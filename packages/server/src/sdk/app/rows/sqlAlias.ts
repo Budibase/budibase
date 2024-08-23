@@ -12,6 +12,7 @@ import { getSQLClient } from "./utils"
 import { cloneDeep } from "lodash"
 import datasources from "../datasources"
 import { BudibaseInternalDB } from "../../../db/utils"
+import { dataFilters } from "@budibase/shared-core"
 
 type PerformQueryFunction = (
   datasource: Datasource,
@@ -199,16 +200,20 @@ export default class AliasTables {
         )
       }
       if (json.filters) {
-        for (let [filterKey, filter] of Object.entries(json.filters)) {
-          if (typeof filter !== "object") {
-            continue
+        const aliasFilters = (filters: SearchFilters): SearchFilters => {
+          for (let [filterKey, filter] of Object.entries(filters)) {
+            if (typeof filter !== "object") {
+              continue
+            }
+            const aliasedFilters: typeof filter = {}
+            for (let key of Object.keys(filter)) {
+              aliasedFilters[this.aliasField(key)] = filter[key]
+            }
+            filters[filterKey as keyof SearchFilters] = aliasedFilters
           }
-          const aliasedFilters: typeof filter = {}
-          for (let key of Object.keys(filter)) {
-            aliasedFilters[this.aliasField(key)] = filter[key]
-          }
-          json.filters[filterKey as keyof SearchFilters] = aliasedFilters
+          return dataFilters.recurseLogicalOperators(filters, aliasFilters)
         }
+        json.filters = aliasFilters(json.filters)
       }
       if (json.meta?.table) {
         this.getAlias(json.meta.table.name)
