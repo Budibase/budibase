@@ -67,9 +67,9 @@
     box-sizing: border-box;
     padding: var(--spacing-m) var(--spacing-xl);
     flex-grow: 1;
-    gap: var(--spacing-s);
     display: flex;
     flex-direction: column;
+    justify-content: center;
   }
 
   .image {
