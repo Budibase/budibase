@@ -1065,7 +1065,12 @@
                 value={inputData[key]}
               />
             {:else if value.customType === "code"}
-              <CodeEditorModal>
+              <CodeEditorModal
+                on:hide={() => {
+                  // Push any pending changes when the window closes
+                  onChange({ [key]: inputData[key] })
+                }}
+              >
                 <div class:js-editor={editingJs}>
                   <div
                     class:js-code={editingJs}
@@ -1075,7 +1080,11 @@
                       value={inputData[key]}
                       on:blur={e => {
                         // need to pass without the value inside
-                        onChange({ [key]: e.detail })
+                        inputData[key] = e.detail
+                      }}
+                      on:insert={e => {
+                        // Blur events only happen once after inserting a binding
+                        // State will now update on insert
                         inputData[key] = e.detail
                       }}
                       completions={stepCompletions}
