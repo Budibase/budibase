@@ -2427,137 +2427,137 @@ describe.each([
     })
   })
 
-  describe("relationships", () => {
-    let tableId: string
+  // Upserting isn't yet supported in MSSQL or Oracle, see:
+  //   https://github.com/knex/knex/pull/6050
+  !isMSSQL &&
+    !isOracle &&
+    describe("relationships", () => {
+      let tableId: string
 
-    let auxData: Row[] = []
+      let auxData: Row[] = []
 
-    beforeAll(async () => {
-      const aux2Table = await config.api.table.save(saveTableRequest())
-      const aux2Data = await config.api.row.save(aux2Table._id!, {})
+      beforeAll(async () => {
+        const aux2Table = await config.api.table.save(saveTableRequest())
+        const aux2Data = await config.api.row.save(aux2Table._id!, {})
 
-      const auxTable = await config.api.table.save(
-        saveTableRequest({
-          primaryDisplay: "name",
-          schema: {
-            name: {
-              name: "name",
-              type: FieldType.STRING,
-              constraints: { presence: true },
+        const auxTable = await config.api.table.save(
+          saveTableRequest({
+            primaryDisplay: "name",
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+              age: {
+                name: "age",
+                type: FieldType.NUMBER,
+                constraints: { presence: true },
+              },
+              address: {
+                name: "address",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+                visible: false,
+              },
+              link: {
+                name: "link",
+                type: FieldType.LINK,
+                tableId: aux2Table._id!,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+                fieldName: "fk_aux",
+                constraints: { presence: true },
+              },
+              formula: {
+                name: "formula",
+                type: FieldType.FORMULA,
+                formula: "{{ any }}",
+                constraints: { presence: true },
+              },
             },
-            age: {
-              name: "age",
-              type: FieldType.NUMBER,
-              constraints: { presence: true },
-            },
-            address: {
-              name: "address",
-              type: FieldType.STRING,
-              constraints: { presence: true },
-              visible: false,
-            },
-            link: {
-              name: "link",
-              type: FieldType.LINK,
-              tableId: aux2Table._id!,
-              relationshipType: RelationshipType.MANY_TO_MANY,
-              fieldName: "fk_aux",
-              constraints: { presence: true },
-            },
-            formula: {
-              name: "formula",
-              type: FieldType.FORMULA,
-              formula: "{{ any }}",
-              constraints: { presence: true },
-            },
-          },
-        })
-      )
-      const auxTableId = auxTable._id!
-
-      for (const name of generator.unique(() => generator.name(), 10)) {
-        auxData.push(
-          await config.api.row.save(auxTableId, {
-            name,
-            age: generator.age(),
-            address: generator.address(),
-            link: [aux2Data],
           })
         )
-      }
+        const auxTableId = auxTable._id!
 
-      const table = await config.api.table.save(
-        saveTableRequest({
-          schema: {
-            title: {
-              name: "title",
-              type: FieldType.STRING,
-              constraints: { presence: true },
-            },
-            relWithNoSchema: {
-              name: "relWithNoSchema",
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              type: FieldType.LINK,
-              tableId: auxTableId,
-              fieldName: "fk_relWithNoSchema",
-              constraints: { presence: true },
-            },
-            relWithEmptySchema: {
-              name: "relWithEmptySchema",
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              type: FieldType.LINK,
-              tableId: auxTableId,
-              fieldName: "fk_relWithEmptySchema",
-              constraints: { presence: true },
-              schema: {},
-            },
-            relWithFullSchema: {
-              name: "relWithFullSchema",
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              type: FieldType.LINK,
-              tableId: auxTableId,
-              fieldName: "fk_relWithFullSchema",
-              constraints: { presence: true },
-              schema: Object.keys(auxTable.schema).reduce(
-                (acc, c) => ({ ...acc, [c]: { visible: true } }),
-                {}
-              ),
-            },
-            relWithHalfSchema: {
-              name: "relWithHalfSchema",
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              type: FieldType.LINK,
-              tableId: auxTableId,
-              fieldName: "fk_relWithHalfSchema",
-              constraints: { presence: true },
-              schema: {
-                name: { visible: true },
-                age: { visible: false, readonly: true },
+        for (const name of generator.unique(() => generator.name(), 10)) {
+          auxData.push(
+            await config.api.row.save(auxTableId, {
+              name,
+              age: generator.age(),
+              address: generator.address(),
+              link: [aux2Data],
+            })
+          )
+        }
+
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              title: {
+                name: "title",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+              relWithNoSchema: {
+                name: "relWithNoSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithNoSchema",
+                constraints: { presence: true },
+              },
+              relWithEmptySchema: {
+                name: "relWithEmptySchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithEmptySchema",
+                constraints: { presence: true },
+                schema: {},
+              },
+              relWithFullSchema: {
+                name: "relWithFullSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithFullSchema",
+                constraints: { presence: true },
+                schema: Object.keys(auxTable.schema).reduce(
+                  (acc, c) => ({ ...acc, [c]: { visible: true } }),
+                  {}
+                ),
+              },
+              relWithHalfSchema: {
+                name: "relWithHalfSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithHalfSchema",
+                constraints: { presence: true },
+                schema: {
+                  name: { visible: true },
+                  age: { visible: false, readonly: true },
+                },
+              },
+              relWithIllegalSchema: {
+                name: "relWithIllegalSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithIllegalSchema",
+                constraints: { presence: true },
+                schema: {
+                  name: { visible: true },
+                  address: { visible: true },
+                  unexisting: { visible: true },
+                },
               },
             },
-            relWithIllegalSchema: {
-              name: "relWithIllegalSchema",
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              type: FieldType.LINK,
-              tableId: auxTableId,
-              fieldName: "fk_relWithIllegalSchema",
-              constraints: { presence: true },
-              schema: {
-                name: { visible: true },
-                address: { visible: true },
-                unexisting: { visible: true },
-              },
-            },
-          },
-        })
-      )
-      tableId = table._id!
-    })
+          })
+        )
+        tableId = table._id!
+      })
 
-    // Upserting isn't yet supported in MSSQL or Oracle, see:
-    //   https://github.com/knex/knex/pull/6050
-    !isMSSQL &&
-      !isOracle &&
       it.each([
         ["get row", (row: Row) => config.api.row.get(tableId, row._id!)],
         [
@@ -2648,7 +2648,7 @@ describe.each([
           )
         }
       )
-  })
+    })
 
   describe("Formula fields", () => {
     let table: Table
