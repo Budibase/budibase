@@ -163,7 +163,7 @@ export async function enrichRelationshipSchema(
 
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
-      if (relTableField.type === FieldType.LINK) {
+      if ([FieldType.LINK, FieldType.FORMULA].includes(relTableField.type)) {
         continue
       }
 
