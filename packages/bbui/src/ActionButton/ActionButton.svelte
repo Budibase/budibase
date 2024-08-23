@@ -30,7 +30,6 @@
   }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <button
   class="spectrum-ActionButton spectrum-ActionButton--size{size}"
   class:spectrum-ActionButton--quiet={quiet}

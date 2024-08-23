@@ -1,7 +1,6 @@
 <script>
-  import { views } from "stores/builder"
+  import { views, tables } from "stores/builder"
   import { API } from "api"
-  import { tables } from "stores/builder"
   import Table from "components/backend/DataTable/Table.svelte"
   import CalculateButton from "components/backend/DataTable/buttons/CalculateButton.svelte"
   import GroupByButton from "components/backend/DataTable/buttons/GroupByButton.svelte"

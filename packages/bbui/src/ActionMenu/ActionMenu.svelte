@@ -22,7 +22,7 @@
     anchor = node.firstChild
   }
 
-  export const show = e => {
+  export const show = () => {
     cancelHide()
     dropdown.show()
   }
