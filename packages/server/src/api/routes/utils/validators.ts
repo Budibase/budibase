@@ -15,7 +15,7 @@ const { isRequired } = helpers.schema
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_BOOLEAN = Joi.boolean().optional().allow(null)
-const APP_NAME_REGEX = /^[\w\s]+$/
+const APP_NAME_REGEX = /^[\p{L}\p{N}\s]+$/u
 
 const validateViewSchemas: CustomValidator<Table> = (table, helpers) => {
   if (table.views && Object.entries(table.views).length) {
