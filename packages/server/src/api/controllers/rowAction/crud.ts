@@ -26,7 +26,7 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
     return
   }
 
-  const { actions } = await sdk.rowActions.get(table._id!)
+  const { actions } = await sdk.rowActions.getAll(table._id!)
   const result: RowActionsResponse = {
     actions: Object.entries(actions).reduce<Record<string, RowActionResponse>>(
       (acc, [key, action]) => ({
