@@ -2,6 +2,7 @@ import {
   CreateRowActionRequest,
   RowActionResponse,
   RowActionsResponse,
+  RowActionTriggerRequest,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -97,6 +98,23 @@ export class RowActionAPI extends TestAPI {
     return await this._delete<RowActionResponse>(
       `/api/tables/${tableId}/actions/${rowActionId}/permissions/${viewId}`,
       {
+        expectations,
+        ...config,
+      }
+    )
+  }
+
+  trigger = async (
+    tableId: string,
+    rowActionId: string,
+    body: RowActionTriggerRequest,
+    expectations?: Expectations,
+    config?: { publicUser?: boolean }
+  ) => {
+    return await this._post<RowActionResponse>(
+      `/api/tables/${tableId}/actions/${rowActionId}/trigger`,
+      {
+        body,
         expectations,
         ...config,
       }
