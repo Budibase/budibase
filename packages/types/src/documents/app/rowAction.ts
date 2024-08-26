@@ -2,6 +2,7 @@ import { Document } from "../document"
 
 export interface TableRowActions extends Document {
   _id: string
+  tableId: string
   actions: Record<
     string,
     {
