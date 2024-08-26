@@ -87,3 +87,19 @@ export async function remove(ctx: Ctx<void, void>) {
   await sdk.rowActions.remove(table._id!, actionId)
   ctx.status = 204
 }
+
+export async function setViewPermission(ctx: Ctx<void, void>) {
+  const table = await getTable(ctx)
+  const { actionId, viewId } = ctx.params
+
+  await sdk.rowActions.setViewPermission(table._id!, actionId, viewId)
+  ctx.status = 204
+}
+
+export async function unsetViewPermission(ctx: Ctx<void, void>) {
+  const table = await getTable(ctx)
+  const { actionId, viewId } = ctx.params
+
+  await sdk.rowActions.unsetViewPermission(table._id!, actionId, viewId)
+  ctx.status = 204
+}

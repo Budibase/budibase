@@ -158,6 +158,25 @@ export async function setViewPermission(
   }
 }
 
+export async function unsetViewPermission(
+  tableId: string,
+  rowActionId: string,
+  viewId: string
+) {
+  const actionsDoc = await get(tableId)
+
+  const rowAction = getRowAction(actionsDoc, rowActionId)
+  delete rowAction.permissions.views[viewId]
+
+  const db = context.getAppDB()
+  await db.put(actionsDoc)
+
+  return {
+    id: rowActionId,
+    ...rowAction,
+  }
+}
+
 export async function remove(tableId: string, rowActionId: string) {
   const actionsDoc = await get(tableId)
 
