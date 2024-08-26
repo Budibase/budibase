@@ -13,7 +13,6 @@ import { generator } from "@budibase/backend-core/tests"
 import { Expectations } from "../../../tests/utilities/api/base"
 import { roles } from "@budibase/backend-core"
 import { automations } from "@budibase/pro"
-import { trigger } from "src/api/controllers/automation"
 
 const expectAutomationId = () =>
   expect.stringMatching(`^${DocumentType.AUTOMATION}_.+`)
