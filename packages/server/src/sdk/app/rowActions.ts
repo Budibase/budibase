@@ -87,7 +87,19 @@ export async function create(tableId: string, rowAction: { name: string }) {
   }
 }
 
-export async function get(tableId: string) {
+export async function get(tableId: string, rowActionId: string) {
+  const actionsDoc = await getAll(tableId)
+  const rowAction = actionsDoc?.actions[rowActionId]
+  if (!rowAction) {
+    throw new HTTPError(
+      `Row action '${rowActionId}' not found in '${tableId}'`,
+      400
+    )
+  }
+  return rowAction
+}
+
+async function getAll(tableId: string) {
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
   return await db.get<TableRowActions>(rowActionsId)
@@ -107,7 +119,7 @@ async function updateDoc(
     tableRowActions: TableRowActions
   ) => TableRowActions | Promise<TableRowActions>
 ) {
-  const actionsDoc = await get(tableId)
+  const actionsDoc = await getAll(tableId)
   const rowAction = actionsDoc?.actions[rowActionId]
   if (!rowAction) {
     throw new HTTPError(
@@ -199,7 +211,7 @@ export async function run(tableId: any, rowActionId: any, rowId: string) {
     throw new HTTPError("Table not found", 404)
   }
 
-  const { actions } = await get(tableId)
+  const { actions } = await getAll(tableId)
 
   const rowAction = actions[rowActionId]
   if (!rowAction) {
