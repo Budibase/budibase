@@ -462,4 +462,121 @@ describe("/rowsActions", () => {
       }
     })
   })
+
+  describe("setViewPermission", () => {
+    // unauthorisedTests()
+
+    it("can set permission views", async () => {
+      for (const rowAction of createRowActionRequests(3)) {
+        await createRowAction(tableId, rowAction)
+      }
+
+      const persisted = await config.api.rowAction.find(tableId)
+
+      const [actionId1, actionId2] = _.sampleSize(
+        Object.keys(persisted.actions),
+        2
+      )
+
+      const viewId1 = generator.guid()
+      const viewId2 = generator.guid()
+
+      await config.api.rowAction.setViewPermission(
+        tableId,
+        viewId1,
+        actionId1,
+        {
+          status: 200,
+          body: {},
+        }
+      )
+      const action1Result = await config.api.rowAction.setViewPermission(
+        tableId,
+        viewId2,
+        actionId1,
+        {
+          status: 200,
+          body: {},
+        }
+      )
+      const action2Result = await config.api.rowAction.setViewPermission(
+        tableId,
+        viewId1,
+        actionId2,
+        {
+          status: 200,
+          body: {},
+        }
+      )
+
+      const expectedAction1 = expect.objectContaining({
+        allowedViews: [viewId1, viewId2],
+      })
+      const expectedAction2 = expect.objectContaining({
+        allowedViews: [viewId1],
+      })
+
+      const expectedActions = expect.objectContaining({
+        [actionId1]: expectedAction1,
+        [actionId2]: expectedAction2,
+      })
+      expect(action1Result).toEqual(expectedAction1)
+      expect(action2Result).toEqual(expectedAction2)
+      expect((await config.api.rowAction.find(tableId)).actions).toEqual(
+        expectedActions
+      )
+    })
+  })
+
+  describe("unsetViewPermission", () => {
+    // unauthorisedTests()
+
+    it("can unset permission views", async () => {
+      for (const rowAction of createRowActionRequests(3)) {
+        await createRowAction(tableId, rowAction)
+      }
+
+      const persisted = await config.api.rowAction.find(tableId)
+
+      const [actionId] = _.sampleSize(Object.keys(persisted.actions), 1)
+
+      const viewId1 = generator.guid()
+      const viewId2 = generator.guid()
+
+      await config.api.rowAction.setViewPermission(tableId, viewId1, actionId, {
+        status: 200,
+        body: {},
+      })
+      await config.api.rowAction.setViewPermission(tableId, viewId2, actionId, {
+        status: 200,
+        body: {},
+      })
+
+      expect((await config.api.rowAction.find(tableId)).actions).toEqual(
+        expect.objectContaining({
+          [actionId]: expect.objectContaining({
+            allowedViews: [viewId1, viewId2],
+          }),
+        })
+      )
+
+      const actionResult = await config.api.rowAction.unsetViewPermission(
+        tableId,
+        viewId1,
+        actionId,
+        {
+          status: 200,
+          body: {},
+        }
+      )
+
+      const expectedAction = expect.objectContaining({
+        allowedViews: [viewId2],
+      })
+      expect(actionResult).toEqual(expectedAction)
+      expect(
+        (await config.api.rowAction.find(tableId)).actions[actionId]
+      ).toEqual(expectedAction)
+    })
+  })
 })
