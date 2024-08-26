@@ -5,12 +5,15 @@ import {
   CreateRowActionRequest,
   DocumentType,
   PermissionLevel,
+  Row,
   RowActionResponse,
 } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 import { Expectations } from "../../../tests/utilities/api/base"
 import { roles } from "@budibase/backend-core"
+import { automations } from "@budibase/pro"
+import { trigger } from "src/api/controllers/automation"
 
 const expectAutomationId = () =>
   expect.stringMatching(`^${DocumentType.AUTOMATION}_.+`)
@@ -674,5 +677,61 @@ describe("/rowsActions", () => {
         })
       }
     )
+  })
+
+  describe("trigger", () => {
+    let row: Row
+    let rowAction: RowActionResponse
+
+    unauthorisedTests((expectations, testConfig) =>
+      config.api.rowAction.trigger(
+        tableId,
+        rowAction.id,
+        {
+          rowId: row._id!,
+        },
+        expectations,
+        { ...testConfig, useProdApp: true }
+      )
+    )
+
+    beforeEach(async () => {
+      row = await config.api.row.save(tableId, {})
+      rowAction = await createRowAction(tableId, createRowActionRequest())
+
+      await config.publish()
+    })
+
+    it("can trigger an automation given valid data", async () => {
+      await config.api.rowAction.trigger(
+        tableId,
+        rowAction.id,
+        {
+          rowId: row._id!,
+        },
+        undefined,
+        { useProdApp: true }
+      )
+
+      const { data: automationLogs } = await config.doInContext(
+        config.getProdAppId(),
+        async () =>
+          automations.logs.logSearch({
+            startDate: await automations.logs.oldestLogDate(),
+          })
+      )
+      expect(automationLogs).toEqual([
+        expect.objectContaining({
+          automationId: rowAction.automationId,
+          trigger: expect.objectContaining({
+            outputs: {
+              fields: {},
+              row: await config.api.row.get(tableId, row._id!),
+              table: await config.api.table.get(tableId),
+            },
+          }),
+        }),
+      ])
+    })
   })
 })
