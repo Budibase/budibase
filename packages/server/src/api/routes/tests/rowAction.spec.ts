@@ -727,5 +727,47 @@ describe("/rowsActions", () => {
         }),
       ])
     })
+
+    it("rejects triggering from a non-allowed view", async () => {
+      const viewId = (
+        await config.api.viewV2.create(
+          setup.structures.viewV2.createRequest(tableId)
+        )
+      ).id
+
+      await config.api.rowAction.trigger(
+        viewId,
+        rowAction.id,
+        {
+          rowId: row._id!,
+        },
+        {
+          status: 403,
+          body: {
+            message: `Row action '${rowAction.id}' is not enabled for view '${viewId}'"`,
+          },
+        }
+      )
+
+      const { data: automationLogs } = await config.doInContext(
+        config.getProdAppId(),
+        async () =>
+          automations.logs.logSearch({
+            startDate: await automations.logs.oldestLogDate(),
+          })
+      )
+      expect(automationLogs).toEqual([
+        expect.objectContaining({
+          automationId: rowAction.automationId,
+          trigger: expect.objectContaining({
+            outputs: {
+              fields: {},
+              row: await config.api.row.get(tableId, row._id!),
+              table: await config.api.table.get(tableId),
+            },
+          }),
+        }),
+      ])
+    })
   })
 })
