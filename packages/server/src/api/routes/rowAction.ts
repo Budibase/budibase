@@ -50,6 +50,16 @@ router
     authorizedResource(PermissionType.TABLE, PermissionLevel.READ, "tableId"),
     rowActionController.remove
   )
+  .post(
+    "/api/tables/:tableId/actions/:actionId/permissions/:viewId",
+    authorizedResource(PermissionType.TABLE, PermissionLevel.READ, "tableId"),
+    rowActionController.setViewPermission
+  )
+  .delete(
+    "/api/tables/:tableId/actions/:actionId/permissions/:viewId",
+    authorizedResource(PermissionType.TABLE, PermissionLevel.READ, "tableId"),
+    rowActionController.unsetViewPermission
+  )
 
   // Other endpoints
   .post(
