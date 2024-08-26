@@ -491,36 +491,54 @@ describe("/rowsActions", () => {
     })
   })
 
-  describe("setViewPermission", () => {
-    unauthorisedTests((expectations, testConfig) =>
-      config.api.rowAction.setViewPermission(
-        tableId,
-        generator.guid(),
-        generator.guid(),
-        expectations,
-        testConfig
+  describe("set/unsetViewPermission", () => {
+    describe.each([
+      ["setViewPermission", config.api.rowAction.setViewPermission],
+      ["unsetViewPermission", config.api.rowAction.unsetViewPermission],
+    ])("unauthorisedTests for %s", (__, delegateTest) => {
+      unauthorisedTests((expectations, testConfig) =>
+        delegateTest(
+          tableId,
+          generator.guid(),
+          generator.guid(),
+          expectations,
+          testConfig
+        )
       )
-    )
+    })
 
-    it("can set permission views", async () => {
+    let tableIdForDescribe: string
+    let actionId1: string, actionId2: string
+    let viewId1: string, viewId2: string
+    beforeAll(async () => {
+      tableIdForDescribe = tableId
       for (const rowAction of createRowActionRequests(3)) {
         await createRowAction(tableId, rowAction)
       }
-
       const persisted = await config.api.rowAction.find(tableId)
 
-      const [actionId1, actionId2] = _.sampleSize(
-        Object.keys(persisted.actions),
-        2
-      )
+      const actions = _.sampleSize(Object.keys(persisted.actions), 2)
+      actionId1 = actions[0]
+      actionId2 = actions[1]
 
-      const { id: viewId1 } = await config.api.viewV2.create(
-        setup.structures.viewV2.createRequest(tableId)
-      )
-      const { id: viewId2 } = await config.api.viewV2.create(
-        setup.structures.viewV2.createRequest(tableId)
-      )
+      viewId1 = (
+        await config.api.viewV2.create(
+          setup.structures.viewV2.createRequest(tableId)
+        )
+      ).id
+      viewId2 = (
+        await config.api.viewV2.create(
+          setup.structures.viewV2.createRequest(tableId)
+        )
+      ).id
+    })
 
+    beforeEach(() => {
+      // Hack to reuse tables for these given tests
+      tableId = tableIdForDescribe
+    })
+
+    it("can set permission views", async () => {
       await config.api.rowAction.setViewPermission(
         tableId,
         viewId1,
@@ -566,56 +584,12 @@ describe("/rowsActions", () => {
         expectedActions
       )
     })
-  })
-
-  describe("unsetViewPermission", () => {
-    unauthorisedTests((expectations, testConfig) =>
-      config.api.rowAction.unsetViewPermission(
-        tableId,
-        generator.guid(),
-        generator.guid(),
-        expectations,
-        testConfig
-      )
-    )
 
     it("can unset permission views", async () => {
-      for (const rowAction of createRowActionRequests(3)) {
-        await createRowAction(tableId, rowAction)
-      }
-
-      const persisted = await config.api.rowAction.find(tableId)
-
-      const [actionId] = _.sampleSize(Object.keys(persisted.actions), 1)
-
-      const { id: viewId1 } = await config.api.viewV2.create(
-        setup.structures.viewV2.createRequest(tableId)
-      )
-      const { id: viewId2 } = await config.api.viewV2.create(
-        setup.structures.viewV2.createRequest(tableId)
-      )
-
-      await config.api.rowAction.setViewPermission(tableId, viewId1, actionId, {
-        status: 200,
-        body: {},
-      })
-      await config.api.rowAction.setViewPermission(tableId, viewId2, actionId, {
-        status: 200,
-        body: {},
-      })
-
-      expect((await config.api.rowAction.find(tableId)).actions).toEqual(
-        expect.objectContaining({
-          [actionId]: expect.objectContaining({
-            allowedViews: [viewId1, viewId2],
-          }),
-        })
-      )
-
       const actionResult = await config.api.rowAction.unsetViewPermission(
         tableId,
         viewId1,
-        actionId,
+        actionId1,
         {
           status: 200,
           body: {},
@@ -627,8 +601,47 @@ describe("/rowsActions", () => {
       })
       expect(actionResult).toEqual(expectedAction)
       expect(
-        (await config.api.rowAction.find(tableId)).actions[actionId]
+        (await config.api.rowAction.find(tableId)).actions[actionId1]
       ).toEqual(expectedAction)
     })
+
+    it.each([
+      ["setViewPermission", config.api.rowAction.setViewPermission],
+      ["unsetViewPermission", config.api.rowAction.unsetViewPermission],
+    ])(
+      "cannot update permission views for unexisting views (%s)",
+      async (__, delegateTest) => {
+        const viewId = generator.guid()
+
+        await delegateTest(tableId, viewId, actionId1, {
+          status: 400,
+          body: {
+            message: `View '${viewId}' not found in '${tableId}'`,
+          },
+        })
+      }
+    )
+
+    it.each([
+      ["setViewPermission", config.api.rowAction.setViewPermission],
+      ["unsetViewPermission", config.api.rowAction.unsetViewPermission],
+    ])(
+      "cannot update permission views crossing table views (%s)",
+      async (__, delegateTest) => {
+        const anotherTable = await config.api.table.save(
+          setup.structures.basicTable()
+        )
+        const { id: viewId } = await config.api.viewV2.create(
+          setup.structures.viewV2.createRequest(anotherTable._id!)
+        )
+
+        await delegateTest(tableId, viewId, actionId1, {
+          status: 400,
+          body: {
+            message: `View '${viewId}' not found in '${tableId}'`,
+          },
+        })
+      }
+    )
   })
 })

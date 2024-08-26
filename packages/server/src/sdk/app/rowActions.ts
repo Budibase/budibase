@@ -142,7 +142,15 @@ export async function update(
 }
 
 async function guardView(tableId: string, viewId: string) {
-  const view = await sdk.views.get(viewId)
+  let view
+  try {
+    view = await sdk.views.get(viewId)
+  } catch (e: any) {
+    if (e?.message !== "Unable to extract table ID, is not a view ID") {
+      throw e
+    }
+    // View id is not valid
+  }
   if (!view || view.tableId !== tableId) {
     throw new HTTPError(`View '${viewId}' not found in '${tableId}'`, 400)
   }
