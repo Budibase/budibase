@@ -23,6 +23,7 @@ export function triggerRowActionAuthorised(
     const tableId = isTableId
       ? sourceId
       : utils.extractViewInfoFromID(sourceId).tableId
+
     const rowAction = await sdk.rowActions.get(tableId, rowActionId)
 
     if (isTableId && !rowAction.permissions.table.runAllowed) {
@@ -37,6 +38,8 @@ export function triggerRowActionAuthorised(
       )
     }
 
+    // Enrich tableId
+    ctx.params.tableId = tableId
     return next()
   }
 }
