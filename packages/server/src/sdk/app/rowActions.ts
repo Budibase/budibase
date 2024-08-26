@@ -41,7 +41,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
       throw e
     }
 
-    doc = { _id: rowActionsId, actions: {} }
+    doc = { _id: rowActionsId, tableId, actions: {} }
   }
 
   ensureUniqueAndThrow(doc, action.name)
@@ -75,6 +75,10 @@ export async function create(tableId: string, rowAction: { name: string }) {
   doc.actions[newRowActionId] = {
     name: action.name,
     automationId: automation._id!,
+    permissions: {
+      table: { runAllowed: true },
+      views: {},
+    },
   }
   await db.put(doc)
 
@@ -115,7 +119,7 @@ export async function update(
   ensureUniqueAndThrow(actionsDoc, action.name, rowActionId)
 
   actionsDoc.actions[rowActionId] = {
-    automationId: actionsDoc.actions[rowActionId].automationId,
+    ...actionsDoc.actions[rowActionId],
     ...action,
   }
 
