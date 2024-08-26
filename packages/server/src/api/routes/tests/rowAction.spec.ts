@@ -90,6 +90,10 @@ describe("/rowsActions", () => {
           level: PermissionLevel.EXECUTE,
         })
       }
+
+      // replicate changes before checking permissions
+      await config.publish()
+
       await config.withUser(user, async () => {
         await createRowAction(tableId, createRowActionRequest(), {
           status: 403,
