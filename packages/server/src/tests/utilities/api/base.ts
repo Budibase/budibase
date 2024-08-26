@@ -108,7 +108,10 @@ export abstract class TestAPI {
     }
 
     const headersFn = publicUser
-      ? this.config.publicHeaders.bind(this.config)
+      ? (_extras = {}) =>
+          this.config.publicHeaders.bind(this.config)({
+            prodApp: opts?.useProdApp,
+          })
       : (extras = {}) =>
           this.config.defaultHeaders.bind(this.config)(extras, opts?.useProdApp)
 
