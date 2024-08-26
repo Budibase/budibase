@@ -4,11 +4,13 @@ import tk from "timekeeper"
 import {
   CreateRowActionRequest,
   DocumentType,
+  PermissionLevel,
   RowActionResponse,
 } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 import { Expectations } from "../../../tests/utilities/api/base"
+import { roles } from "@budibase/backend-core"
 
 const expectAutomationId = () =>
   expect.stringMatching(`^${DocumentType.AUTOMATION}_.+`)
@@ -69,6 +71,31 @@ describe("/rowsActions", () => {
       await config.withUser(user, async () => {
         await createRowAction(generator.guid(), createRowActionRequest(), {
           status: 403,
+          body: {
+            message: "Not Authorized",
+          },
+        })
+      })
+    })
+
+    it("returns forbidden (403) for non-builder users even if they have table write permissions", async () => {
+      const user = await config.createUser({
+        builder: {},
+      })
+      const tableId = generator.guid()
+      for (const role of Object.values(roles.BUILTIN_ROLE_IDS)) {
+        await config.api.permission.add({
+          roleId: role,
+          resourceId: tableId,
+          level: PermissionLevel.EXECUTE,
+        })
+      }
+      await config.withUser(user, async () => {
+        await createRowAction(tableId, createRowActionRequest(), {
+          status: 403,
+          body: {
+            message: "Not Authorized",
+          },
         })
       })
     })
