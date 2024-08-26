@@ -63,7 +63,7 @@ router
 
   // Other endpoints
   .post(
-    "/api/tables/:tableId/actions/:actionId/trigger",
+    "/api/tables/:sourceId/actions/:actionId/trigger",
     rowTriggerValidator(),
     authorizedResource(PermissionType.TABLE, PermissionLevel.READ, "tableId"),
     rowActionController.run
