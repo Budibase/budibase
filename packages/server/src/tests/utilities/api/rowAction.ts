@@ -109,7 +109,7 @@ export class RowActionAPI extends TestAPI {
     rowActionId: string,
     body: RowActionTriggerRequest,
     expectations?: Expectations,
-    config?: { publicUser?: boolean }
+    config?: { publicUser?: boolean; useProdApp?: boolean }
   ) => {
     return await this._post<RowActionResponse>(
       `/api/tables/${tableId}/actions/${rowActionId}/trigger`,
