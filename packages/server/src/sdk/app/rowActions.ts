@@ -40,7 +40,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
       throw e
     }
 
-    doc = { _id: rowActionsId, tableId, actions: {} }
+    doc = { _id: rowActionsId, actions: {} }
   }
 
   ensureUniqueAndThrow(doc, action.name)
