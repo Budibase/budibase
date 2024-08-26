@@ -726,6 +726,7 @@ describe("/rowsActions", () => {
         )
       ).id
 
+      await config.publish()
       await config.api.rowAction.trigger(
         viewId,
         rowAction.id,
@@ -757,7 +758,8 @@ describe("/rowsActions", () => {
         rowAction.id
       )
 
-      await config.api.rowAction.trigger(tableId, rowAction.id, {
+      await config.publish()
+      await config.api.rowAction.trigger(viewId, rowAction.id, {
         rowId: row._id!,
       })
 
