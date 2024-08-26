@@ -141,11 +141,19 @@ export async function update(
   })
 }
 
+async function guardView(tableId: string, viewId: string) {
+  const view = await sdk.views.get(viewId)
+  if (!view || view.tableId !== tableId) {
+    throw new HTTPError(`View '${viewId}' not found in '${tableId}'`, 400)
+  }
+}
+
 export async function setViewPermission(
   tableId: string,
   rowActionId: string,
   viewId: string
 ) {
+  await guardView(tableId, viewId)
   return await updateDoc(tableId, rowActionId, async actionsDoc => {
     actionsDoc.actions[rowActionId].permissions.views[viewId] = {
       runAllowed: true,
@@ -159,6 +167,7 @@ export async function unsetViewPermission(
   rowActionId: string,
   viewId: string
 ) {
+  await guardView(tableId, viewId)
   return await updateDoc(tableId, rowActionId, async actionsDoc => {
     delete actionsDoc.actions[rowActionId].permissions.views[viewId]
     return actionsDoc
