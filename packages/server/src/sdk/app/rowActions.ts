@@ -1,8 +1,6 @@
 import { context, HTTPError, utils } from "@budibase/backend-core"
-
 import {
   AutomationTriggerStepId,
-  RowActionData,
   SEPARATOR,
   TableRowActions,
   VirtualDocumentType,
@@ -102,17 +100,31 @@ export async function docExists(tableId: string) {
   return result
 }
 
-function getRowAction(
-  rowActions: TableRowActions,
-  rowActionId: string
-): RowActionData {
-  if (!rowActions.actions[rowActionId]) {
+async function updateDoc(
+  tableId: string,
+  rowActionId: string,
+  transformer: (
+    tableRowActions: TableRowActions
+  ) => TableRowActions | Promise<TableRowActions>
+) {
+  const actionsDoc = await get(tableId)
+  const rowAction = actionsDoc?.actions[rowActionId]
+  if (!rowAction) {
     throw new HTTPError(
-      `Row action '${rowActionId}' not found in '${rowActions.tableId}'`,
+      `Row action '${rowActionId}' not found in '${tableId}'`,
       400
     )
   }
-  return rowActions.actions[rowActionId]
+
+  const updated = await transformer(actionsDoc)
+
+  const db = context.getAppDB()
+  await db.put(updated)
+
+  return {
+    id: rowActionId,
+    ...updated.actions[rowActionId],
+  }
 }
 
 export async function update(
@@ -120,21 +132,13 @@ export async function update(
   rowActionId: string,
   rowActionData: { name: string }
 ) {
-  rowActionData.name = rowActionData.name.trim()
+  const newName = rowActionData.name.trim()
 
-  const actionsDoc = await get(tableId)
-  ensureUniqueAndThrow(actionsDoc, rowActionData.name, rowActionId)
-
-  const rowAction = getRowAction(actionsDoc, rowActionId)
-  rowAction.name = rowActionData.name
-
-  const db = context.getAppDB()
-  await db.put(actionsDoc)
-
-  return {
-    id: rowActionId,
-    ...rowAction,
-  }
+  return await updateDoc(tableId, rowActionId, actionsDoc => {
+    ensureUniqueAndThrow(actionsDoc, newName, rowActionId)
+    actionsDoc.actions[rowActionId].name = newName
+    return actionsDoc
+  })
 }
 
 export async function setViewPermission(
@@ -142,20 +146,12 @@ export async function setViewPermission(
   rowActionId: string,
   viewId: string
 ) {
-  const actionsDoc = await get(tableId)
-
-  const rowAction = getRowAction(actionsDoc, rowActionId)
-  rowAction.permissions.views[viewId] = {
-    runAllowed: true,
-  }
-
-  const db = context.getAppDB()
-  await db.put(actionsDoc)
-
-  return {
-    id: rowActionId,
-    ...rowAction,
-  }
+  return await updateDoc(tableId, rowActionId, async actionsDoc => {
+    actionsDoc.actions[rowActionId].permissions.views[viewId] = {
+      runAllowed: true,
+    }
+    return actionsDoc
+  })
 }
 
 export async function unsetViewPermission(
@@ -163,32 +159,21 @@ export async function unsetViewPermission(
   rowActionId: string,
   viewId: string
 ) {
-  const actionsDoc = await get(tableId)
-
-  const rowAction = getRowAction(actionsDoc, rowActionId)
-  delete rowAction.permissions.views[viewId]
-
-  const db = context.getAppDB()
-  await db.put(actionsDoc)
-
-  return {
-    id: rowActionId,
-    ...rowAction,
-  }
+  return await updateDoc(tableId, rowActionId, async actionsDoc => {
+    delete actionsDoc.actions[rowActionId].permissions.views[viewId]
+    return actionsDoc
+  })
 }
 
 export async function remove(tableId: string, rowActionId: string) {
-  const actionsDoc = await get(tableId)
+  return await updateDoc(tableId, rowActionId, async actionsDoc => {
+    const { automationId } = actionsDoc.actions[rowActionId]
+    const automation = await automations.get(automationId)
+    await automations.remove(automation._id, automation._rev)
 
-  const rowAction = getRowAction(actionsDoc, rowActionId)
-
-  const { automationId } = rowAction
-  const automation = await automations.get(automationId)
-  await automations.remove(automation._id, automation._rev)
-  delete actionsDoc.actions[rowActionId]
-
-  const db = context.getAppDB()
-  await db.put(actionsDoc)
+    delete actionsDoc.actions[rowActionId]
+    return actionsDoc
+  })
 }
 
 export async function run(tableId: any, rowActionId: any, rowId: string) {
