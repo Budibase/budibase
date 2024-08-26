@@ -70,4 +70,42 @@ export class RowActionAPI extends TestAPI {
       }
     )
   }
+
+  setViewPermission = async (
+    tableId: string,
+    viewId: string,
+    rowActionId: string,
+    expectations?: Expectations,
+    config?: { publicUser?: boolean }
+  ) => {
+    return await this._post<RowActionResponse>(
+      `/api/tables/${tableId}/actions/${rowActionId}/permissions/${viewId}`,
+      {
+        expectations: {
+          ...expectations,
+          status: expectations?.status || 204,
+        },
+        ...config,
+      }
+    )
+  }
+
+  unsetViewPermission = async (
+    tableId: string,
+    viewId: string,
+    rowActionId: string,
+    expectations?: Expectations,
+    config?: { publicUser?: boolean }
+  ) => {
+    return await this._delete<RowActionResponse>(
+      `/api/tables/${tableId}/actions/${rowActionId}/permissions/${viewId}`,
+      {
+        expectations: {
+          ...expectations,
+          status: expectations?.status || 204,
+        },
+        ...config,
+      }
+    )
+  }
 }
