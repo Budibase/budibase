@@ -2,6 +2,7 @@ import { context, HTTPError, utils } from "@budibase/backend-core"
 
 import {
   AutomationTriggerStepId,
+  RowActionData,
   SEPARATOR,
   TableRowActions,
   VirtualDocumentType,
@@ -101,26 +102,51 @@ export async function docExists(tableId: string) {
   return result
 }
 
-export async function update(
-  tableId: string,
-  rowActionId: string,
-  rowAction: { name: string }
-) {
-  const action = { name: rowAction.name.trim() }
-  const actionsDoc = await get(tableId)
-
-  if (!actionsDoc.actions[rowActionId]) {
+function getRowAction(
+  rowActions: TableRowActions,
+  rowActionId: string
+): RowActionData {
+  if (!rowActions.actions[rowActionId]) {
     throw new HTTPError(
-      `Row action '${rowActionId}' not found in '${tableId}'`,
+      `Row action '${rowActionId}' not found in '${rowActions.tableId}'`,
       400
     )
   }
+  return rowActions.actions[rowActionId]
+}
 
-  ensureUniqueAndThrow(actionsDoc, action.name, rowActionId)
+export async function update(
+  tableId: string,
+  rowActionId: string,
+  rowActionData: { name: string }
+) {
+  rowActionData.name = rowActionData.name.trim()
 
-  actionsDoc.actions[rowActionId] = {
-    ...actionsDoc.actions[rowActionId],
-    ...action,
+  const actionsDoc = await get(tableId)
+  ensureUniqueAndThrow(actionsDoc, rowActionData.name, rowActionId)
+
+  const rowAction = getRowAction(actionsDoc, rowActionId)
+  rowAction.name = rowActionData.name
+
+  const db = context.getAppDB()
+  await db.put(actionsDoc)
+
+  return {
+    id: rowActionId,
+    ...rowAction,
+  }
+}
+
+export async function setViewPermission(
+  tableId: string,
+  rowActionId: string,
+  viewId: string
+) {
+  const actionsDoc = await get(tableId)
+
+  const rowAction = getRowAction(actionsDoc, rowActionId)
+  rowAction.permissions.views[viewId] = {
+    runAllowed: true,
   }
 
   const db = context.getAppDB()
@@ -128,20 +154,14 @@ export async function update(
 
   return {
     id: rowActionId,
-    ...actionsDoc.actions[rowActionId],
+    ...rowAction,
   }
 }
 
 export async function remove(tableId: string, rowActionId: string) {
   const actionsDoc = await get(tableId)
 
-  const rowAction = actionsDoc.actions[rowActionId]
-  if (!rowAction) {
-    throw new HTTPError(
-      `Row action '${rowActionId}' not found in '${tableId}'`,
-      400
-    )
-  }
+  const rowAction = getRowAction(actionsDoc, rowActionId)
 
   const { automationId } = rowAction
   const automation = await automations.get(automationId)
