@@ -703,7 +703,7 @@ describe("/rowsActions", () => {
 
     it("can trigger an automation given valid data", async () => {
       await config.api.rowAction.trigger(tableId, rowAction.id, {
-          rowId: row._id!,
+        rowId: row._id!,
       })
 
       const { data: automationLogs } = await config.doInContext(
