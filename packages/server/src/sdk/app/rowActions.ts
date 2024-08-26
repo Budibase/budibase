@@ -99,7 +99,7 @@ export async function get(tableId: string, rowActionId: string) {
   return rowAction
 }
 
-async function getAll(tableId: string) {
+export async function getAll(tableId: string) {
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
   return await db.get<TableRowActions>(rowActionsId)

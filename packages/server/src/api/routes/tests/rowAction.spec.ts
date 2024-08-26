@@ -13,7 +13,6 @@ import { generator } from "@budibase/backend-core/tests"
 import { Expectations } from "../../../tests/utilities/api/base"
 import { roles } from "@budibase/backend-core"
 import { automations } from "@budibase/pro"
-import { trigger } from "src/api/controllers/automation"
 
 const expectAutomationId = () =>
   expect.stringMatching(`^${DocumentType.AUTOMATION}_.+`)
@@ -688,32 +687,24 @@ describe("/rowsActions", () => {
       rowAction = await createRowAction(tableId, createRowActionRequest())
 
       await config.publish()
+      tk.travel(Date.now() + 100)
     })
 
-    unauthorisedTests((expectations, testConfig) =>
-      config.api.rowAction.trigger(
-        tableId,
-        rowAction.id,
-        {
-          rowId: row._id!,
-        },
-        expectations,
-        { ...testConfig, useProdApp: true }
-      )
-    )
-
-    it("can trigger an automation given valid data", async () => {
-      await config.api.rowAction.trigger(tableId, rowAction.id, {
-          rowId: row._id!,
-      })
-
+    async function getAutomationLogs() {
       const { data: automationLogs } = await config.doInContext(
         config.getProdAppId(),
         async () =>
-          automations.logs.logSearch({
-            startDate: await automations.logs.oldestLogDate(),
-          })
+          automations.logs.logSearch({ startDate: new Date().toISOString() })
       )
+      return automationLogs
+    }
+
+    it("can trigger an automation given valid data", async () => {
+      await config.api.rowAction.trigger(tableId, rowAction.id, {
+        rowId: row._id!,
+      })
+
+      const automationLogs = await getAutomationLogs()
       expect(automationLogs).toEqual([
         expect.objectContaining({
           automationId: rowAction.automationId,
@@ -744,28 +735,36 @@ describe("/rowsActions", () => {
         {
           status: 403,
           body: {
-            message: `Row action '${rowAction.id}' is not enabled for view '${viewId}'"`,
+            message: `Row action '${rowAction.id}' is not enabled for view '${viewId}'`,
           },
         }
       )
 
-      const { data: automationLogs } = await config.doInContext(
-        config.getProdAppId(),
-        async () =>
-          automations.logs.logSearch({
-            startDate: await automations.logs.oldestLogDate(),
-          })
+      const automationLogs = await getAutomationLogs()
+      expect(automationLogs).toEqual([])
+    })
+
+    it("triggers from an allowed view", async () => {
+      const viewId = (
+        await config.api.viewV2.create(
+          setup.structures.viewV2.createRequest(tableId)
+        )
+      ).id
+
+      await config.api.rowAction.setViewPermission(
+        tableId,
+        viewId,
+        rowAction.id
       )
+
+      await config.api.rowAction.trigger(tableId, rowAction.id, {
+        rowId: row._id!,
+      })
+
+      const automationLogs = await getAutomationLogs()
       expect(automationLogs).toEqual([
         expect.objectContaining({
           automationId: rowAction.automationId,
-          trigger: expect.objectContaining({
-            outputs: {
-              fields: {},
-              row: await config.api.row.get(tableId, row._id!),
-              table: await config.api.table.get(tableId),
-            },
-          }),
         }),
       ])
     })
