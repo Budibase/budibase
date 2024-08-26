@@ -514,8 +514,12 @@ describe("/rowsActions", () => {
         2
       )
 
-      const viewId1 = generator.guid()
-      const viewId2 = generator.guid()
+      const { id: viewId1 } = await config.api.viewV2.create(
+        setup.structures.viewV2.createRequest(tableId)
+      )
+      const { id: viewId2 } = await config.api.viewV2.create(
+        setup.structures.viewV2.createRequest(tableId)
+      )
 
       await config.api.rowAction.setViewPermission(
         tableId,
@@ -584,8 +588,12 @@ describe("/rowsActions", () => {
 
       const [actionId] = _.sampleSize(Object.keys(persisted.actions), 1)
 
-      const viewId1 = generator.guid()
-      const viewId2 = generator.guid()
+      const { id: viewId1 } = await config.api.viewV2.create(
+        setup.structures.viewV2.createRequest(tableId)
+      )
+      const { id: viewId2 } = await config.api.viewV2.create(
+        setup.structures.viewV2.createRequest(tableId)
+      )
 
       await config.api.rowAction.setViewPermission(tableId, viewId1, actionId, {
         status: 200,
