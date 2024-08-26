@@ -7,6 +7,10 @@ export interface TableRowActions extends Document {
     {
       name: string
       automationId: string
+      permissions: {
+        table: { runAllowed: boolean }
+        views: Record<string, { runAllowed: boolean }>
+      }
     }
   >
 }
