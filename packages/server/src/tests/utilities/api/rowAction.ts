@@ -116,7 +116,7 @@ export class RowActionAPI extends TestAPI {
       {
         body,
         expectations,
-        ...config,
+        ...{ ...config, useProdApp: config?.useProdApp ?? true },
       }
     )
   }

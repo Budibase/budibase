@@ -683,6 +683,13 @@ describe("/rowsActions", () => {
     let row: Row
     let rowAction: RowActionResponse
 
+    beforeEach(async () => {
+      row = await config.api.row.save(tableId, {})
+      rowAction = await createRowAction(tableId, createRowActionRequest())
+
+      await config.publish()
+    })
+
     unauthorisedTests((expectations, testConfig) =>
       config.api.rowAction.trigger(
         tableId,
@@ -695,23 +702,10 @@ describe("/rowsActions", () => {
       )
     )
 
-    beforeEach(async () => {
-      row = await config.api.row.save(tableId, {})
-      rowAction = await createRowAction(tableId, createRowActionRequest())
-
-      await config.publish()
-    })
-
     it("can trigger an automation given valid data", async () => {
-      await config.api.rowAction.trigger(
-        tableId,
-        rowAction.id,
-        {
+      await config.api.rowAction.trigger(tableId, rowAction.id, {
           rowId: row._id!,
-        },
-        undefined,
-        { useProdApp: true }
-      )
+      })
 
       const { data: automationLogs } = await config.doInContext(
         config.getProdAppId(),
