@@ -8,6 +8,7 @@ import {
 } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
+import { Expectations } from "../../../tests/utilities/api/base"
 
 const expectAutomationId = () =>
   expect.stringMatching(`^${DocumentType.AUTOMATION}_.+`)
@@ -43,11 +44,14 @@ describe("/rowsActions", () => {
       .map(name => ({ name }))
   }
 
-  function unauthorisedTests() {
+  function unauthorisedTests(
+    apiDelegate: (
+      expectations: Expectations,
+      testConfig?: { publicUser?: boolean }
+    ) => Promise<any>
+  ) {
     it("returns unauthorised (401) for unauthenticated requests", async () => {
-      await createRowAction(
-        tableId,
-        createRowActionRequest(),
+      await apiDelegate(
         {
           status: 401,
           body: {
@@ -77,7 +81,14 @@ describe("/rowsActions", () => {
   }
 
   describe("create", () => {
-    unauthorisedTests()
+    unauthorisedTests((expectations, testConfig) =>
+      createRowAction(
+        tableId,
+        createRowActionRequest(),
+        expectations,
+        testConfig
+      )
+    )
 
     it("creates new row actions for tables without existing actions", async () => {
       const rowAction = createRowActionRequest()
@@ -247,7 +258,9 @@ describe("/rowsActions", () => {
   })
 
   describe("find", () => {
-    unauthorisedTests()
+    unauthorisedTests((expectations, testConfig) =>
+      config.api.rowAction.find(tableId, expectations, testConfig)
+    )
 
     it("returns only the actions for the requested table", async () => {
       const rowActions: RowActionResponse[] = []
@@ -279,7 +292,15 @@ describe("/rowsActions", () => {
   })
 
   describe("update", () => {
-    unauthorisedTests()
+    unauthorisedTests((expectations, testConfig) =>
+      config.api.rowAction.update(
+        tableId,
+        generator.guid(),
+        createRowActionRequest(),
+        expectations,
+        testConfig
+      )
+    )
 
     it("can update existing actions", async () => {
       for (const rowAction of createRowActionRequests(3)) {
@@ -398,7 +419,14 @@ describe("/rowsActions", () => {
   })
 
   describe("delete", () => {
-    unauthorisedTests()
+    unauthorisedTests((expectations, testConfig) =>
+      config.api.rowAction.delete(
+        tableId,
+        generator.guid(),
+        expectations,
+        testConfig
+      )
+    )
 
     it("can delete existing actions", async () => {
       const actions: RowActionResponse[] = []
@@ -464,7 +492,15 @@ describe("/rowsActions", () => {
   })
 
   describe("setViewPermission", () => {
-    // unauthorisedTests()
+    unauthorisedTests((expectations, testConfig) =>
+      config.api.rowAction.setViewPermission(
+        tableId,
+        generator.guid(),
+        generator.guid(),
+        expectations,
+        testConfig
+      )
+    )
 
     it("can set permission views", async () => {
       for (const rowAction of createRowActionRequests(3)) {
@@ -529,7 +565,15 @@ describe("/rowsActions", () => {
   })
 
   describe("unsetViewPermission", () => {
-    // unauthorisedTests()
+    unauthorisedTests((expectations, testConfig) =>
+      config.api.rowAction.unsetViewPermission(
+        tableId,
+        generator.guid(),
+        generator.guid(),
+        expectations,
+        testConfig
+      )
+    )
 
     it("can unset permission views", async () => {
       for (const rowAction of createRowActionRequests(3)) {
