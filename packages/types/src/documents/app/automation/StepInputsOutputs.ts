@@ -100,7 +100,7 @@ export type FilterStepOutputs = BaseAutomationOutputs & {
 export type LoopStepInputs = {
   option: LoopStepType
   binding: any
-  iterations?: number
+  iterations?: string
   failure?: string
 }
 

@@ -108,6 +108,46 @@ describe("Automation Scenarios", () => {
       })
     })
 
+    it("should run an automation where a loop step is between two normal steps to ensure context correctness", async () => {
+      const builder = createAutomationBuilder({
+        name: "Test Trigger with Loop and Create Row",
+      })
+
+      const results = await builder
+        .rowSaved(
+          { tableId: table._id! },
+          {
+            row: {
+              name: "Trigger Row",
+              description: "This row triggers the automation",
+            },
+            id: "1234",
+            revision: "1",
+          }
+        )
+        .queryRows({
+          tableId: table._id!,
+        })
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: [1, 2, 3],
+        })
+        .serverLog({ text: "Message {{loop.currentItem}}" })
+        .serverLog({ text: "{{steps.1.rows.0._id}}" })
+        .run()
+
+      results.steps[1].outputs.items.forEach(
+        (output: ServerLogStepOutputs, index: number) => {
+          expect(output).toMatchObject({
+            success: true,
+          })
+          expect(output.message).toContain(`Message ${index + 1}`)
+        }
+      )
+
+      expect(results.steps[2].outputs.message).toContain("ro_ta")
+    })
+
     it("should run an automation where a loop is successfully run twice", async () => {
       const builder = createAutomationBuilder({
         name: "Test Trigger with Loop and Create Row",

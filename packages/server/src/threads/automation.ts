@@ -23,7 +23,9 @@ import {
   AutomationStatus,
   AutomationStep,
   AutomationStepStatus,
+  BranchStep,
   LoopStep,
+  SearchFilters,
 } from "@budibase/types"
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
@@ -33,7 +35,7 @@ import { cloneDeep } from "lodash/fp"
 import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
-import tracer from "dd-trace"
+import tracer, { Span } from "dd-trace"
 
 threadUtils.threadSetup()
 const CRON_STEP_ID = triggerDefs.CRON.stepId
@@ -70,6 +72,10 @@ class Orchestrator {
   _emitter: any
   _context: AutomationContext
   _job: Job
+  _loopStepOutputs: LoopStep[]
+  _stopped: boolean
+  _parentSpan?: Span
+  _loopStep?: LoopStep
   executionOutput: AutomationContext
 
   constructor(job: AutomationJob) {
@@ -94,6 +100,8 @@ class Orchestrator {
     // setup the execution output
     const triggerId = automation.definition.trigger.id
     this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
+    this._loopStepOutputs = []
+    this._stopped = false
   }
 
   cleanupTriggerOutputs(stepId: string, triggerOutput: TriggerOutput) {
@@ -229,6 +237,7 @@ class Orchestrator {
       },
       inputs: step.inputs,
     })
+
     this._context.steps.splice(currentLoopStepIndex, 0, {
       ...output,
       success: result.success,
@@ -245,22 +254,13 @@ class Orchestrator {
           appId: this._appId,
           automationId: this._automation._id,
         })
-
-        // this will retrieve from context created at start of thread
+        this._parentSpan = span
         this._context.env = await sdkUtils.getEnvironmentVariables()
-        let automation = this._automation
-        let stopped = false
-        let loopStep: LoopStep | undefined
 
-        let stepCount = 0
-        let currentLoopStepIndex: number = 0
-        let loopSteps: LoopStep[] | undefined = []
         let metadata
-        let timeoutFlag = false
-        let wasLoopStep = false
-        let timeout = this._job.data.event.timeout
+
         // check if this is a recurring automation,
-        if (isProdAppID(this._appId) && isRecurring(automation)) {
+        if (isProdAppID(this._appId) && isRecurring(this._automation)) {
           span?.addTags({ recurring: true })
           metadata = await this.getMetadata()
           const shouldStop = await this.checkIfShouldStop(metadata)
@@ -270,270 +270,20 @@ class Orchestrator {
           }
         }
         const start = performance.now()
-        for (const step of automation.definition.steps) {
-          const stepSpan = tracer.startSpan("Orchestrator.execute.step", {
-            childOf: span,
-          })
-          stepSpan.addTags({
-            resource: "automation",
-            step: {
-              stepId: step.stepId,
-              id: step.id,
-              name: step.name,
-              type: step.type,
-              title: step.stepTitle,
-              internal: step.internal,
-              deprecated: step.deprecated,
-            },
-          })
 
-          let input,
-            iterations = 1,
-            iterationCount = 0
-
-          try {
-            if (timeoutFlag) {
-              span?.addTags({ timedOut: true })
-              break
-            }
-
-            if (timeout) {
-              setTimeout(() => {
-                timeoutFlag = true
-              }, timeout || env.AUTOMATION_THREAD_TIMEOUT)
-            }
-
-            stepCount++
-            if (step.stepId === AutomationActionStepId.LOOP) {
-              loopStep = step
-              currentLoopStepIndex = stepCount
-              continue
-            }
-
-            if (loopStep) {
-              input = await processObject(loopStep.inputs, this._context)
-              iterations = getLoopIterations(loopStep)
-              stepSpan?.addTags({ step: { iterations } })
-            }
-
-            for (let stepIndex = 0; stepIndex < iterations; stepIndex++) {
-              let originalStepInput = cloneDeep(step.inputs)
-              if (loopStep && input?.binding) {
-                let tempOutput = {
-                  items: loopSteps,
-                  iterations: iterationCount,
-                }
-                try {
-                  loopStep.inputs.binding = automationUtils.typecastForLooping(
-                    loopStep.inputs
-                  )
-                } catch (err) {
-                  this.updateContextAndOutput(
-                    currentLoopStepIndex,
-                    step,
-                    tempOutput,
-                    {
-                      status: AutomationErrors.INCORRECT_TYPE,
-                      success: false,
-                    }
-                  )
-                  loopSteps = undefined
-                  loopStep = undefined
-                  break
-                }
-                let item: any[] = []
-                if (
-                  typeof loopStep.inputs.binding === "string" &&
-                  loopStep.inputs.option === "String"
-                ) {
-                  item = automationUtils.stringSplit(loopStep.inputs.binding)
-                } else if (Array.isArray(loopStep.inputs.binding)) {
-                  item = loopStep.inputs.binding
-                }
-                this._context.steps[currentLoopStepIndex] = {
-                  currentItem: item[stepIndex],
-                }
-
-                originalStepInput = replaceFakeBindings(
-                  originalStepInput,
-                  currentLoopStepIndex
-                )
-
-                if (
-                  stepIndex === env.AUTOMATION_MAX_ITERATIONS ||
-                  (loopStep.inputs.iterations &&
-                    stepIndex === loopStep.inputs.iterations)
-                ) {
-                  this.updateContextAndOutput(
-                    currentLoopStepIndex,
-                    step,
-                    tempOutput,
-                    {
-                      status: AutomationErrors.MAX_ITERATIONS,
-                      success: true,
-                    }
-                  )
-                  loopSteps = undefined
-                  loopStep = undefined
-                  break
-                }
-
-                let isFailure = false
-                const currentItem =
-                  this._context.steps[currentLoopStepIndex]?.currentItem
-                if (currentItem && typeof currentItem === "object") {
-                  isFailure = Object.keys(currentItem).some(value => {
-                    return currentItem[value] === loopStep?.inputs.failure
-                  })
-                } else {
-                  isFailure =
-                    currentItem && currentItem === loopStep.inputs.failure
-                }
-
-                if (isFailure) {
-                  this.updateContextAndOutput(
-                    currentLoopStepIndex,
-                    step,
-                    tempOutput,
-                    {
-                      status: AutomationErrors.FAILURE_CONDITION,
-                      success: false,
-                    }
-                  )
-                  loopSteps = undefined
-                  loopStep = undefined
-                  break
-                }
-              }
-
-              // execution stopped, record state for that
-              if (stopped) {
-                this.updateExecutionOutput(
-                  step.id,
-                  step.stepId,
-                  {},
-                  STOPPED_STATUS
-                )
-                continue
-              }
-
-              let stepFn = await this.getStepFunctionality(
-                step.stepId as AutomationActionStepId
-              )
-              let inputs = await processObject(originalStepInput, this._context)
-              inputs = automationUtils.cleanInputValues(
-                inputs,
-                step.schema.inputs
-              )
-              try {
-                // appId is always passed
-                const outputs = await stepFn({
-                  inputs: inputs,
-                  appId: this._appId,
-                  emitter: this._emitter,
-                  context: this._context,
-                })
-
-                this._context.steps[stepCount] = outputs
-                // if filter causes us to stop execution don't break the loop, set a var
-                // so that we can finish iterating through the steps and record that it stopped
-                if (
-                  step.stepId === AutomationActionStepId.FILTER &&
-                  !outputs.result
-                ) {
-                  stopped = true
-                  this.updateExecutionOutput(
-                    step.id,
-                    step.stepId,
-                    step.inputs,
-                    {
-                      ...outputs,
-                      ...STOPPED_STATUS,
-                    }
-                  )
-                  continue
-                }
-                if (loopStep && loopSteps) {
-                  loopSteps.push(outputs)
-                } else {
-                  this.updateExecutionOutput(
-                    step.id,
-                    step.stepId,
-                    step.inputs,
-                    outputs
-                  )
-                }
-              } catch (err) {
-                console.error(`Automation error - ${step.stepId} - ${err}`)
-                return err
-              }
-
-              if (loopStep) {
-                iterationCount++
-                if (stepIndex === iterations - 1) {
-                  loopStep = undefined
-                  this._context.steps.splice(currentLoopStepIndex, 1)
-                  break
-                }
-              }
-            }
-          } finally {
-            stepSpan?.finish()
-          }
-
-          if (loopStep && iterations === 0) {
-            loopStep = undefined
-            this.executionOutput.steps.splice(currentLoopStepIndex + 1, 0, {
-              id: step.id,
-              stepId: step.stepId,
-              outputs: {
-                status: AutomationStepStatus.NO_ITERATIONS,
-                success: true,
-              },
-              inputs: {},
-            })
-
-            this._context.steps.splice(currentLoopStepIndex, 1)
-            iterations = 1
-          }
-
-          // Delete the step after the loop step as it's irrelevant, since information is included
-          // in the loop step
-          if (wasLoopStep && !loopStep) {
-            this._context.steps.splice(currentLoopStepIndex + 1, 1)
-            wasLoopStep = false
-          }
-          if (loopSteps && loopSteps.length) {
-            let tempOutput = {
-              success: true,
-              items: loopSteps,
-              iterations: iterationCount,
-            }
-            this.executionOutput.steps.splice(currentLoopStepIndex + 1, 0, {
-              id: step.id,
-              stepId: step.stepId,
-              outputs: tempOutput,
-              inputs: step.inputs,
-            })
-            this._context.steps[currentLoopStepIndex] = tempOutput
-
-            wasLoopStep = true
-            loopSteps = []
-          }
-        }
+        await this.executeSteps(this._automation.definition.steps)
 
         const end = performance.now()
         const executionTime = end - start
 
         console.info(
-          `Automation ID: ${automation._id} Execution time: ${executionTime} milliseconds`,
+          `Automation ID: ${this._automation._id} Execution time: ${executionTime} milliseconds`,
           {
             _logKey: "automation",
             executionTime,
           }
         )
 
-        // store the logs for the automation run
         try {
           await storeLog(this._automation, this.executionOutput)
         } catch (e: any) {
@@ -544,12 +294,261 @@ class Orchestrator {
           }
           logging.logAlert("Error writing automation log", e)
         }
-        if (isProdAppID(this._appId) && isRecurring(automation) && metadata) {
+        if (
+          isProdAppID(this._appId) &&
+          isRecurring(this._automation) &&
+          metadata
+        ) {
           await this.updateMetadata(metadata)
         }
         return this.executionOutput
       }
     )
+  }
+
+  private async executeSteps(steps: AutomationStep[]): Promise<void> {
+    let stepIndex = 0
+    let timeoutFlag
+    let timeout = this._job.data.event.timeout
+    while (stepIndex < steps.length) {
+      if (timeoutFlag) {
+        this._parentSpan?.addTags({ timedOut: true })
+        break
+      }
+
+      if (timeout) {
+        setTimeout(() => {
+          timeoutFlag = true
+        }, timeout || env.AUTOMATION_THREAD_TIMEOUT)
+      }
+
+      const step = steps[stepIndex]
+      if (step.stepId === AutomationActionStepId.BRANCH) {
+        await this.executeBranchStep(step)
+      } else if (step.stepId === AutomationActionStepId.LOOP) {
+        stepIndex = await this.executeLoopStep(step, steps, stepIndex)
+      } else {
+        await this.executeStep(step)
+        stepIndex++
+      }
+    }
+  }
+
+  private async executeLoopStep(
+    loopStep: LoopStep,
+    steps: AutomationStep[],
+    currentIndex: number
+  ): Promise<number> {
+    this._loopStep = loopStep
+    await processObject(this._loopStep.inputs, this._context)
+    const iterations = getLoopIterations(this._loopStep)
+    let stepToLoopIndex = currentIndex + 1
+    let iterationCount = 0
+
+    for (let loopStepIndex = 0; loopStepIndex < iterations; loopStepIndex++) {
+      try {
+        this._loopStep.inputs.binding = automationUtils.typecastForLooping(
+          this._loopStep.inputs
+        )
+      } catch (err) {
+        this.updateContextAndOutput(
+          currentIndex,
+          this._loopStep,
+          {},
+          {
+            status: AutomationErrors.INCORRECT_TYPE,
+            success: false,
+          }
+        )
+      }
+
+      if (
+        loopStepIndex === env.AUTOMATION_MAX_ITERATIONS ||
+        (this._loopStep.inputs.iterations &&
+          loopStepIndex === parseInt(this._loopStep.inputs.iterations))
+      ) {
+        this.updateContextAndOutput(
+          loopStepIndex,
+          steps[stepToLoopIndex],
+          {
+            items: this._loopStepOutputs,
+            iterations: loopStepIndex,
+          },
+          {
+            status: AutomationErrors.MAX_ITERATIONS,
+            success: true,
+          }
+        )
+        break
+      }
+
+      let isFailure = false
+      const currentItem = this.getCurrentLoopItem(loopStepIndex)
+      if (currentItem && typeof currentItem === "object") {
+        isFailure = Object.keys(currentItem).some(value => {
+          return currentItem[value] === this._loopStep?.inputs.failure
+        })
+      } else {
+        isFailure = currentItem && currentItem === this._loopStep.inputs.failure
+      }
+
+      if (isFailure) {
+        this.updateContextAndOutput(
+          loopStepIndex,
+          steps[stepToLoopIndex],
+          {
+            items: this._loopStepOutputs,
+            iterations: loopStepIndex,
+          },
+          {
+            status: AutomationErrors.FAILURE_CONDITION,
+            success: false,
+          }
+        )
+        break
+      }
+
+      this._context.steps[currentIndex + 1] = {
+        currentItem: this.getCurrentLoopItem(loopStepIndex),
+      }
+
+      stepToLoopIndex = currentIndex + 1
+
+      await this.executeStep(steps[stepToLoopIndex], stepToLoopIndex)
+      iterationCount++
+    }
+
+    let tempOutput =
+      iterations === 0
+        ? {
+            status: AutomationStepStatus.NO_ITERATIONS,
+            success: true,
+          }
+        : {
+            success: true,
+            items: this._loopStepOutputs,
+            iterations: iterationCount,
+          }
+
+    // Loop Step clean up
+    this.executionOutput.steps.splice(currentIndex + 1, 0, {
+      id: steps[stepToLoopIndex].id,
+      stepId: steps[stepToLoopIndex].stepId,
+      outputs: tempOutput,
+      inputs: steps[stepToLoopIndex].inputs,
+    })
+    this._context.steps[currentIndex + 1] = tempOutput
+    this._loopStepOutputs = []
+    this._loopStep = undefined
+    return stepToLoopIndex + 1
+  }
+
+  private async executeBranchStep(branchStep: BranchStep): Promise<void> {
+    const { branches, children } = branchStep.inputs
+
+    for (const branch of branches) {
+      const condition = await this.evaluateBranchCondition(branch.condition)
+      if (condition) {
+        const branchSteps = children?.[branch.name] || []
+        await this.executeSteps(branchSteps)
+        break
+      }
+    }
+
+    // Update execution output for the branch step
+    this.updateExecutionOutput(
+      branchStep.id,
+      branchStep.stepId,
+      branchStep.inputs,
+      {
+        success: true,
+        status: AutomationStatus.SUCCESS,
+      }
+    )
+  }
+
+  private async evaluateBranchCondition(
+    condition: SearchFilters
+  ): Promise<boolean> {
+    return true
+  }
+
+  private async executeStep(
+    step: AutomationStep,
+    iteration?: number
+  ): Promise<void> {
+    const stepSpan = tracer.startSpan("Orchestrator.execute.step", {
+      childOf: this._parentSpan,
+    })
+    stepSpan.addTags({
+      resource: "automation",
+      step: {
+        stepId: step.stepId,
+        id: step.id,
+        name: step.name,
+        type: step.type,
+        title: step.stepTitle,
+        internal: step.internal,
+        deprecated: step.deprecated,
+      },
+    })
+
+    try {
+      if (this._stopped) {
+        this.updateExecutionOutput(step.id, step.stepId, {}, STOPPED_STATUS)
+        return
+      }
+
+      let originalStepInput = cloneDeep(step.inputs)
+      if (this._loopStep) {
+        originalStepInput = replaceFakeBindings(originalStepInput, iteration!)
+      }
+      const stepFn = await this.getStepFunctionality(step.stepId)
+      let inputs = await processObject(originalStepInput, this._context)
+      inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
+
+      const outputs = await stepFn({
+        inputs: inputs,
+        appId: this._appId,
+        emitter: this._emitter,
+        context: this._context,
+      })
+      this.handleStepOutput(step, outputs)
+    } catch (err) {
+      console.error(`Automation error - ${step.stepId} - ${err}`)
+      throw err
+    } finally {
+      stepSpan?.finish()
+    }
+  }
+
+  private getCurrentLoopItem(index: number): any {
+    if (!this._loopStep) return null
+    if (
+      typeof this._loopStep.inputs.binding === "string" &&
+      this._loopStep.inputs.option === "String"
+    ) {
+      return automationUtils.stringSplit(this._loopStep.inputs.binding)[index]
+    } else if (Array.isArray(this._loopStep.inputs.binding)) {
+      return this._loopStep.inputs.binding[index]
+    }
+    return null
+  }
+
+  private handleStepOutput(step: AutomationStep, outputs: any): void {
+    if (step.stepId === AutomationActionStepId.FILTER && !outputs.result) {
+      this._stopped = true
+      this.updateExecutionOutput(step.id, step.stepId, step.inputs, {
+        ...outputs,
+        ...STOPPED_STATUS,
+      })
+    } else if (this._loopStep) {
+      this._loopStepOutputs = this._loopStepOutputs || []
+      this._loopStepOutputs.push(outputs)
+    } else {
+      this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
+    }
+    this._context.steps[this._context.steps.length] = outputs
   }
 }
 
