@@ -1,4 +1,4 @@
-import { context } from "../.."
+import { doInTenant } from "../../context"
 import { structures } from "../../../tests"
 import { getDB } from "../db"
 
@@ -18,7 +18,7 @@ describe("db", () => {
     })
 
     it("uses the custom put function", async () => {
-      await context.doInTenant("foo", async () => {
+      await doInTenant("foo", async () => {
         const db = getDB(structures.db.id())
         let doc: Doc = { _id: "test" }
         await db.put(doc)

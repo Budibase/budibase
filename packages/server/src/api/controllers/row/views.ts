@@ -38,7 +38,6 @@ export async function searchView(
   let query = dataFilters.buildQuery(view.query || [])
   if (body.query) {
     // Delete extraneous search params that cannot be overridden
-    delete body.query.allOr
     delete body.query.onEmptyFilter
 
     if (
@@ -60,13 +59,12 @@ export async function searchView(
           }
         })
       })
-    } else {
+    } else
       query = {
         $and: {
           conditions: [query, body.query],
         },
       }
-    }
   }
 
   await context.ensureSnippetContext(true)

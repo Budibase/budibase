@@ -2,24 +2,14 @@
   import { Select } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
   import { tables as tablesStore, viewsV2 } from "stores/builder"
+  import { tableSelect as format } from "helpers/data/format"
 
   export let value
 
   const dispatch = createEventDispatcher()
 
-  $: tables = $tablesStore.list.map(table => ({
-    type: "table",
-    label: table.name,
-    tableId: table._id,
-    resourceId: table._id,
-  }))
-  $: views = $viewsV2.list.map(view => ({
-    type: "viewV2",
-    id: view.id,
-    label: view.name,
-    tableId: view.tableId,
-    resourceId: view.id,
-  }))
+  $: tables = $tablesStore.list.map(format.table)
+  $: views = $viewsV2.list.map(format.viewV2)
   $: options = [...(tables || []), ...(views || [])]
 
   const onChange = e => {

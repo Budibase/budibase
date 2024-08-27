@@ -1664,7 +1664,7 @@ describe.each([
   isInternal &&
     describe("attachments and signatures", () => {
       const coreAttachmentEnrichment = async (
-        schema: any,
+        schema: TableSchema,
         field: string,
         attachmentCfg: string | string[]
       ) => {
@@ -1691,7 +1691,7 @@ describe.each([
 
         await withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
-            const enriched: Row[] = await outputProcessing(table, [row])
+            const enriched: Row[] = await outputProcessing(testTable, [row])
             const [targetRow] = enriched
             const attachmentEntries = Array.isArray(targetRow[field])
               ? targetRow[field]
