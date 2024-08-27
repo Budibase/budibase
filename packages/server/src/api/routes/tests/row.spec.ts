@@ -9,7 +9,13 @@ import {
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
-import { context, InternalTable, tenancy } from "@budibase/backend-core"
+import {
+  context,
+  InternalTable,
+  tenancy,
+  withEnv as withCoreEnv,
+  setEnv as setCoreEnv,
+} from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AttachmentFieldMetadata,
@@ -69,6 +75,7 @@ async function waitForEvent(
 
 describe.each([
   ["internal", undefined],
+  ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
@@ -76,6 +83,8 @@ describe.each([
   [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
+  const isLucene = providerType === "lucene"
+  const isSqs = providerType === "sqs"
   const isMSSQL = providerType === DatabaseName.SQL_SERVER
   const isOracle = providerType === DatabaseName.ORACLE
   const config = setup.getConfig()
@@ -83,9 +92,17 @@ describe.each([
   let table: Table
   let datasource: Datasource | undefined
   let client: Knex | undefined
+  let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await config.init()
+    await withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, () => config.init())
+    if (isSqs) {
+      envCleanup = setCoreEnv({
+        SQS_SEARCH_ENABLE: "true",
+        SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
+      })
+    }
+
     if (dsProvider) {
       const rawDatasource = await dsProvider
       datasource = await config.createDatasource({
@@ -97,6 +114,9 @@ describe.each([
 
   afterAll(async () => {
     setup.afterAll()
+    if (envCleanup) {
+      envCleanup()
+    }
   })
 
   function saveTableRequest(
@@ -346,7 +366,7 @@ describe.each([
         expect(ids).toEqual(expect.arrayContaining(sequence))
       })
 
-    isInternal &&
+    isLucene &&
       it("row values are coerced", async () => {
         const str: FieldSchema = {
           type: FieldType.STRING,
@@ -2406,6 +2426,229 @@ describe.each([
       })
     })
   })
+
+  // Upserting isn't yet supported in MSSQL or Oracle, see:
+  //   https://github.com/knex/knex/pull/6050
+  !isMSSQL &&
+    !isOracle &&
+    describe("relationships", () => {
+      let tableId: string
+
+      let auxData: Row[] = []
+
+      beforeAll(async () => {
+        const aux2Table = await config.api.table.save(saveTableRequest())
+        const aux2Data = await config.api.row.save(aux2Table._id!, {})
+
+        const auxTable = await config.api.table.save(
+          saveTableRequest({
+            primaryDisplay: "name",
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+              age: {
+                name: "age",
+                type: FieldType.NUMBER,
+                constraints: { presence: true },
+              },
+              address: {
+                name: "address",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+                visible: false,
+              },
+              link: {
+                name: "link",
+                type: FieldType.LINK,
+                tableId: aux2Table._id!,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+                fieldName: "fk_aux",
+                constraints: { presence: true },
+              },
+              formula: {
+                name: "formula",
+                type: FieldType.FORMULA,
+                formula: "{{ any }}",
+                constraints: { presence: true },
+              },
+            },
+          })
+        )
+        const auxTableId = auxTable._id!
+
+        for (const name of generator.unique(() => generator.name(), 10)) {
+          auxData.push(
+            await config.api.row.save(auxTableId, {
+              name,
+              age: generator.age(),
+              address: generator.address(),
+              link: [aux2Data],
+            })
+          )
+        }
+
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              title: {
+                name: "title",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+              relWithNoSchema: {
+                name: "relWithNoSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithNoSchema",
+                constraints: { presence: true },
+              },
+              relWithEmptySchema: {
+                name: "relWithEmptySchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithEmptySchema",
+                constraints: { presence: true },
+                schema: {},
+              },
+              relWithFullSchema: {
+                name: "relWithFullSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithFullSchema",
+                constraints: { presence: true },
+                schema: Object.keys(auxTable.schema).reduce(
+                  (acc, c) => ({ ...acc, [c]: { visible: true } }),
+                  {}
+                ),
+              },
+              relWithHalfSchema: {
+                name: "relWithHalfSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithHalfSchema",
+                constraints: { presence: true },
+                schema: {
+                  name: { visible: true },
+                  age: { visible: false, readonly: true },
+                },
+              },
+              relWithIllegalSchema: {
+                name: "relWithIllegalSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithIllegalSchema",
+                constraints: { presence: true },
+                schema: {
+                  name: { visible: true },
+                  address: { visible: true },
+                  unexisting: { visible: true },
+                },
+              },
+            },
+          })
+        )
+        tableId = table._id!
+      })
+
+      it.each([
+        ["get row", (row: Row) => config.api.row.get(tableId, row._id!)],
+        [
+          "fetch",
+          async (row: Row) => {
+            const rows = await config.api.row.fetch(tableId)
+            return rows.find(r => r._id === row._id)
+          },
+        ],
+        [
+          "search",
+          async (row: Row) => {
+            const { rows } = await config.api.row.search(tableId)
+            return rows.find(r => r._id === row._id)
+          },
+        ],
+        [
+          "from view",
+          async (row: Row) => {
+            const table = await config.api.table.get(tableId)
+            const view = await config.api.viewV2.create({
+              name: generator.guid(),
+              tableId,
+              schema: Object.keys(table.schema).reduce(
+                (acc, c) => ({ ...acc, [c]: { visible: true } }),
+                {}
+              ),
+            })
+            const { rows } = await config.api.viewV2.search(view.id)
+            return rows.find(r => r._id === row._id!)
+          },
+        ],
+        ["from original saved row", (row: Row) => row],
+      ])(
+        "can retrieve rows with populated relationships (via %s)",
+        async (__, retrieveDelegate) => {
+          const otherRows = _.sampleSize(auxData, 5)
+
+          const row = await config.api.row.save(tableId, {
+            title: generator.word(),
+            relWithNoSchema: [otherRows[0]],
+            relWithEmptySchema: [otherRows[1]],
+            relWithFullSchema: [otherRows[2]],
+            relWithHalfSchema: [otherRows[3]],
+            relWithIllegalSchema: [otherRows[4]],
+          })
+
+          const retrieved = await retrieveDelegate(row)
+          expect(retrieved).toEqual(
+            expect.objectContaining({
+              title: row.title,
+              relWithNoSchema: [
+                {
+                  _id: otherRows[0]._id,
+                  primaryDisplay: otherRows[0].name,
+                },
+              ],
+              relWithEmptySchema: [
+                {
+                  _id: otherRows[1]._id,
+                  primaryDisplay: otherRows[1].name,
+                },
+              ],
+              relWithFullSchema: [
+                {
+                  _id: otherRows[2]._id,
+                  primaryDisplay: otherRows[2].name,
+                  name: otherRows[2].name,
+                  age: otherRows[2].age,
+                  id: otherRows[2].id,
+                },
+              ],
+              relWithHalfSchema: [
+                {
+                  _id: otherRows[3]._id,
+                  primaryDisplay: otherRows[3].name,
+                  name: otherRows[3].name,
+                },
+              ],
+              relWithIllegalSchema: [
+                {
+                  _id: otherRows[4]._id,
+                  primaryDisplay: otherRows[4].name,
+                  name: otherRows[4].name,
+                },
+              ],
+            })
+          )
+        }
+      )
+    })
 
   describe("Formula fields", () => {
     let table: Table
