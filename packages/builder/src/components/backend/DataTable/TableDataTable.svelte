@@ -1,6 +1,6 @@
 <script>
   import { datasources, tables, integrations, appStore } from "stores/builder"
-  import { themeStore, admin, licensing } from "stores/portal"
+  import { themeStore, admin } from "stores/portal"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
