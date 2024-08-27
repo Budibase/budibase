@@ -337,6 +337,40 @@ class InternalBuilder {
     return filters
   }
 
+  addRelationshipForFilter(
+    query: Knex.QueryBuilder,
+    filterKey: string,
+    whereCb: (query: Knex.QueryBuilder) => Knex.QueryBuilder
+  ): Knex.QueryBuilder {
+    const mainKnex = this.knex
+    const { relationships, endpoint } = this.query
+    const tableName = endpoint.entityId
+    if (!relationships) {
+      return query
+    }
+    for (const relationship of relationships) {
+      // this is the relationship which is being filtered
+      if (filterKey.startsWith(relationship.column) && relationship.to) {
+        const subQuery = query.whereExists(function () {
+          this.select(mainKnex.raw(1)).from(relationship.tableName!)
+        })
+        query = whereCb(
+          this.addJoin(
+            subQuery,
+            {
+              from: relationship.tableName,
+              to: tableName,
+              through: relationship.through,
+            },
+            [relationship]
+          )
+        )
+        break
+      }
+    }
+    return query
+  }
+
   // right now we only do filters on the specific table being queried
   addFilters(
     query: Knex.QueryBuilder,
@@ -387,6 +421,7 @@ class InternalBuilder {
           fn(alias ? `${alias}.${updatedKey}` : updatedKey, value)
         }
         if (opts?.relationship && isRelationshipField) {
+          // TODO: need to update fn to take the query
           const [filterTableName, property] = updatedKey.split(".")
           const alias = getTableAlias(filterTableName)
           fn(alias ? `${alias}.${property}` : property, value)
@@ -839,12 +874,75 @@ class InternalBuilder {
     return query
   }
 
+  addJoin(
+    query: Knex.QueryBuilder,
+    tables: { from: string; to: string; through?: string },
+    columns: {
+      from?: string
+      to?: string
+      fromPrimary?: string
+      toPrimary?: string
+    }[]
+  ): Knex.QueryBuilder {
+    const { tableAliases: aliases, endpoint } = this.query
+    const schema = endpoint.schema
+    const toTable = tables.to,
+      fromTable = tables.from,
+      throughTable = tables.through
+    const toAlias = aliases?.[toTable] || toTable,
+      throughAlias = (throughTable && aliases?.[throughTable]) || throughTable,
+      fromAlias = aliases?.[fromTable] || fromTable
+    let toTableWithSchema = this.tableNameWithSchema(toTable, {
+      alias: toAlias,
+      schema,
+    })
+    let throughTableWithSchema = throughTable
+      ? this.tableNameWithSchema(throughTable, {
+          alias: throughAlias,
+          schema,
+        })
+      : undefined
+    if (!throughTable) {
+      // @ts-ignore
+      query = query.leftJoin(toTableWithSchema, function () {
+        for (let relationship of columns) {
+          const from = relationship.from,
+            to = relationship.to
+          // @ts-ignore
+          this.orOn(`${fromAlias}.${from}`, "=", `${toAlias}.${to}`)
+        }
+      })
+    } else {
+      query = query
+        // @ts-ignore
+        .leftJoin(throughTableWithSchema, function () {
+          for (let relationship of columns) {
+            const fromPrimary = relationship.fromPrimary
+            const from = relationship.from
+            // @ts-ignore
+            this.orOn(
+              `${fromAlias}.${fromPrimary}`,
+              "=",
+              `${throughAlias}.${from}`
+            )
+          }
+        })
+        .leftJoin(toTableWithSchema, function () {
+          for (let relationship of columns) {
+            const toPrimary = relationship.toPrimary
+            const to = relationship.to
+            // @ts-ignore
+            this.orOn(`${toAlias}.${toPrimary}`, `${throughAlias}.${to}`)
+          }
+        })
+    }
+    return query
+  }
+
   addRelationships(
     query: Knex.QueryBuilder,
     fromTable: string,
-    relationships: RelationshipsJson[],
-    schema?: string,
-    aliases?: Record<string, string>
+    relationships: RelationshipsJson[]
   ): Knex.QueryBuilder {
     const tableSets: Record<string, [RelationshipsJson]> = {}
     // aggregate into table sets (all the same to tables)
@@ -865,51 +963,15 @@ class InternalBuilder {
     }
     for (let [key, relationships] of Object.entries(tableSets)) {
       const { toTable, throughTable } = JSON.parse(key)
-      const toAlias = aliases?.[toTable] || toTable,
-        throughAlias = aliases?.[throughTable] || throughTable,
-        fromAlias = aliases?.[fromTable] || fromTable
-      let toTableWithSchema = this.tableNameWithSchema(toTable, {
-        alias: toAlias,
-        schema,
-      })
-      let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
-        alias: throughAlias,
-        schema,
-      })
-      if (!throughTable) {
-        // @ts-ignore
-        query = query.leftJoin(toTableWithSchema, function () {
-          for (let relationship of relationships) {
-            const from = relationship.from,
-              to = relationship.to
-            // @ts-ignore
-            this.orOn(`${fromAlias}.${from}`, "=", `${toAlias}.${to}`)
-          }
-        })
-      } else {
-        query = query
-          // @ts-ignore
-          .leftJoin(throughTableWithSchema, function () {
-            for (let relationship of relationships) {
-              const fromPrimary = relationship.fromPrimary
-              const from = relationship.from
-              // @ts-ignore
-              this.orOn(
-                `${fromAlias}.${fromPrimary}`,
-                "=",
-                `${throughAlias}.${from}`
-              )
-            }
-          })
-          .leftJoin(toTableWithSchema, function () {
-            for (let relationship of relationships) {
-              const toPrimary = relationship.toPrimary
-              const to = relationship.to
-              // @ts-ignore
-              this.orOn(`${toAlias}.${toPrimary}`, `${throughAlias}.${to}`)
-            }
-          })
-      }
+      query = this.addJoin(
+        query,
+        {
+          from: fromTable,
+          to: toTable,
+          through: throughTable,
+        },
+        relationships
+      )
     }
     return query
   }
@@ -1015,8 +1077,7 @@ class InternalBuilder {
       limits?: { base: number; query: number }
     } = {}
   ): Knex.QueryBuilder {
-    let { endpoint, filters, paginate, relationships, tableAliases } =
-      this.query
+    let { endpoint, filters, paginate, relationships } = this.query
     const { limits } = opts
     const counting = endpoint.operation === Operation.COUNT
 
@@ -1062,13 +1123,7 @@ class InternalBuilder {
     if (relationships && this.client === SqlClient.SQL_LITE) {
       query = this.addJsonRelationships(query, tableName, relationships)
     } else if (relationships) {
-      query = this.addRelationships(
-        query,
-        tableName,
-        relationships,
-        endpoint.schema,
-        tableAliases
-      )
+      query = this.addRelationships(query, tableName, relationships)
     }
 
     return this.addFilters(query, filters, { relationship: true })
