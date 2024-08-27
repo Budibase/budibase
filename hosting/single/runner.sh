@@ -44,8 +44,7 @@ fi
 # randomise any unset environment variables
 for ENV_VAR in "${ENV_VARS[@]}"
 do
-    temp=$(eval "echo \$$ENV_VAR")
-    if [[ -z "${temp}" ]]; then
+    if [[ -z "${!ENV_VAR}" ]]; then
         eval "export $ENV_VAR=$(uuidgen | sed -e 's/-//g')"
     fi
 done

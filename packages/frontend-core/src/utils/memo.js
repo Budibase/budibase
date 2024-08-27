@@ -4,32 +4,23 @@ import { writable, get, derived } from "svelte/store"
 // subscribed children will only fire when a new value is actually set
 export const memo = initialValue => {
   const store = writable(initialValue)
+  let currentJSON = JSON.stringify(initialValue)
 
-  const tryUpdateValue = (newValue, currentValue) => {
-    // Sanity check for primitive equality
-    if (currentValue === newValue) {
-      return
-    }
-
-    // Otherwise deep compare via JSON stringify
-    const currentString = JSON.stringify(currentValue)
-    const newString = JSON.stringify(newValue)
-    if (currentString !== newString) {
+  const tryUpdateValue = newValue => {
+    const newJSON = JSON.stringify(newValue)
+    if (newJSON !== currentJSON) {
       store.set(newValue)
+      currentJSON = newJSON
     }
   }
 
   return {
     subscribe: store.subscribe,
-    set: newValue => {
-      const currentValue = get(store)
-      tryUpdateValue(newValue, currentValue)
-    },
+    set: tryUpdateValue,
     update: updateFn => {
-      const currentValue = get(store)
-      let mutableCurrentValue = JSON.parse(JSON.stringify(currentValue))
+      let mutableCurrentValue = JSON.parse(currentJSON)
       const newValue = updateFn(mutableCurrentValue)
-      tryUpdateValue(newValue, currentValue)
+      tryUpdateValue(newValue)
     },
   }
 }

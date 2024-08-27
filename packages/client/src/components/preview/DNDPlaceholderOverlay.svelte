@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { DNDPlaceholderID } from "constants"
-  import { domDebounce } from "utils/domDebounce.js"
+  import { Utils } from "@budibase/frontend-core"
 
   let left, top, height, width
 
@@ -19,7 +19,7 @@
       width = bounds.width
     }
   }
-  const debouncedUpdate = domDebounce(updatePosition)
+  const debouncedUpdate = Utils.domDebounce(updatePosition)
 
   onMount(() => {
     const interval = setInterval(debouncedUpdate, 100)
