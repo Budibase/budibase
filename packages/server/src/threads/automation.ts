@@ -325,6 +325,7 @@ class Orchestrator {
       const step = steps[stepIndex]
       if (step.stepId === AutomationActionStepId.BRANCH) {
         await this.executeBranchStep(step)
+        stepIndex++
       } else if (step.stepId === AutomationActionStepId.LOOP) {
         stepIndex = await this.executeLoopStep(step, steps, stepIndex)
       } else {
@@ -466,9 +467,8 @@ class Orchestrator {
       }
     )
   }
-
   private async evaluateBranchCondition(
-    condition: SearchFilters
+    condition?: SearchFilters
   ): Promise<boolean> {
     return true
   }

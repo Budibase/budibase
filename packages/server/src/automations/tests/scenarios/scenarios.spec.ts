@@ -23,42 +23,42 @@ describe("Automation Scenarios", () => {
 
   afterAll(setup.afterAll)
 
-  // eslint-disable-next-line jest/no-commented-out-tests
-  // describe("Branching automations", () => {
-  // eslint-disable-next-line jest/no-commented-out-tests
-  // it("should run an automation with a trigger, loop, and create row step", async () => {
-  //   const builder = createAutomationBuilder({
-  //     name: "Test Trigger with Loop and Create Row",
-  //   })
+  describe("Branching automations", () => {
+    it("should run a multiple nested branching automation", async () => {
+      const builder = createAutomationBuilder({
+        name: "Test Trigger with Loop and Create Row",
+      })
 
-  //   builder
-  //     .serverLog({ text: "Starting automation" })
-  //     .branch({
-  //       topLevelBranch1: {
-  //         steps: stepBuilder =>
-  //           stepBuilder.serverLog({ text: "Branch 1" }).branch({
-  //             branch1: {
-  //               steps: stepBuilder =>
-  //                 stepBuilder.serverLog({ text: "Branch 1.1" }),
-  //               condition: { notEmpty: { column: 10 } },
-  //             },
-  //             branch2: {
-  //               steps: stepBuilder =>
-  //                 stepBuilder.serverLog({ text: "Branch 1.2" }),
-  //               condition: { fuzzy: { column: "sadsd" } },
-  //             },
-  //           }),
-  //         condition: { equal: { column: 10 } },
-  //       },
-  //       topLevelBranch2: {
-  //         steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
-  //         condition: { equal: { column: 20 } },
-  //       },
-  //     })
-  //     .run()
-  // })
+      const results = await builder
+        .appAction({ fields: {} })
+        .serverLog({ text: "Starting automation" })
+        .branch({
+          topLevelBranch1: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Branch 1" }).branch({
+                branch1: {
+                  steps: stepBuilder =>
+                    stepBuilder.serverLog({ text: "Branch 1.1" }),
+                  condition: { notEmpty: { column: 10 } },
+                },
+                branch2: {
+                  steps: stepBuilder =>
+                    stepBuilder.serverLog({ text: "Branch 1.2" }),
+                  condition: { fuzzy: { column: "sadsd" } },
+                },
+              }),
+            condition: { equal: { column: 10 } },
+          },
+          topLevelBranch2: {
+            steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
+            condition: { equal: { column: 20 } },
+          },
+        })
+        .run()
 
-  // })
+      expect(results.steps[2].outputs.message).toContain("Branch 1.1")
+    })
+  })
 
   describe("Loop automations", () => {
     it("should run an automation with a trigger, loop, and create row step", async () => {
