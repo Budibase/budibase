@@ -14,6 +14,7 @@ import { processFormulas } from "../../utilities/rowProcessor"
 import { context, features } from "@budibase/backend-core"
 import {
   ContextUser,
+  FeatureFlag,
   FieldType,
   LinkDocumentValue,
   Row,
@@ -273,7 +274,7 @@ export async function squashLinksToPrimaryDisplay(
         obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
 
         const allowRelationshipSchemas = await features.flags.isEnabled(
-          "ENRICHED_RELATIONSHIPS"
+          FeatureFlag.ENRICHED_RELATIONSHIPS
         )
         if (schema.schema && allowRelationshipSchemas) {
           for (const relField of Object.entries(schema.schema)
