@@ -42,7 +42,7 @@ export async function searchView(
 
     if (
       !isExternalTableID(view.tableId) &&
-      (await features.flags.isEnabled("SQS"))
+      !(await features.flags.isEnabled("SQS"))
     ) {
       // Extract existing fields
       const existingFields =
