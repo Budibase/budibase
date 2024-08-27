@@ -11,7 +11,7 @@ import { USER_METDATA_PREFIX } from "../utils"
 import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import { processFormulas } from "../../utilities/rowProcessor"
-import { context } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import {
   ContextUser,
   FieldType,
@@ -272,7 +272,9 @@ export async function squashLinksToPrimaryDisplay(
         const obj: any = { _id: link._id }
         obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
 
-        const allowRelationshipSchemas = true // TODO
+        const allowRelationshipSchemas = await features.flags.isEnabled(
+          "ENRICHED_RELATIONSHIPS"
+        )
         if (schema.schema && allowRelationshipSchemas) {
           for (const relField of Object.entries(schema.schema)
             .filter(([_, field]) => field.visible !== false)
