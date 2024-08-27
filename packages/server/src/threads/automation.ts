@@ -455,18 +455,8 @@ class Orchestrator {
         break
       }
     }
-
-    // Update execution output for the branch step
-    this.updateExecutionOutput(
-      branchStep.id,
-      branchStep.stepId,
-      branchStep.inputs,
-      {
-        success: true,
-        status: AutomationStatus.SUCCESS,
-      }
-    )
   }
+
   private async evaluateBranchCondition(
     condition?: SearchFilters
   ): Promise<boolean> {
