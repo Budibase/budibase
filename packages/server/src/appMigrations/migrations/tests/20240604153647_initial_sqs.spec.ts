@@ -18,7 +18,7 @@ import {
 } from "../../../db/utils"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20240604153647_initial_sqs"
-import { AppMigration } from "src/appMigrations"
+import { AppMigration, updateAppMigrationMetadata } from "../../"
 import sdk from "../../../sdk"
 
 const MIGRATIONS: AppMigration[] = [
@@ -87,6 +87,15 @@ describe("SQS migration", () => {
       const db = dbCore.getDB(config.appId!)
       // old link document
       await db.put(oldLinkDocument())
+    })
+  })
+
+  beforeEach(async () => {
+    await config.doInTenant(async () => {
+      await updateAppMigrationMetadata({
+        appId: config.getAppId(),
+        version: "",
+      })
     })
   })
 
