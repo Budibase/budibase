@@ -163,7 +163,7 @@ export async function enrichRelationshipSchema(
 
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
-      if (relTableField.type === FieldType.LINK) {
+      if ([FieldType.LINK, FieldType.FORMULA].includes(relTableField.type)) {
         continue
       }
 
@@ -171,9 +171,10 @@ export async function enrichRelationshipSchema(
         continue
       }
 
+      const isVisible = !!fieldSchema[relTableFieldName]?.visible
       const isReadonly = !!fieldSchema[relTableFieldName]?.readonly
       resultSchema[relTableFieldName] = {
-        visible: isReadonly,
+        visible: isVisible,
         readonly: isReadonly,
       }
     }

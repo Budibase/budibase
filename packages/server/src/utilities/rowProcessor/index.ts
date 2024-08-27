@@ -3,6 +3,7 @@ import { fixAutoColumnSubType, processFormulas } from "./utils"
 import {
   cache,
   context,
+  db,
   HTTPError,
   objectStore,
   utils,
@@ -349,11 +350,19 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
-  if (isExternal) {
+  if (isExternal || db.isSqsEnabledForTenant()) {
     for (const row of enriched) {
       for (const key of Object.keys(row)) {
         if (row[key] === null) {
           delete row[key]
+        } else if (row[key] && table.schema[key]?.type === FieldType.LINK) {
+          for (const link of row[key] || []) {
+            for (const linkKey of Object.keys(link)) {
+              if (link[linkKey] === null) {
+                delete link[linkKey]
+              }
+            }
+          }
         }
       }
     }
