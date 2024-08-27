@@ -43,6 +43,35 @@
     onChange: handleChange,
     createComponent: componentStore.createInstance,
   })
+
+  const addButton = () => {
+    const generateName = () => {
+      const defaultName = "Custom column"
+      const nameRegex = new RegExp(`^${defaultName}( (?<count>\\d+))?$`)
+      const customColumnCount = columns.sortable
+        .filter(f => f.custom && nameRegex.test(f.label))
+        .reduce((acc, c) => {
+          const columnNumber = +(nameRegex.exec(c.label).groups["count"] || 1)
+          if (columnNumber >= acc) {
+            return columnNumber + 1
+          }
+          return acc
+        }, 1)
+      return (
+        defaultName + (customColumnCount > 1 ? ` ${customColumnCount}` : "")
+      )
+    }
+
+    const name = generateName()
+
+    columns.add({
+      field: `custom_${Date.now()}`,
+      label: name,
+      active: true,
+      columnType: "string",
+      custom: true,
+    })
+  }
 </script>
 
 {#if columns.primary}
@@ -69,6 +98,12 @@
   }}
 />
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="list-footer" on:click={addButton}>
+  <div class="add-button">Add button</div>
+</div>
+
 <style>
   .right-content {
     flex: 1;
@@ -87,7 +122,7 @@
     );
     border: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
-    margin-bottom: 10px;
+    margin-bottom: var(--spacing-m);
   }
   .sticky-item-inner {
     background-color: var(
@@ -104,5 +139,32 @@
     box-sizing: border-box;
     border-radius: 4px;
     border-bottom: 0;
+  }
+
+  .list-footer {
+    margin-top: var(--spacing-m);
+    width: 100%;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    background-color: var(
+      --spectrum-table-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    transition: background-color ease-in-out 130ms;
+    display: flex;
+    justify-content: center;
+    border: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
+    cursor: pointer;
+  }
+  .list-footer:hover {
+    background-color: var(
+      --spectrum-table-row-background-color-hover,
+      var(--spectrum-alias-highlight-hover)
+    );
+  }
+
+  .add-button {
+    margin: var(--spacing-s);
   }
 </style>

@@ -8,6 +8,7 @@ const modernize = columns => {
       label: column.displayName,
       field: column.name,
       active: true,
+      custom: column.custom,
     }))
   }
 
@@ -22,8 +23,8 @@ const removeInvalidAddMissing = (
   const defaultColumnNames = defaultColumns.map(column => column.field)
   const columnNames = columns.map(column => column.field)
 
-  const validColumns = columns.filter(column =>
-    defaultColumnNames.includes(column.field)
+  const validColumns = columns.filter(
+    column => defaultColumnNames.includes(column.field) || column.custom
   )
   let missingColumns = defaultColumns.filter(
     defaultColumn => !columnNames.includes(defaultColumn.field)
@@ -69,6 +70,7 @@ const toGridFormat = draggableListColumns => {
     active: entry.active,
     width: entry.width,
     conditions: entry.conditions,
+    custom: entry.custom,
   }))
 }
 
@@ -82,9 +84,12 @@ const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
         active: column.active,
         field: column.field,
         label: column.label,
-        columnType: schema[column.field].type,
+        columnType: column.custom
+          ? column.columnType
+          : schema[column.field].type,
         width: column.width,
         conditions: column.conditions,
+        custom: column.custom,
       },
       {}
     )
@@ -120,6 +125,10 @@ const getColumns = ({
     sortable,
     updateSortable: newDraggableList => {
       onChange(toGridFormat(newDraggableList.concat(primary || [])))
+    },
+    add: newEntry => {
+      const newDraggableList = [...draggableList, newEntry]
+      onChange(toGridFormat(newDraggableList))
     },
     update: newEntry => {
       const newDraggableList = draggableList.map(entry => {
