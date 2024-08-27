@@ -113,7 +113,6 @@ export async function create(automation: Automation) {
   automation = await checkForWebhooks({
     newAuto: automation,
   })
-
   const response = await db.put(automation)
   await events.automation.created(automation)
   for (let step of automation.definition.steps) {
