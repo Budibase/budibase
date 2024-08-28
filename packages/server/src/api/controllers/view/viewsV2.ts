@@ -22,8 +22,8 @@ async function parseSchema(view: CreateViewRequest) {
       let fieldRelatedSchema:
         | Record<string, RequiredKeys<RelationSchemaField>>
         | undefined
-      if (schemaValue.schema) {
-        fieldRelatedSchema = Object.entries(schemaValue.schema).reduce<
+      if (schemaValue.columns) {
+        fieldRelatedSchema = Object.entries(schemaValue.columns).reduce<
           NonNullable<typeof fieldRelatedSchema>
         >((acc, [key, fieldSchema]) => {
           acc[key] = {
@@ -36,7 +36,7 @@ async function parseSchema(view: CreateViewRequest) {
 
       const fieldSchema: RequiredKeys<
         ViewFieldMetadata & {
-          schema: typeof fieldRelatedSchema
+          columns: typeof fieldRelatedSchema
         }
       > = {
         order: schemaValue.order,
@@ -44,7 +44,7 @@ async function parseSchema(view: CreateViewRequest) {
         visible: schemaValue.visible,
         readonly: schemaValue.readonly,
         icon: schemaValue.icon,
-        schema: fieldRelatedSchema,
+        columns: fieldRelatedSchema,
       }
       Object.entries(fieldSchema)
         .filter(([, val]) => val === undefined)

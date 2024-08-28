@@ -11,10 +11,9 @@ import { USER_METDATA_PREFIX } from "../utils"
 import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import { processFormulas } from "../../utilities/rowProcessor"
-import { context, features } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import {
   ContextUser,
-  FeatureFlag,
   FieldType,
   LinkDocumentValue,
   Row,
@@ -259,11 +258,7 @@ export async function squashLinksToPrimaryDisplay(
   for (const row of enrichedArray) {
     // this only fetches the table if its not already in array
     const rowTable = await getLinkedTable(row.tableId!, linkedTables)
-    const safeSchema =
-      (rowTable?.schema &&
-        (await sdk.tables.enrichRelationshipSchema(rowTable.schema))) ||
-      {}
-    for (let [column, schema] of Object.entries(safeSchema)) {
+    for (let [column, schema] of Object.entries(rowTable.schema)) {
       if (schema.type !== FieldType.LINK || !Array.isArray(row[column])) {
         continue
       }
@@ -275,16 +270,17 @@ export async function squashLinksToPrimaryDisplay(
         const obj: any = { _id: link._id }
         obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
 
-        const allowRelationshipSchemas = await features.flags.isEnabled(
-          FeatureFlag.ENRICHED_RELATIONSHIPS
-        )
-        if (schema.schema && allowRelationshipSchemas) {
-          for (const relField of Object.entries(schema.schema)
-            .filter(([_, field]) => field.visible !== false)
-            .map(([fieldKey]) => fieldKey)) {
-            obj[relField] = link[relField]
-          }
-        }
+        // TODO
+        // const allowRelationshipSchemas = await features.flags.isEnabled(
+        //   FeatureFlag.ENRICHED_RELATIONSHIPS
+        // )
+        // if (schema.schema && allowRelationshipSchemas) {
+        //   for (const relField of Object.entries(schema.schema)
+        //     .filter(([_, field]) => field.visible !== false)
+        //     .map(([fieldKey]) => fieldKey)) {
+        //     obj[relField] = link[relField]
+        //   }
+        // }
 
         newLinks.push(obj)
       }
