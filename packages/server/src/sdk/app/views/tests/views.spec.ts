@@ -101,14 +101,6 @@ describe("table sdk", () => {
               type: "number",
             },
           },
-          hiddenField: {
-            type: "string",
-            name: "hiddenField",
-            visible: false,
-            constraints: {
-              type: "string",
-            },
-          },
         },
       })
     })
@@ -142,10 +134,6 @@ describe("table sdk", () => {
           id: {
             ...basicTable.schema.id,
             visible: true,
-          },
-          hiddenField: {
-            ...basicTable.schema.hiddenField,
-            visible: false,
           },
         },
       })
@@ -181,10 +169,6 @@ describe("table sdk", () => {
             ...basicTable.schema.id,
             visible: false,
           },
-          hiddenField: {
-            ...basicTable.schema.hiddenField,
-            visible: false,
-          },
         },
       })
     })
@@ -209,7 +193,6 @@ describe("table sdk", () => {
         expect.objectContaining({
           ...view,
           schema: {
-            ...basicTable.schema,
             name: {
               type: "string",
               name: "name",
@@ -264,7 +247,6 @@ describe("table sdk", () => {
         expect.objectContaining({
           ...view,
           schema: {
-            ...basicTable.schema,
             name: {
               type: "string",
               name: "name",
