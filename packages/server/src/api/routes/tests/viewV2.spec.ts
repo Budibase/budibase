@@ -978,49 +978,6 @@ describe.each([
     })
   })
 
-  describe("read", () => {
-    let view: ViewV2
-
-    beforeAll(async () => {
-      table = await config.api.table.save(
-        saveTableRequest({
-          schema: {
-            Country: {
-              type: FieldType.STRING,
-              name: "Country",
-            },
-            Story: {
-              type: FieldType.STRING,
-              name: "Story",
-            },
-          },
-        })
-      )
-
-      view = await config.api.viewV2.create({
-        tableId: table._id!,
-        name: generator.guid(),
-        schema: {
-          id: { visible: true },
-          Country: {
-            visible: true,
-          },
-        },
-      })
-    })
-
-    it("views have extra data trimmed", async () => {
-      let row = await config.api.row.save(view.id, {
-        Country: "Aussy",
-        Story: "aaaaa",
-      })
-
-      row = await config.api.row.get(table._id!, row._id!)
-      expect(row.Story).toBeUndefined()
-      expect(row.Country).toEqual("Aussy")
-    })
-  })
-
   describe("row operations", () => {
     let table: Table, view: ViewV2
     beforeEach(async () => {
@@ -1191,6 +1148,50 @@ describe.each([
           status: 404,
         })
         await config.api.row.get(table._id!, rows[1]._id!, { status: 200 })
+      })
+    })
+
+    describe("read", () => {
+      let view: ViewV2
+      let table: Table
+
+      beforeAll(async () => {
+        table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              Country: {
+                type: FieldType.STRING,
+                name: "Country",
+              },
+              Story: {
+                type: FieldType.STRING,
+                name: "Story",
+              },
+            },
+          })
+        )
+
+        view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
+            Country: {
+              visible: true,
+            },
+          },
+        })
+      })
+
+      it("views have extra data trimmed", async () => {
+        let row = await config.api.row.save(view.id, {
+          Country: "Aussy",
+          Story: "aaaaa",
+        })
+
+        row = await config.api.row.get(table._id!, row._id!)
+        expect(row.Story).toBeUndefined()
+        expect(row.Country).toEqual("Aussy")
       })
     })
 
