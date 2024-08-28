@@ -1084,9 +1084,36 @@ describe.each([
         expect(row.one).toBeUndefined()
         expect(row.two).toEqual("bar")
       })
+
+      it("should not return non-view view fields for a row", async () => {
+        const newRow = await config.api.row.save(view.id, {
+          one: "foo",
+          two: "bar",
+        })
+
+        expect(newRow.one).toBeUndefined()
+        expect(newRow.two).toEqual("bar")
+      })
     })
 
     describe("patch", () => {
+      it("should not return non-view view fields for a row", async () => {
+        const newRow = await config.api.row.save(table._id!, {
+          one: "foo",
+          two: "bar",
+        })
+        const row = await config.api.row.patch(view.id, {
+          tableId: table._id!,
+          _id: newRow._id!,
+          _rev: newRow._rev!,
+          one: "newFoo",
+          two: "newBar",
+        })
+
+        expect(row.one).toBeUndefined()
+        expect(row.two).toEqual("newBar")
+      })
+
       it("should update only the view fields for a row", async () => {
         const newRow = await config.api.row.save(table._id!, {
           one: "foo",
