@@ -4,20 +4,20 @@
 
   let data = {}
 
-  export function extractDomainFromUrl(url) {
+  function extractDomainFromUrl(url) {
     const { hostname } = new URL(url)
     const parts = hostname.split('.');
     const tld = parts.slice(-2).join(".")
     return tld
   }
 
-  export function handleMessage(event) {
+  function handleMessage(event) {
     // Validate the event origin to ensure it's coming from a trusted source
     // Allow different subdomains but must match TLD
     const appOrigin = extractDomainFromUrl(window.location.origin)
     const eventOrigin = extractDomainFromUrl(event.origin)
 
-    if (appOrigin !== eventOrigin) {
+    if (appOrigin === eventOrigin) {
       data = event.data
     } else {
       console.error(
