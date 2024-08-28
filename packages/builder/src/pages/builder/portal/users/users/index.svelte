@@ -47,6 +47,7 @@
     options: {
       paginate: true,
       limit: 10,
+      tenantId: $auth.tenantId,
     },
   })
 

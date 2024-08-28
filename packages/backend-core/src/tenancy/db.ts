@@ -17,5 +17,7 @@ export async function saveTenantInfo(tenantInfo: TenantInfo) {
 
 export async function getTenantInfo(tenantId: string): Promise<TenantInfo> {
   const db = getTenantDB(tenantId)
-  return db.get("tenant_info")
+  const tenantInfo = (await db.get("tenant_info")) as TenantInfo
+  delete tenantInfo?.owner?.password
+  return tenantInfo
 }
