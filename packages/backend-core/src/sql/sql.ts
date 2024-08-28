@@ -36,6 +36,7 @@ import {
 } from "@budibase/types"
 import environment from "../environment"
 import { dataFilters, helpers } from "@budibase/shared-core"
+import { cloneDeep } from "lodash"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 
@@ -268,6 +269,7 @@ class InternalBuilder {
   }
 
   private parseFilters(filters: SearchFilters): SearchFilters {
+    filters = cloneDeep(filters)
     for (const op of Object.values(BasicOperator)) {
       const filter = filters[op]
       if (!filter) {
@@ -337,7 +339,7 @@ class InternalBuilder {
     if (!filters) {
       return query
     }
-    filters = this.parseFilters(filters)
+    filters = this.parseFilters({ ...filters })
     const aliases = this.query.tableAliases
     // if all or specified in filters, then everything is an or
     const allOr = filters.allOr
@@ -371,10 +373,11 @@ class InternalBuilder {
             ),
             castedTypeValue.values
           )
-        } else if (!opts?.relationship && !isRelationshipField) {
+        } else if (!isRelationshipField) {
           const alias = getTableAlias(tableName)
           fn(alias ? `${alias}.${updatedKey}` : updatedKey, value)
-        } else if (opts?.relationship && isRelationshipField) {
+        }
+        if (opts?.relationship && isRelationshipField) {
           const [filterTableName, property] = updatedKey.split(".")
           const alias = getTableAlias(filterTableName)
           fn(alias ? `${alias}.${property}` : property, value)
@@ -465,18 +468,20 @@ class InternalBuilder {
 
     if (filters.$and) {
       const { $and } = filters
-      query = query.where(x => {
-        for (const condition of $and.conditions) {
-          x = this.addFilters(x, condition, opts)
-        }
-      })
+      for (const condition of $and.conditions) {
+        query = query.where(b => {
+          this.addFilters(b, condition, opts)
+        })
+      }
     }
 
     if (filters.$or) {
       const { $or } = filters
-      query = query.where(x => {
+      query = query.where(b => {
         for (const condition of $or.conditions) {
-          x = this.addFilters(x, { ...condition, allOr: true }, opts)
+          b.orWhere(c =>
+            this.addFilters(c, { ...condition, allOr: true }, opts)
+          )
         }
       })
     }

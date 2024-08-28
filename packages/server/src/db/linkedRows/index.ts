@@ -1,10 +1,10 @@
 import LinkController from "./LinkController"
 import {
   getLinkDocuments,
-  getUniqueByProp,
-  getRelatedTableForField,
-  getLinkedTableIDs,
   getLinkedTable,
+  getLinkedTableIDs,
+  getRelatedTableForField,
+  getUniqueByProp,
 } from "./linkUtils"
 import flatten from "lodash/flatten"
 import { USER_METDATA_PREFIX } from "../utils"
@@ -13,15 +13,25 @@ import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import { processFormulas } from "../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
 import {
-  Table,
-  Row,
-  LinkDocumentValue,
-  FieldType,
   ContextUser,
+  FieldType,
+  LinkDocumentValue,
+  Row,
+  Table,
+  TableSchema,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
 export { IncludeDocs, getLinkDocuments, createLinkView } from "./linkUtils"
+
+const INVALID_DISPLAY_COLUMN_TYPE = [
+  FieldType.LINK,
+  FieldType.ATTACHMENTS,
+  FieldType.ATTACHMENT_SINGLE,
+  FieldType.SIGNATURE_SINGLE,
+  FieldType.BB_REFERENCE,
+  FieldType.BB_REFERENCE_SINGLE,
+]
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
@@ -37,8 +47,8 @@ export const EventType = {
   TABLE_DELETE: "table:delete",
 }
 
-function clearRelationshipFields(table: Table, rows: Row[]) {
-  for (let [key, field] of Object.entries(table.schema)) {
+function clearRelationshipFields(schema: TableSchema, rows: Row[]) {
+  for (let [key, field] of Object.entries(schema)) {
     if (field.type === FieldType.LINK) {
       rows = rows.map(row => {
         delete row[key]
@@ -149,11 +159,11 @@ export async function updateLinks(args: {
  * @return returns the rows with all of the enriched relationships on it.
  */
 export async function attachFullLinkedDocs(
-  table: Table,
+  schema: TableSchema,
   rows: Row[],
   opts?: { fromRow?: Row }
 ) {
-  const linkedTableIds = getLinkedTableIDs(table)
+  const linkedTableIds = getLinkedTableIDs(schema)
   if (linkedTableIds.length === 0) {
     return rows
   }
@@ -173,7 +183,7 @@ export async function attachFullLinkedDocs(
   }
   const linkedTables = response[1] as Table[]
   // clear any existing links that could be dupe'd
-  rows = clearRelationshipFields(table, rows)
+  rows = clearRelationshipFields(schema, rows)
   // now get the docs and combine into the rows
   let linked: Row[] = []
   if (linksWithoutFromRow.length > 0) {
@@ -192,7 +202,7 @@ export async function attachFullLinkedDocs(
       }
       if (linkedRow) {
         const linkedTableId =
-          linkedRow.tableId || getRelatedTableForField(table, link.fieldName)
+          linkedRow.tableId || getRelatedTableForField(schema, link.fieldName)
         const linkedTable = linkedTables.find(
           table => table._id === linkedTableId
         )
@@ -204,6 +214,31 @@ export async function attachFullLinkedDocs(
     }
   }
   return rows
+}
+
+/**
+ * Finds a valid value for the primary display, avoiding columns which break things
+ * like relationships (can be circular).
+ * @param row The row to lift a value from for the primary display.
+ * @param table The related table to attempt to work out the primary display column from.
+ */
+function getPrimaryDisplayValue(row: Row, table?: Table) {
+  const primaryDisplay = table?.primaryDisplay
+  let invalid = true
+  if (primaryDisplay) {
+    const primaryDisplaySchema = table?.schema[primaryDisplay]
+    invalid = INVALID_DISPLAY_COLUMN_TYPE.includes(primaryDisplaySchema.type)
+  }
+  if (invalid || !primaryDisplay) {
+    const validKey = Object.keys(table?.schema || {}).find(
+      key =>
+        table?.schema[key].type &&
+        !INVALID_DISPLAY_COLUMN_TYPE.includes(table?.schema[key].type)
+    )
+    return validKey ? row[validKey] : undefined
+  } else {
+    return row[primaryDisplay]
+  }
 }
 
 /**
@@ -229,12 +264,11 @@ export async function squashLinksToPrimaryDisplay(
       }
       const newLinks = []
       for (let link of row[column]) {
-        const linkTblId = link.tableId || getRelatedTableForField(table, column)
+        const linkTblId =
+          link.tableId || getRelatedTableForField(table.schema, column)
         const linkedTable = await getLinkedTable(linkTblId!, linkedTables)
         const obj: any = { _id: link._id }
-        if (linkedTable?.primaryDisplay && link[linkedTable.primaryDisplay]) {
-          obj.primaryDisplay = link[linkedTable.primaryDisplay]
-        }
+        obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
         newLinks.push(obj)
       }
       row[column] = newLinks
