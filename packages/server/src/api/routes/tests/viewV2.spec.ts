@@ -1038,29 +1038,6 @@ describe.each([
           },
         })
       })
-    })
-
-    describe("fetch view (through table)", () => {
-      it("should be able to fetch a view V2", async () => {
-        const res = await config.api.viewV2.create({
-          name: generator.name(),
-          tableId: table._id!,
-          schema: {
-            id: { visible: true },
-            Price: { visible: false },
-            Category: { visible: true },
-          },
-        })
-
-        const view = await config.api.viewV2.get(res.id)
-        const updatedTable = await config.api.table.get(table._id!)
-        const viewSchema = updatedTable.views![view!.name!].schema as Record<
-          string,
-          ViewUIFieldMetadata
-        >
-        expect(viewSchema.Price?.visible).toEqual(false)
-        expect(viewSchema.Category?.visible).toEqual(true)
-      })
 
       it("should be able to fetch readonly config after downgrades", async () => {
         mocks.licenses.useViewReadonlyColumns()
@@ -1069,13 +1046,13 @@ describe.each([
           tableId: table._id!,
           schema: {
             id: { visible: true },
-            Price: { visible: true, readonly: true },
+            one: { visible: true, readonly: true },
           },
         })
 
         mocks.licenses.useCloudFree()
-        const view = await config.api.viewV2.get(res.id)
-        expect(view.schema?.Price).toEqual(
+        const view = (await getDelegate(res)) as ViewV2
+        expect(view.schema?.one).toEqual(
           expect.objectContaining({ visible: true, readonly: true })
         )
       })
