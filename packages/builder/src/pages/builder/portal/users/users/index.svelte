@@ -114,7 +114,7 @@
         }
       })
       user.tenantOwnerEmail = res.tenantOwner?.email
-      const role = Constants.BudibaseRoleOptions.find(
+      const role = Constants.ExtendedBudibaseRoleOptions.find(
         x => x.value === users.getUserRole(user)
       )
       return {
