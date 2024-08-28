@@ -41,6 +41,7 @@ export const BudibaseRoles = {
   Developer: "developer",
   Creator: "creator",
   Admin: "admin",
+  Owner: "owner",
 }
 
 export const BudibaseRoleOptionsOld = [
@@ -51,7 +52,7 @@ export const BudibaseRoleOptionsOld = [
 ]
 export const BudibaseRoleOptions = [
   {
-    label: "Account admin",
+    label: "Admin",
     value: BudibaseRoles.Admin,
     subtitle: "Has full access to all apps and settings in your account",
   },
@@ -64,6 +65,11 @@ export const BudibaseRoleOptions = [
     label: "App user",
     value: BudibaseRoles.AppUser,
     subtitle: "Can only use published apps they have access to",
+  },
+  {
+    label: "Account holder",
+    value: BudibaseRoles.Owner,
+    subtitle: "Has full access to all apps and settings in your account",
   },
 ]
 

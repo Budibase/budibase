@@ -53,6 +53,7 @@
 
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
   let enrichedUsers = []
+  let tenantOwnerEmail
   let createUserModal,
     inviteConfirmationModal,
     onboardingTypeModal,
@@ -100,6 +101,7 @@
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
   $: {
+    tenantOwnerEmail = $fetch.tenantOwner?.email
     enrichedUsers = $fetch.rows?.map(user => {
       let userGroups = []
       $groups.forEach(group => {
@@ -115,6 +117,7 @@
         ...user,
         name: user.firstName ? user.firstName + " " + user.lastName : "",
         userGroups,
+        tenantOwnerEmail,
         apps: [...new Set(Object.keys(user.roles))],
       }
     })
