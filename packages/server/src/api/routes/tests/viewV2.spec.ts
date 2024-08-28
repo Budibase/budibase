@@ -15,7 +15,6 @@ import {
   Table,
   TableSourceType,
   UpdateViewRequest,
-  ViewUIFieldMetadata,
   ViewV2,
   SearchResponse,
   BasicOperator,
