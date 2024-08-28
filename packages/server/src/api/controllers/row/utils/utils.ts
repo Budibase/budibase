@@ -78,7 +78,7 @@ export async function findRow(tableId: string, rowId: string) {
   return row
 }
 
-export function getTableId(ctx: Ctx): string {
+export function getSourceId(ctx: Ctx): string {
   // top priority, use the URL first
   if (ctx.params?.sourceId) {
     return ctx.params.sourceId
