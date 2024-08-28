@@ -4,7 +4,7 @@ import { BaseSocket } from "./websocket"
 import { auth, permissions } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
-import { getTableId } from "../api/controllers/row/utils"
+import { getSourceId } from "../api/controllers/row/utils"
 import { Row, Table, View, ViewV2 } from "@budibase/types"
 import { Socket } from "socket.io"
 import { GridSocketEvent } from "@budibase/shared-core"
@@ -80,7 +80,7 @@ export default class GridSocket extends BaseSocket {
   }
 
   emitRowUpdate(ctx: any, row: Row) {
-    const resourceId = ctx.params?.viewId || getTableId(ctx)
+    const resourceId = ctx.params?.viewId || getSourceId(ctx)
     const room = `${ctx.appId}-${resourceId}`
     this.emitToRoom(ctx, room, GridSocketEvent.RowChange, {
       id: row._id,
@@ -89,7 +89,7 @@ export default class GridSocket extends BaseSocket {
   }
 
   emitRowDeletion(ctx: any, row: Row) {
-    const resourceId = ctx.params?.viewId || getTableId(ctx)
+    const resourceId = ctx.params?.viewId || getSourceId(ctx)
     const room = `${ctx.appId}-${resourceId}`
     this.emitToRoom(ctx, room, GridSocketEvent.RowChange, {
       id: row._id,
