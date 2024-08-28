@@ -1,5 +1,8 @@
 import {
+  FieldType,
+  RelationSchemaField,
   RenameColumn,
+  Table,
   TableSchema,
   View,
   ViewFieldMetadata,
@@ -162,23 +165,59 @@ export async function enrichSchema(
   view: ViewV2,
   tableSchema: TableSchema
 ): Promise<ViewV2Enriched> {
+  const tableCache: Record<string, Table> = {}
+
+  async function populateRelTableSchema(
+    tableId: string,
+    viewFields: Record<string, RelationSchemaField>
+  ) {
+    if (!tableCache[tableId]) {
+      tableCache[tableId] = await sdk.tables.getTable(tableId)
+    }
+    const relTable = tableCache[tableId]
+
+    const result: Record<string, RelationSchemaField> = {}
+
+    for (const relTableFieldName of Object.keys(relTable.schema)) {
+      const relTableField = relTable.schema[relTableFieldName]
+      if ([FieldType.LINK, FieldType.FORMULA].includes(relTableField.type)) {
+        continue
+      }
+
+      if (relTableField.visible === false) {
+        continue
+      }
+
+      const isVisible = !!viewFields[relTableFieldName]?.visible
+      const isReadonly = !!viewFields[relTableFieldName]?.readonly
+      result[relTableFieldName] = {
+        visible: isVisible,
+        readonly: isReadonly,
+      }
+    }
+    return result
+  }
+
   let schema: TableSchema = {}
-  const anyViewOrder = Object.values(view.schema || {}).some(
-    ui => ui.order != null
-  )
-  for (const key of Object.keys(tableSchema).filter(
-    key => tableSchema[key].visible !== false
-  )) {
+
+  const viewSchema = view.schema || {}
+  const anyViewOrder = Object.values(viewSchema).some(ui => ui.order != null)
+  for (const key of Object.keys(schema)) {
     // if nothing specified in view, then it is not visible
-    const ui = view.schema?.[key] || { visible: false }
+    const ui = viewSchema[key] || { visible: false }
     schema[key] = {
       ...tableSchema[key],
       ...ui,
       order: anyViewOrder ? ui?.order ?? undefined : tableSchema[key].order,
     }
-  }
 
-  schema = await sdk.tables.enrichRelationshipSchema(schema)
+    if (schema[key].type === FieldType.LINK) {
+      schema[key].columns = await populateRelTableSchema(
+        schema[key].tableId,
+        viewSchema[key].columns || {}
+      )
+    }
+  }
 
   return {
     ...view,

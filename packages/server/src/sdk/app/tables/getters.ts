@@ -146,53 +146,6 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
   return processTables(tables)
 }
 
-export async function enrichRelationshipSchema(
-  schema: TableSchema
-): Promise<TableSchema> {
-  const tableCache: Record<string, Table> = {}
-
-  async function populateRelTableSchema(field: RelationshipFieldMetadata) {
-    if (!tableCache[field.tableId]) {
-      tableCache[field.tableId] = await sdk.tables.getTable(field.tableId)
-    }
-    const relTable = tableCache[field.tableId]
-
-    const fieldSchema = field.schema || {}
-
-    const resultSchema: Record<string, RelationSchemaField> = {}
-
-    for (const relTableFieldName of Object.keys(relTable.schema)) {
-      const relTableField = relTable.schema[relTableFieldName]
-      if ([FieldType.LINK, FieldType.FORMULA].includes(relTableField.type)) {
-        continue
-      }
-
-      if (relTableField.visible === false) {
-        continue
-      }
-
-      const isVisible = !!fieldSchema[relTableFieldName]?.visible
-      const isReadonly = !!fieldSchema[relTableFieldName]?.readonly
-      resultSchema[relTableFieldName] = {
-        visible: isVisible,
-        readonly: isReadonly,
-      }
-    }
-    field.schema = resultSchema
-  }
-
-  const result: TableSchema = {}
-  for (const fieldName of Object.keys(schema)) {
-    const field = { ...schema[fieldName] }
-    if (field.type === FieldType.LINK) {
-      await populateRelTableSchema(field)
-    }
-
-    result[fieldName] = field
-  }
-  return result
-}
-
 export async function enrichViewSchemas(table: Table): Promise<TableResponse> {
   const views = []
   for (const view of Object.values(table.views ?? [])) {
