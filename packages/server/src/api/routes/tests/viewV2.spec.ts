@@ -126,659 +126,121 @@ describe.each([
   })
 
   describe("view crud", () => {
-  describe("create", () => {
-    it("persist the view when the view is successfully created", async () => {
-      const newView: CreateViewRequest = {
-        name: generator.name(),
-        tableId: table._id!,
-        schema: {
-          id: { visible: true },
-        },
-      }
-      const res = await config.api.viewV2.create(newView)
-
-      expect(res).toEqual({
-        ...newView,
-        id: expect.stringMatching(new RegExp(`${table._id!}_`)),
-        version: 2,
-      })
-    })
-
-    it("can persist views with all fields", async () => {
-      const newView: Required<CreateViewRequest> = {
-        name: generator.name(),
-        tableId: table._id!,
-        primaryDisplay: "id",
-        query: [
-          {
-            operator: BasicOperator.EQUAL,
-            field: "field",
-            value: "value",
-          },
-        ],
-        sort: {
-          field: "fieldToSort",
-          order: SortOrder.DESCENDING,
-          type: SortType.STRING,
-        },
-        schema: {
-          id: { visible: true },
-          Price: {
-            visible: true,
-          },
-        },
-      }
-      const res = await config.api.viewV2.create(newView)
-
-      expect(res).toEqual({
-        ...newView,
-        schema: {
-          id: { visible: true },
-          Price: {
-            visible: true,
-          },
-        },
-        id: expect.any(String),
-        version: 2,
-      })
-    })
-
-    it("persist only UI schema overrides", async () => {
-      const newView: CreateViewRequest = {
-        name: generator.name(),
-        tableId: table._id!,
-        schema: {
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-            visible: true,
-          },
-          Price: {
-            name: "Price",
-            type: FieldType.NUMBER,
-            visible: true,
-            order: 1,
-            width: 100,
-          },
-          Category: {
-            name: "Category",
-            type: FieldType.STRING,
-            visible: false,
-            icon: "ic",
-          },
-        } as Record<string, FieldSchema>,
-      }
-
-      const createdView = await config.api.viewV2.create(newView)
-
-      expect(createdView).toEqual({
-        ...newView,
-        schema: {
-          id: { visible: true },
-          Price: {
-            visible: true,
-            order: 1,
-            width: 100,
-          },
-          Category: {
-            visible: false,
-            icon: "ic",
-          },
-        },
-        id: createdView.id,
-        version: 2,
-      })
-    })
-
-    it("will not throw an exception if the schema is 'deleting' non UI fields", async () => {
-      const newView: CreateViewRequest = {
-        name: generator.name(),
-        tableId: table._id!,
-        schema: {
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-            autocolumn: true,
-            visible: true,
-          },
-          Price: {
-            name: "Price",
-            type: FieldType.NUMBER,
-            visible: true,
-          },
-          Category: {
-            name: "Category",
-            type: FieldType.STRING,
-          },
-        } as Record<string, FieldSchema>,
-      }
-
-      await config.api.viewV2.create(newView, {
-        status: 201,
-      })
-    })
-
-    it("does not persist non-visible fields", async () => {
-      const newView: CreateViewRequest = {
-        name: generator.name(),
-        tableId: table._id!,
-        primaryDisplay: "id",
-        schema: {
-          id: { visible: true },
-          Price: { visible: true },
-          Category: { visible: false },
-        },
-      }
-      const res = await config.api.viewV2.create(newView)
-
-      expect(res).toEqual({
-        ...newView,
-        schema: {
-          id: { visible: true },
-          Price: { visible: true },
-          Category: { visible: false },
-        },
-        id: expect.any(String),
-        version: 2,
-      })
-    })
-
-    it("throws bad request when the schema fields are not valid", async () => {
-      const newView: CreateViewRequest = {
-        name: generator.name(),
-        tableId: table._id!,
-        schema: {
-          id: { visible: true },
-          nonExisting: {
-            visible: true,
-          },
-        },
-      }
-      await config.api.viewV2.create(newView, {
-        status: 400,
-        body: {
-          message: 'Field "nonExisting" is not valid for the requested table',
-        },
-      })
-    })
-
-    describe("readonly fields", () => {
-      beforeEach(() => {
-        mocks.licenses.useViewReadonlyColumns()
-      })
-
-      it("readonly fields are persisted", async () => {
-        const table = await config.api.table.save(
-          saveTableRequest({
-            schema: {
-              name: {
-                name: "name",
-                type: FieldType.STRING,
-              },
-              description: {
-                name: "description",
-                type: FieldType.STRING,
-              },
-            },
-          })
-        )
-
+    describe("create", () => {
+      it("persist the view when the view is successfully created", async () => {
         const newView: CreateViewRequest = {
           name: generator.name(),
           tableId: table._id!,
           schema: {
             id: { visible: true },
-            name: {
-              visible: true,
-              readonly: true,
-            },
-            description: {
-              visible: true,
-              readonly: true,
-            },
           },
         }
-
         const res = await config.api.viewV2.create(newView)
-        expect(res.schema).toEqual({
-          id: { visible: true },
-          name: {
-            visible: true,
-            readonly: true,
-          },
-          description: {
-            visible: true,
-            readonly: true,
-          },
+
+        expect(res).toEqual({
+          ...newView,
+          id: expect.stringMatching(new RegExp(`${table._id!}_`)),
+          version: 2,
         })
       })
 
-      it("required fields cannot be marked as readonly", async () => {
-        const table = await config.api.table.save(
-          saveTableRequest({
-            schema: {
-              name: {
-                name: "name",
-                type: FieldType.STRING,
-                constraints: { presence: true },
-              },
-              description: {
-                name: "description",
-                type: FieldType.STRING,
-              },
-            },
-          })
-        )
-
-        const newView: CreateViewRequest = {
+      it("can persist views with all fields", async () => {
+        const newView: Required<CreateViewRequest> = {
           name: generator.name(),
           tableId: table._id!,
-          schema: {
-            id: { visible: true },
-            name: {
-              visible: true,
-              readonly: true,
-            },
-          },
-        }
-
-        await config.api.viewV2.create(newView, {
-          status: 400,
-          body: {
-            message:
-              'You can\'t make "name" readonly because it is a required field.',
-            status: 400,
-          },
-        })
-      })
-
-      it("readonly fields must be visible", async () => {
-        const table = await config.api.table.save(
-          saveTableRequest({
-            schema: {
-              name: {
-                name: "name",
-                type: FieldType.STRING,
-              },
-              description: {
-                name: "description",
-                type: FieldType.STRING,
-              },
-            },
-          })
-        )
-
-        const newView: CreateViewRequest = {
-          name: generator.name(),
-          tableId: table._id!,
-          schema: {
-            id: { visible: true },
-            name: {
-              visible: false,
-              readonly: true,
-            },
-          },
-        }
-
-        await config.api.viewV2.create(newView, {
-          status: 400,
-          body: {
-            message:
-              'Field "name" must be visible if you want to make it readonly',
-            status: 400,
-          },
-        })
-      })
-
-      it("readonly fields cannot be used on free license", async () => {
-        mocks.licenses.useCloudFree()
-        const table = await config.api.table.save(
-          saveTableRequest({
-            schema: {
-              name: {
-                name: "name",
-                type: FieldType.STRING,
-              },
-              description: {
-                name: "description",
-                type: FieldType.STRING,
-              },
-            },
-          })
-        )
-
-        const newView: CreateViewRequest = {
-          name: generator.name(),
-          tableId: table._id!,
-          schema: {
-            id: { visible: true },
-            name: {
-              visible: true,
-              readonly: true,
-            },
-          },
-        }
-
-        await config.api.viewV2.create(newView, {
-          status: 400,
-          body: {
-            message: "Readonly fields are not enabled",
-            status: 400,
-          },
-        })
-      })
-    })
-
-    it("display fields must be visible", async () => {
-      const table = await config.api.table.save(
-        saveTableRequest({
-          schema: {
-            name: {
-              name: "name",
-              type: FieldType.STRING,
-            },
-            description: {
-              name: "description",
-              type: FieldType.STRING,
-            },
-          },
-        })
-      )
-
-      const newView: CreateViewRequest = {
-        name: generator.name(),
-        tableId: table._id!,
-        primaryDisplay: "name",
-        schema: {
-          id: { visible: true },
-          name: {
-            visible: false,
-          },
-        },
-      }
-
-      await config.api.viewV2.create(newView, {
-        status: 400,
-        body: {
-          message: 'You can\'t hide "name" because it is the display column.',
-          status: 400,
-        },
-      })
-    })
-
-    it("display fields can be readonly", async () => {
-      mocks.licenses.useViewReadonlyColumns()
-      const table = await config.api.table.save(
-        saveTableRequest({
-          schema: {
-            name: {
-              name: "name",
-              type: FieldType.STRING,
-            },
-            description: {
-              name: "description",
-              type: FieldType.STRING,
-            },
-          },
-        })
-      )
-
-      const newView: CreateViewRequest = {
-        name: generator.name(),
-        tableId: table._id!,
-        primaryDisplay: "name",
-        schema: {
-          id: { visible: true },
-          name: {
-            visible: true,
-            readonly: true,
-          },
-        },
-      }
-
-      await config.api.viewV2.create(newView, {
-        status: 201,
-      })
-    })
-  })
-
-  describe("update", () => {
-    let view: ViewV2
-
-    beforeEach(async () => {
-      table = await config.api.table.save(priceTable())
-
-      view = await config.api.viewV2.create({
-        tableId: table._id!,
-        name: generator.guid(),
-        schema: {
-          id: { visible: true },
-        },
-      })
-    })
-
-    it("can update an existing view data", async () => {
-      const tableId = table._id!
-      await config.api.viewV2.update({
-        ...view,
-        query: [
-          {
-            operator: BasicOperator.EQUAL,
-            field: "newField",
-            value: "thatValue",
-          },
-        ],
-      })
-
-      expect((await config.api.table.get(tableId)).views).toEqual({
-        [view.name]: {
-          ...view,
-            query: [
-              { operator: "equal", field: "newField", value: "thatValue" },
-            ],
-          schema: expect.anything(),
-        },
-      })
-    })
-
-    it("can update all fields", async () => {
-      mocks.licenses.useViewReadonlyColumns()
-      const tableId = table._id!
-
-      const updatedData: Required<UpdateViewRequest> = {
-        version: view.version,
-        id: view.id,
-        tableId,
-        name: view.name,
-        primaryDisplay: "Price",
-        query: [
-          {
-            operator: BasicOperator.EQUAL,
-            field: generator.word(),
-            value: generator.word(),
-          },
-        ],
-        sort: {
-          field: generator.word(),
-          order: SortOrder.DESCENDING,
-          type: SortType.STRING,
-        },
-        schema: {
-          id: { visible: true },
-          Category: {
-            visible: false,
-          },
-          Price: {
-            visible: true,
-            readonly: true,
-          },
-        },
-      }
-      await config.api.viewV2.update(updatedData)
-
-      expect((await config.api.table.get(tableId)).views).toEqual({
-        [view.name]: {
-          ...updatedData,
-          schema: {
-            ...table.schema,
-            id: expect.objectContaining({
-              visible: true,
-            }),
-            Category: expect.objectContaining({
-              visible: false,
-            }),
-            Price: expect.objectContaining({
-              visible: true,
-              readonly: true,
-            }),
-          },
-        },
-      })
-    })
-
-    it("can update an existing view name", async () => {
-      const tableId = table._id!
-      const newName = generator.guid()
-      await config.api.viewV2.update({ ...view, name: newName })
-
-      expect(await config.api.table.get(tableId)).toEqual(
-        expect.objectContaining({
-          views: {
-            [newName]: { ...view, name: newName, schema: expect.anything() },
-          },
-        })
-      )
-    })
-
-    it("cannot update an unexisting views nor edit ids", async () => {
-      const tableId = table._id!
-      await config.api.viewV2.update(
-        { ...view, id: generator.guid() },
-        { status: 404 }
-      )
-
-      expect(await config.api.table.get(tableId)).toEqual(
-        expect.objectContaining({
-          views: {
-            [view.name]: {
-              ...view,
-              schema: expect.anything(),
-            },
-          },
-        })
-      )
-    })
-
-    it("cannot update views with the wrong tableId", async () => {
-      const tableId = table._id!
-      await config.api.viewV2.update(
-        {
-          ...view,
-          tableId: generator.guid(),
+          primaryDisplay: "id",
           query: [
             {
               operator: BasicOperator.EQUAL,
-              field: "newField",
-              value: "thatValue",
+              field: "field",
+              value: "value",
             },
           ],
-        },
-        { status: 404 }
-      )
-
-      expect(await config.api.table.get(tableId)).toEqual(
-        expect.objectContaining({
-          views: {
-            [view.name]: {
-              ...view,
-              schema: expect.anything(),
+          sort: {
+            field: "fieldToSort",
+            order: SortOrder.DESCENDING,
+            type: SortType.STRING,
+          },
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
             },
           },
-        })
-      )
-    })
+        }
+        const res = await config.api.viewV2.create(newView)
 
-    it("cannot update views v1", async () => {
-      const viewV1 = await config.api.legacyView.save({
-        tableId: table._id!,
-        name: generator.guid(),
-        filters: [],
-        schema: {},
-      })
-
-      await config.api.viewV2.update(viewV1 as unknown as ViewV2, {
-        status: 400,
-        body: {
-          message: "Only views V2 can be updated",
-          status: 400,
-        },
-      })
-    })
-
-    it("cannot update the a view with unmatching ids between url and body", async () => {
-      const anotherView = await config.api.viewV2.create({
-        tableId: table._id!,
-        name: generator.guid(),
-        schema: {
-          id: { visible: true },
-        },
-      })
-      const result = await config
-        .request!.put(`/api/v2/views/${anotherView.id}`)
-        .send(view)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(400)
-
-      expect(result.body).toEqual({
-        message: "View id does not match between the body and the uri path",
-        status: 400,
-      })
-    })
-
-    it("updates only UI schema overrides", async () => {
-      const updatedView = await config.api.viewV2.update({
-        ...view,
-        schema: {
-          ...view.schema,
-          Price: {
-            name: "Price",
-            type: FieldType.NUMBER,
-            visible: true,
-            order: 1,
-            width: 100,
-          },
-          Category: {
-            name: "Category",
-            type: FieldType.STRING,
-            visible: false,
-            icon: "ic",
-          },
-        } as Record<string, FieldSchema>,
-      })
-
-      expect(updatedView).toEqual({
-        ...view,
-        schema: {
-          id: { visible: true },
-          Price: {
-            visible: true,
-            order: 1,
-            width: 100,
-          },
-          Category: { visible: false, icon: "ic" },
-        },
-        id: view.id,
-        version: 2,
-      })
-    })
-
-    it("will not throw an exception if the schema is 'deleting' non UI fields", async () => {
-      await config.api.viewV2.update(
-        {
-          ...view,
+        expect(res).toEqual({
+          ...newView,
           schema: {
-            ...view.schema,
+            id: { visible: true },
+            Price: {
+              visible: true,
+            },
+          },
+          id: expect.any(String),
+          version: 2,
+        })
+      })
+
+      it("persist only UI schema overrides", async () => {
+        const newView: CreateViewRequest = {
+          name: generator.name(),
+          tableId: table._id!,
+          schema: {
+            id: {
+              name: "id",
+              type: FieldType.NUMBER,
+              visible: true,
+            },
+            Price: {
+              name: "Price",
+              type: FieldType.NUMBER,
+              visible: true,
+              order: 1,
+              width: 100,
+            },
+            Category: {
+              name: "Category",
+              type: FieldType.STRING,
+              visible: false,
+              icon: "ic",
+            },
+          } as Record<string, FieldSchema>,
+        }
+
+        const createdView = await config.api.viewV2.create(newView)
+
+        expect(createdView).toEqual({
+          ...newView,
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
+              order: 1,
+              width: 100,
+            },
+            Category: {
+              visible: false,
+              icon: "ic",
+            },
+          },
+          id: createdView.id,
+          version: 2,
+        })
+      })
+
+      it("will not throw an exception if the schema is 'deleting' non UI fields", async () => {
+        const newView: CreateViewRequest = {
+          name: generator.name(),
+          tableId: table._id!,
+          schema: {
+            id: {
+              name: "id",
+              type: FieldType.NUMBER,
+              autocolumn: true,
+              visible: true,
+            },
             Price: {
               name: "Price",
               type: FieldType.NUMBER,
@@ -789,66 +251,593 @@ describe.each([
               type: FieldType.STRING,
             },
           } as Record<string, FieldSchema>,
-        },
-        {
-          status: 200,
         }
-      )
+
+        await config.api.viewV2.create(newView, {
+          status: 201,
+        })
+      })
+
+      it("does not persist non-visible fields", async () => {
+        const newView: CreateViewRequest = {
+          name: generator.name(),
+          tableId: table._id!,
+          primaryDisplay: "id",
+          schema: {
+            id: { visible: true },
+            Price: { visible: true },
+            Category: { visible: false },
+          },
+        }
+        const res = await config.api.viewV2.create(newView)
+
+        expect(res).toEqual({
+          ...newView,
+          schema: {
+            id: { visible: true },
+            Price: { visible: true },
+            Category: { visible: false },
+          },
+          id: expect.any(String),
+          version: 2,
+        })
+      })
+
+      it("throws bad request when the schema fields are not valid", async () => {
+        const newView: CreateViewRequest = {
+          name: generator.name(),
+          tableId: table._id!,
+          schema: {
+            id: { visible: true },
+            nonExisting: {
+              visible: true,
+            },
+          },
+        }
+        await config.api.viewV2.create(newView, {
+          status: 400,
+          body: {
+            message: 'Field "nonExisting" is not valid for the requested table',
+          },
+        })
+      })
+
+      describe("readonly fields", () => {
+        beforeEach(() => {
+          mocks.licenses.useViewReadonlyColumns()
+        })
+
+        it("readonly fields are persisted", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                },
+                description: {
+                  name: "description",
+                  type: FieldType.STRING,
+                },
+              },
+            })
+          )
+
+          const newView: CreateViewRequest = {
+            name: generator.name(),
+            tableId: table._id!,
+            schema: {
+              id: { visible: true },
+              name: {
+                visible: true,
+                readonly: true,
+              },
+              description: {
+                visible: true,
+                readonly: true,
+              },
+            },
+          }
+
+          const res = await config.api.viewV2.create(newView)
+          expect(res.schema).toEqual({
+            id: { visible: true },
+            name: {
+              visible: true,
+              readonly: true,
+            },
+            description: {
+              visible: true,
+              readonly: true,
+            },
+          })
+        })
+
+        it("required fields cannot be marked as readonly", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                  constraints: { presence: true },
+                },
+                description: {
+                  name: "description",
+                  type: FieldType.STRING,
+                },
+              },
+            })
+          )
+
+          const newView: CreateViewRequest = {
+            name: generator.name(),
+            tableId: table._id!,
+            schema: {
+              id: { visible: true },
+              name: {
+                visible: true,
+                readonly: true,
+              },
+            },
+          }
+
+          await config.api.viewV2.create(newView, {
+            status: 400,
+            body: {
+              message:
+                'You can\'t make "name" readonly because it is a required field.',
+              status: 400,
+            },
+          })
+        })
+
+        it("readonly fields must be visible", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                },
+                description: {
+                  name: "description",
+                  type: FieldType.STRING,
+                },
+              },
+            })
+          )
+
+          const newView: CreateViewRequest = {
+            name: generator.name(),
+            tableId: table._id!,
+            schema: {
+              id: { visible: true },
+              name: {
+                visible: false,
+                readonly: true,
+              },
+            },
+          }
+
+          await config.api.viewV2.create(newView, {
+            status: 400,
+            body: {
+              message:
+                'Field "name" must be visible if you want to make it readonly',
+              status: 400,
+            },
+          })
+        })
+
+        it("readonly fields cannot be used on free license", async () => {
+          mocks.licenses.useCloudFree()
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                },
+                description: {
+                  name: "description",
+                  type: FieldType.STRING,
+                },
+              },
+            })
+          )
+
+          const newView: CreateViewRequest = {
+            name: generator.name(),
+            tableId: table._id!,
+            schema: {
+              id: { visible: true },
+              name: {
+                visible: true,
+                readonly: true,
+              },
+            },
+          }
+
+          await config.api.viewV2.create(newView, {
+            status: 400,
+            body: {
+              message: "Readonly fields are not enabled",
+              status: 400,
+            },
+          })
+        })
+      })
+
+      it("display fields must be visible", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+              description: {
+                name: "description",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        const newView: CreateViewRequest = {
+          name: generator.name(),
+          tableId: table._id!,
+          primaryDisplay: "name",
+          schema: {
+            id: { visible: true },
+            name: {
+              visible: false,
+            },
+          },
+        }
+
+        await config.api.viewV2.create(newView, {
+          status: 400,
+          body: {
+            message: 'You can\'t hide "name" because it is the display column.',
+            status: 400,
+          },
+        })
+      })
+
+      it("display fields can be readonly", async () => {
+        mocks.licenses.useViewReadonlyColumns()
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+              description: {
+                name: "description",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        const newView: CreateViewRequest = {
+          name: generator.name(),
+          tableId: table._id!,
+          primaryDisplay: "name",
+          schema: {
+            id: { visible: true },
+            name: {
+              visible: true,
+              readonly: true,
+            },
+          },
+        }
+
+        await config.api.viewV2.create(newView, {
+          status: 201,
+        })
+      })
     })
 
-    it("cannot update views with readonly on on free license", async () => {
-      mocks.licenses.useViewReadonlyColumns()
+    describe("update", () => {
+      let view: ViewV2
 
-      view = await config.api.viewV2.update({
-        ...view,
-        schema: {
-          id: { visible: true },
-          Price: {
-            visible: true,
-            readonly: true,
+      beforeEach(async () => {
+        table = await config.api.table.save(priceTable())
+
+        view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
           },
-        },
+        })
       })
 
-      mocks.licenses.useCloudFree()
-      await config.api.viewV2.update(view, {
-        status: 400,
-        body: {
-          message: "Readonly fields are not enabled",
-        },
-      })
-    })
+      it("can update an existing view data", async () => {
+        const tableId = table._id!
+        await config.api.viewV2.update({
+          ...view,
+          query: [
+            {
+              operator: BasicOperator.EQUAL,
+              field: "newField",
+              value: "thatValue",
+            },
+          ],
+        })
 
-    it("can remove readonly config after license downgrade", async () => {
-      mocks.licenses.useViewReadonlyColumns()
+        expect((await config.api.table.get(tableId)).views).toEqual({
+          [view.name]: {
+            ...view,
+            query: [
+              { operator: "equal", field: "newField", value: "thatValue" },
+            ],
+            schema: expect.anything(),
+          },
+        })
+      })
 
-      view = await config.api.viewV2.update({
-        ...view,
-        schema: {
-          id: { visible: true },
-          Price: {
-            visible: true,
-            readonly: true,
+      it("can update all fields", async () => {
+        mocks.licenses.useViewReadonlyColumns()
+        const tableId = table._id!
+
+        const updatedData: Required<UpdateViewRequest> = {
+          version: view.version,
+          id: view.id,
+          tableId,
+          name: view.name,
+          primaryDisplay: "Price",
+          query: [
+            {
+              operator: BasicOperator.EQUAL,
+              field: generator.word(),
+              value: generator.word(),
+            },
+          ],
+          sort: {
+            field: generator.word(),
+            order: SortOrder.DESCENDING,
+            type: SortType.STRING,
           },
-          Category: {
-            visible: true,
-            readonly: true,
+          schema: {
+            id: { visible: true },
+            Category: {
+              visible: false,
+            },
+            Price: {
+              visible: true,
+              readonly: true,
+            },
           },
-        },
+        }
+        await config.api.viewV2.update(updatedData)
+
+        expect((await config.api.table.get(tableId)).views).toEqual({
+          [view.name]: {
+            ...updatedData,
+            schema: {
+              ...table.schema,
+              id: expect.objectContaining({
+                visible: true,
+              }),
+              Category: expect.objectContaining({
+                visible: false,
+              }),
+              Price: expect.objectContaining({
+                visible: true,
+                readonly: true,
+              }),
+            },
+          },
+        })
       })
-      mocks.licenses.useCloudFree()
-      const res = await config.api.viewV2.update({
-        ...view,
-        schema: {
-          id: { visible: true },
-          Price: {
-            visible: true,
-            readonly: false,
-          },
-        },
+
+      it("can update an existing view name", async () => {
+        const tableId = table._id!
+        const newName = generator.guid()
+        await config.api.viewV2.update({ ...view, name: newName })
+
+        expect(await config.api.table.get(tableId)).toEqual(
+          expect.objectContaining({
+            views: {
+              [newName]: { ...view, name: newName, schema: expect.anything() },
+            },
+          })
+        )
       })
-      expect(res).toEqual(
-        expect.objectContaining({
+
+      it("cannot update an unexisting views nor edit ids", async () => {
+        const tableId = table._id!
+        await config.api.viewV2.update(
+          { ...view, id: generator.guid() },
+          { status: 404 }
+        )
+
+        expect(await config.api.table.get(tableId)).toEqual(
+          expect.objectContaining({
+            views: {
+              [view.name]: {
+                ...view,
+                schema: expect.anything(),
+              },
+            },
+          })
+        )
+      })
+
+      it("cannot update views with the wrong tableId", async () => {
+        const tableId = table._id!
+        await config.api.viewV2.update(
+          {
+            ...view,
+            tableId: generator.guid(),
+            query: [
+              {
+                operator: BasicOperator.EQUAL,
+                field: "newField",
+                value: "thatValue",
+              },
+            ],
+          },
+          { status: 404 }
+        )
+
+        expect(await config.api.table.get(tableId)).toEqual(
+          expect.objectContaining({
+            views: {
+              [view.name]: {
+                ...view,
+                schema: expect.anything(),
+              },
+            },
+          })
+        )
+      })
+
+      it("cannot update views v1", async () => {
+        const viewV1 = await config.api.legacyView.save({
+          tableId: table._id!,
+          name: generator.guid(),
+          filters: [],
+          schema: {},
+        })
+
+        await config.api.viewV2.update(viewV1 as unknown as ViewV2, {
+          status: 400,
+          body: {
+            message: "Only views V2 can be updated",
+            status: 400,
+          },
+        })
+      })
+
+      it("cannot update the a view with unmatching ids between url and body", async () => {
+        const anotherView = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
+          },
+        })
+        const result = await config
+          .request!.put(`/api/v2/views/${anotherView.id}`)
+          .send(view)
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(400)
+
+        expect(result.body).toEqual({
+          message: "View id does not match between the body and the uri path",
+          status: 400,
+        })
+      })
+
+      it("updates only UI schema overrides", async () => {
+        const updatedView = await config.api.viewV2.update({
+          ...view,
+          schema: {
+            ...view.schema,
+            Price: {
+              name: "Price",
+              type: FieldType.NUMBER,
+              visible: true,
+              order: 1,
+              width: 100,
+            },
+            Category: {
+              name: "Category",
+              type: FieldType.STRING,
+              visible: false,
+              icon: "ic",
+            },
+          } as Record<string, FieldSchema>,
+        })
+
+        expect(updatedView).toEqual({
+          ...view,
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
+              order: 1,
+              width: 100,
+            },
+            Category: { visible: false, icon: "ic" },
+          },
+          id: view.id,
+          version: 2,
+        })
+      })
+
+      it("will not throw an exception if the schema is 'deleting' non UI fields", async () => {
+        await config.api.viewV2.update(
+          {
+            ...view,
+            schema: {
+              ...view.schema,
+              Price: {
+                name: "Price",
+                type: FieldType.NUMBER,
+                visible: true,
+              },
+              Category: {
+                name: "Category",
+                type: FieldType.STRING,
+              },
+            } as Record<string, FieldSchema>,
+          },
+          {
+            status: 200,
+          }
+        )
+      })
+
+      it("cannot update views with readonly on on free license", async () => {
+        mocks.licenses.useViewReadonlyColumns()
+
+        view = await config.api.viewV2.update({
+          ...view,
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
+              readonly: true,
+            },
+          },
+        })
+
+        mocks.licenses.useCloudFree()
+        await config.api.viewV2.update(view, {
+          status: 400,
+          body: {
+            message: "Readonly fields are not enabled",
+          },
+        })
+      })
+
+      it("can remove readonly config after license downgrade", async () => {
+        mocks.licenses.useViewReadonlyColumns()
+
+        view = await config.api.viewV2.update({
+          ...view,
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
+              readonly: true,
+            },
+            Category: {
+              visible: true,
+              readonly: true,
+            },
+          },
+        })
+        mocks.licenses.useCloudFree()
+        const res = await config.api.viewV2.update({
           ...view,
           schema: {
             id: { visible: true },
@@ -858,76 +847,87 @@ describe.each([
             },
           },
         })
-      )
+        expect(res).toEqual(
+          expect.objectContaining({
+            ...view,
+            schema: {
+              id: { visible: true },
+              Price: {
+                visible: true,
+                readonly: false,
+              },
+            },
+          })
+        )
+      })
+
+      isInternal &&
+        it("updating schema will only validate modified field", async () => {
+          let view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              id: { visible: true },
+              Price: {
+                visible: true,
+              },
+              Category: { visible: true },
+            },
+          })
+
+          // Update the view to an invalid state
+          const tableToUpdate = await config.api.table.get(table._id!)
+          ;(tableToUpdate.views![view.name] as ViewV2).schema!.id.visible =
+            false
+          await db.getDB(config.appId!).put(tableToUpdate)
+
+          view = await config.api.viewV2.get(view.id)
+          await config.api.viewV2.update(
+            {
+              ...view,
+              schema: {
+                ...view.schema,
+                Price: {
+                  visible: false,
+                },
+              },
+            },
+            {
+              status: 400,
+              body: {
+                message: 'You can\'t hide "id" because it is a required field.',
+                status: 400,
+              },
+            }
+          )
+        })
     })
 
-    isInternal &&
-      it("updating schema will only validate modified field", async () => {
-        let view = await config.api.viewV2.create({
+    describe("delete", () => {
+      let view: ViewV2
+
+      beforeAll(async () => {
+        view = await config.api.viewV2.create({
           tableId: table._id!,
           name: generator.guid(),
           schema: {
             id: { visible: true },
-            Price: {
-              visible: true,
-            },
-            Category: { visible: true },
           },
         })
-
-        // Update the view to an invalid state
-        const tableToUpdate = await config.api.table.get(table._id!)
-          ;(tableToUpdate.views![view.name] as ViewV2).schema!.id.visible =
-            false
-        await db.getDB(config.appId!).put(tableToUpdate)
-
-        view = await config.api.viewV2.get(view.id)
-        await config.api.viewV2.update(
-          {
-            ...view,
-            schema: {
-              ...view.schema,
-              Price: {
-                visible: false,
-              },
-            },
-          },
-          {
-            status: 400,
-            body: {
-              message: 'You can\'t hide "id" because it is a required field.',
-              status: 400,
-            },
-          }
-        )
       })
-  })
 
-  describe("delete", () => {
-    let view: ViewV2
+      it("can delete an existing view", async () => {
+        const tableId = table._id!
+        const getPersistedView = async () =>
+          (await config.api.table.get(tableId)).views![view.name]
 
-    beforeAll(async () => {
-      view = await config.api.viewV2.create({
-        tableId: table._id!,
-        name: generator.guid(),
-        schema: {
-          id: { visible: true },
-        },
+        expect(await getPersistedView()).toBeDefined()
+
+        await config.api.viewV2.delete(view.id)
+
+        expect(await getPersistedView()).toBeUndefined()
       })
     })
-
-    it("can delete an existing view", async () => {
-      const tableId = table._id!
-      const getPersistedView = async () =>
-        (await config.api.table.get(tableId)).views![view.name]
-
-      expect(await getPersistedView()).toBeDefined()
-
-      await config.api.viewV2.delete(view.id)
-
-      expect(await getPersistedView()).toBeUndefined()
-    })
-  })
 
     describe.each([
       ["from view api", (view: ViewV2) => config.api.viewV2.get(view.id)],
@@ -976,13 +976,13 @@ describe.each([
         })
 
         expect(await getDelegate(view)).toEqual({
-            ...view,
-            schema: {
-              id: { ...table.schema["id"], visible: true },
-              one: { ...table.schema["one"], visible: true },
-              two: { ...table.schema["two"], visible: true },
-              three: { ...table.schema["three"], visible: false },
-            },
+          ...view,
+          schema: {
+            id: { ...table.schema["id"], visible: true },
+            one: { ...table.schema["one"], visible: true },
+            two: { ...table.schema["two"], visible: true },
+            three: { ...table.schema["three"], visible: false },
+          },
         })
       })
 
@@ -1040,44 +1040,44 @@ describe.each([
       })
     })
 
-  describe("fetch view (through table)", () => {
-    it("should be able to fetch a view V2", async () => {
-      const res = await config.api.viewV2.create({
-        name: generator.name(),
-        tableId: table._id!,
-        schema: {
-          id: { visible: true },
-          Price: { visible: false },
-          Category: { visible: true },
-        },
+    describe("fetch view (through table)", () => {
+      it("should be able to fetch a view V2", async () => {
+        const res = await config.api.viewV2.create({
+          name: generator.name(),
+          tableId: table._id!,
+          schema: {
+            id: { visible: true },
+            Price: { visible: false },
+            Category: { visible: true },
+          },
+        })
+
+        const view = await config.api.viewV2.get(res.id)
+        const updatedTable = await config.api.table.get(table._id!)
+        const viewSchema = updatedTable.views![view!.name!].schema as Record<
+          string,
+          ViewUIFieldMetadata
+        >
+        expect(viewSchema.Price?.visible).toEqual(false)
+        expect(viewSchema.Category?.visible).toEqual(true)
       })
 
-      const view = await config.api.viewV2.get(res.id)
-      const updatedTable = await config.api.table.get(table._id!)
-      const viewSchema = updatedTable.views![view!.name!].schema as Record<
-        string,
-        ViewUIFieldMetadata
-      >
-      expect(viewSchema.Price?.visible).toEqual(false)
-      expect(viewSchema.Category?.visible).toEqual(true)
-    })
+      it("should be able to fetch readonly config after downgrades", async () => {
+        mocks.licenses.useViewReadonlyColumns()
+        const res = await config.api.viewV2.create({
+          name: generator.name(),
+          tableId: table._id!,
+          schema: {
+            id: { visible: true },
+            Price: { visible: true, readonly: true },
+          },
+        })
 
-    it("should be able to fetch readonly config after downgrades", async () => {
-      mocks.licenses.useViewReadonlyColumns()
-      const res = await config.api.viewV2.create({
-        name: generator.name(),
-        tableId: table._id!,
-        schema: {
-          id: { visible: true },
-          Price: { visible: true, readonly: true },
-        },
-      })
-
-      mocks.licenses.useCloudFree()
-      const view = await config.api.viewV2.get(res.id)
-      expect(view.schema?.Price).toEqual(
-        expect.objectContaining({ visible: true, readonly: true })
-      )
+        mocks.licenses.useCloudFree()
+        const view = await config.api.viewV2.get(res.id)
+        expect(view.schema?.Price).toEqual(
+          expect.objectContaining({ visible: true, readonly: true })
+        )
       })
     })
 
