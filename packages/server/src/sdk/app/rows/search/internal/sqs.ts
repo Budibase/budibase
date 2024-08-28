@@ -379,7 +379,7 @@ export async function search(
     }
 
     // get the rows
-    let finalRows = await outputProcessing<Row[]>(table, processed, {
+    let finalRows = await outputProcessing(table, processed, {
       preserveLinks: true,
       squash: true,
     })
