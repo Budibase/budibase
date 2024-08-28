@@ -139,14 +139,20 @@ export async function remove(viewId: string): Promise<ViewV2> {
   return pickApi(tableId).remove(viewId)
 }
 
-export function allowedFields(view: View | ViewV2) {
+export function allowedFields(
+  view: View | ViewV2,
+  permission: "WRITE" | "READ"
+) {
   return [
     ...Object.keys(view?.schema || {}).filter(key => {
       if (!isV2(view)) {
         return true
       }
       const fieldSchema = view.schema![key]
-      return fieldSchema.visible && !fieldSchema.readonly
+      if (permission === "WRITE") {
+        return fieldSchema.visible && !fieldSchema.readonly
+      }
+      return fieldSchema.visible
     }),
     ...PROTECTED_EXTERNAL_COLUMNS,
     ...PROTECTED_INTERNAL_COLUMNS,
