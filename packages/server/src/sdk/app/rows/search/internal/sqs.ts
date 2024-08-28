@@ -4,6 +4,7 @@ import {
   FieldType,
   isLogicalSearchOperator,
   Operation,
+  OutputRowOptions,
   QueryJson,
   RelationshipFieldMetadata,
   RelationshipsJson,
@@ -283,7 +284,7 @@ function resyncDefinitionsRequired(status: number, message: string) {
 export async function search(
   options: RowSearchParams,
   table: Table,
-  opts?: { retrying?: boolean }
+  opts?: { retrying?: boolean; outputRowOptions?: OutputRowOptions }
 ): Promise<SearchResponse<Row>> {
   let { paginate, query, ...params } = options
 
@@ -382,6 +383,7 @@ export async function search(
     let finalRows = await outputProcessing(table, processed, {
       preserveLinks: true,
       squash: true,
+      squashNestedFields: opts?.outputRowOptions?.squashNestedFields,
     })
 
     // check if we need to pick specific rows out
@@ -409,7 +411,10 @@ export async function search(
     const msg = typeof err === "string" ? err : err.message
     if (!opts?.retrying && resyncDefinitionsRequired(err.status, msg)) {
       await sdk.tables.sqs.syncDefinition()
-      return search(options, table, { retrying: true })
+      return search(options, table, {
+        retrying: true,
+        outputRowOptions: opts?.outputRowOptions,
+      })
     }
     // previously the internal table didn't error when a column didn't exist in search
     if (err.status === 400 && msg?.match(MISSING_COLUMN_REGEX)) {
