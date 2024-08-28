@@ -1,7 +1,9 @@
 import {
   FieldType,
+  OutputRowOptions,
   RelationSchemaField,
   RenameColumn,
+  SquashTableFields,
   Table,
   TableSchema,
   View,
@@ -249,4 +251,27 @@ export function syncSchema(
   }
 
   return view
+}
+
+export function outputRowOptions(
+  table: Table,
+  viewId: string
+): OutputRowOptions {
+  const view = Object.values(table.views || {}).find(
+    (v): v is ViewV2 => sdk.views.isV2(v) && v.id === viewId
+  )
+  const viewSchema = view?.schema || {}
+
+  const squashFields: SquashTableFields = {}
+  for (const key of Object.keys(viewSchema)) {
+    if (viewSchema[key].columns) {
+      squashFields[key] = {
+        visibleFieldNames: Object.entries(viewSchema[key].columns)
+          .filter(([_, c]) => c.visible !== false)
+          .map(([columnName]) => columnName),
+      }
+    }
+  }
+
+  return { squashNestedFields: squashFields }
 }
