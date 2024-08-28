@@ -343,18 +343,24 @@ class InternalBuilder {
     whereCb: (query: Knex.QueryBuilder) => Knex.QueryBuilder
   ): Knex.QueryBuilder {
     const mainKnex = this.knex
-    const { relationships, endpoint } = this.query
+    const { relationships, endpoint, tableAliases: aliases } = this.query
     const tableName = endpoint.entityId
     if (!relationships) {
       return query
     }
     for (const relationship of relationships) {
       // this is the relationship which is being filtered
-      if (filterKey.startsWith(relationship.column) && relationship.to) {
-        const subQuery = query.whereExists(function () {
-          this.select(mainKnex.raw(1)).from(relationship.tableName!)
-        })
-        query = whereCb(
+      if (
+        filterKey.startsWith(`${relationship.tableName}.`) &&
+        relationship.to &&
+        relationship.tableName
+      ) {
+        const relatedTableName = relationship.tableName
+        const alias = aliases?.[relatedTableName] || relatedTableName
+        let subQuery = mainKnex
+          .select(mainKnex.raw(1))
+          .from({ [alias]: relatedTableName })
+        subQuery = whereCb(
           this.addJoin(
             subQuery,
             {
@@ -365,6 +371,7 @@ class InternalBuilder {
             [relationship]
           )
         )
+        query = query.whereExists(subQuery)
         break
       }
     }
@@ -382,12 +389,13 @@ class InternalBuilder {
     if (!filters) {
       return query
     }
+    const builder = this
     filters = this.parseFilters({ ...filters })
     const aliases = this.query.tableAliases
     // if all or specified in filters, then everything is an or
     const allOr = filters.allOr
-    const tableName =
-      this.client === SqlClient.SQL_LITE ? this.table._id! : this.table.name
+    const isSqlite = this.client === SqlClient.SQL_LITE
+    const tableName = isSqlite ? this.table._id! : this.table.name
 
     function getTableAlias(name: string) {
       const alias = aliases?.[name]
@@ -395,13 +403,33 @@ class InternalBuilder {
     }
     function iterate(
       structure: AnySearchFilter,
-      fn: (key: string, value: any) => void,
-      complexKeyFn?: (key: string[], value: any) => void
+      fn: (
+        query: Knex.QueryBuilder,
+        key: string,
+        value: any
+      ) => Knex.QueryBuilder,
+      complexKeyFn?: (
+        query: Knex.QueryBuilder,
+        key: string[],
+        value: any
+      ) => Knex.QueryBuilder
     ) {
+      const handleRelationship = (
+        q: Knex.QueryBuilder,
+        key: string,
+        value: any
+      ) => {
+        const [filterTableName, ...otherProperties] = key.split(".")
+        const property = otherProperties.join(".")
+        const alias = getTableAlias(filterTableName)
+        return fn(q, alias ? `${alias}.${property}` : property, value)
+      }
       for (const key in structure) {
         const value = structure[key]
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
+        const shouldProcessRelationship =
+          opts?.relationship && isRelationshipField
 
         let castedTypeValue
         if (
@@ -410,7 +438,8 @@ class InternalBuilder {
           complexKeyFn
         ) {
           const alias = getTableAlias(tableName)
-          complexKeyFn(
+          query = complexKeyFn(
+            query,
             castedTypeValue.id.map((x: string) =>
               alias ? `${alias}.${x}` : x
             ),
@@ -418,27 +447,31 @@ class InternalBuilder {
           )
         } else if (!isRelationshipField) {
           const alias = getTableAlias(tableName)
-          fn(alias ? `${alias}.${updatedKey}` : updatedKey, value)
-        }
-        if (opts?.relationship && isRelationshipField) {
-          // TODO: need to update fn to take the query
-          const [filterTableName, property] = updatedKey.split(".")
-          const alias = getTableAlias(filterTableName)
-          fn(alias ? `${alias}.${property}` : property, value)
+          query = fn(
+            query,
+            alias ? `${alias}.${updatedKey}` : updatedKey,
+            value
+          )
+        } else if (isSqlite && shouldProcessRelationship) {
+          query = builder.addRelationshipForFilter(query, updatedKey, q => {
+            return handleRelationship(q, updatedKey, value)
+          })
+        } else if (shouldProcessRelationship) {
+          query = handleRelationship(query, updatedKey, value)
         }
       }
     }
 
-    const like = (key: string, value: any) => {
+    const like = (q: Knex.QueryBuilder, key: string, value: any) => {
       const fuzzyOr = filters?.fuzzyOr
       const fnc = fuzzyOr || allOr ? "orWhere" : "where"
       // postgres supports ilike, nothing else does
       if (this.client === SqlClient.POSTGRES) {
-        query = query[fnc](key, "ilike", `%${value}%`)
+        return q[fnc](key, "ilike", `%${value}%`)
       } else {
         const rawFnc = `${fnc}Raw`
         // @ts-ignore
-        query = query[rawFnc](`LOWER(${this.quotedIdentifier(key)}) LIKE ?`, [
+        return q[rawFnc](`LOWER(${this.quotedIdentifier(key)}) LIKE ?`, [
           `%${value.toLowerCase()}%`,
         ])
       }
@@ -456,13 +489,13 @@ class InternalBuilder {
         return `[${value.join(",")}]`
       }
       if (this.client === SqlClient.POSTGRES) {
-        iterate(mode, (key, value) => {
+        iterate(mode, (q, key, value) => {
           const wrap = any ? "" : "'"
           const op = any ? "\\?| array" : "@>"
           const fieldNames = key.split(/\./g)
           const table = fieldNames[0]
           const col = fieldNames[1]
-          query = query[rawFnc](
+          return q[rawFnc](
             `${not}COALESCE("${table}"."${col}"::jsonb ${op} ${wrap}${stringifyArray(
               value,
               any ? "'" : '"'
@@ -471,8 +504,8 @@ class InternalBuilder {
         })
       } else if (this.client === SqlClient.MY_SQL) {
         const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
-        iterate(mode, (key, value) => {
-          query = query[rawFnc](
+        iterate(mode, (q, key, value) => {
+          return q[rawFnc](
             `${not}COALESCE(${jsonFnc}(${key}, '${stringifyArray(
               value
             )}'), FALSE)`
@@ -480,7 +513,7 @@ class InternalBuilder {
         })
       } else {
         const andOr = mode === filters?.containsAny ? " OR " : " AND "
-        iterate(mode, (key, value) => {
+        iterate(mode, (q, key, value) => {
           let statement = ""
           const identifier = this.quotedIdentifier(key)
           for (let i in value) {
@@ -495,16 +528,16 @@ class InternalBuilder {
           }
 
           if (statement === "") {
-            return
+            return q
           }
 
           if (not) {
-            query = query[rawFnc](
+            return q[rawFnc](
               `(NOT (${statement}) OR ${identifier} IS NULL)`,
               value
             )
           } else {
-            query = query[rawFnc](statement, value)
+            return q[rawFnc](statement, value)
           }
         })
       }
@@ -534,39 +567,39 @@ class InternalBuilder {
       const fnc = allOr ? "orWhereIn" : "whereIn"
       iterate(
         filters.oneOf,
-        (key: string, array) => {
+        (q, key: string, array) => {
           if (this.client === SqlClient.ORACLE) {
             key = this.convertClobs(key)
             array = Array.isArray(array) ? array : [array]
             const binding = new Array(array.length).fill("?").join(",")
-            query = query.whereRaw(`${key} IN (${binding})`, array)
+            return q.whereRaw(`${key} IN (${binding})`, array)
           } else {
-            query = query[fnc](key, Array.isArray(array) ? array : [array])
+            return q[fnc](key, Array.isArray(array) ? array : [array])
           }
         },
-        (key: string[], array) => {
+        (q, key: string[], array) => {
           if (this.client === SqlClient.ORACLE) {
             const keyStr = `(${key.map(k => this.convertClobs(k)).join(",")})`
             const binding = `(${array
               .map((a: any) => `(${new Array(a.length).fill("?").join(",")})`)
               .join(",")})`
-            query = query.whereRaw(`${keyStr} IN ${binding}`, array.flat())
+            return q.whereRaw(`${keyStr} IN ${binding}`, array.flat())
           } else {
-            query = query[fnc](key, Array.isArray(array) ? array : [array])
+            return q[fnc](key, Array.isArray(array) ? array : [array])
           }
         }
       )
     }
     if (filters.string) {
-      iterate(filters.string, (key, value) => {
+      iterate(filters.string, (q, key, value) => {
         const fnc = allOr ? "orWhere" : "where"
         // postgres supports ilike, nothing else does
         if (this.client === SqlClient.POSTGRES) {
-          query = query[fnc](key, "ilike", `${value}%`)
+          return q[fnc](key, "ilike", `${value}%`)
         } else {
           const rawFnc = `${fnc}Raw`
           // @ts-ignore
-          query = query[rawFnc](`LOWER(${this.quotedIdentifier(key)}) LIKE ?`, [
+          return q[rawFnc](`LOWER(${this.quotedIdentifier(key)}) LIKE ?`, [
             `${value.toLowerCase()}%`,
           ])
         }
@@ -576,7 +609,7 @@ class InternalBuilder {
       iterate(filters.fuzzy, like)
     }
     if (filters.range) {
-      iterate(filters.range, (key, value) => {
+      iterate(filters.range, (q, key, value) => {
         const isEmptyObject = (val: any) => {
           return (
             val &&
@@ -605,97 +638,93 @@ class InternalBuilder {
             schema?.type === FieldType.BIGINT &&
             this.client === SqlClient.SQL_LITE
           ) {
-            query = query.whereRaw(
+            return q.whereRaw(
               `CAST(${key} AS INTEGER) BETWEEN CAST(? AS INTEGER) AND CAST(? AS INTEGER)`,
               [value.low, value.high]
             )
           } else {
             const fnc = allOr ? "orWhereBetween" : "whereBetween"
-            query = query[fnc](key, [value.low, value.high])
+            return q[fnc](key, [value.low, value.high])
           }
         } else if (lowValid) {
           if (
             schema?.type === FieldType.BIGINT &&
             this.client === SqlClient.SQL_LITE
           ) {
-            query = query.whereRaw(
-              `CAST(${key} AS INTEGER) >= CAST(? AS INTEGER)`,
-              [value.low]
-            )
+            return q.whereRaw(`CAST(${key} AS INTEGER) >= CAST(? AS INTEGER)`, [
+              value.low,
+            ])
           } else {
             const fnc = allOr ? "orWhere" : "where"
-            query = query[fnc](key, ">=", value.low)
+            return q[fnc](key, ">=", value.low)
           }
         } else if (highValid) {
           if (
             schema?.type === FieldType.BIGINT &&
             this.client === SqlClient.SQL_LITE
           ) {
-            query = query.whereRaw(
-              `CAST(${key} AS INTEGER) <= CAST(? AS INTEGER)`,
-              [value.high]
-            )
+            return q.whereRaw(`CAST(${key} AS INTEGER) <= CAST(? AS INTEGER)`, [
+              value.high,
+            ])
           } else {
             const fnc = allOr ? "orWhere" : "where"
-            query = query[fnc](key, "<=", value.high)
+            return q[fnc](key, "<=", value.high)
           }
         }
+        return q
       })
     }
     if (filters.equal) {
-      iterate(filters.equal, (key, value) => {
+      iterate(filters.equal, (q, key, value) => {
         const fnc = allOr ? "orWhereRaw" : "whereRaw"
         if (this.client === SqlClient.MS_SQL) {
-          query = query[fnc](
+          return q[fnc](
             `CASE WHEN ${this.quotedIdentifier(key)} = ? THEN 1 ELSE 0 END = 1`,
             [value]
           )
         } else if (this.client === SqlClient.ORACLE) {
           const identifier = this.convertClobs(key)
-          query = query[fnc](
-            `(${identifier} IS NOT NULL AND ${identifier} = ?)`,
-            [value]
-          )
+          return q[fnc](`(${identifier} IS NOT NULL AND ${identifier} = ?)`, [
+            value,
+          ])
         } else {
-          query = query[fnc](
-            `COALESCE(${this.quotedIdentifier(key)} = ?, FALSE)`,
-            [value]
-          )
+          return q[fnc](`COALESCE(${this.quotedIdentifier(key)} = ?, FALSE)`, [
+            value,
+          ])
         }
       })
     }
     if (filters.notEqual) {
-      iterate(filters.notEqual, (key, value) => {
+      iterate(filters.notEqual, (q, key, value) => {
         const fnc = allOr ? "orWhereRaw" : "whereRaw"
         if (this.client === SqlClient.MS_SQL) {
-          query = query[fnc](
+          return q[fnc](
             `CASE WHEN ${this.quotedIdentifier(key)} = ? THEN 1 ELSE 0 END = 0`,
             [value]
           )
         } else if (this.client === SqlClient.ORACLE) {
           const identifier = this.convertClobs(key)
-          query = query[fnc](
+          return q[fnc](
             `(${identifier} IS NOT NULL AND ${identifier} != ?) OR ${identifier} IS NULL`,
             [value]
           )
         } else {
-          query = query[fnc](
-            `COALESCE(${this.quotedIdentifier(key)} != ?, TRUE)`,
-            [value]
-          )
+          return q[fnc](`COALESCE(${this.quotedIdentifier(key)} != ?, TRUE)`, [
+            value,
+          ])
         }
       })
     }
     if (filters.empty) {
-      iterate(filters.empty, key => {
+      iterate(filters.empty, (q, key) => {
         const fnc = allOr ? "orWhereNull" : "whereNull"
-        query = query[fnc](key)
+        return q[fnc](key)
       })
     }
     if (filters.notEmpty) {
-      iterate(filters.notEmpty, key => {
+      iterate(filters.notEmpty, (q, key) => {
         const fnc = allOr ? "orWhereNotNull" : "whereNotNull"
-        query = query[fnc](key)
+        return q[fnc](key)
       })
     }
     if (filters.contains) {
