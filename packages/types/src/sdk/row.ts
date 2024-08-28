@@ -36,3 +36,9 @@ export enum RowExportFormat {
   JSON = "json",
   JSON_WITH_SCHEMA = "jsonWithSchema",
 }
+
+export interface OutputRowOptions {
+  squashNestedFields: SquashTableFields
+}
+
+export type SquashTableFields = Record<string, { visibleFieldNames: string[] }>
