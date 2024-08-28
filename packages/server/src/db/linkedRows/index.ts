@@ -248,10 +248,10 @@ function getPrimaryDisplayValue(row: Row, table?: Table) {
  * @param enriched The pre-enriched rows (full docs) which are to be squashed.
  * @returns The rows after having their links squashed to only contain the ID and primary display.
  */
-export async function squashLinksToPrimaryDisplay(
+export async function squashLinks<T = Row[] | Row>(
   table: Table,
-  enriched: Row[] | Row
-) {
+  enriched: T
+): Promise<T> {
   // will populate this as we find them
   const linkedTables = [table]
   const isArray = Array.isArray(enriched)

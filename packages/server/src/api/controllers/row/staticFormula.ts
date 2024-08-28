@@ -154,9 +154,6 @@ export async function finaliseRow(
   if (updateFormula) {
     await updateRelatedFormula(table, enrichedRow)
   }
-  const squashed = await linkRows.squashLinksToPrimaryDisplay(
-    table,
-    enrichedRow
-  )
+  const squashed = await linkRows.squashLinks(table, enrichedRow)
   return { row: enrichedRow, squashed, table }
 }
