@@ -123,7 +123,7 @@
 
     const table = await cache.actions.getTable(relationshipField.tableId)
     relationshipPanelColumns = Object.entries(
-      relationshipField?.schema || {}
+      relationshipField?.columns || {}
     ).map(([name, column]) => {
       return {
         name: name,
