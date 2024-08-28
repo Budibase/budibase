@@ -13,7 +13,6 @@ import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
-import { cloneDeep } from "lodash/fp"
 
 import * as utils from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
@@ -163,17 +162,19 @@ export function enrichSchema(
   view: ViewV2,
   tableSchema: TableSchema
 ): ViewV2Enriched {
-  let schema = cloneDeep(tableSchema)
+  let schema: TableSchema = {}
   const anyViewOrder = Object.values(view.schema || {}).some(
     ui => ui.order != null
   )
-  for (const key of Object.keys(schema)) {
+  for (const key of Object.keys(tableSchema).filter(
+    key => tableSchema[key].visible !== false
+  )) {
     // if nothing specified in view, then it is not visible
     const ui = view.schema?.[key] || { visible: false }
     schema[key] = {
-      ...schema[key],
+      ...tableSchema[key],
       ...ui,
-      order: anyViewOrder ? ui?.order ?? undefined : schema[key].order,
+      order: anyViewOrder ? ui?.order ?? undefined : tableSchema[key].order,
     }
   }
 
