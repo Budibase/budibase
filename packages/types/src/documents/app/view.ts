@@ -1,5 +1,5 @@
 import { SearchFilter, SortOrder, SortType } from "../../api"
-import { RelationSchemaField, UIFieldMetadata } from "./table"
+import { UIFieldMetadata } from "./table"
 import { Document } from "../document"
 import { DBView } from "../../sdk"
 
@@ -35,7 +35,12 @@ export interface View {
 
 export type ViewFieldMetadata = UIFieldMetadata & {
   readonly?: boolean
-  schema?: Record<string, RelationSchemaField>
+  columns?: Record<string, RelationSchemaField>
+}
+
+type RelationSchemaField = {
+  visible?: boolean
+  readonly?: boolean
 }
 
 export interface ViewV2 {
