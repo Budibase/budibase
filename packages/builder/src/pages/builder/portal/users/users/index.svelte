@@ -118,6 +118,8 @@
         name: user.firstName ? user.firstName + " " + user.lastName : "",
         userGroups,
         tenantOwnerEmail,
+        allowSelectedOverride:
+          user.email === tenantOwnerEmail ? false : undefined,
         apps: [...new Set(Object.keys(user.roles))],
       }
     })

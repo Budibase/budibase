@@ -259,7 +259,10 @@
     if (select) {
       // Add any rows which are not already in selected rows
       rows.forEach(row => {
-        if (selectedRows.findIndex(x => x._id === row._id) === -1) {
+        if (
+          row.allowSelectedOverride !== false &&
+          selectedRows.findIndex(x => x._id === row._id) === -1
+        ) {
           selectedRows.push(row)
         }
       })
@@ -396,6 +399,9 @@
                   class:noBorderCheckbox={!showHeaderBorder}
                   class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
                   on:click={e => {
+                    if (row.allowSelectedOverride === false) {
+                      return
+                    }
                     toggleSelectRow(row)
                     e.stopPropagation()
                   }}
@@ -407,6 +413,7 @@
                     ) !== -1}
                     onEdit={e => editRow(e, row)}
                     {allowSelectRows}
+                    allowSelectedOverride={row.allowSelectedOverride}
                     {allowEditRows}
                   />
                 </div>
