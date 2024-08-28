@@ -929,7 +929,16 @@ describe.each([
     })
   })
 
-    describe("read", () => {
+    describe.each([
+      ["from view api", (view: ViewV2) => config.api.viewV2.get(view.id)],
+      [
+        "from table",
+        async (view: ViewV2) => {
+          const table = await config.api.table.get(view.tableId)
+          return (table.views || {})[view.name]
+        },
+      ],
+    ])("read (%s)", (_, getDelegate) => {
       let table: Table
       let tableId: string
 
@@ -966,8 +975,7 @@ describe.each([
           },
         })
 
-        expect((await config.api.table.get(tableId)).views).toEqual({
-          [view.name]: {
+        expect(await getDelegate(view)).toEqual({
             ...view,
             schema: {
               id: { ...table.schema["id"], visible: true },
@@ -975,6 +983,29 @@ describe.each([
               two: { ...table.schema["two"], visible: true },
               three: { ...table.schema["three"], visible: false },
             },
+        })
+      })
+
+      it("does not include columns removed from the table", async () => {
+        const view = await config.api.viewV2.create({
+          tableId,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
+            one: { visible: true },
+            two: { visible: true },
+          },
+        })
+        const table = await config.api.table.get(tableId)
+        const { one: _, ...newSchema } = table.schema
+        await config.api.table.save({ ...table, schema: newSchema })
+
+        expect(await getDelegate(view)).toEqual({
+          ...view,
+          schema: {
+            id: { ...table.schema["id"], visible: true },
+            two: { ...table.schema["two"], visible: true },
+            three: { ...table.schema["three"], visible: false },
           },
         })
       })
