@@ -101,8 +101,8 @@
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
   $: {
-    tenantOwnerEmail = $fetch.tenantOwner?.email
-    enrichedUsers = $fetch.rows?.map(user => {
+    const res = $fetch
+    enrichedUsers = res.rows?.map(user => {
       let userGroups = []
       $groups.forEach(group => {
         if (group.users) {
@@ -113,14 +113,18 @@
           })
         }
       })
+      user.tenantOwnerEmail = res.tenantOwner?.email
+      const role = Constants.BudibaseRoleOptions.find(
+        x => x.value === users.getUserRole(user)
+      )
       return {
         ...user,
         name: user.firstName ? user.firstName + " " + user.lastName : "",
         userGroups,
-        tenantOwnerEmail,
         allowSelectedOverride:
-          user.email === tenantOwnerEmail ? false : undefined,
+          role.value === Constants.BudibaseRoles.Owner ? false : undefined,
         apps: [...new Set(Object.keys(user.roles))],
+        access: role.sortOrder,
       }
     })
   }
@@ -382,6 +386,7 @@
     allowSelectRows={!readonly}
     {customRenderers}
     loading={!$fetch.loaded || !groupsLoaded}
+    defaultSortColumn={"access"}
   />
 
   <div class="pagination">

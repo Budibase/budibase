@@ -43,6 +43,8 @@
   export let showHeaderBorder = true
   export let placeholderText = "No rows found"
   export let snippets = []
+  export let defaultSortColumn
+  export let defaultSortOrder = "Ascending"
 
   const dispatch = createEventDispatcher()
 
@@ -162,6 +164,8 @@
   }
 
   const sortRows = (rows, sortColumn, sortOrder) => {
+    sortColumn = sortColumn ?? defaultSortColumn
+    sortOrder = sortOrder ?? defaultSortOrder
     if (!sortColumn || !sortOrder || disableSorting) {
       return rows
     }
