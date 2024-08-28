@@ -345,6 +345,7 @@ class InternalBuilder {
     const mainKnex = this.knex
     const { relationships, endpoint, tableAliases: aliases } = this.query
     const tableName = endpoint.entityId
+    const fromAlias = aliases?.[tableName] || tableName
     if (!relationships) {
       return query
     }
@@ -356,22 +357,37 @@ class InternalBuilder {
         relationship.tableName
       ) {
         const relatedTableName = relationship.tableName
-        const alias = aliases?.[relatedTableName] || relatedTableName
+        const toAlias = aliases?.[relatedTableName] || relatedTableName
         let subQuery = mainKnex
           .select(mainKnex.raw(1))
-          .from({ [alias]: relatedTableName })
-        subQuery = whereCb(
-          this.addJoin(
-            subQuery,
-            {
-              from: relationship.tableName,
-              to: tableName,
-              through: relationship.through,
-            },
-            [relationship]
+          .from({ [toAlias]: relatedTableName })
+        let mainTableRelatesTo = toAlias
+        if (relationship.through) {
+          const throughAlias =
+            aliases?.[relationship.through] || relationship.through
+          let throughTable = this.tableNameWithSchema(relationship.through, {
+            alias: throughAlias,
+            schema: endpoint.schema,
+          })
+          subQuery = subQuery.innerJoin(throughTable, function () {
+            // @ts-ignore
+            this.orOn(
+              `${toAlias}.${relationship.toPrimary}`,
+              "=",
+              `${throughAlias}.${relationship.to}`
+            )
+          })
+          mainTableRelatesTo = throughAlias
+        }
+        // "join" to the main table, making sure the ID matches that of the main
+        subQuery = subQuery.where(
+          `${mainTableRelatesTo}.${relationship.from}`,
+          "=",
+          mainKnex.raw(
+            this.quotedIdentifier(`${fromAlias}.${relationship.fromPrimary}`)
           )
         )
-        query = query.whereExists(subQuery)
+        query = query.whereExists(whereCb(subQuery))
         break
       }
     }
