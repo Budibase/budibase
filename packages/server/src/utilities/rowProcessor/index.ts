@@ -343,10 +343,7 @@ export async function outputProcessing<T extends Row[] | Row>(
   enriched = await processFormulas(table, enriched, { dynamic: true })
 
   if (opts.squash) {
-    enriched = (await linkRows.squashLinksToPrimaryDisplay(
-      table,
-      enriched
-    )) as Row[]
+    enriched = await linkRows.squashLinks(table, enriched)
   }
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
