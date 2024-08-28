@@ -929,6 +929,57 @@ describe.each([
     })
   })
 
+    describe("read", () => {
+      let table: Table
+      let tableId: string
+
+      beforeEach(async () => {
+        table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              one: {
+                type: FieldType.STRING,
+                name: "one",
+              },
+              two: {
+                type: FieldType.STRING,
+                name: "two",
+              },
+              three: {
+                type: FieldType.STRING,
+                name: "three",
+              },
+            },
+          })
+        )
+        tableId = table._id!
+      })
+
+      it("retrieves the view data with the enriched schema", async () => {
+        const view = await config.api.viewV2.create({
+          tableId,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
+            one: { visible: true },
+            two: { visible: true },
+          },
+        })
+
+        expect((await config.api.table.get(tableId)).views).toEqual({
+          [view.name]: {
+            ...view,
+            schema: {
+              id: { ...table.schema["id"], visible: true },
+              one: { ...table.schema["one"], visible: true },
+              two: { ...table.schema["two"], visible: true },
+              three: { ...table.schema["three"], visible: false },
+            },
+          },
+        })
+      })
+    })
+
   describe("fetch view (through table)", () => {
     it("should be able to fetch a view V2", async () => {
       const res = await config.api.viewV2.create({
