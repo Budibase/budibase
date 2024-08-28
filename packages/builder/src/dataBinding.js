@@ -829,7 +829,6 @@ const getEmbedBindings = () => {
       readableBinding: `ParentWindow`,
       category: "Embed",
       icon: "DistributeVertically",
-      display: { type: "object", name: "Parent Window" },
     },
   ]
   return bindings
