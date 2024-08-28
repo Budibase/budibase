@@ -1009,6 +1009,35 @@ describe.each([
           },
         })
       })
+
+      it("does not include columns hidden from the table", async () => {
+        const view = await config.api.viewV2.create({
+          tableId,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
+            one: { visible: true },
+            two: { visible: true },
+          },
+        })
+        const table = await config.api.table.get(tableId)
+        await config.api.table.save({
+          ...table,
+          schema: {
+            ...table.schema,
+            two: { ...table.schema["two"], visible: false },
+          },
+        })
+
+        expect(await getDelegate(view)).toEqual({
+          ...view,
+          schema: {
+            id: { ...table.schema["id"], visible: true },
+            one: { ...table.schema["one"], visible: true },
+            three: { ...table.schema["three"], visible: false },
+          },
+        })
+      })
     })
 
   describe("fetch view (through table)", () => {
