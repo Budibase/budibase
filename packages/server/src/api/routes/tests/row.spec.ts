@@ -40,6 +40,7 @@ import {
   TableSchema,
   JsonFieldSubType,
   RowExportFormat,
+  FeatureFlag,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -95,7 +96,12 @@ describe.each([
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, () => config.init())
+    await withCoreEnv(
+      {
+        SQS_SEARCH_ENABLE: "true",
+      },
+      () => config.init()
+    )
     if (isSqs) {
       envCleanup = setCoreEnv({
         SQS_SEARCH_ENABLE: "true",
@@ -2436,7 +2442,13 @@ describe.each([
 
       let auxData: Row[] = []
 
+      let flagCleanup: (() => void) | undefined
+
       beforeAll(async () => {
+        flagCleanup = setCoreEnv({
+          TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
+        })
+
         const aux2Table = await config.api.table.save(saveTableRequest())
         const aux2Data = await config.api.row.save(aux2Table._id!, {})
 
@@ -2558,7 +2570,11 @@ describe.each([
         tableId = table._id!
       })
 
-      it.each([
+      afterAll(() => {
+        flagCleanup?.()
+      })
+
+      const testScenarios: [string, (row: Row) => Promise<Row> | Row][] = [
         ["get row", (row: Row) => config.api.row.get(tableId, row._id!)],
         [
           "fetch",
@@ -2591,7 +2607,9 @@ describe.each([
           },
         ],
         ["from original saved row", (row: Row) => row],
-      ])(
+      ]
+
+      it.each(testScenarios)(
         "can retrieve rows with populated relationships (via %s)",
         async (__, retrieveDelegate) => {
           const otherRows = _.sampleSize(auxData, 5)
@@ -2606,6 +2624,7 @@ describe.each([
           })
 
           const retrieved = await retrieveDelegate(row)
+
           expect(retrieved).toEqual(
             expect.objectContaining({
               title: row.title,
@@ -2645,6 +2664,67 @@ describe.each([
                 },
               ],
             })
+          )
+        }
+      )
+
+      it.each(testScenarios)(
+        "does not enrich relationships when not enabled (via %s)",
+        async (__, retrieveDelegate) => {
+          await withCoreEnv(
+            {
+              TENANT_FEATURE_FLAGS: ``,
+            },
+            async () => {
+              const otherRows = _.sampleSize(auxData, 5)
+
+              const row = await config.api.row.save(tableId, {
+                title: generator.word(),
+                relWithNoSchema: [otherRows[0]],
+                relWithEmptySchema: [otherRows[1]],
+                relWithFullSchema: [otherRows[2]],
+                relWithHalfSchema: [otherRows[3]],
+                relWithIllegalSchema: [otherRows[4]],
+              })
+
+              const retrieved = await retrieveDelegate(row)
+
+              expect(retrieved).toEqual(
+                expect.objectContaining({
+                  title: row.title,
+                  relWithNoSchema: [
+                    {
+                      _id: otherRows[0]._id,
+                      primaryDisplay: otherRows[0].name,
+                    },
+                  ],
+                  relWithEmptySchema: [
+                    {
+                      _id: otherRows[1]._id,
+                      primaryDisplay: otherRows[1].name,
+                    },
+                  ],
+                  relWithFullSchema: [
+                    {
+                      _id: otherRows[2]._id,
+                      primaryDisplay: otherRows[2].name,
+                    },
+                  ],
+                  relWithHalfSchema: [
+                    {
+                      _id: otherRows[3]._id,
+                      primaryDisplay: otherRows[3].name,
+                    },
+                  ],
+                  relWithIllegalSchema: [
+                    {
+                      _id: otherRows[4]._id,
+                      primaryDisplay: otherRows[4].name,
+                    },
+                  ],
+                })
+              )
+            }
           )
         }
       )

@@ -12,7 +12,9 @@
   export let columns
   export let fromRelationshipField
 
-  const { datasource, dispatch, cache } = getContext("grid")
+  const { datasource, dispatch, cache, config } = getContext("grid")
+
+  $: canSetRelationshipSchemas = $config.canSetRelationshipSchemas
 
   let relationshipPanelAnchor
   let relationshipFieldName
@@ -29,8 +31,6 @@
     }),
     {}
   )
-
-  $: allowRelationshipSchemas = true // TODO
 
   $: displayColumns = columns.map(c => {
     const isRequired =
@@ -196,7 +196,7 @@
           value={columnToPermissionOptions(column)}
           options={column.options}
         />
-        {#if allowRelationshipSchemas && column.schema.type === FieldType.LINK && columnToPermissionOptions(column) !== FieldPermissions.HIDDEN}
+        {#if canSetRelationshipSchemas && column.schema.type === FieldType.LINK && columnToPermissionOptions(column) !== FieldPermissions.HIDDEN}
           <div class="relationship-columns">
             <ActionButton
               on:click={e => {
@@ -214,7 +214,7 @@
   </div>
 </div>
 
-{#if allowRelationshipSchemas}
+{#if canSetRelationshipSchemas}
   <Popover
     on:close={() => (relationshipFieldName = null)}
     open={relationshipFieldName}

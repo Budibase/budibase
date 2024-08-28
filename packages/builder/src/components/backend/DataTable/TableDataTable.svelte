@@ -18,6 +18,8 @@
   import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
   import GridUsersTableButton from "components/backend/DataTable/modals/grid/GridUsersTableButton.svelte"
   import { DB_TYPE_EXTERNAL } from "constants/backend"
+  import { isEnabled } from "helpers/featureFlags"
+  import { FeatureFlag } from "@budibase/types"
 
   const userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },
@@ -66,6 +68,7 @@
     canDeleteRows={!isUsersTable}
     canEditRows={!isUsersTable || !$appStore.features.disableUserMetadata}
     canEditColumns={!isUsersTable || !$appStore.features.disableUserMetadata}
+    canSetRelationshipSchemas={isEnabled(FeatureFlag.ENRICHED_RELATIONSHIPS)}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatedatasource={handleGridTableUpdate}
