@@ -121,9 +121,9 @@ export async function fetchRaw(tableId: string): Promise<Row[]> {
   return pickApi(tableId).fetchRaw(tableId)
 }
 
-export async function fetchView(
+export async function fetchLegacyView(
   viewName: string,
   params: ViewParams
 ): Promise<Row[]> {
-  return internal.fetchView(viewName, params)
+  return internal.fetchLegacyView(viewName, params)
 }

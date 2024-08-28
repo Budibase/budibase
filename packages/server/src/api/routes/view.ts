@@ -46,7 +46,7 @@ router
       permissions.PermissionType.TABLE,
       permissions.PermissionLevel.READ
     ),
-    rowController.fetchView
+    rowController.fetchLegacyView
   )
   .get("/api/views", authorized(permissions.BUILDER), viewController.v1.fetch)
   .delete(

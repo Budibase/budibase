@@ -97,12 +97,12 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
   gridSocket?.emitRowUpdate(ctx, row || squashed)
 }
 
-export async function fetchView(ctx: any) {
+export async function fetchLegacyView(ctx: any) {
   const viewName = decodeURIComponent(ctx.params.viewName)
 
   const { calculation, group, field } = ctx.query
 
-  ctx.body = await sdk.rows.fetchView(viewName, {
+  ctx.body = await sdk.rows.fetchLegacyView(viewName, {
     calculation,
     group: calculation ? group : null,
     field,
