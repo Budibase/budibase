@@ -96,12 +96,7 @@ describe.each([
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await withCoreEnv(
-      {
-        SQS_SEARCH_ENABLE: "true",
-      },
-      () => config.init()
-    )
+    await withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, () => config.init())
     if (isSqs) {
       envCleanup = setCoreEnv({
         SQS_SEARCH_ENABLE: "true",
