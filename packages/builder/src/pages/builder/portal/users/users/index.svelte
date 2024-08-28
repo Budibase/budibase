@@ -53,7 +53,6 @@
 
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
   let enrichedUsers = []
-  let tenantOwnerEmail
   let createUserModal,
     inviteConfirmationModal,
     onboardingTypeModal,

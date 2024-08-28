@@ -50,7 +50,9 @@ export default class UserFetch extends DataFetch {
       let tenantInfo
       try {
         tenantInfo = await this.API.getTenantInfo({ tenantId })
-      } catch {}
+      } catch {
+        tenantInfo = undefined
+      }
       return {
         rows: res?.data || [],
         hasNextPage: res?.hasNextPage || false,
