@@ -2,13 +2,13 @@ import { Ctx, Row } from "@budibase/types"
 import * as utils from "../db/utils"
 import sdk from "../sdk"
 import { Next } from "koa"
-import { getTableId } from "../api/controllers/row/utils"
+import { getSourceId } from "../api/controllers/row/utils"
 
 export default async (ctx: Ctx<Row>, next: Next) => {
   const { body } = ctx.request
   let { _viewId: viewId } = body
 
-  const possibleViewId = getTableId(ctx)
+  const possibleViewId = getSourceId(ctx)
   if (utils.isViewID(possibleViewId)) {
     viewId = possibleViewId
   }
