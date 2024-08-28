@@ -194,8 +194,8 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: ["john%", limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
+      bindings: ["john%", limit, "john%", 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc) where rownum <= :2) "test" where LOWER("test"."name") LIKE :3 order by "test"."id" asc) where rownum <= :4`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -208,9 +208,10 @@ describe("SQL query builder", () => {
         },
       })
     )
+    const filterSet = [`%20%`, `%25%`, `%"john"%`, `%"mary"%`]
     expect(query).toEqual({
-      bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2 and COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4 order by "test"."id" asc) where rownum <= :5) "test" order by "test"."id" asc) where rownum <= :6`,
+      bindings: [...filterSet, limit, ...filterSet, 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2 and COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4 order by "test"."id" asc) where rownum <= :5) "test" where COALESCE(LOWER("test"."age"), '') LIKE :6 AND COALESCE(LOWER("test"."age"), '') LIKE :7 and COALESCE(LOWER("test"."name"), '') LIKE :8 AND COALESCE(LOWER("test"."name"), '') LIKE :9 order by "test"."id" asc) where rownum <= :10`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -223,8 +224,8 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: [`%jo%`, limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
+      bindings: [`%jo%`, limit, `%jo%`, 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc) where rownum <= :2) "test" where LOWER("test"."name") LIKE :3 order by "test"."id" asc) where rownum <= :4`,
     })
   })
 
@@ -241,8 +242,8 @@ describe("SQL query builder", () => {
     )
 
     expect(query).toEqual({
-      bindings: ["John", limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") = :1) order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
+      bindings: ["John", limit, "John", 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") = :1) order by "test"."id" asc) where rownum <= :2) "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") = :3) order by "test"."id" asc) where rownum <= :4`,
     })
   })
 
@@ -259,8 +260,8 @@ describe("SQL query builder", () => {
     )
 
     expect(query).toEqual({
-      bindings: ["John", limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") != :1) OR to_char("test"."name") IS NULL order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
+      bindings: ["John", limit, "John", 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") != :1) OR to_char("test"."name") IS NULL order by "test"."id" asc) where rownum <= :2) "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") != :3) OR to_char("test"."name") IS NULL order by "test"."id" asc) where rownum <= :4`,
     })
   })
 })
