@@ -263,7 +263,7 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
   // attach any linked row information
   let enriched = !opts.preserveLinks
-    ? await linkRows.attachFullLinkedDocs(table, safeRows, {
+    ? await linkRows.attachFullLinkedDocs(table.schema, safeRows, {
         fromRow: opts?.fromRow,
       })
     : safeRows
