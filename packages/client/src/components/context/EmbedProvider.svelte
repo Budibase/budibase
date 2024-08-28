@@ -12,6 +12,10 @@
   }
 
   function handleMessage(event) {
+    if (event.data?.type !== "bb-parent-window-event") {
+      return
+    }
+
     // Validate the event origin to ensure it's coming from a trusted source
     // Allow different subdomains but must match TLD
     const appOrigin = extractDomainFromUrl(window.location.origin)
