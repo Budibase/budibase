@@ -125,18 +125,7 @@ describe.each([
     mocks.licenses.useCloudFree()
   })
 
-  const getRowUsage = async () => {
-    const { total } = await config.doInContext(undefined, () =>
-      quotas.getCurrentUsageValues(QuotaUsageType.STATIC, StaticQuotaName.ROWS)
-    )
-    return total
-  }
-
-  const assertRowUsage = async (expected: number) => {
-    const usage = await getRowUsage()
-    expect(usage).toBe(expected)
-  }
-
+  describe("view crud", () => {
   describe("create", () => {
     it("persist the view when the view is successfully created", async () => {
       const newView: CreateViewRequest = {
@@ -584,7 +573,9 @@ describe.each([
       expect((await config.api.table.get(tableId)).views).toEqual({
         [view.name]: {
           ...view,
-          query: [{ operator: "equal", field: "newField", value: "thatValue" }],
+            query: [
+              { operator: "equal", field: "newField", value: "thatValue" },
+            ],
           schema: expect.anything(),
         },
       })
@@ -886,7 +877,8 @@ describe.each([
 
         // Update the view to an invalid state
         const tableToUpdate = await config.api.table.get(table._id!)
-        ;(tableToUpdate.views![view.name] as ViewV2).schema!.id.visible = false
+          ;(tableToUpdate.views![view.name] as ViewV2).schema!.id.visible =
+            false
         await db.getDB(config.appId!).put(tableToUpdate)
 
         view = await config.api.viewV2.get(view.id)
@@ -975,6 +967,126 @@ describe.each([
       expect(view.schema?.Price).toEqual(
         expect.objectContaining({ visible: true, readonly: true })
       )
+      })
+    })
+
+    describe("updating table schema", () => {
+      describe("existing columns changed to required", () => {
+        beforeEach(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                id: {
+                  name: "id",
+                  type: FieldType.NUMBER,
+                  autocolumn: true,
+                },
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                },
+              },
+            })
+          )
+        })
+
+        it("allows updating when no views constrains the field", async () => {
+          await config.api.viewV2.create({
+            name: "view a",
+            tableId: table._id!,
+            schema: {
+              id: { visible: true },
+              name: { visible: true },
+            },
+          })
+
+          table = await config.api.table.get(table._id!)
+          await config.api.table.save(
+            {
+              ...table,
+              schema: {
+                ...table.schema,
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                  constraints: { presence: { allowEmpty: false } },
+                },
+              },
+            },
+            { status: 200 }
+          )
+        })
+
+        it("rejects if field is readonly in any view", async () => {
+          mocks.licenses.useViewReadonlyColumns()
+
+          await config.api.viewV2.create({
+            name: "view a",
+            tableId: table._id!,
+            schema: {
+              id: { visible: true },
+              name: {
+                visible: true,
+                readonly: true,
+              },
+            },
+          })
+
+          table = await config.api.table.get(table._id!)
+          await config.api.table.save(
+            {
+              ...table,
+              schema: {
+                ...table.schema,
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                  constraints: { presence: true },
+                },
+              },
+            },
+            {
+              status: 400,
+              body: {
+                status: 400,
+                message:
+                  'To make field "name" required, this field must be present and writable in views: view a.',
+              },
+            }
+          )
+        })
+
+        it("rejects if field is hidden in any view", async () => {
+          await config.api.viewV2.create({
+            name: "view a",
+            tableId: table._id!,
+            schema: { id: { visible: true } },
+          })
+
+          table = await config.api.table.get(table._id!)
+          await config.api.table.save(
+            {
+              ...table,
+              schema: {
+                ...table.schema,
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                  constraints: { presence: true },
+                },
+              },
+            },
+            {
+              status: 400,
+              body: {
+                status: 400,
+                message:
+                  'To make field "name" required, this field must be present and writable in views: view a.',
+              },
+            }
+          )
+        })
+      })
     })
   })
 
@@ -1119,6 +1231,21 @@ describe.each([
     })
 
     describe("destroy", () => {
+      const getRowUsage = async () => {
+        const { total } = await config.doInContext(undefined, () =>
+          quotas.getCurrentUsageValues(
+            QuotaUsageType.STATIC,
+            StaticQuotaName.ROWS
+          )
+        )
+        return total
+      }
+
+      const assertRowUsage = async (expected: number) => {
+        const usage = await getRowUsage()
+        expect(usage).toBe(expected)
+      }
+
       it("should be able to delete a row", async () => {
         const createdRow = await config.api.row.save(table._id!, {})
         const rowUsage = await getRowUsage()
@@ -1820,125 +1947,6 @@ describe.each([
         await config.api.viewV2.publicSearch(view.id, undefined, {
           status: 401,
         })
-      })
-    })
-  })
-
-  describe("updating table schema", () => {
-    describe("existing columns changed to required", () => {
-      beforeEach(async () => {
-        table = await config.api.table.save(
-          saveTableRequest({
-            schema: {
-              id: {
-                name: "id",
-                type: FieldType.NUMBER,
-                autocolumn: true,
-              },
-              name: {
-                name: "name",
-                type: FieldType.STRING,
-              },
-            },
-          })
-        )
-      })
-
-      it("allows updating when no views constrains the field", async () => {
-        await config.api.viewV2.create({
-          name: "view a",
-          tableId: table._id!,
-          schema: {
-            id: { visible: true },
-            name: { visible: true },
-          },
-        })
-
-        table = await config.api.table.get(table._id!)
-        await config.api.table.save(
-          {
-            ...table,
-            schema: {
-              ...table.schema,
-              name: {
-                name: "name",
-                type: FieldType.STRING,
-                constraints: { presence: { allowEmpty: false } },
-              },
-            },
-          },
-          { status: 200 }
-        )
-      })
-
-      it("rejects if field is readonly in any view", async () => {
-        mocks.licenses.useViewReadonlyColumns()
-
-        await config.api.viewV2.create({
-          name: "view a",
-          tableId: table._id!,
-          schema: {
-            id: { visible: true },
-            name: {
-              visible: true,
-              readonly: true,
-            },
-          },
-        })
-
-        table = await config.api.table.get(table._id!)
-        await config.api.table.save(
-          {
-            ...table,
-            schema: {
-              ...table.schema,
-              name: {
-                name: "name",
-                type: FieldType.STRING,
-                constraints: { presence: true },
-              },
-            },
-          },
-          {
-            status: 400,
-            body: {
-              status: 400,
-              message:
-                'To make field "name" required, this field must be present and writable in views: view a.',
-            },
-          }
-        )
-      })
-
-      it("rejects if field is hidden in any view", async () => {
-        await config.api.viewV2.create({
-          name: "view a",
-          tableId: table._id!,
-          schema: { id: { visible: true } },
-        })
-
-        table = await config.api.table.get(table._id!)
-        await config.api.table.save(
-          {
-            ...table,
-            schema: {
-              ...table.schema,
-              name: {
-                name: "name",
-                type: FieldType.STRING,
-                constraints: { presence: true },
-              },
-            },
-          },
-          {
-            status: 400,
-            body: {
-              status: 400,
-              message:
-                'To make field "name" required, this field must be present and writable in views: view a.',
-            },
-          }
-        )
       })
     })
   })
