@@ -38,7 +38,7 @@ export async function handleRequest<T extends Operation>(
 }
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
 
   const { _id, ...rowData } = ctx.request.body
   const table = await sdk.tables.getTable(tableId)
@@ -93,7 +93,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 }
 
 export async function destroy(ctx: UserCtx) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const _id = ctx.request.body._id
   const { row } = await handleRequest(Operation.DELETE, tableId, {
     id: breakRowIdField(_id),
@@ -104,7 +104,7 @@ export async function destroy(ctx: UserCtx) {
 
 export async function bulkDestroy(ctx: UserCtx) {
   const { rows } = ctx.request.body
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   let promises: Promise<{ row: Row; table: Table }>[] = []
   for (let row of rows) {
     promises.push(
@@ -123,7 +123,7 @@ export async function bulkDestroy(ctx: UserCtx) {
 
 export async function fetchEnrichedRow(ctx: UserCtx) {
   const id = ctx.params.rowId
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   const datasource: Datasource = await sdk.datasources.get(datasourceId)
   if (!datasource || !datasource.entities) {
