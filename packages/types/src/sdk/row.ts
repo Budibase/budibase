@@ -5,6 +5,7 @@ import { WithRequired } from "../shared"
 
 export interface SearchParams {
   tableId?: string
+  viewId?: string
   query?: SearchFilters
   paginate?: boolean
   bookmark?: string | number

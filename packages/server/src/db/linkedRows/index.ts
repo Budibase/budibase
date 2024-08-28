@@ -17,6 +17,7 @@ import {
   FieldType,
   LinkDocumentValue,
   Row,
+  SquashTableFields,
   Table,
   TableSchema,
 } from "@budibase/types"
@@ -245,11 +246,13 @@ function getPrimaryDisplayValue(row: Row, table?: Table) {
  * This function will take the given enriched rows and squash the links to only contain the primary display field.
  * @param table The table from which the rows originated.
  * @param enriched The pre-enriched rows (full docs) which are to be squashed.
+ * @param squashFields Per link column (key) define which columns are allowed while squashing.
  * @returns The rows after having their links squashed to only contain the ID and primary display.
  */
 export async function squashLinks<T = Row[] | Row>(
   table: Table,
-  enriched: T
+  enriched: T,
+  squashFields?: SquashTableFields
 ): Promise<T> {
   // will populate this as we find them
   const linkedTables = [table]
@@ -270,17 +273,11 @@ export async function squashLinks<T = Row[] | Row>(
         const obj: any = { _id: link._id }
         obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
 
-        // TODO
-        // const allowRelationshipSchemas = await features.flags.isEnabled(
-        //   FeatureFlag.ENRICHED_RELATIONSHIPS
-        // )
-        // if (schema.schema && allowRelationshipSchemas) {
-        //   for (const relField of Object.entries(schema.schema)
-        //     .filter(([_, field]) => field.visible !== false)
-        //     .map(([fieldKey]) => fieldKey)) {
-        //     obj[relField] = link[relField]
-        //   }
-        // }
+        if (squashFields && squashFields[column]) {
+          for (const relField of squashFields[column].visibleFieldNames) {
+            obj[relField] = link[relField]
+          }
+        }
 
         newLinks.push(obj)
       }

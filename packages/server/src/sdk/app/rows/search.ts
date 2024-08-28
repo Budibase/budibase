@@ -86,16 +86,21 @@ export async function search(
       options.query = removeInvalidFilters(options.query, queriableFields)
     }
 
+    let outputRowOptions
+    if (options.viewId) {
+      outputRowOptions = sdk.views.outputRowOptions(table, options.viewId)
+    }
+
     let result: SearchResponse<Row>
     if (isExternalTable) {
       span?.addTags({ searchType: "external" })
-      result = await external.search(options, table)
+      result = await external.search(options, table, outputRowOptions)
     } else if (dbCore.isSqsEnabledForTenant()) {
       span?.addTags({ searchType: "sqs" })
-      result = await internal.sqs.search(options, table)
+      result = await internal.sqs.search(options, table, { outputRowOptions })
     } else {
       span?.addTags({ searchType: "lucene" })
-      result = await internal.lucene.search(options, table)
+      result = await internal.lucene.search(options, table, outputRowOptions)
     }
 
     span?.addTags({
