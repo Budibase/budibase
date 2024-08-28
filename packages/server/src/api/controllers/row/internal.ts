@@ -16,7 +16,6 @@ import {
   PatchRowRequest,
   PatchRowResponse,
   Row,
-  Table,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -197,7 +196,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   )
 
   // get the linked tables
-  const linkTableIds = getLinkedTableIDs(table as Table)
+  const linkTableIds = getLinkedTableIDs(table.schema)
   const linkTables = await sdk.tables.getTables(linkTableIds)
 
   // perform output processing
