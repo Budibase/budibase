@@ -71,8 +71,9 @@ export async function patch(
 }
 
 export const save = async (ctx: UserCtx<Row, Row>) => {
-  const { tableId } = utils.getSourceId(ctx)
-  const { sourceId } = ctx.params
+  const { tableId, viewId } = utils.getSourceId(ctx)
+  const sourceId = viewId || tableId
+
   const appId = ctx.appId
   const body = ctx.request.body
 
@@ -116,7 +117,8 @@ export async function fetch(ctx: any) {
 }
 
 export async function find(ctx: UserCtx<void, GetRowResponse>) {
-  const { sourceId } = ctx.params
+  const { tableId, viewId } = utils.getSourceId(ctx)
+  const sourceId = viewId || tableId
   const rowId = ctx.params.rowId
 
   const response = await sdk.rows.find(sourceId, rowId)
