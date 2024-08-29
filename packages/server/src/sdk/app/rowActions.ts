@@ -5,7 +5,7 @@ import {
   TableRowActions,
   VirtualDocumentType,
 } from "@budibase/types"
-import { generateRowActionsID } from "../../db/utils"
+import { generateRowActionsID, isViewID } from "../../db/utils"
 import automations from "./automations"
 import { definitions as TRIGGER_DEFINITIONS } from "../../automations/triggerInfo"
 import * as triggers from "../../automations/triggers"
@@ -155,13 +155,8 @@ export async function update(
 
 async function guardView(tableId: string, viewId: string) {
   let view
-  try {
+  if (isViewID(viewId)) {
     view = await sdk.views.get(viewId)
-  } catch (e: any) {
-    if (e?.message !== "Unable to extract table ID, is not a view ID") {
-      throw e
-    }
-    // View id is not valid
   }
   if (!view || view.tableId !== tableId) {
     throw new HTTPError(`View '${viewId}' not found in '${tableId}'`, 400)
