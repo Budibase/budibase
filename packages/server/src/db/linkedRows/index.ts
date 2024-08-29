@@ -11,9 +11,10 @@ import { USER_METDATA_PREFIX } from "../utils"
 import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import { processFormulas } from "../../utilities/rowProcessor"
-import { context } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import {
   ContextUser,
+  FeatureFlag,
   FieldType,
   LinkDocumentValue,
   Row,
@@ -270,17 +271,16 @@ export async function squashLinks<T = Row[] | Row>(
         const obj: any = { _id: link._id }
         obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
 
-        // TODO
-        // const allowRelationshipSchemas = await features.flags.isEnabled(
-        //   FeatureFlag.ENRICHED_RELATIONSHIPS
-        // )
-        // if (schema.schema && allowRelationshipSchemas) {
-        //   for (const relField of Object.entries(schema.schema)
-        //     .filter(([_, field]) => field.visible !== false)
-        //     .map(([fieldKey]) => fieldKey)) {
-        //     obj[relField] = link[relField]
-        //   }
-        // }
+        const allowRelationshipSchemas = await features.flags.isEnabled(
+          FeatureFlag.ENRICHED_RELATIONSHIPS
+        )
+        if (schema.schema && allowRelationshipSchemas) {
+          for (const relField of Object.entries(schema.schema)
+            .filter(([_, field]) => field.visible !== false)
+            .map(([fieldKey]) => fieldKey)) {
+            obj[relField] = link[relField]
+          }
+        }
 
         newLinks.push(obj)
       }
