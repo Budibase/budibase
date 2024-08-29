@@ -2619,6 +2619,7 @@ describe.each([
           },
         ],
         ["from original saved row", (row: Row) => row],
+        ["from updated  row", (row: Row) => config.api.row.save(viewId, row)],
       ]
 
       it.each(testScenarios)(
