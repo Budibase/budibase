@@ -35,7 +35,7 @@ export interface View {
 
 export type ViewFieldMetadata = UIFieldMetadata & {
   readonly?: boolean
-  schema?: Record<string, RelationSchemaField>
+  columns?: Record<string, RelationSchemaField>
 }
 
 export interface ViewV2 {
