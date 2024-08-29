@@ -346,21 +346,25 @@ class InternalBuilder {
     const { relationships, endpoint, tableAliases: aliases } = this.query
     const tableName = endpoint.entityId
     const fromAlias = aliases?.[tableName] || tableName
+    const matches = (possibleTable: string) =>
+      filterKey.startsWith(`${possibleTable}`)
     if (!relationships) {
       return query
     }
     for (const relationship of relationships) {
+      const relatedTableName = relationship.tableName
+      const toAlias = aliases?.[relatedTableName] || relatedTableName
       // this is the relationship which is being filtered
       if (
-        filterKey.startsWith(`${relationship.tableName}.`) &&
+        (matches(relatedTableName) || matches(toAlias)) &&
         relationship.to &&
         relationship.tableName
       ) {
-        const relatedTableName = relationship.tableName
-        const toAlias = aliases?.[relatedTableName] || relatedTableName
         let subQuery = mainKnex
           .select(mainKnex.raw(1))
           .from({ [toAlias]: relatedTableName })
+          // relationships should never have more than the base limit
+          .limit(getBaseLimit())
         let mainTableRelatesTo = toAlias
         if (relationship.through) {
           const throughAlias =
