@@ -308,15 +308,17 @@
           />
         </div>
         <!-- don't let a user remove the privileges that let them be here -->
-        {#if userId !== $auth.user._id && !isTenantOwner}
+        {#if userId !== $auth.user._id}
           <!-- Disabled if it's not admin, enabled for SCIM integration   -->
           <div class="field">
             <Label size="L">Role</Label>
             <Select
               placeholder={null}
-              disabled={!sdk.users.isAdmin($auth.user)}
-              value={globalRole}
-              options={Constants.BudibaseRoleOptions}
+              disabled={!sdk.users.isAdmin($auth.user) || isTenantOwner}
+              value={isTenantOwner ? "owner" : globalRole}
+              options={isTenantOwner
+                ? Constants.ExtendedBudibaseRoleOptions
+                : Constants.BudibaseRoleOptions}
               on:change={updateUserRole}
             />
           </div>
