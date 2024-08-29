@@ -47,12 +47,7 @@ export default class UserFetch extends DataFetch {
         limit,
       }
       const res = await this.API.searchUsers(opts)
-      let tenantInfo
-      try {
-        tenantInfo = await this.API.getTenantInfo({ tenantId })
-      } catch {
-        tenantInfo = undefined
-      }
+      const tenantInfo = await this.API.getTenantInfo({ tenantId })
       return {
         rows: res?.data || [],
         hasNextPage: res?.hasNextPage || false,
