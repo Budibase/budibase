@@ -2687,7 +2687,8 @@ describe.each([
       })
     })
 
-  isSql &&
+  // TODO: when all SQL databases use the same mechanism - remove this test, new relationship system doesn't have this problem
+  !isInternal &&
     describe("pagination edge case with relationships", () => {
       let mainRows: Row[] = []
 
