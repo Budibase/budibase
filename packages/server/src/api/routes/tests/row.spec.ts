@@ -95,12 +95,9 @@ describe.each([
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, () => config.init())
+    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*SQS" }, () => config.init())
     if (isSqs) {
-      envCleanup = setCoreEnv({
-        SQS_SEARCH_ENABLE: "true",
-        SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
-      })
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*SQS" })
     }
 
     if (dsProvider) {
