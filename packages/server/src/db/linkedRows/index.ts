@@ -17,9 +17,10 @@ import {
   FieldType,
   LinkDocumentValue,
   Row,
-  SquashTableFields,
   Table,
   TableSchema,
+  ViewFieldMetadata,
+  ViewV2,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
@@ -242,6 +243,8 @@ function getPrimaryDisplayValue(row: Row, table?: Table) {
   }
 }
 
+export type SquashTableFields = Record<string, { visibleFieldNames: string[] }>
+
 /**
  * This function will take the given enriched rows and squash the links to only contain the primary display field.
  * @param table The table from which the rows originated.
@@ -252,8 +255,40 @@ function getPrimaryDisplayValue(row: Row, table?: Table) {
 export async function squashLinks<T = Row[] | Row>(
   table: Table,
   enriched: T,
-  squashFields?: SquashTableFields
+  options?: {
+    fromViewId?: string
+  }
 ): Promise<T> {
+  // export function outputRowOptions(
+  //   table: Table,
+  //   viewId: string
+  // ): OutputRowOptions {
+  //   const view = Object.values(table.views || {}).find(
+  //     (v): v is ViewV2 => sdk.views.isV2(v) && v.id === viewId
+  //   )
+  //   const viewSchema = view?.schema || {}
+
+  //   const squashFields: SquashTableFields = {}
+  //   for (const key of Object.keys(viewSchema)) {
+  //     if (viewSchema[key].columns) {
+  //       squashFields[key] = {
+  //         visibleFieldNames: Object.entries(viewSchema[key].columns)
+  //           .filter(([_, c]) => c.visible !== false)
+  //           .map(([columnName]) => columnName),
+  //       }
+  //     }
+  //   }
+
+  //   return { squashNestedFields: squashFields }
+  // }
+  let viewSchema: Record<string, ViewFieldMetadata> = {}
+  if (options?.fromViewId) {
+    const view = Object.values(table.views || {}).find(
+      (v): v is ViewV2 => sdk.views.isV2(v) && v.id === options?.fromViewId
+    )
+    viewSchema = view?.schema || {}
+  }
+
   // will populate this as we find them
   const linkedTables = [table]
   const isArray = Array.isArray(enriched)
@@ -273,8 +308,27 @@ export async function squashLinks<T = Row[] | Row>(
         const obj: any = { _id: link._id }
         obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
 
-        if (squashFields && squashFields[column]) {
-          for (const relField of squashFields[column].visibleFieldNames) {
+        if (viewSchema[column]?.columns) {
+          const squashFields = Object.entries(viewSchema[column].columns)
+            .filter(([columnName, viewColumnConfig]) => {
+              const tableColumn = linkedTable.schema[columnName]
+              if (!tableColumn) {
+                return false
+              }
+              if (
+                [FieldType.LINK, FieldType.FORMULA].includes(tableColumn.type)
+              ) {
+                return false
+              }
+              return (
+                tableColumn.visible !== false &&
+                viewColumnConfig.visible !== false
+              )
+            })
+
+            .map(([columnName]) => columnName)
+
+          for (const relField of squashFields) {
             obj[relField] = link[relField]
           }
         }
