@@ -168,7 +168,7 @@ describe("Automation Scenarios", () => {
       })
     })
 
-    it("if an incorrect type is passed to the loop it should return an error", async () => {
+    it("ensure the loop stops if the failure condition is reached", async () => {
       const builder = createAutomationBuilder({
         name: "Test Loop error",
       })
