@@ -934,7 +934,7 @@ describe.each([
         "from table",
         async (view: ViewV2) => {
           const table = await config.api.table.get(view.tableId)
-          return (table.views || {})[view.name]
+          return table.views![view.name] as ViewV2
         },
       ],
     ])("read (%s)", (_, getDelegate) => {
@@ -1050,7 +1050,7 @@ describe.each([
         })
 
         mocks.licenses.useCloudFree()
-        const view = (await getDelegate(res)) as ViewV2
+        const view = await getDelegate(res)
         expect(view.schema?.one).toEqual(
           expect.objectContaining({ visible: true, readonly: true })
         )
