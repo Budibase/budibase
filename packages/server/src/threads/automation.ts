@@ -66,41 +66,40 @@ function getLoopIterations(loopStep: LoopStep) {
  * inputs and handles any outputs.
  */
 class Orchestrator {
-  _chainCount: number
-  _appId: string
-  _automation: Automation
-  _emitter: any
-  _context: AutomationContext
-  _job: Job
-  _loopStepOutputs: LoopStep[]
-  _stopped: boolean
-  _loopStep?: LoopStep
-  executionOutput: AutomationContext
+  private chainCount: number
+  private appId: string
+  private automation: Automation
+  private emitter: any
+  private context: AutomationContext
+  private job: Job
+  private loopStepOutputs: LoopStep[]
+  private stopped: boolean
+  private executionOutput: AutomationContext
 
   constructor(job: AutomationJob) {
     let automation = job.data.automation
     let triggerOutput = job.data.event
     const metadata = triggerOutput.metadata
-    this._chainCount = metadata ? metadata.automationChainCount! : 0
-    this._appId = triggerOutput.appId as string
-    this._job = job
+    this.chainCount = metadata ? metadata.automationChainCount! : 0
+    this.appId = triggerOutput.appId as string
+    this.job = job
     const triggerStepId = automation.definition.trigger.stepId
     triggerOutput = this.cleanupTriggerOutputs(triggerStepId, triggerOutput)
     // remove from context
     delete triggerOutput.appId
     delete triggerOutput.metadata
     // step zero is never used as the template string is zero indexed for customer facing
-    this._context = { steps: [{}], trigger: triggerOutput }
-    this._automation = automation
+    this.context = { steps: [{}], trigger: triggerOutput }
+    this.automation = automation
     // create an emitter which has the chain count for this automation run in it, so it can block
     // excessive chaining if required
-    this._emitter = new AutomationEmitter(this._chainCount + 1)
+    this.emitter = new AutomationEmitter(this.chainCount + 1)
     this.executionOutput = { trigger: {}, steps: [] }
     // setup the execution output
     const triggerId = automation.definition.trigger.id
     this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
-    this._loopStepOutputs = []
-    this._stopped = false
+    this.loopStepOutputs = []
+    this.stopped = false
   }
 
   cleanupTriggerOutputs(stepId: string, triggerOutput: TriggerOutput) {
@@ -119,7 +118,7 @@ class Orchestrator {
   }
 
   async getMetadata(): Promise<AutomationMetadata> {
-    const metadataId = generateAutomationMetadataID(this._automation._id!)
+    const metadataId = generateAutomationMetadataID(this.automation._id!)
     const db = context.getAppDB()
     let metadata: AutomationMetadata
     try {
@@ -134,15 +133,15 @@ class Orchestrator {
   }
 
   async stopCron(reason: string) {
-    if (!this._job.opts.repeat) {
+    if (!this.job.opts.repeat) {
       return
     }
     logging.logWarn(
-      `CRON disabled reason=${reason} - ${this._appId}/${this._automation._id}`
+      `CRON disabled reason=${reason} - ${this.appId}/${this.automation._id}`
     )
-    const automation = this._automation
+    const automation = this.automation
     const trigger = automation.definition.trigger
-    await disableCronById(this._job.id)
+    await disableCronById(this.job.id)
     this.updateExecutionOutput(
       trigger.id,
       trigger.stepId,
@@ -156,7 +155,7 @@ class Orchestrator {
   }
 
   async checkIfShouldStop(metadata: AutomationMetadata): Promise<boolean> {
-    if (!metadata.errorCount || !this._job.opts.repeat) {
+    if (!metadata.errorCount || !this.job.opts.repeat) {
       return false
     }
     if (metadata.errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
@@ -168,7 +167,7 @@ class Orchestrator {
 
   async updateMetadata(metadata: AutomationMetadata) {
     const output = this.executionOutput,
-      automation = this._automation
+      automation = this.automation
     if (!output || !isRecurring(automation)) {
       return
     }
@@ -236,7 +235,7 @@ class Orchestrator {
       },
       inputs: step.inputs,
     })
-    this._context.steps.splice(currentLoopStepIndex, 0, {
+    this.context.steps.splice(currentLoopStepIndex, 0, {
       ...output,
       success: result.success,
       status: result.status,
@@ -249,15 +248,15 @@ class Orchestrator {
       { resource: "automation" },
       async span => {
         span?.addTags({
-          appId: this._appId,
-          automationId: this._automation._id,
+          appId: this.appId,
+          automationId: this.automation._id,
         })
-        this._context.env = await sdkUtils.getEnvironmentVariables()
+        this.context.env = await sdkUtils.getEnvironmentVariables()
 
         let metadata
 
         // check if this is a recurring automation,
-        if (isProdAppID(this._appId) && isRecurring(this._automation)) {
+        if (isProdAppID(this.appId) && isRecurring(this.automation)) {
           span?.addTags({ recurring: true })
           metadata = await this.getMetadata()
           const shouldStop = await this.checkIfShouldStop(metadata)
@@ -268,13 +267,13 @@ class Orchestrator {
         }
         const start = performance.now()
 
-        await this.executeSteps(this._automation.definition.steps)
+        await this.executeSteps(this.automation.definition.steps)
 
         const end = performance.now()
         const executionTime = end - start
 
         console.info(
-          `Automation ID: ${this._automation._id} Execution time: ${executionTime} milliseconds`,
+          `Automation ID: ${this.automation._id} Execution time: ${executionTime} milliseconds`,
           {
             _logKey: "automation",
             executionTime,
@@ -282,7 +281,7 @@ class Orchestrator {
         )
 
         try {
-          await storeLog(this._automation, this.executionOutput)
+          await storeLog(this.automation, this.executionOutput)
         } catch (e: any) {
           if (e.status === 413 && e.request?.data) {
             // if content is too large we shouldn't log it
@@ -292,8 +291,8 @@ class Orchestrator {
           logging.logAlert("Error writing automation log", e)
         }
         if (
-          isProdAppID(this._appId) &&
-          isRecurring(this._automation) &&
+          isProdAppID(this.appId) &&
+          isRecurring(this.automation) &&
           metadata
         ) {
           await this.updateMetadata(metadata)
@@ -310,7 +309,7 @@ class Orchestrator {
       async span => {
         let stepIndex = 0
         const timeout =
-          this._job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT
+          this.job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT
 
         try {
           await helpers.withTimeout(
@@ -345,7 +344,7 @@ class Orchestrator {
     steps: AutomationStep[],
     currentIndex: number
   ): Promise<number> {
-    await processObject(loopStep.inputs, this._context)
+    await processObject(loopStep.inputs, this.context)
     const iterations = getLoopIterations(loopStep)
     let stepToLoopIndex = currentIndex + 1
     let iterationCount = 0
@@ -379,7 +378,7 @@ class Orchestrator {
           stepToLoopIndex,
           steps[stepToLoopIndex],
           {
-            items: this._loopStepOutputs,
+            items: this.loopStepOutputs,
             iterations: loopStepIndex,
           },
           {
@@ -406,7 +405,7 @@ class Orchestrator {
           loopStepIndex,
           steps[stepToLoopIndex],
           {
-            items: this._loopStepOutputs,
+            items: this.loopStepOutputs,
             iterations: loopStepIndex,
           },
           {
@@ -418,7 +417,7 @@ class Orchestrator {
         break
       }
 
-      this._context.steps[currentIndex + 1] = {
+      this.context.steps[currentIndex + 1] = {
         currentItem: this.getCurrentLoopItem(loopStep, loopStepIndex),
       }
 
@@ -437,7 +436,7 @@ class Orchestrator {
             }
           : {
               success: true,
-              items: this._loopStepOutputs,
+              items: this.loopStepOutputs,
               iterations: iterationCount,
             }
 
@@ -448,8 +447,8 @@ class Orchestrator {
         outputs: tempOutput,
         inputs: steps[stepToLoopIndex].inputs,
       })
-      this._context.steps[currentIndex + 1] = tempOutput
-      this._loopStepOutputs = []
+      this.context.steps[currentIndex + 1] = tempOutput
+      this.loopStepOutputs = []
     }
 
     return stepToLoopIndex + 1
@@ -494,7 +493,7 @@ class Orchestrator {
           },
         })
 
-        if (this._stopped) {
+        if (this.stopped) {
           this.updateExecutionOutput(step.id, step.stepId, {}, STOPPED_STATUS)
           return
         }
@@ -507,14 +506,14 @@ class Orchestrator {
           )
         }
         const stepFn = await this.getStepFunctionality(step.stepId)
-        let inputs = await processObject(originalStepInput, this._context)
+        let inputs = await processObject(originalStepInput, this.context)
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
 
         const outputs = await stepFn({
           inputs: inputs,
-          appId: this._appId,
-          emitter: this._emitter,
-          context: this._context,
+          appId: this.appId,
+          emitter: this.emitter,
+          context: this.context,
         })
         this.handleStepOutput(step, outputs, loopIteration)
       }
@@ -540,18 +539,18 @@ class Orchestrator {
     loopIteration: number | undefined
   ): void {
     if (step.stepId === AutomationActionStepId.FILTER && !outputs.result) {
-      this._stopped = true
+      this.stopped = true
       this.updateExecutionOutput(step.id, step.stepId, step.inputs, {
         ...outputs,
         ...STOPPED_STATUS,
       })
     } else if (loopIteration !== undefined) {
-      this._loopStepOutputs = this._loopStepOutputs || []
-      this._loopStepOutputs.push(outputs)
+      this.loopStepOutputs = this.loopStepOutputs || []
+      this.loopStepOutputs.push(outputs)
     } else {
       this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
     }
-    this._context.steps[this._context.steps.length] = outputs
+    this.context.steps[this.context.steps.length] = outputs
   }
 }
 
