@@ -10,6 +10,14 @@ import { outputProcessing } from ".."
 import { generator, structures } from "@budibase/backend-core/tests"
 import * as bbReferenceProcessor from "../bbReferenceProcessor"
 
+jest.mock("@budibase/backend-core", () => ({
+  ...jest.requireActual("@budibase/backend-core"),
+  db: {
+    ...jest.requireActual("@budibase/backend-core").db,
+    isSqsEnabledForTenant: () => true,
+  },
+}))
+
 jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
   processInputBBReference: jest.fn(),
   processInputBBReferences: jest.fn(),
