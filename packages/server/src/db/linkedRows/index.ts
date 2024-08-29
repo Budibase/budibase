@@ -11,9 +11,10 @@ import { USER_METDATA_PREFIX } from "../utils"
 import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import { processFormulas } from "../../utilities/rowProcessor"
-import { context } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import {
   ContextUser,
+  FeatureFlag,
   FieldType,
   LinkDocumentValue,
   Row,
@@ -259,30 +260,12 @@ export async function squashLinks<T = Row[] | Row>(
     fromViewId?: string
   }
 ): Promise<T> {
-  // export function outputRowOptions(
-  //   table: Table,
-  //   viewId: string
-  // ): OutputRowOptions {
-  //   const view = Object.values(table.views || {}).find(
-  //     (v): v is ViewV2 => sdk.views.isV2(v) && v.id === viewId
-  //   )
-  //   const viewSchema = view?.schema || {}
+  const allowRelationshipSchemas = await features.flags.isEnabled(
+    FeatureFlag.ENRICHED_RELATIONSHIPS
+  )
 
-  //   const squashFields: SquashTableFields = {}
-  //   for (const key of Object.keys(viewSchema)) {
-  //     if (viewSchema[key].columns) {
-  //       squashFields[key] = {
-  //         visibleFieldNames: Object.entries(viewSchema[key].columns)
-  //           .filter(([_, c]) => c.visible !== false)
-  //           .map(([columnName]) => columnName),
-  //       }
-  //     }
-  //   }
-
-  //   return { squashNestedFields: squashFields }
-  // }
   let viewSchema: Record<string, ViewFieldMetadata> = {}
-  if (options?.fromViewId) {
+  if (options?.fromViewId && allowRelationshipSchemas) {
     const view = Object.values(table.views || {}).find(
       (v): v is ViewV2 => sdk.views.isV2(v) && v.id === options?.fromViewId
     )
