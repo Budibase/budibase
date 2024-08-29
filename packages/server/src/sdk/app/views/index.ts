@@ -202,7 +202,9 @@ export async function enrichSchema(
 
   const viewSchema = view.schema || {}
   const anyViewOrder = Object.values(viewSchema).some(ui => ui.order != null)
-  for (const key of Object.keys(viewSchema)) {
+  for (const key of Object.keys(tableSchema).filter(
+    k => tableSchema[k].visible !== false
+  )) {
     // if nothing specified in view, then it is not visible
     const ui = viewSchema[key] || { visible: false }
     schema[key] = {

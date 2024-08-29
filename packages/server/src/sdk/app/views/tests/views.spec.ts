@@ -297,12 +297,6 @@ describe("table sdk", () => {
             relationshipType: RelationshipType.ONE_TO_MANY,
             fieldName: "table",
             tableId: "otherTableId",
-            schema: {
-              title: {
-                visible: true,
-                readonly: true,
-              },
-            },
           },
         },
       }
@@ -334,7 +328,15 @@ describe("table sdk", () => {
         tableId,
         schema: {
           name: { visible: true },
-          other: { visible: true },
+          other: {
+            visible: true,
+            columns: {
+              title: {
+                visible: true,
+                readonly: true,
+              },
+            },
+          },
         },
       }
 
@@ -351,7 +353,7 @@ describe("table sdk", () => {
             other: {
               ...table.schema.other,
               visible: true,
-              schema: {
+              columns: {
                 title: {
                   visible: true,
                   readonly: true,
