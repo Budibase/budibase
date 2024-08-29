@@ -71,8 +71,9 @@ export async function patch(
 }
 
 export const save = async (ctx: UserCtx<Row, Row>) => {
-  const appId = ctx.appId
   const { tableId } = utils.getSourceId(ctx)
+  const { sourceId } = ctx.params
+  const appId = ctx.appId
   const body = ctx.request.body
 
   // user metadata doesn't exist yet - don't allow creation
@@ -85,9 +86,9 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
     return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
   const { row, table, squashed } = tableId.includes("datasource_plus")
-    ? await sdk.rows.save(tableId, ctx.request.body, ctx.user?._id)
+    ? await sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
     : await quotas.addRow(() =>
-        sdk.rows.save(tableId, ctx.request.body, ctx.user?._id)
+        sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
       )
   ctx.status = 200
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)

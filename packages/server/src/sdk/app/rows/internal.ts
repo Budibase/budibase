@@ -13,10 +13,11 @@ import { getFullUser } from "../../../utilities/users"
 import { tryExtractingTableAndViewId } from "./utils"
 
 export async function save(
-  tableId: string,
+  tableOrViewId: string,
   inputs: Row,
   userId: string | undefined
 ) {
+  const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
   inputs.tableId = tableId
 
   if (!inputs._rev && !inputs._id) {
@@ -51,6 +52,7 @@ export async function save(
   return finaliseRow(table, row, {
     oldTable: dbTable,
     updateFormula: true,
+    fromViewId: viewId,
   })
 }
 

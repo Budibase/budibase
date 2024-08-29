@@ -2618,7 +2618,7 @@ describe.each([
             return rows.find(r => r._id === row._id!)
           },
         ],
-        // ["from original saved row", (row: Row) => row],
+        ["from original saved row", (row: Row) => row],
       ]
 
       it.each(testScenarios)(

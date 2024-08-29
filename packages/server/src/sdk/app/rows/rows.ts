@@ -37,11 +37,11 @@ function pickApi(tableOrViewId: string) {
 }
 
 export async function save(
-  tableId: string,
+  tableOrViewId: string,
   row: Row,
   userId: string | undefined
 ) {
-  return pickApi(tableId).save(tableId, row, userId)
+  return pickApi(tableOrViewId).save(tableOrViewId, row, userId)
 }
 
 export async function find(tableOrViewId: string, rowId: string) {
