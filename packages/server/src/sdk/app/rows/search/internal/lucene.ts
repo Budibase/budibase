@@ -2,7 +2,6 @@ import { PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 import { fullSearch, paginatedSearch } from "../utils"
 import { InternalTables } from "../../../../../db/utils"
 import {
-  OutputRowOptions,
   Row,
   RowSearchParams,
   SearchResponse,
@@ -16,8 +15,7 @@ import pick from "lodash/pick"
 
 export async function search(
   options: RowSearchParams,
-  table: Table,
-  outputRowOptions?: OutputRowOptions
+  table: Table
 ): Promise<SearchResponse<Row>> {
   const { tableId } = options
 
@@ -62,7 +60,7 @@ export async function search(
     }
 
     response.rows = await outputProcessing(table, response.rows, {
-      squashNestedFields: outputRowOptions?.squashNestedFields,
+      fromViewId: options.viewId,
     })
   }
 

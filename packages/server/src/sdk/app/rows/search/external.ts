@@ -1,7 +1,6 @@
 import {
   IncludeRelationship,
   Operation,
-  OutputRowOptions,
   PaginationJson,
   Row,
   RowSearchParams,
@@ -61,8 +60,7 @@ function getPaginationAndLimitParameters(
 
 export async function search(
   options: RowSearchParams,
-  table: Table,
-  outputRowOptions?: OutputRowOptions
+  table: Table
 ): Promise<SearchResponse<Row>> {
   const { tableId } = options
   const { countRows, paginate, query, ...params } = options
@@ -117,7 +115,7 @@ export async function search(
     let processed = await outputProcessing(table, rows, {
       preserveLinks: true,
       squash: true,
-      squashNestedFields: outputRowOptions?.squashNestedFields,
+      fromViewId: options.viewId,
     })
 
     let hasNextPage = false

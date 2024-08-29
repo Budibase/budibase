@@ -16,7 +16,6 @@ import {
   IdentityType,
   Row,
   RowAttachment,
-  SquashTableFields,
   Table,
   User,
 } from "@budibase/types"
@@ -35,6 +34,7 @@ import {
 } from "@budibase/shared-core"
 import { processString } from "@budibase/string-templates"
 import { isUserMetadataTable } from "../../api/controllers/row/utils"
+
 
 export * from "./utils"
 export * from "./attachments"
@@ -248,7 +248,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     preserveLinks?: boolean
     fromRow?: Row
     skipBBReferences?: boolean
-    squashNestedFields?: SquashTableFields
+    fromViewId?: string
   } = {
     squash: true,
     preserveLinks: false,
@@ -344,12 +344,10 @@ export async function outputProcessing<T extends Row[] | Row>(
   // process formulas after the complex types had been processed
   enriched = await processFormulas(table, enriched, { dynamic: true })
 
-  if (opts.squash || opts.squashNestedFields) {
-    enriched = await linkRows.squashLinks(
-      table,
-      enriched,
-      opts.squashNestedFields
-    )
+  if (opts.squash) {
+    enriched = await linkRows.squashLinks(table, enriched, {
+      fromViewId: opts?.fromViewId,
+    })
   }
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
