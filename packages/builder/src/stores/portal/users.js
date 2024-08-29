@@ -128,6 +128,11 @@ export function createUsersStore() {
     return await API.removeAppBuilder({ userId, appId })
   }
 
+  async function getTenantOwner(tenantId) {
+    const tenantInfo = await API.getTenantInfo({ tenantId })
+    return tenantInfo?.owner
+  }
+
   const getUserRole = user => {
     if (user && user.email === user.tenantOwnerEmail) {
       return Constants.BudibaseRoles.Owner
@@ -171,6 +176,7 @@ export function createUsersStore() {
     save: refreshUsage(save),
     bulkDelete: refreshUsage(bulkDelete),
     delete: refreshUsage(del),
+    tenantOwner: getTenantOwner,
   }
 }
 

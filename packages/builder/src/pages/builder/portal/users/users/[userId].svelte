@@ -85,7 +85,7 @@
   let popoverAnchor
   let searchTerm = ""
   let popover
-  let user
+  let user, tenantOwner
   let loaded = false
 
   $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
@@ -205,6 +205,7 @@
     if (!user?._id) {
       $goto("./")
     }
+    tenantOwner = await users.tenantOwner($auth.tenantId)
   }
 
   async function toggleFlags(detail) {
@@ -304,7 +305,7 @@
           />
         </div>
         <!-- don't let a user remove the privileges that let them be here -->
-        {#if userId !== $auth.user._id}
+        {#if userId !== $auth.user._id && tenantOwner?.email !== user?.email}
           <!-- Disabled if it's not admin, enabled for SCIM integration   -->
           <div class="field">
             <Label size="L">Role</Label>
