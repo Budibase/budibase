@@ -18,6 +18,7 @@ import {
   LinkDocumentValue,
   Row,
   Table,
+  TableSchema,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
@@ -46,8 +47,8 @@ export const EventType = {
   TABLE_DELETE: "table:delete",
 }
 
-function clearRelationshipFields(table: Table, rows: Row[]) {
-  for (let [key, field] of Object.entries(table.schema)) {
+function clearRelationshipFields(schema: TableSchema, rows: Row[]) {
+  for (let [key, field] of Object.entries(schema)) {
     if (field.type === FieldType.LINK) {
       rows = rows.map(row => {
         delete row[key]
@@ -158,11 +159,11 @@ export async function updateLinks(args: {
  * @return returns the rows with all of the enriched relationships on it.
  */
 export async function attachFullLinkedDocs(
-  table: Table,
+  schema: TableSchema,
   rows: Row[],
   opts?: { fromRow?: Row }
 ) {
-  const linkedTableIds = getLinkedTableIDs(table)
+  const linkedTableIds = getLinkedTableIDs(schema)
   if (linkedTableIds.length === 0) {
     return rows
   }
@@ -182,7 +183,7 @@ export async function attachFullLinkedDocs(
   }
   const linkedTables = response[1] as Table[]
   // clear any existing links that could be dupe'd
-  rows = clearRelationshipFields(table, rows)
+  rows = clearRelationshipFields(schema, rows)
   // now get the docs and combine into the rows
   let linked: Row[] = []
   if (linksWithoutFromRow.length > 0) {
@@ -201,7 +202,7 @@ export async function attachFullLinkedDocs(
       }
       if (linkedRow) {
         const linkedTableId =
-          linkedRow.tableId || getRelatedTableForField(table, link.fieldName)
+          linkedRow.tableId || getRelatedTableForField(schema, link.fieldName)
         const linkedTable = linkedTables.find(
           table => table._id === linkedTableId
         )
@@ -263,7 +264,8 @@ export async function squashLinksToPrimaryDisplay(
       }
       const newLinks = []
       for (let link of row[column]) {
-        const linkTblId = link.tableId || getRelatedTableForField(table, column)
+        const linkTblId =
+          link.tableId || getRelatedTableForField(table.schema, column)
         const linkedTable = await getLinkedTable(linkTblId!, linkedTables)
         const obj: any = { _id: link._id }
         obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
