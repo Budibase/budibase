@@ -17,8 +17,8 @@ export class RowActionAPI extends TestAPI {
       {
         body: rowAction,
         expectations: {
+          status: 201,
           ...expectations,
-          status: expectations?.status || 201,
         },
         ...config,
       }
@@ -81,7 +81,10 @@ export class RowActionAPI extends TestAPI {
     return await this._post<RowActionResponse>(
       `/api/tables/${tableId}/actions/${rowActionId}/permissions/${viewId}`,
       {
-        expectations,
+        expectations: {
+          status: 200,
+          ...expectations,
+        },
         ...config,
       }
     )
@@ -97,7 +100,10 @@ export class RowActionAPI extends TestAPI {
     return await this._delete<RowActionResponse>(
       `/api/tables/${tableId}/actions/${rowActionId}/permissions/${viewId}`,
       {
-        expectations,
+        expectations: {
+          status: 200,
+          ...expectations,
+        },
         ...config,
       }
     )
