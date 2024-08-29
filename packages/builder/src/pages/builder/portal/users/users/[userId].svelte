@@ -104,6 +104,7 @@
     })
   })
   $: globalRole = users.getUserRole(user)
+  $: isTenantOwner = tenantOwner?.email && tenantOwner.email === user?.email
 
   const getAvailableApps = (appList, privileged, roles) => {
     let availableApps = appList.slice()
@@ -269,9 +270,11 @@
                 Force password reset
               </MenuItem>
             {/if}
-            <MenuItem on:click={deleteModal.show} icon="Delete">
-              Delete
-            </MenuItem>
+            {#if !isTenantOwner}
+              <MenuItem on:click={deleteModal.show} icon="Delete">
+                Delete
+              </MenuItem>
+            {/if}
           </ActionMenu>
         </div>
       {/if}
@@ -305,7 +308,7 @@
           />
         </div>
         <!-- don't let a user remove the privileges that let them be here -->
-        {#if userId !== $auth.user._id && tenantOwner?.email !== user?.email}
+        {#if userId !== $auth.user._id && !isTenantOwner}
           <!-- Disabled if it's not admin, enabled for SCIM integration   -->
           <div class="field">
             <Label size="L">Role</Label>
