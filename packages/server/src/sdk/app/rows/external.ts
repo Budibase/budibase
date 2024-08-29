@@ -27,10 +27,11 @@ export async function getRow(
 }
 
 export async function save(
-  tableId: string,
+  tableOrViewId: string,
   inputs: Row,
   userId: string | undefined
 ) {
+  const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
   const table = await sdk.tables.getTable(tableId)
   const { table: updatedTable, row } = await inputProcessing(
     userId,
@@ -64,6 +65,7 @@ export async function save(
       row: await outputProcessing(table, row, {
         preserveLinks: true,
         squash: true,
+        fromViewId: viewId,
       }),
     }
   } else {
