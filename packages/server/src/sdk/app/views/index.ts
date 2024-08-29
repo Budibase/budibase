@@ -198,7 +198,7 @@ export async function enrichSchema(
     return result
   }
 
-  let schema: TableSchema = {}
+  let schema: ViewV2Enriched["schema"] = {}
 
   const viewSchema = view.schema || {}
   const anyViewOrder = Object.values(viewSchema).some(ui => ui.order != null)
