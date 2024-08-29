@@ -1,4 +1,4 @@
-import { InternalTables } from "../../../../db/utils"
+import * as utils from "../../../../db/utils"
 
 import { context } from "@budibase/backend-core"
 import {
@@ -67,7 +67,7 @@ export async function findRow(tableId: string, rowId: string) {
   const db = context.getAppDB()
   let row: Row
   // TODO remove special user case in future
-  if (tableId === InternalTables.USER_METADATA) {
+  if (tableId === utils.InternalTables.USER_METADATA) {
     row = await getFullUser(rowId)
   } else {
     row = await db.get(rowId)
@@ -78,22 +78,25 @@ export async function findRow(tableId: string, rowId: string) {
   return row
 }
 
-export function getTableId(ctx: Ctx): string {
+export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
   // top priority, use the URL first
   if (ctx.params?.sourceId) {
-    return ctx.params.sourceId
+    const { sourceId } = ctx.params
+    if (utils.isViewID(sourceId)) {
+      return {
+        tableId: utils.extractViewInfoFromID(sourceId).tableId,
+        viewId: sourceId,
+      }
+    }
+    return { tableId: ctx.params.sourceId }
   }
   // now check for old way of specifying table ID
   if (ctx.params?.tableId) {
-    return ctx.params.tableId
+    return { tableId: ctx.params.tableId }
   }
   // check body for a table ID
   if (ctx.request.body?.tableId) {
-    return ctx.request.body.tableId
-  }
-  // now check if a specific view name
-  if (ctx.params?.viewName) {
-    return ctx.params.viewName
+    return { tableId: ctx.request.body.tableId }
   }
   throw new Error("Unable to find table ID in request")
 }
@@ -198,7 +201,7 @@ export async function sqlOutputProcessing(
 }
 
 export function isUserMetadataTable(tableId: string) {
-  return tableId === InternalTables.USER_METADATA
+  return tableId === utils.InternalTables.USER_METADATA
 }
 
 export async function enrichArrayContext(

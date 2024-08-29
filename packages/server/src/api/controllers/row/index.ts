@@ -47,7 +47,7 @@ export async function patch(
   ctx: UserCtx<PatchRowRequest, PatchRowResponse>
 ): Promise<any> {
   const appId = ctx.appId
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const body = ctx.request.body
 
   // if it doesn't have an _id then its save
@@ -72,7 +72,7 @@ export async function patch(
 
 export const save = async (ctx: UserCtx<Row, Row>) => {
   const appId = ctx.appId
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const body = ctx.request.body
 
   // user metadata doesn't exist yet - don't allow creation
@@ -97,13 +97,12 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
   gridSocket?.emitRowUpdate(ctx, row || squashed)
 }
 
-export async function fetchView(ctx: any) {
-  const tableId = utils.getTableId(ctx)
+export async function fetchLegacyView(ctx: any) {
   const viewName = decodeURIComponent(ctx.params.viewName)
 
   const { calculation, group, field } = ctx.query
 
-  ctx.body = await sdk.rows.fetchView(tableId, viewName, {
+  ctx.body = await sdk.rows.fetchLegacyView(viewName, {
     calculation,
     group: calculation ? group : null,
     field,
@@ -111,12 +110,12 @@ export async function fetchView(ctx: any) {
 }
 
 export async function fetch(ctx: any) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   ctx.body = await sdk.rows.fetch(tableId)
 }
 
 export async function find(ctx: UserCtx<void, GetRowResponse>) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const rowId = ctx.params.rowId
 
   ctx.body = await sdk.rows.find(tableId, rowId)
@@ -132,7 +131,7 @@ function isDeleteRow(input: any): input is DeleteRow {
 
 async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
   let request = ctx.request.body as DeleteRows
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
 
   const processedRows = request.rows.map(row => {
     let processedRow: Row = typeof row == "string" ? { _id: row } : row
@@ -148,7 +147,7 @@ async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
 }
 
 async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const appId = ctx.appId
 
   let deleteRequest = ctx.request.body as DeleteRows
@@ -170,7 +169,7 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
 
 async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   const appId = ctx.appId
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
 
   const resp = await pickApi(tableId).destroy(ctx)
   if (!tableId.includes("datasource_plus")) {
@@ -204,7 +203,7 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
 }
 
 export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
 
   await context.ensureSnippetContext(true)
 
@@ -226,7 +225,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
 }
 
 export async function validate(ctx: Ctx<Row, ValidateResponse>) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   // external tables are hard to validate currently
   if (isExternalTableID(tableId)) {
     ctx.body = { valid: true, errors: {} }
@@ -239,14 +238,14 @@ export async function validate(ctx: Ctx<Row, ValidateResponse>) {
 }
 
 export async function fetchEnrichedRow(ctx: UserCtx<void, Row>) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   ctx.body = await pickApi(tableId).fetchEnrichedRow(ctx)
 }
 
 export const exportRows = async (
   ctx: Ctx<ExportRowsRequest, ExportRowsResponse>
 ) => {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
 
   const format = ctx.query.format
 
@@ -279,7 +278,7 @@ export const exportRows = async (
 export async function downloadAttachment(ctx: UserCtx) {
   const { columnName } = ctx.params
 
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const rowId = ctx.params.rowId
   const row = await sdk.rows.find(tableId, rowId)
 
