@@ -345,17 +345,16 @@ class Orchestrator {
     steps: AutomationStep[],
     currentIndex: number
   ): Promise<number> {
-    this._loopStep = loopStep
-    await processObject(this._loopStep.inputs, this._context)
-    const iterations = getLoopIterations(this._loopStep)
+    await processObject(loopStep.inputs, this._context)
+    const iterations = getLoopIterations(loopStep)
     let stepToLoopIndex = currentIndex + 1
     let iterationCount = 0
     let shouldCleanup = true
 
     for (let loopStepIndex = 0; loopStepIndex < iterations; loopStepIndex++) {
       try {
-        this._loopStep.inputs.binding = automationUtils.typecastForLooping(
-          this._loopStep.inputs
+        loopStep.inputs.binding = automationUtils.typecastForLooping(
+          loopStep.inputs
         )
       } catch (err) {
         this.updateContextAndOutput(
@@ -373,8 +372,8 @@ class Orchestrator {
 
       if (
         loopStepIndex === env.AUTOMATION_MAX_ITERATIONS ||
-        (this._loopStep.inputs.iterations &&
-          loopStepIndex === parseInt(this._loopStep.inputs.iterations))
+        (loopStep.inputs.iterations &&
+          loopStepIndex === parseInt(loopStep.inputs.iterations))
       ) {
         this.updateContextAndOutput(
           stepToLoopIndex,
@@ -393,13 +392,13 @@ class Orchestrator {
       }
 
       let isFailure = false
-      const currentItem = this.getCurrentLoopItem(loopStepIndex)
+      const currentItem = this.getCurrentLoopItem(loopStep, loopStepIndex)
       if (currentItem && typeof currentItem === "object") {
         isFailure = Object.keys(currentItem).some(value => {
-          return currentItem[value] === this._loopStep?.inputs.failure
+          return currentItem[value] === loopStep?.inputs.failure
         })
       } else {
-        isFailure = currentItem && currentItem === this._loopStep.inputs.failure
+        isFailure = currentItem && currentItem === loopStep.inputs.failure
       }
 
       if (isFailure) {
@@ -420,7 +419,7 @@ class Orchestrator {
       }
 
       this._context.steps[currentIndex + 1] = {
-        currentItem: this.getCurrentLoopItem(loopStepIndex),
+        currentItem: this.getCurrentLoopItem(loopStep, loopStepIndex),
       }
 
       stepToLoopIndex = currentIndex + 1
@@ -451,7 +450,6 @@ class Orchestrator {
       })
       this._context.steps[currentIndex + 1] = tempOutput
       this._loopStepOutputs = []
-      this._loopStep = undefined
     }
 
     return stepToLoopIndex + 1
@@ -518,32 +516,36 @@ class Orchestrator {
           emitter: this._emitter,
           context: this._context,
         })
-        this.handleStepOutput(step, outputs)
+        this.handleStepOutput(step, outputs, loopIteration)
       }
     )
   }
 
-  private getCurrentLoopItem(index: number): any {
-    if (!this._loopStep) return null
+  private getCurrentLoopItem(loopStep: LoopStep, index: number): any {
+    if (!loopStep) return null
     if (
-      typeof this._loopStep.inputs.binding === "string" &&
-      this._loopStep.inputs.option === "String"
+      typeof loopStep.inputs.binding === "string" &&
+      loopStep.inputs.option === "String"
     ) {
-      return automationUtils.stringSplit(this._loopStep.inputs.binding)[index]
-    } else if (Array.isArray(this._loopStep.inputs.binding)) {
-      return this._loopStep.inputs.binding[index]
+      return automationUtils.stringSplit(loopStep.inputs.binding)[index]
+    } else if (Array.isArray(loopStep.inputs.binding)) {
+      return loopStep.inputs.binding[index]
     }
     return null
   }
 
-  private handleStepOutput(step: AutomationStep, outputs: any): void {
+  private handleStepOutput(
+    step: AutomationStep,
+    outputs: any,
+    loopIteration: number | undefined
+  ): void {
     if (step.stepId === AutomationActionStepId.FILTER && !outputs.result) {
       this._stopped = true
       this.updateExecutionOutput(step.id, step.stepId, step.inputs, {
         ...outputs,
         ...STOPPED_STATUS,
       })
-    } else if (this._loopStep) {
+    } else if (loopIteration !== undefined) {
       this._loopStepOutputs = this._loopStepOutputs || []
       this._loopStepOutputs.push(outputs)
     } else {
