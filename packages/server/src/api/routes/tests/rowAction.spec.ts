@@ -150,7 +150,7 @@ describe("/rowsActions", () => {
 
     it("trims row action names", async () => {
       const name = "   action  name  "
-      const res = await createRowAction(tableId, { name }, { status: 201 })
+      const res = await createRowAction(tableId, { name })
 
       expect(res).toEqual(
         expect.objectContaining({
@@ -218,9 +218,7 @@ describe("/rowsActions", () => {
         id: generator.guid(),
         valueToIgnore: generator.string(),
       }
-      const res = await createRowAction(tableId, dirtyRowAction, {
-        status: 201,
-      })
+      const res = await createRowAction(tableId, dirtyRowAction)
 
       expect(res).toEqual({
         name: rowAction.name,
@@ -283,9 +281,9 @@ describe("/rowsActions", () => {
       const action2 = await createRowAction(tableId, createRowActionRequest())
 
       for (const automationId of [action1.automationId, action2.automationId]) {
-        expect(
-          await config.api.automation.get(automationId, { status: 200 })
-        ).toEqual(expect.objectContaining({ _id: automationId }))
+        expect(await config.api.automation.get(automationId)).toEqual(
+          expect.objectContaining({ _id: automationId })
+        )
       }
     })
   })
@@ -374,13 +372,7 @@ describe("/rowsActions", () => {
     })
 
     it("trims row action names", async () => {
-      const rowAction = await createRowAction(
-        tableId,
-        createRowActionRequest(),
-        {
-          status: 201,
-        }
-      )
+      const rowAction = await createRowAction(tableId, createRowActionRequest())
 
       const res = await config.api.rowAction.update(tableId, rowAction.id, {
         name: "   action  name  ",
@@ -572,32 +564,16 @@ describe("/rowsActions", () => {
     })
 
     it("can set permission views", async () => {
-      await config.api.rowAction.setViewPermission(
-        tableId,
-        viewId1,
-        actionId1,
-        {
-          status: 200,
-          body: {},
-        }
-      )
+      await config.api.rowAction.setViewPermission(tableId, viewId1, actionId1)
       const action1Result = await config.api.rowAction.setViewPermission(
         tableId,
         viewId2,
-        actionId1,
-        {
-          status: 200,
-          body: {},
-        }
+        actionId1
       )
       const action2Result = await config.api.rowAction.setViewPermission(
         tableId,
         viewId1,
-        actionId2,
-        {
-          status: 200,
-          body: {},
-        }
+        actionId2
       )
 
       const expectedAction1 = expect.objectContaining({
@@ -622,11 +598,7 @@ describe("/rowsActions", () => {
       const actionResult = await config.api.rowAction.unsetViewPermission(
         tableId,
         viewId1,
-        actionId1,
-        {
-          status: 200,
-          body: {},
-        }
+        actionId1
       )
 
       const expectedAction = expect.objectContaining({
