@@ -60,6 +60,7 @@ export async function search(
     }
 
     response.rows = await outputProcessing(table, response.rows, {
+      squash: true,
       fromViewId: options.viewId,
     })
   }

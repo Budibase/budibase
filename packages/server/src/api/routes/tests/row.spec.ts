@@ -2596,7 +2596,7 @@ describe.each([
       })
 
       const testScenarios: [string, (row: Row) => Promise<Row> | Row][] = [
-        // ["get row", (row: Row) => config.api.row.get(viewId, row._id!)],
+        ["get row", (row: Row) => config.api.row.get(viewId, row._id!)],
         // [
         //   "fetch",
         //   async (row: Row) => {
@@ -2690,7 +2690,7 @@ describe.each([
             async () => {
               const otherRows = _.sampleSize(auxData, 5)
 
-              const row = await config.api.row.save(tableId, {
+              const row = await config.api.row.save(viewId, {
                 title: generator.word(),
                 relWithNoSchema: [otherRows[0]],
                 relWithEmptySchema: [otherRows[1]],
