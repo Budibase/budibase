@@ -145,7 +145,7 @@ export async function fetchRaw(tableId: string): Promise<Row[]> {
   return rows as Row[]
 }
 
-export async function fetchView(
+export async function fetchLegacyView(
   viewName: string,
   options: { calculation: string; group: string; field: string }
 ): Promise<Row[]> {
