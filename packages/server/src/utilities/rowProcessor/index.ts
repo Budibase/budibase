@@ -35,7 +35,6 @@ import {
 import { processString } from "@budibase/string-templates"
 import { isUserMetadataTable } from "../../api/controllers/row/utils"
 
-
 export * from "./utils"
 export * from "./attachments"
 
