@@ -115,10 +115,11 @@ export async function fetch(ctx: any) {
 }
 
 export async function find(ctx: UserCtx<void, GetRowResponse>) {
-  const { tableId } = utils.getSourceId(ctx)
+  const { sourceId } = ctx.params
   const rowId = ctx.params.rowId
 
-  ctx.body = await sdk.rows.find(tableId, rowId)
+  const response = await sdk.rows.find(sourceId, rowId)
+  ctx.body = response
 }
 
 function isDeleteRows(input: any): input is DeleteRows {
