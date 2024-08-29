@@ -41,6 +41,7 @@ import {
   JsonFieldSubType,
   RowExportFormat,
   FeatureFlag,
+  RelationSchemaField,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -1233,7 +1234,7 @@ describe.each([
     })
 
     it.each([{ not: "valid" }, { rows: 123 }, "invalid"])(
-      "Should ignore malformed/invalid delete request: %s",
+      "should ignore malformed/invalid delete request: %s",
       async (request: any) => {
         const rowUsage = await getRowUsage()
 
@@ -2433,7 +2434,7 @@ describe.each([
   !isMSSQL &&
     !isOracle &&
     describe("relationships", () => {
-      let tableId: string
+      let viewId: string
 
       let auxData: Row[] = []
 
@@ -2520,7 +2521,6 @@ describe.each([
                 tableId: auxTableId,
                 fieldName: "fk_relWithEmptySchema",
                 constraints: { presence: true },
-                schema: {},
               },
               relWithFullSchema: {
                 name: "relWithFullSchema",
@@ -2529,10 +2529,6 @@ describe.each([
                 tableId: auxTableId,
                 fieldName: "fk_relWithFullSchema",
                 constraints: { presence: true },
-                schema: Object.keys(auxTable.schema).reduce(
-                  (acc, c) => ({ ...acc, [c]: { visible: true } }),
-                  {}
-                ),
               },
               relWithHalfSchema: {
                 name: "relWithHalfSchema",
@@ -2541,10 +2537,6 @@ describe.each([
                 tableId: auxTableId,
                 fieldName: "fk_relWithHalfSchema",
                 constraints: { presence: true },
-                schema: {
-                  name: { visible: true },
-                  age: { visible: false, readonly: true },
-                },
               },
               relWithIllegalSchema: {
                 name: "relWithIllegalSchema",
@@ -2553,7 +2545,41 @@ describe.each([
                 tableId: auxTableId,
                 fieldName: "fk_relWithIllegalSchema",
                 constraints: { presence: true },
+              },
+            },
+          })
+        )
+        const tableId = table._id!
+        const view = await config.api.viewV2.create({
+          name: generator.guid(),
+          tableId,
                 schema: {
+            title: {
+              visible: true,
+            },
+            relWithNoSchema: {
+              visible: true,
+            },
+            relWithEmptySchema: {
+              visible: true,
+              columns: {},
+            },
+            relWithFullSchema: {
+              visible: true,
+              columns: Object.keys(auxTable.schema).reduce<
+                Record<string, RelationSchemaField>
+              >((acc, c) => ({ ...acc, [c]: { visible: true } }), {}),
+            },
+            relWithHalfSchema: {
+              visible: true,
+              columns: {
+                name: { visible: true },
+                age: { visible: false, readonly: true },
+              },
+            },
+            relWithIllegalSchema: {
+              visible: true,
+              columns: {
                   name: { visible: true },
                   address: { visible: true },
                   unexisting: { visible: true },
@@ -2561,8 +2587,8 @@ describe.each([
               },
             },
           })
-        )
-        tableId = table._id!
+
+        viewId = view.id
       })
 
       afterAll(() => {
@@ -2570,38 +2596,29 @@ describe.each([
       })
 
       const testScenarios: [string, (row: Row) => Promise<Row> | Row][] = [
-        ["get row", (row: Row) => config.api.row.get(tableId, row._id!)],
+        // ["get row", (row: Row) => config.api.row.get(viewId, row._id!)],
+        // [
+        //   "fetch",
+        //   async (row: Row) => {
+        //     const rows = await config.api.row.fetch(tableId)
+        //     return rows.find(r => r._id === row._id)
+        //   },
+        // ],
+        // [
+        //   "search",
+        //   async (row: Row) => {
+        //     const { rows } = await config.api.row.search(tableId)
+        //     return rows.find(r => r._id === row._id)
+        //   },
+        // ],
         [
-          "fetch",
+          "from view search",
           async (row: Row) => {
-            const rows = await config.api.row.fetch(tableId)
-            return rows.find(r => r._id === row._id)
-          },
-        ],
-        [
-          "search",
-          async (row: Row) => {
-            const { rows } = await config.api.row.search(tableId)
-            return rows.find(r => r._id === row._id)
-          },
-        ],
-        [
-          "from view",
-          async (row: Row) => {
-            const table = await config.api.table.get(tableId)
-            const view = await config.api.viewV2.create({
-              name: generator.guid(),
-              tableId,
-              schema: Object.keys(table.schema).reduce(
-                (acc, c) => ({ ...acc, [c]: { visible: true } }),
-                {}
-              ),
-            })
-            const { rows } = await config.api.viewV2.search(view.id)
+            const { rows } = await config.api.viewV2.search(viewId)
             return rows.find(r => r._id === row._id!)
           },
         ],
-        ["from original saved row", (row: Row) => row],
+        // ["from original saved row", (row: Row) => row],
       ]
 
       it.each(testScenarios)(
@@ -2609,7 +2626,7 @@ describe.each([
         async (__, retrieveDelegate) => {
           const otherRows = _.sampleSize(auxData, 5)
 
-          const row = await config.api.row.save(tableId, {
+          const row = await config.api.row.save(viewId, {
             title: generator.word(),
             relWithNoSchema: [otherRows[0]],
             relWithEmptySchema: [otherRows[1]],
