@@ -337,6 +337,11 @@ class InternalBuilder {
     return filters
   }
 
+  addJoinFieldCheck(query: Knex.QueryBuilder, relationship: RelationshipsJson) {
+    const document = relationship.from?.split(".")[0] || ""
+    return query.andWhere(`${document}.fieldName`, "=", relationship.column)
+  }
+
   addRelationshipForFilter(
     query: Knex.QueryBuilder,
     filterKey: string,
@@ -363,8 +368,6 @@ class InternalBuilder {
         let subQuery = mainKnex
           .select(mainKnex.raw(1))
           .from({ [toAlias]: relatedTableName })
-          // relationships should never have more than the base limit
-          .limit(getBaseLimit())
         let mainTableRelatesTo = toAlias
         if (relationship.through) {
           const throughAlias =
@@ -375,12 +378,15 @@ class InternalBuilder {
           })
           subQuery = subQuery.innerJoin(throughTable, function () {
             // @ts-ignore
-            this.orOn(
+            this.on(
               `${toAlias}.${relationship.toPrimary}`,
               "=",
               `${throughAlias}.${relationship.to}`
             )
           })
+          if (this.client === SqlClient.SQL_LITE) {
+            subQuery = this.addJoinFieldCheck(subQuery, relationship)
+          }
           mainTableRelatesTo = throughAlias
         }
         // "join" to the main table, making sure the ID matches that of the main
@@ -907,7 +913,7 @@ class InternalBuilder {
         default:
           throw new Error(`JSON relationships not implement for ${this.client}`)
       }
-      const subQuery = this.knex
+      let subQuery = this.knex
         .select(rawJsonArray)
         .from(toTableWithSchema)
         .join(throughTableWithSchema, function () {
@@ -918,6 +924,12 @@ class InternalBuilder {
           "=",
           this.knex.raw(this.quotedIdentifier(`${fromAlias}.${fromPrimary}`))
         )
+        // relationships should never have more than the base limit
+        .limit(getBaseLimit())
+      // need to check the junction table document is to the right column
+      if (this.client === SqlClient.SQL_LITE) {
+        subQuery = this.addJoinFieldCheck(subQuery, relationship)
+      }
       query = query.select({ [relationship.column]: subQuery })
     }
     return query
