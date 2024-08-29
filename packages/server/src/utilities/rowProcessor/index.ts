@@ -3,7 +3,6 @@ import { fixAutoColumnSubType, processFormulas } from "./utils"
 import {
   cache,
   context,
-  db,
   features,
   HTTPError,
   objectStore,
