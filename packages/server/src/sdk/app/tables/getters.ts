@@ -7,13 +7,9 @@ import {
 } from "../../../integrations/utils"
 import {
   Database,
-  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
-  RelationSchemaField,
-  RelationshipFieldMetadata,
   Table,
   TableResponse,
-  TableSchema,
   TableSourceType,
   TableViewsResponse,
 } from "@budibase/types"
