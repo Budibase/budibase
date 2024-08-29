@@ -4,6 +4,7 @@ import {
   cache,
   context,
   db,
+  features,
   HTTPError,
   objectStore,
   utils,
@@ -350,7 +351,7 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
-  if (isExternal || db.isSqsEnabledForTenant()) {
+  if (isExternal || (await features.flags.isEnabled("SQS"))) {
     for (const row of enriched) {
       for (const key of Object.keys(row)) {
         if (row[key] === null) {
