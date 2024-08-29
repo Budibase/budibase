@@ -148,6 +148,26 @@ describe("Automation Scenarios", () => {
       expect(results.steps[2].outputs.message).toContain("ro_ta")
     })
 
+    it.only("if an incorrect type is passed to the loop it should return an error", async () => {
+      const builder = createAutomationBuilder({
+        name: "Test Loop error",
+      })
+
+      const results = await builder
+        .appAction({ fields: {} })
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: "1, 2, 3",
+        })
+        .serverLog({ text: "Message {{loop.currentItem}}" })
+        .run()
+
+      expect(results.steps[0].outputs).toEqual({
+        success: false,
+        status: "INCORRECT_TYPE",
+      })
+    })
+
     it("should run an automation where a loop is successfully run twice", async () => {
       const builder = createAutomationBuilder({
         name: "Test Trigger with Loop and Create Row",
