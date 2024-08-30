@@ -238,7 +238,7 @@ jobs:
           base_commit_excluding_merges='${{ steps.get_pro_commits.outputs.base_commit_excluding_merges }}'
           pro_commit='${{ steps.get_pro_commits.outputs.pro_commit }}'
 
-          any_commit=$(git log --no-merges $base_commit_excluding_merges...$pro_commit)
+          any_commit=$(git log $base_commit_excluding_merges...$pro_commit)
 
           if [ -n "$any_commit" ]; then
             echo $any_commit
