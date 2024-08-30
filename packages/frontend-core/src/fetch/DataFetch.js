@@ -62,7 +62,6 @@ export default class DataFetch {
       cursors: [],
       resetKey: Math.random(),
       error: null,
-      tenantOwner: null,
     })
 
     // Merge options with their default values
@@ -203,7 +202,6 @@ export default class DataFetch {
       pageNumber: 0,
       rows: page.rows,
       info: page.info,
-      tenantOwner: page.tenantOwner,
       cursors: paginate && page.hasNextPage ? [null, page.cursor] : [null],
       error: page.error,
       resetKey: Math.random(),
@@ -226,8 +224,7 @@ export default class DataFetch {
     const { query } = get(this.store)
 
     // Get the actual data
-    let { rows, info, hasNextPage, cursor, error, tenantOwner } =
-      await this.getData()
+    let { rows, info, hasNextPage, cursor, error } = await this.getData()
 
     // If we don't support searching, do a client search
     if (!this.features.supportsSearch && clientSideSearching) {
@@ -250,7 +247,6 @@ export default class DataFetch {
       hasNextPage,
       cursor,
       error,
-      tenantOwner,
     }
   }
 

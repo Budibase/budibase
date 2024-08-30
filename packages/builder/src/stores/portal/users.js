@@ -133,8 +133,8 @@ export function createUsersStore() {
     return tenantInfo?.owner
   }
 
-  const getUserRole = user => {
-    if (user && user.email === user.tenantOwnerEmail) {
+  const getUserRole = (user, tenantOwnerEmail) => {
+    if (user && user.email === tenantOwnerEmail) {
       return Constants.BudibaseRoles.Owner
     } else if (sdk.users.isAdmin(user)) {
       return Constants.BudibaseRoles.Admin

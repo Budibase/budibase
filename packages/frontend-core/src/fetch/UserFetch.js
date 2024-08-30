@@ -28,7 +28,7 @@ export default class UserFetch extends DataFetch {
   }
 
   async getData() {
-    const { limit, paginate, tenantId } = this.options
+    const { limit, paginate } = this.options
     const { cursor, query } = get(this.store)
     let finalQuery
     // convert old format to new one - we now allow use of the lucene format
@@ -47,12 +47,10 @@ export default class UserFetch extends DataFetch {
         limit,
       }
       const res = await this.API.searchUsers(opts)
-      const tenantInfo = await this.API.getTenantInfo({ tenantId })
       return {
         rows: res?.data || [],
         hasNextPage: res?.hasNextPage || false,
         cursor: res?.nextPage || null,
-        tenantOwner: tenantInfo?.owner,
       }
     } catch (error) {
       return {
