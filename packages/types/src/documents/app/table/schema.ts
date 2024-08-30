@@ -25,12 +25,6 @@ interface BaseRelationshipFieldMetadata
   tableId: string
   tableRev?: string
   subtype?: AutoFieldSubType.CREATED_BY | AutoFieldSubType.UPDATED_BY
-  schema?: Record<string, RelationSchemaField>
-}
-
-export type RelationSchemaField = {
-  visible?: boolean
-  readonly?: boolean
 }
 
 // External tables use junction tables, internal tables don't require them
