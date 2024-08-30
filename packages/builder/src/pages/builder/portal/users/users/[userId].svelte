@@ -85,7 +85,7 @@
   let popoverAnchor
   let searchTerm = ""
   let popover
-  let user
+  let user, tenantOwner
   let loaded = false
 
   $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
@@ -104,6 +104,7 @@
     })
   })
   $: globalRole = users.getUserRole(user)
+  $: isTenantOwner = tenantOwner?.email && tenantOwner.email === user?.email
 
   const getAvailableApps = (appList, privileged, roles) => {
     let availableApps = appList.slice()
@@ -205,6 +206,7 @@
     if (!user?._id) {
       $goto("./")
     }
+    tenantOwner = await users.tenantOwner($auth.tenantId)
   }
 
   async function toggleFlags(detail) {
@@ -268,9 +270,11 @@
                 Force password reset
               </MenuItem>
             {/if}
-            <MenuItem on:click={deleteModal.show} icon="Delete">
-              Delete
-            </MenuItem>
+            {#if !isTenantOwner}
+              <MenuItem on:click={deleteModal.show} icon="Delete">
+                Delete
+              </MenuItem>
+            {/if}
           </ActionMenu>
         </div>
       {/if}
@@ -310,9 +314,11 @@
             <Label size="L">Role</Label>
             <Select
               placeholder={null}
-              disabled={!sdk.users.isAdmin($auth.user)}
-              value={globalRole}
-              options={Constants.BudibaseRoleOptions}
+              disabled={!sdk.users.isAdmin($auth.user) || isTenantOwner}
+              value={isTenantOwner ? "owner" : globalRole}
+              options={isTenantOwner
+                ? Constants.ExtendedBudibaseRoleOptions
+                : Constants.BudibaseRoleOptions}
               on:change={updateUserRole}
             />
           </div>
