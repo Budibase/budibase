@@ -43,6 +43,8 @@
   export let showHeaderBorder = true
   export let placeholderText = "No rows found"
   export let snippets = []
+  export let defaultSortColumn
+  export let defaultSortOrder = "Ascending"
 
   const dispatch = createEventDispatcher()
 
@@ -162,6 +164,8 @@
   }
 
   const sortRows = (rows, sortColumn, sortOrder) => {
+    sortColumn = sortColumn ?? defaultSortColumn
+    sortOrder = sortOrder ?? defaultSortOrder
     if (!sortColumn || !sortOrder || disableSorting) {
       return rows
     }
@@ -259,7 +263,10 @@
     if (select) {
       // Add any rows which are not already in selected rows
       rows.forEach(row => {
-        if (selectedRows.findIndex(x => x._id === row._id) === -1) {
+        if (
+          row.__selectable !== false &&
+          selectedRows.findIndex(x => x._id === row._id) === -1
+        ) {
           selectedRows.push(row)
         }
       })
@@ -396,6 +403,9 @@
                   class:noBorderCheckbox={!showHeaderBorder}
                   class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
                   on:click={e => {
+                    if (row.__selectable === false) {
+                      return
+                    }
                     toggleSelectRow(row)
                     e.stopPropagation()
                   }}
