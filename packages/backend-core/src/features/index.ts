@@ -6,7 +6,7 @@ import tracer from "dd-trace"
 
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
-  if (env.POSTHOG_TOKEN && env.POSTHOG_API_HOST) {
+  if (env.POSTHOG_TOKEN && env.POSTHOG_API_HOST && !env.SELF_HOSTED) {
     console.log("initializing posthog client...")
     posthog = new PostHog(env.POSTHOG_TOKEN, {
       host: env.POSTHOG_API_HOST,
@@ -267,5 +267,6 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 // default values set correctly and their types flow through the system.
 export const flags = new FlagSet({
   DEFAULT_VALUES: Flag.boolean(false),
+  SQS: Flag.boolean(false),
   [FeatureFlag.ENRICHED_RELATIONSHIPS]: Flag.boolean(false),
 })

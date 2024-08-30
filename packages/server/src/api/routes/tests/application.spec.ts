@@ -352,13 +352,13 @@ describe("/applications", () => {
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
 
-    it("should be able to delete an app after SQS_SEARCH_ENABLE has been set but app hasn't been migrated", async () => {
+    it("should be able to delete an app after SQS has been set but app hasn't been migrated", async () => {
       const prodAppId = app.appId.replace("_dev", "")
       nock("http://localhost:10000")
         .delete(`/api/global/roles/${prodAppId}`)
         .reply(200, {})
 
-      await withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, async () => {
+      await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, async () => {
         await config.api.application.delete(app.appId)
       })
     })
