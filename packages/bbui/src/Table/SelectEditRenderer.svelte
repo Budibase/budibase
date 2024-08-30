@@ -6,11 +6,11 @@
   export let onEdit
   export let allowSelectRows = false
   export let allowEditRows = false
-  export let allowSelectedOverride
+  export let data
 </script>
 
 <div>
-  {#if allowSelectRows && allowSelectedOverride !== false}
+  {#if allowSelectRows && data.allowSelectedOverride !== false}
     <Checkbox value={selected} />
   {/if}
   {#if allowEditRows}

@@ -417,7 +417,6 @@
                     ) !== -1}
                     onEdit={e => editRow(e, row)}
                     {allowSelectRows}
-                    allowSelectedOverride={row.allowSelectedOverride}
                     {allowEditRows}
                   />
                 </div>
