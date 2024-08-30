@@ -15,7 +15,7 @@ import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { events, context, db as dbCore } from "@budibase/backend-core"
+import { events, context, features } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   ContextUser,
@@ -332,7 +332,7 @@ class TableSaveFunctions {
       importRows: this.importRows,
       user: this.user,
     })
-    if (dbCore.isSqsEnabledForTenant()) {
+    if (await features.flags.isEnabled("SQS")) {
       await sdk.tables.sqs.addTable(table)
     }
     return table
@@ -526,7 +526,7 @@ export async function internalTableCleanup(table: Table, rows?: Row[]) {
   if (rows) {
     await AttachmentCleanup.tableDelete(table, rows)
   }
-  if (dbCore.isSqsEnabledForTenant()) {
+  if (await features.flags.isEnabled("SQS")) {
     await sdk.tables.sqs.removeTable(table)
   }
 }
