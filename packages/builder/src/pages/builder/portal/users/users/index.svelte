@@ -52,6 +52,7 @@
 
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
   let enrichedUsers = []
+  let tenantOwner
   let createUserModal,
     inviteConfirmationModal,
     onboardingTypeModal,
@@ -70,6 +71,7 @@
   ]
   let userData = []
   let invitesLoaded = false
+  let tenantOwnerLoaded = false
   let pendingInvites = []
   let parsedInvites = []
 
@@ -101,7 +103,10 @@
   $: setEnrichedUsers($fetch.rows)
 
   const setEnrichedUsers = async rows => {
-    const tenantOwner = await users.tenantOwner($auth.tenantId)
+    if (!tenantOwnerLoaded) {
+      enrichedUsers = []
+      return
+    }
     enrichedUsers = rows?.map(user => {
       let userGroups = []
       $groups.forEach(group => {
@@ -311,6 +316,8 @@
       groupsLoaded = true
       pendingInvites = await users.getInvites()
       invitesLoaded = true
+      tenantOwner = await users.tenantOwner($auth.tenantId)
+      tenantOwnerLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
     }
