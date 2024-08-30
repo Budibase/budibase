@@ -522,10 +522,10 @@
   }
 
   .relationship-fields {
-    margin: var(--cell-padding);
+    margin: var(--spacing-m) var(--spacing-l);
     display: grid;
     grid-template-columns: auto auto;
-    grid-row-gap: var(--cell-spacing);
+    grid-row-gap: var(--spacing-m);
     grid-column-gap: var(--cell-spacing);
   }
 </style>
