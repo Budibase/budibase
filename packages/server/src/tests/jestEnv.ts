@@ -3,6 +3,8 @@ import { tmpdir } from "os"
 process.env.SELF_HOSTED = "1"
 process.env.NODE_ENV = "jest"
 process.env.MULTI_TENANCY = "1"
+process.env.APP_PORT = "0"
+process.env.WORKER_PORT = "0"
 // @ts-ignore
 process.env.BUDIBASE_DIR = tmpdir("budibase-unittests")
 process.env.LOG_LEVEL = process.env.LOG_LEVEL || "error"

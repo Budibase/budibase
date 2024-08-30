@@ -147,13 +147,13 @@ describe("feature flags", () => {
     }) => {
       const env: Partial<typeof environment> = {
         TENANT_FEATURE_FLAGS: environmentFlags,
+        SELF_HOSTED: false,
       }
 
       if (posthogFlags) {
         mockPosthogFlags(posthogFlags)
         env.POSTHOG_TOKEN = "test"
         env.POSTHOG_API_HOST = "https://us.i.posthog.com"
-        env.POSTHOG_PERSONAL_TOKEN = "test"
       }
 
       const ctx = { user: { license: { features: licenseFlags || [] } } }
