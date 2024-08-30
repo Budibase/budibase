@@ -514,7 +514,7 @@
   }
 
   .relationship-fields {
-    padding: var(--spacing-s);
+    margin: var(--cell-padding);
     display: grid;
     grid-template-columns: auto auto;
     grid-row-gap: var(--cell-spacing);
