@@ -62,12 +62,12 @@ export const deriveStores = context => {
         }
 
         if ($subSchemaMutations[field]) {
-          enrichedSchema[field].schema ??= {}
+          enrichedSchema[field].columns ??= {}
           for (const [fieldName, mutation] of Object.entries(
             $subSchemaMutations[field]
           )) {
-            enrichedSchema[field].schema[fieldName] = {
-              ...enrichedSchema[field].schema[fieldName],
+            enrichedSchema[field].columns[fieldName] = {
+              ...enrichedSchema[field].columns[fieldName],
               ...mutation,
             }
           }
@@ -239,12 +239,12 @@ export const createActions = context => {
         ...$schemaMutations[column],
       }
       if ($subSchemaMutations[column]) {
-        newSchema[column].schema ??= {}
+        newSchema[column].columns ??= {}
         for (const [fieldName, mutation] of Object.entries(
           $subSchemaMutations[column]
         )) {
-          newSchema[column].schema[fieldName] = {
-            ...newSchema[column].schema[fieldName],
+          newSchema[column].columns[fieldName] = {
+            ...newSchema[column].columns[fieldName],
             ...mutation,
           }
         }

@@ -41,6 +41,7 @@ import {
   JsonFieldSubType,
   RowExportFormat,
   FeatureFlag,
+  RelationSchemaField,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -1233,7 +1234,7 @@ describe.each([
     })
 
     it.each([{ not: "valid" }, { rows: 123 }, "invalid"])(
-      "Should ignore malformed/invalid delete request: %s",
+      "should ignore malformed/invalid delete request: %s",
       async (request: any) => {
         const rowUsage = await getRowUsage()
 
@@ -2434,6 +2435,7 @@ describe.each([
     !isOracle &&
     describe("relationships", () => {
       let tableId: string
+      let viewId: string
 
       let auxData: Row[] = []
 
@@ -2520,7 +2522,6 @@ describe.each([
                 tableId: auxTableId,
                 fieldName: "fk_relWithEmptySchema",
                 constraints: { presence: true },
-                schema: {},
               },
               relWithFullSchema: {
                 name: "relWithFullSchema",
@@ -2529,10 +2530,6 @@ describe.each([
                 tableId: auxTableId,
                 fieldName: "fk_relWithFullSchema",
                 constraints: { presence: true },
-                schema: Object.keys(auxTable.schema).reduce(
-                  (acc, c) => ({ ...acc, [c]: { visible: true } }),
-                  {}
-                ),
               },
               relWithHalfSchema: {
                 name: "relWithHalfSchema",
@@ -2541,10 +2538,6 @@ describe.each([
                 tableId: auxTableId,
                 fieldName: "fk_relWithHalfSchema",
                 constraints: { presence: true },
-                schema: {
-                  name: { visible: true },
-                  age: { visible: false, readonly: true },
-                },
               },
               relWithIllegalSchema: {
                 name: "relWithIllegalSchema",
@@ -2553,16 +2546,50 @@ describe.each([
                 tableId: auxTableId,
                 fieldName: "fk_relWithIllegalSchema",
                 constraints: { presence: true },
-                schema: {
-                  name: { visible: true },
-                  address: { visible: true },
-                  unexisting: { visible: true },
-                },
               },
             },
           })
         )
         tableId = table._id!
+        const view = await config.api.viewV2.create({
+          name: generator.guid(),
+          tableId,
+          schema: {
+            title: {
+              visible: true,
+            },
+            relWithNoSchema: {
+              visible: true,
+            },
+            relWithEmptySchema: {
+              visible: true,
+              columns: {},
+            },
+            relWithFullSchema: {
+              visible: true,
+              columns: Object.keys(auxTable.schema).reduce<
+                Record<string, RelationSchemaField>
+              >((acc, c) => ({ ...acc, [c]: { visible: true } }), {}),
+            },
+            relWithHalfSchema: {
+              visible: true,
+              columns: {
+                name: { visible: true },
+                age: { visible: false, readonly: true },
+              },
+            },
+            relWithIllegalSchema: {
+              visible: true,
+              columns: {
+                name: { visible: true },
+                address: { visible: true },
+                unexisting: { visible: true },
+              },
+            },
+          },
+        })
+
+        viewId = view.id
       })
 
       afterAll(() => {
@@ -2570,38 +2597,16 @@ describe.each([
       })
 
       const testScenarios: [string, (row: Row) => Promise<Row> | Row][] = [
-        ["get row", (row: Row) => config.api.row.get(tableId, row._id!)],
+        ["get row", (row: Row) => config.api.row.get(viewId, row._id!)],
         [
-          "fetch",
+          "from view search",
           async (row: Row) => {
-            const rows = await config.api.row.fetch(tableId)
-            return rows.find(r => r._id === row._id)
-          },
-        ],
-        [
-          "search",
-          async (row: Row) => {
-            const { rows } = await config.api.row.search(tableId)
-            return rows.find(r => r._id === row._id)
-          },
-        ],
-        [
-          "from view",
-          async (row: Row) => {
-            const table = await config.api.table.get(tableId)
-            const view = await config.api.viewV2.create({
-              name: generator.guid(),
-              tableId,
-              schema: Object.keys(table.schema).reduce(
-                (acc, c) => ({ ...acc, [c]: { visible: true } }),
-                {}
-              ),
-            })
-            const { rows } = await config.api.viewV2.search(view.id)
+            const { rows } = await config.api.viewV2.search(viewId)
             return rows.find(r => r._id === row._id!)
           },
         ],
         ["from original saved row", (row: Row) => row],
+        ["from updated  row", (row: Row) => config.api.row.save(viewId, row)],
       ]
 
       it.each(testScenarios)(
@@ -2609,7 +2614,7 @@ describe.each([
         async (__, retrieveDelegate) => {
           const otherRows = _.sampleSize(auxData, 5)
 
-          const row = await config.api.row.save(tableId, {
+          const row = await config.api.row.save(viewId, {
             title: generator.word(),
             relWithNoSchema: [otherRows[0]],
             relWithEmptySchema: [otherRows[1]],
@@ -2673,7 +2678,7 @@ describe.each([
             async () => {
               const otherRows = _.sampleSize(auxData, 5)
 
-              const row = await config.api.row.save(tableId, {
+              const row = await config.api.row.save(viewId, {
                 title: generator.word(),
                 relWithNoSchema: [otherRows[0]],
                 relWithEmptySchema: [otherRows[1]],
@@ -2720,6 +2725,75 @@ describe.each([
                 })
               )
             }
+          )
+        }
+      )
+
+      it.each([
+        [
+          "from table fetch",
+          async (row: Row) => {
+            const rows = await config.api.row.fetch(tableId)
+            return rows.find(r => r._id === row._id!)
+          },
+        ],
+        [
+          "from table search",
+          async (row: Row) => {
+            const { rows } = await config.api.row.search(tableId)
+            return rows.find(r => r._id === row._id!)
+          },
+        ],
+      ])(
+        "does not enrich when fetching from the table (via %s)",
+        async (__, retrieveDelegate) => {
+          const otherRows = _.sampleSize(auxData, 5)
+
+          const row = await config.api.row.save(viewId, {
+            title: generator.word(),
+            relWithNoSchema: [otherRows[0]],
+            relWithEmptySchema: [otherRows[1]],
+            relWithFullSchema: [otherRows[2]],
+            relWithHalfSchema: [otherRows[3]],
+            relWithIllegalSchema: [otherRows[4]],
+          })
+
+          const retrieved = await retrieveDelegate(row)
+
+          expect(retrieved).toEqual(
+            expect.objectContaining({
+              title: row.title,
+              relWithNoSchema: [
+                {
+                  _id: otherRows[0]._id,
+                  primaryDisplay: otherRows[0].name,
+                },
+              ],
+              relWithEmptySchema: [
+                {
+                  _id: otherRows[1]._id,
+                  primaryDisplay: otherRows[1].name,
+                },
+              ],
+              relWithFullSchema: [
+                {
+                  _id: otherRows[2]._id,
+                  primaryDisplay: otherRows[2].name,
+                },
+              ],
+              relWithHalfSchema: [
+                {
+                  _id: otherRows[3]._id,
+                  primaryDisplay: otherRows[3].name,
+                },
+              ],
+              relWithIllegalSchema: [
+                {
+                  _id: otherRows[4]._id,
+                  primaryDisplay: otherRows[4].name,
+                },
+              ],
+            })
           )
         }
       )
