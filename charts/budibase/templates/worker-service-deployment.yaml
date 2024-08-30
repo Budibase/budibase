@@ -198,10 +198,6 @@ spec:
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
-        {{- if .Values.globals.sqs.enabled }}
-        - name: SQS_SEARCH_ENABLE
-          value: "true"
-        {{- end }}
         {{- range .Values.services.worker.extraEnv }}
         - name: {{ .name }}
           value: {{ .value | quote }}
