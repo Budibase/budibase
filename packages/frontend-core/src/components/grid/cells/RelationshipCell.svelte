@@ -223,11 +223,11 @@
   }
 
   const displayRelationshipFields = relationship => {
-    {
-      const { _id, primaryDisplay, ...fields } = relationship
-      if (Object.keys(fields).length) {
-        relationshipFields = fields
-      }
+    for (const column of Object.entries(schema.columns)
+      .filter(([_, column]) => column.visible !== false)
+      .map(([key]) => key)) {
+      relationshipFields ??= {}
+      relationshipFields[column] = relationship[column]
     }
   }
 
