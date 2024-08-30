@@ -97,7 +97,11 @@ describe.each([
     await withCoreEnv({ TENANT_FEATURE_FLAGS: isSqs ? "*:SQS" : "" }, () =>
       config.init()
     )
-    if (isSqs) {
+    if (isLucene) {
+      envCleanup = setCoreEnv({
+        TENANT_FEATURE_FLAGS: "*:!SQS",
+      })
+    } else if (isSqs) {
       envCleanup = setCoreEnv({
         TENANT_FEATURE_FLAGS: "*:SQS",
       })
