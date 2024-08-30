@@ -118,7 +118,7 @@
         ...user,
         name: user.firstName ? user.firstName + " " + user.lastName : "",
         userGroups,
-        allowSelectedOverride:
+        __selectable:
           role.value === Constants.BudibaseRoles.Owner ? false : undefined,
         apps: [...new Set(Object.keys(user.roles))],
         access: role.sortOrder,

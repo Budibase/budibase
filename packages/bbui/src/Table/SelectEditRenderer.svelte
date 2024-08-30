@@ -10,7 +10,7 @@
 </script>
 
 <div>
-  {#if allowSelectRows && data.allowSelectedOverride !== false}
+  {#if allowSelectRows && data.__selectable !== false}
     <Checkbox value={selected} />
   {/if}
   {#if allowEditRows}

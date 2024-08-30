@@ -264,7 +264,7 @@
       // Add any rows which are not already in selected rows
       rows.forEach(row => {
         if (
-          row.allowSelectedOverride !== false &&
+          row.__selectable !== false &&
           selectedRows.findIndex(x => x._id === row._id) === -1
         ) {
           selectedRows.push(row)
@@ -403,7 +403,7 @@
                   class:noBorderCheckbox={!showHeaderBorder}
                   class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
                   on:click={e => {
-                    if (row.allowSelectedOverride === false) {
+                    if (row.__selectable === false) {
                       return
                     }
                     toggleSelectRow(row)
