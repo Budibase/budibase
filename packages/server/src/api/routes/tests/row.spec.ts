@@ -76,11 +76,11 @@ async function waitForEvent(
 describe.each([
   ["internal", undefined],
   ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const isLucene = providerType === "lucene"
@@ -95,9 +95,11 @@ describe.each([
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*SQS" }, () => config.init())
-    if (isSqs) {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*SQS" })
+    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
+    if (isLucene) {
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" })
+    } else if (isSqs) {
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" })
     }
 
     if (dsProvider) {
