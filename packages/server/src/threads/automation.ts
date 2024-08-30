@@ -368,11 +368,13 @@ class Orchestrator {
         shouldCleanup = false
         break
       }
+      const maxIterations = automationUtils.ensureMaxIterationsAsNumber(
+        loopStep.inputs.iterations
+      )
 
       if (
         loopStepIndex === env.AUTOMATION_MAX_ITERATIONS ||
-        (loopStep.inputs.iterations &&
-          loopStepIndex === parseInt(loopStep.inputs.iterations))
+        (loopStep.inputs.iterations && loopStepIndex === maxIterations)
       ) {
         this.updateContextAndOutput(
           stepToLoopIndex,
