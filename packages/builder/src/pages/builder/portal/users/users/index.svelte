@@ -72,7 +72,6 @@
   let invitesLoaded = false
   let pendingInvites = []
   let parsedInvites = []
-  let tenantOwner
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: readonly = !sdk.users.isAdmin($auth.user)
@@ -99,8 +98,11 @@
   $: pendingSchema = getPendingSchema(schema)
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
-  $: {
-    enrichedUsers = $fetch.rows?.map(user => {
+  $: setEnrichedUsers($fetch.rows)
+
+  const setEnrichedUsers = async rows => {
+    const tenantOwner = await users.tenantOwner($auth.tenantId)
+    enrichedUsers = rows?.map(user => {
       let userGroups = []
       $groups.forEach(group => {
         if (group.users) {
@@ -111,8 +113,9 @@
           })
         }
       })
+      user.tenantOwnerEmail = tenantOwner?.email
       const role = Constants.ExtendedBudibaseRoleOptions.find(
-        x => x.value === users.getUserRole(user, tenantOwner?.email)
+        x => x.value === users.getUserRole(user)
       )
       return {
         ...user,
@@ -125,7 +128,6 @@
       }
     })
   }
-
   const getPendingSchema = tblSchema => {
     if (!tblSchema) {
       return {}
@@ -309,7 +311,6 @@
       groupsLoaded = true
       pendingInvites = await users.getInvites()
       invitesLoaded = true
-      tenantOwner = await users.tenantOwner($auth.tenantId)
     } catch (error) {
       notifications.error("Error fetching user group data")
     }
