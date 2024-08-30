@@ -2,7 +2,7 @@ import * as setup from "./utilities"
 import path from "path"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
-import { withEnv as withCoreEnv } from "@budibase/backend-core"
+import { withEnv as withCoreEnv, env as coreEnv } from "@budibase/backend-core"
 
 interface App {
   background: string
@@ -85,9 +85,8 @@ describe("/templates", () => {
     it.each(["sqs", "lucene"])(
       `should be able to create an app from a template (%s)`,
       async source => {
-        const env = {
-          SQS_SEARCH_ENABLE: source === "sqs" ? "true" : "false",
-          SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
+        const env: Partial<typeof coreEnv> = {
+          TENANT_FEATURE_FLAGS: source === "sqs" ? "*:SQS" : "",
         }
 
         await withCoreEnv(env, async () => {
