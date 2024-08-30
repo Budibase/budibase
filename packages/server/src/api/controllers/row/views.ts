@@ -10,7 +10,7 @@ import {
 } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
-import { db, context } from "@budibase/backend-core"
+import { db, context, features } from "@budibase/backend-core"
 import { enrichSearchContext } from "./utils"
 import { isExternalTableID } from "../../../integrations/utils"
 
@@ -40,7 +40,10 @@ export async function searchView(
     // Delete extraneous search params that cannot be overridden
     delete body.query.onEmptyFilter
 
-    if (!isExternalTableID(view.tableId) && !db.isSqsEnabledForTenant()) {
+    if (
+      !isExternalTableID(view.tableId) &&
+      !(await features.flags.isEnabled("SQS"))
+    ) {
       // Extract existing fields
       const existingFields =
         view.query
@@ -56,12 +59,13 @@ export async function searchView(
           }
         })
       })
-    } else
+    } else {
       query = {
         $and: {
           conditions: [query, body.query],
         },
       }
+    }
   }
 
   await context.ensureSnippetContext(true)
