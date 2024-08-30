@@ -2,7 +2,22 @@
 const { parsed: existingConfig } = require("dotenv").config()
 const updateDotEnv = require("update-dotenv")
 
+const TenantFlags = ["SQS"]
+
+function anyMissingTenantFlags(tenantFlagsVar) {
+  if (!tenantFlagsVar) {
+    return true
+  }
+  for (const flag of TenantFlags) {
+    if (!tenantFlagsVar.includes(flag)) {
+      return true
+    }
+  }
+  return false
+}
+
 async function init() {
+  const tenantFlagsDefault = "*:SQS"
   let config = {
     SELF_HOSTED: "1",
     PORT: "4002",
@@ -30,10 +45,14 @@ async function init() {
     HTTP_LOGGING: "0",
     VERSION: "0.0.0+local",
     PASSWORD_MIN_LENGTH: "1",
-    TENANT_FEATURE_FLAGS: "*:SQS",
+    TENANT_FEATURE_FLAGS: tenantFlagsDefault,
   }
 
   config = { ...config, ...existingConfig }
+
+  if (anyMissingTenantFlags(existingConfig.TENANT_FEATURE_FLAGS)) {
+    config.TENANT_FEATURE_FLAGS = tenantFlagsDefault
+  }
 
   await updateDotEnv(config)
 }
