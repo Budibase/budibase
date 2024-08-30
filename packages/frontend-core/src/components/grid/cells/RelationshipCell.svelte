@@ -341,7 +341,7 @@
   </GridPopover>
 {/if}
 
-{#if relationshipFields && !isOpen}
+{#if relationshipFields && !focused}
   <GridPopover {open} {anchor}>
     <div class="relationship-fields">
       {#each Object.entries(relationshipFields) as [fieldName, fieldValue]}
