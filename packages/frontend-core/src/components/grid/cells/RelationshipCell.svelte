@@ -29,6 +29,7 @@
   let searching = false
   let container
   let anchor
+  let relationshipFields
 
   $: fieldValue = parseValue(value)
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
@@ -221,6 +222,19 @@
     return value
   }
 
+  const displayRelationshipFields = relationship => {
+    {
+      const { _id, primaryDisplay, ...fields } = relationship
+      if (Object.keys(fields).length) {
+        relationshipFields = fields
+      }
+    }
+  }
+
+  const hideRelationshipFields = () => {
+    relationshipFields = undefined
+  }
+
   onMount(() => {
     api = {
       focus: open,
@@ -248,7 +262,12 @@
     >
       {#each fieldValue || [] as relationship}
         {#if relationship[primaryDisplay] || relationship.primaryDisplay}
-          <div class="badge">
+          <div
+            class="badge"
+            on:mouseover={() => displayRelationshipFields(relationship)}
+            on:focus={() => {}}
+            on:mouseleave={() => hideRelationshipFields()}
+          >
             <span>
               {readable(
                 relationship[primaryDisplay] || relationship.primaryDisplay
@@ -318,6 +337,21 @@
           {/each}
         </div>
       {/if}
+    </div>
+  </GridPopover>
+{/if}
+
+{#if relationshipFields && !isOpen}
+  <GridPopover {open} {anchor}>
+    <div class="relationship-fields">
+      {#each Object.entries(relationshipFields) as [fieldName, fieldValue]}
+        <div class="relationship-field-name">
+          {fieldName}
+        </div>
+        <div class="relationship-field-value">
+          {fieldValue}
+        </div>
+      {/each}
     </div>
   </GridPopover>
 {/if}
@@ -477,5 +511,13 @@
   }
   .search :global(.spectrum-Form-item) {
     flex: 1 1 auto;
+  }
+
+  .relationship-fields {
+    padding: var(--spacing-s);
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-row-gap: var(--cell-spacing);
+    grid-column-gap: var(--cell-spacing);
   }
 </style>
