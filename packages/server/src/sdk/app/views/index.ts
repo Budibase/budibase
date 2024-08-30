@@ -216,7 +216,7 @@ export async function enrichSchema(
     if (schema[key].type === FieldType.LINK) {
       schema[key].columns = await populateRelTableSchema(
         schema[key].tableId,
-        viewSchema[key].columns || {}
+        viewSchema[key]?.columns || {}
       )
     }
   }
