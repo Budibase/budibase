@@ -39,24 +39,130 @@ describe("Automation Scenarios", () => {
                 branch1: {
                   steps: stepBuilder =>
                     stepBuilder.serverLog({ text: "Branch 1.1" }),
-                  condition: { notEmpty: { column: 10 } },
+                  condition: {
+                    equal: { "steps.1.success": true },
+                  },
                 },
                 branch2: {
                   steps: stepBuilder =>
                     stepBuilder.serverLog({ text: "Branch 1.2" }),
-                  condition: { fuzzy: { column: "sadsd" } },
+                  condition: {
+                    equal: { "steps.1.success": false },
+                  },
                 },
               }),
-            condition: { equal: { column: 10 } },
+            condition: {
+              equal: { "steps.1.success": true },
+            },
           },
           topLevelBranch2: {
             steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
-            condition: { equal: { column: 20 } },
+            condition: {
+              equal: { "steps.1.success": false },
+            },
           },
         })
         .run()
 
       expect(results.steps[2].outputs.message).toContain("Branch 1.1")
+    })
+
+    it("should execute correct branch based on string equality", async () => {
+      const builder = createAutomationBuilder({
+        name: "String Equality Branching",
+      })
+
+      const results = await builder
+        .appAction({ fields: { status: "active" } })
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {
+              equal: { "trigger.fields.status": "active" },
+            },
+          },
+          inactiveBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Inactive user" }),
+            condition: {
+              equal: { "trigger.fields.status": "inactive" },
+            },
+          },
+        })
+        .run()
+
+      expect(results.steps[0].outputs.message).toContain("Active user")
+    })
+
+    it("should handle multiple conditions with AND operator", async () => {
+      const builder = createAutomationBuilder({
+        name: "Multiple AND Conditions Branching",
+      })
+
+      const results = await builder
+        .appAction({ fields: { status: "active", role: "admin" } })
+        .branch({
+          activeAdminBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active admin user" }),
+            condition: {
+              $and: {
+                conditions: [
+                  { equal: { "trigger.fields.status": "active" } },
+                  { equal: { "trigger.fields.role": "admin" } },
+                ],
+              },
+            },
+          },
+          otherBranch: {
+            steps: stepBuilder => stepBuilder.serverLog({ text: "Other user" }),
+            condition: {
+              notEqual: { "trigger.fields.status": "active" },
+            },
+          },
+        })
+        .run()
+
+      expect(results.steps[0].outputs.message).toContain("Active admin user")
+    })
+
+    it("should handle multiple conditions with OR operator", async () => {
+      const builder = createAutomationBuilder({
+        name: "Multiple OR Conditions Branching",
+      })
+
+      const results = await builder
+        .appAction({ fields: { status: "test", role: "user" } })
+        .branch({
+          specialBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Special user" }),
+            condition: {
+              $or: {
+                conditions: [
+                  { equal: { "trigger.fields.status": "test" } },
+                  { equal: { "trigger.fields.role": "admin" } },
+                ],
+              },
+            },
+          },
+          regularBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Regular user" }),
+            condition: {
+              $and: {
+                conditions: [
+                  { notEqual: { "trigger.fields.status": "active" } },
+                  { notEqual: { "trigger.fields.role": "admin" } },
+                ],
+              },
+            },
+          },
+        })
+        .run()
+
+      expect(results.steps[0].outputs.message).toContain("Special user")
     })
   })
 

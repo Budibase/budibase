@@ -8,7 +8,7 @@ import {
 import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
 import { replaceFakeBindings } from "../automations/loopUtils"
-import { helpers } from "@budibase/shared-core"
+import { dataFilters, helpers } from "@budibase/shared-core"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { definitions as triggerDefs } from "../automations/triggerInfo"
@@ -30,7 +30,7 @@ import {
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
 import { context, logging } from "@budibase/backend-core"
-import { processObject } from "@budibase/string-templates"
+import { processObject, processStringSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
@@ -469,9 +469,27 @@ class Orchestrator {
   }
 
   private async evaluateBranchCondition(
-    _condition?: SearchFilters
+    conditions: SearchFilters
   ): Promise<boolean> {
-    return true
+    const toFilter: Record<string, any> = {}
+
+    const processFilter = (filter: SearchFilters) => {
+      Object.entries(filter).forEach(([_, value]) => {
+        Object.entries(value).forEach(([field, _]) => {
+          const fromContext = processStringSync(
+            `{{ literal ${field} }}`,
+            this.context
+          )
+          toFilter[field] = fromContext
+        })
+      })
+      return filter
+    }
+    processFilter(conditions)
+    dataFilters.recurseLogicalOperators(conditions, processFilter)
+
+    const result = dataFilters.runQuery([toFilter], conditions)
+    return result.length > 0
   }
 
   private async executeStep(
