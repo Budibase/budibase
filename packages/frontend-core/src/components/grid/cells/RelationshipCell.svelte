@@ -223,11 +223,19 @@
   }
 
   const displayRelationshipFields = relationship => {
+    const fields = {}
     for (const column of Object.entries(schema.columns)
-      .filter(([_, column]) => column.visible !== false)
+      .filter(
+        ([key, column]) =>
+          column.visible !== false &&
+          relationship[key] !== null &&
+          relationship[key] !== undefined
+      )
       .map(([key]) => key)) {
-      relationshipFields ??= {}
-      relationshipFields[column] = relationship[column]
+      fields[column] = relationship[column]
+    }
+    if (Object.keys(fields).length) {
+      relationshipFields = fields
     }
   }
 
