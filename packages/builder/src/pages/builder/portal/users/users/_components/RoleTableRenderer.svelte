@@ -4,7 +4,7 @@
 
   export let row
 
-  $: role = Constants.BudibaseRoleOptions.find(
+  $: role = Constants.ExtendedBudibaseRoleOptions.find(
     x => x.value === users.getUserRole(row)
   )
   $: value = role?.label || "Not available"
