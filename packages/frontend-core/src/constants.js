@@ -41,6 +41,7 @@ export const BudibaseRoles = {
   Developer: "developer",
   Creator: "creator",
   Admin: "admin",
+  Owner: "owner",
 }
 
 export const BudibaseRoleOptionsOld = [
@@ -54,18 +55,28 @@ export const BudibaseRoleOptions = [
     label: "Account admin",
     value: BudibaseRoles.Admin,
     subtitle: "Has full access to all apps and settings in your account",
+    sortOrder: 1,
   },
   {
     label: "Creator",
     value: BudibaseRoles.Creator,
     subtitle: "Can create and edit apps they have access to",
+    sortOrder: 2,
   },
   {
     label: "App user",
     value: BudibaseRoles.AppUser,
     subtitle: "Can only use published apps they have access to",
+    sortOrder: 3,
   },
 ]
+export const ExtendedBudibaseRoleOptions = [
+  {
+    label: "Account holder",
+    value: BudibaseRoles.Owner,
+    sortOrder: 0,
+  },
+].concat(BudibaseRoleOptions)
 
 export const PlanType = {
   FREE: "free",

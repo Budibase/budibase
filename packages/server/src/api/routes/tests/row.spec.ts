@@ -97,9 +97,11 @@ describe.each([
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*SQS" }, () => config.init())
-    if (isSqs) {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*SQS" })
+    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
+    if (isLucene) {
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" })
+    } else if (isSqs) {
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" })
     }
 
     if (dsProvider) {

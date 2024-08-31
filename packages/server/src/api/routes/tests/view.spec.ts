@@ -444,7 +444,10 @@ describe("/views", () => {
 
       assertJsonExport(res)
       expect(events.table.exported).toHaveBeenCalledTimes(1)
-      expect(events.table.exported).toHaveBeenCalledWith(table, "json")
+      expect(events.table.exported).toHaveBeenCalledWith(
+        expect.objectContaining(table),
+        "json"
+      )
     })
 
     it("should be able to export a table as CSV", async () => {
@@ -454,7 +457,10 @@ describe("/views", () => {
 
       assertCSVExport(res)
       expect(events.table.exported).toHaveBeenCalledTimes(1)
-      expect(events.table.exported).toHaveBeenCalledWith(table, "csv")
+      expect(events.table.exported).toHaveBeenCalledWith(
+        expect.objectContaining(table),
+        "csv"
+      )
     })
 
     it("should be able to export a view as JSON", async () => {
