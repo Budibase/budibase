@@ -17,7 +17,9 @@ describe.each(["lucene", "sql"])("/api/global/auditlogs (%s)", method => {
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    if (method === "sql") {
+    if (method === "lucene") {
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" })
+    } else if (method === "sql") {
       envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" })
     }
     await config.beforeAll()
