@@ -176,83 +176,84 @@
                       {/if}
                     {/key}
 
-                  <!-- Clip boundary for selection indicators -->
-                  <div
-                    id="clip-root"
-                    class:preview={$builderStore.inBuilder}
-                    class:tablet-preview={$builderStore.previewDevice ===
-                      "tablet"}
-                    class:mobile-preview={$builderStore.previewDevice ===
-                      "mobile"}
-                  >
-                    <!-- Actual app -->
-                    <div id="app-root">
-                      {#if showDevTools}
-                        <DevToolsHeader />
-                      {/if}
-
-                      <div id="app-body">
-                        {#if permissionError}
-                          <div class="error">
-                            <Layout justifyItems="center" gap="S">
-                              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                              {@html ErrorSVG}
-                              <Heading size="L">
-                                You don't have permission to use this app
-                              </Heading>
-                              <Body size="S">
-                                Ask your administrator to grant you access
-                              </Body>
-                            </Layout>
-                          </div>
-                        {:else if !$screenStore.activeLayout}
-                          <div class="error">
-                            <Layout justifyItems="center" gap="S">
-                              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                              {@html ErrorSVG}
-                              <Heading size="L">
-                                Something went wrong rendering your app
-                              </Heading>
-                              <Body size="S">
-                                Get in touch with support if this issue persists
-                              </Body>
-                            </Layout>
-                          </div>
-                        {:else if embedNoScreens}
-                          <div class="error">
-                            <Layout justifyItems="center" gap="S">
-                              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                              {@html ErrorSVG}
-                              <Heading size="L">
-                                This Budibase app is not publicly accessible
-                              </Heading>
-                            </Layout>
-                          </div>
-                        {:else}
-                          <CustomThemeWrapper>
-                            {#key $screenStore.activeLayout._id}
-                              <Component
-                                isLayout
-                                instance={$screenStore.activeLayout.props}
-                              />
-                            {/key}
-
-                            <!-- Layers on top of app -->
-                            <NotificationDisplay />
-                            <ConfirmationDisplay />
-                            <PeekScreenDisplay />
-                          </CustomThemeWrapper>
+                    <!-- Clip boundary for selection indicators -->
+                    <div
+                      id="clip-root"
+                      class:preview={$builderStore.inBuilder}
+                      class:tablet-preview={$builderStore.previewDevice ===
+                        "tablet"}
+                      class:mobile-preview={$builderStore.previewDevice ===
+                        "mobile"}
+                    >
+                      <!-- Actual app -->
+                      <div id="app-root">
+                        {#if showDevTools}
+                          <DevToolsHeader />
                         {/if}
 
-                        {#if showDevTools}
-                          <DevTools />
+                        <div id="app-body">
+                          {#if permissionError}
+                            <div class="error">
+                              <Layout justifyItems="center" gap="S">
+                                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                                {@html ErrorSVG}
+                                <Heading size="L">
+                                  You don't have permission to use this app
+                                </Heading>
+                                <Body size="S">
+                                  Ask your administrator to grant you access
+                                </Body>
+                              </Layout>
+                            </div>
+                          {:else if !$screenStore.activeLayout}
+                            <div class="error">
+                              <Layout justifyItems="center" gap="S">
+                                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                                {@html ErrorSVG}
+                                <Heading size="L">
+                                  Something went wrong rendering your app
+                                </Heading>
+                                <Body size="S">
+                                  Get in touch with support if this issue
+                                  persists
+                                </Body>
+                              </Layout>
+                            </div>
+                          {:else if embedNoScreens}
+                            <div class="error">
+                              <Layout justifyItems="center" gap="S">
+                                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                                {@html ErrorSVG}
+                                <Heading size="L">
+                                  This Budibase app is not publicly accessible
+                                </Heading>
+                              </Layout>
+                            </div>
+                          {:else}
+                            <CustomThemeWrapper>
+                              {#key $screenStore.activeLayout._id}
+                                <Component
+                                  isLayout
+                                  instance={$screenStore.activeLayout.props}
+                                />
+                              {/key}
+
+                              <!-- Layers on top of app -->
+                              <NotificationDisplay />
+                              <ConfirmationDisplay />
+                              <PeekScreenDisplay />
+                            </CustomThemeWrapper>
+                          {/if}
+
+                          {#if showDevTools}
+                            <DevTools />
+                          {/if}
+                        </div>
+
+                        {#if !$builderStore.inBuilder && $featuresStore.logoEnabled}
+                          <FreeFooter />
                         {/if}
                       </div>
-
-                      {#if !$builderStore.inBuilder && $featuresStore.logoEnabled}
-                        <FreeFooter />
-                      {/if}
-                    </div>
 
                       <!-- Preview and dev tools utilities  -->
                       {#if $appStore.isDevApp}
