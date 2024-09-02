@@ -49,6 +49,7 @@
   }
 
   async function saveConfig() {
+    formValues.type = "ai"
     try {
       const savedConfig = await API.saveConfig(formValues)
       formValues._rev = savedConfig._rev
