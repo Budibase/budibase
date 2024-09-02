@@ -42,6 +42,20 @@
     }
   }
 
+  $: relationFields = fieldValue?.reduce((acc, f) => {
+    const fields = {}
+    for (const [column] of Object.entries(schema?.columns || {}).filter(
+      ([key, column]) =>
+        column.visible !== false && f[key] !== null && f[key] !== undefined
+    )) {
+      fields[column] = f[column]
+    }
+    if (Object.keys(fields).length) {
+      acc[f._id] = fields
+    }
+    return acc
+  }, {})
+
   const parseValue = value => {
     if (Array.isArray(value) && value.every(x => x?._id)) {
       return value
@@ -223,20 +237,7 @@
   }
 
   const displayRelationshipFields = relationship => {
-    const fields = {}
-    for (const column of Object.entries(schema.columns)
-      .filter(
-        ([key, column]) =>
-          column.visible !== false &&
-          relationship[key] !== null &&
-          relationship[key] !== undefined
-      )
-      .map(([key]) => key)) {
-      fields[column] = relationship[column]
-    }
-    if (Object.keys(fields).length) {
-      relationshipFields = fields
-    }
+    relationshipFields = relationFields[relationship._id]
   }
 
   const hideRelationshipFields = () => {
