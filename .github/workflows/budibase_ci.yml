@@ -240,7 +240,7 @@ jobs:
 
           any_commit=$(git log --no-merges $base_commit_excluding_merges...$pro_commit)
 
-          if [ -n "$any_commit" ]; then
+          if [ -n "$any_commit" ] && [ "$base_commit" != "$pro_commit" ]; then
             echo $any_commit
 
             echo "An error occurred: <error_message>"

@@ -198,7 +198,7 @@ export const createLicensingStore = () => {
         }, {})
       }
       const monthlyMetrics = getMetrics(
-        ["dayPasses", "queries", "automations"],
+        ["queries", "automations"],
         license.quotas.usage.monthly,
         usage.monthly.current
       )

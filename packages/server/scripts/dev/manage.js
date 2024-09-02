@@ -47,7 +47,6 @@ async function init() {
     HTTP_LOGGING: "0",
     VERSION: "0.0.0+local",
     PASSWORD_MIN_LENGTH: "1",
-    TENANT_FEATURE_FLAGS: "*:SQS",
   }
 
   config = { ...config, ...existingConfig }
