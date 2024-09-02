@@ -1,5 +1,6 @@
 import {
-  AIConfig, AIInnerConfig,
+  AIConfig,
+  AIInnerConfig,
   Config,
   ConfigType,
   GoogleConfig,
