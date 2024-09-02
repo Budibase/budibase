@@ -23,37 +23,48 @@
   const models = [
     "gpt4o-mini",
   ]
+  
+  const defaultConfig = {
+    active: false,
+    isDefault: false,
+  }
 
-  let formValues = {}
-
+  let aiConfig = defaultConfig
   let validation
 
   $: {
-    const { provider, model, name, apiKey } = formValues
-    validation = provider && model && name && apiKey
+    const { provider, defaultModel, name, apiKey } = aiConfig
+    validation = provider && defaultModel && name && apiKey
   }
 
   function prefillConfig(evt) {
     const provider = evt.detail
     // grab the preset config from the constants for that provider and fill it in
     if (ConfigMap[provider]) {
-      formValues = {
-        ...formValues,
+      aiConfig = {
+        ...aiConfig,
         ...ConfigMap[provider]
       }
     } else {
-      formValues = {
+      aiConfig = {
+        ...aiConfig,
         provider
       }
     }
   }
 
   async function saveConfig() {
-    formValues.type = "ai"
+    const config = {
+      type: "ai",
+      config: [
+        // TODO: include the ones that are already there, or just handle this in the backend
+        aiConfig,
+      ]
+    }
     try {
-      const savedConfig = await API.saveConfig(formValues)
-      formValues._rev = savedConfig._rev
-      formValues._id = savedConfig._id
+      const savedConfig = await API.saveConfig(config)
+      aiConfig._rev = savedConfig._rev
+      aiConfig._id = savedConfig._id
       notifications.success(`Configuration saved`)
     } catch (error) {
       notifications.error(
@@ -92,33 +103,33 @@
     <Label size="M">Provider</Label>
     <Select
       placeholder={null}
-      bind:value={formValues.provider}
+      bind:value={aiConfig.provider}
       options={providers}
       on:change={prefillConfig}
     />
   </div>
   <div class="form-row">
-    <Label size="M">Model</Label>
+    <Label size="M">Default Model</Label>
     <Select
       placeholder={null}
-      bind:value={formValues.model}
+      bind:value={aiConfig.defaultModel}
       options={models}
     />
   </div>
   <div class="form-row">
     <Label size="M">Name</Label>
-    <Input placeholder={"Test 1"} bind:value={formValues.name}/>
+    <Input placeholder={"Test 1"} bind:value={aiConfig.name}/>
   </div>
   <div class="form-row">
     <Label size="M">Base URL</Label>
-    <Input placeholder={"www.google.com"} bind:value={formValues.baseUrl}/>
+    <Input placeholder={"www.google.com"} bind:value={aiConfig.baseUrl}/>
   </div>
   <div class="form-row">
     <Label size="M">API Key</Label>
-    <Input bind:value={formValues.apiKey}/>
+    <Input bind:value={aiConfig.apiKey}/>
   </div>
-  <Toggle text="Active" bind:value={formValues.active}/>
-  <Toggle text="Set as default" bind:value={formValues.isDefault}/>
+  <Toggle text="Active" bind:value={aiConfig.active}/>
+  <Toggle text="Set as default" bind:value={aiConfig.isDefault}/>
 </ModalContent>
 
 <style>
