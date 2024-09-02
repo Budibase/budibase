@@ -22,6 +22,7 @@ jobs:
         env:
           PAYLOAD_BRANCH: ${{ github.head_ref }}
           PAYLOAD_PR_NUMBER: ${{ github.event.pull_request.number }}
+          PAYLOAD_LICENSE_TYPE: "free"
         with:
           repository: budibase/budibase-deploys
           event: featurebranch-qa-deploy
