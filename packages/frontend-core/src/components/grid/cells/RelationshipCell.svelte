@@ -448,7 +448,8 @@
   .badge {
     flex: 0 0 auto;
     padding: 0 var(--cell-padding);
-    position: relative;
+    background: var(--color);
+    border-radius: var(--cell-padding);
     user-select: none;
     display: flex;
     align-items: center;
@@ -456,18 +457,8 @@
     height: 20px;
     max-width: 100%;
   }
-  .badge::before {
-    background: var(--color);
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: var(--cell-padding);
-  }
-  .values.wrap .badge:hover::before {
-    opacity: 0.7;
+  .values.wrap .badge:hover {
+    filter: brightness(1.25);
   }
   .values.wrap .badge.extra-info {
     cursor: pointer;
