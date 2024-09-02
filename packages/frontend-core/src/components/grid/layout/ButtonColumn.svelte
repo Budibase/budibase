@@ -18,6 +18,7 @@
     isDragging,
     buttonColumnWidth,
     showVScrollbar,
+    showHScrollbar,
     dispatch,
   } = getContext("grid")
 
@@ -32,10 +33,12 @@
   $: gridEnd = $width - $buttonColumnWidth - 1
   $: left = Math.min(columnEnd, gridEnd)
 
-  const handleClick = async (button, row) => {
-    await button.onClick?.(rows.actions.cleanRow(row))
-    // Refresh the row in case it changed
-    await rows.actions.refreshRow(row._id)
+  const handleClick = async (e, button, row) => {
+    await button.onClick?.(
+      e,
+      rows.actions.cleanRow(row),
+      async () => await rows.actions.refreshRow(row._id)
+    )
   }
 
   onMount(() => {
@@ -72,23 +75,29 @@
             highlighted={rowHovered || rowFocused}
             metadata={row.__metadata?.row}
           >
-            <div class="buttons" class:offset={$showVScrollbar}>
+            <div
+              class="buttons"
+              class:offset={$showVScrollbar && $showHScrollbar}
+            >
               {#each buttons as button}
-                <Button
-                  newStyles
-                  size="S"
-                  cta={button.type === "cta"}
-                  primary={button.type === "primary"}
-                  secondary={button.type === "secondary"}
-                  warning={button.type === "warning"}
-                  overBackground={button.type === "overBackground"}
-                  on:click={() => handleClick(button, row)}
-                >
-                  {#if button.icon}
-                    <i class="{button.icon} S" />
-                  {/if}
-                  {button.text || "Button"}
-                </Button>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <span on:click={e => handleClick(e, button, row)}>
+                  <Button
+                    newStyles
+                    size="S"
+                    icon={button.icon}
+                    cta={button.type === "cta"}
+                    primary={button.type === "primary"}
+                    secondary={button.type === "secondary"}
+                    warning={button.type === "warning"}
+                    overBackground={button.type === "overBackground"}
+                  >
+                    {#if button.icon}
+                      <i class="{button.icon} S" />
+                    {/if}
+                    {button.text || "Button"}
+                  </Button>
+                </span>
               {/each}
             </div>
           </GridCell>

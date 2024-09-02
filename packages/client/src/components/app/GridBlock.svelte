@@ -115,13 +115,15 @@
       text: settings.text,
       type: settings.type,
       icon: settings.icon,
-      onClick: async row => {
+      onClick: async (_, row, refresh) => {
         // Create a fake, ephemeral context to run the buttons actions with
         const id = get(component).id
         const gridContext = createContextStore(context)
         gridContext.actions.provideData(id, row)
         const fn = enrichButtonActions(settings.onClick, get(gridContext))
-        return await fn?.({ row })
+        const res = await fn?.({ row })
+        await refresh()
+        return res
       },
     }))
   }
