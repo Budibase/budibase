@@ -273,6 +273,7 @@
         {#if relationship[primaryDisplay] || relationship.primaryDisplay}
           <div
             class="badge"
+            class:extra-info={!!relationFields[relationship._id]}
             on:mouseover={() => displayRelationshipFields(relationship)}
             on:focus={() => {}}
             on:mouseleave={() => hideRelationshipFields()}
@@ -441,14 +442,23 @@
   .badge {
     flex: 0 0 auto;
     padding: 0 var(--cell-padding);
-    background: var(--color);
-    border-radius: var(--cell-padding);
+    position: relative;
     user-select: none;
     display: flex;
     align-items: center;
     gap: var(--cell-spacing);
     height: 20px;
     max-width: 100%;
+  }
+  .badge::before {
+    background: var(--color);
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--cell-padding);
   }
   .badge span {
     overflow: hidden;
@@ -528,5 +538,12 @@
     grid-template-columns: auto auto;
     grid-row-gap: var(--spacing-m);
     grid-column-gap: var(--cell-spacing);
+  }
+
+  .values:not(.wrap) .badge.extra-info {
+    cursor: pointer;
+  }
+  .values:not(.wrap) .badge.extra-info:hover::before {
+    opacity: 0.7;
   }
 </style>
