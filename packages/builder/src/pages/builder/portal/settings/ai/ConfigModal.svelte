@@ -5,15 +5,14 @@
     Input,
     Select,
     Toggle,
-    Dropzone,
     Body,
     notifications,
   } from "@budibase/bbui"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import { plugins } from "stores/portal"
-  import { PluginSource } from "constants"
+  import { ConfigMap } from "./constants"
+  import { API } from "api"
 
-  const options = [
+  // TODO: Update these
+  const providers = [
     "OpenAI",
     "Anthropic",
     "Together AI",
@@ -21,21 +20,69 @@
     "Custom"
   ]
 
-  let source = PluginSource.GITHUB
-  let dynamicValues = {}
+  const models = [
+    "gpt4o-mini",
+  ]
 
-  let name
-  let baseUrl
-  let apiKey
-  let active
-  let isDefault
+  let formValues = {}
 
   let validation
+
+  $: {
+    const { provider, model, name, apiKey } = formValues
+    validation = provider && model && name && apiKey
+  }
+
+  function prefillConfig(evt) {
+    const provider = evt.detail
+    // grab the preset config from the constants for that provider and fill it in
+    if (ConfigMap[provider]) {
+      formValues = {
+        ...formValues,
+        ...ConfigMap[provider]
+      }
+    } else {
+      formValues = {
+        provider
+      }
+    }
+  }
+
+  async function saveConfig() {
+    try {
+      const savedConfig = await API.saveConfig(formValues)
+      formValues._rev = savedConfig._rev
+      formValues._id = savedConfig._id
+      notifications.success(`Configuration saved`)
+    } catch (error) {
+      notifications.error(
+        `Failed to save AI Configuration, reason: ${error?.message || "Unknown"}`
+      )
+    }
+  }
+
+  async function deleteConfig() {
+    // Delete a configuration
+    try {
+      // await API.deleteConfig({
+      //   id: smtpConfig._id,
+      //   rev: smtpConfig._rev,
+      // })
+      notifications.success(`Deleted config`)
+    } catch (error) {
+      notifications.error(
+        `Failed to clear email settings, reason: ${error?.message || "Unknown"}`
+      )
+    }
+  }
+
 </script>
 
 <ModalContent
     confirmText={"Save"}
-    onConfirm={() => {}}
+    cancelText={"Delete"}
+    onConfirm={saveConfig}
+    onCancel={deleteConfig}
     disabled={!validation}
     size="M"
     title="Custom AI Configuration"
@@ -43,39 +90,40 @@
   <div class="form-row">
     <Label size="M">Provider</Label>
     <Select
-        placeholder={null}
-        bind:value={source}
-        options={options}
+      placeholder={null}
+      bind:value={formValues.provider}
+      options={providers}
+      on:change={prefillConfig}
     />
   </div>
   <div class="form-row">
     <Label size="M">Model</Label>
     <Select
-        placeholder={null}
-        bind:value={source}
-        options={Object.values(PluginSource)}
+      placeholder={null}
+      bind:value={formValues.model}
+      options={models}
     />
   </div>
   <div class="form-row">
     <Label size="M">Name</Label>
-    <Input placeholder={"Test 1"} bind:value={name} />
+    <Input placeholder={"Test 1"} bind:value={formValues.name}/>
   </div>
   <div class="form-row">
     <Label size="M">Base URL</Label>
-    <Input placeholder={"www.google.com"} bind:value={baseUrl} />
+    <Input placeholder={"www.google.com"} bind:value={formValues.baseUrl}/>
   </div>
   <div class="form-row">
     <Label size="M">API Key</Label>
-    <Input bind:value={apiKey} />
+    <Input bind:value={formValues.apiKey}/>
   </div>
-  <Toggle text="Active" bind:value={active} />
-  <Toggle text="Set as default" bind:value={isDefault} />
+  <Toggle text="Active" bind:value={formValues.active}/>
+  <Toggle text="Set as default" bind:value={formValues.isDefault}/>
 </ModalContent>
 
 <style>
-    .form-row {
-        display: grid;
-        grid-gap: var(--spacing-s);
-        align-items: center;
-    }
+  .form-row {
+    display: grid;
+    grid-gap: var(--spacing-s);
+    align-items: center;
+  }
 </style>
