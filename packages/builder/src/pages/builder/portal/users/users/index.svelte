@@ -52,6 +52,7 @@
 
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
   let enrichedUsers = []
+  let tenantOwner
   let createUserModal,
     inviteConfirmationModal,
     onboardingTypeModal,
@@ -70,6 +71,7 @@
   ]
   let userData = []
   let invitesLoaded = false
+  let tenantOwnerLoaded = false
   let pendingInvites = []
   let parsedInvites = []
 
@@ -98,8 +100,14 @@
   $: pendingSchema = getPendingSchema(schema)
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
-  $: {
-    enrichedUsers = $fetch.rows?.map(user => {
+  $: setEnrichedUsers($fetch.rows, tenantOwnerLoaded)
+
+  const setEnrichedUsers = async rows => {
+    if (!tenantOwnerLoaded) {
+      enrichedUsers = []
+      return
+    }
+    enrichedUsers = rows?.map(user => {
       let userGroups = []
       $groups.forEach(group => {
         if (group.users) {
@@ -110,15 +118,21 @@
           })
         }
       })
+      user.tenantOwnerEmail = tenantOwner?.email
+      const role = Constants.ExtendedBudibaseRoleOptions.find(
+        x => x.value === users.getUserRole(user)
+      )
       return {
         ...user,
         name: user.firstName ? user.firstName + " " + user.lastName : "",
         userGroups,
+        __selectable:
+          role.value === Constants.BudibaseRoles.Owner ? false : undefined,
         apps: [...new Set(Object.keys(user.roles))],
+        access: role.sortOrder,
       }
     })
   }
-
   const getPendingSchema = tblSchema => {
     if (!tblSchema) {
       return {}
@@ -302,6 +316,8 @@
       groupsLoaded = true
       pendingInvites = await users.getInvites()
       invitesLoaded = true
+      tenantOwner = await users.tenantOwner($auth.tenantId)
+      tenantOwnerLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
     }
@@ -376,6 +392,7 @@
     allowSelectRows={!readonly}
     {customRenderers}
     loading={!$fetch.loaded || !groupsLoaded}
+    defaultSortColumn={"access"}
   />
 
   <div class="pagination">
