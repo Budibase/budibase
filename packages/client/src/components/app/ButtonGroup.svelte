@@ -1,7 +1,13 @@
 <script>
   import BlockComponent from "../BlockComponent.svelte"
   import Block from "../Block.svelte"
-  import { Button, Popover, Menu, MenuItem } from "@budibase/bbui"
+  import {
+    Button,
+    Popover,
+    Menu,
+    MenuItem,
+    CollapsedButtonGroup,
+  } from "@budibase/bbui"
   import { getContext } from "svelte"
 
   export let buttons = []
@@ -16,39 +22,26 @@
   const component = getContext("component")
   const context = getContext("context")
 
-  let popover
-  let anchor
+  $: collapsedButtons = collapsed ? makeCollapsed(buttons) : null
 
-  const handleCollapsedClick = async button => {
-    const fn = enrichButtonActions(button.onClick, $context)
-    await fn?.()
-    popover.hide()
+  const makeCollapsed = buttons => {
+    return buttons.map(button => ({
+      ...button,
+      onClick: async () => {
+        const fn = enrichButtonActions(button.onClick, $context)
+        await fn?.()
+      },
+    }))
   }
 </script>
 
 {#if collapsed}
   <div use:styleable={$component.styles}>
-    <Button
-      bind:ref={anchor}
-      on:click={() => popover?.show()}
-      icon="ChevronDown"
-      cta
-    >
-      {collapsedText || "Action"}
-    </Button>
+    <CollapsedButtonGroup
+      text={collapsedText || "Action"}
+      buttons={collapsedButtons}
+    />
   </div>
-  <Popover bind:this={popover} align="left" {anchor}>
-    <Menu>
-      {#each buttons as button}
-        <MenuItem
-          on:click={() => handleCollapsedClick(button)}
-          disabled={button.disabled}
-        >
-          {button.text || "Button"}
-        </MenuItem>
-      {/each}
-    </Menu>
-  </Popover>
 {:else}
   <Block>
     <BlockComponent

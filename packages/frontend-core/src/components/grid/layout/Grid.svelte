@@ -43,7 +43,9 @@
   export let notifySuccess = null
   export let notifyError = null
   export let buttons = null
-  export let darkMode
+  export let buttonsCollapsed = false
+  export let buttonsCollapsedText = null
+  export let darkMode = false
   export let isCloud = null
   export let rowConditions = null
 
@@ -98,6 +100,8 @@
     notifySuccess,
     notifyError,
     buttons,
+    buttonsCollapsed,
+    buttonsCollapsedText,
     darkMode,
     isCloud,
     rowConditions,
