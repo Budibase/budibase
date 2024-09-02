@@ -469,6 +469,10 @@
   .values.wrap .badge:hover::before {
     opacity: 0.7;
   }
+  .values.wrap .badge.extra-info {
+    cursor: pointer;
+  }
+
   .badge span {
     overflow: hidden;
     white-space: nowrap;
@@ -544,12 +548,14 @@
   .relationship-fields {
     margin: var(--spacing-m) var(--spacing-l);
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: minmax(auto, 75%) auto;
     grid-row-gap: var(--spacing-m);
     grid-column-gap: var(--cell-spacing);
   }
 
-  .values.wrap .badge.extra-info {
-    cursor: pointer;
+  .relationship-field-name {
+    text-transform: uppercase;
+    color: var(--spectrum-global-color-gray-600);
+    font-size: var(--font-size-xs);
   }
 </style>
