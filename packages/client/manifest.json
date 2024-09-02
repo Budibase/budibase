@@ -7188,6 +7188,18 @@
             "key": "buttons",
             "nested": true,
             "resetOn": ["actionType", "dataSource"]
+          },
+          {
+            "type": "boolean",
+            "label": "Collapse",
+            "key": "buttonsCollapsed"
+          },
+          {
+            "type": "text",
+            "label": "Collapsed text",
+            "key": "buttonsCollapsedText",
+            "dependsOn": "buttonsCollapsed",
+            "placeholder": "Action"
           }
         ]
       },
