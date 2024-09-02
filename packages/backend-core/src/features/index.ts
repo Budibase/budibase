@@ -267,5 +267,5 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 // default values set correctly and their types flow through the system.
 export const flags = new FlagSet({
   DEFAULT_VALUES: Flag.boolean(env.isDev()),
-  SQS: Flag.boolean(false),
+  SQS: Flag.boolean(env.isDev()),
 })
