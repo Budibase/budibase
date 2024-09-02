@@ -56,6 +56,12 @@
     return acc
   }, {})
 
+  $: showRelationshipFields =
+    relationshipFields &&
+    Object.keys(relationshipFields).length &&
+    focused &&
+    !isOpen
+
   const parseValue = value => {
     if (Array.isArray(value) && value.every(x => x?._id)) {
       return value
@@ -351,8 +357,8 @@
   </GridPopover>
 {/if}
 
-{#if relationshipFields && !focused}
-  <GridPopover {open} {anchor}>
+{#if relationshipFields}
+  <GridPopover open={showRelationshipFields} {anchor}>
     <div class="relationship-fields">
       {#each Object.entries(relationshipFields) as [fieldName, fieldValue]}
         <div class="relationship-field-name">
@@ -460,6 +466,9 @@
     bottom: 0;
     border-radius: var(--cell-padding);
   }
+  .values.wrap .badge:hover::before {
+    opacity: 0.7;
+  }
   .badge span {
     overflow: hidden;
     white-space: nowrap;
@@ -540,10 +549,7 @@
     grid-column-gap: var(--cell-spacing);
   }
 
-  .values:not(.wrap) .badge.extra-info {
+  .values.wrap .badge.extra-info {
     cursor: pointer;
-  }
-  .values:not(.wrap) .badge.extra-info:hover::before {
-    opacity: 0.7;
   }
 </style>
