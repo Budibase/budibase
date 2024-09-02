@@ -548,7 +548,7 @@
   .relationship-fields {
     margin: var(--spacing-m) var(--spacing-l);
     display: grid;
-    grid-template-columns: minmax(auto, 75%) auto;
+    grid-template-columns: minmax(auto, 75%) minmax(auto, 25%);
     grid-row-gap: var(--spacing-m);
     grid-column-gap: var(--cell-spacing);
   }
