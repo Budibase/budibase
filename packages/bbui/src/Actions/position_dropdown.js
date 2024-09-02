@@ -246,7 +246,7 @@ export default function positionDropdown(element, opts) {
   }
 
   // Apply initial styles which don't need to change
-  element.style.position = "absolute"
+  element.style.position = "fixed"
   element.style.zIndex = "9999"
 
   // Set up a scroll listener

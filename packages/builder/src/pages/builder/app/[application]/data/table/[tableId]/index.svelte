@@ -60,7 +60,7 @@
   $: darkMode = !currentTheme.includes("light")
   $: buttons = [
     {
-      text: "Actions",
+      text: "Action",
       type: "cta",
       icon: "ChevronDown",
       onClick: async (e, row, refresh) => {
