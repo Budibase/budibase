@@ -16,7 +16,6 @@ import {
   PatchRowRequest,
   PatchRowResponse,
   Row,
-  Table,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -24,7 +23,7 @@ import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
 import { flatten } from "lodash"
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const inputs = ctx.request.body
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
@@ -98,7 +97,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 
 export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const { _id } = ctx.request.body
   let row = await db.get<Row>(_id)
   let _rev = ctx.request.body._rev || row._rev
@@ -137,7 +136,7 @@ export async function destroy(ctx: UserCtx) {
 }
 
 export async function bulkDestroy(ctx: UserCtx) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const table = await sdk.tables.getTable(tableId)
   let { rows } = ctx.request.body
 
@@ -179,7 +178,7 @@ export async function bulkDestroy(ctx: UserCtx) {
 export async function fetchEnrichedRow(ctx: UserCtx) {
   const fieldName = ctx.request.query.field as string | undefined
   const db = context.getAppDB()
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const rowId = ctx.params.rowId as string
   // need table to work out where links go in row, as well as the link docs
   const [table, links] = await Promise.all([
@@ -197,7 +196,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   )
 
   // get the linked tables
-  const linkTableIds = getLinkedTableIDs(table as Table)
+  const linkTableIds = getLinkedTableIDs(table.schema)
   const linkTables = await sdk.tables.getTables(linkTableIds)
 
   // perform output processing

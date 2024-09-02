@@ -212,10 +212,6 @@ spec:
         - name: APP_FEATURES
           value: "api"
         {{- end }}
-        {{- if .Values.globals.sqs.enabled }}
-        - name: SQS_SEARCH_ENABLE
-          value: "true"
-        {{- end }}
         {{- range .Values.services.apps.extraEnv }}
         - name: {{ .name }}
           value: {{ .value | quote }}

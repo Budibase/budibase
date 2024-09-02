@@ -39,6 +39,7 @@ import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
+import { processTable } from "../../../sdk/app/tables/getters"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {
@@ -118,6 +119,8 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:save`, appId, { ...savedTable })
   ctx.body = savedTable
+
+  savedTable = await processTable(savedTable)
   builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
 }
 

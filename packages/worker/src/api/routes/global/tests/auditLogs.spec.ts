@@ -1,7 +1,6 @@
 import { mocks, structures } from "@budibase/backend-core/tests"
-import { context, events } from "@budibase/backend-core"
+import { context, events, setEnv as setCoreEnv } from "@budibase/backend-core"
 import { Event, IdentityType } from "@budibase/types"
-import { auditLogs } from "@budibase/pro"
 import { TestConfiguration } from "../../../../tests"
 
 mocks.licenses.useAuditLogs()
@@ -15,15 +14,19 @@ const APP_ID = "app_1"
 
 describe.each(["lucene", "sql"])("/api/global/auditlogs (%s)", method => {
   const config = new TestConfiguration()
+  let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    if (method === "sql") {
-      auditLogs.useSQLSearch()
+    if (method === "lucene") {
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" })
+    } else if (method === "sql") {
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" })
     }
     await config.beforeAll()
   })
 
   afterAll(async () => {
+    envCleanup?.()
     await config.afterAll()
   })
 

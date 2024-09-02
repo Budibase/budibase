@@ -9,7 +9,13 @@ import {
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
-import { context, InternalTable, tenancy } from "@budibase/backend-core"
+import {
+  context,
+  InternalTable,
+  tenancy,
+  withEnv as withCoreEnv,
+  setEnv as setCoreEnv,
+} from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AttachmentFieldMetadata,
@@ -69,6 +75,7 @@ async function waitForEvent(
 
 describe.each([
   ["internal", undefined],
+  ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
@@ -76,6 +83,8 @@ describe.each([
   [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
+  const isLucene = providerType === "lucene"
+  const isSqs = providerType === "sqs"
   const isMSSQL = providerType === DatabaseName.SQL_SERVER
   const isOracle = providerType === DatabaseName.ORACLE
   const config = setup.getConfig()
@@ -83,9 +92,16 @@ describe.each([
   let table: Table
   let datasource: Datasource | undefined
   let client: Knex | undefined
+  let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await config.init()
+    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
+    if (isLucene) {
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" })
+    } else if (isSqs) {
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" })
+    }
+
     if (dsProvider) {
       const rawDatasource = await dsProvider
       datasource = await config.createDatasource({
@@ -97,6 +113,9 @@ describe.each([
 
   afterAll(async () => {
     setup.afterAll()
+    if (envCleanup) {
+      envCleanup()
+    }
   })
 
   function saveTableRequest(
@@ -346,7 +365,7 @@ describe.each([
         expect(ids).toEqual(expect.arrayContaining(sequence))
       })
 
-    isInternal &&
+    isLucene &&
       it("row values are coerced", async () => {
         const str: FieldSchema = {
           type: FieldType.STRING,
