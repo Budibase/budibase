@@ -13,6 +13,8 @@
   export let description
   export let buttons
   export let buttonPosition = "bottom"
+  export let buttonsCollapsed
+  export let buttonsCollapsedText
   export let schema
 
   const context = getContext("context")
@@ -81,6 +83,8 @@
                 type="buttongroup"
                 props={{
                   buttons,
+                  collapsed: buttonsCollapsed,
+                  collapsedText: buttonsCollapsedText,
                 }}
                 order={0}
               />
@@ -104,6 +108,8 @@
         type="buttongroup"
         props={{
           buttons,
+          collapsed: buttonsCollapsed,
+          collapsedText: buttonsCollapsedText,
         }}
         styles={{
           normal: {
