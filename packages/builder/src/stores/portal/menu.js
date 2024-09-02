@@ -46,6 +46,10 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
         href: "/builder/portal/settings/auth",
       },
       {
+        title: "AI",
+        href: "/builder/portal/settings/ai",
+      },
+      {
         title: "Email",
         href: "/builder/portal/settings/email",
       },
