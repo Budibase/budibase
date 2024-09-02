@@ -45,7 +45,7 @@
   onMount(() => {
     const observer = new ResizeObserver(entries => {
       const width = entries?.[0]?.contentRect?.width ?? 0
-      buttonColumnWidth.set(Math.floor(width) - 1)
+      buttonColumnWidth.set(width)
     })
     observer.observe(container)
   })
@@ -113,7 +113,7 @@
           on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
         >
           <GridCell
-            width={$buttonColumnWidth}
+            width="100%"
             highlighted={$hoveredRowId === BlankRowID}
             on:click={() => dispatch("add-row-inline")}
           />

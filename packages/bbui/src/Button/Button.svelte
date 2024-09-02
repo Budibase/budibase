@@ -17,6 +17,7 @@
   export let tooltip = undefined
   export let newStyles = true
   export let id
+  export let ref
 
   const dispatch = createEventDispatcher()
 </script>
@@ -25,6 +26,7 @@
   <button
     {id}
     {type}
+    bind:this={ref}
     class:spectrum-Button--cta={cta}
     class:spectrum-Button--primary={primary}
     class:spectrum-Button--secondary={secondary}

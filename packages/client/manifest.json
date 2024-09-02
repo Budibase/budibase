@@ -448,6 +448,18 @@
         "name": "Layout",
         "settings": [
           {
+            "type": "boolean",
+            "label": "Collapse",
+            "key": "collapsed"
+          },
+          {
+            "type": "text",
+            "label": "Collapsed text",
+            "key": "collapsedText",
+            "dependsOn": "collapsed",
+            "placeholder": "Action"
+          },
+          {
             "type": "select",
             "label": "Direction",
             "key": "direction",
@@ -467,7 +479,11 @@
                 "barTitle": "Row layout"
               }
             ],
-            "defaultValue": "row"
+            "defaultValue": "row",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            }
           },
           {
             "type": "select",
@@ -501,7 +517,11 @@
                 "barTitle": "Align stretched horizontally"
               }
             ],
-            "defaultValue": "left"
+            "defaultValue": "left",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            }
           },
           {
             "type": "select",
@@ -535,7 +555,11 @@
                 "barTitle": "Align stretched vertically"
               }
             ],
-            "defaultValue": "top"
+            "defaultValue": "top",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            }
           },
           {
             "type": "select",
@@ -557,7 +581,11 @@
                 "barTitle": "Grow container"
               }
             ],
-            "defaultValue": "shrink"
+            "defaultValue": "shrink",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            }
           },
           {
             "type": "select",
@@ -583,7 +611,11 @@
                 "value": "L"
               }
             ],
-            "defaultValue": "M"
+            "defaultValue": "M",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            }
           },
           {
             "type": "boolean",
@@ -591,7 +623,11 @@
             "key": "wrap",
             "showInBar": true,
             "barIcon": "ModernGridView",
-            "barTitle": "Wrap"
+            "barTitle": "Wrap",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            }
           }
         ]
       }
