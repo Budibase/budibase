@@ -6,7 +6,7 @@
 
   function extractDomainFromUrl(url) {
     const { hostname } = new URL(url)
-    const parts = hostname.split('.');
+    const parts = hostname.split(".")
     const tld = parts.slice(-2).join(".")
     return tld
   }
@@ -36,9 +36,7 @@
 
     return () => window.removeEventListener("message", handleMessage)
   })
-
 </script>
-
 
 <Provider key="embed" {data}>
   <slot />
