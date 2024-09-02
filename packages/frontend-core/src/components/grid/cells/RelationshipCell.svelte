@@ -548,7 +548,7 @@
   .relationship-fields {
     margin: var(--spacing-m) var(--spacing-l);
     display: grid;
-    grid-template-columns: minmax(auto, 75%) minmax(auto, 25%);
+    grid-template-columns: minmax(auto, 70%) minmax(auto, 30%);
     grid-row-gap: var(--spacing-m);
     grid-column-gap: var(--cell-spacing);
   }
@@ -557,5 +557,12 @@
     text-transform: uppercase;
     color: var(--spectrum-global-color-gray-600);
     font-size: var(--font-size-xs);
+  }
+  .relationship-field-value {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
   }
 </style>
