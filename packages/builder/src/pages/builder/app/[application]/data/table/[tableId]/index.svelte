@@ -30,10 +30,6 @@
 
   let rowActions = []
   let generateButton
-  let rowActionPopover
-  let rowActionRow
-  let rowActionAnchor
-  let refreshRow
 
   $: autoColumnStatus = verifyAutocolumns($tables?.selected)
   $: duplicates = Object.values(autoColumnStatus).reduce((acc, status) => {
@@ -58,20 +54,21 @@
   $: relationshipsEnabled = relationshipSupport(tableDatasource)
   $: currentTheme = $themeStore?.theme
   $: darkMode = !currentTheme.includes("light")
-  $: buttons = [
-    {
-      text: "Action",
-      type: "cta",
-      icon: "ChevronDown",
-      onClick: async (e, row, refresh) => {
-        rowActionRow = row
-        rowActionAnchor = e.currentTarget
-        rowActionPopover.show()
-        refreshRow = refresh
-      },
-    },
-  ]
+  $: buttons = makeRowActionButtons(rowActions)
   $: fetchRowActions(id)
+
+  const makeRowActionButtons = rowActions => {
+    return rowActions.map(action => ({
+      text: action.name,
+      onClick: async row => {
+        await API.rowActions.trigger({
+          rowActionId: action.id,
+          tableId: id,
+          rowId: row._id,
+        })
+      },
+    }))
+  }
 
   const relationshipSupport = datasource => {
     const integration = $integrations[datasource?.source]
@@ -110,16 +107,6 @@
     const res = await API.rowActions.fetch(tableId)
     rowActions = Object.values(res || {})
   }
-
-  const runRowAction = async action => {
-    await API.rowActions.trigger({
-      rowActionId: action.id,
-      tableId: id,
-      rowId: rowActionRow._id,
-    })
-    await refreshRow()
-    rowActionPopover.hide()
-  }
 </script>
 
 {#if $tables?.selected?.name}
@@ -143,7 +130,8 @@
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     isCloud={$admin.cloud}
-    buttons={rowActions.length ? buttons : null}
+    {buttons}
+    buttonsCollapsed
     on:updatedatasource={handleGridTableUpdate}
   >
     <!-- Controls -->
@@ -191,19 +179,6 @@
 {:else}
   <i>Create your first table to start building</i>
 {/if}
-
-<Popover
-  bind:this={rowActionPopover}
-  align="right"
-  anchor={rowActionAnchor}
-  offset={5}
->
-  <Menu>
-    {#each rowActions as action}
-      <MenuItem on:click={() => runRowAction(action)}>{action.name}</MenuItem>
-    {/each}
-  </Menu>
-</Popover>
 
 <style>
   i {

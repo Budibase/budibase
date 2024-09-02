@@ -4,6 +4,7 @@
   import GridCell from "../cells/GridCell.svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import { BlankRowID } from "../lib/constants"
+  import CollapsedButtonGroup from "../../../../../bbui/src/ButtonGroup/CollapsedButtonGroup.svelte"
 
   const {
     renderedRows,
@@ -34,12 +35,16 @@
   $: gridEnd = $width - $buttonColumnWidth - 1
   $: left = Math.min(columnEnd, gridEnd)
 
-  const handleClick = async (e, button, row) => {
-    await button.onClick?.(
-      e,
-      rows.actions.cleanRow(row),
-      async () => await rows.actions.refreshRow(row._id)
-    )
+  const handleClick = async (button, row) => {
+    await button.onClick?.(rows.actions.cleanRow(row))
+    await rows.actions.refreshRow(row._id)
+  }
+
+  const makeCollapsedButtons = (buttons, row) => {
+    return buttons.map(button => ({
+      ...button,
+      onClick: () => handleClick(button, row),
+    }))
   }
 
   onMount(() => {
@@ -80,26 +85,33 @@
               class="buttons"
               class:offset={$showVScrollbar && $showHScrollbar}
             >
-              {#each buttons as button}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <span on:click={e => handleClick(e, button, row)}>
+              {#if $props.buttonsCollapsed}
+                <CollapsedButtonGroup
+                  buttons={makeCollapsedButtons(buttons, row)}
+                  text={$props.buttonsCollapsedText || "Action"}
+                  align="right"
+                  offset={5}
+                  size="S"
+                />
+              {:else}
+                {#each buttons as button}
                   <Button
                     newStyles
                     size="S"
-                    icon={button.icon}
                     cta={button.type === "cta"}
                     primary={button.type === "primary"}
                     secondary={button.type === "secondary"}
                     warning={button.type === "warning"}
                     overBackground={button.type === "overBackground"}
+                    on:click={() => handleClick(button, row)}
                   >
                     {#if button.icon}
                       <i class="{button.icon} S" />
                     {/if}
                     {button.text || "Button"}
                   </Button>
-                </span>
-              {/each}
+                {/each}
+              {/if}
             </div>
           </GridCell>
         </div>

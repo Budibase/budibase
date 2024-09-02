@@ -19,6 +19,8 @@
   export let columns = null
   export let onRowClick = null
   export let buttons = null
+  export let buttonsCollapsed = false
+  export let buttonsCollapsedText = null
 
   const context = getContext("context")
   const component = getContext("component")
@@ -115,15 +117,13 @@
       text: settings.text,
       type: settings.type,
       icon: settings.icon,
-      onClick: async (_, row, refresh) => {
+      onClick: async row => {
         // Create a fake, ephemeral context to run the buttons actions with
         const id = get(component).id
         const gridContext = createContextStore(context)
         gridContext.actions.provideData(id, row)
         const fn = enrichButtonActions(settings.onClick, get(gridContext))
-        const res = await fn?.({ row })
-        await refresh()
-        return res
+        return await fn?.({ row })
       },
     }))
   }
@@ -183,6 +183,8 @@
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
     buttons={enrichedButtons}
+    {buttonsCollapsed}
+    {buttonsCollapsedText}
     isCloud={$environmentStore.cloud}
     on:rowclick={e => onRowClick?.({ row: e.detail })}
   />
