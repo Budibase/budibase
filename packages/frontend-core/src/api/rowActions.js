@@ -55,9 +55,12 @@ export const buildRowActionEndpoints = API => ({
    * @param tableId the ID of the table
    * @param rowActionId the ID of the row action to trigger
    */
-  trigger: async ({ tableId, rowActionId }) => {
+  trigger: async ({ tableId, rowActionId, rowId }) => {
     return await API.post({
       url: `/api/tables/${tableId}/actions/${rowActionId}/trigger`,
+      body: {
+        rowId,
+      },
     })
   },
 })

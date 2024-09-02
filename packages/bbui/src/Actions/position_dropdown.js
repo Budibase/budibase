@@ -169,7 +169,7 @@ export default function positionDropdown(element, opts) {
         align === "left-context-menu"
       ) {
         applyYStrategy(Strategies.StartToStart)
-        styles.top -= 4 // Manual adjustment for action menu padding
+        styles.top -= 5 // Manual adjustment for action menu padding
       } else {
         applyYStrategy(Strategies.StartToEnd)
       }
