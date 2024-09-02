@@ -1199,18 +1199,25 @@ describe.each([
 
           const table = await config.api.table.save(
             saveTableRequest({
+              schema: {},
+            })
+          )
+          await config.api.table.save({
+            ...table,
               schema: {
+              ...table.schema,
                 aux: {
                   name: "aux",
                   relationshipType: RelationshipType.ONE_TO_MANY,
                   type: FieldType.LINK,
                   tableId: auxTable._id!,
                   fieldName: "fk_aux",
-                  constraints: { presence: true },
+                constraints: { type: "array" },
                 },
               },
             })
-          )
+          // Refetch auxTable
+          auxTable = await config.api.table.get(auxTable._id!)
 
           const view = await config.api.viewV2.create({
             name: "view a",
@@ -1226,8 +1233,6 @@ describe.each([
             },
           })
 
-          // Refetch autTable
-          auxTable = await config.api.table.get(auxTable._id!)
           await config.api.table.save({
             ...auxTable,
             schema: {
