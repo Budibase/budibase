@@ -20,6 +20,7 @@
     showVScrollbar,
     showHScrollbar,
     dispatch,
+    config,
   } = getContext("grid")
 
   let container
@@ -103,17 +104,21 @@
           </GridCell>
         </div>
       {/each}
-      <div
-        class="row blank"
-        on:mouseenter={$isDragging ? null : () => ($hoveredRowId = BlankRowID)}
-        on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
-      >
-        <GridCell
-          width={$buttonColumnWidth}
-          highlighted={$hoveredRowId === BlankRowID}
-          on:click={() => dispatch("add-row-inline")}
-        />
-      </div>
+      {#if $config.canAddRows}
+        <div
+          class="row blank"
+          on:mouseenter={$isDragging
+            ? null
+            : () => ($hoveredRowId = BlankRowID)}
+          on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
+        >
+          <GridCell
+            width={$buttonColumnWidth}
+            highlighted={$hoveredRowId === BlankRowID}
+            on:click={() => dispatch("add-row-inline")}
+          />
+        </div>
+      {/if}
     </GridScrollWrapper>
   </div>
 </div>
