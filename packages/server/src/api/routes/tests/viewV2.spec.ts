@@ -18,6 +18,7 @@ import {
   ViewV2,
   SearchResponse,
   BasicOperator,
+  RelationshipType,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -1174,6 +1175,87 @@ describe.each([
                   'To make field "name" required, this field must be present and writable in views: view a.',
               },
             }
+          )
+        })
+
+        it("updating a column will update link columns configuration", async () => {
+          let auxTable = await config.api.table.save(
+            saveTableRequest({
+              primaryDisplay: "name",
+              schema: {
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                  constraints: { presence: true },
+                },
+                age: {
+                  name: "age",
+                  type: FieldType.NUMBER,
+                  constraints: { presence: true },
+                },
+              },
+            })
+          )
+
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                aux: {
+                  name: "aux",
+                  relationshipType: RelationshipType.ONE_TO_MANY,
+                  type: FieldType.LINK,
+                  tableId: auxTable._id!,
+                  fieldName: "fk_aux",
+                  constraints: { presence: true },
+                },
+              },
+            })
+          )
+
+          const view = await config.api.viewV2.create({
+            name: "view a",
+            tableId: table._id!,
+            schema: {
+              aux: {
+                visible: true,
+                columns: {
+                  name: { visible: true, readonly: true },
+                  age: { visible: true, readonly: true },
+                },
+              },
+            },
+          })
+
+          // Refetch autTable
+          auxTable = await config.api.table.get(auxTable._id!)
+          await config.api.table.save({
+            ...auxTable,
+            schema: {
+              ...auxTable.schema,
+              // @ts-ignore deleting age to force the rename
+              age: undefined,
+              dob: {
+                name: "dob",
+                type: FieldType.NUMBER,
+                constraints: { presence: true },
+              },
+            },
+            _rename: { old: "age", updated: "dob" },
+          })
+
+          const updatedView = await config.api.viewV2.get(view.id)
+          expect(updatedView).toEqual(
+            expect.objectContaining({
+              schema: expect.objectContaining({
+                aux: expect.objectContaining({
+                  columns: {
+                    id: { visible: false, readonly: false },
+                    name: { visible: true, readonly: true },
+                    dob: { visible: true, readonly: true },
+                  },
+                }),
+              }),
+            })
           )
         })
       })
