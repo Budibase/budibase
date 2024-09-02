@@ -100,7 +100,7 @@
   $: pendingSchema = getPendingSchema(schema)
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
-  $: setEnrichedUsers($fetch.rows)
+  $: setEnrichedUsers($fetch.rows, tenantOwnerLoaded)
 
   const setEnrichedUsers = async rows => {
     if (!tenantOwnerLoaded) {

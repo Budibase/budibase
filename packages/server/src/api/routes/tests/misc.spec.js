@@ -159,7 +159,7 @@ describe("run misc tests", () => {
         const rowThree = rows.find(row => row.e === 3)
         expect(rowThree.a).toEqual("9")
         expect(rowThree.f).toEqual(["Two", "Four"])
-        expect(rowThree.g).toEqual(null)
+        expect(rowThree.g).toEqual(undefined)
 
         const rowFour = rows.find(row => row.e === 4)
         expect(rowFour.a).toEqual("13")
