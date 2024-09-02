@@ -7076,6 +7076,18 @@
         "key": "buttons",
         "wide": true,
         "nested": true
+      },
+      {
+        "type": "boolean",
+        "label": "Collapse",
+        "key": "buttonsCollapsed"
+      },
+      {
+        "type": "text",
+        "label": "Collapsed text",
+        "key": "buttonsCollapsedText",
+        "dependsOn": "buttonsCollapsed",
+        "placeholder": "Action"
       }
     ]
   },

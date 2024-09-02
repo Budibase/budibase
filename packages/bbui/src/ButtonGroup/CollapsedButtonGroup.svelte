@@ -28,7 +28,7 @@
 >
   {text || "Action"}
 </Button>
-<Popover bind:this={popover} {align} {anchor} {offset}>
+<Popover bind:this={popover} {align} {anchor} {offset} resizable={false}>
   <Menu>
     {#each buttons as button}
       <MenuItem on:click={() => handleClick(button)} disabled={button.disabled}>
