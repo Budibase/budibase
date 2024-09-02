@@ -8,57 +8,76 @@
     Divider,
     notifications,
     Modal,
-    ModalContent,
+    Tags,
+    Tag
   } from "@budibase/bbui"
-  import { auth, admin } from "stores/portal"
-  import { redirect } from "@roxi/routify"
+  import { admin, licensing } from "stores/portal"
   import { API } from "api"
   import AIConfigModal from "./ConfigModal.svelte"
   import { onMount } from "svelte"
   import { sdk } from "@budibase/shared-core"
 
-  let diagnosticInfo = ""
-  let modal
+  const ConfigTypes = {
+    AI: "ai",
+  }
 
-  // async function fetchSystemDebugInfo() {
-  //   const diagnostics = await API.fetchSystemDebugInfo()
-  //   diagnosticInfo = {
-  //     browser: {
-  //       language: navigator.language || navigator.userLanguage,
-  //       userAgent: navigator.userAgent,
-  //       platform: navigator.platform,
-  //       vendor: navigator.vendor,
-  //     },
-  //     server: diagnostics,
-  //   }
-  // }
-  //
-  // const copyToClipboard = async () => {
-  //   await Helpers.copyToClipboard(JSON.stringify(diagnosticInfo, undefined, 2))
-  //   notifications.success("Copied")
-  // }
+  let modal
+  let aiConfig
+  let loading = false
+
+  $: isCloud = $admin.cloud
+  $: budibaseAIEnabled = $licensing.budibaseAIEnabled
+  $: customAIConfigsEnabled = $licensing.customAIConfigsEnabled
+
+  async function fetchAIConfig() {
+    loading = true
+    try {
+      // Fetch the configs for smtp
+      const aiDoc = await API.getConfig(ConfigTypes.AI)
+      if (aiDoc._id) {
+        aiConfig = aiDoc
+      }
+      loading = false
+    } catch (error) {
+      notifications.error("Error fetching AI config")
+    }
+  }
 
   onMount(async () => {
-    // await fetchSystemDebugInfo()
+    await fetchAIConfig()
   })
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-
 <Modal bind:this={modal}>
   <AIConfigModal />
 </Modal>
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading size="M">AI</Heading>
+    {#if isCloud && !budibaseAIEnabled}
+      <Tags>
+        <Tag icon="LockClosed">Premium</Tag>
+      </Tags>
+    {/if}
     <Body>Configure your AI settings within this section:</Body>
   </Layout>
   <Divider />
   <Layout noPadding>
     <div class="config-heading">
       <Heading size="S">AI Configurations</Heading>
-      <Button size="S" cta on:click={modal.show}>Add configuration</Button>
+      {#if !isCloud && !customAIConfigsEnabled}
+        <Tags>
+          <Tag icon="LockClosed">Premium</Tag>
+        </Tags>
+      {:else if isCloud && !customAIConfigsEnabled}
+        <Tags>
+          <Tag icon="LockClosed">Enterprise</Tag>
+        </Tags>
+      {:else}
+        <Button size="S" cta on:click={modal.show}>Add configuration</Button>
+      {/if}
     </div>
     <Body size="S">Use the following interface to select your preferred AI configuration.</Body>
     <Body size="S">Select your AI Model:</Body>

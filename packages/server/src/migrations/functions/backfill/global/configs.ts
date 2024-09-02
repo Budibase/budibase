@@ -15,11 +15,12 @@ import {
 } from "@budibase/types"
 import env from "./../../../../environment"
 
-export function getConfigParams(): DatabaseQueryOpts {
+export function getConfigParams(type?: ConfigType): DatabaseQueryOpts {
+  const configType = type || ""
   return {
     include_docs: true,
-    startkey: `${DocumentType.CONFIG}${SEPARATOR}`,
-    endkey: `${DocumentType.CONFIG}${SEPARATOR}${UNICODE_MAX}`,
+    startkey: `${DocumentType.CONFIG}${SEPARATOR}${configType}`,
+    endkey: `${DocumentType.CONFIG}${SEPARATOR}${configType}${UNICODE_MAX}`,
   }
 }
 

@@ -197,6 +197,12 @@ async function verifyOIDCConfig(config: OIDCConfigs) {
   await verifySSOConfig(ConfigType.OIDC, config.configs[0])
 }
 
+async function verifyAIConfig(config: OIDCConfigs) {
+  // await verifySSOConfig(ConfigType.OIDC, config.configs[0])
+  // Shape should be `config_ai`
+  return true
+}
+
 export async function save(ctx: UserCtx<Config>) {
   const body = ctx.request.body
   const type = body.type
@@ -223,6 +229,9 @@ export async function save(ctx: UserCtx<Config>) {
         break
       case ConfigType.OIDC:
         await verifyOIDCConfig(config)
+        break
+      case ConfigType.AI:
+        await verifyAIConfig(config)
         break
     }
   } catch (err: any) {
@@ -313,6 +322,11 @@ export async function find(ctx: UserCtx) {
     if (scopedConfig) {
       if (type === ConfigType.OIDC_LOGOS) {
         enrichOIDCLogos(scopedConfig)
+      }
+
+      if (type === ConfigType.AI) {
+        // TODO: strip the keys from the configs here
+        // TODO: do the licensing checks here and return the right things based on the license
       }
       ctx.body = scopedConfig
     } else {
