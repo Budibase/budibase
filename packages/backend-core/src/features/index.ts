@@ -266,6 +266,6 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 // All of the machinery in this file is to make sure that flags have their
 // default values set correctly and their types flow through the system.
 export const flags = new FlagSet({
-  DEFAULT_VALUES: Flag.boolean(false),
+  DEFAULT_VALUES: Flag.boolean(env.isDev()),
   SQS: Flag.boolean(env.isDev()),
 })
