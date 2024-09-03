@@ -282,7 +282,7 @@ export async function renameLinkedViews(table: Table, renaming: RenameColumn) {
 
         return tableField.tableId === table._id
       })) {
-        const columns = view.schema && view.schema[relField]?.columns
+        const columns = view.schema?.[relField]?.columns
 
         if (columns && columns[renaming.old]) {
           columns[renaming.updated] = columns[renaming.old]
