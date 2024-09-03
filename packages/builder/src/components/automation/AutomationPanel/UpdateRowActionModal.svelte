@@ -1,5 +1,5 @@
 <script>
-  import { automationStore } from "stores/builder"
+  import { automationStore, rowActions } from "stores/builder"
   import {
     notifications,
     Icon,
@@ -26,12 +26,11 @@
 
   async function saveAutomation() {
     try {
-      await API.rowActions.update({
-        rowActionId: automation.definition.trigger.inputs.rowActionId,
-        tableId: automation.definition.trigger.inputs.tableId,
-        name,
-      })
-      await automationStore.actions.fetch()
+      await rowActions.rename(
+        automation.definition.trigger.inputs.tableId,
+        automation.definition.trigger.inputs.rowActionId,
+        name
+      )
       notifications.success(`Row action updated successfully`)
       hide()
     } catch (error) {

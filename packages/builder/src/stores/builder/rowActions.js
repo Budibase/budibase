@@ -86,6 +86,36 @@ export class RowActionStore extends BudiStore {
     })
     await this.refreshRowActions(tableId)
   }
+
+  rename = async (tableId, rowActionId, name) => {
+    await API.rowActions.update({
+      tableId,
+      rowActionId,
+      name,
+    })
+    await Promise.all([
+      this.refreshRowActions(tableId),
+      automationStore.actions.fetch(),
+    ])
+  }
+
+  delete = async (tableId, rowActionId) => {
+    await API.rowActions.delete({
+      tableId,
+      rowActionId,
+    })
+    await this.refreshRowActions(tableId)
+    // We don't need to refresh automations as we can only delete row actions
+    // from the automations store, so we already handle the state update there
+  }
+
+  trigger = async (sourceId, rowActionId, rowId) => {
+    await API.rowActions.trigger({
+      sourceId,
+      rowActionId,
+      rowId,
+    })
+  }
 }
 
 const store = new RowActionStore()
