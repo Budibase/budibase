@@ -10,7 +10,6 @@
   import DetailPopover from "components/common/DetailPopover.svelte"
   import { getContext } from "svelte"
   import { appStore, rowActions } from "stores/builder"
-  import { API } from "api"
   import { goto, url } from "@roxi/routify"
   import { derived } from "svelte/store"
 
@@ -34,7 +33,7 @@
     try {
       const newRowAction = await rowActions.createRowAction(tableId, viewId)
       notifications.success("Row action created successfully")
-      // $goto($rowActionUrl(newRowAction))
+      $goto($rowActionUrl(newRowAction))
     } catch (error) {
       console.error(error)
       notifications.error("Error creating row action")
