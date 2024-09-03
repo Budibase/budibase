@@ -84,7 +84,7 @@
   }
   let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
   let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
-  let relationshipMap = {
+  const relationshipMap = {
     [RelationshipType.ONE_TO_MANY]: {
       part1: PrettyRelationshipDefinitions.MANY,
       part2: PrettyRelationshipDefinitions.ONE,
@@ -98,7 +98,7 @@
       part2: PrettyRelationshipDefinitions.MANY,
     },
   }
-  let autoColumnInfo = getAutoColumnInformation()
+  const autoColumnInfo = getAutoColumnInformation()
   let optionsValid = true
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
