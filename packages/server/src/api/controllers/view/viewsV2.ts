@@ -3,11 +3,12 @@ import {
   CreateViewRequest,
   Ctx,
   RequiredKeys,
-  ViewUIFieldMetadata,
   UpdateViewRequest,
   ViewResponse,
   ViewResponseEnriched,
   ViewV2,
+  ViewFieldMetadata,
+  RelationSchemaField,
 } from "@budibase/types"
 import { builderSocket, gridSocket } from "../../../websockets"
 
@@ -18,21 +19,41 @@ async function parseSchema(view: CreateViewRequest) {
   const finalViewSchema =
     view.schema &&
     Object.entries(view.schema).reduce((p, [fieldName, schemaValue]) => {
-      const fieldSchema: RequiredKeys<ViewUIFieldMetadata> = {
+      let fieldRelatedSchema:
+        | Record<string, RequiredKeys<RelationSchemaField>>
+        | undefined
+      if (schemaValue.columns) {
+        fieldRelatedSchema = Object.entries(schemaValue.columns).reduce<
+          NonNullable<typeof fieldRelatedSchema>
+        >((acc, [key, fieldSchema]) => {
+          acc[key] = {
+            visible: fieldSchema.visible,
+            readonly: fieldSchema.readonly,
+          }
+          return acc
+        }, {})
+      }
+
+      const fieldSchema: RequiredKeys<
+        ViewFieldMetadata & {
+          columns: typeof fieldRelatedSchema
+        }
+      > = {
         order: schemaValue.order,
         width: schemaValue.width,
         visible: schemaValue.visible,
         readonly: schemaValue.readonly,
         icon: schemaValue.icon,
+        columns: fieldRelatedSchema,
       }
       Object.entries(fieldSchema)
         .filter(([, val]) => val === undefined)
         .forEach(([key]) => {
-          delete fieldSchema[key as keyof ViewUIFieldMetadata]
+          delete fieldSchema[key as keyof ViewFieldMetadata]
         })
       p[fieldName] = fieldSchema
       return p
-    }, {} as Record<string, RequiredKeys<ViewUIFieldMetadata>>)
+    }, {} as Record<string, RequiredKeys<ViewFieldMetadata>>)
   return finalViewSchema
 }
 

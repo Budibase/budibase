@@ -75,8 +75,11 @@ export async function searchView(
   })
 
   const searchOptions: RequiredKeys<SearchViewRowRequest> &
-    RequiredKeys<Pick<RowSearchParams, "tableId" | "query" | "fields">> = {
+    RequiredKeys<
+      Pick<RowSearchParams, "tableId" | "viewId" | "query" | "fields">
+    > = {
     tableId: view.tableId,
+    viewId: view.id,
     query: enrichedQuery,
     fields: viewFields,
     ...getSortOptions(body, view),
