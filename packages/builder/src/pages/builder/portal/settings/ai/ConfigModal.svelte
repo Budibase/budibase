@@ -5,13 +5,10 @@
     Input,
     Select,
     Toggle,
-    Body,
-    notifications,
   } from "@budibase/bbui"
-  import { ConfigMap, Providers } from "./constants"
-  import { API } from "api"
+  import {ConfigMap, Providers} from "./constants"
 
-  export let defaultConfig = {
+  export let config = {
     active: false,
     isDefault: false,
   }
@@ -19,11 +16,10 @@
   export let saveHandler
   export let deleteHandler
 
-  let aiConfig = defaultConfig
   let validation
 
   $: {
-    const { provider, defaultModel, name, apiKey } = aiConfig
+    const {provider, defaultModel, name, apiKey} = config
     validation = provider && defaultModel && name && apiKey
   }
 
@@ -31,36 +27,35 @@
     const provider = evt.detail
     // grab the preset config from the constants for that provider and fill it in
     if (ConfigMap[provider]) {
-      aiConfig = {
-        ...aiConfig,
+      config = {
+        ...config,
         ...ConfigMap[provider],
-        provider
+        provider,
       }
     } else {
-      aiConfig.provider = provider
-      // aiConfig = {
-      //   ...aiConfig,
-      //   provider
-      // }
+      config.provider = provider
     }
   }
-
 </script>
 
 <ModalContent
-    confirmText={"Save"}
-    cancelText={"Delete"}
-    onConfirm={saveHandler}
-    onCancel={deleteHandler}
-    disabled={!validation}
-    size="M"
-    title="Custom AI Configuration"
+  confirmText={"Save"}
+  cancelText={"Delete"}
+  onConfirm={saveHandler}
+  onCancel={deleteHandler}
+  disabled={!validation}
+  size="M"
+  title="Custom AI Configuration"
 >
   <div class="form-row">
+    <div class="form-row">
+      <Label size="M">Name</Label>
+      <Input placeholder={"Test 1"} bind:value={config.name}/>
+    </div>
     <Label size="M">Provider</Label>
     <Select
       placeholder={null}
-      bind:value={aiConfig.provider}
+      bind:value={config.provider}
       options={Object.keys(Providers)}
       on:change={prefillConfig}
     />
@@ -68,25 +63,21 @@
   <div class="form-row">
     <Label size="M">Default Model</Label>
     <Select
-      placeholder={aiConfig.provider ? "Choose an option" : "Select a provider first"}
-      bind:value={aiConfig.defaultModel}
-      options={aiConfig.provider ? Providers[aiConfig.provider].models : []}
+      placeholder={config.provider ? "Choose an option" : "Select a provider first"}
+      bind:value={config.defaultModel}
+      options={config.provider ? Providers[config.provider].models : []}
     />
   </div>
   <div class="form-row">
-    <Label size="M">Name</Label>
-    <Input placeholder={"Test 1"} bind:value={aiConfig.name}/>
-  </div>
-  <div class="form-row">
     <Label size="M">Base URL</Label>
-    <Input placeholder={"www.google.com"} bind:value={aiConfig.baseUrl}/>
+    <Input placeholder={"www.google.com"} bind:value={config.baseUrl}/>
   </div>
   <div class="form-row">
     <Label size="M">API Key</Label>
-    <Input type="password" bind:value={aiConfig.apiKey}/>
+    <Input type="password" bind:value={config.apiKey}/>
   </div>
-  <Toggle text="Active" bind:value={aiConfig.active}/>
-  <Toggle text="Set as default" bind:value={aiConfig.isDefault}/>
+  <Toggle text="Active" bind:value={config.active}/>
+  <Toggle text="Set as default" bind:value={config.isDefault}/>
 </ModalContent>
 
 <style>

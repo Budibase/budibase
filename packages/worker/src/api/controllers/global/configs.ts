@@ -28,7 +28,9 @@ import {
   SSOConfig,
   SSOConfigType,
   UserCtx,
-  OIDCLogosConfig, AIConfig,
+  OIDCLogosConfig,
+  AIConfig,
+  PASSWORD_REPLACEMENT,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
 
@@ -197,9 +199,11 @@ async function verifyOIDCConfig(config: OIDCConfigs) {
   await verifySSOConfig(ConfigType.OIDC, config.configs[0])
 }
 
-async function verifyAIConfig(config: OIDCConfigs) {
-  // await verifySSOConfig(ConfigType.OIDC, config.configs[0])
-  // Shape should be `config_ai`
+async function verifyAIConfig(config: AIConfig, existingConfig?: AIConfig) {
+  // ensure that the redacted API keys are not overwritten in the DB
+  // for (let aiConfig of existingConfig) {
+  //
+  // }
   return true
 }
 
@@ -231,7 +235,7 @@ export async function save(ctx: UserCtx<Config>) {
         await verifyOIDCConfig(config)
         break
       case ConfigType.AI:
-        await verifyAIConfig(config)
+        await verifyAIConfig(config, existingConfig)
         break
     }
   } catch (err: any) {
@@ -314,8 +318,10 @@ function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
 }
 
 function sanitizeAIConfig(aiConfig: AIConfig) {
-  for (let providerConfig of aiConfig.config) {
-    delete providerConfig.apiKey
+  for (let key in aiConfig.config) {
+    if (aiConfig.config[key].apiKey) {
+      aiConfig.config[key].apiKey = PASSWORD_REPLACEMENT
+    }
   }
   return aiConfig
 }

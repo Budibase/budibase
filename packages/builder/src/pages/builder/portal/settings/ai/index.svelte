@@ -22,8 +22,9 @@
   }
 
   let modal
-  let aiConfig
-  let currentlyEditingConfig
+  let fullAIConfig
+  let editingAIConfig = {}
+  let editingUuid
 
   $: isCloud = $admin.cloud
   $: budibaseAIEnabled = $licensing.budibaseAIEnabled
@@ -34,7 +35,7 @@
       // Fetch the AI configs
       const aiDoc = await API.getConfig(ConfigTypes.AI)
       if (aiDoc._id) {
-        aiConfig = aiDoc
+        fullAIConfig = aiDoc
       }
     } catch (error) {
       notifications.error("Error fetching AI config")
@@ -42,22 +43,27 @@
   }
 
   async function saveConfig() {
-    // Update the config that was changed
-    const updateConfigs = aiConfig.config
+    // Use existing key or generate new one
+    const id = editingUuid || Helpers.uuid()
 
-    const config = {
-      type: ConfigTypes.AI,
-      config: [
-        // TODO: include the ones that are already there, or just handle this in the backend
-        aiConfig,
-      ]
+    // Creating first custom AI Config
+    if (!fullAIConfig) {
+      fullAIConfig = {
+        type: ConfigTypes.AI,
+        config: {
+          [id]: editingAIConfig
+        }
+      }
+    } else {
+      // Add new or update existing custom AI Config
+      fullAIConfig.config[id] = editingAIConfig
     }
+
     try {
-      const isNew = !!aiConfig._rev
-      const savedConfig = await API.saveConfig(config)
-      aiConfig._rev = savedConfig._rev
-      aiConfig._id = savedConfig._id
-      notifications.success(`Successfully saved and activated ${isNew ? "new" : ""} AI Configuration`)
+      const savedConfig = await API.saveConfig(fullAIConfig)
+      fullAIConfig._rev = savedConfig._rev
+      fullAIConfig._id = savedConfig._id
+      notifications.success(`Successfully saved and activated AI Configuration`)
     } catch (error) {
       notifications.error(
         `Failed to save AI Configuration, reason: ${error?.message || "Unknown"}`
@@ -65,15 +71,14 @@
     }
   }
 
-  async function deleteConfig(name) {
+  async function deleteConfig(key) {
     // Delete a configuration
-    const idx = aiConfig.config.findIndex(config => config.name === currentlyEditingConfig?.name || name)
-    aiConfig.config.splice(idx, 1)
+    delete fullAIConfig.config[key]
 
     try {
-      const savedConfig = await API.saveConfig(aiConfig)
-      aiConfig._rev = savedConfig._rev
-      aiConfig._id = savedConfig._id
+      const savedConfig = await API.saveConfig(fullAIConfig)
+      fullAIConfig._rev = savedConfig._rev
+      fullAIConfig._id = savedConfig._id
       notifications.success(`Deleted config`)
     } catch (error) {
       notifications.error(
@@ -82,13 +87,15 @@
     }
   }
 
-  function editConfig(config) {
-    currentlyEditingConfig = config
+  function editConfig(uuid) {
+    editingUuid = uuid
+    editingAIConfig = fullAIConfig?.config[editingUuid]
     modal.show()
   }
 
   function newConfig() {
-    currentlyEditingConfig = undefined
+    editingUuid = undefined
+    editingAIConfig = undefined
     modal.show()
   }
 
@@ -103,7 +110,7 @@
   <AIConfigModal
     saveHandler={saveConfig}
     deleteHandler={deleteConfig}
-    defaultConfig={currentlyEditingConfig}
+    bind:config={editingAIConfig}
   />
 </Modal>
 <Layout noPadding>
@@ -134,12 +141,12 @@
     </div>
     <Body size="S">Use the following interface to select your preferred AI configuration.</Body>
     <Body size="S">Select your AI Model:</Body>
-    {#if aiConfig}
-      {#each aiConfig.config as config}
+    {#if fullAIConfig?.config}
+      {#each Object.keys(fullAIConfig.config) as key}
         <AIConfigTile
-          {config}
-          editHandler={() => editConfig(config)}
-          deleteHandler={modal.show}
+          config={fullAIConfig.config[key]}
+          editHandler={() => editConfig(key)}
+          deleteHandler={() => deleteConfig(key)}
         />
       {/each}
     {/if}
