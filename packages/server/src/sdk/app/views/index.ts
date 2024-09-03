@@ -254,21 +254,18 @@ export function syncSchema(
 }
 
 export async function renameLinkedViews(table: Table, renaming: RenameColumn) {
-  const relatedTableIds = new Set<string>()
+  const relatedTables: Record<string, Table> = {}
 
   for (const field of Object.values(table.schema)) {
     if (field.type !== FieldType.LINK) {
       continue
     }
 
-    relatedTableIds.add(field.tableId)
+    relatedTables[field.tableId] ??= await sdk.tables.getTable(field.tableId)
     break
   }
 
-  const relatedTables = await sdk.tables.getTables(
-    Array.from(relatedTableIds.values())
-  )
-  for (const relatedTable of relatedTables) {
+  for (const relatedTable of Object.values(relatedTables)) {
     let toSave = false
     const viewsV2 = Object.values(relatedTable.views || {}).filter(
       sdk.views.isV2
