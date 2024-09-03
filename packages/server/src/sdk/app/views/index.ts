@@ -276,7 +276,7 @@ export async function renameLinkedViews(table: Table, renaming: RenameColumn) {
     for (const view of viewsV2) {
       for (const relField of Object.keys(view.schema || {}).filter(f => {
         const tableField = relatedTable.schema[f]
-        if (tableField.type !== FieldType.LINK) {
+        if (!tableField || tableField.type !== FieldType.LINK) {
           return false
         }
 
