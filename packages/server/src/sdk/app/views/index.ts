@@ -262,7 +262,6 @@ export async function renameLinkedViews(table: Table, renaming: RenameColumn) {
     }
 
     relatedTables[field.tableId] ??= await sdk.tables.getTable(field.tableId)
-    break
   }
 
   for (const relatedTable of Object.values(relatedTables)) {
