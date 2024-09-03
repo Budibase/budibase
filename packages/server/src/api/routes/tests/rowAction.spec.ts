@@ -672,6 +672,7 @@ describe("/rowsActions", () => {
     }
 
     it("can trigger an automation given valid data", async () => {
+      expect(await getAutomationLogs()).toBeEmpty()
       await config.api.rowAction.trigger(tableId, rowAction.id, {
         rowId: row._id!,
       })
@@ -680,13 +681,19 @@ describe("/rowsActions", () => {
       expect(automationLogs).toEqual([
         expect.objectContaining({
           automationId: rowAction.automationId,
-          trigger: expect.objectContaining({
+          trigger: {
+            id: "trigger",
+            stepId: "ROW_ACTION",
+            inputs: null,
             outputs: {
               fields: {},
               row: await config.api.row.get(tableId, row._id!),
               table: await config.api.table.get(tableId),
+              automation: expect.objectContaining({
+                _id: rowAction.automationId,
+              }),
             },
-          }),
+          },
         }),
       ])
     })
@@ -731,6 +738,7 @@ describe("/rowsActions", () => {
       )
 
       await config.publish()
+      expect(await getAutomationLogs()).toBeEmpty()
       await config.api.rowAction.trigger(viewId, rowAction.id, {
         rowId: row._id!,
       })
