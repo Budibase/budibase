@@ -23,8 +23,7 @@
   $: tableId = ds?.tableId
   $: isView = ds?.type === "viewV2"
   $: fetchRowActions(tableId)
-  $: viewActiveCount = 0
-  $: actionCount = isView ? viewActiveCount : rowActions.length
+  $: actionCount = rowActions.filter(action => !isView || action.enabled).length
 
   const rowActionUrl = derived([url, appStore], ([$url, $appStore]) => {
     return ({ automationId }) => {

@@ -146,10 +146,10 @@
       {#if !isUsersTable}
         <GridRowActionsButton />
       {/if}
+      <GridScreensButton on:request-generate={() => generateButton?.show()} />
       <GridAutomationsButton
         on:request-generate={() => generateButton?.show()}
       />
-      <GridScreensButton on:request-generate={() => generateButton?.show()} />
       {#if !isUsersTable}
         <GridImportButton />
       {/if}
