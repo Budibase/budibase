@@ -18,7 +18,6 @@
     tableId: view.tableId,
     resourceId: view.id,
   }))
-  $: console.log($viewsV2.list)
   $: datasourceOptions = [...(tableOptions || []), ...(viewOptions || [])]
   $: resourceId = parameters.resourceId
   $: fetchRowActions(resourceId)
@@ -46,6 +45,9 @@
       console.error(err)
       rowActions = []
     }
+
+    // Auto select first action
+    parameters.rowActionId = rowActions[0]?.id
   }
 </script>
 
