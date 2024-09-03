@@ -63,7 +63,7 @@
       onClick: async row => {
         await API.rowActions.trigger({
           rowActionId: action.id,
-          tableId: id,
+          sourceId: id,
           rowId: row._id,
         })
       },

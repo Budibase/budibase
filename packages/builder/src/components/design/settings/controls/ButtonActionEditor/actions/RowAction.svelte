@@ -15,10 +15,13 @@
   }))
   $: viewOptions = $viewsV2.list.map(view => ({
     label: view.name,
+    tableId: view.tableId,
     resourceId: view.id,
   }))
+  $: console.log($viewsV2.list)
   $: datasourceOptions = [...(tableOptions || []), ...(viewOptions || [])]
-  $: fetchRowActions(parameters.resourceId)
+  $: resourceId = parameters.resourceId
+  $: fetchRowActions(resourceId)
   $: rowActionOptions = rowActions.map(action => ({
     label: action.name,
     value: action.id,
@@ -30,8 +33,15 @@
       return
     }
     try {
-      const res = await API.rowActions.fetch(resourceId)
-      rowActions = Object.values(res || {})
+      const isView = resourceId.startsWith("view_")
+      let tableId = resourceId
+      if (isView) {
+        tableId = viewOptions.find(x => x.resourceId === resourceId).tableId
+      }
+      const res = await API.rowActions.fetch(tableId)
+      rowActions = Object.values(res || {}).filter(action => {
+        return !isView || action.allowedViews?.includes(resourceId)
+      })
     } catch (err) {
       console.error(err)
       rowActions = []

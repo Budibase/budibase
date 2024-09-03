@@ -38,7 +38,10 @@
       return
     }
     const res = await API.rowActions.fetch(tableId)
-    rowActions = Object.values(res || {})
+    rowActions = Object.values(res || {}).map(action => ({
+      ...action,
+      enabled: !isView || action.allowedViews?.includes(ds.id),
+    }))
   }
 
   const createRowAction = async () => {
@@ -56,6 +59,23 @@
     } catch (error) {
       console.error(error)
       notifications.error("Error creating row action")
+    }
+  }
+
+  const toggleAction = async (action, enabled) => {
+    console.log(action, enabled)
+    if (enabled) {
+      await API.rowActions.enableView({
+        tableId,
+        rowActionId: action.id,
+        viewId: ds.id,
+      })
+    } else {
+      await API.rowActions.disableView({
+        tableId,
+        rowActionId: action.id,
+        viewId: ds.id,
+      })
     }
   }
 </script>
@@ -87,7 +107,10 @@
           <svelte:fragment slot="right">
             {#if isView}
               <span>
-                <Toggle />
+                <Toggle
+                  value={action.enabled}
+                  on:change={e => toggleAction(action, e.detail)}
+                />
               </span>
             {/if}
           </svelte:fragment>
