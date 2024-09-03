@@ -1,5 +1,5 @@
 <script>
-  import { Banner, Menu, MenuItem, Popover } from "@budibase/bbui"
+  import { Banner } from "@budibase/bbui"
   import { datasources, tables, integrations, appStore } from "stores/builder"
   import { themeStore, admin } from "stores/portal"
   import { TableNames } from "constants"

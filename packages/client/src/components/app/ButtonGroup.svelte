@@ -1,13 +1,7 @@
 <script>
   import BlockComponent from "../BlockComponent.svelte"
   import Block from "../Block.svelte"
-  import {
-    Button,
-    Popover,
-    Menu,
-    MenuItem,
-    CollapsedButtonGroup,
-  } from "@budibase/bbui"
+  import { CollapsedButtonGroup } from "@budibase/bbui"
   import { getContext } from "svelte"
 
   export let buttons = []
