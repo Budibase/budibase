@@ -2126,81 +2126,76 @@ describe.each([
     })
   })
 
-  // This will never work for Lucene.
-  !isLucene &&
-    // It also can't work for in-memory searching because the related table name
-    // isn't available.
-    !isInMemory &&
-    describe("relations", () => {
-      let productCategoryTable: Table, productCatRows: Row[]
+  describe("relations", () => {
+    let productCategoryTable: Table, productCatRows: Row[]
 
-      beforeAll(async () => {
-        productCategoryTable = await createTable(
-          {
-            name: { name: "name", type: FieldType.STRING },
-          },
-          "productCategory"
-        )
-        table = await createTable(
-          {
-            name: { name: "name", type: FieldType.STRING },
-            productCat: {
-              type: FieldType.LINK,
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              name: "productCat",
-              fieldName: "product",
-              tableId: productCategoryTable._id!,
-              constraints: {
-                type: "array",
-              },
+    beforeAll(async () => {
+      productCategoryTable = await createTable(
+        {
+          name: { name: "name", type: FieldType.STRING },
+        },
+        "productCategory"
+      )
+      table = await createTable(
+        {
+          name: { name: "name", type: FieldType.STRING },
+          productCat: {
+            type: FieldType.LINK,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            name: "productCat",
+            fieldName: "product",
+            tableId: productCategoryTable._id!,
+            constraints: {
+              type: "array",
             },
           },
-          "product"
-        )
+        },
+        "product"
+      )
 
-        productCatRows = await Promise.all([
-          config.api.row.save(productCategoryTable._id!, { name: "foo" }),
-          config.api.row.save(productCategoryTable._id!, { name: "bar" }),
-        ])
+      productCatRows = await Promise.all([
+        config.api.row.save(productCategoryTable._id!, { name: "foo" }),
+        config.api.row.save(productCategoryTable._id!, { name: "bar" }),
+      ])
 
-        await Promise.all([
-          config.api.row.save(table._id!, {
-            name: "foo",
-            productCat: [productCatRows[0]._id],
-          }),
-          config.api.row.save(table._id!, {
-            name: "bar",
-            productCat: [productCatRows[1]._id],
-          }),
-          config.api.row.save(table._id!, {
-            name: "baz",
-            productCat: [],
-          }),
-        ])
-      })
-
-      it("should be able to filter by relationship using column name", async () => {
-        await expectQuery({
-          equal: { ["productCat.name"]: "foo" },
-        }).toContainExactly([
-          { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
-        ])
-      })
-
-      it("should be able to filter by relationship using table name", async () => {
-        await expectQuery({
-          equal: { ["productCategory.name"]: "foo" },
-        }).toContainExactly([
-          { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
-        ])
-      })
-
-      it("shouldn't return any relationship for last row", async () => {
-        await expectQuery({
-          equal: { ["name"]: "baz" },
-        }).toContainExactly([{ name: "baz", productCat: undefined }])
-      })
+      await Promise.all([
+        config.api.row.save(table._id!, {
+          name: "foo",
+          productCat: [productCatRows[0]._id],
+        }),
+        config.api.row.save(table._id!, {
+          name: "bar",
+          productCat: [productCatRows[1]._id],
+        }),
+        config.api.row.save(table._id!, {
+          name: "baz",
+          productCat: [],
+        }),
+      ])
     })
+
+    it("should be able to filter by relationship using column name", async () => {
+      await expectQuery({
+        equal: { ["productCat.name"]: "foo" },
+      }).toContainExactly([
+        { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+      ])
+    })
+
+    it("should be able to filter by relationship using table name", async () => {
+      await expectQuery({
+        equal: { ["productCategory.name"]: "foo" },
+      }).toContainExactly([
+        { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+      ])
+    })
+
+    it("shouldn't return any relationship for last row", async () => {
+      await expectQuery({
+        equal: { ["name"]: "baz" },
+      }).toContainExactly([{ name: "baz", productCat: undefined }])
+    })
+  })
   ;(isSqs || isLucene) &&
     describe("relations to same table", () => {
       let relatedTable: Table, relatedRows: Row[]
@@ -2610,49 +2605,49 @@ describe.each([
       })
     })
 
-  !isInMemory &&
-    describe("search by _id", () => {
-      let row: Row
+  // !isInMemory &&
+  describe("search by _id", () => {
+    let row: Row
 
-      beforeAll(async () => {
-        const toRelateTable = await createTable({
-          name: {
-            name: "name",
-            type: FieldType.STRING,
-          },
-        })
-        table = await createTable({
-          name: {
-            name: "name",
-            type: FieldType.STRING,
-          },
-          rel: {
-            name: "rel",
-            type: FieldType.LINK,
-            relationshipType: RelationshipType.MANY_TO_MANY,
-            tableId: toRelateTable._id!,
-            fieldName: "rel",
-          },
-        })
-        const [row1, row2] = await Promise.all([
-          config.api.row.save(toRelateTable._id!, { name: "tag 1" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 2" }),
-        ])
-        row = await config.api.row.save(table._id!, {
-          name: "product 1",
-          rel: [row1._id, row2._id],
-        })
+    beforeAll(async () => {
+      const toRelateTable = await createTable({
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+        },
       })
-
-      it("can filter by the row ID with limit 1", async () => {
-        await expectSearch({
-          query: {
-            equal: { _id: row._id },
-          },
-          limit: 1,
-        }).toContainExactly([row])
+      table = await createTable({
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+        },
+        rel: {
+          name: "rel",
+          type: FieldType.LINK,
+          relationshipType: RelationshipType.MANY_TO_MANY,
+          tableId: toRelateTable._id!,
+          fieldName: "rel",
+        },
+      })
+      const [row1, row2] = await Promise.all([
+        config.api.row.save(toRelateTable._id!, { name: "tag 1" }),
+        config.api.row.save(toRelateTable._id!, { name: "tag 2" }),
+      ])
+      row = await config.api.row.save(table._id!, {
+        name: "product 1",
+        rel: [row1._id, row2._id],
       })
     })
+
+    it("can filter by the row ID with limit 1", async () => {
+      await expectSearch({
+        query: {
+          equal: { _id: row._id },
+        },
+        limit: 1,
+      }).toContainExactly([row])
+    })
+  })
 
   !isInternal &&
     describe("search by composite key", () => {
@@ -2687,82 +2682,6 @@ describe.each([
             idColumn2: 2,
           },
         ])
-      })
-    })
-
-  // TODO: when all SQL databases use the same mechanism - remove this test, new relationship system doesn't have this problem
-  !isInternal &&
-    describe("pagination edge case with relationships", () => {
-      let mainRows: Row[] = []
-
-      beforeAll(async () => {
-        const toRelateTable = await createTable({
-          name: {
-            name: "name",
-            type: FieldType.STRING,
-          },
-        })
-        table = await createTable({
-          name: {
-            name: "name",
-            type: FieldType.STRING,
-          },
-          rel: {
-            name: "rel",
-            type: FieldType.LINK,
-            relationshipType: RelationshipType.MANY_TO_ONE,
-            tableId: toRelateTable._id!,
-            fieldName: "rel",
-          },
-        })
-        const relatedRows = await Promise.all([
-          config.api.row.save(toRelateTable._id!, { name: "tag 1" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 2" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 3" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 4" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 5" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 6" }),
-        ])
-        mainRows = await Promise.all([
-          config.api.row.save(table._id!, {
-            name: "product 1",
-            rel: relatedRows.map(row => row._id),
-          }),
-          config.api.row.save(table._id!, {
-            name: "product 2",
-            rel: [],
-          }),
-          config.api.row.save(table._id!, {
-            name: "product 3",
-            rel: [],
-          }),
-        ])
-      })
-
-      it("can still page when the hard limit is hit", async () => {
-        await withCoreEnv(
-          {
-            SQL_MAX_ROWS: "6",
-          },
-          async () => {
-            const params: Omit<RowSearchParams, "tableId"> = {
-              query: {},
-              paginate: true,
-              limit: 3,
-              sort: "name",
-              sortType: SortType.STRING,
-              sortOrder: SortOrder.ASCENDING,
-            }
-            const page1 = await expectSearch(params).toContain([mainRows[0]])
-            expect(page1.hasNextPage).toBe(true)
-            expect(page1.bookmark).toBeDefined()
-            const page2 = await expectSearch({
-              ...params,
-              bookmark: page1.bookmark,
-            }).toContain([mainRows[1], mainRows[2]])
-            expect(page2.hasNextPage).toBe(false)
-          }
-        )
       })
     })
 
