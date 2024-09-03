@@ -22,6 +22,17 @@ export const Providers = {
   TogetherAI: {
     name: "Together AI",
     // TODO: too many - probably need to use an autocomplete for this
+    models: [
+      "gpt-4o-mini",
+      "gpt-4o",
+      "gpt-3.5-turbo",
+      "chatgpt-4o-latest",
+      "gpt-4-turbo",
+      "gpt-4",
+    ]
+  },
+  AzureOpenAI: {
+    name: "Azure Open AI",
     models: ["whatever"]
   },
   Custom: {
