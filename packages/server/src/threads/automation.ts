@@ -36,7 +36,6 @@ import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
 import tracer from "dd-trace"
-import { recurseSearchFilters } from "@budibase/shared-core/src/filters"
 
 threadUtils.threadSetup()
 const CRON_STEP_ID = triggerDefs.CRON.stepId
@@ -474,18 +473,21 @@ class Orchestrator {
   ): Promise<boolean> {
     const toFilter: Record<string, any> = {}
 
-    const processedConditions = recurseSearchFilters(conditions, filter => {
-      Object.entries(filter).forEach(([_, value]) => {
-        Object.entries(value).forEach(([field, _]) => {
-          const fromContext = processStringSync(
-            `{{ literal ${field} }}`,
-            this.context
-          )
-          toFilter[field] = fromContext
+    const processedConditions = dataFilters.recurseSearchFilters(
+      conditions,
+      filter => {
+        Object.entries(filter).forEach(([_, value]) => {
+          Object.entries(value).forEach(([field, _]) => {
+            const fromContext = processStringSync(
+              `{{ literal ${field} }}`,
+              this.context
+            )
+            toFilter[field] = fromContext
+          })
         })
-      })
-      return filter
-    })
+        return filter
+      }
+    )
 
     const result = dataFilters.runQuery([toFilter], processedConditions)
     return result.length > 0
