@@ -19,7 +19,7 @@
   let validation
 
   $: {
-    const {provider, defaultModel, name, apiKey} = config
+    const { provider, defaultModel, name, apiKey } = config
     validation = provider && defaultModel && name && apiKey
   }
   $: canEditBaseUrl = config.provider && ConfigMap[config.provider].baseUrl === ""
@@ -49,10 +49,6 @@
   title="Custom AI Configuration"
 >
   <div class="form-row">
-    <div class="form-row">
-      <Label size="M">Name</Label>
-      <Input placeholder={"Test 1"} bind:value={config.name}/>
-    </div>
     <Label size="M">Provider</Label>
     <Select
       placeholder={null}
@@ -60,6 +56,10 @@
       options={Object.keys(Providers)}
       on:change={prefillConfig}
     />
+  </div>
+  <div class="form-row">
+    <Label size="M">Name</Label>
+    <Input placeholder={"Enter a name"} bind:value={config.name}/>
   </div>
   <div class="form-row">
     <Label size="M">Default Model</Label>

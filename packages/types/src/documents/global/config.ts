@@ -111,16 +111,16 @@ export interface SCIMInnerConfig {
 
 export interface SCIMConfig extends Config<SCIMInnerConfig> {}
 
+type AIProvider = "OpenAI" | "Anthropic" | "AzureOpenAI" | "Custom"
+
 export interface AIInnerConfig {
   [key: string]: {
-    // TODO: should be enum
-    provider: string
+    provider: AIProvider
     isDefault: boolean
     name: string
     active: boolean
-    baseUrl: string
-    apiKey: string
-    // TODO: should be enum
+    baseUrl?: string
+    apiKey?: string
     defaultModel: string
   }
 }

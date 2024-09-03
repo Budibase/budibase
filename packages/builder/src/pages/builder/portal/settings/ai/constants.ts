@@ -33,24 +33,31 @@ export const Providers = {
   },
   AzureOpenAI: {
     name: "Azure Open AI",
-    models: ["whatever"]
+    models: [
+      "gpt-4o-mini",
+    ]
   },
   Custom: {
     name: "Custom",
-    // TODO: too many - probably need to use an autocomplete for this
-    models: [""]
   },
 }
 
 export const ConfigMap = {
   OpenAI: {
-    baseUrl: "https://api.openai.com"
+    name: "OpenAI",
+    baseUrl: "https://api.openai.com",
   },
   Anthropic: {
-    baseUrl: ""
+    name: "Anthropic",
+    baseUrl: "",
   },
   TogetherAI: {
-    baseUrl: "https://api.together.xyz/v1"
+    name: "TogetherAI",
+    baseUrl: "https://api.together.xyz/v1",
+  },
+  AzureOpenAI: {
+    name: "Azure OpenAI",
+    baseUrl: "",
   },
   Custom: {
     baseUrl: ""
