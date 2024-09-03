@@ -22,7 +22,7 @@ export const Providers = {
   TogetherAI: {
     name: "Together AI",
     // TODO: too many - probably need to use an autocomplete for this
-    models: [""]
+    models: ["whatever"]
   },
   Custom: {
     name: "Custom",
