@@ -51,7 +51,7 @@ export enum CalculationType {
   MAX = "max",
 }
 
-export type ViewCalculationFieldMetadata = ViewUIFieldMetadata & {
+export type ViewCalculationFieldMetadata = ViewFieldMetadata & {
   calculationType: CalculationType
   field: string
 }
