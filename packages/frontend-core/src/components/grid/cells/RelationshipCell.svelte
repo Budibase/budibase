@@ -273,6 +273,7 @@
     <div
       class="values"
       class:wrap={editable || contentLines > 1}
+      class:disabled={!focused}
       on:wheel={e => (focused ? e.stopPropagation() : null)}
     >
       {#each fieldValue || [] as relationship}
@@ -357,8 +358,8 @@
   </GridPopover>
 {/if}
 
-{#if relationshipFields}
-  <GridPopover open={showRelationshipFields} {anchor}>
+{#if showRelationshipFields}
+  <GridPopover {anchor} minWidth={300} maxWidth={400}>
     <div class="relationship-fields">
       {#each Object.entries(relationshipFields) as [fieldName, fieldValue]}
         <div class="relationship-field-name">
@@ -425,6 +426,9 @@
     overflow: hidden;
     padding: var(--cell-padding);
     flex-wrap: nowrap;
+  }
+  .values.disabled {
+    pointer-events: none;
   }
   .values.wrap {
     flex-wrap: wrap;
@@ -539,9 +543,9 @@
   .relationship-fields {
     margin: var(--spacing-m) var(--spacing-l);
     display: grid;
-    grid-template-columns: minmax(auto, 70%) minmax(auto, 30%);
+    grid-template-columns: minmax(auto, 50%) auto;
     grid-row-gap: var(--spacing-m);
-    grid-column-gap: var(--cell-spacing);
+    grid-column-gap: var(--spacing-m);
   }
 
   .relationship-field-name {
