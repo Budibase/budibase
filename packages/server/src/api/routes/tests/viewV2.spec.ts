@@ -1238,11 +1238,11 @@ describe.each([
 
         const renameColumn = async (table: Table, renaming: RenameColumn) => {
           const newSchema = { ...table.schema }
-          ;(newSchema[renaming.updated] = {
+          newSchema[renaming.updated] = {
             ...table.schema[renaming.old],
             name: renaming.updated,
-          }),
-            delete newSchema[renaming.old]
+          }
+          delete newSchema[renaming.old]
 
           await config.api.table.save({
             ...table,
