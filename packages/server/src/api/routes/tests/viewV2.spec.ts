@@ -1204,18 +1204,18 @@ describe.each([
           )
           await config.api.table.save({
             ...table,
-              schema: {
+            schema: {
               ...table.schema,
-                aux: {
-                  name: "aux",
-                  relationshipType: RelationshipType.ONE_TO_MANY,
-                  type: FieldType.LINK,
-                  tableId: auxTable._id!,
-                  fieldName: "fk_aux",
+              aux: {
+                name: "aux",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTable._id!,
+                fieldName: "fk_aux",
                 constraints: { type: "array" },
-                },
               },
-            })
+            },
+          })
           // Refetch auxTable
           auxTable = await config.api.table.get(auxTable._id!)
 
