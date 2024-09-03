@@ -112,18 +112,20 @@ export interface SCIMInnerConfig {
 export interface SCIMConfig extends Config<SCIMInnerConfig> {}
 
 export interface AIInnerConfig {
-  // TODO: should be enum
-  provider: string
-  isDefault: boolean
-  name: string
-  active: boolean
-  baseUrl: string
-  apiKey: string
-  // TODO: should be enum
-  defaultModel: string
+  [key: string]: {
+    // TODO: should be enum
+    provider: string
+    isDefault: boolean
+    name: string
+    active: boolean
+    baseUrl: string
+    apiKey: string
+    // TODO: should be enum
+    defaultModel: string
+  }
 }
 
-export interface AIConfig extends Config<AIInnerConfig[]> {}
+export interface AIConfig extends Config<AIInnerConfig> {}
 
 export const isSettingsConfig = (config: Config): config is SettingsConfig =>
   config.type === ConfigType.SETTINGS

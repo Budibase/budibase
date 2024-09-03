@@ -22,6 +22,7 @@
     const {provider, defaultModel, name, apiKey} = config
     validation = provider && defaultModel && name && apiKey
   }
+  $: canEditBaseUrl = config.provider && ConfigMap[config.provider].baseUrl === ""
 
   function prefillConfig(evt) {
     const provider = evt.detail
@@ -70,7 +71,7 @@
   </div>
   <div class="form-row">
     <Label size="M">Base URL</Label>
-    <Input placeholder={"www.google.com"} bind:value={config.baseUrl}/>
+    <Input disabled={!canEditBaseUrl} placeholder={"https://budibase.ai"} bind:value={config.baseUrl}/>
   </div>
   <div class="form-row">
     <Label size="M">API Key</Label>

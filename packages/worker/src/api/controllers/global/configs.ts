@@ -200,11 +200,14 @@ async function verifyOIDCConfig(config: OIDCConfigs) {
 }
 
 async function verifyAIConfig(config: AIConfig, existingConfig?: AIConfig) {
+  if (!existingConfig) return
+
   // ensure that the redacted API keys are not overwritten in the DB
-  // for (let aiConfig of existingConfig) {
-  //
-  // }
-  return true
+  for (let uuid in existingConfig.config) {
+    if (config[uuid]?.apiKey === PASSWORD_REPLACEMENT) {
+      config[uuid].apiKey = existingConfig.config[uuid].apiKey
+    }
+  }
 }
 
 export async function save(ctx: UserCtx<Config>) {
