@@ -265,7 +265,7 @@ export function screenValidator() {
 function generateStepSchema(allowStepTypes: string[]) {
   const branchSchema = Joi.object({
     name: Joi.string().required(),
-    condition: filterObject(false).required().min(1),
+    condition: filterObject({ unknown: false }).required().min(1),
   })
 
   return Joi.object({
