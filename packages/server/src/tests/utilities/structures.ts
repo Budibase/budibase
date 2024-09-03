@@ -292,6 +292,132 @@ export function serverLogAutomation(appId?: string): Automation {
   }
 }
 
+export function branchAutomationIncorrectPosition(appId?: string): Automation {
+  return {
+    name: "My Automation",
+    screenId: "kasdkfldsafkl",
+    live: true,
+    uiTree: {},
+    definition: {
+      trigger: {
+        stepId: AutomationTriggerStepId.APP,
+        name: "test",
+        tagline: "test",
+        icon: "test",
+        description: "test",
+        type: AutomationStepType.TRIGGER,
+        id: "test",
+        inputs: { fields: {} },
+        schema: {
+          inputs: {
+            properties: {},
+          },
+          outputs: {
+            properties: {},
+          },
+        },
+      },
+      steps: [
+        {
+          stepId: AutomationActionStepId.BRANCH,
+          name: "Branch",
+          tagline: "Console log a value in the backend",
+          icon: "Monitoring",
+          description: "Logs the given text to the server (using console.log)",
+          inputs: {
+            branches: [],
+          },
+          schema: { inputs: { properties: {} }, outputs: { properties: {} } },
+          id: "y8lkZbeSe",
+          type: AutomationStepType.LOGIC,
+        },
+        {
+          stepId: AutomationActionStepId.SERVER_LOG,
+          name: "Backend log",
+          tagline: "Console log a value in the backend",
+          icon: "Monitoring",
+          description: "Logs the given text to the server (using console.log)",
+          internal: true,
+          features: {
+            LOOPING: true,
+          },
+          inputs: {
+            text: "log statement",
+          },
+          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
+          id: "y8lkZbeSe",
+          type: AutomationStepType.ACTION,
+        },
+      ],
+    },
+    type: "automation",
+    appId: appId!,
+  }
+}
+
+export function branchAutomation(appId?: string): Automation {
+  return {
+    name: "My Automation",
+    screenId: "kasdkfldsafkl",
+    live: true,
+    uiTree: {},
+    definition: {
+      trigger: {
+        stepId: AutomationTriggerStepId.APP,
+        name: "test",
+        tagline: "test",
+        icon: "test",
+        description: "test",
+        type: AutomationStepType.TRIGGER,
+        id: "test",
+        inputs: { fields: {} },
+        schema: {
+          inputs: {
+            properties: {},
+          },
+          outputs: {
+            properties: {},
+          },
+        },
+      },
+      steps: [
+        {
+          stepId: AutomationActionStepId.SERVER_LOG,
+          name: "Backend log",
+          tagline: "Console log a value in the backend",
+          icon: "Monitoring",
+          description: "Logs the given text to the server (using console.log)",
+          internal: true,
+          features: {
+            LOOPING: true,
+          },
+          inputs: {
+            text: "log statement",
+          },
+          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
+          id: "y8lkZbeSe",
+          type: AutomationStepType.ACTION,
+        },
+        {
+          stepId: AutomationActionStepId.BRANCH,
+          name: "Branch",
+          tagline: "Console log a value in the backend",
+          icon: "Monitoring",
+          description: "Logs the given text to the server (using console.log)",
+          inputs: {
+            branches: [],
+          },
+          schema: { inputs: { properties: {} }, outputs: { properties: {} } },
+          id: "y8lkZbeSe",
+          type: AutomationStepType.LOGIC,
+        },
+      ],
+    },
+    type: "automation",
+    appId: appId!,
+  }
+}
+
 export function loopAutomation(
   tableId: string,
   loopOpts?: LoopInput

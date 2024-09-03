@@ -1,6 +1,9 @@
 import { auth, permissions } from "@budibase/backend-core"
 import { DataSourceOperation } from "../../../constants"
 import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepType,
   EmptyFilterOption,
   SearchFilters,
   Table,
@@ -88,7 +91,7 @@ export function datasourceValidator() {
   )
 }
 
-function filterObject() {
+function filterObject(unknown = true) {
   const conditionalFilteringObject = () =>
     Joi.object({
       conditions: Joi.array().items(Joi.link("#schema")).required(),
@@ -115,7 +118,7 @@ function filterObject() {
     fuzzyOr: Joi.forbidden(),
     documentType: Joi.forbidden(),
   }
-  return Joi.object(filtersValidators).unknown(true).id("schema")
+  return Joi.object(filtersValidators).unknown(unknown).id("schema")
 }
 
 export function internalSearchValidator() {
@@ -259,6 +262,11 @@ export function screenValidator() {
 }
 
 function generateStepSchema(allowStepTypes: string[]) {
+  const branchSchema = Joi.object({
+    name: Joi.string().required(),
+    condition: filterObject(false).required().min(1),
+  })
+
   return Joi.object({
     stepId: Joi.string().required(),
     id: Joi.string().required(),
@@ -267,11 +275,33 @@ function generateStepSchema(allowStepTypes: string[]) {
     tagline: Joi.string().required(),
     icon: Joi.string().required(),
     params: Joi.object(),
+    inputs: Joi.when("stepId", {
+      is: AutomationActionStepId.BRANCH,
+      then: Joi.object({
+        branches: Joi.array().items(branchSchema).min(1).required(),
+        children: Joi.object()
+          .pattern(Joi.string(), Joi.array().items(Joi.link("#step")))
+          .required(),
+      }).required(),
+      otherwise: Joi.object(),
+    }),
+
     args: Joi.object(),
     type: Joi.string()
       .required()
       .valid(...allowStepTypes),
   }).unknown(true)
+}
+
+const validateStepsArray = (
+  steps: AutomationStep[],
+  helpers: Joi.CustomHelpers
+) => {
+  for (let i = 0; i < steps.length - 1; i++) {
+    if (steps[i].stepId === AutomationActionStepId.BRANCH) {
+      return helpers.error("branchStepPosition")
+    }
+  }
 }
 
 export function automationValidator(existing = false) {
@@ -284,9 +314,20 @@ export function automationValidator(existing = false) {
       definition: Joi.object({
         steps: Joi.array()
           .required()
-          .items(generateStepSchema(["ACTION", "LOGIC"])),
-        trigger: generateStepSchema(["TRIGGER"]).allow(null),
+          .items(
+            generateStepSchema([
+              AutomationStepType.ACTION,
+              AutomationStepType.LOGIC,
+            ])
+          )
+          .custom(validateStepsArray)
+          .messages({
+            branchStepPosition:
+              "Branch steps are only allowed as the last step",
+          }),
+        trigger: generateStepSchema([AutomationStepType.TRIGGER]).allow(null),
       })
+
         .required()
         .unknown(true),
     }).unknown(true)
