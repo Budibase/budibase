@@ -252,3 +252,48 @@ export function syncSchema(
 
   return view
 }
+
+export async function renameLinkedViews(table: Table, renaming: RenameColumn) {
+  const relatedTables: Record<string, Table> = {}
+
+  for (const field of Object.values(table.schema)) {
+    if (field.type !== FieldType.LINK) {
+      continue
+    }
+
+    relatedTables[field.tableId] ??= await sdk.tables.getTable(field.tableId)
+  }
+
+  for (const relatedTable of Object.values(relatedTables)) {
+    let toSave = false
+    const viewsV2 = Object.values(relatedTable.views || {}).filter(
+      sdk.views.isV2
+    )
+    if (!viewsV2) {
+      continue
+    }
+
+    for (const view of viewsV2) {
+      for (const relField of Object.keys(view.schema || {}).filter(f => {
+        const tableField = relatedTable.schema[f]
+        if (!tableField || tableField.type !== FieldType.LINK) {
+          return false
+        }
+
+        return tableField.tableId === table._id
+      })) {
+        const columns = view.schema?.[relField]?.columns
+
+        if (columns && columns[renaming.old]) {
+          columns[renaming.updated] = columns[renaming.old]
+          delete columns[renaming.old]
+          toSave = true
+        }
+      }
+    }
+
+    if (toSave) {
+      await sdk.tables.saveTable(relatedTable)
+    }
+  }
+}
