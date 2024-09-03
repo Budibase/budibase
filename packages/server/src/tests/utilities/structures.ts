@@ -30,6 +30,7 @@ import {
   BBReferenceFieldSubType,
   JsonFieldSubType,
   AutoFieldSubType,
+  CreateViewRequest,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -143,6 +144,17 @@ export function view(tableId: string) {
     ...filterView(tableId),
     ...calculationView(tableId),
   }
+}
+
+function viewV2CreateRequest(tableId: string): CreateViewRequest {
+  return {
+    tableId,
+    name: generator.guid(),
+  }
+}
+
+export const viewV2 = {
+  createRequest: viewV2CreateRequest,
 }
 
 export function automationStep(
