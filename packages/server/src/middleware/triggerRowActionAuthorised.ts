@@ -1,5 +1,5 @@
 import { Next } from "koa"
-import { Ctx } from "@budibase/types"
+import { UserCtx } from "@budibase/types"
 import { paramSubResource } from "./resourceId"
 import { docIds } from "@budibase/backend-core"
 import * as utils from "../db/utils"
@@ -9,9 +9,11 @@ export function triggerRowActionAuthorised(
   sourcePath: string,
   actionPath: string
 ) {
-  return async (ctx: Ctx, next: Next) => {
+  function extractResourceIds(ctx: UserCtx) {
+    ctx = { ...ctx }
     // Reusing the existing middleware to extract the value
     paramSubResource(sourcePath, actionPath)(ctx, () => {})
+
     const { resourceId: sourceId, subResourceId: rowActionId } = ctx
 
     const isTableId = docIds.isTableId(sourceId)
@@ -23,18 +25,24 @@ export function triggerRowActionAuthorised(
     const tableId = isTableId
       ? sourceId
       : utils.extractViewInfoFromID(sourceId).tableId
+    const viewId = isTableId ? undefined : sourceId
+    return { tableId, viewId, rowActionId }
+  }
+
+  return async (ctx: UserCtx, next: Next) => {
+    const { tableId, viewId, rowActionId } = extractResourceIds(ctx)
 
     const rowAction = await sdk.rowActions.get(tableId, rowActionId)
 
-    if (isTableId && !rowAction.permissions.table.runAllowed) {
+    if (!viewId && !rowAction.permissions.table.runAllowed) {
       ctx.throw(
         403,
-        `Row action '${rowActionId}' is not enabled for table '${sourceId}'`
+        `Row action '${rowActionId}' is not enabled for table '${tableId}'`
       )
-    } else if (isViewId && !rowAction.permissions.views[sourceId]?.runAllowed) {
+    } else if (viewId && !rowAction.permissions.views[viewId]?.runAllowed) {
       ctx.throw(
         403,
-        `Row action '${rowActionId}' is not enabled for view '${sourceId}'`
+        `Row action '${rowActionId}' is not enabled for view '${viewId}'`
       )
     }
 
