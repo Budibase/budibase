@@ -56,12 +56,17 @@ export class RowActionStore extends BudiStore {
 
     // Enable action on this view if adding via a view
     if (viewId) {
-      await this.enableView(tableId, viewId, res.id)
+      await Promise.all([
+        this.enableView(tableId, viewId, res.id),
+        automationStore.actions.fetch(),
+      ])
     } else {
-      await this.refreshRowActions(tableId)
+      await Promise.all([
+        this.refreshRowActions(tableId),
+        automationStore.actions.fetch(),
+      ])
     }
 
-    automationStore.actions.fetch()
     return res
   }
 
