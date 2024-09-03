@@ -123,7 +123,11 @@ export async function updateAllFormulasInTable(table: Table) {
 export async function finaliseRow(
   table: Table,
   row: Row,
-  { oldTable, updateFormula }: { oldTable?: Table; updateFormula: boolean } = {
+  {
+    oldTable,
+    updateFormula,
+    fromViewId,
+  }: { oldTable?: Table; updateFormula: boolean; fromViewId?: string } = {
     updateFormula: true,
   }
 ) {
@@ -154,9 +158,8 @@ export async function finaliseRow(
   if (updateFormula) {
     await updateRelatedFormula(table, enrichedRow)
   }
-  const squashed = await linkRows.squashLinksToPrimaryDisplay(
-    table,
-    enrichedRow
-  )
+  const squashed = await linkRows.squashLinks(table, enrichedRow, {
+    fromViewId,
+  })
   return { row: enrichedRow, squashed, table }
 }

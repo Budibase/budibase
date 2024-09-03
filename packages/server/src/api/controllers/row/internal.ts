@@ -23,7 +23,7 @@ import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
 import { flatten } from "lodash"
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
-  const { tableId } = utils.getSourceId(ctx)
+  const { tableId, viewId } = utils.getSourceId(ctx)
   const inputs = ctx.request.body
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
@@ -90,6 +90,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const result = await finaliseRow(table, row, {
     oldTable: dbTable,
     updateFormula: true,
+    fromViewId: viewId,
   })
 
   return { ...result, oldRow }
