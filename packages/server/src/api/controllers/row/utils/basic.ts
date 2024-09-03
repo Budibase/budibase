@@ -143,12 +143,16 @@ export function basicProcessing({
             return relatedRow
           })
           .sort((a, b) => {
-            if (!a?.[sortField]) {
+            const aField = a?.[sortField],
+              bField = b?.[sortField]
+            if (!aField) {
               return 1
-            } else if (!b?.[sortField]) {
+            } else if (!bField) {
               return -1
             }
-            return a[sortField].localeCompare(b[sortField])
+            return aField.localeCompare
+              ? aField.localeCompare(bField)
+              : aField - bField
           })
       }
     }
