@@ -17,7 +17,11 @@ import {
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
-import { isRelationshipColumn } from "../../../db/utils"
+import {
+  extractViewInfoFromID,
+  isRelationshipColumn,
+  isViewID,
+} from "../../../db/utils"
 import { isSQL } from "../../../integrations/utils"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
@@ -316,4 +320,15 @@ function validateTimeOnlyField(
 // type-guard check
 export function isArrayFilter(operator: any): operator is ArrayOperator {
   return Object.values(ArrayOperator).includes(operator)
+}
+
+export function tryExtractingTableAndViewId(tableOrViewId: string) {
+  if (isViewID(tableOrViewId)) {
+    return {
+      tableId: extractViewInfoFromID(tableOrViewId).tableId,
+      viewId: tableOrViewId,
+    }
+  }
+
+  return { tableId: tableOrViewId }
 }

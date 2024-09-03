@@ -18,6 +18,10 @@ import {
   ViewV2,
   SearchResponse,
   BasicOperator,
+  RelationshipType,
+  TableSchema,
+  ViewFieldMetadata,
+  RenameColumn,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -1175,6 +1179,263 @@ describe.each([
               },
             }
           )
+        })
+      })
+
+      describe("foreign relationship columns", () => {
+        const createAuxTable = () =>
+          config.api.table.save(
+            saveTableRequest({
+              primaryDisplay: "name",
+              schema: {
+                name: { name: "name", type: FieldType.STRING },
+                age: { name: "age", type: FieldType.NUMBER },
+              },
+            })
+          )
+
+        const createMainTable = async (
+          links: {
+            name: string
+            tableId: string
+            fk: string
+          }[]
+        ) => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {},
+            })
+          )
+          await config.api.table.save({
+            ...table,
+            schema: {
+              ...table.schema,
+              ...links.reduce<TableSchema>((acc, c) => {
+                acc[c.name] = {
+                  name: c.name,
+                  relationshipType: RelationshipType.ONE_TO_MANY,
+                  type: FieldType.LINK,
+                  tableId: c.tableId,
+                  fieldName: c.fk,
+                  constraints: { type: "array" },
+                }
+                return acc
+              }, {}),
+            },
+          })
+          return table
+        }
+
+        const createView = async (
+          tableId: string,
+          schema: Record<string, ViewFieldMetadata>
+        ) =>
+          await config.api.viewV2.create({
+            name: generator.guid(),
+            tableId,
+            schema,
+          })
+
+        const renameColumn = async (table: Table, renaming: RenameColumn) => {
+          const newSchema = { ...table.schema }
+          newSchema[renaming.updated] = {
+            ...table.schema[renaming.old],
+            name: renaming.updated,
+          }
+          delete newSchema[renaming.old]
+
+          await config.api.table.save({
+            ...table,
+            schema: newSchema,
+            _rename: renaming,
+          })
+        }
+
+        it("updating a column will update link columns configuration", async () => {
+          let auxTable = await createAuxTable()
+
+          const table = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+          ])
+          // Refetch auxTable
+          auxTable = await config.api.table.get(auxTable._id!)
+
+          const view = await createView(table._id!, {
+            aux: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
+                age: { visible: true, readonly: true },
+              },
+            },
+          })
+
+          await renameColumn(auxTable, { old: "age", updated: "dob" })
+
+          const updatedView = await config.api.viewV2.get(view.id)
+          expect(updatedView).toEqual(
+            expect.objectContaining({
+              schema: expect.objectContaining({
+                aux: expect.objectContaining({
+                  columns: {
+                    id: { visible: false, readonly: false },
+                    name: { visible: true, readonly: true },
+                    dob: { visible: true, readonly: true },
+                  },
+                }),
+              }),
+            })
+          )
+        })
+
+        it("handles multiple fields using the same table", async () => {
+          let auxTable = await createAuxTable()
+
+          const table = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+            { name: "aux2", tableId: auxTable._id!, fk: "fk_aux2" },
+          ])
+          // Refetch auxTable
+          auxTable = await config.api.table.get(auxTable._id!)
+
+          const view = await createView(table._id!, {
+            aux: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
+                age: { visible: true, readonly: true },
+              },
+            },
+            aux2: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
+                age: { visible: true, readonly: true },
+              },
+            },
+          })
+
+          await renameColumn(auxTable, { old: "age", updated: "dob" })
+
+          const updatedView = await config.api.viewV2.get(view.id)
+          expect(updatedView).toEqual(
+            expect.objectContaining({
+              schema: expect.objectContaining({
+                aux: expect.objectContaining({
+                  columns: {
+                    id: { visible: false, readonly: false },
+                    name: { visible: true, readonly: true },
+                    dob: { visible: true, readonly: true },
+                  },
+                }),
+                aux2: expect.objectContaining({
+                  columns: {
+                    id: { visible: false, readonly: false },
+                    name: { visible: true, readonly: true },
+                    dob: { visible: true, readonly: true },
+                  },
+                }),
+              }),
+            })
+          )
+        })
+
+        it("does not rename columns with the same name but from other tables", async () => {
+          let auxTable = await createAuxTable()
+          let aux2Table = await createAuxTable()
+
+          const table = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+            { name: "aux2", tableId: aux2Table._id!, fk: "fk_aux2" },
+          ])
+
+          // Refetch auxTable
+          auxTable = await config.api.table.get(auxTable._id!)
+
+          const view = await createView(table._id!, {
+            aux: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
+              },
+            },
+            aux2: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
+              },
+            },
+          })
+
+          await renameColumn(auxTable, { old: "name", updated: "fullName" })
+
+          const updatedView = await config.api.viewV2.get(view.id)
+          expect(updatedView).toEqual(
+            expect.objectContaining({
+              schema: expect.objectContaining({
+                aux: expect.objectContaining({
+                  columns: {
+                    id: { visible: false, readonly: false },
+                    fullName: { visible: true, readonly: true },
+                    age: { visible: false, readonly: false },
+                  },
+                }),
+                aux2: expect.objectContaining({
+                  columns: {
+                    id: { visible: false, readonly: false },
+                    name: { visible: true, readonly: true },
+                    age: { visible: false, readonly: false },
+                  },
+                }),
+              }),
+            })
+          )
+        })
+
+        it("updates all views references", async () => {
+          let auxTable = await createAuxTable()
+
+          const table1 = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux_table1" },
+          ])
+          const table2 = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux_table2" },
+          ])
+
+          // Refetch auxTable
+          auxTable = await config.api.table.get(auxTable._id!)
+
+          const viewSchema = {
+            aux: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
+                age: { visible: true, readonly: true },
+              },
+            },
+          }
+          const view1 = await createView(table1._id!, viewSchema)
+          const view2 = await createView(table1._id!, viewSchema)
+          const view3 = await createView(table2._id!, viewSchema)
+
+          await renameColumn(auxTable, { old: "age", updated: "dob" })
+
+          for (const view of [view1, view2, view3]) {
+            const updatedView = await config.api.viewV2.get(view.id)
+            expect(updatedView).toEqual(
+              expect.objectContaining({
+                schema: expect.objectContaining({
+                  aux: expect.objectContaining({
+                    columns: {
+                      id: { visible: false, readonly: false },
+                      name: { visible: true, readonly: true },
+                      dob: { visible: true, readonly: true },
+                    },
+                  }),
+                }),
+              })
+            )
+          }
         })
       })
     })
