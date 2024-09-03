@@ -25,7 +25,7 @@
     {/if}
   </div>
   <div class="header">
-    <Body>{config.name}</Body>
+    <Body>{config.provider}</Body>
     <Label>{config.name}</Label>
   </div>
   <div class="controls">
