@@ -1,8 +1,11 @@
 import {
+  FieldType,
+  RelationSchemaField,
   RenameColumn,
+  Table,
   TableSchema,
   View,
-  ViewUIFieldMetadata,
+  ViewFieldMetadata,
   ViewV2,
   ViewV2Enriched,
 } from "@budibase/types"
@@ -57,7 +60,7 @@ async function guardViewSchema(
     if (viewSchema[field].readonly) {
       if (
         !(await features.isViewReadonlyColumnsEnabled()) &&
-        !(tableSchemaField as ViewUIFieldMetadata).readonly
+        !(tableSchemaField as ViewFieldMetadata).readonly
       ) {
         throw new HTTPError(`Readonly fields are not enabled`, 400)
       }
@@ -158,23 +161,63 @@ export function allowedFields(
   ]
 }
 
-export function enrichSchema(
+export async function enrichSchema(
   view: ViewV2,
   tableSchema: TableSchema
-): ViewV2Enriched {
-  let schema: TableSchema = {}
-  const anyViewOrder = Object.values(view.schema || {}).some(
-    ui => ui.order != null
-  )
+): Promise<ViewV2Enriched> {
+  const tableCache: Record<string, Table> = {}
+
+  async function populateRelTableSchema(
+    tableId: string,
+    viewFields: Record<string, RelationSchemaField>
+  ) {
+    if (!tableCache[tableId]) {
+      tableCache[tableId] = await sdk.tables.getTable(tableId)
+    }
+    const relTable = tableCache[tableId]
+
+    const result: Record<string, RelationSchemaField> = {}
+
+    for (const relTableFieldName of Object.keys(relTable.schema)) {
+      const relTableField = relTable.schema[relTableFieldName]
+      if ([FieldType.LINK, FieldType.FORMULA].includes(relTableField.type)) {
+        continue
+      }
+
+      if (relTableField.visible === false) {
+        continue
+      }
+
+      const isVisible = !!viewFields[relTableFieldName]?.visible
+      const isReadonly = !!viewFields[relTableFieldName]?.readonly
+      result[relTableFieldName] = {
+        visible: isVisible,
+        readonly: isReadonly,
+      }
+    }
+    return result
+  }
+
+  let schema: ViewV2Enriched["schema"] = {}
+
+  const viewSchema = view.schema || {}
+  const anyViewOrder = Object.values(viewSchema).some(ui => ui.order != null)
   for (const key of Object.keys(tableSchema).filter(
-    key => tableSchema[key].visible !== false
+    k => tableSchema[k].visible !== false
   )) {
     // if nothing specified in view, then it is not visible
-    const ui = view.schema?.[key] || { visible: false }
+    const ui = viewSchema[key] || { visible: false }
     schema[key] = {
       ...tableSchema[key],
       ...ui,
       order: anyViewOrder ? ui?.order ?? undefined : tableSchema[key].order,
+    }
+
+    if (schema[key].type === FieldType.LINK) {
+      schema[key].columns = await populateRelTableSchema(
+        schema[key].tableId,
+        viewSchema[key]?.columns || {}
+      )
     }
   }
 
@@ -208,4 +251,49 @@ export function syncSchema(
   }
 
   return view
+}
+
+export async function renameLinkedViews(table: Table, renaming: RenameColumn) {
+  const relatedTables: Record<string, Table> = {}
+
+  for (const field of Object.values(table.schema)) {
+    if (field.type !== FieldType.LINK) {
+      continue
+    }
+
+    relatedTables[field.tableId] ??= await sdk.tables.getTable(field.tableId)
+  }
+
+  for (const relatedTable of Object.values(relatedTables)) {
+    let toSave = false
+    const viewsV2 = Object.values(relatedTable.views || {}).filter(
+      sdk.views.isV2
+    )
+    if (!viewsV2) {
+      continue
+    }
+
+    for (const view of viewsV2) {
+      for (const relField of Object.keys(view.schema || {}).filter(f => {
+        const tableField = relatedTable.schema[f]
+        if (!tableField || tableField.type !== FieldType.LINK) {
+          return false
+        }
+
+        return tableField.tableId === table._id
+      })) {
+        const columns = view.schema?.[relField]?.columns
+
+        if (columns && columns[renaming.old]) {
+          columns[renaming.updated] = columns[renaming.old]
+          delete columns[renaming.old]
+          toSave = true
+        }
+      }
+    }
+
+    if (toSave) {
+      await sdk.tables.saveTable(relatedTable)
+    }
+  }
 }

@@ -40,6 +40,8 @@ import {
   TableSchema,
   JsonFieldSubType,
   RowExportFormat,
+  FeatureFlag,
+  RelationSchemaField,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -1231,7 +1233,7 @@ describe.each([
     })
 
     it.each([{ not: "valid" }, { rows: 123 }, "invalid"])(
-      "Should ignore malformed/invalid delete request: %s",
+      "should ignore malformed/invalid delete request: %s",
       async (request: any) => {
         const rowUsage = await getRowUsage()
 
@@ -2425,6 +2427,376 @@ describe.each([
       })
     })
   })
+
+  // Upserting isn't yet supported in MSSQL or Oracle, see:
+  //   https://github.com/knex/knex/pull/6050
+  !isMSSQL &&
+    !isOracle &&
+    describe("relationships", () => {
+      let tableId: string
+      let viewId: string
+
+      let auxData: Row[] = []
+
+      let flagCleanup: (() => void) | undefined
+
+      beforeAll(async () => {
+        flagCleanup = setCoreEnv({
+          TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
+        })
+
+        const aux2Table = await config.api.table.save(saveTableRequest())
+        const aux2Data = await config.api.row.save(aux2Table._id!, {})
+
+        const auxTable = await config.api.table.save(
+          saveTableRequest({
+            primaryDisplay: "name",
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+              age: {
+                name: "age",
+                type: FieldType.NUMBER,
+                constraints: { presence: true },
+              },
+              address: {
+                name: "address",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+                visible: false,
+              },
+              link: {
+                name: "link",
+                type: FieldType.LINK,
+                tableId: aux2Table._id!,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+                fieldName: "fk_aux",
+                constraints: { presence: true },
+              },
+              formula: {
+                name: "formula",
+                type: FieldType.FORMULA,
+                formula: "{{ any }}",
+                constraints: { presence: true },
+              },
+            },
+          })
+        )
+        const auxTableId = auxTable._id!
+
+        for (const name of generator.unique(() => generator.name(), 10)) {
+          auxData.push(
+            await config.api.row.save(auxTableId, {
+              name,
+              age: generator.age(),
+              address: generator.address(),
+              link: [aux2Data],
+            })
+          )
+        }
+
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              title: {
+                name: "title",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+              relWithNoSchema: {
+                name: "relWithNoSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithNoSchema",
+                constraints: { presence: true },
+              },
+              relWithEmptySchema: {
+                name: "relWithEmptySchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithEmptySchema",
+                constraints: { presence: true },
+              },
+              relWithFullSchema: {
+                name: "relWithFullSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithFullSchema",
+                constraints: { presence: true },
+              },
+              relWithHalfSchema: {
+                name: "relWithHalfSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithHalfSchema",
+                constraints: { presence: true },
+              },
+              relWithIllegalSchema: {
+                name: "relWithIllegalSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithIllegalSchema",
+                constraints: { presence: true },
+              },
+            },
+          })
+        )
+        tableId = table._id!
+        const view = await config.api.viewV2.create({
+          name: generator.guid(),
+          tableId,
+          schema: {
+            title: {
+              visible: true,
+            },
+            relWithNoSchema: {
+              visible: true,
+            },
+            relWithEmptySchema: {
+              visible: true,
+              columns: {},
+            },
+            relWithFullSchema: {
+              visible: true,
+              columns: Object.keys(auxTable.schema).reduce<
+                Record<string, RelationSchemaField>
+              >((acc, c) => ({ ...acc, [c]: { visible: true } }), {}),
+            },
+            relWithHalfSchema: {
+              visible: true,
+              columns: {
+                name: { visible: true },
+                age: { visible: false, readonly: true },
+              },
+            },
+            relWithIllegalSchema: {
+              visible: true,
+              columns: {
+                name: { visible: true },
+                address: { visible: true },
+                unexisting: { visible: true },
+              },
+            },
+          },
+        })
+
+        viewId = view.id
+      })
+
+      afterAll(() => {
+        flagCleanup?.()
+      })
+
+      const testScenarios: [string, (row: Row) => Promise<Row> | Row][] = [
+        ["get row", (row: Row) => config.api.row.get(viewId, row._id!)],
+        [
+          "from view search",
+          async (row: Row) => {
+            const { rows } = await config.api.viewV2.search(viewId)
+            return rows.find(r => r._id === row._id!)
+          },
+        ],
+        ["from original saved row", (row: Row) => row],
+        ["from updated  row", (row: Row) => config.api.row.save(viewId, row)],
+      ]
+
+      it.each(testScenarios)(
+        "can retrieve rows with populated relationships (via %s)",
+        async (__, retrieveDelegate) => {
+          const otherRows = _.sampleSize(auxData, 5)
+
+          const row = await config.api.row.save(viewId, {
+            title: generator.word(),
+            relWithNoSchema: [otherRows[0]],
+            relWithEmptySchema: [otherRows[1]],
+            relWithFullSchema: [otherRows[2]],
+            relWithHalfSchema: [otherRows[3]],
+            relWithIllegalSchema: [otherRows[4]],
+          })
+
+          const retrieved = await retrieveDelegate(row)
+
+          expect(retrieved).toEqual(
+            expect.objectContaining({
+              title: row.title,
+              relWithNoSchema: [
+                {
+                  _id: otherRows[0]._id,
+                  primaryDisplay: otherRows[0].name,
+                },
+              ],
+              relWithEmptySchema: [
+                {
+                  _id: otherRows[1]._id,
+                  primaryDisplay: otherRows[1].name,
+                },
+              ],
+              relWithFullSchema: [
+                {
+                  _id: otherRows[2]._id,
+                  primaryDisplay: otherRows[2].name,
+                  name: otherRows[2].name,
+                  age: otherRows[2].age,
+                  id: otherRows[2].id,
+                },
+              ],
+              relWithHalfSchema: [
+                {
+                  _id: otherRows[3]._id,
+                  primaryDisplay: otherRows[3].name,
+                  name: otherRows[3].name,
+                },
+              ],
+              relWithIllegalSchema: [
+                {
+                  _id: otherRows[4]._id,
+                  primaryDisplay: otherRows[4].name,
+                  name: otherRows[4].name,
+                },
+              ],
+            })
+          )
+        }
+      )
+
+      it.each(testScenarios)(
+        "does not enrich relationships when not enabled (via %s)",
+        async (__, retrieveDelegate) => {
+          await withCoreEnv(
+            {
+              TENANT_FEATURE_FLAGS: ``,
+            },
+            async () => {
+              const otherRows = _.sampleSize(auxData, 5)
+
+              const row = await config.api.row.save(viewId, {
+                title: generator.word(),
+                relWithNoSchema: [otherRows[0]],
+                relWithEmptySchema: [otherRows[1]],
+                relWithFullSchema: [otherRows[2]],
+                relWithHalfSchema: [otherRows[3]],
+                relWithIllegalSchema: [otherRows[4]],
+              })
+
+              const retrieved = await retrieveDelegate(row)
+
+              expect(retrieved).toEqual(
+                expect.objectContaining({
+                  title: row.title,
+                  relWithNoSchema: [
+                    {
+                      _id: otherRows[0]._id,
+                      primaryDisplay: otherRows[0].name,
+                    },
+                  ],
+                  relWithEmptySchema: [
+                    {
+                      _id: otherRows[1]._id,
+                      primaryDisplay: otherRows[1].name,
+                    },
+                  ],
+                  relWithFullSchema: [
+                    {
+                      _id: otherRows[2]._id,
+                      primaryDisplay: otherRows[2].name,
+                    },
+                  ],
+                  relWithHalfSchema: [
+                    {
+                      _id: otherRows[3]._id,
+                      primaryDisplay: otherRows[3].name,
+                    },
+                  ],
+                  relWithIllegalSchema: [
+                    {
+                      _id: otherRows[4]._id,
+                      primaryDisplay: otherRows[4].name,
+                    },
+                  ],
+                })
+              )
+            }
+          )
+        }
+      )
+
+      it.each([
+        [
+          "from table fetch",
+          async (row: Row) => {
+            const rows = await config.api.row.fetch(tableId)
+            return rows.find(r => r._id === row._id!)
+          },
+        ],
+        [
+          "from table search",
+          async (row: Row) => {
+            const { rows } = await config.api.row.search(tableId)
+            return rows.find(r => r._id === row._id!)
+          },
+        ],
+      ])(
+        "does not enrich when fetching from the table (via %s)",
+        async (__, retrieveDelegate) => {
+          const otherRows = _.sampleSize(auxData, 5)
+
+          const row = await config.api.row.save(viewId, {
+            title: generator.word(),
+            relWithNoSchema: [otherRows[0]],
+            relWithEmptySchema: [otherRows[1]],
+            relWithFullSchema: [otherRows[2]],
+            relWithHalfSchema: [otherRows[3]],
+            relWithIllegalSchema: [otherRows[4]],
+          })
+
+          const retrieved = await retrieveDelegate(row)
+
+          expect(retrieved).toEqual(
+            expect.objectContaining({
+              title: row.title,
+              relWithNoSchema: [
+                {
+                  _id: otherRows[0]._id,
+                  primaryDisplay: otherRows[0].name,
+                },
+              ],
+              relWithEmptySchema: [
+                {
+                  _id: otherRows[1]._id,
+                  primaryDisplay: otherRows[1].name,
+                },
+              ],
+              relWithFullSchema: [
+                {
+                  _id: otherRows[2]._id,
+                  primaryDisplay: otherRows[2].name,
+                },
+              ],
+              relWithHalfSchema: [
+                {
+                  _id: otherRows[3]._id,
+                  primaryDisplay: otherRows[3].name,
+                },
+              ],
+              relWithIllegalSchema: [
+                {
+                  _id: otherRows[4]._id,
+                  primaryDisplay: otherRows[4].name,
+                },
+              ],
+            })
+          )
+        }
+      )
+    })
 
   describe("Formula fields", () => {
     let table: Table
