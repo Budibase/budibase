@@ -1455,6 +1455,101 @@ describe.each([
             })
           )
         })
+
+        it("updates all views references", async () => {
+          let auxTable = await config.api.table.save(
+            saveTableRequest({
+              primaryDisplay: "name",
+              schema: {
+                name: { name: "name", type: FieldType.STRING },
+                age: { name: "age", type: FieldType.NUMBER },
+              },
+            })
+          )
+
+          const createTableWithRelationship = async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {},
+              })
+            )
+            await config.api.table.save({
+              ...table,
+              schema: {
+                ...table.schema,
+                aux: {
+                  name: "aux",
+                  relationshipType: RelationshipType.ONE_TO_MANY,
+                  type: FieldType.LINK,
+                  tableId: auxTable._id!,
+                  fieldName: `fk_${table.name}`,
+                  constraints: { type: "array" },
+                },
+              },
+            })
+
+            return table
+          }
+
+          const table1 = await createTableWithRelationship()
+          const table2 = await createTableWithRelationship()
+
+          // Refetch auxTable
+          auxTable = await config.api.table.get(auxTable._id!)
+
+          const createView = async (tableId: string) => {
+            const view = await config.api.viewV2.create({
+              name: generator.guid(),
+              tableId,
+              schema: {
+                aux: {
+                  visible: true,
+                  columns: {
+                    name: { visible: true, readonly: true },
+                    age: { visible: true, readonly: true },
+                  },
+                },
+              },
+            })
+            return view
+          }
+
+          const view1 = await createView(table1._id!)
+          const view2 = await createView(table1._id!)
+          const view3 = await createView(table2._id!)
+
+          await config.api.table.save({
+            ...auxTable,
+            schema: {
+              ...auxTable.schema,
+              // @ts-ignore deleting age to force the rename
+              age: undefined,
+              dob: {
+                name: "dob",
+                type: FieldType.NUMBER,
+                constraints: { presence: true },
+              },
+            },
+            _rename: { old: "age", updated: "dob" },
+          })
+
+          for (const view of [view1, view2, view3]) {
+            const updatedView = await config.api.viewV2.get(view.id)
+            expect(updatedView).toEqual(
+              expect.objectContaining({
+                schema: expect.objectContaining({
+                  aux: expect.objectContaining({
+                    columns: {
+                      id: { visible: false, readonly: false },
+                      name: { visible: true, readonly: true },
+                      dob: { visible: true, readonly: true },
+                    },
+                  }),
+                }),
+              })
+            )
+          }
+        })
       })
     })
   })
