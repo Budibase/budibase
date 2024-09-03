@@ -123,7 +123,7 @@ export interface AIInnerConfig {
   defaultModel: string
 }
 
-export interface AIConfig extends Config<AIInnerConfig> {}
+export interface AIConfig extends Config<AIInnerConfig[]> {}
 
 export const isSettingsConfig = (config: Config): config is SettingsConfig =>
   config.type === ConfigType.SETTINGS

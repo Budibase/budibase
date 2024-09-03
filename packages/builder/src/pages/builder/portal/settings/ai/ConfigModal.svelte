@@ -8,26 +8,16 @@
     Body,
     notifications,
   } from "@budibase/bbui"
-  import { ConfigMap } from "./constants"
+  import { ConfigMap, Providers } from "./constants"
   import { API } from "api"
 
-  // TODO: Update these
-  const providers = [
-    "OpenAI",
-    "Anthropic",
-    "Together AI",
-    "Azure Open AI",
-    "Custom"
-  ]
-
-  const models = [
-    "gpt4o-mini",
-  ]
-  
-  const defaultConfig = {
+  export let defaultConfig = {
     active: false,
     isDefault: false,
   }
+
+  export let saveHandler
+  export let deleteHandler
 
   let aiConfig = defaultConfig
   let validation
@@ -43,48 +33,15 @@
     if (ConfigMap[provider]) {
       aiConfig = {
         ...aiConfig,
-        ...ConfigMap[provider]
-      }
-    } else {
-      aiConfig = {
-        ...aiConfig,
+        ...ConfigMap[provider],
         provider
       }
-    }
-  }
-
-  async function saveConfig() {
-    const config = {
-      type: "ai",
-      config: [
-        // TODO: include the ones that are already there, or just handle this in the backend
-        aiConfig,
-      ]
-    }
-    try {
-      const savedConfig = await API.saveConfig(config)
-      aiConfig._rev = savedConfig._rev
-      aiConfig._id = savedConfig._id
-      notifications.success(`Configuration saved`)
-    } catch (error) {
-      notifications.error(
-        `Failed to save AI Configuration, reason: ${error?.message || "Unknown"}`
-      )
-    }
-  }
-
-  async function deleteConfig() {
-    // Delete a configuration
-    try {
-      // await API.deleteConfig({
-      //   id: smtpConfig._id,
-      //   rev: smtpConfig._rev,
-      // })
-      notifications.success(`Deleted config`)
-    } catch (error) {
-      notifications.error(
-        `Failed to clear email settings, reason: ${error?.message || "Unknown"}`
-      )
+    } else {
+      aiConfig.provider = provider
+      // aiConfig = {
+      //   ...aiConfig,
+      //   provider
+      // }
     }
   }
 
@@ -93,8 +50,8 @@
 <ModalContent
     confirmText={"Save"}
     cancelText={"Delete"}
-    onConfirm={saveConfig}
-    onCancel={deleteConfig}
+    onConfirm={saveHandler}
+    onCancel={deleteHandler}
     disabled={!validation}
     size="M"
     title="Custom AI Configuration"
@@ -104,16 +61,16 @@
     <Select
       placeholder={null}
       bind:value={aiConfig.provider}
-      options={providers}
+      options={Object.keys(Providers)}
       on:change={prefillConfig}
     />
   </div>
   <div class="form-row">
     <Label size="M">Default Model</Label>
     <Select
-      placeholder={null}
+      placeholder={aiConfig.provider ? "Choose an option" : "Select a provider first"}
       bind:value={aiConfig.defaultModel}
-      options={models}
+      options={aiConfig.provider ? Providers[aiConfig.provider].models : []}
     />
   </div>
   <div class="form-row">
@@ -126,7 +83,7 @@
   </div>
   <div class="form-row">
     <Label size="M">API Key</Label>
-    <Input bind:value={aiConfig.apiKey}/>
+    <Input type="password" bind:value={aiConfig.apiKey}/>
   </div>
   <Toggle text="Active" bind:value={aiConfig.active}/>
   <Toggle text="Set as default" bind:value={aiConfig.isDefault}/>
