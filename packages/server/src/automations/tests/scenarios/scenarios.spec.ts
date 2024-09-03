@@ -23,42 +23,148 @@ describe("Automation Scenarios", () => {
 
   afterAll(setup.afterAll)
 
-  // eslint-disable-next-line jest/no-commented-out-tests
-  // describe("Branching automations", () => {
-  // eslint-disable-next-line jest/no-commented-out-tests
-  // it("should run an automation with a trigger, loop, and create row step", async () => {
-  //   const builder = createAutomationBuilder({
-  //     name: "Test Trigger with Loop and Create Row",
-  //   })
+  describe("Branching automations", () => {
+    it("should run a multiple nested branching automation", async () => {
+      const builder = createAutomationBuilder({
+        name: "Test Trigger with Loop and Create Row",
+      })
 
-  //   builder
-  //     .serverLog({ text: "Starting automation" })
-  //     .branch({
-  //       topLevelBranch1: {
-  //         steps: stepBuilder =>
-  //           stepBuilder.serverLog({ text: "Branch 1" }).branch({
-  //             branch1: {
-  //               steps: stepBuilder =>
-  //                 stepBuilder.serverLog({ text: "Branch 1.1" }),
-  //               condition: { notEmpty: { column: 10 } },
-  //             },
-  //             branch2: {
-  //               steps: stepBuilder =>
-  //                 stepBuilder.serverLog({ text: "Branch 1.2" }),
-  //               condition: { fuzzy: { column: "sadsd" } },
-  //             },
-  //           }),
-  //         condition: { equal: { column: 10 } },
-  //       },
-  //       topLevelBranch2: {
-  //         steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
-  //         condition: { equal: { column: 20 } },
-  //       },
-  //     })
-  //     .run()
-  // })
+      const results = await builder
+        .appAction({ fields: {} })
+        .serverLog({ text: "Starting automation" })
+        .branch({
+          topLevelBranch1: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Branch 1" }).branch({
+                branch1: {
+                  steps: stepBuilder =>
+                    stepBuilder.serverLog({ text: "Branch 1.1" }),
+                  condition: {
+                    equal: { "steps.1.success": true },
+                  },
+                },
+                branch2: {
+                  steps: stepBuilder =>
+                    stepBuilder.serverLog({ text: "Branch 1.2" }),
+                  condition: {
+                    equal: { "steps.1.success": false },
+                  },
+                },
+              }),
+            condition: {
+              equal: { "steps.1.success": true },
+            },
+          },
+          topLevelBranch2: {
+            steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
+            condition: {
+              equal: { "steps.1.success": false },
+            },
+          },
+        })
+        .run()
 
-  // })
+      expect(results.steps[2].outputs.message).toContain("Branch 1.1")
+    })
+
+    it("should execute correct branch based on string equality", async () => {
+      const builder = createAutomationBuilder({
+        name: "String Equality Branching",
+      })
+
+      const results = await builder
+        .appAction({ fields: { status: "active" } })
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {
+              equal: { "trigger.fields.status": "active" },
+            },
+          },
+          inactiveBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Inactive user" }),
+            condition: {
+              equal: { "trigger.fields.status": "inactive" },
+            },
+          },
+        })
+        .run()
+
+      expect(results.steps[0].outputs.message).toContain("Active user")
+    })
+
+    it("should handle multiple conditions with AND operator", async () => {
+      const builder = createAutomationBuilder({
+        name: "Multiple AND Conditions Branching",
+      })
+
+      const results = await builder
+        .appAction({ fields: { status: "active", role: "admin" } })
+        .branch({
+          activeAdminBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active admin user" }),
+            condition: {
+              $and: {
+                conditions: [
+                  { equal: { "trigger.fields.status": "active" } },
+                  { equal: { "trigger.fields.role": "admin" } },
+                ],
+              },
+            },
+          },
+          otherBranch: {
+            steps: stepBuilder => stepBuilder.serverLog({ text: "Other user" }),
+            condition: {
+              notEqual: { "trigger.fields.status": "active" },
+            },
+          },
+        })
+        .run()
+
+      expect(results.steps[0].outputs.message).toContain("Active admin user")
+    })
+
+    it("should handle multiple conditions with OR operator", async () => {
+      const builder = createAutomationBuilder({
+        name: "Multiple OR Conditions Branching",
+      })
+
+      const results = await builder
+        .appAction({ fields: { status: "test", role: "user" } })
+        .branch({
+          specialBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Special user" }),
+            condition: {
+              $or: {
+                conditions: [
+                  { equal: { "trigger.fields.status": "test" } },
+                  { equal: { "trigger.fields.role": "admin" } },
+                ],
+              },
+            },
+          },
+          regularBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Regular user" }),
+            condition: {
+              $and: {
+                conditions: [
+                  { notEqual: { "trigger.fields.status": "active" } },
+                  { notEqual: { "trigger.fields.role": "admin" } },
+                ],
+              },
+            },
+          },
+        })
+        .run()
+
+      expect(results.steps[0].outputs.message).toContain("Special user")
+    })
+  })
 
   describe("Loop automations", () => {
     it("should run an automation with a trigger, loop, and create row step", async () => {
@@ -106,6 +212,89 @@ describe("Automation Scenarios", () => {
           },
         })
       })
+    })
+
+    it("should run an automation where a loop step is between two normal steps to ensure context correctness", async () => {
+      const builder = createAutomationBuilder({
+        name: "Test Trigger with Loop and Create Row",
+      })
+
+      const results = await builder
+        .rowSaved(
+          { tableId: table._id! },
+          {
+            row: {
+              name: "Trigger Row",
+              description: "This row triggers the automation",
+            },
+            id: "1234",
+            revision: "1",
+          }
+        )
+        .queryRows({
+          tableId: table._id!,
+        })
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: [1, 2, 3],
+        })
+        .serverLog({ text: "Message {{loop.currentItem}}" })
+        .serverLog({ text: "{{steps.1.rows.0._id}}" })
+        .run()
+
+      results.steps[1].outputs.items.forEach(
+        (output: ServerLogStepOutputs, index: number) => {
+          expect(output).toMatchObject({
+            success: true,
+          })
+          expect(output.message).toContain(`Message ${index + 1}`)
+        }
+      )
+
+      expect(results.steps[2].outputs.message).toContain("ro_ta")
+    })
+
+    it("if an incorrect type is passed to the loop it should return an error", async () => {
+      const builder = createAutomationBuilder({
+        name: "Test Loop error",
+      })
+
+      const results = await builder
+        .appAction({ fields: {} })
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: "1, 2, 3",
+        })
+        .serverLog({ text: "Message {{loop.currentItem}}" })
+        .run()
+
+      expect(results.steps[0].outputs).toEqual({
+        success: false,
+        status: "INCORRECT_TYPE",
+      })
+    })
+
+    it("ensure the loop stops if the failure condition is reached", async () => {
+      const builder = createAutomationBuilder({
+        name: "Test Loop error",
+      })
+
+      const results = await builder
+        .appAction({ fields: {} })
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: ["test", "test2", "test3"],
+          failure: "test2",
+        })
+        .serverLog({ text: "Message {{loop.currentItem}}" })
+        .run()
+
+      expect(results.steps[0].outputs).toEqual(
+        expect.objectContaining({
+          status: "FAILURE_CONDITION_MET",
+          success: false,
+        })
+      )
     })
 
     it("should run an automation where a loop is successfully run twice", async () => {
