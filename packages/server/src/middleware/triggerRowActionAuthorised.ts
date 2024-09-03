@@ -5,16 +5,24 @@ import { docIds } from "@budibase/backend-core"
 import * as utils from "../db/utils"
 import sdk from "../sdk"
 
+async function executeMiddleware(
+  ctx: UserCtx,
+  delegate: (ctx: UserCtx, next: any) => any
+) {
+  await new Promise<void>(r => delegate(ctx, () => r()))
+}
+
 export function triggerRowActionAuthorised(
   sourcePath: string,
   actionPath: string
 ) {
-  function extractResourceIds(ctx: UserCtx) {
+  async function extractResourceIds(ctx: UserCtx) {
     ctx = { ...ctx }
     // Reusing the existing middleware to extract the value
-    paramSubResource(sourcePath, actionPath)(ctx, () => {})
+    await executeMiddleware(ctx, paramSubResource(sourcePath, actionPath))
 
-    const { resourceId: sourceId, subResourceId: rowActionId } = ctx
+    const sourceId: string = ctx.resourceId
+    const rowActionId: String = ctx.subResourceId
 
     const isTableId = docIds.isTableId(sourceId)
     const isViewId = utils.isViewID(sourceId)
