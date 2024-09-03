@@ -43,6 +43,19 @@ export type RelationSchemaField = {
   readonly?: boolean
 }
 
+export enum CalculationType {
+  SUM = "sum",
+  AVG = "avg",
+  COUNT = "count",
+  MIN = "min",
+  MAX = "max",
+}
+
+export type ViewCalculationFieldMetadata = ViewUIFieldMetadata & {
+  calculationType: CalculationType
+  field: string
+}
+
 export interface ViewV2 {
   version: 2
   id: string
@@ -55,7 +68,7 @@ export interface ViewV2 {
     order?: SortOrder
     type?: SortType
   }
-  schema?: Record<string, ViewFieldMetadata>
+  schema?: Record<string, ViewFieldMetadata | ViewCalculationFieldMetadata>
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema

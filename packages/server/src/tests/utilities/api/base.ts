@@ -40,6 +40,7 @@ export interface RequestOpts {
   >
   expectations?: Expectations
   publicUser?: boolean
+  useProdApp?: boolean
 }
 
 export abstract class TestAPI {
@@ -107,8 +108,12 @@ export abstract class TestAPI {
     }
 
     const headersFn = publicUser
-      ? this.config.publicHeaders.bind(this.config)
-      : this.config.defaultHeaders.bind(this.config)
+      ? (_extras = {}) =>
+          this.config.publicHeaders.bind(this.config)({
+            prodApp: opts?.useProdApp,
+          })
+      : (extras = {}) =>
+          this.config.defaultHeaders.bind(this.config)(extras, opts?.useProdApp)
 
     const app = getServer()
     let req = request(app)[method](url)
