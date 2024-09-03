@@ -1177,7 +1177,9 @@ describe.each([
             }
           )
         })
+      })
 
+      describe("foreign relationship columns", () => {
         it("updating a column will update link columns configuration", async () => {
           let auxTable = await config.api.table.save(
             saveTableRequest({
