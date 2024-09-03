@@ -1183,16 +1183,8 @@ describe.each([
             saveTableRequest({
               primaryDisplay: "name",
               schema: {
-                name: {
-                  name: "name",
-                  type: FieldType.STRING,
-                  constraints: { presence: true },
-                },
-                age: {
-                  name: "age",
-                  type: FieldType.NUMBER,
-                  constraints: { presence: true },
-                },
+                name: { name: "name", type: FieldType.STRING },
+                age: { name: "age", type: FieldType.NUMBER },
               },
             })
           )
@@ -1257,6 +1249,204 @@ describe.each([
                     id: { visible: false, readonly: false },
                     name: { visible: true, readonly: true },
                     dob: { visible: true, readonly: true },
+                  },
+                }),
+              }),
+            })
+          )
+        })
+
+        it("handles multiple fields using the same table", async () => {
+          let auxTable = await config.api.table.save(
+            saveTableRequest({
+              primaryDisplay: "name",
+              schema: {
+                name: { name: "name", type: FieldType.STRING },
+                age: { name: "age", type: FieldType.NUMBER },
+              },
+            })
+          )
+
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {},
+            })
+          )
+          await config.api.table.save({
+            ...table,
+            schema: {
+              ...table.schema,
+              aux: {
+                name: "aux",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTable._id!,
+                fieldName: "fk_aux",
+                constraints: { type: "array" },
+              },
+              aux2: {
+                name: "aux2",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTable._id!,
+                fieldName: "fk_aux2",
+                constraints: { type: "array" },
+              },
+            },
+          })
+          // Refetch auxTable
+          auxTable = await config.api.table.get(auxTable._id!)
+
+          const view = await config.api.viewV2.create({
+            name: "view a",
+            tableId: table._id!,
+            schema: {
+              aux: {
+                visible: true,
+                columns: {
+                  name: { visible: true, readonly: true },
+                  age: { visible: true, readonly: true },
+                },
+              },
+              aux2: {
+                visible: true,
+                columns: {
+                  name: { visible: true, readonly: true },
+                  age: { visible: true, readonly: true },
+                },
+              },
+            },
+          })
+
+          await config.api.table.save({
+            ...auxTable,
+            schema: {
+              ...auxTable.schema,
+              // @ts-ignore deleting age to force the rename
+              age: undefined,
+              dob: {
+                name: "dob",
+                type: FieldType.NUMBER,
+                constraints: { presence: true },
+              },
+            },
+            _rename: { old: "age", updated: "dob" },
+          })
+
+          const updatedView = await config.api.viewV2.get(view.id)
+          expect(updatedView).toEqual(
+            expect.objectContaining({
+              schema: expect.objectContaining({
+                aux: expect.objectContaining({
+                  columns: {
+                    id: { visible: false, readonly: false },
+                    name: { visible: true, readonly: true },
+                    dob: { visible: true, readonly: true },
+                  },
+                }),
+                aux2: expect.objectContaining({
+                  columns: {
+                    id: { visible: false, readonly: false },
+                    name: { visible: true, readonly: true },
+                    dob: { visible: true, readonly: true },
+                  },
+                }),
+              }),
+            })
+          )
+        })
+
+        it("does not rename columns with the same name but from other tables", async () => {
+          let auxTable = await config.api.table.save(
+            saveTableRequest({
+              primaryDisplay: "name",
+              schema: { name: { name: "name", type: FieldType.STRING } },
+            })
+          )
+          let aux2Table = await config.api.table.save(
+            saveTableRequest({
+              primaryDisplay: "name",
+              schema: { name: { name: "name", type: FieldType.STRING } },
+            })
+          )
+
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {},
+            })
+          )
+          await config.api.table.save({
+            ...table,
+            schema: {
+              ...table.schema,
+              aux: {
+                name: "aux",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTable._id!,
+                fieldName: "fk_aux",
+                constraints: { type: "array" },
+              },
+              aux2: {
+                name: "aux2",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: aux2Table._id!,
+                fieldName: "fk_aux2",
+                constraints: { type: "array" },
+              },
+            },
+          })
+          // Refetch auxTable
+          auxTable = await config.api.table.get(auxTable._id!)
+
+          const view = await config.api.viewV2.create({
+            name: "view a",
+            tableId: table._id!,
+            schema: {
+              aux: {
+                visible: true,
+                columns: {
+                  name: { visible: true, readonly: true },
+                },
+              },
+              aux2: {
+                visible: true,
+                columns: {
+                  name: { visible: true, readonly: true },
+                },
+              },
+            },
+          })
+
+          await config.api.table.save({
+            ...auxTable,
+            schema: {
+              ...auxTable.schema,
+              // @ts-ignore deleting age to force the rename
+              name: undefined,
+              fullName: {
+                name: "fullName",
+                type: FieldType.STRING,
+              },
+            },
+            _rename: { old: "name", updated: "fullName" },
+          })
+
+          const updatedView = await config.api.viewV2.get(view.id)
+          expect(updatedView).toEqual(
+            expect.objectContaining({
+              schema: expect.objectContaining({
+                aux: expect.objectContaining({
+                  columns: {
+                    id: { visible: false, readonly: false },
+                    fullName: { visible: true, readonly: true },
+                  },
+                }),
+                aux2: expect.objectContaining({
+                  columns: {
+                    id: { visible: false, readonly: false },
+                    name: { visible: true, readonly: true },
                   },
                 }),
               }),
