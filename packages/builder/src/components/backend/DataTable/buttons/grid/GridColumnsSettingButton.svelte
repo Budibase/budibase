@@ -2,8 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover } from "@budibase/bbui"
   import ColumnsSettingContent from "./ColumnsSettingContent.svelte"
-
-  export let allowViewReadonlyColumns = false
+  import { licensing } from "stores/portal"
 
   const { columns } = getContext("grid")
 
@@ -29,5 +28,8 @@
 </div>
 
 <Popover bind:open {anchor} align="left">
-  <ColumnsSettingContent columns={$columns} {allowViewReadonlyColumns} />
+  <ColumnsSettingContent
+    columns={$columns}
+    allowViewReadonlyColumns={$licensing.isViewReadonlyColumnsEnabled}
+  />
 </Popover>

@@ -52,7 +52,7 @@ export async function getBuilderData(
     const rowActionName = await getRowActionName(tableId, rowActionId)
 
     result[automation._id!] = {
-      displayName: `${tableName}: ${automation.name}`,
+      displayName: rowActionName,
       triggerInfo: {
         type: "Automation trigger",
         table: { id: tableId, name: tableName },

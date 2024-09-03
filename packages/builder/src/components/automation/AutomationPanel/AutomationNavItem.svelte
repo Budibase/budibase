@@ -9,6 +9,7 @@
   import { sdk } from "@budibase/shared-core"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import UpdateAutomationModal from "components/automation/AutomationPanel/UpdateAutomationModal.svelte"
+  import UpdateRowActionModal from "components/automation/AutomationPanel/UpdateRowActionModal.svelte"
   import NavItem from "components/common/NavItem.svelte"
 
   export let automation
@@ -16,6 +17,9 @@
 
   let confirmDeleteDialog
   let updateAutomationDialog
+  let updateRowActionDialog
+
+  $: isRowAction = sdk.automations.isRowAction(automation)
 
   async function deleteAutomation() {
     try {
@@ -37,7 +41,6 @@
   }
 
   const getContextMenuItems = () => {
-    const isRowAction = sdk.automations.isRowAction(automation)
     const pause = {
       icon: automation.disabled ? "CheckmarkCircle" : "Cancel",
       name: automation.disabled ? "Activate" : "Pause",
@@ -83,7 +86,16 @@
         del,
       ]
     } else {
-      return [del]
+      return [
+        {
+          icon: "Edit",
+          name: "Edit",
+          keyBind: null,
+          visible: true,
+          callback: updateRowActionDialog.show,
+        },
+        del,
+      ]
     }
   }
 
@@ -122,4 +134,9 @@
   <i>{automation.name}?</i>
   This action cannot be undone.
 </ConfirmDialog>
-<UpdateAutomationModal {automation} bind:this={updateAutomationDialog} />
+
+{#if isRowAction}
+  <UpdateRowActionModal {automation} bind:this={updateRowActionDialog} />
+{:else}
+  <UpdateAutomationModal {automation} bind:this={updateAutomationDialog} />
+{/if}

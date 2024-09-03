@@ -22,7 +22,7 @@
   $: ds = $datasource
   $: tableId = ds?.tableId
   $: isView = ds?.type === "viewV2"
-  $: fetchRowActions(tableId)
+  $: fetchRowActions(ds)
   $: actionCount = rowActions.filter(action => !isView || action.enabled).length
 
   const rowActionUrl = derived([url, appStore], ([$url, $appStore]) => {
@@ -31,12 +31,12 @@
     }
   })
 
-  const fetchRowActions = async tableId => {
-    if (!tableId) {
+  const fetchRowActions = async datasource => {
+    if (!datasource?.tableId) {
       rowActions = []
       return
     }
-    const res = await API.rowActions.fetch(tableId)
+    const res = await API.rowActions.fetch(datasource.tableId)
     rowActions = Object.values(res || {}).map(action => ({
       ...action,
       enabled: !isView || action.allowedViews?.includes(ds.id),

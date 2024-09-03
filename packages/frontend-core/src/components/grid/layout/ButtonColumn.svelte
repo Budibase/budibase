@@ -91,6 +91,7 @@
                   align="right"
                   offset={5}
                   size="S"
+                  animate={false}
                 />
               {:else}
                 {#each buttons as button}

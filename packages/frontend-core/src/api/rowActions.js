@@ -31,7 +31,7 @@ export const buildRowActionEndpoints = API => ({
    * @param rowActionId the ID of the row action to update
    */
   update: async ({ tableId, rowActionId, name }) => {
-    return await API.post({
+    return await API.put({
       url: `/api/tables/${tableId}/actions/${rowActionId}`,
       body: {
         name,
