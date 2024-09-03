@@ -1,13 +1,10 @@
 <script>
-  import { Select, Label, Checkbox, Body } from "@budibase/bbui"
-  import { tables, viewsV2 } from "stores/builder"
+  import { Select, Label, Checkbox } from "@budibase/bbui"
+  import { tables, viewsV2, rowActions } from "stores/builder"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { API } from "api"
 
   export let parameters
   export let bindings = []
-
-  let rowActions = []
 
   $: tableOptions = $tables.list.map(table => ({
     label: table.name,
@@ -20,35 +17,12 @@
   }))
   $: datasourceOptions = [...(tableOptions || []), ...(viewOptions || [])]
   $: resourceId = parameters.resourceId
-  $: fetchRowActions(resourceId)
-  $: rowActionOptions = rowActions.map(action => ({
+  $: rowActions.refreshRowActions(resourceId)
+  $: enabledRowActions = $rowActions[resourceId] || []
+  $: rowActionOptions = enabledRowActions.map(action => ({
     label: action.name,
     value: action.id,
   }))
-
-  const fetchRowActions = async resourceId => {
-    if (!resourceId) {
-      rowActions = []
-      return
-    }
-    try {
-      const isView = resourceId.startsWith("view_")
-      let tableId = resourceId
-      if (isView) {
-        tableId = viewOptions.find(x => x.resourceId === resourceId).tableId
-      }
-      const res = await API.rowActions.fetch(tableId)
-      rowActions = Object.values(res || {}).filter(action => {
-        return !isView || action.allowedViews?.includes(resourceId)
-      })
-    } catch (err) {
-      console.error(err)
-      rowActions = []
-    }
-
-    // Auto select first action
-    parameters.rowActionId = rowActions[0]?.id
-  }
 </script>
 
 <div class="root">

@@ -28,11 +28,7 @@
     return (rowActions || []).map(action => ({
       text: action.name,
       onClick: async row => {
-        await API.rowActions.trigger({
-          rowActionId: action.id,
-          sourceId: id,
-          rowId: row._id,
-        })
+        await rowActions.trigger(id, action.id, row._id)
       },
     }))
   }
