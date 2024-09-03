@@ -63,7 +63,7 @@ describe("Automation Scenarios", () => {
           },
         })
         .run()
-
+      expect(results.steps[3].outputs.status).toContain("branch1 branch taken")
       expect(results.steps[4].outputs.message).toContain("Branch 1.1")
     })
 
@@ -91,7 +91,9 @@ describe("Automation Scenarios", () => {
           },
         })
         .run()
-
+      expect(results.steps[0].outputs.status).toContain(
+        "activeBranch branch taken"
+      )
       expect(results.steps[1].outputs.message).toContain("Active user")
     })
 
