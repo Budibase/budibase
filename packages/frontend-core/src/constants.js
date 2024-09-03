@@ -182,3 +182,8 @@ export const OnEmptyFilter = {
   RETURN_ALL: "all",
   RETURN_NONE: "none",
 }
+
+export const FilterValueType = {
+  BINDING: "Binding",
+  VALUE: "Value",
+}

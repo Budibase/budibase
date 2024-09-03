@@ -1,4 +1,4 @@
-import { SearchFilter, SortOrder, SortType } from "../../api"
+import { SearchFilter, SearchFilterGroup, SortOrder, SortType } from "../../api"
 import { UIFieldMetadata } from "./table"
 import { Document } from "../document"
 import { DBView } from "../../sdk"
@@ -56,7 +56,7 @@ export interface ViewV2 {
   name: string
   primaryDisplay?: string
   tableId: string
-  query?: SearchFilter[]
+  query?: SearchFilter[] | SearchFilterGroup
   sort?: {
     field: string
     order?: SortOrder
