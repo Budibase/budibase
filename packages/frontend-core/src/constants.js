@@ -187,3 +187,9 @@ export const FilterValueType = {
   BINDING: "Binding",
   VALUE: "Value",
 }
+
+export const FieldPermissions = {
+  WRITABLE: "writable",
+  READONLY: "readonly",
+  HIDDEN: "hidden",
+}

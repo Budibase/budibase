@@ -38,7 +38,7 @@ export async function handleRequest<T extends Operation>(
 }
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
-  const { tableId } = utils.getSourceId(ctx)
+  const { tableId, viewId } = utils.getSourceId(ctx)
 
   const { _id, ...rowData } = ctx.request.body
   const table = await sdk.tables.getTable(tableId)
@@ -77,6 +77,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     outputProcessing(table, row, {
       squash: true,
       preserveLinks: true,
+      fromViewId: viewId,
     }),
     outputProcessing(table, beforeRow, {
       squash: true,
@@ -163,14 +164,10 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
       },
       includeSqlRelationships: IncludeRelationship.INCLUDE,
     })
-    row[fieldName] = await outputProcessing<Row[]>(
-      linkedTable,
-      relatedRows.rows,
-      {
-        squash: true,
-        preserveLinks: true,
-      }
-    )
+    row[fieldName] = await outputProcessing(linkedTable, relatedRows.rows, {
+      squash: true,
+      preserveLinks: true,
+    })
   }
   return row
 }
