@@ -19,6 +19,9 @@ import {
   SearchResponse,
   BasicOperator,
   RelationshipType,
+  TableSchema,
+  ViewFieldMetadata,
+  RenameColumn,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -1180,8 +1183,8 @@ describe.each([
       })
 
       describe("foreign relationship columns", () => {
-        it("updating a column will update link columns configuration", async () => {
-          let auxTable = await config.api.table.save(
+        const createAuxTable = () =>
+          config.api.table.save(
             saveTableRequest({
               primaryDisplay: "name",
               schema: {
@@ -1191,6 +1194,13 @@ describe.each([
             })
           )
 
+        const createMainTable = async (
+          links: {
+            name: string
+            tableId: string
+            fk: string
+          }[]
+        ) => {
           const table = await config.api.table.save(
             saveTableRequest({
               schema: {},
@@ -1200,47 +1210,67 @@ describe.each([
             ...table,
             schema: {
               ...table.schema,
-              aux: {
-                name: "aux",
-                relationshipType: RelationshipType.ONE_TO_MANY,
-                type: FieldType.LINK,
-                tableId: auxTable._id!,
-                fieldName: "fk_aux",
-                constraints: { type: "array" },
-              },
+              ...links.reduce<TableSchema>((acc, c) => {
+                acc[c.name] = {
+                  name: c.name,
+                  relationshipType: RelationshipType.ONE_TO_MANY,
+                  type: FieldType.LINK,
+                  tableId: c.tableId,
+                  fieldName: c.fk,
+                  constraints: { type: "array" },
+                }
+                return acc
+              }, {}),
             },
           })
+          return table
+        }
+
+        const createView = async (
+          tableId: string,
+          schema: Record<string, ViewFieldMetadata>
+        ) =>
+          await config.api.viewV2.create({
+            name: generator.guid(),
+            tableId,
+            schema,
+          })
+
+        const renameColumn = async (table: Table, renaming: RenameColumn) => {
+          const newSchema = { ...table.schema }
+          ;(newSchema[renaming.updated] = {
+            ...table.schema[renaming.old],
+            name: renaming.updated,
+          }),
+            delete newSchema[renaming.old]
+
+          await config.api.table.save({
+            ...table,
+            schema: newSchema,
+            _rename: renaming,
+          })
+        }
+
+        it("updating a column will update link columns configuration", async () => {
+          let auxTable = await createAuxTable()
+
+          const table = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+          ])
           // Refetch auxTable
           auxTable = await config.api.table.get(auxTable._id!)
 
-          const view = await config.api.viewV2.create({
-            name: "view a",
-            tableId: table._id!,
-            schema: {
-              aux: {
-                visible: true,
-                columns: {
-                  name: { visible: true, readonly: true },
-                  age: { visible: true, readonly: true },
-                },
+          const view = await createView(table._id!, {
+            aux: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
+                age: { visible: true, readonly: true },
               },
             },
           })
 
-          await config.api.table.save({
-            ...auxTable,
-            schema: {
-              ...auxTable.schema,
-              // @ts-ignore deleting age to force the rename
-              age: undefined,
-              dob: {
-                name: "dob",
-                type: FieldType.NUMBER,
-                constraints: { presence: true },
-              },
-            },
-            _rename: { old: "age", updated: "dob" },
-          })
+          await renameColumn(auxTable, { old: "age", updated: "dob" })
 
           const updatedView = await config.api.viewV2.get(view.id)
           expect(updatedView).toEqual(
@@ -1259,81 +1289,33 @@ describe.each([
         })
 
         it("handles multiple fields using the same table", async () => {
-          let auxTable = await config.api.table.save(
-            saveTableRequest({
-              primaryDisplay: "name",
-              schema: {
-                name: { name: "name", type: FieldType.STRING },
-                age: { name: "age", type: FieldType.NUMBER },
-              },
-            })
-          )
+          let auxTable = await createAuxTable()
 
-          const table = await config.api.table.save(
-            saveTableRequest({
-              schema: {},
-            })
-          )
-          await config.api.table.save({
-            ...table,
-            schema: {
-              ...table.schema,
-              aux: {
-                name: "aux",
-                relationshipType: RelationshipType.ONE_TO_MANY,
-                type: FieldType.LINK,
-                tableId: auxTable._id!,
-                fieldName: "fk_aux",
-                constraints: { type: "array" },
-              },
-              aux2: {
-                name: "aux2",
-                relationshipType: RelationshipType.ONE_TO_MANY,
-                type: FieldType.LINK,
-                tableId: auxTable._id!,
-                fieldName: "fk_aux2",
-                constraints: { type: "array" },
-              },
-            },
-          })
+          const table = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+            { name: "aux2", tableId: auxTable._id!, fk: "fk_aux2" },
+          ])
           // Refetch auxTable
           auxTable = await config.api.table.get(auxTable._id!)
 
-          const view = await config.api.viewV2.create({
-            name: "view a",
-            tableId: table._id!,
-            schema: {
-              aux: {
-                visible: true,
-                columns: {
-                  name: { visible: true, readonly: true },
-                  age: { visible: true, readonly: true },
-                },
+          const view = await createView(table._id!, {
+            aux: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
+                age: { visible: true, readonly: true },
               },
-              aux2: {
-                visible: true,
-                columns: {
-                  name: { visible: true, readonly: true },
-                  age: { visible: true, readonly: true },
-                },
+            },
+            aux2: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
+                age: { visible: true, readonly: true },
               },
             },
           })
 
-          await config.api.table.save({
-            ...auxTable,
-            schema: {
-              ...auxTable.schema,
-              // @ts-ignore deleting age to force the rename
-              age: undefined,
-              dob: {
-                name: "dob",
-                type: FieldType.NUMBER,
-                constraints: { presence: true },
-              },
-            },
-            _rename: { old: "age", updated: "dob" },
-          })
+          await renameColumn(auxTable, { old: "age", updated: "dob" })
 
           const updatedView = await config.api.viewV2.get(view.id)
           expect(updatedView).toEqual(
@@ -1359,81 +1341,33 @@ describe.each([
         })
 
         it("does not rename columns with the same name but from other tables", async () => {
-          let auxTable = await config.api.table.save(
-            saveTableRequest({
-              primaryDisplay: "name",
-              schema: { name: { name: "name", type: FieldType.STRING } },
-            })
-          )
-          let aux2Table = await config.api.table.save(
-            saveTableRequest({
-              primaryDisplay: "name",
-              schema: { name: { name: "name", type: FieldType.STRING } },
-            })
-          )
+          let auxTable = await createAuxTable()
+          let aux2Table = await createAuxTable()
 
-          const table = await config.api.table.save(
-            saveTableRequest({
-              schema: {},
-            })
-          )
-          await config.api.table.save({
-            ...table,
-            schema: {
-              ...table.schema,
-              aux: {
-                name: "aux",
-                relationshipType: RelationshipType.ONE_TO_MANY,
-                type: FieldType.LINK,
-                tableId: auxTable._id!,
-                fieldName: "fk_aux",
-                constraints: { type: "array" },
-              },
-              aux2: {
-                name: "aux2",
-                relationshipType: RelationshipType.ONE_TO_MANY,
-                type: FieldType.LINK,
-                tableId: aux2Table._id!,
-                fieldName: "fk_aux2",
-                constraints: { type: "array" },
-              },
-            },
-          })
+          const table = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+            { name: "aux2", tableId: aux2Table._id!, fk: "fk_aux2" },
+          ])
+
           // Refetch auxTable
           auxTable = await config.api.table.get(auxTable._id!)
 
-          const view = await config.api.viewV2.create({
-            name: "view a",
-            tableId: table._id!,
-            schema: {
-              aux: {
-                visible: true,
-                columns: {
-                  name: { visible: true, readonly: true },
-                },
+          const view = await createView(table._id!, {
+            aux: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
               },
-              aux2: {
-                visible: true,
-                columns: {
-                  name: { visible: true, readonly: true },
-                },
+            },
+            aux2: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
               },
             },
           })
 
-          await config.api.table.save({
-            ...auxTable,
-            schema: {
-              ...auxTable.schema,
-              // @ts-ignore deleting age to force the rename
-              name: undefined,
-              fullName: {
-                name: "fullName",
-                type: FieldType.STRING,
-              },
-            },
-            _rename: { old: "name", updated: "fullName" },
-          })
+          await renameColumn(auxTable, { old: "name", updated: "fullName" })
 
           const updatedView = await config.api.viewV2.get(view.id)
           expect(updatedView).toEqual(
@@ -1443,12 +1377,14 @@ describe.each([
                   columns: {
                     id: { visible: false, readonly: false },
                     fullName: { visible: true, readonly: true },
+                    age: { visible: false, readonly: false },
                   },
                 }),
                 aux2: expect.objectContaining({
                   columns: {
                     id: { visible: false, readonly: false },
                     name: { visible: true, readonly: true },
+                    age: { visible: false, readonly: false },
                   },
                 }),
               }),
@@ -1457,81 +1393,32 @@ describe.each([
         })
 
         it("updates all views references", async () => {
-          let auxTable = await config.api.table.save(
-            saveTableRequest({
-              primaryDisplay: "name",
-              schema: {
-                name: { name: "name", type: FieldType.STRING },
-                age: { name: "age", type: FieldType.NUMBER },
-              },
-            })
-          )
+          let auxTable = await createAuxTable()
 
-          const createTableWithRelationship = async () => {
-            const table = await config.api.table.save(
-              saveTableRequest({
-                schema: {},
-              })
-            )
-            await config.api.table.save({
-              ...table,
-              schema: {
-                ...table.schema,
-                aux: {
-                  name: "aux",
-                  relationshipType: RelationshipType.ONE_TO_MANY,
-                  type: FieldType.LINK,
-                  tableId: auxTable._id!,
-                  fieldName: `fk_${table.name}`,
-                  constraints: { type: "array" },
-                },
-              },
-            })
-
-            return table
-          }
-
-          const table1 = await createTableWithRelationship()
-          const table2 = await createTableWithRelationship()
+          const table1 = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux_table1" },
+          ])
+          const table2 = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux_table2" },
+          ])
 
           // Refetch auxTable
           auxTable = await config.api.table.get(auxTable._id!)
 
-          const createView = async (tableId: string) => {
-            const view = await config.api.viewV2.create({
-              name: generator.guid(),
-              tableId,
-              schema: {
-                aux: {
-                  visible: true,
-                  columns: {
-                    name: { visible: true, readonly: true },
-                    age: { visible: true, readonly: true },
-                  },
-                },
-              },
-            })
-            return view
-          }
-
-          const view1 = await createView(table1._id!)
-          const view2 = await createView(table1._id!)
-          const view3 = await createView(table2._id!)
-
-          await config.api.table.save({
-            ...auxTable,
-            schema: {
-              ...auxTable.schema,
-              // @ts-ignore deleting age to force the rename
-              age: undefined,
-              dob: {
-                name: "dob",
-                type: FieldType.NUMBER,
-                constraints: { presence: true },
+          const viewSchema = {
+            aux: {
+              visible: true,
+              columns: {
+                name: { visible: true, readonly: true },
+                age: { visible: true, readonly: true },
               },
             },
-            _rename: { old: "age", updated: "dob" },
-          })
+          }
+          const view1 = await createView(table1._id!, viewSchema)
+          const view2 = await createView(table1._id!, viewSchema)
+          const view3 = await createView(table2._id!, viewSchema)
+
+          await renameColumn(auxTable, { old: "age", updated: "dob" })
 
           for (const view of [view1, view2, view3]) {
             const updatedView = await config.api.viewV2.get(view.id)
