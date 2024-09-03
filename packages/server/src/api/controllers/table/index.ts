@@ -116,6 +116,9 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   } else {
     await events.table.updated(savedTable)
   }
+  if (renaming) {
+    await sdk.views.renameLinkedViews(savedTable, renaming)
+  }
   if (isImport) {
     await events.table.imported(savedTable)
   }
