@@ -13,7 +13,7 @@ import {
   processDates,
   processFormulas,
 } from "../../../../utilities/rowProcessor"
-import { isKnexEmptyReadResponse, updateRelationshipColumns } from "./sqlUtils"
+import { isKnexEmptyReadResponse } from "./sqlUtils"
 import {
   basicProcessing,
   generateIdForRow,
@@ -149,22 +149,11 @@ export async function sqlOutputProcessing(
       rowId = generateIdForRow(row, table)
       row._id = rowId
     }
-    // this is a relationship of some sort
-    if (!opts?.sqs && finalRows[rowId]) {
-      finalRows = await updateRelationshipColumns(
-        table,
-        tables,
-        row,
-        finalRows,
-        relationships,
-        opts
-      )
-      continue
-    }
     const thisRow = fixArrayTypes(
       basicProcessing({
         row,
         table,
+        tables: Object.values(tables),
         isLinked: false,
         sqs: opts?.sqs,
       }),
@@ -175,18 +164,6 @@ export async function sqlOutputProcessing(
     }
 
     finalRows[thisRow._id] = fixBooleanFields({ row: thisRow, table })
-
-    // do this at end once its been added to the final rows
-    if (!opts?.sqs) {
-      finalRows = await updateRelationshipColumns(
-        table,
-        tables,
-        row,
-        finalRows,
-        relationships,
-        opts
-      )
-    }
   }
 
   // make sure all related rows are correct

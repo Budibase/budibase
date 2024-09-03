@@ -7,6 +7,7 @@ import {
   isValidFilter,
   isValidISODateString,
   sqlLog,
+  validateManyToMany,
 } from "./utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
@@ -133,80 +134,78 @@ class InternalBuilder {
       return "*"
     }
 
-    // no relationships - select everything in SQLite
-    if (this.client === SqlClient.SQL_LITE) {
-      const alias = tableAliases?.[endpoint.entityId]
-        ? tableAliases?.[endpoint.entityId]
-        : endpoint.entityId
-      return [this.knex.raw(`${this.quote(alias)}.*`)]
-    }
-
-    const schema = meta.table.schema
-    return resource.fields.map(field => {
-      const parts = field.split(/\./g)
-      let table: string | undefined = undefined
-      let column: string | undefined = undefined
-
-      // Just a column name, e.g.: "column"
-      if (parts.length === 1) {
-        column = parts[0]
-      }
-
-      // A table name and a column name, e.g.: "table.column"
-      if (parts.length === 2) {
-        table = parts[0]
-        column = parts[1]
-      }
-
-      // A link doc, e.g.: "table.doc1.fieldName"
-      if (parts.length > 2) {
-        table = parts[0]
-        column = parts.slice(1).join(".")
-      }
-
-      if (!column) {
-        throw new Error(`Invalid field name: ${field}`)
-      }
-
-      const columnSchema = schema[column]
-
-      if (
-        this.client === SqlClient.POSTGRES &&
-        columnSchema?.externalType?.includes("money")
-      ) {
-        return this.knex.raw(
-          `${this.quotedIdentifier(
-            [table, column].join(".")
-          )}::money::numeric as ${this.quote(field)}`
-        )
-      }
-
-      if (
-        this.client === SqlClient.MS_SQL &&
-        columnSchema?.type === FieldType.DATETIME &&
-        columnSchema.timeOnly
-      ) {
-        // Time gets returned as timestamp from mssql, not matching the expected
-        // HH:mm format
-        return this.knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
-      }
-
-      // There's at least two edge cases being handled in the expression below.
-      //  1. The column name could start/end with a space, and in that case we
-      //     want to preseve that space.
-      //  2. Almost all column names are specified in the form table.column, except
-      //     in the case of relationships, where it's table.doc1.column. In that
-      //     case, we want to split it into `table`.`doc1.column` for reasons that
-      //     aren't actually clear to me, but `table`.`doc1` breaks things with the
-      //     sample data tests.
-      if (table) {
-        return this.knex.raw(
-          `${this.quote(table)}.${this.quote(column)} as ${this.quote(field)}`
-        )
-      } else {
-        return this.knex.raw(`${this.quote(field)} as ${this.quote(field)}`)
-      }
-    })
+    const alias = tableAliases?.[endpoint.entityId]
+      ? tableAliases?.[endpoint.entityId]
+      : endpoint.entityId
+    return [this.knex.raw(`${this.quote(alias)}.*`)]
+    //
+    //
+    // const schema = meta.table.schema
+    // return resource.fields.map(field => {
+    //   const parts = field.split(/\./g)
+    //   let table: string | undefined = undefined
+    //   let column: string | undefined = undefined
+    //
+    //   // Just a column name, e.g.: "column"
+    //   if (parts.length === 1) {
+    //     column = parts[0]
+    //   }
+    //
+    //   // A table name and a column name, e.g.: "table.column"
+    //   if (parts.length === 2) {
+    //     table = parts[0]
+    //     column = parts[1]
+    //   }
+    //
+    //   // A link doc, e.g.: "table.doc1.fieldName"
+    //   if (parts.length > 2) {
+    //     table = parts[0]
+    //     column = parts.slice(1).join(".")
+    //   }
+    //
+    //   if (!column) {
+    //     throw new Error(`Invalid field name: ${field}`)
+    //   }
+    //
+    //   const columnSchema = schema[column]
+    //
+    //   if (
+    //     this.client === SqlClient.POSTGRES &&
+    //     columnSchema?.externalType?.includes("money")
+    //   ) {
+    //     return this.knex.raw(
+    //       `${this.quotedIdentifier(
+    //         [table, column].join(".")
+    //       )}::money::numeric as ${this.quote(field)}`
+    //     )
+    //   }
+    //
+    //   if (
+    //     this.client === SqlClient.MS_SQL &&
+    //     columnSchema?.type === FieldType.DATETIME &&
+    //     columnSchema.timeOnly
+    //   ) {
+    //     // Time gets returned as timestamp from mssql, not matching the expected
+    //     // HH:mm format
+    //     return this.knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
+    //   }
+    //
+    //   // There's at least two edge cases being handled in the expression below.
+    //   //  1. The column name could start/end with a space, and in that case we
+    //   //     want to preseve that space.
+    //   //  2. Almost all column names are specified in the form table.column, except
+    //   //     in the case of relationships, where it's table.doc1.column. In that
+    //   //     case, we want to split it into `table`.`doc1.column` for reasons that
+    //   //     aren't actually clear to me, but `table`.`doc1` breaks things with the
+    //   //     sample data tests.
+    //   if (table) {
+    //     return this.knex.raw(
+    //       `${this.quote(table)}.${this.quote(column)} as ${this.quote(field)}`
+    //     )
+    //   } else {
+    //     return this.knex.raw(`${this.quote(field)} as ${this.quote(field)}`)
+    //   }
+    // })
   }
 
   // OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
@@ -368,35 +367,47 @@ class InternalBuilder {
         let subQuery = mainKnex
           .select(mainKnex.raw(1))
           .from({ [toAlias]: relatedTableName })
-        let mainTableRelatesTo = toAlias
-        if (relationship.through) {
+        const manyToMany = validateManyToMany(relationship)
+        if (manyToMany) {
           const throughAlias =
-            aliases?.[relationship.through] || relationship.through
-          let throughTable = this.tableNameWithSchema(relationship.through, {
+            aliases?.[manyToMany.through] || relationship.through
+          let throughTable = this.tableNameWithSchema(manyToMany.through, {
             alias: throughAlias,
             schema: endpoint.schema,
           })
-          subQuery = subQuery.innerJoin(throughTable, function () {
-            // @ts-ignore
-            this.on(
-              `${toAlias}.${relationship.toPrimary}`,
+          subQuery = subQuery
+            // add a join through the junction table
+            .innerJoin(throughTable, function () {
+              // @ts-ignore
+              this.on(
+                `${toAlias}.${manyToMany.toPrimary}`,
+                "=",
+                `${throughAlias}.${manyToMany.to}`
+              )
+            })
+            // check the document in the junction table points to the main table
+            .where(
+              `${throughAlias}.${manyToMany.from}`,
               "=",
-              `${throughAlias}.${relationship.to}`
+              mainKnex.raw(
+                this.quotedIdentifier(`${fromAlias}.${manyToMany.fromPrimary}`)
+              )
             )
-          })
+          // in SQS the same junction table is used for different many-to-many relationships between the
+          // two same tables, this is needed to avoid rows ending up in all columns
           if (this.client === SqlClient.SQL_LITE) {
-            subQuery = this.addJoinFieldCheck(subQuery, relationship)
+            subQuery = this.addJoinFieldCheck(subQuery, manyToMany)
           }
-          mainTableRelatesTo = throughAlias
-        }
-        // "join" to the main table, making sure the ID matches that of the main
-        subQuery = subQuery.where(
-          `${mainTableRelatesTo}.${relationship.from}`,
-          "=",
-          mainKnex.raw(
-            this.quotedIdentifier(`${fromAlias}.${relationship.fromPrimary}`)
+        } else {
+          // "join" to the main table, making sure the ID matches that of the main
+          subQuery = subQuery.where(
+            `${toAlias}.${relationship.to}`,
+            "=",
+            mainKnex.raw(
+              this.quotedIdentifier(`${fromAlias}.${relationship.from}`)
+            )
           )
-        )
+        }
         query = query.whereExists(whereCb(subQuery))
         break
       }
@@ -478,12 +489,10 @@ class InternalBuilder {
             alias ? `${alias}.${updatedKey}` : updatedKey,
             value
           )
-        } else if (isSqlite && shouldProcessRelationship) {
+        } else if (shouldProcessRelationship) {
           query = builder.addRelationshipForFilter(query, updatedKey, q => {
             return handleRelationship(q, updatedKey, value)
           })
-        } else if (shouldProcessRelationship) {
-          query = handleRelationship(query, updatedKey, value)
         }
       }
     }
@@ -849,6 +858,7 @@ class InternalBuilder {
     fromTable: string,
     relationships: RelationshipsJson[]
   ): Knex.QueryBuilder {
+    const sqlClient = this.client
     const { resource, tableAliases: aliases, endpoint } = this.query
     const fields = resource?.fields || []
     const jsonField = (field: string) => {
@@ -862,7 +872,15 @@ class InternalBuilder {
         unaliased = parts.join(".")
         tableField = this.quote(unaliased)
       }
-      return `'${unaliased}',${tableField}`
+      let separator = ","
+      switch (sqlClient) {
+        case SqlClient.ORACLE:
+          separator = " VALUE "
+          break
+        case SqlClient.MS_SQL:
+          separator = ":"
+      }
+      return `'${unaliased}'${separator}${tableField}`
     }
     for (let relationship of relationships) {
       const {
@@ -874,21 +892,13 @@ class InternalBuilder {
         toPrimary,
       } = relationship
       // skip invalid relationships
-      if (!toTable || !fromTable || !fromPrimary || !toPrimary) {
+      if (!toTable || !fromTable) {
         continue
       }
-      if (!throughTable) {
-        throw new Error("Only many-to-many implemented for JSON relationships")
-      }
       const toAlias = aliases?.[toTable] || toTable,
-        throughAlias = aliases?.[throughTable] || throughTable,
         fromAlias = aliases?.[fromTable] || fromTable
       let toTableWithSchema = this.tableNameWithSchema(toTable, {
         alias: toAlias,
-        schema: endpoint.schema,
-      })
-      let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
-        alias: throughAlias,
         schema: endpoint.schema,
       })
       let relationshipFields = fields.filter(
@@ -903,32 +913,75 @@ class InternalBuilder {
       const fieldList: string = relationshipFields
         .map(field => jsonField(field))
         .join(",")
-      let rawJsonArray: Knex.Raw
-      switch (this.client) {
+      let rawJsonArray: Knex.Raw, limit: number
+      switch (sqlClient) {
         case SqlClient.SQL_LITE:
           rawJsonArray = this.knex.raw(
             `json_group_array(json_object(${fieldList}))`
           )
+          limit = getBaseLimit()
+          break
+        case SqlClient.POSTGRES:
+          rawJsonArray = this.knex.raw(
+            `json_agg(json_build_object(${fieldList}))`
+          )
+          limit = 1
+          break
+        case SqlClient.MY_SQL:
+        case SqlClient.ORACLE:
+          rawJsonArray = this.knex.raw(
+            `json_arrayagg(json_object(${fieldList}))`
+          )
+          limit = getBaseLimit()
+          break
+        case SqlClient.MS_SQL:
+          rawJsonArray = this.knex.raw(`json_array(json_object(${fieldList}))`)
+          limit = 1
           break
         default:
           throw new Error(`JSON relationships not implement for ${this.client}`)
       }
+      // SQL Server uses TOP - which performs a little differently to the normal LIMIT syntax
+      // it reduces the result set rather than limiting how much data it filters over
+      const primaryKey = `${toAlias}.${toPrimary || toKey}`
       let subQuery = this.knex
         .select(rawJsonArray)
         .from(toTableWithSchema)
-        .join(throughTableWithSchema, function () {
-          this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
-        })
-        .where(
-          `${throughAlias}.${fromKey}`,
-          "=",
-          this.knex.raw(this.quotedIdentifier(`${fromAlias}.${fromPrimary}`))
-        )
-        // relationships should never have more than the base limit
-        .limit(getBaseLimit())
+        .limit(limit)
         // add sorting to get consistent order
-        .orderBy(`${toAlias}.${toPrimary}`)
-      // need to check the junction table document is to the right column
+        .orderBy(primaryKey)
+
+      if (sqlClient === SqlClient.POSTGRES) {
+        subQuery = subQuery.groupBy(primaryKey)
+      }
+
+      // many-to-many relationship with junction table
+      if (throughTable && toPrimary && fromPrimary) {
+        const throughAlias = aliases?.[throughTable] || throughTable
+        let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
+          alias: throughAlias,
+          schema: endpoint.schema,
+        })
+        subQuery = subQuery
+          .join(throughTableWithSchema, function () {
+            this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
+          })
+          .where(
+            `${throughAlias}.${fromKey}`,
+            "=",
+            this.knex.raw(this.quotedIdentifier(`${fromAlias}.${fromPrimary}`))
+          )
+      }
+      // one-to-many relationship with foreign key
+      else {
+        subQuery = subQuery.where(
+          `${toAlias}.${toKey}`,
+          "=",
+          this.knex.raw(this.quotedIdentifier(`${fromAlias}.${fromKey}`))
+        )
+      }
+
+      // need to check the junction table document is to the right column, this is just for SQS
       if (this.client === SqlClient.SQL_LITE) {
         subQuery = this.addJoinFieldCheck(subQuery, relationship)
       }
@@ -1179,14 +1232,12 @@ class InternalBuilder {
       ? query.select(this.generateSelectStatement())
       : this.addDistinctCount(query)
     // have to add after as well (this breaks MS-SQL)
-    if (this.client !== SqlClient.MS_SQL && !counting) {
+    if (!counting) {
       query = this.addSorting(query)
     }
     // handle joins
-    if (relationships && this.client === SqlClient.SQL_LITE) {
+    if (relationships) {
       query = this.addJsonRelationships(query, tableName, relationships)
-    } else if (relationships) {
-      query = this.addRelationships(query, tableName, relationships)
     }
 
     return this.addFilters(query, filters, { relationship: true })
