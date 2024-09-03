@@ -1,6 +1,12 @@
 <script>
   import { Banner } from "@budibase/bbui"
-  import { datasources, tables, integrations, appStore } from "stores/builder"
+  import {
+    datasources,
+    tables,
+    integrations,
+    appStore,
+    rowActions,
+  } from "stores/builder"
   import { themeStore, admin } from "stores/portal"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
@@ -28,7 +34,6 @@
     status: { displayName: "Status", disabled: true },
   }
 
-  let rowActions = []
   let generateButton
 
   $: autoColumnStatus = verifyAutocolumns($tables?.selected)
@@ -54,11 +59,11 @@
   $: relationshipsEnabled = relationshipSupport(tableDatasource)
   $: currentTheme = $themeStore?.theme
   $: darkMode = !currentTheme.includes("light")
-  $: buttons = makeRowActionButtons(rowActions)
-  $: fetchRowActions(id)
+  $: buttons = makeRowActionButtons($rowActions[id])
+  $: rowActions.refreshRowActions(id)
 
   const makeRowActionButtons = rowActions => {
-    return rowActions.map(action => ({
+    return (rowActions || []).map(action => ({
       text: action.name,
       onClick: async row => {
         await API.rowActions.trigger({
@@ -97,15 +102,6 @@
       acc[fieldKey].push(fieldSchema)
       return acc
     }, {})
-  }
-
-  const fetchRowActions = async tableId => {
-    if (!tableId) {
-      rowActions = []
-      return
-    }
-    const res = await API.rowActions.fetch(tableId)
-    rowActions = Object.values(res || {})
   }
 </script>
 

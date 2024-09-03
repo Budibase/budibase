@@ -1,5 +1,5 @@
 <script>
-  import { viewsV2 } from "stores/builder"
+  import { viewsV2, rowActions } from "stores/builder"
   import { admin } from "stores/portal"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
@@ -21,6 +21,21 @@
     id,
     tableId: $viewsV2.selected?.tableId,
   }
+  $: buttons = makeRowActionButtons($rowActions[id])
+  $: rowActions.refreshRowActions(id)
+
+  const makeRowActionButtons = rowActions => {
+    return (rowActions || []).map(action => ({
+      text: action.name,
+      onClick: async row => {
+        await API.rowActions.trigger({
+          rowActionId: action.id,
+          sourceId: id,
+          rowId: row._id,
+        })
+      },
+    }))
+  }
 
   const handleGridViewUpdate = async e => {
     viewsV2.replaceView(id, e.detail)
@@ -35,6 +50,8 @@
   showAvatars={false}
   on:updatedatasource={handleGridViewUpdate}
   isCloud={$admin.cloud}
+  {buttons}
+  buttonsCollapsed
 >
   <svelte:fragment slot="controls">
     <GridFilterButton />

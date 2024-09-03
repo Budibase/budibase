@@ -9,21 +9,20 @@
   } from "@budibase/bbui"
   import DetailPopover from "components/common/DetailPopover.svelte"
   import { getContext } from "svelte"
-  import { appStore, automationStore } from "stores/builder"
+  import { appStore, rowActions } from "stores/builder"
   import { API } from "api"
   import { goto, url } from "@roxi/routify"
   import { derived } from "svelte/store"
-  import { getSequentialName } from "helpers/duplicate"
 
   const { datasource } = getContext("grid")
 
-  let rowActions = []
-
   $: ds = $datasource
   $: tableId = ds?.tableId
+  $: viewId = ds?.id
   $: isView = ds?.type === "viewV2"
-  $: fetchRowActions(ds)
-  $: actionCount = rowActions.filter(action => !isView || action.enabled).length
+  $: tableRowActions = $rowActions[tableId] || []
+  $: viewRowActions = $rowActions[viewId] || []
+  $: actionCount = isView ? viewRowActions.length : tableRowActions.length
 
   const rowActionUrl = derived([url, appStore], ([$url, $appStore]) => {
     return ({ automationId }) => {
@@ -31,30 +30,11 @@
     }
   })
 
-  const fetchRowActions = async datasource => {
-    if (!datasource?.tableId) {
-      rowActions = []
-      return
-    }
-    const res = await API.rowActions.fetch(datasource.tableId)
-    rowActions = Object.values(res || {}).map(action => ({
-      ...action,
-      enabled: !isView || action.allowedViews?.includes(ds.id),
-    }))
-  }
-
   const createRowAction = async () => {
     try {
-      const name = getSequentialName(rowActions, "New row action ", {
-        getName: x => x.name,
-      })
-      const res = await API.rowActions.create({
-        name,
-        tableId,
-      })
-      await automationStore.actions.fetch()
+      const newRowAction = await rowActions.createRowAction(tableId, viewId)
       notifications.success("Row action created successfully")
-      $goto($rowActionUrl(res))
+      // $goto($rowActionUrl(newRowAction))
     } catch (error) {
       console.error(error)
       notifications.error("Error creating row action")
@@ -62,19 +42,10 @@
   }
 
   const toggleAction = async (action, enabled) => {
-    console.log(action, enabled)
     if (enabled) {
-      await API.rowActions.enableView({
-        tableId,
-        rowActionId: action.id,
-        viewId: ds.id,
-      })
+      await rowActions.enableView(tableId, viewId, action.id)
     } else {
-      await API.rowActions.disableView({
-        tableId,
-        rowActionId: action.id,
-        viewId: ds.id,
-      })
+      await rowActions.disableView(tableId, viewId, action.id)
     }
   }
 </script>
@@ -96,18 +67,18 @@
     Use the toggle to enable/disable row actions for this view.
     <br />
   {/if}
-  {#if !rowActions.length}
+  {#if !tableRowActions.length}
     <br />
     You haven't created any row actions.
   {:else}
     <List>
-      {#each rowActions as action}
+      {#each tableRowActions as action}
         <ListItem title={action.name} url={$rowActionUrl(action)} showArrow>
           <svelte:fragment slot="right">
             {#if isView}
               <span>
                 <Toggle
-                  value={action.enabled}
+                  value={action.allowedViews?.includes(viewId)}
                   on:change={e => toggleAction(action, e.detail)}
                 />
               </span>
