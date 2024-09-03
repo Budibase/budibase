@@ -926,6 +926,8 @@ class InternalBuilder {
         )
         // relationships should never have more than the base limit
         .limit(getBaseLimit())
+        // add sorting to get consistent order
+        .orderBy(`${toAlias}.${toPrimary}`)
       // need to check the junction table document is to the right column
       if (this.client === SqlClient.SQL_LITE) {
         subQuery = this.addJoinFieldCheck(subQuery, relationship)
