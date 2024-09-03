@@ -27,7 +27,6 @@ import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet, schema } from "./helpers"
 import { isPlainObject, isEmpty } from "lodash"
 import { decodeNonAscii } from "./helpers/schema"
-// import { Constants } from "@budibase/frontend-core"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -293,20 +292,21 @@ export class ColumnSplitter {
 const builderFilter = (expression: SearchFilter) => {
   // Filter body
   let query: SearchFilters = {
-    // string: {},
-    // fuzzy: {},
-    // range: {},
-    // equal: {},
-    // notEqual: {},
-    // empty: {},
-    // notEmpty: {},
-    // contains: {},
-    // notContains: {},
-    // oneOf: {},
-    // containsAny: {},
+    string: {},
+    fuzzy: {},
+    range: {},
+    equal: {},
+    notEqual: {},
+    empty: {},
+    notEmpty: {},
+    contains: {},
+    notContains: {},
+    oneOf: {},
+    containsAny: {},
   }
 
   // DEAN -
+
   // This is the chattiest service we have, pruning the requests
   // of bloat should have meaningful impact
   // Further validation in this area is a must
@@ -427,6 +427,7 @@ export const buildQuery = (filter: SearchFilter[]) => {
     return query
   }
 
+  // DEAN Replace with builderFilter
   filter.forEach(expression => {
     let { operator, field, type, value, externalType, onEmptyFilter } =
       expression
@@ -527,10 +528,12 @@ export const buildQuery = (filter: SearchFilter[]) => {
   return query
 }
 
-/**
- * FOR TESTING - this still isnt type safe
- */
+// Grouped query
 export const buildQueryX = (filter: SearchFilterGroup) => {
+  if (!filter) {
+    return {}
+  }
+
   const operatorMap = {
     [FilterGroupLogicalOperator.ALL]: LogicalOperator.AND,
     [FilterGroupLogicalOperator.ANY]: LogicalOperator.OR,
@@ -545,7 +548,7 @@ export const buildQueryX = (filter: SearchFilterGroup) => {
       conditions: filter.groups?.map((group: SearchFilterGroup) => {
         return {
           [operatorMap[group.logicalOperator]]: {
-            conditions: group.filters?.map(x => builderFilter(x)), //buildFilters
+            conditions: group.filters?.map(x => builderFilter(x)),
           },
         }
       }),
