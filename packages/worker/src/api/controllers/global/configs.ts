@@ -28,7 +28,7 @@ import {
   SSOConfig,
   SSOConfigType,
   UserCtx,
-  OIDCLogosConfig,
+  OIDCLogosConfig, AIConfig,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
 
@@ -313,6 +313,13 @@ function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
   )
 }
 
+function sanitizeAIConfig(aiConfig: AIConfig) {
+  for (let providerConfig of aiConfig.config) {
+    delete providerConfig.apiKey
+  }
+  return aiConfig
+}
+
 export async function find(ctx: UserCtx) {
   try {
     // Find the config with the most granular scope based on context
@@ -325,8 +332,8 @@ export async function find(ctx: UserCtx) {
       }
 
       if (type === ConfigType.AI) {
-        // TODO: strip the keys from the configs here
         // TODO: do the licensing checks here and return the right things based on the license
+        sanitizeAIConfig(scopedConfig)
       }
       ctx.body = scopedConfig
     } else {

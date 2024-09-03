@@ -19,7 +19,6 @@ import { DocumentType, SEPARATOR } from "../constants"
 import { CacheKey, TTL, withCache } from "../cache"
 import * as context from "../context"
 import env from "../environment"
-import { getConfigParams } from "@budibase/server/src/migrations/functions/backfill/global/configs"
 
 // UTILS
 
@@ -262,37 +261,37 @@ export async function getSCIMConfig(): Promise<SCIMInnerConfig | undefined> {
 // AI
 
 // TODO: Can we assume that you are licensed when you hit this endpoint?
-export async function getAIConfig(): Promise<AIConfig | undefined> {
-  if (!env.SELF_HOSTED) {
-    // always use the env vars in cloud
-    // TODO: Licensing stuff - make this right
-    if (env.OPENAI_API_KEY) {
-      return getDefaultBudibaseAIConfig()
-    }
-  }
+// export async function getAIConfig(): Promise<AIConfig | undefined> {
+  // if (!env.SELF_HOSTED) {
+  //   // always use the env vars in cloud
+  //   // TODO: Licensing stuff - make this right
+  //   if (env.OPENAI_API_KEY) {
+  //     return getDefaultBudibaseAIConfig()
+  //   }
+  // }
 
   // prefer the config in self-host
-  let config = await getConfig<AIConfig>(ConfigType.AI)
+  // let config = await getConfig<AIConfig>(ConfigType.AI)
 
   // fallback to env vars
-  if (!config || !config.activated) {
-    config = getDefaultBudibaseAIConfig()
-  }
+  // if (!config || !config.activated) {
+  //   config = getDefaultBudibaseAIConfig()
+  // }
 
-  return config
-}
+  // return config
+// }
 
-export function getDefaultBudibaseAIConfig(): AIInnerConfig | undefined {
-  if (env.OPENAI_API_KEY) {
-    return {
-      provider: "",
-      isDefault: true,
-      name: "Budibase AI",
-      active: true,
-      baseUrl: "",
-      apiKey: env.OPENAI_API_KEY,
-      // TODO: should be enum
-      defaultModel: ""
-    }
-  }
-}
+// export function getDefaultBudibaseAIConfig(): AIInnerConfig | undefined {
+//   if (env.OPENAI_API_KEY) {
+//     return {
+//       provider: "",
+//       isDefault: true,
+//       name: "Budibase AI",
+//       active: true,
+//       baseUrl: "",
+//       apiKey: env.OPENAI_API_KEY,
+//       // TODO: should be enum
+//       defaultModel: ""
+//     }
+//   }
+// }
