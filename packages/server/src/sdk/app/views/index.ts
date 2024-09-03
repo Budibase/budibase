@@ -1,7 +1,6 @@
 import {
   FieldType,
   RelationSchemaField,
-  RelationshipFieldMetadata,
   RenameColumn,
   Table,
   TableSchema,
@@ -255,18 +254,20 @@ export function syncSchema(
 }
 
 export async function renameLinkedViews(table: Table, renaming: RenameColumn) {
-  const relatedLinks: Record<string, RelationshipFieldMetadata[]> = {}
+  const relatedTableIds = new Set<string>()
 
   for (const field of Object.values(table.schema)) {
     if (field.type !== FieldType.LINK) {
       continue
     }
 
-    relatedLinks[field.tableId] ??= []
-    relatedLinks[field.tableId].push(field)
+    relatedTableIds.add(field.tableId)
+    break
   }
 
-  const relatedTables = await sdk.tables.getTables(Object.keys(relatedLinks))
+  const relatedTables = await sdk.tables.getTables(
+    Array.from(relatedTableIds.values())
+  )
   for (const relatedTable of relatedTables) {
     let toSave = false
     const viewsV2 = Object.values(relatedTable.views || {}).filter(
