@@ -92,6 +92,8 @@
                   offset={5}
                   size="S"
                   animate={false}
+                  on:open={() => selectedRows.set({ [row._id]: true })}
+                  on:close={() => selectedRows.set({})}
                 />
               {:else}
                 {#each buttons as button}
