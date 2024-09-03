@@ -2,39 +2,41 @@ export const Providers = {
   OpenAI: {
     name: "OpenAI",
     models: [
-      "gpt-4o-mini",
-      "gpt-4o",
-      "gpt-3.5-turbo",
-      "chatgpt-4o-latest",
-      "gpt-4-turbo",
-      "gpt-4",
+      {label: "GPT 4o Mini", value: "gpt-4o-mini" },
+      {label: "GPT 4o", value: "gpt-4o" },
+      {label: "GPT 4 Turbo", value: "gpt-4-turbo" },
+      {label: "GPT 4", value: "gpt-4" },
+      {label: "GPT 3.5 Turbo", value: "gpt-3.5-turbo" },
     ]
   },
   Anthropic: {
     name: "Anthropic",
     models: [
-      "claude-3-5-sonnet-20240620",
-      "claude-3-sonnet-20240229",
-      "claude-3-opus-20240229",
-      "claude-3-haiku-20240307"
+      {label: "Claude 3.5 Sonnet", value: "claude-3-5-sonnet-20240620" },
+      {label: "Claude 3 Sonnet", value: "claude-3-sonnet-20240229" },
+      {label: "Claude 3 Opus", value: "claude-3-opus-20240229" },
+      {label: "Claude 3 Haiku", value: "claude-3-haiku-20240307" },
     ]
   },
   TogetherAI: {
     name: "Together AI",
     // TODO: too many - probably need to use an autocomplete for this
     models: [
-      "gpt-4o-mini",
-      "gpt-4o",
-      "gpt-3.5-turbo",
-      "chatgpt-4o-latest",
-      "gpt-4-turbo",
-      "gpt-4",
+      {label: "GPT 4o Mini", value: "gpt-4o-mini" },
+      {label: "GPT 4o", value: "gpt-4o" },
+      {label: "GPT 4 Turbo", value: "gpt-4-turbo" },
+      {label: "GPT 4", value: "gpt-4" },
+      {label: "GPT 3.5 Turbo", value: "gpt-3.5-turbo" },
     ]
   },
   AzureOpenAI: {
     name: "Azure Open AI",
     models: [
-      "gpt-4o-mini",
+      {label: "GPT 4o Mini", value: "gpt-4o-mini" },
+      {label: "GPT 4o", value: "gpt-4o" },
+      {label: "GPT 4 Turbo", value: "gpt-4-turbo" },
+      {label: "GPT 4", value: "gpt-4" },
+      {label: "GPT 3.5 Turbo", value: "gpt-3.5-turbo" },
     ]
   },
   Custom: {
