@@ -412,6 +412,28 @@ describe("/api/global/users", () => {
       expect(events.user.permissionBuilderRemoved).toHaveBeenCalledTimes(1)
     })
 
+    it("should not be able to update an account holder user to a basic user", async () => {
+      const accountHolderUser = await config.createUser(
+        structures.users.adminUser()
+      )
+      jest.clearAllMocks()
+      tenancy.getTenantInfo = jest.fn().mockImplementation(() => ({
+        owner: {
+          email: accountHolderUser.email,
+        },
+      }))
+
+      accountHolderUser.admin!.global = false
+      accountHolderUser.builder!.global = false
+
+      await config.api.users.saveUser(accountHolderUser, 400)
+
+      expect(events.user.created).not.toHaveBeenCalled()
+      expect(events.user.updated).not.toHaveBeenCalled()
+      expect(events.user.permissionAdminRemoved).not.toHaveBeenCalled()
+      expect(events.user.permissionBuilderRemoved).not.toHaveBeenCalled()
+    })
+
     it("should be able to update an builder user to a basic user", async () => {
       const user = await config.createUser(structures.users.builderUser())
       jest.clearAllMocks()
