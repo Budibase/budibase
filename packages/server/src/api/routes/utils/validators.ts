@@ -298,8 +298,8 @@ const validateStepsArray = (
   steps: AutomationStep[],
   helpers: Joi.CustomHelpers
 ) => {
-  for (let i = 0; i < steps.length - 1; i++) {
-    if (steps[i].stepId === AutomationActionStepId.BRANCH) {
+  for (const step of steps.slice(0, -1)) {
+    if (step.stepId === AutomationActionStepId.BRANCH) {
       return helpers.error("branchStepPosition")
     }
   }
