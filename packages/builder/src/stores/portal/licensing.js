@@ -104,6 +104,7 @@ export const createLicensingStore = () => {
       const isBusinessPlan = planType === Constants.PlanType.BUSINESS
       const isEnterpriseTrial =
         planType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
+      console.log(license)
       const groupsEnabled = license.features.includes(
         Constants.Features.USER_GROUPS
       )
@@ -141,6 +142,8 @@ export const createLicensingStore = () => {
       const isViewReadonlyColumnsEnabled = license.features.includes(
         Constants.Features.VIEW_READONLY_COLUMNS
       )
+
+      console.log(isViewReadonlyColumnsEnabled)
 
       store.update(state => {
         return {

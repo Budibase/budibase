@@ -9,6 +9,7 @@
   export let size = "M"
   export let align = "left"
   export let offset
+  export let animate
 
   let anchor
   let popover
@@ -28,7 +29,14 @@
 >
   {text || "Action"}
 </Button>
-<Popover bind:this={popover} {align} {anchor} {offset} resizable={false}>
+<Popover
+  bind:this={popover}
+  {align}
+  {anchor}
+  {offset}
+  {animate}
+  resizable={false}
+>
   <Menu>
     {#each buttons as button}
       <MenuItem on:click={() => handleClick(button)} disabled={button.disabled}>
