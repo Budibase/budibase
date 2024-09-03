@@ -1,5 +1,5 @@
 <script>
-  import {Body, Label, Icon, Tag} from "@budibase/bbui"
+  import { Body, Label, Icon } from "@budibase/bbui"
   import OpenAILogo from "./logos/OpenAI.svelte"
   import AnthropicLogo from "./logos/Anthropic.svelte"
   import { Providers } from "./constants"

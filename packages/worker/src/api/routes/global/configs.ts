@@ -67,19 +67,19 @@ function scimValidation() {
 
 function aiValidation() {
   // prettier-ignore
-  return Joi.array().items(
-    Joi.object({
-      provider: Joi.string().required(),
-      isDefault: Joi.boolean().required(),
-      name: Joi.string().required(),
-      active: Joi.boolean().required(),
-      baseUrl: Joi.string().optional().allow("", null),
-      apiKey: Joi.string().required(),
-      // TODO: should be enum
-      defaultModel: Joi.string().optional(),
-
-    })
-  ).required()
+  return Joi.object().pattern(
+     Joi.string(),
+     Joi.object({
+       provider: Joi.string().required(),
+       isDefault: Joi.boolean().required(),
+       name: Joi.string().required(),
+       active: Joi.boolean().required(),
+       baseUrl: Joi.string().optional().allow("", null),
+       apiKey: Joi.string().required(),
+       // TODO: should be enum
+       defaultModel: Joi.string().optional(),
+     }).required()
+  )
 }
 
 function buildConfigSaveValidation() {
