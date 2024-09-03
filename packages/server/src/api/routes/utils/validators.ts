@@ -91,7 +91,8 @@ export function datasourceValidator() {
   )
 }
 
-function filterObject(unknown = true) {
+function filterObject(opts?: { unknown: boolean }) {
+  const { unknown = true } = opts || {}
   const conditionalFilteringObject = () =>
     Joi.object({
       conditions: Joi.array().items(Joi.link("#schema")).required(),
