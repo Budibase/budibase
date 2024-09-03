@@ -4,10 +4,15 @@ import tk from "timekeeper"
 import {
   CreateRowActionRequest,
   DocumentType,
+  PermissionLevel,
+  Row,
   RowActionResponse,
 } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
+import { Expectations } from "../../../tests/utilities/api/base"
+import { roles } from "@budibase/backend-core"
+import { automations } from "@budibase/pro"
 
 const expectAutomationId = () =>
   expect.stringMatching(`^${DocumentType.AUTOMATION}_.+`)
@@ -43,11 +48,14 @@ describe("/rowsActions", () => {
       .map(name => ({ name }))
   }
 
-  function unauthorisedTests() {
+  function unauthorisedTests(
+    apiDelegate: (
+      expectations: Expectations,
+      testConfig?: { publicUser?: boolean }
+    ) => Promise<any>
+  ) {
     it("returns unauthorised (401) for unauthenticated requests", async () => {
-      await createRowAction(
-        tableId,
-        createRowActionRequest(),
+      await apiDelegate(
         {
           status: 401,
           body: {
@@ -65,6 +73,35 @@ describe("/rowsActions", () => {
       await config.withUser(user, async () => {
         await createRowAction(generator.guid(), createRowActionRequest(), {
           status: 403,
+          body: {
+            message: "Not Authorized",
+          },
+        })
+      })
+    })
+
+    it("returns forbidden (403) for non-builder users even if they have table write permissions", async () => {
+      const user = await config.createUser({
+        builder: {},
+      })
+      const tableId = generator.guid()
+      for (const role of Object.values(roles.BUILTIN_ROLE_IDS)) {
+        await config.api.permission.add({
+          roleId: role,
+          resourceId: tableId,
+          level: PermissionLevel.EXECUTE,
+        })
+      }
+
+      // replicate changes before checking permissions
+      await config.publish()
+
+      await config.withUser(user, async () => {
+        await createRowAction(tableId, createRowActionRequest(), {
+          status: 403,
+          body: {
+            message: "Not Authorized",
+          },
         })
       })
     })
@@ -77,7 +114,14 @@ describe("/rowsActions", () => {
   }
 
   describe("create", () => {
-    unauthorisedTests()
+    unauthorisedTests((expectations, testConfig) =>
+      createRowAction(
+        tableId,
+        createRowActionRequest(),
+        expectations,
+        testConfig
+      )
+    )
 
     it("creates new row actions for tables without existing actions", async () => {
       const rowAction = createRowActionRequest()
@@ -106,7 +150,7 @@ describe("/rowsActions", () => {
 
     it("trims row action names", async () => {
       const name = "   action  name  "
-      const res = await createRowAction(tableId, { name }, { status: 201 })
+      const res = await createRowAction(tableId, { name })
 
       expect(res).toEqual(
         expect.objectContaining({
@@ -174,9 +218,7 @@ describe("/rowsActions", () => {
         id: generator.guid(),
         valueToIgnore: generator.string(),
       }
-      const res = await createRowAction(tableId, dirtyRowAction, {
-        status: 201,
-      })
+      const res = await createRowAction(tableId, dirtyRowAction)
 
       expect(res).toEqual({
         name: rowAction.name,
@@ -239,15 +281,17 @@ describe("/rowsActions", () => {
       const action2 = await createRowAction(tableId, createRowActionRequest())
 
       for (const automationId of [action1.automationId, action2.automationId]) {
-        expect(
-          await config.api.automation.get(automationId, { status: 200 })
-        ).toEqual(expect.objectContaining({ _id: automationId }))
+        expect(await config.api.automation.get(automationId)).toEqual(
+          expect.objectContaining({ _id: automationId })
+        )
       }
     })
   })
 
   describe("find", () => {
-    unauthorisedTests()
+    unauthorisedTests((expectations, testConfig) =>
+      config.api.rowAction.find(tableId, expectations, testConfig)
+    )
 
     it("returns only the actions for the requested table", async () => {
       const rowActions: RowActionResponse[] = []
@@ -279,7 +323,15 @@ describe("/rowsActions", () => {
   })
 
   describe("update", () => {
-    unauthorisedTests()
+    unauthorisedTests((expectations, testConfig) =>
+      config.api.rowAction.update(
+        tableId,
+        generator.guid(),
+        createRowActionRequest(),
+        expectations,
+        testConfig
+      )
+    )
 
     it("can update existing actions", async () => {
       for (const rowAction of createRowActionRequests(3)) {
@@ -320,13 +372,7 @@ describe("/rowsActions", () => {
     })
 
     it("trims row action names", async () => {
-      const rowAction = await createRowAction(
-        tableId,
-        createRowActionRequest(),
-        {
-          status: 201,
-        }
-      )
+      const rowAction = await createRowAction(tableId, createRowActionRequest())
 
       const res = await config.api.rowAction.update(tableId, rowAction.id, {
         name: "   action  name  ",
@@ -398,7 +444,14 @@ describe("/rowsActions", () => {
   })
 
   describe("delete", () => {
-    unauthorisedTests()
+    unauthorisedTests((expectations, testConfig) =>
+      config.api.rowAction.delete(
+        tableId,
+        generator.guid(),
+        expectations,
+        testConfig
+      )
+    )
 
     it("can delete existing actions", async () => {
       const actions: RowActionResponse[] = []
@@ -460,6 +513,242 @@ describe("/rowsActions", () => {
           status: 200,
         })
       }
+    })
+  })
+
+  describe("set/unsetViewPermission", () => {
+    describe.each([
+      ["setViewPermission", config.api.rowAction.setViewPermission],
+      ["unsetViewPermission", config.api.rowAction.unsetViewPermission],
+    ])("unauthorisedTests for %s", (__, delegateTest) => {
+      unauthorisedTests((expectations, testConfig) =>
+        delegateTest(
+          tableId,
+          generator.guid(),
+          generator.guid(),
+          expectations,
+          testConfig
+        )
+      )
+    })
+
+    let tableIdForDescribe: string
+    let actionId1: string, actionId2: string
+    let viewId1: string, viewId2: string
+    beforeAll(async () => {
+      tableIdForDescribe = tableId
+      for (const rowAction of createRowActionRequests(3)) {
+        await createRowAction(tableId, rowAction)
+      }
+      const persisted = await config.api.rowAction.find(tableId)
+
+      const actions = _.sampleSize(Object.keys(persisted.actions), 2)
+      actionId1 = actions[0]
+      actionId2 = actions[1]
+
+      viewId1 = (
+        await config.api.viewV2.create(
+          setup.structures.viewV2.createRequest(tableId)
+        )
+      ).id
+      viewId2 = (
+        await config.api.viewV2.create(
+          setup.structures.viewV2.createRequest(tableId)
+        )
+      ).id
+    })
+
+    beforeEach(() => {
+      // Hack to reuse tables for these given tests
+      tableId = tableIdForDescribe
+    })
+
+    it("can set permission views", async () => {
+      await config.api.rowAction.setViewPermission(tableId, viewId1, actionId1)
+      const action1Result = await config.api.rowAction.setViewPermission(
+        tableId,
+        viewId2,
+        actionId1
+      )
+      const action2Result = await config.api.rowAction.setViewPermission(
+        tableId,
+        viewId1,
+        actionId2
+      )
+
+      const expectedAction1 = expect.objectContaining({
+        allowedViews: [viewId1, viewId2],
+      })
+      const expectedAction2 = expect.objectContaining({
+        allowedViews: [viewId1],
+      })
+
+      const expectedActions = expect.objectContaining({
+        [actionId1]: expectedAction1,
+        [actionId2]: expectedAction2,
+      })
+      expect(action1Result).toEqual(expectedAction1)
+      expect(action2Result).toEqual(expectedAction2)
+      expect((await config.api.rowAction.find(tableId)).actions).toEqual(
+        expectedActions
+      )
+    })
+
+    it("can unset permission views", async () => {
+      const actionResult = await config.api.rowAction.unsetViewPermission(
+        tableId,
+        viewId1,
+        actionId1
+      )
+
+      const expectedAction = expect.objectContaining({
+        allowedViews: [viewId2],
+      })
+      expect(actionResult).toEqual(expectedAction)
+      expect(
+        (await config.api.rowAction.find(tableId)).actions[actionId1]
+      ).toEqual(expectedAction)
+    })
+
+    it.each([
+      ["setViewPermission", config.api.rowAction.setViewPermission],
+      ["unsetViewPermission", config.api.rowAction.unsetViewPermission],
+    ])(
+      "cannot update permission views for unexisting views (%s)",
+      async (__, delegateTest) => {
+        const viewId = generator.guid()
+
+        await delegateTest(tableId, viewId, actionId1, {
+          status: 400,
+          body: {
+            message: `View '${viewId}' not found in '${tableId}'`,
+          },
+        })
+      }
+    )
+
+    it.each([
+      ["setViewPermission", config.api.rowAction.setViewPermission],
+      ["unsetViewPermission", config.api.rowAction.unsetViewPermission],
+    ])(
+      "cannot update permission views crossing table views (%s)",
+      async (__, delegateTest) => {
+        const anotherTable = await config.api.table.save(
+          setup.structures.basicTable()
+        )
+        const { id: viewId } = await config.api.viewV2.create(
+          setup.structures.viewV2.createRequest(anotherTable._id!)
+        )
+
+        await delegateTest(tableId, viewId, actionId1, {
+          status: 400,
+          body: {
+            message: `View '${viewId}' not found in '${tableId}'`,
+          },
+        })
+      }
+    )
+  })
+
+  describe("trigger", () => {
+    let row: Row
+    let rowAction: RowActionResponse
+
+    beforeEach(async () => {
+      row = await config.api.row.save(tableId, {})
+      rowAction = await createRowAction(tableId, createRowActionRequest())
+
+      await config.publish()
+      tk.travel(Date.now() + 100)
+    })
+
+    async function getAutomationLogs() {
+      const { data: automationLogs } = await config.doInContext(
+        config.getProdAppId(),
+        async () =>
+          automations.logs.logSearch({ startDate: new Date().toISOString() })
+      )
+      return automationLogs
+    }
+
+    it("can trigger an automation given valid data", async () => {
+      expect(await getAutomationLogs()).toBeEmpty()
+      await config.api.rowAction.trigger(tableId, rowAction.id, {
+        rowId: row._id!,
+      })
+
+      const automationLogs = await getAutomationLogs()
+      expect(automationLogs).toEqual([
+        expect.objectContaining({
+          automationId: rowAction.automationId,
+          trigger: {
+            id: "trigger",
+            stepId: "ROW_ACTION",
+            inputs: null,
+            outputs: {
+              fields: {},
+              row: await config.api.row.get(tableId, row._id!),
+              table: await config.api.table.get(tableId),
+              automation: expect.objectContaining({
+                _id: rowAction.automationId,
+              }),
+            },
+          },
+        }),
+      ])
+    })
+
+    it("rejects triggering from a non-allowed view", async () => {
+      const viewId = (
+        await config.api.viewV2.create(
+          setup.structures.viewV2.createRequest(tableId)
+        )
+      ).id
+
+      await config.publish()
+      await config.api.rowAction.trigger(
+        viewId,
+        rowAction.id,
+        {
+          rowId: row._id!,
+        },
+        {
+          status: 403,
+          body: {
+            message: `Row action '${rowAction.id}' is not enabled for view '${viewId}'`,
+          },
+        }
+      )
+
+      const automationLogs = await getAutomationLogs()
+      expect(automationLogs).toEqual([])
+    })
+
+    it("triggers from an allowed view", async () => {
+      const viewId = (
+        await config.api.viewV2.create(
+          setup.structures.viewV2.createRequest(tableId)
+        )
+      ).id
+
+      await config.api.rowAction.setViewPermission(
+        tableId,
+        viewId,
+        rowAction.id
+      )
+
+      await config.publish()
+      expect(await getAutomationLogs()).toBeEmpty()
+      await config.api.rowAction.trigger(viewId, rowAction.id, {
+        rowId: row._id!,
+      })
+
+      const automationLogs = await getAutomationLogs()
+      expect(automationLogs).toEqual([
+        expect.objectContaining({
+          automationId: rowAction.automationId,
+        }),
+      ])
     })
   })
 })
