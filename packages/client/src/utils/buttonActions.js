@@ -497,7 +497,7 @@ const rowActionHandler = async action => {
   const { resourceId, rowId, rowActionId } = action.parameters
   await API.rowActions.trigger({
     rowActionId,
-    tableId: resourceId,
+    sourceId: resourceId,
     rowId,
   })
 }

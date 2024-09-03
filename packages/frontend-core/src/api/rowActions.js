@@ -51,13 +51,37 @@ export const buildRowActionEndpoints = API => ({
   },
 
   /**
+   * Enables a row action for a certain view
+   * @param tableId the ID of the parent table
+   * @param rowActionId the ID of the row action
+   * @param viewId the ID of the view
+   */
+  enableView: async ({ tableId, rowActionId, viewId }) => {
+    return await API.post({
+      url: `/api/tables/${tableId}/actions/${rowActionId}/permissions/${viewId}`,
+    })
+  },
+
+  /**
+   * Disables a row action for a certain view
+   * @param tableId the ID of the parent table
+   * @param rowActionId the ID of the row action
+   * @param viewId the ID of the view
+   */
+  disableView: async ({ tableId, rowActionId, viewId }) => {
+    return await API.delete({
+      url: `/api/tables/${tableId}/actions/${rowActionId}/permissions/${viewId}`,
+    })
+  },
+
+  /**
    * Triggers a row action.
    * @param tableId the ID of the table
    * @param rowActionId the ID of the row action to trigger
    */
-  trigger: async ({ tableId, rowActionId, rowId }) => {
+  trigger: async ({ sourceId, rowActionId, rowId }) => {
     return await API.post({
-      url: `/api/tables/${tableId}/actions/${rowActionId}/trigger`,
+      url: `/api/tables/${sourceId}/actions/${rowActionId}/trigger`,
       body: {
         rowId,
       },
