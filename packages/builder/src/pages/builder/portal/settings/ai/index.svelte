@@ -60,10 +60,9 @@
     }
 
     try {
-      const savedConfig = await API.saveConfig(fullAIConfig)
-      fullAIConfig._rev = savedConfig._rev
-      fullAIConfig._id = savedConfig._id
+      await API.saveConfig(fullAIConfig)
       notifications.success(`Successfully saved and activated AI Configuration`)
+      await fetchAIConfig()
     } catch (error) {
       notifications.error(
         `Failed to save AI Configuration, reason: ${error?.message || "Unknown"}`
@@ -76,10 +75,9 @@
     delete fullAIConfig.config[key]
 
     try {
-      const savedConfig = await API.saveConfig(fullAIConfig)
-      fullAIConfig._rev = savedConfig._rev
-      fullAIConfig._id = savedConfig._id
+      await API.saveConfig(fullAIConfig)
       notifications.success(`Deleted config`)
+      await fetchAIConfig()
     } catch (error) {
       notifications.error(
         `Failed to delete config, reason: ${error?.message || "Unknown"}`
