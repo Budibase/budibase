@@ -63,11 +63,15 @@
   </div>
   <div class="form-row">
     <Label size="M">Default Model</Label>
-    <Select
-      placeholder={config.provider ? "Choose an option" : "Select a provider first"}
-      bind:value={config.defaultModel}
-      options={config.provider ? Providers[config.provider].models : []}
-    />
+    {#if config.provider !== Providers.Custom.name}
+      <Select
+        placeholder={config.provider ? "Choose an option" : "Select a provider first"}
+        bind:value={config.defaultModel}
+        options={config.provider ? Providers[config.provider].models : []}
+      />
+    {:else}
+      <Input bind:value={config.defaultModel} />
+    {/if}
   </div>
   <div class="form-row">
     <Label size="M">Base URL</Label>
