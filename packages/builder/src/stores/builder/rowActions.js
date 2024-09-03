@@ -48,24 +48,20 @@ export class RowActionStore extends BudiStore {
       getName: x => x.name,
     })
 
-    // Create the action and update state
+    // Create the action
     const res = await API.rowActions.create({
       name,
       tableId,
     })
-    this.update(state => ({
-      ...state,
-      [tableId]: [...(state[tableId] || []), res],
-    }))
 
-    // If adding to a view, enable on this view
+    // Enable action on this view if adding via a view
     if (viewId) {
       await this.enableView(tableId, viewId, res.id)
+    } else {
+      await this.refreshRowActions(tableId)
     }
 
-    // Refresh automations so we have this new row action automation
-    await automationStore.actions.fetch()
-
+    automationStore.actions.fetch()
     return res
   }
 
@@ -93,10 +89,8 @@ export class RowActionStore extends BudiStore {
       rowActionId,
       name,
     })
-    await Promise.all([
-      this.refreshRowActions(tableId),
-      automationStore.actions.fetch(),
-    ])
+    await this.refreshRowActions(tableId)
+    automationStore.actions.fetch()
   }
 
   delete = async (tableId, rowActionId) => {
