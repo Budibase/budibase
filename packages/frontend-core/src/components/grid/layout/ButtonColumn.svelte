@@ -25,7 +25,7 @@
 
   let container
 
-  $: buttons = $props.buttons?.slice(0, 3) || []
+  $: buttons = getButtons($props)
   $: columnsWidth = $scrollableColumns.reduce(
     (total, col) => (total += col.width),
     0
@@ -33,6 +33,14 @@
   $: columnEnd = columnsWidth - $scrollLeft - 1
   $: gridEnd = $width - $buttonColumnWidth - 1
   $: left = Math.min(columnEnd, gridEnd)
+
+  const getButtons = ({ buttons, buttonsCollapsed }) => {
+    let gridButtons = buttons || []
+    if (!buttonsCollapsed) {
+      return gridButtons.slice(0, 3)
+    }
+    return gridButtons
+  }
 
   const handleClick = async (button, row) => {
     await button.onClick?.(rows.actions.cleanRow(row))

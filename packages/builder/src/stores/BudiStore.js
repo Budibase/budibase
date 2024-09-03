@@ -2,9 +2,8 @@ import { writable } from "svelte/store"
 
 export default class BudiStore {
   constructor(init, opts) {
-    const store = writable({
-      ...init,
-    })
+    this.initialState = init
+    const store = writable({ ...init })
 
     /**
      * Internal Svelte store
@@ -23,6 +22,7 @@ export default class BudiStore {
      * *Store modification should be kept to a minimum
      */
     this.update = this.store.update
+    this.set = this.store.set
 
     /**
      * Optional debug mode to output the store updates to console
@@ -32,5 +32,9 @@ export default class BudiStore {
         console.warn(`${this.constructor.name}`, state)
       })
     }
+  }
+
+  reset = () => {
+    this.store.set({ ...this.initialState })
   }
 }

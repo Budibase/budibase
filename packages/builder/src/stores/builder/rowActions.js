@@ -1,0 +1,114 @@
+import { get, derived } from "svelte/store"
+import BudiStore from "stores/BudiStore"
+import { tables } from "./tables"
+import { viewsV2 } from "./viewsV2"
+import { automationStore } from "./automations"
+import { API } from "api"
+import { getSequentialName } from "helpers/duplicate"
+
+const initialState = {}
+
+export class RowActionStore extends BudiStore {
+  constructor() {
+    super(initialState)
+  }
+
+  refreshRowActions = async sourceId => {
+    if (!sourceId) {
+      return
+    }
+
+    // Get the underlying table ID for this source ID
+    let tableId = get(tables).list.find(table => table._id === sourceId)?._id
+    if (!tableId) {
+      const view = get(viewsV2).list.find(view => view.id === sourceId)
+      tableId = view?.tableId
+    }
+    if (!tableId) {
+      return
+    }
+
+    // Fetch row actions for this table
+    const res = await API.rowActions.fetch(tableId)
+    const actions = Object.values(res || {})
+    this.update(state => ({
+      ...state,
+      [tableId]: actions,
+    }))
+  }
+
+  createRowAction = async (tableId, viewId) => {
+    if (!tableId) {
+      return
+    }
+
+    // Get a unique name for this action
+    const existingRowActions = get(this.store)[tableId] || []
+    const name = getSequentialName(existingRowActions, "New row action ", {
+      getName: x => x.name,
+    })
+
+    // Create the action and update state
+    const res = await API.rowActions.create({
+      name,
+      tableId,
+    })
+    this.update(state => ({
+      ...state,
+      [tableId]: [...(state[tableId] || []), res],
+    }))
+
+    // If adding to a view, enable on this view
+    if (viewId) {
+      await this.enableView(tableId, viewId, res.id)
+    }
+
+    // Refresh automations so we have this new row action automation
+    await automationStore.actions.fetch()
+
+    return res
+  }
+
+  enableView = async (tableId, viewId, rowActionId) => {
+    await API.rowActions.enableView({
+      tableId,
+      viewId,
+      rowActionId,
+    })
+    await this.refreshRowActions(tableId)
+  }
+
+  disableView = async (tableId, viewId, rowActionId) => {
+    await API.rowActions.disableView({
+      tableId,
+      viewId,
+      rowActionId,
+    })
+    await this.refreshRowActions(tableId)
+  }
+}
+
+const store = new RowActionStore()
+const derivedStore = derived(store, $store => {
+  let map = {}
+
+  // Generate an entry for every view as well
+  Object.keys($store || {}).forEach(tableId => {
+    map[tableId] = $store[tableId]
+    for (let action of $store[tableId]) {
+      for (let viewId of action.allowedViews || []) {
+        if (!map[viewId]) {
+          map[viewId] = []
+        }
+        map[viewId].push(action)
+      }
+    }
+  })
+
+  return map
+})
+
+export const rowActions = {
+  ...store,
+  subscribe: derivedStore.subscribe,
+}
