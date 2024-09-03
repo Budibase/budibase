@@ -26,6 +26,7 @@
   icon="ChevronDown"
   cta
   on:click={() => popover?.show()}
+  on:click
 >
   {text || "Action"}
 </Button>
@@ -36,6 +37,8 @@
   {offset}
   {animate}
   resizable={false}
+  on:close
+  on:open
 >
   <Menu>
     {#each buttons as button}
