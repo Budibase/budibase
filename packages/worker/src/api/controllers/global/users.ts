@@ -54,6 +54,17 @@ export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
     const currentUserId = ctx.user?._id
     const requestUser = ctx.request.body
 
+    // Do not allow the account holder role to be changed
+    const tenantInfo = await tenancy.getTenantInfo(requestUser.tenantId)
+    if (tenantInfo?.owner.email === requestUser.email) {
+      if (
+        requestUser.admin?.global !== true ||
+        requestUser.builder?.global !== true
+      ) {
+        throw Error("Cannot set role of account holder")
+      }
+    }
+
     const user = await userSdk.db.save(requestUser, { currentUserId })
 
     ctx.body = {
