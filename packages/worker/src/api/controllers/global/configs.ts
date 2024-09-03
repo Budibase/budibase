@@ -320,12 +320,26 @@ function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
   )
 }
 
-function sanitizeAIConfig(aiConfig: AIConfig) {
+async function enrichAIConfig(aiConfig: AIConfig) {
+  // Strip out the API Keys from the response so they don't show in the UI
   for (let key in aiConfig.config) {
     if (aiConfig.config[key].apiKey) {
       aiConfig.config[key].apiKey = PASSWORD_REPLACEMENT
     }
   }
+
+  // Return the Budibase AI data source as part of the response if licensing allows
+  const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
+  if (budibaseAIEnabled) {
+    aiConfig.config["budibase_ai"] = {
+      provider: "OpenAI",
+      active: true,
+      isDefault: true,
+      defaultModel: env.BUDIBASE_AI_DEFAULT_MODEL,
+      name: "Budibase AI",
+    }
+  }
+
   return aiConfig
 }
 
@@ -341,8 +355,7 @@ export async function find(ctx: UserCtx) {
       }
 
       if (type === ConfigType.AI) {
-        // TODO: do the licensing checks here and return the right things based on the license
-        sanitizeAIConfig(scopedConfig)
+        await enrichAIConfig(scopedConfig)
       }
       ctx.body = scopedConfig
     } else {

@@ -1,5 +1,6 @@
 <script>
   import { Body, Label, Icon } from "@budibase/bbui"
+  import BudibaseLogo from "./logos/Budibase.svelte"
   import OpenAILogo from "./logos/OpenAI.svelte"
   import AnthropicLogo from "./logos/Anthropic.svelte"
   import TogetherAILogo from "./logos/TogetherAI.svelte"
@@ -7,6 +8,7 @@
 
   export let config
   export let disabled
+  export let budibaseAIDefault
 
   export let editHandler
   export let deleteHandler
@@ -16,7 +18,9 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div on:click class:disabled class="option">
   <div class="icon">
-    {#if config.provider === Providers.OpenAI.name}
+    {#if config.name === "Budibase AI"}
+      <BudibaseLogo height="30" width="30"/>
+    {:else if config.provider === Providers.OpenAI.name}
       <OpenAILogo height="30" width="30"/>
     {:else if config.provider === Providers.Anthropic.name}
       <AnthropicLogo height="30" width="30"/>
