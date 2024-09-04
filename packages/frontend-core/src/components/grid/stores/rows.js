@@ -6,6 +6,7 @@ import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
 import { FieldType } from "@budibase/types"
+import { processStringSync } from "@budibase/string-templates"
 
 export const createStores = () => {
   const rows = writable([])
@@ -67,7 +68,7 @@ export const deriveStores = context => {
         ...row,
         __idx: idx,
         ...customColumns.reduce((acc, c) => {
-          acc[c.name] = get(row, c.formulaField)
+          acc[c.name] = processStringSync(c.formulaField, row)
           return acc
         }, {}),
       }))

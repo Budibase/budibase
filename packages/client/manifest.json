@@ -3078,7 +3078,7 @@
         "key": "label"
       },
       {
-        "type": "plainText",
+        "type": "text",
         "label": "Formula",
         "key": "formulaField"
       },
