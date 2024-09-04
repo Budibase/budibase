@@ -913,25 +913,21 @@ class InternalBuilder {
       const fieldList: string = relationshipFields
         .map(field => jsonField(field))
         .join(",")
-      let select: Knex.Raw, limit: number
+      let select: Knex.Raw
       switch (sqlClient) {
         case SqlClient.SQL_LITE:
           select = this.knex.raw(`json_group_array(json_object(${fieldList}))`)
-          limit = getBaseLimit()
           break
         case SqlClient.POSTGRES:
           select = this.knex.raw(`json_agg(json_build_object(${fieldList}))`)
-          limit = 1
           break
         case SqlClient.MY_SQL:
         case SqlClient.ORACLE:
           select = this.knex.raw(`json_arrayagg(json_object(${fieldList}))`)
-          limit = getBaseLimit()
           break
         case SqlClient.MS_SQL:
           // Cursed, needs some code later instead
           select = this.knex.raw(`*`)
-          limit = getBaseLimit()
           break
         default:
           throw new Error(`JSON relationships not implement for ${this.client}`)
@@ -940,15 +936,11 @@ class InternalBuilder {
       // it reduces the result set rather than limiting how much data it filters over
       const primaryKey = `${toAlias}.${toPrimary || toKey}`
       let subQuery: Knex.QueryBuilder | Knex.Raw = this.knex
-        .select(select)
+        .select(`${toAlias}.*`)
         .from(toTableWithSchema)
-        .limit(limit)
+        .limit(getBaseLimit())
         // add sorting to get consistent order
         .orderBy(primaryKey)
-
-      if (sqlClient === SqlClient.POSTGRES) {
-        subQuery = subQuery.groupBy(primaryKey)
-      }
 
       // many-to-many relationship with junction table
       if (throughTable && toPrimary && fromPrimary) {
@@ -987,7 +979,11 @@ class InternalBuilder {
         )
       }
 
-      query = query.select({ [relationship.column]: subQuery })
+      // @ts-ignore - the from alias syntax isn't in Knex typing
+      const wrapperQuery = this.knex.select(select).from({
+        [toAlias]: subQuery,
+      })
+      query = query.select({ [relationship.column]: wrapperQuery })
     }
     return query
   }
