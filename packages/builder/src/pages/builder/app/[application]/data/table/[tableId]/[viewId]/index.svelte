@@ -24,8 +24,8 @@
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
 
-  const makeRowActionButtons = rowActions => {
-    return (rowActions || []).map(action => ({
+  const makeRowActionButtons = actions => {
+    return (actions || []).map(action => ({
       text: action.name,
       onClick: async row => {
         await rowActions.trigger(id, action.id, row._id)
