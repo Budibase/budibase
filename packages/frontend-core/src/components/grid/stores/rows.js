@@ -42,15 +42,37 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { rows } = context
+  function get(obj, path) {
+    if (!path) {
+      return
+    }
+    return path
+      .split(".")
+      .reduce(
+        (acc, part) => (acc && acc[part] !== undefined ? acc[part] : undefined),
+        obj
+      )
+  }
+
+  const { rows, enrichedSchema } = context
 
   // Enrich rows with an index property and any pending changes
-  const enrichedRows = derived(rows, $rows => {
-    return $rows.map((row, idx) => ({
-      ...row,
-      __idx: idx,
-    }))
-  })
+  const enrichedRows = derived(
+    [rows, enrichedSchema],
+    ([$rows, $enrichedSchema]) => {
+      const customColumns = Object.values($enrichedSchema || {}).filter(
+        f => f.custom
+      )
+      return $rows.map((row, idx) => ({
+        ...row,
+        __idx: idx,
+        ...customColumns.reduce((acc, c) => {
+          acc[c.name] = get(row, c.formulaField)
+          return acc
+        }, {}),
+      }))
+    }
+  )
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(enrichedRows, $enrichedRows => {

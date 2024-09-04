@@ -81,7 +81,9 @@ export const deriveStores = context => {
           }
           enrichedSchema[field] = {
             ...$schemaOverrides[field],
+            name: field,
             type: FieldType.FORMULA,
+            custom: true,
           }
         })
       }

@@ -99,6 +99,7 @@
         conditions: column.conditions,
         visible: !!column.active,
         custom: column.custom,
+        formulaField: column.formulaField,
       }
       if (column.width) {
         overrides[column.field].width = column.width
