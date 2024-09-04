@@ -2,48 +2,47 @@ import { setEnv as setCoreEnv } from "@budibase/backend-core"
 import type { GoogleSpreadsheetWorksheet } from "google-spreadsheet"
 import nock from "nock"
 
-jest.mock("google-auth-library")
-const { OAuth2Client } = require("google-auth-library")
-
-const setCredentialsMock = jest.fn()
-const getAccessTokenMock = jest.fn()
-
-OAuth2Client.mockImplementation(() => {
-  return {
-    setCredentials: setCredentialsMock,
-    getAccessToken: getAccessTokenMock,
-  }
-})
-
-jest.mock("google-spreadsheet")
-const { GoogleSpreadsheet } = require("google-spreadsheet")
-
-const sheetsByTitle: { [title: string]: GoogleSpreadsheetWorksheet } = {}
-const sheetsByIndex: GoogleSpreadsheetWorksheet[] = []
-const mockGoogleIntegration = {
-  useOAuth2Client: jest.fn(),
-  loadInfo: jest.fn(),
-  sheetsByTitle,
-  sheetsByIndex,
-}
-
-GoogleSpreadsheet.mockImplementation(() => mockGoogleIntegration)
-
 import { structures } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import GoogleSheetsIntegration from "../googlesheets"
-import { FieldType, Table, TableSchema, TableSourceType } from "@budibase/types"
+import { GoogleSheetsConfig, GoogleSheetsIntegration } from "../googlesheets"
+import {
+  Datasource,
+  FieldType,
+  SourceName,
+  Table,
+  TableSchema,
+  TableSourceType,
+} from "@budibase/types"
 import { generateDatasourceID } from "../../db/utils"
 
 describe("Google Sheets Integration", () => {
-  let integration: any,
-    config = new TestConfiguration()
-  let cleanupEnv: () => void
+  const config = new TestConfiguration()
 
-  beforeAll(() => {
+  let integration: GoogleSheetsIntegration
+  let cleanupEnv: () => void
+  let table: Table
+  let datasource: Datasource
+
+  const datasourceConfig: GoogleSheetsConfig = {
+    spreadsheetId: "randomId",
+    auth: {
+      appId: "appId",
+      accessToken: "accessToken",
+      refreshToken: "refreshToken",
+    },
+  }
+
+  beforeAll(async () => {
     cleanupEnv = setCoreEnv({
       GOOGLE_CLIENT_ID: "test",
       GOOGLE_CLIENT_SECRET: "test",
+    })
+
+    datasource = await config.api.datasource.create({
+      name: "Test Datasource",
+      type: "datasource",
+      source: SourceName.GOOGLE_SHEETS,
+      config: datasourceConfig,
     })
   })
 
@@ -53,17 +52,32 @@ describe("Google Sheets Integration", () => {
   })
 
   beforeEach(async () => {
-    integration = new GoogleSheetsIntegration.integration({
-      spreadsheetId: "randomId",
-      auth: {
-        appId: "appId",
-        accessToken: "accessToken",
-        refreshToken: "refreshToken",
-      },
-    })
     await config.init()
 
-    jest.clearAllMocks()
+    integration = new GoogleSheetsIntegration(datasourceConfig)
+
+    table = await config.api.table.save({
+      name: "Test Table",
+      type: "table",
+      sourceId: generateDatasourceID(),
+      sourceType: TableSourceType.EXTERNAL,
+      schema: {
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+          constraints: {
+            type: "string",
+          },
+        },
+        description: {
+          name: "description",
+          type: FieldType.STRING,
+          constraints: {
+            type: "string",
+          },
+        },
+      },
+    })
 
     nock.cleanAll()
     nock("https://www.googleapis.com/").post("/oauth2/v4/token").reply(200, {

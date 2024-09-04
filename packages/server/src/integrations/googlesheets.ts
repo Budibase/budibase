@@ -31,7 +31,7 @@ import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"
 import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
 
-interface GoogleSheetsConfig {
+export interface GoogleSheetsConfig {
   spreadsheetId: string
   auth: OAuthClientConfig
   continueSetupId?: string
@@ -157,7 +157,7 @@ const SCHEMA: Integration = {
   },
 }
 
-class GoogleSheetsIntegration implements DatasourcePlus {
+export class GoogleSheetsIntegration implements DatasourcePlus {
   private readonly config: GoogleSheetsConfig
   private readonly spreadsheetId: string
   private client: GoogleSpreadsheet = undefined!
