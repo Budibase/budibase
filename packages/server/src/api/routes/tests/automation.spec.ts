@@ -15,6 +15,7 @@ import { Automation, FieldType, Table } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { FilterConditions } from "../../../automations/steps/filter"
 import { removeDeprecated } from "../../../automations/utils"
+import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 
 const MAX_RETRIES = 4
 let {
@@ -119,6 +120,104 @@ describe("/automations", () => {
       expect(res.body.automation._id).not.toEqual(null)
       expect(events.automation.created).toHaveBeenCalledTimes(1)
       expect(events.automation.stepCreated).toHaveBeenCalledTimes(2)
+    })
+
+    it("Should ensure you can't have a branch as not a last step", async () => {
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
+      })
+        .appAction({ fields: { status: "active" } })
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {
+              equal: { "trigger.fields.status": "active" },
+            },
+          },
+        })
+        .serverLog({ text: "Inactive user" })
+        .build()
+
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            "Invalid body - Branch steps are only allowed as the last step",
+        },
+      })
+    })
+
+    it("Should check validation on an automation that has a branch step with no children", async () => {
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
+      })
+        .appAction({ fields: { status: "active" } })
+        .branch({})
+        .serverLog({ text: "Inactive user" })
+        .build()
+
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            'Invalid body - "definition.steps[0].inputs.branches" must contain at least 1 items',
+        },
+      })
+    })
+
+    it("Should check validation on a branch step with empty conditions", async () => {
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
+      })
+        .appAction({ fields: { status: "active" } })
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {},
+          },
+        })
+        .build()
+
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            'Invalid body - "definition.steps[0].inputs.branches[0].condition" must have at least 1 key',
+        },
+      })
+    })
+
+    it("Should check validation on an branch that has a condition that is not valid", async () => {
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
+      })
+        .appAction({ fields: { status: "active" } })
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {
+              //@ts-ignore
+              INCORRECT: { "trigger.fields.status": "active" },
+            },
+          },
+        })
+        .serverLog({ text: "Inactive user" })
+        .build()
+
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            'Invalid body - "definition.steps[0].inputs.branches[0].condition.INCORRECT" is not allowed',
+        },
+      })
     })
 
     it("should apply authorization to endpoint", async () => {
