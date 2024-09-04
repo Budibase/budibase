@@ -125,14 +125,14 @@ describe("/automations", () => {
 
     it("Should ensure you can't have a branch as not a last step", async () => {
       const automation = branchAutomationIncorrectPosition()
-      const res = await request
-        .post(`/api/automations`)
-        .set(config.defaultHeaders())
-        .send(automation)
-        .expect("Content-Type", /json/)
-        .expect(400)
 
-      expect(res.body.message).toContain("must contain at least 1 items")
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            'Invalid body - "definition.steps[0].inputs.branches" must contain at least 1 items',
+        },
+      })
     })
 
     it("Should check validation on an automation that has a branch step with no children", async () => {
@@ -142,16 +142,13 @@ describe("/automations", () => {
       ]
       automation.definition.steps[0].inputs.children = {}
 
-      const res = await request
-        .post(`/api/automations`)
-        .set(config.defaultHeaders())
-        .send(automation)
-        .expect("Content-Type", /json/)
-        .expect(400)
-
-      expect(res.body.message).toContain(
-        "Branch steps are only allowed as the last step"
-      )
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            "Invalid body - Branch steps are only allowed as the last step",
+        },
+      })
     })
 
     it("Should check validation on a branch step with empty conditions", async () => {
@@ -162,14 +159,13 @@ describe("/automations", () => {
       ]
       automation.definition.steps[1].inputs.children = {}
 
-      const res = await request
-        .post(`/api/automations`)
-        .set(config.defaultHeaders())
-        .send(automation)
-        .expect("Content-Type", /json/)
-        .expect(400)
-
-      expect(res.body.message).toContain("must have at least 1 key")
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            'Invalid body - "definition.steps[1].inputs.branches[0].condition" must have at least 1 key',
+        },
+      })
     })
 
     it("Should check validation on an branch that has a condition that is not valid", async () => {
@@ -185,14 +181,13 @@ describe("/automations", () => {
       ]
       automation.definition.steps[1].inputs.children = {}
 
-      const res = await request
-        .post(`/api/automations`)
-        .set(config.defaultHeaders())
-        .send(automation)
-        .expect("Content-Type", /json/)
-        .expect(400)
-
-      expect(res.body.message).toContain('INCORRECT" is not allowed')
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            'Invalid body - "definition.steps[1].inputs.branches[0].condition.INCORRECT" is not allowed',
+        },
+      })
     })
 
     it("should apply authorization to endpoint", async () => {
