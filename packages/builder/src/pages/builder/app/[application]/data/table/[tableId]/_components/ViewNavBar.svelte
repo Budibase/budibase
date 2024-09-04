@@ -328,6 +328,7 @@
     align-items: center;
     padding: 0 var(--spacing-xl);
     gap: 8px;
+    background: var(--background);
   }
   .nav__views {
     flex: 0 1 auto;
