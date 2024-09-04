@@ -128,7 +128,7 @@ class InternalBuilder {
   }
 
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
-    const { endpoint, resource, meta, tableAliases } = this.query
+    const { endpoint, resource, tableAliases } = this.query
 
     if (!resource || !resource.fields || resource.fields.length === 0) {
       return "*"
