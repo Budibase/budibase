@@ -205,6 +205,7 @@
               size="S"
               icon="ChevronRight"
               quiet
+              selected={relationshipFieldName === column.name}
             />
           </div>
         {/if}
