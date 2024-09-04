@@ -742,5 +742,37 @@ describe("/rowsActions", () => {
         }),
       ])
     })
+
+    const { PUBLIC, ...nonPublicRoles } = roles.BUILTIN_ROLE_IDS
+
+    it.each(Object.values(nonPublicRoles))(
+      "rejects if the user does not have table read permission",
+      async role => {
+      await config.api.permission.add({
+        level: PermissionLevel.READ,
+        resourceId: tableId,
+          roleId: role,
+      })
+
+      const normalUser = await config.createUser({
+        admin: { global: false },
+        builder: {},
+      })
+      await config.withUser(normalUser, async () => {
+        await config.publish()
+        await config.api.rowAction.trigger(
+          tableId,
+          rowAction.id,
+          {
+            rowId: row._id!,
+          },
+            { status: 403, body: { message: "User does not have permission" } }
+        )
+
+        const automationLogs = await getAutomationLogs()
+        expect(automationLogs).toBeEmpty()
+      })
+      }
+    )
   })
 })
