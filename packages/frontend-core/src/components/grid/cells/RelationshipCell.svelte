@@ -465,10 +465,8 @@
     height: 20px;
     max-width: 100%;
   }
-  .values.wrap .badge:hover {
+  .values.wrap .badge.extra-info:hover {
     filter: brightness(1.25);
-  }
-  .values.wrap .badge.extra-info {
     cursor: pointer;
   }
 
