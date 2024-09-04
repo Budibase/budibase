@@ -9,7 +9,7 @@ import {
   RowActionResponse,
 } from "@budibase/types"
 import * as setup from "./utilities"
-import { generator } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import { Expectations } from "../../../tests/utilities/api/base"
 import { roles } from "@budibase/backend-core"
 import { automations } from "@budibase/pro"
@@ -743,7 +743,34 @@ describe("/rowsActions", () => {
       ])
     })
 
-    describe("role permission checks", () => {
+    describe.each([
+      ["table", async () => tableId],
+      [
+        "view",
+        async () => {
+          const viewId = (
+            await config.api.viewV2.create(
+              setup.structures.viewV2.createRequest(tableId)
+            )
+          ).id
+
+          await config.api.rowAction.setViewPermission(
+            tableId,
+            viewId,
+            rowAction.id
+          )
+          return viewId
+        },
+      ],
+    ])("role permission checks (for %s)", (_, getResourceId) => {
+      beforeAll(() => {
+        mocks.licenses.useViewPermissions()
+      })
+
+      afterAll(() => {
+        mocks.licenses.useCloudFree()
+      })
+
       function createUser(role: string) {
         return config.createUser({
           admin: { global: false },
@@ -752,33 +779,38 @@ describe("/rowsActions", () => {
         })
       }
 
-      function getRolesHigherThan(role: string) {
-        const result = Object.values(roles.BUILTIN_ROLE_IDS).filter(
-          r => r !== role && roles.lowerBuiltinRoleID(r, role) === role
+      const allowedRoleConfig = (() => {
+        function getRolesLowerThan(role: string) {
+          const result = Object.values(roles.BUILTIN_ROLE_IDS).filter(
+            r => r !== role && roles.lowerBuiltinRoleID(r, role) === r
+          )
+          return result
+        }
+        return Object.values(roles.BUILTIN_ROLE_IDS).flatMap(r =>
+          [r, ...getRolesLowerThan(r)].map(p => [r, p])
         )
-        return result
-      }
-      function getRolesLowerThan(role: string) {
-        const result = Object.values(roles.BUILTIN_ROLE_IDS).filter(
-          r => r !== role && roles.lowerBuiltinRoleID(r, role) === r
+      })()
+
+      const disallowedRoleConfig = (() => {
+        function getRolesHigherThan(role: string) {
+          const result = Object.values(roles.BUILTIN_ROLE_IDS).filter(
+            r => r !== role && roles.lowerBuiltinRoleID(r, role) === role
+          )
+          return result
+        }
+        return Object.values(roles.BUILTIN_ROLE_IDS).flatMap(r =>
+          getRolesHigherThan(r).map(p => [r, p])
         )
-        return result
-      }
-
-      const allowedRoleConfig = Object.values(roles.BUILTIN_ROLE_IDS).flatMap(
-        r => [r, ...getRolesLowerThan(r)].map(p => [r, p])
-      )
-
-      const disallowedRoleConfig = Object.values(
-        roles.BUILTIN_ROLE_IDS
-      ).flatMap(r => getRolesHigherThan(r).map(p => [r, p]))
+      })()
 
       it.each(allowedRoleConfig)(
-        "allows triggering if the user has table read permission (user %s, table %s)",
+        "allows triggering if the user has read permission (user %s, table %s)",
         async (userRole, resourcePermission) => {
+          const resourceId = await getResourceId()
+
           await config.api.permission.add({
             level: PermissionLevel.READ,
-            resourceId: tableId,
+            resourceId,
             roleId: resourcePermission,
           })
 
@@ -787,7 +819,7 @@ describe("/rowsActions", () => {
           await config.withUser(normalUser, async () => {
             await config.publish()
             await config.api.rowAction.trigger(
-              tableId,
+              resourceId,
               rowAction.id,
               {
                 rowId: row._id!,
@@ -801,9 +833,10 @@ describe("/rowsActions", () => {
       it.each(disallowedRoleConfig)(
         "rejects if the user does not have table read permission (user %s, table %s)",
         async (userRole, resourcePermission) => {
+          const resourceId = await getResourceId()
           await config.api.permission.add({
             level: PermissionLevel.READ,
-            resourceId: tableId,
+            resourceId,
             roleId: resourcePermission,
           })
 
@@ -812,7 +845,7 @@ describe("/rowsActions", () => {
           await config.withUser(normalUser, async () => {
             await config.publish()
             await config.api.rowAction.trigger(
-              tableId,
+              resourceId,
               rowAction.id,
               {
                 rowId: row._id!,
