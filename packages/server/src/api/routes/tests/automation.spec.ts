@@ -15,6 +15,7 @@ import { Automation, FieldType, Table } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { FilterConditions } from "../../../automations/steps/filter"
 import { removeDeprecated } from "../../../automations/utils"
+import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 
 const MAX_RETRIES = 4
 let {
@@ -25,8 +26,6 @@ let {
   collectAutomation,
   filterAutomation,
   updateRowAutomationWithFilters,
-  branchAutomationIncorrectPosition,
-  branchAutomation,
 } = setup.structures
 
 describe("/automations", () => {
@@ -124,23 +123,22 @@ describe("/automations", () => {
     })
 
     it("Should ensure you can't have a branch as not a last step", async () => {
-      const automation = branchAutomationIncorrectPosition()
-
-      await config.api.automation.post(automation, {
-        status: 400,
-        body: {
-          message:
-            'Invalid body - "definition.steps[0].inputs.branches" must contain at least 1 items',
-        },
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
       })
-    })
-
-    it("Should check validation on an automation that has a branch step with no children", async () => {
-      const automation = branchAutomationIncorrectPosition()
-      automation.definition.steps[0].inputs.branches = [
-        { name: "test", condition: { equal: { "steps.1.success": "true" } } },
-      ]
-      automation.definition.steps[0].inputs.children = {}
+        .appAction({ fields: { status: "active" } })
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {
+              equal: { "trigger.fields.status": "active" },
+            },
+          },
+        })
+        .serverLog({ text: "Inactive user" })
+        .build()
 
       await config.api.automation.post(automation, {
         status: 400,
@@ -151,41 +149,73 @@ describe("/automations", () => {
       })
     })
 
-    it("Should check validation on a branch step with empty conditions", async () => {
-      const automation = branchAutomation()
-
-      automation.definition.steps[1].inputs.branches = [
-        { name: "test", condition: {} },
-      ]
-      automation.definition.steps[1].inputs.children = {}
+    it("Should check validation on an automation that has a branch step with no children", async () => {
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
+      })
+        .appAction({ fields: { status: "active" } })
+        .branch({})
+        .serverLog({ text: "Inactive user" })
+        .build()
 
       await config.api.automation.post(automation, {
         status: 400,
         body: {
           message:
-            'Invalid body - "definition.steps[1].inputs.branches[0].condition" must have at least 1 key',
+            'Invalid body - "definition.steps[0].inputs.branches" must contain at least 1 items',
+        },
+      })
+    })
+
+    it("Should check validation on a branch step with empty conditions", async () => {
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
+      })
+        .appAction({ fields: { status: "active" } })
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {},
+          },
+        })
+        .build()
+
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            'Invalid body - "definition.steps[0].inputs.branches[0].condition" must have at least 1 key',
         },
       })
     })
 
     it("Should check validation on an branch that has a condition that is not valid", async () => {
-      const automation = branchAutomation()
-
-      automation.definition.steps[1].inputs.branches = [
-        {
-          name: "test",
-          condition: {
-            INCORRECT: { "steps.1.success": true },
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
+      })
+        .appAction({ fields: { status: "active" } })
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {
+              //@ts-ignore
+              INCORRECT: { "trigger.fields.status": "active" },
+            },
           },
-        },
-      ]
-      automation.definition.steps[1].inputs.children = {}
+        })
+        .serverLog({ text: "Inactive user" })
+        .build()
 
       await config.api.automation.post(automation, {
         status: 400,
         body: {
           message:
-            'Invalid body - "definition.steps[1].inputs.branches[0].condition.INCORRECT" is not allowed',
+            'Invalid body - "definition.steps[0].inputs.branches[0].condition.INCORRECT" is not allowed',
         },
       })
     })

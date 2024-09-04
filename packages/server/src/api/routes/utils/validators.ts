@@ -291,7 +291,9 @@ function generateStepSchema(allowStepTypes: string[]) {
     type: Joi.string()
       .required()
       .valid(...allowStepTypes),
-  }).unknown(true)
+  })
+    .unknown(true)
+    .id("step")
 }
 
 const validateStepsArray = (
