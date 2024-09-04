@@ -208,6 +208,7 @@
 
   // Toggles whether a row is included in the relationship or not
   const toggleRow = async row => {
+    hideRelationshipFields()
     if (fieldValue?.some(x => x._id === row._id)) {
       // If the row is already included, remove it and update the candidate
       // row to be the same position if possible
@@ -363,7 +364,12 @@
 {/if}
 
 {#if showRelationshipFields}
-  <GridPopover anchor={relationshipAnchor} maxWidth={400} offset={4}>
+  <GridPopover
+    anchor={relationshipAnchor}
+    maxWidth={400}
+    offset={4}
+    clickOutsideOverride
+  >
     <div class="relationship-fields">
       {#each Object.entries(relationshipFields) as [fieldName, fieldValue]}
         <div class="relationship-field-name">
