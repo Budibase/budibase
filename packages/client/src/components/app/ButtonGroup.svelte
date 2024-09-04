@@ -12,8 +12,7 @@
   export let collapsed = false
   export let collapsedText = "Action"
 
-  const { styleable, enrichButtonActions } = getContext("sdk")
-  const component = getContext("component")
+  const { enrichButtonActions } = getContext("sdk")
   const context = getContext("context")
 
   $: collapsedButtons = collapsed ? makeCollapsed(buttons) : null
@@ -29,30 +28,28 @@
   }
 </script>
 
-{#if collapsed}
-  <div use:styleable={$component.styles}>
-    <CollapsedButtonGroup
-      text={collapsedText || "Action"}
-      buttons={collapsedButtons}
-    />
-  </div>
-{:else}
-  <Block>
-    <BlockComponent
-      type="container"
-      props={{
-        direction,
-        hAlign,
-        vAlign,
-        gap,
-        wrap: true,
-      }}
-      styles={{
-        normal: {
-          height: "100%",
-        },
-      }}
-    >
+<Block>
+  <BlockComponent
+    type="container"
+    props={{
+      direction,
+      hAlign,
+      vAlign,
+      gap,
+      wrap: true,
+    }}
+    styles={{
+      normal: {
+        height: "100%",
+      },
+    }}
+  >
+    {#if collapsed}
+      <CollapsedButtonGroup
+        text={collapsedText || "Action"}
+        buttons={collapsedButtons}
+      />
+    {:else}
       {#each buttons as { text, type, quiet, disabled, onClick, size, icon, gap }}
         <BlockComponent
           type="button"
@@ -68,6 +65,6 @@
           }}
         />
       {/each}
-    </BlockComponent>
-  </Block>
-{/if}
+    {/if}
+  </BlockComponent>
+</Block>

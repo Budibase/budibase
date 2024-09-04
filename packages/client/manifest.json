@@ -517,11 +517,7 @@
                 "barTitle": "Align stretched horizontally"
               }
             ],
-            "defaultValue": "left",
-            "dependsOn": {
-              "setting": "collapsed",
-              "invert": true
-            }
+            "defaultValue": "left"
           },
           {
             "type": "select",
@@ -555,11 +551,7 @@
                 "barTitle": "Align stretched vertically"
               }
             ],
-            "defaultValue": "top",
-            "dependsOn": {
-              "setting": "collapsed",
-              "invert": true
-            }
+            "defaultValue": "top"
           },
           {
             "type": "select",
