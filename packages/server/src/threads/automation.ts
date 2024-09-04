@@ -451,7 +451,7 @@ class Orchestrator {
       })
       this.context.steps[this.context.steps.length] = tempOutput
       this.context.steps = this.context.steps.filter(
-        item => !item.hasOwnProperty.call("currentItem")
+        item => !item.hasOwnProperty.call(item, "currentItem")
       )
 
       this.loopStepOutputs = []
