@@ -973,16 +973,18 @@ class InternalBuilder {
         subQuery = this.addJoinFieldCheck(subQuery, relationship)
       }
 
+      let wrapperQuery: Knex.QueryBuilder | Knex.Raw
       if (this.client === SqlClient.MS_SQL) {
-        subQuery = this.knex.raw(
-          `(SELECT a.* FROM (${subQuery}) AS a FOR JSON PATH)`
+        wrapperQuery = this.knex.raw(
+          `(SELECT [${toAlias}] = (SELECT a.* FROM (${subQuery}) AS a FOR JSON PATH))`
         )
+      } else {
+        // @ts-ignore - the from alias syntax isn't in Knex typing
+        wrapperQuery = this.knex.select(select).from({
+          [toAlias]: subQuery,
+        })
       }
 
-      // @ts-ignore - the from alias syntax isn't in Knex typing
-      const wrapperQuery = this.knex.select(select).from({
-        [toAlias]: subQuery,
-      })
       query = query.select({ [relationship.column]: wrapperQuery })
     }
     return query
