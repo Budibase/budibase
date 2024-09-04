@@ -73,6 +73,12 @@ export const deriveStores = context => {
           }
         }
       })
+      Object.keys($schemaOverrides).forEach(field => {
+        if (!$schemaOverrides[field].custom) {
+          return
+        }
+        enrichedSchema[field] = $schemaOverrides[field]
+      })
       return enrichedSchema
     }
   )

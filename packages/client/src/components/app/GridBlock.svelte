@@ -98,6 +98,7 @@
         order: idx,
         conditions: column.conditions,
         visible: !!column.active,
+        custom: column.custom,
       }
       if (column.width) {
         overrides[column.field].width = column.width
