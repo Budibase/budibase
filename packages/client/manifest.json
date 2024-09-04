@@ -3063,6 +3063,41 @@
       }
     ]
   },
+  "customcolumnfield": {
+    "name": "Custom Columm Field",
+    "icon": "Text",
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    },
+    "settings": [
+      {
+        "type": "plainText",
+        "label": "Laaabel",
+        "key": "label"
+      },
+      {
+        "type": "plainText",
+        "label": "Formula",
+        "key": "formulaField"
+      },
+      {
+        "type": "number",
+        "label": "Initial width",
+        "key": "width",
+        "placeholder": "Auto",
+        "min": 80,
+        "max": 9999
+      },
+      {
+        "type": "tableConditions",
+        "label": "Conditions",
+        "key": "conditions"
+      }
+    ]
+  },
+
   "stringfield": {
     "name": "Text Field",
     "icon": "Text",

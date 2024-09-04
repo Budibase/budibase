@@ -76,8 +76,9 @@ const toGridFormat = draggableListColumns => {
 
 const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
   return gridFormatColumns.map(column => {
+    const component = column.custom ? "customcolumnfield" : "labelfield"
     return createComponent(
-      "@budibase/standard-components/labelfield",
+      `@budibase/standard-components/${component}`,
       {
         _id: column.field,
         _instanceName: column.field,
