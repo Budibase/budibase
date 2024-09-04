@@ -216,11 +216,15 @@ export async function run(tableId: any, rowActionId: any, rowId: string) {
   const automation = await sdk.automations.get(rowAction.automationId)
 
   const row = await sdk.rows.find(tableId, rowId)
-  await triggers.externalTrigger(automation, {
-    fields: {
-      row,
-      table,
+  await triggers.externalTrigger(
+    automation,
+    {
+      fields: {
+        row,
+        table,
+      },
+      appId: context.getAppId(),
     },
-    appId: context.getAppId(),
-  })
+    { getResponses: true }
+  )
 }
