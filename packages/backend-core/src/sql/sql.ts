@@ -917,8 +917,7 @@ class InternalBuilder {
       // SQL Server uses TOP - which performs a little differently to the normal LIMIT syntax
       // it reduces the result set rather than limiting how much data it filters over
       const primaryKey = `${toAlias}.${toPrimary || toKey}`
-      let subQuery: Knex.QueryBuilder | Knex.Raw = knex
-        .select(`${toAlias}.*`)
+      let subQuery: Knex.QueryBuilder = knex
         .from(toTableWithSchema)
         .limit(getBaseLimit())
         // add sorting to get consistent order
@@ -951,6 +950,7 @@ class InternalBuilder {
       }
 
       const standardWrap = (select: string): Knex.QueryBuilder => {
+        subQuery = subQuery.select(`${toAlias}.*`)
         // @ts-ignore - the from alias syntax isn't in Knex typing
         return knex.select(knex.raw(select)).from({
           [toAlias]: subQuery,
@@ -971,6 +971,10 @@ class InternalBuilder {
           )
           break
         case SqlClient.MY_SQL:
+          wrapperQuery = subQuery.select(
+            knex.raw(`json_arrayagg(json_object(${fieldList}))`)
+          )
+          break
         case SqlClient.ORACLE:
           wrapperQuery = standardWrap(
             `json_arrayagg(json_object(${fieldList}))`
@@ -982,7 +986,7 @@ class InternalBuilder {
               .select(`${fromAlias}.*`)
               // @ts-ignore - from alias syntax not TS supported
               .from({
-                [fromAlias]: subQuery,
+                [fromAlias]: subQuery.select(`${toAlias}.*`),
               })} FOR JSON PATH))`
           )
           break
