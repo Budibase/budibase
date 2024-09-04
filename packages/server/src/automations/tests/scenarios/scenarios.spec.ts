@@ -63,8 +63,8 @@ describe("Automation Scenarios", () => {
           },
         })
         .run()
-
-      expect(results.steps[2].outputs.message).toContain("Branch 1.1")
+      expect(results.steps[3].outputs.status).toContain("branch1 branch taken")
+      expect(results.steps[4].outputs.message).toContain("Branch 1.1")
     })
 
     it("should execute correct branch based on string equality", async () => {
@@ -91,8 +91,10 @@ describe("Automation Scenarios", () => {
           },
         })
         .run()
-
-      expect(results.steps[0].outputs.message).toContain("Active user")
+      expect(results.steps[0].outputs.status).toContain(
+        "activeBranch branch taken"
+      )
+      expect(results.steps[1].outputs.message).toContain("Active user")
     })
 
     it("should handle multiple conditions with AND operator", async () => {
@@ -124,7 +126,7 @@ describe("Automation Scenarios", () => {
         })
         .run()
 
-      expect(results.steps[0].outputs.message).toContain("Active admin user")
+      expect(results.steps[1].outputs.message).toContain("Active admin user")
     })
 
     it("should handle multiple conditions with OR operator", async () => {
@@ -162,7 +164,7 @@ describe("Automation Scenarios", () => {
         })
         .run()
 
-      expect(results.steps[0].outputs.message).toContain("Special user")
+      expect(results.steps[1].outputs.message).toContain("Special user")
     })
   })
 

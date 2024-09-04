@@ -465,6 +465,19 @@ class Orchestrator {
     for (const branch of branches) {
       const condition = await this.evaluateBranchCondition(branch.condition)
       if (condition) {
+        let branchStatus = {
+          status: `${branch.name} branch taken`,
+          success: true,
+        }
+
+        this.updateExecutionOutput(
+          branchStep.id,
+          branchStep.stepId,
+          branchStep.inputs,
+          branchStatus
+        )
+        this.context.steps[this.context.steps.length] = branchStatus
+
         const branchSteps = children?.[branch.name] || []
         await this.executeSteps(branchSteps)
         break
