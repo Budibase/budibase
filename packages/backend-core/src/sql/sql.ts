@@ -859,6 +859,7 @@ class InternalBuilder {
     relationships: RelationshipsJson[]
   ): Knex.QueryBuilder {
     const sqlClient = this.client
+    const knex = this.knex
     const { resource, tableAliases: aliases, endpoint } = this.query
     const fields = resource?.fields || []
     const jsonField = (field: string) => {
@@ -913,29 +914,10 @@ class InternalBuilder {
       const fieldList: string = relationshipFields
         .map(field => jsonField(field))
         .join(",")
-      let select: Knex.Raw
-      switch (sqlClient) {
-        case SqlClient.SQL_LITE:
-          select = this.knex.raw(`json_group_array(json_object(${fieldList}))`)
-          break
-        case SqlClient.POSTGRES:
-          select = this.knex.raw(`json_agg(json_build_object(${fieldList}))`)
-          break
-        case SqlClient.MY_SQL:
-        case SqlClient.ORACLE:
-          select = this.knex.raw(`json_arrayagg(json_object(${fieldList}))`)
-          break
-        case SqlClient.MS_SQL:
-          // Cursed, needs some code later instead
-          select = this.knex.raw(`*`)
-          break
-        default:
-          throw new Error(`JSON relationships not implement for ${this.client}`)
-      }
       // SQL Server uses TOP - which performs a little differently to the normal LIMIT syntax
       // it reduces the result set rather than limiting how much data it filters over
       const primaryKey = `${toAlias}.${toPrimary || toKey}`
-      let subQuery: Knex.QueryBuilder | Knex.Raw = this.knex
+      let subQuery: Knex.QueryBuilder | Knex.Raw = knex
         .select(`${toAlias}.*`)
         .from(toTableWithSchema)
         .limit(getBaseLimit())
@@ -956,7 +938,7 @@ class InternalBuilder {
           .where(
             `${throughAlias}.${fromKey}`,
             "=",
-            this.knex.raw(this.quotedIdentifier(`${fromAlias}.${fromPrimary}`))
+            knex.raw(this.quotedIdentifier(`${fromAlias}.${fromPrimary}`))
           )
       }
       // one-to-many relationship with foreign key
@@ -964,25 +946,48 @@ class InternalBuilder {
         subQuery = subQuery.where(
           `${toAlias}.${toKey}`,
           "=",
-          this.knex.raw(this.quotedIdentifier(`${fromAlias}.${fromKey}`))
+          knex.raw(this.quotedIdentifier(`${fromAlias}.${fromKey}`))
         )
       }
 
-      // need to check the junction table document is to the right column, this is just for SQS
-      if (this.client === SqlClient.SQL_LITE) {
-        subQuery = this.addJoinFieldCheck(subQuery, relationship)
-      }
-
-      let wrapperQuery: Knex.QueryBuilder | Knex.Raw
-      if (this.client === SqlClient.MS_SQL) {
-        wrapperQuery = this.knex.raw(
-          `(SELECT [${toAlias}] = (SELECT a.* FROM (${subQuery}) AS a FOR JSON PATH))`
-        )
-      } else {
+      const standardWrap = (select: string): Knex.QueryBuilder => {
         // @ts-ignore - the from alias syntax isn't in Knex typing
-        wrapperQuery = this.knex.select(select).from({
+        return knex.select(knex.raw(select)).from({
           [toAlias]: subQuery,
         })
+      }
+      let wrapperQuery: Knex.QueryBuilder | Knex.Raw
+      switch (sqlClient) {
+        case SqlClient.SQL_LITE:
+          // need to check the junction table document is to the right column, this is just for SQS
+          subQuery = this.addJoinFieldCheck(subQuery, relationship)
+          wrapperQuery = standardWrap(
+            `json_group_array(json_object(${fieldList}))`
+          )
+          break
+        case SqlClient.POSTGRES:
+          wrapperQuery = standardWrap(
+            `json_agg(json_build_object(${fieldList}))`
+          )
+          break
+        case SqlClient.MY_SQL:
+        case SqlClient.ORACLE:
+          wrapperQuery = standardWrap(
+            `json_arrayagg(json_object(${fieldList}))`
+          )
+          break
+        case SqlClient.MS_SQL:
+          wrapperQuery = knex.raw(
+            `(SELECT ${this.quote(toAlias)} = (${knex
+              .select(`${fromAlias}.*`)
+              // @ts-ignore - from alias syntax not TS supported
+              .from({
+                [fromAlias]: subQuery,
+              })} FOR JSON PATH))`
+          )
+          break
+        default:
+          throw new Error(`JSON relationships not implement for ${sqlClient}`)
       }
 
       query = query.select({ [relationship.column]: wrapperQuery })
