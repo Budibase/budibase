@@ -44,7 +44,7 @@
     createComponent: componentStore.createInstance,
   })
 
-  const addButton = () => {
+  const addCustomColumn = () => {
     const generateName = () => {
       const defaultName = "Custom column"
       const nameRegex = new RegExp(`^${defaultName}( (?<count>\\d+))?$`)
@@ -100,8 +100,8 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="list-footer" on:click={addButton}>
-  <div class="add-button">Add button</div>
+<div class="list-footer" on:click={addCustomColumn}>
+  <div class="add-button">Add custom column</div>
 </div>
 
 <style>
