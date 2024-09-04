@@ -362,6 +362,32 @@ describe("Automation Scenarios", () => {
         }
       )
     })
+
+    it("should run an automation where a loop is used twice to ensure context correctness further down the tree", async () => {
+      const builder = createAutomationBuilder({
+        name: "Test Trigger with Loop and Create Row",
+      })
+
+      const results = await builder
+        .appAction({ fields: {} })
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: [1, 2, 3],
+        })
+        .serverLog({ text: "Message {{loop.currentItem}}" })
+        .serverLog({ text: "{{steps.1.iterations}}" })
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: [1, 2, 3],
+        })
+        .serverLog({ text: "{{loop.currentItem}}" })
+        .serverLog({ text: "{{steps.3.iterations}}" })
+        .run()
+
+      // We want to ensure that bindings are corr
+      expect(results.steps[1].outputs.message).toContain("- 3")
+      expect(results.steps[3].outputs.message).toContain("- 3")
+    })
   })
 
   describe("Row Automations", () => {
