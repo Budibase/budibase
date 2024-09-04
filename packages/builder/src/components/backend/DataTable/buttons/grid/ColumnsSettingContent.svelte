@@ -160,9 +160,6 @@
       await datasource.actions.saveSchemaMutations()
     } catch (e) {
       notifications.error(e.message)
-    } finally {
-      await datasource.actions.resetSchemaMutations()
-      await datasource.actions.refreshDefinition()
     }
     dispatch(visible ? "show-column" : "hide-column")
   }
