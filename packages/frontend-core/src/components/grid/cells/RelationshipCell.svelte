@@ -29,6 +29,7 @@
   let searching = false
   let container
   let anchor
+  let relationshipAnchor
   let relationshipFields
 
   $: fieldValue = parseValue(value)
@@ -57,6 +58,7 @@
   }, {})
 
   $: showRelationshipFields =
+    relationshipAnchor &&
     relationshipFields &&
     Object.keys(relationshipFields).length &&
     focused &&
@@ -242,11 +244,13 @@
     return value
   }
 
-  const displayRelationshipFields = relationship => {
+  const displayRelationshipFields = (e, relationship) => {
+    relationshipAnchor = e.target
     relationshipFields = relationFields[relationship._id]
   }
 
   const hideRelationshipFields = () => {
+    relationshipAnchor = null
     relationshipFields = undefined
   }
 
@@ -281,7 +285,7 @@
           <div
             class="badge"
             class:extra-info={!!relationFields[relationship._id]}
-            on:mouseover={() => displayRelationshipFields(relationship)}
+            on:mouseenter={e => displayRelationshipFields(e, relationship)}
             on:focus={() => {}}
             on:mouseleave={() => hideRelationshipFields()}
           >
@@ -359,7 +363,7 @@
 {/if}
 
 {#if showRelationshipFields}
-  <GridPopover {anchor} minWidth={300} maxWidth={400}>
+  <GridPopover anchor={relationshipAnchor} maxWidth={400} offset={4}>
     <div class="relationship-fields">
       {#each Object.entries(relationshipFields) as [fieldName, fieldValue]}
         <div class="relationship-field-name">
@@ -543,15 +547,19 @@
   .relationship-fields {
     margin: var(--spacing-m) var(--spacing-l);
     display: grid;
-    grid-template-columns: minmax(auto, 50%) auto;
+    grid-template-columns: auto 1fr;
     grid-row-gap: var(--spacing-m);
-    grid-column-gap: var(--spacing-m);
+    grid-column-gap: var(--spacing-xl);
   }
 
   .relationship-field-name {
     text-transform: uppercase;
     color: var(--spectrum-global-color-gray-600);
-    font-size: var(--font-size-xs);
+    font-size: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 120px;
   }
   .relationship-field-value {
     overflow: hidden;
