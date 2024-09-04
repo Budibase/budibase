@@ -7,11 +7,9 @@ import {
   ManyToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
   RelationshipsJson,
-  Row,
   Table,
 } from "@budibase/types"
 import { breakExternalTableId } from "../../../../integrations/utils"
-import { basicProcessing } from "./basic"
 import { generateJunctionTableID } from "../../../../db/utils"
 
 type TableMap = Record<string, Table>
@@ -20,20 +18,6 @@ export function isManyToMany(
   field: RelationshipFieldMetadata
 ): field is ManyToManyRelationshipFieldMetadata {
   return !!(field as ManyToManyRelationshipFieldMetadata).through
-}
-
-function isCorrectRelationship(
-  relationship: RelationshipsJson,
-  table1: Table,
-  table2: Table,
-  row: Row
-): boolean {
-  const junctionTableId = generateJunctionTableID(table1._id!, table2._id!)
-  const possibleColumns = [
-    `${junctionTableId}.doc1.fieldName`,
-    `${junctionTableId}.doc2.fieldName`,
-  ]
-  return !!possibleColumns.find(col => row[col] === relationship.column)
 }
 
 /**
