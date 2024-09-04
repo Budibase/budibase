@@ -913,30 +913,26 @@ class InternalBuilder {
       const fieldList: string = relationshipFields
         .map(field => jsonField(field))
         .join(",")
-      let rawJsonArray: Knex.Raw, limit: number
+      let rawJsonArray: Knex.Raw
       switch (sqlClient) {
         case SqlClient.SQL_LITE:
           rawJsonArray = this.knex.raw(
             `json_group_array(json_object(${fieldList}))`
           )
-          limit = getBaseLimit()
           break
         case SqlClient.POSTGRES:
           rawJsonArray = this.knex.raw(
             `json_agg(json_build_object(${fieldList}))`
           )
-          limit = 1
           break
         case SqlClient.MY_SQL:
         case SqlClient.ORACLE:
           rawJsonArray = this.knex.raw(
             `json_arrayagg(json_object(${fieldList}))`
           )
-          limit = getBaseLimit()
           break
         case SqlClient.MS_SQL:
           rawJsonArray = this.knex.raw(`json_array(json_object(${fieldList}))`)
-          limit = 1
           break
         default:
           throw new Error(`JSON relationships not implement for ${this.client}`)
@@ -945,15 +941,11 @@ class InternalBuilder {
       // it reduces the result set rather than limiting how much data it filters over
       const primaryKey = `${toAlias}.${toPrimary || toKey}`
       let subQuery = this.knex
-        .select(rawJsonArray)
+        .select(`${toAlias}.*`)
         .from(toTableWithSchema)
-        .limit(limit)
+        .limit(getBaseLimit())
         // add sorting to get consistent order
         .orderBy(primaryKey)
-
-      if (sqlClient === SqlClient.POSTGRES) {
-        subQuery = subQuery.groupBy(primaryKey)
-      }
 
       // many-to-many relationship with junction table
       if (throughTable && toPrimary && fromPrimary) {
@@ -985,7 +977,11 @@ class InternalBuilder {
       if (this.client === SqlClient.SQL_LITE) {
         subQuery = this.addJoinFieldCheck(subQuery, relationship)
       }
-      query = query.select({ [relationship.column]: subQuery })
+      // @ts-ignore - the from alias syntax isn't in Knex typing
+      const wrapperQuery = this.knex.select(rawJsonArray).from({
+        [toAlias]: subQuery,
+      })
+      query = query.select({ [relationship.column]: wrapperQuery })
     }
     return query
   }
