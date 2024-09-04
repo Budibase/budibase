@@ -65,7 +65,7 @@
     <Label size="M">Default Model</Label>
     {#if config.provider !== Providers.Custom.name}
       <Select
-        placeholder={config.provider ? "Choose an option" : "Select a provider first"}
+        placeholder={config.provider ? "Choose an option" : "Select a provider"}
         bind:value={config.defaultModel}
         options={config.provider ? Providers[config.provider].models : []}
       />

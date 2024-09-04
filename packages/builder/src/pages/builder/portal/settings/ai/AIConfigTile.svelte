@@ -8,7 +8,6 @@
 
   export let config
   export let disabled
-  export let budibaseAIDefault
 
   export let editHandler
   export let deleteHandler
@@ -33,24 +32,29 @@
     <Label>{config.name}</Label>
   </div>
   <div class="controls">
-    <Icon
-      on:click={editHandler}
-      color="var(--grey-6)"
-      size="S"
-      hoverable
-      name="Edit"
-    />
-    <Icon
-      on:click={deleteHandler}
-      color="var(--grey-6)"
-      size="S"
-      hoverable
-      name="Delete"
-    />
+    {#if config.name !== "Budibase AI"}
+      <Icon
+        on:click={editHandler}
+        color="var(--grey-6)"
+        size="S"
+        hoverable
+        name="Edit"
+      />
+      <Icon
+        on:click={deleteHandler}
+        color="var(--grey-6)"
+        size="S"
+        hoverable
+        name="Delete"
+      />
+    {/if}
     {#if config.active}
       <div class="tag active">Activated</div>
     {:else if !config.active}
       <div class="tag disabled">Disabled</div>
+    {/if}
+    {#if config.isDefault}
+      <div class="tag default">Default</div>
     {/if}
   </div>
 </div>
@@ -63,7 +67,7 @@
     border-radius: 4px;
     cursor: pointer;
     display: grid;
-    grid-template-columns: 6% 1fr 20%;
+    grid-template-columns: 6% 1fr auto;
     grid-gap: 20px;
     align-items: center;
   }
@@ -109,15 +113,18 @@
     align-items: center;
     gap: 8px;
     font-size: 12px;
+    border-radius: 5px;
+  }
+
+  .default {
+    background: var(--grey-6);
   }
 
   .active {
-    border-radius: 5px;
     background: var(--spectrum-global-color-green-600);
   }
 
   .disabled {
-    border-radius: 5px;
     background: var(--spectrum-global-color-red-600);
   }
 </style>
