@@ -110,7 +110,7 @@
     <div class="generate-section__options">
       <div>
         <ListItem
-          title="CRUD app"
+          title="Table"
           icon="TableEdit"
           hoverable
           on:click={() => startScreenWizard(AutoScreenTypes.TABLE)}
