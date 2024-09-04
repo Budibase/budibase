@@ -8,8 +8,45 @@ import {
   ViewResponse,
   ViewResponseEnriched,
   ViewV2,
+  BasicViewUIFieldMetadata,
+  ViewCalculationFieldMetadata,
 } from "@budibase/types"
 import { builderSocket, gridSocket } from "../../../websockets"
+import { helpers } from "@budibase/shared-core"
+
+function stripUnknownFields(
+  field: ViewUIFieldMetadata
+): RequiredKeys<ViewUIFieldMetadata> {
+  if (helpers.views.isCalculationField(field)) {
+    const strippedField: RequiredKeys<ViewCalculationFieldMetadata> = {
+      order: field.order,
+      width: field.width,
+      visible: field.visible,
+      readonly: field.readonly,
+      icon: field.icon,
+      calculationType: field.calculationType,
+      field: field.field,
+    }
+    return strippedField
+  } else {
+    const strippedField: RequiredKeys<BasicViewUIFieldMetadata> = {
+      order: field.order,
+      width: field.width,
+      visible: field.visible,
+      readonly: field.readonly,
+      icon: field.icon,
+    }
+    return strippedField
+  }
+}
+
+function stripUndefinedFields(obj: Record<string, any>): void {
+  Object.keys(obj)
+    .filter(key => obj[key] === undefined)
+    .forEach(key => {
+      delete obj[key]
+    })
+}
 
 async function parseSchema(view: CreateViewRequest) {
   if (!view.schema) {
@@ -18,18 +55,8 @@ async function parseSchema(view: CreateViewRequest) {
   const finalViewSchema =
     view.schema &&
     Object.entries(view.schema).reduce((p, [fieldName, schemaValue]) => {
-      const fieldSchema: RequiredKeys<ViewUIFieldMetadata> = {
-        order: schemaValue.order,
-        width: schemaValue.width,
-        visible: schemaValue.visible,
-        readonly: schemaValue.readonly,
-        icon: schemaValue.icon,
-      }
-      Object.entries(fieldSchema)
-        .filter(([, val]) => val === undefined)
-        .forEach(([key]) => {
-          delete fieldSchema[key as keyof ViewUIFieldMetadata]
-        })
+      const fieldSchema = stripUnknownFields(schemaValue)
+      stripUndefinedFields(fieldSchema)
       p[fieldName] = fieldSchema
       return p
     }, {} as Record<string, RequiredKeys<ViewUIFieldMetadata>>)

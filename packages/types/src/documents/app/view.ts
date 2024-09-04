@@ -33,9 +33,18 @@ export interface View {
   groupBy?: string
 }
 
-export type ViewUIFieldMetadata = UIFieldMetadata & {
+export interface BasicViewUIFieldMetadata extends UIFieldMetadata {
   readonly?: boolean
 }
+
+export interface ViewCalculationFieldMetadata extends BasicViewUIFieldMetadata {
+  calculationType: CalculationType
+  field: string
+}
+
+export type ViewUIFieldMetadata =
+  | BasicViewUIFieldMetadata
+  | ViewCalculationFieldMetadata
 
 export enum CalculationType {
   SUM = "sum",
@@ -43,11 +52,6 @@ export enum CalculationType {
   COUNT = "count",
   MIN = "min",
   MAX = "max",
-}
-
-export type ViewCalculationFieldMetadata = ViewUIFieldMetadata & {
-  calculationType: CalculationType
-  field: string
 }
 
 export interface ViewV2 {
@@ -62,7 +66,7 @@ export interface ViewV2 {
     order?: SortOrder
     type?: SortType
   }
-  schema?: Record<string, ViewUIFieldMetadata | ViewCalculationFieldMetadata>
+  schema?: Record<string, ViewUIFieldMetadata>
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema

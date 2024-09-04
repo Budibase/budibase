@@ -1,0 +1,39 @@
+import {
+  BasicViewUIFieldMetadata,
+  ViewCalculationFieldMetadata,
+  ViewUIFieldMetadata,
+  ViewV2,
+} from "@budibase/types"
+import { pickBy } from "lodash"
+
+export function isCalculationField(
+  field: ViewUIFieldMetadata
+): field is ViewCalculationFieldMetadata {
+  return "calculationType" in field
+}
+
+export function isBasicViewField(
+  field: ViewUIFieldMetadata
+): field is BasicViewUIFieldMetadata {
+  return !isCalculationField(field)
+}
+
+type UnsavedViewV2 = Omit<ViewV2, "id" | "version">
+
+export function isCalculationView(view: UnsavedViewV2) {
+  return Object.values(view.schema || {}).some(isCalculationField)
+}
+
+export function calculationFields(view: UnsavedViewV2) {
+  if (!isCalculationView(view)) {
+    throw new Error("View is not a calculation view")
+  }
+  return pickBy(view.schema || {}, isCalculationField)
+}
+
+export function basicFields(view: UnsavedViewV2) {
+  if (!isCalculationView(view)) {
+    throw new Error("View is not a calculation view")
+  }
+  return pickBy(view.schema || {}, field => !isCalculationField(field))
+}

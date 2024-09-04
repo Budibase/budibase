@@ -10,10 +10,12 @@ import {
 } from "./utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
+  Aggregation,
   AnySearchFilter,
   ArrayOperator,
   BasicOperator,
   BBReferenceFieldMetadata,
+  CalculationType,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -789,6 +791,38 @@ class InternalBuilder {
     return query.countDistinct(`${aliased}.${primary[0]} as total`)
   }
 
+  addAggregations(
+    query: Knex.QueryBuilder,
+    aggregations: Aggregation[]
+  ): Knex.QueryBuilder {
+    const fields = this.query.resource?.fields || []
+    if (fields.length > 0) {
+      query = query.groupBy(fields.map(field => `${this.table.name}.${field}`))
+    }
+    for (const aggregation of aggregations) {
+      const op = aggregation.calculationType
+      const field = `${this.table.name}.${aggregation.field} as ${aggregation.name}`
+      switch (op) {
+        case CalculationType.COUNT:
+          query = query.count(field)
+          break
+        case CalculationType.SUM:
+          query = query.sum(field)
+          break
+        case CalculationType.AVG:
+          query = query.avg(field)
+          break
+        case CalculationType.MIN:
+          query = query.min(field)
+          break
+        case CalculationType.MAX:
+          query = query.max(field)
+          break
+      }
+    }
+    return query
+  }
+
   addSorting(query: Knex.QueryBuilder): Knex.QueryBuilder {
     let { sort } = this.query
     const primaryKey = this.table.primary
@@ -1172,10 +1206,18 @@ class InternalBuilder {
       }
     }
 
-    // if counting, use distinct count, else select
-    query = !counting
-      ? query.select(this.generateSelectStatement())
-      : this.addDistinctCount(query)
+    const aggregations = this.query.resource?.aggregations || []
+    if (counting) {
+      query = this.addDistinctCount(query)
+    } else if (aggregations.length > 0) {
+      query = query.select(
+        this.knex.raw("ROW_NUMBER() OVER (ORDER BY (SELECT 0)) as _id")
+      )
+      query = this.addAggregations(query, aggregations)
+    } else {
+      query = query.select(this.generateSelectStatement())
+    }
+
     // have to add after as well (this breaks MS-SQL)
     if (this.client !== SqlClient.MS_SQL && !counting) {
       query = this.addSorting(query)

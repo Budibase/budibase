@@ -1,7 +1,13 @@
 import { SortOrder, SortType } from "../api"
 import { SearchFilters } from "./search"
-import { Row } from "../documents"
+import { CalculationType, Row } from "../documents"
 import { WithRequired } from "../shared"
+
+export interface Aggregation {
+  name: string
+  calculationType: CalculationType
+  field: string
+}
 
 export interface SearchParams {
   tableId?: string
@@ -18,6 +24,7 @@ export interface SearchParams {
   indexer?: () => Promise<any>
   rows?: Row[]
   countRows?: boolean
+  aggregations?: Aggregation[]
 }
 
 // when searching for rows we want a more extensive search type that requires certain properties
