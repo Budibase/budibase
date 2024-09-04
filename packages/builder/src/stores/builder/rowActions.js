@@ -13,6 +13,10 @@ export class RowActionStore extends BudiStore {
     super(initialState)
   }
 
+  reset = () => {
+    this.store.set(initialState)
+  }
+
   refreshRowActions = async sourceId => {
     if (!sourceId) {
       return
