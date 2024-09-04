@@ -3074,7 +3074,7 @@
     "settings": [
       {
         "type": "plainText",
-        "label": "Laaabel",
+        "label": "Label",
         "key": "label"
       },
       {
