@@ -913,30 +913,25 @@ class InternalBuilder {
       const fieldList: string = relationshipFields
         .map(field => jsonField(field))
         .join(",")
-      let rawJsonArray: Knex.Raw, limit: number
+      let select: Knex.Raw, limit: number
       switch (sqlClient) {
         case SqlClient.SQL_LITE:
-          rawJsonArray = this.knex.raw(
-            `json_group_array(json_object(${fieldList}))`
-          )
+          select = this.knex.raw(`json_group_array(json_object(${fieldList}))`)
           limit = getBaseLimit()
           break
         case SqlClient.POSTGRES:
-          rawJsonArray = this.knex.raw(
-            `json_agg(json_build_object(${fieldList}))`
-          )
+          select = this.knex.raw(`json_agg(json_build_object(${fieldList}))`)
           limit = 1
           break
         case SqlClient.MY_SQL:
         case SqlClient.ORACLE:
-          rawJsonArray = this.knex.raw(
-            `json_arrayagg(json_object(${fieldList}))`
-          )
+          select = this.knex.raw(`json_arrayagg(json_object(${fieldList}))`)
           limit = getBaseLimit()
           break
         case SqlClient.MS_SQL:
-          rawJsonArray = this.knex.raw(`json_array(json_object(${fieldList}))`)
-          limit = 1
+          // Cursed, needs some code later instead
+          select = this.knex.raw(`*`)
+          limit = getBaseLimit()
           break
         default:
           throw new Error(`JSON relationships not implement for ${this.client}`)
@@ -944,8 +939,8 @@ class InternalBuilder {
       // SQL Server uses TOP - which performs a little differently to the normal LIMIT syntax
       // it reduces the result set rather than limiting how much data it filters over
       const primaryKey = `${toAlias}.${toPrimary || toKey}`
-      let subQuery = this.knex
-        .select(rawJsonArray)
+      let subQuery: Knex.QueryBuilder | Knex.Raw = this.knex
+        .select(select)
         .from(toTableWithSchema)
         .limit(limit)
         // add sorting to get consistent order
@@ -985,6 +980,13 @@ class InternalBuilder {
       if (this.client === SqlClient.SQL_LITE) {
         subQuery = this.addJoinFieldCheck(subQuery, relationship)
       }
+
+      if (this.client === SqlClient.MS_SQL) {
+        subQuery = this.knex.raw(
+          `(SELECT a.* FROM (${subQuery}) AS a FOR JSON PATH)`
+        )
+      }
+
       query = query.select({ [relationship.column]: subQuery })
     }
     return query
