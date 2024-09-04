@@ -59,7 +59,6 @@
 <div class="view-v1">
   {#if view}
     <Table
-      title={decodeURI(name)}
       {schema}
       tableId={view.tableId}
       {data}
@@ -82,7 +81,7 @@
 
 <style>
   .view-v1 {
-    padding: var(--spacing-xl);
+    padding: 0 var(--spacing-xl);
   }
   i {
     font-size: var(--font-size-m);

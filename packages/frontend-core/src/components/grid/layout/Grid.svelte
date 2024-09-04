@@ -321,7 +321,7 @@
     width: 100%;
     height: 100%;
     background: var(--grid-background-alt);
-    opacity: 0.6;
+    opacity: 0.3;
   }
 
   /* Error */

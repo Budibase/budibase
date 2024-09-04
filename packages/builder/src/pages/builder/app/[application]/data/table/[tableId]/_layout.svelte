@@ -32,6 +32,6 @@
     margin: -28px -40px -40px -40px;
     display: flex;
     flex-direction: column;
-    background: var(--background);
+    background: var(--spectrum-global-color-gray-50);
   }
 </style>
