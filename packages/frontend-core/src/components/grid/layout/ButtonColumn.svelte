@@ -100,8 +100,7 @@
                   offset={5}
                   size="S"
                   animate={false}
-                  on:open={() => selectedRows.set({ [row._id]: true })}
-                  on:close={() => selectedRows.set({})}
+                  on:mouseenter={() => ($hoveredRowId = row._id)}
                 />
               {:else}
                 {#each buttons as button}

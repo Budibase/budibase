@@ -39,6 +39,8 @@
   resizable={false}
   on:close
   on:open
+  on:mouseenter
+  on:mouseleave
 >
   <Menu>
     {#each buttons as button}
