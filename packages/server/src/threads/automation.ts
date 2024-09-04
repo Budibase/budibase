@@ -449,7 +449,11 @@ class Orchestrator {
         outputs: tempOutput,
         inputs: steps[stepToLoopIndex].inputs,
       })
-      this.context.steps[currentIndex + 1] = tempOutput
+      this.context.steps[this.context.steps.length] = tempOutput
+      this.context.steps = this.context.steps.filter(
+        item => !item.hasOwnProperty.call(item, "currentItem")
+      )
+
       this.loopStepOutputs = []
     }
 
@@ -582,8 +586,8 @@ class Orchestrator {
       this.loopStepOutputs.push(outputs)
     } else {
       this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
+      this.context.steps[this.context.steps.length] = outputs
     }
-    this.context.steps[this.context.steps.length] = outputs
   }
 }
 
