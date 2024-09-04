@@ -1,8 +1,9 @@
 import {
+  BasicViewUIFieldMetadata,
   RenameColumn,
+  Table,
   TableSchema,
   View,
-  ViewUIFieldMetadata,
   ViewV2,
   ViewV2Enriched,
 } from "@budibase/types"
@@ -38,31 +39,84 @@ export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
   return pickApi(tableId).getEnriched(viewId)
 }
 
+async function guardCalculationViewSchema(
+  table: Table,
+  view: Omit<ViewV2, "id" | "version">
+) {
+  const calculationFields = helpers.views.calculationFields(view)
+  for (const calculationFieldName of Object.keys(calculationFields)) {
+    const schema = calculationFields[calculationFieldName]
+    const targetSchema = table.schema[schema.field]
+    if (!targetSchema) {
+      throw new HTTPError(
+        `Calculation field "${calculationFieldName}" references field "${schema.field}" which does not exist in the table schema`,
+        400
+      )
+    }
+
+    if (!helpers.schema.isNumeric(targetSchema)) {
+      throw new HTTPError(
+        `Calculation field "${calculationFieldName}" references field "${schema.field}" which is not a numeric field`,
+        400
+      )
+    }
+  }
+
+  const groupByFields = helpers.views.basicFields(view)
+  for (const groupByFieldName of Object.keys(groupByFields)) {
+    const targetSchema = table.schema[groupByFieldName]
+    if (!targetSchema) {
+      throw new HTTPError(
+        `Group by field "${groupByFieldName}" does not exist in the table schema`,
+        400
+      )
+    }
+  }
+}
+
 async function guardViewSchema(
   tableId: string,
   view: Omit<ViewV2, "id" | "version">
 ) {
-  const viewSchema = view.schema || {}
   const table = await sdk.tables.getTable(tableId)
 
+  if (helpers.views.isCalculationView(view)) {
+    await guardCalculationViewSchema(table, view)
+  }
+
+  await checkReadonlyFields(table, view)
+  checkRequiredFields(table, view)
+  checkDisplayField(view)
+}
+
+async function checkReadonlyFields(
+  table: Table,
+  view: Omit<ViewV2, "id" | "version">
+) {
+  const viewSchema = view.schema || {}
   for (const field of Object.keys(viewSchema)) {
-    const tableSchemaField = table.schema[field]
-    if (!tableSchemaField) {
+    const viewFieldSchema = viewSchema[field]
+    if (helpers.views.isCalculationField(viewFieldSchema)) {
+      continue
+    }
+
+    const tableFieldSchema = table.schema[field]
+    if (!tableFieldSchema) {
       throw new HTTPError(
         `Field "${field}" is not valid for the requested table`,
         400
       )
     }
 
-    if (viewSchema[field].readonly) {
+    if (viewFieldSchema.readonly) {
       if (
         !(await features.isViewReadonlyColumnsEnabled()) &&
-        !(tableSchemaField as ViewUIFieldMetadata).readonly
+        !(tableFieldSchema as BasicViewUIFieldMetadata).readonly
       ) {
         throw new HTTPError(`Readonly fields are not enabled`, 400)
       }
 
-      if (!viewSchema[field].visible) {
+      if (!viewFieldSchema.visible) {
         throw new HTTPError(
           `Field "${field}" must be visible if you want to make it readonly`,
           400
@@ -70,18 +124,33 @@ async function guardViewSchema(
       }
     }
   }
+}
 
-  const existingView =
-    table?.views && (table.views[view.name] as ViewV2 | undefined)
+function checkDisplayField(view: Omit<ViewV2, "id" | "version">) {
+  if (view.primaryDisplay) {
+    const viewSchemaField = view.schema?.[view.primaryDisplay]
 
+    if (!viewSchemaField?.visible) {
+      throw new HTTPError(
+        `You can't hide "${view.primaryDisplay}" because it is the display column.`,
+        400
+      )
+    }
+  }
+}
+
+function checkRequiredFields(
+  table: Table,
+  view: Omit<ViewV2, "id" | "version">
+) {
+  const existingView = table.views?.[view.name] as ViewV2 | undefined
   for (const field of Object.values(table.schema)) {
     if (!helpers.schema.isRequired(field.constraints)) {
       continue
     }
 
-    const viewSchemaField = viewSchema[field.name]
-    const existingViewSchema =
-      existingView?.schema && existingView.schema[field.name]
+    const viewSchemaField = view.schema?.[field.name]
+    const existingViewSchema = existingView?.schema?.[field.name]
     if (!viewSchemaField && !existingViewSchema?.visible) {
       // Supporting existing configs with required columns but hidden in views
       continue
@@ -94,20 +163,12 @@ async function guardViewSchema(
       )
     }
 
-    if (viewSchemaField.readonly) {
+    if (
+      helpers.views.isBasicViewField(viewSchemaField) &&
+      viewSchemaField.readonly
+    ) {
       throw new HTTPError(
         `You can't make "${field.name}" readonly because it is a required field.`,
-        400
-      )
-    }
-  }
-
-  if (view.primaryDisplay) {
-    const viewSchemaField = viewSchema[view.primaryDisplay]
-
-    if (!viewSchemaField?.visible) {
-      throw new HTTPError(
-        `You can't hide "${view.primaryDisplay}" because it is the display column.`,
         400
       )
     }

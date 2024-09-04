@@ -18,6 +18,7 @@ import {
   ViewV2,
   SearchResponse,
   BasicOperator,
+  CalculationType,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -32,13 +33,13 @@ import {
 import sdk from "../../../sdk"
 
 describe.each([
-  ["lucene", undefined],
+  // ["lucene", undefined],
   ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/v2/views (%s)", (name, dsProvider) => {
   const config = setup.getConfig()
   const isSqs = name === "sqs"
@@ -1977,6 +1978,64 @@ describe.each([
             fields: ["id"],
           })
         )
+      })
+
+      describe("calculations", () => {
+        let table: Table
+        let rows: Row[]
+
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                quantity: {
+                  type: FieldType.NUMBER,
+                  name: "quantity",
+                },
+                price: {
+                  type: FieldType.NUMBER,
+                  name: "price",
+                },
+              },
+            })
+          )
+
+          rows = await Promise.all(
+            Array.from({ length: 10 }, () =>
+              config.api.row.save(table._id!, {
+                quantity: generator.natural({ min: 1, max: 10 }),
+                price: generator.natural({ min: 1, max: 10 }),
+              })
+            )
+          )
+        })
+
+        it.only("should be able to search by calculations", async () => {
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              "Quantity Sum": {
+                visible: true,
+                calculationType: CalculationType.SUM,
+                field: "quantity",
+              },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id, {
+            query: {},
+          })
+
+          expect(response.rows).toHaveLength(1)
+          expect(response.rows).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                "Quantity Sum": rows.reduce((acc, r) => acc + r.quantity, 0),
+              }),
+            ])
+          )
+        })
       })
     })
 

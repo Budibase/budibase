@@ -46,6 +46,9 @@ export async function search(
       paginate: options.paginate,
       fields: options.fields,
       countRows: options.countRows,
+      aggregations: options.aggregations
+        ?.map(a => `${a.field}:${a.calculationType}`)
+        .join(", "),
     })
 
     const isExternalTable = isExternalTableID(options.tableId)

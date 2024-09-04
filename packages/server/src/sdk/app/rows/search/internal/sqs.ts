@@ -48,6 +48,7 @@ import {
 } from "@budibase/shared-core"
 import { isSearchingByRowID } from "../utils"
 import tracer from "dd-trace"
+import { cloneDeep } from "lodash"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const SQLITE_COLUMN_LIMIT = 2000
@@ -285,7 +286,7 @@ export async function search(
   table: Table,
   opts?: { retrying?: boolean }
 ): Promise<SearchResponse<Row>> {
-  let { paginate, query, ...params } = options
+  let { paginate, query, ...params } = cloneDeep(options)
 
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
@@ -303,6 +304,21 @@ export async function search(
     ...cleanupFilters(query, table, allTables),
     documentType: DocumentType.ROW,
   }
+
+  let fields = options.fields
+  if (fields === undefined) {
+    fields = buildInternalFieldList(table, allTables, { relationships })
+  } else {
+    fields = fields.map(f => mapToUserColumn(f))
+  }
+
+  if (options.aggregations) {
+    options.aggregations = options.aggregations.map(a => {
+      a.field = mapToUserColumn(a.field)
+      return a
+    })
+  }
+
   const request: QueryJson = {
     endpoint: {
       // not important, we query ourselves
@@ -317,9 +333,7 @@ export async function search(
       tables: allTablesMap,
       columnPrefix: USER_COLUMN_PREFIX,
     },
-    resource: {
-      fields: buildInternalFieldList(table, allTables, { relationships }),
-    },
+    resource: { fields, aggregations: options.aggregations },
     relationships,
   }
 
@@ -426,6 +440,7 @@ export async function search(
     if (err.status === 400 && msg?.match(MISSING_COLUMN_REGEX)) {
       return { rows: [] }
     }
+    throw err
     throw new Error(`Unable to search by SQL - ${msg}`, { cause: err })
   }
 }
