@@ -744,9 +744,12 @@ describe("/rowsActions", () => {
     })
 
     describe.each([
-      ["table", async () => tableId],
       [
-        "view",
+        "table",
+        async () => ({ permissionResource: tableId, triggerResouce: tableId }),
+      ],
+      [
+        "view (with implicit views)",
         async () => {
           const viewId = (
             await config.api.viewV2.create(
@@ -759,10 +762,27 @@ describe("/rowsActions", () => {
             viewId,
             rowAction.id
           )
-          return viewId
+          return { permissionResource: viewId, triggerResouce: viewId }
         },
       ],
-    ])("role permission checks (for %s)", (_, getResourceId) => {
+      [
+        "view (without implicit views)",
+        async () => {
+          const viewId = (
+            await config.api.viewV2.create(
+              setup.structures.viewV2.createRequest(tableId)
+            )
+          ).id
+
+          await config.api.rowAction.setViewPermission(
+            tableId,
+            viewId,
+            rowAction.id
+          )
+          return { permissionResource: tableId, triggerResouce: viewId }
+        },
+      ],
+    ])("role permission checks (for %s)", (_, getResources) => {
       beforeAll(() => {
         mocks.licenses.useViewPermissions()
       })
@@ -806,11 +826,11 @@ describe("/rowsActions", () => {
       it.each(allowedRoleConfig)(
         "allows triggering if the user has read permission (user %s, table %s)",
         async (userRole, resourcePermission) => {
-          const resourceId = await getResourceId()
+          const { permissionResource, triggerResouce } = await getResources()
 
           await config.api.permission.add({
             level: PermissionLevel.READ,
-            resourceId,
+            resourceId: permissionResource,
             roleId: resourcePermission,
           })
 
@@ -819,7 +839,7 @@ describe("/rowsActions", () => {
           await config.withUser(normalUser, async () => {
             await config.publish()
             await config.api.rowAction.trigger(
-              resourceId,
+              triggerResouce,
               rowAction.id,
               {
                 rowId: row._id!,
@@ -833,10 +853,10 @@ describe("/rowsActions", () => {
       it.each(disallowedRoleConfig)(
         "rejects if the user does not have table read permission (user %s, table %s)",
         async (userRole, resourcePermission) => {
-          const resourceId = await getResourceId()
+          const { permissionResource, triggerResouce } = await getResources()
           await config.api.permission.add({
             level: PermissionLevel.READ,
-            resourceId,
+            resourceId: permissionResource,
             roleId: resourcePermission,
           })
 
@@ -845,7 +865,7 @@ describe("/rowsActions", () => {
           await config.withUser(normalUser, async () => {
             await config.publish()
             await config.api.rowAction.trigger(
-              resourceId,
+              triggerResouce,
               rowAction.id,
               {
                 rowId: row._id!,
