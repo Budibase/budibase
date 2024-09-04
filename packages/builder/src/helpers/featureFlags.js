@@ -3,5 +3,5 @@ import { get } from "svelte/store"
 
 export const isEnabled = featureFlag => {
   const user = get(auth).user
-  return true
+  return !!user?.flags?.[featureFlag]
 }

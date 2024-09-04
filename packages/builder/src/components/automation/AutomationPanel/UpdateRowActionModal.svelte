@@ -1,5 +1,5 @@
 <script>
-  import { automationStore, rowActions } from "stores/builder"
+  import { rowActions } from "stores/builder"
   import {
     notifications,
     Icon,
@@ -7,7 +7,6 @@
     ModalContent,
     Modal,
   } from "@budibase/bbui"
-  import { API } from "api"
 
   export let automation
   export let onCancel = undefined
