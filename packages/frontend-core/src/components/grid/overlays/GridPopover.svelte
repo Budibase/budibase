@@ -15,6 +15,7 @@
   export let open = true
   export let resizable = false
   export let wrap = true
+  export let offset = 0
 
   const { gridID } = getContext("grid")
   const dispatch = createEventDispatcher()
@@ -42,8 +43,8 @@
   {align}
   {resizable}
   {wrap}
+  {offset}
   portalTarget="#{gridID} .grid-popover-container"
-  offset={0}
 >
   <div
     class="grid-popover-contents"
