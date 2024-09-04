@@ -743,36 +743,91 @@ describe("/rowsActions", () => {
       ])
     })
 
-    const { PUBLIC, ...nonPublicRoles } = roles.BUILTIN_ROLE_IDS
-
-    it.each(Object.values(nonPublicRoles))(
-      "rejects if the user does not have table read permission",
-      async role => {
-      await config.api.permission.add({
-        level: PermissionLevel.READ,
-        resourceId: tableId,
-          roleId: role,
-      })
-
-      const normalUser = await config.createUser({
-        admin: { global: false },
-        builder: {},
-      })
-      await config.withUser(normalUser, async () => {
-        await config.publish()
-        await config.api.rowAction.trigger(
-          tableId,
-          rowAction.id,
-          {
-            rowId: row._id!,
-          },
-            { status: 403, body: { message: "User does not have permission" } }
-        )
-
-        const automationLogs = await getAutomationLogs()
-        expect(automationLogs).toBeEmpty()
-      })
+    describe("role permission checks", () => {
+      function createUser(role: string) {
+        return config.createUser({
+          admin: { global: false },
+          builder: {},
+          roles: { [config.getProdAppId()]: role },
+        })
       }
-    )
+
+      function getRolesHigherThan(role: string) {
+        const result = Object.values(roles.BUILTIN_ROLE_IDS).filter(
+          r => r !== role && roles.lowerBuiltinRoleID(r, role) === role
+        )
+        return result
+      }
+      function getRolesLowerThan(role: string) {
+        const result = Object.values(roles.BUILTIN_ROLE_IDS).filter(
+          r => r !== role && roles.lowerBuiltinRoleID(r, role) === r
+        )
+        return result
+      }
+
+      const allowedRoleConfig = Object.values(roles.BUILTIN_ROLE_IDS).flatMap(
+        r => [r, ...getRolesLowerThan(r)].map(p => [r, p])
+      )
+
+      const disallowedRoleConfig = Object.values(
+        roles.BUILTIN_ROLE_IDS
+      ).flatMap(r => getRolesHigherThan(r).map(p => [r, p]))
+
+      it.each(allowedRoleConfig)(
+        "allows triggering if the user has table read permission (user %s, table %s)",
+        async (userRole, resourcePermission) => {
+          await config.api.permission.add({
+            level: PermissionLevel.READ,
+            resourceId: tableId,
+            roleId: resourcePermission,
+          })
+
+          const normalUser = await createUser(userRole)
+
+          await config.withUser(normalUser, async () => {
+            await config.publish()
+            await config.api.rowAction.trigger(
+              tableId,
+              rowAction.id,
+              {
+                rowId: row._id!,
+              },
+              { status: 200 }
+            )
+          })
+        }
+      )
+
+      it.each(disallowedRoleConfig)(
+        "rejects if the user does not have table read permission (user %s, table %s)",
+        async (userRole, resourcePermission) => {
+          await config.api.permission.add({
+            level: PermissionLevel.READ,
+            resourceId: tableId,
+            roleId: resourcePermission,
+          })
+
+          const normalUser = await createUser(userRole)
+
+          await config.withUser(normalUser, async () => {
+            await config.publish()
+            await config.api.rowAction.trigger(
+              tableId,
+              rowAction.id,
+              {
+                rowId: row._id!,
+              },
+              {
+                status: 403,
+                body: { message: "User does not have permission" },
+              }
+            )
+
+            const automationLogs = await getAutomationLogs()
+            expect(automationLogs).toBeEmpty()
+          })
+        }
+      )
+    })
   })
 })
