@@ -455,7 +455,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
     const keys = Object.keys(schema).sort()
 
     // Generate safe unique runtime prefix
-    let providerId = component._id
+    let providerId = (context.type === "schema" && context.key) || component._id
     if (runtimeSuffix) {
       providerId += `-${runtimeSuffix}`
     }

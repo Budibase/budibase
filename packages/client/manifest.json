@@ -7559,7 +7559,8 @@
           {
             "type": "columns/grid",
             "key": "columns",
-            "resetOn": "table"
+            "resetOn": "table",
+            "nested": true
           }
         ]
       },
@@ -7585,7 +7586,8 @@
     "context": [
       {
         "type": "schema",
-        "scope": "local"
+        "scope": "local",
+        "key": "row"
       },
       {
         "type": "static",

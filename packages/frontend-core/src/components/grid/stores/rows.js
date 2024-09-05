@@ -43,18 +43,6 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  function get(obj, path) {
-    if (!path) {
-      return
-    }
-    return path
-      .split(".")
-      .reduce(
-        (acc, part) => (acc && acc[part] !== undefined ? acc[part] : undefined),
-        obj
-      )
-  }
-
   const { rows, enrichedSchema } = context
 
   // Enrich rows with an index property and any pending changes
@@ -68,7 +56,7 @@ export const deriveStores = context => {
         ...row,
         __idx: idx,
         ...customColumns.reduce((acc, c) => {
-          acc[c.name] = processStringSync(c.formulaField, row)
+          acc[c.name] = processStringSync(c.formulaField, { row })
           return acc
         }, {}),
       }))
