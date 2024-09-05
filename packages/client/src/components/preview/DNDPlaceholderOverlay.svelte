@@ -6,8 +6,11 @@
   let left, top, height, width
 
   const updatePosition = () => {
-    const node =
-      document.getElementsByClassName(DNDPlaceholderID)[0]?.childNodes[0]
+    let node = document.getElementsByClassName(DNDPlaceholderID)[0]
+    const insideGrid = node?.dataset.insideGrid === "true"
+    if (!insideGrid) {
+      node = document.getElementsByClassName(`${DNDPlaceholderID}-dom`)[0]
+    }
     if (!node) {
       height = 0
       width = 0
