@@ -189,12 +189,6 @@
   // Scroll the selected element into view
   $: selected && scrollIntoView()
 
-  // When dragging and dropping, pad components to allow dropping between
-  // nested layers. Only reset this when dragging stops.
-  let pad = false
-  $: pad = pad || (interactive && hasChildren && inDndPath)
-  $: $dndIsDragging, (pad = false)
-
   // Themes
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
@@ -206,8 +200,10 @@
   }
 
   // Metadata to pass into grid action to apply CSS
-  const insideGrid =
-    parent?._component.endsWith("/container") && parent?.layout === "grid"
+  const checkGrid = x =>
+    x?._component.endsWith("/container") && x?.layout === "grid"
+  $: insideGrid = checkGrid(parent)
+  $: isGrid = checkGrid(instance)
   $: gridMetadata = {
     insideGrid,
     ignoresLayout: definition?.ignoresLayout === true,
@@ -218,6 +214,12 @@
     definition,
     errored: errorState,
   }
+
+  // When dragging and dropping, pad components to allow dropping between
+  // nested layers. Only reset this when dragging stops.
+  let pad = false
+  $: pad = pad || (!isGrid && interactive && hasChildren && inDndPath)
+  $: $dndIsDragging, (pad = false)
 
   // Update component context
   $: store.set({
