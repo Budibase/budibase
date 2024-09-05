@@ -10,6 +10,7 @@
   export let align = "left"
   export let offset
   export let animate
+  export let secondary = false
 
   let anchor
   let popover
@@ -24,7 +25,8 @@
   bind:ref={anchor}
   {size}
   icon="ChevronDown"
-  cta
+  cta={!secondary}
+  {secondary}
   on:click={() => popover?.show()}
   on:click
 >

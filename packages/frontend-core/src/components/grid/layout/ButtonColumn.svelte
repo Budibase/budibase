@@ -57,7 +57,7 @@
   onMount(() => {
     const observer = new ResizeObserver(entries => {
       const width = entries?.[0]?.contentRect?.width ?? 0
-      buttonColumnWidth.set(width)
+      buttonColumnWidth.set(width - 1)
     })
     observer.observe(container)
   })
@@ -68,7 +68,6 @@
   class="button-column"
   style="left:{left}px"
   class:hidden={$buttonColumnWidth === 0}
-  class:right-border={left !== gridEnd}
 >
   <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
     <GridScrollWrapper scrollVertically attachHandlers bind:ref={container}>
@@ -99,6 +98,7 @@
                   align="right"
                   offset={5}
                   size="S"
+                  secondary
                   animate={false}
                   on:mouseenter={() => ($hoveredRowId = row._id)}
                 />
@@ -187,8 +187,5 @@
   /* Add left cell border to all cells */
   .button-column :global(.cell) {
     border-left: var(--cell-border);
-  }
-  .button-column:not(.right-border) :global(.cell) {
-    border-right-color: transparent;
   }
 </style>
