@@ -143,7 +143,9 @@
       {/each}
     </div>
   {/if}
-  <slot />
+  {#if mounted}
+    <slot />
+  {/if}
 </div>
 
 <style>
