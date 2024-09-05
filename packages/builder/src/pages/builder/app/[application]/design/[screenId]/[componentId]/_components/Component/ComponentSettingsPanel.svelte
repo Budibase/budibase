@@ -37,10 +37,10 @@
   $: componentDefinition = componentStore.getDefinition(
     $selectedComponent?._component
   )
+
   $: bindings = getBindableProperties(
     $selectedScreen,
-    $componentStore.selectedComponentId,
-    { includeSelf: true }
+    $componentStore.selectedComponentId
   )
 
   $: componentBindings = getComponentBindableProperties(
