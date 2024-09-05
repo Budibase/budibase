@@ -37,7 +37,6 @@
   $: componentDefinition = componentStore.getDefinition(
     $selectedComponent?._component
   )
-
   $: bindings = getBindableProperties(
     $selectedScreen,
     $componentStore.selectedComponentId
