@@ -66,15 +66,29 @@
     <div class="field-label">{item.label || item.field}</div>
   </div>
   <div class="list-item-right">
-    <Toggle
-      on:click={e => {
-        e.stopPropagation()
-      }}
-      on:change={onToggle(item)}
-      text=""
-      value={item.active}
-      thin
-    />
+    {#if !item.custom}
+      <Toggle
+        on:click={e => {
+          e.stopPropagation()
+        }}
+        on:change={onToggle(item)}
+        text=""
+        value={item.active}
+        thin
+      />
+    {:else}
+      <div class="delete-column">
+        <Icon
+          size="S"
+          name="Close"
+          hoverable
+          on:click={e => {
+            e.stopPropagation()
+            dispatch("delete", item)
+          }}
+        />
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -96,6 +110,10 @@
   }
   .list-item-body {
     justify-content: space-between;
+  }
+  .delete-column {
+    margin-top: 8px;
+    margin-bottom: 8px;
   }
   .type-icon {
     display: flex;

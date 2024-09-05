@@ -90,6 +90,7 @@
 <DraggableList
   on:change={e => columns.updateSortable(e.detail)}
   on:itemChange={e => columns.update(e.detail)}
+  on:delete={e => columns.remove(e.detail)}
   items={columns.sortable}
   listItemKey={"_id"}
   listType={FieldSetting}

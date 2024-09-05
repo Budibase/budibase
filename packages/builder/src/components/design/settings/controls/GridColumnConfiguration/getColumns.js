@@ -140,6 +140,12 @@ const getColumns = ({
 
       onChange(toGridFormat(newDraggableList))
     },
+    remove: entryToDelete => {
+      const newDraggableList = draggableList.filter(
+        entry => entry.field !== entryToDelete.field
+      )
+      onChange(toGridFormat(newDraggableList))
+    },
   }
 }
 

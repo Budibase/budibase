@@ -127,6 +127,7 @@
           item={draggableItem.item}
           {...listTypeProps}
           on:change={onItemChanged}
+          on:delete={e => dispatch("delete", e.detail)}
         />
       </div>
     </li>
