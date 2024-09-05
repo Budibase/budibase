@@ -153,7 +153,7 @@
   $: builderInteractive =
     $builderStore.inBuilder && insideScreenslot && !isBlock && !instance.static
   $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
-  $: interactive = !isRoot && (builderInteractive || devToolsInteractive)
+  $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
   $: draggable =
     !inDragPath &&
@@ -189,12 +189,6 @@
   // Scroll the selected element into view
   $: selected && scrollIntoView()
 
-  // When dragging and dropping, pad components to allow dropping between
-  // nested layers. Only reset this when dragging stops.
-  let pad = false
-  $: pad = pad || (interactive && hasChildren && inDndPath)
-  $: $dndIsDragging, (pad = false)
-
   // Themes
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
@@ -206,8 +200,10 @@
   }
 
   // Metadata to pass into grid action to apply CSS
-  const insideGrid =
-    parent?._component.endsWith("/container") && parent?.layout === "grid"
+  const checkGrid = x =>
+    x?._component.endsWith("/container") && x?.layout === "grid"
+  $: insideGrid = checkGrid(parent)
+  $: isGrid = checkGrid(instance)
   $: gridMetadata = {
     insideGrid,
     ignoresLayout: definition?.ignoresLayout === true,
@@ -218,6 +214,12 @@
     definition,
     errored: errorState,
   }
+
+  // When dragging and dropping, pad components to allow dropping between
+  // nested layers. Only reset this when dragging stops.
+  let pad = false
+  $: pad = pad || (!isGrid && interactive && hasChildren && inDndPath)
+  $: $dndIsDragging, (pad = false)
 
   // Update component context
   $: store.set({
@@ -231,12 +233,14 @@
       empty: emptyState,
       selected,
       interactive,
+      isRoot,
       draggable,
       editable,
       isBlock,
     },
     empty: emptyState,
     selected,
+    isRoot,
     inSelectedPath,
     name,
     editing,
@@ -672,6 +676,7 @@
     class:parent={hasChildren}
     class:block={isBlock}
     class:error={errorState}
+    class:root={isRoot}
     data-id={id}
     data-name={name}
     data-icon={icon}
