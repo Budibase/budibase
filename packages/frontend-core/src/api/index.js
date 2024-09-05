@@ -82,6 +82,14 @@ export const createAPIClient = config => {
     ...config,
   }
   let cache = {}
+  let logs = []
+
+  const addLogEntry = entry => {
+    logs.push(entry)
+    while (logs.length > 20) {
+      logs.shift()
+    }
+  }
 
   // Generates an error object from an API response
   const makeErrorFromResponse = async (
@@ -161,6 +169,17 @@ export const createAPIClient = config => {
       }
     }
 
+    let logEntry = {
+      time: new Date().toISOString(),
+      request: {
+        method,
+        url,
+        body: requestBody,
+      },
+      response: null,
+      error: null,
+    }
+
     // Make request
     let response
     try {
@@ -171,8 +190,17 @@ export const createAPIClient = config => {
         credentials: "same-origin",
       })
     } catch (error) {
+      logEntry.error = {
+        message: error.message,
+      }
+      addLogEntry(logEntry)
       delete cache[url]
       throw makeError("Failed to send request", { url, method })
+    }
+
+    logEntry.response = {
+      status: response.status,
+      headers: response.headers,
     }
 
     // Handle response
@@ -182,13 +210,21 @@ export const createAPIClient = config => {
         if (parseResponse) {
           return await parseResponse(response)
         } else {
-          return await response.json()
+          const json = await response.json()
+          logEntry.response.body = json
+          return json
         }
       } catch (error) {
+        logEntry.error = {
+          message: error.message,
+        }
         delete cache[url]
         return null
+      } finally {
+        addLogEntry(logEntry)
       }
     } else {
+      addLogEntry(logEntry)
       delete cache[url]
       throw await makeErrorFromResponse(response, method, suppressErrors)
     }
@@ -262,6 +298,9 @@ export const createAPIClient = config => {
       let headers = {}
       config?.attachHeaders(headers)
       return headers?.[Header.APP_ID]
+    },
+    getLogs() {
+      return logs
     },
   }
 

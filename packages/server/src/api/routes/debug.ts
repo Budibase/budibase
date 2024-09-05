@@ -11,4 +11,10 @@ router.get(
   controller.systemDebugInfo
 )
 
+router.post(
+  "/api/debug/bug-report",
+  authorized(permissions.BUILDER),
+  controller.bugReport
+)
+
 export default router

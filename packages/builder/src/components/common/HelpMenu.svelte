@@ -4,12 +4,25 @@
   import { licensing } from "stores/portal"
   import { isPremiumOrAbove } from "helpers/planTitle"
   import { ChangelogURL } from "constants"
+  import { API } from "api"
 
   $: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license?.plan?.type)
 
   let show
   let hide
   let popoverAnchor
+
+  async function downloadBugReport() {
+    const resp = await API.fetchBugReportFile()
+    const url = window.URL.createObjectURL(resp)
+    const a = document.createElement("a")
+    a.style.display = "none"
+    a.href = url
+    a.download = "bug-report.zip"
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
 </script>
 
 <div bind:this={popoverAnchor} class="help">
@@ -59,6 +72,13 @@
           <FontAwesomeIcon name="fa-solid fa-play" />
         </div>
         <Body size="S">Budibase University</Body>
+      </a>
+      <div class="divider" />
+      <a role="button" on:click={downloadBugReport}>
+        <div class="icon">
+          <FontAwesomeIcon name="fa-solid fa-bug" />
+        </div>
+        <Body size="S">Download bug report</Body>
       </a>
       <div class="divider" />
       <a

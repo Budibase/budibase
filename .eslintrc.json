@@ -39,7 +39,8 @@
       "plugins": ["@typescript-eslint"],
       "extends": ["eslint:recommended"],
       "globals": {
-        "NodeJS": true
+        "NodeJS": true,
+        "BufferEncoding": "readonly"
       },
       "rules": {
         "no-unused-vars": "off",

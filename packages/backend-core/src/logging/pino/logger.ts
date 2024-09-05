@@ -1,4 +1,4 @@
-import pino, { LoggerOptions } from "pino"
+import pino, { LoggerOptions, DestinationStream } from "pino"
 import pinoPretty from "pino-pretty"
 
 import { IdentityType } from "@budibase/types"
@@ -22,11 +22,41 @@ function isMessage(obj: any) {
   return typeof obj === "string"
 }
 
-// LOGGER
+class CircularByteBuffer implements DestinationStream {
+  private buffer: Buffer
+  private head: number = 0
+  private tail: number = 0
+  private capacity: number
 
+  constructor(capacity: number) {
+    this.capacity = capacity
+    this.buffer = Buffer.alloc(capacity)
+  }
+
+  write(data: string): void {
+    const buffer = Buffer.from(data)
+    for (let i = 0; i < buffer.length; i++) {
+      this.buffer[this.tail] = buffer[i]
+      this.tail = (this.tail + 1) % this.capacity
+    }
+  }
+
+  readAll(encoding: BufferEncoding = "utf8"): string {
+    const data = Buffer.alloc(this.buffer.length)
+    let index = 0
+    while (index < this.buffer.length) {
+      data[index] = this.buffer[this.head]
+      this.head = (this.head + 1) % this.capacity
+      index++
+    }
+    return data.toString(encoding)
+  }
+}
+
+let logTail: CircularByteBuffer | undefined
 let pinoInstance: pino.Logger | undefined
 if (!env.DISABLE_PINO_LOGGER) {
-  const level = env.LOG_LEVEL
+  const level = env.LOG_LEVEL as pino.Level
   const pinoOptions: LoggerOptions = {
     level,
     formatters: {
@@ -49,21 +79,16 @@ if (!env.DISABLE_PINO_LOGGER) {
   }
 
   const destinations: pino.StreamEntry[] = []
-
   destinations.push(
     env.isDev()
-      ? {
-          stream: pinoPretty({ singleLine: true }),
-          level: level as pino.Level,
-        }
-      : { stream: process.stdout, level: level as pino.Level }
+      ? { stream: pinoPretty({ singleLine: true }), level }
+      : { stream: process.stdout, level }
   )
 
   if (env.SELF_HOSTED) {
-    destinations.push({
-      stream: localFileDestination(),
-      level: level as pino.Level,
-    })
+    logTail = new CircularByteBuffer(1024 * 1024)
+    destinations.push({ stream: logTail, level })
+    destinations.push({ stream: localFileDestination(), level })
   }
 
   pinoInstance = destinations.length
@@ -237,3 +262,4 @@ if (!env.DISABLE_PINO_LOGGER) {
 }
 
 export const logger = pinoInstance
+export const tail = logTail

@@ -163,6 +163,24 @@ export const buildAppEndpoints = API => ({
   },
 
   /**
+   *  Gets the bug report file.
+   */
+  fetchBugReportFile: async body => {
+    if (!body) {
+      body = {}
+    }
+    return await API.post({
+      url: `/api/debug/bug-report`,
+      parseResponse: response => response.blob(),
+      body: {
+        clientApiCalls: API.getLogs(),
+        browserUrl: window.location.href,
+        ...body,
+      },
+    })
+  },
+
+  /**
    * Syncs an app with the production database.
    * @param appId the ID of the app to sync
    */

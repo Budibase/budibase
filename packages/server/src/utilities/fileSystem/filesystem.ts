@@ -115,19 +115,19 @@ export const readFileSync = (filepath: PathLike, options = "utf8") => {
   return fs.readFileSync(filepath, options)
 }
 
-export const createTempFolder = (item: any) => {
-  const path = join(budibaseTempDir(), item)
+export const createTempFolder = (path?: string) => {
+  const fullPath = join(budibaseTempDir(), path || uuid())
   try {
     // remove old tmp directories automatically - don't combine
-    if (fs.existsSync(path)) {
-      fs.rmSync(path, { recursive: true, force: true })
+    if (fs.existsSync(fullPath)) {
+      fs.rmSync(fullPath, { recursive: true, force: true })
     }
-    fs.mkdirSync(path)
+    fs.mkdirSync(fullPath)
   } catch (err: any) {
     throw new Error(`Path cannot be created: ${err.message}`)
   }
 
-  return path
+  return fullPath
 }
 
 export const extractTarball = async (fromFilePath: string, toPath: string) => {
