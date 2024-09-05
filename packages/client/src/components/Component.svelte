@@ -240,6 +240,7 @@
     },
     empty: emptyState,
     selected,
+    isRoot,
     inSelectedPath,
     name,
     editing,
