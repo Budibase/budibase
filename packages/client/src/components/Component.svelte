@@ -153,7 +153,7 @@
   $: builderInteractive =
     $builderStore.inBuilder && insideScreenslot && !isBlock && !instance.static
   $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
-  $: interactive = !isRoot && (builderInteractive || devToolsInteractive)
+  $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
   $: draggable =
     !inDragPath &&
@@ -231,6 +231,7 @@
       empty: emptyState,
       selected,
       interactive,
+      isRoot,
       draggable,
       editable,
       isBlock,
@@ -672,6 +673,7 @@
     class:parent={hasChildren}
     class:block={isBlock}
     class:error={errorState}
+    class:root={isRoot}
     data-id={id}
     data-name={name}
     data-icon={icon}
