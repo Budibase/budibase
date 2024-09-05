@@ -94,6 +94,23 @@ class InternalBuilder {
     })
   }
 
+  // states the various situations in which we need a full mapped select statement
+  private readonly SPECIAL_SELECT_CASES = {
+    POSTGRES_MONEY: (field: FieldSchema | undefined) => {
+      return (
+        this.client === SqlClient.POSTGRES &&
+        field?.externalType?.includes("money")
+      )
+    },
+    MSSQL_DATES: (field: FieldSchema | undefined) => {
+      return (
+        this.client === SqlClient.MS_SQL &&
+        field?.type === FieldType.DATETIME &&
+        field.timeOnly
+      )
+    },
+  }
+
   get table(): Table {
     return this.query.meta.table
   }
@@ -127,8 +144,20 @@ class InternalBuilder {
       .join(".")
   }
 
+  private isFullSelectStatementRequired(): boolean {
+    const { meta } = this.query
+    for (let column of Object.values(meta.table.schema)) {
+      if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(column)) {
+        return true
+      } else if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(column)) {
+        return true
+      }
+    }
+    return false
+  }
+
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
-    const { endpoint, resource, tableAliases } = this.query
+    const { meta, endpoint, resource, tableAliases } = this.query
 
     if (!resource || !resource.fields || resource.fields.length === 0) {
       return "*"
@@ -137,75 +166,48 @@ class InternalBuilder {
     const alias = tableAliases?.[endpoint.entityId]
       ? tableAliases?.[endpoint.entityId]
       : endpoint.entityId
-    return [this.knex.raw(`${this.quote(alias)}.*`)]
-    //
-    //
-    // const schema = meta.table.schema
-    // return resource.fields.map(field => {
-    //   const parts = field.split(/\./g)
-    //   let table: string | undefined = undefined
-    //   let column: string | undefined = undefined
-    //
-    //   // Just a column name, e.g.: "column"
-    //   if (parts.length === 1) {
-    //     column = parts[0]
-    //   }
-    //
-    //   // A table name and a column name, e.g.: "table.column"
-    //   if (parts.length === 2) {
-    //     table = parts[0]
-    //     column = parts[1]
-    //   }
-    //
-    //   // A link doc, e.g.: "table.doc1.fieldName"
-    //   if (parts.length > 2) {
-    //     table = parts[0]
-    //     column = parts.slice(1).join(".")
-    //   }
-    //
-    //   if (!column) {
-    //     throw new Error(`Invalid field name: ${field}`)
-    //   }
-    //
-    //   const columnSchema = schema[column]
-    //
-    //   if (
-    //     this.client === SqlClient.POSTGRES &&
-    //     columnSchema?.externalType?.includes("money")
-    //   ) {
-    //     return this.knex.raw(
-    //       `${this.quotedIdentifier(
-    //         [table, column].join(".")
-    //       )}::money::numeric as ${this.quote(field)}`
-    //     )
-    //   }
-    //
-    //   if (
-    //     this.client === SqlClient.MS_SQL &&
-    //     columnSchema?.type === FieldType.DATETIME &&
-    //     columnSchema.timeOnly
-    //   ) {
-    //     // Time gets returned as timestamp from mssql, not matching the expected
-    //     // HH:mm format
-    //     return this.knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
-    //   }
-    //
-    //   // There's at least two edge cases being handled in the expression below.
-    //   //  1. The column name could start/end with a space, and in that case we
-    //   //     want to preseve that space.
-    //   //  2. Almost all column names are specified in the form table.column, except
-    //   //     in the case of relationships, where it's table.doc1.column. In that
-    //   //     case, we want to split it into `table`.`doc1.column` for reasons that
-    //   //     aren't actually clear to me, but `table`.`doc1` breaks things with the
-    //   //     sample data tests.
-    //   if (table) {
-    //     return this.knex.raw(
-    //       `${this.quote(table)}.${this.quote(column)} as ${this.quote(field)}`
-    //     )
-    //   } else {
-    //     return this.knex.raw(`${this.quote(field)} as ${this.quote(field)}`)
-    //   }
-    // })
+    const schema = meta.table.schema
+    if (!this.isFullSelectStatementRequired()) {
+      return [this.knex.raw(`${this.quote(alias)}.*`)]
+    }
+    // get just the fields for this table
+    return resource.fields
+      .map(field => {
+        const parts = field.split(/\./g)
+        let table: string | undefined = undefined
+        let column = parts[0]
+
+        // Just a column name, e.g.: "column"
+        if (parts.length > 1) {
+          table = parts[0]
+          column = parts.slice(1).join(".")
+        }
+
+        return { table, column, field }
+      })
+      .filter(({ table }) => !table || table === alias)
+      .map(({ table, column, field }) => {
+        const columnSchema = schema[column]
+
+        if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(columnSchema)) {
+          return this.knex.raw(
+            `${this.quotedIdentifier(
+              [table, column].join(".")
+            )}::money::numeric as ${this.quote(field)}`
+          )
+        }
+
+        if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(columnSchema)) {
+          // Time gets returned as timestamp from mssql, not matching the expected
+          // HH:mm format
+          return this.knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
+        }
+
+        const quoted = table
+          ? `${this.quote(table)}.${this.quote(column)}`
+          : this.quote(field)
+        return this.knex.raw(quoted)
+      })
   }
 
   // OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
