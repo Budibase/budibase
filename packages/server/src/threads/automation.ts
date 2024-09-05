@@ -449,7 +449,11 @@ class Orchestrator {
         outputs: tempOutput,
         inputs: steps[stepToLoopIndex].inputs,
       })
-      this.context.steps[currentIndex + 1] = tempOutput
+      this.context.steps[this.context.steps.length] = tempOutput
+      this.context.steps = this.context.steps.filter(
+        item => !item.hasOwnProperty.call(item, "currentItem")
+      )
+
       this.loopStepOutputs = []
     }
 
@@ -461,6 +465,19 @@ class Orchestrator {
     for (const branch of branches) {
       const condition = await this.evaluateBranchCondition(branch.condition)
       if (condition) {
+        let branchStatus = {
+          status: `${branch.name} branch taken`,
+          success: true,
+        }
+
+        this.updateExecutionOutput(
+          branchStep.id,
+          branchStep.stepId,
+          branchStep.inputs,
+          branchStatus
+        )
+        this.context.steps[this.context.steps.length] = branchStatus
+
         const branchSteps = children?.[branch.name] || []
         await this.executeSteps(branchSteps)
         break
@@ -569,8 +586,8 @@ class Orchestrator {
       this.loopStepOutputs.push(outputs)
     } else {
       this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
+      this.context.steps[this.context.steps.length] = outputs
     }
-    this.context.steps[this.context.steps.length] = outputs
   }
 }
 
