@@ -49,8 +49,12 @@ const UpdateReferenceAction = {
 /**
  * Gets all bindable data context fields and instance fields.
  */
-export const getBindableProperties = (asset, componentId) => {
-  const contextBindings = getContextBindings(asset, componentId)
+export const getBindableProperties = (
+  asset,
+  componentId,
+  options = { includeSelf: false }
+) => {
+  const contextBindings = getContextBindings(asset, componentId, options)
   const userBindings = getUserBindings()
   const urlBindings = getUrlBindings(asset)
   const deviceBindings = getDeviceBindings()
@@ -361,9 +365,18 @@ export const getDatasourceForProvider = (asset, component) => {
 /**
  * Gets all bindable data properties from component data contexts.
  */
-const getContextBindings = (asset, componentId) => {
+const getContextBindings = (
+  asset,
+  componentId,
+  options = { includeSelf: false }
+) => {
   // Get all available contexts for this component
-  const componentContexts = getAllComponentContexts(asset, componentId)
+  const componentContexts = getAllComponentContexts(
+    asset,
+    componentId,
+    undefined,
+    options
+  )
 
   // Generate bindings for each context
   return componentContexts
