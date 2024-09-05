@@ -1,4 +1,5 @@
 <script>
+  import { FeatureFlag } from "@budibase/types"
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen, componentStore } from "stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
@@ -6,6 +7,7 @@
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
   import getColumns from "./getColumns.js"
+  import { isEnabled } from "helpers/featureFlags"
 
   export let value
   export let componentInstance
@@ -99,11 +101,13 @@
   }}
 />
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="list-footer" on:click={addCustomColumn}>
-  <div class="add-button">Add custom column</div>
-</div>
+{#if isEnabled(FeatureFlag.ENRICHED_RELATIONSHIPS)}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div class="list-footer" on:click={addCustomColumn}>
+    <div class="add-button">Add custom column</div>
+  </div>
+{/if}
 
 <style>
   .right-content {
