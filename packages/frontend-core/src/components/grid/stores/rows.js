@@ -6,6 +6,7 @@ import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
 import { FieldType } from "@budibase/types"
+import { processStringSync } from "@budibase/string-templates"
 
 export const createStores = () => {
   const rows = writable([])
@@ -42,15 +43,32 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { rows } = context
+  const { rows, enrichedSchema } = context
 
   // Enrich rows with an index property and any pending changes
-  const enrichedRows = derived(rows, $rows => {
-    return $rows.map((row, idx) => ({
-      ...row,
-      __idx: idx,
-    }))
-  })
+  const enrichedRows = derived(
+    [rows, enrichedSchema],
+    ([$rows, $enrichedSchema]) => {
+      const customColumns = Object.values($enrichedSchema || {}).filter(
+        f => f.related
+      )
+      return $rows.map((row, idx) => ({
+        ...row,
+        __idx: idx,
+        ...customColumns.reduce((acc, c) => {
+          try {
+            acc[c.name] = processStringSync(
+              `{{ join (pluck ${c.related.field} '${c.related.subField}') ', ' }}`,
+              row
+            )
+          } catch {
+            // It might be some formula not set, or anything being incorrect
+          }
+          return acc
+        }, {}),
+      }))
+    }
+  )
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(enrichedRows, $enrichedRows => {
