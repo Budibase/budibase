@@ -3078,8 +3078,8 @@
         "key": "label"
       },
       {
-        "type": "text",
-        "label": "Formula",
+        "type": "relatedField",
+        "label": "Related Field",
         "key": "formulaField"
       },
       {
