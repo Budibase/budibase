@@ -32,7 +32,6 @@
 
   async function fetchAIConfig() {
     try {
-      // Fetch the AI configs
       const aiDoc = await API.getConfig(ConfigTypes.AI)
       if (aiDoc._id) {
         fullAIConfig = aiDoc
@@ -105,8 +104,8 @@
     modal.show()
   }
 
-  onMount(async () => {
-    await fetchAIConfig()
+  onMount(() => {
+    fetchAIConfig()
   })
 </script>
 
