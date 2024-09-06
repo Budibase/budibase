@@ -1,4 +1,5 @@
 import {
+  FieldSchema,
   FieldType,
   RelationSchemaField,
   RenameColumn,
@@ -176,7 +177,7 @@ export async function enrichSchema(
     }
     const relTable = tableCache[tableId]
 
-    const result: Record<string, RelationSchemaField> = {}
+    const result: Record<string, FieldSchema & RelationSchemaField> = {}
 
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
@@ -191,6 +192,7 @@ export async function enrichSchema(
       const isVisible = !!viewFields[relTableFieldName]?.visible
       const isReadonly = !!viewFields[relTableFieldName]?.readonly
       result[relTableFieldName] = {
+        ...relTableField,
         visible: isVisible,
         readonly: isReadonly,
       }
@@ -211,6 +213,7 @@ export async function enrichSchema(
       ...tableSchema[key],
       ...ui,
       order: anyViewOrder ? ui?.order ?? undefined : tableSchema[key].order,
+      columns: undefined,
     }
 
     if (schema[key].type === FieldType.LINK) {
