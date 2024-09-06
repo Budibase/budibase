@@ -129,32 +129,29 @@ export function basicProcessing({
       : typeof value === "string"
       ? JSON.parse(value)
       : undefined
-    if (array) {
+    if (array && Array.isArray(array)) {
       thisRow[col] = array
       // make sure all of them have an _id
-      if (Array.isArray(thisRow[col])) {
-        const sortField =
-          relatedTable.primaryDisplay || relatedTable.primary![0]!
-        thisRow[col] = (thisRow[col] as Row[])
-          .map(relatedRow => {
-            relatedRow._id = relatedRow._id
-              ? relatedRow._id
-              : generateIdForRow(relatedRow, relatedTable)
-            return relatedRow
-          })
-          .sort((a, b) => {
-            const aField = a?.[sortField],
-              bField = b?.[sortField]
-            if (!aField) {
-              return 1
-            } else if (!bField) {
-              return -1
-            }
-            return aField.localeCompare
-              ? aField.localeCompare(bField)
-              : aField - bField
-          })
-      }
+      const sortField = relatedTable.primaryDisplay || relatedTable.primary![0]!
+      thisRow[col] = (thisRow[col] as Row[])
+        .map(relatedRow => {
+          relatedRow._id = relatedRow._id
+            ? relatedRow._id
+            : generateIdForRow(relatedRow, relatedTable)
+          return relatedRow
+        })
+        .sort((a, b) => {
+          const aField = a?.[sortField],
+            bField = b?.[sortField]
+          if (!aField) {
+            return 1
+          } else if (!bField) {
+            return -1
+          }
+          return aField.localeCompare
+            ? aField.localeCompare(bField)
+            : aField - bField
+        })
     }
   }
   return thisRow
