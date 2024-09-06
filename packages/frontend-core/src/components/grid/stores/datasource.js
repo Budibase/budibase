@@ -83,7 +83,10 @@ export const deriveStores = context => {
           const { field: relField, subField: relSubField } =
             $schemaOverrides[field].related
 
-          if (!$schema[relField]?.columns?.[relSubField]?.visible) {
+          if (
+            !$schema[relField].visible ||
+            !$schema[relField]?.columns?.[relSubField]?.visible
+          ) {
             return
           }
 
