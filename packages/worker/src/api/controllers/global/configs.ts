@@ -199,7 +199,7 @@ async function verifyOIDCConfig(config: OIDCConfigs) {
   await verifySSOConfig(ConfigType.OIDC, config.configs[0])
 }
 
-async function verifyAIConfig(config: AIConfig, existingConfig?: AIConfig) {
+export async function verifyAIConfig(config: AIConfig, existingConfig?: AIConfig) {
   if (!existingConfig) return
 
   // ensure that the redacted API keys are not overwritten in the DB

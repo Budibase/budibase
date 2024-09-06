@@ -79,7 +79,7 @@ export default defineConfig(({ mode }) => {
         "process.env.POSTHOG_TOKEN": JSON.stringify(process.env.POSTHOG_TOKEN),
       }),
       copyFonts("fonts"),
-    ...(isProduction ? [] : devOnlyPlugins),
+      ...(isProduction ? [] : devOnlyPlugins),
     ],
     optimizeDeps: {
       exclude: ["@roxi/routify", "fsevents"],
