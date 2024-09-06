@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount } from "svelte"
-  import { Button, CollapsedButtonGroup } from "@budibase/bbui"
+  import { Button, CollapsedButtonGroup, Select } from "@budibase/bbui"
   import GridCell from "../cells/GridCell.svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import { BlankRowID } from "../lib/constants"
@@ -98,7 +98,7 @@
                   align="right"
                   offset={5}
                   size="S"
-                  secondary
+                  quiet
                   animate={false}
                   on:mouseenter={() => ($hoveredRowId = row._id)}
                 />

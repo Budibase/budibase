@@ -10,7 +10,7 @@
   export let align = "left"
   export let offset
   export let animate
-  export let secondary = false
+  export let quiet = false
 
   let anchor
   let popover
@@ -25,10 +25,13 @@
   bind:ref={anchor}
   {size}
   icon="ChevronDown"
-  cta={!secondary}
-  {secondary}
+  {quiet}
+  primary={quiet}
+  cta={!quiet}
+  newStyles={!quiet}
   on:click={() => popover?.show()}
   on:click
+  reverse
 >
   {text || "Action"}
 </Button>
