@@ -76,7 +76,6 @@ function aiValidation() {
        active: Joi.boolean().required(),
        baseUrl: Joi.string().optional().allow("", null),
        apiKey: Joi.string().required(),
-       // TODO: should be enum
        defaultModel: Joi.string().optional(),
      }).required()
   )
