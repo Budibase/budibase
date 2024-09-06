@@ -855,6 +855,21 @@ class InternalBuilder {
     return withSchema
   }
 
+  private buildJsonField(field: string): string {
+    const parts = field.split(".")
+    let tableField: string, unaliased: string
+    if (parts.length > 1) {
+      const alias = parts.shift()!
+      unaliased = parts.join(".")
+      tableField = `${this.quote(alias)}.${this.quote(unaliased)}`
+    } else {
+      unaliased = parts.join(".")
+      tableField = this.quote(unaliased)
+    }
+    const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
+    return `'${unaliased}'${separator}${tableField}`
+  }
+
   addJsonRelationships(
     query: Knex.QueryBuilder,
     fromTable: string,
@@ -864,27 +879,6 @@ class InternalBuilder {
     const knex = this.knex
     const { resource, tableAliases: aliases, endpoint } = this.query
     const fields = resource?.fields || []
-    const jsonField = (field: string) => {
-      const parts = field.split(".")
-      let tableField: string, unaliased: string
-      if (parts.length > 1) {
-        const alias = parts.shift()!
-        unaliased = parts.join(".")
-        tableField = `${this.quote(alias)}.${this.quote(unaliased)}`
-      } else {
-        unaliased = parts.join(".")
-        tableField = this.quote(unaliased)
-      }
-      let separator = ","
-      switch (sqlClient) {
-        case SqlClient.ORACLE:
-          separator = " VALUE "
-          break
-        case SqlClient.MS_SQL:
-          separator = ":"
-      }
-      return `'${unaliased}'${separator}${tableField}`
-    }
     for (let relationship of relationships) {
       const {
         tableName: toTable,
@@ -914,7 +908,7 @@ class InternalBuilder {
         )
       }
       const fieldList: string = relationshipFields
-        .map(field => jsonField(field))
+        .map(field => this.buildJsonField(field))
         .join(",")
       // SQL Server uses TOP - which performs a little differently to the normal LIMIT syntax
       // it reduces the result set rather than limiting how much data it filters over
@@ -1066,43 +1060,6 @@ class InternalBuilder {
     return query
   }
 
-  addRelationships(
-    query: Knex.QueryBuilder,
-    fromTable: string,
-    relationships: RelationshipsJson[]
-  ): Knex.QueryBuilder {
-    const tableSets: Record<string, [RelationshipsJson]> = {}
-    // aggregate into table sets (all the same to tables)
-    for (let relationship of relationships) {
-      const keyObj: { toTable: string; throughTable: string | undefined } = {
-        toTable: relationship.tableName,
-        throughTable: undefined,
-      }
-      if (relationship.through) {
-        keyObj.throughTable = relationship.through
-      }
-      const key = JSON.stringify(keyObj)
-      if (tableSets[key]) {
-        tableSets[key].push(relationship)
-      } else {
-        tableSets[key] = [relationship]
-      }
-    }
-    for (let [key, relationships] of Object.entries(tableSets)) {
-      const { toTable, throughTable } = JSON.parse(key)
-      query = this.addJoin(
-        query,
-        {
-          from: fromTable,
-          to: toTable,
-          through: throughTable,
-        },
-        relationships
-      )
-    }
-    return query
-  }
-
   qualifiedKnex(opts?: { alias?: string | boolean }): Knex.QueryBuilder {
     let alias = this.query.tableAliases?.[this.query.endpoint.entityId]
     if (opts?.alias === false) {
@@ -1186,8 +1143,7 @@ class InternalBuilder {
       if (!primary) {
         throw new Error("Primary key is required for upsert")
       }
-      const ret = query.insert(parsedBody).onConflict(primary).merge()
-      return ret
+      return query.insert(parsedBody).onConflict(primary).merge()
     } else if (
       this.client === SqlClient.MS_SQL ||
       this.client === SqlClient.ORACLE
