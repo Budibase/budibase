@@ -343,9 +343,9 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         err.number
       )
       if (readableMessage) {
-        throw new Error(readableMessage)
+        throw new Error(readableMessage, { cause: err })
       } else {
-        throw new Error(err.message as string)
+        throw new Error(err.message as string, { cause: err })
       }
     }
   }

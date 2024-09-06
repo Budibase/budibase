@@ -1,6 +1,10 @@
 // need to handle table name + field or just field, depending on if relationships used
 import { FieldSchema, FieldType, Row, Table } from "@budibase/types"
-import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
+import {
+  helpers,
+  PROTECTED_EXTERNAL_COLUMNS,
+  PROTECTED_INTERNAL_COLUMNS,
+} from "@budibase/shared-core"
 import { generateRowIdField } from "../../../../integrations/utils"
 
 function extractFieldValue({
@@ -61,11 +65,13 @@ export function generateIdForRow(
 export function basicProcessing({
   row,
   table,
+  tables,
   isLinked,
   sqs,
 }: {
   row: Row
   table: Table
+  tables: Table[]
   isLinked: boolean
   sqs?: boolean
 }): Row {
@@ -86,24 +92,69 @@ export function basicProcessing({
       thisRow[fieldName] = value
     }
   }
+  let columns: string[] = Object.keys(table.schema)
   if (!sqs) {
     thisRow._id = generateIdForRow(row, table, isLinked)
     thisRow.tableId = table._id
     thisRow._rev = "rev"
+    columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)
   } else {
-    const columns = Object.keys(table.schema)
+    columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)
     for (let internalColumn of [...PROTECTED_INTERNAL_COLUMNS, ...columns]) {
-      const schema: FieldSchema | undefined = table.schema[internalColumn]
-      let value = extractFieldValue({
+      thisRow[internalColumn] = extractFieldValue({
         row,
         tableName: table._id!,
         fieldName: internalColumn,
         isLinked,
       })
-      if (sqs && schema?.type === FieldType.LINK && typeof value === "string") {
-        value = JSON.parse(value)
+    }
+  }
+  for (let col of columns) {
+    const schema: FieldSchema | undefined = table.schema[col]
+    if (schema?.type !== FieldType.LINK) {
+      continue
+    }
+    const relatedTable = tables.find(tbl => tbl._id === schema.tableId)
+    if (!relatedTable) {
+      continue
+    }
+    const value = extractFieldValue({
+      row,
+      tableName: table._id!,
+      fieldName: col,
+      isLinked,
+    })
+    const array: Row[] = Array.isArray(value)
+      ? value
+      : typeof value === "string"
+      ? JSON.parse(value)
+      : undefined
+    if (array) {
+      thisRow[col] = array
+      // make sure all of them have an _id
+      if (Array.isArray(thisRow[col])) {
+        const sortField =
+          relatedTable.primaryDisplay || relatedTable.primary![0]!
+        thisRow[col] = (thisRow[col] as Row[])
+          .map(relatedRow => {
+            relatedRow._id = relatedRow._id
+              ? relatedRow._id
+              : generateIdForRow(relatedRow, relatedTable)
+            return relatedRow
+          })
+          .sort((a, b) => {
+            const aField = a?.[sortField],
+              bField = b?.[sortField]
+            if (!aField) {
+              return 1
+            } else if (!bField) {
+              return -1
+            }
+            return aField.localeCompare
+              ? aField.localeCompare(bField)
+              : aField - bField
+          })
       }
-      thisRow[internalColumn] = value
     }
   }
   return thisRow
