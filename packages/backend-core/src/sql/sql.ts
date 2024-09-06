@@ -1202,12 +1202,33 @@ class InternalBuilder {
     if (!counting) {
       query = this.addSorting(query)
     }
-    // handle joins
-    if (relationships) {
-      query = this.addJsonRelationships(query, tableName, relationships)
-    }
 
-    return this.addFilters(query, filters, { relationship: true })
+    query = this.addFilters(query, filters, { relationship: true })
+
+    // SQLite (SQS) cannot use the WITH statement yet
+    if (relationships?.length && this.client === SqlClient.SQL_LITE) {
+      return this.addJsonRelationships(query, tableName, relationships)
+    }
+    // handle relationships with a CTE for all others
+    else if (relationships?.length) {
+      const mainTable =
+        this.query.tableAliases?.[this.query.endpoint.entityId] ||
+        this.query.endpoint.entityId
+      const cte = this.addSorting(
+        this.knex
+          .with("paginated", query)
+          .select(this.generateSelectStatement())
+          .from({
+            [mainTable]: "paginated",
+          })
+      )
+      // add JSON aggregations attached to the CTE
+      return this.addJsonRelationships(cte, tableName, relationships)
+    }
+    // no relationships found - return query
+    else {
+      return query
+    }
   }
 
   update(opts: QueryOptions): Knex.QueryBuilder {
