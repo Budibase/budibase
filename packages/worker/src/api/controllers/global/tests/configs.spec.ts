@@ -1,6 +1,6 @@
-import { TestConfiguration, structures } from "../../../../tests"
-import { constants, configs } from "@budibase/backend-core"
-import { AIConfig, UserCtx } from "@budibase/types"
+import { configs } from "@budibase/backend-core"
+import { UserCtx } from "@budibase/types"
+import * as pro from "@budibase/pro"
 import { find, verifyAIConfig } from "../configs"
 
 jest.mock("@budibase/backend-core", () => ({
@@ -11,7 +11,12 @@ jest.mock("@budibase/backend-core", () => ({
   },
 }))
 
+
 describe("Global configs controller", () => {
+  afterEach(() => {
+    jest.resetAllMocks()
+  })
+
   it("Should strip secrets when pulling AI config", async () => {
     configs.getConfig.mockResolvedValue({
       config: {
@@ -32,6 +37,42 @@ describe("Global configs controller", () => {
 
     expect(ctx.body).toEqual({
       config: {
+        ai: {
+          apiKey: "--secret-value--",
+          "baseUrl": "https://api.example.com"
+        }
+      }
+    })
+  })
+
+  it("Should return the default BB AI config when the feature is turned on", async () => {
+    pro.features.isBudibaseAIEnabled = jest.fn(() => true)
+    configs.getConfig.mockResolvedValue({
+      config: {
+        ai: {
+          apiKey: "abc123APIKey",
+          baseUrl: "https://api.example.com",
+        }
+      }
+    })
+    const ctx = {
+      params: {
+        type: "ai"
+      },
+      throw: jest.fn()
+    } as UserCtx
+
+    await find(ctx)
+
+    expect(ctx.body).toEqual({
+      config: {
+        budibase_ai: {
+          provider: "OpenAI",
+          active: true,
+          isDefault: true,
+          defaultModel: undefined,
+          name: "Budibase AI",
+        },
         ai: {
           apiKey: "--secret-value--",
           "baseUrl": "https://api.example.com"
