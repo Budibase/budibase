@@ -93,7 +93,7 @@ export const styleable = (node, styles = {}) => {
     node.addEventListener("mouseout", applyNormalStyles)
 
     // Add builder preview click listener
-    if (newStyles.interactive) {
+    if (newStyles.interactive && !newStyles.isRoot) {
       node.addEventListener("click", selectComponent, false)
       node.addEventListener("dblclick", editComponent, false)
     }

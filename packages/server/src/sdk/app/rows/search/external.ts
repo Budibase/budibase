@@ -112,9 +112,10 @@ export async function search(
         : Promise.resolve(undefined),
     ])
 
-    let processed = await outputProcessing<Row[]>(table, rows, {
+    let processed = await outputProcessing(table, rows, {
       preserveLinks: true,
       squash: true,
+      fromViewId: options.viewId,
     })
 
     let hasNextPage = false
@@ -260,7 +261,7 @@ export async function fetch(tableId: string): Promise<Row[]> {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
   const table = await sdk.tables.getTable(tableId)
-  return await outputProcessing<Row[]>(table, response.rows, {
+  return await outputProcessing(table, response.rows, {
     preserveLinks: true,
     squash: true,
   })
