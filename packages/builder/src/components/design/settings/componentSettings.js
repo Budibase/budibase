@@ -31,6 +31,7 @@ import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
 import FormStepControls from "./controls/FormStepControls.svelte"
 import PaywalledSetting from "./controls/PaywalledSetting.svelte"
 import TableConditionEditor from "./controls/TableConditionEditor.svelte"
+import RelationshipFieldPicker from "./controls/RelationshipFieldPicker.svelte"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -53,6 +54,7 @@ const componentMap = {
   schema: SchemaSelect,
   section: SectionSelect,
   filter: FilterEditor,
+  relatedField: RelationshipFieldPicker,
   "filter/relationship": RelationshipFilterEditor,
   url: URLSelect,
   fieldConfiguration: FieldConfiguration,

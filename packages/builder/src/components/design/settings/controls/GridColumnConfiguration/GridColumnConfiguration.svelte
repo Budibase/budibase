@@ -105,7 +105,7 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="list-footer" on:click={addCustomColumn}>
-    <div class="add-button">Add custom column</div>
+    <div class="add-button">Add related column</div>
   </div>
 {/if}
 

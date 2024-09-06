@@ -57,7 +57,7 @@ export const deriveStores = context => {
         __idx: idx,
         ...customColumns.reduce((acc, c) => {
           try {
-            acc[c.name] = processStringSync(c.formulaField, { row })
+            acc[c.name] = processStringSync(c.formulaField, row)
           } catch {
             // It might be some formula not set, or anything being incorrect
           }
