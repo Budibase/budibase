@@ -6,6 +6,7 @@
   import { componentStore } from "stores/builder"
   import { getEventContextBindings } from "dataBinding"
   import { cloneDeep, isEqual } from "lodash/fp"
+  import { getRowActionButtonTemplates } from "templates/rowActions"
 
   export let componentInstance
   export let componentBindings
@@ -19,11 +20,14 @@
 
   let focusItem
   let cachedValue
+  let rowActionTemplates = []
 
+  $: console.log(rowActionTemplates)
+
+  $: getRowActionTemplates(componentInstance)
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
   }
-
   $: buttonList = sanitizeValue(cachedValue) || []
   $: buttonCount = buttonList.length
   $: eventContextBindings = getEventContextBindings({
@@ -38,6 +42,11 @@
     nested,
   }
   $: canAddButtons = max == null || buttonList.length < max
+
+  const getRowActionTemplates = async instance => {
+    const templates = await getRowActionButtonTemplates({ component: instance })
+    rowActionTemplates = templates
+  }
 
   const sanitizeValue = val => {
     if (!Array.isArray(val)) {
@@ -79,9 +88,13 @@
   }
 
   const addButton = () => {
-    const newButton = buildPseudoInstance({
-      text: `Button ${buttonCount + 1}`,
-    })
+    // const newButton = buildPseudoInstance({
+    //   text: `Button ${buttonCount + 1}`,
+    // })
+    const newButton = rowActionTemplates[0]
+    if (!newButton) {
+      return
+    }
     dispatch("change", [...buttonList, newButton])
     focusItem = newButton._id
   }

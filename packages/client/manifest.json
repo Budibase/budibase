@@ -6998,6 +6998,10 @@
       {
         "type": "ChangeFormStep",
         "suffix": "form"
+      },
+      {
+        "type": "RefreshDatasource",
+        "suffix": "provider"
       }
     ],
     "context": [
@@ -7241,6 +7245,10 @@
       {
         "type": "ScrollTo",
         "suffix": "form"
+      },
+      {
+        "type": "RefreshDatasource",
+        "suffix": "provider"
       }
     ],
     "context": [
