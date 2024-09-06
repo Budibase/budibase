@@ -14,4 +14,14 @@ export class AutomationAPI extends TestAPI {
     )
     return result
   }
+  post = async (
+    body: Automation,
+    expectations?: Expectations
+  ): Promise<Automation> => {
+    const result = await this._post<Automation>(`/api/automations`, {
+      body,
+      expectations,
+    })
+    return result
+  }
 }

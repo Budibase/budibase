@@ -179,7 +179,7 @@ class AutomationBuilder extends BaseStepBuilder {
   private triggerOutputs: any
   private triggerSet: boolean = false
 
-  constructor(options: { name?: string } = {}) {
+  constructor(options: { name?: string; appId?: string } = {}) {
     super()
     this.automationConfig = {
       name: options.name || `Test Automation ${uuidv4()}`,
@@ -188,7 +188,7 @@ class AutomationBuilder extends BaseStepBuilder {
         trigger: {} as AutomationTrigger,
       },
       type: "automation",
-      appId: setup.getConfig().getAppId(),
+      appId: options.appId ?? setup.getConfig().getAppId(),
     }
     this.config = setup.getConfig()
   }
@@ -261,13 +261,14 @@ class AutomationBuilder extends BaseStepBuilder {
     return this
   }
 
-  branch(branchConfig: BranchConfig): {
-    run: () => Promise<AutomationResults>
-  } {
+  branch(branchConfig: BranchConfig): this {
     this.addBranchStep(branchConfig)
-    return {
-      run: () => this.run(),
-    }
+    return this
+  }
+
+  build(): Automation {
+    this.automationConfig.definition.steps = this.steps
+    return this.automationConfig
   }
 
   async run() {
@@ -275,7 +276,7 @@ class AutomationBuilder extends BaseStepBuilder {
       throw new Error("Please add a trigger to this automation test")
     }
     this.automationConfig.definition.steps = this.steps
-    const automation = await this.config.createAutomation(this.automationConfig)
+    const automation = await this.config.createAutomation(this.build())
     const results = await testAutomation(
       this.config,
       automation,
@@ -295,6 +296,9 @@ class AutomationBuilder extends BaseStepBuilder {
   }
 }
 
-export function createAutomationBuilder(options?: { name?: string }) {
+export function createAutomationBuilder(options?: {
+  name?: string
+  appId?: string
+}) {
   return new AutomationBuilder(options)
 }

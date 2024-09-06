@@ -28,7 +28,7 @@ export default async (ctx: Ctx<Row, Row>, next: Next) => {
 }
 
 // have to mutate the koa context, can't return
-export async function trimNonViewFields(
+async function trimNonViewFields(
   row: Row,
   view: ViewV2,
   permission: "WRITE" | "READ"
