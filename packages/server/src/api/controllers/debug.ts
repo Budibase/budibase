@@ -103,6 +103,8 @@ class ZipBuilder {
 }
 
 export async function bugReport(ctx: UserCtx<BugReportRequest>) {
+  const { browserUrl, clientApiCalls } = ctx.request.body
+
   const zip = ZipBuilder.inTmpDir("bug-report")
 
   if (logging.tail !== undefined) {
@@ -112,11 +114,11 @@ export async function bugReport(ctx: UserCtx<BugReportRequest>) {
   zip.json("user.json", ctx.user)
   zip.json("diagnostics.json", getDiagnostics())
 
-  if (ctx.request.body.clientApiCalls) {
-    zip.json("client-api-calls.json", ctx.request.body.clientApiCalls)
+  if (clientApiCalls) {
+    zip.json("client-api-calls.json", clientApiCalls)
   }
 
-  zip.json("meta.json", { browserUrl: ctx.request.body.browserUrl })
+  zip.json("meta.json", { browserUrl })
 
   const path = await zip.build()
 
