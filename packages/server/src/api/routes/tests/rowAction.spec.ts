@@ -5,7 +5,6 @@ import {
   CreateRowActionRequest,
   DocumentType,
   PermissionLevel,
-  Row,
   RowActionResponse,
 } from "@budibase/types"
 import * as setup from "./utilities"
