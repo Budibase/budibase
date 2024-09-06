@@ -201,7 +201,7 @@
 
   // Metadata to pass into grid action to apply CSS
   const checkGrid = x =>
-    x?._component.endsWith("/container") && x?.layout === "grid"
+    x?._component?.endsWith("/container") && x?.layout === "grid"
   $: insideGrid = checkGrid(parent)
   $: isGrid = checkGrid(instance)
   $: gridMetadata = {
