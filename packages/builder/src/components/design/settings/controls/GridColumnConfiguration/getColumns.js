@@ -1,3 +1,5 @@
+import { FieldType } from "@budibase/types"
+
 const modernize = columns => {
   if (!columns) {
     return []
@@ -8,6 +10,7 @@ const modernize = columns => {
       label: column.displayName,
       field: column.name,
       active: true,
+      related: column.related,
     }))
   }
 
@@ -50,12 +53,35 @@ const removeInvalidAddMissing = (
 const getDefault = (schema = {}) => {
   const defaultValues = Object.values(schema)
     .filter(column => !column.nestedJSON)
-    .map(column => ({
-      label: column.name,
-      field: column.name,
-      active: column.visible ?? true,
-      order: column.visible ? column.order ?? -1 : Number.MAX_SAFE_INTEGER,
-    }))
+    .flatMap(column => {
+      const order = column.visible
+        ? column.order ?? -1
+        : Number.MAX_SAFE_INTEGER
+      const columns = [
+        {
+          label: column.name,
+          field: column.name,
+          active: column.visible ?? true,
+          order,
+        },
+      ]
+
+      if (column.columns) {
+        for (const relColumn of Object.keys(column.columns).filter(
+          relColumn => column.columns[relColumn].visible !== false
+        )) {
+          columns.push({
+            label: `${relColumn} (${column.name})`,
+            field: `${column.name}.${relColumn}`,
+            active: column.visible ?? true,
+            order,
+            related: true,
+          })
+        }
+      }
+
+      return columns
+    })
 
   defaultValues.sort((a, b) => a.order - b.order)
 
@@ -69,6 +95,7 @@ const toGridFormat = draggableListColumns => {
     active: entry.active,
     width: entry.width,
     conditions: entry.conditions,
+    related: entry.related,
   }))
 }
 
@@ -82,9 +109,12 @@ const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
         active: column.active,
         field: column.field,
         label: column.label,
-        columnType: schema[column.field].type,
+        columnType: column.related
+          ? FieldType.FORMULA
+          : schema[column.field]?.type,
         width: column.width,
         conditions: column.conditions,
+        related: column.related,
       },
       {}
     )
