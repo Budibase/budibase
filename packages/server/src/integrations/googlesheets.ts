@@ -580,7 +580,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       let response = []
       for (let row of filtered) {
         response.push(
-          this.buildRowObject(headerValues, row.toObject(), row._rowNumber)
+          this.buildRowObject(headerValues, row.toObject(), row["_rowNumber"])
         )
       }
 

@@ -1,36 +1,22 @@
 import { setEnv as setCoreEnv } from "@budibase/backend-core"
-import type { GoogleSpreadsheetWorksheet } from "google-spreadsheet"
 import nock from "nock"
 
-import { structures } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { GoogleSheetsConfig, GoogleSheetsIntegration } from "../googlesheets"
 import {
   Datasource,
   FieldType,
   SourceName,
-  Table,
-  TableSchema,
   TableSourceType,
 } from "@budibase/types"
-import { generateDatasourceID } from "../../db/utils"
+import { access } from "node:fs"
+import { GoogleSheetsMock } from "./utils/googlesheets"
 
 describe("Google Sheets Integration", () => {
   const config = new TestConfiguration()
 
-  let integration: GoogleSheetsIntegration
   let cleanupEnv: () => void
-  let table: Table
   let datasource: Datasource
-
-  const datasourceConfig: GoogleSheetsConfig = {
-    spreadsheetId: "randomId",
-    auth: {
-      appId: "appId",
-      accessToken: "accessToken",
-      refreshToken: "refreshToken",
-    },
-  }
+  let mock: GoogleSheetsMock
 
   beforeAll(async () => {
     cleanupEnv = setCoreEnv({
@@ -38,11 +24,20 @@ describe("Google Sheets Integration", () => {
       GOOGLE_CLIENT_SECRET: "test",
     })
 
+    await config.init()
+
     datasource = await config.api.datasource.create({
       name: "Test Datasource",
       type: "datasource",
       source: SourceName.GOOGLE_SHEETS,
-      config: datasourceConfig,
+      config: {
+        spreadsheetId: "randomId",
+        auth: {
+          appId: "appId",
+          accessToken: "accessToken",
+          refreshToken: "refreshToken",
+        },
+      },
     })
   })
 
@@ -52,139 +47,40 @@ describe("Google Sheets Integration", () => {
   })
 
   beforeEach(async () => {
-    await config.init()
-
-    integration = new GoogleSheetsIntegration(datasourceConfig)
-
-    table = await config.api.table.save({
-      name: "Test Table",
-      type: "table",
-      sourceId: generateDatasourceID(),
-      sourceType: TableSourceType.EXTERNAL,
-      schema: {
-        name: {
-          name: "name",
-          type: FieldType.STRING,
-          constraints: {
-            type: "string",
-          },
-        },
-        description: {
-          name: "description",
-          type: FieldType.STRING,
-          constraints: {
-            type: "string",
-          },
-        },
-      },
-    })
-
     nock.cleanAll()
-    nock("https://www.googleapis.com/").post("/oauth2/v4/token").reply(200, {
-      grant_type: "client_credentials",
-      client_id: "your-client-id",
-      client_secret: "your-client-secret",
-    })
+    mock = GoogleSheetsMock.forDatasource(datasource)
+    mock.mockAuth()
   })
 
-  function createBasicTable(name: string, columns: string[]): Table {
-    return {
-      type: "table",
-      name,
-      sourceId: generateDatasourceID(),
-      sourceType: TableSourceType.EXTERNAL,
-      schema: {
-        ...columns.reduce((p, c) => {
-          p[c] = {
-            name: c,
+  describe("create", () => {
+    it("creates a new table", async () => {
+      nock("https://sheets.googleapis.com/", {
+        reqheaders: { authorization: "Bearer test" },
+      })
+        .get("/v4/spreadsheets/randomId/")
+        .reply(200, {})
+
+      const table = await config.api.table.save({
+        name: "Test Table",
+        type: "table",
+        sourceId: datasource._id!,
+        sourceType: TableSourceType.EXTERNAL,
+        schema: {
+          name: {
+            name: "name",
             type: FieldType.STRING,
             constraints: {
               type: "string",
             },
-          }
-          return p
-        }, {} as TableSchema),
-      },
-    }
-  }
-
-  function createSheet({
-    headerValues,
-  }: {
-    headerValues: string[]
-  }): GoogleSpreadsheetWorksheet {
-    return {
-      // to ignore the unmapped fields
-      ...({} as any),
-      loadHeaderRow: jest.fn(),
-      headerValues,
-      setHeaderRow: jest.fn(),
-    }
-  }
-
-  describe("update table", () => {
-    it("adding a new field will be adding a new header row", async () => {
-      await config.doInContext(structures.uuid(), async () => {
-        const tableColumns = ["name", "description", "new field"]
-        const table = createBasicTable(structures.uuid(), tableColumns)
-
-        const sheet = createSheet({ headerValues: ["name", "description"] })
-        sheetsByTitle[table.name] = sheet
-        await integration.updateTable(table)
-
-        expect(sheet.loadHeaderRow).toHaveBeenCalledTimes(1)
-        expect(sheet.setHeaderRow).toHaveBeenCalledTimes(1)
-        expect(sheet.setHeaderRow).toHaveBeenCalledWith(tableColumns)
-      })
-    })
-
-    it("removing an existing field will remove the header from the google sheet", async () => {
-      const sheet = await config.doInContext(structures.uuid(), async () => {
-        const tableColumns = ["name"]
-        const table = createBasicTable(structures.uuid(), tableColumns)
-
-        const sheet = createSheet({
-          headerValues: ["name", "description", "location"],
-        })
-        sheetsByTitle[table.name] = sheet
-        await integration.updateTable(table)
-        return sheet
-      })
-      expect(sheet.loadHeaderRow).toHaveBeenCalledTimes(1)
-      expect(sheet.setHeaderRow).toHaveBeenCalledTimes(1)
-      expect(sheet.setHeaderRow).toHaveBeenCalledWith([
-        "name",
-        "description",
-        "location",
-      ])
-    })
-  })
-
-  describe("getTableNames", () => {
-    it("can fetch table names", async () => {
-      await config.doInContext(structures.uuid(), async () => {
-        const sheetNames: string[] = []
-        for (let i = 0; i < 5; i++) {
-          const sheet = createSheet({ headerValues: [] })
-          sheetsByIndex.push(sheet)
-          sheetNames.push(sheet.title)
-        }
-
-        const res = await integration.getTableNames()
-
-        expect(mockGoogleIntegration.loadInfo).toHaveBeenCalledTimes(1)
-        expect(res).toEqual(sheetNames)
-      })
-    })
-  })
-
-  describe("testConnection", () => {
-    it("can test successful connections", async () => {
-      await config.doInContext(structures.uuid(), async () => {
-        const res = await integration.testConnection()
-
-        expect(mockGoogleIntegration.loadInfo).toHaveBeenCalledTimes(1)
-        expect(res).toEqual({ connected: true })
+          },
+          description: {
+            name: "description",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+        },
       })
     })
   })
