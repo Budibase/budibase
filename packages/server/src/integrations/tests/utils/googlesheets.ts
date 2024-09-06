@@ -6,8 +6,8 @@ type Value = string | number | boolean
 type Dimension = "ROWS" | "COLUMNS"
 
 interface Range {
-  row: number | "ALL"
-  column: number | "ALL"
+  row: number
+  column: number
 }
 
 interface DimensionProperties {
@@ -124,7 +124,7 @@ interface Spreadsheet {
 
 export class GoogleSheetsMock {
   private config: GoogleSheetsConfig
-  private sheet: Spreadsheet
+  private spreadsheet: Spreadsheet
 
   static forDatasource(datasource: Datasource): GoogleSheetsMock {
     return new GoogleSheetsMock(datasource.config as GoogleSheetsConfig)
@@ -132,7 +132,7 @@ export class GoogleSheetsMock {
 
   private constructor(config: GoogleSheetsConfig) {
     this.config = config
-    this.sheet = {
+    this.spreadsheet = {
       properties: {
         title: "Test Spreadsheet",
       },
@@ -142,11 +142,14 @@ export class GoogleSheetsMock {
   }
 
   init() {
-    nock("https://www.googleapis.com/").post("/oauth2/v4/token").reply(200, {
-      grant_type: "client_credentials",
-      client_id: "your-client-id",
-      client_secret: "your-client-secret",
-    })
+    nock("https://www.googleapis.com/")
+      .post("/oauth2/v4/token")
+      .reply(200, {
+        grant_type: "client_credentials",
+        client_id: "your-client-id",
+        client_secret: "your-client-secret",
+      })
+      .persist()
     nock("https://oauth2.googleapis.com/")
       .post("/token", {
         client_id: "test",
@@ -160,54 +163,22 @@ export class GoogleSheetsMock {
         token_type: "Bearer",
         scopes: "https://www.googleapis.com/auth/spreadsheets",
       })
+      .persist()
 
     nock("https://sheets.googleapis.com/", {
       reqheaders: { authorization: "Bearer test" },
     })
-      .get("/v4/spreadsheets/randomId/")
-      .reply(200, () => this.sheet)
+      .get(`/v4/spreadsheets/${this.config.spreadsheetId}/`)
+      .reply(200, () => this.handleGetSpreadsheet())
       .persist()
 
     nock("https://sheets.googleapis.com/", {
       reqheaders: { authorization: "Bearer test" },
     })
       .post(`/v4/spreadsheets/${this.config.spreadsheetId}/:batchUpdate`)
-      .reply(200, (uri: string, request: nock.Body): nock.Body => {
-        const batchUpdateRequest = request as BatchUpdateRequest
-        const replies: Response[] = []
-
-        for (const request of batchUpdateRequest.requests) {
-          if (request.addSheet) {
-            const properties: SheetProperties = {
-              title: request.addSheet.properties.title,
-              sheetId: this.sheet.sheets.length,
-              gridProperties: {
-                rowCount: 100,
-                columnCount: 26,
-                frozenRowCount: 0,
-                frozenColumnCount: 0,
-                hideGridlines: false,
-                rowGroupControlAfter: false,
-                columnGroupControlAfter: false,
-              },
-            }
-
-            this.sheet.sheets.push({
-              properties,
-              data: [this.createEmptyGrid(100, 26)],
-            })
-
-            replies.push({ addSheet: { properties } })
-          }
-        }
-
-        const response: BatchUpdateResponse = {
-          spreadsheetId: this.sheet.spreadsheetId,
-          replies,
-          updatedSpreadsheet: this.sheet,
-        }
-        return response
-      })
+      .reply(200, (_uri, request) =>
+        this.handleBatchUpdate(request as BatchUpdateRequest)
+      )
       .persist()
 
     nock("https://sheets.googleapis.com/", {
@@ -216,9 +187,94 @@ export class GoogleSheetsMock {
       .put(
         new RegExp(`/v4/spreadsheets/${this.config.spreadsheetId}/values/.*`)
       )
-      .reply(200, (uri, request) =>
+      .reply(200, (_uri, request) =>
         this.handleValueUpdate(request as ValueRange)
       )
+      .persist()
+
+    nock("https://sheets.googleapis.com/", {
+      reqheaders: { authorization: "Bearer test" },
+    })
+      .get(
+        new RegExp(`/v4/spreadsheets/${this.config.spreadsheetId}/values/.*`)
+      )
+      .reply(200, uri => {
+        const range = uri.split("/").pop()
+        if (!range) {
+          throw new Error("No range provided")
+        }
+        return this.handleGetValues(decodeURIComponent(range))
+      })
+      .persist()
+  }
+
+  private handleGetValues(range: string): ValueRange {
+    const { sheet, topLeft, bottomRight } = this.parseA1Notation(range)
+    const valueRange: ValueRange = {
+      range,
+      majorDimension: "ROWS",
+      values: [],
+    }
+
+    for (let row = topLeft.row; row <= bottomRight.row; row++) {
+      const values: Value[] = []
+      for (let col = topLeft.column; col <= bottomRight.column; col++) {
+        const cell = this.getCellNumericIndexes(sheet, row, col)
+        if (!cell) {
+          throw new Error("Cell not found")
+        }
+        values.push(this.unwrapValue(cell.userEnteredValue))
+      }
+      valueRange.values.push(values)
+    }
+
+    return valueRange
+  }
+
+  private handleBatchUpdate(
+    batchUpdateRequest: BatchUpdateRequest
+  ): BatchUpdateResponse {
+    const replies: Response[] = []
+
+    for (const request of batchUpdateRequest.requests) {
+      if (request.addSheet) {
+        const response = this.handleAddSheet(request.addSheet)
+        replies.push({ addSheet: response })
+      }
+    }
+
+    return {
+      spreadsheetId: this.spreadsheet.spreadsheetId,
+      replies,
+      updatedSpreadsheet: this.spreadsheet,
+    }
+  }
+
+  private handleAddSheet(request: AddSheetRequest): AddSheetResponse {
+    const properties: SheetProperties = {
+      title: request.properties.title,
+      sheetId: this.spreadsheet.sheets.length,
+      gridProperties: {
+        rowCount: 100,
+        columnCount: 26,
+        frozenRowCount: 0,
+        frozenColumnCount: 0,
+        hideGridlines: false,
+        rowGroupControlAfter: false,
+        columnGroupControlAfter: false,
+      },
+    }
+
+    this.spreadsheet.sheets.push({
+      properties,
+      data: [this.createEmptyGrid(100, 26)],
+    })
+
+    return { properties }
+  }
+
+  private handleGetSpreadsheet(): Spreadsheet {
+    return this.spreadsheet
   }
 
   private handleValueUpdate(valueRange: ValueRange): UpdateValuesResponse {
@@ -229,19 +285,6 @@ export class GoogleSheetsMock {
     const { sheet, topLeft, bottomRight } = this.parseA1Notation(
       valueRange.range
     )
-
-    if (topLeft.row === "ALL") {
-      topLeft.row = 0
-    }
-    if (bottomRight.row === "ALL") {
-      bottomRight.row = sheet.properties.gridProperties.rowCount - 1
-    }
-    if (topLeft.column === "ALL") {
-      topLeft.column = 0
-    }
-    if (bottomRight.column === "ALL") {
-      bottomRight.column = sheet.properties.gridProperties.columnCount - 1
-    }
 
     for (let row = topLeft.row; row <= bottomRight.row; row++) {
       for (
@@ -260,7 +303,7 @@ export class GoogleSheetsMock {
     }
 
     const response: UpdateValuesResponse = {
-      spreadsheetId: this.sheet.spreadsheetId,
+      spreadsheetId: this.spreadsheet.spreadsheetId,
       updatedRange: valueRange.range,
       updatedRows: valueRange.values.length,
       updatedColumns: valueRange.values[0].length,
@@ -268,6 +311,20 @@ export class GoogleSheetsMock {
       updatedData: valueRange,
     }
     return response
+  }
+
+  private unwrapValue(from: ExtendedValue): Value {
+    if (from.stringValue !== undefined) {
+      return from.stringValue
+    } else if (from.numberValue !== undefined) {
+      return from.numberValue
+    } else if (from.boolValue !== undefined) {
+      return from.boolValue
+    } else if (from.formulaValue !== undefined) {
+      return from.formulaValue
+    } else {
+      throw new Error("Unsupported value type")
+    }
   }
 
   private createValue(from: Value): ExtendedValue {
@@ -375,10 +432,26 @@ export class GoogleSheetsMock {
       throw new Error(`Sheet ${sheetName} not found`)
     }
 
+    const parsedTopLeft = this.parseCell(topLeft)
+    const parsedBottomRight = this.parseCell(bottomRight)
+
+    if (parsedTopLeft.row === "ALL") {
+      parsedTopLeft.row = 0
+    }
+    if (parsedBottomRight.row === "ALL") {
+      parsedBottomRight.row = sheet.properties.gridProperties.rowCount - 1
+    }
+    if (parsedTopLeft.column === "ALL") {
+      parsedTopLeft.column = 0
+    }
+    if (parsedBottomRight.column === "ALL") {
+      parsedBottomRight.column = sheet.properties.gridProperties.columnCount - 1
+    }
+
     return {
       sheet,
-      topLeft: this.parseCell(topLeft),
-      bottomRight: this.parseCell(bottomRight),
+      topLeft: parsedTopLeft as Range,
+      bottomRight: parsedBottomRight as Range,
     }
   }
 
@@ -387,7 +460,10 @@ export class GoogleSheetsMock {
    * @param cell a string of the form A1, B2, etc.
    * @returns
    */
-  private parseCell(cell: string): Range {
+  private parseCell(cell: string): {
+    row: number | "ALL"
+    column: number | "ALL"
+  } {
     const firstChar = cell.slice(0, 1)
     if (this.isInteger(firstChar)) {
       return { row: parseInt(cell) - 1, column: "ALL" }
@@ -409,6 +485,8 @@ export class GoogleSheetsMock {
   }
 
   private getSheetByName(name: string): Sheet | undefined {
-    return this.sheet.sheets.find(sheet => sheet.properties.title === name)
+    return this.spreadsheet.sheets.find(
+      sheet => sheet.properties.title === name
+    )
   }
 }
