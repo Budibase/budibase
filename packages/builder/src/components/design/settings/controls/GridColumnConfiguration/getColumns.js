@@ -75,7 +75,7 @@ const getDefault = (schema = {}) => {
             field: `${column.name}.${relColumn}`,
             active: column.visible ?? true,
             order,
-            related: true,
+            related: { field: column.name, subField: relColumn },
           })
         }
       }
