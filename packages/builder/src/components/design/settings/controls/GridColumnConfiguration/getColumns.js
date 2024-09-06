@@ -1,5 +1,3 @@
-import { FieldType } from "@budibase/types"
-
 const modernize = columns => {
   if (!columns) {
     return []
@@ -20,7 +18,8 @@ const modernize = columns => {
 const removeInvalidAddMissing = (
   columns = [],
   defaultColumns,
-  primaryDisplayColumnName
+  primaryDisplayColumnName,
+  schema
 ) => {
   const defaultColumnNames = defaultColumns.map(column => column.field)
   const columnNames = columns.map(column => column.field)
@@ -45,6 +44,16 @@ const removeInvalidAddMissing = (
   )
   if (primaryDisplayIndex > -1) {
     combinedColumns[primaryDisplayIndex].active = true
+  }
+
+  for (const column of combinedColumns) {
+    if (!column.related) {
+      column.columnType = schema[column.field]?.type
+      continue
+    }
+
+    const { field: relField, subField: relSubField } = column.related
+    column.columnType = schema[relField]?.columns?.[relSubField]?.type
   }
 
   return combinedColumns
@@ -99,7 +108,7 @@ const toGridFormat = draggableListColumns => {
   }))
 }
 
-const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
+const toDraggableListFormat = (gridFormatColumns, createComponent) => {
   return gridFormatColumns.map(column => {
     return createComponent(
       "@budibase/standard-components/labelfield",
@@ -109,9 +118,7 @@ const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
         active: column.active,
         field: column.field,
         label: column.label,
-        columnType: column.related
-          ? FieldType.FORMULA
-          : schema[column.field]?.type,
+        columnType: column.columnType,
         width: column.width,
         conditions: column.conditions,
         related: column.related,
@@ -131,13 +138,10 @@ const getColumns = ({
   const validatedColumns = removeInvalidAddMissing(
     modernize(columns),
     getDefault(schema),
-    primaryDisplayColumnName
-  )
-  const draggableList = toDraggableListFormat(
-    validatedColumns,
-    createComponent,
+    primaryDisplayColumnName,
     schema
   )
+  const draggableList = toDraggableListFormat(validatedColumns, createComponent)
   const primary = draggableList
     .filter(entry => entry.field === primaryDisplayColumnName)
     .map(instance => ({ ...instance, schema }))[0]
