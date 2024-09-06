@@ -79,10 +79,14 @@ export const deriveStores = context => {
           if (!$schemaOverrides[field].related) {
             return
           }
+
+          const { field: relField, subField: relSubField } =
+            $schemaOverrides[field].related
+
           enrichedSchema[field] = {
             ...$schemaOverrides[field],
             name: field,
-            type: FieldType.FORMULA,
+            type: $schema[relField]?.columns?.[relSubField]?.type,
           }
         })
       }
