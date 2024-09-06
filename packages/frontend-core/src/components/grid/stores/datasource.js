@@ -1,6 +1,7 @@
 import { derived, get } from "svelte/store"
 import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
 import { memo } from "../../../utils"
+import { FieldType } from "@budibase/types"
 
 export const createStores = () => {
   const definition = memo(null)
@@ -73,6 +74,19 @@ export const deriveStores = context => {
           }
         }
       })
+      if ($schemaOverrides) {
+        Object.keys($schemaOverrides).forEach(field => {
+          if (!$schemaOverrides[field].related) {
+            return
+          }
+          enrichedSchema[field] = {
+            ...$schemaOverrides[field],
+            name: field,
+            type: FieldType.FORMULA,
+            related: true,
+          }
+        })
+      }
       return enrichedSchema
     }
   )
