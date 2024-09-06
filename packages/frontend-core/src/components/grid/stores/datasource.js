@@ -1,7 +1,6 @@
 import { derived, get } from "svelte/store"
 import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
 import { memo } from "../../../utils"
-import { FieldType } from "@budibase/types"
 
 export const createStores = () => {
   const definition = memo(null)
