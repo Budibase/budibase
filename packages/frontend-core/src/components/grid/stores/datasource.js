@@ -83,7 +83,6 @@ export const deriveStores = context => {
             ...$schemaOverrides[field],
             name: field,
             type: FieldType.FORMULA,
-            related: true,
           }
         })
       }
