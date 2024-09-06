@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
     // Copy fonts to an additional path so that svelte's automatic
     // prefixing of the base URL path can still resolve assets
     copyFonts("builder/fonts"),
-  ]
+]
 
   return {
     test: {
@@ -79,7 +79,7 @@ export default defineConfig(({ mode }) => {
         "process.env.POSTHOG_TOKEN": JSON.stringify(process.env.POSTHOG_TOKEN),
       }),
       copyFonts("fonts"),
-      ...(isProduction ? [] : devOnlyPlugins),
+    ...(isProduction ? [] : devOnlyPlugins),
     ],
     optimizeDeps: {
       exclude: ["@roxi/routify", "fsevents"],
