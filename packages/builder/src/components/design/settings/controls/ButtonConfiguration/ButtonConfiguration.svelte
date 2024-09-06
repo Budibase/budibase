@@ -1,8 +1,8 @@
 <script>
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import ButtonSetting from "./ButtonSetting.svelte"
-  import { createEventDispatcher } from "svelte"
-  import { Helpers } from "@budibase/bbui"
+  import { createEventDispatcher, onMount } from "svelte"
+  import { Helpers, Menu, MenuItem, Popover } from "@budibase/bbui"
   import { componentStore } from "stores/builder"
   import { getEventContextBindings } from "dataBinding"
   import { cloneDeep, isEqual } from "lodash/fp"
@@ -18,13 +18,11 @@
 
   const dispatch = createEventDispatcher()
 
-  let focusItem
   let cachedValue
   let rowActionTemplates = []
+  let anchor
+  let popover
 
-  $: console.log(rowActionTemplates)
-
-  $: getRowActionTemplates(componentInstance)
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
   }
@@ -42,11 +40,6 @@
     nested,
   }
   $: canAddButtons = max == null || buttonList.length < max
-
-  const getRowActionTemplates = async instance => {
-    const templates = await getRowActionButtonTemplates({ component: instance })
-    rowActionTemplates = templates
-  }
 
   const sanitizeValue = val => {
     if (!Array.isArray(val)) {
@@ -82,21 +75,32 @@
         _instanceName: Helpers.uuid(),
         text: cfg.text,
         type: cfg.type || "primary",
-      },
-      {}
+      }
     )
   }
 
-  const addButton = () => {
-    // const newButton = buildPseudoInstance({
-    //   text: `Button ${buttonCount + 1}`,
-    // })
-    const newButton = rowActionTemplates[0]
-    if (!newButton) {
-      return
-    }
+  const addCustomButton = () => {
+    const newButton = buildPseudoInstance({
+      text: `Button ${buttonCount + 1}`,
+    })
     dispatch("change", [...buttonList, newButton])
-    focusItem = newButton._id
+    popover.hide()
+  }
+
+  const addRowActionTemplate = template => {
+    dispatch("change", [...buttonList, template])
+    popover.hide()
+  }
+
+  const addButton = async () => {
+    rowActionTemplates = await getRowActionButtonTemplates({
+      component: componentInstance,
+    })
+    if (rowActionTemplates.length) {
+      popover.show()
+    } else {
+      addCustomButton()
+    }
   }
 
   const removeButton = id => {
@@ -118,12 +122,11 @@
       listItemKey={"_id"}
       listType={ButtonSetting}
       listTypeProps={itemProps}
-      focus={focusItem}
       draggable={buttonCount > 1}
     />
   {/if}
-
   <div
+    bind:this={anchor}
     class="list-footer"
     class:disabled={!canAddButtons}
     on:click={addButton}
@@ -132,6 +135,17 @@
     <div class="add-button">Add button</div>
   </div>
 </div>
+
+<Popover bind:this={popover} {anchor} useAnchorWidth resizable={false}>
+  <Menu>
+    <MenuItem on:click={addCustomButton}>Custom button</MenuItem>
+    {#each rowActionTemplates as template}
+      <MenuItem on:click={() => addRowActionTemplate(template)}>
+        {template.text}
+      </MenuItem>
+    {/each}
+  </Menu>
+</Popover>
 
 <style>
   .button-configuration :global(.spectrum-ActionButton) {

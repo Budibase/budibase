@@ -28,7 +28,7 @@
   if (!rootId) {
     setContext("rootId", componentInstance._id)
   }
-  componentInstance._rootId = rootId || componentInstance._id
+  $: componentInstance._rootId = rootId || componentInstance._id
 
   $: sections = getSections(
     componentInstance,
