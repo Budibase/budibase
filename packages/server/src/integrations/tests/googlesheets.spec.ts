@@ -49,17 +49,11 @@ describe("Google Sheets Integration", () => {
   beforeEach(async () => {
     nock.cleanAll()
     mock = GoogleSheetsMock.forDatasource(datasource)
-    mock.mockAuth()
+    mock.init()
   })
 
   describe("create", () => {
     it("creates a new table", async () => {
-      nock("https://sheets.googleapis.com/", {
-        reqheaders: { authorization: "Bearer test" },
-      })
-        .get("/v4/spreadsheets/randomId/")
-        .reply(200, {})
-
       const table = await config.api.table.save({
         name: "Test Table",
         type: "table",
@@ -82,6 +76,12 @@ describe("Google Sheets Integration", () => {
           },
         },
       })
+
+      const cell = mock.getCell(table.name, "A1")
+      if (!cell) {
+        throw new Error("Cell not found")
+      }
+      expect(cell.userEnteredValue.stringValue).toEqual(table.name)
     })
   })
 })
