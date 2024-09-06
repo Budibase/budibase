@@ -87,6 +87,7 @@ export const deriveStores = context => {
             ...$schemaOverrides[field],
             name: field,
             type: $schema[relField]?.columns?.[relSubField]?.type,
+            readonly: true,
           }
         })
       }
