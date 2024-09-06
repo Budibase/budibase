@@ -1,5 +1,4 @@
 import {
-  FieldSchema,
   FieldType,
   RelationSchemaField,
   RenameColumn,
@@ -8,6 +7,7 @@ import {
   View,
   ViewFieldMetadata,
   ViewV2,
+  ViewV2ColumnEnriched,
   ViewV2Enriched,
 } from "@budibase/types"
 import { HTTPError } from "@budibase/backend-core"
@@ -177,7 +177,7 @@ export async function enrichSchema(
     }
     const relTable = tableCache[tableId]
 
-    const result: Record<string, FieldSchema & RelationSchemaField> = {}
+    const result: Record<string, ViewV2ColumnEnriched> = {}
 
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
@@ -189,10 +189,13 @@ export async function enrichSchema(
         continue
       }
 
-      const isVisible = !!viewFields[relTableFieldName]?.visible
-      const isReadonly = !!viewFields[relTableFieldName]?.readonly
+      const viewFieldSchema = viewFields[relTableFieldName]
+      const isVisible = !!viewFieldSchema?.visible
+      const isReadonly = !!viewFieldSchema?.readonly
       result[relTableFieldName] = {
-        ...relTableField,
+        ...viewFieldSchema,
+        type: relTableField.type,
+        name: relTableField.name,
         visible: isVisible,
         readonly: isReadonly,
       }
