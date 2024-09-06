@@ -6,9 +6,9 @@ import {
   Datasource,
   FieldType,
   SourceName,
+  Table,
   TableSourceType,
 } from "@budibase/types"
-import { access } from "node:fs"
 import { GoogleSheetsMock } from "./utils/googlesheets"
 
 describe("Google Sheets Integration", () => {
@@ -82,6 +82,35 @@ describe("Google Sheets Integration", () => {
         throw new Error("Cell not found")
       }
       expect(cell.userEnteredValue.stringValue).toEqual(table.name)
+    })
+  })
+
+  describe("update", () => {
+    let table: Table
+    beforeEach(async () => {
+      table = await config.api.table.save({
+        name: "Test Table",
+        type: "table",
+        sourceId: datasource._id!,
+        sourceType: TableSourceType.EXTERNAL,
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+          description: {
+            name: "description",
+            type: FieldType.STRING,
+          },
+        },
+      })
+    })
+
+    it.only("should be able to add a new row", async () => {
+      await config.api.row.save(table._id!, {
+        name: "Test Contact",
+        description: "original description",
+      })
     })
   })
 })
