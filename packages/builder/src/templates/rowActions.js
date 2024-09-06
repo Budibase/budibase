@@ -28,7 +28,7 @@ export const getRowActionButtonTemplates = async ({ screen, component }) => {
   }
 
   // Check we have a valid datasource that can contain row actions
-  const ds = getDatasourceForProvider(get(selectedScreen), instance)
+  const ds = getDatasourceForProvider(screen, instance)
   if (ds?.type !== "table" && ds?.type !== "viewV2") {
     return []
   }
