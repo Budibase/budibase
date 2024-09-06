@@ -73,7 +73,7 @@ const getDefault = (schema = {}) => {
           columns.push({
             label: `${relColumn} (${column.name})`,
             field: `${column.name}.${relColumn}`,
-            active: column.visible ?? true,
+            active: false,
             order,
             related: { field: column.name, subField: relColumn },
           })
