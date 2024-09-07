@@ -1,5 +1,6 @@
 import { Helpers } from "@budibase/bbui"
 import { BaseStructure } from "./BaseStructure"
+import { componentStore } from "stores/builder"
 
 export class Component extends BaseStructure {
   constructor(name, _id = Helpers.uuid()) {

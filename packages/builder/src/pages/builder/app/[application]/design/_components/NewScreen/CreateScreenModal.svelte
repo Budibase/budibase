@@ -123,15 +123,18 @@
   }
 
   const createFormScreen = async type => {
-    const screenTemplates = selectedTablesAndViews.flatMap(tableOrView =>
-      screenTemplating.form({
-        screens,
-        tableOrView,
-        type,
-        permissions: permissions[tableOrView.id],
-      })
-    )
-
+    const screenTemplates = (
+      await Promise.all(
+        selectedTablesAndViews.map(tableOrView =>
+          screenTemplating.form({
+            screens,
+            tableOrView,
+            type,
+            permissions: permissions[tableOrView.id],
+          })
+        )
+      )
+    ).flat()
     const newScreens = await createScreens(screenTemplates)
 
     if (type === "update" || type === "create") {
