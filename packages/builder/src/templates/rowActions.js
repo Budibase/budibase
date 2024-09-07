@@ -4,15 +4,22 @@ import { rowActions, selectedScreen, componentStore } from "stores/builder"
 import { Helpers } from "@budibase/bbui"
 import { findComponent } from "helpers/components"
 
-export const getRowActionButtonTemplates = async ({ screen, component }) => {
-  if (!component) {
-    return []
+export const getRowActionButtonTemplates = async ({
+  screen,
+  component,
+  instance,
+}) => {
+  // Find root component instance if not specified
+  if (!instance) {
+    if (!component) {
+      return []
+    }
+    if (!screen) {
+      screen = get(selectedScreen)
+    }
+    const id = component._rootId
+    instance = findComponent(screen?.props, id)
   }
-  if (!screen) {
-    screen = get(selectedScreen)
-  }
-  const id = component._rootId
-  const instance = findComponent(screen?.props, id)
   if (!instance) {
     return []
   }
