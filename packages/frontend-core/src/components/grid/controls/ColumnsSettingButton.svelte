@@ -6,12 +6,14 @@
 
   export let allowViewReadonlyColumns = false
 
-  const { columns, datasource } = getContext("grid")
+  const { tableColumns, datasource } = getContext("grid")
 
   let open = false
   let anchor
 
-  $: anyRestricted = $columns.filter(col => !col.visible || col.readonly).length
+  $: anyRestricted = $tableColumns.filter(
+    col => !col.visible || col.readonly
+  ).length
   $: text = anyRestricted ? `Columns (${anyRestricted} restricted)` : "Columns"
 
   $: permissions =
@@ -34,7 +36,7 @@
     size="M"
     on:click={() => (open = !open)}
     selected={open || anyRestricted}
-    disabled={!$columns.length}
+    disabled={!$tableColumns.length}
   >
     {text}
   </ActionButton>
@@ -42,7 +44,7 @@
 
 <Popover bind:open {anchor} align="left">
   <ColumnsSettingContent
-    columns={$columns}
+    columns={$tableColumns}
     {permissions}
     {disabledPermissions}
   />
