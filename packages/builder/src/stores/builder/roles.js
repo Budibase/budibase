@@ -1,6 +1,14 @@
 import { writable } from "svelte/store"
 import { API } from "api"
 import { RoleUtils } from "@budibase/frontend-core"
+import { Roles } from "constants/backend"
+
+const ROLE_NAMES = {
+  [Roles.ADMIN]: "App admin",
+  [Roles.POWER]: "App power user",
+  [Roles.BASIC]: "App user",
+  [Roles.PUBLIC]: "Public user",
+}
 
 export function createRolesStore() {
   const { subscribe, update, set } = writable([])
@@ -17,7 +25,16 @@ export function createRolesStore() {
 
   const actions = {
     fetch: async () => {
-      const roles = await API.getRoles()
+      let roles = await API.getRoles()
+
+      // Update labels
+      for (let [roleId, name] of Object.entries(ROLE_NAMES)) {
+        const idx = roles.findIndex(x => x._id === roleId)
+        if (idx !== -1) {
+          roles[idx].name = name
+        }
+      }
+
       setRoles(roles)
     },
     fetchByAppId: async appId => {

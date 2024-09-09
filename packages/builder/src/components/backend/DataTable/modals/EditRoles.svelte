@@ -17,7 +17,7 @@
   let basePermissions = []
   let selectedRole = BASE_ROLE
   let errors = []
-  let builtInRoles = ["Admin", "Power", "Basic", "Public"]
+  let builtInRoles = ["App admin", "App power user", "App user", "Public user"]
   let validRegex = /^[a-zA-Z0-9_]*$/
   // Don't allow editing of public role
   $: editableRoles = $roles.filter(role => role._id !== "PUBLIC")
@@ -108,6 +108,9 @@
   }
 
   const getRoleNameError = name => {
+    if (builtInRoles.includes(name)) {
+      return null
+    }
     const hasUniqueRoleName = !otherRoles
       ?.map(role => role.name)
       ?.includes(name)
