@@ -55,6 +55,7 @@ const form = async ({ tableOrView, type, permissions, screens }) => {
       actionType: getActionType(type),
       title: getTitle(type),
       rowId: type === "new" ? undefined : `{{ url.id }}`,
+      buttonPosition: "bottom",
     })
     .instanceName(`${tableOrView.name} - Form block`)
     .json()
@@ -69,6 +70,11 @@ const form = async ({ tableOrView, type, permissions, screens }) => {
     })
     if (rowActionButtons.length) {
       formBlock.buttons = [...(formBlock.buttons || []), ...rowActionButtons]
+
+      // Collapse buttons if more than 3 row actions
+      if (rowActionButtons.length > 3) {
+        formBlock.buttonsCollapsed = true
+      }
     }
   }
 

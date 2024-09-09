@@ -63,6 +63,7 @@ export const getRowActionButtonTemplates = async ({
         _instanceName: Helpers.uuid(),
         text: action.name,
         type: "primary",
+        quiet: true,
       }
     )
 
