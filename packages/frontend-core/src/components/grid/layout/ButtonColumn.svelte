@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount } from "svelte"
-  import { Button, CollapsedButtonGroup, Select } from "@budibase/bbui"
+  import { Button, CollapsedButtonGroup } from "@budibase/bbui"
   import GridCell from "../cells/GridCell.svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import { BlankRowID } from "../lib/constants"
