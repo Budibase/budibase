@@ -57,7 +57,11 @@ function getRelatedTableValues(row, field) {
       break
     case FieldType.ARRAY:
     case FieldType.OPTIONS:
-      result = row[field.related.field].flatMap(r => r[field.related.subField])
+      result = Array.from(
+        new Set(
+          row[field.related.field].flatMap(r => r[field.related.subField])
+        )
+      )
   }
 
   return result
