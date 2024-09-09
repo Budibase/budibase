@@ -1,6 +1,6 @@
 import { derived, get } from "svelte/store"
 import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
-import { memo } from "../../../utils"
+import { enrichSchemaWithRelColumns, memo } from "../../../utils"
 
 export const createStores = () => {
   const definition = memo(null)
@@ -54,27 +54,9 @@ export const deriveStores = context => {
         return null
       }
 
-      const schemaWithRelatedColumns = Object.keys($schema || {}).reduce(
-        (acc, c) => {
-          const field = $schema[c]
-          acc[c] = field
+      const schemaWithRelatedColumns = enrichSchemaWithRelColumns($schema)
 
-          if (field.columns) {
-            for (const relColumn of Object.keys(field.columns)) {
-              const name = `${field.name}.${relColumn}`
-              acc[name] = {
-                ...field.columns[relColumn],
-                name,
-                related: { field: c, subField: relColumn },
-              }
-            }
-          }
-          return acc
-        },
-        {}
-      )
-
-      let enrichedSchema = {}
+      const enrichedSchema = {}
       Object.keys(schemaWithRelatedColumns).forEach(field => {
         enrichedSchema[field] = {
           ...schemaWithRelatedColumns[field],
