@@ -31,7 +31,7 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { columns, enrichedSchema } = context
+  const { columns } = context
 
   // Derive a lookup map for all columns by name
   const columnLookupMap = derived(columns, $columns => {
@@ -42,39 +42,15 @@ export const deriveStores = context => {
     return map
   })
 
+  // Derived list of columns which are direct part of the table
+  const tableColumns = derived(columns, $columns => {
+    return $columns.filter(col => !col.related)
+  })
+
   // Derived list of columns which have not been explicitly hidden
-  const visibleColumns = derived(
-    [columns, enrichedSchema],
-    ([$columns, $enrichedSchema]) => {
-      return $columns
-        .filter(col => col.visible)
-        .flatMap(c => {
-          const relatedColumns = []
-
-          const schemaColumns = $enrichedSchema?.[c.name]?.columns
-          if (schemaColumns) {
-            for (const relColumn of Object.keys(schemaColumns)) {
-              const relFieldSchema = schemaColumns[relColumn]
-              if (!relFieldSchema.visible) {
-                continue
-              }
-              relatedColumns.push({
-                name: `${c.name}.${relColumn}`,
-                label: `${relColumn} (${c.name})`,
-                schema: relFieldSchema,
-                width: relFieldSchema.width || DefaultColumnWidth,
-                visible: relFieldSchema.visible ?? true,
-                readonly: relFieldSchema.readonly,
-                order: relFieldSchema.order,
-                conditions: relFieldSchema.conditions,
-              })
-            }
-          }
-
-          return [c, ...relatedColumns]
-        })
-    }
-  )
+  const visibleColumns = derived(columns, $columns => {
+    return $columns.filter(col => col.visible)
+  })
 
   // Split visible columns into their discrete types
   const displayColumn = derived(visibleColumns, $visibleColumns => {
@@ -93,6 +69,7 @@ export const deriveStores = context => {
   })
 
   return {
+    tableColumns,
     displayColumn,
     columnLookupMap,
     visibleColumns,
@@ -182,6 +159,32 @@ export const initialise = context => {
             column.primaryDisplay = true
           }
           return column
+        })
+        .flatMap(field => {
+          const relatedColumns = []
+
+          const schemaColumns = $enrichedSchema?.[field.name]?.columns
+          if (field.visible && schemaColumns) {
+            for (const relColumn of Object.keys(schemaColumns)) {
+              const relFieldSchema = schemaColumns[relColumn]
+              if (!relFieldSchema.visible) {
+                continue
+              }
+              relatedColumns.push({
+                name: `${field.name}.${relColumn}`,
+                label: `${relColumn} (${field.name})`,
+                schema: relFieldSchema,
+                width: relFieldSchema.width || DefaultColumnWidth,
+                visible: relFieldSchema.visible ?? true,
+                readonly: relFieldSchema.readonly,
+                order: relFieldSchema.order,
+                conditions: relFieldSchema.conditions,
+                related: true,
+              })
+            }
+          }
+
+          return [field, ...relatedColumns]
         })
         .sort((a, b) => {
           // Display column should always come first
