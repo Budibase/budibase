@@ -17,8 +17,7 @@ const modernize = columns => {
 const removeInvalidAddMissing = (
   columns = [],
   defaultColumns,
-  primaryDisplayColumnName,
-  schema
+  primaryDisplayColumnName
 ) => {
   const defaultColumnNames = defaultColumns.map(column => column.field)
   const columnNames = columns.map(column => column.field)
@@ -45,37 +44,18 @@ const removeInvalidAddMissing = (
     combinedColumns[primaryDisplayIndex].active = true
   }
 
-  for (const column of combinedColumns) {
-    if (!column.related) {
-      column.columnType = schema[column.field]?.type
-      continue
-    }
-
-    const { field: relField, subField: relSubField } = column.related
-    column.columnType = schema[relField]?.columns?.[relSubField]?.type
-  }
-
   return combinedColumns
 }
 
 const getDefault = (schema = {}) => {
   const defaultValues = Object.values(schema)
     .filter(column => !column.nestedJSON)
-    .flatMap(column => {
-      const order = column.visible
-        ? column.order ?? -1
-        : Number.MAX_SAFE_INTEGER
-      const columns = [
-        {
-          label: column.name,
-          field: column.name,
-          active: column.visible ?? true,
-          order,
-        },
-      ]
-
-      return columns
-    })
+    .map(column => ({
+      label: column.name,
+      field: column.name,
+      active: column.visible ?? true,
+      order: column.visible ? column.order ?? -1 : Number.MAX_SAFE_INTEGER,
+    }))
 
   defaultValues.sort((a, b) => a.order - b.order)
 
@@ -121,8 +101,7 @@ const getColumns = ({
   const validatedColumns = removeInvalidAddMissing(
     modernize(columns),
     getDefault(schema),
-    primaryDisplayColumnName,
-    schema
+    primaryDisplayColumnName
   )
   const draggableList = toDraggableListFormat(validatedColumns, createComponent)
   const primary = draggableList
