@@ -8,7 +8,6 @@ const modernize = columns => {
       label: column.displayName,
       field: column.name,
       active: true,
-      related: column.related,
     }))
   }
 
@@ -75,20 +74,6 @@ const getDefault = (schema = {}) => {
         },
       ]
 
-      if (column.columns) {
-        for (const relColumn of Object.keys(column.columns).filter(
-          relColumn => column.columns[relColumn].visible !== false
-        )) {
-          columns.push({
-            label: `${relColumn} (${column.name})`,
-            field: `${column.name}.${relColumn}`,
-            active: false,
-            order,
-            related: { field: column.name, subField: relColumn },
-          })
-        }
-      }
-
       return columns
     })
 
@@ -104,7 +89,6 @@ const toGridFormat = draggableListColumns => {
     active: entry.active,
     width: entry.width,
     conditions: entry.conditions,
-    related: entry.related,
   }))
 }
 
@@ -121,7 +105,6 @@ const toDraggableListFormat = (gridFormatColumns, createComponent) => {
         columnType: column.columnType,
         width: column.width,
         conditions: column.conditions,
-        related: column.related,
       },
       {}
     )
