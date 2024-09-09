@@ -2,7 +2,10 @@ import { Datasource } from "@budibase/types"
 import nock from "nock"
 import { GoogleSheetsConfig } from "../../googlesheets"
 
+// https://protobuf.dev/reference/protobuf/google.protobuf/#value
 type Value = string | number | boolean
+
+// https://developers.google.com/sheets/api/reference/rest/v4/Dimension
 type Dimension = "ROWS" | "COLUMNS"
 
 interface Range {
@@ -18,12 +21,14 @@ interface DimensionProperties {
   // dataSourceColumnReference: DataSourceColumnReference
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values#ValueRange
 interface ValueRange {
   range: string
   majorDimension: Dimension
   values: Value[][]
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/UpdateValuesResponse
 interface UpdateValuesResponse {
   spreadsheetId: string
   updatedRange: string
@@ -33,6 +38,7 @@ interface UpdateValuesResponse {
   updatedData: ValueRange
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/response#AddSheetResponse
 interface AddSheetResponse {
   properties: SheetProperties
 }
@@ -41,12 +47,14 @@ interface Response {
   addSheet?: AddSheetResponse
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/response
 interface BatchUpdateResponse {
   spreadsheetId: string
   replies: Response[]
   updatedSpreadsheet: Spreadsheet
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#GridProperties
 interface GridProperties {
   rowCount: number
   columnCount: number
@@ -57,12 +65,14 @@ interface GridProperties {
   columnGroupControlAfter: boolean
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#SheetProperties
 interface SheetProperties {
   sheetId: number
   title: string
   gridProperties: GridProperties
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddSheetRequest
 interface AddSheetRequest {
   properties: SheetProperties
 }
@@ -71,6 +81,7 @@ interface Request {
   addSheet?: AddSheetRequest
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request
 interface BatchUpdateRequest {
   requests: Request[]
   includeSpreadsheetInResponse: boolean
@@ -78,11 +89,13 @@ interface BatchUpdateRequest {
   responseIncludeGridData: boolean
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#ErrorValue
 interface ErrorValue {
   type: string
   message: string
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#ExtendedValue
 interface ExtendedValue {
   stringValue?: string
   numberValue?: number
@@ -91,14 +104,17 @@ interface ExtendedValue {
   errorValue?: ErrorValue
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#CellData
 interface CellData {
   userEnteredValue: ExtendedValue
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#RowData
 interface RowData {
   values: CellData[]
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#GridData
 interface GridData {
   startRow: number
   startColumn: number
@@ -107,19 +123,59 @@ interface GridData {
   columnMetadata: DimensionProperties[]
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#Sheet
 interface Sheet {
   properties: SheetProperties
   data: GridData[]
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#SpreadsheetProperties
 interface SpreadsheetProperties {
   title: string
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#Spreadsheet
 interface Spreadsheet {
   properties: SpreadsheetProperties
   spreadsheetId: string
   sheets: Sheet[]
+}
+
+// https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
+type ValueInputOption =
+  | "USER_ENTERED"
+  | "RAW"
+  | "INPUT_VALUE_OPTION_UNSPECIFIED"
+
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#InsertDataOption
+type InsertDataOption = "OVERWRITE" | "INSERT_ROWS"
+
+// https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
+type ValueRenderOption = "FORMATTED_VALUE" | "UNFORMATTED_VALUE" | "FORMULA"
+
+// https://developers.google.com/sheets/api/reference/rest/v4/DateTimeRenderOption
+type DateTimeRenderOption = "SERIAL_NUMBER" | "FORMATTED_STRING"
+
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#query-parameters
+interface AppendParams {
+  valueInputOption?: ValueInputOption
+  insertDataOption?: InsertDataOption
+  includeValuesInResponse?: boolean
+  responseValueRenderOption?: ValueRenderOption
+  responseDateTimeRenderOption?: DateTimeRenderOption
+}
+
+interface AppendRequest {
+  range: string
+  params: AppendParams
+  body: ValueRange
+}
+
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#response-body
+interface AppendResponse {
+  spreadsheetId: string
+  tableRange: string
+  updates: UpdateValuesResponse
 }
 
 export class GoogleSheetsMock {
@@ -141,7 +197,38 @@ export class GoogleSheetsMock {
     }
   }
 
-  init() {
+  private route(
+    method: "get" | "put" | "post",
+    path: string | RegExp,
+    handler: (uri: string, request: nock.Body) => nock.Body
+  ): nock.Scope {
+    const headers = { reqheaders: { authorization: "Bearer test" } }
+    const scope = nock("https://sheets.googleapis.com/", headers)
+    return scope[method](path).reply(200, handler).persist()
+  }
+
+  private get(
+    path: string | RegExp,
+    handler: (uri: string, request: nock.Body) => nock.Body
+  ): nock.Scope {
+    return this.route("get", path, handler)
+  }
+
+  private put(
+    path: string | RegExp,
+    handler: (uri: string, request: nock.Body) => nock.Body
+  ): nock.Scope {
+    return this.route("put", path, handler)
+  }
+
+  private post(
+    path: string | RegExp,
+    handler: (uri: string, request: nock.Body) => nock.Body
+  ): nock.Scope {
+    return this.route("post", path, handler)
+  }
+
+  private mockAuth() {
     nock("https://www.googleapis.com/")
       .post("/oauth2/v4/token")
       .reply(200, {
@@ -164,49 +251,71 @@ export class GoogleSheetsMock {
         scopes: "https://www.googleapis.com/auth/spreadsheets",
       })
       .persist()
+  }
 
-    nock("https://sheets.googleapis.com/", {
-      reqheaders: { authorization: "Bearer test" },
-    })
-      .get(`/v4/spreadsheets/${this.config.spreadsheetId}/`)
-      .reply(200, () => this.handleGetSpreadsheet())
-      .persist()
+  init() {
+    this.mockAuth()
 
-    nock("https://sheets.googleapis.com/", {
-      reqheaders: { authorization: "Bearer test" },
-    })
-      .post(`/v4/spreadsheets/${this.config.spreadsheetId}/:batchUpdate`)
-      .reply(200, (_uri, request) =>
-        this.handleBatchUpdate(request as BatchUpdateRequest)
-      )
-      .persist()
+    this.get(`/v4/spreadsheets/${this.config.spreadsheetId}/`, () =>
+      this.handleGetSpreadsheet()
+    )
 
-    nock("https://sheets.googleapis.com/", {
-      reqheaders: { authorization: "Bearer test" },
-    })
-      .put(
-        new RegExp(`/v4/spreadsheets/${this.config.spreadsheetId}/values/.*`)
-      )
-      .reply(200, (_uri, request) =>
-        this.handleValueUpdate(request as ValueRange)
-      )
-      .persist()
+    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchUpdate
+    this.post(
+      `/v4/spreadsheets/${this.config.spreadsheetId}/:batchUpdate`,
+      (_uri, request) => this.handleBatchUpdate(request as BatchUpdateRequest)
+    )
 
-    nock("https://sheets.googleapis.com/", {
-      reqheaders: { authorization: "Bearer test" },
-    })
-      .get(
-        new RegExp(`/v4/spreadsheets/${this.config.spreadsheetId}/values/.*`)
-      )
-      .reply(200, uri => {
+    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/update
+    this.put(
+      new RegExp(`/v4/spreadsheets/${this.config.spreadsheetId}/values/.*`),
+      (_uri, request) => this.handleValueUpdate(request as ValueRange)
+    )
+
+    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get
+    this.get(
+      new RegExp(`/v4/spreadsheets/${this.config.spreadsheetId}/values/.*`),
+      uri => {
         const range = uri.split("/").pop()
         if (!range) {
           throw new Error("No range provided")
         }
         return this.handleGetValues(decodeURIComponent(range))
-      })
-      .persist()
+      }
+    )
+
+    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append
+    this.post(
+      new RegExp(
+        `/v4/spreadsheets/${this.config.spreadsheetId}/values/.*:append`
+      ),
+      (_uri, request) => {
+        const url = new URL(_uri, "https://sheets.googleapis.com/")
+        const params: Record<string, any> = Object.fromEntries(
+          url.searchParams.entries()
+        )
+
+        if (params.includeValuesInResponse === "true") {
+          params.includeValuesInResponse = true
+        } else {
+          params.includeValuesInResponse = false
+        }
+
+        const range = url.pathname.split("/").pop()
+        if (!range) {
+          throw new Error("No range provided")
+        }
+
+        return this.handleValueAppend({
+          range,
+          params,
+          body: request as ValueRange,
+        })
+      }
+    )
   }
+
+  private handleValueAppend(request: AppendRequest): AppendResponse {}
 
   private handleGetValues(range: string): ValueRange {
     const { sheet, topLeft, bottomRight } = this.parseA1Notation(range)
@@ -415,6 +524,7 @@ export class GoogleSheetsMock {
     return cell
   }
 
+  // https://developers.google.com/sheets/api/guides/concepts#cell
   private parseA1Notation(range: string): {
     sheet: Sheet
     topLeft: Range
