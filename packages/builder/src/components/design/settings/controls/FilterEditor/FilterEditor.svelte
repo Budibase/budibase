@@ -8,11 +8,7 @@
     Helpers,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-    readableToRuntimeBinding,
-  } from "dataBinding"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import FilterBuilder from "./FilterBuilder.svelte"
   import { tables, selectedScreen } from "stores/builder"
   import { search } from "@budibase/frontend-core"
