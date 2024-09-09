@@ -219,7 +219,7 @@
     on:close={() => (relationshipFieldName = null)}
     open={relationshipFieldName}
     anchor={relationshipPanelAnchor}
-    align="right-outside"
+    align="left"
   >
     {#if relationshipPanelColumns.length}
       <div class="relationship-header">
