@@ -59,7 +59,7 @@ export function quotas(): Quotas {
           name: "Budibase AI Credits",
           value: 1,
           triggers: [],
-        }
+        },
       },
       static: {
         rows: {

@@ -127,7 +127,7 @@
         name: user.firstName ? user.firstName + " " + user.lastName : "",
         userGroups,
         __selectable:
-          role.value === Constants.BudibaseRoles.Owner ? false : undefined,
+          role?.value === Constants.BudibaseRoles.Owner ? false : undefined,
         apps: [...new Set(Object.keys(user.roles))],
         access: role.sortOrder,
       }

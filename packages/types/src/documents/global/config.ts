@@ -153,5 +153,5 @@ export enum ConfigType {
   OIDC = "oidc",
   OIDC_LOGOS = "logos_oidc",
   SCIM = "scim",
-  AI = "ai"
+  AI = "ai",
 }
