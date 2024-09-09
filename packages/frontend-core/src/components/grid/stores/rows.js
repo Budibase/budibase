@@ -42,6 +42,27 @@ export const createStores = () => {
   }
 }
 
+function getRelatedTableValues(row, field) {
+  let result = ""
+  const separator = ", "
+
+  switch (field.type) {
+    case FieldType.STRING:
+    case FieldType.NUMBER:
+    default:
+      result = processStringSync(
+        `{{ join (pluck ${field.related.field} '${field.related.subField}') '${separator}' }}`,
+        row
+      )
+      break
+    case FieldType.ARRAY:
+    case FieldType.OPTIONS:
+      result = row[field.related.field].flatMap(r => r[field.related.subField])
+  }
+
+  return result
+}
+
 export const deriveStores = context => {
   const { rows, enrichedSchema } = context
 
@@ -56,14 +77,7 @@ export const deriveStores = context => {
         ...row,
         __idx: idx,
         ...customColumns.reduce((acc, c) => {
-          try {
-            acc[c.name] = processStringSync(
-              `{{ join (pluck ${c.related.field} '${c.related.subField}') ', ' }}`,
-              row
-            )
-          } catch {
-            // It might be some formula not set, or anything being incorrect
-          }
+          acc[c.name] = getRelatedTableValues(row, c)
           return acc
         }, {}),
       }))
