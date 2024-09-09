@@ -9,10 +9,10 @@ import {
   db as dbCore,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
+  setEnv as setCoreEnv,
   SQLITE_DESIGN_DOC_ID,
   utils,
   withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
 } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
@@ -2921,6 +2921,28 @@ describe.each([
             'Invalid body - "query.$and.conditions[1].$and.conditions" is required'
           )
         })
+
+      it("returns no rows when onEmptyFilter set to none", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+            $and: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toFindNothing()
+      })
+
+      it("returns all rows when onEmptyFilter set to all", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            $and: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toHaveLength(4)
+      })
     })
 
   !isLucene &&
@@ -3048,6 +3070,28 @@ describe.each([
             ],
           },
         }).toContainExactly([{ age: 1, name: "Jane" }])
+      })
+
+      it("returns no rows when onEmptyFilter set to none", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+            $or: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toFindNothing()
+      })
+
+      it("returns all rows when onEmptyFilter set to all", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            $or: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toHaveLength(4)
       })
     })
 })
