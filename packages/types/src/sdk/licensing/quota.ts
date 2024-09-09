@@ -24,7 +24,7 @@ export enum MonthlyQuotaName {
   QUERIES = "queries",
   AUTOMATIONS = "automations",
   DAY_PASSES = "dayPasses",
-  BUDIBASE_AI_CREDITS = "budibaseAICredits"
+  BUDIBASE_AI_CREDITS = "budibaseAICredits",
 }
 
 export enum ConstantQuotaName {

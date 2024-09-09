@@ -11,23 +11,19 @@ const Hosting = {
   Self: "self",
 }
 
-function setupEnv(
-  hosting,
-  features = {}) {
+function setupEnv(hosting, features = {}) {
   const defaultFeatures = {
     budibaseAIEnabled: false,
     customAIConfigsEnabled: false,
-    ...features
+    ...features,
   }
   admin.subscribe = vi.fn().mockImplementation(callback => {
-    callback({cloud: hosting === Hosting.Cloud})
-    return () => {
-    }
+    callback({ cloud: hosting === Hosting.Cloud })
+    return () => {}
   })
   licensing.subscribe = vi.fn().mockImplementation(callback => {
     callback(defaultFeatures)
-    return () => {
-    }
+    return () => {}
   })
 }
 
@@ -73,7 +69,7 @@ describe("AISettings", () => {
       addConfigurationButton = instance.queryByText("Add configuration")
       expect(addConfigurationButton).not.toBeInTheDocument()
 
-      setupEnv(Hosting.Cloud, {customAIConfigsEnabled: true})
+      setupEnv(Hosting.Cloud, { customAIConfigsEnabled: true })
       instance = render(AISettings)
       addConfigurationButton = instance.queryByText("Add configuration")
       expect(addConfigurationButton).toBeInTheDocument()
@@ -87,7 +83,7 @@ describe("AISettings", () => {
       addConfigurationButton = instance.queryByText("Add configuration")
       expect(addConfigurationButton).not.toBeInTheDocument()
 
-      setupEnv(Hosting.Self, {customAIConfigsEnabled: true})
+      setupEnv(Hosting.Self, { customAIConfigsEnabled: true })
       instance = render(AISettings, {})
       addConfigurationButton = instance.queryByText("Add configuration")
       expect(addConfigurationButton).toBeInTheDocument()

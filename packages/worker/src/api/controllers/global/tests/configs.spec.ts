@@ -1,3 +1,4 @@
+import { expect } from "vitest"
 import { configs } from "@budibase/backend-core"
 import { UserCtx } from "@budibase/types"
 import * as pro from "@budibase/pro"
@@ -7,10 +8,9 @@ jest.mock("@budibase/backend-core", () => ({
   ...jest.requireActual("@budibase/backend-core"),
   configs: {
     getConfig: jest.fn(),
-    save: jest.fn()
+    save: jest.fn(),
   },
 }))
-
 
 describe("Global configs controller", () => {
   afterEach(() => {
@@ -23,14 +23,14 @@ describe("Global configs controller", () => {
         ai: {
           apiKey: "abc123APIKey",
           baseUrl: "https://api.example.com",
-        }
-      }
+        },
+      },
     })
     const ctx = {
       params: {
-        type: "ai"
+        type: "ai",
       },
-      throw: jest.fn()
+      throw: jest.fn(),
     } as UserCtx
 
     await find(ctx)
@@ -39,9 +39,9 @@ describe("Global configs controller", () => {
       config: {
         ai: {
           apiKey: "--secret-value--",
-          "baseUrl": "https://api.example.com"
-        }
-      }
+          baseUrl: "https://api.example.com",
+        },
+      },
     })
   })
 
@@ -52,14 +52,14 @@ describe("Global configs controller", () => {
         ai: {
           apiKey: "abc123APIKey",
           baseUrl: "https://api.example.com",
-        }
-      }
+        },
+      },
     })
     const ctx = {
       params: {
-        type: "ai"
+        type: "ai",
       },
-      throw: jest.fn()
+      throw: jest.fn(),
     } as UserCtx
 
     await find(ctx)
@@ -75,9 +75,9 @@ describe("Global configs controller", () => {
         },
         ai: {
           apiKey: "--secret-value--",
-          "baseUrl": "https://api.example.com"
-        }
-      }
+          baseUrl: "https://api.example.com",
+        },
+      },
     })
   })
 
@@ -91,9 +91,9 @@ describe("Global configs controller", () => {
           name: "MyConfig",
           active: true,
           defaultModel: "gpt4",
-          apiKey: "--secret-value--"
-        }
-      }
+          apiKey: "--secret-value--",
+        },
+      },
     }
 
     const existingConfig = {
@@ -105,9 +105,9 @@ describe("Global configs controller", () => {
           name: "MyConfig",
           active: true,
           defaultModel: "gpt4",
-          apiKey: "myapikey"
-        }
-      }
+          apiKey: "myapikey",
+        },
+      },
     }
 
     await verifyAIConfig(newConfig, existingConfig)

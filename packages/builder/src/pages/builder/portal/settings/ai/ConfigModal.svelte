@@ -1,12 +1,6 @@
 <script>
-  import {
-    ModalContent,
-    Label,
-    Input,
-    Select,
-    Toggle,
-  } from "@budibase/bbui"
-  import {ConfigMap, Providers} from "./constants"
+  import { ModalContent, Label, Input, Select, Toggle } from "@budibase/bbui"
+  import { ConfigMap, Providers } from "./constants"
 
   export let config = {
     active: false,
@@ -22,7 +16,8 @@
     const { provider, defaultModel, name, apiKey } = config
     validation = provider && defaultModel && name && apiKey
   }
-  $: canEditBaseUrl = config.provider && ConfigMap[config.provider].baseUrl === ""
+  $: canEditBaseUrl =
+    config.provider && ConfigMap[config.provider].baseUrl === ""
 
   function prefillConfig(evt) {
     const provider = evt.detail
@@ -59,7 +54,7 @@
   </div>
   <div class="form-row">
     <Label size="M">Name</Label>
-    <Input placeholder={"Enter a name"} bind:value={config.name}/>
+    <Input placeholder={"Enter a name"} bind:value={config.name} />
   </div>
   <div class="form-row">
     <Label size="M">Default Model</Label>
@@ -75,14 +70,18 @@
   </div>
   <div class="form-row">
     <Label size="M">Base URL</Label>
-    <Input disabled={!canEditBaseUrl} placeholder={"https://budibase.ai"} bind:value={config.baseUrl}/>
+    <Input
+      disabled={!canEditBaseUrl}
+      placeholder={"https://budibase.ai"}
+      bind:value={config.baseUrl}
+    />
   </div>
   <div class="form-row">
     <Label size="M">API Key</Label>
-    <Input type="password" bind:value={config.apiKey}/>
+    <Input type="password" bind:value={config.apiKey} />
   </div>
-  <Toggle text="Active" bind:value={config.active}/>
-  <Toggle text="Set as default" bind:value={config.isDefault}/>
+  <Toggle text="Active" bind:value={config.active} />
+  <Toggle text="Set as default" bind:value={config.isDefault} />
 </ModalContent>
 
 <style>

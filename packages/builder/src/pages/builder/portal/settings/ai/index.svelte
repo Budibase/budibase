@@ -10,7 +10,7 @@
     notifications,
     Modal,
     Tags,
-    Tag
+    Tag,
   } from "@budibase/bbui"
   import { admin, licensing } from "stores/portal"
   import { API } from "api"
@@ -50,8 +50,8 @@
       fullAIConfig = {
         type: ConfigTypes.AI,
         config: {
-          [id]: editingAIConfig
-        }
+          [id]: editingAIConfig,
+        },
       }
     } else {
       // We don't store the default BB AI config in the DB
@@ -72,7 +72,9 @@
       await fetchAIConfig()
     } catch (error) {
       notifications.error(
-        `Failed to save AI Configuration, reason: ${error?.message || "Unknown"}`
+        `Failed to save AI Configuration, reason: ${
+          error?.message || "Unknown"
+        }`
       )
     }
   }
@@ -142,7 +144,9 @@
         <Button size="S" cta on:click={newConfig}>Add configuration</Button>
       {/if}
     </div>
-    <Body size="S">Use the following interface to select your preferred AI configuration.</Body>
+    <Body size="S"
+      >Use the following interface to select your preferred AI configuration.</Body
+    >
     <Body size="S">Select your AI Model:</Body>
     {#if fullAIConfig?.config}
       {#each Object.keys(fullAIConfig.config) as key}
