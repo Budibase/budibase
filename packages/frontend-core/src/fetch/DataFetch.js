@@ -2,7 +2,7 @@ import { writable, derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
-import { FilterGroupLogicalOperator, EmptyFilterOption } from "@budibase/types"
+import { FilterGroupLogicalOperator } from "@budibase/types"
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
