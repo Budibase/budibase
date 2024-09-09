@@ -2,7 +2,6 @@ import inline from "./inline"
 import modal from "./modal"
 import sidePanel from "./sidePanel"
 import newScreen from "./newScreen"
-import { getRowActionButtonTemplates } from "templates/rowActions"
 
 const createScreen = async ({ tableOrView, type, permissions, screens }) => {
   if (type === "inline") {

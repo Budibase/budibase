@@ -1,7 +1,7 @@
 <script>
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import ButtonSetting from "./ButtonSetting.svelte"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import { Helpers, Menu, MenuItem, Popover } from "@budibase/bbui"
   import { componentStore } from "stores/builder"
   import { getEventContextBindings } from "dataBinding"
