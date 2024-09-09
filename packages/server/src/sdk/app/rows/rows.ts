@@ -1,6 +1,10 @@
 import { db as dbCore, context } from "@budibase/backend-core"
 import { Database, Row } from "@budibase/types"
-import { getRowParams } from "../../../db/utils"
+import {
+  extractViewInfoFromID,
+  getRowParams,
+  isViewID,
+} from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"
 import * as external from "./external"
@@ -20,7 +24,12 @@ export async function getAllInternalRows(appId?: string) {
   return response.rows.map(row => row.doc) as Row[]
 }
 
-function pickApi(tableId: any) {
+function pickApi(tableOrViewId: string) {
+  let tableId = tableOrViewId
+  if (isViewID(tableOrViewId)) {
+    tableId = extractViewInfoFromID(tableOrViewId).tableId
+  }
+
   if (isExternalTableID(tableId)) {
     return external
   }
@@ -28,13 +37,13 @@ function pickApi(tableId: any) {
 }
 
 export async function save(
-  tableId: string,
+  tableOrViewId: string,
   row: Row,
   userId: string | undefined
 ) {
-  return pickApi(tableId).save(tableId, row, userId)
+  return pickApi(tableOrViewId).save(tableOrViewId, row, userId)
 }
 
-export async function find(tableId: string, rowId: string) {
-  return pickApi(tableId).find(tableId, rowId)
+export async function find(tableOrViewId: string, rowId: string) {
+  return pickApi(tableOrViewId).find(tableOrViewId, rowId)
 }

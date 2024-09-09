@@ -44,6 +44,7 @@
   {wrap}
   portalTarget="#{gridID} .grid-popover-container"
   offset={0}
+  clickOutsideOverride
 >
   <div
     class="grid-popover-contents"
