@@ -1,3 +1,12 @@
+// In this file is a mock implementation of the Google Sheets API.  It is used
+// to test the Google Sheets integration, and it keeps track of a single
+// spreadsheet with many sheets. It aims to be a faithful recreation of the
+// Google Sheets API, but it is not a perfect recreation. Some fields are
+// missing if they aren't relevant to our use of the API. It's possible that
+// this will cause problems for future feature development, but the original
+// development of these tests involved hitting Google's APIs directly and
+// examining the responses. If we couldn't find a good example of something in
+// use, it wasn't included.
 import { Datasource } from "@budibase/types"
 import nock from "nock"
 import { GoogleSheetsConfig } from "../../googlesheets"
@@ -13,6 +22,7 @@ interface Range {
   column: number
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#DimensionProperties
 interface DimensionProperties {
   hiddenByFilter: boolean
   hiddenByUser: boolean
