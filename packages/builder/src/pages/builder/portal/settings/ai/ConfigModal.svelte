@@ -54,7 +54,11 @@
   </div>
   <div class="form-row">
     <Label size="M">Name</Label>
-    <Input placeholder={"Enter a name"} bind:value={config.name} />
+    <Input
+      error={config.name === "Budibase AI" ? "Cannot use this name" : null}
+      placeholder={"Enter a name"}
+      bind:value={config.name}
+    />
   </div>
   <div class="form-row">
     <Label size="M">Default Model</Label>

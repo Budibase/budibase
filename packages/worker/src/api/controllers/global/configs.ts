@@ -31,6 +31,7 @@ import {
   OIDCLogosConfig,
   AIConfig,
   PASSWORD_REPLACEMENT,
+  isAIConfig,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
 
@@ -40,6 +41,11 @@ const getEventFns = async (config: Config, existing?: Config) => {
   if (!existing) {
     if (isSMTPConfig(config)) {
       fns.push(events.email.SMTPCreated)
+    } else if (isAIConfig(config)) {
+      fns.push(() => events.ai.AIConfigCreated)
+      fns.push(() =>
+        pro.quotas.updateCustomAIConfigCount(Object.keys(config.config).length)
+      )
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
       if (config.config.activated) {
@@ -76,6 +82,11 @@ const getEventFns = async (config: Config, existing?: Config) => {
   } else {
     if (isSMTPConfig(config)) {
       fns.push(events.email.SMTPUpdated)
+    } else if (isAIConfig(config)) {
+      fns.push(() => events.ai.AIConfigUpdated)
+      fns.push(() =>
+        pro.quotas.updateCustomAIConfigCount(Object.keys(config.config).length)
+      )
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOUpdated(ConfigType.GOOGLE))
       if (!existing.config.activated && config.config.activated) {
