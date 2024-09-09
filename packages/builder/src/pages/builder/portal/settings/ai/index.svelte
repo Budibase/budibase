@@ -80,7 +80,9 @@
   }
 
   async function deleteConfig(key) {
-    // Delete a configuration
+    // We don't store the default BB AI config in the DB
+    delete fullAIConfig.config.budibase_ai
+    // Delete the configuration
     delete fullAIConfig.config[key]
 
     try {
