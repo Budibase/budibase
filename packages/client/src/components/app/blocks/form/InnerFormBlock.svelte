@@ -113,7 +113,7 @@
         }}
         styles={{
           normal: {
-            "margin-top": "16",
+            "margin-top": "24",
           },
         }}
         order={1}
