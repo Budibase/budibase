@@ -2,6 +2,7 @@ import { writable, derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
+import { FilterGroupLogicalOperator, EmptyFilterOption } from "@budibase/types"
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
@@ -176,10 +177,16 @@ export default class DataFetch {
       }
     }
 
+    let defaultQuery = {
+      logicalOperator: FilterGroupLogicalOperator.ALL,
+      groups: [],
+    }
+
     // Build the query
-    let query = this.options.query
-    if (!query) {
-      query = buildQuery(filter)
+    let query = this.features.supportsSearch ? this.options.query : null
+
+    if (!query && this.features.supportsSearch) {
+      query = buildQuery(filter || defaultQuery)
     }
 
     // Update store

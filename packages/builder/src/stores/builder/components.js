@@ -29,8 +29,9 @@ import {
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
 import BudiStore from "../BudiStore"
-import { Utils, Constants } from "@budibase/frontend-core"
+import { Utils } from "@budibase/frontend-core"
 import { FieldType } from "@budibase/types"
+import { utils } from "@budibase/shared-core"
 
 export const INITIAL_COMPONENTS_STATE = {
   components: {},
@@ -204,18 +205,11 @@ export class ComponentStore extends BudiStore {
     const filterableTypes = def.settings.filter(setting =>
       setting?.type?.startsWith("filter")
     )
-
-    // Map this?
     for (let setting of filterableTypes) {
-      const updateFilter = Utils.migrateSearchFilters(
+      enrichedComponent[setting.key] = utils.processSearchFilters(
         enrichedComponent[setting.key]
       )
-      // DEAN - switch to real value when complete
-      if (updateFilter) {
-        enrichedComponent[setting.key + "_x"] = updateFilter
-      }
     }
-
     return migrated
   }
 
@@ -581,7 +575,6 @@ export class ComponentStore extends BudiStore {
       const patchResult = patchFn(component, screen)
 
       // Post processing
-      // DEAN - SKIP ON SAVE FOR THE MOMENT
       const migrated = null
 
       this.migrateSettings(component)

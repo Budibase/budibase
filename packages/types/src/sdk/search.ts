@@ -180,6 +180,11 @@ export enum EmptyFilterOption {
   RETURN_NONE = "none",
 }
 
+export enum FilterGroupLogicalOperator {
+  ALL = "all",
+  ANY = "any",
+}
+
 export enum SqlClient {
   MS_SQL = "mssql",
   POSTGRES = "pg",

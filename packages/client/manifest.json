@@ -5101,7 +5101,8 @@
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "resetOn": "dataSource"
       },
       {
         "type": "field/sortable",

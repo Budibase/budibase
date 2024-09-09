@@ -7,6 +7,7 @@ import {
   RowSearchParams,
   SearchFilterKey,
   LogicalOperator,
+  SearchFilter,
 } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
@@ -19,7 +20,7 @@ export async function searchView(
 ) {
   const { viewId } = ctx.params
 
-  const view = await sdk.views.get(viewId)
+  const view: ViewV2 = await sdk.views.get(viewId)
   if (!view) {
     ctx.throw(404, `View ${viewId} not found`)
   }
@@ -35,7 +36,7 @@ export async function searchView(
   // Enrich saved query with ephemeral query params.
   // We prevent searching on any fields that are saved as part of the query, as
   // that could let users find rows they should not be allowed to access.
-  let query = dataFilters.buildQuery(view.query || [])
+  let query: any = dataFilters.buildQuery(view.query ?? [])
   if (body.query) {
     // Delete extraneous search params that cannot be overridden
     delete body.query.onEmptyFilter
@@ -44,9 +45,15 @@ export async function searchView(
       !isExternalTableID(view.tableId) &&
       !(await features.flags.isEnabled("SQS"))
     ) {
+      // In the unlikely event that a Grouped Filter is in a non-SQS environment
+      // It needs to be ignored. Entirely
+      let queryFilters: SearchFilter[] = Array.isArray(view.query)
+        ? view.query
+        : []
+
       // Extract existing fields
       const existingFields =
-        view.query
+        queryFilters
           ?.filter(filter => filter.field)
           .map(filter => db.removeKeyNumbering(filter.field)) || []
 
