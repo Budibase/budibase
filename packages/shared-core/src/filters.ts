@@ -22,7 +22,7 @@ import {
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
-import { schema } from "./helpers"
+import { deepGet, schema } from "./helpers"
 import { isPlainObject, isEmpty } from "lodash"
 import { decodeNonAscii } from "./helpers/schema"
 
@@ -496,8 +496,11 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       test: (docValue: any, testValue: any) => boolean
     ) =>
     (doc: Record<string, any>) => {
-      for (const testValue of Object.values(query[type] || {})) {
-        const result = test(doc, testValue)
+      for (const [key, testValue] of Object.entries(query[type] || {})) {
+        const valueToCheck = isLogicalSearchOperator(type)
+          ? doc
+          : deepGet(doc, removeKeyNumbering(key))
+        const result = test(valueToCheck, testValue)
         if (query.allOr && result) {
           return true
         } else if (!query.allOr && !result) {
