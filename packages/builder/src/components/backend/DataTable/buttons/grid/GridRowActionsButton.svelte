@@ -6,6 +6,9 @@
     Button,
     Toggle,
     notifications,
+    Modal,
+    ModalContent,
+    Input,
   } from "@budibase/bbui"
   import DetailPopover from "components/common/DetailPopover.svelte"
   import { getContext } from "svelte"
@@ -15,6 +18,10 @@
 
   const { datasource } = getContext("grid")
 
+  let popover
+  let createModal
+  let newName
+
   $: ds = $datasource
   $: tableId = ds?.tableId
   $: viewId = ds?.id
@@ -22,23 +29,13 @@
   $: tableRowActions = $rowActions[tableId] || []
   $: viewRowActions = $rowActions[viewId] || []
   $: actionCount = isView ? viewRowActions.length : tableRowActions.length
+  $: newNameInvalid = newName && tableRowActions.some(x => x.name === newName)
 
   const rowActionUrl = derived([url, appStore], ([$url, $appStore]) => {
     return ({ automationId }) => {
       return $url(`/builder/app/${$appStore.appId}/automation/${automationId}`)
     }
   })
-
-  const createRowAction = async () => {
-    try {
-      const newRowAction = await rowActions.createRowAction(tableId, viewId)
-      notifications.success("Row action created successfully")
-      $goto($rowActionUrl(newRowAction))
-    } catch (error) {
-      console.error(error)
-      notifications.error("Error creating row action")
-    }
-  }
 
   const toggleAction = async (action, enabled) => {
     if (enabled) {
@@ -47,9 +44,30 @@
       await rowActions.disableView(tableId, viewId, action.id)
     }
   }
+
+  const showCreateModal = () => {
+    newName = null
+    popover.hide()
+    createModal.show()
+  }
+
+  const createRowAction = async () => {
+    try {
+      const newRowAction = await rowActions.createRowAction(
+        tableId,
+        viewId,
+        newName
+      )
+      notifications.success("Row action created successfully")
+      $goto($rowActionUrl(newRowAction))
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error creating row action")
+    }
+  }
 </script>
 
-<DetailPopover title="Row actions">
+<DetailPopover title="Row actions" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
       icon="Engagement"
@@ -88,11 +106,33 @@
     </List>
   {/if}
   <div>
-    <Button secondary icon="Engagement" on:click={createRowAction}>
+    <Button secondary icon="Engagement" on:click={showCreateModal}>
       Create row action
     </Button>
   </div>
 </DetailPopover>
+
+<Modal bind:this={createModal}>
+  <ModalContent
+    size="S"
+    title="Create row action"
+    confirmText="Create"
+    showCancelButton={false}
+    showDivider={false}
+    showCloseIcon={false}
+    disabled={!newName || newNameInvalid}
+    onConfirm={createRowAction}
+    let:loading
+  >
+    <Input
+      label="Name"
+      bind:value={newName}
+      error={newNameInvalid && !loading
+        ? "A row action with this name already exists"
+        : null}
+    />
+  </ModalContent>
+</Modal>
 
 <style>
   span :global(.spectrum-Switch) {
