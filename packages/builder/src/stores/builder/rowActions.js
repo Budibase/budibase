@@ -41,16 +41,18 @@ export class RowActionStore extends BudiStore {
     }))
   }
 
-  createRowAction = async (tableId, viewId) => {
+  createRowAction = async (tableId, viewId, name) => {
     if (!tableId) {
       return
     }
 
     // Get a unique name for this action
-    const existingRowActions = get(this.store)[tableId] || []
-    const name = getSequentialName(existingRowActions, "New row action ", {
-      getName: x => x.name,
-    })
+    if (!name) {
+      const existingRowActions = get(this.store)[tableId] || []
+      name = getSequentialName(existingRowActions, "New row action ", {
+        getName: x => x.name,
+      })
+    }
 
     // Create the action
     const res = await API.rowActions.create({
