@@ -1,7 +1,8 @@
 <script>
   import { getContext } from "svelte"
-  import { Pagination, ProgressCircle } from "@budibase/bbui"
+  import { Pagination, ProgressCircle, Helpers } from "@budibase/bbui"
   import { fetchData, QueryUtils } from "@budibase/frontend-core"
+  import { LogicalOperator, EmptyFilterOption } from "@budibase/types"
 
   export let dataSource
   export let filter
@@ -16,10 +17,16 @@
 
   let interval
   let queryExtensions = {}
+  let localFilters
+
+  $: if (filter) {
+    localFilters = Helpers.cloneDeep(filter)
+  }
+
+  $: defaultQuery = QueryUtils.buildQuery(localFilters)
 
   // We need to manage our lucene query manually as we want to allow components
   // to extend it
-  $: defaultQuery = QueryUtils.buildQuery(filter)
   $: query = extendQuery(defaultQuery, queryExtensions)
   $: fetch = createFetch(dataSource)
   $: fetch.update({
@@ -124,17 +131,15 @@
   }
 
   const extendQuery = (defaultQuery, extensions) => {
-    const extensionValues = Object.values(extensions || {})
-    let extendedQuery = { ...defaultQuery }
-    extensionValues.forEach(extension => {
-      Object.entries(extension || {}).forEach(([operator, fields]) => {
-        extendedQuery[operator] = {
-          ...extendedQuery[operator],
-          ...fields,
-        }
-      })
-    })
-    return extendedQuery
+    return {
+      [LogicalOperator.AND]: {
+        conditions: [
+          ...(defaultQuery ? [defaultQuery] : []),
+          ...Object.values(extensions || {}),
+        ],
+      },
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+    }
   }
 
   const setUpAutoRefresh = autoRefresh => {

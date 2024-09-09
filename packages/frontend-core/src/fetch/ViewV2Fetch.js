@@ -1,5 +1,6 @@
 import DataFetch from "./DataFetch.js"
 import { get } from "svelte/store"
+import { utils } from "@budibase/shared-core"
 
 export default class ViewV2Fetch extends DataFetch {
   determineFeatureFlags() {
@@ -53,7 +54,10 @@ export default class ViewV2Fetch extends DataFetch {
       this.options.sortColumn = definition.sort.field
       this.options.sortOrder = definition.sort.order
     }
-    if (!filter?.length && definition.query?.length) {
+
+    const parsed = utils.processSearchFilters(filter)
+
+    if (!parsed?.groups?.length && definition.query?.groups?.length) {
       this.options.filter = definition.query
     }
 

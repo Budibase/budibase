@@ -353,98 +353,57 @@ export const buildMultiStepFormBlockDefaultProps = props => {
   }
 }
 
-/**
- * Processes the filter config. Filters are migrated
- * SearchFilter[] to SearchFilterGroup
- *
- *  This is supposed to be in shared-core
- * @param {Object[]} filter
- */
-export const migrateSearchFilters = filters => {
-  const defaultCfg = {
-    logicalOperator: Constants.FilterOperator.ALL,
-    groups: [],
-  }
+export const handleFilterChange = (req, filters) => {
+  const {
+    groupIdx,
+    filterIdx,
+    filter,
+    group,
+    addFilter,
+    addGroup,
+    deleteGroup,
+    deleteFilter,
+    logicalOperator,
+    onEmptyFilter,
+  } = req
 
-  const filterWhitelistKeys = [
-    "field",
-    "operator",
-    "valueType", // bb
-    "value",
-    "type",
-    "noValue", // bb
-  ]
+  let editable = Helpers.cloneDeep(filters)
+  let targetGroup = editable.groups?.[groupIdx]
+  let targetFilter = targetGroup?.filters?.[filterIdx]
 
-  /**
-   * Review these
-   * externalType, formulaType, subtype
-   */
-
-  if (Array.isArray(filters)) {
-    const baseGroup = {
-      filters: [],
-      logicalOperator: Constants.FilterOperator.ALL,
+  if (targetFilter) {
+    if (deleteFilter) {
+      targetGroup.filters.splice(filterIdx, 1)
+    } else if (filter) {
+      targetGroup.filters[filterIdx] = filter
     }
-
-    const migratedSetting = filters.reduce((acc, filter) => {
-      // Sort the properties for easier debugging
-      // Remove unset values
-      const filterEntries = Object.entries(filter)
-        .sort((a, b) => {
-          return a[0].localeCompare(b[0])
-        })
-        .filter(x => x[1] ?? false)
-
-      // Scrub invalid filters
-      const { operator, onEmptyFilter, field, valueType } = filter
-      if (!field || !valueType) {
-        // THIS SCRUBS THE 2 GLOBALS
-        // return acc
+  } else if (targetGroup) {
+    if (deleteGroup) {
+      editable.groups.splice(groupIdx, 1)
+    } else if (addFilter) {
+      targetGroup.filters.push({})
+    } else if (group) {
+      editable.groups[groupIdx] = {
+        ...targetGroup,
+        ...group,
       }
-
-      if (filterEntries.length == 1) {
-        console.log("### one entry ")
-        const [key, value] = filterEntries[0]
-        // Global
-        if (key === "onEmptyFilter") {
-          // unset otherwise, seems to be the default
-          acc.onEmptyFilter = value
-        } else if (key === "operator" && value === "allOr") {
-          // Group 1 logical operator
-          baseGroup.logicalOperator = Constants.FilterOperator.ANY
-        }
-
-        return acc
-      }
-
-      // Process settings??
-      const whiteListedFilterSettings = filterEntries.reduce((acc, entry) => {
-        const [key, value] = entry
-
-        if (filterWhitelistKeys.includes(key)) {
-          if (key === "field") {
-            acc.push([key, value.replace(/^[0-9]+:/, "")])
-          } else {
-            acc.push([key, value])
-          }
-        }
-        return acc
-      }, [])
-
-      const migratedFilter = Object.fromEntries(whiteListedFilterSettings)
-
-      baseGroup.filters.push(migratedFilter)
-
-      if (!acc.groups.length) {
-        // init the base group
-        acc.groups.push(baseGroup)
-      }
-
-      return acc
-    }, defaultCfg)
-
-    console.log("MIGRATED ", migratedSetting)
-    return migratedSetting
+    }
+  } else if (addGroup) {
+    editable.groups.push({
+      logicalOperator: Constants.FilterOperator.ANY,
+      filters: [{}],
+    })
+  } else if (logicalOperator) {
+    editable = {
+      ...editable,
+      logicalOperator,
+    }
+  } else if (onEmptyFilter) {
+    editable = {
+      ...editable,
+      onEmptyFilter,
+    }
   }
-  return false
+
+  return editable
 }
