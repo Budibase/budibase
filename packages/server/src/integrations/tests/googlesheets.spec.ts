@@ -104,11 +104,73 @@ describe("Google Sheets Integration", () => {
       })
     })
 
-    it.only("should be able to add a new row", async () => {
-      await config.api.row.save(table._id!, {
+    it("should be able to add a new row", async () => {
+      const row = await config.api.row.save(table._id!, {
         name: "Test Contact",
         description: "original description",
       })
+
+      expect(row.name).toEqual("Test Contact")
+      expect(row.description).toEqual("original description")
+
+      expect(mock.cell("A2")).toEqual("Test Contact")
+      expect(mock.cell("B2")).toEqual("original description")
+
+      const row2 = await config.api.row.save(table._id!, {
+        name: "Test Contact 2",
+        description: "original description 2",
+      })
+
+      expect(row2.name).toEqual("Test Contact 2")
+      expect(row2.description).toEqual("original description 2")
+
+      // Notable that adding a new row adds it at the top, not the bottom.  Not
+      // entirely sure if this is the intended behaviour or an incorrect
+      // implementation of the GoogleSheetsMock.
+      expect(mock.cell("A2")).toEqual("Test Contact 2")
+      expect(mock.cell("B2")).toEqual("original description 2")
+
+      expect(mock.cell("A3")).toEqual("Test Contact")
+      expect(mock.cell("B3")).toEqual("original description")
+    })
+
+    it("should be able to add multiple rows", async () => {
+      await config.api.row.bulkImport(table._id!, {
+        rows: [
+          {
+            name: "Test Contact 1",
+            description: "original description 1",
+          },
+          {
+            name: "Test Contact 2",
+            description: "original description 2",
+          },
+        ],
+      })
+
+      expect(mock.cell("A2")).toEqual("Test Contact 1")
+      expect(mock.cell("B2")).toEqual("original description 1")
+      expect(mock.cell("A3")).toEqual("Test Contact 2")
+      expect(mock.cell("B3")).toEqual("original description 2")
+    })
+
+    it("should be able to update a row", async () => {
+      const row = await config.api.row.save(table._id!, {
+        name: "Test Contact",
+        description: "original description",
+      })
+
+      expect(mock.cell("A2")).toEqual("Test Contact")
+      expect(mock.cell("B2")).toEqual("original description")
+
+      await config.api.row.save(table._id!, {
+        ...row,
+        name: "Test Contact Updated",
+        description: "original description updated",
+      })
+
+      expect(mock.cell("A2")).toEqual("Test Contact Updated")
+      expect(mock.cell("B2")).toEqual("original description updated")
     })
   })
 })

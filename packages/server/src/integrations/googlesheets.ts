@@ -378,6 +378,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
         return this.create({ sheet, row: json.body as Row })
       case Operation.BULK_CREATE:
         return this.createBulk({ sheet, rows: json.body as Row[] })
+      case Operation.BULK_UPSERT:
+        return this.createBulk({ sheet, rows: json.body as Row[] })
       case Operation.READ:
         return this.read({ ...json, sheet })
       case Operation.UPDATE:
@@ -557,32 +559,15 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       } else {
         rows = await sheet.getRows()
       }
-      // this is a special case - need to handle the _id, it doesn't exist
-      // we cannot edit the returned structure from google, it does not have
-      // setter functions and is immutable, easier to update the filters
-      // to look for the _rowNumber property rather than rowNumber
-      if (query.filters?.equal) {
-        const idFilterKeys = Object.keys(query.filters.equal).filter(filter =>
-          filter.includes(GOOGLE_SHEETS_PRIMARY_KEY)
-        )
-        for (let idFilterKey of idFilterKeys) {
-          const id = query.filters.equal[idFilterKey]
-          delete query.filters.equal[idFilterKey]
-          query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
-        }
-      }
 
       if (hasFilters && query.paginate) {
         rows = rows.slice(offset, offset + limit)
       }
       const headerValues = sheet.headerValues
-      let response = []
-      for (let row of rows) {
-        response.push(
-          this.buildRowObject(headerValues, row.toObject(), row.rowNumber)
-        )
-      }
 
+      let response = rows.map(row =>
+        this.buildRowObject(headerValues, row.toObject(), row.rowNumber)
+      )
       response = dataFilters.runQuery(response, query.filters || {})
 
       if (query.sort) {

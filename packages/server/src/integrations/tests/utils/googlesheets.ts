@@ -175,6 +175,20 @@ interface AppendParams {
   responseDateTimeRenderOption?: DateTimeRenderOption
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchGet#query-parameters
+interface BatchGetParams {
+  ranges: string[]
+  majorDimension?: Dimension
+  valueRenderOption?: ValueRenderOption
+  dateTimeRenderOption?: DateTimeRenderOption
+}
+
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchGet#response-body
+interface BatchGetResponse {
+  spreadsheetId: string
+  valueRanges: ValueRange[]
+}
+
 interface AppendRequest {
   range: string
   params: AppendParams
@@ -268,39 +282,57 @@ export class GoogleSheetsMock {
   }
 
   private mockAPI() {
-    this.get(`/v4/spreadsheets/${this.config.spreadsheetId}/`, () =>
+    const spreadsheetId = this.config.spreadsheetId
+
+    this.get(`/v4/spreadsheets/${spreadsheetId}/`, () =>
       this.handleGetSpreadsheet()
     )
 
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchUpdate
     this.post(
-      `/v4/spreadsheets/${this.config.spreadsheetId}/:batchUpdate`,
+      `/v4/spreadsheets/${spreadsheetId}/:batchUpdate`,
       (_uri, request) => this.handleBatchUpdate(request as BatchUpdateRequest)
     )
 
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/update
     this.put(
-      new RegExp(`/v4/spreadsheets/${this.config.spreadsheetId}/values/.*`),
+      new RegExp(`/v4/spreadsheets/${spreadsheetId}/values/.*`),
       (_uri, request) => this.handleValueUpdate(request as ValueRange)
     )
 
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get
+    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchGet
     this.get(
-      new RegExp(`/v4/spreadsheets/${this.config.spreadsheetId}/values/.*`),
+      new RegExp(`/v4/spreadsheets/${spreadsheetId}/values:batchGet.*`),
       uri => {
-        const range = uri.split("/").pop()
-        if (!range) {
-          throw new Error("No range provided")
+        const url = new URL(uri, "https://sheets.googleapis.com/")
+        const params: BatchGetParams = {
+          ranges: url.searchParams.getAll("ranges"),
+          majorDimension:
+            (url.searchParams.get("majorDimension") as Dimension) || "ROWS",
+          valueRenderOption:
+            (url.searchParams.get("valueRenderOption") as ValueRenderOption) ||
+            undefined,
+          dateTimeRenderOption:
+            (url.searchParams.get(
+              "dateTimeRenderOption"
+            ) as DateTimeRenderOption) || undefined,
         }
-        return this.getValueRange(decodeURIComponent(range))
+        return this.handleBatchGet(params as unknown as BatchGetParams)
       }
     )
 
+    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get
+    this.get(new RegExp(`/v4/spreadsheets/${spreadsheetId}/values/.*`), uri => {
+      const range = uri.split("/").pop()
+      if (!range) {
+        throw new Error("No range provided")
+      }
+      return this.getValueRange(decodeURIComponent(range))
+    })
+
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append
     this.post(
-      new RegExp(
-        `/v4/spreadsheets/${this.config.spreadsheetId}/values/.*:append`
-      ),
+      new RegExp(`/v4/spreadsheets/${spreadsheetId}/values/.*:append`),
       (_uri, request) => {
         const url = new URL(_uri, "https://sheets.googleapis.com/")
         const params: Record<string, any> = Object.fromEntries(
@@ -370,6 +402,19 @@ export class GoogleSheetsMock {
         updatedCells: body.values.length * body.values[0].length,
         updatedData: body,
       },
+    }
+  }
+
+  private handleBatchGet(params: BatchGetParams): BatchGetResponse {
+    const { ranges, majorDimension } = params
+
+    if (majorDimension && majorDimension !== "ROWS") {
+      throw new Error("Only row-major updates are supported")
+    }
+
+    return {
+      spreadsheetId: this.spreadsheet.spreadsheetId,
+      valueRanges: ranges.map(range => this.getValueRange(range)),
     }
   }
 
