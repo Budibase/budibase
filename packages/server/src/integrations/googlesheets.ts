@@ -566,23 +566,19 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
         }
       }
-      let filtered = dataFilters.runQuery(
-        rows,
-        query.filters || {},
-        (row: GoogleSpreadsheetRow, headerKey: string) => {
-          return row.get(headerKey)
-        }
-      )
+
       if (hasFilters && query.paginate) {
-        filtered = filtered.slice(offset, offset + limit)
+        rows = rows.slice(offset, offset + limit)
       }
       const headerValues = sheet.headerValues
       let response = []
-      for (let row of filtered) {
+      for (let row of rows) {
         response.push(
-          this.buildRowObject(headerValues, row.toObject(), row._rowNumber)
+          this.buildRowObject(headerValues, row.toObject(), row.rowNumber)
         )
       }
+
+      response = dataFilters.runQuery(response, query.filters || {})
 
       if (query.sort) {
         if (Object.keys(query.sort).length !== 1) {
