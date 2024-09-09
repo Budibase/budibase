@@ -14,7 +14,6 @@
 
   // Get the screen definition for the current route
   $: screen = $screenStore.activeScreen
-  $: screenDefinition = { ...screen?.props, addEmptyRows: true }
   $: onLoadActions.set(screen?.onLoad)
   $: runOnLoadActions($onLoadActions, params)
 
@@ -42,10 +41,10 @@
 </script>
 
 <!-- Ensure to fully remount when screen changes -->
-{#if $routeStore.routerLoaded}
-  {#key screenDefinition?._id}
+{#if $routeStore.routerLoaded && screen?.props}
+  {#key screen.props._id}
     <Provider key="url" data={params}>
-      <Component isRoot instance={screenDefinition} />
+      <Component isRoot instance={screen.props} />
     </Provider>
   {/key}
 {/if}
