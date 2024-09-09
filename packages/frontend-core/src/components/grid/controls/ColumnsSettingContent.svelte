@@ -12,7 +12,7 @@
   export let columns
   export let fromRelationshipField
 
-  const { datasource, dispatch, cache, config } = getContext("grid")
+  const { datasource, dispatch, config } = getContext("grid")
 
   $: canSetRelationshipSchemas = $config.canSetRelationshipSchemas
 
@@ -114,29 +114,19 @@
     return { ...c, options }
   })
 
-  let relationshipPanelColumns = []
-  async function fetchRelationshipPanelColumns(relationshipField) {
-    relationshipPanelColumns = []
-    if (!relationshipField) {
-      return
+  $: relationshipPanelColumns = Object.entries(
+    relationshipField?.columns || {}
+  ).map(([name, column]) => {
+    return {
+      name: name,
+      label: name,
+      schema: {
+        type: column.type,
+        visible: column.visible,
+        readonly: column.readonly,
+      },
     }
-
-    const table = await cache.actions.getTable(relationshipField.tableId)
-    relationshipPanelColumns = Object.entries(
-      relationshipField?.columns || {}
-    ).map(([name, column]) => {
-      return {
-        name: name,
-        label: name,
-        schema: {
-          type: table.schema[name].type,
-          visible: column.visible,
-          readonly: column.readonly,
-        },
-      }
-    })
-  }
-  $: fetchRelationshipPanelColumns(relationshipField)
+  })
 
   async function toggleColumn(column, permission) {
     const visible = permission !== FieldPermissions.HIDDEN
