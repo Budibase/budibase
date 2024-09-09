@@ -3,7 +3,7 @@ import nock from "nock"
 import { GoogleSheetsConfig } from "../../googlesheets"
 
 // https://protobuf.dev/reference/protobuf/google.protobuf/#value
-type Value = string | number | boolean
+type Value = string | number | boolean | null
 
 // https://developers.google.com/sheets/api/reference/rest/v4/Dimension
 type Dimension = "ROWS" | "COLUMNS"
@@ -195,6 +195,9 @@ export class GoogleSheetsMock {
       spreadsheetId: config.spreadsheetId,
       sheets: [],
     }
+
+    this.mockAuth()
+    this.mockAPI()
   }
 
   private route(
@@ -237,6 +240,7 @@ export class GoogleSheetsMock {
         client_secret: "your-client-secret",
       })
       .persist()
+
     nock("https://oauth2.googleapis.com/")
       .post("/token", {
         client_id: "test",
@@ -253,9 +257,7 @@ export class GoogleSheetsMock {
       .persist()
   }
 
-  init() {
-    this.mockAuth()
-
+  private mockAPI() {
     this.get(`/v4/spreadsheets/${this.config.spreadsheetId}/`, () =>
       this.handleGetSpreadsheet()
     )
@@ -280,7 +282,7 @@ export class GoogleSheetsMock {
         if (!range) {
           throw new Error("No range provided")
         }
-        return this.handleGetValues(decodeURIComponent(range))
+        return this.getValueRange(decodeURIComponent(range))
       }
     )
 
@@ -301,10 +303,16 @@ export class GoogleSheetsMock {
           params.includeValuesInResponse = false
         }
 
-        const range = url.pathname.split("/").pop()
+        let range = url.pathname.split("/").pop()
         if (!range) {
           throw new Error("No range provided")
         }
+
+        if (range.endsWith(":append")) {
+          range = range.slice(0, -7)
+        }
+
+        range = decodeURIComponent(range)
 
         return this.handleValueAppend({
           range,
@@ -315,29 +323,44 @@ export class GoogleSheetsMock {
     )
   }
 
-  private handleValueAppend(request: AppendRequest): AppendResponse {}
+  private handleValueAppend(request: AppendRequest): AppendResponse {
+    const { range, params, body } = request
+    const { sheet, bottomRight } = this.parseA1Notation(range)
 
-  private handleGetValues(range: string): ValueRange {
-    const { sheet, topLeft, bottomRight } = this.parseA1Notation(range)
-    const valueRange: ValueRange = {
-      range,
-      majorDimension: "ROWS",
-      values: [],
-    }
+    const newRows = body.values.map(v => this.valuesToRowData(v))
+    const toDelete =
+      params.insertDataOption === "INSERT_ROWS" ? newRows.length : 0
+    sheet.data[0].rowData.splice(bottomRight.row + 1, toDelete, ...newRows)
+    sheet.data[0].rowMetadata.splice(bottomRight.row + 1, toDelete, {
+      hiddenByUser: false,
+      hiddenByFilter: false,
+      pixelSize: 100,
+    })
 
-    for (let row = topLeft.row; row <= bottomRight.row; row++) {
-      const values: Value[] = []
-      for (let col = topLeft.column; col <= bottomRight.column; col++) {
-        const cell = this.getCellNumericIndexes(sheet, row, col)
-        if (!cell) {
-          throw new Error("Cell not found")
-        }
-        values.push(this.unwrapValue(cell.userEnteredValue))
+    const updatedRange = this.createA1FromRanges(
+      sheet,
+      {
+        row: bottomRight.row + 1,
+        column: 0,
+      },
+      {
+        row: bottomRight.row + newRows.length,
+        column: 0,
       }
-      valueRange.values.push(values)
-    }
+    )
 
-    return valueRange
+    return {
+      spreadsheetId: this.spreadsheet.spreadsheetId,
+      tableRange: range,
+      updates: {
+        spreadsheetId: this.spreadsheet.spreadsheetId,
+        updatedRange,
+        updatedRows: body.values.length,
+        updatedColumns: body.values[0].length,
+        updatedCells: body.values.length * body.values[0].length,
+        updatedData: body,
+      },
+    }
   }
 
   private handleBatchUpdate(
@@ -387,29 +410,9 @@ export class GoogleSheetsMock {
   }
 
   private handleValueUpdate(valueRange: ValueRange): UpdateValuesResponse {
-    if (valueRange.majorDimension !== "ROWS") {
-      throw new Error("Only row-major updates are supported")
-    }
-
-    const { sheet, topLeft, bottomRight } = this.parseA1Notation(
-      valueRange.range
-    )
-
-    for (let row = topLeft.row; row <= bottomRight.row; row++) {
-      for (
-        let column = topLeft.column;
-        column <= bottomRight.column;
-        column++
-      ) {
-        const cell = this.getCellNumericIndexes(sheet, row, column)
-        if (!cell) {
-          continue
-        }
-        const value =
-          valueRange.values[row - topLeft.row][column - topLeft.column]
-        cell.userEnteredValue = this.createValue(value)
-      }
-    }
+    this.iterateCells(valueRange, (cell, value) => {
+      cell.userEnteredValue = this.createValue(value)
+    })
 
     const response: UpdateValuesResponse = {
       spreadsheetId: this.spreadsheet.spreadsheetId,
@@ -422,6 +425,60 @@ export class GoogleSheetsMock {
     return response
   }
 
+  private iterateCells(
+    valueRange: ValueRange,
+    cb: (cell: CellData, value: Value) => void
+  ) {
+    if (valueRange.majorDimension !== "ROWS") {
+      throw new Error("Only row-major updates are supported")
+    }
+
+    const { sheet, topLeft, bottomRight } = this.parseA1Notation(
+      valueRange.range
+    )
+    for (let row = topLeft.row; row <= bottomRight.row; row++) {
+      for (let col = topLeft.column; col <= bottomRight.column; col++) {
+        const cell = this.getCellNumericIndexes(sheet, row, col)
+        if (!cell) {
+          throw new Error("Cell not found")
+        }
+        const value = valueRange.values[row - topLeft.row][col - topLeft.column]
+        cb(cell, value)
+      }
+    }
+  }
+
+  private getValueRange(range: string): ValueRange {
+    const { sheet, topLeft, bottomRight } = this.parseA1Notation(range)
+    const valueRange: ValueRange = {
+      range,
+      majorDimension: "ROWS",
+      values: [],
+    }
+
+    for (let row = topLeft.row; row <= bottomRight.row; row++) {
+      const values: Value[] = []
+      for (let col = topLeft.column; col <= bottomRight.column; col++) {
+        const cell = this.getCellNumericIndexes(sheet, row, col)
+        if (!cell) {
+          throw new Error("Cell not found")
+        }
+        values.push(this.unwrapValue(cell.userEnteredValue))
+      }
+      valueRange.values.push(values)
+    }
+
+    return valueRange
+  }
+
+  private valuesToRowData(values: Value[]): RowData {
+    return {
+      values: values.map(v => {
+        return { userEnteredValue: this.createValue(v) }
+      }),
+    }
+  }
+
   private unwrapValue(from: ExtendedValue): Value {
     if (from.stringValue !== undefined) {
       return from.stringValue
@@ -432,12 +489,14 @@ export class GoogleSheetsMock {
     } else if (from.formulaValue !== undefined) {
       return from.formulaValue
     } else {
-      throw new Error("Unsupported value type")
+      return null
     }
   }
 
   private createValue(from: Value): ExtendedValue {
-    if (typeof from === "string") {
+    if (from == null) {
+      return {}
+    } else if (typeof from === "string") {
       return {
         stringValue: from,
       }
@@ -459,15 +518,9 @@ export class GoogleSheetsMock {
     for (let row = 0; row < numRows; row++) {
       const cells: CellData[] = []
       for (let col = 0; col < numCols; col++) {
-        cells.push({
-          userEnteredValue: {
-            stringValue: "",
-          },
-        })
+        cells.push({ userEnteredValue: this.createValue(null) })
       }
-      rowData.push({
-        values: cells,
-      })
+      rowData.push({ values: cells })
     }
     const rowMetadata: DimensionProperties[] = []
     for (let row = 0; row < numRows; row++) {
@@ -495,16 +548,20 @@ export class GoogleSheetsMock {
     }
   }
 
-  getCell(sheetName: string, ref: string): CellData | undefined {
-    const sheet = this.getSheetByName(sheetName)
-    if (!sheet) {
+  private cellData(cell: string): CellData | undefined {
+    const {
+      sheet,
+      topLeft: { row, column },
+    } = this.parseA1Notation(cell)
+    return this.getCellNumericIndexes(sheet, row, column)
+  }
+
+  cell(cell: string): Value | undefined {
+    const cellData = this.cellData(cell)
+    if (!cellData) {
       return undefined
     }
-    const { row, column } = this.parseCell(ref)
-    if (row === "ALL" || column === "ALL") {
-      throw new Error("Only single cell references are supported")
-    }
-    return this.getCellNumericIndexes(sheet, row, column)
+    return this.unwrapValue(cellData.userEnteredValue)
   }
 
   private getCellNumericIndexes(
@@ -525,36 +582,83 @@ export class GoogleSheetsMock {
   }
 
   // https://developers.google.com/sheets/api/guides/concepts#cell
+  //
+  // Examples from
+  //   https://code.luasoftware.com/tutorials/google-sheets-api/google-sheets-api-range-parameter-a1-notation
+  //
+  //   "Sheet1!A1"     -> First cell on Row 1 Col 1
+  //   "Sheet1!A1:C1"  -> Col 1-3 (A, B, C) on Row 1 = A1, B1, C1
+  //   "A1"            -> First visible sheet (if sheet name is ommitted)
+  //   "'My Sheet'!A1" -> If sheet name which contain space or start with a bracket.
+  //   "Sheet1"        -> All cells in Sheet1.
+  //   "Sheet1!A:A"    -> All cells on Col 1.
+  //   "Sheet1!A:B"    -> All cells on Col 1 and 2.
+  //   "Sheet1!1:1"    -> All cells on Row 1.
+  //   "Sheet1!1:2"    -> All cells on Row 1 and 2.
+  //
+  // How that translates to our code below, omitting the `sheet` property:
+  //
+  //   "Sheet1!A1"     -> { topLeft: { row: 0, column: 0 }, bottomRight: { row: 0, column: 0 } }
+  //   "Sheet1!A1:C1"  -> { topLeft: { row: 0, column: 0 }, bottomRight: { row: 0, column: 2 } }
+  //   "A1"            -> { topLeft: { row: 0, column: 0 }, bottomRight: { row: 0, column: 0 } }
+  //   "Sheet1"        -> { topLeft: { row: 0, column: 0 }, bottomRight: { row: 100, column: 25 } }
+  //                    -> This is because we default to having a 100x26 grid.
+  //   "Sheet1!A:A"    -> { topLeft: { row: 0, column: 0 }, bottomRight: { row: 99, column: 0 } }
+  //   "Sheet1!A:B"    -> { topLeft: { row: 0, column: 0 }, bottomRight: { row: 99, column: 1 } }
+  //   "Sheet1!1:1"    -> { topLeft: { row: 0, column: 0 }, bottomRight: { row: 0, column: 25 } }
+  //   "Sheet1!1:2"    -> { topLeft: { row: 0, column: 0 }, bottomRight: { row: 1, column: 25 } }
   private parseA1Notation(range: string): {
     sheet: Sheet
     topLeft: Range
     bottomRight: Range
   } {
-    let [sheetName, rest] = range.split("!")
+    let sheet: Sheet
+    let rest: string
+    if (!range.includes("!")) {
+      sheet = this.spreadsheet.sheets[0]
+      rest = range
+    } else {
+      let sheetName = range.split("!")[0]
+      if (sheetName.startsWith("'") && sheetName.endsWith("'")) {
+        sheetName = sheetName.slice(1, -1)
+      }
+      const foundSheet = this.getSheetByName(sheetName)
+      if (!foundSheet) {
+        throw new Error(`Sheet ${sheetName} not found`)
+      }
+      sheet = foundSheet
+      rest = range.split("!")[1]
+    }
+
     const [topLeft, bottomRight] = rest.split(":")
 
-    if (sheetName.startsWith("'") && sheetName.endsWith("'")) {
-      sheetName = sheetName.slice(1, -1)
+    const parsedTopLeft = topLeft ? this.parseCell(topLeft) : undefined
+    let parsedBottomRight = bottomRight
+      ? this.parseCell(bottomRight)
+      : undefined
+
+    if (!parsedTopLeft && !parsedBottomRight) {
+      throw new Error("No range provided")
     }
 
-    const sheet = this.getSheetByName(sheetName)
-    if (!sheet) {
-      throw new Error(`Sheet ${sheetName} not found`)
+    if (!parsedTopLeft) {
+      throw new Error("No top left cell provided")
     }
 
-    const parsedTopLeft = this.parseCell(topLeft)
-    const parsedBottomRight = this.parseCell(bottomRight)
+    if (!parsedBottomRight) {
+      parsedBottomRight = parsedTopLeft
+    }
 
-    if (parsedTopLeft.row === "ALL") {
+    if (parsedTopLeft && parsedTopLeft.row === undefined) {
       parsedTopLeft.row = 0
     }
-    if (parsedBottomRight.row === "ALL") {
-      parsedBottomRight.row = sheet.properties.gridProperties.rowCount - 1
-    }
-    if (parsedTopLeft.column === "ALL") {
+    if (parsedTopLeft && parsedTopLeft.column === undefined) {
       parsedTopLeft.column = 0
     }
-    if (parsedBottomRight.column === "ALL") {
+    if (parsedBottomRight && parsedBottomRight.row === undefined) {
+      parsedBottomRight.row = sheet.properties.gridProperties.rowCount - 1
+    }
+    if (parsedBottomRight && parsedBottomRight.column === undefined) {
       parsedBottomRight.column = sheet.properties.gridProperties.columnCount - 1
     }
 
@@ -565,22 +669,31 @@ export class GoogleSheetsMock {
     }
   }
 
+  private createA1FromRanges(sheet: Sheet, topLeft: Range, bottomRight: Range) {
+    let title = sheet.properties.title
+    if (title.includes(" ")) {
+      title = `'${title}'`
+    }
+    const topLeftLetter = this.numberToLetter(topLeft.column)
+    const bottomRightLetter = this.numberToLetter(bottomRight.column)
+    const topLeftRow = topLeft.row + 1
+    const bottomRightRow = bottomRight.row + 1
+    return `${title}!${topLeftLetter}${topLeftRow}:${bottomRightLetter}${bottomRightRow}`
+  }
+
   /**
    * Parses a cell reference into a row and column.
    * @param cell a string of the form A1, B2, etc.
    * @returns
    */
-  private parseCell(cell: string): {
-    row: number | "ALL"
-    column: number | "ALL"
-  } {
+  private parseCell(cell: string): Partial<Range> {
     const firstChar = cell.slice(0, 1)
     if (this.isInteger(firstChar)) {
-      return { row: parseInt(cell) - 1, column: "ALL" }
+      return { row: parseInt(cell) - 1 }
     }
     const column = this.letterToNumber(firstChar)
     if (cell.length === 1) {
-      return { row: "ALL", column }
+      return { column }
     }
     const number = cell.slice(1)
     return { row: parseInt(number) - 1, column }
@@ -592,6 +705,10 @@ export class GoogleSheetsMock {
 
   private letterToNumber(letter: string): number {
     return letter.charCodeAt(0) - 65
+  }
+
+  private numberToLetter(number: number): string {
+    return String.fromCharCode(number + 65)
   }
 
   private getSheetByName(name: string): Sheet | undefined {
