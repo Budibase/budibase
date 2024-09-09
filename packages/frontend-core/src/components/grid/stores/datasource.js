@@ -205,24 +205,6 @@ export const createActions = context => {
     })
   }
 
-  // Adds schema mutations for multiple fields at once
-  const addSchemaMutations = mutations => {
-    const fields = Object.keys(mutations || {})
-    if (!fields.length) {
-      return
-    }
-    schemaMutations.update($schemaMutations => {
-      let newSchemaMutations = { ...$schemaMutations }
-      fields.forEach(field => {
-        newSchemaMutations[field] = {
-          ...newSchemaMutations[field],
-          ...mutations[field],
-        }
-      })
-      return newSchemaMutations
-    })
-  }
-
   // Saves schema changes to the server, if possible
   const saveSchemaMutations = async () => {
     // If we can't save schema changes then we just want to keep this in memory
@@ -312,7 +294,6 @@ export const createActions = context => {
         changePrimaryDisplay,
         addSchemaMutation,
         addSubSchemaMutation,
-        addSchemaMutations,
         saveSchemaMutations,
         resetSchemaMutations,
       },
