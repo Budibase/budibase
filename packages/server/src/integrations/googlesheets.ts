@@ -395,7 +395,12 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
           sheet,
         })
       case Operation.CREATE_TABLE:
-        return this.createTable(json?.table?.name)
+        if (json.table === undefined) {
+          throw new Error(
+            "attempted to create a table without specifying the table to create"
+          )
+        }
+        return this.createTable(json.table)
       case Operation.UPDATE_TABLE:
         return this.updateTable(json.table!)
       case Operation.DELETE_TABLE:
@@ -422,13 +427,13 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     return rowObject
   }
 
-  private async createTable(name?: string) {
-    if (!name) {
-      throw new Error("Must provide name for new sheet.")
-    }
+  private async createTable(table: Table) {
     try {
       await this.connect()
-      await this.client.addSheet({ title: name, headerValues: [name] })
+      await this.client.addSheet({
+        title: table.name,
+        headerValues: Object.keys(table.schema),
+      })
     } catch (err) {
       console.error("Error creating new table in google sheets", err)
       throw err
