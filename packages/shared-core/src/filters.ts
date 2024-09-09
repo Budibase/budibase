@@ -471,15 +471,8 @@ export const search = (
  * Performs a client-side search on an array of data
  * @param docs the data
  * @param query the JSON query
- * @param findInDoc optional fn when trying to extract a value
- * from custom doc type e.g. Google Sheets
- *
  */
-export const runQuery = (
-  docs: Record<string, any>[],
-  query: SearchFilters,
-  findInDoc: Function = deepGet
-) => {
+export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
@@ -506,7 +499,7 @@ export const runQuery = (
       for (const [key, testValue] of Object.entries(query[type] || {})) {
         const valueToCheck = isLogicalSearchOperator(type)
           ? doc
-          : findInDoc(doc, removeKeyNumbering(key))
+          : deepGet(doc, removeKeyNumbering(key))
         const result = test(valueToCheck, testValue)
         if (query.allOr && result) {
           return true
