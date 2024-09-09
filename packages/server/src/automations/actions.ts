@@ -26,7 +26,6 @@ import {
   Hosting,
   ActionImplementation,
   AutomationStepDefinition,
-  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
