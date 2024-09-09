@@ -103,21 +103,23 @@
 
   const createBlankScreen = async ({ route }) => {
     const screenTemplates = screenTemplating.blank({ route, screens })
-
     const newScreens = await createScreens(screenTemplates)
     loadNewScreen(newScreens[0])
   }
 
   const createTableScreen = async type => {
-    const screenTemplates = selectedTablesAndViews.flatMap(tableOrView =>
-      screenTemplating.table({
-        screens,
-        tableOrView,
-        type,
-        permissions: permissions[tableOrView.id],
-      })
-    )
-
+    const screenTemplates = (
+      await Promise.all(
+        selectedTablesAndViews.map(tableOrView =>
+          screenTemplating.table({
+            screens,
+            tableOrView,
+            type,
+            permissions: permissions[tableOrView.id],
+          })
+        )
+      )
+    ).flat()
     const newScreens = await createScreens(screenTemplates)
     loadNewScreen(newScreens[0])
   }
