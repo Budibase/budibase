@@ -6,7 +6,7 @@ export function enrichSchemaWithRelColumns(schema) {
     const field = schema[c]
     acc[c] = field
 
-    if (field.columns) {
+    if (field.visible !== false && field.columns) {
       for (const relColumn of Object.keys(field.columns)) {
         const relField = field.columns[relColumn]
         if (!relField.visible) {
