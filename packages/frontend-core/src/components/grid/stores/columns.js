@@ -79,16 +79,24 @@ export const deriveStores = context => {
 }
 
 export const createActions = context => {
-  const { columns, datasource, schema } = context
+  const { columns, datasource } = context
 
   // Updates the width of all columns
   const changeAllColumnWidths = async width => {
-    const $schema = get(schema)
-    let mutations = {}
-    Object.keys($schema).forEach(field => {
-      mutations[field] = { width }
+    const $columns = get(columns)
+    $columns.forEach(column => {
+      const { related } = column
+      const mutation = { width }
+      if (!related) {
+        datasource.actions.addSchemaMutation(column.name, mutation)
+      } else {
+        datasource.actions.addSubSchemaMutation(
+          related.subField,
+          related.field,
+          mutation
+        )
+      }
     })
-    datasource.actions.addSchemaMutations(mutations)
     await datasource.actions.saveSchemaMutations()
   }
 
