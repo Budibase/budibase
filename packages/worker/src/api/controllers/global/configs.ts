@@ -135,7 +135,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
       }
     }
   }
-
   return fns
 }
 
@@ -344,11 +343,12 @@ async function enrichAIConfig(aiConfig: AIConfig) {
 
   // Return the Budibase AI data source as part of the response if licensing allows
   const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
+  const defaultConfigExists = Object.keys(aiConfig.config).some(key => aiConfig.config[key].isDefault)
   if (budibaseAIEnabled) {
     aiConfig.config["budibase_ai"] = {
       provider: "OpenAI",
       active: true,
-      isDefault: true,
+      isDefault: !defaultConfigExists,
       defaultModel: env.BUDIBASE_AI_DEFAULT_MODEL,
       name: "Budibase AI",
     }

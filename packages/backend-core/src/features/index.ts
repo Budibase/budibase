@@ -268,4 +268,5 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 export const flags = new FlagSet({
   DEFAULT_VALUES: Flag.boolean(env.isDev()),
   SQS: Flag.boolean(env.isDev()),
+  AI_CUSTOM_CONFIGS: Flag.boolean(env.isDev()),
 })

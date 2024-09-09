@@ -1,4 +1,3 @@
-import { expect } from "vitest"
 import { configs } from "@budibase/backend-core"
 import { UserCtx } from "@budibase/types"
 import * as pro from "@budibase/pro"
@@ -81,6 +80,35 @@ describe("Global configs controller", () => {
     })
   })
 
+  it("Should not not return the default Budibase AI config when on self host", async () => {
+    pro.features.isBudibaseAIEnabled = jest.fn(() => false)
+    configs.getConfig.mockResolvedValue({
+      config: {
+        ai: {
+          apiKey: "abc123APIKey",
+          baseUrl: "https://api.example.com",
+        },
+      },
+    })
+    const ctx = {
+      params: {
+        type: "ai",
+      },
+      throw: jest.fn(),
+    } as UserCtx
+
+    await find(ctx)
+
+    expect(ctx.body).toEqual({
+      config: {
+        ai: {
+          apiKey: "--secret-value--",
+          baseUrl: "https://api.example.com",
+        },
+      },
+    })
+  })
+
   it("Should not update existing secrets when updating an existing AI Config", async () => {
     const newConfig = {
       type: "ai",
@@ -114,4 +142,5 @@ describe("Global configs controller", () => {
     // should be unchanged
     expect(newConfig.config.aiconfig.apiKey === "myapikey")
   })
+
 })
