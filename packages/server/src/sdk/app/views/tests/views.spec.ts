@@ -3,6 +3,7 @@ import {
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  RelationshipType,
   Table,
   TableSchema,
   TableSourceType,
@@ -10,6 +11,7 @@ import {
 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import { enrichSchema, syncSchema } from ".."
+import sdk from "../../../../sdk"
 
 describe("table sdk", () => {
   const basicTable: Table = {
@@ -58,7 +60,7 @@ describe("table sdk", () => {
     },
   }
 
-  describe("enrichViewSchemas", () => {
+  describe("enrichSchema", () => {
     it("should fetch the default schema if not overridden", async () => {
       const tableId = basicTable._id!
       const view: ViewV2 = {
@@ -68,7 +70,7 @@ describe("table sdk", () => {
         tableId,
       }
 
-      const res = enrichSchema(view, basicTable.schema)
+      const res = await enrichSchema(view, basicTable.schema)
 
       expect(res).toEqual({
         ...view,
@@ -118,7 +120,7 @@ describe("table sdk", () => {
         },
       }
 
-      const res = enrichSchema(view, basicTable.schema)
+      const res = await enrichSchema(view, basicTable.schema)
 
       expect(res).toEqual({
         ...view,
@@ -152,7 +154,7 @@ describe("table sdk", () => {
         },
       }
 
-      const res = enrichSchema(view, basicTable.schema)
+      const res = await enrichSchema(view, basicTable.schema)
 
       expect(res).toEqual({
         ...view,
@@ -187,7 +189,7 @@ describe("table sdk", () => {
         },
       }
 
-      const res = enrichSchema(view, basicTable.schema)
+      const res = await enrichSchema(view, basicTable.schema)
 
       expect(res).toEqual(
         expect.objectContaining({
@@ -241,7 +243,7 @@ describe("table sdk", () => {
         },
       }
 
-      const res = enrichSchema(view, basicTable.schema)
+      const res = await enrichSchema(view, basicTable.schema)
 
       expect(res).toEqual(
         expect.objectContaining({
@@ -274,6 +276,92 @@ describe("table sdk", () => {
               width: 200,
               constraints: {
                 type: "string",
+              },
+            },
+          },
+        })
+      )
+    })
+
+    it("should include related fields", async () => {
+      const table: Table = {
+        ...basicTable,
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+          other: {
+            name: "other",
+            type: FieldType.LINK,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            fieldName: "table",
+            tableId: "otherTableId",
+          },
+        },
+      }
+
+      const otherTable: Table = {
+        ...basicTable,
+        primaryDisplay: "title",
+        schema: {
+          title: {
+            name: "title",
+            type: FieldType.STRING,
+          },
+          age: {
+            name: "age",
+            type: FieldType.NUMBER,
+          },
+        },
+      }
+
+      const tableId = table._id!
+
+      const getTableSpy = jest.spyOn(sdk.tables, "getTable")
+      getTableSpy.mockResolvedValueOnce(otherTable)
+
+      const view: ViewV2 = {
+        version: 2,
+        id: generator.guid(),
+        name: generator.guid(),
+        tableId,
+        schema: {
+          name: { visible: true },
+          other: {
+            visible: true,
+            columns: {
+              title: {
+                visible: true,
+                readonly: true,
+              },
+            },
+          },
+        },
+      }
+
+      const res = await enrichSchema(view, table.schema)
+
+      expect(res).toEqual(
+        expect.objectContaining({
+          ...view,
+          schema: {
+            name: {
+              ...table.schema.name,
+              visible: true,
+            },
+            other: {
+              ...table.schema.other,
+              visible: true,
+              columns: {
+                title: {
+                  visible: true,
+                  readonly: true,
+                },
+                age: {
+                  visible: false,
+                  readonly: false,
+                },
               },
             },
           },
