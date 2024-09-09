@@ -22,7 +22,7 @@ import {
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
-import { deepGet, schema } from "./helpers"
+import { schema } from "./helpers"
 import { isPlainObject, isEmpty } from "lodash"
 import { decodeNonAscii } from "./helpers/schema"
 
