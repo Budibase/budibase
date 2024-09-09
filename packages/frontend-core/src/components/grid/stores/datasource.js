@@ -53,10 +53,31 @@ export const deriveStores = context => {
       if (!$schema) {
         return null
       }
+
+      const schemaWithRelatedColumns = Object.keys($schema || {}).reduce(
+        (acc, c) => {
+          const field = $schema[c]
+          acc[c] = field
+
+          if (field.columns) {
+            for (const relColumn of Object.keys(field.columns)) {
+              const name = `${field.name}.${relColumn}`
+              acc[name] = {
+                ...field.columns[relColumn],
+                name,
+                related: { field: c, subField: relColumn },
+              }
+            }
+          }
+          return acc
+        },
+        {}
+      )
+
       let enrichedSchema = {}
-      Object.keys($schema).forEach(field => {
+      Object.keys(schemaWithRelatedColumns).forEach(field => {
         enrichedSchema[field] = {
-          ...$schema[field],
+          ...schemaWithRelatedColumns[field],
           ...$schemaOverrides?.[field],
           ...$schemaMutations[field],
         }
@@ -73,30 +94,6 @@ export const deriveStores = context => {
           }
         }
       })
-      if ($schemaOverrides) {
-        Object.keys($schemaOverrides).forEach(field => {
-          if (!$schemaOverrides[field].related) {
-            return
-          }
-
-          const { field: relField, subField: relSubField } =
-            $schemaOverrides[field].related
-
-          if (
-            !$schema[relField].visible ||
-            !$schema[relField]?.columns?.[relSubField]?.visible
-          ) {
-            return
-          }
-
-          enrichedSchema[field] = {
-            ...$schemaOverrides[field],
-            name: field,
-            type: $schema[relField]?.columns?.[relSubField]?.type,
-            readonly: true,
-          }
-        })
-      }
       return enrichedSchema
     }
   )

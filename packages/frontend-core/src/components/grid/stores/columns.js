@@ -151,6 +151,7 @@ export const initialise = context => {
             readonly: fieldSchema.readonly,
             order: fieldSchema.order ?? oldColumn?.order,
             conditions: fieldSchema.conditions,
+            related: fieldSchema.related,
           }
           // Override a few properties for primary display
           if (field === primaryDisplay) {
@@ -159,32 +160,6 @@ export const initialise = context => {
             column.primaryDisplay = true
           }
           return column
-        })
-        .flatMap(field => {
-          const relatedColumns = []
-
-          const schemaColumns = $enrichedSchema?.[field.name]?.columns
-          if (field.visible && schemaColumns) {
-            for (const relColumn of Object.keys(schemaColumns)) {
-              const relFieldSchema = schemaColumns[relColumn]
-              if (!relFieldSchema.visible) {
-                continue
-              }
-              relatedColumns.push({
-                name: `${field.name}.${relColumn}`,
-                label: `${relColumn} (${field.name})`,
-                schema: relFieldSchema,
-                width: relFieldSchema.width || DefaultColumnWidth,
-                visible: relFieldSchema.visible ?? true,
-                readonly: relFieldSchema.readonly,
-                order: relFieldSchema.order,
-                conditions: relFieldSchema.conditions,
-                related: true,
-              })
-            }
-          }
-
-          return [field, ...relatedColumns]
         })
         .sort((a, b) => {
           // Display column should always come first
