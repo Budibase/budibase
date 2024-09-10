@@ -84,7 +84,7 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
     menu.push({
       title: "Settings",
       href: "/builder/portal/settings",
-      subPages: settingsSubPages,
+      subPages: [...settingsSubPages].sort((a, b) => a.title.localeCompare(b.title)),
     })
   }
 
