@@ -31,7 +31,7 @@ import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"
 import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
 
-interface GoogleSheetsConfig {
+export interface GoogleSheetsConfig {
   spreadsheetId: string
   auth: OAuthClientConfig
   continueSetupId?: string
@@ -157,7 +157,7 @@ const SCHEMA: Integration = {
   },
 }
 
-class GoogleSheetsIntegration implements DatasourcePlus {
+export class GoogleSheetsIntegration implements DatasourcePlus {
   private readonly config: GoogleSheetsConfig
   private readonly spreadsheetId: string
   private client: GoogleSpreadsheet = undefined!
@@ -378,6 +378,10 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         return this.create({ sheet, row: json.body as Row })
       case Operation.BULK_CREATE:
         return this.createBulk({ sheet, rows: json.body as Row[] })
+      case Operation.BULK_UPSERT:
+        // This is technically not correct because it won't update existing
+        // rows, but it's better than not having this functionality at all.
+        return this.createBulk({ sheet, rows: json.body as Row[] })
       case Operation.READ:
         return this.read({ ...json, sheet })
       case Operation.UPDATE:
@@ -395,9 +399,19 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           sheet,
         })
       case Operation.CREATE_TABLE:
-        return this.createTable(json?.table?.name)
+        if (!json.table) {
+          throw new Error(
+            "attempted to create a table without specifying the table to create"
+          )
+        }
+        return this.createTable(json.table)
       case Operation.UPDATE_TABLE:
-        return this.updateTable(json.table!)
+        if (!json.table) {
+          throw new Error(
+            "attempted to create a table without specifying the table to create"
+          )
+        }
+        return this.updateTable(json.table)
       case Operation.DELETE_TABLE:
         return this.deleteTable(json?.table?.name)
       default:
@@ -422,13 +436,13 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return rowObject
   }
 
-  private async createTable(name?: string) {
-    if (!name) {
-      throw new Error("Must provide name for new sheet.")
-    }
+  private async createTable(table: Table) {
     try {
       await this.connect()
-      await this.client.addSheet({ title: name, headerValues: [name] })
+      await this.client.addSheet({
+        title: table.name,
+        headerValues: Object.keys(table.schema),
+      })
     } catch (err) {
       console.error("Error creating new table in google sheets", err)
       throw err
@@ -552,32 +566,15 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       } else {
         rows = await sheet.getRows()
       }
-      // this is a special case - need to handle the _id, it doesn't exist
-      // we cannot edit the returned structure from google, it does not have
-      // setter functions and is immutable, easier to update the filters
-      // to look for the _rowNumber property rather than rowNumber
-      if (query.filters?.equal) {
-        const idFilterKeys = Object.keys(query.filters.equal).filter(filter =>
-          filter.includes(GOOGLE_SHEETS_PRIMARY_KEY)
-        )
-        for (let idFilterKey of idFilterKeys) {
-          const id = query.filters.equal[idFilterKey]
-          delete query.filters.equal[idFilterKey]
-          query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
-        }
-      }
 
       if (hasFilters && query.paginate) {
         rows = rows.slice(offset, offset + limit)
       }
       const headerValues = sheet.headerValues
-      let response = []
-      for (let row of rows) {
-        response.push(
-          this.buildRowObject(headerValues, row.toObject(), row.rowNumber)
-        )
-      }
 
+      let response = rows.map(row =>
+        this.buildRowObject(headerValues, row.toObject(), row.rowNumber)
+      )
       response = dataFilters.runQuery(response, query.filters || {})
 
       if (query.sort) {
