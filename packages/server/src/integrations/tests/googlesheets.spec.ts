@@ -53,7 +53,7 @@ describe("Google Sheets Integration", () => {
 
   describe("create", () => {
     it("creates a new table", async () => {
-      await config.api.table.save({
+      const table = await config.api.table.save({
         name: "Test Table",
         type: "table",
         sourceId: datasource._id!,
@@ -76,10 +76,137 @@ describe("Google Sheets Integration", () => {
         },
       })
 
+      expect(table.name).toEqual("Test Table")
+
       expect(mock.cell("A1")).toEqual("name")
       expect(mock.cell("B1")).toEqual("description")
       expect(mock.cell("A2")).toEqual(null)
       expect(mock.cell("B2")).toEqual(null)
+    })
+
+    it("can handle multiple tables", async () => {
+      const table1 = await config.api.table.save({
+        name: "Test Table 1",
+        type: "table",
+        sourceId: datasource._id!,
+        sourceType: TableSourceType.EXTERNAL,
+        schema: {
+          one: {
+            name: "one",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
+
+      const table2 = await config.api.table.save({
+        name: "Test Table 2",
+        type: "table",
+        sourceId: datasource._id!,
+        sourceType: TableSourceType.EXTERNAL,
+        schema: {
+          two: {
+            name: "two",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
+
+      expect(table1.name).toEqual("Test Table 1")
+      expect(table2.name).toEqual("Test Table 2")
+
+      expect(mock.cell("Test Table 1!A1")).toEqual("one")
+      expect(mock.cell("Test Table 1!A2")).toEqual(null)
+      expect(mock.cell("Test Table 2!A1")).toEqual("two")
+      expect(mock.cell("Test Table 2!A2")).toEqual(null)
+    })
+  })
+
+  describe("read", () => {
+    let table: Table
+    beforeEach(async () => {
+      table = await config.api.table.save({
+        name: "Test Table",
+        type: "table",
+        sourceId: datasource._id!,
+        sourceType: TableSourceType.EXTERNAL,
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+          description: {
+            name: "description",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
+
+      await config.api.row.bulkImport(table._id!, {
+        rows: [
+          {
+            name: "Test Contact 1",
+            description: "original description 1",
+          },
+          {
+            name: "Test Contact 2",
+            description: "original description 2",
+          },
+        ],
+      })
+    })
+
+    it("can read table details", async () => {
+      const response = await config.api.table.get(table._id!)
+      expect(response.name).toEqual("Test Table")
+      expect(response.schema).toEqual({
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+          constraints: {
+            type: "string",
+          },
+        },
+        description: {
+          name: "description",
+          type: FieldType.STRING,
+          constraints: {
+            type: "string",
+          },
+        },
+      })
+    })
+
+    it("can read table rows", async () => {
+      const rows = await config.api.row.fetch(table._id!)
+      expect(rows.length).toEqual(2)
+      expect(rows[0].name).toEqual("Test Contact 1")
+      expect(rows[0].description).toEqual("original description 1")
+      expect(rows[0]._id).toEqual("%5B2%5D")
+      expect(rows[1].name).toEqual("Test Contact 2")
+      expect(rows[1].description).toEqual("original description 2")
+      expect(rows[1]._id).toEqual("%5B3%5D")
+    })
+
+    it("can get a specific row", async () => {
+      const row1 = await config.api.row.get(table._id!, "2")
+      expect(row1.name).toEqual("Test Contact 1")
+      expect(row1.description).toEqual("original description 1")
+
+      const row2 = await config.api.row.get(table._id!, "3")
+      expect(row2.name).toEqual("Test Contact 2")
+      expect(row2.description).toEqual("original description 2")
     })
   })
 
