@@ -10,6 +10,11 @@ export enum AutoReason {
   FOREIGN_KEY = "foreign_key",
 }
 
+export type FieldSubType =
+  | AutoFieldSubType
+  | JsonFieldSubType
+  | BBReferenceFieldSubType
+
 export enum AutoFieldSubType {
   CREATED_BY = "createdBy",
   CREATED_AT = "createdAt",
