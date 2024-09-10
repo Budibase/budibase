@@ -6,6 +6,8 @@
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridFilterButton from "components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
   import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
+  import { isEnabled } from "helpers/featureFlags"
+  import { FeatureFlag } from "@budibase/types"
 
   $: id = $viewsV2.selected?.id
   $: datasource = {
@@ -29,6 +31,7 @@
     on:updatedatasource={handleGridViewUpdate}
     isCloud={$admin.cloud}
     allowViewReadonlyColumns={$licensing.isViewReadonlyColumnsEnabled}
+    canSetRelationshipSchemas={isEnabled(FeatureFlag.ENRICHED_RELATIONSHIPS)}
   >
     <svelte:fragment slot="filter">
       <GridFilterButton />
