@@ -10,6 +10,7 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import { GoogleSheetsMock } from "./utils/googlesheets"
+import exp from "constants"
 
 describe("Google Sheets Integration", () => {
   const config = new TestConfiguration()
@@ -298,6 +299,43 @@ describe("Google Sheets Integration", () => {
 
       expect(mock.cell("A2")).toEqual("Test Contact Updated")
       expect(mock.cell("B2")).toEqual("original description updated")
+    })
+
+    it("should be able to rename a column", async () => {
+      const row = await config.api.row.save(table._id!, {
+        name: "Test Contact",
+        description: "original description",
+      })
+
+      const { name, ...otherColumns } = table.schema
+      const renamedTable = await config.api.table.save({
+        ...table,
+        schema: {
+          ...otherColumns,
+          renamed: {
+            ...table.schema.name,
+          },
+        },
+        _rename: {
+          old: "name",
+          updated: "renamed",
+        },
+      })
+
+      expect(renamedTable.schema.name).not.toBeDefined()
+      expect(renamedTable.schema.renamed).toBeDefined()
+
+      expect(mock.cell("A1")).toEqual("renamed")
+      expect(mock.cell("B1")).toEqual("description")
+      expect(mock.cell("A2")).toEqual("Test Contact")
+      expect(mock.cell("B2")).toEqual("original description")
+      expect(mock.cell("A3")).toEqual(null)
+      expect(mock.cell("B3")).toEqual(null)
+
+      const renamedRow = await config.api.row.get(table._id!, row._id!)
+      expect(renamedRow.renamed).toEqual("Test Contact")
+      expect(renamedRow.description).toEqual("original description")
+      expect(renamedRow.name).not.toBeDefined()
     })
   })
 })
