@@ -10,31 +10,71 @@
 import { Datasource } from "@budibase/types"
 import nock from "nock"
 import { GoogleSheetsConfig } from "../../googlesheets"
+import type {
+  SpreadsheetProperties,
+  ExtendedValue,
+  WorksheetDimension,
+  WorksheetDimensionProperties,
+  WorksheetProperties,
+  CellData,
+  CellBorder,
+  CellFormat,
+  CellPadding,
+  Color,
+} from "google-spreadsheet/src/lib/types/sheets-types"
+
+const BLACK: Color = { red: 0, green: 0, blue: 0 }
+const WHITE: Color = { red: 1, green: 1, blue: 1 }
+const NO_PADDING: CellPadding = { top: 0, right: 0, bottom: 0, left: 0 }
+const DEFAULT_BORDER: CellBorder = {
+  style: "SOLID",
+  width: 1,
+  color: BLACK,
+  colorStyle: { rgbColor: BLACK },
+}
+const DEFAULT_CELL_FORMAT: CellFormat = {
+  hyperlinkDisplayType: "PLAIN_TEXT",
+  horizontalAlignment: "LEFT",
+  verticalAlignment: "BOTTOM",
+  wrapStrategy: "OVERFLOW_CELL",
+  textDirection: "LEFT_TO_RIGHT",
+  textRotation: { angle: 0, vertical: false },
+  padding: NO_PADDING,
+  backgroundColorStyle: { rgbColor: BLACK },
+  borders: {
+    top: DEFAULT_BORDER,
+    bottom: DEFAULT_BORDER,
+    left: DEFAULT_BORDER,
+    right: DEFAULT_BORDER,
+  },
+  numberFormat: {
+    type: "NUMBER",
+    pattern: "General",
+  },
+  backgroundColor: WHITE,
+  textFormat: {
+    foregroundColor: BLACK,
+    fontFamily: "Arial",
+    fontSize: 10,
+    bold: false,
+    italic: false,
+    strikethrough: false,
+    underline: false,
+  },
+}
 
 // https://protobuf.dev/reference/protobuf/google.protobuf/#value
 type Value = string | number | boolean | null
-
-// https://developers.google.com/sheets/api/reference/rest/v4/Dimension
-type Dimension = "ROWS" | "COLUMNS"
 
 interface Range {
   row: number
   column: number
 }
 
-// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#DimensionProperties
-interface DimensionProperties {
-  hiddenByFilter: boolean
-  hiddenByUser: boolean
-  pixelSize: number
-  // developerMetadata: DeveloperMetadata[]
-  // dataSourceColumnReference: DataSourceColumnReference
-}
-
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values#ValueRange
 interface ValueRange {
   range: string
-  majorDimension: Dimension
+  majorDimension: WorksheetDimension
   values: Value[][]
 }
 
@@ -50,41 +90,21 @@ interface UpdateValuesResponse {
 
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/response#AddSheetResponse
 interface AddSheetResponse {
-  properties: SheetProperties
-}
-
-interface Response {
-  addSheet?: AddSheetResponse
+  properties: WorksheetProperties
 }
 
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/response
 interface BatchUpdateResponse {
   spreadsheetId: string
-  replies: Response[]
+  replies: {
+    addSheet?: AddSheetResponse
+  }[]
   updatedSpreadsheet: Spreadsheet
-}
-
-// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#GridProperties
-interface GridProperties {
-  rowCount: number
-  columnCount: number
-  frozenRowCount: number
-  frozenColumnCount: number
-  hideGridlines: boolean
-  rowGroupControlAfter: boolean
-  columnGroupControlAfter: boolean
-}
-
-// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#SheetProperties
-interface SheetProperties {
-  sheetId: number
-  title: string
-  gridProperties: GridProperties
 }
 
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddSheetRequest
 interface AddSheetRequest {
-  properties: SheetProperties
+  properties: WorksheetProperties
 }
 
 interface Request {
@@ -99,26 +119,6 @@ interface BatchUpdateRequest {
   responseIncludeGridData: boolean
 }
 
-// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#ErrorValue
-interface ErrorValue {
-  type: string
-  message: string
-}
-
-// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#ExtendedValue
-interface ExtendedValue {
-  stringValue?: string
-  numberValue?: number
-  boolValue?: boolean
-  formulaValue?: string
-  errorValue?: ErrorValue
-}
-
-// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#CellData
-interface CellData {
-  userEnteredValue: ExtendedValue
-}
-
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#RowData
 interface RowData {
   values: CellData[]
@@ -129,19 +129,14 @@ interface GridData {
   startRow: number
   startColumn: number
   rowData: RowData[]
-  rowMetadata: DimensionProperties[]
-  columnMetadata: DimensionProperties[]
+  rowMetadata: WorksheetDimensionProperties[]
+  columnMetadata: WorksheetDimensionProperties[]
 }
 
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#Sheet
 interface Sheet {
-  properties: SheetProperties
+  properties: WorksheetProperties
   data: GridData[]
-}
-
-// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#SpreadsheetProperties
-interface SpreadsheetProperties {
-  title: string
 }
 
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#Spreadsheet
@@ -178,7 +173,7 @@ interface AppendParams {
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchGet#query-parameters
 interface BatchGetParams {
   ranges: string[]
-  majorDimension?: Dimension
+  majorDimension?: WorksheetDimension
   valueRenderOption?: ValueRenderOption
   dateTimeRenderOption?: DateTimeRenderOption
 }
@@ -215,6 +210,12 @@ export class GoogleSheetsMock {
     this.spreadsheet = {
       properties: {
         title: "Test Spreadsheet",
+        locale: "en_US",
+        autoRecalc: "ON_CHANGE",
+        timeZone: "America/New_York",
+        defaultFormat: {},
+        iterativeCalculationSettings: {},
+        spreadsheetTheme: {},
       },
       spreadsheetId: config.spreadsheetId,
       sheets: [],
@@ -308,7 +309,8 @@ export class GoogleSheetsMock {
         const params: BatchGetParams = {
           ranges: url.searchParams.getAll("ranges"),
           majorDimension:
-            (url.searchParams.get("majorDimension") as Dimension) || "ROWS",
+            (url.searchParams.get("majorDimension") as WorksheetDimension) ||
+            "ROWS",
           valueRenderOption:
             (url.searchParams.get("valueRenderOption") as ValueRenderOption) ||
             undefined,
@@ -377,8 +379,11 @@ export class GoogleSheetsMock {
       hiddenByUser: false,
       hiddenByFilter: false,
       pixelSize: 100,
+      developerMetadata: [],
     })
 
+    // It's important to give back a correct updated range because the API
+    // library we use makes use of it to assign the correct row IDs to rows.
     const updatedRange = this.createA1FromRanges(
       sheet,
       {
@@ -421,24 +426,31 @@ export class GoogleSheetsMock {
   private handleBatchUpdate(
     batchUpdateRequest: BatchUpdateRequest
   ): BatchUpdateResponse {
-    const replies: Response[] = []
+    const response: BatchUpdateResponse = {
+      spreadsheetId: this.spreadsheet.spreadsheetId,
+      replies: [],
+      updatedSpreadsheet: this.spreadsheet,
+    }
 
     for (const request of batchUpdateRequest.requests) {
       if (request.addSheet) {
-        const response = this.handleAddSheet(request.addSheet)
-        replies.push({ addSheet: response })
+        response.replies.push({
+          addSheet: this.handleAddSheet(request.addSheet),
+        })
       }
     }
 
-    return {
-      spreadsheetId: this.spreadsheet.spreadsheetId,
-      replies,
-      updatedSpreadsheet: this.spreadsheet,
-    }
+    return response
   }
 
   private handleAddSheet(request: AddSheetRequest): AddSheetResponse {
-    const properties: SheetProperties = {
+    const properties: Omit<WorksheetProperties, "dataSourceSheetProperties"> = {
+      index: this.spreadsheet.sheets.length,
+      hidden: false,
+      rightToLeft: false,
+      tabColor: BLACK,
+      tabColorStyle: { rgbColor: BLACK },
+      sheetType: "GRID",
       title: request.properties.title,
       sheetId: this.spreadsheet.sheets.length,
       gridProperties: {
@@ -453,11 +465,13 @@ export class GoogleSheetsMock {
     }
 
     this.spreadsheet.sheets.push({
-      properties,
+      properties: properties as WorksheetProperties,
       data: [this.createEmptyGrid(100, 26)],
     })
 
-    return { properties }
+    // dataSourceSheetProperties is only returned by the API if the sheet type is
+    // DATA_SOURCE, which we aren't using, so sadly we need to cast here.
+    return { properties: properties as WorksheetProperties }
   }
 
   private handleGetSpreadsheet(): Spreadsheet {
@@ -518,7 +532,7 @@ export class GoogleSheetsMock {
         if (!cell) {
           throw new Error("Cell not found")
         }
-        values.push(this.unwrapValue(cell.userEnteredValue))
+        values.push(this.cellValue(cell))
       }
       valueRange.values.push(values)
     }
@@ -529,28 +543,32 @@ export class GoogleSheetsMock {
   private valuesToRowData(values: Value[]): RowData {
     return {
       values: values.map(v => {
-        return { userEnteredValue: this.createValue(v) }
+        return this.createCellData(v)
       }),
     }
   }
 
   private unwrapValue(from: ExtendedValue): Value {
-    if (from.stringValue !== undefined) {
+    if ("stringValue" in from) {
       return from.stringValue
-    } else if (from.numberValue !== undefined) {
+    } else if ("numberValue" in from) {
       return from.numberValue
-    } else if (from.boolValue !== undefined) {
+    } else if ("boolValue" in from) {
       return from.boolValue
-    } else if (from.formulaValue !== undefined) {
+    } else if ("formulaValue" in from) {
       return from.formulaValue
     } else {
       return null
     }
   }
 
+  private cellValue(from: CellData): Value {
+    return this.unwrapValue(from.userEnteredValue)
+  }
+
   private createValue(from: Value): ExtendedValue {
     if (from == null) {
-      return {}
+      return {} as ExtendedValue
     } else if (typeof from === "string") {
       return {
         stringValue: from,
@@ -568,29 +586,52 @@ export class GoogleSheetsMock {
     }
   }
 
+  /**
+   * Because the structure of a CellData is very nested and contains a lot of
+   * extraneous formatting information, this function abstracts it away and just
+   * lets you create a cell containing a given value.
+   *
+   * When you want to read the value back out, use {@link cellValue}.
+   *
+   * @param value value to store in the returned cell
+   * @returns a CellData containing the given value. Read it back out with
+   * {@link cellValue}
+   */
+  private createCellData(value: Value): CellData {
+    return {
+      userEnteredValue: this.createValue(value),
+      effectiveValue: this.createValue(value),
+      formattedValue: value?.toString() || "",
+      userEnteredFormat: DEFAULT_CELL_FORMAT,
+      effectiveFormat: DEFAULT_CELL_FORMAT,
+    }
+  }
+
   private createEmptyGrid(numRows: number, numCols: number): GridData {
     const rowData: RowData[] = []
     for (let row = 0; row < numRows; row++) {
       const cells: CellData[] = []
       for (let col = 0; col < numCols; col++) {
-        cells.push({ userEnteredValue: this.createValue(null) })
+        cells.push(this.createCellData(null))
       }
       rowData.push({ values: cells })
     }
-    const rowMetadata: DimensionProperties[] = []
+    const rowMetadata: WorksheetDimensionProperties[] = []
     for (let row = 0; row < numRows; row++) {
       rowMetadata.push({
         hiddenByFilter: false,
         hiddenByUser: false,
         pixelSize: 100,
+        developerMetadata: [],
       })
     }
-    const columnMetadata: DimensionProperties[] = []
+    const columnMetadata: WorksheetDimensionProperties[] = []
     for (let col = 0; col < numCols; col++) {
       columnMetadata.push({
         hiddenByFilter: false,
         hiddenByUser: false,
         pixelSize: 100,
+        developerMetadata: [],
       })
     }
 
@@ -616,7 +657,7 @@ export class GoogleSheetsMock {
     if (!cellData) {
       return undefined
     }
-    return this.unwrapValue(cellData.userEnteredValue)
+    return this.cellValue(cellData)
   }
 
   private getCellNumericIndexes(

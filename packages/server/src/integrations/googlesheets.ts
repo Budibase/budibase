@@ -379,6 +379,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       case Operation.BULK_CREATE:
         return this.createBulk({ sheet, rows: json.body as Row[] })
       case Operation.BULK_UPSERT:
+        // This is technically not correct because it won't update existing
+        // rows, but it's better than not having this functionality at all.
         return this.createBulk({ sheet, rows: json.body as Row[] })
       case Operation.READ:
         return this.read({ ...json, sheet })
@@ -397,14 +399,19 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
           sheet,
         })
       case Operation.CREATE_TABLE:
-        if (json.table === undefined) {
+        if (json.table == null) {
           throw new Error(
             "attempted to create a table without specifying the table to create"
           )
         }
         return this.createTable(json.table)
       case Operation.UPDATE_TABLE:
-        return this.updateTable(json.table!)
+        if (json.table == null) {
+          throw new Error(
+            "attempted to create a table without specifying the table to create"
+          )
+        }
+        return this.updateTable(json.table)
       case Operation.DELETE_TABLE:
         return this.deleteTable(json?.table?.name)
       default:
