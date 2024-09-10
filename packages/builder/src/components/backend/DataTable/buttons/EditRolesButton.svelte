@@ -5,11 +5,9 @@
   let modal
 </script>
 
-<div>
-  <Button secondary icon="UsersLock" on:click on:click={modal.show}>
-    Edit roles
-  </Button>
-</div>
+<Button secondary icon="UsersLock" on:click on:click={modal.show}>
+  Edit roles
+</Button>
 <Modal bind:this={modal} on:show on:hide>
   <EditRolesModal />
 </Modal>
