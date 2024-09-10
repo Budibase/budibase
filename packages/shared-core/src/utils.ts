@@ -182,7 +182,7 @@ export const processSearchFilters = (
 
     return migratedSetting
   } else if (!filters?.groups) {
-    return defaultCfg
+    return null
   }
   return filters
 }
