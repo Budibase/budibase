@@ -69,13 +69,14 @@
     try {
       await API.saveConfig(fullAIConfig)
       notifications.success(`Successfully saved and activated AI Configuration`)
-      await fetchAIConfig()
     } catch (error) {
       notifications.error(
         `Failed to save AI Configuration, reason: ${
           error?.message || "Unknown"
         }`
       )
+    } finally {
+      await fetchAIConfig()
     }
   }
 
@@ -88,11 +89,12 @@
     try {
       await API.saveConfig(fullAIConfig)
       notifications.success(`Deleted config`)
-      await fetchAIConfig()
     } catch (error) {
       notifications.error(
         `Failed to delete config, reason: ${error?.message || "Unknown"}`
       )
+    } finally {
+      await fetchAIConfig()
     }
   }
 

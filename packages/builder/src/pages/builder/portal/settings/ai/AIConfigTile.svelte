@@ -6,6 +6,13 @@
   import TogetherAILogo from "./logos/TogetherAI.svelte"
   import { Providers } from "./constants"
 
+  const logos = {
+    ["Budibase AI"]: BudibaseLogo,
+    [Providers.OpenAI.name]: OpenAILogo,
+    [Providers.Anthropic.name]: AnthropicLogo,
+    [Providers.TogetherAI.name]: TogetherAILogo,
+  }
+
   export let config
   export let disabled
 
@@ -17,15 +24,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div on:click class:disabled class="option">
   <div class="icon">
-    {#if config.name === "Budibase AI"}
-      <BudibaseLogo height="30" width="30" />
-    {:else if config.provider === Providers.OpenAI.name}
-      <OpenAILogo height="30" width="30" />
-    {:else if config.provider === Providers.Anthropic.name}
-      <AnthropicLogo height="30" width="30" />
-    {:else if config.provider === Providers.TogetherAI.name}
-      <TogetherAILogo height="30" width="30" />
-    {/if}
+    <svelte:component this={logos[config.name || config.provider]} height="30" width="30" />
   </div>
   <div class="header">
     <Body>{config.provider}</Body>
