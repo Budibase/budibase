@@ -45,18 +45,6 @@ async function updatePermissionOnRole(
   }: { roleId: string; resourceId: string; level: PermissionLevel },
   updateType: PermissionUpdateType
 ) {
-  const allowedAction = await sdk.permissions.resourceActionAllowed({
-    resourceId,
-    level,
-  })
-
-  if (!allowedAction.allowed) {
-    throw new HTTPError(
-      `You are not allowed to '${allowedAction.level}' the resource type '${allowedAction.resourceType}'`,
-      403
-    )
-  }
-
   const db = context.getAppDB()
   const remove = updateType === PermissionUpdateType.REMOVE
   const isABuiltin = roles.isBuiltin(roleId)
@@ -182,9 +170,6 @@ export async function getResourcePerms(
       },
       {} as Record<string, ResourcePermissionInfo>
     ),
-    requiresPlanToModify: (
-      await sdk.permissions.allowsExplicitPermissions(resourceId)
-    ).minPlan,
   }
 }
 
