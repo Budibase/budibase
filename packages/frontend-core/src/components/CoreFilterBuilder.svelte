@@ -39,12 +39,6 @@
   export let toReadable
   export let toRuntime
 
-  const defaultConf = {
-    logicalOperator: FilterGroupLogicalOperator.ALL,
-    onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-    groups: [],
-  }
-
   $: editableFilters = filters ? Helpers.cloneDeep(filters) : null
 
   $: {
@@ -218,8 +212,12 @@
         }
       }
     } else if (addGroup) {
-      if (!editable) {
-        editable = defaultConf
+      if (!editable?.groups?.length) {
+        editable = {
+          logicalOperator: FilterGroupLogicalOperator.ALL,
+          onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          groups: [],
+        }
       }
       editable.groups.push({
         logicalOperator: Constants.FilterOperator.ANY,
