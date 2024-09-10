@@ -146,7 +146,7 @@
     <InfoDisplay
       error
       icon="Alert"
-      body="Your previous configuration is shown above.<br/> Please choose a new role for both read and write access."
+      body="Your previous configuration is shown above.<br/> Please choose a single role for read and write access."
     />
   {/if}
 
@@ -190,7 +190,7 @@
   </List>
 
   {#if dependantsInfoMessage}
-    <InfoDisplay body={dependantsInfoMessage} />
+    <InfoDisplay info body={dependantsInfoMessage} />
   {/if}
 
   <EditRolesButton

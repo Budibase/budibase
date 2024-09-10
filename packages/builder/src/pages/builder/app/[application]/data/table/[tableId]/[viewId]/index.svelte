@@ -50,11 +50,11 @@
   buttonsCollapsed
 >
   <svelte:fragment slot="controls">
+    <GridManageAccessButton />
     <GridFilterButton />
     <GridSortButton />
     <GridSizeButton />
     <GridColumnsSettingButton />
-    <GridManageAccessButton />
     <GridRowActionsButton />
     <GridScreensButton on:request-generate={() => generateButton?.show()} />
   </svelte:fragment>
