@@ -29,6 +29,9 @@ async function parseSchema(view: CreateViewRequest) {
           acc[key] = {
             visible: fieldSchema.visible,
             readonly: fieldSchema.readonly,
+            order: fieldSchema.order,
+            width: fieldSchema.width,
+            icon: fieldSchema.icon,
           }
           return acc
         }, {})
