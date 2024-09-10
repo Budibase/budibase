@@ -49,6 +49,13 @@ function getBaseLimit() {
   return envLimit || 5000
 }
 
+function getRelationshipLimit() {
+  const envLimit = environment.SQL_MAX_RELATED_ROWS
+    ? parseInt(environment.SQL_MAX_RELATED_ROWS)
+    : null
+  return envLimit || 500
+}
+
 function getTableName(table?: Table): string | undefined {
   // SQS uses the table ID rather than the table name
   if (
@@ -921,7 +928,7 @@ class InternalBuilder {
       const primaryKey = `${toAlias}.${toPrimary || toKey}`
       let subQuery: Knex.QueryBuilder = knex
         .from(toTableWithSchema)
-        .limit(getBaseLimit())
+        .limit(getRelationshipLimit())
         // add sorting to get consistent order
         .orderBy(primaryKey)
 
