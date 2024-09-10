@@ -399,14 +399,14 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
           sheet,
         })
       case Operation.CREATE_TABLE:
-        if (json.table == null) {
+        if (!json.table) {
           throw new Error(
             "attempted to create a table without specifying the table to create"
           )
         }
         return this.createTable(json.table)
       case Operation.UPDATE_TABLE:
-        if (json.table == null) {
+        if (!json.table) {
           throw new Error(
             "attempted to create a table without specifying the table to create"
           )
