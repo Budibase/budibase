@@ -4,20 +4,24 @@
   import { Icon } from "@budibase/bbui"
   import { Roles } from "constants/backend"
   import { NodeWidth, NodeHeight } from "./constants"
+  import { getContext, tick } from "svelte"
 
   export let data
   export let isConnectable
   export let id
 
+  const { autoLayout } = getContext("flow")
   const flow = useSvelteFlow()
   const { label, description, custom } = data
 
   $: color = RoleUtils.getRoleColour(id)
 
-  const deleteNode = () => {
+  const deleteNode = async () => {
     flow.deleteElements({
       nodes: [{ id }],
     })
+    await tick()
+    autoLayout()
   }
 </script>
 

@@ -2,9 +2,8 @@
   import { Button, Helpers, ActionButton } from "@budibase/bbui"
   import { useSvelteFlow, Position } from "@xyflow/svelte"
   import { getContext } from "svelte"
-  import { dagreLayout } from "./layout"
 
-  const { nodes, edges } = getContext("flow")
+  const { nodes, autoLayout } = getContext("flow")
   const flow = useSvelteFlow()
 
   const addRole = () => {
@@ -24,13 +23,6 @@
       },
     ])
     autoLayout()
-  }
-
-  const autoLayout = () => {
-    const layout = dagreLayout({ nodes: $nodes, edges: $edges })
-    nodes.set(layout.nodes)
-    edges.set(layout.edges)
-    flow.fitView({ maxZoom: 1 })
   }
 </script>
 
