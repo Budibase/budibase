@@ -71,7 +71,7 @@ export function getQueryIndex(viewName: ViewName) {
 export const isTableId = (id: string) => {
   // this includes datasource plus tables
   return (
-    id &&
+    !!id &&
     (id.startsWith(`${DocumentType.TABLE}${SEPARATOR}`) ||
       id.startsWith(`${DocumentType.DATASOURCE_PLUS}${SEPARATOR}`))
   )

@@ -76,7 +76,9 @@ export const ExtendedBudibaseRoleOptions = [
     value: BudibaseRoles.Owner,
     sortOrder: 0,
   },
-].concat(BudibaseRoleOptions)
+]
+  .concat(BudibaseRoleOptions)
+  .concat(BudibaseRoleOptionsOld)
 
 export const PlanType = {
   FREE: "free",
@@ -172,3 +174,9 @@ export const TypeIconMap = {
 export const OptionColours = [...new Array(12).keys()].map(idx => {
   return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, 0.3)`
 })
+
+export const FieldPermissions = {
+  WRITABLE: "writable",
+  READONLY: "readonly",
+  HIDDEN: "hidden",
+}

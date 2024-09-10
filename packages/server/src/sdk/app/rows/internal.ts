@@ -10,12 +10,14 @@ import {
 import * as linkRows from "../../../db/linkedRows"
 import { InternalTables } from "../../../db/utils"
 import { getFullUser } from "../../../utilities/users"
+import { tryExtractingTableAndViewId } from "./utils"
 
 export async function save(
-  tableId: string,
+  tableOrViewId: string,
   inputs: Row,
   userId: string | undefined
 ) {
+  const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
   inputs.tableId = tableId
 
   if (!inputs._rev && !inputs._id) {
@@ -50,14 +52,17 @@ export async function save(
   return finaliseRow(table, row, {
     oldTable: dbTable,
     updateFormula: true,
+    fromViewId: viewId,
   })
 }
 
-export async function find(tableId: string, rowId: string): Promise<Row> {
+export async function find(tableOrViewId: string, rowId: string): Promise<Row> {
+  const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
+
   const table = await sdk.tables.getTable(tableId)
   let row = await findRow(tableId, rowId)
 
-  row = await outputProcessing(table, row)
+  row = await outputProcessing(table, row, { squash: true, fromViewId: viewId })
   return row
 }
 

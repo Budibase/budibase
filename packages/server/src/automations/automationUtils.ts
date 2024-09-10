@@ -294,3 +294,13 @@ export function typecastForLooping(input: LoopStepInputs) {
   }
   return input.binding
 }
+
+export function ensureMaxIterationsAsNumber(
+  value: number | string | undefined
+): number | undefined {
+  if (typeof value === "number") return value
+  if (typeof value === "string") {
+    return parseInt(value)
+  }
+  return undefined
+}

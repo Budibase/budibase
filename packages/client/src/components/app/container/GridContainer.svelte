@@ -4,8 +4,6 @@
   import { GridRowHeight, GridColumns } from "constants"
   import { memo } from "@budibase/frontend-core"
 
-  export let addEmptyRows = false
-
   const component = getContext("component")
   const { styleable, builderStore } = getContext("sdk")
   const context = getContext("context")
@@ -18,16 +16,12 @@
   let styles = memo({})
 
   $: inBuilder = $builderStore.inBuilder
-  $: requiredRows = calculateRequiredRows(
-    $children,
-    mobile,
-    addEmptyRows && inBuilder
-  )
+  $: addEmptyRows = $component.isRoot && inBuilder
+  $: requiredRows = calculateRequiredRows($children, mobile, addEmptyRows)
   $: requiredHeight = requiredRows * GridRowHeight
   $: availableRows = Math.floor(height / GridRowHeight)
   $: rows = Math.max(requiredRows, availableRows)
   $: mobile = $context.device.mobile
-  $: empty = $component.empty
   $: colSize = width / GridColumns
   $: styles.set({
     ...$component.styles,
@@ -40,7 +34,6 @@
       "--col-size": colSize,
       "--row-size": GridRowHeight,
     },
-    empty: false,
   })
 
   // Calculates the minimum number of rows required to render all child
@@ -145,9 +138,7 @@
       {/each}
     </div>
   {/if}
-
-  <!-- Only render the slot if not empty, as we don't want the placeholder -->
-  {#if !empty && mounted}
+  {#if mounted}
     <slot />
   {/if}
 </div>
