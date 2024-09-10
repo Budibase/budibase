@@ -1,17 +1,48 @@
 <script>
-  import { Heading } from "@budibase/bbui"
-  import { writable } from "svelte/store"
+  import { Heading, Helpers } from "@budibase/bbui"
+  import { derived, writable } from "svelte/store"
   import { SvelteFlow, Background, BackgroundVariant } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import RoleNode from "./RoleNode.svelte"
   import { initialLayout, dagreLayout } from "./layout"
-  import { onMount, setContext } from "svelte"
+  import { onMount, setContext, tick } from "svelte"
   import Controls from "./Controls.svelte"
+  import { Roles } from "constants/backend"
 
   const nodes = writable([])
-  const edges = writable([])
+  const edgeStore = writable([])
+  const enrichedEdges = derived([edgeStore, nodes], ([$edgeStore, $nodes]) => {
+    let additions = []
+    for (let node of $nodes) {
+      // If a certain node does not inherit anything, make it inherit basic
+      if (
+        !$edgeStore.some(x => x.target === node.id) &&
+        node.id !== Roles.BASIC
+      ) {
+        additions.push({
+          id: Helpers.uuid(),
+          source: Roles.BASIC,
+          target: node.id,
+          animated: true,
+        })
+      }
+    }
+    return [...$edgeStore, ...additions]
+  })
+  const edges = {
+    ...edgeStore,
+    subscribe: enrichedEdges.subscribe,
+  }
 
-  setContext("flow", { nodes, edges })
+  setContext("flow", {
+    nodes,
+    edges,
+    autoLayout: async () => {
+      const layout = dagreLayout({ nodes: $nodes, edges: $edges })
+      nodes.set(layout.nodes)
+      edges.set(layout.edges)
+    },
+  })
 
   onMount(() => {
     const layout = dagreLayout(initialLayout())
