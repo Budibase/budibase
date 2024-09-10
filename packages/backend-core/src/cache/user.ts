@@ -96,7 +96,7 @@ export async function getUser({
   // try cache
   let user: User = await client.get(userId)
   if (!user) {
-    user = await populateUser(userId, tenantId)
+    user = await populateUser(userId, tenantId, email)
     await client.store(userId, user, EXPIRY_SECONDS)
   }
   if (user && !user.tenantId && tenantId) {
