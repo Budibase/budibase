@@ -1,46 +1,36 @@
-import { configs } from "@budibase/backend-core"
-import { UserCtx } from "@budibase/types"
 import * as pro from "@budibase/pro"
-import { find, verifyAIConfig } from "../configs"
-
-jest.mock("@budibase/backend-core", () => ({
-  ...jest.requireActual("@budibase/backend-core"),
-  configs: {
-    getConfig: jest.fn(),
-    save: jest.fn(),
-  },
-}))
+import { verifyAIConfig } from "../configs"
+import { TestConfiguration, structures } from "../../../../tests"
 
 describe("Global configs controller", () => {
+  const config = new TestConfiguration()
+
+  beforeAll(async () => {
+    await config.beforeAll()
+  })
+
+  afterAll(async () => {
+    await config.afterAll()
+  })
+
   afterEach(() => {
     jest.resetAllMocks()
   })
 
   it("Should strip secrets when pulling AI config", async () => {
-    configs.getConfig.mockResolvedValue({
-      config: {
-        ai: {
-          apiKey: "abc123APIKey",
-          baseUrl: "https://api.example.com",
-        },
-      },
-    })
-    const ctx = {
-      params: {
-        type: "ai",
-      },
-      throw: jest.fn(),
-    } as UserCtx
-
-    await find(ctx)
-
-    expect(ctx.body).toEqual({
-      config: {
-        ai: {
-          apiKey: "--secret-value--",
-          baseUrl: "https://api.example.com",
-        },
-      },
+    const data = structures.configs.ai()
+    await config.api.configs.saveConfig(data)
+    const response = await config.api.configs.getAIConfig()
+    expect(response.body.config).toEqual({
+      ai: {
+        active: true,
+        apiKey: "--secret-value--",
+        baseUrl: "https://api.example.com",
+        defaultModel: "gpt4",
+        isDefault: false,
+        name: "Test",
+        provider: "OpenAI"
+      }
     })
   })
 
@@ -48,36 +38,25 @@ describe("Global configs controller", () => {
     jest
       .spyOn(pro.features, "isBudibaseAIEnabled")
       .mockImplementation(() => true)
-    configs.getConfig.mockResolvedValue({
-      config: {
-        ai: {
-          apiKey: "abc123APIKey",
-          baseUrl: "https://api.example.com",
-        },
-      },
-    })
-    const ctx = {
-      params: {
-        type: "ai",
-      },
-      throw: jest.fn(),
-    } as UserCtx
+    const data = structures.configs.ai()
+    await config.api.configs.saveConfig(data)
+    const response = await config.api.configs.getAIConfig()
 
-    await find(ctx)
-
-    expect(ctx.body).toEqual({
-      config: {
-        budibase_ai: {
-          provider: "OpenAI",
-          active: true,
-          isDefault: true,
-          defaultModel: undefined,
-          name: "Budibase AI",
-        },
-        ai: {
-          apiKey: "--secret-value--",
-          baseUrl: "https://api.example.com",
-        },
+    expect(response.body.config).toEqual({
+      budibase_ai: {
+        provider: "OpenAI",
+        active: true,
+        isDefault: true,
+        name: "Budibase AI",
+      },
+      ai: {
+        active: true,
+        apiKey: "--secret-value--",
+        baseUrl: "https://api.example.com",
+        defaultModel: "gpt4",
+        isDefault: false,
+        name: "Test",
+        provider: "OpenAI"
       },
     })
   })
@@ -86,49 +65,29 @@ describe("Global configs controller", () => {
     jest
       .spyOn(pro.features, "isBudibaseAIEnabled")
       .mockImplementation(() => false)
-    configs.getConfig.mockResolvedValue({
-      config: {
-        ai: {
-          apiKey: "abc123APIKey",
-          baseUrl: "https://api.example.com",
-        },
-      },
-    })
-    const ctx = {
-      params: {
-        type: "ai",
-      },
-      throw: jest.fn(),
-    } as UserCtx
+    const data = structures.configs.ai()
+    await config.api.configs.saveConfig(data)
+    const response = await config.api.configs.getAIConfig()
 
-    await find(ctx)
-
-    expect(ctx.body).toEqual({
-      config: {
-        ai: {
-          apiKey: "--secret-value--",
-          baseUrl: "https://api.example.com",
-        },
+    expect(response.body.config).toEqual({
+      ai: {
+        active: true,
+        apiKey: "--secret-value--",
+        baseUrl: "https://api.example.com",
+        defaultModel: "gpt4",
+        isDefault: false,
+        name: "Test",
+        provider: "OpenAI"
       },
     })
   })
 
   it("Should not update existing secrets when updating an existing AI Config", async () => {
-    const newConfig = {
-      type: "ai",
-      config: {
-        aiconfig: {
-          provider: "OpenAI",
-          isDefault: true,
-          name: "MyConfig",
-          active: true,
-          defaultModel: "gpt4",
-          apiKey: "--secret-value--",
-        },
-      },
-    }
+    const data = structures.configs.ai()
+    await config.api.configs.saveConfig(data)
+    const existingConfig = await config.api.configs.getAIConfig()
 
-    const existingConfig = {
+    const newConfig = {
       type: "ai",
       config: {
         aiconfig: {
