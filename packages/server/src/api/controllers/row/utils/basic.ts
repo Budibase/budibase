@@ -1,5 +1,5 @@
 // need to handle table name + field or just field, depending on if relationships used
-import { FieldSchema, FieldType, Row, Table } from "@budibase/types"
+import { FieldSchema, FieldType, Row, Table, JsonTypes } from "@budibase/types"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
@@ -60,6 +60,22 @@ export function generateIdForRow(
     return ""
   }
   return generateRowIdField(idParts)
+}
+
+function fixJsonTypes(row: Row, table: Table) {
+  for (let [fieldName, schema] of Object.entries(table.schema)) {
+    if (JsonTypes.includes(schema.type) && typeof row[fieldName] === "string") {
+      try {
+        row[fieldName] = JSON.parse(row[fieldName])
+      } catch (err) {
+        if (!helpers.schema.isDeprecatedSingleUserColumn(schema)) {
+          // couldn't convert back to array, ignore
+          delete row[fieldName]
+        }
+      }
+    }
+  }
+  return row
 }
 
 export function basicProcessing({
@@ -136,12 +152,15 @@ export function basicProcessing({
         const sortField =
           relatedTable.primaryDisplay || relatedTable.primary![0]!
         thisRow[col] = (thisRow[col] as Row[])
-          .map(relatedRow => {
-            relatedRow._id = relatedRow._id
-              ? relatedRow._id
-              : generateIdForRow(relatedRow, relatedTable)
-            return relatedRow
-          })
+          .map(relatedRow =>
+            basicProcessing({
+              row: relatedRow,
+              table: relatedTable,
+              tables,
+              isLinked: false,
+              sqs,
+            })
+          )
           .sort((a, b) => {
             const aField = a?.[sortField],
               bField = b?.[sortField]
@@ -157,24 +176,5 @@ export function basicProcessing({
       }
     }
   }
-  return thisRow
-}
-
-export function fixArrayTypes(row: Row, table: Table) {
-  for (let [fieldName, schema] of Object.entries(table.schema)) {
-    if (
-      [FieldType.ARRAY, FieldType.BB_REFERENCE].includes(schema.type) &&
-      typeof row[fieldName] === "string"
-    ) {
-      try {
-        row[fieldName] = JSON.parse(row[fieldName])
-      } catch (err) {
-        if (!helpers.schema.isDeprecatedSingleUserColumn(schema)) {
-          // couldn't convert back to array, ignore
-          delete row[fieldName]
-        }
-      }
-    }
-  }
-  return row
+  return fixJsonTypes(thisRow, table)
 }
