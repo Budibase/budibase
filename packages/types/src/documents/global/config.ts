@@ -121,7 +121,7 @@ export interface AIInnerConfig {
     active: boolean
     baseUrl?: string
     apiKey?: string
-    defaultModel: string
+    defaultModel?: string
   }
 }
 

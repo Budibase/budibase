@@ -32,6 +32,7 @@ import {
   AIConfig,
   PASSWORD_REPLACEMENT,
   isAIConfig,
+  AIInnerConfig,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
 
@@ -210,13 +211,13 @@ async function verifyOIDCConfig(config: OIDCConfigs) {
 }
 
 export async function verifyAIConfig(
-  config: AIConfig,
+  configToSave: AIInnerConfig,
   existingConfig: AIConfig
 ) {
   // ensure that the redacted API keys are not overwritten in the DB
   for (let uuid in existingConfig.config) {
-    if (config[uuid]?.apiKey === PASSWORD_REPLACEMENT) {
-      config[uuid].apiKey = existingConfig.config[uuid].apiKey
+    if (configToSave[uuid]?.apiKey === PASSWORD_REPLACEMENT) {
+      configToSave[uuid].apiKey = existingConfig.config[uuid].apiKey
     }
   }
 }
@@ -351,7 +352,7 @@ async function enrichAIConfig(aiConfig: AIConfig) {
       provider: "OpenAI",
       active: true,
       isDefault: !defaultConfigExists,
-      defaultModel: env.BUDIBASE_AI_DEFAULT_MODEL,
+      defaultModel: env.BUDIBASE_AI_DEFAULT_MODEL || "",
       name: "Budibase AI",
     }
   }
