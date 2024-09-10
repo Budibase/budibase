@@ -49,6 +49,7 @@ describe("Global configs controller", () => {
         active: true,
         isDefault: true,
         name: "Budibase AI",
+        defaultModel: "",
       },
       ai: {
         active: true,
@@ -86,20 +87,20 @@ describe("Global configs controller", () => {
   it("Should not update existing secrets when updating an existing AI Config", async () => {
     const data = structures.configs.ai()
     await config.api.configs.saveConfig(data)
-    const existingConfig = await config.api.configs.getAIConfig()
 
     const newConfig: AIInnerConfig = {
-      aiconfig: {
+      ai: {
         provider: "OpenAI",
         isDefault: true,
+        apiKey: "--secret-value--",
         name: "MyConfig",
         active: true,
         defaultModel: "gpt4",
       },
     }
 
-    await verifyAIConfig(newConfig, existingConfig.body)
+    await verifyAIConfig(newConfig, data)
     // should be unchanged
-    expect(newConfig.aiconfig.apiKey).toEqual("myapikey")
+    expect(newConfig.ai.apiKey).toEqual("myapikey")
   })
 })
