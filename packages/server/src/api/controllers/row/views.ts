@@ -36,7 +36,7 @@ export async function searchView(
   // Enrich saved query with ephemeral query params.
   // We prevent searching on any fields that are saved as part of the query, as
   // that could let users find rows they should not be allowed to access.
-  let query: any = dataFilters.buildQuery(view.query ?? [])
+  let query: any = dataFilters.buildQuery(view.query)
   if (body.query) {
     // Delete extraneous search params that cannot be overridden
     delete body.query.onEmptyFilter
