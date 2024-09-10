@@ -335,7 +335,7 @@ function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
 
 async function enrichAIConfig(aiConfig: AIConfig) {
   // Strip out the API Keys from the response so they don't show in the UI
-  for (let key in aiConfig.config) {
+  for (const key in aiConfig.config) {
     if (aiConfig.config[key].apiKey) {
       aiConfig.config[key].apiKey = PASSWORD_REPLACEMENT
     }
