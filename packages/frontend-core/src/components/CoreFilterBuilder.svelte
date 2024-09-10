@@ -39,13 +39,13 @@
   export let toReadable
   export let toRuntime
 
-  $: editableFilters = filters
-    ? Helpers.cloneDeep(filters)
-    : {
-        logicalOperator: FilterGroupLogicalOperator.ALL,
-        onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-        groups: [],
-      }
+  const defaultConf = {
+    logicalOperator: FilterGroupLogicalOperator.ALL,
+    onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+    groups: [],
+  }
+
+  $: editableFilters = filters ? Helpers.cloneDeep(filters) : null
 
   $: {
     if (
@@ -191,7 +191,7 @@
     } = req
 
     let editable = Helpers.cloneDeep(editableFilters)
-    let targetGroup = editable.groups?.[groupIdx]
+    let targetGroup = editable?.groups?.[groupIdx]
     let targetFilter = targetGroup?.filters?.[filterIdx]
 
     if (targetFilter) {
@@ -202,7 +202,11 @@
       }
     } else if (targetGroup) {
       if (deleteGroup) {
-        editable.groups.splice(groupIdx, 1)
+        if (editable.groups.length > 1) {
+          editable.groups.splice(groupIdx, 1)
+        } else {
+          editable = {}
+        }
       } else if (addFilter) {
         targetGroup.filters.push({
           valueType: FilterValueType.VALUE,
@@ -214,6 +218,9 @@
         }
       }
     } else if (addGroup) {
+      if (!editable) {
+        editable = defaultConf
+      }
       editable.groups.push({
         logicalOperator: Constants.FilterOperator.ANY,
         filters: [
@@ -381,7 +388,7 @@
       {/if}
 
       <div class="filters-footer">
-        {#if behaviourFilters && editableFilters?.groups.length}
+        {#if behaviourFilters && editableFilters?.groups?.length}
           <div class="empty-filter">
             <span>Return</span>
             <span class="empty-filter-picker">

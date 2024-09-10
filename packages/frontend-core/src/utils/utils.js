@@ -1,6 +1,5 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
-import * as Constants from "../constants"
 
 export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -351,59 +350,4 @@ export const buildMultiStepFormBlockDefaultProps = props => {
     buttons,
     title,
   }
-}
-
-export const handleFilterChange = (req, filters) => {
-  const {
-    groupIdx,
-    filterIdx,
-    filter,
-    group,
-    addFilter,
-    addGroup,
-    deleteGroup,
-    deleteFilter,
-    logicalOperator,
-    onEmptyFilter,
-  } = req
-
-  let editable = Helpers.cloneDeep(filters)
-  let targetGroup = editable.groups?.[groupIdx]
-  let targetFilter = targetGroup?.filters?.[filterIdx]
-
-  if (targetFilter) {
-    if (deleteFilter) {
-      targetGroup.filters.splice(filterIdx, 1)
-    } else if (filter) {
-      targetGroup.filters[filterIdx] = filter
-    }
-  } else if (targetGroup) {
-    if (deleteGroup) {
-      editable.groups.splice(groupIdx, 1)
-    } else if (addFilter) {
-      targetGroup.filters.push({})
-    } else if (group) {
-      editable.groups[groupIdx] = {
-        ...targetGroup,
-        ...group,
-      }
-    }
-  } else if (addGroup) {
-    editable.groups.push({
-      logicalOperator: Constants.FilterOperator.ANY,
-      filters: [{}],
-    })
-  } else if (logicalOperator) {
-    editable = {
-      ...editable,
-      logicalOperator,
-    }
-  } else if (onEmptyFilter) {
-    editable = {
-      ...editable,
-      onEmptyFilter,
-    }
-  }
-
-  return editable
 }

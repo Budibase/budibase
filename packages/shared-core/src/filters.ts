@@ -321,6 +321,11 @@ const builderFilter = (expression: SearchFilter) => {
     containsAny: {},
   }
   let { operator, field, type, value, externalType, onEmptyFilter } = expression
+
+  if (!operator || !field) {
+    return
+  }
+
   const queryOperator = operator as SearchFilterOperator
   const isHbs =
     typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
@@ -446,7 +451,9 @@ export const buildQuery = (filter: SearchFilterGroup | SearchFilter[]) => {
       conditions: parsedFilter.groups?.map((group: SearchFilterGroup) => {
         return {
           [operatorMap[group.logicalOperator]]: {
-            conditions: group.filters?.map(x => builderFilter(x)),
+            conditions: group.filters
+              ?.map(x => builderFilter(x))
+              .filter(filter => filter),
           },
         }
       }),
