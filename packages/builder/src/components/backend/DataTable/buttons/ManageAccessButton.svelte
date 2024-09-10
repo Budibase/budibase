@@ -15,7 +15,6 @@
   import { capitalise } from "helpers"
   import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { Roles } from "constants/backend"
-  import RoleEditor from "./RoleEditor.svelte"
 
   export let resourceId
 
@@ -196,10 +195,6 @@
     <EditRolesButton
       on:show={() => (showPopover = false)}
       on:hide={() => (showPopover = true)}
-    />
-    <RoleEditor
-      on:drawerShow={() => (showPopover = false)}
-      on:drawerHide={() => (showPopover = true)}
     />
   </div>
 </DetailPopover>
