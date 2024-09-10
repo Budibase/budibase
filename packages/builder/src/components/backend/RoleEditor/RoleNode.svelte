@@ -1,10 +1,18 @@
 <script>
   import { RoleUtils } from "@budibase/frontend-core"
   import { Handle, Position, useSvelteFlow } from "@xyflow/svelte"
-  import { Icon } from "@budibase/bbui"
+  import {
+    Icon,
+    Input,
+    ColorPicker,
+    Modal,
+    ModalContent,
+    FieldLabel,
+  } from "@budibase/bbui"
   import { Roles } from "constants/backend"
   import { NodeWidth, NodeHeight } from "./constants"
   import { getContext, tick } from "svelte"
+  import { template } from "lodash"
 
   export let data
   export let isConnectable
@@ -12,9 +20,13 @@
 
   const { autoLayout } = getContext("flow")
   const flow = useSvelteFlow()
-  const { label, description, custom } = data
 
-  $: color = RoleUtils.getRoleColour(id)
+  let anchor
+  let modal
+  let tempLabel
+  let tempColor
+
+  $: color = data.color || RoleUtils.getRoleColour(id)
 
   const deleteNode = async () => {
     flow.deleteElements({
@@ -23,29 +35,43 @@
     await tick()
     autoLayout()
   }
+
+  const openPopover = () => {
+    tempLabel = data.label
+    tempColor = color
+    modal.show()
+  }
+
+  const saveChanges = () => {
+    flow.updateNodeData(id, {
+      label: tempLabel,
+      color: tempColor,
+    })
+  }
 </script>
 
 <div
   class="node"
   class:selected={false}
   style={`--color:${color}; --width:${NodeWidth}px; --height:${NodeHeight}px;`}
+  bind:this={anchor}
 >
   <div class="color" />
   <div class="content">
     <div class="title">
       <div class="label">
-        {label}
+        {data.label}
       </div>
-      {#if custom}
+      {#if data.custom}
         <div class="buttons">
-          <Icon size="S" name="Edit" hoverable />
+          <Icon size="S" name="Edit" hoverable on:click={openPopover} />
           <Icon size="S" name="Delete" hoverable on:click={deleteNode} />
         </div>
       {/if}
     </div>
-    {#if description}
+    {#if data.description}
       <div class="description">
-        {description}
+        {data.description}
       </div>
     {/if}
   </div>
@@ -56,6 +82,24 @@
     <Handle type="source" position={Position.Right} {isConnectable} />
   {/if}
 </div>
+
+<Modal bind:this={modal}>
+  <ModalContent
+    title={`Edit ${data.label}`}
+    confirmText="Save"
+    onConfirm={saveChanges}
+  >
+    <Input
+      label="Name"
+      value={tempLabel}
+      on:change={e => (tempLabel = e.detail)}
+    />
+    <div>
+      <FieldLabel label="Color" />
+      <ColorPicker value={tempColor} on:change={e => (tempColor = e.detail)} />
+    </div>
+  </ModalContent>
+</Modal>
 
 <style>
   .node {
