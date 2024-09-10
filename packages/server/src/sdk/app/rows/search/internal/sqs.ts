@@ -18,7 +18,6 @@ import {
 } from "@budibase/types"
 import {
   buildInternalRelationships,
-  fixJsonTypes,
   sqlOutputProcessing,
 } from "../../../../../api/controllers/row/utils"
 import sdk from "../../../../index"
