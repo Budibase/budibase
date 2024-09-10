@@ -215,7 +215,7 @@ export async function verifyAIConfig(
   existingConfig: AIConfig
 ) {
   // ensure that the redacted API keys are not overwritten in the DB
-  for (let uuid in existingConfig.config) {
+  for (const uuid in existingConfig.config) {
     if (configToSave[uuid]?.apiKey === PASSWORD_REPLACEMENT) {
       configToSave[uuid].apiKey = existingConfig.config[uuid].apiKey
     }
