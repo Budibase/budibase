@@ -1958,7 +1958,7 @@ describe.each([
           {
             relationship: {
               type: FieldType.LINK,
-              relationshipType: RelationshipType.ONE_TO_MANY,
+              relationshipType: RelationshipType.MANY_TO_ONE,
               name: "relationship",
               fieldName: "relate",
               tableId: arrayTable._id!,
@@ -1970,7 +1970,7 @@ describe.each([
               type: FieldType.FORMULA,
               name: "formula",
               formula: encodeJSBinding(
-                `let array = [];$("relationship").forEach(rel => array = array.concat(rel.array));return array.join(",")`
+                `let array = [];$("relationship").forEach(rel => array = array.concat(rel.array));return array.sort().join(",")`
               ),
             },
           },
