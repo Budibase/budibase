@@ -32,7 +32,7 @@ function multiline(sql: string) {
 }
 
 describe("Captures of real examples", () => {
-  const baseLimit = 5000
+  const relationshipLimit = 500
   const primaryLimit = 100
 
   function getJson(name: string): QueryJson {
@@ -42,7 +42,9 @@ describe("Captures of real examples", () => {
   describe("create", () => {
     it("should create a row with relationships", () => {
       const queryJson = getJson("createWithRelationships.json")
-      let query = new Sql(SqlClient.POSTGRES, baseLimit)._query(queryJson)
+      let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
+        queryJson
+      )
       expect(query).toEqual({
         bindings: ["A Street", 34, "London", "A", "B", "designer", 1990],
         sql: multiline(`insert into "persons" ("address", "age", "city", "firstname", "lastname", "type", "year") 
@@ -54,9 +56,11 @@ describe("Captures of real examples", () => {
   describe("read", () => {
     it("should handle basic retrieval with relationships", () => {
       const queryJson = getJson("basicFetchWithRelationships.json")
-      let query = new Sql(SqlClient.POSTGRES, baseLimit)._query(queryJson)
+      let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
+        queryJson
+      )
       expect(query).toEqual({
-        bindings: [baseLimit, baseLimit, primaryLimit],
+        bindings: [relationshipLimit, relationshipLimit, primaryLimit],
         sql: expect.stringContaining(
           multiline(
             `select json_agg(json_build_object('executorid',"b"."executorid",'taskname',"b"."taskname",'taskid',"b"."taskid",'completed',"b"."completed",'qaid',"b"."qaid",'executorid',"b"."executorid",'taskname',"b"."taskname",'taskid',"b"."taskid",'completed',"b"."completed",'qaid',"b"."qaid")`
@@ -67,9 +71,11 @@ describe("Captures of real examples", () => {
 
     it("should handle filtering by relationship", () => {
       const queryJson = getJson("filterByRelationship.json")
-      let query = new Sql(SqlClient.POSTGRES, baseLimit)._query(queryJson)
+      let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
+        queryJson
+      )
       expect(query).toEqual({
-        bindings: [baseLimit, "assembling", primaryLimit],
+        bindings: [relationshipLimit, "assembling", primaryLimit],
         sql: expect.stringContaining(
           multiline(
             `where exists (select 1 from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" 
@@ -81,9 +87,11 @@ describe("Captures of real examples", () => {
 
     it("should handle fetching many to many relationships", () => {
       const queryJson = getJson("fetchManyToMany.json")
-      let query = new Sql(SqlClient.POSTGRES, baseLimit)._query(queryJson)
+      let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
+        queryJson
+      )
       expect(query).toEqual({
-        bindings: [baseLimit, primaryLimit],
+        bindings: [relationshipLimit, primaryLimit],
         sql: expect.stringContaining(
           multiline(
             `select json_agg(json_build_object('executorid',"b"."executorid",'taskname',"b"."taskname",'taskid',"b"."taskid",'completed',"b"."completed",'qaid',"b"."qaid")) 
@@ -97,9 +105,11 @@ describe("Captures of real examples", () => {
     it("should handle enrichment of rows", () => {
       const queryJson = getJson("enrichRelationship.json")
       const filters = queryJson.filters?.oneOf?.taskid as number[]
-      let query = new Sql(SqlClient.POSTGRES, baseLimit)._query(queryJson)
+      let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
+        queryJson
+      )
       expect(query).toEqual({
-        bindings: [baseLimit, ...filters, baseLimit],
+        bindings: [relationshipLimit, ...filters, relationshipLimit],
         sql: multiline(
           `select "a".*, (select json_agg(json_build_object('productname',"b"."productname",'productid',"b"."productid")) 
                from (select "b".* from "products" as "b" inner join "products_tasks" as "c" on "b"."productid" = "c"."productid" 
@@ -111,7 +121,9 @@ describe("Captures of real examples", () => {
 
     it("should manage query with many relationship filters", () => {
       const queryJson = getJson("manyRelationshipFilters.json")
-      let query = new Sql(SqlClient.POSTGRES, baseLimit)._query(queryJson)
+      let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
+        queryJson
+      )
       const filters = queryJson.filters
       const notEqualsValue = Object.values(filters?.notEqual!)[0]
       const rangeValue: { high?: string | number; low?: string | number } =
@@ -120,9 +132,9 @@ describe("Captures of real examples", () => {
 
       expect(query).toEqual({
         bindings: [
-          baseLimit,
-          baseLimit,
-          baseLimit,
+          relationshipLimit,
+          relationshipLimit,
+          relationshipLimit,
           rangeValue.low,
           rangeValue.high,
           equalValue,
@@ -141,7 +153,9 @@ describe("Captures of real examples", () => {
   describe("update", () => {
     it("should handle performing a simple update", () => {
       const queryJson = getJson("updateSimple.json")
-      let query = new Sql(SqlClient.POSTGRES, baseLimit)._query(queryJson)
+      let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
+        queryJson
+      )
       expect(query).toEqual({
         bindings: [1990, "C", "A Street", 34, "designer", "London", "B", 5],
         sql: multiline(
@@ -153,7 +167,9 @@ describe("Captures of real examples", () => {
 
     it("should handle performing an update of relationships", () => {
       const queryJson = getJson("updateRelationship.json")
-      let query = new Sql(SqlClient.POSTGRES, baseLimit)._query(queryJson)
+      let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
+        queryJson
+      )
       expect(query).toEqual({
         bindings: [1990, "C", "A Street", 34, "designer", "London", "B", 5],
         sql: multiline(`update "persons" as "a" set "year" = $1, "firstname" = $2, "address" = $3, "age" = $4, 
@@ -165,7 +181,9 @@ describe("Captures of real examples", () => {
   describe("delete", () => {
     it("should handle deleting with relationships", () => {
       const queryJson = getJson("deleteSimple.json")
-      let query = new Sql(SqlClient.POSTGRES, baseLimit)._query(queryJson)
+      let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
+        queryJson
+      )
       expect(query).toEqual({
         bindings: ["ddd", ""],
         sql: multiline(`delete from "compositetable" as "a" 
@@ -178,7 +196,7 @@ describe("Captures of real examples", () => {
   describe("returning (everything bar Postgres)", () => {
     it("should be able to handle row returning", () => {
       const queryJson = getJson("createSimple.json")
-      const SQL = new Sql(SqlClient.MS_SQL, baseLimit)
+      const SQL = new Sql(SqlClient.MS_SQL, relationshipLimit)
       let query = SQL._query(queryJson, { disableReturning: true })
       expect(query).toEqual({
         sql: "insert into [people] ([age], [name]) values (@p0, @p1)",
