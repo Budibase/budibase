@@ -24,7 +24,11 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div on:click class:disabled class="option">
   <div class="icon">
-    <svelte:component this={logos[config.name || config.provider]} height="30" width="30" />
+    <svelte:component
+      this={logos[config.name || config.provider]}
+      height="30"
+      width="30"
+    />
   </div>
   <div class="header">
     <Body>{config.provider}</Body>
