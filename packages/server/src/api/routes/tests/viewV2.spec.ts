@@ -1278,9 +1278,18 @@ describe.each([
               schema: expect.objectContaining({
                 aux: expect.objectContaining({
                   columns: {
-                    id: { visible: false, readonly: false },
-                    name: { visible: true, readonly: true },
-                    dob: { visible: true, readonly: true },
+                    id: expect.objectContaining({
+                      visible: false,
+                      readonly: false,
+                    }),
+                    name: expect.objectContaining({
+                      visible: true,
+                      readonly: true,
+                    }),
+                    dob: expect.objectContaining({
+                      visible: true,
+                      readonly: true,
+                    }),
                   },
                 }),
               }),
@@ -1323,16 +1332,34 @@ describe.each([
               schema: expect.objectContaining({
                 aux: expect.objectContaining({
                   columns: {
-                    id: { visible: false, readonly: false },
-                    name: { visible: true, readonly: true },
-                    dob: { visible: true, readonly: true },
+                    id: expect.objectContaining({
+                      visible: false,
+                      readonly: false,
+                    }),
+                    name: expect.objectContaining({
+                      visible: true,
+                      readonly: true,
+                    }),
+                    dob: expect.objectContaining({
+                      visible: true,
+                      readonly: true,
+                    }),
                   },
                 }),
                 aux2: expect.objectContaining({
                   columns: {
-                    id: { visible: false, readonly: false },
-                    name: { visible: true, readonly: true },
-                    dob: { visible: true, readonly: true },
+                    id: expect.objectContaining({
+                      visible: false,
+                      readonly: false,
+                    }),
+                    name: expect.objectContaining({
+                      visible: true,
+                      readonly: true,
+                    }),
+                    dob: expect.objectContaining({
+                      visible: true,
+                      readonly: true,
+                    }),
                   },
                 }),
               }),
@@ -1375,16 +1402,34 @@ describe.each([
               schema: expect.objectContaining({
                 aux: expect.objectContaining({
                   columns: {
-                    id: { visible: false, readonly: false },
-                    fullName: { visible: true, readonly: true },
-                    age: { visible: false, readonly: false },
+                    id: expect.objectContaining({
+                      visible: false,
+                      readonly: false,
+                    }),
+                    fullName: expect.objectContaining({
+                      visible: true,
+                      readonly: true,
+                    }),
+                    age: expect.objectContaining({
+                      visible: false,
+                      readonly: false,
+                    }),
                   },
                 }),
                 aux2: expect.objectContaining({
                   columns: {
-                    id: { visible: false, readonly: false },
-                    name: { visible: true, readonly: true },
-                    age: { visible: false, readonly: false },
+                    id: expect.objectContaining({
+                      visible: false,
+                      readonly: false,
+                    }),
+                    name: expect.objectContaining({
+                      visible: true,
+                      readonly: true,
+                    }),
+                    age: expect.objectContaining({
+                      visible: false,
+                      readonly: false,
+                    }),
                   },
                 }),
               }),
@@ -1427,9 +1472,18 @@ describe.each([
                 schema: expect.objectContaining({
                   aux: expect.objectContaining({
                     columns: {
-                      id: { visible: false, readonly: false },
-                      name: { visible: true, readonly: true },
-                      dob: { visible: true, readonly: true },
+                      id: expect.objectContaining({
+                        visible: false,
+                        readonly: false,
+                      }),
+                      name: expect.objectContaining({
+                        visible: true,
+                        readonly: true,
+                      }),
+                      dob: expect.objectContaining({
+                        visible: true,
+                        readonly: true,
+                      }),
                     },
                   }),
                 }),
