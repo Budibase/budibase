@@ -428,7 +428,11 @@ const builderFilter = (expression: SearchFilter) => {
   return query
 }
 
-export const buildQuery = (filter: SearchFilterGroup | SearchFilter[]) => {
+export const buildQuery = (filter?: SearchFilterGroup | SearchFilter[]) => {
+  if (!filter) {
+    return
+  }
+
   const parsedFilter = processSearchFilters(filter)
 
   if (!parsedFilter) {
