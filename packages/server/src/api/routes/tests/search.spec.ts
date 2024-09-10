@@ -9,10 +9,10 @@ import {
   db as dbCore,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
+  setEnv as setCoreEnv,
   SQLITE_DESIGN_DOC_ID,
   utils,
   withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
 } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
@@ -1936,6 +1936,67 @@ describe.each([
       await expectQuery({ equal: { "1:1:name": "none" } }).toFindNothing()
     })
   })
+
+  isSql &&
+    describe("related formulas", () => {
+      beforeAll(async () => {
+        const arrayTable = await createTable(
+          {
+            name: { name: "name", type: FieldType.STRING },
+            array: {
+              name: "array",
+              type: FieldType.ARRAY,
+              constraints: {
+                type: JsonFieldSubType.ARRAY,
+                inclusion: ["option 1", "option 2"],
+              },
+            },
+          },
+          "array"
+        )
+        table = await createTable(
+          {
+            relationship: {
+              type: FieldType.LINK,
+              relationshipType: RelationshipType.ONE_TO_MANY,
+              name: "relationship",
+              fieldName: "relate",
+              tableId: arrayTable._id!,
+              constraints: {
+                type: "array",
+              },
+            },
+            formula: {
+              type: FieldType.FORMULA,
+              name: "formula",
+              formula: encodeJSBinding(
+                `let array = [];$("relationship").forEach(rel => array = array.concat(rel.array));return array.join(",")`
+              ),
+            },
+          },
+          "main"
+        )
+        const arrayRows = await Promise.all([
+          config.api.row.save(arrayTable._id!, {
+            name: "foo",
+            array: ["option 1"],
+          }),
+          config.api.row.save(arrayTable._id!, {
+            name: "bar",
+            array: ["option 2"],
+          }),
+        ])
+        await Promise.all([
+          config.api.row.save(table._id!, {
+            relationship: [arrayRows[0]._id, arrayRows[1]._id],
+          }),
+        ])
+      })
+
+      it("formula is correct with relationship arrays", async () => {
+        await expectQuery({}).toContain([{ formula: "option 1,option 2" }])
+      })
+    })
 
   describe("user", () => {
     let user1: User
