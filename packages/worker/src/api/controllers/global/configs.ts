@@ -343,7 +343,9 @@ async function enrichAIConfig(aiConfig: AIConfig) {
 
   // Return the Budibase AI data source as part of the response if licensing allows
   const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
-  const defaultConfigExists = Object.keys(aiConfig.config).some(key => aiConfig.config[key].isDefault)
+  const defaultConfigExists = Object.keys(aiConfig.config).some(
+    key => aiConfig.config[key].isDefault
+  )
   if (budibaseAIEnabled) {
     aiConfig.config["budibase_ai"] = {
       provider: "OpenAI",
