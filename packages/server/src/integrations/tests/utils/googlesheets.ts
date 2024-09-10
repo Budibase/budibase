@@ -534,7 +534,55 @@ export class GoogleSheetsMock {
         }
         values.push(this.cellValue(cell))
       }
+
       valueRange.values.push(values)
+    }
+
+    return this.trimValueRange(valueRange)
+  }
+
+  // When Google Sheets returns a value range, it will trim the data down to the
+  // smallest possible size. It does all of the following:
+  //
+  // 1. Converts cells in non-empty rows up to the first value to empty strings.
+  // 2. Removes all cells after the last non-empty cell in a row.
+  // 3. Removes all rows after the last non-empty row.
+  // 4. Rows that are before the first non-empty row that are empty are replaced with [].
+  //
+  // We replicate this behaviour here.
+  private trimValueRange(valueRange: ValueRange): ValueRange {
+    for (const row of valueRange.values) {
+      if (row.every(v => v == null)) {
+        row.splice(0, row.length)
+        continue
+      }
+
+      for (let i = row.length - 1; i >= 0; i--) {
+        const cell = row[i]
+        if (cell == null) {
+          row.pop()
+        } else {
+          break
+        }
+      }
+
+      for (let i = 0; i < row.length; i++) {
+        const cell = row[i]
+        if (cell == null) {
+          row[i] = ""
+        } else {
+          break
+        }
+      }
+    }
+
+    for (let i = valueRange.values.length - 1; i >= 0; i--) {
+      const row = valueRange.values[i]
+      if (row.length === 0) {
+        valueRange.values.pop()
+      } else {
+        break
+      }
     }
 
     return valueRange
