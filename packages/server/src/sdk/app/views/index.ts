@@ -193,8 +193,8 @@ export async function enrichSchema(
       const isVisible = !!viewFieldSchema?.visible
       const isReadonly = !!viewFieldSchema?.readonly
       result[relTableFieldName] = {
+        ...relTableField,
         ...viewFieldSchema,
-        type: relTableField.type,
         name: relTableField.name,
         visible: isVisible,
         readonly: isReadonly,
