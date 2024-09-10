@@ -93,7 +93,7 @@ export function ai(): AIConfig {
         name: "Test",
         active: true,
         defaultModel: "gpt4",
-        apiKey: "abc123APIKey",
+        apiKey: "myapikey",
         baseUrl: "https://api.example.com",
       },
     },
