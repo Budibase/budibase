@@ -1,6 +1,7 @@
 import * as pro from "@budibase/pro"
 import { verifyAIConfig } from "../configs"
 import { TestConfiguration, structures } from "../../../../tests"
+import { AIInnerConfig } from "@budibase/types"
 
 describe("Global configs controller", () => {
   const config = new TestConfiguration()
@@ -29,8 +30,8 @@ describe("Global configs controller", () => {
         defaultModel: "gpt4",
         isDefault: false,
         name: "Test",
-        provider: "OpenAI"
-      }
+        provider: "OpenAI",
+      },
     })
   })
 
@@ -56,7 +57,7 @@ describe("Global configs controller", () => {
         defaultModel: "gpt4",
         isDefault: false,
         name: "Test",
-        provider: "OpenAI"
+        provider: "OpenAI",
       },
     })
   })
@@ -77,7 +78,7 @@ describe("Global configs controller", () => {
         defaultModel: "gpt4",
         isDefault: false,
         name: "Test",
-        provider: "OpenAI"
+        provider: "OpenAI",
       },
     })
   })
@@ -87,22 +88,18 @@ describe("Global configs controller", () => {
     await config.api.configs.saveConfig(data)
     const existingConfig = await config.api.configs.getAIConfig()
 
-    const newConfig = {
-      type: "ai",
-      config: {
-        aiconfig: {
-          provider: "OpenAI",
-          isDefault: true,
-          name: "MyConfig",
-          active: true,
-          defaultModel: "gpt4",
-          apiKey: "myapikey",
-        },
+    const newConfig: AIInnerConfig = {
+      aiconfig: {
+        provider: "OpenAI",
+        isDefault: true,
+        name: "MyConfig",
+        active: true,
+        defaultModel: "gpt4",
       },
     }
 
-    await verifyAIConfig(newConfig, existingConfig)
+    await verifyAIConfig(newConfig, existingConfig.body)
     // should be unchanged
-    expect(newConfig.config.aiconfig.apiKey).toEqual("myapikey")
+    expect(newConfig.aiconfig.apiKey).toEqual("myapikey")
   })
 })

@@ -4,7 +4,8 @@ import {
   ConfigType,
   SMTPConfig,
   GoogleConfig,
-  OIDCConfig, AIConfig,
+  OIDCConfig,
+  AIConfig,
 } from "@budibase/types"
 
 export function oidc(conf?: any): OIDCConfig {
@@ -95,6 +96,6 @@ export function ai(): AIConfig {
         apiKey: "abc123APIKey",
         baseUrl: "https://api.example.com",
       },
-    }
+    },
   }
 }

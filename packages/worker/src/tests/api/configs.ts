@@ -30,7 +30,6 @@ export class ConfigAPI extends TestAPI {
       .expect("Content-Type", /json/)
   }
 
-
   saveConfig = (data: any) => {
     return this.request
       .post(`/api/global/configs`)
