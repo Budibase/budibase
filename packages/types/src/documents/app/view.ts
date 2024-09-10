@@ -38,8 +38,7 @@ export type ViewFieldMetadata = UIFieldMetadata & {
   columns?: Record<string, RelationSchemaField>
 }
 
-export type RelationSchemaField = {
-  visible?: boolean
+export type RelationSchemaField = UIFieldMetadata & {
   readonly?: boolean
 }
 
