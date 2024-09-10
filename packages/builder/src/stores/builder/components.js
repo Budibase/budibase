@@ -202,10 +202,10 @@ export class ComponentStore extends BudiStore {
     }
 
     const def = this.getDefinition(enrichedComponent?._component)
-    const filterableTypes = def.settings.filter(setting =>
+    const filterableTypes = def?.settings?.filter(setting =>
       setting?.type?.startsWith("filter")
     )
-    for (let setting of filterableTypes) {
+    for (let setting of filterableTypes || []) {
       enrichedComponent[setting.key] = utils.processSearchFilters(
         enrichedComponent[setting.key]
       )
