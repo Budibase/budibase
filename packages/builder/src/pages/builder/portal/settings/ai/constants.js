@@ -44,7 +44,7 @@ export const ConfigMap = {
   },
   Anthropic: {
     name: "Anthropic",
-    baseUrl: "",
+    baseUrl: "https://api.anthropic.com/v1",
   },
   TogetherAI: {
     name: "TogetherAI",
