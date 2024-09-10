@@ -38,7 +38,7 @@ describe("Global configs controller", () => {
   it("Should return the default BB AI config when the feature is turned on", async () => {
     jest
       .spyOn(pro.features, "isBudibaseAIEnabled")
-      .mockImplementation(() => true)
+      .mockImplementation(() => Promise.resolve(true))
     const data = structures.configs.ai()
     await config.api.configs.saveConfig(data)
     const response = await config.api.configs.getAIConfig()
@@ -66,7 +66,7 @@ describe("Global configs controller", () => {
   it("Should not not return the default Budibase AI config when on self host", async () => {
     jest
       .spyOn(pro.features, "isBudibaseAIEnabled")
-      .mockImplementation(() => false)
+      .mockImplementation(() => Promise.resolve(false))
     const data = structures.configs.ai()
     await config.api.configs.saveConfig(data)
     const response = await config.api.configs.getAIConfig()
