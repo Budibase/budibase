@@ -19,12 +19,17 @@ import { EmailTemplatePurpose } from "../../constants"
 export async function loginUser(user: User) {
   const sessionId = coreUtils.newid()
   const tenantId = tenancy.getTenantId()
-  await sessions.createASession(user._id!, { sessionId, tenantId })
+  await sessions.createASession(user._id!, {
+    sessionId,
+    tenantId,
+    email: user.email,
+  })
   return jwt.sign(
     {
       userId: user._id,
       sessionId,
       tenantId,
+      email: user.email,
     },
     coreEnv.JWT_SECRET!
   )
