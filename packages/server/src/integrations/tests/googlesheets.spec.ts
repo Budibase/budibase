@@ -53,7 +53,7 @@ describe("Google Sheets Integration", () => {
 
   describe("create", () => {
     it("creates a new table", async () => {
-      await config.api.table.save({
+      const table = await config.api.table.save({
         name: "Test Table",
         type: "table",
         sourceId: datasource._id!,
@@ -76,10 +76,54 @@ describe("Google Sheets Integration", () => {
         },
       })
 
+      expect(table.name).toEqual("Test Table")
+
       expect(mock.cell("A1")).toEqual("name")
       expect(mock.cell("B1")).toEqual("description")
       expect(mock.cell("A2")).toEqual(null)
       expect(mock.cell("B2")).toEqual(null)
+    })
+
+    it("can handle multiple tables", async () => {
+      const table1 = await config.api.table.save({
+        name: "Test Table 1",
+        type: "table",
+        sourceId: datasource._id!,
+        sourceType: TableSourceType.EXTERNAL,
+        schema: {
+          one: {
+            name: "one",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
+
+      const table2 = await config.api.table.save({
+        name: "Test Table 2",
+        type: "table",
+        sourceId: datasource._id!,
+        sourceType: TableSourceType.EXTERNAL,
+        schema: {
+          two: {
+            name: "two",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
+
+      expect(table1.name).toEqual("Test Table 1")
+      expect(table2.name).toEqual("Test Table 2")
+
+      expect(mock.cell("Test Table 1!A1")).toEqual("one")
+      expect(mock.cell("Test Table 1!A2")).toEqual(null)
+      expect(mock.cell("Test Table 2!A1")).toEqual("two")
+      expect(mock.cell("Test Table 2!A2")).toEqual(null)
     })
   })
 
