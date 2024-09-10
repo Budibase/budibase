@@ -5,8 +5,7 @@ import { getCellID, parseCellID } from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
-import { FieldType } from "@budibase/types"
-import { processStringSync } from "@budibase/string-templates"
+import { FieldType, RelationshipType } from "@budibase/types"
 
 export const createStores = () => {
   const rows = writable([])
@@ -42,26 +41,50 @@ export const createStores = () => {
   }
 }
 
-function getRelatedTableValues(row, field) {
-  let result = ""
-  const separator = ", "
+function getRelatedTableValues(row, field, isSingle) {
+  let result = "Not rendable"
+  try {
+    if (isSingle) {
+      result = row[field.related.field]?.[0]?.[field.related.subField]
+      switch (field.type) {
+        case FieldType.JSON:
+        case FieldType.SIGNATURE_SINGLE:
+        case FieldType.ATTACHMENT_SINGLE:
+        case FieldType.ATTACHMENTS:
+        case FieldType.BB_REFERENCE:
+          result = JSON.parse(result)
+          break
 
-  switch (field.type) {
-    case FieldType.STRING:
-    case FieldType.NUMBER:
-    default:
-      result = processStringSync(
-        `{{ join (pluck ${field.related.field} '${field.related.subField}') '${separator}' }}`,
-        row
-      )
-      break
-    case FieldType.ARRAY:
-    case FieldType.OPTIONS:
+        case FieldType.LINK:
+          console.error(`${field.type} type is not rendable`)
+      }
+    } else {
+      // TODO: check all types
       result = Array.from(
         new Set(
           row[field.related.field].flatMap(r => r[field.related.subField])
         )
       )
+
+      switch (field.type) {
+        case FieldType.STRING:
+        case FieldType.NUMBER:
+        case FieldType.BIGINT:
+          result = result.join(", ")
+          break
+
+        case FieldType.JSON:
+        case FieldType.ATTACHMENTS:
+        case FieldType.SIGNATURE_SINGLE:
+          result = result.map(JSON.parse)
+          break
+
+        case FieldType.LINK:
+          console.error(`${field.type} type is not rendable`)
+      }
+    }
+  } catch (e) {
+    console.error(e.message)
   }
 
   return result
@@ -81,7 +104,11 @@ export const deriveStores = context => {
         ...row,
         __idx: idx,
         ...customColumns.reduce((acc, c) => {
-          acc[c.name] = getRelatedTableValues(row, c)
+          const isSingle =
+            $enrichedSchema[c.related.field].relationshipType ===
+            RelationshipType.ONE_TO_MANY
+
+          acc[c.name] = getRelatedTableValues(row, c, isSingle)
           return acc
         }, {}),
       }))
