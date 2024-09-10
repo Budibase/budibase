@@ -4,7 +4,7 @@ import {
   ConfigType,
   SMTPConfig,
   GoogleConfig,
-  OIDCConfig,
+  OIDCConfig, AIConfig,
 } from "@budibase/types"
 
 export function oidc(conf?: any): OIDCConfig {
@@ -79,5 +79,22 @@ export function settings(conf?: any): SettingsConfig {
       company: "Budibase",
       ...conf,
     },
+  }
+}
+
+export function ai(): AIConfig {
+  return {
+    type: ConfigType.AI,
+    config: {
+      ai: {
+        provider: "OpenAI",
+        isDefault: false,
+        name: "Test",
+        active: true,
+        defaultModel: "gpt4",
+        apiKey: "abc123APIKey",
+        baseUrl: "https://api.example.com",
+      },
+    }
   }
 }
