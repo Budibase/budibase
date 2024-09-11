@@ -463,11 +463,11 @@ class Orchestrator {
   }
   private async executeBranchStep(branchStep: BranchStep): Promise<void> {
     const { branches, children } = branchStep.inputs
-    const conditionMet = false
+
     for (const branch of branches) {
       const condition = await this.evaluateBranchCondition(branch.condition)
       if (condition) {
-        let branchStatus = {
+        const branchStatus = {
           status: `${branch.name} branch taken`,
           success: true,
         }
@@ -482,22 +482,20 @@ class Orchestrator {
 
         const branchSteps = children?.[branch.name] || []
         await this.executeSteps(branchSteps)
-        break
+        return
       }
     }
-    if (!conditionMet) {
-      this.stopped = true
-      this.updateExecutionOutput(
-        branchStep.id,
-        branchStep.stepId,
-        branchStep.inputs,
-        {
-          success: false,
-          status: AutomationStatus.NO_CONDITION_MET,
-        }
-      )
-      return
-    }
+
+    this.stopped = true
+    this.updateExecutionOutput(
+      branchStep.id,
+      branchStep.stepId,
+      branchStep.inputs,
+      {
+        success: false,
+        status: AutomationStatus.NO_CONDITION_MET,
+      }
+    )
   }
 
   private async evaluateBranchCondition(
