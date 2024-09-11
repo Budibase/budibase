@@ -63,7 +63,9 @@ async function updatePermissionOnRole(
   // resource from another role and then adding to the new role
   for (let role of dbRoles) {
     let updated = false
-    const rolePermissions = role.permissions ? role.permissions : {}
+    const rolePermissions: Record<string, PermissionLevel[]> = role.permissions
+      ? role.permissions
+      : {}
     // make sure its an array, also handle migrating
     if (
       !rolePermissions[resourceId] ||
@@ -71,7 +73,7 @@ async function updatePermissionOnRole(
     ) {
       rolePermissions[resourceId] =
         typeof rolePermissions[resourceId] === "string"
-          ? [rolePermissions[resourceId] as unknown as string]
+          ? [rolePermissions[resourceId] as unknown as PermissionLevel]
           : []
     }
     // handle the removal/updating the role which has this permission first
