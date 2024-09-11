@@ -6,6 +6,8 @@ import { createHistoryStore } from "stores/builder/history"
 import { notifications } from "@budibase/bbui"
 import { updateReferencesInObject } from "dataBinding"
 import { AutomationTriggerStepId } from "@budibase/types"
+import { sdk } from "@budibase/shared-core"
+import { rowActions } from "./rowActions"
 
 const initialAutomationState = {
   automations: [],
@@ -123,10 +125,18 @@ const automationActions = store => ({
     return response.automation
   },
   delete: async automation => {
-    await API.deleteAutomation({
-      automationId: automation?._id,
-      automationRev: automation?._rev,
-    })
+    const isRowAction = sdk.automations.isRowAction(automation)
+    if (isRowAction) {
+      await rowActions.delete(
+        automation.definition.trigger.inputs.tableId,
+        automation.definition.trigger.inputs.rowActionId
+      )
+    } else {
+      await API.deleteAutomation({
+        automationId: automation?._id,
+        automationRev: automation?._rev,
+      })
+    }
 
     store.update(state => {
       // Remove the automation

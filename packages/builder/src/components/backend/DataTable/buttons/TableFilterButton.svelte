@@ -51,6 +51,7 @@
   {disabled}
   on:click={drawer.show}
   selected={filterCount > 0}
+  accentColor="#004EA6"
 >
   {filterCount ? `Filter (${filterCount})` : "Filter"}
 </ActionButton>
