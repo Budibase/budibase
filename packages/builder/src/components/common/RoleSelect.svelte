@@ -123,7 +123,7 @@
     return (
       subType === Constants.PlanType.ENTERPRISE ||
       subType === Constants.PlanType.ENTERPRISE_BASIC ||
-      subType === Constants.PlanType.ENTERPRISE_BASIC_trial
+      subType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
     )
   }
 </script>
