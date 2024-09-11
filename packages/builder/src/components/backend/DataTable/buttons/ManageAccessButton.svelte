@@ -10,7 +10,6 @@
   } from "@budibase/bbui"
   import { permissions as permissionsStore, roles } from "stores/builder"
   import DetailPopover from "components/common/DetailPopover.svelte"
-  import EditRolesButton from "./EditRolesButton.svelte"
   import { PermissionSource } from "@budibase/types"
   import { capitalise } from "helpers"
   import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
