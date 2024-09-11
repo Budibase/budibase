@@ -1,24 +1,23 @@
 import * as automation from "../../index"
 import * as setup from "../utilities"
-import { Table, LoopStepType, FieldType } from "@budibase/types"
+import { LoopStepType, FieldType } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { DatabaseName } from "../../../integrations/tests/utils"
 
 describe("Automation Scenarios", () => {
-  let config = setup.getConfig(),
-    table: Table
+  let config = setup.getConfig()
 
   beforeEach(async () => {
     await automation.init()
     await config.init()
-    table = await config.createTable()
-    await config.createRow()
   })
 
   afterAll(setup.afterAll)
 
   describe("Row Automations", () => {
     it("should trigger an automation which then creates a row", async () => {
+      const table = await config.createTable()
+
       const builder = createAutomationBuilder({
         name: "Test Row Save and Create",
       })
@@ -53,6 +52,7 @@ describe("Automation Scenarios", () => {
   })
 
   it("should trigger an automation which querys the database", async () => {
+    const table = await config.createTable()
     const row = {
       name: "Test Row",
       description: "original description",
@@ -76,6 +76,7 @@ describe("Automation Scenarios", () => {
   })
 
   it("should trigger an automation which querys the database then deletes a row", async () => {
+    const table = await config.createTable()
     const row = {
       name: "DFN",
       description: "original description",
