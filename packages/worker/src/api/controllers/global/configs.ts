@@ -29,6 +29,10 @@ import {
   SSOConfigType,
   UserCtx,
   OIDCLogosConfig,
+  AIConfig,
+  PASSWORD_REPLACEMENT,
+  isAIConfig,
+  AIInnerConfig,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
 
@@ -38,6 +42,11 @@ const getEventFns = async (config: Config, existing?: Config) => {
   if (!existing) {
     if (isSMTPConfig(config)) {
       fns.push(events.email.SMTPCreated)
+    } else if (isAIConfig(config)) {
+      fns.push(() => events.ai.AIConfigCreated)
+      fns.push(() =>
+        pro.quotas.updateCustomAIConfigCount(Object.keys(config.config).length)
+      )
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
       if (config.config.activated) {
@@ -74,6 +83,11 @@ const getEventFns = async (config: Config, existing?: Config) => {
   } else {
     if (isSMTPConfig(config)) {
       fns.push(events.email.SMTPUpdated)
+    } else if (isAIConfig(config)) {
+      fns.push(() => events.ai.AIConfigUpdated)
+      fns.push(() =>
+        pro.quotas.updateCustomAIConfigCount(Object.keys(config.config).length)
+      )
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOUpdated(ConfigType.GOOGLE))
       if (!existing.config.activated && config.config.activated) {
@@ -122,7 +136,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
       }
     }
   }
-
   return fns
 }
 
@@ -197,6 +210,18 @@ async function verifyOIDCConfig(config: OIDCConfigs) {
   await verifySSOConfig(ConfigType.OIDC, config.configs[0])
 }
 
+export async function verifyAIConfig(
+  configToSave: AIInnerConfig,
+  existingConfig: AIConfig
+) {
+  // ensure that the redacted API keys are not overwritten in the DB
+  for (const uuid in existingConfig.config) {
+    if (configToSave[uuid]?.apiKey === PASSWORD_REPLACEMENT) {
+      configToSave[uuid].apiKey = existingConfig.config[uuid].apiKey
+    }
+  }
+}
+
 export async function save(ctx: UserCtx<Config>) {
   const body = ctx.request.body
   const type = body.type
@@ -223,6 +248,11 @@ export async function save(ctx: UserCtx<Config>) {
         break
       case ConfigType.OIDC:
         await verifyOIDCConfig(config)
+        break
+      case ConfigType.AI:
+        if (existingConfig) {
+          await verifyAIConfig(config, existingConfig)
+        }
         break
     }
   } catch (err: any) {
@@ -304,6 +334,32 @@ function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
   )
 }
 
+async function enrichAIConfig(aiConfig: AIConfig) {
+  // Strip out the API Keys from the response so they don't show in the UI
+  for (const key in aiConfig.config) {
+    if (aiConfig.config[key].apiKey) {
+      aiConfig.config[key].apiKey = PASSWORD_REPLACEMENT
+    }
+  }
+
+  // Return the Budibase AI data source as part of the response if licensing allows
+  const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
+  const defaultConfigExists = Object.keys(aiConfig.config).some(
+    key => aiConfig.config[key].isDefault
+  )
+  if (budibaseAIEnabled) {
+    aiConfig.config["budibase_ai"] = {
+      provider: "OpenAI",
+      active: true,
+      isDefault: !defaultConfigExists,
+      defaultModel: env.BUDIBASE_AI_DEFAULT_MODEL || "",
+      name: "Budibase AI",
+    }
+  }
+
+  return aiConfig
+}
+
 export async function find(ctx: UserCtx) {
   try {
     // Find the config with the most granular scope based on context
@@ -313,6 +369,10 @@ export async function find(ctx: UserCtx) {
     if (scopedConfig) {
       if (type === ConfigType.OIDC_LOGOS) {
         enrichOIDCLogos(scopedConfig)
+      }
+
+      if (type === ConfigType.AI) {
+        await enrichAIConfig(scopedConfig)
       }
       ctx.body = scopedConfig
     } else {

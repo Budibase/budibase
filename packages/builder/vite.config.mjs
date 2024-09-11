@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
     // Copy fonts to an additional path so that svelte's automatic
     // prefixing of the base URL path can still resolve assets
     copyFonts("builder/fonts"),
-  ]
+]
 
   return {
     test: {
