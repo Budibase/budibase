@@ -14,12 +14,7 @@ import {
   processFormulas,
 } from "../../../../utilities/rowProcessor"
 import { isKnexEmptyReadResponse } from "./sqlUtils"
-import {
-  basicProcessing,
-  generateIdForRow,
-  fixArrayTypes,
-  getInternalRowId,
-} from "./basic"
+import { basicProcessing, generateIdForRow, getInternalRowId } from "./basic"
 import sdk from "../../../../sdk"
 import { processStringSync } from "@budibase/string-templates"
 import validateJs from "validate.js"
@@ -149,16 +144,13 @@ export async function sqlOutputProcessing(
       rowId = generateIdForRow(row, table)
       row._id = rowId
     }
-    const thisRow = fixArrayTypes(
-      basicProcessing({
-        row,
-        table,
-        tables: Object.values(tables),
-        isLinked: false,
-        sqs: opts?.sqs,
-      }),
-      table
-    )
+    const thisRow = basicProcessing({
+      row,
+      table,
+      tables: Object.values(tables),
+      isLinked: false,
+      sqs: opts?.sqs,
+    })
     if (thisRow._id == null) {
       throw new Error("Unable to generate row ID for SQL rows")
     }
