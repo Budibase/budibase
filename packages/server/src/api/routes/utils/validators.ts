@@ -200,7 +200,7 @@ export function webhookValidator() {
 
 export function roleValidator() {
   const permLevelArray = Object.values(permissions.PermissionLevel)
-
+  const permissionString = Joi.string().valid(...permLevelArray)
   return auth.joiValidator.body(
     Joi.object({
       _id: OPTIONAL_STRING,
@@ -213,7 +213,13 @@ export function roleValidator() {
         .valid(...Object.values(permissions.BuiltinPermissionID))
         .required(),
       permissions: Joi.object()
-        .pattern(/.*/, [Joi.string().valid(...permLevelArray)])
+        .pattern(
+          /.*/,
+          Joi.alternatives().try(
+            Joi.array().items(permissionString),
+            permissionString
+          )
+        )
         .optional(),
       inherits: OPTIONAL_STRING,
     }).unknown(true)
