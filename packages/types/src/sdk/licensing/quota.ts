@@ -17,12 +17,14 @@ export enum StaticQuotaName {
   CREATORS = "creators",
   USER_GROUPS = "userGroups",
   PLUGINS = "plugins",
+  AI_CUSTOM_CONFIGS = "aiCustomConfigs",
 }
 
 export enum MonthlyQuotaName {
   QUERIES = "queries",
   AUTOMATIONS = "automations",
   DAY_PASSES = "dayPasses",
+  BUDIBASE_AI_CREDITS = "budibaseAICredits",
 }
 
 export enum ConstantQuotaName {
@@ -62,6 +64,7 @@ export type MonthlyQuotas = {
   [MonthlyQuotaName.QUERIES]: Quota
   [MonthlyQuotaName.AUTOMATIONS]: Quota
   [MonthlyQuotaName.DAY_PASSES]: Quota
+  [MonthlyQuotaName.BUDIBASE_AI_CREDITS]: Quota
 }
 
 export type StaticQuotas = {
@@ -71,6 +74,7 @@ export type StaticQuotas = {
   [StaticQuotaName.CREATORS]: Quota
   [StaticQuotaName.USER_GROUPS]: Quota
   [StaticQuotaName.PLUGINS]: Quota
+  [StaticQuotaName.AI_CUSTOM_CONFIGS]: Quota
 }
 
 export type ConstantQuotas = {
