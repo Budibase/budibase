@@ -13,7 +13,7 @@
   export let fromRelationshipField
   export let canSetRelationshipSchemas
 
-  const { datasource, dispatch, cache } = getContext("grid")
+  const { datasource, dispatch } = getContext("grid")
 
   let relationshipPanelAnchor
   let relationshipFieldName
@@ -113,29 +113,19 @@
     return { ...c, options }
   })
 
-  let relationshipPanelColumns = []
-  async function fetchRelationshipPanelColumns(relationshipField) {
-    relationshipPanelColumns = []
-    if (!relationshipField) {
-      return
+  $: relationshipPanelColumns = Object.entries(
+    relationshipField?.columns || {}
+  ).map(([name, column]) => {
+    return {
+      name: name,
+      label: name,
+      schema: {
+        type: column.type,
+        visible: column.visible,
+        readonly: column.readonly,
+      },
     }
-
-    const table = await cache.actions.getTable(relationshipField.tableId)
-    relationshipPanelColumns = Object.entries(
-      relationshipField?.columns || {}
-    ).map(([name, column]) => {
-      return {
-        name: name,
-        label: name,
-        schema: {
-          type: table.schema[name].type,
-          visible: column.visible,
-          readonly: column.readonly,
-        },
-      }
-    })
-  }
-  $: fetchRelationshipPanelColumns(relationshipField)
+  })
 
   async function toggleColumn(column, permission) {
     const visible = permission !== FieldPermissions.HIDDEN
@@ -216,7 +206,7 @@
     on:close={() => (relationshipFieldName = null)}
     open={relationshipFieldName}
     anchor={relationshipPanelAnchor}
-    align="right-outside"
+    align="left"
   >
     {#if relationshipPanelColumns.length}
       <div class="relationship-header">
