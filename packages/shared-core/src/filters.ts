@@ -530,6 +530,7 @@ export const buildQueryLegacy = (
         }
       }
     } else if (isLogicalSearchOperator(queryOperator)) {
+      // ignore
     } else if (query[queryOperator] && operator !== "onEmptyFilter") {
       if (type === "boolean") {
         // Transform boolean filters to cope with null.
