@@ -22,6 +22,14 @@ export class ConfigAPI extends TestAPI {
       .expect("Content-Type", /json/)
   }
 
+  getAIConfig = () => {
+    return this.request
+      .get(`/api/global/configs/ai`)
+      .set(this.config.defaultHeaders())
+      .expect(200)
+      .expect("Content-Type", /json/)
+  }
+
   saveConfig = (data: any) => {
     return this.request
       .post(`/api/global/configs`)

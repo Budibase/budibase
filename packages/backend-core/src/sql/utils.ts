@@ -1,4 +1,11 @@
-import { DocumentType, SqlQuery, Table, TableSourceType } from "@budibase/types"
+import {
+  DocumentType,
+  ManyToManyRelationshipJson,
+  RelationshipsJson,
+  SqlQuery,
+  Table,
+  TableSourceType,
+} from "@budibase/types"
 import { DEFAULT_BB_DATASOURCE_ID } from "../constants"
 import { Knex } from "knex"
 import { SEPARATOR } from "../db"
@@ -162,4 +169,25 @@ export function sqlLog(client: string, query: string, values?: any[]) {
     string += ` values="${values.join(", ")}"`
   }
   console.log(string)
+}
+
+function isValidManyToManyRelationship(
+  relationship: RelationshipsJson
+): relationship is ManyToManyRelationshipJson {
+  return (
+    !!relationship.through &&
+    !!relationship.fromPrimary &&
+    !!relationship.from &&
+    !!relationship.toPrimary &&
+    !!relationship.to
+  )
+}
+
+export function validateManyToMany(
+  relationship: RelationshipsJson
+): ManyToManyRelationshipJson | undefined {
+  if (isValidManyToManyRelationship(relationship)) {
+    return relationship
+  }
+  return undefined
 }
