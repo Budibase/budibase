@@ -149,6 +149,7 @@ function generateManyRelationshipJson(config: { schema?: string } = {}) {
 }
 
 describe("SQL query builder", () => {
+  const relationshipLimit = 500
   const limit = 500
   const client = SqlClient.POSTGRES
   let sql: any
@@ -160,7 +161,7 @@ describe("SQL query builder", () => {
   it("should add the schema to the LEFT JOIN", () => {
     const query = sql._query(generateRelationshipJson({ schema: "production" }))
     expect(query).toEqual({
-      bindings: [5000, limit],
+      bindings: [relationshipLimit, limit],
       sql: `select "brands".*, (select json_agg(json_build_object('product_id',"products"."product_id",'product_name',"products"."product_name",'brand_id',"products"."brand_id")) from (select "products".* from "production"."products" as "products" where "products"."brand_id" = "brands"."brand_id" order by "products"."brand_id" asc limit $1) as "products") as "products" from "production"."brands" order by "test"."id" asc limit $2`,
     })
   })
@@ -168,7 +169,7 @@ describe("SQL query builder", () => {
   it("should handle if the schema is not present when doing a LEFT JOIN", () => {
     const query = sql._query(generateRelationshipJson())
     expect(query).toEqual({
-      bindings: [5000, limit],
+      bindings: [relationshipLimit, limit],
       sql: `select "brands".*, (select json_agg(json_build_object('product_id',"products"."product_id",'product_name',"products"."product_name",'brand_id',"products"."brand_id")) from (select "products".* from "products" as "products" where "products"."brand_id" = "brands"."brand_id" order by "products"."brand_id" asc limit $1) as "products") as "products" from "brands" order by "test"."id" asc limit $2`,
     })
   })
@@ -178,7 +179,7 @@ describe("SQL query builder", () => {
       generateManyRelationshipJson({ schema: "production" })
     )
     expect(query).toEqual({
-      bindings: [5000, limit],
+      bindings: [relationshipLimit, limit],
       sql: `select "stores".*, (select json_agg(json_build_object('product_id',"products"."product_id",'product_name',"products"."product_name")) from (select "products".* from "production"."products" as "products" inner join "production"."stocks" as "stocks" on "products"."product_id" = "stocks"."product_id" where "stocks"."store_id" = "stores"."store_id" order by "products"."product_id" asc limit $1) as "products") as "products" from "production"."stores" order by "test"."id" asc limit $2`,
     })
   })
