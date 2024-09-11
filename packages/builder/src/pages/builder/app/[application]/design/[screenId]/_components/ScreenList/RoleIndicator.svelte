@@ -1,5 +1,4 @@
 <script>
-  import { RoleUtils } from "@budibase/frontend-core"
   import { Tooltip, StatusLight } from "@budibase/bbui"
   import { roles } from "stores/builder"
   import { Roles } from "constants/backend"
@@ -13,7 +12,7 @@
   $: tooltip =
     roleId === Roles.PUBLIC
       ? "Open to the public"
-      : `Requires ${role?.name} access`
+      : `Requires ${role?.displayName} access`
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
