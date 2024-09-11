@@ -28,6 +28,27 @@
   let tempDescription
   let tempColor
 
+  $: nameError = validateName(tempDisplayName, $roles)
+  $: descriptionError = validateDescription(tempDescription)
+  $: invalid = nameError || descriptionError
+
+  const validateName = (name, roles) => {
+    if (!name?.length) {
+      return "Please enter a name"
+    }
+    if (roles.some(x => x.displayName === name && x._id !== id)) {
+      return "That name is already used by another role"
+    }
+    return null
+  }
+
+  const validateDescription = description => {
+    if (!description?.length) {
+      return "Please enter a name"
+    }
+    return null
+  }
+
   const deleteNode = async () => {
     flow.deleteElements({
       nodes: [{ id }],
@@ -100,15 +121,18 @@
     title={`Edit ${data.displayName}`}
     confirmText="Save"
     onConfirm={saveChanges}
+    disabled={invalid}
   >
     <Input
       label="Name"
       value={tempDisplayName}
+      error={nameError}
       on:change={e => (tempDisplayName = e.detail)}
     />
     <Input
       label="Description"
       value={tempDescription}
+      error={descriptionError}
       on:change={e => (tempDescription = e.detail)}
     />
     <div>
