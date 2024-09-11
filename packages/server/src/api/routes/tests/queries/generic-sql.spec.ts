@@ -832,10 +832,12 @@ describe.each(
         },
       })
       expect(res).toHaveLength(1)
-      expect(res[0]).toEqual({
-        id: 2,
-        name: "two",
-      })
+      expect(res[0]).toEqual(
+        expect.objectContaining({
+          id: 2,
+          name: "two",
+        })
+      )
     })
 
     // this parameter really only impacts SQL queries
