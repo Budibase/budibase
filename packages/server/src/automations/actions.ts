@@ -16,6 +16,7 @@ import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
 import * as loop from "./steps/loop"
 import * as collect from "./steps/collect"
+import * as branch from "./steps/branch"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import env from "../environment"
 import {
@@ -28,6 +29,7 @@ import {
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
+import { features } from "@budibase/backend-core"
 
 type ActionImplType = ActionImplementations<
   typeof env.SELF_HOSTED extends "true" ? Hosting.SELF : Hosting.CLOUD
@@ -98,6 +100,9 @@ if (env.SELF_HOSTED) {
 }
 
 export async function getActionDefinitions() {
+  if (await features.flags.isEnabled("AUTOMATION_BRANCHING")) {
+    BUILTIN_ACTION_DEFINITIONS["BRANCH"] = branch.definition
+  }
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.AUTOMATION)
