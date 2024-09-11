@@ -67,11 +67,14 @@ describe.each([
   let rows: Row[]
 
   beforeAll(async () => {
-    await withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, () => config.init())
-    if (isSqs) {
+    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
+    if (isLucene) {
       envCleanup = setCoreEnv({
-        SQS_SEARCH_ENABLE: "true",
-        SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
+        TENANT_FEATURE_FLAGS: "*:!SQS",
+      })
+    } else if (isSqs) {
+      envCleanup = setCoreEnv({
+        TENANT_FEATURE_FLAGS: "*:SQS",
       })
     }
 
@@ -2759,6 +2762,57 @@ describe.each([
             expect(page2.hasNextPage).toBe(false)
           }
         )
+      })
+    })
+
+  isSql &&
+    describe("primaryDisplay", () => {
+      beforeAll(async () => {
+        let toRelateTable = await createTable({
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+        })
+        table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+              link: {
+                name: "link",
+                type: FieldType.LINK,
+                relationshipType: RelationshipType.MANY_TO_ONE,
+                tableId: toRelateTable._id!,
+                fieldName: "link",
+              },
+            },
+          })
+        )
+        toRelateTable = await config.api.table.get(toRelateTable._id!)
+        await config.api.table.save({
+          ...toRelateTable,
+          primaryDisplay: "link",
+        })
+        const relatedRows = await Promise.all([
+          config.api.row.save(toRelateTable._id!, { name: "test" }),
+        ])
+        await Promise.all([
+          config.api.row.save(table._id!, {
+            name: "test",
+            link: relatedRows.map(row => row._id),
+          }),
+        ])
+      })
+
+      it("should be able to query, primary display on related table shouldn't be used", async () => {
+        // this test makes sure that if a relationship has been specified as the primary display on a table
+        // it is ignored and another column is used instead
+        await expectQuery({}).toContain([
+          { name: "test", link: [{ primaryDisplay: "test" }] },
+        ])
       })
     })
 

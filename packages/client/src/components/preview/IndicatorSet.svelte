@@ -1,8 +1,8 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
-  import { domDebounce } from "utils/domDebounce"
   import { builderStore } from "stores"
+  import { memo, Utils } from "@budibase/frontend-core"
 
   export let componentId = null
   export let color = null
@@ -10,7 +10,10 @@
   export let prefix = null
   export let allowResizeAnchors = false
 
+  // Offset = 6 (clip-root padding) - 1 (half the border thickness)
+  const config = memo($$props)
   const errorColor = "var(--spectrum-global-color-static-red-600)"
+  const mutationObserver = new MutationObserver(() => debouncedUpdate())
   const defaultState = () => ({
     // Cached props
     componentId,
@@ -29,38 +32,49 @@
 
   let interval
   let state = defaultState()
-  let nextState = null
+  let observingMutations = false
   let updating = false
-  let observers = []
+  let intersectionObservers = []
   let callbackCount = 0
+  let nextState
 
+  $: componentId, reset()
   $: visibleIndicators = state.indicators.filter(x => x.visible)
-  $: offset = $builderStore.inBuilder ? 0 : 2
-  $: $$props, debouncedUpdate()
+  $: offset = $builderStore.inBuilder ? 5 : -1
+  $: config.set({
+    componentId,
+    color,
+    zIndex,
+    prefix,
+    allowResizeAnchors,
+  })
 
-  const checkInsideGrid = id => {
-    const component = document.getElementsByClassName(id)[0]
-    const domNode = component?.children[0]
+  // Update position when any props change
+  $: $config, debouncedUpdate()
 
-    // Ignore grid itself
-    if (domNode?.classList.contains("grid")) {
-      return false
-    }
+  const reset = () => {
+    mutationObserver.disconnect()
+    observingMutations = false
+    updating = false
+  }
 
-    return component?.parentNode
-      ?.closest?.(".component")
-      ?.childNodes[0]?.classList.contains("grid")
+  const observeMutations = element => {
+    mutationObserver.observe(element, {
+      attributes: true,
+      attributeFilter: ["style"],
+    })
+    observingMutations = true
   }
 
   const createIntersectionCallback = idx => entries => {
-    if (callbackCount >= observers.length) {
+    if (callbackCount >= intersectionObservers.length) {
       return
     }
     nextState.indicators[idx].visible =
       nextState.indicators[idx].insideModal ||
       nextState.indicators[idx].insideSidePanel ||
       entries[0].isIntersecting
-    if (++callbackCount === observers.length) {
+    if (++callbackCount === intersectionObservers.length) {
       state = nextState
       updating = false
     }
@@ -76,76 +90,95 @@
       state = defaultState()
       return
     }
-
-    // Reset state
+    let elements = document.getElementsByClassName(componentId)
+    if (!elements.length) {
+      state = defaultState()
+      return
+    }
     updating = true
     callbackCount = 0
-    observers.forEach(o => o.disconnect())
-    observers = []
+    intersectionObservers.forEach(o => o.disconnect())
+    intersectionObservers = []
     nextState = defaultState()
+
+    // Start observing mutations if this is the first time we've seen our
+    // component in the DOM
+    if (!observingMutations) {
+      observeMutations(elements[0])
+    }
 
     // Check if we're inside a grid
     if (allowResizeAnchors) {
-      nextState.insideGrid = checkInsideGrid(componentId)
+      nextState.insideGrid = elements[0]?.dataset.insideGrid === "true"
     }
 
-    // Determine next set of indicators
-    const parents = document.getElementsByClassName(componentId)
-    if (parents.length) {
-      nextState.text = parents[0].dataset.name
-      if (nextState.prefix) {
-        nextState.text = `${nextState.prefix} ${nextState.text}`
-      }
-      if (parents[0].dataset.icon) {
-        nextState.icon = parents[0].dataset.icon
-      }
+    // Get text to display
+    nextState.text = elements[0].dataset.name
+    if (nextState.prefix) {
+      nextState.text = `${nextState.prefix} ${nextState.text}`
     }
-    nextState.error = parents?.[0]?.classList.contains("error")
+    if (elements[0].dataset.icon) {
+      nextState.icon = elements[0].dataset.icon
+    }
+    nextState.error = elements[0].classList.contains("error")
 
     // Batch reads to minimize reflow
     const scrollX = window.scrollX
     const scrollY = window.scrollY
 
     // Extract valid children
-    // Sanity limit of 100 active indicators
-    const children = Array.from(
-      document.getElementsByClassName(`${componentId}-dom`)
-    )
+    // Sanity limit of active indicators
+    if (!nextState.insideGrid) {
+      elements = document.getElementsByClassName(`${componentId}-dom`)
+    }
+    elements = Array.from(elements)
       .filter(x => x != null)
       .slice(0, 100)
+    const multi = elements.length > 1
 
     // If there aren't any nodes then reset
-    if (!children.length) {
+    if (!elements.length) {
       state = defaultState()
-      updating = false
       return
     }
 
     const device = document.getElementById("app-root")
     const deviceBounds = device.getBoundingClientRect()
-    children.forEach((child, idx) => {
-      const callback = createIntersectionCallback(idx)
-      const threshold = children.length > 1 ? 1 : 0
-      const observer = new IntersectionObserver(callback, {
-        threshold,
-        root: device,
-      })
-      observer.observe(child)
-      observers.push(observer)
+    nextState.indicators = elements.map((element, idx) => {
+      const elBounds = element.getBoundingClientRect()
+      let indicator = {
+        top: Math.round(elBounds.top + scrollY - deviceBounds.top + offset),
+        left: Math.round(elBounds.left + scrollX - deviceBounds.left + offset),
+        width: Math.round(elBounds.width + 2),
+        height: Math.round(elBounds.height + 2),
+        visible: true,
+      }
 
-      const elBounds = child.getBoundingClientRect()
-      nextState.indicators.push({
-        top: elBounds.top + scrollY - deviceBounds.top - offset,
-        left: elBounds.left + scrollX - deviceBounds.left - offset,
-        width: elBounds.width + 4,
-        height: elBounds.height + 4,
-        visible: false,
-        insideSidePanel: !!child.closest(".side-panel"),
-        insideModal: !!child.closest(".modal-content"),
-      })
+      // If observing more than one node then we need to use an intersection
+      // observer to determine whether each indicator should be visible
+      if (multi) {
+        const callback = createIntersectionCallback(idx)
+        const intersectionObserver = new IntersectionObserver(callback, {
+          threshold: 1,
+          root: device,
+        })
+        intersectionObserver.observe(element)
+        intersectionObservers.push(intersectionObserver)
+        indicator.visible = false
+        indicator.insideSidePanel = !!element.closest(".side-panel")
+        indicator.insideModal = !!element.closest(".modal-content")
+      }
+
+      return indicator
     })
+
+    // Immediately apply the update if we're just observing a single node
+    if (!multi) {
+      state = nextState
+      updating = false
+    }
   }
-  const debouncedUpdate = domDebounce(updatePosition)
+  const debouncedUpdate = Utils.domDebounce(updatePosition)
 
   onMount(() => {
     debouncedUpdate()
@@ -154,9 +187,9 @@
   })
 
   onDestroy(() => {
+    mutationObserver.disconnect()
     clearInterval(interval)
     document.removeEventListener("scroll", debouncedUpdate, true)
-    observers.forEach(o => o.disconnect())
   })
 </script>
 

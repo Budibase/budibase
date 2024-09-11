@@ -9,6 +9,7 @@ import {
 } from "../../../utilities/rowProcessor"
 import cloneDeep from "lodash/fp/cloneDeep"
 import isEqual from "lodash/fp/isEqual"
+import { tryExtractingTableAndViewId } from "./utils"
 
 export async function getRow(
   tableId: string,
@@ -26,10 +27,11 @@ export async function getRow(
 }
 
 export async function save(
-  tableId: string,
+  tableOrViewId: string,
   inputs: Row,
   userId: string | undefined
 ) {
+  const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
   const table = await sdk.tables.getTable(tableId)
   const { table: updatedTable, row } = await inputProcessing(
     userId,
@@ -63,6 +65,7 @@ export async function save(
       row: await outputProcessing(table, row, {
         preserveLinks: true,
         squash: true,
+        fromViewId: viewId,
       }),
     }
   } else {
@@ -70,7 +73,9 @@ export async function save(
   }
 }
 
-export async function find(tableId: string, rowId: string): Promise<Row> {
+export async function find(tableOrViewId: string, rowId: string): Promise<Row> {
+  const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
+
   const row = await getRow(tableId, rowId, {
     relationships: true,
   })
@@ -84,5 +89,6 @@ export async function find(tableId: string, rowId: string): Promise<Row> {
   return await outputProcessing(table, row, {
     squash: true,
     preserveLinks: true,
+    fromViewId: viewId,
   })
 }

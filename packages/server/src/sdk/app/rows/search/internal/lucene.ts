@@ -59,7 +59,10 @@ export async function search(
       response.rows = response.rows.map((r: any) => pick(r, fields))
     }
 
-    response.rows = await outputProcessing(table, response.rows)
+    response.rows = await outputProcessing(table, response.rows, {
+      squash: true,
+      fromViewId: options.viewId,
+    })
   }
 
   return response

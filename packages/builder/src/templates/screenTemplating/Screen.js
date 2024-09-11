@@ -1,4 +1,4 @@
-import { BaseStructure } from "./BaseStructure"
+import { BaseStructure } from "../BaseStructure"
 import { Helpers } from "@budibase/bbui"
 
 export class Screen extends BaseStructure {
@@ -18,6 +18,7 @@ export class Screen extends BaseStructure {
         },
         _children: [],
         _instanceName: "",
+        layout: "flex",
         direction: "column",
         hAlign: "stretch",
         vAlign: "top",

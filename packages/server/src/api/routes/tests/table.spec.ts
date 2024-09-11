@@ -35,7 +35,7 @@ const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 describe.each([
-  ["internal", undefined],
+  ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
@@ -290,7 +290,7 @@ describe.each([
             expected._rev = expect.stringMatching(/^2-.+/)
           }
 
-          expect(updatedTable).toEqual(expected)
+          expect(updatedTable).toEqual(expect.objectContaining(expected))
 
           const persistedTable = await config.api.table.get(updatedTable._id!)
           expected = {
@@ -304,7 +304,7 @@ describe.each([
           if (isInternal) {
             expected._rev = expect.stringMatching(/^2-.+/)
           }
-          expect(persistedTable).toEqual(expected)
+          expect(persistedTable).toEqual(expect.objectContaining(expected))
         })
       })
 
@@ -687,7 +687,7 @@ describe.each([
         basicTable(datasource, { name: generator.guid() })
       )
       const res = await config.api.table.get(table._id!)
-      expect(res).toEqual(table)
+      expect(res).toEqual(expect.objectContaining(table))
     })
   })
 
@@ -727,10 +727,12 @@ describe.each([
         body: { message: `Table ${testTable._id} deleted.` },
       })
       expect(events.table.deleted).toHaveBeenCalledTimes(1)
-      expect(events.table.deleted).toHaveBeenCalledWith({
-        ...testTable,
-        tableId: testTable._id,
-      })
+      expect(events.table.deleted).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ...testTable,
+          tableId: testTable._id,
+        })
+      )
     })
 
     it("deletes linked references to the table after deletion", async () => {

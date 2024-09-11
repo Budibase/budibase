@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import { computed } from "../utils/computed.js"
+import { derivedMemo } from "@budibase/frontend-core"
 
 const createDndStore = () => {
   const initialState = {
@@ -78,11 +78,11 @@ export const dndStore = createDndStore()
 // performance by deriving any state that needs to be externally observed.
 // By doing this and using primitives, we can avoid invalidating other stores
 // or components which depend on DND state unless values actually change.
-export const dndParent = computed(dndStore, x => x.drop?.parent)
-export const dndIndex = computed(dndStore, x => x.drop?.index)
-export const dndBounds = computed(dndStore, x => x.source?.bounds)
-export const dndIsDragging = computed(dndStore, x => !!x.source)
-export const dndIsNewComponent = computed(
+export const dndParent = derivedMemo(dndStore, x => x.drop?.parent)
+export const dndIndex = derivedMemo(dndStore, x => x.drop?.index)
+export const dndBounds = derivedMemo(dndStore, x => x.source?.bounds)
+export const dndIsDragging = derivedMemo(dndStore, x => !!x.source)
+export const dndIsNewComponent = derivedMemo(
   dndStore,
   x => x.source?.newComponentType != null
 )

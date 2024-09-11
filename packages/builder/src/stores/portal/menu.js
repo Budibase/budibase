@@ -1,5 +1,4 @@
 import { derived } from "svelte/store"
-import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 import { admin } from "./admin"
 import { auth } from "./auth"
 import { sdk } from "@budibase/shared-core"
@@ -15,12 +14,10 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
       href: "/builder/portal/users/users",
     },
   ]
-  if (isEnabled(TENANT_FEATURE_FLAGS.USER_GROUPS)) {
-    userSubPages.push({
-      title: "Groups",
-      href: "/builder/portal/users/groups",
-    })
-  }
+  userSubPages.push({
+    title: "Groups",
+    href: "/builder/portal/users/groups",
+  })
 
   // Pages that all devs and admins can access
   let menu = [
@@ -83,50 +80,48 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
   }
 
   // Add account page
-  if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
-    let accountSubPages = [
-      {
-        title: "Usage",
-        href: "/builder/portal/account/usage",
-      },
-    ]
-    if (isAdmin) {
-      accountSubPages.push({
-        title: "Audit Logs",
-        href: "/builder/portal/account/auditLogs",
-      })
+  let accountSubPages = [
+    {
+      title: "Usage",
+      href: "/builder/portal/account/usage",
+    },
+  ]
+  if (isAdmin) {
+    accountSubPages.push({
+      title: "Audit Logs",
+      href: "/builder/portal/account/auditLogs",
+    })
 
-      if (!cloud) {
-        accountSubPages.push({
-          title: "System Logs",
-          href: "/builder/portal/account/systemLogs",
-        })
-      }
-    }
-    if (cloud && user?.accountPortalAccess) {
+    if (!cloud) {
       accountSubPages.push({
-        title: "Upgrade",
-        href: $admin?.accountPortalUrl + "/portal/upgrade",
-      })
-    } else if (!cloud && isAdmin) {
-      accountSubPages.push({
-        title: "Upgrade",
-        href: "/builder/portal/account/upgrade",
+        title: "System Logs",
+        href: "/builder/portal/account/systemLogs",
       })
     }
-    // add license check here
-    if (user?.accountPortalAccess && user.account.stripeCustomerId) {
-      accountSubPages.push({
-        title: "Billing",
-        href: $admin?.accountPortalUrl + "/portal/billing",
-      })
-    }
-    menu.push({
-      title: "Account",
-      href: "/builder/portal/account",
-      subPages: accountSubPages,
+  }
+  if (cloud && user?.accountPortalAccess) {
+    accountSubPages.push({
+      title: "Upgrade",
+      href: $admin?.accountPortalUrl + "/portal/upgrade",
+    })
+  } else if (!cloud && isAdmin) {
+    accountSubPages.push({
+      title: "Upgrade",
+      href: "/builder/portal/account/upgrade",
     })
   }
+  // add license check here
+  if (user?.accountPortalAccess && user.account.stripeCustomerId) {
+    accountSubPages.push({
+      title: "Billing",
+      href: $admin?.accountPortalUrl + "/portal/billing",
+    })
+  }
+  menu.push({
+    title: "Account",
+    href: "/builder/portal/account",
+    subPages: accountSubPages,
+  })
 
   return menu
 })
