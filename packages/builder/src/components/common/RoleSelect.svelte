@@ -48,7 +48,8 @@
       let options = roles
         .filter(role => allowedRoles.includes(role._id))
         .map(role => ({
-          name: enrichLabel(role.name),
+          color: role.color,
+          name: enrichLabel(role.displayName),
           _id: role._id,
         }))
       if (allowedRoles.includes(Constants.Roles.CREATOR)) {
@@ -63,7 +64,8 @@
 
     // Allow all core roles
     let options = roles.map(role => ({
-      name: enrichLabel(role.name),
+      color: role.color,
+      name: enrichLabel(role.displayName),
       _id: role._id,
     }))
 
