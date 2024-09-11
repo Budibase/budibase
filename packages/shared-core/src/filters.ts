@@ -428,8 +428,9 @@ const builderFilter = (expression: SearchFilter) => {
   return query
 }
 
-export const buildQueryLegacy = (filter: SearchFilter[]) => {
-  //
+export const buildQueryLegacy = (
+  filter?: SearchFilterGroup | SearchFilter[]
+): SearchFilters | undefined => {
   let query: SearchFilters = {
     string: {},
     fuzzy: {},
@@ -523,7 +524,6 @@ export const buildQueryLegacy = (filter: SearchFilter[]) => {
         }
       }
     } else if (isLogicalSearchOperator(queryOperator)) {
-      // TODO
     } else if (query[queryOperator] && operator !== "onEmptyFilter") {
       if (type === "boolean") {
         // Transform boolean filters to cope with null.
@@ -548,7 +548,9 @@ export const buildQueryLegacy = (filter: SearchFilter[]) => {
   return query
 }
 
-export const buildQuery = (filter?: SearchFilterGroup | SearchFilter[]) => {
+export const buildQuery = (
+  filter?: SearchFilterGroup | SearchFilter[]
+): SearchFilters | undefined => {
   if (!filter) {
     return
   }
