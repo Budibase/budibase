@@ -321,20 +321,18 @@ const automationActions = store => ({
       const oldName = newAutomation.definition.steps[stepIndex].name
       const newName = name.trim()
 
-      // Update stepNames
       newAutomation.definition.stepNames = {
         ...newAutomation.definition.stepNames,
         [blockId]: newName,
       }
 
-      // Update the name in the step itself
       newAutomation.definition.steps[stepIndex].name = newName
 
-      // Update bindings in all steps
       newAutomation.definition.steps = updateBindingsInSteps(
         newAutomation.definition.steps,
         oldName,
-        newName
+        newName,
+        stepIndex
       )
 
       await store.actions.save(newAutomation)

@@ -49,7 +49,6 @@
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
-    runtimeToReadableBinding,
   } from "dataBinding"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
@@ -677,7 +676,6 @@
       const field = Object.values(FIELDS).find(
         field => field.type === value.type && field.subtype === value.subtype
       )
-      console.log(bindingName)
       return {
         readableBinding:
           bindingName && !isLoopBlock
@@ -710,7 +708,6 @@
         !isLoopBlock
           ? allSteps[idx]?.name
           : allSteps[idx - 1]?.name
-      console.log(idx == 4 && bindingName)
 
       if (isLoopBlock) {
         schema = {
