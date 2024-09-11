@@ -1,12 +1,14 @@
 <script>
   import { Button, Helpers, ActionButton } from "@budibase/bbui"
   import { useSvelteFlow, Position } from "@xyflow/svelte"
-  import { getContext } from "svelte"
+  import { getContext, tick } from "svelte"
+  import { autoLayout } from "./layout"
+  import { ZoomDuration } from "./constants"
 
-  const { nodes, autoLayout } = getContext("flow")
+  const { nodes, edges } = getContext("flow")
   const flow = useSvelteFlow()
 
-  const addRole = () => {
+  const addRole = async () => {
     nodes.update(state => [
       ...state,
       {
@@ -22,19 +24,42 @@
         position: { x: 0, y: 0 },
       },
     ])
-    autoLayout()
+    await doAutoLayout()
+  }
+
+  const doAutoLayout = async () => {
+    const layout = autoLayout({ nodes: $nodes, edges: $edges })
+    nodes.set(layout.nodes)
+    edges.set(layout.edges)
+    await tick()
+    flow.fitView({
+      maxZoom: 1,
+      duration: ZoomDuration,
+      includeHiddenNodes: true,
+    })
   }
 </script>
 
 <div class="control top-left">
   <div class="group">
-    <ActionButton icon="Add" quiet on:click={flow.zoomIn} />
-    <ActionButton icon="Remove" quiet on:click={flow.zoomOut} />
+    <ActionButton
+      icon="Add"
+      quiet
+      on:click={() => flow.zoomIn({ duration: ZoomDuration })}
+    />
+    <ActionButton
+      icon="Remove"
+      quiet
+      on:click={() => flow.zoomOut({ duration: ZoomDuration })}
+    />
   </div>
-  <Button secondary on:click={() => flow.fitView({ maxZoom: 1 })}>
+  <Button
+    secondary
+    on:click={() => flow.fitView({ maxZoom: 1, duration: ZoomDuration })}
+  >
     Zoom to fit
   </Button>
-  <Button secondary on:click={autoLayout}>Auto layout</Button>
+  <Button secondary on:click={doAutoLayout}>Auto layout</Button>
 </div>
 <div class="control bottom-right">
   <Button icon="Add" cta on:click={addRole}>Add role</Button>
