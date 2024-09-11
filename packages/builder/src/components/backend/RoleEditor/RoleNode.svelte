@@ -29,12 +29,12 @@
   let tempColor
 
   const deleteNode = async () => {
-    await roles.delete(nodeToRole({ id, data }))
     flow.deleteElements({
       nodes: [{ id }],
     })
     await tick()
     doAutoLayout()
+    await roles.delete(nodeToRole({ id, data }))
   }
 
   const openPopover = () => {
@@ -45,12 +45,12 @@
   }
 
   const saveChanges = async () => {
-    await roles.save(nodeToRole({ id, data }))
     flow.updateNodeData(id, {
       displayName: tempDisplayName,
       description: tempDescription,
       color: tempColor,
     })
+    await roles.save(nodeToRole({ id, data }))
   }
 
   const doAutoLayout = () => {
