@@ -454,11 +454,9 @@ class Orchestrator {
         outputs: tempOutput,
         inputs: steps[stepToLoopIndex].inputs,
       })
-      console.log(this.context)
 
       const stepName = steps[stepToLoopIndex].name || steps[stepToLoopIndex].id
       this.context.stepsByName![stepName] = tempOutput
-      console.log(this.context)
       this.context.steps[this.context.steps.length] = tempOutput
       this.context.steps = this.context.steps.filter(
         item => !item.hasOwnProperty.call(item, "currentItem")
@@ -552,7 +550,6 @@ class Orchestrator {
             loopIteration
           )
         }
-        console.log(this.context)
 
         const stepFn = await this.getStepFunctionality(step.stepId)
         let inputs = await this.testProcesss(originalStepInput, this.context)
