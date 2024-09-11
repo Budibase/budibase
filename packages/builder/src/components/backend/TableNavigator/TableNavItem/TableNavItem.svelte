@@ -21,20 +21,20 @@
   const getContextMenuItems = () => {
     return [
       {
-        icon: "Delete",
-        name: "Delete",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: deleteConfirmationModal.show,
-      },
-      {
         icon: "Edit",
         name: "Edit",
         keyBind: null,
         visible: table?.sourceType !== DB_TYPE_EXTERNAL,
         disabled: false,
         callback: editModal.show,
+      },
+      {
+        icon: "Delete",
+        name: "Delete",
+        keyBind: null,
+        visible: true,
+        disabled: false,
+        callback: deleteConfirmationModal.show,
       },
     ]
   }
