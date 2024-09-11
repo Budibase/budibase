@@ -36,7 +36,6 @@
     proOptions={{ hideAttribution: true }}
     fitViewOptions={{ maxZoom: 1 }}
     defaultEdgeOptions={{ type: "bezier", animated: true }}
-    on:nodeclick={event => console.log("on node click", event.detail.node)}
   >
     <Background variant={BackgroundVariant.Dots} />
     <Controls />
