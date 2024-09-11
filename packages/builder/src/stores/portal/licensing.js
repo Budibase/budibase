@@ -22,6 +22,8 @@ export const createLicensingStore = () => {
     backupsEnabled: false,
     brandingEnabled: false,
     scimEnabled: false,
+    budibaseAIEnabled: false,
+    customAIConfigsEnabled: false,
     // the currently used quotas from the db
     quotaUsage: undefined,
     // derived quota metrics for percentages used
@@ -142,6 +144,14 @@ export const createLicensingStore = () => {
         Constants.Features.VIEW_READONLY_COLUMNS
       )
 
+      const budibaseAIEnabled = license.features.includes(
+        Constants.Features.BUDIBASE_AI
+      )
+
+      const customAIConfigsEnabled = license.features.includes(
+        Constants.Features.AI_CUSTOM_CONFIGS
+      )
+
       store.update(state => {
         return {
           ...state,
@@ -153,6 +163,8 @@ export const createLicensingStore = () => {
           groupsEnabled,
           backupsEnabled,
           brandingEnabled,
+          budibaseAIEnabled,
+          customAIConfigsEnabled,
           scimEnabled,
           environmentVariablesEnabled,
           auditLogsEnabled,
