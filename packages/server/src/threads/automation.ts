@@ -323,7 +323,9 @@ class Orchestrator {
                 } else if (step.stepId === AutomationActionStepId.LOOP) {
                   stepIndex = await this.executeLoopStep(step, steps, stepIndex)
                 } else {
-                  await this.executeStep(step)
+                  if (!this.stopped) {
+                    await this.executeStep(step)
+                  }
                   stepIndex++
                 }
               }
@@ -461,7 +463,7 @@ class Orchestrator {
   }
   private async executeBranchStep(branchStep: BranchStep): Promise<void> {
     const { branches, children } = branchStep.inputs
-
+    const conditionMet = false
     for (const branch of branches) {
       const condition = await this.evaluateBranchCondition(branch.condition)
       if (condition) {
@@ -482,6 +484,19 @@ class Orchestrator {
         await this.executeSteps(branchSteps)
         break
       }
+    }
+    if (!conditionMet) {
+      this.stopped = true
+      this.updateExecutionOutput(
+        branchStep.id,
+        branchStep.stepId,
+        branchStep.inputs,
+        {
+          success: false,
+          status: AutomationStatus.NO_CONDITION_MET,
+        }
+      )
+      return
     }
   }
 
