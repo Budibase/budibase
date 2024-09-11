@@ -30,11 +30,20 @@
   $: roleMismatch = checkRoleMismatch(permissions)
   $: selectedRole = roleMismatch ? null : permissions?.[0]?.value
   $: readableRole = selectedRole
-    ? $roles.find(x => x._id === selectedRole)?.name
+    ? $roles.find(x => x._id === selectedRole)?.displayName
     : null
   $: buttonLabel = readableRole ? `Access: ${readableRole}` : "Access"
-  $: customRoles = $roles.filter(x => !builtins.includes(x._id))
   $: highlight = roleMismatch || selectedRole === Roles.PUBLIC
+
+  $: builtInRoles = builtins.map(roleId => $roles.find(x => x._id === roleId))
+  $: customRoles = $roles
+    .filter(x => !builtins.includes(x._id))
+    .slice()
+    .toSorted((a, b) => {
+      const aName = a.displayName || a.name
+      const bName = b.displayName || b.name
+      return aName < bName ? -1 : 1
+    })
 
   const fetchPermissions = async id => {
     const res = await permissionsStore.forResourceDetailed(id)
@@ -149,39 +158,25 @@
   {/if}
 
   <List>
-    <ListItem
-      title="App admin"
-      subtitle="Only app admins can access this data"
-      hoverable
-      selected={selectedRole === Roles.ADMIN}
-      on:click={() => changePermission(Roles.ADMIN)}
-    />
-    <ListItem
-      title="App power user"
-      subtitle="Only app power users can access this data"
-      hoverable
-      selected={selectedRole === Roles.POWER}
-      on:click={() => changePermission(Roles.POWER)}
-    />
-    <ListItem
-      title="App user"
-      subtitle="Only logged in users can access this data"
-      hoverable
-      selected={selectedRole === Roles.BASIC}
-      on:click={() => changePermission(Roles.BASIC)}
-    />
-    <ListItem
-      title="Public user"
-      subtitle="Users are not required to log in to access this data"
-      hoverable
-      selected={selectedRole === Roles.PUBLIC}
-      on:click={() => changePermission(Roles.PUBLIC)}
-    />
-    {#each customRoles as role}
+    {#each builtInRoles as role}
       <ListItem
-        title={role.name}
+        title={role.displayName}
+        subtitle={role.description}
         hoverable
         selected={selectedRole === role._id}
+        icon="StatusLight"
+        iconColor={role.color}
+        on:click={() => changePermission(role._id)}
+      />
+    {/each}
+    {#each customRoles as role}
+      <ListItem
+        title={role.displayName}
+        subtitle={role.description}
+        hoverable
+        selected={selectedRole === role._id}
+        icon="StatusLight"
+        iconColor={role.color}
         on:click={() => changePermission(role._id)}
       />
     {/each}
