@@ -6,14 +6,14 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   ExecuteScriptStepInputs,
   ExecuteScriptStepOutputs,
 } from "@budibase/types"
 import { EventEmitter } from "events"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "JS Scripting",
   tagline: "Execute JavaScript Code",
   icon: "Code",

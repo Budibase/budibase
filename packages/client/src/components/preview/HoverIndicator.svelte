@@ -19,7 +19,7 @@
       newId = e.target.dataset.id
     } else {
       // Handle normal components
-      const element = e.target.closest(".interactive.component")
+      const element = e.target.closest(".interactive.component:not(.root)")
       newId = element?.dataset?.id
     }
 

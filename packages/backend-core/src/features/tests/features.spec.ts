@@ -1,6 +1,6 @@
 import { IdentityContext, IdentityType, UserCtx } from "@budibase/types"
-import { Flag, FlagSet, FlagValues, init } from "../"
-import { context } from "../.."
+import { Flag, FlagSet, FlagValues, init, shutdown } from "../"
+import * as context from "../../context"
 import environment, { withEnv } from "../../environment"
 import nodeFetch from "node-fetch"
 import nock from "nock"
@@ -67,9 +67,9 @@ describe("feature flags", () => {
       expected: flags.defaults(),
     },
     {
-      it: "should fail when an environment flag is not recognised",
+      it: "should ignore unknown feature flags",
       environmentFlags: "default:TEST_BOOLEAN,default:FOO",
-      errorMessage: "Feature: FOO is not an allowed option",
+      expected: { TEST_BOOLEAN: true },
     },
     {
       it: "should be able to read boolean flags from PostHog",
@@ -147,13 +147,13 @@ describe("feature flags", () => {
     }) => {
       const env: Partial<typeof environment> = {
         TENANT_FEATURE_FLAGS: environmentFlags,
+        SELF_HOSTED: false,
       }
 
       if (posthogFlags) {
         mockPosthogFlags(posthogFlags)
         env.POSTHOG_TOKEN = "test"
         env.POSTHOG_API_HOST = "https://us.i.posthog.com"
-        env.POSTHOG_PERSONAL_TOKEN = "test"
       }
 
       const ctx = { user: { license: { features: licenseFlags || [] } } }
@@ -197,6 +197,8 @@ describe("feature flags", () => {
             throw new Error("No expected value")
           }
         })
+
+        shutdown()
       })
     }
   )

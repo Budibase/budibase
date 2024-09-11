@@ -30,6 +30,7 @@ import {
   BBReferenceFieldSubType,
   JsonFieldSubType,
   AutoFieldSubType,
+  CreateViewRequest,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -145,12 +146,25 @@ export function view(tableId: string) {
   }
 }
 
+function viewV2CreateRequest(tableId: string): CreateViewRequest {
+  return {
+    tableId,
+    name: generator.guid(),
+  }
+}
+
+export const viewV2 = {
+  createRequest: viewV2CreateRequest,
+}
+
 export function automationStep(
   actionDefinition = BUILTIN_ACTION_DEFINITIONS.CREATE_ROW
 ): AutomationStep {
   return {
     id: utils.newid(),
     ...actionDefinition,
+    stepId: AutomationActionStepId.CREATE_ROW,
+    inputs: { row: {} },
   }
 }
 
@@ -160,7 +174,7 @@ export function automationTrigger(
   return {
     id: utils.newid(),
     ...triggerDefinition,
-  }
+  } as AutomationTrigger
 }
 
 export function newAutomation({
@@ -209,7 +223,9 @@ export function basicAutomation(appId?: string): Automation {
         description: "test",
         type: AutomationStepType.TRIGGER,
         id: "test",
-        inputs: {},
+        inputs: {
+          fields: {},
+        },
         schema: {
           inputs: {
             properties: {},
@@ -241,7 +257,7 @@ export function serverLogAutomation(appId?: string): Automation {
         description: "test",
         type: AutomationStepType.TRIGGER,
         id: "test",
-        inputs: {},
+        inputs: { fields: {} },
         schema: {
           inputs: {
             properties: {},
@@ -394,7 +410,7 @@ export function filterAutomation(appId: string, tableId?: string): Automation {
           type: AutomationStepType.ACTION,
           internal: true,
           stepId: AutomationActionStepId.FILTER,
-          inputs: {},
+          inputs: { field: "name", value: "test", condition: "EQ" },
           schema: BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT.schema,
         },
       ],
@@ -408,7 +424,7 @@ export function filterAutomation(appId: string, tableId?: string): Automation {
         event: "row:save",
         stepId: AutomationTriggerStepId.ROW_SAVED,
         inputs: {
-          tableId,
+          tableId: tableId!,
         },
         schema: TRIGGER_DEFINITIONS.ROW_SAVED.schema,
       },
@@ -417,7 +433,10 @@ export function filterAutomation(appId: string, tableId?: string): Automation {
   return automation
 }
 
-export function updateRowAutomationWithFilters(appId: string): Automation {
+export function updateRowAutomationWithFilters(
+  appId: string,
+  tableId: string
+): Automation {
   const automation: Automation = {
     name: "updateRowWithFilters",
     type: "automation",
@@ -433,7 +452,7 @@ export function updateRowAutomationWithFilters(appId: string): Automation {
           type: AutomationStepType.ACTION,
           internal: true,
           stepId: AutomationActionStepId.SERVER_LOG,
-          inputs: {},
+          inputs: { text: "log statement" },
           schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
         },
       ],
@@ -442,12 +461,11 @@ export function updateRowAutomationWithFilters(appId: string): Automation {
         tagline: "An automation trigger",
         description: "A trigger",
         icon: "Icon",
-
         id: "a",
         type: AutomationStepType.TRIGGER,
         event: "row:update",
         stepId: AutomationTriggerStepId.ROW_UPDATED,
-        inputs: {},
+        inputs: { tableId },
         schema: TRIGGER_DEFINITIONS.ROW_UPDATED.schema,
       },
     },

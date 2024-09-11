@@ -1,6 +1,6 @@
 <script>
   import { Label } from "@budibase/bbui"
-  import { onMount, createEventDispatcher } from "svelte"
+  import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 
   import {
@@ -57,6 +57,64 @@
   export let readonlyLineNumbers = false
 
   const dispatch = createEventDispatcher()
+
+  let textarea
+  let editor
+  let mounted = false
+  let isEditorInitialised = false
+  let queuedRefresh = false
+
+  // Theming!
+  let currentTheme = $themeStore?.theme
+  let isDark = !currentTheme.includes("light")
+  let themeConfig = new Compartment()
+
+  $: {
+    if (autofocus && isEditorInitialised) {
+      editor.focus()
+    }
+  }
+
+  // Init when all elements are ready
+  $: if (mounted && !isEditorInitialised) {
+    isEditorInitialised = true
+    initEditor()
+  }
+
+  // Theme change
+  $: if (mounted && isEditorInitialised && $themeStore?.theme) {
+    if (currentTheme != $themeStore?.theme) {
+      currentTheme = $themeStore?.theme
+      isDark = !currentTheme.includes("light")
+
+      // Issue theme compartment update
+      editor.dispatch({
+        effects: themeConfig.reconfigure([...(isDark ? [oneDark] : [])]),
+      })
+    }
+  }
+
+  // Wait to try and gracefully replace
+  $: refresh(value, isEditorInitialised, mounted)
+
+  /**
+   * Will refresh the editor contents only after
+   * it has been fully initialised
+   * @param value {string} the editor value
+   */
+  const refresh = (value, initialised, mounted) => {
+    if (!initialised || !mounted) {
+      queuedRefresh = true
+      return
+    }
+
+    if (editor.state.doc.toString() !== value || queuedRefresh) {
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: value },
+      })
+      queuedRefresh = false
+    }
+  }
 
   // Export a function to expose caret position
   export const getCaretPosition = () => {
@@ -131,11 +189,6 @@
       decorations: v => v.decorations,
     }
   )
-
-  // Theming!
-  let currentTheme = $themeStore?.theme
-  let isDark = !currentTheme.includes("light")
-  let themeConfig = new Compartment()
 
   const indentWithTabCustom = {
     key: "Tab",
@@ -253,6 +306,11 @@
         lineNumbers(),
         foldGutter(),
         keymap.of(buildKeymap()),
+        EditorView.domEventHandlers({
+          blur: () => {
+            dispatch("blur", editor.state.doc.toString())
+          },
+        }),
         EditorView.updateListener.of(v => {
           const docStr = v.state.doc?.toString()
           if (docStr === value) {
@@ -266,11 +324,6 @@
     return complete
   }
 
-  let textarea
-  let editor
-  let mounted = false
-  let isEditorInitialised = false
-
   const initEditor = () => {
     const baseExtensions = buildBaseExtensions()
 
@@ -281,37 +334,13 @@
     })
   }
 
-  $: {
-    if (autofocus && isEditorInitialised) {
-      editor.focus()
-    }
-  }
-
-  // Init when all elements are ready
-  $: if (mounted && !isEditorInitialised) {
-    isEditorInitialised = true
-    initEditor()
-  }
-
-  // Theme change
-  $: if (mounted && isEditorInitialised && $themeStore?.theme) {
-    if (currentTheme != $themeStore?.theme) {
-      currentTheme = $themeStore?.theme
-      isDark = !currentTheme.includes("light")
-
-      // Issue theme compartment update
-      editor.dispatch({
-        effects: themeConfig.reconfigure([...(isDark ? [oneDark] : [])]),
-      })
-    }
-  }
-
   onMount(async () => {
     mounted = true
-    return () => {
-      if (editor) {
-        editor.destroy()
-      }
+  })
+
+  onDestroy(() => {
+    if (editor) {
+      editor.destroy()
     }
   })
 </script>

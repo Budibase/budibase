@@ -1,4 +1,11 @@
-import { Datasource, FieldType, Row, Table } from "@budibase/types"
+import {
+  AutoColumnFieldMetadata,
+  AutoFieldSubType,
+  Datasource,
+  FieldType,
+  NumberFieldMetadata,
+  Table,
+} from "@budibase/types"
 
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
 import { search } from "../../../../../sdk/app/rows/search"
@@ -32,17 +39,19 @@ describe.each([
   let envCleanup: (() => void) | undefined
   let datasource: Datasource | undefined
   let table: Table
-  let rows: Row[]
 
   beforeAll(async () => {
-    await withCoreEnv({ SQS_SEARCH_ENABLE: isSqs ? "true" : "false" }, () =>
+    await withCoreEnv({ TENANT_FEATURE_FLAGS: isSqs ? "*:SQS" : "" }, () =>
       config.init()
     )
 
-    if (isSqs) {
+    if (isLucene) {
       envCleanup = setCoreEnv({
-        SQS_SEARCH_ENABLE: "true",
-        SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
+        TENANT_FEATURE_FLAGS: "*:!SQS",
+      })
+    } else if (isSqs) {
+      envCleanup = setCoreEnv({
+        TENANT_FEATURE_FLAGS: "*:SQS",
       })
     }
 
@@ -51,16 +60,28 @@ describe.each([
         datasource: await dsProvider,
       })
     }
+  })
+
+  beforeEach(async () => {
+    const idFieldSchema: NumberFieldMetadata | AutoColumnFieldMetadata =
+      isInternal
+        ? {
+            name: "id",
+            type: FieldType.AUTO,
+            subtype: AutoFieldSubType.AUTO_ID,
+            autocolumn: true,
+          }
+        : {
+            name: "id",
+            type: FieldType.NUMBER,
+            autocolumn: true,
+          }
 
     table = await config.api.table.save(
       tableForDatasource(datasource, {
         primary: ["id"],
         schema: {
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-            autocolumn: true,
-          },
+          id: idFieldSchema,
           name: {
             name: "name",
             type: FieldType.STRING,
@@ -81,16 +102,13 @@ describe.each([
       })
     )
 
-    rows = []
     for (let i = 0; i < 10; i++) {
-      rows.push(
-        await config.api.row.save(table._id!, {
-          name: generator.first(),
-          surname: generator.last(),
-          age: generator.age(),
-          address: generator.address(),
-        })
-      )
+      await config.api.row.save(table._id!, {
+        name: generator.first(),
+        surname: generator.last(),
+        age: generator.age(),
+        address: generator.address(),
+      })
     }
   })
 
@@ -138,4 +156,100 @@ describe.each([
         )
       })
     })
+
+  it("does not allow accessing hidden fields", async () => {
+    await config.doInContext(config.appId, async () => {
+      await config.api.table.save({
+        ...table,
+        schema: {
+          ...table.schema,
+          name: {
+            ...table.schema.name,
+            visible: true,
+          },
+          age: {
+            ...table.schema.age,
+            visible: false,
+          },
+        },
+      })
+      const result = await search({
+        tableId: table._id!,
+        query: {},
+      })
+      expect(result.rows).toHaveLength(10)
+      for (const row of result.rows) {
+        const keys = Object.keys(row)
+        expect(keys).toContain("name")
+        expect(keys).toContain("surname")
+        expect(keys).toContain("address")
+        expect(keys).not.toContain("age")
+      }
+    })
+  })
+
+  it("does not allow accessing hidden fields even if requested", async () => {
+    await config.doInContext(config.appId, async () => {
+      await config.api.table.save({
+        ...table,
+        schema: {
+          ...table.schema,
+          name: {
+            ...table.schema.name,
+            visible: true,
+          },
+          age: {
+            ...table.schema.age,
+            visible: false,
+          },
+        },
+      })
+      const result = await search({
+        tableId: table._id!,
+        query: {},
+        fields: ["name", "age"],
+      })
+      expect(result.rows).toHaveLength(10)
+      for (const row of result.rows) {
+        const keys = Object.keys(row)
+        expect(keys).toContain("name")
+        expect(keys).not.toContain("age")
+        expect(keys).not.toContain("surname")
+        expect(keys).not.toContain("address")
+      }
+    })
+  })
+
+  !isLucene &&
+    it.each([
+      [["id", "name", "age"], 3],
+      [["name", "age"], 10],
+    ])(
+      "cannot query by non search fields (fields: %s)",
+      async (queryFields, expectedRows) => {
+        await config.doInContext(config.appId, async () => {
+          const { rows } = await search({
+            tableId: table._id!,
+            query: {
+              $or: {
+                conditions: [
+                  {
+                    $and: {
+                      conditions: [
+                        { range: { id: { low: 2, high: 4 } } },
+                        { range: { id: { low: 3, high: 5 } } },
+                      ],
+                    },
+                  },
+                  { equal: { id: 7 } },
+                ],
+              },
+            },
+            fields: queryFields,
+          })
+
+          expect(rows).toHaveLength(expectedRows)
+        })
+      }
+    )
 })

@@ -297,7 +297,7 @@ export async function search(
     throw new Error("Unable to find table")
   }
 
-  const relationships = buildInternalRelationships(table)
+  const relationships = buildInternalRelationships(table, allTables)
 
   const searchFilters: SearchFilters = {
     ...cleanupFilters(query, table, allTables),
@@ -379,9 +379,10 @@ export async function search(
     }
 
     // get the rows
-    let finalRows = await outputProcessing<Row[]>(table, processed, {
+    let finalRows = await outputProcessing(table, processed, {
       preserveLinks: true,
       squash: true,
+      fromViewId: options.viewId,
     })
 
     // check if we need to pick specific rows out

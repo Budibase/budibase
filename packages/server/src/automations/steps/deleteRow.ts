@@ -4,16 +4,16 @@ import { buildCtx } from "./utils"
 import { getError } from "../automationUtils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
   AutomationStepType,
   AutomationIOType,
   AutomationCustomIOType,
   AutomationFeature,
   DeleteRowStepInputs,
   DeleteRowStepOutputs,
+  AutomationStepDefinition,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   description: "Delete a row from your database",
   icon: "TableRowRemoveCenter",
   name: "Delete Row",

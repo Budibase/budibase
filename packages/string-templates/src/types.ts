@@ -5,4 +5,5 @@ export interface ProcessOptions {
   noFinalise?: boolean
   escapeNewlines?: boolean
   onlyFound?: boolean
+  disabledHelpers?: string[]
 }
