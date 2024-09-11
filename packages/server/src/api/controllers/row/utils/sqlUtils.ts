@@ -7,11 +7,9 @@ import {
   ManyToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
   RelationshipsJson,
-  Row,
   Table,
 } from "@budibase/types"
 import { breakExternalTableId } from "../../../../integrations/utils"
-import { basicProcessing } from "./basic"
 import { generateJunctionTableID } from "../../../../db/utils"
 
 type TableMap = Record<string, Table>
@@ -20,87 +18,6 @@ export function isManyToMany(
   field: RelationshipFieldMetadata
 ): field is ManyToManyRelationshipFieldMetadata {
   return !!(field as ManyToManyRelationshipFieldMetadata).through
-}
-
-function isCorrectRelationship(
-  relationship: RelationshipsJson,
-  table1: Table,
-  table2: Table,
-  row: Row
-): boolean {
-  const junctionTableId = generateJunctionTableID(table1._id!, table2._id!)
-  const possibleColumns = [
-    `${junctionTableId}.doc1.fieldName`,
-    `${junctionTableId}.doc2.fieldName`,
-  ]
-  return !!possibleColumns.find(col => row[col] === relationship.column)
-}
-
-/**
- * This iterates through the returned rows and works out what elements of the rows
- * actually match up to another row (based on primary keys) - this is pretty specific
- * to SQL and the way that SQL relationships are returned based on joins.
- * This is complicated, but the idea is that when a SQL query returns all the relations
- * will be separate rows, with all of the data in each row. We have to decipher what comes
- * from where (which tables) and how to convert that into budibase columns.
- */
-export async function updateRelationshipColumns(
-  table: Table,
-  tables: TableMap,
-  row: Row,
-  rows: { [key: string]: Row },
-  relationships: RelationshipsJson[],
-  opts?: { sqs?: boolean }
-) {
-  const columns: { [key: string]: any } = {}
-  for (let relationship of relationships) {
-    const linkedTable = tables[relationship.tableName]
-    if (!linkedTable) {
-      continue
-    }
-    const fromColumn = `${table.name}.${relationship.from}`
-    const toColumn = `${linkedTable.name}.${relationship.to}`
-    // this is important when working with multiple relationships
-    // between the same tables, don't want to overlap/multiply the relations
-    if (
-      !relationship.through &&
-      row[fromColumn]?.toString() !== row[toColumn]?.toString()
-    ) {
-      continue
-    }
-
-    let linked = basicProcessing({
-      row,
-      table: linkedTable,
-      isLinked: true,
-      sqs: opts?.sqs,
-    })
-    if (!linked._id) {
-      continue
-    }
-    if (
-      !opts?.sqs ||
-      isCorrectRelationship(relationship, table, linkedTable, row)
-    ) {
-      columns[relationship.column] = linked
-    }
-  }
-  for (let [column, related] of Object.entries(columns)) {
-    if (!row._id) {
-      continue
-    }
-    const rowId: string = row._id
-    if (!Array.isArray(rows[rowId][column])) {
-      rows[rowId][column] = []
-    }
-    // make sure relationship hasn't been found already
-    if (
-      !rows[rowId][column].find((relation: Row) => relation._id === related._id)
-    ) {
-      rows[rowId][column].push(related)
-    }
-  }
-  return rows
 }
 
 /**

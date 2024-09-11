@@ -171,6 +171,7 @@ const environment = {
   // Couch/search
   SQL_LOGGING_ENABLE: process.env.SQL_LOGGING_ENABLE,
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
+  SQL_MAX_RELATED_ROWS: process.env.MAX_RELATED_ROWS,
   // smtp
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
   SMTP_USER: process.env.SMTP_USER,
