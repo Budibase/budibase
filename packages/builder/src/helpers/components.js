@@ -213,7 +213,7 @@ export const getComponentText = component => {
     return component._instanceName
   }
   const type =
-    component._component.replace("@budibase/standard-components/", "") ||
+    component._component?.replace("@budibase/standard-components/", "") ||
     "component"
   return capitalise(type)
 }
