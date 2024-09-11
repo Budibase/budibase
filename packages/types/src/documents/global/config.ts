@@ -111,6 +111,22 @@ export interface SCIMInnerConfig {
 
 export interface SCIMConfig extends Config<SCIMInnerConfig> {}
 
+type AIProvider = "OpenAI" | "Anthropic" | "AzureOpenAI" | "Custom"
+
+export interface AIInnerConfig {
+  [key: string]: {
+    provider: AIProvider
+    isDefault: boolean
+    name: string
+    active: boolean
+    baseUrl?: string
+    apiKey?: string
+    defaultModel?: string
+  }
+}
+
+export interface AIConfig extends Config<AIInnerConfig> {}
+
 export const isSettingsConfig = (config: Config): config is SettingsConfig =>
   config.type === ConfigType.SETTINGS
 
@@ -126,6 +142,9 @@ export const isOIDCConfig = (config: Config): config is OIDCConfig =>
 export const isSCIMConfig = (config: Config): config is SCIMConfig =>
   config.type === ConfigType.SCIM
 
+export const isAIConfig = (config: Config): config is AIConfig =>
+  config.type === ConfigType.AI
+
 export enum ConfigType {
   SETTINGS = "settings",
   ACCOUNT = "account",
@@ -134,4 +153,5 @@ export enum ConfigType {
   OIDC = "oidc",
   OIDC_LOGOS = "logos_oidc",
   SCIM = "scim",
+  AI = "ai",
 }
