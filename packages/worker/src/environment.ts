@@ -70,6 +70,9 @@ const environment = {
   PASSPORT_OIDCAUTH_FAILURE_REDIRECT:
     process.env.PASSPORT_OIDCAUTH_FAILURE_REDIRECT || "/error",
 
+  // Budibase AI
+  BUDIBASE_AI_API_KEY: process.env.BUDIBASE_AI_API_KEY,
+  BUDIBASE_AI_DEFAULT_MODEL: process.env.BUDIBASE_AI_DEFAULT_MODEL,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
