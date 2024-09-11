@@ -55,6 +55,11 @@ export function quotas(): Quotas {
           value: 1,
           triggers: [],
         },
+        budibaseAICredits: {
+          name: "Budibase AI Credits",
+          value: 1,
+          triggers: [],
+        },
       },
       static: {
         rows: {
@@ -83,6 +88,11 @@ export function quotas(): Quotas {
           triggers: [],
         },
         plugins: {
+          name: "Plugins",
+          value: 1,
+          triggers: [],
+        },
+        aiCustomConfigs: {
           name: "Plugins",
           value: 1,
           triggers: [],
