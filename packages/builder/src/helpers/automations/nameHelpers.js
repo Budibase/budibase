@@ -105,9 +105,10 @@ export const getNewStepName = (automation, step) => {
       return count
     }, 0)
   }
-
-  const existingCount = countExistingSteps(automation.definition.steps)
-
+  let existingCount = 0
+  if (automation?.definition) {
+    existingCount = countExistingSteps(automation.definition.steps)
+  }
   if (existingCount === 0) {
     return baseName
   }
