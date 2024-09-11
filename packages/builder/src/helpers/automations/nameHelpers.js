@@ -1,40 +1,71 @@
 import { AutomationActionStepId } from "@budibase/types"
 
-export const updateBindingsInInputs = (inputs, oldName, newName) => {
+export const updateBindingsInInputs = (inputs, oldName, newName, stepIndex) => {
   if (typeof inputs === "string") {
-    return inputs.replace(
-      new RegExp(`stepsByName\\.${oldName}\\.`, "g"),
-      `stepsByName.${newName}.`
-    )
+    return inputs
+      .replace(
+        new RegExp(`stepsByName\\.${oldName}\\.`, "g"),
+        `stepsByName.${newName}.`
+      )
+      .replace(
+        new RegExp(`steps\\.${stepIndex}\\.`, "g"),
+        `stepsByName.${newName}.`
+      )
   }
 
   if (Array.isArray(inputs)) {
-    return inputs.map(item => updateBindingsInInputs(item, oldName, newName))
+    return inputs.map(item =>
+      updateBindingsInInputs(item, oldName, newName, stepIndex)
+    )
   }
 
   if (typeof inputs === "object" && inputs !== null) {
     const updatedInputs = {}
     for (const [key, value] of Object.entries(inputs)) {
-      updatedInputs[key] = updateBindingsInInputs(value, oldName, newName)
+      const updatedKey = updateBindingsInInputs(
+        key,
+        oldName,
+        newName,
+        stepIndex
+      )
+      updatedInputs[updatedKey] = updateBindingsInInputs(
+        value,
+        oldName,
+        newName,
+        stepIndex
+      )
     }
     return updatedInputs
   }
-
   return inputs
 }
 
-export const updateBindingsInSteps = (steps, oldName, newName) => {
+export const updateBindingsInSteps = (
+  steps,
+  oldName,
+  newName,
+  changedStepIndex
+) => {
   return steps.map(step => {
     const updatedStep = {
       ...step,
-      inputs: updateBindingsInInputs(step.inputs, oldName, newName),
+      inputs: updateBindingsInInputs(
+        step.inputs,
+        oldName,
+        newName,
+        changedStepIndex
+      ),
     }
 
-    // Handle branch steps
     if ("branches" in updatedStep.inputs) {
       updatedStep.inputs.branches = updatedStep.inputs.branches.map(branch => ({
         ...branch,
-        condition: updateBindingsInInputs(branch.condition, oldName, newName),
+        condition: updateBindingsInInputs(
+          branch.condition,
+          oldName,
+          newName,
+          changedStepIndex
+        ),
       }))
 
       if (updatedStep.inputs.children) {
@@ -44,7 +75,8 @@ export const updateBindingsInSteps = (steps, oldName, newName) => {
           updatedStep.inputs.children[key] = updateBindingsInSteps(
             childSteps,
             oldName,
-            newName
+            newName,
+            changedStepIndex
           )
         }
       }
@@ -53,7 +85,6 @@ export const updateBindingsInSteps = (steps, oldName, newName) => {
     return updatedStep
   })
 }
-
 export const getNewStepName = (automation, step) => {
   const baseName = step.name
 
