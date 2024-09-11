@@ -355,10 +355,14 @@ describe("table sdk", () => {
               visible: true,
               columns: {
                 title: {
+                  name: "title",
+                  type: "string",
                   visible: true,
                   readonly: true,
                 },
                 age: {
+                  name: "age",
+                  type: "number",
                   visible: false,
                   readonly: false,
                 },
