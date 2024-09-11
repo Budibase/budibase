@@ -12,13 +12,13 @@
   import { Roles } from "constants/backend"
   import { NodeWidth, NodeHeight } from "./constants"
   import { getContext, tick } from "svelte"
-  import { template } from "lodash"
+  import { autoLayout } from "./layout"
 
   export let data
   export let isConnectable
   export let id
 
-  const { autoLayout } = getContext("flow")
+  const { nodes, edges } = getContext("flow")
   const flow = useSvelteFlow()
 
   let anchor
@@ -33,7 +33,7 @@
       nodes: [{ id }],
     })
     await tick()
-    autoLayout()
+    doAutoLayout()
   }
 
   const openPopover = () => {
@@ -47,6 +47,13 @@
       label: tempLabel,
       color: tempColor,
     })
+  }
+
+  const doAutoLayout = () => {
+    const layout = autoLayout({ nodes: $nodes, edges: $edges })
+    nodes.set(layout.nodes)
+    edges.set(layout.edges)
+    flow.fitView({ maxZoom: 1, duration: 300 })
   }
 </script>
 

@@ -1,57 +1,20 @@
 <script>
-  import { Heading, Helpers } from "@budibase/bbui"
-  import { derived, writable } from "svelte/store"
+  import { Heading } from "@budibase/bbui"
+  import { writable } from "svelte/store"
   import { SvelteFlow, Background, BackgroundVariant } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import RoleNode from "./RoleNode.svelte"
-  import { rolesToLayout, dagreLayout, layoutToRoles } from "./layout"
-  import { onMount, setContext, tick } from "svelte"
+  import { defaultLayout, autoLayout } from "./layout"
+  import { onMount, setContext } from "svelte"
   import Controls from "./Controls.svelte"
-  import { Roles } from "constants/backend"
-  import { derivedMemo } from "@budibase/frontend-core"
 
   const nodes = writable([])
-  const edgeStore = writable([])
-  const enrichedEdges = derived([edgeStore, nodes], ([$edgeStore, $nodes]) => {
-    let additions = []
-    for (let node of $nodes) {
-      // If a certain node does not inherit anything, make it inherit basic
-      if (
-        !$edgeStore.some(x => x.target === node.id) &&
-        node.id !== Roles.BASIC
-      ) {
-        additions.push({
-          id: Helpers.uuid(),
-          source: Roles.BASIC,
-          target: node.id,
-          animated: true,
-        })
-      }
-    }
-    return [...$edgeStore, ...additions]
-  })
-  const edges = {
-    ...edgeStore,
-    subscribe: enrichedEdges.subscribe,
-  }
+  const edges = writable([])
 
-  const roles = derivedMemo([nodes, edges], ([$nodes, $edges]) => {
-    return layoutToRoles({ nodes: $nodes, edges: $edges })
-  })
-  $: console.log("new roles", $roles)
-
-  setContext("flow", {
-    nodes,
-    edges,
-    autoLayout: async () => {
-      const layout = dagreLayout({ nodes: $nodes, edges: $edges })
-      nodes.set(layout.nodes)
-      edges.set(layout.edges)
-    },
-  })
+  setContext("flow", { nodes, edges })
 
   onMount(() => {
-    const layout = dagreLayout(rolesToLayout())
+    const layout = autoLayout(defaultLayout())
     nodes.set(layout.nodes)
     edges.set(layout.edges)
   })
@@ -120,15 +83,5 @@
     /* Edges */
     --xy-edge-stroke: var(--edge-color);
     --xy-edge-stroke-selected: var(--selected-color);
-
-    /* Minimap */
-    /* --xy-minimap-background-color-props: var(--node-background);
-    --xy-minimap-mask-background-color-props: var(--translucent-grey); */
   }
-
-  /* Arrow edge markers */
-  /* .flow :global(.svelte-flow__arrowhead > polyline) {
-    fill: var(--edge-color);
-    stroke: var(--edge-color);
-  } */
 </style>

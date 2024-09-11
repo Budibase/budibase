@@ -6,7 +6,8 @@ import { Roles } from "constants/backend"
 import { get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 
-export const rolesToLayout = () => {
+// Generates a flow compatible structure of nodes and edges from the current roles
+export const defaultLayout = () => {
   const ignoredRoles = [Roles.PUBLIC]
   const $roles = get(roles)
   const descriptions = {
@@ -59,6 +60,7 @@ export const rolesToLayout = () => {
   }
 }
 
+// Converts the flow structure of ndes and edges back into an array of roles
 export const layoutToRoles = ({ nodes, edges }) => {
   // Clone and wipe existing inheritance
   let newRoles = Helpers.cloneDeep(get(roles)).map(role => {
@@ -92,7 +94,8 @@ export const layoutToRoles = ({ nodes, edges }) => {
   return newRoles
 }
 
-export const dagreLayout = ({ nodes, edges }) => {
+// Updates positions of nodes and edges into a nice graph structure
+const dagreLayout = ({ nodes, edges }) => {
   const dagreGraph = new dagre.graphlib.Graph()
   dagreGraph.setDefaultEdgeLabel(() => ({}))
   dagreGraph.setGraph({
@@ -117,4 +120,41 @@ export const dagreLayout = ({ nodes, edges }) => {
     }
   })
   return { nodes, edges }
+}
+
+// Adds additional edges as needed to the flow structure to ensure compatibility with BB role logic
+const sanitiseLayout = ({ nodes, edges }) => {
+  let additions = []
+
+  for (let node of nodes) {
+    // If a node does not inherit anything, let it inherit basic
+    if (!edges.some(x => x.target === node.id) && node.id !== Roles.BASIC) {
+      additions.push({
+        id: Helpers.uuid(),
+        source: Roles.BASIC,
+        target: node.id,
+        animated: true,
+      })
+    }
+
+    // If a node is not inherited by anything, let it be inherited by admin
+    if (!edges.some(x => x.source === node.id) && node.id !== Roles.ADMIN) {
+      additions.push({
+        id: Helpers.uuid(),
+        source: node.id,
+        target: Roles.ADMIN,
+        animated: true,
+      })
+    }
+  }
+
+  return {
+    nodes,
+    edges: [...edges, ...additions],
+  }
+}
+
+// Automatically lays out the graph, sanitising and enriching the structure
+export const autoLayout = ({ nodes, edges }) => {
+  return dagreLayout(sanitiseLayout({ nodes, edges }))
 }
