@@ -17,9 +17,10 @@
         targetPosition: Position.Left,
         type: "role",
         data: {
-          label: "New role",
+          displayName: "New role",
           description: "Custom role",
           custom: true,
+          color: "var(--spectrum-global-color-gray-700)",
         },
         position: { x: 0, y: 0 },
       },

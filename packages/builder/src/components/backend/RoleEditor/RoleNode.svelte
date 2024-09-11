@@ -23,7 +23,8 @@
 
   let anchor
   let modal
-  let tempLabel
+  let tempDisplayName
+  let tempDescription
   let tempColor
 
   $: color = data.color || RoleUtils.getRoleColour(id)
@@ -37,14 +38,16 @@
   }
 
   const openPopover = () => {
-    tempLabel = data.label
+    tempDisplayName = data.displayName
+    tempDescription = data.description
     tempColor = color
     modal.show()
   }
 
   const saveChanges = () => {
     flow.updateNodeData(id, {
-      label: tempLabel,
+      displayName: tempDisplayName,
+      description: tempDescription,
       color: tempColor,
     })
   }
@@ -66,8 +69,8 @@
   <div class="color" />
   <div class="content">
     <div class="title">
-      <div class="label">
-        {data.label}
+      <div class="name">
+        {data.displayName}
       </div>
       {#if data.custom}
         <div class="buttons">
@@ -92,14 +95,19 @@
 
 <Modal bind:this={modal}>
   <ModalContent
-    title={`Edit ${data.label}`}
+    title={`Edit ${data.displayName}`}
     confirmText="Save"
     onConfirm={saveChanges}
   >
     <Input
       label="Name"
-      value={tempLabel}
-      on:change={e => (tempLabel = e.detail)}
+      value={tempDisplayName}
+      on:change={e => (tempDisplayName = e.detail)}
+    />
+    <Input
+      label="Description"
+      value={tempDescription}
+      on:change={e => (tempDescription = e.detail)}
     />
     <div>
       <FieldLabel label="Color" />
@@ -160,7 +168,7 @@
   .title :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-600);
   }
-  .label {
+  .name {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
