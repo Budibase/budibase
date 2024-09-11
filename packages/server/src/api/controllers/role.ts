@@ -62,7 +62,16 @@ export async function find(ctx: UserCtx<void, FindRoleResponse>) {
 
 export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   const db = context.getAppDB()
-  let { _id, name, inherits, permissionId, version } = ctx.request.body
+  let {
+    _id,
+    name,
+    displayName,
+    description,
+    color,
+    inherits,
+    permissionId,
+    version,
+  } = ctx.request.body
   let isCreate = false
   const isNewVersion = version === roles.RoleIDVersion.NAME
 
@@ -88,7 +97,13 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     ctx.throw(400, "Cannot change custom role name")
   }
 
-  const role = new roles.Role(_id, name, permissionId).addInheritance(inherits)
+  const role = new roles.Role(
+    _id,
+    displayName || name,
+    description || "Custom role",
+    color || "var(--spectrum-global-color-static-magenta-400)",
+    permissionId
+  ).addInheritance(inherits)
   if (ctx.request.body._rev) {
     role._rev = ctx.request.body._rev
   }

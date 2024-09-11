@@ -4,7 +4,7 @@
   import { SvelteFlow, Background, BackgroundVariant } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import RoleNode from "./RoleNode.svelte"
-  import { defaultLayout, autoLayout } from "./layout"
+  import { rolesToNodes, autoLayout } from "./layout"
   import { onMount, setContext } from "svelte"
   import Controls from "./Controls.svelte"
 
@@ -14,7 +14,7 @@
   setContext("flow", { nodes, edges })
 
   onMount(() => {
-    const layout = autoLayout(defaultLayout())
+    const layout = autoLayout(rolesToNodes())
     nodes.set(layout.nodes)
     edges.set(layout.edges)
   })

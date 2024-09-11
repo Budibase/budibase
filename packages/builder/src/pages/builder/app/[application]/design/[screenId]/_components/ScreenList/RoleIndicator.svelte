@@ -8,7 +8,7 @@
 
   let showTooltip = false
 
-  $: color = RoleUtils.getRoleColour(roleId)
+  $: color = role.color || "var(--spectrum-global-color-static-magenta-400)"
   $: role = $roles.find(role => role._id === roleId)
   $: tooltip =
     roleId === Roles.PUBLIC

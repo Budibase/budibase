@@ -6,15 +6,36 @@ import { Roles } from "constants/backend"
 import { get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 
+// Converts a role doc into a node structure
+export const roleToNode = role => ({
+  id: role._id,
+  sourcePosition: Position.Right,
+  targetPosition: Position.Left,
+  type: "role",
+  position: { x: 0, y: 0 },
+  data: {
+    displayName: role.displayName || role.name,
+    description: role.description || "Custom role",
+    color: role.color || "var(--spectrum-global-color-static-magenta-400)",
+    custom: !role._id.match(/[A-Z]+/),
+  },
+})
+
+// Converts a node structure back into a role doc
+export const nodeToRole = node => {
+  const role = get(roles).find(x => x._id === node.id)
+  return {
+    ...role,
+    displayName: node.data.displayName,
+    color: node.data.color,
+    description: node.data.description,
+  }
+}
+
 // Generates a flow compatible structure of nodes and edges from the current roles
-export const defaultLayout = () => {
+export const rolesToNodes = () => {
   const ignoredRoles = [Roles.PUBLIC]
   const $roles = get(roles)
-  const descriptions = {
-    [Roles.BASIC]: "Basic user",
-    [Roles.POWER]: "Power user",
-    [Roles.ADMIN]: "Can do everything",
-  }
 
   let nodes = []
   let edges = []
@@ -23,19 +44,11 @@ export const defaultLayout = () => {
     if (ignoredRoles.includes(role._id)) {
       continue
     }
-    nodes.push({
-      id: role._id,
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left,
-      type: "role",
-      data: {
-        displayName: role.displayName || role.name || "",
-        description: descriptions[role._id] || "Custom role",
-        color: role.color,
-        custom: !role._id.match(/[A-Z]+/),
-      },
-    })
 
+    // Add node for this role
+    nodes.push(roleToNode(role))
+
+    // Add edges for this role
     let inherits = []
     if (role.inherits) {
       inherits = Array.isArray(role.inherits) ? role.inherits : [role.inherits]
@@ -58,40 +71,6 @@ export const defaultLayout = () => {
     nodes,
     edges,
   }
-}
-
-// Converts the flow structure of ndes and edges back into an array of roles
-export const layoutToRoles = ({ nodes, edges }) => {
-  // Clone and wipe existing inheritance
-  let newRoles = Helpers.cloneDeep(get(roles)).map(role => {
-    return { ...role, inherits: [] }
-  })
-
-  // Copy over names and colours
-  for (let node of nodes) {
-    let role = newRoles.find(x => x._id === node.id)
-    if (role) {
-      role.name = node.data.label
-      role.color = node.data.color
-    } else {
-      // New role
-    }
-  }
-
-  // Build inheritance
-  for (let edge of edges) {
-    let role = newRoles.find(x => x._id === edge.target)
-    if (role) {
-      role.inherits.push(edge.source)
-    } else {
-      // New role
-    }
-  }
-
-  // Ensure basic is correct
-  newRoles.find(x => x._id === Roles.BASIC).inherits = [Roles.BASIC]
-
-  return newRoles
 }
 
 // Updates positions of nodes and edges into a nice graph structure
