@@ -1,6 +1,9 @@
 import { Screen } from "./Screen"
 import { Component } from "../Component"
 import getValidRoute from "./getValidRoute"
+import { componentStore } from "stores/builder"
+import { Helpers } from "@budibase/bbui"
+import { getRowActionButtonTemplates } from "templates/rowActions"
 
 export const getTypeSpecificRoute = (tableOrView, type) => {
   if (type === "create") {
@@ -32,27 +35,55 @@ const getActionType = type => {
   }
 }
 
-const form = ({ tableOrView, type, permissions, screens }) => {
+const getTitle = type => {
+  if (type === "create") {
+    return "Create row"
+  } else if (type === "update") {
+    return "Update row"
+  }
+  return "Row details"
+}
+
+const form = async ({ tableOrView, type, permissions, screens }) => {
+  const id = Helpers.uuid()
   const typeSpecificRoute = getTypeSpecificRoute(tableOrView, type)
   const role = getRole(permissions, type)
 
-  const multistepFormBlock = new Component(
-    "@budibase/standard-components/multistepformblock"
-  )
+  let formBlock = new Component("@budibase/standard-components/formblock", id)
     .customProps({
-      actionType: getActionType(type),
       dataSource: tableOrView.tableSelectFormat,
-      steps: [{}],
+      actionType: getActionType(type),
+      title: getTitle(type),
       rowId: type === "new" ? undefined : `{{ url.id }}`,
+      buttonPosition: "bottom",
     })
-    .instanceName(`${tableOrView.name} - Multistep Form block`)
+    .instanceName(`${tableOrView.name} - Form block`)
+    .json()
+
+  // Add default button config
+  componentStore.migrateSettings(formBlock)
+
+  // Add row action buttons if required
+  if (type !== "create") {
+    const rowActionButtons = await getRowActionButtonTemplates({
+      instance: formBlock,
+    })
+    if (rowActionButtons.length) {
+      formBlock.buttons = [...(formBlock.buttons || []), ...rowActionButtons]
+
+      // Collapse buttons if more than 3 row actions
+      if (rowActionButtons.length > 3) {
+        formBlock.buttonsCollapsed = true
+      }
+    }
+  }
 
   const template = new Screen()
     .route(getValidRoute(screens, typeSpecificRoute, role))
     .instanceName(`${tableOrView.name} - Form`)
     .role(role)
     .autoTableId(tableOrView.id)
-    .addChild(multistepFormBlock)
+    .addChild(formBlock)
     .json()
 
   return [

@@ -7,19 +7,41 @@
     Select,
     notifications,
     Body,
-    ModalContent,
-    Tags,
-    Tag,
     Icon,
   } from "@budibase/bbui"
   import { capitalise } from "helpers"
-  import { getFormattedPlanName } from "helpers/planTitle"
   import { get } from "svelte/store"
 
   export let resourceId
   export let permissions
 
   const inheritedRoleId = "inherited"
+
+  let dependantsInfoMessage
+
+  $: loadDependantInfo(resourceId)
+  $: computedPermissions = Object.entries(permissions.permissions).reduce(
+    (p, [level, roleInfo]) => {
+      p[level] = {
+        selectedValue:
+          roleInfo.permissionType === PermissionSource.INHERITED
+            ? inheritedRoleId
+            : roleInfo.role,
+        options: [...$roles],
+      }
+      if (roleInfo.inheritablePermission) {
+        p[level].inheritOption = roleInfo.inheritablePermission
+        p[level].options.unshift({
+          _id: inheritedRoleId,
+          name: `Inherit (${
+            get(roles).find(x => x._id === roleInfo.inheritablePermission).name
+          })`,
+        })
+      }
+      return p
+    },
+    {}
+  )
 
   async function changePermission(level, role) {
     try {
@@ -45,38 +67,9 @@
     }
   }
 
-  $: computedPermissions = Object.entries(permissions.permissions).reduce(
-    (p, [level, roleInfo]) => {
-      p[level] = {
-        selectedValue:
-          roleInfo.permissionType === PermissionSource.INHERITED
-            ? inheritedRoleId
-            : roleInfo.role,
-        options: [...get(roles)],
-      }
-
-      if (roleInfo.inheritablePermission) {
-        p[level].inheritOption = roleInfo.inheritablePermission
-        p[level].options.unshift({
-          _id: inheritedRoleId,
-          name: `Inherit (${
-            get(roles).find(x => x._id === roleInfo.inheritablePermission).name
-          })`,
-        })
-      }
-      return p
-    },
-    {}
-  )
-
-  $: requiresPlanToModify = permissions.requiresPlanToModify
-
-  let dependantsInfoMessage
-  async function loadDependantInfo() {
+  async function loadDependantInfo(resourceId) {
     const dependantsInfo = await permissionsStore.getDependantsInfo(resourceId)
-
     const resourceByType = dependantsInfo?.resourceByType
-
     if (resourceByType) {
       const total = Object.values(resourceByType).reduce((p, c) => p + c, 0)
       let resourceDisplay =
@@ -91,51 +84,35 @@
       }
     }
   }
-  loadDependantInfo()
 </script>
 
-<ModalContent showCancelButton={false} confirmText="Done">
-  <span slot="header">
-    Manage Access
-    {#if requiresPlanToModify}
-      <span class="lock-tag">
-        <Tags>
-          <Tag icon="LockClosed"
-            >{getFormattedPlanName(requiresPlanToModify)}</Tag
-          >
-        </Tags>
-      </span>
-    {/if}
-  </span>
-  <Body size="S">Specify the minimum access level role for this data.</Body>
-  <div class="row">
-    <Label extraSmall grey>Level</Label>
-    <Label extraSmall grey>Role</Label>
-    {#each Object.keys(computedPermissions) as level}
-      <Input value={capitalise(level)} disabled />
-      <Select
-        disabled={requiresPlanToModify}
-        placeholder={false}
-        value={computedPermissions[level].selectedValue}
-        on:change={e => changePermission(level, e.detail)}
-        options={computedPermissions[level].options}
-        getOptionLabel={x => x.name}
-        getOptionValue={x => x._id}
-      />
-    {/each}
-  </div>
+<Body size="S">Specify the minimum access level role for this data.</Body>
+<div class="row">
+  <Label extraSmall grey>Level</Label>
+  <Label extraSmall grey>Role</Label>
+  {#each Object.keys(computedPermissions) as level}
+    <Input value={capitalise(level)} disabled />
+    <Select
+      placeholder={false}
+      value={computedPermissions[level].selectedValue}
+      on:change={e => changePermission(level, e.detail)}
+      options={computedPermissions[level].options}
+      getOptionLabel={x => x.name}
+      getOptionValue={x => x._id}
+    />
+  {/each}
+</div>
 
-  {#if dependantsInfoMessage}
-    <div class="inheriting-resources">
-      <Icon name="Alert" />
-      <Body size="S">
-        <i>
-          {dependantsInfoMessage}
-        </i>
-      </Body>
-    </div>
-  {/if}
-</ModalContent>
+{#if dependantsInfoMessage}
+  <div class="inheriting-resources">
+    <Icon name="Alert" />
+    <Body size="S">
+      <i>
+        {dependantsInfoMessage}
+      </i>
+    </Body>
+  </div>
+{/if}
 
 <style>
   .row {
@@ -143,11 +120,6 @@
     grid-template-columns: 1fr 1fr;
     grid-gap: var(--spacing-s);
   }
-
-  .lock-tag {
-    padding-left: var(--spacing-s);
-  }
-
   .inheriting-resources {
     display: flex;
     gap: var(--spacing-s);

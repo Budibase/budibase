@@ -10,12 +10,16 @@
     navigationStore,
     permissions as permissionsStore,
     builderStore,
+    datasources,
+    appStore,
   } from "stores/builder"
   import { auth } from "stores/portal"
   import { goto } from "@roxi/routify"
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import * as screenTemplating from "templates/screenTemplating"
   import { Roles } from "constants/backend"
+  import { AutoScreenTypes } from "constants"
+  import { makeTableOption, makeViewOption } from "./utils"
 
   let mode
 
@@ -23,20 +27,33 @@
   let datasourceModal
   let formTypeModal
   let tableTypeModal
-
   let selectedTablesAndViews = []
   let permissions = {}
+  let hasPreselectedDatasource = false
 
   $: screens = $screenStore.screens
 
-  export const show = newMode => {
+  export const show = (newMode, preselectedDatasource) => {
     mode = newMode
     selectedTablesAndViews = []
     permissions = {}
+    hasPreselectedDatasource = preselectedDatasource != null
 
-    if (mode === "table" || mode === "form") {
-      datasourceModal.show()
-    } else if (mode === "blank") {
+    if (mode === AutoScreenTypes.TABLE || mode === AutoScreenTypes.FORM) {
+      if (preselectedDatasource) {
+        // If preselecting a datasource, skip a step
+        const isTable = preselectedDatasource.type === "table"
+        const tableOrView = isTable
+          ? makeTableOption(preselectedDatasource, $datasources.list)
+          : makeViewOption(preselectedDatasource)
+        fetchPermission(tableOrView.id)
+        selectedTablesAndViews.push(tableOrView)
+        onSelectDatasources()
+      } else {
+        // Otherwise choose a datasource
+        datasourceModal.show()
+      }
+    } else if (mode === AutoScreenTypes.BLANK) {
       screenDetailsModal.show()
     } else {
       throw new Error("Invalid mode provided")
@@ -77,44 +94,49 @@
   }
 
   const onSelectDatasources = async () => {
-    if (mode === "form") {
+    if (mode === AutoScreenTypes.FORM) {
       formTypeModal.show()
-    } else if (mode === "table") {
+    } else if (mode === AutoScreenTypes.TABLE) {
       tableTypeModal.show()
     }
   }
 
   const createBlankScreen = async ({ route }) => {
     const screenTemplates = screenTemplating.blank({ route, screens })
-
     const newScreens = await createScreens(screenTemplates)
     loadNewScreen(newScreens[0])
   }
 
   const createTableScreen = async type => {
-    const screenTemplates = selectedTablesAndViews.flatMap(tableOrView =>
-      screenTemplating.table({
-        screens,
-        tableOrView,
-        type,
-        permissions: permissions[tableOrView.id],
-      })
-    )
-
+    const screenTemplates = (
+      await Promise.all(
+        selectedTablesAndViews.map(tableOrView =>
+          screenTemplating.table({
+            screens,
+            tableOrView,
+            type,
+            permissions: permissions[tableOrView.id],
+          })
+        )
+      )
+    ).flat()
     const newScreens = await createScreens(screenTemplates)
     loadNewScreen(newScreens[0])
   }
 
   const createFormScreen = async type => {
-    const screenTemplates = selectedTablesAndViews.flatMap(tableOrView =>
-      screenTemplating.form({
-        screens,
-        tableOrView,
-        type,
-        permissions: permissions[tableOrView.id],
-      })
-    )
-
+    const screenTemplates = (
+      await Promise.all(
+        selectedTablesAndViews.map(tableOrView =>
+          screenTemplating.form({
+            screens,
+            tableOrView,
+            type,
+            permissions: permissions[tableOrView.id],
+          })
+        )
+      )
+    ).flat()
     const newScreens = await createScreens(screenTemplates)
 
     if (type === "update" || type === "create") {
@@ -136,9 +158,11 @@
     if (screen?.props?._children.length) {
       // Focus on the main component for the screen type
       const mainComponent = screen?.props?._children?.[0]._id
-      $goto(`./${screen._id}/${mainComponent}`)
+      $goto(
+        `/builder/app/${$appStore.appId}/design/${screen._id}/${mainComponent}`
+      )
     } else {
-      $goto(`./${screen._id}`)
+      $goto(`/builder/app/${$appStore.appId}/design/${screen._id}`)
     }
 
     screenStore.select(screen._id)
@@ -214,6 +238,7 @@
       tableTypeModal.hide()
       datasourceModal.show()
     }}
+    showCancelButton={!hasPreselectedDatasource}
   />
 </Modal>
 
@@ -230,5 +255,6 @@
       formTypeModal.hide()
       datasourceModal.show()
     }}
+    showCancelButton={!hasPreselectedDatasource}
   />
 </Modal>
