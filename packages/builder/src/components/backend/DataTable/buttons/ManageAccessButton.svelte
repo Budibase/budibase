@@ -185,13 +185,6 @@
   {#if dependantsInfoMessage}
     <InfoDisplay info body={dependantsInfoMessage} />
   {/if}
-
-  <div class="buttons">
-    <EditRolesButton
-      on:show={() => (showPopover = false)}
-      on:hide={() => (showPopover = true)}
-    />
-  </div>
 </DetailPopover>
 
 <style>
