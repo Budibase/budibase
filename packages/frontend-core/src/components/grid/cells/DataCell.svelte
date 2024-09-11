@@ -66,7 +66,7 @@
     focus: () => api?.focus?.(),
     blur: () => api?.blur?.(),
     isActive: () => api?.isActive?.() ?? false,
-    onKeyDown: (...params) => api?.onKeyDown(...params),
+    onKeyDown: (...params) => api?.onKeyDown?.(...params),
     isReadonly: () => readonly,
     getType: () => column.schema.type,
     getValue: () => row[column.name],

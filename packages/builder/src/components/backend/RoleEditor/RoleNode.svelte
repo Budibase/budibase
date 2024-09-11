@@ -45,12 +45,13 @@
   }
 
   const saveChanges = async () => {
-    flow.updateNodeData(id, {
+    const newData = {
       displayName: tempDisplayName,
       description: tempDescription,
       color: tempColor,
-    })
-    await roles.save(nodeToRole({ id, data }))
+    }
+    flow.updateNodeData(id, newData)
+    await roles.save(nodeToRole({ id, data: newData }))
   }
 
   const doAutoLayout = () => {
@@ -81,7 +82,7 @@
       {/if}
     </div>
     {#if data.description}
-      <div class="description">
+      <div class="description" title={data.description}>
         {data.description}
       </div>
     {/if}
@@ -169,7 +170,8 @@
   .title :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-600);
   }
-  .name {
+  .name,
+  .description {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;

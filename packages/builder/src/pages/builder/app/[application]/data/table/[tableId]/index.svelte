@@ -6,6 +6,7 @@
     integrations,
     appStore,
     rowActions,
+    roles,
   } from "stores/builder"
   import { themeStore, admin } from "stores/portal"
   import { TableNames } from "constants"
@@ -26,16 +27,20 @@
   import GridRowActionsButton from "components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
   import { DB_TYPE_EXTERNAL } from "constants/backend"
 
-  const userSchemaOverrides = {
+  let generateButton
+
+  $: userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },
     lastName: { displayName: "Last name", disabled: true },
     email: { displayName: "Email", disabled: true },
-    roleId: { displayName: "Role", disabled: true },
     status: { displayName: "Status", disabled: true },
+    roleId: {
+      displayName: "Role",
+      type: "role",
+      disabled: true,
+      roles: $roles,
+    },
   }
-
-  let generateButton
-
   $: autoColumnStatus = verifyAutocolumns($tables?.selected)
   $: duplicates = Object.values(autoColumnStatus).reduce((acc, status) => {
     if (status.length > 1) {
