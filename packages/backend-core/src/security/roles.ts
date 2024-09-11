@@ -44,7 +44,7 @@ export class Role implements RoleDoc {
   permissionId: string
   inherits?: string
   version?: string
-  permissions = {}
+  permissions: Record<string, PermissionLevel[]> = {}
 
   constructor(id: string, name: string, permissionId: string) {
     this._id = id
@@ -244,9 +244,9 @@ export async function getUserRoleHierarchy(
 // some templates/older apps will use a simple string instead of array for roles
 // convert the string to an array using the theory that write is higher than read
 export function checkForRoleResourceArray(
-  rolePerms: { [key: string]: string[] },
+  rolePerms: Record<string, PermissionLevel[]>,
   resourceId: string
-) {
+): Record<string, PermissionLevel[]> {
   if (rolePerms && !Array.isArray(rolePerms[resourceId])) {
     const permLevel = rolePerms[resourceId] as any
     rolePerms[resourceId] = [permLevel]
