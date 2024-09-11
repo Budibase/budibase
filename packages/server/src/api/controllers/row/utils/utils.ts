@@ -13,13 +13,8 @@ import {
   processDates,
   processFormulas,
 } from "../../../../utilities/rowProcessor"
-import { isKnexEmptyReadResponse, updateRelationshipColumns } from "./sqlUtils"
-import {
-  basicProcessing,
-  generateIdForRow,
-  fixArrayTypes,
-  getInternalRowId,
-} from "./basic"
+import { isKnexEmptyReadResponse } from "./sqlUtils"
+import { basicProcessing, generateIdForRow, getInternalRowId } from "./basic"
 import sdk from "../../../../sdk"
 import { processStringSync } from "@budibase/string-templates"
 import validateJs from "validate.js"
@@ -149,42 +144,18 @@ export async function sqlOutputProcessing(
       rowId = generateIdForRow(row, table)
       row._id = rowId
     }
-    // this is a relationship of some sort
-    if (finalRows[rowId]) {
-      finalRows = await updateRelationshipColumns(
-        table,
-        tables,
-        row,
-        finalRows,
-        relationships,
-        opts
-      )
-      continue
-    }
-    const thisRow = fixArrayTypes(
-      basicProcessing({
-        row,
-        table,
-        isLinked: false,
-        sqs: opts?.sqs,
-      }),
-      table
-    )
+    const thisRow = basicProcessing({
+      row,
+      table,
+      tables: Object.values(tables),
+      isLinked: false,
+      sqs: opts?.sqs,
+    })
     if (thisRow._id == null) {
       throw new Error("Unable to generate row ID for SQL rows")
     }
 
     finalRows[thisRow._id] = fixBooleanFields({ row: thisRow, table })
-
-    // do this at end once its been added to the final rows
-    finalRows = await updateRelationshipColumns(
-      table,
-      tables,
-      row,
-      finalRows,
-      relationships,
-      opts
-    )
   }
 
   // make sure all related rows are correct
