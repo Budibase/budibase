@@ -4,10 +4,11 @@
   import { SvelteFlow, Background, BackgroundVariant } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import RoleNode from "./RoleNode.svelte"
-  import { initialLayout, dagreLayout } from "./layout"
+  import { rolesToLayout, dagreLayout, layoutToRoles } from "./layout"
   import { onMount, setContext, tick } from "svelte"
   import Controls from "./Controls.svelte"
   import { Roles } from "constants/backend"
+  import { derivedMemo } from "@budibase/frontend-core"
 
   const nodes = writable([])
   const edgeStore = writable([])
@@ -34,6 +35,11 @@
     subscribe: enrichedEdges.subscribe,
   }
 
+  const roles = derivedMemo([nodes, edges], ([$nodes, $edges]) => {
+    return layoutToRoles({ nodes: $nodes, edges: $edges })
+  })
+  $: console.log("new roles", $roles)
+
   setContext("flow", {
     nodes,
     edges,
@@ -45,7 +51,7 @@
   })
 
   onMount(() => {
-    const layout = dagreLayout(initialLayout())
+    const layout = dagreLayout(rolesToLayout())
     nodes.set(layout.nodes)
     edges.set(layout.edges)
   })

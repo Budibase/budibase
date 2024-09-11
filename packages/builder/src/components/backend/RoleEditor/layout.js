@@ -4,92 +4,92 @@ import { Position } from "@xyflow/svelte"
 import { roles } from "stores/builder"
 import { Roles } from "constants/backend"
 import { get } from "svelte/store"
+import { Helpers } from "@budibase/bbui"
 
-export const initialLayout = () => {
-  const builtins = [Roles.BASIC, Roles.POWER, Roles.ADMIN]
+export const rolesToLayout = () => {
+  const ignoredRoles = [Roles.PUBLIC]
+  const $roles = get(roles)
   const descriptions = {
     [Roles.BASIC]: "Basic user",
     [Roles.POWER]: "Power user",
     [Roles.ADMIN]: "Can do everything",
   }
-  const $roles = get(roles)
-  const nodes = builtins
-    .map(roleId => {
-      return {
-        id: roleId,
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
-        type: "role",
-        data: {
-          label: $roles.find(x => x._id === roleId)?.name,
-          description: descriptions[roleId],
-        },
-      }
-    })
-    .concat([
-      {
-        id: "management",
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
-        type: "role",
-        data: {
-          label: "Management",
-          description: "Custom role",
-          custom: true,
-        },
-      },
-      {
-        id: "approver",
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
-        type: "role",
-        data: {
-          label: "Approver",
-          description: "Custom role",
-          custom: true,
-        },
-      },
-      {
-        id: "engineer",
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
-        type: "role",
-        data: {
-          label: "Engineer",
-          description: "Custom role",
-          custom: true,
-        },
-      },
-    ])
 
+  let nodes = []
   let edges = []
-  const link = (source, target) => {
-    edges.push({
-      id: `${source}-${target}`,
-      source,
-      target,
-      animated: true,
-      // markerEnd: {
-      //   type: MarkerType.ArrowClosed,
-      //   width: 16,
-      //   height: 16,
-      // },
+
+  for (let role of $roles) {
+    if (ignoredRoles.includes(role._id)) {
+      continue
+    }
+    nodes.push({
+      id: role._id,
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+      type: "role",
+      data: {
+        label: role.name,
+        description: descriptions[role._id] || "Custom role",
+        color: role.color,
+        custom: !role._id.match(/[A-Z]+/),
+      },
     })
+
+    let inherits = []
+    if (role.inherits) {
+      inherits = Array.isArray(role.inherits) ? role.inherits : [role.inherits]
+    }
+    for (let sourceRole of inherits) {
+      // Ensure source role exists
+      if (!$roles.some(x => x._id === sourceRole)) {
+        continue
+      }
+      edges.push({
+        id: `${sourceRole}-${role._id}`,
+        source: sourceRole,
+        target: role._id,
+        animated: true,
+      })
+    }
   }
-
-  link(Roles.BASIC, "engineer")
-  link(Roles.BASIC, "approver")
-
-  link("engineer", Roles.POWER)
-  link("approver", "management")
-
-  link(Roles.POWER, Roles.ADMIN)
-  link("management", Roles.ADMIN)
 
   return {
     nodes,
     edges,
   }
+}
+
+export const layoutToRoles = ({ nodes, edges }) => {
+  // Clone and wipe existing inheritance
+  let newRoles = Helpers.cloneDeep(get(roles)).map(role => {
+    return { ...role, inherits: [] }
+  })
+
+  // Copy over names and colours
+  for (let node of nodes) {
+    let role = newRoles.find(x => x._id === node.id)
+    if (role) {
+      role.name = node.data.label
+      role.color = node.data.color
+    } else {
+      // New role
+    }
+  }
+
+  // Build inheritance
+  for (let edge of edges) {
+    let role = newRoles.find(x => x._id === edge.target)
+    if (role) {
+      role.inherits.push(edge.source)
+    } else {
+      // New role
+    }
+  }
+
+  // Ensure basic is correct
+  newRoles.find(x => x._id === Roles.BASIC).inherits = [Roles.BASIC]
+
+  return newRoles
 }
 
 export const dagreLayout = ({ nodes, edges }) => {
