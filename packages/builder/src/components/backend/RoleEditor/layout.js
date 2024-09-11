@@ -29,7 +29,7 @@ export const defaultLayout = () => {
       targetPosition: Position.Left,
       type: "role",
       data: {
-        label: role.name,
+        displayName: role.displayName || role.name || "",
         description: descriptions[role._id] || "Custom role",
         color: role.color,
         custom: !role._id.match(/[A-Z]+/),
