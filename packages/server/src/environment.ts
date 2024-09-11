@@ -112,6 +112,7 @@ const environment = {
     parseIntSafe(process.env.JS_RUNNER_MEMORY_LIMIT) ||
     DEFAULTS.JS_RUNNER_MEMORY_LIMIT,
   LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
+  DISABLE_USER_SYNC: process.env.DISABLE_USER_SYNC,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {
