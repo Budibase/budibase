@@ -156,7 +156,7 @@ describe("Branching automations", () => {
     expect(results.steps[1].outputs.message).toContain("Special user")
   })
 
-  it("should handlestop the branch automation when no conditions are met", async () => {
+  it("should stop the branch automation when no conditions are met", async () => {
     const builder = createAutomationBuilder({
       name: "Multiple OR Conditions Branching",
     })
