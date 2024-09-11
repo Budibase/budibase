@@ -6,4 +6,7 @@ export interface Role extends Document {
   permissions: { [key: string]: string[] }
   version?: string
   name: string
+  displayName?: string
+  color?: string
+  description?: string
 }

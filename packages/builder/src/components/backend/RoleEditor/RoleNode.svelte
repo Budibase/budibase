@@ -12,7 +12,8 @@
   import { Roles } from "constants/backend"
   import { NodeWidth, NodeHeight } from "./constants"
   import { getContext, tick } from "svelte"
-  import { autoLayout } from "./layout"
+  import { autoLayout, nodeToRole } from "./layout"
+  import { roles } from "stores/builder"
 
   export let data
   export let isConnectable
@@ -27,9 +28,8 @@
   let tempDescription
   let tempColor
 
-  $: color = data.color || RoleUtils.getRoleColour(id)
-
   const deleteNode = async () => {
+    await roles.delete(nodeToRole({ id, data }))
     flow.deleteElements({
       nodes: [{ id }],
     })
@@ -40,11 +40,12 @@
   const openPopover = () => {
     tempDisplayName = data.displayName
     tempDescription = data.description
-    tempColor = color
+    tempColor = data.color
     modal.show()
   }
 
-  const saveChanges = () => {
+  const saveChanges = async () => {
+    await roles.save(nodeToRole({ id, data }))
     flow.updateNodeData(id, {
       displayName: tempDisplayName,
       description: tempDescription,
@@ -63,7 +64,7 @@
 <div
   class="node"
   class:selected={false}
-  style={`--color:${color}; --width:${NodeWidth}px; --height:${NodeHeight}px;`}
+  style={`--color:${data.color}; --width:${NodeWidth}px; --height:${NodeHeight}px;`}
   bind:this={anchor}
 >
   <div class="color" />

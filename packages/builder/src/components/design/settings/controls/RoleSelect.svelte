@@ -14,7 +14,8 @@
   options={$roles}
   getOptionLabel={role => role.name}
   getOptionValue={role => role._id}
-  getOptionColour={role => RoleUtils.getRoleColour(role._id)}
+  getOptionColour={role =>
+    role.color || "var(--spectrum-global-color-static-magenta-400)"}
   {placeholder}
   {error}
 />

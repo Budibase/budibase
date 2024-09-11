@@ -45,10 +45,22 @@ export class Role implements RoleDoc {
   inherits?: string
   version?: string
   permissions = {}
+  displayName?: string
+  color?: string
+  description?: string
 
-  constructor(id: string, name: string, permissionId: string) {
+  constructor(
+    id: string,
+    displayName: string,
+    description: string,
+    color: string,
+    permissionId: string
+  ) {
     this._id = id
-    this.name = name
+    this.name = id
+    this.displayName = displayName
+    this.color = color
+    this.description = description
     this.permissionId = permissionId
     // version for managing the ID - removing the role_ when responding
     this.version = RoleIDVersion.NAME
@@ -63,21 +75,39 @@ export class Role implements RoleDoc {
 const BUILTIN_ROLES = {
   ADMIN: new Role(
     BUILTIN_IDS.ADMIN,
-    "Admin",
+    "App admin",
+    "Can do everything",
+    "var(--spectrum-global-color-static-red-400)",
     BuiltinPermissionID.ADMIN
   ).addInheritance(BUILTIN_IDS.POWER),
   POWER: new Role(
     BUILTIN_IDS.POWER,
-    "Power",
+    "App power user",
+    "An app user with more access",
+    "var(--spectrum-global-color-static-orange-400)",
     BuiltinPermissionID.POWER
   ).addInheritance(BUILTIN_IDS.BASIC),
   BASIC: new Role(
     BUILTIN_IDS.BASIC,
-    "Basic",
+    "App user",
+    "Any logged in user",
+    "var(--spectrum-global-color-static-green-400)",
     BuiltinPermissionID.WRITE
   ).addInheritance(BUILTIN_IDS.PUBLIC),
-  PUBLIC: new Role(BUILTIN_IDS.PUBLIC, "Public", BuiltinPermissionID.PUBLIC),
-  BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder", BuiltinPermissionID.ADMIN),
+  PUBLIC: new Role(
+    BUILTIN_IDS.PUBLIC,
+    "Public user",
+    "Accessible to anyone",
+    "var(--spectrum-global-color-static-blue-400)",
+    BuiltinPermissionID.PUBLIC
+  ),
+  BUILDER: new Role(
+    BUILTIN_IDS.BUILDER,
+    "Builder user",
+    "Users that can edit this app",
+    "var(--spectrum-global-color-static-magenta-600)",
+    BuiltinPermissionID.ADMIN
+  ),
 }
 
 export function getBuiltinRoles(): { [key: string]: RoleDoc } {

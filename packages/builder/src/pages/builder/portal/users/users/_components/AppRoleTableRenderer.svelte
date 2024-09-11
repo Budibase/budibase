@@ -6,8 +6,9 @@
 
   export let value
 
+  $: role = $roles.find(x => x._id === roleId)
+
   const getRoleLabel = roleId => {
-    const role = $roles.find(x => x._id === roleId)
     return roleId === Constants.Roles.CREATOR
       ? capitalise(Constants.Roles.CREATOR.toLowerCase())
       : role?.name || "Custom role"
@@ -17,7 +18,10 @@
 {#if value === Constants.Roles.CREATOR}
   Can edit
 {:else}
-  <StatusLight square color={RoleUtils.getRoleColour(value)}>
+  <StatusLight
+    square
+    color={role?.color || "var(--spectrum-global-color-static-magenta-400)"}
+  >
     Can use as {getRoleLabel(value)}
   </StatusLight>
 {/if}

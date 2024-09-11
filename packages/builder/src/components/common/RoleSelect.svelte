@@ -99,7 +99,7 @@
     if (role._id === Constants.Roles.CREATOR || role._id === RemoveID) {
       return null
     }
-    return RoleUtils.getRoleColour(role._id)
+    return role.color || "var(--spectrum-global-color-static-magenta-400)"
   }
 
   const getIcon = role => {

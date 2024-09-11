@@ -2,29 +2,28 @@
   import { Button, Helpers, ActionButton } from "@budibase/bbui"
   import { useSvelteFlow, Position } from "@xyflow/svelte"
   import { getContext, tick } from "svelte"
-  import { autoLayout } from "./layout"
+  import { autoLayout, roleToNode } from "./layout"
   import { ZoomDuration } from "./constants"
+  import { getSequentialName } from "helpers/duplicate"
+  import { roles } from "stores/builder"
+  import { Roles } from "constants/backend"
 
   const { nodes, edges } = getContext("flow")
   const flow = useSvelteFlow()
 
   const addRole = async () => {
-    nodes.update(state => [
-      ...state,
-      {
-        id: Helpers.uuid(),
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
-        type: "role",
-        data: {
-          displayName: "New role",
-          description: "Custom role",
-          custom: true,
-          color: "var(--spectrum-global-color-gray-700)",
-        },
-        position: { x: 0, y: 0 },
-      },
-    ])
+    const role = {
+      name: Helpers.uuid(),
+      displayName: getSequentialName($nodes, "New role ", {
+        getName: x => x.data.displayName,
+      }),
+      color: "var(--spectrum-global-color-gray-700)",
+      description: "Custom role",
+      permissionId: "write",
+      inherits: Roles.BASIC,
+    }
+    const savedRole = await roles.save(role)
+    nodes.update(state => [...state, roleToNode(savedRole)])
     await doAutoLayout()
   }
 
@@ -36,7 +35,6 @@
     flow.fitView({
       maxZoom: 1,
       duration: ZoomDuration,
-      includeHiddenNodes: true,
     })
   }
 </script>
