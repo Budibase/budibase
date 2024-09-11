@@ -1,17 +1,17 @@
 <script>
   import { StatusLight } from "@budibase/bbui"
-  import { RoleUtils, Constants } from "@budibase/frontend-core"
+  import { Constants } from "@budibase/frontend-core"
   import { roles } from "stores/builder"
   import { capitalise } from "helpers"
 
   export let value
 
-  $: role = $roles.find(x => x._id === roleId)
+  $: role = $roles.find(x => x._id === value)
 
   const getRoleLabel = roleId => {
     return roleId === Constants.Roles.CREATOR
       ? capitalise(Constants.Roles.CREATOR.toLowerCase())
-      : role?.name || "Custom role"
+      : role?.displayName || role?.name || "Custom role"
   }
 </script>
 
