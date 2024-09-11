@@ -1212,12 +1212,8 @@ class InternalBuilder {
 
     query = this.addFilters(query, filters, { relationship: true })
 
-    // SQLite (SQS) cannot use the WITH statement yet
-    if (relationships?.length && this.client === SqlClient.SQL_LITE) {
-      return this.addJsonRelationships(query, tableName, relationships)
-    }
     // handle relationships with a CTE for all others
-    else if (relationships?.length) {
+    if (relationships?.length) {
       const mainTable =
         this.query.tableAliases?.[this.query.endpoint.entityId] ||
         this.query.endpoint.entityId
