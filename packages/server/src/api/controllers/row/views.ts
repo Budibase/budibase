@@ -33,23 +33,26 @@ export async function searchView(
     .map(([key]) => key)
   const { body } = ctx.request
 
+  const sqsEnabled = await features.flags.isEnabled("SQS")
+  const supportsLogicalOperators = isExternalTableID(view.tableId) || sqsEnabled
+
   // Enrich saved query with ephemeral query params.
   // We prevent searching on any fields that are saved as part of the query, as
   // that could let users find rows they should not be allowed to access.
-  let query: any = dataFilters.buildQuery(view.query)
+  let query: any = supportsLogicalOperators
+    ? dataFilters.buildQuery(view.query)
+    : dataFilters.buildQueryLegacy(view.query as SearchFilter[])
+
+  delete query?.onEmptyFilter
+
   if (body.query) {
     // Delete extraneous search params that cannot be overridden
     delete body.query.onEmptyFilter
 
-    if (
-      !isExternalTableID(view.tableId) &&
-      !(await features.flags.isEnabled("SQS"))
-    ) {
+    if (!supportsLogicalOperators) {
       // In the unlikely event that a Grouped Filter is in a non-SQS environment
       // It needs to be ignored. Entirely
-      let queryFilters: SearchFilter[] = Array.isArray(view.query)
-        ? view.query
-        : []
+      let queryFilters: SearchFilter[] = Array.isArray(query) ? query : []
 
       // Extract existing fields
       const existingFields =

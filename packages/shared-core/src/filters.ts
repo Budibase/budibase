@@ -428,6 +428,126 @@ const builderFilter = (expression: SearchFilter) => {
   return query
 }
 
+export const buildQueryLegacy = (filter: SearchFilter[]) => {
+  //
+  let query: SearchFilters = {
+    string: {},
+    fuzzy: {},
+    range: {},
+    equal: {},
+    notEqual: {},
+    empty: {},
+    notEmpty: {},
+    contains: {},
+    notContains: {},
+    oneOf: {},
+    containsAny: {},
+  }
+
+  if (!Array.isArray(filter)) {
+    return query
+  }
+
+  filter.forEach(expression => {
+    let { operator, field, type, value, externalType, onEmptyFilter } =
+      expression
+    const queryOperator = operator as SearchFilterOperator
+    const isHbs =
+      typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
+    // Parse all values into correct types
+    if (operator === "allOr") {
+      query.allOr = true
+      return
+    }
+    if (onEmptyFilter) {
+      query.onEmptyFilter = onEmptyFilter
+      return
+    }
+    if (
+      type === "datetime" &&
+      !isHbs &&
+      queryOperator !== "empty" &&
+      queryOperator !== "notEmpty"
+    ) {
+      // Ensure date value is a valid date and parse into correct format
+      if (!value) {
+        return
+      }
+      try {
+        value = new Date(value).toISOString()
+      } catch (error) {
+        return
+      }
+    }
+    if (type === "number" && typeof value === "string" && !isHbs) {
+      if (queryOperator === "oneOf") {
+        value = value.split(",").map(item => parseFloat(item))
+      } else {
+        value = parseFloat(value)
+      }
+    }
+    if (type === "boolean") {
+      value = `${value}`?.toLowerCase() === "true"
+    }
+    if (
+      ["contains", "notContains", "containsAny"].includes(operator) &&
+      type === "array" &&
+      typeof value === "string"
+    ) {
+      value = value.split(",")
+    }
+    if (operator.startsWith("range") && query.range) {
+      const minint =
+        SqlNumberTypeRangeMap[
+          externalType as keyof typeof SqlNumberTypeRangeMap
+        ]?.min || Number.MIN_SAFE_INTEGER
+      const maxint =
+        SqlNumberTypeRangeMap[
+          externalType as keyof typeof SqlNumberTypeRangeMap
+        ]?.max || Number.MAX_SAFE_INTEGER
+      if (!query.range[field]) {
+        query.range[field] = {
+          low: type === "number" ? minint : "0000-00-00T00:00:00.000Z",
+          high: type === "number" ? maxint : "9999-00-00T00:00:00.000Z",
+        }
+      }
+      if (operator === "rangeLow" && value != null && value !== "") {
+        query.range[field] = {
+          ...query.range[field],
+          low: value,
+        }
+      } else if (operator === "rangeHigh" && value != null && value !== "") {
+        query.range[field] = {
+          ...query.range[field],
+          high: value,
+        }
+      }
+    } else if (isLogicalSearchOperator(queryOperator)) {
+      // TODO
+    } else if (query[queryOperator] && operator !== "onEmptyFilter") {
+      if (type === "boolean") {
+        // Transform boolean filters to cope with null.
+        // "equals false" needs to be "not equals true"
+        // "not equals false" needs to be "equals true"
+        if (queryOperator === "equal" && value === false) {
+          query.notEqual = query.notEqual || {}
+          query.notEqual[field] = true
+        } else if (queryOperator === "notEqual" && value === false) {
+          query.equal = query.equal || {}
+          query.equal[field] = true
+        } else {
+          query[queryOperator] ??= {}
+          query[queryOperator]![field] = value
+        }
+      } else {
+        query[queryOperator] ??= {}
+        query[queryOperator]![field] = value
+      }
+    }
+  })
+  return query
+}
+
 export const buildQuery = (filter?: SearchFilterGroup | SearchFilter[]) => {
   if (!filter) {
     return
@@ -891,9 +1011,23 @@ export const hasFilters = (query?: SearchFilters) => {
   }
   const queryRoot = query[LogicalOperator.AND] ?? query[LogicalOperator.OR]
 
+  if (!queryRoot) {
+    const skipped = ["allOr", "onEmptyFilter"]
+    for (let [key, value] of Object.entries(query)) {
+      if (skipped.includes(key) || typeof value !== "object") {
+        continue
+      }
+      if (Object.keys(value || {}).length !== 0) {
+        return true
+      }
+    }
+    return false
+  }
+
   return (
     (queryRoot?.conditions || []).reduce((acc, group) => {
-      const groupRoot = group[LogicalOperator.AND] ?? group[LogicalOperator.OR]
+      const groupRoot =
+        group?.[LogicalOperator.AND] ?? group?.[LogicalOperator.OR]
       acc += groupRoot?.conditions?.length || 0
       return acc
     }, 0) > 0
