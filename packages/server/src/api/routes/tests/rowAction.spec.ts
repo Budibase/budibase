@@ -5,11 +5,10 @@ import {
   CreateRowActionRequest,
   DocumentType,
   PermissionLevel,
-  Row,
   RowActionResponse,
 } from "@budibase/types"
 import * as setup from "./utilities"
-import { generator } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import { Expectations } from "../../../tests/utilities/api/base"
 import { roles } from "@budibase/backend-core"
 import { automations } from "@budibase/pro"
@@ -651,12 +650,26 @@ describe("/rowsActions", () => {
   })
 
   describe("trigger", () => {
-    let row: Row
+    let viewId: string
+    let rowId: string
     let rowAction: RowActionResponse
 
     beforeEach(async () => {
-      row = await config.api.row.save(tableId, {})
+      const row = await config.api.row.save(tableId, {})
+      rowId = row._id!
       rowAction = await createRowAction(tableId, createRowActionRequest())
+
+      viewId = (
+        await config.api.viewV2.create(
+          setup.structures.viewV2.createRequest(tableId)
+        )
+      ).id
+
+      await config.api.rowAction.setViewPermission(
+        tableId,
+        viewId,
+        rowAction.id
+      )
 
       await config.publish()
       tk.travel(Date.now() + 100)
@@ -673,9 +686,7 @@ describe("/rowsActions", () => {
 
     it("can trigger an automation given valid data", async () => {
       expect(await getAutomationLogs()).toBeEmpty()
-      await config.api.rowAction.trigger(tableId, rowAction.id, {
-        rowId: row._id!,
-      })
+      await config.api.rowAction.trigger(viewId, rowAction.id, { rowId })
 
       const automationLogs = await getAutomationLogs()
       expect(automationLogs).toEqual([
@@ -687,8 +698,11 @@ describe("/rowsActions", () => {
             inputs: null,
             outputs: {
               fields: {},
-              row: await config.api.row.get(tableId, row._id!),
-              table: await config.api.table.get(tableId),
+              row: await config.api.row.get(tableId, rowId),
+              table: {
+                ...(await config.api.table.get(tableId)),
+                views: expect.anything(),
+              },
               automation: expect.objectContaining({
                 _id: rowAction.automationId,
               }),
@@ -709,9 +723,7 @@ describe("/rowsActions", () => {
       await config.api.rowAction.trigger(
         viewId,
         rowAction.id,
-        {
-          rowId: row._id!,
-        },
+        { rowId },
         {
           status: 403,
           body: {
@@ -738,10 +750,9 @@ describe("/rowsActions", () => {
       )
 
       await config.publish()
+
       expect(await getAutomationLogs()).toBeEmpty()
-      await config.api.rowAction.trigger(viewId, rowAction.id, {
-        rowId: row._id!,
-      })
+      await config.api.rowAction.trigger(viewId, rowAction.id, { rowId })
 
       const automationLogs = await getAutomationLogs()
       expect(automationLogs).toEqual([
@@ -749,6 +760,171 @@ describe("/rowsActions", () => {
           automationId: rowAction.automationId,
         }),
       ])
+    })
+
+    describe("role permission checks", () => {
+      beforeAll(() => {
+        mocks.licenses.useViewPermissions()
+      })
+
+      afterAll(() => {
+        mocks.licenses.useCloudFree()
+      })
+
+      function createUser(role: string) {
+        return config.createUser({
+          admin: { global: false },
+          builder: {},
+          roles: { [config.getProdAppId()]: role },
+        })
+      }
+
+      const allowedRoleConfig = (() => {
+        function getRolesLowerThan(role: string) {
+          const result = Object.values(roles.BUILTIN_ROLE_IDS).filter(
+            r => r !== role && roles.lowerBuiltinRoleID(r, role) === r
+          )
+          return result
+        }
+        return Object.values(roles.BUILTIN_ROLE_IDS).flatMap(r =>
+          [r, ...getRolesLowerThan(r)].map(p => [r, p])
+        )
+      })()
+
+      const disallowedRoleConfig = (() => {
+        function getRolesHigherThan(role: string) {
+          const result = Object.values(roles.BUILTIN_ROLE_IDS).filter(
+            r => r !== role && roles.lowerBuiltinRoleID(r, role) === role
+          )
+          return result
+        }
+        return Object.values(roles.BUILTIN_ROLE_IDS).flatMap(r =>
+          getRolesHigherThan(r).map(p => [r, p])
+        )
+      })()
+
+      describe.each([
+        [
+          "view (with implicit views)",
+          async () => {
+            const viewId = (
+              await config.api.viewV2.create(
+                setup.structures.viewV2.createRequest(tableId)
+              )
+            ).id
+
+            await config.api.rowAction.setViewPermission(
+              tableId,
+              viewId,
+              rowAction.id
+            )
+            return { permissionResource: viewId, triggerResouce: viewId }
+          },
+        ],
+        [
+          "view (without implicit views)",
+          async () => {
+            const viewId = (
+              await config.api.viewV2.create(
+                setup.structures.viewV2.createRequest(tableId)
+              )
+            ).id
+
+            await config.api.rowAction.setViewPermission(
+              tableId,
+              viewId,
+              rowAction.id
+            )
+            return { permissionResource: tableId, triggerResouce: viewId }
+          },
+        ],
+      ])("checks for %s", (_, getResources) => {
+        it.each(allowedRoleConfig)(
+          "allows triggering if the user has read permission (user %s, table %s)",
+          async (userRole, resourcePermission) => {
+            const { permissionResource, triggerResouce } = await getResources()
+
+            await config.api.permission.add({
+              level: PermissionLevel.READ,
+              resourceId: permissionResource,
+              roleId: resourcePermission,
+            })
+
+            const normalUser = await createUser(userRole)
+
+            await config.withUser(normalUser, async () => {
+              await config.publish()
+              await config.api.rowAction.trigger(
+                triggerResouce,
+                rowAction.id,
+                { rowId },
+                { status: 200 }
+              )
+            })
+          }
+        )
+
+        it.each(disallowedRoleConfig)(
+          "rejects if the user does not have table read permission (user %s, table %s)",
+          async (userRole, resourcePermission) => {
+            const { permissionResource, triggerResouce } = await getResources()
+            await config.api.permission.add({
+              level: PermissionLevel.READ,
+              resourceId: permissionResource,
+              roleId: resourcePermission,
+            })
+
+            const normalUser = await createUser(userRole)
+
+            await config.withUser(normalUser, async () => {
+              await config.publish()
+              await config.api.rowAction.trigger(
+                triggerResouce,
+                rowAction.id,
+                { rowId },
+                {
+                  status: 403,
+                  body: { message: "User does not have permission" },
+                }
+              )
+
+              const automationLogs = await getAutomationLogs()
+              expect(automationLogs).toBeEmpty()
+            })
+          }
+        )
+      })
+
+      it.each(allowedRoleConfig)(
+        "does not allow running row actions for tables by default even",
+        async (userRole, resourcePermission) => {
+          await config.api.permission.add({
+            level: PermissionLevel.READ,
+            resourceId: tableId,
+            roleId: resourcePermission,
+          })
+
+          const normalUser = await createUser(userRole)
+
+          await config.withUser(normalUser, async () => {
+            await config.publish()
+            await config.api.rowAction.trigger(
+              tableId,
+              rowAction.id,
+              { rowId },
+              {
+                status: 403,
+                body: {
+                  message: `Row action '${rowAction.id}' is not enabled for table '${tableId}'`,
+                },
+              }
+            )
+
+            const automationLogs = await getAutomationLogs()
+            expect(automationLogs).toBeEmpty()
+          })
+        }
+      )
     })
   })
 })
