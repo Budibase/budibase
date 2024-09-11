@@ -27,6 +27,12 @@ import { isPlainObject, isEmpty } from "lodash"
 import { decodeNonAscii } from "./helpers/schema"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
+const LOGICAL_OPERATORS = Object.values(LogicalOperator)
+const SEARCH_OPERATORS = [
+  ...Object.values(BasicOperator),
+  ...Object.values(ArrayOperator),
+  ...Object.values(RangeOperator),
+]
 
 /**
  * Returns the valid operator options for a certain data type
@@ -117,7 +123,7 @@ export function recurseLogicalOperators(
   filters: SearchFilters,
   fn: (f: SearchFilters) => SearchFilters
 ) {
-  for (const logical of Object.values(LogicalOperator)) {
+  for (const logical of LOGICAL_OPERATORS) {
     if (filters[logical]) {
       filters[logical]!.conditions = filters[logical]!.conditions.map(
         condition => fn(condition)
@@ -135,7 +141,7 @@ export function recurseSearchFilters(
   filters = processFn(filters)
 
   // Recurse through logical operators
-  for (const logical of Object.values(LogicalOperator)) {
+  for (const logical of LOGICAL_OPERATORS) {
     if (filters[logical]) {
       filters[logical]!.conditions = filters[logical]!.conditions.map(
         condition => recurseSearchFilters(condition, processFn)
@@ -773,12 +779,16 @@ export function runQuery<T extends Record<string, any>>(
         return filterFunctions[key as SearchFilterOperator]?.(doc) ?? false
       })
 
-    if (query.allOr) {
+    // there are no filters - logical operators can cover this up
+    if (!hasFilters(query)) {
+      return true
+    } else if (query.allOr) {
       return results.some(result => result === true)
     } else {
       return results.every(result => result === true)
     }
   }
+
   return docs.filter(docMatch)
 }
 
@@ -841,14 +851,33 @@ export const hasFilters = (query?: SearchFilters) => {
   if (!query) {
     return false
   }
-  const skipped = ["allOr", "onEmptyFilter"]
-  for (let [key, value] of Object.entries(query)) {
-    if (skipped.includes(key) || typeof value !== "object") {
-      continue
+  const check = (filters: SearchFilters): boolean => {
+    for (const logical of LOGICAL_OPERATORS) {
+      if (filters[logical]) {
+        for (const condition of filters[logical]?.conditions || []) {
+          const result = check(condition)
+          if (result) {
+            return result
+          }
+        }
+      }
     }
-    if (Object.keys(value || {}).length !== 0) {
-      return true
+    for (const search of SEARCH_OPERATORS) {
+      const searchValue = filters[search]
+      if (!searchValue || typeof searchValue !== "object") {
+        continue
+      }
+      const filtered = Object.entries(searchValue).filter(entry => {
+        const valueDefined =
+          entry[1] !== undefined || entry[1] !== null || entry[1] !== ""
+        // not empty is an edge case, null is allowed for it - this is covered by test cases
+        return search === BasicOperator.NOT_EMPTY || valueDefined
+      })
+      if (filtered.length !== 0) {
+        return true
+      }
     }
+    return false
   }
-  return false
+  return check(query)
 }
