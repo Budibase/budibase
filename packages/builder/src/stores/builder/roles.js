@@ -1,12 +1,22 @@
-import { writable } from "svelte/store"
+import { derived, writable } from "svelte/store"
 import { API } from "api"
 import { RoleUtils } from "@budibase/frontend-core"
 
 export function createRolesStore() {
-  const { subscribe, update, set } = writable([])
+  const store = writable([])
+  const enriched = derived(store, $store => {
+    return $store.map(role => ({
+      ...role,
+
+      // Ensure we have new metadata for all roles
+      displayName: role.displayName || role.name,
+      color: role.color || "var(--spectrum-global-color-magenta-400)",
+      description: role.description || "Custom role",
+    }))
+  })
 
   function setRoles(roles) {
-    set(
+    store.set(
       roles.sort((a, b) => {
         const priorityA = RoleUtils.getRolePriority(a._id)
         const priorityB = RoleUtils.getRolePriority(b._id)
@@ -45,7 +55,7 @@ export function createRolesStore() {
   }
 
   return {
-    subscribe,
+    subscribe: enriched.subscribe,
     ...actions,
   }
 }

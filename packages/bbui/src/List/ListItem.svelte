@@ -1,5 +1,6 @@
 <script>
   import Icon from "../Icon/Icon.svelte"
+  import StatusLight from "../StatusLight/StatusLight.svelte"
 
   export let icon = null
   export let iconColor = null
@@ -19,7 +20,9 @@
   class:selected
 >
   <div class="left">
-    {#if icon}
+    {#if icon === "StatusLight"}
+      <StatusLight square size="L" color={iconColor} />
+    {:else if icon}
       <Icon name={icon} color={iconColor} />
     {/if}
     <div class="list-item__text">

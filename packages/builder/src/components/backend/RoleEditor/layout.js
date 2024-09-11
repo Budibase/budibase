@@ -14,9 +14,9 @@ export const roleToNode = role => ({
   type: "role",
   position: { x: 0, y: 0 },
   data: {
-    displayName: role.displayName || role.name,
-    description: role.description || "Custom role",
-    color: role.color || "var(--spectrum-global-color-static-magenta-400)",
+    displayName: role.displayName,
+    description: role.description,
+    color: role.color,
     custom: !role._id.match(/[A-Z]+/),
   },
 })
