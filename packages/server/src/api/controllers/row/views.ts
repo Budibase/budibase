@@ -39,9 +39,9 @@ export async function searchView(
   // Enrich saved query with ephemeral query params.
   // We prevent searching on any fields that are saved as part of the query, as
   // that could let users find rows they should not be allowed to access.
-  let query: any = supportsLogicalOperators
+  let query = supportsLogicalOperators
     ? dataFilters.buildQuery(view.query)
-    : dataFilters.buildQueryLegacy(view.query as SearchFilter[])
+    : dataFilters.buildQueryLegacy(view.query)
 
   delete query?.onEmptyFilter
 
@@ -51,8 +51,10 @@ export async function searchView(
 
     if (!supportsLogicalOperators) {
       // In the unlikely event that a Grouped Filter is in a non-SQS environment
-      // It needs to be ignored. Entirely
-      let queryFilters: SearchFilter[] = Array.isArray(query) ? query : []
+      // It needs to be ignored entirely
+      let queryFilters: SearchFilter[] = Array.isArray(view.query)
+        ? view.query
+        : []
 
       // Extract existing fields
       const existingFields =
@@ -64,15 +66,16 @@ export async function searchView(
       Object.keys(body.query).forEach(key => {
         const operator = key as Exclude<SearchFilterKey, LogicalOperator>
         Object.keys(body.query[operator] || {}).forEach(field => {
-          if (!existingFields.includes(db.removeKeyNumbering(field))) {
+          if (query && !existingFields.includes(db.removeKeyNumbering(field))) {
             query[operator]![field] = body.query[operator]![field]
           }
         })
       })
     } else {
+      const conditions = query ? [query] : []
       query = {
         $and: {
-          conditions: [query, body.query],
+          conditions: [...conditions, body.query],
         },
       }
     }
@@ -80,7 +83,7 @@ export async function searchView(
 
   await context.ensureSnippetContext(true)
 
-  const enrichedQuery = await enrichSearchContext(query, {
+  const enrichedQuery = await enrichSearchContext(query || {}, {
     user: sdk.users.getUserContextBindings(ctx.user),
   })
 
