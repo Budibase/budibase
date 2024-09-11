@@ -552,7 +552,10 @@ class Orchestrator {
         }
 
         const stepFn = await this.getStepFunctionality(step.stepId)
-        let inputs = await this.testProcesss(originalStepInput, this.context)
+        let inputs = await this.addContextAndProcess(
+          originalStepInput,
+          this.context
+        )
 
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
 
@@ -580,7 +583,7 @@ class Orchestrator {
     return null
   }
 
-  private async testProcesss(inputs: any, context: any) {
+  private async addContextAndProcess(inputs: any, context: any) {
     const processContext = {
       ...context,
       steps: {
