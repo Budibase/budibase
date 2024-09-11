@@ -31,44 +31,44 @@ async function planChanged(
   await publishEvent(Event.LICENSE_PLAN_CHANGED, properties)
 }
 
-async function activated(account: Account) {
+async function activated(accountId: string) {
   const properties: LicenseActivatedEvent = {
-    accountId: account.accountId,
+    accountId,
   }
   await publishEvent(Event.LICENSE_ACTIVATED, properties)
 }
 
-async function checkoutOpened(account: Account) {
+async function checkoutOpened(accountId: string) {
   const properties: LicenseCheckoutOpenedEvent = {
-    accountId: account.accountId,
+    accountId,
   }
   await publishEvent(Event.LICENSE_CHECKOUT_OPENED, properties)
 }
 
-async function checkoutSuccess(account: Account) {
+async function checkoutSuccess(accountId: string) {
   const properties: LicenseCheckoutSuccessEvent = {
-    accountId: account.accountId,
+    accountId,
   }
   await publishEvent(Event.LICENSE_CHECKOUT_SUCCESS, properties)
 }
 
-async function portalOpened(account: Account) {
+async function portalOpened(accountId: string) {
   const properties: LicensePortalOpenedEvent = {
-    accountId: account.accountId,
+    accountId,
   }
   await publishEvent(Event.LICENSE_PORTAL_OPENED, properties)
 }
 
-async function paymentFailed(account: Account) {
+async function paymentFailed(accountId: string) {
   const properties: LicensePaymentFailedEvent = {
-    accountId: account.accountId,
+    accountId,
   }
   await publishEvent(Event.LICENSE_PAYMENT_FAILED, properties)
 }
 
-async function paymentRecovered(account: Account) {
+async function paymentRecovered(accountId: string) {
   const properties: LicensePaymentRecoveredEvent = {
-    accountId: account.accountId,
+    accountId,
   }
   await publishEvent(Event.LICENSE_PAYMENT_RECOVERED, properties)
 }
