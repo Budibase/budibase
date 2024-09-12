@@ -33,6 +33,7 @@ import {
   BranchStepInputs,
   SearchFilters,
   Branch,
+  FilterStepInputs,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
@@ -158,6 +159,14 @@ class BaseStepBuilder {
     return this.step(
       AutomationActionStepId.SERVER_LOG,
       BUILTIN_ACTION_DEFINITIONS.SERVER_LOG,
+      input
+    )
+  }
+
+  filter(input: FilterStepInputs): this {
+    return this.step(
+      AutomationActionStepId.FILTER,
+      BUILTIN_ACTION_DEFINITIONS.FILTER,
       input
     )
   }

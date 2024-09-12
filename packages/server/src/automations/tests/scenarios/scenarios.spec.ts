@@ -1,8 +1,9 @@
 import * as automation from "../../index"
 import * as setup from "../utilities"
-import { LoopStepType, FieldType } from "@budibase/types"
+import { LoopStepType, FieldType, Table } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { DatabaseName } from "../../../integrations/tests/utils"
+import { FilterConditions } from "../../../automations/steps/filter"
 
 describe("Automation Scenarios", () => {
   let config = setup.getConfig()
@@ -194,6 +195,170 @@ describe("Automation Scenarios", () => {
       expect(results.steps[2].outputs.rows).toEqual(
         expect.arrayContaining([expect.objectContaining(expectedRow)])
       )
+    })
+  })
+  describe.only("Automations with filter", () => {
+    let table: Table
+
+    beforeEach(async () => {
+      table = await config.createTable({
+        name: "TestTable",
+        type: "table",
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            constraints: {
+              presence: true,
+            },
+          },
+          value: {
+            name: "value",
+            type: FieldType.NUMBER,
+            constraints: {
+              presence: true,
+            },
+          },
+        },
+      })
+    })
+
+    it("should stop an automation if the condition is not met", async () => {
+      const builder = createAutomationBuilder({
+        name: "Test Equal",
+      })
+
+      const results = await builder
+        .appAction({ fields: {} })
+        .createRow({
+          row: {
+            name: "Equal Test",
+            value: 10,
+            tableId: table._id,
+          },
+        })
+        .queryRows({
+          tableId: table._id!,
+        })
+        .filter({
+          field: "{{ steps.2.rows.0.value }}",
+          condition: FilterConditions.EQUAL,
+          value: 20,
+        })
+        .serverLog({ text: "Equal condition met" })
+        .run()
+
+      expect(results.steps[2].outputs.success).toBeTrue()
+      expect(results.steps[2].outputs.result).toBeFalse()
+      expect(results.steps[3]).toBeUndefined()
+    })
+
+    it("should continue the automation if the condition is met", async () => {
+      const builder = createAutomationBuilder({
+        name: "Test Not Equal",
+      })
+
+      const results = await builder
+        .appAction({ fields: {} })
+        .createRow({
+          row: {
+            name: "Not Equal Test",
+            value: 10,
+            tableId: table._id,
+          },
+        })
+        .queryRows({
+          tableId: table._id!,
+        })
+        .filter({
+          field: "{{ steps.2.rows.0.value }}",
+          condition: FilterConditions.NOT_EQUAL,
+          value: 20,
+        })
+        .serverLog({ text: "Not Equal condition met" })
+        .run()
+
+      expect(results.steps[2].outputs.success).toBeTrue()
+      expect(results.steps[2].outputs.result).toBeTrue()
+      expect(results.steps[3].outputs.success).toBeTrue()
+    })
+
+    const testCases = [
+      {
+        condition: FilterConditions.EQUAL,
+        value: 10,
+        rowValue: 10,
+        expectPass: true,
+      },
+      {
+        condition: FilterConditions.NOT_EQUAL,
+        value: 10,
+        rowValue: 20,
+        expectPass: true,
+      },
+      {
+        condition: FilterConditions.GREATER_THAN,
+        value: 10,
+        rowValue: 15,
+        expectPass: true,
+      },
+      {
+        condition: FilterConditions.LESS_THAN,
+        value: 10,
+        rowValue: 5,
+        expectPass: true,
+      },
+      {
+        condition: FilterConditions.GREATER_THAN,
+        value: 10,
+        rowValue: 5,
+        expectPass: false,
+      },
+      {
+        condition: FilterConditions.LESS_THAN,
+        value: 10,
+        rowValue: 15,
+        expectPass: false,
+      },
+    ]
+
+    testCases.forEach(({ condition, value, rowValue, expectPass }) => {
+      it(`should ${
+        expectPass ? "pass" : "fail"
+      } the filter when condition is "${condition}" and value is ${value}`, async () => {
+        const builder = createAutomationBuilder({
+          name: `Test ${condition}`,
+        })
+
+        const results = await builder
+          .appAction({ fields: {} })
+          .createRow({
+            row: {
+              name: `${condition} Test`,
+              value: rowValue,
+              tableId: table._id,
+            },
+          })
+          .queryRows({
+            tableId: table._id!,
+          })
+          .filter({
+            field: "{{ steps.2.rows.0.value }}",
+            condition,
+            value,
+          })
+          .serverLog({
+            text: `${condition} condition ${expectPass ? "passed" : "failed"}`,
+          })
+          .run()
+
+        expect(results.steps[2].outputs.result).toBe(expectPass)
+        if (expectPass) {
+          expect(results.steps[3].outputs.success).toBeTrue()
+        } else {
+          expect(results.steps[3]).toBeUndefined()
+        }
+      })
     })
   })
 })
