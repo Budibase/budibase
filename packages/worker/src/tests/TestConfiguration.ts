@@ -170,19 +170,26 @@ class TestConfiguration {
   async _createSession({
     userId,
     tenantId,
+    email,
   }: {
     userId: string
     tenantId: string
+    email: string
   }) {
     await sessions.createASession(userId!, {
       sessionId: "sessionid",
-      tenantId: tenantId,
+      tenantId,
       csrfToken: CSRF_TOKEN,
+      email,
     })
   }
 
   async createSession(user: User) {
-    return this._createSession({ userId: user._id!, tenantId: user.tenantId })
+    return this._createSession({
+      userId: user._id!,
+      tenantId: user.tenantId,
+      email: user.email,
+    })
   }
 
   cookieHeader(cookies: any) {
