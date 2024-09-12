@@ -39,7 +39,7 @@ export function createRolesStore() {
         roleId: role?._id,
         roleRev: role?._rev,
       })
-      update(state => state.filter(existing => existing._id !== role._id))
+      store.update(state => state.filter(existing => existing._id !== role._id))
     },
     save: async role => {
       const savedRole = await API.saveRole(role)
