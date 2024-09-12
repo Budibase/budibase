@@ -10,7 +10,7 @@
     FieldLabel,
   } from "@budibase/bbui"
   import { Roles } from "constants/backend"
-  import { NodeWidth, NodeHeight } from "./constants"
+  import { NodeWidth, NodeHeight, MaxAutoZoom, ZoomDuration } from "./constants"
   import { getContext, tick } from "svelte"
   import { autoLayout, nodeToRole } from "./layout"
   import { roles } from "stores/builder"
@@ -79,7 +79,7 @@
     const layout = autoLayout({ nodes: $nodes, edges: $edges })
     nodes.set(layout.nodes)
     edges.set(layout.edges)
-    flow.fitView({ maxZoom: 1, duration: 300 })
+    flow.fitView({ maxZoom: MaxAutoZoom, duration: ZoomDuration })
   }
 </script>
 
