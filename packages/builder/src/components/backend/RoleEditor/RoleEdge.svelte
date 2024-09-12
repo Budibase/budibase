@@ -5,8 +5,9 @@
     EdgeLabelRenderer,
     useSvelteFlow,
   } from "@xyflow/svelte"
-  import { Icon, ActionButton } from "@budibase/bbui"
+  import { Icon, TooltipPosition } from "@budibase/bbui"
   import { onMount } from "svelte"
+  import { roles } from "stores/builder"
 
   export let sourceX
   export let sourceY
@@ -15,6 +16,8 @@
   export let targetY
   export let targetPosition
   export let id
+  export let source
+  export let target
 
   const flow = useSvelteFlow()
 
@@ -31,6 +34,12 @@
     targetY,
     targetPosition,
   })
+  $: sourceRole = $roles.find(x => x._id === source)
+  $: targetRole = $roles.find(x => x._id === target)
+  $: tooltip =
+    sourceRole && targetRole
+      ? `Stop ${targetRole.displayName} from inheriting ${sourceRole.displayName}`
+      : null
 
   const getEdgeClasses = (hovered, labelHovered) => {
     let classes = ""
@@ -81,7 +90,7 @@
     on:mouseover={() => (labelHovered = true)}
     on:mouseout={() => (labelHovered = false)}
   >
-    <Icon name="Delete" />
+    <Icon name="Delete" {tooltip} tooltipPosition={TooltipPosition.Top} />
   </div>
 </EdgeLabelRenderer>
 
