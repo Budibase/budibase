@@ -323,7 +323,9 @@ class Orchestrator {
                 } else if (step.stepId === AutomationActionStepId.LOOP) {
                   stepIndex = await this.executeLoopStep(step, steps, stepIndex)
                 } else {
-                  await this.executeStep(step)
+                  if (!this.stopped) {
+                    await this.executeStep(step)
+                  }
                   stepIndex++
                 }
               }
@@ -465,7 +467,7 @@ class Orchestrator {
     for (const branch of branches) {
       const condition = await this.evaluateBranchCondition(branch.condition)
       if (condition) {
-        let branchStatus = {
+        const branchStatus = {
           status: `${branch.name} branch taken`,
           success: true,
         }
@@ -480,9 +482,20 @@ class Orchestrator {
 
         const branchSteps = children?.[branch.name] || []
         await this.executeSteps(branchSteps)
-        break
+        return
       }
     }
+
+    this.stopped = true
+    this.updateExecutionOutput(
+      branchStep.id,
+      branchStep.stepId,
+      branchStep.inputs,
+      {
+        success: false,
+        status: AutomationStatus.NO_CONDITION_MET,
+      }
+    )
   }
 
   private async evaluateBranchCondition(
