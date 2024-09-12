@@ -1,4 +1,4 @@
-FROM node:20-slim
+FROM node:20-alpine
 
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-check="scripts/watchtower-hooks/pre-check.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-hooks/pre-update.sh"
@@ -15,25 +15,22 @@ ENV POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
 ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
 ENV TOP_LEVEL_PATH=/
 
-# handle node-gyp
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends g++ make python3 jq
-RUN yarn global add pm2
+# handle node-gyp and install postgres client for pg_dump utils
+RUN apk add --no-cache \
+    g++ \
+    make \
+    python3 \
+    jq \
+    bash \
+    postgresql-client \
+    git
 
-# Install postgres client for pg_dump utils
-RUN apt update && apt upgrade -y \
-    && apt install software-properties-common apt-transport-https curl gpg -y \
-    && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
-    && echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list \
-    && apt update -y \
-    && apt install postgresql-client-15 -y \
-    && apt remove software-properties-common apt-transport-https curl gpg -y
+RUN yarn global add pm2
 
 WORKDIR /
 
 COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
 RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
-
 
 WORKDIR /app
 COPY packages/server/package.json .
@@ -41,11 +38,12 @@ COPY packages/server/dist/yarn.lock .
 
 COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
 RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
-RUN ./scripts/removeWorkspaceDependencies.sh  package.json
+RUN ./scripts/removeWorkspaceDependencies.sh package.json
 
+# Install yarn packages with caching
 RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true --network-timeout 1000000 \
-    # Remove unneeded data from file system to reduce image size
-    && yarn cache clean && apt-get remove -y --purge --auto-remove g++ make python jq \
+    && yarn cache clean \
+    && apk del g++ make python3 jq \
     && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
 
 COPY packages/server/dist/ dist/
@@ -69,7 +67,7 @@ EXPOSE 4001
 # due to this causing yarn to stop installing dev dependencies
 # which are actually needed to get this environment up and running
 ENV NODE_ENV=production
-# this is required for isolated-vm to work on Node 20+
+# This is required for isolated-vm to work on Node 20+
 ENV NODE_OPTIONS="--no-node-snapshot"
 ENV CLUSTER_MODE=${CLUSTER_MODE}
 ENV TOP_LEVEL_PATH=/app
