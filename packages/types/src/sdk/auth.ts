@@ -10,6 +10,7 @@ export interface AuthToken {
 export interface CreateSession {
   sessionId: string
   tenantId: string
+  email: string
   csrfToken?: string
   hosting?: Hosting
 }
