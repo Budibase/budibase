@@ -16,10 +16,9 @@
   import { roles } from "stores/builder"
 
   export let data
-  export let isConnectable
   export let id
 
-  const { nodes, edges } = getContext("flow")
+  const { nodes, edges, dragging } = getContext("flow")
   const flow = useSvelteFlow()
 
   let anchor
@@ -31,6 +30,7 @@
   $: nameError = validateName(tempDisplayName, $roles)
   $: descriptionError = validateDescription(tempDescription)
   $: invalid = nameError || descriptionError
+  $: targetClasses = `target${$dragging ? "" : " hidden"}`
 
   const validateName = (name, roles) => {
     if (!name?.length) {
@@ -109,10 +109,15 @@
     {/if}
   </div>
   {#if id !== Roles.BASIC}
-    <Handle type="target" position={Position.Left} {isConnectable} />
+    <Handle
+      type="target"
+      position={Position.Left}
+      class={targetClasses}
+      isConnectable={$dragging}
+    />
   {/if}
   {#if id !== Roles.ADMIN}
-    <Handle type="source" position={Position.Right} {isConnectable} />
+    <Handle type="source" position={Position.Right} />
   {/if}
 </div>
 
@@ -206,5 +211,12 @@
   }
   .node:hover .buttons {
     display: flex;
+  }
+  .node :global(.svelte-flow__handle.target) {
+    background: var(--background-color);
+  }
+  .node :global(.svelte-flow__handle.hidden) {
+    opacity: 0;
+    pointer-events: none;
   }
 </style>
