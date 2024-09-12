@@ -124,6 +124,7 @@ export interface Automation extends Document {
   definition: {
     steps: AutomationStep[]
     trigger: AutomationTrigger
+    stepNames?: Record<string, string>
   }
   screenId?: string
   uiTree?: any
