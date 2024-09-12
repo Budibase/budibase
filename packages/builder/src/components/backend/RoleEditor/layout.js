@@ -62,7 +62,6 @@ export const rolesToNodes = () => {
         id: `${sourceRole}-${role._id}`,
         source: sourceRole,
         target: role._id,
-        animated: true,
       })
     }
   }
@@ -79,7 +78,7 @@ const dagreLayout = ({ nodes, edges }) => {
   dagreGraph.setDefaultEdgeLabel(() => ({}))
   dagreGraph.setGraph({
     rankdir: "LR",
-    ranksep: 100,
+    ranksep: 200,
     nodesep: 100,
   })
   nodes.forEach(node => {
@@ -122,7 +121,6 @@ const sanitiseLayout = ({ nodes, edges }) => {
         id: Helpers.uuid(),
         source: node.id,
         target: Roles.ADMIN,
-        animated: true,
       })
     }
   }

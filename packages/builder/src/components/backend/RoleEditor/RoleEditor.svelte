@@ -4,14 +4,16 @@
   import { SvelteFlow, Background, BackgroundVariant } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import RoleNode from "./RoleNode.svelte"
+  import RoleEdge from "./RoleEdge.svelte"
   import { rolesToNodes, autoLayout } from "./layout"
   import { onMount, setContext } from "svelte"
   import Controls from "./Controls.svelte"
 
   const nodes = writable([])
   const edges = writable([])
+  const dragging = writable(false)
 
-  setContext("flow", { nodes, edges })
+  setContext("flow", { nodes, edges, dragging })
 
   onMount(() => {
     const layout = autoLayout(rolesToNodes())
@@ -33,9 +35,12 @@
     {edges}
     snapGrid={[25, 25]}
     nodeTypes={{ role: RoleNode }}
+    edgeTypes={{ role: RoleEdge }}
     proOptions={{ hideAttribution: true }}
     fitViewOptions={{ maxZoom: 1 }}
-    defaultEdgeOptions={{ type: "bezier", animated: true }}
+    defaultEdgeOptions={{ type: "role", animated: true, selectable: false }}
+    onconnectstart={() => dragging.set(true)}
+    onconnectend={() => dragging.set(false)}
   >
     <Background variant={BackgroundVariant.Dots} />
     <Controls />
@@ -81,6 +86,6 @@
 
     /* Edges */
     --xy-edge-stroke: var(--edge-color);
-    --xy-edge-stroke-selected: var(--selected-color);
+    --xy-edge-stroke-selected: var(--edge-color);
   }
 </style>
