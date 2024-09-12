@@ -8,6 +8,7 @@
   import { rolesToNodes, autoLayout } from "./layout"
   import { onMount, setContext } from "svelte"
   import Controls from "./Controls.svelte"
+  import { MaxAutoZoom } from "./constants"
 
   const nodes = writable([])
   const edges = writable([])
@@ -37,7 +38,7 @@
     nodeTypes={{ role: RoleNode }}
     edgeTypes={{ role: RoleEdge }}
     proOptions={{ hideAttribution: true }}
-    fitViewOptions={{ maxZoom: 1 }}
+    fitViewOptions={{ maxZoom: MaxAutoZoom }}
     defaultEdgeOptions={{ type: "role", animated: true, selectable: false }}
     onconnectstart={() => dragging.set(true)}
     onconnectend={() => dragging.set(false)}

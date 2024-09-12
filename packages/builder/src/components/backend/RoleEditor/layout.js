@@ -79,7 +79,7 @@ const dagreLayout = ({ nodes, edges }) => {
   dagreGraph.setGraph({
     rankdir: "LR",
     ranksep: 200,
-    nodesep: 100,
+    nodesep: 50,
   })
   nodes.forEach(node => {
     dagreGraph.setNode(node.id, { width: NodeWidth, height: NodeHeight })
