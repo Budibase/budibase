@@ -76,7 +76,7 @@
     "build:docker:single": "./scripts/build-single-image.sh",
     "build:docker:single:sqs": "./scripts/build-single-image-sqs.sh",
     "build:docker:dependencies": "docker build -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest ./hosting",
-    "publish:docker:couch": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/couchdb/Dockerfile -t budibase/couchdb:latest -t budibase/couchdb:v3.3.3 --push ./hosting/couchdb",
+    "publish:docker:couch": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/couchdb/Dockerfile -t budibase/couchdb:latest -t budibase/couchdb:v3.3.3 -t budibase/couchdb:v3.3.3-sqs-v2.1.1 --push ./hosting/couchdb",
     "publish:docker:dependencies": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest -t budibase/dependencies:v3.2.1 --push ./hosting",
     "release:helm": "node scripts/releaseHelmChart",
     "env:multi:enable": "lerna run --stream env:multi:enable",

@@ -60,7 +60,7 @@ describe("Captures of real examples", () => {
         queryJson
       )
       expect(query).toEqual({
-        bindings: [relationshipLimit, relationshipLimit, primaryLimit],
+        bindings: [primaryLimit, relationshipLimit, relationshipLimit],
         sql: expect.stringContaining(
           multiline(
             `select json_agg(json_build_object('executorid',"b"."executorid",'taskname',"b"."taskname",'taskid',"b"."taskid",'completed',"b"."completed",'qaid',"b"."qaid",'executorid',"b"."executorid",'taskname',"b"."taskname",'taskid',"b"."taskid",'completed',"b"."completed",'qaid',"b"."qaid")`
@@ -75,11 +75,11 @@ describe("Captures of real examples", () => {
         queryJson
       )
       expect(query).toEqual({
-        bindings: [relationshipLimit, "assembling", primaryLimit],
+        bindings: ["assembling", primaryLimit, relationshipLimit],
         sql: expect.stringContaining(
           multiline(
-            `where exists (select 1 from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" 
-                 where "c"."productid" = "a"."productid" and COALESCE("b"."taskname" = $2, FALSE)`
+            `where exists (select 1 from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" 
+                 and COALESCE("b"."taskname" = $1, FALSE)`
           )
         ),
       })
@@ -91,12 +91,13 @@ describe("Captures of real examples", () => {
         queryJson
       )
       expect(query).toEqual({
-        bindings: [relationshipLimit, primaryLimit],
+        bindings: [primaryLimit, relationshipLimit],
         sql: expect.stringContaining(
           multiline(
-            `select json_agg(json_build_object('executorid',"b"."executorid",'taskname',"b"."taskname",'taskid',"b"."taskid",'completed',"b"."completed",'qaid',"b"."qaid")) 
-                 from (select "b".* from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" 
-                 where "c"."productid" = "a"."productid" order by "b"."taskid" asc limit $1`
+            `with "paginated" as (select "a".* from "products" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc limit $1) 
+                 select "a".*, (select json_agg(json_build_object('executorid',"b"."executorid",'taskname',"b"."taskname",'taskid',"b"."taskid",'completed',"b"."completed",'qaid',"b"."qaid")) 
+                 from (select "b".* from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" order by "b"."taskid" asc limit $2) as "b") as "tasks" 
+                 from "paginated" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc`
           )
         ),
       })
@@ -109,12 +110,12 @@ describe("Captures of real examples", () => {
         queryJson
       )
       expect(query).toEqual({
-        bindings: [relationshipLimit, ...filters, relationshipLimit],
+        bindings: [...filters, relationshipLimit, relationshipLimit],
         sql: multiline(
-          `select "a".*, (select json_agg(json_build_object('productname',"b"."productname",'productid',"b"."productid")) 
+          `with "paginated" as (select "a".* from "tasks" as "a" where "a"."taskid" in ($1, $2) order by "a"."taskid" asc limit $3) 
+               select "a".*, (select json_agg(json_build_object('productname',"b"."productname",'productid',"b"."productid")) 
                from (select "b".* from "products" as "b" inner join "products_tasks" as "c" on "b"."productid" = "c"."productid" 
-               where "c"."taskid" = "a"."taskid" order by "b"."productid" asc limit $1) as "b") as "products" 
-               from "tasks" as "a" where "a"."taskid" in ($2, $3) order by "a"."taskid" asc limit $4`
+               where "c"."taskid" = "a"."taskid" order by "b"."productid" asc limit $4) as "b") as "products" from "paginated" as "a" order by "a"."taskid" asc`
         ),
       })
     })
@@ -132,18 +133,18 @@ describe("Captures of real examples", () => {
 
       expect(query).toEqual({
         bindings: [
-          relationshipLimit,
-          relationshipLimit,
-          relationshipLimit,
           rangeValue.low,
           rangeValue.high,
           equalValue,
           notEqualsValue,
           primaryLimit,
+          relationshipLimit,
+          relationshipLimit,
+          relationshipLimit,
         ],
         sql: expect.stringContaining(
           multiline(
-            `where exists (select 1 from "persons" as "c" where "c"."personid" = "a"."executorid" and "c"."year" between $4 and $5)`
+            `where exists (select 1 from "persons" as "c" where "c"."personid" = "a"."executorid" and "c"."year" between $1 and $2)`
           )
         ),
       })

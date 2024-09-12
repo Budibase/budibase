@@ -117,9 +117,9 @@ jobs:
       - name: Test
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            yarn test --ignore=@budibase/worker --ignore=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
+            yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore @budibase/account-portal-server --since=${{ env.NX_BASE_BRANCH }}
           else
-            yarn test --ignore=@budibase/worker --ignore=@budibase/server
+            yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore @budibase/account-portal-server
           fi
 
   test-worker:
