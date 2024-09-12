@@ -70,6 +70,8 @@
     --handle-color: var(--spectrum-global-color-gray-600);
     --selected-color: var(--spectrum-global-color-blue-400);
   }
+
+  /* Customise svelte-flow theme */
   .flow :global(.svelte-flow) {
     /* Panel */
     --xy-background-color: var(--background-color);
@@ -87,5 +89,6 @@
     /* Edges */
     --xy-edge-stroke: var(--edge-color);
     --xy-edge-stroke-selected: var(--edge-color);
+    --xy-edge-stroke-width: 2px;
   }
 </style>
