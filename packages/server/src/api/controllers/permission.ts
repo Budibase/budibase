@@ -1,4 +1,4 @@
-import { permissions, roles, context, HTTPError } from "@budibase/backend-core"
+import { permissions, roles, context } from "@budibase/backend-core"
 import {
   UserCtx,
   Database,
