@@ -700,14 +700,12 @@
         allSteps[idx]?.stepId === ActionStepID.LOOP &&
         allSteps.some(x => x.blockToLoop === block.id)
       let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
-      if (wasLoopBlock) {
-        break
+      if (allSteps[idx]?.name.includes("Looping")) {
+        isLoopBlock = true
+        loopBlockCount++
       }
       let bindingName =
-        automation.stepNames?.[allSteps[idx - loopBlockCount].id] ||
-        !isLoopBlock
-          ? allSteps[idx]?.name
-          : allSteps[idx - 1]?.name
+        automation.stepNames?.[allSteps[idx].id] || allSteps[idx].name
 
       if (isLoopBlock) {
         schema = {
@@ -756,7 +754,7 @@
 
       if (wasLoopBlock) {
         loopBlockCount++
-        continue
+        schema = cloneDeep(allSteps[idx - 1]?.schema?.outputs?.properties)
       }
       Object.entries(schema).forEach(([name, value]) =>
         addBinding(name, value, icon, idx, isLoopBlock, bindingName)
