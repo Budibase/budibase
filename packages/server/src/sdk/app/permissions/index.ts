@@ -90,7 +90,7 @@ export async function getResourcePerms(
       const rolePerms = allowsExplicitPerm
         ? roles.checkForRoleResourceArray(role.permissions || {}, resourceId)
         : {}
-      if (rolePerms[resourceId]?.indexOf(level) > -1) {
+      if (rolePerms[resourceId]?.indexOf(level as PermissionLevel) > -1) {
         permissions[level] = {
           role: roles.getExternalRoleID(role._id!, role.version),
           type: PermissionSource.EXPLICIT,
