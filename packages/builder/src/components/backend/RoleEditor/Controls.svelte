@@ -3,7 +3,7 @@
   import { useSvelteFlow, Position } from "@xyflow/svelte"
   import { getContext, tick } from "svelte"
   import { autoLayout, roleToNode } from "./layout"
-  import { ZoomDuration } from "./constants"
+  import { MaxAutoZoom, ZoomDuration } from "./constants"
   import { getSequentialName } from "helpers/duplicate"
   import { roles } from "stores/builder"
   import { Roles } from "constants/backend"
@@ -33,7 +33,7 @@
     edges.set(layout.edges)
     await tick()
     flow.fitView({
-      maxZoom: 1,
+      maxZoom: MaxAutoZoom,
       duration: ZoomDuration,
     })
   }
@@ -54,7 +54,8 @@
   </div>
   <Button
     secondary
-    on:click={() => flow.fitView({ maxZoom: 1, duration: ZoomDuration })}
+    on:click={() =>
+      flow.fitView({ maxZoom: MaxAutoZoom, duration: ZoomDuration })}
   >
     Zoom to fit
   </Button>
