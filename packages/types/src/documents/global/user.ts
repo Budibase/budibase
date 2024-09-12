@@ -74,9 +74,8 @@ export enum UserStatus {
   INACTIVE = "inactive",
 }
 
-export interface UserRoles {
-  [key: string]: string
-}
+// specifies a map of app ID to role ID
+export type UserRoles = Record<string, string>
 
 // UTILITY TYPES
 
