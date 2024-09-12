@@ -8,7 +8,7 @@
   import { rolesToNodes, autoLayout } from "./layout"
   import { onMount, setContext } from "svelte"
   import Controls from "./Controls.svelte"
-  import { MaxAutoZoom } from "./constants"
+  import { GridResolution, MaxAutoZoom } from "./constants"
 
   const nodes = writable([])
   const edges = writable([])
@@ -34,7 +34,7 @@
     fitView
     {nodes}
     {edges}
-    snapGrid={[25, 25]}
+    snapGrid={[GridResolution, GridResolution]}
     nodeTypes={{ role: RoleNode }}
     edgeTypes={{ role: RoleEdge }}
     proOptions={{ hideAttribution: true }}
@@ -76,7 +76,6 @@
   .flow :global(.svelte-flow) {
     /* Panel */
     --xy-background-color: var(--background-color);
-    --xy-background-pattern-color-props: transparent;
 
     /* Controls */
     --xy-controls-button-background-color: var(--node-background);

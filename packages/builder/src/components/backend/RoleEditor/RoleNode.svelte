@@ -156,28 +156,30 @@
     width: var(--width);
     height: var(--height);
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    box-sizing: border-box;
   }
   .node.selected {
     background: var(--spectrum-global-color-blue-100);
   }
   .color {
     border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    height: 8px;
-    width: 100%;
+    border-bottom-left-radius: 4px;
+    height: 100%;
+    width: 10px;
+    flex: 0 0 10px;
     background: var(--color);
   }
   .content {
     flex: 1 1 auto;
-    padding: 0 14px 0 14px;
+    padding: 0 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
     gap: 2px;
     border: 1px solid var(--border-color);
-    border-bottom-left-radius: 4px;
+    border-top-right-radius: 4px;
     border-bottom-right-radius: 4px;
   }
   .node.selected .content {
@@ -199,8 +201,7 @@
   .title :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-600);
   }
-  .name,
-  .description {
+  .name {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -208,6 +209,12 @@
   .description {
     color: var(--spectrum-global-color-gray-600);
     font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
   }
   .node:hover .buttons {
     display: flex;

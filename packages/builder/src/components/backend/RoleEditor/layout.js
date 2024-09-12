@@ -1,5 +1,5 @@
 import dagre from "@dagrejs/dagre"
-import { NodeWidth, NodeHeight } from "./constants"
+import { NodeWidth, NodeHeight, GridResolution } from "./constants"
 import { Position } from "@xyflow/svelte"
 import { roles } from "stores/builder"
 import { Roles } from "constants/backend"
@@ -78,8 +78,8 @@ const dagreLayout = ({ nodes, edges }) => {
   dagreGraph.setDefaultEdgeLabel(() => ({}))
   dagreGraph.setGraph({
     rankdir: "LR",
-    ranksep: 200,
-    nodesep: 50,
+    ranksep: GridResolution * 6,
+    nodesep: GridResolution * 2,
   })
   nodes.forEach(node => {
     dagreGraph.setNode(node.id, { width: NodeWidth, height: NodeHeight })
@@ -89,12 +89,12 @@ const dagreLayout = ({ nodes, edges }) => {
   })
   dagre.layout(dagreGraph)
   nodes.forEach(node => {
-    const nodeWithPosition = dagreGraph.node(node.id)
+    const pos = dagreGraph.node(node.id)
     node.targetPosition = Position.Left
     node.sourcePosition = Position.Right
     node.position = {
-      x: nodeWithPosition.x - NodeWidth / 2,
-      y: nodeWithPosition.y - NodeHeight / 2,
+      x: Math.round((pos.x - NodeWidth / 2) / GridResolution) * GridResolution,
+      y: Math.round((pos.y - NodeHeight / 2) / GridResolution) * GridResolution,
     }
   })
   return { nodes, edges }
