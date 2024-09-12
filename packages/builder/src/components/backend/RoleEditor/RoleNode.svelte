@@ -212,6 +212,11 @@
   .node:hover .buttons {
     display: flex;
   }
+  .node :global(.svelte-flow__handle) {
+    width: 6px;
+    height: 6px;
+    border-width: 2px;
+  }
   .node :global(.svelte-flow__handle.target) {
     background: var(--background-color);
   }

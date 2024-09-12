@@ -5,7 +5,7 @@
     EdgeLabelRenderer,
     useSvelteFlow,
   } from "@xyflow/svelte"
-  import { Icon } from "@budibase/bbui"
+  import { Icon, ActionButton } from "@budibase/bbui"
   import { onMount } from "svelte"
 
   export let sourceX
@@ -103,6 +103,9 @@
   .edge-label :global(.spectrum-Icon) {
     background: var(--background-color);
     color: var(--spectrum-global-color-gray-600);
+  }
+  .edge-label :global(svg) {
+    padding: 8px;
   }
   :global(.svelte-flow__edge:hover .svelte-flow__edge-path),
   :global(.svelte-flow__edge-path.hovered) {
