@@ -14,9 +14,7 @@ export const roleToNode = role => ({
   type: "role",
   position: { x: 0, y: 0 },
   data: {
-    displayName: role.displayName,
-    description: role.description,
-    color: role.color,
+    ...role.uiMetadata,
     custom: !role._id.match(/[A-Z]+/),
   },
 })
@@ -26,9 +24,11 @@ export const nodeToRole = node => {
   const role = get(roles).find(x => x._id === node.id)
   return {
     ...role,
-    displayName: node.data.displayName,
-    color: node.data.color,
-    description: node.data.description,
+    uiMetadata: {
+      displayName: node.data.displayName,
+      color: node.data.color,
+      description: node.data.description,
+    },
   }
 }
 

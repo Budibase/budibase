@@ -9,9 +9,12 @@ export function createRolesStore() {
       ...role,
 
       // Ensure we have new metadata for all roles
-      displayName: role.displayName || role.name,
-      color: role.color || "var(--spectrum-global-color-magenta-400)",
-      description: role.description || "Custom role",
+      uiMetadata: {
+        displayName: role.uiMetadata?.displayName || role.name,
+        color:
+          role.uiMetadata?.color || "var(--spectrum-global-color-magenta-400)",
+        description: role.uiMetadata?.description || "Custom role",
+      },
     }))
   })
 

@@ -14,11 +14,13 @@
   const addRole = async () => {
     const role = {
       name: Helpers.uuid(),
-      displayName: getSequentialName($nodes, "New role ", {
-        getName: x => x.data.displayName,
-      }),
-      color: "var(--spectrum-global-color-gray-700)",
-      description: "Custom role",
+      uiMetadata: {
+        displayName: getSequentialName($roles, "New role ", {
+          getName: x => x.uiMetadata.displayName,
+        }),
+        color: "var(--spectrum-global-color-gray-700)",
+        description: "Custom role",
+      },
       permissionId: "write",
       inherits: Roles.BASIC,
     }

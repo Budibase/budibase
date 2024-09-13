@@ -12,11 +12,12 @@
     <StatusLight
       square
       size="L"
-      color={role?.color || "var(--spectrum-global-color-magenta-400)"}
+      color={role?.uiMetadata?.color ||
+        "var(--spectrum-global-color-static-magenta-400)"}
     />
   </div>
   <div class="value">
-    {role?.displayName || role?.name || value}
+    {role?.uiMetadata?.displayName || role?.name || "Unknown role"}
   </div>
 </div>
 
