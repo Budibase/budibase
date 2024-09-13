@@ -240,7 +240,7 @@ export const buildFormBlockButtonConfig = props => {
       _component: "@budibase/standard-components/button",
       onClick: onDelete,
       quiet: true,
-      type: "secondary",
+      type: "warning",
     })
   }
 

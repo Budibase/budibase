@@ -3,6 +3,7 @@
   import { tables, builderStore } from "stores/builder"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
+  import ViewNavBar from "./_components/ViewNavBar.svelte"
 
   $: tableId = $tables.selectedTableId
   $: builderStore.selectResource(tableId)
@@ -20,4 +21,17 @@
   onDestroy(stopSyncing)
 </script>
 
-<slot />
+<div class="wrapper">
+  <ViewNavBar />
+  <slot />
+</div>
+
+<style>
+  .wrapper {
+    flex: 1 1 auto;
+    margin: -28px -40px -40px -40px;
+    display: flex;
+    flex-direction: column;
+    background: var(--spectrum-global-color-gray-50);
+  }
+</style>

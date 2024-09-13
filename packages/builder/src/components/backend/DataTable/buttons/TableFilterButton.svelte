@@ -44,7 +44,14 @@
   }
 </script>
 
-<ActionButton icon="Filter" quiet {disabled} on:click={drawer.show} {selected}>
+<ActionButton
+  icon="Filter"
+  quiet
+  {disabled}
+  on:click={drawer.show}
+  {selected}
+  accentColor="#004EA6"
+>
   {text}
 </ActionButton>
 
