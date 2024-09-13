@@ -1,10 +1,7 @@
 import { db, roles } from "@budibase/backend-core"
-import { features } from "@budibase/pro"
 import {
-  DocumentType,
   PermissionLevel,
   PermissionSource,
-  PlanType,
   VirtualDocumentType,
 } from "@budibase/types"
 import { extractViewInfoFromID, isViewID } from "../../../db/utils"

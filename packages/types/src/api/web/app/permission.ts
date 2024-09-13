@@ -1,4 +1,4 @@
-import { PermissionLevel, PlanType } from "../../../sdk"
+import { PermissionLevel } from "../../../sdk"
 
 export interface ResourcePermissionInfo {
   role: string
