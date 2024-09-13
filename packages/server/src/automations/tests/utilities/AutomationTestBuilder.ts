@@ -105,74 +105,80 @@ class BaseStepBuilder {
   }
 
   // STEPS
-  createRow(inputs: CreateRowStepInputs, stepName?: string): this {
+  createRow(inputs: CreateRowStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.CREATE_ROW,
       BUILTIN_ACTION_DEFINITIONS.CREATE_ROW,
       inputs,
-      stepName
+      opts?.stepName
     )
   }
 
-  updateRow(inputs: UpdateRowStepInputs, stepName?: string): this {
+  updateRow(inputs: UpdateRowStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.UPDATE_ROW,
       BUILTIN_ACTION_DEFINITIONS.UPDATE_ROW,
       inputs,
-      stepName
+      opts?.stepName
     )
   }
 
-  deleteRow(inputs: DeleteRowStepInputs, stepName?: string): this {
+  deleteRow(inputs: DeleteRowStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.DELETE_ROW,
       BUILTIN_ACTION_DEFINITIONS.DELETE_ROW,
       inputs,
-      stepName
+      opts?.stepName
     )
   }
 
-  sendSmtpEmail(inputs: SmtpEmailStepInputs, stepName?: string): this {
+  sendSmtpEmail(
+    inputs: SmtpEmailStepInputs,
+    opts?: { stepName?: string }
+  ): this {
     return this.step(
       AutomationActionStepId.SEND_EMAIL_SMTP,
       BUILTIN_ACTION_DEFINITIONS.SEND_EMAIL_SMTP,
       inputs,
-      stepName
+      opts?.stepName
     )
   }
 
-  executeQuery(inputs: ExecuteQueryStepInputs, stepName?: string): this {
+  executeQuery(
+    inputs: ExecuteQueryStepInputs,
+    opts?: { stepName?: string }
+  ): this {
     return this.step(
       AutomationActionStepId.EXECUTE_QUERY,
       BUILTIN_ACTION_DEFINITIONS.EXECUTE_QUERY,
       inputs,
-      stepName
+      opts?.stepName
     )
   }
 
-  queryRows(inputs: QueryRowsStepInputs, stepName?: string): this {
+  queryRows(inputs: QueryRowsStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.QUERY_ROWS,
       BUILTIN_ACTION_DEFINITIONS.QUERY_ROWS,
       inputs,
-      stepName
+      opts?.stepName
     )
   }
-  loop(inputs: LoopStepInputs, stepName?: string): this {
+  loop(inputs: LoopStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.LOOP,
       BUILTIN_ACTION_DEFINITIONS.LOOP,
       inputs,
-      stepName
+      opts?.stepName
     )
   }
 
-  serverLog(input: ServerLogStepInputs, stepName?: string): this {
+  serverLog(input: ServerLogStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.SERVER_LOG,
       BUILTIN_ACTION_DEFINITIONS.SERVER_LOG,
       input,
-      stepName
+      opts?.stepName
     )
   }
 }
