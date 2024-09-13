@@ -7,8 +7,9 @@ import {
   doWithDB,
 } from "../db"
 import { getAppDB } from "../context"
-import { Screen, Role as RoleDoc } from "@budibase/types"
+import { Screen, Role as RoleDoc, RoleUIMetadata } from "@budibase/types"
 import cloneDeep from "lodash/fp/cloneDeep"
+import { RoleColor } from "@budibase/shared-core"
 
 export const BUILTIN_ROLE_IDS = {
   ADMIN: "ADMIN",
@@ -45,22 +46,12 @@ export class Role implements RoleDoc {
   inherits?: string
   version?: string
   permissions: Record<string, PermissionLevel[]> = {}
-  displayName?: string
-  color?: string
-  description?: string
+  uiMetadata?: RoleUIMetadata
 
-  constructor(
-    id: string,
-    displayName: string,
-    description: string,
-    color: string,
-    permissionId: string
-  ) {
+  constructor(id: string, permissionId: string, uiMetadata?: RoleUIMetadata) {
     this._id = id
-    this.name = id
-    this.displayName = displayName
-    this.color = color
-    this.description = description
+    this.name = uiMetadata?.displayName || id
+    this.uiMetadata = uiMetadata
     this.permissionId = permissionId
     // version for managing the ID - removing the role_ when responding
     this.version = RoleIDVersion.NAME
@@ -73,41 +64,31 @@ export class Role implements RoleDoc {
 }
 
 const BUILTIN_ROLES = {
-  ADMIN: new Role(
-    BUILTIN_IDS.ADMIN,
-    "App admin",
-    "Can do everything",
-    "var(--spectrum-global-color-static-red-400)",
-    BuiltinPermissionID.ADMIN
-  ).addInheritance(BUILTIN_IDS.POWER),
-  POWER: new Role(
-    BUILTIN_IDS.POWER,
-    "App power user",
-    "An app user with more access",
-    "var(--spectrum-global-color-static-orange-400)",
-    BuiltinPermissionID.POWER
-  ).addInheritance(BUILTIN_IDS.BASIC),
-  BASIC: new Role(
-    BUILTIN_IDS.BASIC,
-    "App user",
-    "Any logged in user",
-    "var(--spectrum-global-color-static-green-400)",
-    BuiltinPermissionID.WRITE
-  ).addInheritance(BUILTIN_IDS.PUBLIC),
-  PUBLIC: new Role(
-    BUILTIN_IDS.PUBLIC,
-    "Public user",
-    "Accessible to anyone",
-    "var(--spectrum-global-color-static-blue-400)",
-    BuiltinPermissionID.PUBLIC
-  ),
-  BUILDER: new Role(
-    BUILTIN_IDS.BUILDER,
-    "Builder user",
-    "Users that can edit this app",
-    "var(--spectrum-global-color-static-magenta-600)",
-    BuiltinPermissionID.ADMIN
-  ),
+  ADMIN: new Role(BUILTIN_IDS.ADMIN, BuiltinPermissionID.ADMIN, {
+    displayName: "App admin",
+    description: "Can do everything",
+    color: RoleColor.ADMIN,
+  }).addInheritance(BUILTIN_IDS.POWER),
+  POWER: new Role(BUILTIN_IDS.POWER, BuiltinPermissionID.POWER, {
+    displayName: "App power user",
+    description: "An app user with more access",
+    color: RoleColor.POWER,
+  }).addInheritance(BUILTIN_IDS.BASIC),
+  BASIC: new Role(BUILTIN_IDS.BASIC, BuiltinPermissionID.WRITE, {
+    displayName: "App user",
+    description: "Any logged in user",
+    color: RoleColor.BASIC,
+  }).addInheritance(BUILTIN_IDS.PUBLIC),
+  PUBLIC: new Role(BUILTIN_IDS.PUBLIC, BuiltinPermissionID.PUBLIC, {
+    displayName: "Public user",
+    description: "Accessible to anyone",
+    color: RoleColor.PUBLIC,
+  }),
+  BUILDER: new Role(BUILTIN_IDS.BUILDER, BuiltinPermissionID.ADMIN, {
+    displayName: "Builder user",
+    description: "Users that can edit this app",
+    color: RoleColor.BUILDER,
+  }),
 }
 
 export function getBuiltinRoles(): { [key: string]: RoleDoc } {

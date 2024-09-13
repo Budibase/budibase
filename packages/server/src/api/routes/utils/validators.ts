@@ -208,9 +208,11 @@ export function roleValidator() {
       name: Joi.string()
         .regex(/^[a-zA-Z0-9_]*$/)
         .required(),
-      displayName: Joi.string().optional(),
-      color: Joi.string().optional(),
-      description: Joi.string().optional(),
+      uiMetadata: Joi.object({
+        displayName: OPTIONAL_STRING,
+        color: OPTIONAL_STRING,
+        description: OPTIONAL_STRING,
+      }).optional(),
       // this is the base permission ID (for now a built in)
       permissionId: Joi.string()
         .valid(...Object.values(permissions.BuiltinPermissionID))
