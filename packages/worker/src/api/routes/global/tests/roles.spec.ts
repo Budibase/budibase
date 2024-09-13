@@ -35,6 +35,7 @@ describe("/api/global/roles", () => {
 
   const role = new roles.Role(
     db.generateRoleID(ROLE_NAME),
+    ROLE_NAME,
     permissions.BuiltinPermissionID.READ_ONLY,
     { displayName: roles.BUILTIN_ROLE_IDS.BASIC }
   )
