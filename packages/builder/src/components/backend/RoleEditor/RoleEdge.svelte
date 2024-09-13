@@ -38,7 +38,7 @@
   $: targetRole = $roles.find(x => x._id === target)
   $: tooltip =
     sourceRole && targetRole
-      ? `Stop ${targetRole.displayName} from inheriting ${sourceRole.displayName}`
+      ? `Stop ${targetRole.uiMetadata.displayName} from inheriting ${sourceRole.uiMetadata.displayName}`
       : null
 
   const getEdgeClasses = (hovered, labelHovered) => {

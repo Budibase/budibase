@@ -36,7 +36,7 @@
     if (!name?.length) {
       return "Please enter a name"
     }
-    if (roles.some(x => x.displayName === name && x._id !== id)) {
+    if (roles.some(x => x.uiMetadata.displayName === name && x._id !== id)) {
       return "That name is already used by another role"
     }
     return null
@@ -171,6 +171,7 @@
     background: var(--color);
   }
   .content {
+    width: 0;
     flex: 1 1 auto;
     padding: 0 12px;
     display: flex;
@@ -201,7 +202,8 @@
   .title :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-600);
   }
-  .name {
+  .name,
+  .description {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -209,12 +211,6 @@
   .description {
     color: var(--spectrum-global-color-gray-600);
     font-size: 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
-    -webkit-box-orient: vertical;
   }
   .node:hover .buttons {
     display: flex;

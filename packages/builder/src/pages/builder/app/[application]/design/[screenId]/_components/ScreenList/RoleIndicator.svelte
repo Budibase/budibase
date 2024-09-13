@@ -7,12 +7,13 @@
 
   let showTooltip = false
 
-  $: color = role.color || "var(--spectrum-global-color-static-magenta-400)"
   $: role = $roles.find(role => role._id === roleId)
+  $: color =
+    role?.uiMetadata.color || "var(--spectrum-global-color-static-magenta-400)"
   $: tooltip =
     roleId === Roles.PUBLIC
       ? "Open to the public"
-      : `Requires ${role?.displayName} access`
+      : `Requires ${role?.uiMetadata.displayName || "Unknown role"} access`
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

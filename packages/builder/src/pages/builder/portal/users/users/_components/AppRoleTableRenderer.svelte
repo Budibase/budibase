@@ -11,7 +11,7 @@
   const getRoleLabel = roleId => {
     return roleId === Constants.Roles.CREATOR
       ? capitalise(Constants.Roles.CREATOR.toLowerCase())
-      : role?.displayName || role?.name || "Custom role"
+      : role?.uiMetadata.displayName || role?.name || "Custom role"
   }
 </script>
 

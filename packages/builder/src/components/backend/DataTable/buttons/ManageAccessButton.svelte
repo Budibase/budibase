@@ -29,7 +29,7 @@
   $: roleMismatch = checkRoleMismatch(permissions)
   $: selectedRole = roleMismatch ? null : permissions?.[0]?.value
   $: readableRole = selectedRole
-    ? $roles.find(x => x._id === selectedRole)?.displayName
+    ? $roles.find(x => x._id === selectedRole)?.uiMetadata.displayName
     : null
   $: buttonLabel = readableRole ? `Access: ${readableRole}` : "Access"
   $: highlight = roleMismatch || selectedRole === Roles.PUBLIC
@@ -39,8 +39,8 @@
     .filter(x => !builtins.includes(x._id))
     .slice()
     .toSorted((a, b) => {
-      const aName = a.displayName || a.name
-      const bName = b.displayName || b.name
+      const aName = a.uiMetadata.displayName || a.name
+      const bName = b.uiMetadata.displayName || b.name
       return aName < bName ? -1 : 1
     })
 
@@ -159,23 +159,23 @@
   <List>
     {#each builtInRoles as role}
       <ListItem
-        title={role.displayName}
-        subtitle={role.description}
+        title={role.uiMetadata.displayName}
+        subtitle={role.uiMetadata.description}
         hoverable
         selected={selectedRole === role._id}
         icon="StatusLight"
-        iconColor={role.color}
+        iconColor={role.uiMetadata.color}
         on:click={() => changePermission(role._id)}
       />
     {/each}
     {#each customRoles as role}
       <ListItem
-        title={role.displayName}
-        subtitle={role.description}
+        title={role.uiMetadata.displayName}
+        subtitle={role.uiMetadata.description}
         hoverable
         selected={selectedRole === role._id}
         icon="StatusLight"
-        iconColor={role.color}
+        iconColor={role.uiMetadata.color}
         on:click={() => changePermission(role._id)}
       />
     {/each}
