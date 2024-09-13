@@ -62,7 +62,6 @@
   } from "@budibase/types"
   import { FIELDS } from "constants/backend"
   import PropField from "./PropField.svelte"
-  import { name } from "helpers/validation/yup/app"
 
   export let block
   export let testData
@@ -759,9 +758,7 @@
       Object.entries(schema).forEach(([name, value]) => {
         addBinding(name, value, icon, idx, isLoopBlock, bindingName)
       })
-      console.log(bindings)
     }
-    console.log(bindings)
     return bindings
   }
 
