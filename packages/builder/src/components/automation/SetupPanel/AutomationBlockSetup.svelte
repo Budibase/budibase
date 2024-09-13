@@ -62,6 +62,7 @@
   } from "@budibase/types"
   import { FIELDS } from "constants/backend"
   import PropField from "./PropField.svelte"
+  import { name } from "helpers/validation/yup/app"
 
   export let block
   export let testData
@@ -638,8 +639,7 @@
       }
       /* End special cases for generating custom schemas based on triggers */
 
-      let hasUserDefinedName =
-        automation.stepNames?.[allSteps[idx - loopBlockCount]]?.id
+      let hasUserDefinedName = automation.stepNames?.[allSteps[idx]?.id]
       if (isLoopBlock) {
         runtimeName = `loop.${name}`
       } else if (block.name.startsWith("JS")) {
@@ -756,10 +756,12 @@
         loopBlockCount++
         schema = cloneDeep(allSteps[idx - 1]?.schema?.outputs?.properties)
       }
-      Object.entries(schema).forEach(([name, value]) =>
+      Object.entries(schema).forEach(([name, value]) => {
         addBinding(name, value, icon, idx, isLoopBlock, bindingName)
-      )
+      })
+      console.log(bindings)
     }
+    console.log(bindings)
     return bindings
   }
 
