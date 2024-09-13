@@ -48,9 +48,14 @@ export class Role implements RoleDoc {
   permissions: Record<string, PermissionLevel[]> = {}
   uiMetadata?: RoleUIMetadata
 
-  constructor(id: string, permissionId: string, uiMetadata?: RoleUIMetadata) {
+  constructor(
+    id: string,
+    name: string,
+    permissionId: string,
+    uiMetadata?: RoleUIMetadata
+  ) {
     this._id = id
-    this.name = uiMetadata?.displayName || id
+    this.name = name
     this.uiMetadata = uiMetadata
     this.permissionId = permissionId
     // version for managing the ID - removing the role_ when responding
@@ -64,31 +69,56 @@ export class Role implements RoleDoc {
 }
 
 const BUILTIN_ROLES = {
-  ADMIN: new Role(BUILTIN_IDS.ADMIN, BuiltinPermissionID.ADMIN, {
-    displayName: "App admin",
-    description: "Can do everything",
-    color: RoleColor.ADMIN,
-  }).addInheritance(BUILTIN_IDS.POWER),
-  POWER: new Role(BUILTIN_IDS.POWER, BuiltinPermissionID.POWER, {
-    displayName: "App power user",
-    description: "An app user with more access",
-    color: RoleColor.POWER,
-  }).addInheritance(BUILTIN_IDS.BASIC),
-  BASIC: new Role(BUILTIN_IDS.BASIC, BuiltinPermissionID.WRITE, {
-    displayName: "App user",
-    description: "Any logged in user",
-    color: RoleColor.BASIC,
-  }).addInheritance(BUILTIN_IDS.PUBLIC),
-  PUBLIC: new Role(BUILTIN_IDS.PUBLIC, BuiltinPermissionID.PUBLIC, {
-    displayName: "Public user",
-    description: "Accessible to anyone",
-    color: RoleColor.PUBLIC,
-  }),
-  BUILDER: new Role(BUILTIN_IDS.BUILDER, BuiltinPermissionID.ADMIN, {
-    displayName: "Builder user",
-    description: "Users that can edit this app",
-    color: RoleColor.BUILDER,
-  }),
+  ADMIN: new Role(
+    BUILTIN_IDS.ADMIN,
+    BUILTIN_IDS.ADMIN,
+    BuiltinPermissionID.ADMIN,
+    {
+      displayName: "App admin",
+      description: "Can do everything",
+      color: RoleColor.ADMIN,
+    }
+  ).addInheritance(BUILTIN_IDS.POWER),
+  POWER: new Role(
+    BUILTIN_IDS.POWER,
+    BUILTIN_IDS.POWER,
+    BuiltinPermissionID.POWER,
+    {
+      displayName: "App power user",
+      description: "An app user with more access",
+      color: RoleColor.POWER,
+    }
+  ).addInheritance(BUILTIN_IDS.BASIC),
+  BASIC: new Role(
+    BUILTIN_IDS.BASIC,
+    BUILTIN_IDS.BASIC,
+    BuiltinPermissionID.WRITE,
+    {
+      displayName: "App user",
+      description: "Any logged in user",
+      color: RoleColor.BASIC,
+    }
+  ).addInheritance(BUILTIN_IDS.PUBLIC),
+  PUBLIC: new Role(
+    BUILTIN_IDS.PUBLIC,
+    BUILTIN_IDS.PUBLIC,
+    BuiltinPermissionID.PUBLIC,
+    {
+      displayName: "Public user",
+      description: "Accessible to anyone",
+      color: RoleColor.PUBLIC,
+    }
+  ),
+  BUILDER: new Role(
+    BUILTIN_IDS.BUILDER,
+    BUILTIN_IDS.BUILDER,
+    BuiltinPermissionID.ADMIN,
+    {
+      displayName: "Builder user",
+      description: "Users that can edit this app",
+      color: RoleColor.BUILDER,
+    }
+  ),
 }
 
 export function getBuiltinRoles(): { [key: string]: RoleDoc } {
