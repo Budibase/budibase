@@ -763,10 +763,6 @@ describe("/rowsActions", () => {
     })
 
     describe("role permission checks", () => {
-      beforeAll(() => {
-        mocks.licenses.useViewPermissions()
-      })
-
       afterAll(() => {
         mocks.licenses.useCloudFree()
       })

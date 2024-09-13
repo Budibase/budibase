@@ -63,7 +63,7 @@
     "@koa/router": "8.0.8",
     "@socket.io/redis-adapter": "^8.2.1",
     "@types/xml2js": "^0.4.14",
-    "airtable": "0.10.1",
+    "airtable": "0.12.2",
     "arangojs": "7.2.0",
     "archiver": "7.0.1",
     "aws-sdk": "2.1030.0",

@@ -2297,7 +2297,6 @@ describe.each([
 
     describe("permissions", () => {
       beforeEach(async () => {
-        mocks.licenses.useViewPermissions()
         await Promise.all(
           Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
         )
