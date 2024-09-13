@@ -117,7 +117,10 @@
     "axios": "1.6.3",
     "xml2js": "0.6.2",
     "unset-value": "2.0.1",
-    "passport": "0.6.0"
+    "passport": "0.6.0",
+    "fast-xml-parser": "4.4.1",
+    "@azure/identity": "4.2.1",
+    "kind-of": "6.0.3"
   },
   "engines": {
     "node": ">=20.0.0 <21.0.0"
