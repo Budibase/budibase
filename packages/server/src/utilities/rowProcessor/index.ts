@@ -110,7 +110,9 @@ async function processDefaultValues(table: Table, row: Row) {
 
   const identity = context.getIdentity()
   if (identity?._id && identity.type === IdentityType.USER) {
-    const user = await cache.user.getUser(identity._id)
+    const user = await cache.user.getUser({
+      userId: identity._id,
+    })
     delete user.password
 
     ctx["Current User"] = user
@@ -335,6 +337,13 @@ export async function outputProcessing<T extends Row[] | Row>(
             .toString()
             .padStart(2, "0")
           row[property] = `${hours}:${minutes}:${seconds}`
+        }
+      }
+    } else if (column.type === FieldType.LINK) {
+      for (let row of enriched) {
+        // if relationship is empty - remove the array, this has been part of the API for some time
+        if (Array.isArray(row[property]) && row[property].length === 0) {
+          delete row[property]
         }
       }
     }
