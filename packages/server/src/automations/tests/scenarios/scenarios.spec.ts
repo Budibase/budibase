@@ -217,7 +217,7 @@ describe("Automation Scenarios", () => {
           {
             tableId: table._id!,
           },
-          "InitialQueryStep"
+          { stepName: "InitialQueryStep" }
         )
         .deleteRow({
           tableId: table._id!,

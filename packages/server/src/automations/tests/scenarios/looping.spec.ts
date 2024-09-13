@@ -255,12 +255,15 @@ describe("Loop automations", () => {
           option: LoopStepType.ARRAY,
           binding: [1, 2, 3],
         },
-        "FirstLoopStep"
+        { stepName: "FirstLoopStep" }
       )
-      .serverLog({ text: "Message {{loop.currentItem}}" }, "FirstLoopLog")
+      .serverLog(
+        { text: "Message {{loop.currentItem}}" },
+        { stepName: "FirstLoopLog" }
+      )
       .serverLog(
         { text: "{{steps.FirstLoopLog.iterations}}" },
-        "FirstLoopIterationLog"
+        { stepName: "FirstLoopIterationLog" }
       )
       .run()
 
