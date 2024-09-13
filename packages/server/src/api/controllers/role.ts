@@ -89,7 +89,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     ctx.throw(400, "Cannot change custom role name")
   }
 
-  const role = new roles.Role(_id, permissionId, {
+  const role = new roles.Role(_id, name, permissionId, {
     displayName: uiMetadata?.displayName || name,
     description: uiMetadata?.description || "Custom role",
     color: uiMetadata?.color || RoleColor.DEFAULT_CUSTOM,
