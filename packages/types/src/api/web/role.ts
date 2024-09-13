@@ -4,9 +4,6 @@ export interface SaveRoleRequest {
   _id?: string
   _rev?: string
   name: string
-  displayName?: string
-  color?: string
-  description?: string
   inherits: string
   permissionId: string
   version: string

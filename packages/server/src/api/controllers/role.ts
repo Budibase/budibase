@@ -19,7 +19,7 @@ import {
   UserMetadata,
   DocumentType,
 } from "@budibase/types"
-import { sdk as sharedSdk } from "@budibase/shared-core"
+import { RoleColor, sdk as sharedSdk } from "@budibase/shared-core"
 import sdk from "../../sdk"
 
 const UpdateRolesOptions = {
@@ -62,16 +62,8 @@ export async function find(ctx: UserCtx<void, FindRoleResponse>) {
 
 export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   const db = context.getAppDB()
-  let {
-    _id,
-    name,
-    displayName,
-    description,
-    color,
-    inherits,
-    permissionId,
-    version,
-  } = ctx.request.body
+  let { _id, name, inherits, permissionId, version, uiMetadata } =
+    ctx.request.body
   let isCreate = false
   const isNewVersion = version === roles.RoleIDVersion.NAME
 
@@ -97,14 +89,11 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     ctx.throw(400, "Cannot change custom role name")
   }
 
-  const role = new roles.Role(
-    _id,
-    displayName || name,
-    description || "Custom role",
-    color || "var(--spectrum-global-color-static-magenta-400)",
-    permissionId
-  ).addInheritance(inherits)
-
+  const role = new roles.Role(_id, permissionId, {
+    displayName: uiMetadata?.displayName || name,
+    description: uiMetadata?.description || "Custom role",
+    color: uiMetadata?.color || RoleColor.DEFAULT_CUSTOM,
+  }).addInheritance(inherits)
   if (dbRole?.permissions && !role.permissions) {
     role.permissions = dbRole.permissions
   }
