@@ -17,11 +17,8 @@
 
   let interval
   let queryExtensions = {}
-  let localFilters
 
-  $: localFilters = filter ? Helpers.cloneDeep(filter) : null
-
-  $: defaultQuery = QueryUtils.buildQuery(localFilters)
+  $: defaultQuery = QueryUtils.buildQuery(filter)
 
   // We need to manage our lucene query manually as we want to allow components
   // to extend it

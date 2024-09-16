@@ -95,7 +95,7 @@
   }
 
   const updateQuery = () => {
-    filters = Helpers.cloneDeep(editableFilters)
+    filters = editableFilters
   }
 
   onDestroy(() => {
