@@ -55,6 +55,20 @@ function getRelationshipLimit() {
   return envLimit || 500
 }
 
+function prioritisedArraySort(toSort: string[], priorities: string[]) {
+  return toSort.sort((a, b) => {
+    const aPriority = priorities.find(field => field && a.endsWith(field))
+    const bPriority = priorities.find(field => field && b.endsWith(field))
+    if (aPriority && !bPriority) {
+      return -1
+    }
+    if (!aPriority && bPriority) {
+      return 1
+    }
+    return a.localeCompare(b)
+  })
+}
+
 function getTableName(table?: Table): string | undefined {
   // SQS uses the table ID rather than the table name
   if (
@@ -924,11 +938,12 @@ class InternalBuilder {
       const requiredFields = [
         ...(relatedTable?.primary || []),
         relatedTable?.primaryDisplay,
-      ]
-      let relationshipFields = fields
-        .filter(field => field.split(".")[0] === toAlias)
-        // sort the required fields to first in the list
-        .sort(field => (requiredFields.includes(field) ? 1 : -1))
+      ].filter(field => field) as string[]
+      // sort the required fields to first in the list, so they don't get sliced out
+      let relationshipFields = prioritisedArraySort(
+        fields.filter(field => field.split(".")[0] === toAlias),
+        requiredFields
+      )
 
       relationshipFields = relationshipFields.slice(
         0,
