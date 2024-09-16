@@ -3,7 +3,7 @@
   import { roles } from "stores/builder"
   import { licensing } from "stores/portal"
 
-  import { Constants, RoleUtils } from "@budibase/frontend-core"
+  import { Constants } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
   import { capitalise } from "helpers"
 

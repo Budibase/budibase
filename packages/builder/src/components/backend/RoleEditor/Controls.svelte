@@ -1,6 +1,6 @@
 <script>
   import { Button, Helpers, ActionButton } from "@budibase/bbui"
-  import { useSvelteFlow, Position } from "@xyflow/svelte"
+  import { useSvelteFlow } from "@xyflow/svelte"
   import { getContext, tick } from "svelte"
   import { autoLayout, roleToNode } from "./layout"
   import { MaxAutoZoom, ZoomDuration } from "./constants"

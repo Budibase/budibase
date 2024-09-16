@@ -1,5 +1,4 @@
 <script>
-  import { RoleUtils } from "@budibase/frontend-core"
   import { Handle, Position, useSvelteFlow } from "@xyflow/svelte"
   import {
     Icon,
