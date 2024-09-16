@@ -55,6 +55,34 @@ export function createRolesStore() {
         _id: savedRole._id.replace("role_", ""),
       }
     },
+    replace: (roleId, role) => {
+      console.log("replace", roleId, role)
+
+      // Handles external updates of roles
+      if (!roleId) {
+        return
+      }
+
+      // Handle deletion
+      if (!role) {
+        store.update(state => state.filter(x => x._id !== roleId))
+        return
+      }
+
+      // Add new role
+      const index = get(store).findIndex(x => x._id === role._id)
+      if (index === -1) {
+        store.update(state => [...state, role])
+      }
+
+      // Update existing role
+      else if (role) {
+        store.update(state => {
+          state[index] = role
+          return [...state]
+        })
+      }
+    },
   }
 
   return {
