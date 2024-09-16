@@ -1,4 +1,4 @@
-import { derived, writable } from "svelte/store"
+import { derived, writable, get } from "svelte/store"
 import { API } from "api"
 import { RoleUtils } from "@budibase/frontend-core"
 
@@ -56,6 +56,13 @@ export function createRolesStore() {
       }
     },
     replace: (roleId, role) => {
+      // Remove role_ prefix
+      if (roleId?.startsWith("role_")) {
+        roleId = roleId.replace("role_", "")
+      }
+      if (role?._id.startsWith("role_")) {
+        role._id = role._id.replace("role_", "")
+      }
       console.log("replace", roleId, role)
 
       // Handles external updates of roles

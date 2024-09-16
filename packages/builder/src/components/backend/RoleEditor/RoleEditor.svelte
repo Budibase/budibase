@@ -1,25 +1,157 @@
 <script>
-  import { Heading } from "@budibase/bbui"
+  import { Heading, Helpers } from "@budibase/bbui"
   import { writable } from "svelte/store"
-  import { SvelteFlow, Background, BackgroundVariant } from "@xyflow/svelte"
+  import {
+    SvelteFlow,
+    Background,
+    BackgroundVariant,
+    Position,
+  } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import RoleNode from "./RoleNode.svelte"
   import RoleEdge from "./RoleEdge.svelte"
-  import { rolesToNodes, autoLayout } from "./layout"
-  import { onMount, setContext } from "svelte"
+  import { autoLayout } from "./layout"
+  import { setContext } from "svelte"
   import Controls from "./Controls.svelte"
   import { GridResolution, MaxAutoZoom } from "./constants"
+  import { roles } from "stores/builder"
+  import { Roles } from "constants/backend"
+  import { getSequentialName } from "helpers/duplicate"
 
   const nodes = writable([])
   const edges = writable([])
   const dragging = writable(false)
 
-  setContext("flow", { nodes, edges, dragging })
+  // Ensure role changes are synced with nodes and edges
+  $: handleExternalRoleChanges($roles)
 
-  onMount(() => {
-    const layout = autoLayout(rolesToNodes())
-    nodes.set(layout.nodes)
-    edges.set(layout.edges)
+  // Converts a role doc into a node structure
+  const roleToNode = role => ({
+    id: role._id,
+    sourcePosition: Position.Right,
+    targetPosition: Position.Left,
+    type: "role",
+    position: { x: 0, y: 0 },
+    data: {
+      ...role.uiMetadata,
+      custom: !role._id.match(/[A-Z]+/),
+    },
+  })
+
+  // Converts a node structure back into a role doc
+  const nodeToRole = node => {
+    const role = $roles.find(x => x._id === node.id)
+    const inherits = $edges.filter(x => x.target === node.id).map(x => x.source)
+    console.log(inherits)
+    return {
+      ...role,
+      // inherits,
+      uiMetadata: {
+        displayName: node.data.displayName,
+        color: node.data.color,
+        description: node.data.description,
+      },
+    }
+  }
+
+  // Builds a layout from an array of roles
+  const rolesToLayout = roles => {
+    let nodes = []
+    let edges = []
+    for (let role of roles.filter(role => role._id !== Roles.PUBLIC)) {
+      // Add node for this role
+      nodes.push(roleToNode(role))
+
+      // Add edges for this role
+      let inherits = []
+      if (role.inherits) {
+        inherits = Array.isArray(role.inherits)
+          ? role.inherits
+          : [role.inherits]
+      }
+      for (let sourceRole of inherits) {
+        if (!roles.some(x => x._id === sourceRole)) {
+          continue
+        }
+        edges.push({
+          id: `${sourceRole}-${role._id}`,
+          source: sourceRole,
+          target: role._id,
+        })
+      }
+    }
+    return {
+      nodes,
+      edges,
+    }
+  }
+
+  // Updates nodes and edges based on external changes to roles
+  const handleExternalRoleChanges = roles => {
+    const currentNodes = $nodes
+    const newLayout = autoLayout(rolesToLayout(roles))
+
+    // For roles we want to persist their current positions
+    nodes.set(
+      newLayout.nodes.map(node => {
+        const position = currentNodes.find(x => x.id === node.id)?.position
+        if (!position) {
+          return node
+        }
+        return { ...node, position }
+      })
+    )
+
+    // Edges can always be updated
+    edges.set(newLayout.edges)
+  }
+
+  // Creates a new role
+  const createRole = async () => {
+    const role = {
+      name: Helpers.uuid(),
+      uiMetadata: {
+        displayName: getSequentialName($roles, "New role ", {
+          getName: x => x.uiMetadata.displayName,
+        }),
+        color: "var(--spectrum-global-color-gray-700)",
+        description: "Custom role",
+      },
+      permissionId: "write",
+      inherits: Roles.BASIC,
+    }
+    await roles.save(role)
+  }
+
+  // Updates a role based on the latest flow data
+  const updateRole = async roleId => {
+    const node = $nodes.find(x => x.id === roleId)
+    if (node) {
+      const role = nodeToRole(node)
+      await roles.save(role)
+    }
+  }
+
+  // Deletes a role
+  const deleteRole = async roleId => {
+    const role = $roles.find(x => x._id === roleId)
+    if (role) {
+      roles.delete(role)
+    }
+  }
+
+  // Saves a new connection
+  const onConnect = async connection => {
+    await saveRole(connection.target)
+  }
+
+  setContext("flow", {
+    nodes,
+    edges,
+    dragging,
+    createRole,
+    updateRole,
+    deleteRole,
   })
 </script>
 
@@ -42,6 +174,7 @@
     defaultEdgeOptions={{ type: "role", animated: true, selectable: false }}
     onconnectstart={() => dragging.set(true)}
     onconnectend={() => dragging.set(false)}
+    onconnect={onConnect}
   >
     <Background variant={BackgroundVariant.Dots} />
     <Controls />

@@ -1,32 +1,15 @@
 <script>
-  import { Button, Helpers, ActionButton } from "@budibase/bbui"
+  import { Button, ActionButton } from "@budibase/bbui"
   import { useSvelteFlow } from "@xyflow/svelte"
   import { getContext, tick } from "svelte"
-  import { autoLayout, roleToNode } from "./layout"
+  import { autoLayout } from "./layout"
   import { MaxAutoZoom, ZoomDuration } from "./constants"
-  import { getSequentialName } from "helpers/duplicate"
-  import { roles } from "stores/builder"
-  import { Roles } from "constants/backend"
 
-  const { nodes, edges } = getContext("flow")
+  const { nodes, edges, createRole } = getContext("flow")
   const flow = useSvelteFlow()
 
   const addRole = async () => {
-    const role = {
-      name: Helpers.uuid(),
-      uiMetadata: {
-        displayName: getSequentialName($roles, "New role ", {
-          getName: x => x.uiMetadata.displayName,
-        }),
-        color: "var(--spectrum-global-color-gray-700)",
-        description: "Custom role",
-      },
-      permissionId: "write",
-      inherits: Roles.BASIC,
-    }
-    const savedRole = await roles.save(role)
-    nodes.update(state => [...state, roleToNode(savedRole)])
-    await doAutoLayout()
+    await createRole()
   }
 
   const doAutoLayout = async () => {
