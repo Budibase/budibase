@@ -430,15 +430,19 @@ describe("Google Sheets Integration", () => {
     })
 
     it("can delete a table", async () => {
+      expect(mock.sheet(table.name)).toBeDefined()
       await config.api.table.destroy(table._id!, table._rev!)
       expect(mock.sheet(table.name)).toBeUndefined()
     })
 
-    it.only("can delete a row", async () => {
+    it("can delete a row", async () => {
       const rows = await config.api.row.fetch(table._id!)
       expect(rows.length).toEqual(2)
 
-      for (const row of rows) {
+      // Because row IDs in Google Sheets are sequential and determined by the
+      // actual row in the sheet, deleting a row will shift the row IDs down by
+      // one. This is why we reverse the rows before deleting them.
+      for (const row of rows.reverse()) {
         await config.api.row.delete(table._id!, { _id: row._id! })
       }
 
