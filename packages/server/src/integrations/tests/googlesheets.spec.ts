@@ -10,6 +10,7 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import { GoogleSheetsMock } from "./utils/googlesheets"
+import rows from "src/sdk/app/rows"
 
 describe("Google Sheets Integration", () => {
   const config = new TestConfiguration()
@@ -243,6 +244,20 @@ describe("Google Sheets Integration", () => {
       expect(rows.map(row => row.name)).toEqual(
         expect.arrayContaining(Array.from({ length: 248 }, (_, i) => `${i}`))
       )
+    })
+
+    it("can export rows", async () => {
+      const resp = await config.api.row.exportRows(table._id!, {})
+      const parsed = JSON.parse(resp)
+      expect(parsed.length).toEqual(2)
+      expect(parsed[0]).toMatchObject({
+        name: "Test Contact 1",
+        description: "original description 1",
+      })
+      expect(parsed[1]).toMatchObject({
+        name: "Test Contact 2",
+        description: "original description 2",
+      })
     })
   })
 
