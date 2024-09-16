@@ -5,7 +5,6 @@ import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import {
   Datasource,
   FieldType,
-  Row,
   SourceName,
   Table,
   TableSourceType,
