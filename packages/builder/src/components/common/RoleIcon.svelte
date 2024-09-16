@@ -1,5 +1,4 @@
 <script>
-  import { RoleUtils } from "@budibase/frontend-core"
   import { StatusLight } from "@budibase/bbui"
   import { roles } from "stores/builder"
 
