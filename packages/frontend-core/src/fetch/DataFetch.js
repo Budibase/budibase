@@ -177,16 +177,11 @@ export default class DataFetch {
       }
     }
 
-    let defaultQuery = {
-      logicalOperator: FilterGroupLogicalOperator.ALL,
-      groups: [],
-    }
-
     // Build the query
     let query = this.options.query
 
     if (!query && this.features.supportsSearch) {
-      query = buildQuery(filter || defaultQuery)
+      query = buildQuery(filter)
     }
 
     // Update store
