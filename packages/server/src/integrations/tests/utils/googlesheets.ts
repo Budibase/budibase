@@ -21,6 +21,7 @@ import type {
   CellFormat,
   CellPadding,
   Color,
+  GridRange,
 } from "google-spreadsheet/src/lib/types/sheets-types"
 
 const BLACK: Color = { red: 0, green: 0, blue: 0 }
@@ -88,9 +89,36 @@ interface UpdateValuesResponse {
   updatedData: ValueRange
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddSheetRequest
+interface AddSheetRequest {
+  properties: WorksheetProperties
+}
+
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/response#AddSheetResponse
 interface AddSheetResponse {
   properties: WorksheetProperties
+}
+
+interface DeleteRangeRequest {
+  range: GridRange
+  shiftDimension: WorksheetDimension
+}
+
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteSheetRequest
+interface DeleteSheetRequest {
+  sheetId: number
+}
+
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request
+interface BatchUpdateRequest {
+  requests: {
+    addSheet?: AddSheetRequest
+    deleteRange?: DeleteRangeRequest
+    deleteSheet?: DeleteSheetRequest
+  }[]
+  includeSpreadsheetInResponse: boolean
+  responseRanges: string[]
+  responseIncludeGridData: boolean
 }
 
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/response
@@ -100,23 +128,6 @@ interface BatchUpdateResponse {
     addSheet?: AddSheetResponse
   }[]
   updatedSpreadsheet: Spreadsheet
-}
-
-// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddSheetRequest
-interface AddSheetRequest {
-  properties: WorksheetProperties
-}
-
-interface Request {
-  addSheet?: AddSheetRequest
-}
-
-// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request
-interface BatchUpdateRequest {
-  requests: Request[]
-  includeSpreadsheetInResponse: boolean
-  responseRanges: string[]
-  responseIncludeGridData: boolean
 }
 
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#RowData
@@ -369,13 +380,17 @@ export class GoogleSheetsMock {
 
   private handleValueAppend(request: AppendRequest): AppendResponse {
     const { range, params, body } = request
-    const { sheet, bottomRight } = this.parseA1Notation(range)
+    const { sheetId, endRowIndex } = this.parseA1Notation(range)
+    const sheet = this.getSheetById(sheetId)
+    if (!sheet) {
+      throw new Error(`Sheet ${sheetId} not found`)
+    }
 
     const newRows = body.values.map(v => this.valuesToRowData(v))
     const toDelete =
       params.insertDataOption === "INSERT_ROWS" ? newRows.length : 0
-    sheet.data[0].rowData.splice(bottomRight.row + 1, toDelete, ...newRows)
-    sheet.data[0].rowMetadata.splice(bottomRight.row + 1, toDelete, {
+    sheet.data[0].rowData.splice(endRowIndex + 1, toDelete, ...newRows)
+    sheet.data[0].rowMetadata.splice(endRowIndex + 1, toDelete, {
       hiddenByUser: false,
       hiddenByFilter: false,
       pixelSize: 100,
@@ -384,17 +399,13 @@ export class GoogleSheetsMock {
 
     // It's important to give back a correct updated range because the API
     // library we use makes use of it to assign the correct row IDs to rows.
-    const updatedRange = this.createA1FromRanges(
-      sheet,
-      {
-        row: bottomRight.row + 1,
-        column: 0,
-      },
-      {
-        row: bottomRight.row + newRows.length,
-        column: 0,
-      }
-    )
+    const updatedRange = this.createA1({
+      sheetId,
+      startRowIndex: endRowIndex + 1,
+      startColumnIndex: 0,
+      endRowIndex: endRowIndex + newRows.length,
+      endColumnIndex: 0,
+    })
 
     return {
       spreadsheetId: this.spreadsheet.spreadsheetId,
@@ -438,6 +449,14 @@ export class GoogleSheetsMock {
           addSheet: this.handleAddSheet(request.addSheet),
         })
       }
+      if (request.deleteRange) {
+        this.handleDeleteRange(request.deleteRange)
+        response.replies.push({})
+      }
+      if (request.deleteSheet) {
+        this.handleDeleteSheet(request.deleteSheet)
+        response.replies.push({})
+      }
     }
 
     return response
@@ -474,12 +493,29 @@ export class GoogleSheetsMock {
     return { properties: properties as WorksheetProperties }
   }
 
+  private handleDeleteRange(request: DeleteRangeRequest) {
+    const { range, shiftDimension } = request
+
+    if (shiftDimension !== "ROWS") {
+      throw new Error("Only row-based deletes are supported")
+    }
+
+    this.iterateRange(range, cell => {
+      cell.userEnteredValue = this.createValue(null)
+    })
+  }
+
+  private handleDeleteSheet(request: DeleteSheetRequest) {
+    const { sheetId } = request
+    this.spreadsheet.sheets.splice(sheetId, 1)
+  }
+
   private handleGetSpreadsheet(): Spreadsheet {
     return this.spreadsheet
   }
 
   private handleValueUpdate(valueRange: ValueRange): UpdateValuesResponse {
-    this.iterateCells(valueRange, (cell, value) => {
+    this.iterateValueRange(valueRange, (cell, value) => {
       cell.userEnteredValue = this.createValue(value)
     })
 
@@ -494,7 +530,27 @@ export class GoogleSheetsMock {
     return response
   }
 
-  private iterateCells(
+  private iterateRange(range: GridRange, cb: (cell: CellData) => void) {
+    const {
+      sheetId,
+      startRowIndex,
+      endRowIndex,
+      startColumnIndex,
+      endColumnIndex,
+    } = this.ensureGridRange(range)
+
+    for (let row = startRowIndex; row <= endRowIndex; row++) {
+      for (let col = startColumnIndex; col <= endColumnIndex; col++) {
+        const cell = this.getCellNumericIndexes(sheetId, row, col)
+        if (!cell) {
+          throw new Error("Cell not found")
+        }
+        cb(cell)
+      }
+    }
+  }
+
+  private iterateValueRange(
     valueRange: ValueRange,
     cb: (cell: CellData, value: Value) => void
   ) {
@@ -502,33 +558,46 @@ export class GoogleSheetsMock {
       throw new Error("Only row-major updates are supported")
     }
 
-    const { sheet, topLeft, bottomRight } = this.parseA1Notation(
-      valueRange.range
-    )
-    for (let row = topLeft.row; row <= bottomRight.row; row++) {
-      for (let col = topLeft.column; col <= bottomRight.column; col++) {
-        const cell = this.getCellNumericIndexes(sheet, row, col)
+    const {
+      sheetId,
+      startColumnIndex,
+      startRowIndex,
+      endColumnIndex,
+      endRowIndex,
+    } = this.parseA1Notation(valueRange.range)
+
+    for (let row = startRowIndex; row <= endRowIndex; row++) {
+      for (let col = startColumnIndex; col <= endColumnIndex; col++) {
+        const cell = this.getCellNumericIndexes(sheetId, row, col)
         if (!cell) {
           throw new Error("Cell not found")
         }
-        const value = valueRange.values[row - topLeft.row][col - topLeft.column]
+        const value =
+          valueRange.values[row - startRowIndex][col - startColumnIndex]
         cb(cell, value)
       }
     }
   }
 
   private getValueRange(range: string): ValueRange {
-    const { sheet, topLeft, bottomRight } = this.parseA1Notation(range)
+    const {
+      sheetId,
+      startRowIndex,
+      endRowIndex,
+      startColumnIndex,
+      endColumnIndex,
+    } = this.parseA1Notation(range)
+
     const valueRange: ValueRange = {
       range,
       majorDimension: "ROWS",
       values: [],
     }
 
-    for (let row = topLeft.row; row <= bottomRight.row; row++) {
+    for (let row = startRowIndex; row <= endRowIndex; row++) {
       const values: Value[] = []
-      for (let col = topLeft.column; col <= bottomRight.column; col++) {
-        const cell = this.getCellNumericIndexes(sheet, row, col)
+      for (let col = startColumnIndex; col <= endColumnIndex; col++) {
+        const cell = this.getCellNumericIndexes(sheetId, row, col)
         if (!cell) {
           throw new Error("Cell not found")
         }
@@ -693,14 +762,12 @@ export class GoogleSheetsMock {
   }
 
   private cellData(cell: string): CellData | undefined {
-    const {
-      sheet,
-      topLeft: { row, column },
-    } = this.parseA1Notation(cell)
-    return this.getCellNumericIndexes(sheet, row, column)
+    const { sheetId, startColumnIndex, startRowIndex } =
+      this.parseA1Notation(cell)
+    return this.getCellNumericIndexes(sheetId, startRowIndex, startColumnIndex)
   }
 
-  cell(cell: string): Value | undefined {
+  public cell(cell: string): Value | undefined {
     const cellData = this.cellData(cell)
     if (!cellData) {
       return undefined
@@ -708,11 +775,26 @@ export class GoogleSheetsMock {
     return this.cellValue(cellData)
   }
 
+  public sheet(name: string | number): Sheet | undefined {
+    if (typeof name === "number") {
+      return this.getSheetById(name)
+    }
+    return this.getSheetByName(name)
+  }
+
   private getCellNumericIndexes(
-    sheet: Sheet,
+    sheet: Sheet | number,
     row: number,
     column: number
   ): CellData | undefined {
+    if (typeof sheet === "number") {
+      const foundSheet = this.getSheetById(sheet)
+      if (!foundSheet) {
+        return undefined
+      }
+      sheet = foundSheet
+    }
+
     const data = sheet.data[0]
     const rowData = data.rowData[row]
     if (!rowData) {
@@ -751,11 +833,7 @@ export class GoogleSheetsMock {
   //   "Sheet1!A:B"    -> { topLeft: { row: 0, column: 0 }, bottomRight: { row: 99, column: 1 } }
   //   "Sheet1!1:1"    -> { topLeft: { row: 0, column: 0 }, bottomRight: { row: 0, column: 25 } }
   //   "Sheet1!1:2"    -> { topLeft: { row: 0, column: 0 }, bottomRight: { row: 1, column: 25 } }
-  private parseA1Notation(range: string): {
-    sheet: Sheet
-    topLeft: Range
-    bottomRight: Range
-  } {
+  private parseA1Notation(range: string): Required<GridRange> {
     let sheet: Sheet
     let rest: string
     if (!range.includes("!")) {
@@ -793,35 +871,54 @@ export class GoogleSheetsMock {
       parsedBottomRight = parsedTopLeft
     }
 
-    if (parsedTopLeft && parsedTopLeft.row === undefined) {
-      parsedTopLeft.row = 0
-    }
-    if (parsedTopLeft && parsedTopLeft.column === undefined) {
-      parsedTopLeft.column = 0
-    }
-    if (parsedBottomRight && parsedBottomRight.row === undefined) {
-      parsedBottomRight.row = sheet.properties.gridProperties.rowCount - 1
-    }
-    if (parsedBottomRight && parsedBottomRight.column === undefined) {
-      parsedBottomRight.column = sheet.properties.gridProperties.columnCount - 1
+    return this.ensureGridRange({
+      sheetId: sheet.properties.sheetId,
+      startRowIndex: parsedTopLeft.row,
+      endRowIndex: parsedBottomRight.row,
+      startColumnIndex: parsedTopLeft.column,
+      endColumnIndex: parsedBottomRight.column,
+    })
+  }
+
+  private ensureGridRange(range: GridRange): Required<GridRange> {
+    const sheet = this.getSheetById(range.sheetId)
+    if (!sheet) {
+      throw new Error(`Sheet ${range.sheetId} not found`)
     }
 
     return {
-      sheet,
-      topLeft: parsedTopLeft as Range,
-      bottomRight: parsedBottomRight as Range,
+      sheetId: range.sheetId,
+      startRowIndex: range.startRowIndex ?? 0,
+      endRowIndex:
+        range.endRowIndex ?? sheet.properties.gridProperties.rowCount - 1,
+      startColumnIndex: range.startColumnIndex ?? 0,
+      endColumnIndex:
+        range.endColumnIndex ?? sheet.properties.gridProperties.columnCount - 1,
     }
   }
 
-  private createA1FromRanges(sheet: Sheet, topLeft: Range, bottomRight: Range) {
+  private createA1(range: Required<GridRange>) {
+    const {
+      sheetId,
+      startColumnIndex,
+      startRowIndex,
+      endColumnIndex,
+      endRowIndex,
+    } = range
+
+    const sheet = this.getSheetById(sheetId)
+    if (!sheet) {
+      throw new Error(`Sheet ${range.sheetId} not found`)
+    }
+
     let title = sheet.properties.title
     if (title.includes(" ")) {
       title = `'${title}'`
     }
-    const topLeftLetter = this.numberToLetter(topLeft.column)
-    const bottomRightLetter = this.numberToLetter(bottomRight.column)
-    const topLeftRow = topLeft.row + 1
-    const bottomRightRow = bottomRight.row + 1
+    const topLeftLetter = this.numberToLetter(startColumnIndex)
+    const bottomRightLetter = this.numberToLetter(endColumnIndex)
+    const topLeftRow = startRowIndex + 1
+    const bottomRightRow = endRowIndex + 1
     return `${title}!${topLeftLetter}${topLeftRow}:${bottomRightLetter}${bottomRightRow}`
   }
 
@@ -858,6 +955,12 @@ export class GoogleSheetsMock {
   private getSheetByName(name: string): Sheet | undefined {
     return this.spreadsheet.sheets.find(
       sheet => sheet.properties.title === name
+    )
+  }
+
+  private getSheetById(id: number): Sheet | undefined {
+    return this.spreadsheet.sheets.find(
+      sheet => sheet.properties.sheetId === id
     )
   }
 }
