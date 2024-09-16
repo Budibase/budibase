@@ -118,7 +118,7 @@
 
   // Creates a new role
   const createRole = async () => {
-    const newRole = {
+    await roles.save({
       name: Helpers.uuid(),
       uiMetadata: {
         displayName: getSequentialName($roles, "New role ", {
@@ -129,22 +129,7 @@
       },
       permissionId: "write",
       inherits: Roles.BASIC,
-    }
-
-    // Immediate state update
-    const newNode = {
-      ...roleToNode({ ...newRole, _id: newRole.name }),
-      selected: true,
-    }
-    const layout = autoLayout({
-      nodes: [...$nodes.map(node => ({ ...node, selected: false })), newNode],
-      edges: $edges,
     })
-    nodes.set(layout.nodes)
-    edges.set(layout.edges)
-
-    // Actually create role
-    await roles.save(newRole)
   }
 
   // Updates a role with new metadata
@@ -155,7 +140,7 @@
       return
     }
 
-    // Immediate state update
+    // Update metadata
     if (metadata) {
       flow.updateNodeData(roleId, metadata)
     }
@@ -167,15 +152,6 @@
 
   // Deletes a role
   const deleteRole = async roleId => {
-    // Immediate state update
-    const layout = autoLayout({
-      nodes: $nodes.filter(x => x.id !== roleId),
-      edges: $edges.filter(x => x.source !== roleId && x.target !== roleId),
-    })
-    nodes.set(layout.nodes)
-    edges.set(layout.edges)
-
-    // Actually delete role
     const role = $roles.find(x => x._id === roleId)
     if (role) {
       roles.delete(role)

@@ -12,6 +12,7 @@
   import { NodeWidth, NodeHeight } from "./constants"
   import { getContext } from "svelte"
   import { roles } from "stores/builder"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let data
   export let id
@@ -24,6 +25,7 @@
   let tempDisplayName
   let tempDescription
   let tempColor
+  let deleteModal
 
   $: nameError = validateName(tempDisplayName, $roles)
   $: descriptionError = validateDescription(tempDescription)
@@ -90,7 +92,7 @@
   {#if data.custom}
     <div class="buttons">
       <Icon size="S" name="Edit" hoverable on:click={openPopover} />
-      <Icon size="S" name="Delete" hoverable on:click={handleDelete} />
+      <Icon size="S" name="Delete" hoverable on:click={deleteModal?.show} />
     </div>
   {/if}
   {#if id !== Roles.BASIC}
@@ -105,6 +107,14 @@
     <Handle type="source" position={Position.Right} class={sourceClasses} />
   {/if}
 </div>
+
+<ConfirmDialog
+  bind:this={deleteModal}
+  title={`Delete ${data.displayName}`}
+  body="Are you sure you want to delete this role? This can't be undone."
+  okText="Delete"
+  onOk={async () => await deleteRole(id)}
+/>
 
 <Modal bind:this={modal}>
   <ModalContent
