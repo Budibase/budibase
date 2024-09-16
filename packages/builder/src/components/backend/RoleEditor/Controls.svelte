@@ -8,15 +8,15 @@
   const { nodes, edges, createRole } = getContext("flow")
   const flow = useSvelteFlow()
 
-  const doAutoLayout = async () => {
+  const addRole = async () => {
+    await createRole()
+    doAutoLayout()
+  }
+
+  const doAutoLayout = () => {
     const layout = autoLayout({ nodes: $nodes, edges: $edges })
     nodes.set(layout.nodes)
     edges.set(layout.edges)
-    await tick()
-    flow.fitView({
-      maxZoom: MaxAutoZoom,
-      duration: ZoomDuration,
-    })
   }
 </script>
 
@@ -43,7 +43,7 @@
   <Button secondary on:click={doAutoLayout}>Auto layout</Button>
 </div>
 <div class="control bottom-right">
-  <Button icon="Add" cta on:click={createRole}>Add role</Button>
+  <Button icon="Add" cta on:click={addRole}>Add role</Button>
 </div>
 
 <style>
