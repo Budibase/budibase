@@ -1,5 +1,5 @@
 <script>
-  import { Handle, Position, useSvelteFlow } from "@xyflow/svelte"
+  import { Handle, Position, useSvelteFlow, NodeToolbar } from "@xyflow/svelte"
   import {
     Icon,
     Input,
@@ -16,8 +16,9 @@
 
   export let data
   export let id
+  export let selected
 
-  const { nodes, edges, dragging, updateRole, deleteRole } = getContext("flow")
+  const { dragging, updateRole, deleteRole } = getContext("flow")
   const flow = useSvelteFlow()
 
   let anchor
@@ -48,34 +49,31 @@
     return null
   }
 
-  const openPopover = () => {
+  const openPopover = e => {
+    e.stopPropagation()
     tempDisplayName = data.displayName
     tempDescription = data.description
     tempColor = data.color
     modal.show()
   }
 
-  const saveChanges = async () => {
-    const newData = {
+  const saveChanges = () => {
+    updateRole(id, {
       displayName: tempDisplayName,
       description: tempDescription,
       color: tempColor,
-    }
-    flow.updateNodeData(id, newData)
-    await updateRole(id)
+    })
   }
 
-  const doAutoLayout = () => {
-    const layout = autoLayout({ nodes: $nodes, edges: $edges })
-    nodes.set(layout.nodes)
-    edges.set(layout.edges)
-    flow.fitView({ maxZoom: MaxAutoZoom, duration: ZoomDuration })
+  const handleDelete = async e => {
+    e.stopPropagation()
+    await deleteRole(id)
   }
 </script>
 
 <div
   class="node"
-  class:selected={false}
+  class:selected
   style={`--color:${data.color}; --width:${NodeWidth}px; --height:${NodeHeight}px;`}
   bind:this={anchor}
 >
@@ -88,12 +86,7 @@
       {#if data.custom}
         <div class="buttons">
           <Icon size="S" name="Edit" hoverable on:click={openPopover} />
-          <Icon
-            size="S"
-            name="Delete"
-            hoverable
-            on:click={() => deleteRole(id)}
-          />
+          <Icon size="S" name="Delete" hoverable on:click={handleDelete} />
         </div>
       {/if}
     </div>
@@ -153,9 +146,11 @@
     display: flex;
     flex-direction: row;
     box-sizing: border-box;
+    cursor: pointer;
   }
   .node.selected {
     background: var(--spectrum-global-color-blue-100);
+    cursor: grab;
   }
   .color {
     border-top-left-radius: 4px;
@@ -207,7 +202,7 @@
     color: var(--spectrum-global-color-gray-600);
     font-size: 12px;
   }
-  .node:hover .buttons {
+  .node.selected .buttons {
     display: flex;
   }
   .node :global(.svelte-flow__handle) {

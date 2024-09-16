@@ -23,7 +23,12 @@ export function createRolesStore() {
       roles.sort((a, b) => {
         const priorityA = RoleUtils.getRolePriority(a._id)
         const priorityB = RoleUtils.getRolePriority(b._id)
-        return priorityA > priorityB ? -1 : 1
+        if (priorityA !== priorityB) {
+          return priorityA > priorityB ? -1 : 1
+        }
+        const nameA = a.uiMetadata?.displayName || a.name
+        const nameB = b.uiMetadata?.displayName || b.name
+        return nameA < nameB ? -1 : 1
       })
     )
   }

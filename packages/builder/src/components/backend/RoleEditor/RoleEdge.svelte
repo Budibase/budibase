@@ -20,13 +20,12 @@
   export let target
 
   const flow = useSvelteFlow()
-  const { updateRole } = getContext("flow")
+  const { updateRole, selectedNode } = getContext("flow")
 
-  let edgeHovered = false
-  let labelHovered = false
+  let iconHovered = false
 
-  $: hovered = edgeHovered || labelHovered
-  $: edgeClasses = getEdgeClasses(hovered, labelHovered)
+  $: active = source === $selectedNode || target === $selectedNode
+  $: edgeClasses = getEdgeClasses(active, iconHovered)
   $: [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -42,19 +41,11 @@
       ? `Stop ${targetRole.uiMetadata.displayName} from inheriting ${sourceRole.uiMetadata.displayName}`
       : null
 
-  const getEdgeClasses = (hovered, labelHovered) => {
+  const getEdgeClasses = (active, iconHovered) => {
     let classes = ""
-    if (hovered) classes += `hovered `
-    if (labelHovered) classes += `delete `
+    if (active) classes += `active `
+    if (iconHovered) classes += `delete `
     return classes
-  }
-
-  const onEdgeMouseOver = () => {
-    edgeHovered = true
-  }
-
-  const onEdgeMouseOut = () => {
-    edgeHovered = false
   }
 
   const deleteEdge = async () => {
@@ -63,20 +54,6 @@
     })
     await updateRole(target)
   }
-
-  onMount(() => {
-    const edge = document.querySelector(`.svelte-flow__edge[data-id="${id}"]`)
-    if (edge) {
-      edge.addEventListener("mouseover", onEdgeMouseOver)
-      edge.addEventListener("mouseout", onEdgeMouseOut)
-    }
-    return () => {
-      if (edge) {
-        edge.removeEventListener("mouseover", onEdgeMouseOver)
-        edge.removeEventListener("mouseout", onEdgeMouseOut)
-      }
-    }
-  })
 </script>
 
 <BaseEdge path={edgePath} class={edgeClasses} />
@@ -87,10 +64,10 @@
   <div
     style:transform="translate(-50%, -50%) translate({labelX}px,{labelY}px)"
     class="edge-label nodrag nopan"
-    class:hovered
+    class:active
     on:click={deleteEdge}
-    on:mouseover={() => (labelHovered = true)}
-    on:mouseout={() => (labelHovered = false)}
+    on:mouseover={() => (iconHovered = true)}
+    on:mouseout={() => (iconHovered = false)}
   >
     <Icon name="Delete" {tooltip} tooltipPosition={TooltipPosition.Top} />
   </div>
@@ -101,11 +78,11 @@
     position: absolute;
     padding: 8px;
     opacity: 0;
-    pointer-events: all;
+    pointer-events: none;
   }
-  .edge-label:hover,
-  .edge-label.hovered {
+  .edge-label.active {
     opacity: 1;
+    pointer-events: all;
     cursor: pointer;
   }
   .edge-label:hover :global(.spectrum-Icon) {
@@ -116,13 +93,12 @@
     color: var(--spectrum-global-color-gray-600);
   }
   .edge-label :global(svg) {
-    padding: 8px;
+    padding: 4px;
   }
-  :global(.svelte-flow__edge:hover .svelte-flow__edge-path),
-  :global(.svelte-flow__edge-path.hovered) {
+  :global(.svelte-flow__edge-path.active) {
     stroke: var(--spectrum-global-color-blue-400);
   }
-  :global(.svelte-flow__edge-path.hovered.delete) {
+  :global(.svelte-flow__edge-path.active.delete) {
     stroke: var(--spectrum-global-color-red-400);
   }
 </style>
