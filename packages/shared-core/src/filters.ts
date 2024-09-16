@@ -574,12 +574,7 @@ export const buildQueryLegacy = (
 export const buildQuery = (
   filter?: SearchFilterGroup | SearchFilter[]
 ): SearchFilters | undefined => {
-  const parsedFilter: SearchFilterGroup | undefined =
-    processSearchFilters(filter)
-
-  if (!parsedFilter) {
-    return
-  }
+  const parsedFilter: SearchFilterGroup = processSearchFilters(filter)
 
   const operatorMap: { [key in FilterGroupLogicalOperator]: LogicalOperator } =
     {
