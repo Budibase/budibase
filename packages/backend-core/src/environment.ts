@@ -116,10 +116,6 @@ const environment = {
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
   COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL,
-  SQS_SEARCH_ENABLE: process.env.SQS_SEARCH_ENABLE,
-  SQS_SEARCH_ENABLE_TENANTS:
-    process.env.SQS_SEARCH_ENABLE_TENANTS?.split(",") || [],
-  SQS_MIGRATION_ENABLE: process.env.SQS_MIGRATION_ENABLE,
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -175,6 +171,7 @@ const environment = {
   // Couch/search
   SQL_LOGGING_ENABLE: process.env.SQL_LOGGING_ENABLE,
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
+  SQL_MAX_RELATED_ROWS: process.env.MAX_RELATED_ROWS,
   // smtp
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
   SMTP_USER: process.env.SMTP_USER,

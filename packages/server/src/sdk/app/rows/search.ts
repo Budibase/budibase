@@ -12,8 +12,9 @@ import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
-import { db as dbCore } from "@budibase/backend-core"
+import { features } from "@budibase/backend-core"
 import tracer from "dd-trace"
+import { getQueryableFields, removeInvalidFilters } from "./queryUtils"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -73,11 +74,23 @@ export async function search(
     const table = await sdk.tables.getTable(options.tableId)
     options = searchInputMapping(table, options)
 
+    if (options.query) {
+      const tableFields = Object.keys(table.schema).filter(
+        f => table.schema[f].visible !== false
+      )
+
+      const queriableFields = await getQueryableFields(
+        options.fields?.filter(f => tableFields.includes(f)) ?? tableFields,
+        table
+      )
+      options.query = removeInvalidFilters(options.query, queriableFields)
+    }
+
     let result: SearchResponse<Row>
     if (isExternalTable) {
       span?.addTags({ searchType: "external" })
       result = await external.search(options, table)
-    } else if (dbCore.isSqsEnabledForTenant()) {
+    } else if (await features.flags.isEnabled("SQS")) {
       span?.addTags({ searchType: "sqs" })
       result = await internal.sqs.search(options, table)
     } else {
@@ -108,10 +121,9 @@ export async function fetchRaw(tableId: string): Promise<Row[]> {
   return pickApi(tableId).fetchRaw(tableId)
 }
 
-export async function fetchView(
-  tableId: string,
+export async function fetchLegacyView(
   viewName: string,
   params: ViewParams
 ): Promise<Row[]> {
-  return pickApi(tableId).fetchView(viewName, params)
+  return internal.fetchLegacyView(viewName, params)
 }

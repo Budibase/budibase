@@ -1,13 +1,16 @@
 <script>
   import { onMount } from "svelte"
   import { DNDPlaceholderID } from "constants"
-  import { domDebounce } from "utils/domDebounce.js"
+  import { Utils } from "@budibase/frontend-core"
 
   let left, top, height, width
 
   const updatePosition = () => {
-    const node =
-      document.getElementsByClassName(DNDPlaceholderID)[0]?.childNodes[0]
+    let node = document.getElementsByClassName(DNDPlaceholderID)[0]
+    const insideGrid = node?.dataset.insideGrid === "true"
+    if (!insideGrid) {
+      node = document.getElementsByClassName(`${DNDPlaceholderID}-dom`)[0]
+    }
     if (!node) {
       height = 0
       width = 0
@@ -19,7 +22,7 @@
       width = bounds.width
     }
   }
-  const debouncedUpdate = domDebounce(updatePosition)
+  const debouncedUpdate = Utils.domDebounce(updatePosition)
 
   onMount(() => {
     const interval = setInterval(debouncedUpdate, 100)

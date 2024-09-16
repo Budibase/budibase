@@ -1,17 +1,18 @@
 import { Context, createContext, runInNewContext } from "vm"
 import { create, TemplateDelegate } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
-import { preprocess, postprocess } from "./processors"
+import { postprocess, preprocess } from "./processors"
 import {
   atob,
   btoa,
-  isBackendService,
-  FIND_HBS_REGEX,
   FIND_ANY_HBS_REGEX,
+  FIND_HBS_REGEX,
   findDoubleHbsInstances,
+  isBackendService,
+  prefixStrings,
 } from "./utilities"
 import { convertHBSBlock } from "./conversion"
-import { setJSRunner, removeJSRunner } from "./helpers/javascript"
+import { removeJSRunner, setJSRunner } from "./helpers/javascript"
 
 import manifest from "./manifest.json"
 import { ProcessOptions } from "./types"
@@ -23,6 +24,7 @@ export { iifeWrapper } from "./iife"
 
 const hbsInstance = create()
 registerAll(hbsInstance)
+const helperNames = Object.keys(hbsInstance.helpers)
 const hbsInstanceNoHelpers = create()
 registerMinimum(hbsInstanceNoHelpers)
 const defaultOpts: ProcessOptions = {
@@ -45,12 +47,25 @@ function testObject(object: any) {
   }
 }
 
+function findOverlappingHelpers(context?: object) {
+  if (!context) {
+    return []
+  }
+  const contextKeys = Object.keys(context)
+  return contextKeys.filter(key => helperNames.includes(key))
+}
+
 /**
  * Creates a HBS template function for a given string, and optionally caches it.
  */
 const templateCache: Record<string, TemplateDelegate<any>> = {}
-function createTemplate(string: string, opts?: ProcessOptions) {
+function createTemplate(
+  string: string,
+  opts?: ProcessOptions,
+  context?: object
+) {
   opts = { ...defaultOpts, ...opts }
+  const helpersEnabled = !opts?.noHelpers
 
   // Finalising adds a helper, can't do this with no helpers
   const key = `${string}-${JSON.stringify(opts)}`
@@ -60,7 +75,25 @@ function createTemplate(string: string, opts?: ProcessOptions) {
     return templateCache[key]
   }
 
-  string = preprocess(string, opts)
+  const overlappingHelpers = helpersEnabled
+    ? findOverlappingHelpers(context)
+    : []
+
+  string = preprocess(string, {
+    ...opts,
+    disabledHelpers: overlappingHelpers,
+  })
+
+  if (context && helpersEnabled) {
+    if (overlappingHelpers.length > 0) {
+      for (const block of findHBSBlocks(string)) {
+        string = string.replace(
+          block,
+          prefixStrings(block, overlappingHelpers, "./")
+        )
+      }
+    }
+  }
 
   // Optionally disable built in HBS escaping
   if (opts.noEscaping) {
@@ -70,6 +103,7 @@ function createTemplate(string: string, opts?: ProcessOptions) {
   // This does not throw an error when template can't be fulfilled,
   // have to try correct beforehand
   const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
+
   const template = instance.compile(string, {
     strict: false,
   })
@@ -171,7 +205,8 @@ export function processStringSync(
     throw "Cannot process non-string types."
   }
   function process(stringPart: string) {
-    const template = createTemplate(stringPart, opts)
+    // context is needed to check for overlap between helpers and context
+    const template = createTemplate(stringPart, opts, context)
     const now = Math.floor(Date.now() / 1000) * 1000
     const processedString = template({
       now: new Date(now).toISOString(),

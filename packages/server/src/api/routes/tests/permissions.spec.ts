@@ -1,20 +1,5 @@
-const mockedSdk = sdk.permissions as jest.Mocked<typeof sdk.permissions>
-jest.mock("../../../sdk/app/permissions", () => ({
-  ...jest.requireActual("../../../sdk/app/permissions"),
-  resourceActionAllowed: jest.fn(),
-}))
-
-import sdk from "../../../sdk"
-
 import { roles } from "@budibase/backend-core"
-import {
-  Document,
-  DocumentType,
-  PermissionLevel,
-  Row,
-  Table,
-  ViewV2,
-} from "@budibase/types"
+import { Document, PermissionLevel, Row, Table, ViewV2 } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator, mocks } from "@budibase/backend-core/tests"
 
@@ -40,7 +25,6 @@ describe("/permission", () => {
 
   beforeEach(async () => {
     mocks.licenses.useCloudFree()
-    mockedSdk.resourceActionAllowed.mockResolvedValue({ allowed: true })
 
     table = (await config.createTable()) as typeof table
     row = await config.createRow()
@@ -112,29 +96,6 @@ describe("/permission", () => {
       expect(allRes.body[table._id]["read"]).toEqual(STD_ROLE_ID)
       expect(allRes.body[table._id]["write"]).toEqual(HIGHER_ROLE_ID)
     })
-
-    it("throw forbidden if the action is not allowed for the resource", async () => {
-      mockedSdk.resourceActionAllowed.mockResolvedValue({
-        allowed: false,
-        resourceType: DocumentType.DATASOURCE,
-        level: PermissionLevel.READ,
-      })
-
-      await config.api.permission.add(
-        {
-          roleId: STD_ROLE_ID,
-          resourceId: table._id,
-          level: PermissionLevel.EXECUTE,
-        },
-        {
-          status: 403,
-          body: {
-            message:
-              "You are not allowed to 'read' the resource type 'datasource'",
-          },
-        }
-      )
-    })
   })
 
   describe("remove", () => {
@@ -147,29 +108,6 @@ describe("/permission", () => {
       expect(res[0]._id).toEqual(STD_ROLE_ID)
       const permsRes = await config.api.permission.get(table._id)
       expect(permsRes.permissions[STD_ROLE_ID]).toBeUndefined()
-    })
-
-    it("throw forbidden if the action is not allowed for the resource", async () => {
-      mockedSdk.resourceActionAllowed.mockResolvedValue({
-        allowed: false,
-        resourceType: DocumentType.DATASOURCE,
-        level: PermissionLevel.READ,
-      })
-
-      await config.api.permission.revoke(
-        {
-          roleId: STD_ROLE_ID,
-          resourceId: table._id,
-          level: PermissionLevel.EXECUTE,
-        },
-        {
-          status: 403,
-          body: {
-            message:
-              "You are not allowed to 'read' the resource type 'datasource'",
-          },
-        }
-      )
     })
   })
 
@@ -206,27 +144,7 @@ describe("/permission", () => {
       await config.api.viewV2.publicSearch(view.id, undefined, { status: 401 })
     })
 
-    it("should ignore the view permissions if the flag is not on", async () => {
-      await config.api.permission.add({
-        roleId: STD_ROLE_ID,
-        resourceId: view.id,
-        level: PermissionLevel.READ,
-      })
-      await config.api.permission.revoke({
-        roleId: STD_ROLE_ID,
-        resourceId: table._id,
-        level: PermissionLevel.READ,
-      })
-      // replicate changes before checking permissions
-      await config.publish()
-
-      await config.api.viewV2.publicSearch(view.id, undefined, {
-        status: 401,
-      })
-    })
-
-    it("should use the view permissions if the flag is on", async () => {
-      mocks.licenses.useViewPermissions()
+    it("should use the view permissions", async () => {
       await config.api.permission.add({
         roleId: STD_ROLE_ID,
         resourceId: view.id,

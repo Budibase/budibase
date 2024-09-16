@@ -26,7 +26,7 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
     return
   }
 
-  const { actions } = await sdk.rowActions.get(table._id!)
+  const { actions } = await sdk.rowActions.getAll(table._id!)
   const result: RowActionsResponse = {
     actions: Object.entries(actions).reduce<Record<string, RowActionResponse>>(
       (acc, [key, action]) => ({
@@ -36,6 +36,7 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
           tableId: table._id!,
           name: action.name,
           automationId: action.automationId,
+          allowedViews: flattenAllowedViews(action.permissions.views),
         },
       }),
       {}
@@ -58,6 +59,7 @@ export async function create(
     id: createdAction.id,
     name: createdAction.name,
     automationId: createdAction.automationId,
+    allowedViews: undefined,
   }
   ctx.status = 201
 }
@@ -77,6 +79,7 @@ export async function update(
     id: action.id,
     name: action.name,
     automationId: action.automationId,
+    allowedViews: undefined,
   }
 }
 
@@ -86,4 +89,54 @@ export async function remove(ctx: Ctx<void, void>) {
 
   await sdk.rowActions.remove(table._id!, actionId)
   ctx.status = 204
+}
+
+export async function setViewPermission(ctx: Ctx<void, RowActionResponse>) {
+  const table = await getTable(ctx)
+  const { actionId, viewId } = ctx.params
+
+  const action = await sdk.rowActions.setViewPermission(
+    table._id!,
+    actionId,
+    viewId
+  )
+  ctx.body = {
+    tableId: table._id!,
+    id: action.id,
+    name: action.name,
+    automationId: action.automationId,
+    allowedViews: flattenAllowedViews(action.permissions.views),
+  }
+}
+
+export async function unsetViewPermission(ctx: Ctx<void, RowActionResponse>) {
+  const table = await getTable(ctx)
+  const { actionId, viewId } = ctx.params
+
+  const action = await sdk.rowActions.unsetViewPermission(
+    table._id!,
+    actionId,
+    viewId
+  )
+
+  ctx.body = {
+    tableId: table._id!,
+    id: action.id,
+    name: action.name,
+    automationId: action.automationId,
+    allowedViews: flattenAllowedViews(action.permissions.views),
+  }
+}
+
+function flattenAllowedViews(
+  permissions: Record<string, { runAllowed: boolean }>
+) {
+  const allowedPermissions = Object.entries(permissions || {})
+    .filter(([_, p]) => p.runAllowed)
+    .map(([viewId]) => viewId)
+  if (!allowedPermissions.length) {
+    return undefined
+  }
+
+  return allowedPermissions
 }

@@ -1,13 +1,13 @@
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   CollectStepInputs,
   CollectStepOutputs,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Collect Data",
   tagline: "Collect data to be sent to design",
   icon: "Collection",

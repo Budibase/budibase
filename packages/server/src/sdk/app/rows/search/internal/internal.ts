@@ -61,7 +61,7 @@ export async function exportRows(
       })
     ).rows.map(row => row.doc!)
 
-    result = await outputProcessing<Row[]>(table, response)
+    result = await outputProcessing(table, response)
   } else if (query) {
     let searchResponse = await sdk.rows.search({
       tableId,
@@ -145,7 +145,7 @@ export async function fetchRaw(tableId: string): Promise<Row[]> {
   return rows as Row[]
 }
 
-export async function fetchView(
+export async function fetchLegacyView(
   viewName: string,
   options: { calculation: string; group: string; field: string }
 ): Promise<Row[]> {

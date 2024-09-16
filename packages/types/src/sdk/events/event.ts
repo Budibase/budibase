@@ -33,6 +33,10 @@ export enum Event {
   EMAIL_SMTP_CREATED = "email:smtp:created",
   EMAIL_SMTP_UPDATED = "email:smtp:updated",
 
+  // AI
+  AI_CONFIG_CREATED = "ai:config:created",
+  AI_CONFIG_UPDATED = "ai:config:updated",
+
   // AUTH
   AUTH_SSO_CREATED = "auth:sso:created",
   AUTH_SSO_UPDATED = "auth:sso:updated",
@@ -242,6 +246,10 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   // EMAIL
   [Event.EMAIL_SMTP_CREATED]: `Email configuration created`,
   [Event.EMAIL_SMTP_UPDATED]: `Email configuration updated`,
+
+  // AI
+  [Event.AI_CONFIG_CREATED]: `AI configuration created`,
+  [Event.AI_CONFIG_UPDATED]: `AI configuration updated`,
 
   // AUTH
   [Event.AUTH_SSO_CREATED]: `SSO configuration created`,

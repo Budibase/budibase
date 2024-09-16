@@ -1,4 +1,4 @@
-import { Role } from "../../documents"
+import { Role, RoleUIMetadata } from "../../documents"
 
 export interface SaveRoleRequest {
   _id?: string
@@ -6,7 +6,8 @@ export interface SaveRoleRequest {
   name: string
   inherits?: string | string[]
   permissionId: string
-  version?: string
+  version: string
+  uiMetadata?: RoleUIMetadata
 }
 
 export interface SaveRoleResponse extends Role {}

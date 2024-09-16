@@ -46,7 +46,7 @@
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import OptionsEditor from "./OptionsEditor.svelte"
-  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
+  import { isEnabled } from "helpers/featureFlags"
 
   const AUTO_TYPE = FieldType.AUTO
   const FORMULA_TYPE = FieldType.FORMULA
@@ -84,7 +84,7 @@
   }
   let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
   let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
-  let relationshipMap = {
+  const relationshipMap = {
     [RelationshipType.ONE_TO_MANY]: {
       part1: PrettyRelationshipDefinitions.MANY,
       part2: PrettyRelationshipDefinitions.ONE,
@@ -98,7 +98,7 @@
       part2: PrettyRelationshipDefinitions.MANY,
     },
   }
-  let autoColumnInfo = getAutoColumnInformation()
+  const autoColumnInfo = getAutoColumnInformation()
   let optionsValid = true
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
@@ -168,8 +168,7 @@
   $: canBeDisplay =
     canBeDisplayColumn(editableColumn.type) && !editableColumn.autocolumn
   $: canHaveDefault =
-    isEnabled(TENANT_FEATURE_FLAGS.DEFAULT_VALUES) &&
-    canHaveDefaultColumn(editableColumn.type)
+    isEnabled("DEFAULT_VALUES") && canHaveDefaultColumn(editableColumn.type)
   $: canBeRequired =
     editableColumn?.type !== LINK_TYPE &&
     !uneditable &&

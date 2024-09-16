@@ -7,8 +7,9 @@ import {
   doWithDB,
 } from "../db"
 import { getAppDB } from "../context"
-import { Screen, Role as RoleDoc } from "@budibase/types"
+import { Screen, Role as RoleDoc, RoleUIMetadata } from "@budibase/types"
 import cloneDeep from "lodash/fp/cloneDeep"
+import { RoleColor } from "@budibase/shared-core"
 
 export const BUILTIN_ROLE_IDS = {
   ADMIN: "ADMIN",
@@ -44,11 +45,18 @@ export class Role implements RoleDoc {
   permissionId: string
   inherits?: string | string[]
   version?: string
-  permissions = {}
+  permissions: Record<string, PermissionLevel[]> = {}
+  uiMetadata?: RoleUIMetadata
 
-  constructor(id: string, name: string, permissionId: string) {
+  constructor(
+    id: string,
+    name: string,
+    permissionId: string,
+    uiMetadata?: RoleUIMetadata
+  ) {
     this._id = id
     this.name = name
+    this.uiMetadata = uiMetadata
     this.permissionId = permissionId
     // version for managing the ID - removing the role_ when responding
     this.version = RoleIDVersion.NAME
@@ -65,21 +73,54 @@ export class Role implements RoleDoc {
 const BUILTIN_ROLES = {
   ADMIN: new Role(
     BUILTIN_IDS.ADMIN,
-    "Admin",
-    BuiltinPermissionID.ADMIN
+    BUILTIN_IDS.ADMIN,
+    BuiltinPermissionID.ADMIN,
+    {
+      displayName: "App admin",
+      description: "Can do everything",
+      color: RoleColor.ADMIN,
+    }
   ).addInheritance(BUILTIN_IDS.POWER),
   POWER: new Role(
     BUILTIN_IDS.POWER,
-    "Power",
-    BuiltinPermissionID.POWER
+    BUILTIN_IDS.POWER,
+    BuiltinPermissionID.POWER,
+    {
+      displayName: "App power user",
+      description: "An app user with more access",
+      color: RoleColor.POWER,
+    }
   ).addInheritance(BUILTIN_IDS.BASIC),
   BASIC: new Role(
     BUILTIN_IDS.BASIC,
-    "Basic",
-    BuiltinPermissionID.WRITE
+    BUILTIN_IDS.BASIC,
+    BuiltinPermissionID.WRITE,
+    {
+      displayName: "App user",
+      description: "Any logged in user",
+      color: RoleColor.BASIC,
+    }
   ).addInheritance(BUILTIN_IDS.PUBLIC),
-  PUBLIC: new Role(BUILTIN_IDS.PUBLIC, "Public", BuiltinPermissionID.PUBLIC),
-  BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder", BuiltinPermissionID.ADMIN),
+  PUBLIC: new Role(
+    BUILTIN_IDS.PUBLIC,
+    BUILTIN_IDS.PUBLIC,
+    BuiltinPermissionID.PUBLIC,
+    {
+      displayName: "Public user",
+      description: "Accessible to anyone",
+      color: RoleColor.PUBLIC,
+    }
+  ),
+  BUILDER: new Role(
+    BUILTIN_IDS.BUILDER,
+    BUILTIN_IDS.BUILDER,
+    BuiltinPermissionID.ADMIN,
+    {
+      displayName: "Builder user",
+      description: "Users that can edit this app",
+      color: RoleColor.BUILDER,
+    }
+  ),
 }
 
 export function getBuiltinRoles(): { [key: string]: RoleDoc } {
@@ -266,9 +307,9 @@ export async function getUserRoleHierarchy(
 // some templates/older apps will use a simple string instead of array for roles
 // convert the string to an array using the theory that write is higher than read
 export function checkForRoleResourceArray(
-  rolePerms: { [key: string]: string[] },
+  rolePerms: Record<string, PermissionLevel[]>,
   resourceId: string
-) {
+): Record<string, PermissionLevel[]> {
   if (rolePerms && !Array.isArray(rolePerms[resourceId])) {
     const permLevel = rolePerms[resourceId] as any
     rolePerms[resourceId] = [permLevel]
