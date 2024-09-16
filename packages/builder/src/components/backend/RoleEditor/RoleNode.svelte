@@ -1,5 +1,5 @@
 <script>
-  import { Handle, Position, useSvelteFlow } from "@xyflow/svelte"
+  import { Handle, Position } from "@xyflow/svelte"
   import {
     Icon,
     Input,
@@ -18,7 +18,6 @@
   export let selected
 
   const { dragging, updateRole, deleteRole } = getContext("flow")
-  const flow = useSvelteFlow()
 
   let anchor
   let modal

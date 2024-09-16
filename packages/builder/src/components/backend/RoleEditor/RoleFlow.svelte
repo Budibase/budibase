@@ -24,9 +24,8 @@
   const nodes = writable([])
   const edges = writable([])
   const dragging = writable(false)
-  const selectedNode = derived(
-    nodes,
-    $nodes => $nodes.find(x => x.selected)?.id
+  const selectedNodes = derived(nodes, $nodes =>
+    $nodes.filter(x => x.selected).map(x => x.id)
   )
 
   // Ensure role changes are synced with nodes and edges
@@ -192,7 +191,7 @@
     nodes,
     edges,
     dragging,
-    selectedNode,
+    selectedNodes,
     createRole,
     updateRole,
     deleteRole,
@@ -219,6 +218,7 @@
     onconnectstart={() => dragging.set(true)}
     onconnectend={() => dragging.set(false)}
     onconnect={onConnect}
+    deleteKey={null}
   >
     <Background variant={BackgroundVariant.Dots} />
     <Controls />
