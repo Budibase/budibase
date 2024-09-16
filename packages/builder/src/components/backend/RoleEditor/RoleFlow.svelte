@@ -241,8 +241,6 @@
     overflow: hidden;
     position: relative;
     --background-color: var(--spectrum-global-color-gray-50);
-    --node-background: var(--spectrum-global-color-gray-100);
-    --node-background-hover: var(--spectrum-global-color-gray-300);
     --border-color: var(--spectrum-global-color-gray-300);
     --edge-color: var(--spectrum-global-color-gray-500);
     --handle-color: var(--spectrum-global-color-gray-600);
@@ -255,8 +253,6 @@
     --xy-background-color: var(--background-color);
 
     /* Controls */
-    --xy-controls-button-background-color: var(--node-background);
-    --xy-controls-button-background-color-hover: var(--node-background-hover);
     --xy-controls-button-border-color: var(--border-color);
 
     /* Handles */

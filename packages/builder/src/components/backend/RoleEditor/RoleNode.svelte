@@ -1,5 +1,5 @@
 <script>
-  import { Handle, Position, useSvelteFlow, NodeToolbar } from "@xyflow/svelte"
+  import { Handle, Position, useSvelteFlow } from "@xyflow/svelte"
   import {
     Icon,
     Input,
@@ -9,9 +9,8 @@
     FieldLabel,
   } from "@budibase/bbui"
   import { Roles } from "constants/backend"
-  import { NodeWidth, NodeHeight, MaxAutoZoom, ZoomDuration } from "./constants"
+  import { NodeWidth, NodeHeight } from "./constants"
   import { getContext } from "svelte"
-  import { autoLayout } from "./layout"
   import { roles } from "stores/builder"
 
   export let data
@@ -31,6 +30,7 @@
   $: descriptionError = validateDescription(tempDescription)
   $: invalid = nameError || descriptionError
   $: targetClasses = `target${$dragging ? "" : " hidden"}`
+  $: sourceClasses = `source${selected ? "" : " hidden"}`
 
   const validateName = (name, roles) => {
     if (!name?.length) {
@@ -102,8 +102,8 @@
       isConnectable={$dragging}
     />
   {/if}
-  {#if id !== Roles.ADMIN && selected}
-    <Handle type="source" position={Position.Right} />
+  {#if id !== Roles.ADMIN}
+    <Handle type="source" position={Position.Right} class={sourceClasses} />
   {/if}
 </div>
 
@@ -136,7 +136,7 @@
 <style>
   .node {
     position: relative;
-    background: var(--node-background);
+    background: var(--spectrum-global-color-gray-100);
     border-radius: 4px;
     width: var(--width);
     height: var(--height);
@@ -145,6 +145,10 @@
     gap: 12px;
     box-sizing: border-box;
     cursor: pointer;
+    transition: background 130ms ease-out;
+  }
+  .node:hover {
+    background: var(--spectrum-global-color-gray-200);
   }
   .node.selected {
     background: var(--spectrum-global-color-blue-100);
