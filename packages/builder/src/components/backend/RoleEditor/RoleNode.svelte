@@ -65,11 +65,6 @@
       color: tempColor,
     })
   }
-
-  const handleDelete = async e => {
-    e.stopPropagation()
-    await deleteRole(id)
-  }
 </script>
 
 <div
