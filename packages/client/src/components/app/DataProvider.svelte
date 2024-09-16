@@ -19,9 +19,7 @@
   let queryExtensions = {}
   let localFilters
 
-  $: if (filter) {
-    localFilters = Helpers.cloneDeep(filter)
-  }
+  $: localFilters = filter ? Helpers.cloneDeep(filter) : null
 
   $: defaultQuery = QueryUtils.buildQuery(localFilters)
 
@@ -131,7 +129,7 @@
   }
 
   const extendQuery = (defaultQuery, extensions) => {
-    return {
+    const extended = {
       [LogicalOperator.AND]: {
         conditions: [
           ...(defaultQuery ? [defaultQuery] : []),
@@ -140,6 +138,11 @@
       },
       onEmptyFilter: EmptyFilterOption.RETURN_NONE,
     }
+
+    // If there are no conditions applied at all, clear the request.
+    return extended[LogicalOperator.AND]?.conditions?.length > 0
+      ? extended
+      : null
   }
 
   const setUpAutoRefresh = autoRefresh => {

@@ -206,9 +206,15 @@ export class ComponentStore extends BudiStore {
       setting?.type?.startsWith("filter")
     )
     for (let setting of filterableTypes || []) {
-      enrichedComponent[setting.key] = utils.processSearchFilters(
-        enrichedComponent[setting.key]
-      )
+      const isLegacy = Array.isArray(enrichedComponent[setting.key])
+
+      if (isLegacy) {
+        const processedSetting = utils.processSearchFilters(
+          enrichedComponent[setting.key]
+        )
+        enrichedComponent[setting.key] = processedSetting
+        migrated = true
+      }
     }
     return migrated
   }
@@ -575,9 +581,7 @@ export class ComponentStore extends BudiStore {
       const patchResult = patchFn(component, screen)
 
       // Post processing
-      const migrated = null
-
-      this.migrateSettings(component)
+      const migrated = this.migrateSettings(component)
 
       // Returning an explicit false signifies that we should skip this
       // update. If we migrated something, ensure we never skip.

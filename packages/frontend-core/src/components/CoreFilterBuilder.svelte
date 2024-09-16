@@ -58,8 +58,13 @@
     return { value: entry, label: Helpers.capitalise(entry) }
   })
 
+  const onEmptyLabelling = {
+    [OnEmptyFilter.RETURN_ALL]: "All rows",
+    [OnEmptyFilter.RETURN_NONE]: "No rows",
+  }
+
   const onEmptyOptions = Object.values(OnEmptyFilter).map(entry => {
-    return { value: entry, label: Helpers.capitalise(entry) }
+    return { value: entry, label: onEmptyLabelling[entry] }
   })
 
   const context = getContext("context")
@@ -151,7 +156,7 @@
 
   const getGroupPrefix = groupIdx => {
     if (groupIdx == 0) {
-      return "Where"
+      return "When"
     }
     const operatorMapping = {
       [FilterOperator.ANY]: "or",
@@ -191,16 +196,17 @@
     if (targetFilter) {
       if (deleteFilter) {
         targetGroup.filters.splice(filterIdx, 1)
+
+        // Clear the group entirely if no valid filters remain
+        if (targetGroup.filters.length === 0) {
+          editable.groups.splice(groupIdx, 1)
+        }
       } else if (filter) {
         targetGroup.filters[filterIdx] = filter
       }
     } else if (targetGroup) {
       if (deleteGroup) {
-        if (editable.groups.length > 1) {
-          editable.groups.splice(groupIdx, 1)
-        } else {
-          editable = {}
-        }
+        editable.groups.splice(groupIdx, 1)
       } else if (addFilter) {
         targetGroup.filters.push({
           valueType: FilterValueType.VALUE,
@@ -238,6 +244,9 @@
         onEmptyFilter,
       }
     }
+
+    // Set the request to null if the groups are emptied
+    editable = editable.groups.length ? editable : null
 
     dispatch("change", editable)
   }
@@ -294,7 +303,7 @@
                       placeholder={false}
                     />
                   </span>
-                  <span>of the following filters are met:</span>
+                  <span>of the following filters are matched:</span>
                 </div>
                 <div class="group-actions">
                   <Icon
@@ -386,49 +395,51 @@
       {/if}
 
       <div class="filters-footer">
-        {#if behaviourFilters && editableFilters?.groups?.length}
-          <div class="empty-filter">
-            <span>Return</span>
-            <span class="empty-filter-picker">
-              <Select
-                value={editableFilters?.onEmptyFilter}
-                options={onEmptyOptions}
-                getOptionLabel={opt => opt.label}
-                getOptionValue={opt => opt.value}
-                on:change={e => {
-                  handleFilterChange({
-                    onEmptyFilter: e.detail,
-                  })
-                }}
-                placeholder={false}
+        <Layout noPadding>
+          {#if behaviourFilters && editableFilters?.groups?.length}
+            <div class="empty-filter">
+              <span>Return</span>
+              <span class="empty-filter-picker">
+                <Select
+                  value={editableFilters?.onEmptyFilter}
+                  options={onEmptyOptions}
+                  getOptionLabel={opt => opt.label}
+                  getOptionValue={opt => opt.value}
+                  on:change={e => {
+                    handleFilterChange({
+                      onEmptyFilter: e.detail,
+                    })
+                  }}
+                  placeholder={false}
+                />
+              </span>
+              <span>when all filters are empty</span>
+            </div>
+          {/if}
+          <div class="add-group">
+            <Button
+              icon="AddCircle"
+              size="M"
+              secondary
+              on:click={() => {
+                handleFilterChange({
+                  addGroup: true,
+                })
+              }}
+            >
+              Add filter group
+            </Button>
+            <a
+              href="https://docs.budibase.com/docs/searchfilter-data"
+              target="_blank"
+            >
+              <Icon
+                name="HelpOutline"
+                color="var(--spectrum-global-color-gray-600)"
               />
-            </span>
-            <span>when all filters are empty</span>
+            </a>
           </div>
-        {/if}
-        <div class="add-group">
-          <Button
-            icon="AddCircle"
-            size="M"
-            secondary
-            on:click={() => {
-              handleFilterChange({
-                addGroup: true,
-              })
-            }}
-          >
-            Add filter group
-          </Button>
-          <a
-            href="https://docs.budibase.com/docs/searchfilter-data"
-            target="_blank"
-          >
-            <Icon
-              name="HelpOutline"
-              color="var(--spectrum-global-color-gray-600)"
-            />
-          </a>
-        </div>
+        </Layout>
       </div>
     {:else}
       <Body size="S">None of the table column can be used for filtering.</Body>
@@ -446,7 +457,7 @@
   .empty-filter,
   .group-options {
     display: flex;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-m);
     align-items: center;
   }
 
@@ -461,14 +472,13 @@
   }
 
   .empty-filter-picker {
-    width: 80px;
+    width: 92px;
   }
 
   .filter-groups {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
-    /* overflow-x: scroll; */
   }
 
   .group {
@@ -489,7 +499,7 @@
   .filter {
     display: grid;
     gap: var(--spacing-l);
-    grid-template-columns: minmax(150px, 1fr) 170px 200px 40px 40px;
+    grid-template-columns: minmax(150px, 1fr) 170px minmax(200px, 1fr) 40px 40px;
   }
 
   .filters-footer {
