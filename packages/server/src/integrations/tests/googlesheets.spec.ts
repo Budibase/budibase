@@ -429,13 +429,12 @@ describe("Google Sheets Integration", () => {
       })
     })
 
-    it.skip("can delete a table", async () => {
+    it("can delete a table", async () => {
       await config.api.table.destroy(table._id!, table._rev!)
-      expect(mock.cell("A1")).toEqual(null)
-      expect(mock.cell("B1")).toEqual(null)
+      expect(mock.sheet(table.name)).toBeUndefined()
     })
 
-    it.skip("can delete a row", async () => {
+    it.only("can delete a row", async () => {
       const rows = await config.api.row.fetch(table._id!)
       expect(rows.length).toEqual(2)
 

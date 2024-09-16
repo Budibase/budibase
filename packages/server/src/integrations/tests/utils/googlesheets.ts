@@ -104,11 +104,17 @@ interface DeleteRangeRequest {
   shiftDimension: WorksheetDimension
 }
 
+// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteSheetRequest
+interface DeleteSheetRequest {
+  sheetId: number
+}
+
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request
 interface BatchUpdateRequest {
   requests: {
     addSheet?: AddSheetRequest
     deleteRange?: DeleteRangeRequest
+    deleteSheet?: DeleteSheetRequest
   }[]
   includeSpreadsheetInResponse: boolean
   responseRanges: string[]
@@ -445,6 +451,11 @@ export class GoogleSheetsMock {
       }
       if (request.deleteRange) {
         this.handleDeleteRange(request.deleteRange)
+        response.replies.push({})
+      }
+      if (request.deleteSheet) {
+        this.handleDeleteSheet(request.deleteSheet)
+        response.replies.push({})
       }
     }
 
@@ -489,9 +500,14 @@ export class GoogleSheetsMock {
       throw new Error("Only row-based deletes are supported")
     }
 
-    this.iterateRange(range, (cell, value) => {
+    this.iterateRange(range, cell => {
       cell.userEnteredValue = this.createValue(null)
     })
+  }
+
+  private handleDeleteSheet(request: DeleteSheetRequest) {
+    const { sheetId } = request
+    this.spreadsheet.sheets.splice(sheetId, 1)
   }
 
   private handleGetSpreadsheet(): Spreadsheet {
@@ -514,17 +530,14 @@ export class GoogleSheetsMock {
     return response
   }
 
-  private iterateRange(
-    range: Required<GridRange>,
-    cb: (cell: CellData) => void
-  ) {
+  private iterateRange(range: GridRange, cb: (cell: CellData) => void) {
     const {
       sheetId,
       startRowIndex,
       endRowIndex,
       startColumnIndex,
       endColumnIndex,
-    } = range
+    } = this.ensureGridRange(range)
 
     for (let row = startRowIndex; row <= endRowIndex; row++) {
       for (let col = startColumnIndex; col <= endColumnIndex; col++) {
@@ -754,12 +767,19 @@ export class GoogleSheetsMock {
     return this.getCellNumericIndexes(sheetId, startRowIndex, startColumnIndex)
   }
 
-  cell(cell: string): Value | undefined {
+  public cell(cell: string): Value | undefined {
     const cellData = this.cellData(cell)
     if (!cellData) {
       return undefined
     }
     return this.cellValue(cellData)
+  }
+
+  public sheet(name: string | number): Sheet | undefined {
+    if (typeof name === "number") {
+      return this.getSheetById(name)
+    }
+    return this.getSheetByName(name)
   }
 
   private getCellNumericIndexes(
