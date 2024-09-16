@@ -24,6 +24,7 @@
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
+  const subType = $licensing.license.plan.type ?? null
 
   $: enrichLabel = label => (labelPrefix ? `${labelPrefix} ${label}` : label)
   $: options = getOptions(
@@ -68,13 +69,13 @@
     }))
 
     // Add creator if required
-    if (allowCreator) {
+    if (allowCreator || isEnterprisePlan(subType)) {
       options.unshift({
         _id: Constants.Roles.CREATOR,
         name: "Can edit",
-        tag:
-          !$licensing.perAppBuildersEnabled &&
-          capitalise(Constants.PlanType.BUSINESS),
+        tag: isEnterprisePlan(subType)
+          ? null
+          : capitalise(Constants.PlanType.ENTERPRISE),
       })
     }
 
@@ -117,6 +118,14 @@
       dispatch("change", e.detail)
     }
   }
+
+  function isEnterprisePlan(subType) {
+    return (
+      subType === Constants.PlanType.ENTERPRISE ||
+      subType === Constants.PlanType.ENTERPRISE_BASIC ||
+      subType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
+    )
+  }
 </script>
 
 {#if fancySelect}
@@ -134,9 +143,12 @@
     getOptionValue={role => role._id}
     getOptionColour={getColor}
     getOptionIcon={getIcon}
-    isOptionEnabled={option =>
-      option._id !== Constants.Roles.CREATOR ||
-      $licensing.perAppBuildersEnabled}
+    isOptionEnabled={option => {
+      if (option._id === Constants.Roles.CREATOR) {
+        return isEnterprisePlan(subType)
+      }
+      return true
+    }}
     {placeholder}
     {error}
   />
@@ -154,10 +166,12 @@
     getOptionValue={role => role._id}
     getOptionColour={getColor}
     getOptionIcon={getIcon}
-    isOptionEnabled={option =>
-      (option._id !== Constants.Roles.CREATOR ||
-        $licensing.perAppBuildersEnabled) &&
-      option.enabled !== false}
+    isOptionEnabled={option => {
+      if (option._id === Constants.Roles.CREATOR) {
+        return isEnterprisePlan(subType)
+      }
+      return option.enabled !== false
+    }}
     {placeholder}
     {error}
   />

@@ -1,6 +1,7 @@
 export * from "./api"
 export * from "./fields"
 export * from "./rows"
+export * from "./colors"
 
 export const OperatorOptions = {
   Equals: {

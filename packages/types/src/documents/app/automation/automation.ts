@@ -179,6 +179,7 @@ export enum AutomationStatus {
   ERROR = "error",
   STOPPED = "stopped",
   STOPPED_ERROR = "stopped_error",
+  NO_CONDITION_MET = "No branch condition met",
 }
 
 export enum AutomationStoppedReason {

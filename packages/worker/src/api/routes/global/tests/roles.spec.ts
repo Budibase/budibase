@@ -35,8 +35,9 @@ describe("/api/global/roles", () => {
 
   const role = new roles.Role(
     db.generateRoleID(ROLE_NAME),
-    roles.BUILTIN_ROLE_IDS.BASIC,
-    permissions.BuiltinPermissionID.READ_ONLY
+    ROLE_NAME,
+    permissions.BuiltinPermissionID.READ_ONLY,
+    { displayName: roles.BUILTIN_ROLE_IDS.BASIC }
   )
 
   beforeAll(async () => {
