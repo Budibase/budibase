@@ -1,4 +1,4 @@
-import { PermissionLevel, PlanType } from "../../../sdk"
+import { PermissionLevel } from "../../../sdk"
 
 export interface ResourcePermissionInfo {
   role: string
@@ -8,7 +8,6 @@ export interface ResourcePermissionInfo {
 
 export interface GetResourcePermsResponse {
   permissions: Record<string, ResourcePermissionInfo>
-  requiresPlanToModify?: PlanType
 }
 
 export interface GetDependantResourcesResponse {
