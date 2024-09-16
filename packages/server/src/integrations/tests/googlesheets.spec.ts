@@ -5,13 +5,11 @@ import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import {
   Datasource,
   FieldType,
-  Row,
   SourceName,
   Table,
   TableSourceType,
 } from "@budibase/types"
 import { GoogleSheetsMock } from "./utils/googlesheets"
-import exp from "constants"
 
 describe("Google Sheets Integration", () => {
   const config = new TestConfiguration()
