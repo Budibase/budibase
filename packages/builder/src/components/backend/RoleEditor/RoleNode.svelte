@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import { Roles } from "constants/backend"
   import { NodeWidth, NodeHeight, MaxAutoZoom, ZoomDuration } from "./constants"
-  import { getContext, tick } from "svelte"
+  import { getContext } from "svelte"
   import { autoLayout } from "./layout"
   import { roles } from "stores/builder"
 
@@ -46,10 +46,6 @@
       return "Please enter a name"
     }
     return null
-  }
-
-  const deleteNode = async () => {
-    await deleteRole(id)
   }
 
   const openPopover = () => {
@@ -92,7 +88,12 @@
       {#if data.custom}
         <div class="buttons">
           <Icon size="S" name="Edit" hoverable on:click={openPopover} />
-          <Icon size="S" name="Delete" hoverable on:click={deleteNode} />
+          <Icon
+            size="S"
+            name="Delete"
+            hoverable
+            on:click={() => deleteRole(id)}
+          />
         </div>
       {/if}
     </div>

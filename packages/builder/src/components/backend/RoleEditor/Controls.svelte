@@ -8,10 +8,6 @@
   const { nodes, edges, createRole } = getContext("flow")
   const flow = useSvelteFlow()
 
-  const addRole = async () => {
-    await createRole()
-  }
-
   const doAutoLayout = async () => {
     const layout = autoLayout({ nodes: $nodes, edges: $edges })
     nodes.set(layout.nodes)
@@ -47,7 +43,7 @@
   <Button secondary on:click={doAutoLayout}>Auto layout</Button>
 </div>
 <div class="control bottom-right">
-  <Button icon="Add" cta on:click={addRole}>Add role</Button>
+  <Button icon="Add" cta on:click={createRole}>Add role</Button>
 </div>
 
 <style>
