@@ -835,6 +835,9 @@ describe.each(
       expect(res[0]).toEqual({
         id: 2,
         name: "two",
+        // the use of table.* introduces the possibility of nulls being returned
+        birthday: null,
+        number: null,
       })
     })
 

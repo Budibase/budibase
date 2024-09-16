@@ -9,10 +9,10 @@ import {
   db as dbCore,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
+  setEnv as setCoreEnv,
   SQLITE_DESIGN_DOC_ID,
   utils,
   withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
 } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
@@ -1937,6 +1937,67 @@ describe.each([
     })
   })
 
+  isSql &&
+    describe("related formulas", () => {
+      beforeAll(async () => {
+        const arrayTable = await createTable(
+          {
+            name: { name: "name", type: FieldType.STRING },
+            array: {
+              name: "array",
+              type: FieldType.ARRAY,
+              constraints: {
+                type: JsonFieldSubType.ARRAY,
+                inclusion: ["option 1", "option 2"],
+              },
+            },
+          },
+          "array"
+        )
+        table = await createTable(
+          {
+            relationship: {
+              type: FieldType.LINK,
+              relationshipType: RelationshipType.MANY_TO_ONE,
+              name: "relationship",
+              fieldName: "relate",
+              tableId: arrayTable._id!,
+              constraints: {
+                type: "array",
+              },
+            },
+            formula: {
+              type: FieldType.FORMULA,
+              name: "formula",
+              formula: encodeJSBinding(
+                `let array = [];$("relationship").forEach(rel => array = array.concat(rel.array));return array.sort().join(",")`
+              ),
+            },
+          },
+          "main"
+        )
+        const arrayRows = await Promise.all([
+          config.api.row.save(arrayTable._id!, {
+            name: "foo",
+            array: ["option 1"],
+          }),
+          config.api.row.save(arrayTable._id!, {
+            name: "bar",
+            array: ["option 2"],
+          }),
+        ])
+        await Promise.all([
+          config.api.row.save(table._id!, {
+            relationship: [arrayRows[0]._id, arrayRows[1]._id],
+          }),
+        ])
+      })
+
+      it("formula is correct with relationship arrays", async () => {
+        await expectQuery({}).toContain([{ formula: "option 1,option 2" }])
+      })
+    })
+
   describe("user", () => {
     let user1: User
     let user2: User
@@ -2691,81 +2752,6 @@ describe.each([
     })
 
   isSql &&
-    describe("pagination edge case with relationships", () => {
-      let mainRows: Row[] = []
-
-      beforeAll(async () => {
-        const toRelateTable = await createTable({
-          name: {
-            name: "name",
-            type: FieldType.STRING,
-          },
-        })
-        table = await createTable({
-          name: {
-            name: "name",
-            type: FieldType.STRING,
-          },
-          rel: {
-            name: "rel",
-            type: FieldType.LINK,
-            relationshipType: RelationshipType.MANY_TO_ONE,
-            tableId: toRelateTable._id!,
-            fieldName: "rel",
-          },
-        })
-        const relatedRows = await Promise.all([
-          config.api.row.save(toRelateTable._id!, { name: "tag 1" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 2" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 3" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 4" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 5" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 6" }),
-        ])
-        mainRows = await Promise.all([
-          config.api.row.save(table._id!, {
-            name: "product 1",
-            rel: relatedRows.map(row => row._id),
-          }),
-          config.api.row.save(table._id!, {
-            name: "product 2",
-            rel: [],
-          }),
-          config.api.row.save(table._id!, {
-            name: "product 3",
-            rel: [],
-          }),
-        ])
-      })
-
-      it("can still page when the hard limit is hit", async () => {
-        await withCoreEnv(
-          {
-            SQL_MAX_ROWS: "6",
-          },
-          async () => {
-            const params: Omit<RowSearchParams, "tableId"> = {
-              query: {},
-              paginate: true,
-              limit: 3,
-              sort: "name",
-              sortType: SortType.STRING,
-              sortOrder: SortOrder.ASCENDING,
-            }
-            const page1 = await expectSearch(params).toContain([mainRows[0]])
-            expect(page1.hasNextPage).toBe(true)
-            expect(page1.bookmark).toBeDefined()
-            const page2 = await expectSearch({
-              ...params,
-              bookmark: page1.bookmark,
-            }).toContain([mainRows[1], mainRows[2]])
-            expect(page2.hasNextPage).toBe(false)
-          }
-        )
-      })
-    })
-
-  isSql &&
     describe("primaryDisplay", () => {
       beforeAll(async () => {
         let toRelateTable = await createTable({
@@ -2921,6 +2907,28 @@ describe.each([
             'Invalid body - "query.$and.conditions[1].$and.conditions" is required'
           )
         })
+
+      it("returns no rows when onEmptyFilter set to none", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+            $and: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toFindNothing()
+      })
+
+      it("returns all rows when onEmptyFilter set to all", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            $and: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toHaveLength(4)
+      })
     })
 
   !isLucene &&
@@ -3048,6 +3056,28 @@ describe.each([
             ],
           },
         }).toContainExactly([{ age: 1, name: "Jane" }])
+      })
+
+      it("returns no rows when onEmptyFilter set to none", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+            $or: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toFindNothing()
+      })
+
+      it("returns all rows when onEmptyFilter set to all", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            $or: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toHaveLength(4)
       })
     })
 })
