@@ -9,10 +9,10 @@ import {
   db as dbCore,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
+  setEnv as setCoreEnv,
   SQLITE_DESIGN_DOC_ID,
   utils,
   withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
 } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
@@ -67,11 +67,14 @@ describe.each([
   let rows: Row[]
 
   beforeAll(async () => {
-    await withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, () => config.init())
-    if (isSqs) {
+    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
+    if (isLucene) {
       envCleanup = setCoreEnv({
-        SQS_SEARCH_ENABLE: "true",
-        SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
+        TENANT_FEATURE_FLAGS: "*:!SQS",
+      })
+    } else if (isSqs) {
+      envCleanup = setCoreEnv({
+        TENANT_FEATURE_FLAGS: "*:SQS",
       })
     }
 
@@ -1934,6 +1937,67 @@ describe.each([
     })
   })
 
+  isSql &&
+    describe("related formulas", () => {
+      beforeAll(async () => {
+        const arrayTable = await createTable(
+          {
+            name: { name: "name", type: FieldType.STRING },
+            array: {
+              name: "array",
+              type: FieldType.ARRAY,
+              constraints: {
+                type: JsonFieldSubType.ARRAY,
+                inclusion: ["option 1", "option 2"],
+              },
+            },
+          },
+          "array"
+        )
+        table = await createTable(
+          {
+            relationship: {
+              type: FieldType.LINK,
+              relationshipType: RelationshipType.MANY_TO_ONE,
+              name: "relationship",
+              fieldName: "relate",
+              tableId: arrayTable._id!,
+              constraints: {
+                type: "array",
+              },
+            },
+            formula: {
+              type: FieldType.FORMULA,
+              name: "formula",
+              formula: encodeJSBinding(
+                `let array = [];$("relationship").forEach(rel => array = array.concat(rel.array));return array.sort().join(",")`
+              ),
+            },
+          },
+          "main"
+        )
+        const arrayRows = await Promise.all([
+          config.api.row.save(arrayTable._id!, {
+            name: "foo",
+            array: ["option 1"],
+          }),
+          config.api.row.save(arrayTable._id!, {
+            name: "bar",
+            array: ["option 2"],
+          }),
+        ])
+        await Promise.all([
+          config.api.row.save(table._id!, {
+            relationship: [arrayRows[0]._id, arrayRows[1]._id],
+          }),
+        ])
+      })
+
+      it("formula is correct with relationship arrays", async () => {
+        await expectQuery({}).toContain([{ formula: "option 1,option 2" }])
+      })
+    })
+
   describe("user", () => {
     let user1: User
     let user2: User
@@ -2688,77 +2752,53 @@ describe.each([
     })
 
   isSql &&
-    describe("pagination edge case with relationships", () => {
-      let mainRows: Row[] = []
-
+    describe("primaryDisplay", () => {
       beforeAll(async () => {
-        const toRelateTable = await createTable({
+        let toRelateTable = await createTable({
           name: {
             name: "name",
             type: FieldType.STRING,
           },
         })
-        table = await createTable({
-          name: {
-            name: "name",
-            type: FieldType.STRING,
-          },
-          rel: {
-            name: "rel",
-            type: FieldType.LINK,
-            relationshipType: RelationshipType.MANY_TO_ONE,
-            tableId: toRelateTable._id!,
-            fieldName: "rel",
-          },
+        table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+              link: {
+                name: "link",
+                type: FieldType.LINK,
+                relationshipType: RelationshipType.MANY_TO_ONE,
+                tableId: toRelateTable._id!,
+                fieldName: "link",
+              },
+            },
+          })
+        )
+        toRelateTable = await config.api.table.get(toRelateTable._id!)
+        await config.api.table.save({
+          ...toRelateTable,
+          primaryDisplay: "link",
         })
         const relatedRows = await Promise.all([
-          config.api.row.save(toRelateTable._id!, { name: "tag 1" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 2" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 3" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 4" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 5" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 6" }),
+          config.api.row.save(toRelateTable._id!, { name: "test" }),
         ])
-        mainRows = await Promise.all([
+        await Promise.all([
           config.api.row.save(table._id!, {
-            name: "product 1",
-            rel: relatedRows.map(row => row._id),
-          }),
-          config.api.row.save(table._id!, {
-            name: "product 2",
-            rel: [],
-          }),
-          config.api.row.save(table._id!, {
-            name: "product 3",
-            rel: [],
+            name: "test",
+            link: relatedRows.map(row => row._id),
           }),
         ])
       })
 
-      it("can still page when the hard limit is hit", async () => {
-        await withCoreEnv(
-          {
-            SQL_MAX_ROWS: "6",
-          },
-          async () => {
-            const params: Omit<RowSearchParams, "tableId"> = {
-              query: {},
-              paginate: true,
-              limit: 3,
-              sort: "name",
-              sortType: SortType.STRING,
-              sortOrder: SortOrder.ASCENDING,
-            }
-            const page1 = await expectSearch(params).toContain([mainRows[0]])
-            expect(page1.hasNextPage).toBe(true)
-            expect(page1.bookmark).toBeDefined()
-            const page2 = await expectSearch({
-              ...params,
-              bookmark: page1.bookmark,
-            }).toContain([mainRows[1], mainRows[2]])
-            expect(page2.hasNextPage).toBe(false)
-          }
-        )
+      it("should be able to query, primary display on related table shouldn't be used", async () => {
+        // this test makes sure that if a relationship has been specified as the primary display on a table
+        // it is ignored and another column is used instead
+        await expectQuery({}).toContain([
+          { name: "test", link: [{ primaryDisplay: "test" }] },
+        ])
       })
     })
 
@@ -2867,6 +2907,28 @@ describe.each([
             'Invalid body - "query.$and.conditions[1].$and.conditions" is required'
           )
         })
+
+      it("returns no rows when onEmptyFilter set to none", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+            $and: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toFindNothing()
+      })
+
+      it("returns all rows when onEmptyFilter set to all", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            $and: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toHaveLength(4)
+      })
     })
 
   !isLucene &&
@@ -2994,6 +3056,28 @@ describe.each([
             ],
           },
         }).toContainExactly([{ age: 1, name: "Jane" }])
+      })
+
+      it("returns no rows when onEmptyFilter set to none", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+            $or: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toFindNothing()
+      })
+
+      it("returns all rows when onEmptyFilter set to all", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            $or: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toHaveLength(4)
       })
     })
 })

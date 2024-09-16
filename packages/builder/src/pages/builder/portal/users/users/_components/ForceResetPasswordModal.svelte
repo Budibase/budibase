@@ -7,7 +7,15 @@
 
   export let user
 
-  const password = Math.random().toString(36).slice(2, 20)
+  const generatePassword = length => {
+    const array = new Uint8Array(length)
+    crypto.getRandomValues(array)
+    return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
+      .join("")
+      .slice(0, length)
+  }
+
+  const password = generatePassword(12)
 
   async function resetPassword() {
     try {

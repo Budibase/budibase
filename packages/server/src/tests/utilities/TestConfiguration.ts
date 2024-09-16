@@ -333,6 +333,7 @@ export default class TestConfiguration {
       sessionId: this.sessionIdForUser(_id),
       tenantId: this.getTenantId(),
       csrfToken: this.csrfToken,
+      email,
     })
     const resp = await db.put(user)
     await cache.user.invalidateUser(_id)
@@ -396,16 +397,17 @@ export default class TestConfiguration {
       }
       // make sure the user exists in the global DB
       if (roleId !== roles.BUILTIN_ROLE_IDS.PUBLIC) {
-        await this.globalUser({
+        const user = await this.globalUser({
           _id: userId,
           builder: { global: builder },
           roles: { [appId]: roleId || roles.BUILTIN_ROLE_IDS.BASIC },
         })
+        await sessions.createASession(userId, {
+          sessionId: this.sessionIdForUser(userId),
+          tenantId: this.getTenantId(),
+          email: user.email,
+        })
       }
-      await sessions.createASession(userId, {
-        sessionId: this.sessionIdForUser(userId),
-        tenantId: this.getTenantId(),
-      })
       // have to fake this
       const authObj = {
         userId,

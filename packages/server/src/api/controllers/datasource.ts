@@ -27,6 +27,7 @@ import {
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { isEqual } from "lodash"
+import { processTable } from "../../sdk/app/tables/getters"
 
 export async function fetch(ctx: UserCtx) {
   ctx.body = await sdk.datasources.fetch()
@@ -188,6 +189,7 @@ export async function update(
     for (let table of Object.values(datasource.entities)) {
       const oldTable = baseDatasource.entities?.[table.name]
       if (!oldTable || !isEqual(oldTable, table)) {
+        table = await processTable(table)
         builderSocket?.emitTableUpdate(ctx, table, { includeOriginator: true })
       }
     }

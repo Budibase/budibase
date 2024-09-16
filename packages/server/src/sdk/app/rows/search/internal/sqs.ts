@@ -37,9 +37,9 @@ import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
 import { processRowCountResponse } from "../../utils"
 import {
-  updateFilterKeys,
   getRelationshipColumns,
   getTableIDList,
+  updateFilterKeys,
 } from "../filters"
 import {
   dataFilters,
@@ -182,11 +182,20 @@ function buildTableMap(tables: Table[]) {
   return tableMap
 }
 
-function reverseUserColumnMapping(rows: Row[]) {
+// table is only needed to handle relationships
+function reverseUserColumnMapping(rows: Row[], table?: Table) {
   const prefixLength = USER_COLUMN_PREFIX.length
   return rows.map(row => {
     const finalRow: Row = {}
     for (let key of Object.keys(row)) {
+      // handle relationships
+      if (
+        table?.schema[key]?.type === FieldType.LINK &&
+        typeof row[key] === "string"
+      ) {
+        // no table required, relationship rows don't contain relationships
+        row[key] = reverseUserColumnMapping(JSON.parse(row[key]))
+      }
       // it should be the first prefix
       const index = key.indexOf(USER_COLUMN_PREFIX)
       if (index !== -1) {
@@ -261,7 +270,7 @@ async function runSqlQuery(
   if (opts?.countTotalRows) {
     return processRowCountResponse(response)
   } else if (Array.isArray(response)) {
-    return reverseUserColumnMapping(response)
+    return reverseUserColumnMapping(response, json.meta.table)
   }
   return response
 }
@@ -297,7 +306,7 @@ export async function search(
     throw new Error("Unable to find table")
   }
 
-  const relationships = buildInternalRelationships(table)
+  const relationships = buildInternalRelationships(table, allTables)
 
   const searchFilters: SearchFilters = {
     ...cleanupFilters(query, table, allTables),
@@ -379,9 +388,10 @@ export async function search(
     }
 
     // get the rows
-    let finalRows = await outputProcessing<Row[]>(table, processed, {
+    let finalRows = await outputProcessing(table, processed, {
       preserveLinks: true,
       squash: true,
+      fromViewId: options.viewId,
     })
 
     // check if we need to pick specific rows out

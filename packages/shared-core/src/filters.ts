@@ -27,6 +27,12 @@ import { isPlainObject, isEmpty } from "lodash"
 import { decodeNonAscii } from "./helpers/schema"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
+const LOGICAL_OPERATORS = Object.values(LogicalOperator)
+const SEARCH_OPERATORS = [
+  ...Object.values(BasicOperator),
+  ...Object.values(ArrayOperator),
+  ...Object.values(RangeOperator),
+]
 
 /**
  * Returns the valid operator options for a certain data type
@@ -113,6 +119,39 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.In.value,
 ] as (keyof SearchQueryFields)[]
 
+export function recurseLogicalOperators(
+  filters: SearchFilters,
+  fn: (f: SearchFilters) => SearchFilters
+) {
+  for (const logical of LOGICAL_OPERATORS) {
+    if (filters[logical]) {
+      filters[logical]!.conditions = filters[logical]!.conditions.map(
+        condition => fn(condition)
+      )
+    }
+  }
+  return filters
+}
+
+export function recurseSearchFilters(
+  filters: SearchFilters,
+  processFn: (filter: SearchFilters) => SearchFilters
+): SearchFilters {
+  // Process the current level
+  filters = processFn(filters)
+
+  // Recurse through logical operators
+  for (const logical of LOGICAL_OPERATORS) {
+    if (filters[logical]) {
+      filters[logical]!.conditions = filters[logical]!.conditions.map(
+        condition => recurseSearchFilters(condition, processFn)
+      )
+    }
+  }
+
+  return filters
+}
+
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
@@ -145,6 +184,7 @@ export const cleanupQuery = (query: SearchFilters) => {
       }
     }
   }
+  query = recurseLogicalOperators(query, cleanupQuery)
   return query
 }
 
@@ -410,13 +450,14 @@ export function fixupFilterArrays(filters: SearchFilters) {
       }
     }
   }
+  recurseLogicalOperators(filters, fixupFilterArrays)
   return filters
 }
 
-export const search = (
-  docs: Record<string, any>[],
+export function search<T>(
+  docs: Record<string, T>[],
   query: RowSearchParams
-): SearchResponse<Record<string, any>> => {
+): SearchResponse<Record<string, T>> {
   let result = runQuery(docs, query.query)
   if (query.sort) {
     result = sort(result, query.sort, query.sortOrder || SortOrder.ASCENDING)
@@ -436,15 +477,11 @@ export const search = (
  * Performs a client-side search on an array of data
  * @param docs the data
  * @param query the JSON query
- * @param findInDoc optional fn when trying to extract a value
- * from custom doc type e.g. Google Sheets
- *
  */
-export const runQuery = (
-  docs: Record<string, any>[],
-  query: SearchFilters,
-  findInDoc: Function = deepGet
-) => {
+export function runQuery<T extends Record<string, any>>(
+  docs: T[],
+  query: SearchFilters
+): T[] {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
@@ -467,11 +504,11 @@ export const runQuery = (
       type: SearchFilterOperator,
       test: (docValue: any, testValue: any) => boolean
     ) =>
-    (doc: Record<string, any>) => {
+    (doc: T) => {
       for (const [key, testValue] of Object.entries(query[type] || {})) {
         const valueToCheck = isLogicalSearchOperator(type)
           ? doc
-          : findInDoc(doc, removeKeyNumbering(key))
+          : deepGet(doc, removeKeyNumbering(key))
         const result = test(valueToCheck, testValue)
         if (query.allOr && result) {
           return true
@@ -714,11 +751,8 @@ export const runQuery = (
     }
   )
 
-  const docMatch = (doc: Record<string, any>) => {
-    const filterFunctions: Record<
-      SearchFilterOperator,
-      (doc: Record<string, any>) => boolean
-    > = {
+  const docMatch = (doc: T) => {
+    const filterFunctions: Record<SearchFilterOperator, (doc: T) => boolean> = {
       string: stringMatch,
       fuzzy: fuzzyMatch,
       range: rangeMatch,
@@ -745,12 +779,16 @@ export const runQuery = (
         return filterFunctions[key as SearchFilterOperator]?.(doc) ?? false
       })
 
-    if (query.allOr) {
+    // there are no filters - logical operators can cover this up
+    if (!hasFilters(query)) {
+      return true
+    } else if (query.allOr) {
       return results.some(result => result === true)
     } else {
       return results.every(result => result === true)
     }
   }
+
   return docs.filter(docMatch)
 }
 
@@ -762,12 +800,12 @@ export const runQuery = (
  * @param sortOrder the sort order ("ascending" or "descending")
  * @param sortType the type of sort ("string" or "number")
  */
-export const sort = (
-  docs: any[],
-  sort: string,
+export function sort<T extends Record<string, any>>(
+  docs: T[],
+  sort: keyof T,
   sortOrder: SortOrder,
   sortType = SortType.STRING
-) => {
+): T[] {
   if (!sort || !sortOrder || !sortType) {
     return docs
   }
@@ -782,19 +820,17 @@ export const sort = (
     return parseFloat(x)
   }
 
-  return docs
-    .slice()
-    .sort((a: { [x: string]: any }, b: { [x: string]: any }) => {
-      const colA = parse(a[sort])
-      const colB = parse(b[sort])
+  return docs.slice().sort((a, b) => {
+    const colA = parse(a[sort])
+    const colB = parse(b[sort])
 
-      const result = colB == null || colA > colB ? 1 : -1
-      if (sortOrder.toLowerCase() === "descending") {
-        return result * -1
-      }
+    const result = colB == null || colA > colB ? 1 : -1
+    if (sortOrder.toLowerCase() === "descending") {
+      return result * -1
+    }
 
-      return result
-    })
+    return result
+  })
 }
 
 /**
@@ -803,7 +839,7 @@ export const sort = (
  * @param docs the data
  * @param limit the number of docs to limit to
  */
-export const limit = (docs: any[], limit: string) => {
+export function limit<T>(docs: T[], limit: string): T[] {
   const numLimit = parseFloat(limit)
   if (isNaN(numLimit)) {
     return docs
@@ -815,14 +851,33 @@ export const hasFilters = (query?: SearchFilters) => {
   if (!query) {
     return false
   }
-  const skipped = ["allOr", "onEmptyFilter"]
-  for (let [key, value] of Object.entries(query)) {
-    if (skipped.includes(key) || typeof value !== "object") {
-      continue
+  const check = (filters: SearchFilters): boolean => {
+    for (const logical of LOGICAL_OPERATORS) {
+      if (filters[logical]) {
+        for (const condition of filters[logical]?.conditions || []) {
+          const result = check(condition)
+          if (result) {
+            return result
+          }
+        }
+      }
     }
-    if (Object.keys(value || {}).length !== 0) {
-      return true
+    for (const search of SEARCH_OPERATORS) {
+      const searchValue = filters[search]
+      if (!searchValue || typeof searchValue !== "object") {
+        continue
+      }
+      const filtered = Object.entries(searchValue).filter(entry => {
+        const valueDefined =
+          entry[1] !== undefined || entry[1] !== null || entry[1] !== ""
+        // not empty is an edge case, null is allowed for it - this is covered by test cases
+        return search === BasicOperator.NOT_EMPTY || valueDefined
+      })
+      if (filtered.length !== 0) {
+        return true
+      }
     }
+    return false
   }
-  return false
+  return check(query)
 }

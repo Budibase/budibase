@@ -39,6 +39,7 @@ import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
+import { processTable } from "../../../sdk/app/tables/getters"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {
@@ -84,14 +85,19 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
     }
   })
 
-  ctx.body = [...internal, ...external].map(sdk.tables.enrichViewSchemas)
+  const result: FetchTablesResponse = []
+  for (const table of [...internal, ...external]) {
+    result.push(await sdk.tables.enrichViewSchemas(table))
+  }
+  ctx.body = result
 }
 
 export async function find(ctx: UserCtx<void, TableResponse>) {
   const tableId = ctx.params.tableId
   const table = await sdk.tables.getTable(tableId)
 
-  ctx.body = sdk.tables.enrichViewSchemas(table)
+  const result = await sdk.tables.enrichViewSchemas(table)
+  ctx.body = result
 }
 
 export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
@@ -105,10 +111,13 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const api = pickApi({ table })
   let savedTable = await api.save(ctx, renaming)
   if (!table._id) {
-    savedTable = sdk.tables.enrichViewSchemas(savedTable)
+    savedTable = await sdk.tables.enrichViewSchemas(savedTable)
     await events.table.created(savedTable)
   } else {
     await events.table.updated(savedTable)
+  }
+  if (renaming) {
+    await sdk.views.renameLinkedViews(savedTable, renaming)
   }
   if (isImport) {
     await events.table.imported(savedTable)
@@ -118,6 +127,8 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:save`, appId, { ...savedTable })
   ctx.body = savedTable
+
+  savedTable = await processTable(savedTable)
   builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
 }
 

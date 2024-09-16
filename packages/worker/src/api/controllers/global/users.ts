@@ -41,10 +41,29 @@ import { BpmStatusKey, BpmStatusValue } from "@budibase/shared-core"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
+const generatePassword = (length: number) => {
+  const array = new Uint8Array(length)
+  crypto.getRandomValues(array)
+  return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
+    .join("")
+    .slice(0, length)
+}
+
 export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
   try {
     const currentUserId = ctx.user?._id
     const requestUser = ctx.request.body
+
+    // Do not allow the account holder role to be changed
+    const tenantInfo = await tenancy.getTenantInfo(requestUser.tenantId)
+    if (tenantInfo?.owner.email === requestUser.email) {
+      if (
+        requestUser.admin?.global !== true ||
+        requestUser.builder?.global !== true
+      ) {
+        throw Error("Cannot set role of account holder")
+      }
+    }
 
     const user = await userSdk.db.save(requestUser, { currentUserId })
 
@@ -296,7 +315,7 @@ export const onboardUsers = async (
 
   let createdPasswords: Record<string, string> = {}
   const users: User[] = ctx.request.body.map(invite => {
-    let password = Math.random().toString(36).substring(2, 22)
+    const password = generatePassword(12)
     createdPasswords[invite.email] = password
 
     return {

@@ -2,7 +2,7 @@ import { OpenAI } from "openai"
 
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   OpenAIStepInputs,
@@ -15,9 +15,11 @@ enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API
   GPT_4 = "gpt-4",
+  GPT_4O = "gpt-4o",
+  GPT_4O_MINI = "gpt-4o-mini",
 }
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "OpenAI",
   tagline: "Send prompts to ChatGPT",
   icon: "Algorithm",

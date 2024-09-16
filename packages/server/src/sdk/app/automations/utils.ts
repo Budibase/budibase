@@ -29,7 +29,7 @@ export async function getBuilderData(
   const rowActionNameCache: Record<string, TableRowActions> = {}
   async function getRowActionName(tableId: string, rowActionId: string) {
     if (!rowActionNameCache[tableId]) {
-      rowActionNameCache[tableId] = await sdk.rowActions.get(tableId)
+      rowActionNameCache[tableId] = await sdk.rowActions.getAll(tableId)
     }
 
     return rowActionNameCache[tableId].actions[rowActionId]?.name

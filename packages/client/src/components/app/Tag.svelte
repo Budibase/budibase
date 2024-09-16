@@ -57,4 +57,7 @@
   .spectrum-Tag--sizeL {
     padding: 0 var(--spectrum-global-dimension-size-150);
   }
+  .spectrum-Tag-label {
+    height: auto;
+  }
 </style>
