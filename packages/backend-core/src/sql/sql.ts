@@ -899,7 +899,7 @@ class InternalBuilder {
   ): Knex.QueryBuilder {
     const sqlClient = this.client
     const knex = this.knex
-    const { resource, tableAliases: aliases, endpoint } = this.query
+    const { resource, tableAliases: aliases, endpoint, meta } = this.query
     const fields = resource?.fields || []
     for (let relationship of relationships) {
       const {
@@ -914,15 +914,22 @@ class InternalBuilder {
       if (!toTable || !fromTable) {
         continue
       }
+      const relatedTable = meta.tables?.[toTable]
       const toAlias = aliases?.[toTable] || toTable,
         fromAlias = aliases?.[fromTable] || fromTable
       let toTableWithSchema = this.tableNameWithSchema(toTable, {
         alias: toAlias,
         schema: endpoint.schema,
       })
-      let relationshipFields = fields.filter(
-        field => field.split(".")[0] === toAlias
-      )
+      const requiredFields = [
+        ...(relatedTable?.primary || []),
+        relatedTable?.primaryDisplay,
+      ]
+      let relationshipFields = fields
+        .filter(field => field.split(".")[0] === toAlias)
+        // sort the required fields to first in the list
+        .sort(field => (requiredFields.includes(field) ? 1 : -1))
+
       relationshipFields = relationshipFields.slice(
         0,
         Math.floor(this.maxFunctionParameters() / 2)
