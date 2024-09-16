@@ -18,7 +18,6 @@
   import { roles } from "stores/builder"
   import { Roles } from "constants/backend"
   import { getSequentialName } from "helpers/duplicate"
-  import { meta } from "@roxi/routify"
 
   const flow = useSvelteFlow()
   const nodes = writable([])
