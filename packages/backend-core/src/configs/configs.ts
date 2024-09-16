@@ -1,4 +1,6 @@
 import {
+  AIConfig,
+  AIInnerConfig,
   Config,
   ConfigType,
   GoogleConfig,
@@ -254,3 +256,10 @@ export async function getSCIMConfig(): Promise<SCIMInnerConfig | undefined> {
   const config = await getConfig<SCIMConfig>(ConfigType.SCIM)
   return config?.config
 }
+
+// AI
+export async function getAIConfig(): Promise<AIInnerConfig | undefined> {
+  const config = await getConfig<AIConfig>(ConfigType.AI)
+  return config?.config
+}
+

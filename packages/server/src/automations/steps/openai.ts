@@ -10,6 +10,7 @@ import {
 } from "@budibase/types"
 import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
+import * as pro from "@budibase/pro"
 
 enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
@@ -60,6 +61,23 @@ export const definition: AutomationStepDefinition = {
   },
 }
 
+async function legacyOpenAIPrompt(inputs: OpenAIStepInputs) {
+  const openai = new OpenAI({
+    apiKey: env.OPENAI_API_KEY,
+  })
+
+  const completion = await openai.chat.completions.create({
+    model: inputs.model,
+    messages: [
+      {
+        role: "user",
+        content: inputs.prompt,
+      },
+    ],
+  })
+  return completion?.choices[0]?.message?.content
+}
+
 export async function run({
   inputs,
 }: {
@@ -81,20 +99,27 @@ export async function run({
   }
 
   try {
-    const openai = new OpenAI({
-      apiKey: env.OPENAI_API_KEY,
-    })
+    let response
+    const customConfigsEnabled = await pro.features.isAICustomConfigsEnabled()
+    const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
 
-    const completion = await openai.chat.completions.create({
-      model: inputs.model,
-      messages: [
-        {
-          role: "user",
-          content: inputs.prompt,
-        },
-      ],
-    })
-    const response = completion?.choices[0]?.message?.content
+    if (budibaseAIEnabled || customConfigsEnabled) {
+      // Enterprise has custom configs
+      // if custom configs are enabled full stop
+      // Don't use their budibase AI credits, unless it uses the budibase AI configuration
+      // TODO: grab the config from the database (maybe wrap this in the pro AI module)
+      // TODO: pass it into the model to execute the prompt
+
+      // TODO: if in cloud and budibaseAI is enabled, use the standard budibase AI config
+      // Make sure it uses their credits
+      // Should be handled in the LLM wrapper in pro
+      const llm = new pro.ai.LLMWrapper()
+      await llm.init()
+      response = await llm.run(inputs.prompt)
+    } else {
+      // fallback to the default that uses the environment variable for backwards compat
+      response = await legacyOpenAIPrompt(inputs)
+    }
 
     return {
       response,
