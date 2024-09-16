@@ -1,14 +1,6 @@
 import DataFetch from "./DataFetch.js"
 
 export default class CustomFetch extends DataFetch {
-  determineFeatureFlags() {
-    return {
-      supportsSearch: false,
-      supportsSort: false,
-      supportsPagination: false,
-    }
-  }
-
   // Gets the correct Budibase type for a JS value
   getType(value) {
     if (value == null) {

@@ -20,12 +20,9 @@
   export let bindings = []
   export let allowBindings = false
   export let schemaFields
-
-  // Export these to another field type
   export let panel
   export let toReadable
   export let toRuntime
-  // Only required if you're in the builder, which we aint.
 
   const dispatch = createEventDispatcher()
   const { OperatorOptions, FilterValueType } = Constants
@@ -48,17 +45,21 @@
     return schemaFields.find(field => field.name === filter.field)
   }
 
+  const drawerOnChange = e => {
+    drawerValue = e.detail
+  }
+
   const onChange = e => {
     fieldValue = e.detail
     dispatch("change", {
-      value: toRuntime(bindings, fieldValue),
+      value: toRuntime ? toRuntime(bindings, fieldValue) : fieldValue,
     })
   }
 
-  const onConfirm = () => {
+  const onConfirmBinding = () => {
     dispatch("change", {
-      value: fieldValue,
-      valueType: fieldValue ? FilterValueType.BINDING : FilterValueType.VALUE,
+      value: toRuntime ? toRuntime(bindings, drawerValue) : drawerValue,
+      valueType: drawerValue ? FilterValueType.BINDING : FilterValueType.VALUE,
     })
   }
 
@@ -139,7 +140,7 @@
       cta
       slot="buttons"
       on:click={() => {
-        onConfirm()
+        onConfirmBinding()
         bindingDrawer.hide()
       }}
     >
@@ -153,7 +154,7 @@
       allowJS
       allowHelpers
       allowHBS
-      on:change={onChange}
+      on:change={drawerOnChange}
       {bindings}
     />
   </Drawer>

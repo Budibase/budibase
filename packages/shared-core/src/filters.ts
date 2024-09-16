@@ -307,11 +307,11 @@ export class ColumnSplitter {
 }
 
 /**
- * Builds a JSON query from the filter structure generated in the builder
+ * Builds a JSON query from the filter a SearchFilter definition
  * @param filter the builder filter structure
  */
 
-const builderFilter = (expression: SearchFilter) => {
+const buildCondition = (expression: SearchFilter) => {
   // Filter body
   let query: SearchFilters = {
     string: {},
@@ -378,13 +378,15 @@ const builderFilter = (expression: SearchFilter) => {
     value = `${value}`?.toLowerCase() === "true"
   }
   if (
-    ["contains", "notContains", "containsAny"].includes(operator) &&
+    ["contains", "notContains", "containsAny"].includes(
+      operator.toLocaleString()
+    ) &&
     type === "array" &&
     typeof value === "string"
   ) {
     value = value.split(",")
   }
-  if (operator.startsWith("range") && query.range) {
+  if (operator.toLocaleString().startsWith("range") && query.range) {
     const minint =
       SqlNumberTypeRangeMap[externalType as keyof typeof SqlNumberTypeRangeMap]
         ?.min || Number.MIN_SAFE_INTEGER
@@ -497,13 +499,15 @@ export const buildQueryLegacy = (
       value = `${value}`?.toLowerCase() === "true"
     }
     if (
-      ["contains", "notContains", "containsAny"].includes(operator) &&
+      ["contains", "notContains", "containsAny"].includes(
+        operator.toLocaleString()
+      ) &&
       type === "array" &&
       typeof value === "string"
     ) {
       value = value.split(",")
     }
-    if (operator.startsWith("range") && query.range) {
+    if (operator.toLocaleString().startsWith("range") && query.range) {
       const minint =
         SqlNumberTypeRangeMap[
           externalType as keyof typeof SqlNumberTypeRangeMap
@@ -555,28 +559,40 @@ export const buildQueryLegacy = (
   return query
 }
 
+/**
+ * Converts a **SearchFilterGroup** filter definition into a grouped
+ * search query of type **SearchFilters**
+ *
+ * Legacy support remains for the old **SearchFilter[]** format.
+ * These will be migrated to an appropriate **SearchFilters** object, if encountered
+ *
+ * @param filter
+ *
+ * @returns {SearchFilters}
+ */
+
 export const buildQuery = (
   filter?: SearchFilterGroup | SearchFilter[]
 ): SearchFilters | undefined => {
-  if (!filter) {
-    return
-  }
-
-  const parsedFilter = processSearchFilters(filter)
+  const parsedFilter: SearchFilterGroup | undefined =
+    processSearchFilters(filter)
 
   if (!parsedFilter) {
     return
   }
 
-  const operatorMap = {
-    [FilterGroupLogicalOperator.ALL]: LogicalOperator.AND,
-    [FilterGroupLogicalOperator.ANY]: LogicalOperator.OR,
-  }
+  const operatorMap: { [key in FilterGroupLogicalOperator]: LogicalOperator } =
+    {
+      [FilterGroupLogicalOperator.ALL]: LogicalOperator.AND,
+      [FilterGroupLogicalOperator.ANY]: LogicalOperator.OR,
+    }
 
   const globalOnEmpty = parsedFilter.onEmptyFilter
     ? parsedFilter.onEmptyFilter
     : null
-  const globalOperator = operatorMap[parsedFilter.logicalOperator]
+
+  const globalOperator: LogicalOperator =
+    operatorMap[parsedFilter.logicalOperator as FilterGroupLogicalOperator]
 
   const coreRequest: SearchFilters = {
     ...(globalOnEmpty ? { onEmptyFilter: globalOnEmpty } : {}),
@@ -585,7 +601,7 @@ export const buildQuery = (
         return {
           [operatorMap[group.logicalOperator]]: {
             conditions: group.filters
-              ?.map(x => builderFilter(x))
+              ?.map(x => buildCondition(x))
               .filter(filter => filter),
           },
         }

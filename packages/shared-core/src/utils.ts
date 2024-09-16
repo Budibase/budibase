@@ -97,8 +97,8 @@ export function trimOtherProps(object: any, allowedProps: string[]) {
  * @param {SearchFilter[] | SearchFilterGroup} filters
  */
 export const processSearchFilters = (
-  filters: SearchFilter[] | SearchFilterGroup
-) => {
+  filters: SearchFilter[] | SearchFilterGroup | undefined
+): SearchFilterGroup | undefined => {
   if (!filters) {
     return
   }
@@ -182,7 +182,7 @@ export const processSearchFilters = (
 
     return migratedSetting
   } else if (!filters?.groups) {
-    return null
+    return
   }
   return filters
 }
