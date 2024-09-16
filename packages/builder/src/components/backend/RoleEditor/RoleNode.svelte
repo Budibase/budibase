@@ -11,13 +11,13 @@
   import { Roles } from "constants/backend"
   import { NodeWidth, NodeHeight, MaxAutoZoom, ZoomDuration } from "./constants"
   import { getContext, tick } from "svelte"
-  import { autoLayout, nodeToRole } from "./layout"
+  import { autoLayout } from "./layout"
   import { roles } from "stores/builder"
 
   export let data
   export let id
 
-  const { nodes, edges, dragging } = getContext("flow")
+  const { nodes, edges, dragging, updateRole, deleteRole } = getContext("flow")
   const flow = useSvelteFlow()
 
   let anchor
@@ -49,12 +49,7 @@
   }
 
   const deleteNode = async () => {
-    flow.deleteElements({
-      nodes: [{ id }],
-    })
-    await tick()
-    doAutoLayout()
-    await roles.delete(nodeToRole({ id, data }))
+    await deleteRole(id)
   }
 
   const openPopover = () => {
@@ -71,7 +66,7 @@
       color: tempColor,
     }
     flow.updateNodeData(id, newData)
-    await roles.save(nodeToRole({ id, data: newData }))
+    await updateRole(id)
   }
 
   const doAutoLayout = () => {

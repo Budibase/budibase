@@ -59,7 +59,7 @@ export const createBuilderWebsocket = appId => {
 
   // Role events
   socket.onOther(BuilderSocketEvent.RoleChange, ({ id, role }) => {
-    roles.replaceRole(id, role)
+    roles.replace(id, role)
   })
 
   // Design section events

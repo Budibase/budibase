@@ -1,79 +1,11 @@
 import dagre from "@dagrejs/dagre"
 import { NodeWidth, NodeHeight, GridResolution } from "./constants"
 import { Position } from "@xyflow/svelte"
-import { roles } from "stores/builder"
 import { Roles } from "constants/backend"
-import { get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 
-// Converts a role doc into a node structure
-export const roleToNode = role => ({
-  id: role._id,
-  sourcePosition: Position.Right,
-  targetPosition: Position.Left,
-  type: "role",
-  position: { x: 0, y: 0 },
-  data: {
-    ...role.uiMetadata,
-    custom: !role._id.match(/[A-Z]+/),
-  },
-})
-
-// Converts a node structure back into a role doc
-export const nodeToRole = node => {
-  const role = get(roles).find(x => x._id === node.id)
-  return {
-    ...role,
-    uiMetadata: {
-      displayName: node.data.displayName,
-      color: node.data.color,
-      description: node.data.description,
-    },
-  }
-}
-
-// Generates a flow compatible structure of nodes and edges from the current roles
-export const rolesToNodes = () => {
-  const ignoredRoles = [Roles.PUBLIC]
-  const $roles = get(roles)
-
-  let nodes = []
-  let edges = []
-
-  for (let role of $roles) {
-    if (ignoredRoles.includes(role._id)) {
-      continue
-    }
-
-    // Add node for this role
-    nodes.push(roleToNode(role))
-
-    // Add edges for this role
-    let inherits = []
-    if (role.inherits) {
-      inherits = Array.isArray(role.inherits) ? role.inherits : [role.inherits]
-    }
-    for (let sourceRole of inherits) {
-      // Ensure source role exists
-      if (!$roles.some(x => x._id === sourceRole)) {
-        continue
-      }
-      edges.push({
-        id: `${sourceRole}-${role._id}`,
-        source: sourceRole,
-        target: role._id,
-      })
-    }
-  }
-
-  return {
-    nodes,
-    edges,
-  }
-}
-
 // Updates positions of nodes and edges into a nice graph structure
-const dagreLayout = ({ nodes, edges }) => {
+export const dagreLayout = ({ nodes, edges }) => {
   const dagreGraph = new dagre.graphlib.Graph()
   dagreGraph.setDefaultEdgeLabel(() => ({}))
   dagreGraph.setGraph({

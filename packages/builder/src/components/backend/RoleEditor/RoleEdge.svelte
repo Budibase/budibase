@@ -6,7 +6,7 @@
     useSvelteFlow,
   } from "@xyflow/svelte"
   import { Icon, TooltipPosition } from "@budibase/bbui"
-  import { onMount } from "svelte"
+  import { onMount, getContext } from "svelte"
   import { roles } from "stores/builder"
 
   export let sourceX
@@ -20,6 +20,7 @@
   export let target
 
   const flow = useSvelteFlow()
+  const { updateRole } = getContext("flow")
 
   let edgeHovered = false
   let labelHovered = false
@@ -56,10 +57,11 @@
     edgeHovered = false
   }
 
-  const deleteEdge = () => {
+  const deleteEdge = async () => {
     flow.deleteElements({
       edges: [{ id }],
     })
+    await updateRole(target)
   }
 
   onMount(() => {
