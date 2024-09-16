@@ -6,7 +6,7 @@
     useSvelteFlow,
   } from "@xyflow/svelte"
   import { Icon, TooltipPosition } from "@budibase/bbui"
-  import { onMount, getContext } from "svelte"
+  import { getContext } from "svelte"
   import { roles } from "stores/builder"
 
   export let sourceX
@@ -20,11 +20,11 @@
   export let target
 
   const flow = useSvelteFlow()
-  const { updateRole, selectedNode } = getContext("flow")
+  const { updateRole, selectedNodes } = getContext("flow")
 
   let iconHovered = false
 
-  $: active = source === $selectedNode || target === $selectedNode
+  $: active = $selectedNodes.includes(source) || $selectedNodes.includes(target)
   $: edgeClasses = getEdgeClasses(active, iconHovered)
   $: [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
