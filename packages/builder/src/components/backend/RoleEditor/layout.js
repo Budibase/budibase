@@ -10,7 +10,7 @@ export const dagreLayout = ({ nodes, edges }) => {
   dagreGraph.setDefaultEdgeLabel(() => ({}))
   dagreGraph.setGraph({
     rankdir: "LR",
-    ranksep: GridResolution * 6,
+    ranksep: GridResolution * 8,
     nodesep: GridResolution * 2,
   })
   nodes.forEach(node => {

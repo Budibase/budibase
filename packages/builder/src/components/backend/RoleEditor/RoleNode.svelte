@@ -79,16 +79,8 @@
 >
   <div class="color" />
   <div class="content">
-    <div class="title">
-      <div class="name">
-        {data.displayName}
-      </div>
-      {#if data.custom}
-        <div class="buttons">
-          <Icon size="S" name="Edit" hoverable on:click={openPopover} />
-          <Icon size="S" name="Delete" hoverable on:click={handleDelete} />
-        </div>
-      {/if}
+    <div class="name">
+      {data.displayName}
     </div>
     {#if data.description}
       <div class="description" title={data.description}>
@@ -96,6 +88,12 @@
       </div>
     {/if}
   </div>
+  {#if data.custom}
+    <div class="buttons">
+      <Icon size="S" name="Edit" hoverable on:click={openPopover} />
+      <Icon size="S" name="Delete" hoverable on:click={handleDelete} />
+    </div>
+  {/if}
   {#if id !== Roles.BASIC}
     <Handle
       type="target"
@@ -104,7 +102,7 @@
       isConnectable={$dragging}
     />
   {/if}
-  {#if id !== Roles.ADMIN}
+  {#if id !== Roles.ADMIN && selected}
     <Handle type="source" position={Position.Right} />
   {/if}
 </div>
@@ -140,11 +138,11 @@
     position: relative;
     background: var(--node-background);
     border-radius: 4px;
-    border: 1px solid transparent;
     width: var(--width);
     height: var(--height);
     display: flex;
     flex-direction: row;
+    gap: 12px;
     box-sizing: border-box;
     cursor: pointer;
   }
@@ -163,35 +161,33 @@
   .content {
     width: 0;
     flex: 1 1 auto;
-    padding: 0 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
     gap: 2px;
     border: 1px solid var(--border-color);
+    border-left-width: 0;
     border-top-right-radius: 4px;
     border-bottom-right-radius: 4px;
   }
   .node.selected .content {
     border-color: transparent;
   }
-  .title,
   .buttons {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 6px;
   }
-  .title {
-    justify-content: space-between;
-  }
   .buttons {
     display: none;
+    padding-right: 12px;
   }
-  .title :global(.spectrum-Icon) {
+  .buttons :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-600);
   }
+
   .name,
   .description {
     white-space: nowrap;
