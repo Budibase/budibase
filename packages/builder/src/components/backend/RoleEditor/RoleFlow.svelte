@@ -46,7 +46,7 @@
   // Converts a node structure back into a role doc
   const nodeToRole = node => {
     const role = $roles.find(x => x._id === node.id)
-    const inherits = $edges.filter(x => x.target === node.id).map(x => x.source)
+    // const inherits = $edges.filter(x => x.target === node.id).map(x => x.source)
     // TODO save inherits array
     return {
       ...role,
