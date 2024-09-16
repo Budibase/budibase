@@ -2,7 +2,6 @@ import {
   SearchFilter,
   SearchFilterGroup,
   FilterGroupLogicalOperator,
-  EmptyFilterOption,
   SearchFilters,
   BasicOperator,
   ArrayOperator,
