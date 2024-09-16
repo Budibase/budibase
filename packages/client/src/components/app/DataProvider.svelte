@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { Pagination, ProgressCircle, Helpers } from "@budibase/bbui"
+  import { Pagination, ProgressCircle } from "@budibase/bbui"
   import { fetchData, QueryUtils } from "@budibase/frontend-core"
   import { LogicalOperator, EmptyFilterOption } from "@budibase/types"
 
