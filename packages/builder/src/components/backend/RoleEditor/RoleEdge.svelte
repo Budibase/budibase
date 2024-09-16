@@ -69,7 +69,12 @@
     on:mouseover={() => (iconHovered = true)}
     on:mouseout={() => (iconHovered = false)}
   >
-    <Icon name="Delete" {tooltip} tooltipPosition={TooltipPosition.Top} />
+    <Icon
+      name="Delete"
+      size="S"
+      {tooltip}
+      tooltipPosition={TooltipPosition.Top}
+    />
   </div>
 </EdgeLabelRenderer>
 
