@@ -48,7 +48,7 @@
   const nodeToRole = node => {
     const role = $roles.find(x => x._id === node.id)
     const inherits = $edges.filter(x => x.target === node.id).map(x => x.source)
-    console.log(inherits)
+    // TODO save inherits array
     return {
       ...role,
       // inherits,

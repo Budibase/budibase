@@ -68,7 +68,6 @@ export function createRolesStore() {
       if (role?._id.startsWith("role_")) {
         role._id = role._id.replace("role_", "")
       }
-      console.log("replace", roleId, role)
 
       // Handles external updates of roles
       if (!roleId) {
