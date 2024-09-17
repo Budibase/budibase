@@ -136,10 +136,6 @@ export const createLicensingStore = () => {
         Constants.Features.APP_BUILDERS
       )
 
-      const isViewPermissionsEnabled = license.features.includes(
-        Constants.Features.VIEW_PERMISSIONS
-      )
-
       const isViewReadonlyColumnsEnabled = license.features.includes(
         Constants.Features.VIEW_READONLY_COLUMNS
       )
@@ -171,7 +167,6 @@ export const createLicensingStore = () => {
           enforceableSSO,
           syncAutomationsEnabled,
           triggerAutomationRunEnabled,
-          isViewPermissionsEnabled,
           perAppBuildersEnabled,
           isViewReadonlyColumnsEnabled,
         }
