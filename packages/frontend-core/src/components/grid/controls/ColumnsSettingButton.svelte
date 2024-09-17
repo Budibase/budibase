@@ -10,7 +10,7 @@
   let anchor
 
   $: anyRestricted = $columns.filter(col => !col.visible || col.readonly).length
-  $: text = anyRestricted ? `Columns: ${anyRestricted} restricted` : "Columns"
+  $: text = anyRestricted ? `Columns: (${anyRestricted} restricted)` : "Columns"
   $: permissions =
     $datasource.type === "viewV2"
       ? [
