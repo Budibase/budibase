@@ -15,7 +15,6 @@ export enum Feature {
   EXPANDED_PUBLIC_API = "expandedPublicApi",
   // deprecated - no longer licensed
   VIEW_PERMISSIONS = "viewPermissions",
-  VIEW_READONLY_COLUMNS = "viewReadonlyColumns",
   BUDIBASE_AI = "budibaseAI",
   AI_CUSTOM_CONFIGS = "aiCustomConfigs",
 }

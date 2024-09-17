@@ -21,7 +21,6 @@
 
   $: anyRestricted = $columns.filter(col => !col.visible || col.readonly).length
   $: text = anyRestricted ? `Columns: ${anyRestricted} restricted` : "Columns"
-  $: allowViewReadonlyColumns = $licensing.isViewReadonlyColumnsEnabled
   $: permissions =
     $datasource.type === "viewV2"
       ? [
@@ -30,9 +29,6 @@
           FieldPermissions.HIDDEN,
         ]
       : [FieldPermissions.WRITABLE, FieldPermissions.HIDDEN]
-  $: disabledPermissions = allowViewReadonlyColumns
-    ? []
-    : [FieldPermissions.READONLY]
 </script>
 
 <div bind:this={anchor}>
@@ -54,6 +50,5 @@
     columns={$columns}
     canSetRelationshipSchemas={isEnabled(FeatureFlag.ENRICHED_RELATIONSHIPS)}
     {permissions}
-    {disabledPermissions}
   />
 </Popover>
