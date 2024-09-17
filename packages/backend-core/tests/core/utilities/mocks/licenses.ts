@@ -102,10 +102,6 @@ export const useAppBuilders = () => {
   return useFeature(Feature.APP_BUILDERS)
 }
 
-export const useViewReadonlyColumns = () => {
-  return useFeature(Feature.VIEW_READONLY_COLUMNS)
-}
-
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {

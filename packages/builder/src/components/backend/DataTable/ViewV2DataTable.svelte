@@ -30,7 +30,6 @@
     showAvatars={false}
     on:updatedatasource={handleGridViewUpdate}
     isCloud={$admin.cloud}
-    allowViewReadonlyColumns={$licensing.isViewReadonlyColumnsEnabled}
     canSetRelationshipSchemas={isEnabled(FeatureFlag.ENRICHED_RELATIONSHIPS)}
   >
     <svelte:fragment slot="filter">

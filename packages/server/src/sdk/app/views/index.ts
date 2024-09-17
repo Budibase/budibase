@@ -59,13 +59,6 @@ async function guardViewSchema(
     }
 
     if (viewSchema[field].readonly) {
-      if (
-        !(await features.isViewReadonlyColumnsEnabled()) &&
-        !(tableSchemaField as ViewFieldMetadata).readonly
-      ) {
-        throw new HTTPError(`Readonly fields are not enabled`, 400)
-      }
-
       if (!viewSchema[field].visible) {
         throw new HTTPError(
           `Field "${field}" must be visible if you want to make it readonly`,
