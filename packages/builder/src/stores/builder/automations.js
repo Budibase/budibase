@@ -8,6 +8,10 @@ import { updateReferencesInObject } from "dataBinding"
 import { AutomationTriggerStepId } from "@budibase/types"
 import { sdk } from "@budibase/shared-core"
 import { rowActions } from "./rowActions"
+import {
+  updateBindingsInSteps,
+  getNewStepName,
+} from "helpers/automations/nameHelpers"
 
 const initialAutomationState = {
   automations: [],
@@ -285,13 +289,17 @@ const automationActions = store => ({
     await store.actions.save(newAutomation)
   },
   constructBlock(type, stepId, blockDefinition) {
-    return {
+    let newName
+    const newStep = {
       ...blockDefinition,
       inputs: blockDefinition.inputs || {},
       stepId,
       type,
       id: generate(),
     }
+    newName = getNewStepName(get(selectedAutomation), newStep)
+    newStep.name = newName
+    return newStep
   },
   addBlockToAutomation: async (block, blockIdx) => {
     const automation = get(selectedAutomation)
@@ -311,15 +319,34 @@ const automationActions = store => ({
   saveAutomationName: async (blockId, name) => {
     const automation = get(selectedAutomation)
     let newAutomation = cloneDeep(automation)
-    if (!automation) {
+    if (!newAutomation) {
       return
     }
-    newAutomation.definition.stepNames = {
-      ...newAutomation.definition.stepNames,
-      [blockId]: name.trim(),
-    }
 
-    await store.actions.save(newAutomation)
+    const stepIndex = newAutomation.definition.steps.findIndex(
+      step => step.id === blockId
+    )
+
+    if (stepIndex !== -1) {
+      const oldName = newAutomation.definition.steps[stepIndex].name
+      const newName = name.trim()
+
+      newAutomation.definition.stepNames = {
+        ...newAutomation.definition.stepNames,
+        [blockId]: newName,
+      }
+
+      newAutomation.definition.steps[stepIndex].name = newName
+
+      newAutomation.definition.steps = updateBindingsInSteps(
+        newAutomation.definition.steps,
+        oldName,
+        newName,
+        stepIndex
+      )
+
+      await store.actions.save(newAutomation)
+    }
   },
   deleteAutomationName: async blockId => {
     const automation = get(selectedAutomation)
