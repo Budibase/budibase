@@ -346,7 +346,7 @@ export async function find(ctx: UserCtx) {
       }
 
       if (type === ConfigType.AI) {
-        await pro.ai.enrichAIConfig(scopedConfig)
+        await pro.sdk.ai.enrichAIConfig(scopedConfig)
         // Strip out the API Keys from the response so they don't show in the UI
         for (const key in scopedConfig.config) {
           if (scopedConfig.config[key].apiKey) {
