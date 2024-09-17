@@ -97,15 +97,15 @@ export function trimOtherProps(object: any, allowedProps: string[]) {
  */
 export const processSearchFilters = (
   filters: SearchFilter[] | SearchFilterGroup | undefined
-): SearchFilterGroup => {
+): SearchFilterGroup | undefined => {
+  if (!filters) {
+    return
+  }
+
   // Base search config.
   const defaultCfg: SearchFilterGroup = {
     logicalOperator: FilterGroupLogicalOperator.ALL,
     groups: [],
-  }
-
-  if (!filters) {
-    return defaultCfg
   }
 
   const filterWhitelistKeys = [
@@ -182,7 +182,7 @@ export const processSearchFilters = (
 
     return migratedSetting
   } else if (!filters?.groups) {
-    return defaultCfg
+    return
   }
   return filters
 }
