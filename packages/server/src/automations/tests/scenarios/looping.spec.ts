@@ -242,4 +242,31 @@ describe("Loop automations", () => {
     expect(results.steps[1].outputs.message).toContain("- 3")
     expect(results.steps[3].outputs.message).toContain("- 3")
   })
+
+  it("should use automation names to loop with", async () => {
+    const builder = createAutomationBuilder({
+      name: "Test Trigger with Loop and Create Row",
+    })
+
+    const results = await builder
+      .appAction({ fields: {} })
+      .loop(
+        {
+          option: LoopStepType.ARRAY,
+          binding: [1, 2, 3],
+        },
+        { stepName: "FirstLoopStep" }
+      )
+      .serverLog(
+        { text: "Message {{loop.currentItem}}" },
+        { stepName: "FirstLoopLog" }
+      )
+      .serverLog(
+        { text: "{{steps.FirstLoopLog.iterations}}" },
+        { stepName: "FirstLoopIterationLog" }
+      )
+      .run()
+
+    expect(results.steps[1].outputs.message).toContain("- 3")
+  })
 })
