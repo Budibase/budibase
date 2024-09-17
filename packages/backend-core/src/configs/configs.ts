@@ -258,8 +258,8 @@ export async function getSCIMConfig(): Promise<SCIMInnerConfig | undefined> {
 }
 
 // AI
-export async function getAIConfig(): Promise<AIInnerConfig | undefined> {
-  const config = await getConfig<AIConfig>(ConfigType.AI)
-  return config?.config
+
+export async function getAIConfig(): Promise<AIConfig | undefined> {
+  return getConfig<AIConfig>(ConfigType.AI)
 }
 
