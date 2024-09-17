@@ -334,32 +334,6 @@ function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
   )
 }
 
-async function enrichAIConfig(aiConfig: AIConfig) {
-  // Strip out the API Keys from the response so they don't show in the UI
-  for (const key in aiConfig.config) {
-    if (aiConfig.config[key].apiKey) {
-      aiConfig.config[key].apiKey = PASSWORD_REPLACEMENT
-    }
-  }
-
-  // Return the Budibase AI data source as part of the response if licensing allows
-  const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
-  const defaultConfigExists = Object.keys(aiConfig.config).some(
-    key => aiConfig.config[key].isDefault
-  )
-  if (budibaseAIEnabled) {
-    aiConfig.config["budibase_ai"] = {
-      provider: "OpenAI",
-      active: true,
-      isDefault: !defaultConfigExists,
-      defaultModel: env.BUDIBASE_AI_DEFAULT_MODEL || "",
-      name: "Budibase AI",
-    }
-  }
-
-  return aiConfig
-}
-
 export async function find(ctx: UserCtx) {
   try {
     // Find the config with the most granular scope based on context
@@ -372,7 +346,13 @@ export async function find(ctx: UserCtx) {
       }
 
       if (type === ConfigType.AI) {
-        await enrichAIConfig(scopedConfig)
+        await pro.ai.getAIConfig(scopedConfig)
+        // Strip out the API Keys from the response so they don't show in the UI
+        for (const key in scopedConfig.config) {
+          if (scopedConfig.config[key].apiKey) {
+            scopedConfig.config[key].apiKey = PASSWORD_REPLACEMENT
+          }
+        }
       }
       ctx.body = scopedConfig
     } else {

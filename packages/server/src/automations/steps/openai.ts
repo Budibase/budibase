@@ -115,7 +115,7 @@ export async function run({
       // TODO: if in cloud and budibaseAI is enabled, use the standard budibase AI config
       // Make sure it uses their credits
       // Should be handled in the LLM wrapper in pro
-      const llm = new pro.ai.LLMWrapper()
+      const llm = new pro.ai.LargeLanguageModel(inputs.model)
       await llm.init()
       response = await llm.run(inputs.prompt)
     } else {
