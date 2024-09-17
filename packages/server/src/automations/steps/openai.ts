@@ -63,6 +63,11 @@ export const definition: AutomationStepDefinition = {
   },
 }
 
+/**
+ * Maintains backward compatibility with automation steps created before the introduction
+ * of custom configurations and Budibase AI
+ * @param inputs - automation inputs from the OpenAI automation step.
+ */
 async function legacyOpenAIPrompt(inputs: OpenAIStepInputs) {
   const openai = new OpenAI({
     apiKey: env.OPENAI_API_KEY,
@@ -85,14 +90,6 @@ export async function run({
 }: {
   inputs: OpenAIStepInputs
 }): Promise<OpenAIStepOutputs> {
-  if (!env.OPENAI_API_KEY) {
-    return {
-      success: false,
-      response:
-        "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable.",
-    }
-  }
-
   if (inputs.prompt == null) {
     return {
       success: false,
@@ -106,20 +103,19 @@ export async function run({
     const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
 
     if (budibaseAIEnabled || customConfigsEnabled) {
-      // Enterprise has custom configs
-      // if custom configs are enabled full stop
-      // Don't use their budibase AI credits, unless it uses the budibase AI configuration
-      // TODO: grab the config from the database (maybe wrap this in the pro AI module)
-      // TODO: pass it into the model to execute the prompt
-
-      // TODO: if in cloud and budibaseAI is enabled, use the standard budibase AI config
-      // Make sure it uses their credits
-      // Should be handled in the LLM wrapper in pro
       const llm = new pro.ai.LargeLanguageModel(inputs.model)
       await llm.init()
       response = await llm.run(inputs.prompt)
     } else {
       // fallback to the default that uses the environment variable for backwards compat
+      if (!env.OPENAI_API_KEY) {
+        return {
+          success: false,
+          response:
+            "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable.",
+        }
+      }
+
       response = await legacyOpenAIPrompt(inputs)
     }
 
