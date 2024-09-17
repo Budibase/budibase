@@ -551,11 +551,16 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       await this.connect()
       const hasFilters = dataFilters.hasFilters(query.filters)
       const limit = query.paginate?.limit || 100
-      const page: number =
-        typeof query.paginate?.page === "number"
-          ? query.paginate.page
-          : parseInt(query.paginate?.page || "1")
-      const offset = (page - 1) * limit
+      let offset = query.paginate?.offset || 0
+
+      let page = query.paginate?.page
+      if (typeof page === "string") {
+        page = parseInt(page)
+      }
+      if (page !== undefined) {
+        offset = page * limit
+      }
+
       const sheet = this.client.sheetsByTitle[query.sheet]
       let rows: GoogleSpreadsheetRow[] = []
       if (query.paginate && !hasFilters) {
