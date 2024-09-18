@@ -115,7 +115,6 @@ export async function run({
             "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable.",
         }
       }
-
       response = await legacyOpenAIPrompt(inputs)
     }
 
