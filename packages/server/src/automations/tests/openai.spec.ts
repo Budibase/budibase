@@ -35,7 +35,7 @@ jest.mock("@budibase/pro", () => ({
   features: {
     isAICustomConfigsEnabled: jest.fn(),
     isBudibaseAIEnabled: jest.fn(),
-  }
+  },
 }))
 
 const mockedOpenAI = OpenAI as jest.MockedClass<typeof OpenAI>
@@ -102,7 +102,7 @@ describe("test the openai action", () => {
     )
 
     const res = await runStep("OPENAI", {
-      prompt: OPENAI_PROMPT,jj
+      prompt: OPENAI_PROMPT,
     })
 
     expect(res.response).toEqual(
@@ -118,7 +118,7 @@ describe("test the openai action", () => {
     const prompt = "What is the meaning of life?"
     await runStep("OPENAI", {
       model: "gpt-4o-mini",
-      prompt
+      prompt,
     })
 
     expect(pro.ai.LargeLanguageModel).toHaveBeenCalledWith("gpt-4o-mini")
