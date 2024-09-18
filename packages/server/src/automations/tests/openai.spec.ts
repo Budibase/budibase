@@ -4,6 +4,7 @@ import {
   withEnv as withCoreEnv,
   setEnv as setCoreEnv,
 } from "@budibase/backend-core"
+import * as pro from "@budibase/pro"
 
 jest.mock("openai", () => ({
   OpenAI: jest.fn().mockImplementation(() => ({
@@ -21,6 +22,20 @@ jest.mock("openai", () => ({
       },
     },
   })),
+}))
+
+jest.mock("@budibase/pro", () => ({
+  ...jest.requireActual("@budibase/pro"),
+  ai: {
+    LargeLanguageModel: jest.fn().mockImplementation(() => ({
+      init: jest.fn(),
+      run: jest.fn(),
+    })),
+  },
+  features: {
+    isAICustomConfigsEnabled: jest.fn(),
+    isBudibaseAIEnabled: jest.fn(),
+  }
 }))
 
 const mockedOpenAI = OpenAI as jest.MockedClass<typeof OpenAI>
@@ -41,6 +56,7 @@ describe("test the openai action", () => {
 
   afterEach(() => {
     resetEnv()
+    jest.clearAllMocks()
   })
 
   afterAll(_afterAll)
@@ -86,12 +102,29 @@ describe("test the openai action", () => {
     )
 
     const res = await runStep("OPENAI", {
-      prompt: OPENAI_PROMPT,
+      prompt: OPENAI_PROMPT,jj
     })
 
     expect(res.response).toEqual(
       "Error: An error occurred while calling createChatCompletion"
     )
     expect(res.success).toBeFalsy()
+  })
+
+  it("should ensure that the pro AI module is called when the budibase AI features are enabled", async () => {
+    jest.spyOn(pro.features, "isBudibaseAIEnabled").mockResolvedValue(true)
+    jest.spyOn(pro.features, "isAICustomConfigsEnabled").mockResolvedValue(true)
+
+    const prompt = "What is the meaning of life?"
+    await runStep("OPENAI", {
+      model: "gpt-4o-mini",
+      prompt
+    })
+
+    expect(pro.ai.LargeLanguageModel).toHaveBeenCalledWith("gpt-4o-mini")
+
+    const llmInstance = pro.ai.LargeLanguageModel.mock.results[0].value
+    expect(llmInstance.init).toHaveBeenCalled()
+    expect(llmInstance.run).toHaveBeenCalledWith(prompt)
   })
 })
