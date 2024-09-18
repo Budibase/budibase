@@ -191,7 +191,7 @@
     on:contextmenu={openTableContextMenu}
   >
     <div class="nav-item__title">
-      {table.name}
+      {table._id === TableNames.USERS ? "App users" : table.name}
     </div>
     {#if tableSelectedBy}
       <UserAvatars size="XS" users={tableSelectedBy} />
