@@ -253,6 +253,8 @@ export async function save(ctx: UserCtx<Config>) {
         if (existingConfig) {
           await verifyAIConfig(config, existingConfig)
         }
+        const numConfigs = Object.keys(config).length
+        await pro.quotas.updateCustomAIConfigCount(numConfigs)
         break
     }
   } catch (err: any) {
