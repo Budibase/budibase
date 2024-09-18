@@ -123,6 +123,7 @@ describe("test the openai action", () => {
 
     expect(pro.ai.LargeLanguageModel).toHaveBeenCalledWith("gpt-4o-mini")
 
+    // @ts-ignore
     const llmInstance = pro.ai.LargeLanguageModel.mock.results[0].value
     expect(llmInstance.init).toHaveBeenCalled()
     expect(llmInstance.run).toHaveBeenCalledWith(prompt)
