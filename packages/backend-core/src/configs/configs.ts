@@ -262,4 +262,3 @@ export async function getSCIMConfig(): Promise<SCIMInnerConfig | undefined> {
 export async function getAIConfig(): Promise<AIConfig | undefined> {
   return getConfig<AIConfig>(ConfigType.AI)
 }
-
