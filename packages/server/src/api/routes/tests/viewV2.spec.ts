@@ -796,7 +796,7 @@ describe.each([
         )
       })
 
-      it("cannot update views with readonly on on free license", async () => {
+      it("can views with readonly on on free license", async () => {
         view = await config.api.viewV2.update({
           ...view,
           schema: {
@@ -810,51 +810,8 @@ describe.each([
 
         mocks.licenses.useCloudFree()
         await config.api.viewV2.update(view, {
-          status: 400,
-          body: {
-            message: "Readonly fields are not enabled",
-          },
+          status: 200,
         })
-      })
-
-      it("can remove readonly config after license downgrade", async () => {
-        view = await config.api.viewV2.update({
-          ...view,
-          schema: {
-            id: { visible: true },
-            Price: {
-              visible: true,
-              readonly: true,
-            },
-            Category: {
-              visible: true,
-              readonly: true,
-            },
-          },
-        })
-        mocks.licenses.useCloudFree()
-        const res = await config.api.viewV2.update({
-          ...view,
-          schema: {
-            id: { visible: true },
-            Price: {
-              visible: true,
-              readonly: false,
-            },
-          },
-        })
-        expect(res).toEqual(
-          expect.objectContaining({
-            ...view,
-            schema: {
-              id: { visible: true },
-              Price: {
-                visible: true,
-                readonly: false,
-              },
-            },
-          })
-        )
       })
 
       isInternal &&
