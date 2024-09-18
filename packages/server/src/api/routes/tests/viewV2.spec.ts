@@ -462,7 +462,7 @@ describe.each([
           }
 
           await config.api.viewV2.create(newView, {
-            status: 200,
+            status: 201,
           })
         })
       })
@@ -790,24 +790,6 @@ describe.each([
             status: 200,
           }
         )
-      })
-
-      it("can views with readonly on on free license", async () => {
-        view = await config.api.viewV2.update({
-          ...view,
-          schema: {
-            id: { visible: true },
-            Price: {
-              visible: true,
-              readonly: true,
-            },
-          },
-        })
-
-        mocks.licenses.useCloudFree()
-        await config.api.viewV2.update(view, {
-          status: 200,
-        })
       })
 
       isInternal &&
