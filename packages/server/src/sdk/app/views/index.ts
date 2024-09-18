@@ -1,5 +1,6 @@
 import {
   FieldType,
+  PermissionLevel,
   RelationSchemaField,
   RenameColumn,
   Table,
@@ -10,20 +11,22 @@ import {
   ViewV2ColumnEnriched,
   ViewV2Enriched,
 } from "@budibase/types"
-import { HTTPError } from "@budibase/backend-core"
+import { HTTPError, roles } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
-
 import * as utils from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
-
 import * as internal from "./internal"
 import * as external from "./external"
 import sdk from "../../../sdk"
+import {
+  updatePermissionOnRole,
+  PermissionUpdateType,
+} from "src/api/controllers/permission"
 
 function pickApi(tableId: any) {
   if (isExternalTableID(tableId)) {
@@ -123,8 +126,30 @@ export async function create(
   viewRequest: Omit<ViewV2, "id" | "version">
 ): Promise<ViewV2> {
   await guardViewSchema(tableId, viewRequest)
+  const view = await pickApi(tableId).create(tableId, viewRequest)
 
-  return pickApi(tableId).create(tableId, viewRequest)
+  // Set permissions to be the same as the table
+  const tablePerms = await sdk.permissions.getResourcePerms(tableId)
+  const readRole = tablePerms[PermissionLevel.READ]?.role
+  const writeRole = tablePerms[PermissionLevel.WRITE]?.role
+  await updatePermissionOnRole(
+    {
+      roleId: readRole || roles.BUILTIN_ROLE_IDS.BASIC,
+      resourceId: view.id,
+      level: PermissionLevel.READ,
+    },
+    PermissionUpdateType.ADD
+  )
+  await updatePermissionOnRole(
+    {
+      roleId: writeRole || roles.BUILTIN_ROLE_IDS.BASIC,
+      resourceId: view.id,
+      level: PermissionLevel.WRITE,
+    },
+    PermissionUpdateType.ADD
+  )
+
+  return view
 }
 
 export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {

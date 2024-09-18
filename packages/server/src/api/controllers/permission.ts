@@ -20,7 +20,7 @@ import {
 import { removeFromArray } from "../../utilities"
 import sdk from "../../sdk"
 
-const enum PermissionUpdateType {
+export const enum PermissionUpdateType {
   REMOVE = "remove",
   ADD = "add",
 }
@@ -37,7 +37,7 @@ async function getAllDBRoles(db: Database) {
   return body.rows.map(row => row.doc!)
 }
 
-async function updatePermissionOnRole(
+export async function updatePermissionOnRole(
   {
     roleId,
     resourceId,
