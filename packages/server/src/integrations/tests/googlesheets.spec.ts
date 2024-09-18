@@ -208,6 +208,42 @@ describe("Google Sheets Integration", () => {
       expect(row2.name).toEqual("Test Contact 2")
       expect(row2.description).toEqual("original description 2")
     })
+
+    it("can paginate correctly", async () => {
+      await config.api.row.bulkImport(table._id!, {
+        rows: Array.from({ length: 248 }, (_, i) => ({
+          name: `${i}`,
+          description: "",
+        })),
+      })
+
+      let resp = await config.api.row.search(table._id!, {
+        tableId: table._id!,
+        query: {},
+        paginate: true,
+        limit: 10,
+      })
+      let rows = resp.rows
+
+      while (resp.hasNextPage) {
+        resp = await config.api.row.search(table._id!, {
+          tableId: table._id!,
+          query: {},
+          paginate: true,
+          limit: 10,
+          bookmark: resp.bookmark,
+        })
+        rows = rows.concat(resp.rows)
+        if (rows.length > 250) {
+          throw new Error("Too many rows returned")
+        }
+      }
+
+      expect(rows.length).toEqual(250)
+      expect(rows.map(row => row.name)).toEqual(
+        expect.arrayContaining(Array.from({ length: 248 }, (_, i) => `${i}`))
+      )
+    })
   })
 
   describe("update", () => {
