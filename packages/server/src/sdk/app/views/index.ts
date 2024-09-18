@@ -5,13 +5,11 @@ import {
   Table,
   TableSchema,
   View,
-  ViewFieldMetadata,
   ViewV2,
   ViewV2ColumnEnriched,
   ViewV2Enriched,
 } from "@budibase/types"
 import { HTTPError } from "@budibase/backend-core"
-import { features } from "@budibase/pro"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
