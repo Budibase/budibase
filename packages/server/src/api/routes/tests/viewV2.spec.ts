@@ -432,7 +432,7 @@ describe.each([
           })
         })
 
-        it("readonly fields cannot be used on free license", async () => {
+        it("readonly fields can be used on free license", async () => {
           mocks.licenses.useCloudFree()
           const table = await config.api.table.save(
             saveTableRequest({
@@ -462,11 +462,7 @@ describe.each([
           }
 
           await config.api.viewV2.create(newView, {
-            status: 400,
-            body: {
-              message: "Readonly fields are not enabled",
-              status: 400,
-            },
+            status: 200,
           })
         })
       })
