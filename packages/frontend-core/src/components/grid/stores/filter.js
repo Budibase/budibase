@@ -1,5 +1,5 @@
 import { writable, get, derived } from "svelte/store"
-import { FieldType } from "@budibase/types"
+import { FieldType, FilterGroupLogicalOperator } from "@budibase/types"
 
 export const createStores = context => {
   const { props } = context
@@ -16,11 +16,22 @@ export const createStores = context => {
 
 export const deriveStores = context => {
   const { filter, inlineFilters } = context
-
   const allFilters = derived(
     [filter, inlineFilters],
     ([$filter, $inlineFilters]) => {
-      return [...($filter || []), ...$inlineFilters]
+      const inlineFilterGroup = $inlineFilters?.length
+        ? {
+            logicalOperator: FilterGroupLogicalOperator.ALL,
+            filters: [...($inlineFilters || [])],
+          }
+        : null
+
+      return inlineFilterGroup
+        ? {
+            logicalOperator: FilterGroupLogicalOperator.ALL,
+            groups: [...($filter?.groups || []), inlineFilterGroup],
+          }
+        : $filter
     }
   )
 
@@ -54,7 +65,6 @@ export const createActions = context => {
       inlineFilter.operator = "contains"
     }
 
-    // Add this filter
     inlineFilters.update($inlineFilters => {
       // Remove any existing inline filter for this column
       $inlineFilters = $inlineFilters?.filter(x => x.id !== filterId)

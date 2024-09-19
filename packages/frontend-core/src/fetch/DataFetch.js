@@ -178,7 +178,8 @@ export default class DataFetch {
 
     // Build the query
     let query = this.options.query
-    if (!query) {
+
+    if (!query && this.features.supportsSearch) {
       query = buildQuery(filter)
     }
 

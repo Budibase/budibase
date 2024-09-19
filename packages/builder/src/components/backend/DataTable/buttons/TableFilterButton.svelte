@@ -5,6 +5,7 @@
   import { getUserBindings } from "dataBinding"
   import { makePropSafe } from "@budibase/string-templates"
   import { search } from "@budibase/frontend-core"
+  import { utils } from "@budibase/shared-core"
   import { tables } from "stores/builder"
 
   export let schema
@@ -16,15 +17,19 @@
 
   let drawer
 
-  $: tempValue = filters || []
+  $: localFilters = utils.processSearchFilters(filters)
+
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
     { allowLinks: true }
   )
 
-  $: text = getText(filters)
-  $: selected = tempValue.filter(x => !x.onEmptyFilter)?.length > 0
+  $: filterCount =
+    localFilters?.groups?.reduce((acc, group) => {
+      return (acc += group.filters.filter(filter => filter.field).length)
+    }, 0) || 0
+
   $: bindings = [
     {
       type: "context",
@@ -38,10 +43,6 @@
     },
     ...getUserBindings(),
   ]
-  const getText = filters => {
-    const count = filters?.filter(filter => filter.field)?.length
-    return count ? `Filter (${count})` : "Filter"
-  }
 </script>
 
 <ActionButton
@@ -49,24 +50,26 @@
   quiet
   {disabled}
   on:click={drawer.show}
-  {selected}
+  selected={filterCount > 0}
   accentColor="#004EA6"
 >
-  {text}
+  {filterCount ? `Filter (${filterCount})` : "Filter"}
 </ActionButton>
 
 <Drawer
   bind:this={drawer}
   title="Filtering"
   on:drawerHide
-  on:drawerShow
+  on:drawerShow={() => {
+    localFilters = utils.processSearchFilters(filters)
+  }}
   forceModal
 >
   <Button
     cta
     slot="buttons"
     on:click={() => {
-      dispatch("change", tempValue)
+      dispatch("change", localFilters)
       drawer.hide()
     }}
   >
@@ -74,10 +77,10 @@
   </Button>
   <DrawerContent slot="body">
     <FilterBuilder
-      {filters}
+      filters={localFilters}
       {schemaFields}
       datasource={{ type: "table", tableId }}
-      on:change={e => (tempValue = e.detail)}
+      on:change={e => (localFilters = e.detail)}
       {bindings}
     />
   </DrawerContent>
