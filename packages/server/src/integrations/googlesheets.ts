@@ -349,7 +349,6 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
           if (
             err.message.startsWith("No values in the header row") ||
-            err.message.startsWith("Header values are not yet loaded") ||
             err.message.startsWith("All your header cells are blank")
           ) {
             errors[
