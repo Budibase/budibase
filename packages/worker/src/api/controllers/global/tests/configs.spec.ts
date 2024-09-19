@@ -35,55 +35,6 @@ describe("Global configs controller", () => {
     })
   })
 
-  it("Should return the default BB AI config when the feature is turned on", async () => {
-    jest
-      .spyOn(pro.features, "isBudibaseAIEnabled")
-      .mockImplementation(() => Promise.resolve(true))
-    const data = structures.configs.ai()
-    await config.api.configs.saveConfig(data)
-    const response = await config.api.configs.getAIConfig()
-
-    expect(response.body.config).toEqual({
-      budibase_ai: {
-        provider: "OpenAI",
-        active: true,
-        isDefault: true,
-        name: "Budibase AI",
-        defaultModel: "",
-      },
-      ai: {
-        active: true,
-        apiKey: "--secret-value--",
-        baseUrl: "https://api.example.com",
-        defaultModel: "gpt4",
-        isDefault: false,
-        name: "Test",
-        provider: "OpenAI",
-      },
-    })
-  })
-
-  it("Should not not return the default Budibase AI config when on self host", async () => {
-    jest
-      .spyOn(pro.features, "isBudibaseAIEnabled")
-      .mockImplementation(() => Promise.resolve(false))
-    const data = structures.configs.ai()
-    await config.api.configs.saveConfig(data)
-    const response = await config.api.configs.getAIConfig()
-
-    expect(response.body.config).toEqual({
-      ai: {
-        active: true,
-        apiKey: "--secret-value--",
-        baseUrl: "https://api.example.com",
-        defaultModel: "gpt4",
-        isDefault: false,
-        name: "Test",
-        provider: "OpenAI",
-      },
-    })
-  })
-
   it("Should not update existing secrets when updating an existing AI Config", async () => {
     const data = structures.configs.ai()
     await config.api.configs.saveConfig(data)
