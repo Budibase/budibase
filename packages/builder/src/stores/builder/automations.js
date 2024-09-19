@@ -8,6 +8,8 @@ import { notifications } from "@budibase/bbui"
 import { updateReferencesInObject, getEnvironmentBindings } from "dataBinding"
 import { AutomationTriggerStepId, AutomationEventType } from "@budibase/types"
 import { FIELDS } from "constants/backend"
+import { sdk } from "@budibase/shared-core"
+import { rowActions } from "./rowActions"
 import {
   updateBindingsInSteps,
   getNewStepName,
@@ -483,10 +485,18 @@ const automationActions = store => ({
     return response.automation
   },
   delete: async automation => {
-    await API.deleteAutomation({
-      automationId: automation?._id,
-      automationRev: automation?._rev,
-    })
+    const isRowAction = sdk.automations.isRowAction(automation)
+    if (isRowAction) {
+      await rowActions.delete(
+        automation.definition.trigger.inputs.tableId,
+        automation.definition.trigger.inputs.rowActionId
+      )
+    } else {
+      await API.deleteAutomation({
+        automationId: automation?._id,
+        automationRev: automation?._rev,
+      })
+    }
 
     store.update(state => {
       // Remove the automation

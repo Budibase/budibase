@@ -39,7 +39,7 @@
 </script>
 
 <Modal bind:this={editorModal} on:show={initForm}>
-  <ModalContent title="Edit View" onConfirm={save} confirmText="Save">
-    <Input label="View Name" thin bind:value={updatedName} />
+  <ModalContent title="Edit view" onConfirm={save} confirmText="Save">
+    <Input label="Name" thin bind:value={updatedName} />
   </ModalContent>
 </Modal>

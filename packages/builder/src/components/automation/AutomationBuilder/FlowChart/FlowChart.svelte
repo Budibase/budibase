@@ -26,13 +26,16 @@
       console.log("updated")
     },
   })
+  import { sdk } from "@budibase/shared-core"
 
   export let automation
 
   let testDataModal
   let confirmDeleteDialog
   let scrolling = false
+
   $: blocks = getBlocks(automation).filter(x => x.stepId !== ActionStepID.LOOP)
+  $: isRowAction = sdk.automations.isRowAction(automation)
 
   const getBlocks = automation => {
     let blocks = []
@@ -97,17 +100,19 @@
         Test details
       </div>
     </div>
-    <div class="setting-spacing">
-      <Toggle
-        text={automation.disabled ? "Paused" : "Activated"}
-        on:change={automationStore.actions.toggleDisabled(
-          automation._id,
-          automation.disabled
-        )}
-        disabled={!$selectedAutomation?.definition?.trigger}
-        value={!automation.disabled}
-      />
-    </div>
+    {#if !isRowAction}
+      <div class="setting-spacing">
+        <Toggle
+          text={automation.disabled ? "Paused" : "Activated"}
+          on:change={automationStore.actions.toggleDisabled(
+            automation._id,
+            automation.disabled
+          )}
+          disabled={!$selectedAutomation?.definition?.trigger}
+          value={!automation.disabled}
+        />
+      </div>
+    {/if}
   </div>
 </div>
 <div class="canvas" on:scroll={handleScroll}>
