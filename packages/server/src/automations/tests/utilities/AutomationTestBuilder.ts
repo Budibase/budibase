@@ -57,21 +57,27 @@ type BranchConfig = {
 
 class BaseStepBuilder {
   protected steps: AutomationStep[] = []
+  protected stepNames: { [key: string]: string } = {}
 
   protected step<TStep extends AutomationActionStepId>(
     stepId: TStep,
     stepSchema: Omit<AutomationStep, "id" | "stepId" | "inputs">,
-    inputs: AutomationStepInputs<TStep>
+    inputs: AutomationStepInputs<TStep>,
+    stepName?: string
   ): this {
+    const id = uuidv4()
     this.steps.push({
       ...stepSchema,
       inputs: inputs as any,
-      id: uuidv4(),
+      id,
       stepId,
+      name: stepName || stepSchema.name,
     })
+    if (stepName) {
+      this.stepNames[id] = stepName
+    }
     return this
   }
-
   protected addBranchStep(branchConfig: BranchConfig): void {
     const branchStepInputs: BranchStepInputs = {
       branches: [] as Branch[],
@@ -99,66 +105,80 @@ class BaseStepBuilder {
   }
 
   // STEPS
-  createRow(inputs: CreateRowStepInputs): this {
+  createRow(inputs: CreateRowStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.CREATE_ROW,
       BUILTIN_ACTION_DEFINITIONS.CREATE_ROW,
-      inputs
+      inputs,
+      opts?.stepName
     )
   }
 
-  updateRow(inputs: UpdateRowStepInputs): this {
+  updateRow(inputs: UpdateRowStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.UPDATE_ROW,
       BUILTIN_ACTION_DEFINITIONS.UPDATE_ROW,
-      inputs
+      inputs,
+      opts?.stepName
     )
   }
 
-  deleteRow(inputs: DeleteRowStepInputs): this {
+  deleteRow(inputs: DeleteRowStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.DELETE_ROW,
       BUILTIN_ACTION_DEFINITIONS.DELETE_ROW,
-      inputs
+      inputs,
+      opts?.stepName
     )
   }
 
-  sendSmtpEmail(inputs: SmtpEmailStepInputs): this {
+  sendSmtpEmail(
+    inputs: SmtpEmailStepInputs,
+    opts?: { stepName?: string }
+  ): this {
     return this.step(
       AutomationActionStepId.SEND_EMAIL_SMTP,
       BUILTIN_ACTION_DEFINITIONS.SEND_EMAIL_SMTP,
-      inputs
+      inputs,
+      opts?.stepName
     )
   }
 
-  executeQuery(inputs: ExecuteQueryStepInputs): this {
+  executeQuery(
+    inputs: ExecuteQueryStepInputs,
+    opts?: { stepName?: string }
+  ): this {
     return this.step(
       AutomationActionStepId.EXECUTE_QUERY,
       BUILTIN_ACTION_DEFINITIONS.EXECUTE_QUERY,
-      inputs
+      inputs,
+      opts?.stepName
     )
   }
 
-  queryRows(inputs: QueryRowsStepInputs): this {
+  queryRows(inputs: QueryRowsStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.QUERY_ROWS,
       BUILTIN_ACTION_DEFINITIONS.QUERY_ROWS,
-      inputs
+      inputs,
+      opts?.stepName
     )
   }
-  loop(inputs: LoopStepInputs): this {
+  loop(inputs: LoopStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.LOOP,
       BUILTIN_ACTION_DEFINITIONS.LOOP,
-      inputs
+      inputs,
+      opts?.stepName
     )
   }
 
-  serverLog(input: ServerLogStepInputs): this {
+  serverLog(input: ServerLogStepInputs, opts?: { stepName?: string }): this {
     return this.step(
       AutomationActionStepId.SERVER_LOG,
       BUILTIN_ACTION_DEFINITIONS.SERVER_LOG,
-      input
+      input,
+      opts?.stepName
     )
   }
 }
@@ -186,6 +206,7 @@ class AutomationBuilder extends BaseStepBuilder {
       definition: {
         steps: [],
         trigger: {} as AutomationTrigger,
+        stepNames: {},
       },
       type: "automation",
       appId: options.appId ?? setup.getConfig().getAppId(),
@@ -268,6 +289,7 @@ class AutomationBuilder extends BaseStepBuilder {
 
   build(): Automation {
     this.automationConfig.definition.steps = this.steps
+    this.automationConfig.definition.stepNames = this.stepNames
     return this.automationConfig
   }
 

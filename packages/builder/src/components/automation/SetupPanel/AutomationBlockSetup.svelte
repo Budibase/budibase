@@ -595,9 +595,13 @@
     let loopBlockCount = 0
     const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
       if (!name) return
-      const runtimeBinding = determineRuntimeBinding(name, idx, isLoopBlock)
+      const runtimeBinding = determineRuntimeBinding(
+        name,
+        idx,
+        isLoopBlock,
+        bindingName
+      )
       const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
-
       bindings.push(
         createBindingObject(
           name,
@@ -613,7 +617,7 @@
       )
     }
 
-    const determineRuntimeBinding = (name, idx, isLoopBlock) => {
+    const determineRuntimeBinding = (name, idx, isLoopBlock, bindingName) => {
       let runtimeName
 
       /* Begin special cases for generating custom schemas based on triggers */
@@ -634,12 +638,17 @@
       }
       /* End special cases for generating custom schemas based on triggers */
 
+      let hasUserDefinedName = automation.stepNames?.[allSteps[idx]?.id]
       if (isLoopBlock) {
         runtimeName = `loop.${name}`
       } else if (block.name.startsWith("JS")) {
-        runtimeName = `steps[${idx - loopBlockCount}].${name}`
+        runtimeName = hasUserDefinedName
+          ? `stepsByName[${bindingName}].${name}`
+          : `steps[${idx - loopBlockCount}].${name}`
       } else {
-        runtimeName = `steps.${idx - loopBlockCount}.${name}`
+        runtimeName = hasUserDefinedName
+          ? `stepsByName.${bindingName}.${name}`
+          : `steps.${idx - loopBlockCount}.${name}`
       }
       return idx === 0 ? `trigger.${name}` : runtimeName
     }
@@ -666,11 +675,11 @@
       const field = Object.values(FIELDS).find(
         field => field.type === value.type && field.subtype === value.subtype
       )
-
       return {
-        readableBinding: bindingName
-          ? `${bindingName}.${name}`
-          : runtimeBinding,
+        readableBinding:
+          bindingName && !isLoopBlock
+            ? `steps.${bindingName}.${name}`
+            : runtimeBinding,
         runtimeBinding,
         type: value.type,
         description: value.description,
@@ -690,8 +699,12 @@
         allSteps[idx]?.stepId === ActionStepID.LOOP &&
         allSteps.some(x => x.blockToLoop === block.id)
       let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
+      if (allSteps[idx]?.name.includes("Looping")) {
+        isLoopBlock = true
+        loopBlockCount++
+      }
       let bindingName =
-        automation.stepNames?.[allSteps[idx - loopBlockCount].id]
+        automation.stepNames?.[allSteps[idx].id] || allSteps[idx].name
 
       if (isLoopBlock) {
         schema = {
@@ -740,13 +753,12 @@
 
       if (wasLoopBlock) {
         loopBlockCount++
-        continue
+        schema = cloneDeep(allSteps[idx - 1]?.schema?.outputs?.properties)
       }
-      Object.entries(schema).forEach(([name, value]) =>
+      Object.entries(schema).forEach(([name, value]) => {
         addBinding(name, value, icon, idx, isLoopBlock, bindingName)
-      )
+      })
     }
-
     return bindings
   }
 
