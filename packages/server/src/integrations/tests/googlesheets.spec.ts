@@ -10,7 +10,6 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import { GoogleSheetsMock } from "./utils/googlesheets"
-import rows from "src/sdk/app/rows"
 
 describe("Google Sheets Integration", () => {
   const config = new TestConfiguration()
@@ -504,6 +503,24 @@ describe("Google Sheets Integration", () => {
 
       const emptyRows = await config.api.row.fetch(table._id!)
       expect(emptyRows.length).toEqual(0)
+    })
+  })
+
+  describe("import spreadsheet", () => {
+    it.only("should fail to import a completely blank sheet", async () => {
+      mock.createSheet({ title: "Sheet1" })
+      await config.api.datasource.fetchSchema(
+        {
+          datasourceId: datasource._id!,
+          tablesFilter: ["Sheet1"],
+        },
+        {
+          status: 400,
+          body: {
+            message: "",
+          },
+        }
+      )
     })
   })
 })

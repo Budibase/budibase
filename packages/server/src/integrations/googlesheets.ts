@@ -25,7 +25,11 @@ import {
   checkExternalTables,
   finaliseExternalTables,
 } from "./utils"
-import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
+import {
+  GoogleSpreadsheet,
+  GoogleSpreadsheetRow,
+  GoogleSpreadsheetWorksheet,
+} from "google-spreadsheet"
 import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"
@@ -330,15 +334,16 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       return { tables: {}, errors: {} }
     }
     await this.connect()
+
     const sheets = this.client.sheetsByIndex
     const tables: Record<string, Table> = {}
     let errors: Record<string, string> = {}
-    await utils.parallelForeach(
-      sheets,
-      async sheet => {
-        // must fetch rows to determine schema
+
+    let promises: Promise<void>[] = []
+    for (const sheet of sheets) {
+      const f = async (sheet: GoogleSpreadsheetWorksheet) => {
         try {
-          await sheet.getRows()
+          await sheet.getRows({ limit: 1 })
         } catch (err) {
           // We expect this to always be an Error so if it's not, rethrow it to
           // make sure we don't fail quietly.
@@ -346,26 +351,36 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
             throw err
           }
 
-          if (err.message.startsWith("No values in the header row")) {
-            errors[sheet.title] = err.message
-          } else {
-            // If we get an error we don't expect, rethrow to avoid failing
-            // quietly.
-            throw err
+          if (
+            err.message.startsWith("No values in the header row") ||
+            err.message.startsWith("Header values are not yet loaded")
+          ) {
+            errors[
+              sheet.title
+            ] = `Failed to find a header row in sheet "${sheet.title}", is the first row blank?`
+            return
           }
-          return
-        }
 
-        const id = buildExternalTableId(datasourceId, sheet.title)
-        tables[sheet.title] = this.getTableSchema(
-          sheet.title,
-          sheet.headerValues,
-          datasourceId,
-          id
-        )
-      },
-      10
-    )
+          // If we get an error we don't expect, rethrow to avoid failing
+          // quietly.
+          throw err
+        }
+      }
+      promises.push(f(sheet))
+    }
+
+    await Promise.all(promises)
+
+    for (const sheet of sheets) {
+      const id = buildExternalTableId(datasourceId, sheet.title)
+      tables[sheet.title] = this.getTableSchema(
+        sheet.title,
+        sheet.headerValues,
+        datasourceId,
+        id
+      )
+    }
+
     let externalTables = finaliseExternalTables(tables, entities)
     errors = { ...errors, ...checkExternalTables(externalTables) }
     return { tables: externalTables, errors }
