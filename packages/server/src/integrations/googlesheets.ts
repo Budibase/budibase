@@ -339,7 +339,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     const tables: Record<string, Table> = {}
     let errors: Record<string, string> = {}
 
-    await utils.parallelForEach(
+    await utils.parallelForeach(
       sheets,
       async sheet => {
         try {
@@ -367,7 +367,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
           throw err
         }
       },
-      { maxConcurrency: 2 }
+      10
     )
 
     for (const sheet of sheets) {
