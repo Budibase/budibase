@@ -23,10 +23,12 @@
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+  import FlowItemActions from "./FlowItemActions.svelte"
 
   export let block
   export let testDataModal
   export let idx
+  export let isLast
 
   let selected
   let webhookModal
@@ -40,6 +42,7 @@
   )
   $: automationId = $selectedAutomation?._id
   $: isTrigger = block.type === "TRIGGER"
+
   $: steps = $selectedAutomation?.definition?.steps ?? []
   $: blockIdx = steps.findIndex(step => step.id === block.id)
   $: lastStep = !isTrigger && blockIdx + 1 === steps.length
@@ -183,7 +186,9 @@
           </div>
         {/if}
         <AutomationBlockSetup
-          schemaProperties={Object.entries(block.schema.inputs.properties)}
+          schemaProperties={Object.entries(
+            block?.schema?.inputs?.properties || {}
+          )}
           {block}
           {webhookModal}
         />
@@ -204,13 +209,17 @@
 </div>
 {#if !collectBlockExists || !lastStep}
   <div class="separator" />
-  <Icon
+
+  <!-- Need to break out the separators -->
+  <FlowItemActions on:addStep={actionModal.show()} />
+
+  <!-- <Icon
     on:click={() => actionModal.show()}
     hoverable
     name="AddCircle"
     size="S"
-  />
-  {#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
+  /> -->
+  {#if isTrigger ? !isLast || totalBlocks > 1 : blockIdx !== totalBlocks - 2}
     <div class="separator" />
   {/if}
 {/if}
