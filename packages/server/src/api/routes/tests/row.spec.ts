@@ -1138,6 +1138,18 @@ describe.each([
       await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
     })
 
+    it("should be able to delete a row with ID only", async () => {
+      const createdRow = await config.api.row.save(table._id!, {})
+      const rowUsage = await getRowUsage()
+
+      const res = await config.api.row.bulkDelete(table._id!, {
+        rows: [createdRow._id!],
+      })
+      expect(res[0]._id).toEqual(createdRow._id)
+      expect(res[0].tableId).toEqual(table._id!)
+      await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
+    })
+
     it("should be able to bulk delete rows, including a row that doesn't exist", async () => {
       const createdRow = await config.api.row.save(table._id!, {})
       const createdRow2 = await config.api.row.save(table._id!, {})
