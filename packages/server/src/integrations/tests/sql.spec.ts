@@ -162,7 +162,7 @@ describe("SQL query builder", () => {
     const query = sql._query(generateRelationshipJson({ schema: "production" }))
     expect(query).toEqual({
       bindings: [limit, relationshipLimit],
-      sql: `with "paginated" as (select "brands".* from "production"."brands" order by "test"."id" asc limit $1) select "brands".*, (select json_agg(json_build_object('product_id',"products"."product_id",'product_name',"products"."product_name",'brand_id',"products"."brand_id")) from (select "products".* from "production"."products" as "products" where "products"."brand_id" = "brands"."brand_id" order by "products"."brand_id" asc limit $2) as "products") as "products" from "paginated" as "brands" order by "test"."id" asc`,
+      sql: `with "paginated" as (select "brands".* from "production"."brands" order by "test"."id" asc limit $1) select "brands".*, (select json_agg(json_build_object('brand_id',"products"."brand_id",'product_id',"products"."product_id",'product_name',"products"."product_name")) from (select "products".* from "production"."products" as "products" where "products"."brand_id" = "brands"."brand_id" order by "products"."brand_id" asc limit $2) as "products") as "products" from "paginated" as "brands" order by "test"."id" asc`,
     })
   })
 
@@ -170,7 +170,7 @@ describe("SQL query builder", () => {
     const query = sql._query(generateRelationshipJson())
     expect(query).toEqual({
       bindings: [limit, relationshipLimit],
-      sql: `with "paginated" as (select "brands".* from "brands" order by "test"."id" asc limit $1) select "brands".*, (select json_agg(json_build_object('product_id',"products"."product_id",'product_name',"products"."product_name",'brand_id',"products"."brand_id")) from (select "products".* from "products" as "products" where "products"."brand_id" = "brands"."brand_id" order by "products"."brand_id" asc limit $2) as "products") as "products" from "paginated" as "brands" order by "test"."id" asc`,
+      sql: `with "paginated" as (select "brands".* from "brands" order by "test"."id" asc limit $1) select "brands".*, (select json_agg(json_build_object('brand_id',"products"."brand_id",'product_id',"products"."product_id",'product_name',"products"."product_name")) from (select "products".* from "products" as "products" where "products"."brand_id" = "brands"."brand_id" order by "products"."brand_id" asc limit $2) as "products") as "products" from "paginated" as "brands" order by "test"."id" asc`,
     })
   })
 

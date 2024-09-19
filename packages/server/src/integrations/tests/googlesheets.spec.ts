@@ -208,6 +208,42 @@ describe("Google Sheets Integration", () => {
       expect(row2.name).toEqual("Test Contact 2")
       expect(row2.description).toEqual("original description 2")
     })
+
+    it("can paginate correctly", async () => {
+      await config.api.row.bulkImport(table._id!, {
+        rows: Array.from({ length: 248 }, (_, i) => ({
+          name: `${i}`,
+          description: "",
+        })),
+      })
+
+      let resp = await config.api.row.search(table._id!, {
+        tableId: table._id!,
+        query: {},
+        paginate: true,
+        limit: 10,
+      })
+      let rows = resp.rows
+
+      while (resp.hasNextPage) {
+        resp = await config.api.row.search(table._id!, {
+          tableId: table._id!,
+          query: {},
+          paginate: true,
+          limit: 10,
+          bookmark: resp.bookmark,
+        })
+        rows = rows.concat(resp.rows)
+        if (rows.length > 250) {
+          throw new Error("Too many rows returned")
+        }
+      }
+
+      expect(rows.length).toEqual(250)
+      expect(rows.map(row => row.name)).toEqual(
+        expect.arrayContaining(Array.from({ length: 248 }, (_, i) => `${i}`))
+      )
+    })
   })
 
   describe("update", () => {
@@ -298,6 +334,161 @@ describe("Google Sheets Integration", () => {
 
       expect(mock.cell("A2")).toEqual("Test Contact Updated")
       expect(mock.cell("B2")).toEqual("original description updated")
+    })
+
+    it("should be able to rename a column", async () => {
+      const row = await config.api.row.save(table._id!, {
+        name: "Test Contact",
+        description: "original description",
+      })
+
+      const { name, ...otherColumns } = table.schema
+      const renamedTable = await config.api.table.save({
+        ...table,
+        schema: {
+          ...otherColumns,
+          renamed: {
+            ...table.schema.name,
+          },
+        },
+        _rename: {
+          old: "name",
+          updated: "renamed",
+        },
+      })
+
+      expect(renamedTable.schema.name).not.toBeDefined()
+      expect(renamedTable.schema.renamed).toBeDefined()
+
+      expect(mock.cell("A1")).toEqual("renamed")
+      expect(mock.cell("B1")).toEqual("description")
+      expect(mock.cell("A2")).toEqual("Test Contact")
+      expect(mock.cell("B2")).toEqual("original description")
+      expect(mock.cell("A3")).toEqual(null)
+      expect(mock.cell("B3")).toEqual(null)
+
+      const renamedRow = await config.api.row.get(table._id!, row._id!)
+      expect(renamedRow.renamed).toEqual("Test Contact")
+      expect(renamedRow.description).toEqual("original description")
+      expect(renamedRow.name).not.toBeDefined()
+    })
+
+    // TODO: this gets the error "Sheet is not large enough to fit 27 columns. Resize the sheet first."
+    // eslint-disable-next-line jest/no-commented-out-tests
+    // it("should be able to add a new column", async () => {
+    //   const updatedTable = await config.api.table.save({
+    //     ...table,
+    //     schema: {
+    //       ...table.schema,
+    //       newColumn: {
+    //         name: "newColumn",
+    //         type: FieldType.STRING,
+    //       },
+    //     },
+    //   })
+
+    //   expect(updatedTable.schema.newColumn).toBeDefined()
+
+    //   expect(mock.cell("A1")).toEqual("name")
+    //   expect(mock.cell("B1")).toEqual("description")
+    //   expect(mock.cell("C1")).toEqual("newColumn")
+    // })
+
+    it("should be able to delete a column", async () => {
+      const row = await config.api.row.save(table._id!, {
+        name: "Test Contact",
+        description: "original description",
+      })
+
+      const updatedTable = await config.api.table.save({
+        ...table,
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+        },
+      })
+
+      expect(updatedTable.schema.name).toBeDefined()
+      expect(updatedTable.schema.description).not.toBeDefined()
+
+      // TODO: we don't delete data in deleted columns yet, should we?
+      // expect(mock.cell("A1")).toEqual("name")
+      // expect(mock.cell("B1")).toEqual(null)
+
+      const updatedRow = await config.api.row.get(table._id!, row._id!)
+      expect(updatedRow.name).toEqual("Test Contact")
+      expect(updatedRow.description).not.toBeDefined()
+    })
+  })
+
+  describe("delete", () => {
+    let table: Table
+    beforeEach(async () => {
+      table = await config.api.table.save({
+        name: "Test Table",
+        type: "table",
+        sourceId: datasource._id!,
+        sourceType: TableSourceType.EXTERNAL,
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+          description: {
+            name: "description",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
+
+      await config.api.row.bulkImport(table._id!, {
+        rows: [
+          {
+            name: "Test Contact 1",
+            description: "original description 1",
+          },
+          {
+            name: "Test Contact 2",
+            description: "original description 2",
+          },
+        ],
+      })
+    })
+
+    it("can delete a table", async () => {
+      expect(mock.sheet(table.name)).toBeDefined()
+      await config.api.table.destroy(table._id!, table._rev!)
+      expect(mock.sheet(table.name)).toBeUndefined()
+    })
+
+    it("can delete a row", async () => {
+      const rows = await config.api.row.fetch(table._id!)
+      expect(rows.length).toEqual(2)
+
+      // Because row IDs in Google Sheets are sequential and determined by the
+      // actual row in the sheet, deleting a row will shift the row IDs down by
+      // one. This is why we reverse the rows before deleting them.
+      for (const row of rows.reverse()) {
+        await config.api.row.delete(table._id!, { _id: row._id! })
+      }
+
+      expect(mock.cell("A1")).toEqual("name")
+      expect(mock.cell("B1")).toEqual("description")
+      expect(mock.cell("A2")).toEqual(null)
+      expect(mock.cell("B2")).toEqual(null)
+      expect(mock.cell("A3")).toEqual(null)
+      expect(mock.cell("B3")).toEqual(null)
+
+      const emptyRows = await config.api.row.fetch(table._id!)
+      expect(emptyRows.length).toEqual(0)
     })
   })
 })
