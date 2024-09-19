@@ -339,9 +339,9 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     const tables: Record<string, Table> = {}
     let errors: Record<string, string> = {}
 
-    let promises: Promise<void>[] = []
-    for (const sheet of sheets) {
-      const f = async (sheet: GoogleSpreadsheetWorksheet) => {
+    await utils.parallelForEach(
+      sheets,
+      async sheet => {
         try {
           await sheet.getRows({ limit: 1 })
         } catch (err) {
@@ -353,7 +353,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
           if (
             err.message.startsWith("No values in the header row") ||
-            err.message.startsWith("Header values are not yet loaded")
+            err.message.startsWith("Header values are not yet loaded") ||
+            err.message.startsWith("All your header cells are blank")
           ) {
             errors[
               sheet.title
@@ -365,11 +366,9 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
           // quietly.
           throw err
         }
-      }
-      promises.push(f(sheet))
-    }
-
-    await Promise.all(promises)
+      },
+      { maxConcurrency: 2 }
+    )
 
     for (const sheet of sheets) {
       const id = buildExternalTableId(datasourceId, sheet.title)
