@@ -12,33 +12,29 @@ interface PromiseWithId<T> {
   id: number
 }
 
-export async function parallelForeach<T>(
+export async function parallelForEach<T>(
   items: T[],
   task: (item: T) => Promise<void>,
-  maxConcurrency: number
+  opts?: { maxConcurrency?: number }
 ): Promise<void> {
-  try {
-    let next = 0
-    let inProgress: PromiseWithId<number>[] = []
-    while (next < items.length) {
-      if (inProgress.length === maxConcurrency) {
-        const finished = await Promise.race(inProgress.map(t => t.promise))
-        inProgress = inProgress.filter(task => task.id !== finished)
-      }
-
-      const promise = async (next: number) => {
-        await task(items[next])
-        return next
-      }
-
-      inProgress.push({ promise: promise(next), id: next })
-      next++
+  const { maxConcurrency = 10 } = opts || {}
+  let next = 0
+  let inProgress: PromiseWithId<number>[] = []
+  while (next < items.length) {
+    if (inProgress.length === maxConcurrency) {
+      const finished = await Promise.race(inProgress.map(t => t.promise))
+      inProgress = inProgress.filter(task => task.id !== finished)
     }
-    await Promise.all(inProgress.map(t => t.promise))
-  } catch (e) {
-    console.error(e)
-    throw e
+
+    const promise = async (next: number) => {
+      await task(items[next])
+      return next
+    }
+
+    inProgress.push({ promise: promise(next), id: next })
+    next++
   }
+  await Promise.all(inProgress.map(t => t.promise))
 }
 
 export function filterValueToLabel() {
