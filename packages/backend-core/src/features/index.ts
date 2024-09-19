@@ -10,7 +10,7 @@ export function init(opts?: PostHogOptions) {
     env.POSTHOG_TOKEN &&
     env.POSTHOG_API_HOST &&
     !env.SELF_HOSTED &&
-    env.POSTHOG_FEATURE_FLAGS
+    env.POSTHOG_FEATURE_FLAGS_ENABLED
   ) {
     console.log("initializing posthog client...")
     posthog = new PostHog(env.POSTHOG_TOKEN, {
