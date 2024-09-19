@@ -7,34 +7,43 @@ export function unreachable(
   throw new Error(message)
 }
 
-interface PromiseWithId<T> {
-  promise: Promise<T>
-  id: number
-}
-
-export async function parallelForEach<T>(
+export async function parallelForeach<T>(
   items: T[],
   task: (item: T) => Promise<void>,
-  opts?: { maxConcurrency?: number }
+  maxConcurrency: number
 ): Promise<void> {
-  const { maxConcurrency = 10 } = opts || {}
-  let next = 0
-  let inProgress: PromiseWithId<number>[] = []
-  while (next < items.length) {
-    if (inProgress.length === maxConcurrency) {
-      const finished = await Promise.race(inProgress.map(t => t.promise))
-      inProgress = inProgress.filter(task => task.id !== finished)
-    }
+  const promises: Promise<void>[] = []
+  let index = 0
 
-    const promise = async (next: number) => {
-      await task(items[next])
-      return next
+  const processItem = async (item: T) => {
+    try {
+      await task(item)
+    } finally {
+      processNext()
     }
-
-    inProgress.push({ promise: promise(next), id: next })
-    next++
   }
-  await Promise.all(inProgress.map(t => t.promise))
+
+  const processNext = () => {
+    if (index >= items.length) {
+      // No more items to process
+      return
+    }
+
+    const item = items[index]
+    index++
+
+    const promise = processItem(item)
+    promises.push(promise)
+
+    if (promises.length >= maxConcurrency) {
+      Promise.race(promises).then(processNext)
+    } else {
+      processNext()
+    }
+  }
+  processNext()
+
+  await Promise.all(promises)
 }
 
 export function filterValueToLabel() {
