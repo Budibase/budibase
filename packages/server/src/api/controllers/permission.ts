@@ -1,7 +1,6 @@
 import { permissions, roles, context } from "@budibase/backend-core"
 import {
   UserCtx,
-  Database,
   Role,
   GetResourcePermsResponse,
   ResourcePermissionInfo,
