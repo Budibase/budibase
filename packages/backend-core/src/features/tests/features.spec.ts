@@ -148,6 +148,7 @@ describe("feature flags", () => {
       const env: Partial<typeof environment> = {
         TENANT_FEATURE_FLAGS: environmentFlags,
         SELF_HOSTED: false,
+        POSTHOG_FEATURE_FLAGS_ENABLED: "true",
       }
 
       if (posthogFlags) {
