@@ -89,7 +89,12 @@ class Orchestrator {
     delete triggerOutput.appId
     delete triggerOutput.metadata
     // step zero is never used as the template string is zero indexed for customer facing
-    this.context = { steps: [{}], trigger: triggerOutput }
+    this.context = {
+      steps: [{}],
+      stepsByName: {},
+      trigger: triggerOutput,
+    }
+
     this.automation = automation
     // create an emitter which has the chain count for this automation run in it, so it can block
     // excessive chaining if required
@@ -451,6 +456,9 @@ class Orchestrator {
         outputs: tempOutput,
         inputs: steps[stepToLoopIndex].inputs,
       })
+
+      const stepName = steps[stepToLoopIndex].name || steps[stepToLoopIndex].id
+      this.context.stepsByName![stepName] = tempOutput
       this.context.steps[this.context.steps.length] = tempOutput
       this.context.steps = this.context.steps.filter(
         item => !item.hasOwnProperty.call(item, "currentItem")
@@ -555,8 +563,13 @@ class Orchestrator {
             loopIteration
           )
         }
+
         const stepFn = await this.getStepFunctionality(step.stepId)
-        let inputs = await processObject(originalStepInput, this.context)
+        let inputs = await this.addContextAndProcess(
+          originalStepInput,
+          this.context
+        )
+
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
 
         const outputs = await stepFn({
@@ -583,6 +596,18 @@ class Orchestrator {
     return null
   }
 
+  private async addContextAndProcess(inputs: any, context: any) {
+    const processContext = {
+      ...context,
+      steps: {
+        ...context.steps,
+        ...context.stepsByName,
+      },
+    }
+
+    return processObject(inputs, processContext)
+  }
+
   private handleStepOutput(
     step: AutomationStep,
     outputs: any,
@@ -600,6 +625,8 @@ class Orchestrator {
     } else {
       this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
       this.context.steps[this.context.steps.length] = outputs
+      const stepName = step.name || step.id
+      this.context.stepsByName![stepName] = outputs
     }
   }
 }
