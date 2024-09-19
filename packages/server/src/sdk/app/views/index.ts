@@ -23,10 +23,7 @@ import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"
 import * as external from "./external"
 import sdk from "../../../sdk"
-import {
-  updatePermissionOnRole,
-  PermissionUpdateType,
-} from "src/api/controllers/permission"
+import { updatePermissionOnRole, PermissionUpdateType } from "../permissions"
 
 function pickApi(tableId: any) {
   if (isExternalTableID(tableId)) {
