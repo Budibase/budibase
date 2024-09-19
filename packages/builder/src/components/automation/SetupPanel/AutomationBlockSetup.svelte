@@ -106,6 +106,9 @@
   $: environmentBindings = buildEnvironmentBindings($memoEnvVariables)
   $: bindings = [...automationBindings, ...environmentBindings]
 
+  $: bindingsx = automationStore.actions.getPathBindings($memoBlock)
+  // $: console.log(bindingsx)
+
   $: getInputData(testData, $memoBlock.inputs)
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
@@ -522,6 +525,9 @@
     })
    */
   const onChange = Utils.sequential(async update => {
+    if (1 == 1) {
+      console.error("ABORT UPDATE")
+    }
     const request = cloneDeep(update)
     // Process app trigger updates
     if (isTrigger && !isTestModal) {

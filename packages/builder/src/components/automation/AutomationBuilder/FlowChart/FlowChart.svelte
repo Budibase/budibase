@@ -12,6 +12,20 @@
   import { Icon, notifications, Modal, Toggle } from "@budibase/bbui"
   import { ActionStepID } from "constants/backend/automations"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+  import StepNode from "./StepNode.svelte"
+
+  // Test test test
+  import { FIELDS } from "constants/backend"
+  import { tables } from "stores/builder"
+  import { AutomationEventType } from "@budibase/types"
+  import { writable } from "svelte/store"
+  import { setContext } from "svelte"
+
+  const test = writable({
+    someupdate: () => {
+      console.log("updated")
+    },
+  })
 
   export let automation
 
@@ -19,6 +33,7 @@
   let confirmDeleteDialog
   let scrolling = false
   $: blocks = getBlocks(automation).filter(x => x.stepId !== ActionStepID.LOOP)
+
   const getBlocks = automation => {
     let blocks = []
     if (automation.definition.trigger) {
@@ -49,6 +64,14 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="header" class:scrolling>
+  <button
+    on:click={() => {
+      automationStore.actions.traverse($selectedAutomation)
+      console.log($automationStore)
+    }}
+  >
+    TEST
+  </button>
   <div class="header-left">
     <UndoRedoControl store={automationHistoryStore} />
   </div>
@@ -89,7 +112,21 @@
 </div>
 <div class="canvas" on:scroll={handleScroll}>
   <div class="content">
-    {#each blocks as block, idx (block.id)}
+    <!--
+      Separate out the Trigger node?
+    -->
+    <div class="root">
+      {#each blocks as block, idx (block.id)}
+        <StepNode
+          step={blocks[idx]}
+          stepIdx={idx}
+          isLast={blocks?.length - 1 === idx}
+          {automation}
+        />
+      {/each}
+    </div>
+
+    <!-- {#each blocks as block, idx (block.id)}
       <div
         class="block"
         animate:flip={{ duration: 500 }}
@@ -100,7 +137,7 @@
           <FlowItem {testDataModal} {block} {idx} />
         {/if}
       </div>
-    {/each}
+    {/each} -->
   </div>
 </div>
 <ConfirmDialog
@@ -133,18 +170,36 @@
     padding-bottom: 40px;
   }
 
-  .block {
+  .root {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .root :global(.block) {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
   }
 
+  .root :global(.blockSection) {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* .block {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+  } */
+
   .content {
     flex-grow: 1;
     padding: 23px 23px 80px;
     box-sizing: border-box;
-    overflow-x: hidden;
+    /* overflow-x: hidden; */
   }
 
   .header.scrolling {
@@ -163,10 +218,12 @@
     flex: 0 0 48px;
     padding-right: var(--spacing-xl);
   }
+
   .controls {
     display: flex;
     gap: var(--spacing-xl);
   }
+
   .buttons {
     display: flex;
     justify-content: flex-end;

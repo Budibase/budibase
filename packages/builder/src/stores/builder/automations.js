@@ -3,9 +3,11 @@ import { API } from "api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { createHistoryStore } from "stores/builder/history"
+import { environment, licensing } from "stores/portal"
 import { notifications } from "@budibase/bbui"
-import { updateReferencesInObject } from "dataBinding"
-import { AutomationTriggerStepId } from "@budibase/types"
+import { updateReferencesInObject, getEnvironmentBindings } from "dataBinding"
+import { AutomationTriggerStepId, AutomationEventType } from "@budibase/types"
+import { FIELDS } from "constants/backend"
 import {
   updateBindingsInSteps,
   getNewStepName,
@@ -22,6 +24,10 @@ const initialAutomationState = {
   },
   selectedAutomationId: null,
   automationDisplayData: {},
+
+  // registered on screen.
+  // may not be the right store
+  blocks: {},
 }
 
 // If this functions, remove the actions elements
@@ -68,6 +74,356 @@ const getFinalDefinitions = (triggers, actions) => {
 }
 
 const automationActions = store => ({
+  // Should this be in the store?
+  // or just a context item.
+  registerBlock: (block, pathTo) => {
+    // console.log("Register ", block)
+    /*
+      Traverse before even rendering
+      Push all data into a core location i.e here
+
+      Derived store?
+      blocks:
+        {
+          [step.id]:{
+            path: [{step:2, id: abc123 },{branch:0, step:1, id: xyz789}]
+            bindings: []
+            // byName
+            // byStepIdx
+          }
+        }
+    */
+    store.update(state => {
+      state.blocks = {
+        ...state.blocks,
+        [block.id]: {
+          bindings: block.inputs.text,
+        },
+      }
+      return state
+    })
+  },
+  // build and store ONCE
+  // make it derived?
+  buildEnvironmentBindings: () => {
+    if (get(licensing).environmentVariablesEnabled) {
+      return getEnvironmentBindings().map(binding => {
+        return {
+          ...binding,
+          display: {
+            ...binding.display,
+            rank: 98,
+          },
+        }
+      })
+    }
+    return []
+  },
+  //TESTING retrieve all preceding
+  getAvailableBindings: (block, automation) => {
+    if (!block || !automation) {
+      return []
+    }
+
+    // Find previous steps to the selected one
+    let allSteps = [...automation.steps]
+
+    if (automation.trigger) {
+      allSteps = [automation.trigger, ...allSteps]
+    }
+
+    if (1 == 1) {
+      return
+    }
+    let blockIdx = allSteps.findIndex(step => step.id === block.id)
+
+    // Extract all outputs from all previous steps as available bindingsx§x
+    let bindings = []
+    let loopBlockCount = 0
+    const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
+      if (!name) return
+      const runtimeBinding = determineRuntimeBinding(
+        name,
+        idx,
+        isLoopBlock,
+        bindingName
+      )
+      const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
+      bindings.push(
+        createBindingObject(
+          name,
+          value,
+          icon,
+          idx,
+          loopBlockCount,
+          isLoopBlock,
+          runtimeBinding,
+          categoryName,
+          bindingName
+        )
+      )
+    }
+
+    const determineRuntimeBinding = (name, idx, isLoopBlock, bindingName) => {
+      let runtimeName
+
+      /* Begin special cases for generating custom schemas based on triggers */
+      if (
+        idx === 0 &&
+        automation.trigger?.event === AutomationEventType.APP_TRIGGER
+      ) {
+        return `trigger.fields.${name}`
+      }
+
+      if (
+        idx === 0 &&
+        (automation.trigger?.event === AutomationEventType.ROW_UPDATE ||
+          automation.trigger?.event === AutomationEventType.ROW_SAVE)
+      ) {
+        let noRowKeywordBindings = ["id", "revision", "oldRow"]
+        if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
+      }
+      /* End special cases for generating custom schemas based on triggers */
+
+      let hasUserDefinedName = automation.stepNames?.[allSteps[idx]?.id]
+      if (isLoopBlock) {
+        runtimeName = `loop.${name}`
+      } else if (block.name.startsWith("JS")) {
+        runtimeName = hasUserDefinedName
+          ? `stepsByName[${bindingName}].${name}`
+          : `steps[${idx - loopBlockCount}].${name}`
+      } else {
+        runtimeName = hasUserDefinedName
+          ? `stepsByName.${bindingName}.${name}`
+          : `steps.${idx - loopBlockCount}.${name}`
+      }
+      return idx === 0 ? `trigger.${name}` : runtimeName
+    }
+
+    const determineCategoryName = (idx, isLoopBlock, bindingName) => {
+      if (idx === 0) return "Trigger outputs"
+      if (isLoopBlock) return "Loop Outputs"
+      return bindingName
+        ? `${bindingName} outputs`
+        : `Step ${idx - loopBlockCount} outputs`
+    }
+
+    const createBindingObject = (
+      name,
+      value,
+      icon,
+      idx,
+      loopBlockCount,
+      isLoopBlock,
+      runtimeBinding,
+      categoryName,
+      bindingName
+    ) => {
+      const field = Object.values(FIELDS).find(
+        field => field.type === value.type && field.subtype === value.subtype
+      )
+      return {
+        readableBinding:
+          bindingName && !isLoopBlock
+            ? `steps.${bindingName}.${name}`
+            : runtimeBinding,
+        runtimeBinding,
+        type: value.type,
+        description: value.description,
+        icon,
+        category: categoryName,
+        display: {
+          type: field?.name || value.type,
+          name,
+          rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
+        },
+      }
+    }
+
+    for (let idx = 0; idx < blockIdx; idx++) {
+      let wasLoopBlock = allSteps[idx - 1]?.stepId === ActionStepID.LOOP
+      let isLoopBlock =
+        allSteps[idx]?.stepId === ActionStepID.LOOP &&
+        allSteps.some(x => x.blockToLoop === block.id)
+      let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
+      if (allSteps[idx]?.name.includes("Looping")) {
+        isLoopBlock = true
+        loopBlockCount++
+      }
+      let bindingName =
+        automation.stepNames?.[allSteps[idx].id] || allSteps[idx].name
+
+      if (isLoopBlock) {
+        schema = {
+          currentItem: {
+            type: "string",
+            description: "the item currently being executed",
+          },
+        }
+      }
+
+      if (
+        idx === 0 &&
+        automation.trigger?.event === AutomationEventType.APP_TRIGGER
+      ) {
+        schema = Object.fromEntries(
+          Object.keys(automation.trigger.inputs.fields || []).map(key => [
+            key,
+            { type: automation.trigger.inputs.fields[key] },
+          ])
+        )
+      }
+      if (
+        (idx === 0 &&
+          automation.trigger.event === AutomationEventType.ROW_UPDATE) ||
+        (idx === 0 && automation.trigger.event === AutomationEventType.ROW_SAVE)
+      ) {
+        let table = $tables.list.find(
+          table => table._id === automation.trigger.inputs.tableId
+        )
+        // We want to generate our own schema for the bindings from the table schema itself
+        for (const key in table?.schema) {
+          schema[key] = {
+            type: table.schema[key].type,
+            subtype: table.schema[key].subtype,
+          }
+        }
+        // remove the original binding
+        delete schema.row
+      }
+      let icon =
+        idx === 0
+          ? automation.trigger.icon
+          : isLoopBlock
+          ? "Reuse"
+          : allSteps[idx].icon
+
+      if (wasLoopBlock) {
+        loopBlockCount++
+        schema = cloneDeep(allSteps[idx - 1]?.schema?.outputs?.properties)
+      }
+      Object.entries(schema).forEach(([name, value]) => {
+        addBinding(name, value, icon, idx, isLoopBlock, bindingName)
+      })
+    }
+
+    // for (let idx = 0; idx < blockIdx; idx++) {
+    //   let wasLoopBlock = allSteps[idx - 1]?.stepId === ActionStepID.LOOP
+    //   let isLoopBlock =
+    //     allSteps[idx]?.stepId === ActionStepID.LOOP &&
+    //     allSteps.some(x => x.blockToLoop === block.id)
+    //   let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
+    //   if (allSteps[idx]?.name.includes("Looping")) {
+    //     isLoopBlock = true
+    //     loopBlockCount++
+    //   }
+    //   let bindingName =
+    //     automation.stepNames?.[allSteps[idx].id] || allSteps[idx].name
+
+    //   if (isLoopBlock) {
+    //     schema = {
+    //       currentItem: {
+    //         type: "string",
+    //         description: "the item currently being executed",
+    //       },
+    //     }
+    //   }
+
+    //   if (
+    //     idx === 0 &&
+    //     automation.trigger?.event === AutomationEventType.APP_TRIGGER
+    //   ) {
+    //     schema = Object.fromEntries(
+    //       Object.keys(automation.trigger.inputs.fields || []).map(key => [
+    //         key,
+    //         { type: automation.trigger.inputs.fields[key] },
+    //       ])
+    //     )
+    //   }
+    //   if (
+    //     (idx === 0 &&
+    //       automation.trigger.event === AutomationEventType.ROW_UPDATE) ||
+    //     (idx === 0 && automation.trigger.event === AutomationEventType.ROW_SAVE)
+    //   ) {
+    //     let table = $tables.list.find(
+    //       table => table._id === automation.trigger.inputs.tableId
+    //     )
+    //     // We want to generate our own schema for the bindings from the table schema itself
+    //     for (const key in table?.schema) {
+    //       schema[key] = {
+    //         type: table.schema[key].type,
+    //         subtype: table.schema[key].subtype,
+    //       }
+    //     }
+    //     // remove the original binding
+    //     delete schema.row
+    //   }
+    //   let icon =
+    //     idx === 0
+    //       ? automation.trigger.icon
+    //       : isLoopBlock
+    //       ? "Reuse"
+    //       : allSteps[idx].icon
+
+    //   if (wasLoopBlock) {
+    //     loopBlockCount++
+    //     schema = cloneDeep(allSteps[idx - 1]?.schema?.outputs?.properties)
+    //   }
+    //   Object.entries(schema).forEach(([name, value]) => {
+    //     addBinding(name, value, icon, idx, isLoopBlock, bindingName)
+    //   })
+    // }
+    return bindings
+  },
+
+  // $: automationStore.actions.traverse($selectedAutomation)
+  getPathBindings: step => {
+    console.log("Hello world", step)
+    // get(store)
+    // build the full path worth of bindings
+    /*
+      [..globals],
+      blocks[...step.id].binding,
+      ppath.
+    */
+    return []
+  },
+  traverse: automation => {
+    let blocks = []
+    if (automation.definition.trigger) {
+      blocks.push(automation.definition.trigger)
+    }
+    blocks = blocks.concat(automation.definition.steps || [])
+
+    const treeTraverse = (block, pathTo, stepIdx, branchIdx) => {
+      const pathToCurrentNode = [
+        ...(pathTo || []),
+        {
+          ...(Number.isInteger(branchIdx) ? { branchIdx } : {}),
+          stepIdx,
+          id: block.id,
+          ...(block.stepId === "TRIGGER" ? { isTrigger: true } : {}),
+        },
+      ]
+      const branches = block.inputs?.branches || []
+
+      branches.forEach((branch, bIdx) => {
+        block.inputs?.children[branch.name].forEach((bBlock, sIdx) => {
+          treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx)
+        })
+      })
+
+      if (block.stepId !== "BRANCH") {
+        //dev, log.text
+        console.log(pathToCurrentNode, block.inputs.text)
+        //store.actions.registerBlock(block)
+      }
+      store.actions.registerBlock(block)
+    }
+
+    //maybe a cfg block for cleanliness
+    blocks.forEach((block, idx) => treeTraverse(block, null, idx))
+  },
   definitions: async () => {
     const response = await API.getAutomationDefinitions()
     store.update(state => {
@@ -285,7 +641,7 @@ const automationActions = store => ({
       inputs: blockDefinition.inputs || {},
       stepId,
       type,
-      id: generate(),
+      id: generate(), // this can this be relied on
     }
     newName = getNewStepName(get(selectedAutomation), newStep)
     newStep.name = newName
