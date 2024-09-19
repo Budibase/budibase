@@ -15,7 +15,9 @@ export const removeInvalidFilters = (
   const result = cloneDeep(filters)
 
   validFields = validFields.map(f => f.toLowerCase())
-  for (const filterKey of Object.keys(result) as (keyof SearchFilters)[]) {
+  for (const filterKey of Object.keys(
+    result || {}
+  ) as (keyof SearchFilters)[]) {
     const filter = result[filterKey]
     if (!filter || typeof filter !== "object") {
       continue
@@ -24,7 +26,7 @@ export const removeInvalidFilters = (
       const resultingConditions: SearchFilters[] = []
       for (const condition of filter.conditions) {
         const resultingCondition = removeInvalidFilters(condition, validFields)
-        if (Object.keys(resultingCondition).length) {
+        if (Object.keys(resultingCondition || {}).length) {
           resultingConditions.push(resultingCondition)
         }
       }

@@ -12,7 +12,7 @@
     stateKey: "selectedViewId",
     validate: id => $viewsV2.list?.some(view => view.id === id),
     update: viewsV2.select,
-    fallbackUrl: "../../",
+    fallbackUrl: "../",
     store: viewsV2,
     routify,
     decode: decodeURIComponent,

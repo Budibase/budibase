@@ -195,7 +195,7 @@
         {#if isTrigger && triggerInfo}
           <InlineAlert
             header={triggerInfo.type}
-            message={`This trigger is tied to the row action ${triggerInfo.rowAction.name} on your ${triggerInfo.table.name} table`}
+            message={`This trigger is tied to the "${triggerInfo.rowAction.name}" row action in your ${triggerInfo.table.name} table`}
           />
         {/if}
         {#if lastStep}

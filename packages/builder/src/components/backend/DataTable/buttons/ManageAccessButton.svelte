@@ -1,23 +1,31 @@
 <script>
-  import { ActionButton, Modal } from "@budibase/bbui"
+  import { ActionButton } from "@budibase/bbui"
   import { permissions } from "stores/builder"
   import ManageAccessModal from "../modals/ManageAccessModal.svelte"
+  import DetailPopover from "components/common/DetailPopover.svelte"
+  import EditRolesButton from "./EditRolesButton.svelte"
 
   export let resourceId
-  export let disabled = false
 
-  let modal
   let resourcePermissions
+  let showPopover = true
 
-  async function openModal() {
-    resourcePermissions = await permissions.forResourceDetailed(resourceId)
-    modal.show()
+  $: fetchPermissions(resourceId)
+
+  const fetchPermissions = async id => {
+    resourcePermissions = await permissions.forResourceDetailed(id)
   }
 </script>
 
-<ActionButton icon="LockClosed" quiet on:click={openModal} {disabled}>
-  Access
-</ActionButton>
-<Modal bind:this={modal}>
-  <ManageAccessModal {resourceId} permissions={resourcePermissions} />
-</Modal>
+<DetailPopover title="Manage access" {showPopover}>
+  <svelte:fragment slot="anchor" let:open>
+    <ActionButton icon="LockClosed" selected={open} quiet>Access</ActionButton>
+  </svelte:fragment>
+  {#if resourcePermissions}
+    <ManageAccessModal {resourceId} permissions={resourcePermissions} />
+  {/if}
+  <EditRolesButton
+    on:show={() => (showPopover = false)}
+    on:hide={() => (showPopover = true)}
+  />
+</DetailPopover>
