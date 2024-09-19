@@ -1,4 +1,3 @@
-import * as pro from "@budibase/pro"
 import { verifyAIConfig } from "../configs"
 import { TestConfiguration, structures } from "../../../../tests"
 import { AIInnerConfig } from "@budibase/types"
