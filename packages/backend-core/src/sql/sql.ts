@@ -930,7 +930,8 @@ class InternalBuilder {
       }
       const relatedTable = meta.tables?.[toTable]
       const toAlias = aliases?.[toTable] || toTable,
-        fromAlias = aliases?.[fromTable] || fromTable
+        fromAlias = aliases?.[fromTable] || fromTable,
+        throughAlias = (throughTable && aliases?.[throughTable]) || throughTable
       let toTableWithSchema = this.tableNameWithSchema(toTable, {
         alias: toAlias,
         schema: endpoint.schema,
@@ -961,30 +962,38 @@ class InternalBuilder {
         // add sorting to get consistent order
         .orderBy(primaryKey)
 
-      // many-to-many relationship with junction table
-      if (throughTable && toPrimary && fromPrimary) {
-        const throughAlias = aliases?.[throughTable] || throughTable
+      const addCorrelatedWhere = (
+        query: Knex.QueryBuilder,
+        column1: string,
+        column2: string
+      ) => {
+        return query.where(
+          column1,
+          "=",
+          knex.raw(this.quotedIdentifier(column2))
+        )
+      }
+
+      const isManyToMany = throughTable && toPrimary && fromPrimary
+      let correlatedTo = isManyToMany
+          ? `${throughAlias}.${fromKey}`
+          : `${toAlias}.${toKey}`,
+        correlatedFrom = isManyToMany
+          ? `${fromAlias}.${fromPrimary}`
+          : `${fromAlias}.${fromKey}`
+      // many-to-many relationship needs junction table join
+      if (isManyToMany) {
         let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
           alias: throughAlias,
           schema: endpoint.schema,
         })
-        subQuery = subQuery
-          .join(throughTableWithSchema, function () {
-            this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
-          })
-          .where(
-            `${throughAlias}.${fromKey}`,
-            "=",
-            knex.raw(this.quotedIdentifier(`${fromAlias}.${fromPrimary}`))
-          )
+        subQuery = subQuery.join(throughTableWithSchema, function () {
+          this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
+        })
       }
-      // one-to-many relationship with foreign key
-      else {
-        subQuery = subQuery.where(
-          `${toAlias}.${toKey}`,
-          "=",
-          knex.raw(this.quotedIdentifier(`${fromAlias}.${fromKey}`))
-        )
+      // my-sql needs the where statement to be part of main query, not sub-query
+      if (sqlClient !== SqlClient.MY_SQL) {
+        subQuery = addCorrelatedWhere(subQuery, correlatedTo, correlatedFrom)
       }
 
       const standardWrap = (select: string): Knex.QueryBuilder => {
@@ -1009,8 +1018,10 @@ class InternalBuilder {
           )
           break
         case SqlClient.MY_SQL:
-          wrapperQuery = subQuery.select(
-            knex.raw(`json_arrayagg(json_object(${fieldList}))`)
+          wrapperQuery = addCorrelatedWhere(
+            standardWrap(`json_arrayagg(json_object(${fieldList}))`),
+            isManyToMany ? fromKey! : toKey!,
+            correlatedFrom
           )
           break
         case SqlClient.ORACLE:
