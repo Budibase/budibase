@@ -108,7 +108,7 @@ jobs:
       - name: Pull testcontainers images
         run: |
           docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.3.3 &
+          docker pull budibase/couchdb:v3.3.3-sqs-v2.1.1 &
           docker pull redis &
 
           wait $(jobs -p)
@@ -179,7 +179,7 @@ jobs:
           docker pull minio/minio &
           docker pull redis &
           docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.3.3 &
+          docker pull budibase/couchdb:v3.3.3-sqs-v2.1.1 &
 
           wait $(jobs -p)
 
