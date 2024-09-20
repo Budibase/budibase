@@ -138,7 +138,7 @@ async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
   const { tableId } = utils.getSourceId(ctx)
 
   const processedRows = request.rows.map(row => {
-    let processedRow: Row = typeof row == "string" ? { _id: row } : row
+    let processedRow: Row = typeof row == "string" ? { _id: row, tableId } : row
     return !processedRow._rev
       ? addRev(fixRow(processedRow, ctx.params), tableId)
       : fixRow(processedRow, ctx.params)

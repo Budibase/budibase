@@ -22,6 +22,7 @@ import type {
   CellPadding,
   Color,
   GridRange,
+  DataSourceSheetProperties,
 } from "google-spreadsheet/src/lib/types/sheets-types"
 
 const BLACK: Color = { red: 0, green: 0, blue: 0 }
@@ -91,7 +92,7 @@ interface UpdateValuesResponse {
 
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddSheetRequest
 interface AddSheetRequest {
-  properties: WorksheetProperties
+  properties: Partial<WorksheetProperties>
 }
 
 // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/response#AddSheetResponse
@@ -234,6 +235,38 @@ export class GoogleSheetsMock {
 
     this.mockAuth()
     this.mockAPI()
+  }
+
+  public cell(cell: string): Value | undefined {
+    const cellData = this.cellData(cell)
+    if (!cellData) {
+      return undefined
+    }
+    return this.cellValue(cellData)
+  }
+
+  public set(cell: string, value: Value): void {
+    const cellData = this.cellData(cell)
+    if (!cellData) {
+      throw new Error(`Cell ${cell} not found`)
+    }
+    cellData.userEnteredValue = this.createValue(value)
+  }
+
+  public sheet(name: string | number): Sheet | undefined {
+    if (typeof name === "number") {
+      return this.getSheetById(name)
+    }
+    return this.getSheetByName(name)
+  }
+
+  public createSheet(opts: Partial<WorksheetProperties>): Sheet {
+    const properties = this.defaultWorksheetProperties(opts)
+    if (this.getSheetByName(properties.title)) {
+      throw new Error(`Sheet ${properties.title} already exists`)
+    }
+    const resp = this.handleAddSheet({ properties })
+    return this.getSheetById(resp.properties.sheetId)!
   }
 
   private route(
@@ -462,35 +495,39 @@ export class GoogleSheetsMock {
     return response
   }
 
-  private handleAddSheet(request: AddSheetRequest): AddSheetResponse {
-    const properties: Omit<WorksheetProperties, "dataSourceSheetProperties"> = {
+  private defaultWorksheetProperties(
+    opts: Partial<WorksheetProperties>
+  ): WorksheetProperties {
+    return {
       index: this.spreadsheet.sheets.length,
       hidden: false,
       rightToLeft: false,
       tabColor: BLACK,
       tabColorStyle: { rgbColor: BLACK },
       sheetType: "GRID",
-      title: request.properties.title,
+      title: "Sheet",
       sheetId: this.spreadsheet.sheets.length,
       gridProperties: {
         rowCount: 100,
         columnCount: 26,
-        frozenRowCount: 0,
-        frozenColumnCount: 0,
-        hideGridlines: false,
-        rowGroupControlAfter: false,
-        columnGroupControlAfter: false,
       },
+      dataSourceSheetProperties: {} as DataSourceSheetProperties,
+      ...opts,
     }
+  }
 
+  private handleAddSheet(request: AddSheetRequest): AddSheetResponse {
+    const properties = this.defaultWorksheetProperties(request.properties)
     this.spreadsheet.sheets.push({
-      properties: properties as WorksheetProperties,
-      data: [this.createEmptyGrid(100, 26)],
+      properties,
+      data: [
+        this.createEmptyGrid(
+          properties.gridProperties.rowCount,
+          properties.gridProperties.columnCount
+        ),
+      ],
     })
-
-    // dataSourceSheetProperties is only returned by the API if the sheet type is
-    // DATA_SOURCE, which we aren't using, so sadly we need to cast here.
-    return { properties: properties as WorksheetProperties }
+    return { properties }
   }
 
   private handleDeleteRange(request: DeleteRangeRequest) {
@@ -765,21 +802,6 @@ export class GoogleSheetsMock {
     const { sheetId, startColumnIndex, startRowIndex } =
       this.parseA1Notation(cell)
     return this.getCellNumericIndexes(sheetId, startRowIndex, startColumnIndex)
-  }
-
-  public cell(cell: string): Value | undefined {
-    const cellData = this.cellData(cell)
-    if (!cellData) {
-      return undefined
-    }
-    return this.cellValue(cellData)
-  }
-
-  public sheet(name: string | number): Sheet | undefined {
-    if (typeof name === "number") {
-      return this.getSheetById(name)
-    }
-    return this.getSheetByName(name)
   }
 
   private getCellNumericIndexes(
