@@ -53,7 +53,7 @@
   selected={filterCount > 0}
   accentColor="#004EA6"
 >
-  {filterCount ? `Filter (${filterCount})` : "Filter"}
+  {filterCount ? `Filter: ${filterCount}` : "Filter"}
 </ActionButton>
 
 <Drawer
