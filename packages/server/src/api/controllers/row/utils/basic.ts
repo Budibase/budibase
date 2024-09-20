@@ -1,5 +1,12 @@
 // need to handle table name + field or just field, depending on if relationships used
-import { FieldSchema, FieldType, Row, Table, JsonTypes } from "@budibase/types"
+import {
+  FieldSchema,
+  FieldType,
+  Row,
+  Table,
+  JsonTypes,
+  Aggregation,
+} from "@budibase/types"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
@@ -84,12 +91,14 @@ export function basicProcessing({
   tables,
   isLinked,
   sqs,
+  aggregations,
 }: {
   row: Row
   table: Table
   tables: Table[]
   isLinked: boolean
   sqs?: boolean
+  aggregations?: Aggregation[]
 }): Row {
   const thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
@@ -108,6 +117,11 @@ export function basicProcessing({
       thisRow[fieldName] = value
     }
   }
+
+  for (let aggregation of aggregations || []) {
+    thisRow[aggregation.name] = row[aggregation.name]
+  }
+
   let columns: string[] = Object.keys(table.schema)
   if (!sqs) {
     thisRow._id = generateIdForRow(row, table, isLinked)

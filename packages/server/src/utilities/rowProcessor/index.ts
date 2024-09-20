@@ -11,6 +11,7 @@ import {
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import {
+  Aggregation,
   AutoFieldSubType,
   FieldType,
   IdentityType,
@@ -250,6 +251,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     fromRow?: Row
     skipBBReferences?: boolean
     fromViewId?: string
+    aggregations?: Aggregation[]
   } = {
     squash: true,
     preserveLinks: false,
@@ -357,6 +359,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       fromViewId: opts?.fromViewId,
     })
   }
+
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
   if (isExternal || (await features.flags.isEnabled("SQS"))) {
@@ -385,9 +388,15 @@ export async function outputProcessing<T extends Row[] | Row>(
     const tableFields = Object.keys(table.schema).filter(
       f => table.schema[f].visible !== false
     )
+
     const fields = [...tableFields, ...protectedColumns].map(f =>
       f.toLowerCase()
     )
+
+    for (const aggregation of opts.aggregations || []) {
+      fields.push(aggregation.name.toLowerCase())
+    }
+
     for (const row of enriched) {
       for (const key of Object.keys(row)) {
         if (!fields.includes(key.toLowerCase())) {

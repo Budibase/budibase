@@ -20,10 +20,11 @@ import {
   Row,
   Table,
   TableSchema,
-  ViewFieldMetadata,
+  ViewUIFieldMetadata,
   ViewV2,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { helpers } from "@budibase/shared-core"
 
 export { IncludeDocs, getLinkDocuments, createLinkView } from "./linkUtils"
 
@@ -264,12 +265,19 @@ export async function squashLinks<T = Row[] | Row>(
     FeatureFlag.ENRICHED_RELATIONSHIPS
   )
 
-  let viewSchema: Record<string, ViewFieldMetadata> = {}
-  if (options?.fromViewId && allowRelationshipSchemas) {
+  let viewSchema: Record<string, ViewUIFieldMetadata> = {}
+  if (options?.fromViewId) {
     const view = Object.values(table.views || {}).find(
       (v): v is ViewV2 => sdk.views.isV2(v) && v.id === options?.fromViewId
     )
-    viewSchema = view?.schema || {}
+
+    if (view && helpers.views.isCalculationView(view)) {
+      return enriched
+    }
+
+    if (allowRelationshipSchemas && view) {
+      viewSchema = view.schema || {}
+    }
   }
 
   // will populate this as we find them

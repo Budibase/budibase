@@ -2,6 +2,7 @@ import * as utils from "../../../../db/utils"
 
 import { context } from "@budibase/backend-core"
 import {
+  Aggregation,
   Ctx,
   DatasourcePlusQueryResponse,
   FieldType,
@@ -129,7 +130,7 @@ export async function sqlOutputProcessing(
   table: Table,
   tables: Record<string, Table>,
   relationships: RelationshipsJson[],
-  opts?: { sqs?: boolean }
+  opts?: { sqs?: boolean; aggregations?: Aggregation[] }
 ): Promise<Row[]> {
   if (isKnexEmptyReadResponse(rows)) {
     return []
@@ -150,6 +151,7 @@ export async function sqlOutputProcessing(
       tables: Object.values(tables),
       isLinked: false,
       sqs: opts?.sqs,
+      aggregations: opts?.aggregations,
     })
     if (thisRow._id == null) {
       throw new Error("Unable to generate row ID for SQL rows")

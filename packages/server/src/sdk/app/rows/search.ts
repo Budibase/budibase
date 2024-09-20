@@ -37,6 +37,7 @@ export async function search(
   return await tracer.trace("search", async span => {
     span?.addTags({
       tableId: options.tableId,
+      viewId: options.viewId,
       query: options.query,
       sort: options.sort,
       sortOrder: options.sortOrder,
