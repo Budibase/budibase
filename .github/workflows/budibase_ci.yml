@@ -186,6 +186,8 @@ jobs:
       - run: yarn --frozen-lockfile
 
       - name: Test server
+        env:
+          DEBUG: "testcontainers*"
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
             node scripts/run-affected.js --task=test --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
