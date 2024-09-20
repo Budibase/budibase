@@ -140,10 +140,6 @@ export const createLicensingStore = () => {
         Constants.Features.VIEW_PERMISSIONS
       )
 
-      const isViewReadonlyColumnsEnabled = license.features.includes(
-        Constants.Features.VIEW_READONLY_COLUMNS
-      )
-
       const budibaseAIEnabled = license.features.includes(
         Constants.Features.BUDIBASE_AI
       )
@@ -173,7 +169,6 @@ export const createLicensingStore = () => {
           triggerAutomationRunEnabled,
           isViewPermissionsEnabled,
           perAppBuildersEnabled,
-          isViewReadonlyColumnsEnabled,
         }
       })
     },
