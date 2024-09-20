@@ -1,12 +1,13 @@
-import { writable, get, derived } from "svelte/store"
+import { get, derived } from "svelte/store"
 import { FieldType, FilterGroupLogicalOperator } from "@budibase/types"
+import { memo } from "../../../utils/memo"
 
 export const createStores = context => {
   const { props } = context
 
   // Initialise to default props
-  const filter = writable(get(props).initialFilter)
-  const inlineFilters = writable([])
+  const filter = memo(get(props).initialFilter)
+  const inlineFilters = memo([])
 
   return {
     filter,
@@ -19,19 +20,26 @@ export const deriveStores = context => {
   const allFilters = derived(
     [filter, inlineFilters],
     ([$filter, $inlineFilters]) => {
-      const inlineFilterGroup = $inlineFilters?.length
-        ? {
+      // Just use filter prop if no inline filters
+      if (!$inlineFilters?.length) {
+        return $filter
+      }
+      let allFilters = {
+        logicalOperator: FilterGroupLogicalOperator.ALL,
+        groups: [
+          {
             logicalOperator: FilterGroupLogicalOperator.ALL,
-            filters: [...($inlineFilters || [])],
-          }
-        : null
-
-      return inlineFilterGroup
-        ? {
-            logicalOperator: FilterGroupLogicalOperator.ALL,
-            groups: [...($filter?.groups || []), inlineFilterGroup],
-          }
-        : $filter
+            filters: $inlineFilters,
+          },
+        ],
+      }
+      // Just use inline if no filter
+      if (!$filter?.groups?.length) {
+        return allFilters
+      }
+      // Join them together if both
+      allFilters.groups = [...allFilters.groups, ...$filter.groups]
+      return allFilters
     }
   )
 
