@@ -33,6 +33,19 @@
     "@jridgewell/gen-mapping" "^0.3.5"
     "@jridgewell/trace-mapping" "^0.3.24"
 
+"@anthropic-ai/sdk@^0.27.3":
+  version "0.27.3"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/sdk/-/sdk-0.27.3.tgz#592cdd873c85ffab9589ae6f2e250cbf150e1475"
+  integrity sha512-IjLt0gd3L4jlOfilxVXTifn42FnVffMgDC04RJK1KDZpmkBWLv0XC92MVVmkxrFZNS/7l3xWgP/I3nqtX1sQHw==
+  dependencies:
+    "@types/node" "^18.11.18"
+    "@types/node-fetch" "^2.6.4"
+    abort-controller "^3.0.0"
+    agentkeepalive "^4.2.1"
+    form-data-encoder "1.7.2"
+    formdata-node "^4.3.2"
+    node-fetch "^2.6.7"
+
 "@apidevtools/json-schema-ref-parser@^9.0.6":
   version "9.1.2"
   resolved "https://registry.yarnpkg.com/@apidevtools/json-schema-ref-parser/-/json-schema-ref-parser-9.1.2.tgz#8ff5386b365d4c9faa7c8b566ff16a46a577d9b8"
@@ -2053,7 +2066,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.32.6":
+"@budibase/backend-core@2.32.5":
   version "0.0.0"
   dependencies:
     "@budibase/nano" "10.1.5"
@@ -2134,14 +2147,14 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "2.32.6"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.32.6.tgz#02ddef737ee8f52dafd8fab8f8f277dfc89cd33f"
-  integrity sha512-+XEv4JtMvUKZWyllcw+iFOh44zxsoJLmUdShu4bAjj5zXWgElF6LjFpK51IrQzM6xKfQxn7N2vmxu7175u5dDQ==
+  version "2.32.5"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.32.5.tgz#2beecf566da972a92200faddc97bc152ea2bbdea"
+  integrity sha512-afrklI2A8P7pfl/3KxysqO2Sjr0l2yQ1+jyuouEZliEklLxV8AFlzrODr4V2SK3J8E1xk8wG5ztYQS2uT7TnuA==
   dependencies:
-    "@budibase/backend-core" "2.32.6"
-    "@budibase/shared-core" "2.32.6"
-    "@budibase/string-templates" "2.32.6"
-    "@budibase/types" "2.32.6"
+    "@budibase/backend-core" "2.32.5"
+    "@budibase/shared-core" "2.32.5"
+    "@budibase/string-templates" "2.32.5"
+    "@budibase/types" "2.32.5"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     dd-trace "5.2.0"
@@ -2153,13 +2166,13 @@
     scim-patch "^0.8.1"
     scim2-parse-filter "^0.2.8"
 
-"@budibase/shared-core@2.32.6":
+"@budibase/shared-core@2.32.5":
   version "0.0.0"
   dependencies:
     "@budibase/types" "0.0.0"
     cron-validate "1.4.5"
 
-"@budibase/string-templates@2.32.6":
+"@budibase/string-templates@2.32.5":
   version "0.0.0"
   dependencies:
     "@budibase/handlebars-helpers" "^0.13.2"
@@ -2167,7 +2180,7 @@
     handlebars "^4.7.8"
     lodash.clonedeep "^4.5.0"
 
-"@budibase/types@2.32.6":
+"@budibase/types@2.32.5":
   version "0.0.0"
   dependencies:
     scim-patch "^0.8.1"
@@ -6116,6 +6129,11 @@
   version "6.9.7"
   resolved "https://registry.yarnpkg.com/@types/qs/-/qs-6.9.7.tgz#63bb7d067db107cc1e457c303bc25d511febf6cb"
   integrity sha512-FGa1F62FT09qcrueBA6qYTrJPVDzah9a+493+o2PCXsesWHIn27G98TsSMs3WPNbZIEj4+VJf6saSFpvD+3Zsw==
+
+"@types/qs@^6.9.15":
+  version "6.9.16"
+  resolved "https://registry.yarnpkg.com/@types/qs/-/qs-6.9.16.tgz#52bba125a07c0482d26747d5d4947a64daf8f794"
+  integrity sha512-7i+zxXdPD0T4cKDuxCUXJ4wHcsJLwENa6Z3dCu8cfCK743OGy5Nu1RmAGqDPsoTDINVEcdXKRvR/zre+P2Ku1A==
 
 "@types/range-parser@*":
   version "1.2.4"
@@ -12354,10 +12372,10 @@ google-p12-pem@^4.0.0:
   dependencies:
     node-forge "^1.3.1"
 
-"google-spreadsheet@npm:@budibase/google-spreadsheet@4.1.5":
-  version "4.1.5"
-  resolved "https://registry.yarnpkg.com/@budibase/google-spreadsheet/-/google-spreadsheet-4.1.5.tgz#c89ffcbfcb1a3538e910d9275f73efc1d7deb85f"
-  integrity sha512-t1uBjuRSkNLnZ89DYtYQ2GW33xVU84qOyOPbGi+M0w7cAJofs95PwlBLhVol6Pv5VbeL0I1J7M4XyVqp0nSZtQ==
+"google-spreadsheet@npm:@budibase/google-spreadsheet@4.1.3":
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/@budibase/google-spreadsheet/-/google-spreadsheet-4.1.3.tgz#bcee7bd9d90f82c54b16a9aca963b87aceb050ad"
+  integrity sha512-03VX3/K5NXIh6+XAIDZgcHPmR76xwd8vIDL7RedMpvM2IcXK0Iq/KU7FmLY0t/mKqORAGC7+0rajd0jLFezC4w==
   dependencies:
     axios "^1.4.0"
     lodash "^4.17.21"
@@ -17097,19 +17115,20 @@ open@^8.0.0, open@^8.4.0, open@~8.4.0:
     is-docker "^2.1.1"
     is-wsl "^2.2.0"
 
-openai@^4.52.1:
-  version "4.52.1"
-  resolved "https://registry.yarnpkg.com/openai/-/openai-4.52.1.tgz#44acc362a844fa2927b0cfa1fb70fb51e388af65"
-  integrity sha512-kv2hevAWZZ3I/vd2t8znGO2rd8wkowncsfcYpo8i+wU9ML+JEcdqiViANXXjWWGjIhajFNixE6gOY1fEgqILAg==
+openai@4.59.0:
+  version "4.59.0"
+  resolved "https://registry.yarnpkg.com/openai/-/openai-4.59.0.tgz#3961d11a9afb5920e1bd475948a87969e244fc08"
+  integrity sha512-3bn7FypMt2R1ZDuO0+GcXgBEnVFhIzrpUkb47pQRoYvyfdZ2fQXcuP14aOc4C8F9FvCtZ/ElzJmVzVqnP4nHNg==
   dependencies:
     "@types/node" "^18.11.18"
     "@types/node-fetch" "^2.6.4"
+    "@types/qs" "^6.9.15"
     abort-controller "^3.0.0"
     agentkeepalive "^4.2.1"
     form-data-encoder "1.7.2"
     formdata-node "^4.3.2"
     node-fetch "^2.6.7"
-    web-streams-polyfill "^3.2.1"
+    qs "^6.10.3"
 
 openapi-response-validator@^9.2.0:
   version "9.3.1"
@@ -22598,11 +22617,6 @@ web-streams-polyfill@4.0.0-beta.3:
   version "4.0.0-beta.3"
   resolved "https://registry.yarnpkg.com/web-streams-polyfill/-/web-streams-polyfill-4.0.0-beta.3.tgz#2898486b74f5156095e473efe989dcf185047a38"
   integrity sha512-QW95TCTaHmsYfHDybGMwO5IJIM93I/6vTRk+daHTWFPhwh+C8Cg7j7XyKrwrj8Ib6vYXe0ocYNrmzY4xAAN6ug==
-
-web-streams-polyfill@^3.2.1:
-  version "3.3.3"
-  resolved "https://registry.yarnpkg.com/web-streams-polyfill/-/web-streams-polyfill-3.3.3.tgz#2073b91a2fdb1fbfbd401e7de0ac9f8214cecb4b"
-  integrity sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==
 
 web-vitals@^4.0.1:
   version "4.2.3"
