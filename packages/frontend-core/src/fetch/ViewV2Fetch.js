@@ -1,6 +1,5 @@
 import DataFetch from "./DataFetch.js"
 import { get } from "svelte/store"
-import { utils } from "@budibase/shared-core"
 
 export default class ViewV2Fetch extends DataFetch {
   determineFeatureFlags() {

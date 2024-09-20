@@ -1,4 +1,4 @@
-import { writable, get, derived } from "svelte/store"
+import { get, derived } from "svelte/store"
 import { FieldType, FilterGroupLogicalOperator } from "@budibase/types"
 import { memo } from "../../../utils/memo"
 
