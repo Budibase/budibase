@@ -131,23 +131,15 @@ export const createLicensingStore = () => {
       const triggerAutomationRunEnabled = license.features.includes(
         Constants.Features.TRIGGER_AUTOMATION_RUN
       )
-
       const perAppBuildersEnabled = license.features.includes(
         Constants.Features.APP_BUILDERS
       )
-
-      const isViewReadonlyColumnsEnabled = license.features.includes(
-        Constants.Features.VIEW_READONLY_COLUMNS
-      )
-
       const budibaseAIEnabled = license.features.includes(
         Constants.Features.BUDIBASE_AI
       )
-
       const customAIConfigsEnabled = license.features.includes(
         Constants.Features.AI_CUSTOM_CONFIGS
       )
-
       store.update(state => {
         return {
           ...state,
@@ -168,7 +160,6 @@ export const createLicensingStore = () => {
           syncAutomationsEnabled,
           triggerAutomationRunEnabled,
           perAppBuildersEnabled,
-          isViewReadonlyColumnsEnabled,
         }
       })
     },
