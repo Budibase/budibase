@@ -35,7 +35,9 @@ export async function processInputBBReference(
       }
 
       try {
-        await cache.user.getUser(id)
+        await cache.user.getUser({
+          userId: id,
+        })
         return id
       } catch (e: any) {
         if (e.statusCode === 404) {
@@ -125,7 +127,9 @@ export async function processOutputBBReference(
     case BBReferenceFieldSubType.USER: {
       let user
       try {
-        user = await cache.user.getUser(value as string)
+        user = await cache.user.getUser({
+          userId: value as string,
+        })
       } catch (err: any) {
         if (err.statusCode !== 404) {
           throw err

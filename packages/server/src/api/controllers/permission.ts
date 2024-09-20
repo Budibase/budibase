@@ -1,4 +1,4 @@
-import { permissions, roles, context, HTTPError } from "@budibase/backend-core"
+import { permissions, roles, context } from "@budibase/backend-core"
 import {
   UserCtx,
   Database,
@@ -45,18 +45,6 @@ async function updatePermissionOnRole(
   }: { roleId: string; resourceId: string; level: PermissionLevel },
   updateType: PermissionUpdateType
 ) {
-  const allowedAction = await sdk.permissions.resourceActionAllowed({
-    resourceId,
-    level,
-  })
-
-  if (!allowedAction.allowed) {
-    throw new HTTPError(
-      `You are not allowed to '${allowedAction.level}' the resource type '${allowedAction.resourceType}'`,
-      403
-    )
-  }
-
   const db = context.getAppDB()
   const remove = updateType === PermissionUpdateType.REMOVE
   const isABuiltin = roles.isBuiltin(roleId)
@@ -75,7 +63,9 @@ async function updatePermissionOnRole(
   // resource from another role and then adding to the new role
   for (let role of dbRoles) {
     let updated = false
-    const rolePermissions = role.permissions ? role.permissions : {}
+    const rolePermissions: Record<string, PermissionLevel[]> = role.permissions
+      ? role.permissions
+      : {}
     // make sure its an array, also handle migrating
     if (
       !rolePermissions[resourceId] ||
@@ -83,7 +73,7 @@ async function updatePermissionOnRole(
     ) {
       rolePermissions[resourceId] =
         typeof rolePermissions[resourceId] === "string"
-          ? [rolePermissions[resourceId] as unknown as string]
+          ? [rolePermissions[resourceId] as unknown as PermissionLevel]
           : []
     }
     // handle the removal/updating the role which has this permission first
@@ -182,9 +172,6 @@ export async function getResourcePerms(
       },
       {} as Record<string, ResourcePermissionInfo>
     ),
-    requiresPlanToModify: (
-      await sdk.permissions.allowsExplicitPermissions(resourceId)
-    ).minPlan,
   }
 }
 

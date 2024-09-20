@@ -1,12 +1,17 @@
 import env from "../environment"
 import * as context from "../context"
 import { PostHog, PostHogOptions } from "posthog-node"
-import { IdentityType, UserCtx } from "@budibase/types"
+import { FeatureFlag, IdentityType, UserCtx } from "@budibase/types"
 import tracer from "dd-trace"
 
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
-  if (env.POSTHOG_TOKEN && env.POSTHOG_API_HOST && !env.SELF_HOSTED) {
+  if (
+    env.POSTHOG_TOKEN &&
+    env.POSTHOG_API_HOST &&
+    !env.SELF_HOSTED &&
+    env.POSTHOG_FEATURE_FLAGS_ENABLED
+  ) {
     console.log("initializing posthog client...")
     posthog = new PostHog(env.POSTHOG_TOKEN, {
       host: env.POSTHOG_API_HOST,
@@ -267,5 +272,8 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 // default values set correctly and their types flow through the system.
 export const flags = new FlagSet({
   DEFAULT_VALUES: Flag.boolean(env.isDev()),
+  AUTOMATION_BRANCHING: Flag.boolean(env.isDev()),
   SQS: Flag.boolean(env.isDev()),
+  [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(env.isDev()),
+  [FeatureFlag.ENRICHED_RELATIONSHIPS]: Flag.boolean(false),
 })

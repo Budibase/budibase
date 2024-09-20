@@ -101,6 +101,15 @@ export async function getTable(tableId: string): Promise<Table> {
   return await processTable(output)
 }
 
+export async function doesTableExist(tableId: string): Promise<boolean> {
+  try {
+    const table = await getTable(tableId)
+    return !!table
+  } catch (err) {
+    return false
+  }
+}
+
 export async function getAllTables() {
   const [internal, external] = await Promise.all([
     getAllInternalTables(),
@@ -143,16 +152,19 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
   return await processTables(tables)
 }
 
-export function enrichViewSchemas(table: Table): TableResponse {
+export async function enrichViewSchemas(table: Table): Promise<TableResponse> {
+  const views = []
+  for (const view of Object.values(table.views ?? [])) {
+    if (sdk.views.isV2(view)) {
+      views.push(await sdk.views.enrichSchema(view, table.schema))
+    } else views.push(view)
+  }
+
   return {
     ...table,
-    views: Object.values(table.views ?? [])
-      .map(v =>
-        sdk.views.isV2(v) ? sdk.views.enrichSchema(v, table.schema) : v
-      )
-      .reduce((p, v) => {
-        p[v.name!] = v
-        return p
-      }, {} as TableViewsResponse),
+    views: views.reduce((p, v) => {
+      p[v.name!] = v
+      return p
+    }, {} as TableViewsResponse),
   }
 }

@@ -12,6 +12,7 @@ import {
   OneToManyRelationshipFieldMetadata,
   Operation,
   PaginationJson,
+  QueryJson,
   RelationshipFieldMetadata,
   Row,
   SearchFilters,
@@ -161,7 +162,6 @@ export class ExternalRequest<T extends Operation> {
   private readonly tableId: string
   private datasource?: Datasource
   private tables: { [key: string]: Table } = {}
-  private tableList: Table[]
 
   constructor(operation: T, tableId: string, datasource?: Datasource) {
     this.operation = operation
@@ -170,7 +170,6 @@ export class ExternalRequest<T extends Operation> {
     if (datasource && datasource.entities) {
       this.tables = datasource.entities
     }
-    this.tableList = Object.values(this.tables)
   }
 
   private prepareFilters(
@@ -301,7 +300,6 @@ export class ExternalRequest<T extends Operation> {
         throw "No tables found, fetch tables before query."
       }
       this.tables = this.datasource.entities
-      this.tableList = Object.values(this.tables)
     }
     return { tables: this.tables, datasource: this.datasource }
   }
@@ -463,7 +461,7 @@ export class ExternalRequest<T extends Operation> {
         breakExternalTableId(relatedTableId)
       // @ts-ignore
       const linkPrimaryKey = this.tables[relatedTableName].primary[0]
-      if (!lookupField || !row[lookupField]) {
+      if (!lookupField || !row?.[lookupField] == null) {
         continue
       }
       const endpoint = getEndpoint(relatedTableId, Operation.READ)
@@ -631,7 +629,8 @@ export class ExternalRequest<T extends Operation> {
       const { datasource: ds } = await this.retrieveMetadata(datasourceId)
       datasource = ds
     }
-    const table = this.tables[tableName]
+    const tables = this.tables
+    const table = tables[tableName]
     let isSql = isSQL(datasource)
     if (!table) {
       throw new Error(
@@ -686,7 +685,7 @@ export class ExternalRequest<T extends Operation> {
     ) {
       throw "Deletion must be filtered"
     }
-    let json = {
+    let json: QueryJson = {
       endpoint: {
         datasourceId: datasourceId!,
         entityId: tableName,
@@ -715,7 +714,7 @@ export class ExternalRequest<T extends Operation> {
       },
       meta: {
         table,
-        id: config.id,
+        tables: tables,
       },
     }
 
