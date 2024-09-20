@@ -2053,6 +2053,44 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@budibase/backend-core@2.32.6":
+  version "0.0.0"
+  dependencies:
+    "@budibase/nano" "10.1.5"
+    "@budibase/pouchdb-replication-stream" "1.2.11"
+    "@budibase/shared-core" "0.0.0"
+    "@budibase/types" "0.0.0"
+    aws-cloudfront-sign "3.0.2"
+    aws-sdk "2.1030.0"
+    bcrypt "5.1.0"
+    bcryptjs "2.4.3"
+    bull "4.10.1"
+    correlation-id "4.0.0"
+    dd-trace "5.2.0"
+    dotenv "16.0.1"
+    ioredis "5.3.2"
+    joi "17.6.0"
+    jsonwebtoken "9.0.2"
+    knex "2.4.2"
+    koa-passport "^6.0.0"
+    koa-pino-logger "4.0.0"
+    lodash "4.17.21"
+    node-fetch "2.6.7"
+    passport-google-oauth "2.0.0"
+    passport-local "1.0.0"
+    passport-oauth2-refresh "^2.1.0"
+    pino "8.11.0"
+    pino-http "8.3.3"
+    posthog-node "4.0.1"
+    pouchdb "7.3.0"
+    pouchdb-find "7.2.2"
+    redlock "4.2.0"
+    rotating-file-stream "3.1.0"
+    sanitize-s3-objectkey "0.0.1"
+    semver "^7.5.4"
+    tar-fs "2.1.1"
+    uuid "^8.3.2"
+
 "@budibase/handlebars-helpers@^0.13.2":
   version "0.13.2"
   resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.13.2.tgz#73ab51c464e91fd955b429017648e0257060db77"
@@ -2094,6 +2132,45 @@
     pouch-stream "^0.4.0"
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
+
+"@budibase/pro@npm:@budibase/pro@latest":
+  version "2.32.6"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.32.6.tgz#02ddef737ee8f52dafd8fab8f8f277dfc89cd33f"
+  integrity sha512-+XEv4JtMvUKZWyllcw+iFOh44zxsoJLmUdShu4bAjj5zXWgElF6LjFpK51IrQzM6xKfQxn7N2vmxu7175u5dDQ==
+  dependencies:
+    "@budibase/backend-core" "2.32.6"
+    "@budibase/shared-core" "2.32.6"
+    "@budibase/string-templates" "2.32.6"
+    "@budibase/types" "2.32.6"
+    "@koa/router" "8.0.8"
+    bull "4.10.1"
+    dd-trace "5.2.0"
+    joi "17.6.0"
+    jsonwebtoken "9.0.2"
+    lru-cache "^7.14.1"
+    memorystream "^0.3.1"
+    node-fetch "2.6.7"
+    scim-patch "^0.8.1"
+    scim2-parse-filter "^0.2.8"
+
+"@budibase/shared-core@2.32.6":
+  version "0.0.0"
+  dependencies:
+    "@budibase/types" "0.0.0"
+    cron-validate "1.4.5"
+
+"@budibase/string-templates@2.32.6":
+  version "0.0.0"
+  dependencies:
+    "@budibase/handlebars-helpers" "^0.13.2"
+    dayjs "^1.10.8"
+    handlebars "^4.7.8"
+    lodash.clonedeep "^4.5.0"
+
+"@budibase/types@2.32.6":
+  version "0.0.0"
+  dependencies:
+    scim-patch "^0.8.1"
 
 "@bull-board/api@5.10.2":
   version "5.10.2"
@@ -12277,10 +12354,10 @@ google-p12-pem@^4.0.0:
   dependencies:
     node-forge "^1.3.1"
 
-"google-spreadsheet@npm:@budibase/google-spreadsheet@4.1.3":
-  version "4.1.3"
-  resolved "https://registry.yarnpkg.com/@budibase/google-spreadsheet/-/google-spreadsheet-4.1.3.tgz#bcee7bd9d90f82c54b16a9aca963b87aceb050ad"
-  integrity sha512-03VX3/K5NXIh6+XAIDZgcHPmR76xwd8vIDL7RedMpvM2IcXK0Iq/KU7FmLY0t/mKqORAGC7+0rajd0jLFezC4w==
+"google-spreadsheet@npm:@budibase/google-spreadsheet@4.1.5":
+  version "4.1.5"
+  resolved "https://registry.yarnpkg.com/@budibase/google-spreadsheet/-/google-spreadsheet-4.1.5.tgz#c89ffcbfcb1a3538e910d9275f73efc1d7deb85f"
+  integrity sha512-t1uBjuRSkNLnZ89DYtYQ2GW33xVU84qOyOPbGi+M0w7cAJofs95PwlBLhVol6Pv5VbeL0I1J7M4XyVqp0nSZtQ==
   dependencies:
     axios "^1.4.0"
     lodash "^4.17.21"
