@@ -5,6 +5,7 @@ import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import {
   Datasource,
   FieldType,
+  Row,
   SourceName,
   Table,
   TableSourceType,
@@ -596,6 +597,195 @@ describe("Google Sheets Integration", () => {
           body: { errors: {} },
         }
       )
+    })
+  })
+
+  describe("search", () => {
+    let table: Table
+
+    beforeEach(async () => {
+      table = await config.api.table.save({
+        name: "Test Table",
+        type: "table",
+        sourceId: datasource._id!,
+        sourceType: TableSourceType.EXTERNAL,
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
+
+      await config.api.row.bulkImport(table._id!, {
+        rows: [
+          {
+            name: "Foo",
+          },
+          {
+            name: "Bar",
+          },
+          {
+            name: "Baz",
+          },
+        ],
+      })
+    })
+
+    it("should be able to find rows with equals filter", async () => {
+      const response = await config.api.row.search(table._id!, {
+        tableId: table._id!,
+        query: {
+          equal: {
+            name: "Foo",
+          },
+        },
+      })
+
+      expect(response.rows).toHaveLength(1)
+      expect(response.rows[0].name).toEqual("Foo")
+    })
+
+    it("should be able to find rows with not equals filter", async () => {
+      const response = await config.api.row.search(table._id!, {
+        tableId: table._id!,
+        query: {
+          notEqual: {
+            name: "Foo",
+          },
+        },
+      })
+
+      expect(response.rows).toHaveLength(2)
+      expect(response.rows[0].name).toEqual("Bar")
+      expect(response.rows[1].name).toEqual("Baz")
+    })
+
+    it("should be able to find rows with empty filter", async () => {
+      const response = await config.api.row.search(table._id!, {
+        tableId: table._id!,
+        query: {
+          empty: {
+            name: null,
+          },
+        },
+      })
+
+      expect(response.rows).toHaveLength(0)
+    })
+
+    it("should be able to find rows with not empty filter", async () => {
+      const response = await config.api.row.search(table._id!, {
+        tableId: table._id!,
+        query: {
+          notEmpty: {
+            name: null,
+          },
+        },
+      })
+
+      expect(response.rows).toHaveLength(3)
+    })
+
+    it("should be able to find rows with one of filter", async () => {
+      const response = await config.api.row.search(table._id!, {
+        tableId: table._id!,
+        query: {
+          oneOf: {
+            name: ["Foo", "Bar"],
+          },
+        },
+      })
+
+      expect(response.rows).toHaveLength(2)
+      expect(response.rows[0].name).toEqual("Foo")
+      expect(response.rows[1].name).toEqual("Bar")
+    })
+
+    it("should be able to find rows with fuzzy filter", async () => {
+      const response = await config.api.row.search(table._id!, {
+        tableId: table._id!,
+        query: {
+          fuzzy: {
+            name: "oo",
+          },
+        },
+      })
+
+      expect(response.rows).toHaveLength(1)
+      expect(response.rows[0].name).toEqual("Foo")
+    })
+
+    it("should be able to find rows with range filter", async () => {
+      const response = await config.api.row.search(table._id!, {
+        tableId: table._id!,
+        query: {
+          range: {
+            name: {
+              low: "A",
+              high: "C",
+            },
+          },
+        },
+      })
+
+      expect(response.rows).toHaveLength(2)
+      expect(response.rows[0].name).toEqual("Bar")
+      expect(response.rows[1].name).toEqual("Baz")
+    })
+
+    it("should paginate correctly", async () => {
+      await config.api.row.bulkImport(table._id!, {
+        rows: Array.from({ length: 50 }, () => ({
+          name: `Unique value!`,
+        })),
+      })
+      await config.api.row.bulkImport(table._id!, {
+        rows: Array.from({ length: 50 }, () => ({
+          name: `Non-unique value!`,
+        })),
+      })
+
+      let response = await config.api.row.search(table._id!, {
+        tableId: table._id!,
+        query: { equal: { name: "Unique value!" } },
+        paginate: true,
+        limit: 10,
+      })
+      let rows: Row[] = response.rows
+
+      while (response.hasNextPage) {
+        response = await config.api.row.search(table._id!, {
+          tableId: table._id!,
+          query: { equal: { name: "Unique value!" } },
+          paginate: true,
+          limit: 10,
+          bookmark: response.bookmark,
+        })
+
+        expect(response.rows.length).toBeLessThanOrEqual(10)
+        rows = rows.concat(response.rows)
+      }
+
+      // Make sure we only get rows matching the query.
+      expect(rows.length).toEqual(50)
+      expect(rows.map(row => row.name)).toEqual(
+        expect.arrayContaining(
+          Array.from({ length: 50 }, () => "Unique value!")
+        )
+      )
+
+      // Make sure all of the rows have a unique ID.
+      const ids = Object.keys(
+        rows.reduce((acc, row) => {
+          acc[row._id!] = true
+          return acc
+        }, {})
+      )
+      expect(ids.length).toEqual(50)
     })
   })
 })
