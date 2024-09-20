@@ -386,8 +386,9 @@ export async function search(
     // make sure JSON columns corrected
     const processed = builder.convertJsonStringColumns<Row>(
       table,
-      await sqlOutputProcessing(rows, table!, allTablesMap, relationships, {
+      await sqlOutputProcessing(rows, table, allTablesMap, relationships, {
         sqs: true,
+        aggregations: options.aggregations,
       })
     )
 
@@ -406,11 +407,16 @@ export async function search(
       preserveLinks: true,
       squash: true,
       fromViewId: options.viewId,
+      aggregations: options.aggregations,
     })
 
     // check if we need to pick specific rows out
     if (options.fields) {
-      const fields = [...options.fields, ...PROTECTED_INTERNAL_COLUMNS]
+      const fields = [
+        ...options.fields,
+        ...PROTECTED_INTERNAL_COLUMNS,
+        ...(options.aggregations || []).map(a => a.name),
+      ]
       finalRows = finalRows.map((r: any) => pick(r, fields))
     }
 
@@ -440,6 +446,5 @@ export async function search(
       return { rows: [] }
     }
     throw err
-    throw new Error(`Unable to search by SQL - ${msg}`, { cause: err })
   }
 }
