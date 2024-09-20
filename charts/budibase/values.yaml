@@ -641,7 +641,7 @@ couchdb:
     # @ignore
     repository: budibase/couchdb
     # @ignore
-    tag: v3.3.3
+    tag: v3.3.3-sqs-v2.1.1
     # @ignore
     pullPolicy: Always
 
