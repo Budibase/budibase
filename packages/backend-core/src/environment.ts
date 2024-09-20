@@ -143,6 +143,7 @@ const environment = {
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
   POSTHOG_PERSONAL_TOKEN: process.env.POSTHOG_PERSONAL_TOKEN,
   POSTHOG_API_HOST: process.env.POSTHOG_API_HOST || "https://us.i.posthog.com",
+  POSTHOG_FEATURE_FLAGS_ENABLED: process.env.POSTHOG_FEATURE_FLAGS_ENABLED,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
   CLOUDFRONT_CDN: process.env.CLOUDFRONT_CDN,
@@ -171,6 +172,7 @@ const environment = {
   // Couch/search
   SQL_LOGGING_ENABLE: process.env.SQL_LOGGING_ENABLE,
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
+  SQL_MAX_RELATED_ROWS: process.env.MAX_RELATED_ROWS,
   // smtp
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
   SMTP_USER: process.env.SMTP_USER,

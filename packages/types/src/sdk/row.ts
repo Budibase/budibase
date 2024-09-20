@@ -11,6 +11,7 @@ export interface Aggregation {
 
 export interface SearchParams {
   tableId?: string
+  viewId?: string
   query?: SearchFilters
   paginate?: boolean
   bookmark?: string | number

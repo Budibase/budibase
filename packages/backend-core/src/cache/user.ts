@@ -63,14 +63,25 @@ async function populateUsersFromDB(
  * If not present fallback to loading the user directly and re-caching.
  * @param userId the id of the user to get
  * @param tenantId the tenant of the user to get
+ * @param email the email of the user to populate from account if needed
  * @param populateUser function to provide the user for re-caching. default to couch db
  * @returns
  */
-export async function getUser(
-  userId: string,
-  tenantId?: string,
-  populateUser?: (userId: string, tenantId: string) => Promise<User>
-) {
+export async function getUser({
+  userId,
+  tenantId,
+  email,
+  populateUser,
+}: {
+  userId: string
+  email?: string
+  tenantId?: string
+  populateUser?: (
+    userId: string,
+    tenantId: string,
+    email?: string
+  ) => Promise<User>
+}) {
   if (!populateUser) {
     populateUser = populateFromDB
   }
@@ -85,7 +96,7 @@ export async function getUser(
   // try cache
   let user: User = await client.get(userId)
   if (!user) {
-    user = await populateUser(userId, tenantId)
+    user = await populateUser(userId, tenantId, email)
     await client.store(userId, user, EXPIRY_SECONDS)
   }
   if (user && !user.tenantId && tenantId) {

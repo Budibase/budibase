@@ -127,7 +127,10 @@
         name: user.firstName ? user.firstName + " " + user.lastName : "",
         userGroups,
         __selectable:
-          role.value === Constants.BudibaseRoles.Owner ? false : undefined,
+          role.value === Constants.BudibaseRoles.Owner ||
+          $auth.user?.email === user.email
+            ? false
+            : true,
         apps: [...new Set(Object.keys(user.roles))],
         access: role.sortOrder,
       }
@@ -392,7 +395,7 @@
     allowSelectRows={!readonly}
     {customRenderers}
     loading={!$fetch.loaded || !groupsLoaded}
-    defaultSortColumn={"access"}
+    defaultSortColumn={"__selectable"}
   />
 
   <div class="pagination">

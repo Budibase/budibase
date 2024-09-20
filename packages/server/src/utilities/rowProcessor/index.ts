@@ -110,7 +110,9 @@ async function processDefaultValues(table: Table, row: Row) {
 
   const identity = context.getIdentity()
   if (identity?._id && identity.type === IdentityType.USER) {
-    const user = await cache.user.getUser(identity._id)
+    const user = await cache.user.getUser({
+      userId: identity._id,
+    })
     delete user.password
 
     ctx["Current User"] = user
@@ -247,6 +249,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     preserveLinks?: boolean
     fromRow?: Row
     skipBBReferences?: boolean
+    fromViewId?: string
   } = {
     squash: true,
     preserveLinks: false,
@@ -350,10 +353,9 @@ export async function outputProcessing<T extends Row[] | Row>(
   enriched = await processFormulas(table, enriched, { dynamic: true })
 
   if (opts.squash) {
-    enriched = (await linkRows.squashLinksToPrimaryDisplay(
-      table,
-      enriched
-    )) as Row[]
+    enriched = await linkRows.squashLinks(table, enriched, {
+      fromViewId: opts?.fromViewId,
+    })
   }
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)

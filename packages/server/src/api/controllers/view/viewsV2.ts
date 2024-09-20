@@ -3,20 +3,21 @@ import {
   CreateViewRequest,
   Ctx,
   RequiredKeys,
-  ViewUIFieldMetadata,
   UpdateViewRequest,
   ViewResponse,
   ViewResponseEnriched,
   ViewV2,
   BasicViewUIFieldMetadata,
   ViewCalculationFieldMetadata,
+  RelationSchemaField,
+  ViewUIFieldMetadata,
 } from "@budibase/types"
 import { builderSocket, gridSocket } from "../../../websockets"
 import { helpers } from "@budibase/shared-core"
 
 function stripUnknownFields(
-  field: ViewUIFieldMetadata
-): RequiredKeys<ViewUIFieldMetadata> {
+  field: BasicViewUIFieldMetadata
+): RequiredKeys<BasicViewUIFieldMetadata> {
   if (helpers.views.isCalculationField(field)) {
     const strippedField: RequiredKeys<ViewCalculationFieldMetadata> = {
       order: field.order,
@@ -26,6 +27,7 @@ function stripUnknownFields(
       icon: field.icon,
       calculationType: field.calculationType,
       field: field.field,
+      columns: field.columns,
     }
     return strippedField
   } else {
@@ -35,6 +37,7 @@ function stripUnknownFields(
       visible: field.visible,
       readonly: field.readonly,
       icon: field.icon,
+      columns: field.columns,
     }
     return strippedField
   }
@@ -55,8 +58,29 @@ async function parseSchema(view: CreateViewRequest) {
   const finalViewSchema =
     view.schema &&
     Object.entries(view.schema).reduce((p, [fieldName, schemaValue]) => {
+      let fieldRelatedSchema:
+        | Record<string, RequiredKeys<RelationSchemaField>>
+        | undefined
+
+      if (schemaValue.columns) {
+        fieldRelatedSchema = Object.entries(schemaValue.columns).reduce<
+          NonNullable<typeof fieldRelatedSchema>
+        >((acc, [key, fieldSchema]) => {
+          acc[key] = {
+            visible: fieldSchema.visible,
+            readonly: fieldSchema.readonly,
+            order: fieldSchema.order,
+            width: fieldSchema.width,
+            icon: fieldSchema.icon,
+          }
+          return acc
+        }, {})
+        schemaValue.columns = fieldRelatedSchema
+      }
+
       const fieldSchema = stripUnknownFields(schemaValue)
       stripUndefinedFields(fieldSchema)
+
       p[fieldName] = fieldSchema
       return p
     }, {} as Record<string, RequiredKeys<ViewUIFieldMetadata>>)
