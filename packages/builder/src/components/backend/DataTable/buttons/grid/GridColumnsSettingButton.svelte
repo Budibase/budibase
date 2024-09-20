@@ -10,7 +10,6 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover } from "@budibase/bbui"
   import ColumnsSettingContent from "./ColumnsSettingContent.svelte"
-  import { licensing } from "stores/portal"
   import { isEnabled } from "helpers/featureFlags"
   import { FeatureFlag } from "@budibase/types"
 
@@ -21,7 +20,6 @@
 
   $: anyRestricted = $columns.filter(col => !col.visible || col.readonly).length
   $: text = anyRestricted ? `Columns: ${anyRestricted} restricted` : "Columns"
-  $: allowViewReadonlyColumns = $licensing.isViewReadonlyColumnsEnabled
   $: permissions =
     $datasource.type === "viewV2"
       ? [
@@ -30,9 +28,6 @@
           FieldPermissions.HIDDEN,
         ]
       : [FieldPermissions.WRITABLE, FieldPermissions.HIDDEN]
-  $: disabledPermissions = allowViewReadonlyColumns
-    ? []
-    : [FieldPermissions.READONLY]
 </script>
 
 <div bind:this={anchor}>
@@ -54,6 +49,5 @@
     columns={$columns}
     canSetRelationshipSchemas={isEnabled(FeatureFlag.ENRICHED_RELATIONSHIPS)}
     {permissions}
-    {disabledPermissions}
   />
 </Popover>
