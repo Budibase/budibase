@@ -103,8 +103,7 @@ export async function run({
     const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
 
     if (budibaseAIEnabled || customConfigsEnabled) {
-      const llm = new pro.ai.LargeLanguageModel(inputs.model)
-      await llm.init()
+      const llm = await pro.ai.LargeLanguageModel.forCurrentTenant(inputs.model)
       response = await llm.run(inputs.prompt)
     } else {
       // fallback to the default that uses the environment variable for backwards compat
