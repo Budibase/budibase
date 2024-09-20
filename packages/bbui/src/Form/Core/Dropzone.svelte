@@ -396,10 +396,6 @@
     padding: 6px 10px;
     margin-bottom: 8px;
   }
-
-  .compact .gallery > * {
-    max-height: 25px;
-  }
   .title {
     display: flex;
     flex-direction: row;
