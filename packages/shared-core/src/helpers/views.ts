@@ -25,15 +25,9 @@ export function isCalculationView(view: UnsavedViewV2) {
 }
 
 export function calculationFields(view: UnsavedViewV2) {
-  if (!isCalculationView(view)) {
-    throw new Error("View is not a calculation view")
-  }
   return pickBy(view.schema || {}, isCalculationField)
 }
 
 export function basicFields(view: UnsavedViewV2) {
-  if (!isCalculationView(view)) {
-    throw new Error("View is not a calculation view")
-  }
   return pickBy(view.schema || {}, field => !isCalculationField(field))
 }
