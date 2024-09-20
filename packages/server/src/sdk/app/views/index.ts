@@ -1,5 +1,4 @@
 import {
-  BasicViewUIFieldMetadata,
   FieldType,
   RelationSchemaField,
   RenameColumn,
@@ -11,7 +10,6 @@ import {
   ViewV2Enriched,
 } from "@budibase/types"
 import { HTTPError } from "@budibase/backend-core"
-import { features } from "@budibase/pro"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
@@ -111,15 +109,8 @@ async function checkReadonlyFields(
       )
     }
 
-    if (viewFieldSchema.readonly) {
-      if (
-        !(await features.isViewReadonlyColumnsEnabled()) &&
-        !(tableFieldSchema as BasicViewUIFieldMetadata).readonly
-      ) {
-        throw new HTTPError(`Readonly fields are not enabled`, 400)
-      }
-
-      if (!viewFieldSchema.visible) {
+    if (viewSchema[field].readonly) {
+      if (!viewSchema[field].visible) {
         throw new HTTPError(
           `Field "${field}" must be visible if you want to make it readonly`,
           400
