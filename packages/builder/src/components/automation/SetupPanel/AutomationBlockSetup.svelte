@@ -643,8 +643,8 @@
         runtimeName = `loop.${name}`
       } else if (block.name.startsWith("JS")) {
         runtimeName = hasUserDefinedName
-          ? `stepsByName[${bindingName}].${name}`
-          : `steps[${idx - loopBlockCount}].${name}`
+          ? `stepsByName["${bindingName}"].${name}`
+          : `steps["${idx - loopBlockCount}"].${name}`
       } else {
         runtimeName = hasUserDefinedName
           ? `stepsByName.${bindingName}.${name}`
