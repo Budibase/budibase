@@ -958,21 +958,8 @@ class InternalBuilder {
       const primaryKey = `${toAlias}.${toPrimary || toKey}`
       let subQuery: Knex.QueryBuilder = knex
         .from(toTableWithSchema)
-        .limit(getRelationshipLimit())
         // add sorting to get consistent order
         .orderBy(primaryKey)
-
-      const addCorrelatedWhere = (
-        query: Knex.QueryBuilder,
-        column1: string,
-        column2: string
-      ) => {
-        return query.where(
-          column1,
-          "=",
-          knex.raw(this.quotedIdentifier(column2))
-        )
-      }
 
       const isManyToMany = throughTable && toPrimary && fromPrimary
       let correlatedTo = isManyToMany
@@ -992,10 +979,15 @@ class InternalBuilder {
         })
       }
 
-      subQuery = addCorrelatedWhere(subQuery, correlatedTo, correlatedFrom)
+      // add the correlation to the overall query
+      subQuery = subQuery.where(
+        correlatedTo,
+        "=",
+        knex.raw(this.quotedIdentifier(correlatedFrom))
+      )
 
       const standardWrap = (select: string): Knex.QueryBuilder => {
-        subQuery = subQuery.select(`${toAlias}.*`)
+        subQuery = subQuery.select(`${toAlias}.*`).limit(getRelationshipLimit())
         // @ts-ignore - the from alias syntax isn't in Knex typing
         return knex.select(knex.raw(select)).from({
           [toAlias]: subQuery,
@@ -1016,7 +1008,12 @@ class InternalBuilder {
           )
           break
         case SqlClient.MY_SQL:
-          wrapperQuery = knex.raw(`json_arrayagg(json_object(${fieldList}))`)
+          // can't use the standard wrap due to correlated sub-query limitations in MariaDB
+          wrapperQuery = subQuery.select(
+            knex.raw(
+              `json_arrayagg(json_object(${fieldList}) LIMIT ${getRelationshipLimit()})`
+            )
+          )
           break
         case SqlClient.ORACLE:
           wrapperQuery = standardWrap(
