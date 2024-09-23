@@ -581,15 +581,14 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
         rows = await sheet.getRows()
       }
 
-      if (hasFilters && query.paginate) {
-        rows = rows.slice(offset, offset + limit)
-      }
-      const headerValues = sheet.headerValues
-
       let response = rows.map(row =>
-        this.buildRowObject(headerValues, row.toObject(), row.rowNumber)
+        this.buildRowObject(sheet.headerValues, row.toObject(), row.rowNumber)
       )
       response = dataFilters.runQuery(response, query.filters || {})
+
+      if (hasFilters && query.paginate) {
+        response = response.slice(offset, offset + limit)
+      }
 
       if (query.sort) {
         if (Object.keys(query.sort).length !== 1) {
