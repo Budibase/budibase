@@ -440,6 +440,8 @@ export class GoogleSheetsMock {
       endColumnIndex: 0,
     })
 
+    sheet.properties.gridProperties.rowCount = sheet.data[0].rowData.length
+
     return {
       spreadsheetId: this.spreadsheet.spreadsheetId,
       tableRange: range,
