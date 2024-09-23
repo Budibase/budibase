@@ -56,9 +56,7 @@
     <GridSizeButton />
     <GridColumnsSettingButton />
     <GridRowActionsButton />
-    <GridScreensButton on:request-generate={() => generateButton?.show()} />
-  </svelte:fragment>
-  <svelte:fragment slot="controls-right">
+    <GridScreensButton on:generate={() => generateButton?.show()} />
     <GridGenerateButton bind:this={generateButton} />
   </svelte:fragment>
   <GridCreateEditRowModal />
