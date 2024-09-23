@@ -84,7 +84,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
   }
   .left {
     width: 0;
