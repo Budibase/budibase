@@ -991,10 +991,8 @@ class InternalBuilder {
           this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
         })
       }
-      // my-sql needs the where statement to be part of main query, not sub-query
-      if (sqlClient !== SqlClient.MY_SQL) {
-        subQuery = addCorrelatedWhere(subQuery, correlatedTo, correlatedFrom)
-      }
+
+      subQuery = addCorrelatedWhere(subQuery, correlatedTo, correlatedFrom)
 
       const standardWrap = (select: string): Knex.QueryBuilder => {
         subQuery = subQuery.select(`${toAlias}.*`)
@@ -1018,11 +1016,7 @@ class InternalBuilder {
           )
           break
         case SqlClient.MY_SQL:
-          wrapperQuery = addCorrelatedWhere(
-            standardWrap(`json_arrayagg(json_object(${fieldList}))`),
-            isManyToMany ? fromKey! : toKey!,
-            correlatedFrom
-          )
+          wrapperQuery = knex.raw(`json_arrayagg(json_object(${fieldList}))`)
           break
         case SqlClient.ORACLE:
           wrapperQuery = standardWrap(
