@@ -198,6 +198,7 @@ export async function save(
       }
     }
     generateRelatedSchema(schema, relatedTable, tableToSave, relatedColumnName)
+    tables[relatedTable.name] = relatedTable
     schema.main = true
   }
 
@@ -231,7 +232,10 @@ export async function save(
   // remove the rename prop
   delete tableToSave._rename
 
-  datasource.entities[tableToSave.name] = tableToSave
+  datasource.entities = {
+    ...datasource.entities,
+    ...tables,
+  }
 
   // store it into couch now for budibase reference
   await db.put(populateExternalTableSchemas(datasource))
