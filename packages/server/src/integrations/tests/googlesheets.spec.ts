@@ -244,6 +244,20 @@ describe("Google Sheets Integration", () => {
         expect.arrayContaining(Array.from({ length: 248 }, (_, i) => `${i}`))
       )
     })
+
+    it("can export rows", async () => {
+      const resp = await config.api.row.exportRows(table._id!, {})
+      const parsed = JSON.parse(resp)
+      expect(parsed.length).toEqual(2)
+      expect(parsed[0]).toMatchObject({
+        name: "Test Contact 1",
+        description: "original description 1",
+      })
+      expect(parsed[1]).toMatchObject({
+        name: "Test Contact 2",
+        description: "original description 2",
+      })
+    })
   })
 
   describe("update", () => {
@@ -489,6 +503,99 @@ describe("Google Sheets Integration", () => {
 
       const emptyRows = await config.api.row.fetch(table._id!)
       expect(emptyRows.length).toEqual(0)
+    })
+  })
+
+  describe("fetch schema", () => {
+    it("should fail to import a completely blank sheet", async () => {
+      mock.createSheet({ title: "Sheet1" })
+      await config.api.datasource.fetchSchema(
+        {
+          datasourceId: datasource._id!,
+          tablesFilter: ["Sheet1"],
+        },
+        {
+          status: 200,
+          body: {
+            errors: {
+              Sheet1:
+                'Failed to find a header row in sheet "Sheet1", is the first row blank?',
+            },
+          },
+        }
+      )
+    })
+
+    it("should fail to import multiple sheets with blank headers", async () => {
+      mock.createSheet({ title: "Sheet1" })
+      mock.createSheet({ title: "Sheet2" })
+
+      await config.api.datasource.fetchSchema(
+        {
+          datasourceId: datasource!._id!,
+          tablesFilter: ["Sheet1", "Sheet2"],
+        },
+        {
+          status: 200,
+          body: {
+            errors: {
+              Sheet1:
+                'Failed to find a header row in sheet "Sheet1", is the first row blank?',
+              Sheet2:
+                'Failed to find a header row in sheet "Sheet2", is the first row blank?',
+            },
+          },
+        }
+      )
+    })
+
+    it("should only fail the sheet with missing headers", async () => {
+      mock.createSheet({ title: "Sheet1" })
+      mock.createSheet({ title: "Sheet2" })
+      mock.createSheet({ title: "Sheet3" })
+
+      mock.set("Sheet1!A1", "name")
+      mock.set("Sheet1!B1", "dob")
+      mock.set("Sheet2!A1", "name")
+      mock.set("Sheet2!B1", "dob")
+
+      await config.api.datasource.fetchSchema(
+        {
+          datasourceId: datasource!._id!,
+          tablesFilter: ["Sheet1", "Sheet2", "Sheet3"],
+        },
+        {
+          status: 200,
+          body: {
+            errors: {
+              Sheet3:
+                'Failed to find a header row in sheet "Sheet3", is the first row blank?',
+            },
+          },
+        }
+      )
+    })
+
+    it("should only succeed if sheet with missing headers is not being imported", async () => {
+      mock.createSheet({ title: "Sheet1" })
+      mock.createSheet({ title: "Sheet2" })
+      mock.createSheet({ title: "Sheet3" })
+
+      mock.set("Sheet1!A1", "name")
+      mock.set("Sheet1!B1", "dob")
+      mock.set("Sheet2!A1", "name")
+      mock.set("Sheet2!B1", "dob")
+
+      await config.api.datasource.fetchSchema(
+        {
+          datasourceId: datasource!._id!,
+          tablesFilter: ["Sheet1", "Sheet2"],
+        },
+        {
+          status: 200,
+          body: { errors: {} },
+        }
+      )
     })
   })
 })

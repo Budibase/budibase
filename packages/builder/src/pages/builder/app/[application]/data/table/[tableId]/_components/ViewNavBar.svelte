@@ -4,6 +4,7 @@
     datasources,
     userSelectedResourceMap,
     contextMenuStore,
+    appStore,
   } from "stores/builder"
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import { Icon, ActionButton, ActionMenu, MenuItem } from "@budibase/bbui"
@@ -179,11 +180,15 @@
 </script>
 
 <div class="nav">
-  <IntegrationIcon
-    integrationType={datasource?.source}
-    schema={datasource?.schema}
-    size="24"
-  />
+  <a
+    href={`/builder/app/${$appStore.appId}/data/datasource/${datasource?._id}`}
+  >
+    <IntegrationIcon
+      integrationType={datasource?.source}
+      schema={datasource?.schema}
+      size="24"
+    />
+  </a>
   <a
     href={$tableUrl(tableId)}
     class="nav-item"
