@@ -141,17 +141,11 @@
         <GridRelationshipButton />
       {/if}
       {#if !isUsersTable}
-        <GridRowActionsButton />
-        <GridScreensButton on:request-generate={() => generateButton?.show()} />
-        <GridAutomationsButton
-          on:request-generate={() => generateButton?.show()}
-        />
         <GridImportButton />
-      {/if}
-      <GridExportButton />
-    </svelte:fragment>
-    <svelte:fragment slot="controls-right">
-      {#if !isUsersTable}
+        <GridExportButton />
+        <GridRowActionsButton />
+        <GridScreensButton on:generate={() => generateButton?.show()} />
+        <GridAutomationsButton on:generate={() => generateButton?.show()} />
         <GridGenerateButton bind:this={generateButton} />
       {/if}
     </svelte:fragment>
