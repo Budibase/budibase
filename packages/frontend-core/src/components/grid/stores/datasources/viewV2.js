@@ -29,8 +29,18 @@ export const createActions = context => {
     })
   }
 
-  const getRow = () => {
-    throw "Views don't support fetching individual rows"
+  const getRow = async id => {
+    const res = await API.viewV2.fetch({
+      viewId: get(datasource).id,
+      limit: 1,
+      query: {
+        equal: {
+          _id: id,
+        },
+      },
+      paginate: false,
+    })
+    return res?.rows?.[0]
   }
 
   const isDatasourceValid = datasource => {
