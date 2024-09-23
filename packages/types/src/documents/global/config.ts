@@ -111,7 +111,7 @@ export interface SCIMInnerConfig {
 
 export interface SCIMConfig extends Config<SCIMInnerConfig> {}
 
-type AIProvider = "OpenAI" | "Anthropic" | "AzureOpenAI" | "Custom"
+export type AIProvider = "OpenAI" | "Anthropic" | "TogetherAI" | "Custom"
 
 export interface AIInnerConfig {
   [key: string]: {
