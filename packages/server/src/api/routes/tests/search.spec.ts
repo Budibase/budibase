@@ -42,6 +42,7 @@ import { Knex } from "knex"
 import { structures } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
+import { cloneDeep } from "lodash/fp"
 
 describe.each([
   ["in-memory", undefined],
@@ -65,6 +66,35 @@ describe.each([
   let client: Knex | undefined
   let table: Table
   let rows: Row[]
+
+  async function basicRelationshipTables(type: RelationshipType) {
+    const relatedTable = await createTable(
+      {
+        name: { name: "name", type: FieldType.STRING },
+      },
+      "productCategory"
+    )
+    table = await createTable(
+      {
+        name: { name: "name", type: FieldType.STRING },
+        productCat: {
+          type: FieldType.LINK,
+          relationshipType: type,
+          name: "productCat",
+          fieldName: "product",
+          tableId: relatedTable._id!,
+          constraints: {
+            type: "array",
+          },
+        },
+      },
+      "product"
+    )
+    return {
+      relatedTable: await config.api.table.get(relatedTable._id!),
+      table,
+    }
+  }
 
   beforeAll(async () => {
     await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
@@ -201,6 +231,7 @@ describe.each([
     // rows returned by the query will also cause the assertion to fail.
     async toMatchExactly(expectedRows: any[]) {
       const response = await this.performSearch()
+      const cloned = cloneDeep(response)
       const foundRows = response.rows
 
       // eslint-disable-next-line jest/no-standalone-expect
@@ -211,7 +242,7 @@ describe.each([
           expect.objectContaining(this.popRow(expectedRow, foundRows))
         )
       )
-      return response
+      return cloned
     }
 
     // Asserts that the query returns rows matching exactly the set of rows
@@ -219,6 +250,7 @@ describe.each([
     // cause the assertion to fail.
     async toContainExactly(expectedRows: any[]) {
       const response = await this.performSearch()
+      const cloned = cloneDeep(response)
       const foundRows = response.rows
 
       // eslint-disable-next-line jest/no-standalone-expect
@@ -231,7 +263,7 @@ describe.each([
           )
         )
       )
-      return response
+      return cloned
     }
 
     // Asserts that the query returns some property values - this cannot be used
@@ -239,6 +271,7 @@ describe.each([
     // typing for this has to be any, Jest doesn't expose types for matchers like expect.any(...)
     async toMatch(properties: Record<string, any>) {
       const response = await this.performSearch()
+      const cloned = cloneDeep(response)
       const keys = Object.keys(properties) as Array<keyof SearchResponse<Row>>
       for (let key of keys) {
         // eslint-disable-next-line jest/no-standalone-expect
@@ -248,17 +281,18 @@ describe.each([
           expect(response[key]).toEqual(properties[key])
         }
       }
-      return response
+      return cloned
     }
 
     // Asserts that the query doesn't return a property, e.g. pagination parameters.
     async toNotHaveProperty(properties: (keyof SearchResponse<Row>)[]) {
       const response = await this.performSearch()
+      const cloned = cloneDeep(response)
       for (let property of properties) {
         // eslint-disable-next-line jest/no-standalone-expect
         expect(response[property]).toBeUndefined()
       }
-      return response
+      return cloned
     }
 
     // Asserts that the query returns rows matching the set of rows passed in.
@@ -266,6 +300,7 @@ describe.each([
     // assertion to fail.
     async toContain(expectedRows: any[]) {
       const response = await this.performSearch()
+      const cloned = cloneDeep(response)
       const foundRows = response.rows
 
       // eslint-disable-next-line jest/no-standalone-expect
@@ -276,7 +311,7 @@ describe.each([
           )
         )
       )
-      return response
+      return cloned
     }
 
     async toFindNothing() {
@@ -2196,28 +2231,10 @@ describe.each([
       let productCategoryTable: Table, productCatRows: Row[]
 
       beforeAll(async () => {
-        productCategoryTable = await createTable(
-          {
-            name: { name: "name", type: FieldType.STRING },
-          },
-          "productCategory"
+        const { relatedTable } = await basicRelationshipTables(
+          RelationshipType.ONE_TO_MANY
         )
-        table = await createTable(
-          {
-            name: { name: "name", type: FieldType.STRING },
-            productCat: {
-              type: FieldType.LINK,
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              name: "productCat",
-              fieldName: "product",
-              tableId: productCategoryTable._id!,
-              constraints: {
-                type: "array",
-              },
-            },
-          },
-          "product"
-        )
+        productCategoryTable = relatedTable
 
         productCatRows = await Promise.all([
           config.api.row.save(productCategoryTable._id!, { name: "foo" }),
@@ -2260,6 +2277,31 @@ describe.each([
         await expectQuery({
           equal: { ["name"]: "baz" },
         }).toContainExactly([{ name: "baz", productCat: undefined }])
+      })
+    })
+
+  isSql &&
+    describe("big relations", () => {
+      beforeAll(async () => {
+        const { relatedTable } = await basicRelationshipTables(
+          RelationshipType.MANY_TO_ONE
+        )
+        const mainRow = await config.api.row.save(table._id!, {
+          name: "foo",
+        })
+        for (let i = 0; i < 11; i++) {
+          await config.api.row.save(relatedTable._id!, {
+            name: i,
+            product: [mainRow._id!],
+          })
+        }
+      })
+
+      it("can only pull 500 related rows", async () => {
+        await withCoreEnv({ SQL_MAX_RELATED_ROWS: "10" }, async () => {
+          const response = await expectQuery({}).toContain([{ name: "foo" }])
+          expect(response.rows[0].productCat).toBeArrayOfSize(10)
+        })
       })
     })
   ;(isSqs || isLucene) &&

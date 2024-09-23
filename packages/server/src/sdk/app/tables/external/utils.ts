@@ -22,12 +22,16 @@ export function cleanupRelationships(
   tables: Record<string, Table>,
   oldTable?: Table
 ) {
+  if (!oldTable) {
+    return
+  }
   const tableToIterate = oldTable ? oldTable : table
   // clean up relationships in couch table schemas
   for (let [key, schema] of Object.entries(tableToIterate.schema)) {
     if (
       schema.type === FieldType.LINK &&
-      (!oldTable || table.schema[key] == null)
+      oldTable.schema[key] != null &&
+      table.schema[key] == null
     ) {
       const schemaTableId = schema.tableId
       const relatedTable = Object.values(tables).find(
