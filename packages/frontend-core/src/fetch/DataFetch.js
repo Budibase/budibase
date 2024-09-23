@@ -178,7 +178,7 @@ export default class DataFetch {
 
     // Build the query
     let query = this.options.query
-    if (!query) {
+    if (!query && this.features.supportsSearch) {
       query = buildQuery(filter)
     }
 
@@ -364,7 +364,9 @@ export default class DataFetch {
     let refresh = false
     const entries = Object.entries(newOptions || {})
     for (let [key, value] of entries) {
-      if (JSON.stringify(value) !== JSON.stringify(this.options[key])) {
+      const oldVal = this.options[key] == null ? null : this.options[key]
+      const newVal = value == null ? null : value
+      if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
         refresh = true
         break
       }

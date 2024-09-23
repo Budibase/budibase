@@ -1,4 +1,13 @@
+import {
+  SearchFilter,
+  SearchFilterGroup,
+  FilterGroupLogicalOperator,
+  SearchFilters,
+  BasicOperator,
+  ArrayOperator,
+} from "@budibase/types"
 import * as Constants from "./constants"
+import { removeKeyNumbering } from "./filters"
 
 export function unreachable(
   value: never,
@@ -76,4 +85,130 @@ export function trimOtherProps(object: any, allowedProps: string[]) {
       {}
     )
   return result
+}
+
+/**
+ * Processes the filter config. Filters are migrated from
+ * SearchFilter[] to SearchFilterGroup
+ *
+ * If filters is not an array, the migration is skipped
+ *
+ * @param {SearchFilter[] | SearchFilterGroup} filters
+ */
+export const processSearchFilters = (
+  filters: SearchFilter[] | SearchFilterGroup | undefined
+): SearchFilterGroup | undefined => {
+  if (!filters) {
+    return
+  }
+
+  // Base search config.
+  const defaultCfg: SearchFilterGroup = {
+    logicalOperator: FilterGroupLogicalOperator.ALL,
+    groups: [],
+  }
+
+  const filterWhitelistKeys = [
+    "field",
+    "operator",
+    "value",
+    "type",
+    "externalType",
+    "valueType",
+    "noValue",
+    "formulaType",
+  ]
+
+  if (Array.isArray(filters)) {
+    let baseGroup: SearchFilterGroup = {
+      filters: [],
+      logicalOperator: FilterGroupLogicalOperator.ALL,
+    }
+
+    const migratedSetting: SearchFilterGroup = filters.reduce(
+      (acc: SearchFilterGroup, filter: SearchFilter) => {
+        // Sort the properties for easier debugging
+        const filterEntries = Object.entries(filter)
+          .sort((a, b) => {
+            return a[0].localeCompare(b[0])
+          })
+          .filter(x => x[1] ?? false)
+
+        if (filterEntries.length == 1) {
+          const [key, value] = filterEntries[0]
+          // Global
+          if (key === "onEmptyFilter") {
+            // unset otherwise
+            acc.onEmptyFilter = value
+          } else if (key === "operator" && value === "allOr") {
+            // Group 1 logical operator
+            baseGroup.logicalOperator = FilterGroupLogicalOperator.ANY
+          }
+
+          return acc
+        }
+
+        const whiteListedFilterSettings: [string, any][] = filterEntries.reduce(
+          (acc: [string, any][], entry: [string, any]) => {
+            const [key, value] = entry
+
+            if (filterWhitelistKeys.includes(key)) {
+              if (key === "field") {
+                acc.push([key, removeKeyNumbering(value)])
+              } else {
+                acc.push([key, value])
+              }
+            }
+            return acc
+          },
+          []
+        )
+
+        const migratedFilter: SearchFilter = Object.fromEntries(
+          whiteListedFilterSettings
+        ) as SearchFilter
+
+        baseGroup.filters!.push(migratedFilter)
+
+        if (!acc.groups || !acc.groups.length) {
+          // init the base group
+          acc.groups = [baseGroup]
+        }
+
+        return acc
+      },
+      defaultCfg
+    )
+
+    return migratedSetting
+  } else if (!filters?.groups) {
+    return
+  }
+  return filters
+}
+
+export function isSupportedUserSearch(query: SearchFilters) {
+  const allowed = [
+    { op: BasicOperator.STRING, key: "email" },
+    { op: BasicOperator.EQUAL, key: "_id" },
+    { op: ArrayOperator.ONE_OF, key: "_id" },
+  ]
+  for (let [key, operation] of Object.entries(query)) {
+    if (typeof operation !== "object") {
+      return false
+    }
+    const fields = Object.keys(operation || {})
+    // this filter doesn't contain options - ignore
+    if (fields.length === 0) {
+      continue
+    }
+    const allowedOperation = allowed.find(
+      allow =>
+        allow.op === key && fields.length === 1 && fields[0] === allow.key
+    )
+    if (!allowedOperation) {
+      return false
+    }
+  }
+  return true
 }

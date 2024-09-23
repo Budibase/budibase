@@ -1,4 +1,5 @@
 import { QueryUtils } from "@budibase/frontend-core"
+import { EmptyFilterOption } from "@budibase/types"
 
 export const getActiveConditions = conditions => {
   if (!conditions?.length) {
@@ -33,7 +34,8 @@ export const getActiveConditions = conditions => {
       value: condition.referenceValue,
     }
 
-    const query = QueryUtils.buildQuery([luceneCondition])
+    let query = QueryUtils.buildQuery([luceneCondition])
+    query.onEmptyFilter = EmptyFilterOption.RETURN_NONE
     const result = QueryUtils.runQuery([luceneCondition], query)
     return result.length > 0
   })
