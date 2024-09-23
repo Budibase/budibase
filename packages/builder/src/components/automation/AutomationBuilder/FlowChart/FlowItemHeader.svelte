@@ -59,14 +59,12 @@
   }
   const getAutomationNameError = name => {
     if (stepNames && editing) {
-      // Check against stepNames
       for (const [key, value] of Object.entries(stepNames)) {
         if (name !== block.name && name === value && key !== block.id) {
           return "This name already exists, please enter a unique name"
         }
       }
 
-      // Check against other block names
       for (const step of allSteps) {
         if (step.id !== block.id && name === step.name) {
           return "This name already exists, please enter a unique name"
