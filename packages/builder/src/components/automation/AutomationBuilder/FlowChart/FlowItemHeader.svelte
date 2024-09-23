@@ -82,10 +82,6 @@
     return null
   }
 
-  const startTyping = async () => {
-    typing = true
-  }
-
   const saveName = async () => {
     if (automationNameError || block.name === automationName) {
       return
