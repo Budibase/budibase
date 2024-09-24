@@ -284,7 +284,7 @@
 
     // Ensure the field is not required if we have a default value
     if (saveColumn.default) {
-      saveColumn.constraints.presence = false
+      saveColumn.constraints.presence = { allowEmpty: true }
     }
 
     // Delete default value for options fields if the option is no longer available
@@ -298,7 +298,7 @@
 
     // Ensure primary display columns are always required and don't have default values
     if (primaryDisplay) {
-      saveColumn.constraints.presence = true
+      saveColumn.constraints.presence = { allowEmpty: false }
       delete saveColumn.default
     }
 
