@@ -336,7 +336,21 @@ export class DatabaseImpl implements Database {
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
     return this.performCall(db => {
-      return () => db.list(params)
+      return async () => {
+        try {
+          return (await db.list(params)) as AllDocsResponse<T>
+        } catch (err: any) {
+          if (err.status === 404) {
+            return {
+              offset: 0,
+              total_rows: 0,
+              rows: [],
+            }
+          } else {
+            throw err
+          }
+        }
+      }
     })
   }
 
