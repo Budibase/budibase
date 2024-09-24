@@ -48,7 +48,7 @@ describe.each([tableWithUserCol, tableWithUsersCol])(
 
     it("should be able to map ro_ to global user IDs", () => {
       const params: RowSearchParams = {
-        sourceId: tableId,
+        tableId: tableId,
         query: {
           equal: {
             "1:user": userMedataId,
@@ -61,7 +61,7 @@ describe.each([tableWithUserCol, tableWithUsersCol])(
 
     it("should handle array of user IDs", () => {
       const params: RowSearchParams = {
-        sourceId: tableId,
+        tableId: tableId,
         query: {
           oneOf: {
             "1:user": [userMedataId, globalUserId],
@@ -78,7 +78,7 @@ describe.each([tableWithUserCol, tableWithUsersCol])(
     it("shouldn't change any other input", () => {
       const email = "test@example.com"
       const params: RowSearchParams = {
-        sourceId: tableId,
+        tableId: tableId,
         query: {
           equal: {
             "1:user": email,
@@ -91,7 +91,7 @@ describe.each([tableWithUserCol, tableWithUsersCol])(
 
     it("shouldn't error if no query supplied", () => {
       // @ts-expect-error - intentionally passing in a bad type
-      const output = searchInputMapping(col, { sourceId: tableId })
+      const output = searchInputMapping(col, { tableId })
       expect(output.query).toBeUndefined()
     })
   }

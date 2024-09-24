@@ -3,8 +3,6 @@ import {
   ViewV2,
   SearchRowResponse,
   SearchViewRowRequest,
-  RequiredKeys,
-  RowSearchParams,
   SearchFilterKey,
   LogicalOperator,
   Aggregation,
@@ -83,9 +81,9 @@ export async function searchView(
     field,
   }))
 
-  const searchOptions: RequiredKeys<SearchViewRowRequest> &
-    RequiredKeys<Pick<RowSearchParams, "sourceId" | "query" | "fields">> = {
-    sourceId: view.id,
+  const result = await sdk.rows.search({
+    viewId: view.id,
+    tableId: view.tableId,
     query: enrichedQuery,
     fields: viewFields,
     ...getSortOptions(body, view),
@@ -94,9 +92,8 @@ export async function searchView(
     paginate: body.paginate,
     countRows: body.countRows,
     aggregations,
-  }
+  })
 
-  const result = await sdk.rows.search(searchOptions)
   result.rows.forEach(r => (r._viewId = view.id))
   ctx.body = result
 }

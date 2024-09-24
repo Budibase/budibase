@@ -221,7 +221,8 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const searchParams: RowSearchParams = {
     ...ctx.request.body,
     query: enrichedQuery,
-    sourceId: viewId || tableId,
+    tableId,
+    viewId,
   }
 
   ctx.status = 200

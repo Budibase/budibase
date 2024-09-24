@@ -122,7 +122,7 @@ describe.each([
   it("querying by fields will always return data attribute columns", async () => {
     await config.doInContext(config.appId, async () => {
       const { rows } = await search({
-        sourceId: table._id!,
+        tableId: table._id!,
         query: {},
         fields: ["name", "age"],
       })
@@ -142,7 +142,7 @@ describe.each([
     it("will decode _id in oneOf query", async () => {
       await config.doInContext(config.appId, async () => {
         const result = await search({
-          sourceId: table._id!,
+          tableId: table._id!,
           query: {
             oneOf: {
               _id: ["%5B1%5D", "%5B4%5D", "%5B8%5D"],
@@ -174,7 +174,7 @@ describe.each([
         },
       })
       const result = await search({
-        sourceId: table._id!,
+        tableId: table._id!,
         query: {},
       })
       expect(result.rows).toHaveLength(10)
@@ -205,7 +205,7 @@ describe.each([
         },
       })
       const result = await search({
-        sourceId: table._id!,
+        tableId: table._id!,
         query: {},
         fields: ["name", "age"],
       })
@@ -229,7 +229,7 @@ describe.each([
       async (queryFields, expectedRows) => {
         await config.doInContext(config.appId, async () => {
           const { rows } = await search({
-            sourceId: table._id!,
+            tableId: table._id!,
             query: {
               $or: {
                 conditions: [
