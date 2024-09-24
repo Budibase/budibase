@@ -330,15 +330,16 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       return { tables: {}, errors: {} }
     }
     await this.connect()
+
     const sheets = this.client.sheetsByIndex
     const tables: Record<string, Table> = {}
     let errors: Record<string, string> = {}
+
     await utils.parallelForeach(
       sheets,
       async sheet => {
-        // must fetch rows to determine schema
         try {
-          await sheet.getRows()
+          await sheet.getRows({ limit: 1 })
         } catch (err) {
           // We expect this to always be an Error so if it's not, rethrow it to
           // make sure we don't fail quietly.
@@ -346,26 +347,34 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
             throw err
           }
 
-          if (err.message.startsWith("No values in the header row")) {
-            errors[sheet.title] = err.message
-          } else {
-            // If we get an error we don't expect, rethrow to avoid failing
-            // quietly.
-            throw err
+          if (
+            err.message.startsWith("No values in the header row") ||
+            err.message.startsWith("All your header cells are blank")
+          ) {
+            errors[
+              sheet.title
+            ] = `Failed to find a header row in sheet "${sheet.title}", is the first row blank?`
+            return
           }
-          return
-        }
 
-        const id = buildExternalTableId(datasourceId, sheet.title)
-        tables[sheet.title] = this.getTableSchema(
-          sheet.title,
-          sheet.headerValues,
-          datasourceId,
-          id
-        )
+          // If we get an error we don't expect, rethrow to avoid failing
+          // quietly.
+          throw err
+        }
       },
       10
     )
+
+    for (const sheet of sheets) {
+      const id = buildExternalTableId(datasourceId, sheet.title)
+      tables[sheet.title] = this.getTableSchema(
+        sheet.title,
+        sheet.headerValues,
+        datasourceId,
+        id
+      )
+    }
+
     let externalTables = finaliseExternalTables(tables, entities)
     errors = { ...errors, ...checkExternalTables(externalTables) }
     return { tables: externalTables, errors }
@@ -551,11 +560,16 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       await this.connect()
       const hasFilters = dataFilters.hasFilters(query.filters)
       const limit = query.paginate?.limit || 100
-      const page: number =
-        typeof query.paginate?.page === "number"
-          ? query.paginate.page
-          : parseInt(query.paginate?.page || "1")
-      const offset = (page - 1) * limit
+      let offset = query.paginate?.offset || 0
+
+      let page = query.paginate?.page
+      if (typeof page === "string") {
+        page = parseInt(page)
+      }
+      if (page !== undefined) {
+        offset = page * limit
+      }
+
       const sheet = this.client.sheetsByTitle[query.sheet]
       let rows: GoogleSpreadsheetRow[] = []
       if (query.paginate && !hasFilters) {
@@ -567,15 +581,14 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
         rows = await sheet.getRows()
       }
 
-      if (hasFilters && query.paginate) {
-        rows = rows.slice(offset, offset + limit)
-      }
-      const headerValues = sheet.headerValues
-
       let response = rows.map(row =>
-        this.buildRowObject(headerValues, row.toObject(), row.rowNumber)
+        this.buildRowObject(sheet.headerValues, row.toObject(), row.rowNumber)
       )
       response = dataFilters.runQuery(response, query.filters || {})
+
+      if (hasFilters && query.paginate) {
+        response = response.slice(offset, offset + limit)
+      }
 
       if (query.sort) {
         if (Object.keys(query.sort).length !== 1) {

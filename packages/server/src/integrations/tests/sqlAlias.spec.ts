@@ -63,7 +63,7 @@ describe("Captures of real examples", () => {
         bindings: [primaryLimit, relationshipLimit, relationshipLimit],
         sql: expect.stringContaining(
           multiline(
-            `select json_agg(json_build_object('executorid',"b"."executorid",'taskname',"b"."taskname",'taskid',"b"."taskid",'completed',"b"."completed",'qaid',"b"."qaid",'executorid',"b"."executorid",'taskname',"b"."taskname",'taskid',"b"."taskid",'completed',"b"."completed",'qaid',"b"."qaid")`
+            `select json_agg(json_build_object('completed',"b"."completed",'completed',"b"."completed",'executorid',"b"."executorid",'executorid',"b"."executorid",'qaid',"b"."qaid",'qaid',"b"."qaid",'taskid',"b"."taskid",'taskid',"b"."taskid",'taskname',"b"."taskname",'taskname',"b"."taskname")`
           )
         ),
       })
@@ -95,7 +95,7 @@ describe("Captures of real examples", () => {
         sql: expect.stringContaining(
           multiline(
             `with "paginated" as (select "a".* from "products" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc limit $1) 
-                 select "a".*, (select json_agg(json_build_object('executorid',"b"."executorid",'taskname',"b"."taskname",'taskid',"b"."taskid",'completed',"b"."completed",'qaid',"b"."qaid")) 
+                 select "a".*, (select json_agg(json_build_object('completed',"b"."completed",'executorid',"b"."executorid",'qaid',"b"."qaid",'taskid',"b"."taskid",'taskname',"b"."taskname")) 
                  from (select "b".* from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" order by "b"."taskid" asc limit $2) as "b") as "tasks" 
                  from "paginated" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc`
           )
@@ -113,7 +113,7 @@ describe("Captures of real examples", () => {
         bindings: [...filters, relationshipLimit, relationshipLimit],
         sql: multiline(
           `with "paginated" as (select "a".* from "tasks" as "a" where "a"."taskid" in ($1, $2) order by "a"."taskid" asc limit $3) 
-               select "a".*, (select json_agg(json_build_object('productname',"b"."productname",'productid',"b"."productid")) 
+               select "a".*, (select json_agg(json_build_object('productid',"b"."productid",'productname',"b"."productname")) 
                from (select "b".* from "products" as "b" inner join "products_tasks" as "c" on "b"."productid" = "c"."productid" 
                where "c"."taskid" = "a"."taskid" order by "b"."productid" asc limit $4) as "b") as "products" from "paginated" as "a" order by "a"."taskid" asc`
         ),

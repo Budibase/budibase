@@ -101,6 +101,15 @@ export async function getTable(tableId: string): Promise<Table> {
   return await processTable(output)
 }
 
+export async function doesTableExist(tableId: string): Promise<boolean> {
+  try {
+    const table = await getTable(tableId)
+    return !!table
+  } catch (err) {
+    return false
+  }
+}
+
 export async function getAllTables() {
   const [internal, external] = await Promise.all([
     getAllInternalTables(),

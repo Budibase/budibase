@@ -40,7 +40,6 @@ import { dataFilters, helpers } from "@budibase/shared-core"
 import { cloneDeep } from "lodash"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
-const MAX_SQS_RELATIONSHIP_FIELDS = 63
 
 function getBaseLimit() {
   const envLimit = environment.SQL_MAX_ROWS
@@ -54,6 +53,20 @@ function getRelationshipLimit() {
     ? parseInt(environment.SQL_MAX_RELATED_ROWS)
     : null
   return envLimit || 500
+}
+
+function prioritisedArraySort(toSort: string[], priorities: string[]) {
+  return toSort.sort((a, b) => {
+    const aPriority = priorities.find(field => field && a.endsWith(field))
+    const bPriority = priorities.find(field => field && b.endsWith(field))
+    if (aPriority && !bPriority) {
+      return -1
+    }
+    if (!aPriority && bPriority) {
+      return 1
+    }
+    return a.localeCompare(b)
+  })
 }
 
 function getTableName(table?: Table): string | undefined {
@@ -877,6 +890,22 @@ class InternalBuilder {
     return `'${unaliased}'${separator}${tableField}`
   }
 
+  maxFunctionParameters() {
+    // functions like say json_build_object() in SQL have a limit as to how many can be performed
+    // before a limit is met, this limit exists in Postgres/SQLite. This can be very important, such as
+    // for JSON column building as part of relationships. We also have a default limit to avoid very complex
+    // functions being built - it is likely this is not necessary or the best way to do it.
+    switch (this.client) {
+      case SqlClient.SQL_LITE:
+        return 127
+      case SqlClient.POSTGRES:
+        return 100
+      // other DBs don't have a limit, but set some sort of limit
+      default:
+        return 200
+    }
+  }
+
   addJsonRelationships(
     query: Knex.QueryBuilder,
     fromTable: string,
@@ -884,7 +913,7 @@ class InternalBuilder {
   ): Knex.QueryBuilder {
     const sqlClient = this.client
     const knex = this.knex
-    const { resource, tableAliases: aliases, endpoint } = this.query
+    const { resource, tableAliases: aliases, endpoint, meta } = this.query
     const fields = resource?.fields || []
     for (let relationship of relationships) {
       const {
@@ -899,21 +928,27 @@ class InternalBuilder {
       if (!toTable || !fromTable) {
         continue
       }
+      const relatedTable = meta.tables?.[toTable]
       const toAlias = aliases?.[toTable] || toTable,
         fromAlias = aliases?.[fromTable] || fromTable
       let toTableWithSchema = this.tableNameWithSchema(toTable, {
         alias: toAlias,
         schema: endpoint.schema,
       })
-      let relationshipFields = fields.filter(
-        field => field.split(".")[0] === toAlias
+      const requiredFields = [
+        ...(relatedTable?.primary || []),
+        relatedTable?.primaryDisplay,
+      ].filter(field => field) as string[]
+      // sort the required fields to first in the list, so they don't get sliced out
+      let relationshipFields = prioritisedArraySort(
+        fields.filter(field => field.split(".")[0] === toAlias),
+        requiredFields
       )
-      if (this.client === SqlClient.SQL_LITE) {
-        relationshipFields = relationshipFields.slice(
-          0,
-          MAX_SQS_RELATIONSHIP_FIELDS
-        )
-      }
+
+      relationshipFields = relationshipFields.slice(
+        0,
+        Math.floor(this.maxFunctionParameters() / 2)
+      )
       const fieldList: string = relationshipFields
         .map(field => this.buildJsonField(field))
         .join(",")
