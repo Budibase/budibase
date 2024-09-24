@@ -9,7 +9,6 @@ import {
   SearchResponse,
   Row,
   RowSearchParams,
-  ViewV2,
 } from "@budibase/types"
 import { db as dbCore, context } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"

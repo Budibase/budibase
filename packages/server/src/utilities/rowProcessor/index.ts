@@ -19,6 +19,7 @@ import {
   RowAttachment,
   Table,
   User,
+  ViewV2,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -34,7 +35,11 @@ import {
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
 import { processString } from "@budibase/string-templates"
-import { isUserMetadataTable } from "../../api/controllers/row/utils"
+import {
+  getTableFromSource,
+  isUserMetadataTable,
+} from "../../api/controllers/row/utils"
+import sdk from "../../sdk"
 
 export * from "./utils"
 export * from "./attachments"
@@ -170,11 +175,12 @@ export function coerce(row: any, type: string) {
  */
 export async function inputProcessing(
   userId: string | null | undefined,
-  table: Table,
+  source: Table | ViewV2,
   row: Row,
   opts?: AutoColumnProcessingOpts
 ) {
   const clonedRow = cloneDeep(row)
+  const table = await getTableFromSource(source)
 
   const dontCleanseKeys = ["type", "_id", "_rev", "tableId"]
   for (const [key, value] of Object.entries(clonedRow)) {
@@ -243,14 +249,13 @@ export async function inputProcessing(
  * @returns the enriched rows will be returned.
  */
 export async function outputProcessing<T extends Row[] | Row>(
-  table: Table,
+  source: Table | ViewV2,
   rows: T,
   opts: {
     squash?: boolean
     preserveLinks?: boolean
     fromRow?: Row
     skipBBReferences?: boolean
-    fromViewId?: string
     aggregations?: Aggregation[]
   } = {
     squash: true,

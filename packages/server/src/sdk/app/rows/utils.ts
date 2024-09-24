@@ -21,6 +21,7 @@ import sdk from "../.."
 import { extractViewInfoFromID, isRelationshipColumn } from "../../../db/utils"
 import { isSQL } from "../../../integrations/utils"
 import { docIds } from "@budibase/backend-core"
+import { getTableFromSource } from "../../../api/controllers/row/utils"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.POSTGRES]: SqlClient.POSTGRES,
@@ -149,12 +150,7 @@ export async function validate({
   valid: boolean
   errors: Record<string, any>
 }> {
-  let table: Table
-  if (sdk.views.isView(source)) {
-    table = await sdk.views.getTable(source.id)
-  } else {
-    table = source
-  }
+  const table = await getTableFromSource(source)
   const errors: Record<string, any> = {}
   const disallowArrayTypes = [
     FieldType.ATTACHMENT_SINGLE,
