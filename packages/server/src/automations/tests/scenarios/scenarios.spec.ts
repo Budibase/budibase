@@ -197,7 +197,7 @@ describe("Automation Scenarios", () => {
       )
     })
   })
-  describe.only("Automations with filter", () => {
+  describe("Automations with filter", () => {
     let table: Table
 
     beforeEach(async () => {
