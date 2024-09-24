@@ -136,9 +136,8 @@
   }
   $: initialiseField(field, savingColumn)
   $: checkConstraints(editableColumn)
-  $: required = hasDefault
-    ? false
-    : !!editableColumn?.constraints?.presence || primaryDisplay
+  $: required =
+    primaryDisplay || (!hasDefault && !!editableColumn?.constraints?.presence)
   $: uneditable =
     $tables.selected?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(editableColumn.name)
@@ -168,7 +167,9 @@
   $: canBeDisplay =
     canBeDisplayColumn(editableColumn.type) && !editableColumn.autocolumn
   $: canHaveDefault =
-    isEnabled("DEFAULT_VALUES") && canHaveDefaultColumn(editableColumn.type)
+    !required &&
+    isEnabled("DEFAULT_VALUES") &&
+    canHaveDefaultColumn(editableColumn.type)
   $: canBeRequired =
     editableColumn?.type !== LINK_TYPE &&
     !uneditable &&
@@ -187,11 +188,11 @@
     (originalName &&
       SWITCHABLE_TYPES[field.type] &&
       !editableColumn?.autocolumn)
-
   $: allowedTypes = getAllowedTypes(datasource).map(t => ({
     fieldId: makeFieldId(t.type, t.subtype),
     ...t,
   }))
+  $: bindings = getBindings({ table })
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
     // Storing the fields by complex field id
@@ -279,6 +280,20 @@
     }
     if (saveColumn.type !== LINK_TYPE) {
       delete saveColumn.fieldName
+    }
+
+    // Ensure the field is not required if we have a default value
+    if (saveColumn.default) {
+      saveColumn.constraints.presence = false
+    }
+
+    // Delete default value for options fields if the option is no longer available
+    if (
+      saveColumn.type === FieldType.OPTIONS &&
+      saveColumn.default &&
+      !saveColumn.constraints.inclusion?.includes(saveColumn.default)
+    ) {
+      delete saveColumn.default
     }
 
     try {
@@ -727,7 +742,7 @@
               formula: e.detail,
             }
           }}
-          bindings={getBindings({ table })}
+          {bindings}
           allowJS
           context={rowGoldenSample}
         />
@@ -766,27 +781,27 @@
   {/if}
 
   {#if canHaveDefault}
-    <div>
+    {#if editableColumn.type === FieldType.OPTIONS}
+      <Select
+        options={editableColumn.constraints?.inclusion || []}
+        label="Default value"
+        value={editableColumn.default}
+        on:change={e => (editableColumn.default = e.detail)}
+        placeholder="None"
+      />
+    {:else}
       <ModalBindableInput
         panel={ServerBindingPanel}
-        title="Default"
-        label="Default"
+        title="Default value"
+        label="Default value"
+        placeholder="None"
         value={editableColumn.default}
-        on:change={e => {
-          editableColumn = {
-            ...editableColumn,
-            default: e.detail,
-          }
-
-          if (e.detail) {
-            setRequired(false)
-          }
-        }}
-        bindings={getBindings({ table })}
+        on:change={e => (editableColumn.default = e.detail)}
+        {bindings}
         allowJS
         context={rowGoldenSample}
       />
-    </div>
+    {/if}
   {/if}
 </Layout>
 
