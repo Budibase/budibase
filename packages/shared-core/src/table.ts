@@ -53,8 +53,8 @@ const allowDefaultColumnByType: Record<FieldType, boolean> = {
   [FieldType.DATETIME]: true,
   [FieldType.LONGFORM]: true,
   [FieldType.STRING]: true,
+  [FieldType.OPTIONS]: true,
 
-  [FieldType.OPTIONS]: false,
   [FieldType.AUTO]: false,
   [FieldType.INTERNAL]: false,
   [FieldType.BARCODEQR]: false,
