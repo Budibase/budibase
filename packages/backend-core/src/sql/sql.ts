@@ -1031,7 +1031,9 @@ class InternalBuilder {
               .select(`${fromAlias}.*`)
               // @ts-ignore - from alias syntax not TS supported
               .from({
-                [fromAlias]: subQuery.select(`${toAlias}.*`),
+                [fromAlias]: subQuery
+                  .select(`${toAlias}.*`)
+                  .limit(getRelationshipLimit()),
               })} FOR JSON PATH))`
           )
           break
