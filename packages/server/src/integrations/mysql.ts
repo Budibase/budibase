@@ -241,6 +241,16 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
 
   async connect() {
     this.client = await mysql.createConnection(this.config)
+    const res = await this.internalQuery(
+      {
+        sql: "SELECT VERSION();",
+      },
+      { connect: false }
+    )
+    const version = res?.[0]?.["VERSION()"]
+    if (version?.toLowerCase().includes("mariadb")) {
+      this.setExtendedSqlClient(SqlClient.MARIADB)
+    }
   }
 
   async disconnect() {
