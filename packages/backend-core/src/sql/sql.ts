@@ -150,6 +150,7 @@ class InternalBuilder {
         return `"${str}"`
       case SqlClient.MS_SQL:
         return `[${str}]`
+      case SqlClient.MARIADB:
       case SqlClient.MY_SQL:
         return `\`${str}\``
     }
@@ -559,7 +560,10 @@ class InternalBuilder {
             )}${wrap}, FALSE)`
           )
         })
-      } else if (this.client === SqlClient.MY_SQL) {
+      } else if (
+        this.client === SqlClient.MY_SQL ||
+        this.client === SqlClient.MARIADB
+      ) {
         const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
         iterate(mode, (q, key, value) => {
           return q[rawFnc](
@@ -1007,7 +1011,7 @@ class InternalBuilder {
             `json_agg(json_build_object(${fieldList}))`
           )
           break
-        case SqlClient.MY_SQL:
+        case SqlClient.MARIADB:
           // can't use the standard wrap due to correlated sub-query limitations in MariaDB
           wrapperQuery = subQuery.select(
             knex.raw(
@@ -1015,6 +1019,7 @@ class InternalBuilder {
             )
           )
           break
+        case SqlClient.MY_SQL:
         case SqlClient.ORACLE:
           wrapperQuery = standardWrap(
             `json_arrayagg(json_object(${fieldList}))`
@@ -1181,7 +1186,8 @@ class InternalBuilder {
     if (
       this.client === SqlClient.POSTGRES ||
       this.client === SqlClient.SQL_LITE ||
-      this.client === SqlClient.MY_SQL
+      this.client === SqlClient.MY_SQL ||
+      this.client === SqlClient.MARIADB
     ) {
       const primary = this.table.primary
       if (!primary) {
@@ -1328,12 +1334,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   _query(json: QueryJson, opts: QueryOptions = {}): SqlQuery | SqlQuery[] {
     const sqlClient = this.getSqlClient()
     const config: Knex.Config = {
-      client: sqlClient,
+      client: this.getBaseSqlClient(),
     }
     if (sqlClient === SqlClient.SQL_LITE || sqlClient === SqlClient.ORACLE) {
       config.useNullAsDefault = true
     }
-
     const client = knex(config)
     let query: Knex.QueryBuilder
     const builder = new InternalBuilder(sqlClient, client, json)
@@ -1442,7 +1447,10 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       let id
       if (sqlClient === SqlClient.MS_SQL) {
         id = results?.[0].id
-      } else if (sqlClient === SqlClient.MY_SQL) {
+      } else if (
+        sqlClient === SqlClient.MY_SQL ||
+        sqlClient === SqlClient.MARIADB
+      ) {
         id = results?.insertId
       }
       row = processFn(
