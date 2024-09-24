@@ -600,10 +600,10 @@ export function fullSchemaWithoutLinks({
   allRequired,
 }: {
   allRequired?: boolean
-}) {
-  const schema: {
-    [type in Exclude<FieldType, FieldType.LINK>]: FieldSchema & { type: type }
-  } = {
+}): {
+  [type in Exclude<FieldType, FieldType.LINK>]: FieldSchema & { type: type }
+} {
+  return {
     [FieldType.STRING]: {
       name: "string",
       type: FieldType.STRING,
@@ -741,8 +741,6 @@ export function fullSchemaWithoutLinks({
       },
     },
   }
-
-  return schema
 }
 export function basicAttachment() {
   return {
