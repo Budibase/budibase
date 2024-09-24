@@ -56,7 +56,7 @@ export async function save(
     table,
   })) as Row
 
-  return finaliseRow(table, row, { updateFormula: true })
+  return finaliseRow(source, row, { updateFormula: true })
 }
 
 export async function find(sourceId: string, rowId: string): Promise<Row> {

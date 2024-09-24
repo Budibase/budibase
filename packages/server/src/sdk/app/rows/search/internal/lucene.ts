@@ -31,7 +31,7 @@ export async function search(
   const { paginate, query } = options
 
   const params: RowSearchParams = {
-    sourceId: options.sourceId,
+    sourceId: table._id!,
     sort: options.sort,
     sortOrder: options.sortOrder,
     sortType: options.sortType,

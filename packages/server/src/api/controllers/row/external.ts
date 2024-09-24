@@ -76,11 +76,11 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   })
 
   const [enrichedRow, oldRow] = await Promise.all([
-    outputProcessing(table, row, {
+    outputProcessing(source, row, {
       squash: true,
       preserveLinks: true,
     }),
-    outputProcessing(table, beforeRow, {
+    outputProcessing(source, beforeRow, {
       squash: true,
       preserveLinks: true,
     }),

@@ -308,8 +308,8 @@ export async function search(
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
   // make sure we have the mapped/latest table
-  if (table?._id) {
-    table = allTablesMap[table?._id]
+  if (table._id) {
+    table = allTablesMap[table._id]
   }
   if (!table) {
     throw new Error("Unable to find table")
@@ -320,13 +320,6 @@ export async function search(
   const searchFilters: SearchFilters = {
     ...cleanupFilters(query, table, allTables),
     documentType: DocumentType.ROW,
-  }
-
-  let fields = options.fields
-  if (fields === undefined) {
-    fields = buildInternalFieldList(table, allTables, { relationships })
-  } else {
-    fields = fields.map(f => mapToUserColumn(f))
   }
 
   if (options.aggregations) {
@@ -350,7 +343,10 @@ export async function search(
       tables: allTablesMap,
       columnPrefix: USER_COLUMN_PREFIX,
     },
-    resource: { fields, aggregations: options.aggregations },
+    resource: {
+      fields: buildInternalFieldList(table, allTables, { relationships }),
+      aggregations: options.aggregations,
+    },
     relationships,
   }
 
@@ -394,7 +390,7 @@ export async function search(
     // make sure JSON columns corrected
     const processed = builder.convertJsonStringColumns<Row>(
       table,
-      await sqlOutputProcessing(rows, table, allTablesMap, relationships, {
+      await sqlOutputProcessing(rows, source, allTablesMap, relationships, {
         sqs: true,
         aggregations: options.aggregations,
       })
@@ -411,7 +407,7 @@ export async function search(
     }
 
     // get the rows
-    let finalRows = await outputProcessing(table, processed, {
+    let finalRows = await outputProcessing(source, processed, {
       preserveLinks: true,
       squash: true,
       aggregations: options.aggregations,

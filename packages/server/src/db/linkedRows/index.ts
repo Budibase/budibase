@@ -248,10 +248,11 @@ function getPrimaryDisplayValue(row: Row, table?: Table) {
 export type SquashTableFields = Record<string, { visibleFieldNames: string[] }>
 
 /**
- * This function will take the given enriched rows and squash the links to only contain the primary display field.
- * @param table The table from which the rows originated.
+ * This function will take the given enriched rows and squash the links to only
+ * contain the primary display field.
+ *
+ * @param source The table or view from which the rows originated.
  * @param enriched The pre-enriched rows (full docs) which are to be squashed.
- * @param squashFields Per link column (key) define which columns are allowed while squashing.
  * @returns The rows after having their links squashed to only contain the ID and primary display.
  */
 export async function squashLinks<T = Row[] | Row>(
