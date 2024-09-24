@@ -1,6 +1,7 @@
 import { derived, get } from "svelte/store"
 import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
 import { memo } from "../../../utils"
+import { cloneDeep } from "lodash"
 
 export const createStores = () => {
   const definition = memo(null)
@@ -161,10 +162,18 @@ export const createActions = context => {
 
   // Updates the datasources primary display column
   const changePrimaryDisplay = async column => {
-    return await saveDefinition({
-      ...get(definition),
-      primaryDisplay: column,
-    })
+    let newDefinition = cloneDeep(get(definition))
+
+    // Update primary display
+    newDefinition.primaryDisplay = column
+
+    // Sanitise schema to ensure field is required and has no default value
+    if (!newDefinition.schema[column].constraints) {
+      newDefinition.schema[column].constraints = {}
+    }
+    newDefinition.schema[column].constraints.presence = { allowEmpty: false }
+    delete newDefinition.schema[column].default
+    return await saveDefinition(newDefinition)
   }
 
   // Adds a schema mutation for a single field
