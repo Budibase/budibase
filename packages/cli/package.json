@@ -28,7 +28,7 @@
     "inquirer": "8.0.0",
     "lookpath": "1.1.0",
     "node-fetch": "2.6.7",
-    "posthog-node": "1.3.0",
+    "posthog-node": "4.0.1",
     "pouchdb": "7.3.0",
     "@budibase/pouchdb-replication-stream": "1.2.11",
     "randomstring": "1.1.5",

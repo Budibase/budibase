@@ -56,10 +56,13 @@
     } else {
       // We don't store the default BB AI config in the DB
       delete fullAIConfig.config.budibase_ai
+
       // unset the default value from other configs if default is set
       if (editingAIConfig.isDefault) {
         for (let key in fullAIConfig.config) {
-          fullAIConfig.config[key].isDefault = false
+          if (key !== id) {
+            fullAIConfig.config[key].isDefault = false
+          }
         }
       }
       // Add new or update existing custom AI Config

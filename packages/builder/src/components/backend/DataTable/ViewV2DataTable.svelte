@@ -1,6 +1,6 @@
 <script>
   import { viewsV2 } from "stores/builder"
-  import { admin, licensing } from "stores/portal"
+  import { admin } from "stores/portal"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
@@ -30,7 +30,6 @@
     showAvatars={false}
     on:updatedatasource={handleGridViewUpdate}
     isCloud={$admin.cloud}
-    allowViewReadonlyColumns={$licensing.isViewReadonlyColumnsEnabled}
     canSetRelationshipSchemas={isEnabled(FeatureFlag.ENRICHED_RELATIONSHIPS)}
   >
     <svelte:fragment slot="filter">
