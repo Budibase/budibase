@@ -20,17 +20,25 @@ import { cloneDeep } from "lodash/fp"
 export function cleanupRelationships(
   table: Table,
   tables: Record<string, Table>,
-  oldTable?: Table
-) {
-  if (!oldTable) {
-    return
-  }
+  opts: { oldTable: Table }
+): void
+export function cleanupRelationships(
+  table: Table,
+  tables: Record<string, Table>,
+  opts: { deleting: boolean }
+): void
+export function cleanupRelationships(
+  table: Table,
+  tables: Record<string, Table>,
+  opts?: { oldTable?: Table; deleting?: boolean }
+): void {
+  const oldTable = opts?.oldTable
   const tableToIterate = oldTable ? oldTable : table
   // clean up relationships in couch table schemas
   for (let [key, schema] of Object.entries(tableToIterate.schema)) {
     if (
       schema.type === FieldType.LINK &&
-      oldTable.schema[key] != null &&
+      (opts?.deleting || oldTable?.schema[key] != null) &&
       table.schema[key] == null
     ) {
       const schemaTableId = schema.tableId

@@ -77,6 +77,7 @@ describe.each([
     table = await createTable(
       {
         name: { name: "name", type: FieldType.STRING },
+        //@ts-ignore - API accepts this structure, will build out rest of definition
         productCat: {
           type: FieldType.LINK,
           relationshipType: type,
@@ -2297,11 +2298,16 @@ describe.each([
         }
       })
 
-      it("can only pull 500 related rows", async () => {
+      it("can only pull 10 related rows", async () => {
         await withCoreEnv({ SQL_MAX_RELATED_ROWS: "10" }, async () => {
           const response = await expectQuery({}).toContain([{ name: "foo" }])
           expect(response.rows[0].productCat).toBeArrayOfSize(10)
         })
+      })
+
+      it("can pull max rows when env not set (defaults to 500)", async () => {
+        const response = await expectQuery({}).toContain([{ name: "foo" }])
+        expect(response.rows[0].productCat).toBeArrayOfSize(11)
       })
     })
   ;(isSqs || isLucene) &&
