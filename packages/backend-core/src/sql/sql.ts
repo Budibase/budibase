@@ -150,6 +150,7 @@ class InternalBuilder {
         return `"${str}"`
       case SqlClient.MS_SQL:
         return `[${str}]`
+      case SqlClient.MARIADB:
       case SqlClient.MY_SQL:
         return `\`${str}\``
     }
@@ -559,7 +560,10 @@ class InternalBuilder {
             )}${wrap}, FALSE)`
           )
         })
-      } else if (this.client === SqlClient.MY_SQL) {
+      } else if (
+        this.client === SqlClient.MY_SQL ||
+        this.client === SqlClient.MARIADB
+      ) {
         const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
         iterate(mode, (q, key, value) => {
           return q[rawFnc](
@@ -930,7 +934,8 @@ class InternalBuilder {
       }
       const relatedTable = meta.tables?.[toTable]
       const toAlias = aliases?.[toTable] || toTable,
-        fromAlias = aliases?.[fromTable] || fromTable
+        fromAlias = aliases?.[fromTable] || fromTable,
+        throughAlias = (throughTable && aliases?.[throughTable]) || throughTable
       let toTableWithSchema = this.tableNameWithSchema(toTable, {
         alias: toAlias,
         schema: endpoint.schema,
@@ -957,38 +962,36 @@ class InternalBuilder {
       const primaryKey = `${toAlias}.${toPrimary || toKey}`
       let subQuery: Knex.QueryBuilder = knex
         .from(toTableWithSchema)
-        .limit(getRelationshipLimit())
         // add sorting to get consistent order
         .orderBy(primaryKey)
 
-      // many-to-many relationship with junction table
-      if (throughTable && toPrimary && fromPrimary) {
-        const throughAlias = aliases?.[throughTable] || throughTable
+      const isManyToMany = throughTable && toPrimary && fromPrimary
+      let correlatedTo = isManyToMany
+          ? `${throughAlias}.${fromKey}`
+          : `${toAlias}.${toKey}`,
+        correlatedFrom = isManyToMany
+          ? `${fromAlias}.${fromPrimary}`
+          : `${fromAlias}.${fromKey}`
+      // many-to-many relationship needs junction table join
+      if (isManyToMany) {
         let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
           alias: throughAlias,
           schema: endpoint.schema,
         })
-        subQuery = subQuery
-          .join(throughTableWithSchema, function () {
-            this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
-          })
-          .where(
-            `${throughAlias}.${fromKey}`,
-            "=",
-            knex.raw(this.quotedIdentifier(`${fromAlias}.${fromPrimary}`))
-          )
-      }
-      // one-to-many relationship with foreign key
-      else {
-        subQuery = subQuery.where(
-          `${toAlias}.${toKey}`,
-          "=",
-          knex.raw(this.quotedIdentifier(`${fromAlias}.${fromKey}`))
-        )
+        subQuery = subQuery.join(throughTableWithSchema, function () {
+          this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
+        })
       }
 
+      // add the correlation to the overall query
+      subQuery = subQuery.where(
+        correlatedTo,
+        "=",
+        knex.raw(this.quotedIdentifier(correlatedFrom))
+      )
+
       const standardWrap = (select: string): Knex.QueryBuilder => {
-        subQuery = subQuery.select(`${toAlias}.*`)
+        subQuery = subQuery.select(`${toAlias}.*`).limit(getRelationshipLimit())
         // @ts-ignore - the from alias syntax isn't in Knex typing
         return knex.select(knex.raw(select)).from({
           [toAlias]: subQuery,
@@ -1008,11 +1011,15 @@ class InternalBuilder {
             `json_agg(json_build_object(${fieldList}))`
           )
           break
-        case SqlClient.MY_SQL:
+        case SqlClient.MARIADB:
+          // can't use the standard wrap due to correlated sub-query limitations in MariaDB
           wrapperQuery = subQuery.select(
-            knex.raw(`json_arrayagg(json_object(${fieldList}))`)
+            knex.raw(
+              `json_arrayagg(json_object(${fieldList}) LIMIT ${getRelationshipLimit()})`
+            )
           )
           break
+        case SqlClient.MY_SQL:
         case SqlClient.ORACLE:
           wrapperQuery = standardWrap(
             `json_arrayagg(json_object(${fieldList}))`
@@ -1024,7 +1031,9 @@ class InternalBuilder {
               .select(`${fromAlias}.*`)
               // @ts-ignore - from alias syntax not TS supported
               .from({
-                [fromAlias]: subQuery.select(`${toAlias}.*`),
+                [fromAlias]: subQuery
+                  .select(`${toAlias}.*`)
+                  .limit(getRelationshipLimit()),
               })} FOR JSON PATH))`
           )
           break
@@ -1179,7 +1188,8 @@ class InternalBuilder {
     if (
       this.client === SqlClient.POSTGRES ||
       this.client === SqlClient.SQL_LITE ||
-      this.client === SqlClient.MY_SQL
+      this.client === SqlClient.MY_SQL ||
+      this.client === SqlClient.MARIADB
     ) {
       const primary = this.table.primary
       if (!primary) {
@@ -1326,12 +1336,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   _query(json: QueryJson, opts: QueryOptions = {}): SqlQuery | SqlQuery[] {
     const sqlClient = this.getSqlClient()
     const config: Knex.Config = {
-      client: sqlClient,
+      client: this.getBaseSqlClient(),
     }
     if (sqlClient === SqlClient.SQL_LITE || sqlClient === SqlClient.ORACLE) {
       config.useNullAsDefault = true
     }
-
     const client = knex(config)
     let query: Knex.QueryBuilder
     const builder = new InternalBuilder(sqlClient, client, json)
@@ -1440,7 +1449,10 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       let id
       if (sqlClient === SqlClient.MS_SQL) {
         id = results?.[0].id
-      } else if (sqlClient === SqlClient.MY_SQL) {
+      } else if (
+        sqlClient === SqlClient.MY_SQL ||
+        sqlClient === SqlClient.MARIADB
+      ) {
         id = results?.insertId
       }
       row = processFn(
