@@ -23,6 +23,7 @@ import {
   ViewFieldMetadata,
   RenameColumn,
   FeatureFlag,
+  BBReferenceFieldSubType,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -2270,7 +2271,7 @@ describe.each([
             name: generator.name(),
             age: generator.age(),
           })
-          const row = await config.api.row.save(table._id!, {
+          await config.api.row.save(table._id!, {
             title: generator.word(),
             aux: [auxRow],
           })
@@ -2302,6 +2303,69 @@ describe.each([
                   _id: auxRow._id,
                   primaryDisplay: auxRow.name,
                   age: auxRow.age,
+                },
+              ],
+            }),
+          ])
+        })
+
+        it("enriches squashed fields", async () => {
+          const auxTable = await createAuxTable({
+            user: {
+              name: "user",
+              type: FieldType.BB_REFERENCE_SINGLE,
+              subtype: BBReferenceFieldSubType.USER,
+              constraints: { presence: true },
+            },
+          })
+          const table = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+          ])
+
+          const user = config.getUser()
+          const auxRow = await config.api.row.save(auxTable._id!, {
+            name: generator.name(),
+            user: user._id,
+          })
+          await config.api.row.save(table._id!, {
+            title: generator.word(),
+            aux: [auxRow],
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              title: { visible: true },
+              aux: {
+                visible: true,
+                columns: {
+                  name: { visible: true, readonly: true },
+                  user: { visible: true, readonly: true },
+                },
+              },
+            },
+          })
+
+          const response = await withCoreEnv(
+            { TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}` },
+            () => config.api.viewV2.search(view.id)
+          )
+
+          expect(response.rows).toEqual([
+            expect.objectContaining({
+              aux: [
+                {
+                  _id: auxRow._id,
+                  primaryDisplay: auxRow.name,
+                  name: auxRow.name,
+                  user: {
+                    _id: user._id,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    primaryDisplay: user.email,
+                  },
                 },
               ],
             }),
