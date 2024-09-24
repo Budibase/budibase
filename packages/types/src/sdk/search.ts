@@ -197,6 +197,7 @@ export enum SqlClient {
   MS_SQL = "mssql",
   POSTGRES = "pg",
   MY_SQL = "mysql2",
+  MARIADB = "mariadb",
   ORACLE = "oracledb",
   SQL_LITE = "sqlite3",
 }

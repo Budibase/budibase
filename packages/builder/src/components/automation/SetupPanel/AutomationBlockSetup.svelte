@@ -643,8 +643,8 @@
         runtimeName = `loop.${name}`
       } else if (block.name.startsWith("JS")) {
         runtimeName = hasUserDefinedName
-          ? `stepsByName[${bindingName}].${name}`
-          : `steps[${idx - loopBlockCount}].${name}`
+          ? `stepsByName["${bindingName}"].${name}`
+          : `steps["${idx - loopBlockCount}"].${name}`
       } else {
         runtimeName = hasUserDefinedName
           ? `stepsByName.${bindingName}.${name}`
@@ -752,12 +752,20 @@
           : allSteps[idx].icon
 
       if (wasLoopBlock) {
-        loopBlockCount++
         schema = cloneDeep(allSteps[idx - 1]?.schema?.outputs?.properties)
       }
       Object.entries(schema).forEach(([name, value]) => {
         addBinding(name, value, icon, idx, isLoopBlock, bindingName)
       })
+    }
+
+    if (
+      allSteps[blockIdx - 1]?.stepId !== ActionStepID.LOOP &&
+      allSteps
+        .slice(0, blockIdx)
+        .some(step => step.stepId === ActionStepID.LOOP)
+    ) {
+      bindings = bindings.filter(x => !x.readableBinding.includes("loop"))
     }
     return bindings
   }
