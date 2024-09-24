@@ -43,7 +43,11 @@ function finalise(ctx: any, opts: FinaliseOpts = {}) {
 
 async function checkApiKey(
   apiKey: string,
-  populateUser?: (userId: string, tenantId: string) => Promise<User>
+  populateUser?: (
+    userId: string,
+    tenantId: string,
+    email?: string
+  ) => Promise<User>
 ) {
   // check both the primary and the fallback internal api keys
   // this allows for rotation
@@ -70,7 +74,11 @@ async function checkApiKey(
     if (userId) {
       return {
         valid: true,
-        user: await getUser(userId, tenantId, populateUser),
+        user: await getUser({
+          userId,
+          tenantId,
+          populateUser,
+        }),
       }
     } else {
       throw new InvalidAPIKeyError()
@@ -123,13 +131,18 @@ export default function (
           // getting session handles error checking (if session exists etc)
           session = await getSession(userId, sessionId)
           if (opts && opts.populateUser) {
-            user = await getUser(
+            user = await getUser({
               userId,
-              session.tenantId,
-              opts.populateUser(ctx)
-            )
+              tenantId: session.tenantId,
+              email: session.email,
+              populateUser: opts.populateUser(ctx),
+            })
           } else {
-            user = await getUser(userId, session.tenantId)
+            user = await getUser({
+              userId,
+              tenantId: session.tenantId,
+              email: session.email,
+            })
           }
           // @ts-ignore
           user.csrfToken = session.csrfToken
@@ -148,7 +161,11 @@ export default function (
       }
       // this is an internal request, no user made it
       if (!authenticated && apiKey) {
-        const populateUser = opts.populateUser ? opts.populateUser(ctx) : null
+        const populateUser: (
+          userId: string,
+          tenantId: string,
+          email?: string
+        ) => Promise<User> = opts.populateUser ? opts.populateUser(ctx) : null
         const { valid, user: foundUser } = await checkApiKey(
           apiKey,
           populateUser

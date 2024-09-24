@@ -3080,4 +3080,46 @@ describe.each([
         }).toHaveLength(4)
       })
     })
+
+  isSql &&
+    describe("max related columns", () => {
+      let relatedRows: Row[]
+
+      beforeAll(async () => {
+        const relatedSchema: TableSchema = {}
+        const row: Row = {}
+        for (let i = 0; i < 100; i++) {
+          const name = `column${i}`
+          relatedSchema[name] = { name, type: FieldType.NUMBER }
+          row[name] = i
+        }
+        const relatedTable = await createTable(relatedSchema)
+        table = await createTable({
+          name: { name: "name", type: FieldType.STRING },
+          related1: {
+            type: FieldType.LINK,
+            name: "related1",
+            fieldName: "main1",
+            tableId: relatedTable._id!,
+            relationshipType: RelationshipType.MANY_TO_MANY,
+          },
+        })
+        relatedRows = await Promise.all([
+          config.api.row.save(relatedTable._id!, row),
+        ])
+        await config.api.row.save(table._id!, {
+          name: "foo",
+          related1: [relatedRows[0]._id],
+        })
+      })
+
+      it("retrieve the row with relationships", async () => {
+        await expectQuery({}).toContainExactly([
+          {
+            name: "foo",
+            related1: [{ _id: relatedRows[0]._id }],
+          },
+        ])
+      })
+    })
 })

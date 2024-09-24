@@ -1,10 +1,7 @@
 import { db, roles } from "@budibase/backend-core"
-import { features } from "@budibase/pro"
 import {
-  DocumentType,
   PermissionLevel,
   PermissionSource,
-  PlanType,
   VirtualDocumentType,
 } from "@budibase/types"
 import { extractViewInfoFromID, isViewID } from "../../../db/utils"
@@ -14,36 +11,6 @@ import {
 } from "../../../utilities/security"
 import sdk from "../../../sdk"
 import { isV2 } from "../views"
-
-type ResourceActionAllowedResult =
-  | { allowed: true }
-  | {
-      allowed: false
-      level: PermissionLevel
-      resourceType: DocumentType | VirtualDocumentType
-    }
-
-export async function resourceActionAllowed({
-  resourceId,
-  level,
-}: {
-  resourceId: string
-  level: PermissionLevel
-}): Promise<ResourceActionAllowedResult> {
-  if (!isViewID(resourceId)) {
-    return { allowed: true }
-  }
-
-  if (await features.isViewPermissionEnabled()) {
-    return { allowed: true }
-  }
-
-  return {
-    allowed: false,
-    level,
-    resourceType: VirtualDocumentType.VIEW,
-  }
-}
 
 type ResourcePermissions = Record<
   string,
@@ -58,20 +25,6 @@ export async function getInheritablePermissions(
   }
 }
 
-export async function allowsExplicitPermissions(resourceId: string) {
-  if (isViewID(resourceId)) {
-    const allowed = await features.isViewPermissionEnabled()
-    const minPlan = !allowed ? PlanType.PREMIUM_PLUS : undefined
-
-    return {
-      allowed,
-      minPlan,
-    }
-  }
-
-  return { allowed: true }
-}
-
 export async function getResourcePerms(
   resourceId: string
 ): Promise<ResourcePermissions> {
@@ -81,16 +34,14 @@ export async function getResourcePerms(
 
   const permsToInherit = await getInheritablePermissions(resourceId)
 
-  const allowsExplicitPerm = (await allowsExplicitPermissions(resourceId))
-    .allowed
-
   for (let level of CURRENTLY_SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions
     for (let role of rolesList) {
-      const rolePerms = allowsExplicitPerm
-        ? roles.checkForRoleResourceArray(role.permissions || {}, resourceId)
-        : {}
-      if (rolePerms[resourceId]?.indexOf(level) > -1) {
+      const rolePerms = roles.checkForRoleResourceArray(
+        role.permissions || {},
+        resourceId
+      )
+      if (rolePerms[resourceId]?.indexOf(level as PermissionLevel) > -1) {
         permissions[level] = {
           role: roles.getExternalRoleID(role._id!, role.version),
           type: PermissionSource.EXPLICIT,

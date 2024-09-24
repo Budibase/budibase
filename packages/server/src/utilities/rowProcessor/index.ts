@@ -110,7 +110,9 @@ async function processDefaultValues(table: Table, row: Row) {
 
   const identity = context.getIdentity()
   if (identity?._id && identity.type === IdentityType.USER) {
-    const user = await cache.user.getUser(identity._id)
+    const user = await cache.user.getUser({
+      userId: identity._id,
+    })
     delete user.password
 
     ctx["Current User"] = user
