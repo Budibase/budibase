@@ -204,7 +204,9 @@ export async function save(
 
   // add in the new table for relationship purposes
   tables[tableToSave.name] = tableToSave
-  cleanupRelationships(tableToSave, tables, oldTable)
+  if (oldTable) {
+    cleanupRelationships(tableToSave, tables, { oldTable })
+  }
 
   const operation = tableId ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE
   await makeTableRequest(
@@ -259,7 +261,7 @@ export async function destroy(datasourceId: string, table: Table) {
   const operation = Operation.DELETE_TABLE
   if (tables) {
     await makeTableRequest(datasource, operation, table, tables)
-    cleanupRelationships(table, tables)
+    cleanupRelationships(table, tables, { deleting: true })
     delete tables[table.name]
     datasource.entities = tables
   }
