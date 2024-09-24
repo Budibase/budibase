@@ -296,6 +296,12 @@
       delete saveColumn.default
     }
 
+    // Ensure primary display columns are always required and don't have default values
+    if (primaryDisplay) {
+      saveColumn.constraints.presence = true
+      delete saveColumn.default
+    }
+
     try {
       await tables.saveField({
         originalName,
