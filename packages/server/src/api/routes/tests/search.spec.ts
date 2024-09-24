@@ -157,7 +157,11 @@ describe.each([
       if (isInMemory) {
         return dataFilters.search(_.cloneDeep(rows), this.query)
       } else {
-        return config.api.row.search(this.query.sourceId, this.query)
+        const sourceId = this.query.viewId || this.query.tableId
+        if (!sourceId) {
+          throw new Error("No source ID provided")
+        }
+        return config.api.row.search(sourceId, this.query)
       }
     }
 
@@ -327,8 +331,8 @@ describe.each([
     }
   }
 
-  function expectSearch(query: Omit<RowSearchParams, "sourceId">) {
-    return new SearchAssertion({ ...query, sourceId: table._id! })
+  function expectSearch(query: Omit<RowSearchParams, "tableId">) {
+    return new SearchAssertion({ ...query, tableId: table._id! })
   }
 
   function expectQuery(query: SearchFilters) {
@@ -1898,7 +1902,7 @@ describe.each([
             let { rows: fullRowList } = await config.api.row.search(
               table._id!,
               {
-                sourceId: table._id!,
+                tableId: table._id!,
                 query: {},
               }
             )
@@ -1909,7 +1913,7 @@ describe.each([
               rowCount: number = 0
             do {
               const response = await config.api.row.search(table._id!, {
-                sourceId: table._id!,
+                tableId: table._id!,
                 limit: 1,
                 paginate: true,
                 query: {},
@@ -1933,7 +1937,7 @@ describe.each([
           // eslint-disable-next-line no-constant-condition
           while (true) {
             const response = await config.api.row.search(table._id!, {
-              sourceId: table._id!,
+              tableId: table._id!,
               limit: 3,
               query: {},
               bookmark,

@@ -113,7 +113,7 @@ describe("/templates", () => {
             expect(users.name).toBe("Users")
 
             const { rows } = await config.api.row.search(agencyProjects._id!, {
-              sourceId: agencyProjects._id!,
+              tableId: agencyProjects._id!,
               query: {},
             })
 

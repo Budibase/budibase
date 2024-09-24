@@ -19,8 +19,6 @@ export async function search(
   options: RowSearchParams,
   source: Table | ViewV2
 ): Promise<SearchResponse<Row>> {
-  const { sourceId } = options
-
   let table: Table
   if (sdk.views.isView(source)) {
     table = await sdk.views.getTable(source.id)
@@ -31,7 +29,8 @@ export async function search(
   const { paginate, query } = options
 
   const params: RowSearchParams = {
-    sourceId: table._id!,
+    tableId: options.tableId,
+    viewId: options.viewId,
     sort: options.sort,
     sortOrder: options.sortOrder,
     sortType: options.sortType,
@@ -59,7 +58,7 @@ export async function search(
   // Enrich search results with relationships
   if (response.rows && response.rows.length) {
     // enrich with global users if from users table
-    if (sourceId === InternalTables.USER_METADATA) {
+    if (table._id === InternalTables.USER_METADATA) {
       response.rows = await getGlobalUsersFromMetadata(response.rows as User[])
     }
 

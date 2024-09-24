@@ -14,7 +14,7 @@ import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
-import { features, docIds } from "@budibase/backend-core"
+import { features } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { getQueryableFields, removeInvalidFilters } from "./queryUtils"
 
@@ -38,7 +38,8 @@ export async function search(
 ): Promise<SearchResponse<Row>> {
   return await tracer.trace("search", async span => {
     span?.addTags({
-      sourceId: options.sourceId,
+      tableId: options.tableId,
+      viewId: options.viewId,
       query: options.query,
       sort: options.sort,
       sortOrder: options.sortOrder,
@@ -76,20 +77,16 @@ export async function search(
 
     let source: Table | ViewV2
     let table: Table
-    if (docIds.isTableId(options.sourceId)) {
-      source = await sdk.tables.getTable(options.sourceId)
-      table = source
-      options = searchInputMapping(source, options)
-    } else if (docIds.isViewId(options.sourceId)) {
-      source = await sdk.views.get(options.sourceId)
-      table = await sdk.tables.getTable(source.tableId)
+    if (options.viewId) {
+      source = await sdk.views.get(options.viewId)
+      table = await sdk.views.getTable(source)
       options = searchInputMapping(table, options)
-
-      span.addTags({
-        tableId: table._id,
-      })
+    } else if (options.tableId) {
+      source = await sdk.tables.getTable(options.tableId)
+      table = source
+      options = searchInputMapping(table, options)
     } else {
-      throw new Error(`Invalid source ID: ${options.sourceId}`)
+      throw new Error(`Invalid source ID: ${options.viewId || options.tableId}`)
     }
 
     if (options.query) {

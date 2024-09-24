@@ -200,7 +200,7 @@ export async function exportRows(
   }
 
   let result = await search(
-    { sourceId: table._id!, query: requestQuery, sort, sortOrder },
+    { tableId: table._id!, query: requestQuery, sort, sortOrder },
     table
   )
   let rows: Row[] = []
