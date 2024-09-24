@@ -340,7 +340,7 @@ export class DatabaseImpl implements Database {
         try {
           return (await db.list(params)) as AllDocsResponse<T>
         } catch (err: any) {
-          if (err.status === 404) {
+          if (err.reason === DATABASE_NOT_FOUND) {
             return {
               offset: 0,
               total_rows: 0,
