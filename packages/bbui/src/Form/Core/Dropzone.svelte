@@ -397,9 +397,10 @@
     margin-bottom: 8px;
   }
 
-  .compact .gallery > * {
-    max-height: 25px;
+  .compact .placeholder {
+    height: fit-content;
   }
+
   .title {
     display: flex;
     flex-direction: row;
