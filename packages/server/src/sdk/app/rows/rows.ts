@@ -1,9 +1,8 @@
-import { db as dbCore, context } from "@budibase/backend-core"
+import { db as dbCore, context, docIds } from "@budibase/backend-core"
 import { Database, Row } from "@budibase/types"
 import {
   extractViewInfoFromID,
   getRowParams,
-  isViewID,
 } from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"
@@ -26,7 +25,7 @@ export async function getAllInternalRows(appId?: string) {
 
 function pickApi(tableOrViewId: string) {
   let tableId = tableOrViewId
-  if (isViewID(tableOrViewId)) {
+  if (docIds.isViewId(tableOrViewId)) {
     tableId = extractViewInfoFromID(tableOrViewId).tableId
   }
 

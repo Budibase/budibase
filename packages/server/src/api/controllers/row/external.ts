@@ -17,6 +17,7 @@ import {
   Row,
   Table,
   UserCtx,
+  ViewV2,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import * as utils from "./utils"
@@ -29,29 +30,29 @@ import { generateIdForRow } from "./utils"
 
 export async function handleRequest<T extends Operation>(
   operation: T,
-  tableId: string,
+  source: Table | ViewV2,
   opts?: RunConfig
 ): Promise<ExternalRequestReturnType<T>> {
-  return new ExternalRequest<T>(operation, tableId, opts?.datasource).run(
-    opts || {}
-  )
+  return (
+    await ExternalRequest.for<T>(operation, source, {
+      datasource: opts?.datasource,
+    })
+  ).run(opts || {})
 }
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
-  const { tableId, viewId } = utils.getSourceId(ctx)
-
+  const source = await utils.getSource(ctx)
   const { _id, ...rowData } = ctx.request.body
-  const table = await sdk.tables.getTable(tableId)
 
   const { row: dataToUpdate } = await inputProcessing(
     ctx.user?._id,
-    cloneDeep(table),
+    cloneDeep(source),
     rowData
   )
 
   const validateResult = await sdk.rows.utils.validate({
     row: dataToUpdate,
-    tableId,
+    source,
   })
   if (!validateResult.valid) {
     throw { validation: validateResult.errors }

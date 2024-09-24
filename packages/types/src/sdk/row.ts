@@ -10,8 +10,7 @@ export interface Aggregation {
 }
 
 export interface SearchParams {
-  tableId?: string
-  viewId?: string
+  sourceId?: string
   query?: SearchFilters
   paginate?: boolean
   bookmark?: string | number
@@ -30,7 +29,7 @@ export interface SearchParams {
 
 // when searching for rows we want a more extensive search type that requires certain properties
 export interface RowSearchParams
-  extends WithRequired<SearchParams, "tableId" | "query"> {}
+  extends WithRequired<SearchParams, "sourceId" | "query"> {}
 
 export interface SearchResponse<T> {
   rows: T[]
