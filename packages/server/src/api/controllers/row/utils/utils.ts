@@ -112,13 +112,19 @@ function fixBooleanFields({ row, table }: { row: Row; table: Table }) {
 
 export async function sqlOutputProcessing(
   rows: DatasourcePlusQueryResponse,
-  table: Table,
+  source: Table | ViewV2,
   tables: Record<string, Table>,
   relationships: RelationshipsJson[],
   opts?: { sqs?: boolean; aggregations?: Aggregation[] }
 ): Promise<Row[]> {
   if (isKnexEmptyReadResponse(rows)) {
     return []
+  }
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
   }
   let finalRows: { [key: string]: Row } = {}
   for (let row of rows as Row[]) {

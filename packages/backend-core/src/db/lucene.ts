@@ -612,7 +612,6 @@ async function runQuery<T>(
  *   limit {number} The number of results to fetch
  *   bookmark {string|null} Current bookmark in the recursive search
  *   rows {array|null} Current results in the recursive search
- * @returns {Promise<*[]|*>}
  */
 async function recursiveSearch<T>(
   dbName: string,

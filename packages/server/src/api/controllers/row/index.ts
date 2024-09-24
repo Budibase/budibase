@@ -207,7 +207,7 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
 }
 
 export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
-  const { tableId } = utils.getSourceId(ctx)
+  const { tableId, viewId } = utils.getSourceId(ctx)
 
   await context.ensureSnippetContext(true)
 
@@ -221,7 +221,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const searchParams: RowSearchParams = {
     ...ctx.request.body,
     query: enrichedQuery,
-    sourceId: tableId,
+    sourceId: viewId || tableId,
   }
 
   ctx.status = 200
