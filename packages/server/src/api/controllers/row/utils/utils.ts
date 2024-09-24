@@ -1,6 +1,6 @@
 import * as utils from "../../../../db/utils"
 
-import { context, docIds } from "@budibase/backend-core"
+import { docIds } from "@budibase/backend-core"
 import {
   Aggregation,
   Ctx,
@@ -20,7 +20,6 @@ import { basicProcessing, generateIdForRow, getInternalRowId } from "./basic"
 import sdk from "../../../../sdk"
 import { processStringSync } from "@budibase/string-templates"
 import validateJs from "validate.js"
-import { getFullUser } from "../../../../utilities/users"
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -56,21 +55,6 @@ export async function processRelationshipFields(
       relatedRow = await processFormulas(linkedTable, relatedRow)
       row[relationship.column][key] = relatedRow
     }
-  }
-  return row
-}
-
-export async function findRow(tableId: string, rowId: string) {
-  const db = context.getAppDB()
-  let row: Row
-  // TODO remove special user case in future
-  if (tableId === utils.InternalTables.USER_METADATA) {
-    row = await getFullUser(rowId)
-  } else {
-    row = await db.get(rowId)
-  }
-  if (row.tableId !== tableId) {
-    throw "Supplied tableId does not match the rows tableId"
   }
   return row
 }

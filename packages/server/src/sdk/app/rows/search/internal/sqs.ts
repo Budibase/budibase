@@ -15,6 +15,7 @@ import {
   SortType,
   SqlClient,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import {
   buildInternalRelationships,
@@ -292,10 +293,17 @@ function resyncDefinitionsRequired(status: number, message: string) {
 
 export async function search(
   options: RowSearchParams,
-  table: Table,
+  source: Table | ViewV2,
   opts?: { retrying?: boolean }
 ): Promise<SearchResponse<Row>> {
   let { paginate, query, ...params } = cloneDeep(options)
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
 
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
@@ -406,7 +414,6 @@ export async function search(
     let finalRows = await outputProcessing(table, processed, {
       preserveLinks: true,
       squash: true,
-      fromViewId: options.viewId,
       aggregations: options.aggregations,
     })
 

@@ -45,7 +45,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const table = await utils.getTableFromSource(source)
   const { _id, ...rowData } = ctx.request.body
 
-  const { row: dataToUpdate } = await inputProcessing(
+  const dataToUpdate = await inputProcessing(
     ctx.user?._id,
     cloneDeep(source),
     rowData

@@ -219,7 +219,7 @@ describe("Google Sheets Integration", () => {
       })
 
       let resp = await config.api.row.search(table._id!, {
-        tableId: table._id!,
+        sourceId: table._id!,
         query: {},
         paginate: true,
         limit: 10,
@@ -228,7 +228,7 @@ describe("Google Sheets Integration", () => {
 
       while (resp.hasNextPage) {
         resp = await config.api.row.search(table._id!, {
-          tableId: table._id!,
+          sourceId: table._id!,
           query: {},
           paginate: true,
           limit: 10,
@@ -637,7 +637,7 @@ describe("Google Sheets Integration", () => {
 
     it("should be able to find rows with equals filter", async () => {
       const response = await config.api.row.search(table._id!, {
-        tableId: table._id!,
+        sourceId: table._id!,
         query: {
           equal: {
             name: "Foo",
@@ -651,7 +651,7 @@ describe("Google Sheets Integration", () => {
 
     it("should be able to find rows with not equals filter", async () => {
       const response = await config.api.row.search(table._id!, {
-        tableId: table._id!,
+        sourceId: table._id!,
         query: {
           notEqual: {
             name: "Foo",
@@ -666,7 +666,7 @@ describe("Google Sheets Integration", () => {
 
     it("should be able to find rows with empty filter", async () => {
       const response = await config.api.row.search(table._id!, {
-        tableId: table._id!,
+        sourceId: table._id!,
         query: {
           empty: {
             name: null,
@@ -679,7 +679,7 @@ describe("Google Sheets Integration", () => {
 
     it("should be able to find rows with not empty filter", async () => {
       const response = await config.api.row.search(table._id!, {
-        tableId: table._id!,
+        sourceId: table._id!,
         query: {
           notEmpty: {
             name: null,
@@ -692,7 +692,7 @@ describe("Google Sheets Integration", () => {
 
     it("should be able to find rows with one of filter", async () => {
       const response = await config.api.row.search(table._id!, {
-        tableId: table._id!,
+        sourceId: table._id!,
         query: {
           oneOf: {
             name: ["Foo", "Bar"],
@@ -707,7 +707,7 @@ describe("Google Sheets Integration", () => {
 
     it("should be able to find rows with fuzzy filter", async () => {
       const response = await config.api.row.search(table._id!, {
-        tableId: table._id!,
+        sourceId: table._id!,
         query: {
           fuzzy: {
             name: "oo",
@@ -721,7 +721,7 @@ describe("Google Sheets Integration", () => {
 
     it("should be able to find rows with range filter", async () => {
       const response = await config.api.row.search(table._id!, {
-        tableId: table._id!,
+        sourceId: table._id!,
         query: {
           range: {
             name: {
@@ -750,7 +750,7 @@ describe("Google Sheets Integration", () => {
       })
 
       let response = await config.api.row.search(table._id!, {
-        tableId: table._id!,
+        sourceId: table._id!,
         query: { equal: { name: "Unique value!" } },
         paginate: true,
         limit: 10,
@@ -759,7 +759,7 @@ describe("Google Sheets Integration", () => {
 
       while (response.hasNextPage) {
         response = await config.api.row.search(table._id!, {
-          tableId: table._id!,
+          sourceId: table._id!,
           query: { equal: { name: "Unique value!" } },
           paginate: true,
           limit: 10,

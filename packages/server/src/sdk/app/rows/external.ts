@@ -14,7 +14,6 @@ import {
   outputProcessing,
 } from "../../../utilities/rowProcessor"
 import cloneDeep from "lodash/fp/cloneDeep"
-import isEqual from "lodash/fp/isEqual"
 import { tryExtractingTableAndViewId } from "./utils"
 
 export async function getRow(
@@ -55,11 +54,7 @@ export async function save(
     source = await sdk.tables.getTable(tableId)
   }
 
-  const { table: updatedTable, row } = await inputProcessing(
-    userId,
-    cloneDeep(source),
-    inputs
-  )
+  const row = await inputProcessing(userId, cloneDeep(source), inputs)
 
   const validateResult = await sdk.rows.utils.validate({
     row,
@@ -72,10 +67,6 @@ export async function save(
   const response = await handleRequest(Operation.CREATE, source, {
     row,
   })
-
-  if (sdk.tables.isTable(source) && !isEqual(source, updatedTable)) {
-    await sdk.tables.saveTable(updatedTable)
-  }
 
   const rowId = response.row._id
   if (rowId) {

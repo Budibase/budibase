@@ -64,7 +64,7 @@ export async function exportRows(
     result = await outputProcessing(table, response)
   } else if (query) {
     let searchResponse = await sdk.rows.search({
-      tableId,
+      sourceId: tableId,
       query,
       sort,
       sortOrder,
