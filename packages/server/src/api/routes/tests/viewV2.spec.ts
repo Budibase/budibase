@@ -22,6 +22,7 @@ import {
   TableSchema,
   ViewFieldMetadata,
   RenameColumn,
+  FeatureFlag,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -2212,6 +2213,100 @@ describe.each([
             fields: ["id"],
           })
         )
+      })
+
+      describe("foreign relationship columns", () => {
+        const createMainTable = async (
+          links: {
+            name: string
+            tableId: string
+            fk: string
+          }[]
+        ) => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: { title: { name: "title", type: FieldType.STRING } },
+            })
+          )
+          await config.api.table.save({
+            ...table,
+            schema: {
+              ...table.schema,
+              ...links.reduce<TableSchema>((acc, c) => {
+                acc[c.name] = {
+                  name: c.name,
+                  relationshipType: RelationshipType.ONE_TO_MANY,
+                  type: FieldType.LINK,
+                  tableId: c.tableId,
+                  fieldName: c.fk,
+                  constraints: { type: "array" },
+                }
+                return acc
+              }, {}),
+            },
+          })
+          return table
+        }
+        const createAuxTable = (schema: TableSchema) =>
+          config.api.table.save(
+            saveTableRequest({
+              primaryDisplay: "name",
+              schema: {
+                ...schema,
+                name: { name: "name", type: FieldType.STRING },
+              },
+            })
+          )
+
+        it("returns squashed fields respecting the view config", async () => {
+          const auxTable = await createAuxTable({
+            age: { name: "age", type: FieldType.NUMBER },
+          })
+          const table = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+          ])
+
+          const auxRow = await config.api.row.save(auxTable._id!, {
+            name: generator.name(),
+            age: generator.age(),
+          })
+          const row = await config.api.row.save(table._id!, {
+            title: generator.word(),
+            aux: [auxRow],
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              title: { visible: true },
+              aux: {
+                visible: true,
+                columns: {
+                  name: { visible: false, readonly: false },
+                  age: { visible: true, readonly: true },
+                },
+              },
+            },
+          })
+
+          const response = await withCoreEnv(
+            { TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}` },
+            () => config.api.viewV2.search(view.id)
+          )
+
+          expect(response.rows).toEqual([
+            expect.objectContaining({
+              aux: [
+                {
+                  _id: auxRow._id,
+                  primaryDisplay: auxRow.name,
+                  age: auxRow.age,
+                },
+              ],
+            }),
+          ])
+        })
       })
     })
 
