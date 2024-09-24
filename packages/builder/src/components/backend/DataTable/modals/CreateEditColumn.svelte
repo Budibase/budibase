@@ -166,10 +166,8 @@
   // used to select what different options can be displayed for column type
   $: canBeDisplay =
     canBeDisplayColumn(editableColumn.type) && !editableColumn.autocolumn
-  $: canHaveDefault =
-    !required &&
-    isEnabled("DEFAULT_VALUES") &&
-    canHaveDefaultColumn(editableColumn.type)
+  $: defaultValuesEnabled = isEnabled("DEFAULT_VALUES")
+  $: canHaveDefault = !required && canHaveDefaultColumn(editableColumn.type)
   $: canBeRequired =
     editableColumn?.type !== LINK_TYPE &&
     !uneditable &&
@@ -282,9 +280,9 @@
       delete saveColumn.fieldName
     }
 
-    // Ensure the field is not required if we have a default value
-    if (saveColumn.default) {
-      saveColumn.constraints.presence = { allowEmpty: true }
+    // Ensure we don't have a default value if we can't have one
+    if (!canHaveDefault || !defaultValuesEnabled) {
+      delete saveColumn.default
     }
 
     // Delete default value for options fields if the option is no longer available
@@ -300,6 +298,11 @@
     if (primaryDisplay) {
       saveColumn.constraints.presence = { allowEmpty: false }
       delete saveColumn.default
+    }
+
+    // Ensure the field is not required if we have a default value
+    if (saveColumn.default) {
+      saveColumn.constraints.presence = { allowEmpty: true }
     }
 
     try {
@@ -786,9 +789,10 @@
     </div>
   {/if}
 
-  {#if canHaveDefault}
+  {#if defaultValuesEnabled}
     {#if editableColumn.type === FieldType.OPTIONS}
       <Select
+        disabled={!canHaveDefault}
         options={editableColumn.constraints?.inclusion || []}
         label="Default value"
         value={editableColumn.default}
@@ -797,6 +801,7 @@
       />
     {:else}
       <ModalBindableInput
+        disabled={!canHaveDefault}
         panel={ServerBindingPanel}
         title="Default value"
         label="Default value"
