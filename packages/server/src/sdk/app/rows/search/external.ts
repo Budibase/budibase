@@ -106,9 +106,9 @@ export async function search(
       includeSqlRelationships: IncludeRelationship.INCLUDE,
     }
     const [{ rows, rawResponseSize }, totalRows] = await Promise.all([
-      handleRequest(Operation.READ, tableId, parameters),
+      handleRequest(Operation.READ, source, parameters),
       countRows
-        ? handleRequest(Operation.COUNT, tableId, parameters)
+        ? handleRequest(Operation.COUNT, source, parameters)
         : Promise.resolve(undefined),
     ])
 
@@ -200,7 +200,7 @@ export async function exportRows(
   }
 
   let result = await search(
-    { tableId, query: requestQuery, sort, sortOrder },
+    { sourceId: table._id!, query: requestQuery, sort, sortOrder },
     table
   )
   let rows: Row[] = []
@@ -256,10 +256,10 @@ export async function exportRows(
 }
 
 export async function fetch(tableId: string): Promise<Row[]> {
-  const response = await handleRequest(Operation.READ, tableId, {
+  const table = await sdk.tables.getTable(tableId)
+  const response = await handleRequest(Operation.READ, table, {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
-  const table = await sdk.tables.getTable(tableId)
   return await outputProcessing(table, response.rows, {
     preserveLinks: true,
     squash: true,
@@ -267,7 +267,8 @@ export async function fetch(tableId: string): Promise<Row[]> {
 }
 
 export async function fetchRaw(tableId: string): Promise<Row[]> {
-  const response = await handleRequest(Operation.READ, tableId, {
+  const table = await sdk.tables.getTable(tableId)
+  const response = await handleRequest(Operation.READ, table, {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
   return response.rows

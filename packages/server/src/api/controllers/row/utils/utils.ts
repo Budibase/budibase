@@ -106,19 +106,11 @@ export async function getSource(ctx: Ctx): Promise<Table | ViewV2> {
   return sdk.tables.getTable(tableId)
 }
 
-export async function validate(
-  opts: { row: Row } & ({ tableId: string } | { table: Table })
-) {
-  let fetchedTable: Table
-  if ("tableId" in opts) {
-    fetchedTable = await sdk.tables.getTable(opts.tableId)
-  } else {
-    fetchedTable = opts.table
+export async function getTableFromSource(source: Table | ViewV2) {
+  if (sdk.views.isView(source)) {
+    return await sdk.views.getTable(source.id)
   }
-  return sdk.rows.utils.validate({
-    ...opts,
-    table: fetchedTable,
-  })
+  return source
 }
 
 function fixBooleanFields({ row, table }: { row: Row; table: Table }) {

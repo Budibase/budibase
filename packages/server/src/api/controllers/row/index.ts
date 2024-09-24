@@ -221,7 +221,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const searchParams: RowSearchParams = {
     ...ctx.request.body,
     query: enrichedQuery,
-    tableId,
+    sourceId: tableId,
   }
 
   ctx.status = 200
@@ -229,14 +229,15 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
 }
 
 export async function validate(ctx: Ctx<Row, ValidateResponse>) {
-  const { tableId } = utils.getSourceId(ctx)
+  const source = await utils.getSource(ctx)
+  const table = await utils.getTableFromSource(source)
   // external tables are hard to validate currently
-  if (isExternalTableID(tableId)) {
+  if (isExternalTableID(table._id!)) {
     ctx.body = { valid: true, errors: {} }
   } else {
     ctx.body = await sdk.rows.utils.validate({
       row: ctx.request.body,
-      tableId,
+      source,
     })
   }
 }
