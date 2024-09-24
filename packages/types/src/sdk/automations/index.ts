@@ -15,4 +15,10 @@ export interface AutomationData {
   automation: Automation
 }
 
+export interface AutomationRowEvent {
+  appId: string
+  row: Row
+  oldRow: Row
+}
+
 export type AutomationJob = Job<AutomationData>

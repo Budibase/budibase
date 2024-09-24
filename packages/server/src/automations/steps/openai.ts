@@ -10,11 +10,14 @@ import {
 } from "@budibase/types"
 import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
+import * as pro from "@budibase/pro"
 
 enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API
   GPT_4 = "gpt-4",
+  GPT_4O = "gpt-4o",
+  GPT_4O_MINI = "gpt-4o-mini",
 }
 
 export const definition: AutomationStepDefinition = {
@@ -60,19 +63,33 @@ export const definition: AutomationStepDefinition = {
   },
 }
 
+/**
+ * Maintains backward compatibility with automation steps created before the introduction
+ * of custom configurations and Budibase AI
+ * @param inputs - automation inputs from the OpenAI automation step.
+ */
+async function legacyOpenAIPrompt(inputs: OpenAIStepInputs) {
+  const openai = new OpenAI({
+    apiKey: env.OPENAI_API_KEY,
+  })
+
+  const completion = await openai.chat.completions.create({
+    model: inputs.model,
+    messages: [
+      {
+        role: "user",
+        content: inputs.prompt,
+      },
+    ],
+  })
+  return completion?.choices[0]?.message?.content
+}
+
 export async function run({
   inputs,
 }: {
   inputs: OpenAIStepInputs
 }): Promise<OpenAIStepOutputs> {
-  if (!env.OPENAI_API_KEY) {
-    return {
-      success: false,
-      response:
-        "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable.",
-    }
-  }
-
   if (inputs.prompt == null) {
     return {
       success: false,
@@ -81,20 +98,24 @@ export async function run({
   }
 
   try {
-    const openai = new OpenAI({
-      apiKey: env.OPENAI_API_KEY,
-    })
+    let response
+    const customConfigsEnabled = await pro.features.isAICustomConfigsEnabled()
+    const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
 
-    const completion = await openai.chat.completions.create({
-      model: inputs.model,
-      messages: [
-        {
-          role: "user",
-          content: inputs.prompt,
-        },
-      ],
-    })
-    const response = completion?.choices[0]?.message?.content
+    if (budibaseAIEnabled || customConfigsEnabled) {
+      const llm = await pro.ai.LargeLanguageModel.forCurrentTenant(inputs.model)
+      response = await llm.run(inputs.prompt)
+    } else {
+      // fallback to the default that uses the environment variable for backwards compat
+      if (!env.OPENAI_API_KEY) {
+        return {
+          success: false,
+          response:
+            "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable.",
+        }
+      }
+      response = await legacyOpenAIPrompt(inputs)
+    }
 
     return {
       response,

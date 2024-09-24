@@ -2,7 +2,7 @@ import viewTemplate from "./viewBuilder"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import { csv, json, jsonWithSchema, Format, isFormat } from "./exporters"
 import { deleteView, getView, getViews, saveView } from "./utils"
-import { fetchView } from "../row"
+import { fetchLegacyView } from "../row"
 import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import {
@@ -170,7 +170,7 @@ export async function exportView(ctx: Ctx) {
     ctx.params.viewName = viewName
   }
 
-  await fetchView(ctx)
+  await fetchLegacyView(ctx)
   let rows = ctx.body as Row[]
 
   let schema: TableSchema = view && view.meta && view.meta.schema

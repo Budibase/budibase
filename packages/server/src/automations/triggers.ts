@@ -18,6 +18,7 @@ import {
   SearchFilters,
   AutomationStoppedReason,
   AutomationStatus,
+  AutomationRowEvent,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"
@@ -28,6 +29,7 @@ const JOB_OPTS = {
   removeOnFail: true,
 }
 import * as automationUtils from "../automations/automationUtils"
+import { doesTableExist } from "../sdk/app/tables/getters"
 
 async function getAllAutomations() {
   const db = context.getAppDB()
@@ -38,25 +40,35 @@ async function getAllAutomations() {
 }
 
 async function queueRelevantRowAutomations(
-  event: { appId: string; row: Row; oldRow: Row },
-  eventType: string
+  event: AutomationRowEvent,
+  eventType: AutomationEventType
 ) {
+  const tableId = event.row.tableId
   if (event.appId == null) {
     throw `No appId specified for ${eventType} - check event emitters.`
+  }
+
+  // make sure table exists and is valid before proceeding
+  if (!tableId || !(await doesTableExist(tableId))) {
+    return
   }
 
   await context.doInAppContext(event.appId, async () => {
     let automations = await getAllAutomations()
 
     // filter down to the correct event type and enabled automations
+    // make sure it is the correct table ID as well
     automations = automations.filter(automation => {
       const trigger = automation.definition.trigger
-      return trigger && trigger.event === eventType && !automation.disabled
+      return (
+        trigger &&
+        trigger.event === eventType &&
+        !automation.disabled &&
+        trigger?.inputs?.tableId === event.row.tableId
+      )
     })
 
     for (const automation of automations) {
-      const automationDef = automation.definition
-      const automationTrigger = automationDef?.trigger
       // don't queue events which are for dev apps, only way to test automations is
       // running tests on them, in production the test flag will never
       // be checked due to lazy evaluation (first always false)
@@ -72,11 +84,7 @@ async function queueRelevantRowAutomations(
         row: event.row,
         oldRow: event.oldRow,
       })
-      if (
-        automationTrigger?.inputs &&
-        automationTrigger.inputs.tableId === event.row.tableId &&
-        shouldTrigger
-      ) {
+      if (shouldTrigger) {
         try {
           await automationQueue.add({ automation, event }, JOB_OPTS)
         } catch (e) {
@@ -87,6 +95,17 @@ async function queueRelevantRowAutomations(
   })
 }
 
+async function queueRowAutomations(
+  event: AutomationRowEvent,
+  type: AutomationEventType
+) {
+  try {
+    await queueRelevantRowAutomations(event, type)
+  } catch (err: any) {
+    logging.logWarn("Unable to process row event", err)
+  }
+}
+
 emitter.on(
   AutomationEventType.ROW_SAVE,
   async function (event: UpdatedRowEventEmitter) {
@@ -94,7 +113,7 @@ emitter.on(
     if (!event || !event.row || !event.row.tableId) {
       return
     }
-    await queueRelevantRowAutomations(event, AutomationEventType.ROW_SAVE)
+    await queueRowAutomations(event, AutomationEventType.ROW_SAVE)
   }
 )
 
@@ -103,7 +122,7 @@ emitter.on(AutomationEventType.ROW_UPDATE, async function (event) {
   if (!event || !event.row || !event.row.tableId) {
     return
   }
-  await queueRelevantRowAutomations(event, AutomationEventType.ROW_UPDATE)
+  await queueRowAutomations(event, AutomationEventType.ROW_UPDATE)
 })
 
 emitter.on(AutomationEventType.ROW_DELETE, async function (event) {
@@ -111,7 +130,7 @@ emitter.on(AutomationEventType.ROW_DELETE, async function (event) {
   if (!event || !event.row || !event.row.tableId) {
     return
   }
-  await queueRelevantRowAutomations(event, AutomationEventType.ROW_DELETE)
+  await queueRowAutomations(event, AutomationEventType.ROW_DELETE)
 })
 
 function rowPassesFilters(row: Row, filters: SearchFilters) {

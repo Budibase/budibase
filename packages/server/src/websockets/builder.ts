@@ -16,7 +16,6 @@ import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
 import { Socket } from "socket.io"
 import { BuilderSocketEvent } from "@budibase/shared-core"
-import { processTable } from "../sdk/app/tables/getters"
 
 export default class BuilderSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
@@ -102,10 +101,9 @@ export default class BuilderSocket extends BaseSocket {
   }
 
   emitTableUpdate(ctx: any, table: Table, options?: EmitOptions) {
-    // This was added to make sure that sourceId is always present when
-    // sending this message to clients. Without this, tables without a
-    // sourceId (e.g. ta_users) won't get correctly updated client-side.
-    table = processTable(table)
+    if (table.sourceId == null || table.sourceId === "") {
+      throw new Error("Table sourceId is not set")
+    }
 
     this.emitToRoom(
       ctx,

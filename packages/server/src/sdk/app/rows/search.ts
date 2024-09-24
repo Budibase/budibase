@@ -12,7 +12,7 @@ import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
-import { db as dbCore } from "@budibase/backend-core"
+import { features } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { getQueryableFields, removeInvalidFilters } from "./queryUtils"
 
@@ -90,7 +90,7 @@ export async function search(
     if (isExternalTable) {
       span?.addTags({ searchType: "external" })
       result = await external.search(options, table)
-    } else if (dbCore.isSqsEnabledForTenant()) {
+    } else if (await features.flags.isEnabled("SQS")) {
       span?.addTags({ searchType: "sqs" })
       result = await internal.sqs.search(options, table)
     } else {
@@ -121,10 +121,9 @@ export async function fetchRaw(tableId: string): Promise<Row[]> {
   return pickApi(tableId).fetchRaw(tableId)
 }
 
-export async function fetchView(
-  tableId: string,
+export async function fetchLegacyView(
   viewName: string,
   params: ViewParams
 ): Promise<Row[]> {
-  return pickApi(tableId).fetchView(viewName, params)
+  return internal.fetchLegacyView(viewName, params)
 }

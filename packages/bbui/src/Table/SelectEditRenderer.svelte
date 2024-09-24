@@ -6,10 +6,11 @@
   export let onEdit
   export let allowSelectRows = false
   export let allowEditRows = false
+  export let data
 </script>
 
 <div>
-  {#if allowSelectRows}
+  {#if allowSelectRows && data.__selectable !== false}
     <Checkbox value={selected} />
   {/if}
   {#if allowEditRows}

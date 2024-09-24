@@ -134,6 +134,17 @@ export interface RelationshipsJson {
   column: string
 }
 
+// TODO - this can be combined with the above type
+export interface ManyToManyRelationshipJson {
+  through: string
+  from: string
+  to: string
+  fromPrimary: string
+  toPrimary: string
+  tableName: string
+  column: string
+}
+
 export interface QueryJson {
   endpoint: {
     datasourceId: string
@@ -184,6 +195,7 @@ export enum SqlClient {
   MS_SQL = "mssql",
   POSTGRES = "pg",
   MY_SQL = "mysql2",
+  MARIADB = "mariadb",
   ORACLE = "oracledb",
   SQL_LITE = "sqlite3",
 }

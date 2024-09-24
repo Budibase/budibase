@@ -43,6 +43,7 @@
   export let canDeleteRows = true
   export let canEditColumns = true
   export let canSaveSchema = true
+  export let canSetRelationshipSchemas = false
   export let stripeRows = false
   export let quiet = false
   export let collaboration = true
@@ -57,7 +58,6 @@
   export let buttons = null
   export let darkMode
   export let isCloud = null
-  export let allowViewReadonlyColumns = false
   export let rowConditions = null
 
   // Unique identifier for DOM nodes inside this instance
@@ -99,6 +99,7 @@
     canDeleteRows,
     canEditColumns,
     canSaveSchema,
+    canSetRelationshipSchemas,
     stripeRows,
     quiet,
     collaboration,
@@ -113,7 +114,6 @@
     buttons,
     darkMode,
     isCloud,
-    allowViewReadonlyColumns,
     rowConditions,
   })
 
@@ -155,7 +155,7 @@
       <div class="controls-left">
         <slot name="filter" />
         <SortButton />
-        <ColumnsSettingButton {allowViewReadonlyColumns} />
+        <ColumnsSettingButton />
         <SizeButton />
         <slot name="controls" />
       </div>

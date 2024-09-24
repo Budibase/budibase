@@ -3,6 +3,7 @@ import { fixAutoColumnSubType, processFormulas } from "./utils"
 import {
   cache,
   context,
+  features,
   HTTPError,
   objectStore,
   utils,
@@ -109,7 +110,9 @@ async function processDefaultValues(table: Table, row: Row) {
 
   const identity = context.getIdentity()
   if (identity?._id && identity.type === IdentityType.USER) {
-    const user = await cache.user.getUser(identity._id)
+    const user = await cache.user.getUser({
+      userId: identity._id,
+    })
     delete user.password
 
     ctx["Current User"] = user
@@ -246,6 +249,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     preserveLinks?: boolean
     fromRow?: Row
     skipBBReferences?: boolean
+    fromViewId?: string
   } = {
     squash: true,
     preserveLinks: false,
@@ -262,7 +266,7 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
   // attach any linked row information
   let enriched = !opts.preserveLinks
-    ? await linkRows.attachFullLinkedDocs(table, safeRows, {
+    ? await linkRows.attachFullLinkedDocs(table.schema, safeRows, {
         fromRow: opts?.fromRow,
       })
     : safeRows
@@ -335,6 +339,13 @@ export async function outputProcessing<T extends Row[] | Row>(
           row[property] = `${hours}:${minutes}:${seconds}`
         }
       }
+    } else if (column.type === FieldType.LINK) {
+      for (let row of enriched) {
+        // if relationship is empty - remove the array, this has been part of the API for some time
+        if (Array.isArray(row[property]) && row[property].length === 0) {
+          delete row[property]
+        }
+      }
     }
   }
 
@@ -342,18 +353,25 @@ export async function outputProcessing<T extends Row[] | Row>(
   enriched = await processFormulas(table, enriched, { dynamic: true })
 
   if (opts.squash) {
-    enriched = (await linkRows.squashLinksToPrimaryDisplay(
-      table,
-      enriched
-    )) as Row[]
+    enriched = await linkRows.squashLinks(table, enriched, {
+      fromViewId: opts?.fromViewId,
+    })
   }
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
-  if (isExternal) {
+  if (isExternal || (await features.flags.isEnabled("SQS"))) {
     for (const row of enriched) {
       for (const key of Object.keys(row)) {
         if (row[key] === null) {
           delete row[key]
+        } else if (row[key] && table.schema[key]?.type === FieldType.LINK) {
+          for (const link of row[key] || []) {
+            for (const linkKey of Object.keys(link)) {
+              if (link[linkKey] === null) {
+                delete link[linkKey]
+              }
+            }
+          }
         }
       }
     }

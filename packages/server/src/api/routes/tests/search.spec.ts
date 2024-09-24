@@ -9,10 +9,10 @@ import {
   db as dbCore,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
+  setEnv as setCoreEnv,
   SQLITE_DESIGN_DOC_ID,
   utils,
   withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
 } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
@@ -39,9 +39,10 @@ import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
 import { dataFilters } from "@budibase/shared-core"
 import { Knex } from "knex"
-import { structures } from "@budibase/backend-core/tests"
+import { generator, structures } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
+import { cloneDeep } from "lodash/fp"
 
 describe.each([
   ["in-memory", undefined],
@@ -66,12 +67,45 @@ describe.each([
   let table: Table
   let rows: Row[]
 
+  async function basicRelationshipTables(type: RelationshipType) {
+    const relatedTable = await createTable(
+      {
+        name: { name: "name", type: FieldType.STRING },
+      },
+      generator.guid().substring(0, 10)
+    )
+    table = await createTable(
+      {
+        name: { name: "name", type: FieldType.STRING },
+        //@ts-ignore - API accepts this structure, will build out rest of definition
+        productCat: {
+          type: FieldType.LINK,
+          relationshipType: type,
+          name: "productCat",
+          fieldName: "product",
+          tableId: relatedTable._id!,
+          constraints: {
+            type: "array",
+          },
+        },
+      },
+      generator.guid().substring(0, 10)
+    )
+    return {
+      relatedTable: await config.api.table.get(relatedTable._id!),
+      table,
+    }
+  }
+
   beforeAll(async () => {
-    await withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, () => config.init())
-    if (isSqs) {
+    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
+    if (isLucene) {
       envCleanup = setCoreEnv({
-        SQS_SEARCH_ENABLE: "true",
-        SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
+        TENANT_FEATURE_FLAGS: "*:!SQS",
+      })
+    } else if (isSqs) {
+      envCleanup = setCoreEnv({
+        TENANT_FEATURE_FLAGS: "*:SQS",
       })
     }
 
@@ -198,6 +232,7 @@ describe.each([
     // rows returned by the query will also cause the assertion to fail.
     async toMatchExactly(expectedRows: any[]) {
       const response = await this.performSearch()
+      const cloned = cloneDeep(response)
       const foundRows = response.rows
 
       // eslint-disable-next-line jest/no-standalone-expect
@@ -208,7 +243,7 @@ describe.each([
           expect.objectContaining(this.popRow(expectedRow, foundRows))
         )
       )
-      return response
+      return cloned
     }
 
     // Asserts that the query returns rows matching exactly the set of rows
@@ -216,6 +251,7 @@ describe.each([
     // cause the assertion to fail.
     async toContainExactly(expectedRows: any[]) {
       const response = await this.performSearch()
+      const cloned = cloneDeep(response)
       const foundRows = response.rows
 
       // eslint-disable-next-line jest/no-standalone-expect
@@ -228,7 +264,7 @@ describe.each([
           )
         )
       )
-      return response
+      return cloned
     }
 
     // Asserts that the query returns some property values - this cannot be used
@@ -236,6 +272,7 @@ describe.each([
     // typing for this has to be any, Jest doesn't expose types for matchers like expect.any(...)
     async toMatch(properties: Record<string, any>) {
       const response = await this.performSearch()
+      const cloned = cloneDeep(response)
       const keys = Object.keys(properties) as Array<keyof SearchResponse<Row>>
       for (let key of keys) {
         // eslint-disable-next-line jest/no-standalone-expect
@@ -245,17 +282,18 @@ describe.each([
           expect(response[key]).toEqual(properties[key])
         }
       }
-      return response
+      return cloned
     }
 
     // Asserts that the query doesn't return a property, e.g. pagination parameters.
     async toNotHaveProperty(properties: (keyof SearchResponse<Row>)[]) {
       const response = await this.performSearch()
+      const cloned = cloneDeep(response)
       for (let property of properties) {
         // eslint-disable-next-line jest/no-standalone-expect
         expect(response[property]).toBeUndefined()
       }
-      return response
+      return cloned
     }
 
     // Asserts that the query returns rows matching the set of rows passed in.
@@ -263,6 +301,7 @@ describe.each([
     // assertion to fail.
     async toContain(expectedRows: any[]) {
       const response = await this.performSearch()
+      const cloned = cloneDeep(response)
       const foundRows = response.rows
 
       // eslint-disable-next-line jest/no-standalone-expect
@@ -273,7 +312,7 @@ describe.each([
           )
         )
       )
-      return response
+      return cloned
     }
 
     async toFindNothing() {
@@ -1934,6 +1973,67 @@ describe.each([
     })
   })
 
+  isSql &&
+    describe("related formulas", () => {
+      beforeAll(async () => {
+        const arrayTable = await createTable(
+          {
+            name: { name: "name", type: FieldType.STRING },
+            array: {
+              name: "array",
+              type: FieldType.ARRAY,
+              constraints: {
+                type: JsonFieldSubType.ARRAY,
+                inclusion: ["option 1", "option 2"],
+              },
+            },
+          },
+          "array"
+        )
+        table = await createTable(
+          {
+            relationship: {
+              type: FieldType.LINK,
+              relationshipType: RelationshipType.MANY_TO_ONE,
+              name: "relationship",
+              fieldName: "relate",
+              tableId: arrayTable._id!,
+              constraints: {
+                type: "array",
+              },
+            },
+            formula: {
+              type: FieldType.FORMULA,
+              name: "formula",
+              formula: encodeJSBinding(
+                `let array = [];$("relationship").forEach(rel => array = array.concat(rel.array));return array.sort().join(",")`
+              ),
+            },
+          },
+          "main"
+        )
+        const arrayRows = await Promise.all([
+          config.api.row.save(arrayTable._id!, {
+            name: "foo",
+            array: ["option 1"],
+          }),
+          config.api.row.save(arrayTable._id!, {
+            name: "bar",
+            array: ["option 2"],
+          }),
+        ])
+        await Promise.all([
+          config.api.row.save(table._id!, {
+            relationship: [arrayRows[0]._id, arrayRows[1]._id],
+          }),
+        ])
+      })
+
+      it("formula is correct with relationship arrays", async () => {
+        await expectQuery({}).toContain([{ formula: "option 1,option 2" }])
+      })
+    })
+
   describe("user", () => {
     let user1: User
     let user2: User
@@ -2132,28 +2232,10 @@ describe.each([
       let productCategoryTable: Table, productCatRows: Row[]
 
       beforeAll(async () => {
-        productCategoryTable = await createTable(
-          {
-            name: { name: "name", type: FieldType.STRING },
-          },
-          "productCategory"
+        const { relatedTable } = await basicRelationshipTables(
+          RelationshipType.ONE_TO_MANY
         )
-        table = await createTable(
-          {
-            name: { name: "name", type: FieldType.STRING },
-            productCat: {
-              type: FieldType.LINK,
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              name: "productCat",
-              fieldName: "product",
-              tableId: productCategoryTable._id!,
-              constraints: {
-                type: "array",
-              },
-            },
-          },
-          "product"
-        )
+        productCategoryTable = relatedTable
 
         productCatRows = await Promise.all([
           config.api.row.save(productCategoryTable._id!, { name: "foo" }),
@@ -2186,7 +2268,7 @@ describe.each([
 
       it("should be able to filter by relationship using table name", async () => {
         await expectQuery({
-          equal: { ["productCategory.name"]: "foo" },
+          equal: { [`${productCategoryTable.name}.name`]: "foo" },
         }).toContainExactly([
           { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
         ])
@@ -2196,6 +2278,36 @@ describe.each([
         await expectQuery({
           equal: { ["name"]: "baz" },
         }).toContainExactly([{ name: "baz", productCat: undefined }])
+      })
+    })
+
+  isSql &&
+    describe("big relations", () => {
+      beforeAll(async () => {
+        const { relatedTable } = await basicRelationshipTables(
+          RelationshipType.MANY_TO_ONE
+        )
+        const mainRow = await config.api.row.save(table._id!, {
+          name: "foo",
+        })
+        for (let i = 0; i < 11; i++) {
+          await config.api.row.save(relatedTable._id!, {
+            name: i,
+            product: [mainRow._id!],
+          })
+        }
+      })
+
+      it("can only pull 10 related rows", async () => {
+        await withCoreEnv({ SQL_MAX_RELATED_ROWS: "10" }, async () => {
+          const response = await expectQuery({}).toContain([{ name: "foo" }])
+          expect(response.rows[0].productCat).toBeArrayOfSize(10)
+        })
+      })
+
+      it("can pull max rows when env not set (defaults to 500)", async () => {
+        const response = await expectQuery({}).toContain([{ name: "foo" }])
+        expect(response.rows[0].productCat).toBeArrayOfSize(11)
       })
     })
   ;(isSqs || isLucene) &&
@@ -2688,81 +2800,6 @@ describe.each([
     })
 
   isSql &&
-    describe("pagination edge case with relationships", () => {
-      let mainRows: Row[] = []
-
-      beforeAll(async () => {
-        const toRelateTable = await createTable({
-          name: {
-            name: "name",
-            type: FieldType.STRING,
-          },
-        })
-        table = await createTable({
-          name: {
-            name: "name",
-            type: FieldType.STRING,
-          },
-          rel: {
-            name: "rel",
-            type: FieldType.LINK,
-            relationshipType: RelationshipType.MANY_TO_ONE,
-            tableId: toRelateTable._id!,
-            fieldName: "rel",
-          },
-        })
-        const relatedRows = await Promise.all([
-          config.api.row.save(toRelateTable._id!, { name: "tag 1" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 2" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 3" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 4" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 5" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 6" }),
-        ])
-        mainRows = await Promise.all([
-          config.api.row.save(table._id!, {
-            name: "product 1",
-            rel: relatedRows.map(row => row._id),
-          }),
-          config.api.row.save(table._id!, {
-            name: "product 2",
-            rel: [],
-          }),
-          config.api.row.save(table._id!, {
-            name: "product 3",
-            rel: [],
-          }),
-        ])
-      })
-
-      it("can still page when the hard limit is hit", async () => {
-        await withCoreEnv(
-          {
-            SQL_MAX_ROWS: "6",
-          },
-          async () => {
-            const params: Omit<RowSearchParams, "tableId"> = {
-              query: {},
-              paginate: true,
-              limit: 3,
-              sort: "name",
-              sortType: SortType.STRING,
-              sortOrder: SortOrder.ASCENDING,
-            }
-            const page1 = await expectSearch(params).toContain([mainRows[0]])
-            expect(page1.hasNextPage).toBe(true)
-            expect(page1.bookmark).toBeDefined()
-            const page2 = await expectSearch({
-              ...params,
-              bookmark: page1.bookmark,
-            }).toContain([mainRows[1], mainRows[2]])
-            expect(page2.hasNextPage).toBe(false)
-          }
-        )
-      })
-    })
-
-  isSql &&
     describe("primaryDisplay", () => {
       beforeAll(async () => {
         let toRelateTable = await createTable({
@@ -2918,6 +2955,28 @@ describe.each([
             'Invalid body - "query.$and.conditions[1].$and.conditions" is required'
           )
         })
+
+      it("returns no rows when onEmptyFilter set to none", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+            $and: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toFindNothing()
+      })
+
+      it("returns all rows when onEmptyFilter set to all", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            $and: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toHaveLength(4)
+      })
     })
 
   !isLucene &&
@@ -3045,6 +3104,70 @@ describe.each([
             ],
           },
         }).toContainExactly([{ age: 1, name: "Jane" }])
+      })
+
+      it("returns no rows when onEmptyFilter set to none", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+            $or: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toFindNothing()
+      })
+
+      it("returns all rows when onEmptyFilter set to all", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            $or: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toHaveLength(4)
+      })
+    })
+
+  isSql &&
+    describe("max related columns", () => {
+      let relatedRows: Row[]
+
+      beforeAll(async () => {
+        const relatedSchema: TableSchema = {}
+        const row: Row = {}
+        for (let i = 0; i < 100; i++) {
+          const name = `column${i}`
+          relatedSchema[name] = { name, type: FieldType.NUMBER }
+          row[name] = i
+        }
+        const relatedTable = await createTable(relatedSchema)
+        table = await createTable({
+          name: { name: "name", type: FieldType.STRING },
+          related1: {
+            type: FieldType.LINK,
+            name: "related1",
+            fieldName: "main1",
+            tableId: relatedTable._id!,
+            relationshipType: RelationshipType.MANY_TO_MANY,
+          },
+        })
+        relatedRows = await Promise.all([
+          config.api.row.save(relatedTable._id!, row),
+        ])
+        await config.api.row.save(table._id!, {
+          name: "foo",
+          related1: [relatedRows[0]._id],
+        })
+      })
+
+      it("retrieve the row with relationships", async () => {
+        await expectQuery({}).toContainExactly([
+          {
+            name: "foo",
+            related1: [{ _id: relatedRows[0]._id }],
+          },
+        ])
       })
     })
 })
