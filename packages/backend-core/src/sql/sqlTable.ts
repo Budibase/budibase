@@ -210,14 +210,25 @@ function buildDeleteTable(knex: SchemaBuilder, table: Table): SchemaBuilder {
 
 class SqlTableQueryBuilder {
   private readonly sqlClient: SqlClient
+  private extendedSqlClient: SqlClient | undefined
 
   // pass through client to get flavour of SQL
   constructor(client: SqlClient) {
     this.sqlClient = client
   }
 
-  getSqlClient(): SqlClient {
+  getBaseSqlClient(): SqlClient {
     return this.sqlClient
+  }
+
+  getSqlClient(): SqlClient {
+    return this.extendedSqlClient || this.sqlClient
+  }
+
+  // if working in a database like MySQL with many variants (MariaDB)
+  // we can set another client which overrides the base one
+  setExtendedSqlClient(client: SqlClient) {
+    this.extendedSqlClient = client
   }
 
   /**
