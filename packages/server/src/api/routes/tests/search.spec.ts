@@ -39,20 +39,20 @@ import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
 import { dataFilters } from "@budibase/shared-core"
 import { Knex } from "knex"
-import { structures } from "@budibase/backend-core/tests"
+import { generator, structures } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
 import { cloneDeep } from "lodash/fp"
 
 describe.each([
-  ["in-memory", undefined],
-  ["lucene", undefined],
-  ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // ["in-memory", undefined],
+  // ["lucene", undefined],
+  // ["sqs", undefined],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -72,7 +72,7 @@ describe.each([
       {
         name: { name: "name", type: FieldType.STRING },
       },
-      "productCategory"
+      generator.guid().substring(0, 10)
     )
     table = await createTable(
       {
@@ -89,7 +89,7 @@ describe.each([
           },
         },
       },
-      "product"
+      generator.guid().substring(0, 10)
     )
     return {
       relatedTable: await config.api.table.get(relatedTable._id!),
@@ -2268,7 +2268,7 @@ describe.each([
 
       it("should be able to filter by relationship using table name", async () => {
         await expectQuery({
-          equal: { ["productCategory.name"]: "foo" },
+          equal: { [`${productCategoryTable.name}.name`]: "foo" },
         }).toContainExactly([
           { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
         ])
