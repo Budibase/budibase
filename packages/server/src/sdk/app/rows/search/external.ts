@@ -9,6 +9,7 @@ import {
   SortJson,
   SortOrder,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import { handleRequest } from "../../../../api/controllers/row/external"
@@ -60,9 +61,8 @@ function getPaginationAndLimitParameters(
 
 export async function search(
   options: RowSearchParams,
-  table: Table
+  source: Table | ViewV2
 ): Promise<SearchResponse<Row>> {
-  const { tableId } = options
   const { countRows, paginate, query, ...params } = options
   const { limit } = params
   let bookmark =
@@ -112,10 +112,9 @@ export async function search(
         : Promise.resolve(undefined),
     ])
 
-    let processed = await outputProcessing(table, rows, {
+    let processed = await outputProcessing(source, rows, {
       preserveLinks: true,
       squash: true,
-      fromViewId: options.viewId,
     })
 
     let hasNextPage = false

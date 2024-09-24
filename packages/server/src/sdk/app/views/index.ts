@@ -9,7 +9,7 @@ import {
   ViewV2ColumnEnriched,
   ViewV2Enriched,
 } from "@budibase/types"
-import { HTTPError } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
@@ -38,6 +38,23 @@ export async function get(viewId: string): Promise<ViewV2> {
 export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
   return pickApi(tableId).getEnriched(viewId)
+}
+
+export async function getTable(viewId: string): Promise<Table> {
+  const cached = context.getTableForView(viewId)
+  if (cached) {
+    return cached
+  }
+  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const table = await sdk.tables.getTable(tableId)
+  context.setTableForView(viewId, table)
+  return table
+}
+
+export function isView(view: any): view is ViewV2 {
+  return (
+    view.version === 2 && "id" in view && "tableId" in view && "name" in view
+  )
 }
 
 async function guardCalculationViewSchema(

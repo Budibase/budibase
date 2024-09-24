@@ -1,6 +1,6 @@
 import * as utils from "../../../../db/utils"
 
-import { context } from "@budibase/backend-core"
+import { context, docIds } from "@budibase/backend-core"
 import {
   Aggregation,
   Ctx,
@@ -9,6 +9,7 @@ import {
   RelationshipsJson,
   Row,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import {
   processDates,
@@ -78,7 +79,7 @@ export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
   // top priority, use the URL first
   if (ctx.params?.sourceId) {
     const { sourceId } = ctx.params
-    if (utils.isViewID(sourceId)) {
+    if (docIds.isViewId(sourceId)) {
       return {
         tableId: utils.extractViewInfoFromID(sourceId).tableId,
         viewId: sourceId,
@@ -95,6 +96,14 @@ export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
     return { tableId: ctx.request.body.tableId }
   }
   throw new Error("Unable to find table ID in request")
+}
+
+export async function getSource(ctx: Ctx): Promise<Table | ViewV2> {
+  const { tableId, viewId } = getSourceId(ctx)
+  if (viewId) {
+    return sdk.views.get(viewId)
+  }
+  return sdk.tables.getTable(tableId)
 }
 
 export async function validate(

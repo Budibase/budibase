@@ -9,3 +9,7 @@ export function isExternal(opts: { table?: Table; tableId?: string }): boolean {
   }
   return false
 }
+
+export function isTable(table: any): table is Table {
+  return table.type === "table"
+}

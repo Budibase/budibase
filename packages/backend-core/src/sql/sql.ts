@@ -1274,9 +1274,6 @@ class InternalBuilder {
     if (counting) {
       query = this.addDistinctCount(query)
     } else if (aggregations.length > 0) {
-      query = query.select(
-        this.knex.raw("ROW_NUMBER() OVER (ORDER BY (SELECT 0)) as _id")
-      )
       query = this.addAggregations(query, aggregations)
     } else {
       query = query.select(this.generateSelectStatement())
