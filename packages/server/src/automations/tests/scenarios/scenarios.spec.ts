@@ -196,6 +196,91 @@ describe("Automation Scenarios", () => {
         )
       })
     })
+
+    it("should trigger an automation which creates and then updates a row", async () => {
+      const table = await config.createTable({
+        name: "TestTable",
+        type: "table",
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            constraints: {
+              presence: true,
+            },
+          },
+          value: {
+            name: "value",
+            type: FieldType.NUMBER,
+            constraints: {
+              presence: true,
+            },
+          },
+        },
+      })
+
+      const builder = createAutomationBuilder({
+        name: "Test Create and Update Row",
+      })
+
+      const results = await builder
+        .appAction({ fields: {} })
+        .createRow(
+          {
+            row: {
+              name: "Initial Row",
+              value: 1,
+              tableId: table._id,
+            },
+          },
+          { stepName: "CreateRowStep" }
+        )
+        .updateRow(
+          {
+            rowId: "{{ steps.CreateRowStep.row._id }}",
+            row: {
+              name: "Updated Row",
+              value: 2,
+              tableId: table._id,
+            },
+            meta: {},
+          },
+          { stepName: "UpdateRowStep" }
+        )
+        .queryRows(
+          {
+            tableId: table._id!,
+          },
+          { stepName: "QueryRowsStep" }
+        )
+        .run()
+
+      expect(results.steps).toHaveLength(3)
+
+      expect(results.steps[0].outputs).toMatchObject({
+        success: true,
+        row: {
+          name: "Initial Row",
+          value: 1,
+        },
+      })
+
+      expect(results.steps[1].outputs).toMatchObject({
+        success: true,
+        row: {
+          name: "Updated Row",
+          value: 2,
+        },
+      })
+
+      const expectedRows = [{ name: "Updated Row", value: 2 }]
+
+      expect(results.steps[2].outputs.rows).toEqual(
+        expect.arrayContaining(
+          expectedRows.map(row => expect.objectContaining(row))
+        )
+      )
+    })
   })
 
   describe("Name Based Automations", () => {
