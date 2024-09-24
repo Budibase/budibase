@@ -58,7 +58,6 @@
   export let buttons = null
   export let darkMode
   export let isCloud = null
-  export let allowViewReadonlyColumns = false
   export let rowConditions = null
 
   // Unique identifier for DOM nodes inside this instance
@@ -115,7 +114,6 @@
     buttons,
     darkMode,
     isCloud,
-    allowViewReadonlyColumns,
     rowConditions,
   })
 
@@ -157,7 +155,7 @@
       <div class="controls-left">
         <slot name="filter" />
         <SortButton />
-        <ColumnsSettingButton {allowViewReadonlyColumns} />
+        <ColumnsSettingButton />
         <SizeButton />
         <slot name="controls" />
       </div>
