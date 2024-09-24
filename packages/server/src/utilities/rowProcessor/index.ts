@@ -73,6 +73,7 @@ export async function processAutoColumn(
   // check its not user table, or whether any of the processing options have been disabled
   const shouldUpdateUserFields =
     !isUserTable && !opts?.reprocessing && !opts?.noAutoRelationships && !noUser
+  let tableMutated = false
   for (let [key, schema] of Object.entries(table.schema)) {
     if (!schema.autocolumn) {
       continue
@@ -105,9 +106,16 @@ export async function processAutoColumn(
           row[key] = schema.lastID + 1
           schema.lastID++
           table.schema[key] = schema
+          tableMutated = true
         }
         break
     }
+  }
+
+  if (tableMutated) {
+    const db = context.getAppDB()
+    const resp = await db.put(table)
+    table._rev = resp.rev
   }
 }
 
@@ -235,8 +243,7 @@ export async function inputProcessing(
 
   await processAutoColumn(userId, table, clonedRow, opts)
   await processDefaultValues(table, clonedRow)
-
-  return { table, row: clonedRow }
+  return clonedRow
 }
 
 /**
@@ -271,6 +278,14 @@ export async function outputProcessing<T extends Row[] | Row>(
   } else {
     safeRows = rows
   }
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
+
   // attach any linked row information
   let enriched = !opts.preserveLinks
     ? await linkRows.attachFullLinkedDocs(table.schema, safeRows, {
@@ -360,9 +375,7 @@ export async function outputProcessing<T extends Row[] | Row>(
   enriched = await processFormulas(table, enriched, { dynamic: true })
 
   if (opts.squash) {
-    enriched = await linkRows.squashLinks(table, enriched, {
-      fromViewId: opts?.fromViewId,
-    })
+    enriched = await linkRows.squashLinks(source, enriched)
   }
 
   // remove null properties to match internal API

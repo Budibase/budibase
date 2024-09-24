@@ -40,7 +40,8 @@ export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
   return pickApi(tableId).getEnriched(viewId)
 }
 
-export async function getTable(viewId: string): Promise<Table> {
+export async function getTable(view: string | ViewV2): Promise<Table> {
+  const viewId = typeof view === "string" ? view : view.id
   const cached = context.getTableForView(viewId)
   if (cached) {
     return cached

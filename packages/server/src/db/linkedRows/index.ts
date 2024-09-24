@@ -255,29 +255,29 @@ export type SquashTableFields = Record<string, { visibleFieldNames: string[] }>
  * @returns The rows after having their links squashed to only contain the ID and primary display.
  */
 export async function squashLinks<T = Row[] | Row>(
-  table: Table,
-  enriched: T,
-  options?: {
-    fromViewId?: string
-  }
+  source: Table | ViewV2,
+  enriched: T
 ): Promise<T> {
   const allowRelationshipSchemas = await features.flags.isEnabled(
     FeatureFlag.ENRICHED_RELATIONSHIPS
   )
 
   let viewSchema: Record<string, ViewUIFieldMetadata> = {}
-  if (options?.fromViewId) {
-    const view = Object.values(table.views || {}).find(
-      (v): v is ViewV2 => sdk.views.isV2(v) && v.id === options?.fromViewId
-    )
-
-    if (view && helpers.views.isCalculationView(view)) {
+  if (sdk.views.isView(source)) {
+    if (helpers.views.isCalculationView(source)) {
       return enriched
     }
 
-    if (allowRelationshipSchemas && view) {
-      viewSchema = view.schema || {}
+    if (allowRelationshipSchemas) {
+      viewSchema = source.schema || {}
     }
+  }
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
   }
 
   // will populate this as we find them

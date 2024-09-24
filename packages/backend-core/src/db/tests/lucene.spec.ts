@@ -366,7 +366,7 @@ describe("lucene", () => {
           },
         },
         {
-          tableId: TABLE_ID,
+          sourceId: TABLE_ID,
           limit: 1,
           sort: "property",
           sortType: SortType.STRING,
@@ -390,7 +390,7 @@ describe("lucene", () => {
           },
         },
         {
-          tableId: TABLE_ID,
+          sourceId: TABLE_ID,
           query: {},
         }
       )

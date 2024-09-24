@@ -79,8 +79,8 @@ export class QueryBuilder<T> {
     return this
   }
 
-  setTable(tableId: string) {
-    this.#query.equal!.tableId = tableId
+  setSource(sourceId: string) {
+    this.#query.equal!.tableId = sourceId
     return this
   }
 
@@ -638,8 +638,8 @@ async function recursiveSearch<T>(
     .setSortOrder(params.sortOrder)
     .setSortType(params.sortType)
 
-  if (params.tableId) {
-    queryBuilder.setTable(params.tableId)
+  if (params.sourceId) {
+    queryBuilder.setSource(params.sourceId)
   }
 
   const page = await queryBuilder.run()
@@ -672,8 +672,8 @@ export async function paginatedSearch<T>(
   if (params.version) {
     search.setVersion(params.version)
   }
-  if (params.tableId) {
-    search.setTable(params.tableId)
+  if (params.sourceId) {
+    search.setSource(params.sourceId)
   }
   if (params.sort) {
     search
@@ -695,8 +695,8 @@ export async function paginatedSearch<T>(
   // Try fetching 1 row in the next page to see if another page of results
   // exists or not
   search.setBookmark(searchResults.bookmark).setLimit(1)
-  if (params.tableId) {
-    search.setTable(params.tableId)
+  if (params.sourceId) {
+    search.setSource(params.sourceId)
   }
   const nextResults = await search.run()
 

@@ -8,21 +8,30 @@ import {
   SortType,
   Table,
   User,
+  ViewV2,
 } from "@budibase/types"
 import { getGlobalUsersFromMetadata } from "../../../../../utilities/global"
 import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
+import sdk from "../../../../"
 
 export async function search(
   options: RowSearchParams,
-  table: Table
+  source: Table | ViewV2
 ): Promise<SearchResponse<Row>> {
-  const { tableId } = options
+  const { sourceId } = options
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
 
   const { paginate, query } = options
 
   const params: RowSearchParams = {
-    tableId: options.tableId,
+    sourceId: options.sourceId,
     sort: options.sort,
     sortOrder: options.sortOrder,
     sortType: options.sortType,
@@ -50,7 +59,7 @@ export async function search(
   // Enrich search results with relationships
   if (response.rows && response.rows.length) {
     // enrich with global users if from users table
-    if (tableId === InternalTables.USER_METADATA) {
+    if (sourceId === InternalTables.USER_METADATA) {
       response.rows = await getGlobalUsersFromMetadata(response.rows as User[])
     }
 
@@ -59,9 +68,8 @@ export async function search(
       response.rows = response.rows.map((r: any) => pick(r, fields))
     }
 
-    response.rows = await outputProcessing(table, response.rows, {
+    response.rows = await outputProcessing(source, response.rows, {
       squash: true,
-      fromViewId: options.viewId,
     })
   }
 

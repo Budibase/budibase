@@ -321,3 +321,10 @@ export function tryExtractingTableAndViewId(tableOrViewId: string) {
 
   return { tableId: tableOrViewId }
 }
+
+export function getSource(tableOrViewId: string) {
+  if (docIds.isViewId(tableOrViewId)) {
+    return sdk.views.get(tableOrViewId)
+  }
+  return sdk.tables.getTable(tableOrViewId)
+}
