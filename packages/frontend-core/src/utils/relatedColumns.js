@@ -1,4 +1,4 @@
-import { FieldType } from "@budibase/types"
+import { FieldType, RelationshipType } from "@budibase/types"
 import { Helpers } from "@budibase/bbui"
 
 const columnTypeManyOverrides = {
@@ -21,12 +21,10 @@ const columnTypeManyOverrides = {
   },
   [FieldType.BOOLEAN]: {
     overridedType: FieldType.STRING,
-    parser: value => {
-      if (value) {
-        return true
-      }
-      return false
-    },
+    parser: value => !!value,
+  },
+  [FieldType.SIGNATURE_SINGLE]: {
+    overridedType: FieldType.ATTACHMENTS,
   },
 }
 
@@ -39,6 +37,9 @@ export function enrichSchemaWithRelColumns(schema) {
     acc[c] = field
 
     if (field.visible !== false && field.columns) {
+      const fromSingle =
+        field?.relationshipType === RelationshipType.ONE_TO_MANY
+
       for (const relColumn of Object.keys(field.columns)) {
         const relField = field.columns[relColumn]
         if (!relField.visible) {
@@ -50,7 +51,8 @@ export function enrichSchemaWithRelColumns(schema) {
           name,
           related: { field: c, subField: relColumn },
           cellRenderType:
-            columnTypeManyOverrides[relField.type]?.overridedType ||
+            (!fromSingle &&
+              columnTypeManyOverrides[relField.type]?.overridedType) ||
             relField.type,
         }
       }
@@ -61,7 +63,10 @@ export function enrichSchemaWithRelColumns(schema) {
   return result
 }
 
-export function getRelatedTableValues(row, field, fromSingle) {
+export function getRelatedTableValues(row, field, fromField) {
+  const fromSingle =
+    fromField?.relationshipType === RelationshipType.ONE_TO_MANY
+
   let result = ""
   try {
     if (fromSingle) {
