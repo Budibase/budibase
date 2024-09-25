@@ -45,6 +45,7 @@ import {
 import {
   dataFilters,
   helpers,
+  isInternalColumnName,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
 import { isSearchingByRowID } from "../utils"
@@ -130,15 +131,22 @@ function cleanupFilters(
   // generate a map of all possible column names (these can be duplicated across tables
   // the map of them will always be the same
   const userColumnMap: Record<string, string> = {}
-  allTables.forEach(table =>
-    Object.keys(table.schema).forEach(
-      key => (userColumnMap[key] = mapToUserColumn(key))
-    )
-  )
+  for (const table of allTables) {
+    for (const key of Object.keys(table.schema)) {
+      if (isInternalColumnName(key)) {
+        continue
+      }
+      userColumnMap[key] = mapToUserColumn(key)
+    }
+  }
 
   // update the keys of filters to manage user columns
-  const keyInAnyTable = (key: string): boolean =>
-    allTables.some(table => table.schema[key])
+  const keyInAnyTable = (key: string): boolean => {
+    if (isInternalColumnName(key)) {
+      return false
+    }
+    return allTables.some(table => table.schema[key])
+  }
 
   const splitter = new dataFilters.ColumnSplitter(allTables)
 
