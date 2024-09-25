@@ -61,10 +61,10 @@ export function enrichSchemaWithRelColumns(schema) {
   return result
 }
 
-export function getRelatedTableValues(row, field, isSingle) {
+export function getRelatedTableValues(row, field, fromSingle) {
   let result = ""
   try {
-    if (isSingle) {
+    if (fromSingle) {
       result = row[field.related.field]?.[0]?.[field.related.subField]
     } else {
       const parser =
@@ -75,7 +75,18 @@ export function getRelatedTableValues(row, field, isSingle) {
             parser(r[field.related.subField], field)
           )
         )
-      ).join(", ")
+      )
+
+      if (
+        [
+          FieldType.STRING,
+          FieldType.NUMBER,
+          FieldType.BIGINT,
+          FieldType.BOOLEAN,
+        ].includes(field.type)
+      ) {
+        result = result.join(", ")
+      }
     }
   } catch (e) {
     result = "Not rendable"

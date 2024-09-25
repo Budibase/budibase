@@ -56,11 +56,11 @@ export const deriveStores = context => {
         ...row,
         __idx: idx,
         ...customColumns.reduce((acc, c) => {
-          const isSingle =
+          const fromSingle =
             $enrichedSchema[c.related.field].relationshipType ===
             RelationshipType.ONE_TO_MANY
 
-          acc[c.name] = getRelatedTableValues(row, c, isSingle)
+          acc[c.name] = getRelatedTableValues(row, c, fromSingle)
           return acc
         }, {}),
       }))
