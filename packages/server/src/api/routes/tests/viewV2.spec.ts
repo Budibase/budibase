@@ -2291,8 +2291,17 @@ describe.each([
             },
           })
 
+          const flags = [`*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`]
+          if (isLucene) {
+            flags.push("*:!SQS")
+          } else if (isSqs) {
+            flags.push("*:SQS")
+          }
+
           const response = await withCoreEnv(
-            { TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}` },
+            {
+              TENANT_FEATURE_FLAGS: flags.join(","),
+            },
             () => config.api.viewV2.search(view.id)
           )
 
