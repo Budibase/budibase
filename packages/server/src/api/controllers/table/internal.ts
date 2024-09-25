@@ -3,7 +3,6 @@ import { handleDataImport } from "./utils"
 import {
   BulkImportRequest,
   BulkImportResponse,
-  FieldType,
   RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
