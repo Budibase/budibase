@@ -72,7 +72,7 @@ const toGridFormat = draggableListColumns => {
   }))
 }
 
-const toDraggableListFormat = (gridFormatColumns, createComponent) => {
+const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
   return gridFormatColumns.map(column => {
     return createComponent(
       "@budibase/standard-components/labelfield",
@@ -82,7 +82,7 @@ const toDraggableListFormat = (gridFormatColumns, createComponent) => {
         active: column.active,
         field: column.field,
         label: column.label,
-        columnType: column.columnType,
+        columnType: column.columnType || schema[column.field].type,
         width: column.width,
         conditions: column.conditions,
       },
@@ -103,7 +103,11 @@ const getColumns = ({
     getDefault(schema),
     primaryDisplayColumnName
   )
-  const draggableList = toDraggableListFormat(validatedColumns, createComponent)
+  const draggableList = toDraggableListFormat(
+    validatedColumns,
+    createComponent,
+    schema
+  )
   const primary = draggableList
     .filter(entry => entry.field === primaryDisplayColumnName)
     .map(instance => ({ ...instance, schema }))[0]
