@@ -10,7 +10,7 @@ import flatten from "lodash/flatten"
 import { USER_METDATA_PREFIX } from "../utils"
 import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
-import { processFormulas } from "../../utilities/rowProcessor"
+import { outputProcessing, processFormulas } from "../../utilities/rowProcessor"
 import { context, features } from "@budibase/backend-core"
 import {
   ContextUser,
@@ -284,7 +284,7 @@ export async function squashLinks<T = Row[] | Row>(
   // will populate this as we find them
   const linkedTables = [table]
   const isArray = Array.isArray(enriched)
-  const enrichedArray = !isArray ? [enriched] : enriched
+  const enrichedArray = !isArray ? [enriched as Row] : (enriched as Row[])
   for (const row of enrichedArray) {
     // this only fetches the table if its not already in array
     const rowTable = await getLinkedTable(row.tableId!, linkedTables)
@@ -301,6 +301,9 @@ export async function squashLinks<T = Row[] | Row>(
         obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
 
         if (viewSchema[column]?.columns) {
+          const enrichedLink = await outputProcessing(linkedTable, link, {
+            squash: false,
+          })
           const squashFields = Object.entries(viewSchema[column].columns)
             .filter(([columnName, viewColumnConfig]) => {
               const tableColumn = linkedTable.schema[columnName]
@@ -321,7 +324,7 @@ export async function squashLinks<T = Row[] | Row>(
             .map(([columnName]) => columnName)
 
           for (const relField of squashFields) {
-            obj[relField] = link[relField]
+            obj[relField] = enrichedLink[relField]
           }
         }
 
@@ -330,5 +333,5 @@ export async function squashLinks<T = Row[] | Row>(
       row[column] = newLinks
     }
   }
-  return isArray ? enrichedArray : enrichedArray[0]
+  return (isArray ? enrichedArray : enrichedArray[0]) as T
 }
