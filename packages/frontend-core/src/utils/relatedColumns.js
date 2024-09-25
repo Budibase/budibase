@@ -26,6 +26,15 @@ const columnTypeManyOverrides = {
   [FieldType.SIGNATURE_SINGLE]: {
     overridedType: FieldType.ATTACHMENTS,
   },
+  [FieldType.BB_REFERENCE_SINGLE]: {
+    parser: value => [...new Map(value.map(i => [i._id, i])).values()],
+  },
+  [FieldType.BB_REFERENCE]: {
+    parser: value => [...new Map(value.map(i => [i._id, i])).values()],
+  },
+  [FieldType.ARRAY]: {
+    parser: value => Array.from(new Set(value)),
+  },
 }
 
 export function enrichSchemaWithRelColumns(schema) {
@@ -74,12 +83,9 @@ export function getRelatedTableValues(row, field, fromField) {
     } else {
       const parser =
         columnTypeManyOverrides[field.type]?.parser || (value => value)
-      result = Array.from(
-        new Set(
-          row[field.related.field].flatMap(r =>
-            parser(r[field.related.subField], field)
-          )
-        )
+
+      result = parser(
+        row[field.related.field].flatMap(r => r[field.related.subField], field)
       )
 
       if (
@@ -88,6 +94,9 @@ export function getRelatedTableValues(row, field, fromField) {
           FieldType.NUMBER,
           FieldType.BIGINT,
           FieldType.BOOLEAN,
+          FieldType.DATETIME,
+          FieldType.LONGFORM,
+          FieldType.BARCODEQR,
         ].includes(field.type)
       ) {
         result = result.join(", ")
