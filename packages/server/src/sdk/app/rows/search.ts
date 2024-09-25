@@ -92,7 +92,7 @@ export async function search(
     if (options.query) {
       const visibleFields = (
         options.fields || Object.keys(table.schema)
-      ).filter(field => table.schema[field].visible)
+      ).filter(field => table.schema[field].visible !== false)
 
       const queryableFields = await getQueryableFields(table, visibleFields)
       options.query = removeInvalidFilters(options.query, queryableFields)
