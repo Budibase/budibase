@@ -148,9 +148,16 @@ export function parse(rows: Rows, table: Table): Rows {
 
     Object.keys(row).forEach(columnName => {
       const columnData = row[columnName]
+
+      if (columnName === "_id") {
+        parsedRow[columnName] = columnData
+        return
+      }
+
       const schema = table.schema
       if (!(columnName in schema)) {
-        // Objects can be present in the row data but not in the schema, so make sure we don't proceed in such a case
+        // Objects can be present in the row data but not in the schema, so make
+        // sure we don't proceed in such a case
         return
       }
 
