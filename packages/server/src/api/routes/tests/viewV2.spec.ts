@@ -34,6 +34,7 @@ import {
   roles,
   withEnv as withCoreEnv,
   setEnv as setCoreEnv,
+  env,
 } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
@@ -696,22 +697,23 @@ describe.each([
         )
       })
 
-      it("cannot update views v1", async () => {
-        const viewV1 = await config.api.legacyView.save({
-          tableId: table._id!,
-          name: generator.guid(),
-          filters: [],
-          schema: {},
-        })
+      isInternal &&
+        it("cannot update views v1", async () => {
+          const viewV1 = await config.api.legacyView.save({
+            tableId: table._id!,
+            name: generator.guid(),
+            filters: [],
+            schema: {},
+          })
 
-        await config.api.viewV2.update(viewV1 as unknown as ViewV2, {
-          status: 400,
-          body: {
-            message: "Only views V2 can be updated",
+          await config.api.viewV2.update(viewV1 as unknown as ViewV2, {
             status: 400,
-          },
+            body: {
+              message: "Only views V2 can be updated",
+              status: 400,
+            },
+          })
         })
-      })
 
       it("cannot update the a view with unmatching ids between url and body", async () => {
         const anotherView = await config.api.viewV2.create({
@@ -2217,6 +2219,21 @@ describe.each([
       })
 
       describe("foreign relationship columns", () => {
+        let envCleanup: () => void
+        beforeAll(() => {
+          const flags = [`*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`]
+          if (env.TENANT_FEATURE_FLAGS) {
+            flags.push(...env.TENANT_FEATURE_FLAGS.split(","))
+          }
+          envCleanup = setCoreEnv({
+            TENANT_FEATURE_FLAGS: flags.join(","),
+          })
+        })
+
+        afterAll(() => {
+          envCleanup?.()
+        })
+
         const createMainTable = async (
           links: {
             name: string
@@ -2263,14 +2280,14 @@ describe.each([
           const auxTable = await createAuxTable({
             age: { name: "age", type: FieldType.NUMBER },
           })
-          const table = await createMainTable([
-            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
-          ])
-
           const auxRow = await config.api.row.save(auxTable._id!, {
             name: generator.name(),
             age: generator.age(),
           })
+
+          const table = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+          ])
           await config.api.row.save(table._id!, {
             title: generator.word(),
             aux: [auxRow],
@@ -2291,20 +2308,7 @@ describe.each([
             },
           })
 
-          const flags = [`*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`]
-          if (isLucene) {
-            flags.push("*:!SQS")
-          } else if (isSqs) {
-            flags.push("*:SQS")
-          }
-
-          const response = await withCoreEnv(
-            {
-              TENANT_FEATURE_FLAGS: flags.join(","),
-            },
-            () => config.api.viewV2.search(view.id)
-          )
-
+          const response = await config.api.viewV2.search(view.id)
           expect(response.rows).toEqual([
             expect.objectContaining({
               aux: [
@@ -2356,10 +2360,7 @@ describe.each([
             },
           })
 
-          const response = await withCoreEnv(
-            { TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}` },
-            () => config.api.viewV2.search(view.id)
-          )
+          const response = await config.api.viewV2.search(view.id)
 
           expect(response.rows).toEqual([
             expect.objectContaining({
