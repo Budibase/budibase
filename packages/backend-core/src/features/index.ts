@@ -3,6 +3,7 @@ import * as context from "../context"
 import { PostHog, PostHogOptions } from "posthog-node"
 import { FeatureFlag, IdentityType, UserCtx } from "@budibase/types"
 import tracer from "dd-trace"
+import { Duration } from "../utils"
 
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
@@ -16,6 +17,7 @@ export function init(opts?: PostHogOptions) {
     posthog = new PostHog(env.POSTHOG_TOKEN, {
       host: env.POSTHOG_API_HOST,
       personalApiKey: env.POSTHOG_PERSONAL_TOKEN,
+      featureFlagsPollingInterval: Duration.fromMinutes(3).toMs(),
       ...opts,
     })
   } else {
