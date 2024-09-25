@@ -97,7 +97,7 @@ services:
 
   couchdb-service:
     restart: unless-stopped
-    image: budibase/couchdb:v3.3.3
+    image: budibase/couchdb:v3.3.3-sqs-v2.1.1
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
