@@ -6,6 +6,7 @@ import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
 import { FieldType, RelationshipType } from "@budibase/types"
+import { getRelatedTableValues } from "../../../utils"
 
 export const createStores = () => {
   const rows = writable([])
@@ -39,34 +40,6 @@ export const createStores = () => {
     hasNextPage,
     error,
   }
-}
-
-function getRelatedTableValues(row, field, isSingle) {
-  let result = ""
-  try {
-    if (isSingle) {
-      result = row[field.related.field]?.[0]?.[field.related.subField]
-    } else {
-      result = Array.from(
-        new Set(
-          row[field.related.field].flatMap(r => r[field.related.subField])
-        )
-      )
-      switch (field.type) {
-        case FieldType.STRING:
-        case FieldType.NUMBER:
-        case FieldType.BIGINT:
-        case FieldType.BARCODEQR:
-          result = result.join(", ")
-          break
-      }
-    }
-  } catch (e) {
-    result = "Not rendable"
-    console.error(e.message)
-  }
-
-  return result
 }
 
 export const deriveStores = context => {
