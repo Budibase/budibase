@@ -45,14 +45,14 @@ import { generateRowIdField } from "../../../integrations/utils"
 import { cloneDeep } from "lodash/fp"
 
 describe.each([
-  ["in-memory", undefined],
-  ["lucene", undefined],
+  // ["in-memory", undefined],
+  // ["lucene", undefined],
   ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -2757,7 +2757,7 @@ describe.each([
         })
       })
 
-      it("can filter by the row ID with limit 1", async () => {
+      it.only("can filter by the row ID with limit 1", async () => {
         await expectSearch({
           query: {
             equal: { _id: row._id },

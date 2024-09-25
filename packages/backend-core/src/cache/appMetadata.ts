@@ -11,6 +11,7 @@ export interface DeletedApp {
 }
 
 const EXPIRY_SECONDS = 3600
+const INVALID_EXPIRY_SECONDS = 60
 
 /**
  * The default populate app metadata function
@@ -48,9 +49,8 @@ export async function getAppMetadata(appId: string): Promise<App | DeletedApp> {
       // app DB left around, but no metadata, it is invalid
       if (err && err.status === 404) {
         metadata = { state: AppState.INVALID }
-        // don't expire the reference to an invalid app, it'll only be
-        // updated if a metadata doc actually gets stored (app is remade/reverted)
-        expiry = undefined
+        // expire invalid apps regularly, in-case it was only briefly invalid
+        expiry = INVALID_EXPIRY_SECONDS
       } else {
         throw err
       }
