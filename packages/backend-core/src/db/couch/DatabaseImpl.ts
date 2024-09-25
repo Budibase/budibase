@@ -43,6 +43,9 @@ function buildNano(couchInfo: { url: string; cookie: string }) {
 }
 
 type DBCall<T> = () => Promise<T>
+type DBCallback<T> = (
+  db: Nano.DocumentScope<any>
+) => Promise<DBCall<T>> | DBCall<T>
 
 class CouchDBError extends Error implements DBError {
   status: number
@@ -171,8 +174,8 @@ export class DatabaseImpl implements Database {
   }
 
   // this function fetches the DB and handles if DB creation is needed
-  private async performCall<T>(
-    call: (db: Nano.DocumentScope<any>) => Promise<DBCall<T>> | DBCall<T>
+  private async performCallWithDBCreation<T>(
+    call: DBCallback<T>
   ): Promise<any> {
     const db = this.getDb()
     const fnc = await call(db)
@@ -181,8 +184,19 @@ export class DatabaseImpl implements Database {
     } catch (err: any) {
       if (err.statusCode === 404 && err.reason === DATABASE_NOT_FOUND) {
         await this.checkAndCreateDb()
-        return await this.performCall(call)
+        return await this.performCallWithDBCreation(call)
       }
+      // stripping the error down the props which are safe/useful, drop everything else
+      throw new CouchDBError(`CouchDB error: ${err.message}`, err)
+    }
+  }
+
+  private async performCall<T>(call: DBCallback<T>): Promise<any> {
+    const db = this.getDb()
+    const fnc = await call(db)
+    try {
+      return await fnc()
+    } catch (err: any) {
       // stripping the error down the props which are safe/useful, drop everything else
       throw new CouchDBError(`CouchDB error: ${err.message}`, err)
     }
@@ -227,6 +241,7 @@ export class DatabaseImpl implements Database {
   }
 
   async remove(idOrDoc: string | Document, rev?: string) {
+    // not a read call - but don't create a DB to delete a document
     return this.performCall(db => {
       let _id: string
       let _rev: string
@@ -286,7 +301,7 @@ export class DatabaseImpl implements Database {
     if (!document._id) {
       throw new Error("Cannot store document without _id field.")
     }
-    return this.performCall(async db => {
+    return this.performCallWithDBCreation(async db => {
       if (!document.createdAt) {
         document.createdAt = new Date().toISOString()
       }
@@ -309,7 +324,7 @@ export class DatabaseImpl implements Database {
 
   async bulkDocs(documents: AnyDocument[]) {
     const now = new Date().toISOString()
-    return this.performCall(db => {
+    return this.performCallWithDBCreation(db => {
       return () =>
         db.bulk({
           docs: documents.map(d => ({ createdAt: now, ...d, updatedAt: now })),
@@ -321,7 +336,21 @@ export class DatabaseImpl implements Database {
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
     return this.performCall(db => {
-      return () => db.list(params)
+      return async () => {
+        try {
+          return (await db.list(params)) as AllDocsResponse<T>
+        } catch (err: any) {
+          if (err.reason === DATABASE_NOT_FOUND) {
+            return {
+              offset: 0,
+              total_rows: 0,
+              rows: [],
+            }
+          } else {
+            throw err
+          }
+        }
+      }
     })
   }
 
