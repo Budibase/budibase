@@ -6,7 +6,7 @@
     useSvelteFlow,
   } from "@xyflow/svelte"
   import { Icon, TooltipPosition } from "@budibase/bbui"
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
   import { roles } from "stores/builder"
 
   export let sourceX
@@ -23,8 +23,13 @@
   const { updateRole, selectedNodes } = getContext("flow")
 
   let iconHovered = false
+  let edgeHovered = false
 
-  $: active = $selectedNodes.includes(source) || $selectedNodes.includes(target)
+  $: hovered = iconHovered || edgeHovered
+  $: active =
+    hovered ||
+    $selectedNodes.includes(source) ||
+    $selectedNodes.includes(target)
   $: edgeClasses = getEdgeClasses(active, iconHovered)
   $: [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -54,6 +59,28 @@
     })
     await updateRole(target)
   }
+
+  const onEdgeMouseOver = e => {
+    edgeHovered = true
+  }
+
+  const onEdgeMouseOut = e => {
+    edgeHovered = false
+  }
+
+  onMount(() => {
+    const edge = document.querySelector(`.svelte-flow__edge[data-id="${id}"]`)
+    if (edge) {
+      edge.addEventListener("mouseover", onEdgeMouseOver)
+      edge.addEventListener("mouseout", onEdgeMouseOut)
+    }
+    return () => {
+      if (edge) {
+        edge.removeEventListener("mouseover", onEdgeMouseOver)
+        edge.removeEventListener("mouseout", onEdgeMouseOut)
+      }
+    }
+  })
 </script>
 
 <BaseEdge path={edgePath} class={edgeClasses} />
