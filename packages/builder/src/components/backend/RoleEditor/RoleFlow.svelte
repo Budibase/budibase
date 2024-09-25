@@ -12,7 +12,7 @@
   import RoleNode from "./RoleNode.svelte"
   import RoleEdge from "./RoleEdge.svelte"
   import { autoLayout } from "./layout"
-  import { setContext } from "svelte"
+  import { setContext, tick } from "svelte"
   import Controls from "./Controls.svelte"
   import { GridResolution, MaxAutoZoom } from "./constants"
   import { roles } from "stores/builder"
@@ -115,10 +115,21 @@
     edges.set(newLayout.edges)
   }
 
+  // Manually selects a node
+  const selectNode = roleId => {
+    nodes.update($nodes => {
+      return $nodes.map(node => ({
+        ...node,
+        selected: node.id === roleId,
+      }))
+    })
+  }
+
   // Creates a new role
   const createRole = async () => {
+    const roleId = Helpers.uuid()
     await roles.save({
-      name: Helpers.uuid(),
+      name: roleId,
       uiMetadata: {
         displayName: getSequentialName($roles, "New role ", {
           getName: x => x.uiMetadata.displayName,
@@ -129,6 +140,8 @@
       permissionId: "write",
       inherits: Roles.BASIC,
     })
+    await tick()
+    selectNode(roleId)
   }
 
   // Updates a role with new metadata
