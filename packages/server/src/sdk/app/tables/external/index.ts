@@ -198,12 +198,15 @@ export async function save(
       }
     }
     generateRelatedSchema(schema, relatedTable, tableToSave, relatedColumnName)
+    tables[relatedTable.name] = relatedTable
     schema.main = true
   }
 
   // add in the new table for relationship purposes
   tables[tableToSave.name] = tableToSave
-  cleanupRelationships(tableToSave, tables, oldTable)
+  if (oldTable) {
+    cleanupRelationships(tableToSave, tables, { oldTable })
+  }
 
   const operation = tableId ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE
   await makeTableRequest(
@@ -231,7 +234,10 @@ export async function save(
   // remove the rename prop
   delete tableToSave._rename
 
-  datasource.entities[tableToSave.name] = tableToSave
+  datasource.entities = {
+    ...datasource.entities,
+    ...tables,
+  }
 
   // store it into couch now for budibase reference
   await db.put(populateExternalTableSchemas(datasource))
@@ -255,7 +261,7 @@ export async function destroy(datasourceId: string, table: Table) {
   const operation = Operation.DELETE_TABLE
   if (tables) {
     await makeTableRequest(datasource, operation, table, tables)
-    cleanupRelationships(table, tables)
+    cleanupRelationships(table, tables, { deleting: true })
     delete tables[table.name]
     datasource.entities = tables
   }
