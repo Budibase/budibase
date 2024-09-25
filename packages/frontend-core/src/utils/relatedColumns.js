@@ -1,40 +1,39 @@
 import { FieldType, RelationshipType } from "@budibase/types"
 import { Helpers } from "@budibase/bbui"
 
-const columnTypeManyOverrides = {
-  [FieldType.DATETIME]: {
-    overridedType: FieldType.STRING,
-    parser: (value, field) => {
-      const { timeOnly, dateOnly, ignoreTimezones } = field
+const columnTypeManyTypeOverrides = {
+  [FieldType.DATETIME]: FieldType.STRING,
+  [FieldType.BOOLEAN]: FieldType.STRING,
+  [FieldType.SIGNATURE_SINGLE]: FieldType.ATTACHMENTS,
+}
+
+const columnTypeManyParser = {
+  [FieldType.DATETIME]: (value, field) => {
+    function parseDate(value) {
+      const { timeOnly, dateOnly, ignoreTimezones } = field || {}
       const enableTime = !dateOnly
       const parsedValue = Helpers.parseDate(value, {
         timeOnly,
         enableTime,
         ignoreTimezones,
       })
-      const result = Helpers.getDateDisplayValue(parsedValue, {
+      const parsed = Helpers.getDateDisplayValue(parsedValue, {
         enableTime,
         timeOnly,
       })
-      return result
-    },
+      return parsed
+    }
+
+    return value?.map(v => parseDate(v))
   },
-  [FieldType.BOOLEAN]: {
-    overridedType: FieldType.STRING,
-    parser: value => !!value,
-  },
-  [FieldType.SIGNATURE_SINGLE]: {
-    overridedType: FieldType.ATTACHMENTS,
-  },
-  [FieldType.BB_REFERENCE_SINGLE]: {
-    parser: value => [...new Map(value.map(i => [i._id, i])).values()],
-  },
-  [FieldType.BB_REFERENCE]: {
-    parser: value => [...new Map(value.map(i => [i._id, i])).values()],
-  },
-  [FieldType.ARRAY]: {
-    parser: value => Array.from(new Set(value)),
-  },
+  [FieldType.BOOLEAN]: value => value?.map(v => !!v),
+  [FieldType.BB_REFERENCE_SINGLE]: value => [
+    ...new Map(value.map(i => [i._id, i])).values(),
+  ],
+  [FieldType.BB_REFERENCE]: value => [
+    ...new Map(value.map(i => [i._id, i])).values(),
+  ],
+  [FieldType.ARRAY]: value => Array.from(new Set(value)),
 }
 
 export function enrichSchemaWithRelColumns(schema) {
@@ -60,8 +59,7 @@ export function enrichSchemaWithRelColumns(schema) {
           name,
           related: { field: c, subField: relColumn },
           cellRenderType:
-            (!fromSingle &&
-              columnTypeManyOverrides[relField.type]?.overridedType) ||
+            (!fromSingle && columnTypeManyTypeOverrides[relField.type]) ||
             relField.type,
         }
       }
@@ -81,11 +79,11 @@ export function getRelatedTableValues(row, field, fromField) {
     if (fromSingle) {
       result = row[field.related.field]?.[0]?.[field.related.subField]
     } else {
-      const parser =
-        columnTypeManyOverrides[field.type]?.parser || (value => value)
+      const parser = columnTypeManyParser[field.type] || (value => value)
 
       result = parser(
-        row[field.related.field].flatMap(r => r[field.related.subField], field)
+        row[field.related.field].flatMap(r => r[field.related.subField]),
+        field
       )
 
       if (
