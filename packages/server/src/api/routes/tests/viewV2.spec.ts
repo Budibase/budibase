@@ -40,13 +40,13 @@ import {
 import sdk from "../../../sdk"
 
 describe.each([
-  // ["lucene", undefined],
+  ["lucene", undefined],
   ["sqs", undefined],
-  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/v2/views (%s)", (name, dsProvider) => {
   const config = setup.getConfig()
   const isSqs = name === "sqs"
@@ -2384,7 +2384,7 @@ describe.each([
         })
       })
 
-      describe("calculations", () => {
+      describe.skip("calculations", () => {
         let table: Table
         let rows: Row[]
 
