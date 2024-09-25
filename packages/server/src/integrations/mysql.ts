@@ -241,6 +241,16 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
 
   async connect() {
     this.client = await mysql.createConnection(this.config)
+    const res = await this.internalQuery(
+      {
+        sql: "SELECT VERSION();",
+      },
+      { connect: false }
+    )
+    const version = res?.[0]?.["VERSION()"]
+    if (version?.toLowerCase().includes("mariadb")) {
+      this.setExtendedSqlClient(SqlClient.MARIADB)
+    }
   }
 
   async disconnect() {
@@ -272,9 +282,9 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     } catch (err: any) {
       let readableMessage = getReadableErrorMessage(SourceName.MYSQL, err.errno)
       if (readableMessage) {
-        throw new Error(readableMessage)
+        throw new Error(readableMessage, { cause: err })
       } else {
-        throw new Error(err.message as string)
+        throw err
       }
     } finally {
       if (opts?.connect && this.client) {

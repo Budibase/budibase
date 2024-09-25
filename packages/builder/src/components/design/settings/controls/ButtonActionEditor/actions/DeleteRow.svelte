@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label, Checkbox, Input, Body } from "@budibase/bbui"
+  import { Select, Label, Checkbox, Body } from "@budibase/bbui"
   import { tables, viewsV2 } from "stores/builder"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
@@ -46,19 +46,35 @@
 
     {#if parameters.confirm}
       <Label small>Title</Label>
-      <Input placeholder="Delete Row" bind:value={parameters.customTitleText} />
+      <DrawerBindableInput
+        placeholder="Prompt User"
+        value={parameters.customTitleText}
+        on:change={e => (parameters.customTitleText = e.detail)}
+        {bindings}
+      />
 
       <Label small>Text</Label>
-      <Input
-        placeholder="Are you sure you want to delete?"
-        bind:value={parameters.confirmText}
+      <DrawerBindableInput
+        placeholder="Are you sure you want to continue?"
+        value={parameters.confirmText}
+        on:change={e => (parameters.confirmText = e.detail)}
+        {bindings}
       />
 
       <Label small>Confirm Text</Label>
-      <Input placeholder="Confirm" bind:value={parameters.confirmButtonText} />
-
+      <DrawerBindableInput
+        placeholder="Confirm"
+        value={parameters.confirmButtonText}
+        on:change={e => (parameters.confirmButtonText = e.detail)}
+        {bindings}
+      />
       <Label small>Cancel Text</Label>
-      <Input placeholder="Cancel" bind:value={parameters.cancelButtonText} />
+      <DrawerBindableInput
+        placeholder="Cancel"
+        value={parameters.cancelButtonText}
+        on:change={e => (parameters.cancelButtonText = e.detail)}
+        {bindings}
+      />
     {/if}
   </div>
 </div>

@@ -8,8 +8,11 @@
   } from "@budibase/bbui"
   import { componentStore } from "stores/builder"
   import ConditionalUIDrawer from "./ConditionalUIDrawer.svelte"
+  import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
 
   export let componentInstance
+  export let componentDefinition
+  export let componentBindings
   export let bindings
 
   let tempValue
@@ -34,6 +37,19 @@
     conditionCount !== 1 ? "s" : ""
   } set`
 </script>
+
+<!--
+  Load any general settings or sections tagged as "condition"
+-->
+<ComponentSettingsSection
+  {componentInstance}
+  {componentDefinition}
+  isScreen={false}
+  showInstanceName={false}
+  {bindings}
+  {componentBindings}
+  tag="condition"
+/>
 
 <DetailSummary name={"Conditions"} collapsible={false}>
   <ActionButton on:click={openDrawer}>{conditionText}</ActionButton>

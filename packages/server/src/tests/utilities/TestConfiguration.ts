@@ -26,6 +26,7 @@ import {
   roles,
   sessions,
   tenancy,
+  utils,
 } from "@budibase/backend-core"
 import {
   app as appController,
@@ -40,7 +41,6 @@ import {
 } from "./controllers"
 
 import { cleanup } from "../../utilities/fileSystem"
-import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
@@ -70,9 +70,10 @@ import {
 } from "@budibase/types"
 
 import API from "./api"
-import { cloneDeep } from "lodash"
 import jwt, { Secret } from "jsonwebtoken"
 import { Server } from "http"
+
+const newid = utils.newid
 
 mocks.licenses.init(pro)
 
@@ -245,65 +246,6 @@ export default class TestConfiguration {
     }
   }
 
-  async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {
-    let cleanup = this.setEnv(newEnvVars)
-    try {
-      await f()
-    } finally {
-      cleanup()
-    }
-  }
-
-  /*
-   * Sets the environment variables to the given values and returns a function
-   * that can be called to reset the environment variables to their original values.
-   */
-  setEnv(newEnvVars: Partial<typeof env>): () => void {
-    const oldEnv = cloneDeep(env)
-
-    let key: keyof typeof newEnvVars
-    for (key in newEnvVars) {
-      env._set(key, newEnvVars[key])
-    }
-
-    return () => {
-      for (const [key, value] of Object.entries(oldEnv)) {
-        env._set(key, value)
-      }
-    }
-  }
-
-  async withCoreEnv(
-    newEnvVars: Partial<typeof coreEnv>,
-    f: () => Promise<void>
-  ) {
-    let cleanup = this.setCoreEnv(newEnvVars)
-    try {
-      await f()
-    } finally {
-      cleanup()
-    }
-  }
-
-  /*
-   * Sets the environment variables to the given values and returns a function
-   * that can be called to reset the environment variables to their original values.
-   */
-  setCoreEnv(newEnvVars: Partial<typeof coreEnv>): () => void {
-    const oldEnv = cloneDeep(coreEnv)
-
-    let key: keyof typeof newEnvVars
-    for (key in newEnvVars) {
-      coreEnv._set(key, newEnvVars[key])
-    }
-
-    return () => {
-      for (const [key, value] of Object.entries(oldEnv)) {
-        coreEnv._set(key, value)
-      }
-    }
-  }
-
   async withUser(user: User, f: () => Promise<void>) {
     const oldUser = this.user
     this.user = user
@@ -391,6 +333,7 @@ export default class TestConfiguration {
       sessionId: this.sessionIdForUser(_id),
       tenantId: this.getTenantId(),
       csrfToken: this.csrfToken,
+      email,
     })
     const resp = await db.put(user)
     await cache.user.invalidateUser(_id)
@@ -454,16 +397,17 @@ export default class TestConfiguration {
       }
       // make sure the user exists in the global DB
       if (roleId !== roles.BUILTIN_ROLE_IDS.PUBLIC) {
-        await this.globalUser({
+        const user = await this.globalUser({
           _id: userId,
           builder: { global: builder },
           roles: { [appId]: roleId || roles.BUILTIN_ROLE_IDS.BASIC },
         })
+        await sessions.createASession(userId, {
+          sessionId: this.sessionIdForUser(userId),
+          tenantId: this.getTenantId(),
+          email: user.email,
+        })
       }
-      await sessions.createASession(userId, {
-        sessionId: this.sessionIdForUser(userId),
-        tenantId: this.getTenantId(),
-      })
       // have to fake this
       const authObj = {
         userId,

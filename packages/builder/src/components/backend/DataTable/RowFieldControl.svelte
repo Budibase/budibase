@@ -146,7 +146,7 @@
 {:else if type === "link"}
   <LinkedRowSelector
     {error}
-    linkedRows={value}
+    linkedData={value}
     schema={meta}
     on:change={e => (value = e.detail)}
   />

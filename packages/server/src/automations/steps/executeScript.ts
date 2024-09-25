@@ -6,12 +6,14 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
+  ExecuteScriptStepInputs,
+  ExecuteScriptStepOutputs,
 } from "@budibase/types"
+import { EventEmitter } from "events"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "JS Scripting",
   tagline: "Execute JavaScript Code",
   icon: "Code",
@@ -55,7 +57,12 @@ export async function run({
   appId,
   context,
   emitter,
-}: AutomationStepInput) {
+}: {
+  inputs: ExecuteScriptStepInputs
+  appId: string
+  context: object
+  emitter: EventEmitter
+}): Promise<ExecuteScriptStepOutputs> {
   if (inputs.code == null) {
     return {
       success: false,

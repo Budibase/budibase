@@ -1,4 +1,4 @@
-ARG BASEIMG=budibase/couchdb:v3.3.3
+ARG BASEIMG=budibase/couchdb:v3.3.3-sqs-v2.1.1
 FROM node:20-slim as build
 
 # install node-gyp dependencies
@@ -63,11 +63,6 @@ RUN mkdir -p /var/log/nginx && \
   touch /var/log/nginx/error.log && \
   touch /var/run/nginx.pid && \
   usermod -a -G tty www-data
-
-WORKDIR /
-RUN mkdir -p scripts/integrations/oracle
-COPY packages/server/scripts/integrations/oracle scripts/integrations/oracle
-RUN /bin/bash -e ./scripts/integrations/oracle/instantclient/linux/install.sh
 
 # setup minio
 WORKDIR /minio

@@ -247,7 +247,9 @@ class QueryRunner {
     if (!resp.err) {
       const globalUserId = getGlobalIDFromUserMetadataID(_id)
       await auth.updateUserOAuth(globalUserId, resp)
-      this.ctx.user = await cache.user.getUser(globalUserId)
+      this.ctx.user = await cache.user.getUser({
+        userId: globalUserId,
+      })
     } else {
       // In this event the user may have oAuth issues that
       // could require re-authenticating with their provider.

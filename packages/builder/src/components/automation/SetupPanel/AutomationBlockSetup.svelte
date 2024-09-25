@@ -17,7 +17,9 @@
     Helpers,
     Toggle,
     Divider,
+    Icon,
   } from "@budibase/bbui"
+
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation, tables } from "stores/builder"
   import { environment, licensing } from "stores/portal"
@@ -56,6 +58,7 @@
     AutomationEventType,
     AutomationStepType,
     AutomationActionStepId,
+    AutomationCustomIOType,
   } from "@budibase/types"
   import { FIELDS } from "constants/backend"
   import PropField from "./PropField.svelte"
@@ -67,6 +70,7 @@
 
   // Stop unnecessary rendering
   const memoBlock = memo(block)
+  const memoEnvVariables = memo($environment.variables)
 
   const rowTriggers = [
     TriggerStepID.ROW_UPDATED,
@@ -88,11 +92,20 @@
   let insertAtPos, getCaretPosition
   let stepLayouts = {}
 
+  $: memoEnvVariables.set($environment.variables)
   $: memoBlock.set(block)
+
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
-  $: stepId = block.stepId
-  $: bindings = getAvailableBindings(block, $selectedAutomation?.definition)
+  $: stepId = $memoBlock.stepId
+
+  $: automationBindings = getAvailableBindings(
+    $memoBlock,
+    $selectedAutomation?.definition
+  )
+  $: environmentBindings = buildEnvironmentBindings($memoEnvVariables)
+  $: bindings = [...automationBindings, ...environmentBindings]
+
   $: getInputData(testData, $memoBlock.inputs)
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
@@ -107,7 +120,7 @@
     { allowLinks: true }
   )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
-  $: isTrigger = block?.type === AutomationStepType.TRIGGER
+  $: isTrigger = $memoBlock?.type === AutomationStepType.TRIGGER
   $: codeMode =
     stepId === AutomationActionStepId.EXECUTE_BASH
       ? EditorModes.Handlebars
@@ -116,12 +129,29 @@
     disableWrapping: true,
   })
   $: editingJs = codeMode === EditorModes.JS
-  $: requiredProperties = isTestModal ? [] : block.schema["inputs"].required
+  $: requiredProperties = isTestModal
+    ? []
+    : $memoBlock.schema["inputs"].required
 
   $: stepCompletions =
     codeMode === EditorModes.Handlebars
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
+
+  const buildEnvironmentBindings = () => {
+    if ($licensing.environmentVariablesEnabled) {
+      return getEnvironmentBindings().map(binding => {
+        return {
+          ...binding,
+          display: {
+            ...binding.display,
+            rank: 98,
+          },
+        }
+      })
+    }
+    return []
+  }
 
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
@@ -148,9 +178,9 @@
 
   // Store for any UX related data
   const stepStore = writable({})
-  $: currentStep = $stepStore?.[block.id]
+  $: stepState = $stepStore?.[block.id]
 
-  $: customStepLayouts($memoBlock, schemaProperties, currentStep)
+  $: customStepLayouts($memoBlock, schemaProperties, stepState)
 
   const customStepLayouts = block => {
     if (
@@ -182,7 +212,6 @@
                   onChange: e => {
                     onChange({ ["revision"]: e.detail })
                   },
-                  bindings,
                   updateOnChange: false,
                   forceModal: true,
                 },
@@ -211,7 +240,6 @@
               onChange: e => {
                 onChange({ [rowIdentifier]: e.detail })
               },
-              bindings,
               updateOnChange: false,
               forceModal: true,
             },
@@ -250,6 +278,7 @@
                   },
                 }))
               },
+              placeholder: false,
               getOptionLabel: type => type.name,
               getOptionValue: type => type.id,
               options: [
@@ -271,7 +300,7 @@
           isUpdateRow: block.stepId === ActionStepID.UPDATE_ROW,
         }
 
-        if (isTestModal && currentStep?.rowType === "oldRow") {
+        if (isTestModal && stepState?.rowType === "oldRow") {
           return [
             {
               type: RowSelector,
@@ -280,14 +309,14 @@
                   tableId: inputData["row"].tableId,
                 },
                 meta: {
-                  fields: inputData["meta"].oldFields || {},
+                  fields: inputData["meta"]?.oldFields || {},
                 },
                 onChange: e => {
                   onChange({
                     oldRow: e.detail.row,
                     meta: {
-                      fields: inputData["meta"].fields,
-                      oldFields: e.detail.meta.fields,
+                      fields: inputData["meta"]?.fields || {},
+                      oldFields: e.detail?.meta?.fields || {},
                     },
                   })
                 },
@@ -304,7 +333,15 @@
               row: inputData["row"],
               meta: inputData["meta"] || {},
               onChange: e => {
-                onChange(e.detail)
+                onChange({
+                  row: e.detail.row,
+                  meta: {
+                    fields: e.detail?.meta?.fields || {},
+                    ...(isTestModal
+                      ? { oldFields: inputData["meta"]?.oldFields || {} }
+                      : {}),
+                  },
+                })
               },
               ...baseProps,
             },
@@ -356,41 +393,76 @@
 
   /**
    * Handler for row trigger automation updates.
-    @param {object} update - An automation block.inputs update object
-    @example
-    onRowTriggerUpdate({ 
-      "tableId" : "ta_bb_employee"
-    })
+   * @param {object} update - An automation block.inputs update object
+   * @param {string} [update.tableId] - The ID of the table
+   * @param {object} [update.filters] - Filter configuration for the row trigger
+   * @param {object} [update.filters-def] - Filter definitions for the row trigger
+   * @example
+   * // Example with tableId
+   * onRowTriggerUpdate({
+   *   "tableId" : "ta_bb_employee"
+   * })
+   * @example
+   * // Example with filters
+   * onRowTriggerUpdate({
+   *   filters: {
+   *     equal: { "1:Approved": "true" }
+   *   },
+   *   "filters-def": [{
+   *     id: "oH1T4S49n",
+   *     field: "1:Approved",
+   *     operator: "equal",
+   *     value: "true",
+   *     valueType: "Value",
+   *     type: "string"
+   *   }]
+   * })
    */
   const onRowTriggerUpdate = async update => {
     if (
-      Object.hasOwn(update, "tableId") &&
-      $selectedAutomation.testData?.row?.tableId !== update.tableId
+      ["tableId", AutomationCustomIOType.FILTERS, "meta"].some(key =>
+        Object.hasOwn(update, key)
+      )
     ) {
       try {
-        const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
-          searchableSchema: true,
-        }).schema
+        let updatedAutomation
 
-        // Parse the block inputs as usual
-        const updatedAutomation =
-          await automationStore.actions.processBlockInputs(block, {
-            schema: reqSchema,
-            ...update,
-          })
+        if (
+          Object.hasOwn(update, "tableId") &&
+          $selectedAutomation.testData?.row?.tableId !== update.tableId
+        ) {
+          const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
+            searchableSchema: true,
+          }).schema
 
-        // Save the entire automation and reset the testData
-        await automationStore.actions.save({
-          ...updatedAutomation,
-          testData: {
-            // Reset Core fields
-            row: { tableId: update.tableId },
-            oldRow: { tableId: update.tableId },
-            meta: {},
-            id: "",
-            revision: "",
-          },
-        })
+          updatedAutomation = await automationStore.actions.processBlockInputs(
+            block,
+            {
+              schema: reqSchema,
+              ...update,
+            }
+          )
+
+          // Reset testData when tableId changes
+          updatedAutomation = {
+            ...updatedAutomation,
+            testData: {
+              row: { tableId: update.tableId },
+              oldRow: { tableId: update.tableId },
+              meta: {},
+              id: "",
+              revision: "",
+            },
+          }
+        } else {
+          // For filters update, just process block inputs without resetting testData
+          updatedAutomation = await automationStore.actions.processBlockInputs(
+            block,
+            update
+          )
+        }
+
+        await automationStore.actions.save(updatedAutomation)
 
         return
       } catch (e) {
@@ -399,7 +471,6 @@
       }
     }
   }
-
   /**
    * Handler for App trigger automation updates.
    * Ensure updates to the field list are reflected in testData
@@ -452,7 +523,6 @@
    */
   const onChange = Utils.sequential(async update => {
     const request = cloneDeep(update)
-
     // Process app trigger updates
     if (isTrigger && !isTestModal) {
       // Row trigger
@@ -525,9 +595,13 @@
     let loopBlockCount = 0
     const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
       if (!name) return
-      const runtimeBinding = determineRuntimeBinding(name, idx, isLoopBlock)
+      const runtimeBinding = determineRuntimeBinding(
+        name,
+        idx,
+        isLoopBlock,
+        bindingName
+      )
       const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
-
       bindings.push(
         createBindingObject(
           name,
@@ -543,7 +617,7 @@
       )
     }
 
-    const determineRuntimeBinding = (name, idx, isLoopBlock) => {
+    const determineRuntimeBinding = (name, idx, isLoopBlock, bindingName) => {
       let runtimeName
 
       /* Begin special cases for generating custom schemas based on triggers */
@@ -564,12 +638,17 @@
       }
       /* End special cases for generating custom schemas based on triggers */
 
+      let hasUserDefinedName = automation.stepNames?.[allSteps[idx]?.id]
       if (isLoopBlock) {
         runtimeName = `loop.${name}`
       } else if (block.name.startsWith("JS")) {
-        runtimeName = `steps[${idx - loopBlockCount}].${name}`
+        runtimeName = hasUserDefinedName
+          ? `stepsByName["${bindingName}"].${name}`
+          : `steps["${idx - loopBlockCount}"].${name}`
       } else {
-        runtimeName = `steps.${idx - loopBlockCount}.${name}`
+        runtimeName = hasUserDefinedName
+          ? `stepsByName.${bindingName}.${name}`
+          : `steps.${idx - loopBlockCount}.${name}`
       }
       return idx === 0 ? `trigger.${name}` : runtimeName
     }
@@ -596,11 +675,11 @@
       const field = Object.values(FIELDS).find(
         field => field.type === value.type && field.subtype === value.subtype
       )
-
       return {
-        readableBinding: bindingName
-          ? `${bindingName}.${name}`
-          : runtimeBinding,
+        readableBinding:
+          bindingName && !isLoopBlock
+            ? `steps.${bindingName}.${name}`
+            : runtimeBinding,
         runtimeBinding,
         type: value.type,
         description: value.description,
@@ -620,8 +699,12 @@
         allSteps[idx]?.stepId === ActionStepID.LOOP &&
         allSteps.some(x => x.blockToLoop === block.id)
       let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
+      if (allSteps[idx]?.name.includes("Looping")) {
+        isLoopBlock = true
+        loopBlockCount++
+      }
       let bindingName =
-        automation.stepNames?.[allSteps[idx - loopBlockCount].id]
+        automation.stepNames?.[allSteps[idx].id] || allSteps[idx].name
 
       if (isLoopBlock) {
         schema = {
@@ -669,30 +752,24 @@
           : allSteps[idx].icon
 
       if (wasLoopBlock) {
-        loopBlockCount++
-        continue
+        schema = cloneDeep(allSteps[idx - 1]?.schema?.outputs?.properties)
       }
-      Object.entries(schema).forEach(([name, value]) =>
+      Object.entries(schema).forEach(([name, value]) => {
         addBinding(name, value, icon, idx, isLoopBlock, bindingName)
-      )
+      })
     }
 
-    // Environment bindings
-    if ($licensing.environmentVariablesEnabled) {
-      bindings = bindings.concat(
-        getEnvironmentBindings().map(binding => {
-          return {
-            ...binding,
-            display: {
-              ...binding.display,
-              rank: 98,
-            },
-          }
-        })
-      )
+    if (
+      allSteps[blockIdx - 1]?.stepId !== ActionStepID.LOOP &&
+      allSteps
+        .slice(0, blockIdx)
+        .some(step => step.stepId === ActionStepID.LOOP)
+    ) {
+      bindings = bindings.filter(x => !x.readableBinding.includes("loop"))
     }
     return bindings
   }
+
   function lookForFilters(properties) {
     if (!properties) {
       return []
@@ -702,7 +779,11 @@
     for (let [key, field] of properties) {
       // need to look for the builder definition (keyed separately, see saveFilters)
       const defKey = `${key}-def`
-      if (field.customType === "filters" && inputs?.[defKey]) {
+      if (
+        (field.customType === AutomationCustomIOType.FILTERS ||
+          field.customType === AutomationCustomIOType.TRIGGER_FILTER) &&
+        inputs?.[defKey]
+      ) {
         filters = inputs[defKey]
         break
       }
@@ -721,7 +802,7 @@
     drawer.hide()
   }
 
-  function canShowField(key, value) {
+  function canShowField(value) {
     const dependsOn = value?.dependsOn
     return !dependsOn || !!inputData[dependsOn]
   }
@@ -735,6 +816,7 @@
       value.customType !== "triggerSchema" &&
       value.customType !== "automationFields" &&
       value.customType !== "fields" &&
+      value.customType !== "trigger_filter_setting" &&
       value.type !== "signature_single" &&
       value.type !== "attachment" &&
       value.type !== "attachment_single"
@@ -779,6 +861,7 @@
               <svelte:component
                 this={config.type}
                 {...config.props}
+                {bindings}
                 on:change={config.props.onChange}
               />
             </PropField>
@@ -786,6 +869,7 @@
             <svelte:component
               this={config.type}
               {...config.props}
+              {bindings}
               on:change={config.props.onChange}
             />
           {/if}
@@ -799,13 +883,23 @@
         {@const label = getFieldLabel(key, value)}
         <div class:block-field={shouldRenderField(value)}>
           {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
-            <Label
-              tooltip={value.title === "Binding / Value"
-                ? "If using the String input type, please use a comma or newline separated string"
-                : null}
-            >
-              {label}
-            </Label>
+            <div class="label-container">
+              <Label>
+                {label}
+              </Label>
+              {#if value.customType === AutomationCustomIOType.TRIGGER_FILTER}
+                <Icon
+                  hoverable
+                  on:click={() =>
+                    window.open(
+                      "https://docs.budibase.com/docs/row-trigger-filters",
+                      "_blank"
+                    )}
+                  size="XS"
+                  name="InfoOutline"
+                />
+              {/if}
+            </div>
           {/if}
           <div class:field-width={shouldRenderField(value)}>
             {#if value.type === "string" && value.enum && canShowField(key, value)}
@@ -816,6 +910,7 @@
                 options={value.enum}
                 getOptionLabel={(x, idx) =>
                   value.pretty ? value.pretty[idx] : x}
+                disabled={value.readonly}
               />
             {:else if value.type === "json"}
               <Editor
@@ -824,6 +919,7 @@
                 mode="json"
                 value={inputData[key]?.value}
                 on:change={e => onChange({ [key]: e.detail })}
+                readOnly={value.readonly}
               />
             {:else if value.type === "boolean"}
               <div style="margin-top: 10px">
@@ -831,6 +927,7 @@
                   text={value.title}
                   value={inputData[key]}
                   on:change={e => onChange({ [key]: e.detail })}
+                  disabled={value.readonly}
                 />
               </div>
             {:else if value.type === "date"}
@@ -844,6 +941,7 @@
                 allowJS={true}
                 updateOnChange={false}
                 drawerLeft="260px"
+                disabled={value.readonly}
               >
                 <DatePicker
                   value={inputData[key]}
@@ -855,6 +953,7 @@
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
                 options={Object.keys(table?.schema || {})}
+                disabled={value.readonly}
               />
             {:else if value.type === "attachment" || value.type === "signature_single"}
               <div class="attachment-field-wrapper">
@@ -924,8 +1023,12 @@
                   {/if}
                 </div>
               </div>
-            {:else if value.customType === "filters"}
-              <ActionButton on:click={drawer.show}>Define filters</ActionButton>
+            {:else if value.customType === AutomationCustomIOType.FILTERS || value.customType === AutomationCustomIOType.TRIGGER_FILTER}
+              <ActionButton fullWidth on:click={drawer.show}
+                >{filters.length > 0
+                  ? "Update Filter"
+                  : "No Filter set"}</ActionButton
+              >
               <Drawer bind:this={drawer} title="Filtering">
                 <Button cta slot="buttons" on:click={() => saveFilters(key)}>
                   Save
@@ -937,6 +1040,7 @@
                     {schemaFields}
                     datasource={{ type: "table", tableId }}
                     panel={AutomationBindingPanel}
+                    showFilterEmptyDropdown={!rowTriggers.includes(stepId)}
                     on:change={e => (tempFilters = e.detail)}
                   />
                 </DrawerContent>
@@ -963,6 +1067,7 @@
                 {isTrigger}
                 value={inputData[key]}
                 on:change={e => onChange({ [key]: e.detail })}
+                disabled={value.readonly}
               />
             {:else if value.customType === "webhookUrl"}
               <WebhookDisplay value={inputData[key]} />
@@ -980,7 +1085,12 @@
                 value={inputData[key]}
               />
             {:else if value.customType === "code"}
-              <CodeEditorModal>
+              <CodeEditorModal
+                on:hide={() => {
+                  // Push any pending changes when the window closes
+                  onChange({ [key]: inputData[key] })
+                }}
+              >
                 <div class:js-editor={editingJs}>
                   <div
                     class:js-code={editingJs}
@@ -990,7 +1100,6 @@
                       value={inputData[key]}
                       on:change={e => {
                         // need to pass without the value inside
-                        onChange({ [key]: e.detail })
                         inputData[key] = e.detail
                       }}
                       completions={stepCompletions}
@@ -1077,6 +1186,11 @@
 {/if}
 
 <style>
+  .label-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
   .field-width {
     width: 320px;
   }

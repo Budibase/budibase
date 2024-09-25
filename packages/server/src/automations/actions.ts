@@ -16,21 +16,26 @@ import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
 import * as loop from "./steps/loop"
 import * as collect from "./steps/collect"
+import * as branch from "./steps/branch"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import env from "../environment"
 import {
-  AutomationStepSchema,
-  AutomationStepInput,
   PluginType,
-  AutomationStep,
+  AutomationActionStepId,
+  ActionImplementations,
+  Hosting,
+  ActionImplementation,
+  AutomationStepDefinition,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
+import { features } from "@budibase/backend-core"
 
-const ACTION_IMPLS: Record<
-  string,
-  (opts: AutomationStepInput) => Promise<any>
-> = {
+type ActionImplType = ActionImplementations<
+  typeof env.SELF_HOSTED extends "true" ? Hosting.SELF : Hosting.CLOUD
+>
+
+const ACTION_IMPLS: ActionImplType = {
   SEND_EMAIL_SMTP: sendSmtpEmail.run,
   CREATE_ROW: createRow.run,
   UPDATE_ROW: updateRow.run,
@@ -51,29 +56,32 @@ const ACTION_IMPLS: Record<
   integromat: make.run,
   n8n: n8n.run,
 }
-export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
-  {
-    SEND_EMAIL_SMTP: sendSmtpEmail.definition,
-    CREATE_ROW: createRow.definition,
-    UPDATE_ROW: updateRow.definition,
-    DELETE_ROW: deleteRow.definition,
-    OUTGOING_WEBHOOK: outgoingWebhook.definition,
-    EXECUTE_SCRIPT: executeScript.definition,
-    EXECUTE_QUERY: executeQuery.definition,
-    SERVER_LOG: serverLog.definition,
-    DELAY: delay.definition,
-    FILTER: filter.definition,
-    QUERY_ROWS: queryRow.definition,
-    LOOP: loop.definition,
-    COLLECT: collect.definition,
-    TRIGGER_AUTOMATION_RUN: triggerAutomationRun.definition,
-    // these used to be lowercase step IDs, maintain for backwards compat
-    discord: discord.definition,
-    slack: slack.definition,
-    zapier: zapier.definition,
-    integromat: make.definition,
-    n8n: n8n.definition,
-  }
+
+export const BUILTIN_ACTION_DEFINITIONS: Record<
+  string,
+  AutomationStepDefinition
+> = {
+  SEND_EMAIL_SMTP: sendSmtpEmail.definition,
+  CREATE_ROW: createRow.definition,
+  UPDATE_ROW: updateRow.definition,
+  DELETE_ROW: deleteRow.definition,
+  OUTGOING_WEBHOOK: outgoingWebhook.definition,
+  EXECUTE_SCRIPT: executeScript.definition,
+  EXECUTE_QUERY: executeQuery.definition,
+  SERVER_LOG: serverLog.definition,
+  DELAY: delay.definition,
+  FILTER: filter.definition,
+  QUERY_ROWS: queryRow.definition,
+  LOOP: loop.definition,
+  COLLECT: collect.definition,
+  TRIGGER_AUTOMATION_RUN: triggerAutomationRun.definition,
+  // these used to be lowercase step IDs, maintain for backwards compat
+  discord: discord.definition,
+  slack: slack.definition,
+  zapier: zapier.definition,
+  integromat: make.definition,
+  n8n: n8n.definition,
+}
 
 // don't add the bash script/definitions unless in self host
 // the fact this isn't included in any definitions means it cannot be
@@ -86,17 +94,20 @@ if (env.SELF_HOSTED) {
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
   // @ts-ignore
   BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
-
+  // @ts-ignore
   ACTION_IMPLS.OPENAI = openai.run
   BUILTIN_ACTION_DEFINITIONS.OPENAI = openai.definition
 }
 
 export async function getActionDefinitions() {
+  if (await features.flags.isEnabled("AUTOMATION_BRANCHING")) {
+    BUILTIN_ACTION_DEFINITIONS["BRANCH"] = branch.definition
+  }
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.AUTOMATION)
     for (let plugin of plugins) {
-      const schema = plugin.schema.schema as AutomationStep
+      const schema = plugin.schema.schema as AutomationStepDefinition
       actionDefinitions[schema.stepId] = {
         ...schema,
         custom: true,
@@ -107,10 +118,13 @@ export async function getActionDefinitions() {
 }
 
 /* istanbul ignore next */
-export async function getAction(stepId: string) {
-  if (ACTION_IMPLS[stepId] != null) {
-    return ACTION_IMPLS[stepId]
+export async function getAction(
+  stepId: AutomationActionStepId
+): Promise<ActionImplementation<any, any> | undefined> {
+  if (ACTION_IMPLS[stepId as keyof ActionImplType] != null) {
+    return ACTION_IMPLS[stepId as keyof ActionImplType]
   }
+
   // must be a plugin
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.AUTOMATION)

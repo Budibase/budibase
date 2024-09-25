@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import { getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
@@ -15,9 +15,8 @@ import {
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
-import env from "../../../environment"
 
-export function processTable(table: Table): Table {
+export async function processTable(table: Table): Promise<Table> {
   if (!table) {
     return table
   }
@@ -34,20 +33,21 @@ export function processTable(table: Table): Table {
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
     }
-    if (env.SQS_SEARCH_ENABLE) {
-      processed.sql = !!env.SQS_SEARCH_ENABLE
+    const sqsEnabled = await features.flags.isEnabled("SQS")
+    if (sqsEnabled) {
+      processed.sql = true
     }
     return processed
   }
 }
 
-export function processTables(tables: Table[]): Table[] {
-  return tables.map(table => processTable(table))
+export async function processTables(tables: Table[]): Promise<Table[]> {
+  return await Promise.all(tables.map(table => processTable(table)))
 }
 
-function processEntities(tables: Record<string, Table>) {
+async function processEntities(tables: Record<string, Table>) {
   for (let key of Object.keys(tables)) {
-    tables[key] = processTable(tables[key])
+    tables[key] = await processTable(tables[key])
   }
   return tables
 }
@@ -61,7 +61,7 @@ export async function getAllInternalTables(db?: Database): Promise<Table[]> {
       include_docs: true,
     })
   )
-  return processTables(internalTables.rows.map(row => row.doc!))
+  return await processTables(internalTables.rows.map(row => row.doc!))
 }
 
 async function getAllExternalTables(): Promise<Table[]> {
@@ -73,7 +73,7 @@ async function getAllExternalTables(): Promise<Table[]> {
       final = final.concat(Object.values(entities))
     }
   }
-  return processTables(final)
+  return await processTables(final)
 }
 
 export async function getExternalTable(
@@ -98,7 +98,16 @@ export async function getTable(tableId: string): Promise<Table> {
   } else {
     output = await db.get<Table>(tableId)
   }
-  return processTable(output)
+  return await processTable(output)
+}
+
+export async function doesTableExist(tableId: string): Promise<boolean> {
+  try {
+    const table = await getTable(tableId)
+    return !!table
+  } catch (err) {
+    return false
+  }
 }
 
 export async function getAllTables() {
@@ -106,7 +115,7 @@ export async function getAllTables() {
     getAllInternalTables(),
     getAllExternalTables(),
   ])
-  return processTables([...internal, ...external])
+  return await processTables([...internal, ...external])
 }
 
 export async function getExternalTablesInDatasource(
@@ -116,7 +125,7 @@ export async function getExternalTablesInDatasource(
   if (!datasource || !datasource.entities) {
     throw new Error("Datasource is not configured fully.")
   }
-  return processEntities(datasource.entities)
+  return await processEntities(datasource.entities)
 }
 
 export async function getTables(tableIds: string[]): Promise<Table[]> {
@@ -140,19 +149,22 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
     })
     tables = tables.concat(internalTables)
   }
-  return processTables(tables)
+  return await processTables(tables)
 }
 
-export function enrichViewSchemas(table: Table): TableResponse {
+export async function enrichViewSchemas(table: Table): Promise<TableResponse> {
+  const views = []
+  for (const view of Object.values(table.views ?? [])) {
+    if (sdk.views.isV2(view)) {
+      views.push(await sdk.views.enrichSchema(view, table.schema))
+    } else views.push(view)
+  }
+
   return {
     ...table,
-    views: Object.values(table.views ?? [])
-      .map(v =>
-        sdk.views.isV2(v) ? sdk.views.enrichSchema(v, table.schema) : v
-      )
-      .reduce((p, v) => {
-        p[v.name!] = v
-        return p
-      }, {} as TableViewsResponse),
+    views: views.reduce((p, v) => {
+      p[v.name!] = v
+      return p
+    }, {} as TableViewsResponse),
   }
 }

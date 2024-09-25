@@ -1,13 +1,4 @@
-import { AutomationResults, AutomationStep } from "@budibase/types"
-
-export enum LoopStepType {
-  ARRAY = "Array",
-  STRING = "String",
-}
-
-export interface LoopStep extends AutomationStep {
-  inputs: LoopInput
-}
+import { AutomationResults, LoopStepType } from "@budibase/types"
 
 export interface LoopInput {
   option: LoopStepType
@@ -24,6 +15,7 @@ export interface TriggerOutput {
 
 export interface AutomationContext extends AutomationResults {
   steps: any[]
+  stepsByName?: Record<string, any>
   env?: Record<string, string>
   trigger: any
 }

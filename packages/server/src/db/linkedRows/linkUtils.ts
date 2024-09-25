@@ -7,6 +7,7 @@ import {
   LinkDocument,
   LinkDocumentValue,
   Table,
+  TableSchema,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
@@ -34,6 +35,17 @@ export const IncludeDocs = {
  * @returns This will return an array of the linking documents that were found
  * (if any).
  */
+export function getLinkDocuments(args: {
+  tableId?: string
+  rowId?: string
+  fieldName?: string
+  includeDocs: boolean
+}): Promise<LinkDocument[]>
+export function getLinkDocuments(args: {
+  tableId?: string
+  rowId?: string
+  fieldName?: string
+}): Promise<LinkDocumentValue[]>
 export async function getLinkDocuments(args: {
   tableId?: string
   rowId?: string
@@ -110,8 +122,8 @@ export function getUniqueByProp(array: any[], prop: string) {
   return filteredArray
 }
 
-export function getLinkedTableIDs(table: Table): string[] {
-  return Object.values(table.schema)
+export function getLinkedTableIDs(schema: TableSchema): string[] {
+  return Object.values(schema)
     .filter(isRelationshipColumn)
     .map(column => column.tableId)
 }
@@ -128,13 +140,16 @@ export async function getLinkedTable(id: string, tables: Table[]) {
   return linkedTable
 }
 
-export function getRelatedTableForField(table: Table, fieldName: string) {
+export function getRelatedTableForField(
+  schema: TableSchema,
+  fieldName: string
+) {
   // look to see if its on the table, straight in the schema
-  const field = table.schema[fieldName]
+  const field = schema[fieldName]
   if (field?.type === FieldType.LINK) {
     return field.tableId
   }
-  for (let column of Object.values(table.schema)) {
+  for (let column of Object.values(schema)) {
     if (column.type === FieldType.LINK && column.fieldName === fieldName) {
       return column.tableId
     }

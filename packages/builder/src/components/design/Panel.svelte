@@ -1,5 +1,5 @@
 <script>
-  import { AbsTooltip, Icon, Body } from "@budibase/bbui"
+  import { Icon, Body, TooltipPosition, TooltipType } from "@budibase/bbui"
 
   export let title
   export let icon
@@ -18,6 +18,7 @@
   export let closeButtonIcon = "Close"
   export let noHeaderBorder = false
   export let titleCSS = true
+
   $: customHeaderContent = $$slots["panel-header-content"]
   $: customTitleContent = $$slots["panel-title-content"]
 </script>
@@ -41,9 +42,12 @@
       <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
     {/if}
     {#if icon}
-      <AbsTooltip type="info" text={iconTooltip}>
-        <Icon name={icon} />
-      </AbsTooltip>
+      <Icon
+        name={icon}
+        tooltipType={TooltipType.Info}
+        tooltip={iconTooltip}
+        tooltipPosition={TooltipPosition.Top}
+      />
     {/if}
     <div class:title={titleCSS}>
       {#if customTitleContent}

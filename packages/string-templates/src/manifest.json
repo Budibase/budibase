@@ -1312,6 +1312,26 @@
       "requiresBlock": false
     }
   },
+  "regex": {
+    "toRegex": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "example": "{{toRegex 'foo'}} -> /foo/",
+      "description": "<p>Convert the given string to a regular expression.</p>\n",
+      "requiresBlock": false
+    },
+    "test": {
+      "args": [
+        "str"
+      ],
+      "numArgs": 1,
+      "example": "{{test 'foobar' (toRegex 'foo')}} -> true",
+      "description": "<p>Returns true if the given <code>str</code> matches the given regex. A regex can be passed on the context, or using the <a href=\"#toregex\">toRegex</a> helper as a subexpression.</p>\n",
+      "requiresBlock": false
+    }
+  },
   "uuid": {
     "uuid": {
       "args": [],

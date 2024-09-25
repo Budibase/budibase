@@ -15,14 +15,21 @@ import {
   AutomationJob,
   AutomationEventType,
   UpdatedRowEventEmitter,
+  SearchFilters,
+  AutomationStoppedReason,
+  AutomationStatus,
+  AutomationRowEvent,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
+import { dataFilters, sdk } from "@budibase/shared-core"
 
 export const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {
   removeOnComplete: true,
   removeOnFail: true,
 }
+import * as automationUtils from "../automations/automationUtils"
+import { doesTableExist } from "../sdk/app/tables/getters"
 
 async function getAllAutomations() {
   const db = context.getAppDB()
@@ -33,25 +40,35 @@ async function getAllAutomations() {
 }
 
 async function queueRelevantRowAutomations(
-  event: { appId: string; row: Row },
-  eventType: string
+  event: AutomationRowEvent,
+  eventType: AutomationEventType
 ) {
+  const tableId = event.row.tableId
   if (event.appId == null) {
     throw `No appId specified for ${eventType} - check event emitters.`
+  }
+
+  // make sure table exists and is valid before proceeding
+  if (!tableId || !(await doesTableExist(tableId))) {
+    return
   }
 
   await context.doInAppContext(event.appId, async () => {
     let automations = await getAllAutomations()
 
     // filter down to the correct event type and enabled automations
+    // make sure it is the correct table ID as well
     automations = automations.filter(automation => {
       const trigger = automation.definition.trigger
-      return trigger && trigger.event === eventType && !automation.disabled
+      return (
+        trigger &&
+        trigger.event === eventType &&
+        !automation.disabled &&
+        trigger?.inputs?.tableId === event.row.tableId
+      )
     })
 
-    for (let automation of automations) {
-      let automationDef = automation.definition
-      let automationTrigger = automationDef?.trigger
+    for (const automation of automations) {
       // don't queue events which are for dev apps, only way to test automations is
       // running tests on them, in production the test flag will never
       // be checked due to lazy evaluation (first always false)
@@ -62,10 +79,12 @@ async function queueRelevantRowAutomations(
       ) {
         continue
       }
-      if (
-        automationTrigger?.inputs &&
-        automationTrigger.inputs.tableId === event.row.tableId
-      ) {
+
+      const shouldTrigger = await checkTriggerFilters(automation, {
+        row: event.row,
+        oldRow: event.oldRow,
+      })
+      if (shouldTrigger) {
         try {
           await automationQueue.add({ automation, event }, JOB_OPTS)
         } catch (e) {
@@ -76,6 +95,17 @@ async function queueRelevantRowAutomations(
   })
 }
 
+async function queueRowAutomations(
+  event: AutomationRowEvent,
+  type: AutomationEventType
+) {
+  try {
+    await queueRelevantRowAutomations(event, type)
+  } catch (err: any) {
+    logging.logWarn("Unable to process row event", err)
+  }
+}
+
 emitter.on(
   AutomationEventType.ROW_SAVE,
   async function (event: UpdatedRowEventEmitter) {
@@ -83,7 +113,7 @@ emitter.on(
     if (!event || !event.row || !event.row.tableId) {
       return
     }
-    await queueRelevantRowAutomations(event, AutomationEventType.ROW_SAVE)
+    await queueRowAutomations(event, AutomationEventType.ROW_SAVE)
   }
 )
 
@@ -92,7 +122,7 @@ emitter.on(AutomationEventType.ROW_UPDATE, async function (event) {
   if (!event || !event.row || !event.row.tableId) {
     return
   }
-  await queueRelevantRowAutomations(event, AutomationEventType.ROW_UPDATE)
+  await queueRowAutomations(event, AutomationEventType.ROW_UPDATE)
 })
 
 emitter.on(AutomationEventType.ROW_DELETE, async function (event) {
@@ -100,22 +130,25 @@ emitter.on(AutomationEventType.ROW_DELETE, async function (event) {
   if (!event || !event.row || !event.row.tableId) {
     return
   }
-  await queueRelevantRowAutomations(event, AutomationEventType.ROW_DELETE)
+  await queueRowAutomations(event, AutomationEventType.ROW_DELETE)
 })
+
+function rowPassesFilters(row: Row, filters: SearchFilters) {
+  const filteredRows = dataFilters.runQuery([row], filters)
+  return filteredRows.length > 0
+}
 
 export async function externalTrigger(
   automation: Automation,
-  params: { fields: Record<string, any>; timeout?: number },
+  params: { fields: Record<string, any>; timeout?: number; appId?: string },
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<any> {
   if (automation.disabled) {
     throw new Error("Automation is disabled")
   }
+
   if (
-    automation.definition != null &&
-    automation.definition.trigger != null &&
-    automation.definition.trigger.stepId === definitions.APP.stepId &&
-    automation.definition.trigger.stepId === "APP" &&
+    sdk.automations.isAppAction(automation) &&
     !(await checkTestFlag(automation._id!))
   ) {
     // values are likely to be submitted as strings, so we shall convert to correct type
@@ -125,8 +158,31 @@ export async function externalTrigger(
       coercedFields[key] = coerce(params.fields[key], fields[key])
     }
     params.fields = coercedFields
+  } else if (sdk.automations.isRowAction(automation)) {
+    params = {
+      ...params,
+      // Until we don't refactor all the types, we want to flatten the nested "fields" object
+      ...params.fields,
+      fields: {},
+    }
   }
-  const data: AutomationData = { automation, event: params as any }
+  const data: AutomationData = { automation, event: params }
+
+  const shouldTrigger = await checkTriggerFilters(automation, {
+    row: data.event?.row ?? {},
+    oldRow: data.event?.oldRow ?? {},
+  })
+
+  if (!shouldTrigger) {
+    return {
+      outputs: {
+        success: false,
+        status: AutomationStatus.STOPPED,
+      },
+      message: AutomationStoppedReason.TRIGGER_FILTER_NOT_MET,
+    }
+  }
+
   if (getResponses) {
     data.event = {
       ...data.event,
@@ -170,4 +226,26 @@ export async function rebootTrigger() {
       await Promise.all(rebootEvents)
     })
   }
+}
+
+async function checkTriggerFilters(
+  automation: Automation,
+  event: { row: Row; oldRow: Row }
+): Promise<boolean> {
+  const trigger = automation.definition.trigger
+  const filters = trigger?.inputs?.filters
+  const tableId = trigger?.inputs?.tableId
+
+  if (!filters) {
+    return true
+  }
+
+  if (
+    trigger.stepId === definitions.ROW_UPDATED.stepId ||
+    trigger.stepId === definitions.ROW_SAVED.stepId
+  ) {
+    const newRow = await automationUtils.cleanUpRow(tableId, event.row)
+    return rowPassesFilters(newRow, filters)
+  }
+  return true
 }

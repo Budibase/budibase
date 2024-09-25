@@ -62,7 +62,9 @@
       return placeholder || "Choose an option"
     }
 
-    return getFieldAttribute(getOptionLabel, value, options)
+    return (
+      getFieldAttribute(getOptionLabel, value, options) || "Choose an option"
+    )
   }
 
   const selectOption = value => {
@@ -100,7 +102,9 @@
   {onOptionMouseenter}
   {onOptionMouseleave}
   isPlaceholder={value == null || value === ""}
-  placeholderOption={placeholder === false ? null : placeholder}
+  placeholderOption={placeholder === false
+    ? null
+    : placeholder || "Choose an option"}
   isOptionSelected={option => compareOptionAndValue(option, value)}
   onSelectOption={selectOption}
   {loading}

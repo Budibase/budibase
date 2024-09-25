@@ -1,3 +1,4 @@
+import { sql } from "@budibase/backend-core"
 import { FieldType } from "@budibase/types"
 
 const parseArrayString = (value: any) => {
@@ -91,7 +92,13 @@ export const TYPE_TRANSFORM_MAP: any = {
     [null]: null,
     //@ts-ignore
     [undefined]: undefined,
-    parse: (n: any) => parseFloat(n),
+    parse: (n: any) => {
+      const parsed = parseFloat(n)
+      if (isNaN(parsed)) {
+        throw new Error(`Invalid number value "${n}"`)
+      }
+      return parsed
+    },
   },
   [FieldType.BIGINT]: {
     "": null,
@@ -109,8 +116,15 @@ export const TYPE_TRANSFORM_MAP: any = {
     parse: (date: any) => {
       if (date instanceof Date) {
         return date.toISOString()
+      } else if (typeof date === "string" && sql.utils.isValidTime(date)) {
+        return date
+      } else {
+        const parsed = new Date(date)
+        if (isNaN(parsed.getTime())) {
+          throw new Error(`Invalid date value: "${date}"`)
+        }
+        return date
       }
-      return date
     },
   },
   [FieldType.ATTACHMENTS]: {

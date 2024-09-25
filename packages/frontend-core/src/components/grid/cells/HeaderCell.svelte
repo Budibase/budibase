@@ -18,7 +18,7 @@
     isReordering,
     isResizing,
     sort,
-    visibleColumns,
+    scrollableColumns,
     dispatch,
     subscribe,
     config,
@@ -51,7 +51,7 @@
 
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
-  $: canMoveRight = orderable && idx < $visibleColumns.length - 1
+  $: canMoveRight = orderable && idx < $scrollableColumns.length - 1
   $: sortingLabels = getSortingLabels(column.schema?.type)
   $: searchable = isColumnSearchable(column)
   $: resetSearchValue(column.name)
@@ -270,7 +270,7 @@
     on:touchcancel={onMouseUp}
     on:contextmenu={onContextMenu}
     width={column.width}
-    left={column.left}
+    left={column.__left}
     defaultHeight
     center
   >

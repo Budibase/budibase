@@ -18,6 +18,6 @@
     },
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts"],
   "exclude": ["**/*.spec.ts", "**/*.spec.js", "__mocks__", "src/tests"]
 }

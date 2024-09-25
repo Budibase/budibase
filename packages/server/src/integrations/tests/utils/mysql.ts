@@ -4,6 +4,7 @@ import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
 import knex from "knex"
+import { MYSQL_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>
 
@@ -30,7 +31,7 @@ class MySQLWaitStrategy extends AbstractWaitStrategy {
 export async function getDatasource(): Promise<Datasource> {
   if (!ports) {
     ports = startContainer(
-      new GenericContainer("mysql:8.3")
+      new GenericContainer(MYSQL_IMAGE)
         .withExposedPorts(3306)
         .withEnvironment({ MYSQL_ROOT_PASSWORD: "password" })
         .withWaitStrategy(new MySQLWaitStrategy().withStartupTimeout(10000))

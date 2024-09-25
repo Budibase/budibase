@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
+import { cloneDeep } from "lodash"
 
 function isTest() {
   return isJest()
@@ -114,8 +115,7 @@ const environment = {
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
-  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL || "http://localhost:4006",
-  SQS_SEARCH_ENABLE: process.env.SQS_SEARCH_ENABLE,
+  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL,
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -141,6 +141,9 @@ const environment = {
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL || "",
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
+  POSTHOG_PERSONAL_TOKEN: process.env.POSTHOG_PERSONAL_TOKEN,
+  POSTHOG_API_HOST: process.env.POSTHOG_API_HOST || "https://us.i.posthog.com",
+  POSTHOG_FEATURE_FLAGS_ENABLED: process.env.POSTHOG_FEATURE_FLAGS_ENABLED,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
   CLOUDFRONT_CDN: process.env.CLOUDFRONT_CDN,
@@ -169,6 +172,7 @@ const environment = {
   // Couch/search
   SQL_LOGGING_ENABLE: process.env.SQL_LOGGING_ENABLE,
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
+  SQL_MAX_RELATED_ROWS: process.env.MAX_RELATED_ROWS,
   // smtp
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
   SMTP_USER: process.env.SMTP_USER,
@@ -203,6 +207,32 @@ const environment = {
   BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+}
+
+export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
+  const oldEnv = cloneDeep(environment)
+
+  let key: keyof typeof newEnvVars
+  for (key in newEnvVars) {
+    environment._set(key, newEnvVars[key])
+  }
+
+  return () => {
+    for (const [key, value] of Object.entries(oldEnv)) {
+      environment._set(key, value)
+    }
+  }
+}
+
+export function withEnv<T>(envVars: Partial<typeof environment>, f: () => T) {
+  const cleanup = setEnv(envVars)
+  const result = f()
+  if (result instanceof Promise) {
+    return result.finally(cleanup)
+  } else {
+    cleanup()
+    return result
+  }
 }
 
 type EnvironmentKey = keyof typeof environment

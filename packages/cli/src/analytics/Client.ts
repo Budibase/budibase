@@ -1,4 +1,4 @@
-import PostHog from "posthog-node"
+import { PostHog } from "posthog-node"
 import { POSTHOG_TOKEN, AnalyticsEvent } from "../constants"
 import { ConfigManager } from "../structures/ConfigManager"
 

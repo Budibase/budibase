@@ -5,6 +5,7 @@ import { WithRequired } from "../shared"
 
 export interface SearchParams {
   tableId?: string
+  viewId?: string
   query?: SearchFilters
   paginate?: boolean
   bookmark?: string | number
@@ -29,4 +30,10 @@ export interface SearchResponse<T> {
   hasNextPage?: boolean
   bookmark?: string | number
   totalRows?: number
+}
+
+export enum RowExportFormat {
+  CSV = "csv",
+  JSON = "json",
+  JSON_WITH_SCHEMA = "jsonWithSchema",
 }

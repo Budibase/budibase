@@ -1,25 +1,22 @@
 import { Thread, ThreadType } from "../threads"
 import { definitions } from "./triggerInfo"
 import { automationQueue } from "./bullboard"
-import newid from "../db/newid"
 import { updateEntityMetadata } from "../utilities"
 import { MetadataTypes } from "../constants"
-import { db as dbCore, context } from "@budibase/backend-core"
+import { context, db as dbCore, utils } from "@budibase/backend-core"
 import { getAutomationMetadataParams } from "../db/utils"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import {
   Automation,
   AutomationJob,
-  Webhook,
-  WebhookActionType,
+  AutomationStepDefinition,
+  AutomationTriggerDefinition,
 } from "@budibase/types"
-import sdk from "../sdk"
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
 
-const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
 let Runner: Thread
 if (automationsEnabled()) {
@@ -119,7 +116,12 @@ export async function updateTestHistory(
   )
 }
 
-export function removeDeprecated(definitions: any) {
+export function removeDeprecated(
+  definitions: Record<
+    string,
+    AutomationStepDefinition | AutomationTriggerDefinition
+  >
+) {
   const base = cloneDeep(definitions)
   for (let key of Object.keys(base)) {
     if (base[key].deprecated) {
@@ -207,7 +209,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
       )
     }
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
-    const jobId = `${appId}_cron_${newid()}`
+    const jobId = `${appId}_cron_${utils.newid()}`
     const job: any = await automationQueue.add(
       {
         automation,
@@ -228,76 +230,6 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
     enabled = true
   }
   return { enabled, automation }
-}
-
-/**
- * This function handles checking if any webhooks need to be created or deleted for automations.
- * @param appId The ID of the app in which we are checking for webhooks
- * @param oldAuto The old automation object if updating/deleting
- * @param newAuto The new automation object if creating/updating
- * @returns After this is complete the new automation object may have been updated and should be
- * written to DB (this does not write to DB as it would be wasteful to repeat).
- */
-export async function checkForWebhooks({ oldAuto, newAuto }: any) {
-  const appId = context.getAppId()
-  if (!appId) {
-    throw new Error("Unable to check webhooks - no app ID in context.")
-  }
-  const oldTrigger = oldAuto ? oldAuto.definition.trigger : null
-  const newTrigger = newAuto ? newAuto.definition.trigger : null
-  const triggerChanged =
-    oldTrigger && newTrigger && oldTrigger.id !== newTrigger.id
-  function isWebhookTrigger(auto: any) {
-    return (
-      auto &&
-      auto.definition.trigger &&
-      auto.definition.trigger.stepId === WH_STEP_ID
-    )
-  }
-  // need to delete webhook
-  if (
-    isWebhookTrigger(oldAuto) &&
-    (!isWebhookTrigger(newAuto) || triggerChanged) &&
-    oldTrigger.webhookId
-  ) {
-    try {
-      const db = context.getAppDB()
-      // need to get the webhook to get the rev
-      const webhook = await db.get<Webhook>(oldTrigger.webhookId)
-      // might be updating - reset the inputs to remove the URLs
-      if (newTrigger) {
-        delete newTrigger.webhookId
-        newTrigger.inputs = {}
-      }
-      await sdk.automations.webhook.destroy(webhook._id!, webhook._rev!)
-    } catch (err) {
-      // don't worry about not being able to delete, if it doesn't exist all good
-    }
-  }
-  // need to create webhook
-  if (
-    (!isWebhookTrigger(oldAuto) || triggerChanged) &&
-    isWebhookTrigger(newAuto)
-  ) {
-    const webhook = await sdk.automations.webhook.save(
-      sdk.automations.webhook.newDoc(
-        "Automation webhook",
-        WebhookActionType.AUTOMATION,
-        newAuto._id
-      )
-    )
-    const id = webhook._id
-    newTrigger.webhookId = id
-    // the app ID has to be development for this endpoint
-    // it can only be used when building the app
-    // but the trigger endpoint will always be used in production
-    const prodAppId = dbCore.getProdAppID(appId)
-    newTrigger.inputs = {
-      schemaUrl: `api/webhooks/schema/${appId}/${id}`,
-      triggerUrl: `api/webhooks/trigger/${prodAppId}/${id}`,
-    }
-  }
-  return newAuto
 }
 
 /**

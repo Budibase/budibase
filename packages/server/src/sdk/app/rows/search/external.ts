@@ -16,12 +16,47 @@ import {
   breakExternalTableId,
   breakRowIdField,
 } from "../../../../integrations/utils"
-import { utils, CONSTANT_EXTERNAL_ROW_COLS } from "@budibase/shared-core"
+import { utils, PROTECTED_EXTERNAL_COLUMNS } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "./types"
 import { HTTPError } from "@budibase/backend-core"
 import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import sdk from "../../../"
+import { isSearchingByRowID } from "./utils"
+
+function getPaginationAndLimitParameters(
+  filters: SearchFilters,
+  paginate: boolean | undefined,
+  bookmark: number | undefined,
+  limit: number | undefined
+): PaginationJson | undefined {
+  let paginateObj: PaginationJson | undefined
+
+  // only try set limits/pagination if we aren't doing a row ID search
+  if (isSearchingByRowID(filters)) {
+    return
+  }
+
+  if (paginate && !limit) {
+    throw new Error("Cannot paginate query without a limit")
+  }
+
+  if (paginate && limit) {
+    paginateObj = {
+      // add one so we can track if there is another page
+      limit: limit + 1,
+    }
+    if (bookmark) {
+      paginateObj.offset = bookmark
+    }
+  } else if (limit) {
+    paginateObj = {
+      limit: limit,
+    }
+  }
+
+  return paginateObj
+}
 
 export async function search(
   options: RowSearchParams,
@@ -35,25 +70,14 @@ export async function search(
   if (paginate && !bookmark) {
     bookmark = 0
   }
-  let paginateObj: PaginationJson | undefined
 
-  if (paginate && !limit) {
-    throw new Error("Cannot paginate query without a limit")
-  }
+  let paginateObj = getPaginationAndLimitParameters(
+    query,
+    paginate,
+    bookmark,
+    limit
+  )
 
-  if (paginate && limit) {
-    paginateObj = {
-      // add one so we can track if there is another page
-      limit: limit + 1,
-    }
-    if (bookmark) {
-      paginateObj.offset = limit * bookmark
-    }
-  } else if (params && limit) {
-    paginateObj = {
-      limit: limit,
-    }
-  }
   let sort: SortJson | undefined
   if (params.sort) {
     const direction =
@@ -81,37 +105,38 @@ export async function search(
       paginate: paginateObj as PaginationJson,
       includeSqlRelationships: IncludeRelationship.INCLUDE,
     }
-    const queries: Promise<Row[] | number>[] = []
-    queries.push(handleRequest(Operation.READ, tableId, parameters))
-    if (countRows) {
-      queries.push(handleRequest(Operation.COUNT, tableId, parameters))
-    }
-    const responses = await Promise.all(queries)
-    let rows = responses[0] as Row[]
-    const totalRows =
-      responses.length > 1 ? (responses[1] as number) : undefined
+    const [{ rows, rawResponseSize }, totalRows] = await Promise.all([
+      handleRequest(Operation.READ, tableId, parameters),
+      countRows
+        ? handleRequest(Operation.COUNT, tableId, parameters)
+        : Promise.resolve(undefined),
+    ])
+
+    let processed = await outputProcessing(table, rows, {
+      preserveLinks: true,
+      squash: true,
+      fromViewId: options.viewId,
+    })
 
     let hasNextPage = false
-    // remove the extra row if it's there
-    if (paginate && limit && rows.length > limit) {
-      rows.pop()
+    // if the raw rows is greater than the limit then we likely need to paginate
+    if (paginate && limit && rawResponseSize > limit) {
       hasNextPage = true
+      // processed rows has merged relationships down, this might not be more than limit
+      if (processed.length > limit) {
+        processed.pop()
+      }
     }
 
     if (options.fields) {
-      const fields = [...options.fields, ...CONSTANT_EXTERNAL_ROW_COLS]
-      rows = rows.map((r: any) => pick(r, fields))
+      const fields = [...options.fields, ...PROTECTED_EXTERNAL_COLUMNS]
+      processed = processed.map((r: any) => pick(r, fields))
     }
 
-    rows = await outputProcessing<Row[]>(table, rows, {
-      preserveLinks: true,
-      squash: true,
-    })
-
     // need wrapper object for bookmarks etc when paginating
-    const response: SearchResponse<Row> = { rows, hasNextPage }
+    const response: SearchResponse<Row> = { rows: processed, hasNextPage }
     if (hasNextPage && bookmark != null) {
-      response.bookmark = bookmark + 1
+      response.bookmark = bookmark + processed.length
     }
     if (totalRows != null) {
       response.totalRows = totalRows
@@ -123,7 +148,8 @@ export async function search(
   } catch (err: any) {
     if (err.message && err.message.includes("does not exist")) {
       throw new Error(
-        `Table updated externally, please re-fetch - ${err.message}`
+        `Table updated externally, please re-fetch - ${err.message}`,
+        { cause: err }
       )
     } else {
       throw err
@@ -158,10 +184,7 @@ export async function exportRows(
         _id: rowIds.map((row: string) => {
           const ids = breakRowIdField(row)
           if (ids.length > 1) {
-            throw new HTTPError(
-              "Export data does not support composite keys.",
-              400
-            )
+            return ids
           }
           return ids[0]
         }),
@@ -234,30 +257,19 @@ export async function exportRows(
 }
 
 export async function fetch(tableId: string): Promise<Row[]> {
-  const response = await handleRequest<Operation.READ>(
-    Operation.READ,
-    tableId,
-    {
-      includeSqlRelationships: IncludeRelationship.INCLUDE,
-    }
-  )
+  const response = await handleRequest(Operation.READ, tableId, {
+    includeSqlRelationships: IncludeRelationship.INCLUDE,
+  })
   const table = await sdk.tables.getTable(tableId)
-  return await outputProcessing<Row[]>(table, response, {
+  return await outputProcessing(table, response.rows, {
     preserveLinks: true,
     squash: true,
   })
 }
 
 export async function fetchRaw(tableId: string): Promise<Row[]> {
-  return await handleRequest<Operation.READ>(Operation.READ, tableId, {
+  const response = await handleRequest(Operation.READ, tableId, {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
-}
-
-export async function fetchView(viewName: string) {
-  // there are no views in external datasources, shouldn't ever be called
-  // for now just fetch
-  const split = viewName.split("all_")
-  const tableId = split[1] ? split[1] : split[0]
-  return fetch(tableId)
+  return response.rows
 }

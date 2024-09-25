@@ -1,8 +1,7 @@
 <script>
   import { getContext } from "svelte"
-  import Placeholder from "./Placeholder.svelte"
 
-  const { styleable, builderStore } = getContext("sdk")
+  const { styleable } = getContext("sdk")
   const component = getContext("component")
 
   export let url
@@ -19,20 +18,11 @@
   }
 </script>
 
-{#if url}
-  <div class="outer" use:styleable={$component.styles}>
-    <div class="inner" {style}>
-      <slot />
-    </div>
+<div class="outer" use:styleable={$component.styles}>
+  <div class="inner" {style}>
+    <slot />
   </div>
-{:else if $builderStore.inBuilder}
-  <div
-    class="placeholder"
-    use:styleable={{ ...$component.styles, empty: true }}
-  >
-    <Placeholder />
-  </div>
-{/if}
+</div>
 
 <style>
   .outer {
@@ -48,10 +38,5 @@
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center center;
-  }
-
-  .placeholder {
-    display: grid;
-    place-items: center;
   }
 </style>

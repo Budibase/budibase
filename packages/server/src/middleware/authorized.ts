@@ -88,7 +88,7 @@ const authorized =
     opts = { schema: false },
     resourcePath?: string
   ) =>
-  async (ctx: any, next: any) => {
+  async (ctx: UserCtx, next: any) => {
     // webhooks don't need authentication, each webhook unique
     // also internal requests (between services) don't need authorized
     if (isWebhookEndpoint(ctx) || ctx.internal) {
@@ -96,7 +96,7 @@ const authorized =
     }
 
     if (!ctx.user) {
-      return ctx.throw(403, "No user info found")
+      return ctx.throw(401, "No user info found")
     }
 
     // get the resource roles
@@ -148,7 +148,7 @@ const authorized =
 
     // check authenticated
     if (!ctx.isAuthenticated) {
-      return ctx.throw(403, "Session not authenticated")
+      return ctx.throw(401, "Session not authenticated")
     }
 
     // check general builder stuff, this middleware is a good way

@@ -1,5 +1,4 @@
-import newid from "../../../db/newid"
-import { context } from "@budibase/backend-core"
+import { context, utils } from "@budibase/backend-core"
 
 /**
  * This is used to pass around information about the deployment that is occurring
@@ -12,7 +11,7 @@ export default class Deployment {
   appUrl?: string
 
   constructor(id = null) {
-    this._id = id || newid()
+    this._id = id || utils.newid()
   }
 
   setVerification(verification: any) {
