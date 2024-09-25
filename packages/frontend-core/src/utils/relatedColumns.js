@@ -19,6 +19,15 @@ const columnTypeManyOverrides = {
       return result
     },
   },
+  [FieldType.BOOLEAN]: {
+    overridedType: FieldType.STRING,
+    parser: value => {
+      if (value) {
+        return true
+      }
+      return false
+    },
+  },
 }
 
 export function enrichSchemaWithRelColumns(schema) {
