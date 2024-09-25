@@ -7,10 +7,22 @@ import {
   FIELDS,
   isAutoColumnUserRelationship,
 } from "constants/backend"
+import { isEnabled } from "helpers/featureFlags"
 
 export function getAutoColumnInformation(enabled = true) {
   let info = {}
-  for (let [key, subtype] of Object.entries(AUTO_COLUMN_SUB_TYPES)) {
+  for (const [key, subtype] of Object.entries(AUTO_COLUMN_SUB_TYPES)) {
+    // Because it's possible to replicate the functionality of CREATED_AT and
+    // CREATED_BY columns, we disable their creation when the DEFAULT_VALUES
+    // feature flag is enabled.
+    if (isEnabled("DEFAULT_VALUES")) {
+      if (
+        subtype === AUTO_COLUMN_SUB_TYPES.CREATED_AT ||
+        subtype === AUTO_COLUMN_SUB_TYPES.CREATED_BY
+      ) {
+        continue
+      }
+    }
     info[subtype] = { enabled, name: AUTO_COLUMN_DISPLAY_NAMES[key] }
   }
   return info

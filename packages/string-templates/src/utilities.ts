@@ -66,3 +66,16 @@ export const btoa = (plainText: string) => {
 export const atob = (base64: string) => {
   return Buffer.from(base64, "base64").toString("utf-8")
 }
+
+export const prefixStrings = (
+  baseString: string,
+  strings: string[],
+  prefix: string
+) => {
+  // Escape any special characters in the strings to avoid regex errors
+  const escapedStrings = strings.map(str =>
+    str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  )
+  const regexPattern = new RegExp(`\\b(${escapedStrings.join("|")})\\b`, "g")
+  return baseString.replace(regexPattern, `${prefix}$1`)
+}

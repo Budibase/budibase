@@ -10,7 +10,6 @@ declare -a DOCKER_VARS=("APP_PORT" "APPS_URL" "ARCHITECTURE" "BUDIBASE_ENVIRONME
 [[ -z "${MINIO_URL}" ]] && [[ -z "${USE_S3}" ]] && export MINIO_URL=http://127.0.0.1:9000
 [[ -z "${NODE_ENV}" ]] && export NODE_ENV=production
 [[ -z "${POSTHOG_TOKEN}" ]] && export POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
-[[ -z "${TENANT_FEATURE_FLAGS}" ]] && export TENANT_FEATURE_FLAGS="*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"
 [[ -z "${ACCOUNT_PORTAL_URL}" ]] && export ACCOUNT_PORTAL_URL=https://account.budibase.app
 [[ -z "${REDIS_URL}" ]] && export REDIS_URL=127.0.0.1:6379
 [[ -z "${SELF_HOSTED}" ]] && export SELF_HOSTED=1
@@ -45,8 +44,7 @@ fi
 # randomise any unset environment variables
 for ENV_VAR in "${ENV_VARS[@]}"
 do
-    temp=$(eval "echo \$$ENV_VAR")
-    if [[ -z "${temp}" ]]; then
+    if [[ -z "${!ENV_VAR}" ]]; then
         eval "export $ENV_VAR=$(uuidgen | sed -e 's/-//g')"
     fi
 done
@@ -80,7 +78,11 @@ ln -s ${DATA_DIR}/.env /worker/.env
 # make these directories in runner, incase of mount
 mkdir -p ${DATA_DIR}/minio
 chown -R couchdb:couchdb ${DATA_DIR}/couch
-redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
+if [[ -n "${REDIS_PASSWORD}" ]]; then
+  redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
+else
+  redis-server > /dev/stdout 2>&1 &
+fi
 /bbcouch-runner.sh &
 
 # only start minio if use s3 isn't passed

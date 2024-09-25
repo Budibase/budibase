@@ -1,19 +1,20 @@
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   AutomationResults,
   Automation,
   AutomationCustomIOType,
+  TriggerAutomationStepInputs,
+  TriggerAutomationStepOutputs,
 } from "@budibase/types"
 import * as triggers from "../triggers"
 import { context } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
 import env from "../../environment"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Trigger an automation",
   tagline: "Triggers an automation synchronously",
   icon: "Sync",
@@ -61,7 +62,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: TriggerAutomationStepInputs
+}): Promise<TriggerAutomationStepOutputs> {
   const { automationId, ...fieldParams } = inputs.automation
 
   if (await features.isTriggerAutomationRunEnabled()) {
@@ -87,6 +92,10 @@ export async function run({ inputs }: AutomationStepInput) {
         success: true,
         value: response.steps,
       }
+    }
+  } else {
+    return {
+      success: false,
     }
   }
 }

@@ -7,11 +7,9 @@ import {
   ManyToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
   RelationshipsJson,
-  Row,
   Table,
 } from "@budibase/types"
 import { breakExternalTableId } from "../../../../integrations/utils"
-import { basicProcessing } from "./basic"
 import { generateJunctionTableID } from "../../../../db/utils"
 
 type TableMap = Record<string, Table>
@@ -20,68 +18,6 @@ export function isManyToMany(
   field: RelationshipFieldMetadata
 ): field is ManyToManyRelationshipFieldMetadata {
   return !!(field as ManyToManyRelationshipFieldMetadata).through
-}
-
-/**
- * This iterates through the returned rows and works out what elements of the rows
- * actually match up to another row (based on primary keys) - this is pretty specific
- * to SQL and the way that SQL relationships are returned based on joins.
- * This is complicated, but the idea is that when a SQL query returns all the relations
- * will be separate rows, with all of the data in each row. We have to decipher what comes
- * from where (which tables) and how to convert that into budibase columns.
- */
-export async function updateRelationshipColumns(
-  table: Table,
-  tables: TableMap,
-  row: Row,
-  rows: { [key: string]: Row },
-  relationships: RelationshipsJson[],
-  opts?: { sqs?: boolean }
-) {
-  const columns: { [key: string]: any } = {}
-  for (let relationship of relationships) {
-    const linkedTable = tables[relationship.tableName]
-    if (!linkedTable) {
-      continue
-    }
-    const fromColumn = `${table.name}.${relationship.from}`
-    const toColumn = `${linkedTable.name}.${relationship.to}`
-    // this is important when working with multiple relationships
-    // between the same tables, don't want to overlap/multiply the relations
-    if (
-      !relationship.through &&
-      row[fromColumn]?.toString() !== row[toColumn]?.toString()
-    ) {
-      continue
-    }
-
-    let linked = basicProcessing({
-      row,
-      table: linkedTable,
-      isLinked: true,
-      sqs: opts?.sqs,
-    })
-    if (!linked._id) {
-      continue
-    }
-    columns[relationship.column] = linked
-  }
-  for (let [column, related] of Object.entries(columns)) {
-    if (!row._id) {
-      continue
-    }
-    const rowId: string = row._id
-    if (!Array.isArray(rows[rowId][column])) {
-      rows[rowId][column] = []
-    }
-    // make sure relationship hasn't been found already
-    if (
-      !rows[rowId][column].find((relation: Row) => relation._id === related._id)
-    ) {
-      rows[rowId][column].push(related)
-    }
-  }
-  return rows
 }
 
 /**
@@ -132,7 +68,10 @@ export function buildExternalRelationships(
   return relationships
 }
 
-export function buildInternalRelationships(table: Table): RelationshipsJson[] {
+export function buildInternalRelationships(
+  table: Table,
+  allTables: Table[]
+): RelationshipsJson[] {
   const relationships: RelationshipsJson[] = []
   const links = Object.values(table.schema).filter(
     column => column.type === FieldType.LINK
@@ -145,6 +84,10 @@ export function buildInternalRelationships(table: Table): RelationshipsJson[] {
     const linkTableId = link.tableId!
     const junctionTableId = generateJunctionTableID(tableId, linkTableId)
     const isFirstTable = tableId > linkTableId
+    // skip relationships with missing table definitions
+    if (!allTables.find(table => table._id === linkTableId)) {
+      continue
+    }
     relationships.push({
       through: junctionTableId,
       column: link.name,
@@ -173,10 +116,10 @@ export function buildSqlFieldList(
   function extractRealFields(table: Table, existing: string[] = []) {
     return Object.entries(table.schema)
       .filter(
-        column =>
-          column[1].type !== FieldType.LINK &&
-          column[1].type !== FieldType.FORMULA &&
-          !existing.find((field: string) => field === column[0])
+        ([columnName, column]) =>
+          column.type !== FieldType.LINK &&
+          column.type !== FieldType.FORMULA &&
+          !existing.find((field: string) => field === columnName)
       )
       .map(column => `${table.name}.${column[0]}`)
   }

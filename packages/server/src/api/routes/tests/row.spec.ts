@@ -1,3 +1,5 @@
+import * as setup from "./utilities"
+
 import {
   DatabaseName,
   getDatasource,
@@ -7,8 +9,13 @@ import {
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
-import * as setup from "./utilities"
-import { context, InternalTable, tenancy } from "@budibase/backend-core"
+import {
+  context,
+  InternalTable,
+  tenancy,
+  withEnv as withCoreEnv,
+  setEnv as setCoreEnv,
+} from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AttachmentFieldMetadata,
@@ -31,11 +38,17 @@ import {
   TableSourceType,
   UpdatedRowEventEmitter,
   TableSchema,
+  JsonFieldSubType,
+  RowExportFormat,
+  FeatureFlag,
+  RelationSchemaField,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
 import * as uuid from "uuid"
 import { Knex } from "knex"
+import { InternalTables } from "../../../db/utils"
+import { withEnv } from "../../../environment"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -64,21 +77,33 @@ async function waitForEvent(
 
 describe.each([
   ["internal", undefined],
+  ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
+  const isLucene = providerType === "lucene"
+  const isSqs = providerType === "sqs"
   const isMSSQL = providerType === DatabaseName.SQL_SERVER
+  const isOracle = providerType === DatabaseName.ORACLE
   const config = setup.getConfig()
 
   let table: Table
   let datasource: Datasource | undefined
   let client: Knex | undefined
+  let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await config.init()
+    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
+    if (isLucene) {
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" })
+    } else if (isSqs) {
+      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" })
+    }
+
     if (dsProvider) {
       const rawDatasource = await dsProvider
       datasource = await config.createDatasource({
@@ -90,6 +115,9 @@ describe.each([
 
   afterAll(async () => {
     setup.afterAll()
+    if (envCleanup) {
+      envCleanup()
+    }
   })
 
   function saveTableRequest(
@@ -100,7 +128,7 @@ describe.each([
   ): SaveTableRequest {
     const defaultSchema: TableSchema = {
       id: {
-        type: FieldType.AUTO,
+        type: FieldType.NUMBER,
         name: "id",
         autocolumn: true,
         constraints: {
@@ -125,7 +153,8 @@ describe.each([
       primary: ["id"],
       schema: defaultSchema,
     }
-    return merge(req, ...overrides)
+    const merged = merge(req, ...overrides)
+    return merged
   }
 
   function defaultTable(
@@ -338,7 +367,7 @@ describe.each([
         expect(ids).toEqual(expect.arrayContaining(sequence))
       })
 
-    isInternal &&
+    isLucene &&
       it("row values are coerced", async () => {
         const str: FieldSchema = {
           type: FieldType.STRING,
@@ -382,7 +411,7 @@ describe.each([
         const arrayField: FieldSchema = {
           type: FieldType.ARRAY,
           constraints: {
-            type: "array",
+            type: JsonFieldSubType.ARRAY,
             presence: false,
             inclusion: ["One", "Two", "Three"],
           },
@@ -550,6 +579,239 @@ describe.each([
 
       expect(row.name).toEqual(`{ "foo": "2023-01-26T11:48:57.000Z" }`)
     })
+
+    describe("default values", () => {
+      let table: Table
+
+      describe("string column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                description: {
+                  name: "description",
+                  type: FieldType.STRING,
+                  default: "default description",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.description).toEqual("default description")
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            description: "specified description",
+          })
+          expect(row.description).toEqual("specified description")
+        })
+
+        it("uses the default value if value is null", async () => {
+          const row = await config.api.row.save(table._id!, {
+            description: null,
+          })
+          expect(row.description).toEqual("default description")
+        })
+
+        it("uses the default value if value is undefined", async () => {
+          const row = await config.api.row.save(table._id!, {
+            description: undefined,
+          })
+          expect(row.description).toEqual("default description")
+        })
+      })
+
+      describe("number column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                age: {
+                  name: "age",
+                  type: FieldType.NUMBER,
+                  default: "25",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.age).toEqual(25)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            age: 30,
+          })
+          expect(row.age).toEqual(30)
+        })
+      })
+
+      describe("date column", () => {
+        it("creates a row with a default value successfully", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  default: "2023-01-26T11:48:57.000Z",
+                },
+              },
+            })
+          )
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.date).toEqual("2023-01-26T11:48:57.000Z")
+        })
+
+        it("gives an error if the default value is invalid", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  default: "invalid",
+                },
+              },
+            })
+          )
+          await config.api.row.save(
+            table._id!,
+            {},
+            {
+              status: 400,
+              body: {
+                message: `Invalid default value for field 'date' - Invalid date value: "invalid"`,
+              },
+            }
+          )
+        })
+      })
+
+      describe("bindings", () => {
+        describe("string column", () => {
+          beforeAll(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  description: {
+                    name: "description",
+                    type: FieldType.STRING,
+                    default: `{{ date now "YYYY-MM-DDTHH:mm:ss" }}`,
+                  },
+                },
+              })
+            )
+          })
+
+          it("can use bindings in default values", async () => {
+            const row = await config.api.row.save(table._id!, {})
+            expect(row.description).toMatch(
+              /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
+            )
+          })
+
+          it("does not use default value if value specified", async () => {
+            const row = await config.api.row.save(table._id!, {
+              description: "specified description",
+            })
+            expect(row.description).toEqual("specified description")
+          })
+
+          it("can bind the current user", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  user: {
+                    name: "user",
+                    type: FieldType.STRING,
+                    default: `{{ [Current User]._id }}`,
+                  },
+                },
+              })
+            )
+            const row = await config.api.row.save(table._id!, {})
+            expect(row.user).toEqual(config.getUser()._id)
+          })
+
+          it("cannot access current user password", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  user: {
+                    name: "user",
+                    type: FieldType.STRING,
+                    default: `{{ user.password }}`,
+                  },
+                },
+              })
+            )
+            const row = await config.api.row.save(table._id!, {})
+            // For some reason it's null for internal tables, and undefined for
+            // external.
+            expect(row.user == null).toBe(true)
+          })
+        })
+
+        describe("number column", () => {
+          beforeAll(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  age: {
+                    name: "age",
+                    type: FieldType.NUMBER,
+                    default: `{{ sum 10 10 5 }}`,
+                  },
+                },
+              })
+            )
+          })
+
+          it("can use bindings in default values", async () => {
+            const row = await config.api.row.save(table._id!, {})
+            expect(row.age).toEqual(25)
+          })
+
+          describe("invalid default value", () => {
+            beforeAll(async () => {
+              table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    age: {
+                      name: "age",
+                      type: FieldType.NUMBER,
+                      default: `{{ capitalize "invalid" }}`,
+                    },
+                  },
+                })
+              )
+            })
+
+            it("throws an error when invalid default value", async () => {
+              await config.api.row.save(
+                table._id!,
+                {},
+                {
+                  status: 400,
+                  body: {
+                    message:
+                      "Invalid default value for field 'age' - Invalid number value \"Invalid\"",
+                  },
+                }
+              )
+            })
+          })
+        })
+      })
+    })
   })
 
   describe("get", () => {
@@ -571,6 +833,23 @@ describe.each([
         status: 404,
       })
     })
+
+    isInternal &&
+      it("can search row from user table", async () => {
+        const res = await config.api.row.get(
+          InternalTables.USER_METADATA,
+          config.userMetadataId!
+        )
+
+        expect(res).toEqual({
+          ...config.getUser(),
+          _id: config.userMetadataId!,
+          _rev: expect.any(String),
+          roles: undefined,
+          roleId: "ADMIN",
+          tableId: InternalTables.USER_METADATA,
+        })
+      })
   })
 
   describe("fetch", () => {
@@ -819,7 +1098,10 @@ describe.each([
         const table = await config.api.table.save(tableRequest)
 
         const stringValue = generator.word()
-        const naturalValue = generator.integer({ min: 0, max: 1000 })
+
+        // MySQL and MariaDB auto-increment fields have a minimum value of 1. If
+        // you try to save a row with a value of 0 it will use 1 instead.
+        const naturalValue = generator.integer({ min: 1, max: 1000 })
 
         const existing = await config.api.row.save(table._id!, {
           string: stringValue,
@@ -853,6 +1135,18 @@ describe.each([
         rows: [createdRow],
       })
       expect(res[0]._id).toEqual(createdRow._id)
+      await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
+    })
+
+    it("should be able to delete a row with ID only", async () => {
+      const createdRow = await config.api.row.save(table._id!, {})
+      const rowUsage = await getRowUsage()
+
+      const res = await config.api.row.bulkDelete(table._id!, {
+        rows: [createdRow._id!],
+      })
+      expect(res[0]._id).toEqual(createdRow._id)
+      expect(res[0].tableId).toEqual(table._id!)
       await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
     })
 
@@ -951,7 +1245,7 @@ describe.each([
     })
 
     it.each([{ not: "valid" }, { rows: 123 }, "invalid"])(
-      "Should ignore malformed/invalid delete request: %s",
+      "should ignore malformed/invalid delete request: %s",
       async (request: any) => {
         const rowUsage = await getRowUsage()
 
@@ -1042,9 +1336,117 @@ describe.each([
       await assertRowUsage(isInternal ? rowUsage + 2 : rowUsage)
     })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    isInternal &&
+      it("should be able to update existing rows on bulkImport", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+              },
+              description: {
+                type: FieldType.STRING,
+                name: "description",
+              },
+            },
+          })
+        )
+
+        const existingRow = await config.api.row.save(table._id!, {
+          name: "Existing row",
+          description: "Existing description",
+        })
+
+        const rowUsage = await getRowUsage()
+
+        await config.api.row.bulkImport(table._id!, {
+          rows: [
+            {
+              name: "Row 1",
+              description: "Row 1 description",
+            },
+            { ...existingRow, name: "Updated existing row" },
+            {
+              name: "Row 2",
+              description: "Row 2 description",
+            },
+          ],
+          identifierFields: ["_id"],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(3)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Row 1")
+        expect(rows[0].description).toEqual("Row 1 description")
+        expect(rows[1].name).toEqual("Row 2")
+        expect(rows[1].description).toEqual("Row 2 description")
+        expect(rows[2].name).toEqual("Updated existing row")
+        expect(rows[2].description).toEqual("Existing description")
+
+        await assertRowUsage(rowUsage + 2)
+      })
+
+    isInternal &&
+      it("should create new rows if not identifierFields are provided", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+              },
+              description: {
+                type: FieldType.STRING,
+                name: "description",
+              },
+            },
+          })
+        )
+
+        const existingRow = await config.api.row.save(table._id!, {
+          name: "Existing row",
+          description: "Existing description",
+        })
+
+        const rowUsage = await getRowUsage()
+
+        await config.api.row.bulkImport(table._id!, {
+          rows: [
+            {
+              name: "Row 1",
+              description: "Row 1 description",
+            },
+            { ...existingRow, name: "Updated existing row" },
+            {
+              name: "Row 2",
+              description: "Row 2 description",
+            },
+          ],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(4)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Existing row")
+        expect(rows[0].description).toEqual("Existing description")
+        expect(rows[1].name).toEqual("Row 1")
+        expect(rows[1].description).toEqual("Row 1 description")
+        expect(rows[2].name).toEqual("Row 2")
+        expect(rows[2].description).toEqual("Row 2 description")
+        expect(rows[3].name).toEqual("Updated existing row")
+        expect(rows[3].description).toEqual("Existing description")
+
+        await assertRowUsage(rowUsage + 3)
+      })
+
+    // Upserting isn't yet supported in MSSQL / Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       it("should be able to update existing rows with bulkImport", async () => {
         const table = await config.api.table.save(
           saveTableRequest({
@@ -1114,9 +1516,10 @@ describe.each([
         expect(rows[2].description).toEqual("Row 3 description")
       })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    // Upserting isn't yet supported in MSSQL or Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       !isInternal &&
       it("should be able to update existing rows with composite primary keys with bulkImport", async () => {
         const tableName = uuid.v4()
@@ -1183,9 +1586,10 @@ describe.each([
         expect(rows[2].description).toEqual("Row 3 description")
       })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    // Upserting isn't yet supported in MSSQL/Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       !isInternal &&
       it("should be able to update existing rows an autoID primary key", async () => {
         const tableName = uuid.v4()
@@ -1293,7 +1697,7 @@ describe.each([
   isInternal &&
     describe("attachments and signatures", () => {
       const coreAttachmentEnrichment = async (
-        schema: any,
+        schema: TableSchema,
         field: string,
         attachmentCfg: string | string[]
       ) => {
@@ -1318,9 +1722,9 @@ describe.each([
         }
         const row = await config.api.row.save(testTable._id!, draftRow)
 
-        await config.withEnv({ SELF_HOSTED: "true" }, async () => {
+        await withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
-            const enriched: Row[] = await outputProcessing(table, [row])
+            const enriched: Row[] = await outputProcessing(testTable, [row])
             const [targetRow] = enriched
             const attachmentEntries = Array.isArray(targetRow[field])
               ? targetRow[field]
@@ -1384,23 +1788,38 @@ describe.each([
       table = await config.api.table.save(defaultTable())
     })
 
-    it("should allow exporting all columns", async () => {
-      const existing = await config.api.row.save(table._id!, {})
-      const res = await config.api.row.exportRows(table._id!, {
-        rows: [existing._id!],
-      })
-      const results = JSON.parse(res)
-      expect(results.length).toEqual(1)
-      const row = results[0]
+    isInternal &&
+      it("should not export internal couchdb fields", async () => {
+        const existing = await config.api.row.save(table._id!, {
+          name: generator.guid(),
+          description: generator.paragraph(),
+        })
+        const res = await config.api.row.exportRows(table._id!, {
+          rows: [existing._id!],
+        })
+        const results = JSON.parse(res)
+        expect(results.length).toEqual(1)
+        const row = results[0]
 
-      // Ensure all original columns were exported
-      expect(Object.keys(row).length).toBeGreaterThanOrEqual(
-        Object.keys(existing).length
-      )
-      Object.keys(existing).forEach(key => {
-        expect(row[key]).toEqual(existing[key])
+        expect(Object.keys(row)).toEqual(["_id", "name", "description"])
       })
-    })
+
+    !isInternal &&
+      it("should allow exporting all columns", async () => {
+        const existing = await config.api.row.save(table._id!, {})
+        const res = await config.api.row.exportRows(table._id!, {
+          rows: [existing._id!],
+        })
+        const results = JSON.parse(res)
+        expect(results.length).toEqual(1)
+        const row = results[0]
+
+        // Ensure all original columns were exported
+        expect(Object.keys(row).length).toBe(Object.keys(existing).length)
+        Object.keys(existing).forEach(key => {
+          expect(row[key]).toEqual(existing[key])
+        })
+      })
 
     it("should allow exporting only certain columns", async () => {
       const existing = await config.api.row.save(table._id!, {})
@@ -1428,29 +1847,245 @@ describe.each([
       expect(row._id).toEqual(existing._id)
     })
 
-    it("should return an error on composite keys", async () => {
-      const existing = await config.api.row.save(table._id!, {})
-      await config.api.row.exportRows(
-        table._id!,
-        {
-          rows: [`['${existing._id!}']`, "['d001', '10111']"],
-        },
-        {
-          status: 400,
-          body: {
-            message: "Export data does not support composite keys.",
-          },
-        }
-      )
-    })
-
     it("should return an error if no table is found", async () => {
       const existing = await config.api.row.save(table._id!, {})
       await config.api.row.exportRows(
         "1234567",
         { rows: [existing._id!] },
+        RowExportFormat.JSON,
         { status: 404 }
       )
+    })
+
+    // MSSQL needs a setting called IDENTITY_INSERT to be set to ON to allow writing
+    // to identity columns. This is not something Budibase does currently.
+    providerType !== DatabaseName.SQL_SERVER &&
+      it("should handle filtering by composite primary keys", async () => {
+        const tableRequest = saveTableRequest({
+          primary: ["number", "string"],
+          schema: {
+            string: {
+              type: FieldType.STRING,
+              name: "string",
+            },
+            number: {
+              type: FieldType.NUMBER,
+              name: "number",
+            },
+          },
+        })
+        delete tableRequest.schema.id
+
+        const table = await config.api.table.save(tableRequest)
+        const toCreate = generator
+          .unique(() => generator.integer({ min: 0, max: 10000 }), 10)
+          .map(number => ({ number, string: generator.word({ length: 30 }) }))
+
+        const rows = await Promise.all(
+          toCreate.map(d => config.api.row.save(table._id!, d))
+        )
+
+        const res = await config.api.row.exportRows(table._id!, {
+          rows: _.sampleSize(rows, 3).map(r => r._id!),
+        })
+        const results = JSON.parse(res)
+        expect(results.length).toEqual(3)
+      })
+
+    describe("should allow exporting all column types", () => {
+      let tableId: string
+      let expectedRowData: Row
+
+      beforeAll(async () => {
+        const fullSchema = setup.structures.fullSchemaWithoutLinks({
+          allRequired: true,
+        })
+
+        const table = await config.api.table.save(
+          saveTableRequest({
+            ...setup.structures.basicTable(),
+            schema: fullSchema,
+            primary: ["string"],
+          })
+        )
+        tableId = table._id!
+
+        const rowValues: Record<keyof typeof fullSchema, any> = {
+          [FieldType.STRING]: generator.guid(),
+          [FieldType.LONGFORM]: generator.paragraph(),
+          [FieldType.OPTIONS]: "option 2",
+          [FieldType.ARRAY]: ["options 2", "options 4"],
+          [FieldType.NUMBER]: generator.natural(),
+          [FieldType.BOOLEAN]: generator.bool(),
+          [FieldType.DATETIME]: generator.date().toISOString(),
+          [FieldType.ATTACHMENTS]: [setup.structures.basicAttachment()],
+          [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
+          [FieldType.FORMULA]: undefined, // generated field
+          [FieldType.AUTO]: undefined, // generated field
+          [FieldType.JSON]: { name: generator.guid() },
+          [FieldType.INTERNAL]: generator.guid(),
+          [FieldType.BARCODEQR]: generator.guid(),
+          [FieldType.SIGNATURE_SINGLE]: setup.structures.basicAttachment(),
+          [FieldType.BIGINT]: generator.integer().toString(),
+          [FieldType.BB_REFERENCE]: [{ _id: config.getUser()._id }],
+          [FieldType.BB_REFERENCE_SINGLE]: { _id: config.getUser()._id },
+        }
+        const row = await config.api.row.save(table._id!, rowValues)
+        expectedRowData = {
+          _id: row._id,
+          [FieldType.STRING]: rowValues[FieldType.STRING],
+          [FieldType.LONGFORM]: rowValues[FieldType.LONGFORM],
+          [FieldType.OPTIONS]: rowValues[FieldType.OPTIONS],
+          [FieldType.ARRAY]: rowValues[FieldType.ARRAY],
+          [FieldType.NUMBER]: rowValues[FieldType.NUMBER],
+          [FieldType.BOOLEAN]: rowValues[FieldType.BOOLEAN],
+          [FieldType.DATETIME]: rowValues[FieldType.DATETIME],
+          [FieldType.ATTACHMENTS]: rowValues[FieldType.ATTACHMENTS].map(
+            (a: any) =>
+              expect.objectContaining({
+                ...a,
+                url: expect.any(String),
+              })
+          ),
+          [FieldType.ATTACHMENT_SINGLE]: expect.objectContaining({
+            ...rowValues[FieldType.ATTACHMENT_SINGLE],
+            url: expect.any(String),
+          }),
+          [FieldType.FORMULA]: fullSchema[FieldType.FORMULA].formula,
+          [FieldType.AUTO]: expect.any(Number),
+          [FieldType.JSON]: rowValues[FieldType.JSON],
+          [FieldType.INTERNAL]: rowValues[FieldType.INTERNAL],
+          [FieldType.BARCODEQR]: rowValues[FieldType.BARCODEQR],
+          [FieldType.SIGNATURE_SINGLE]: expect.objectContaining({
+            ...rowValues[FieldType.SIGNATURE_SINGLE],
+            url: expect.any(String),
+          }),
+          [FieldType.BIGINT]: rowValues[FieldType.BIGINT],
+          [FieldType.BB_REFERENCE]: rowValues[FieldType.BB_REFERENCE].map(
+            expect.objectContaining
+          ),
+          [FieldType.BB_REFERENCE_SINGLE]: expect.objectContaining(
+            rowValues[FieldType.BB_REFERENCE_SINGLE]
+          ),
+        }
+      })
+
+      it("as csv", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.CSV
+        )
+
+        const jsonResult = await config.api.table.csvToJson({
+          csvString: exportedValue,
+        })
+
+        const stringified = (value: string) =>
+          JSON.stringify(value).replace(/"/g, "'")
+
+        const matchingObject = (key: string, value: any, isArray: boolean) => {
+          const objectMatcher = `{'${key}':'${value[key]}'.*?}`
+          if (isArray) {
+            return expect.stringMatching(new RegExp(`^\\[${objectMatcher}\\]$`))
+          }
+          return expect.stringMatching(new RegExp(`^${objectMatcher}$`))
+        }
+
+        expect(jsonResult).toEqual([
+          {
+            ...expectedRowData,
+            auto: expect.any(String),
+            array: stringified(expectedRowData["array"]),
+            attachment: matchingObject(
+              "key",
+              expectedRowData["attachment"][0].sample,
+              true
+            ),
+            attachment_single: matchingObject(
+              "key",
+              expectedRowData["attachment_single"].sample,
+              false
+            ),
+            boolean: stringified(expectedRowData["boolean"]),
+            json: stringified(expectedRowData["json"]),
+            number: stringified(expectedRowData["number"]),
+            signature_single: matchingObject(
+              "key",
+              expectedRowData["signature_single"].sample,
+              false
+            ),
+            bb_reference: matchingObject(
+              "_id",
+              expectedRowData["bb_reference"][0].sample,
+              true
+            ),
+            bb_reference_single: matchingObject(
+              "_id",
+              expectedRowData["bb_reference_single"].sample,
+              false
+            ),
+          },
+        ])
+      })
+
+      it("as json", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.JSON
+        )
+
+        const json = JSON.parse(exportedValue)
+        expect(json).toEqual([expectedRowData])
+      })
+
+      it("as json with schema", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.JSON_WITH_SCHEMA
+        )
+
+        const json = JSON.parse(exportedValue)
+        expect(json).toEqual({
+          schema: expect.any(Object),
+          rows: [expectedRowData],
+        })
+      })
+
+      it("exported data can be re-imported", async () => {
+        // export all
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.CSV
+        )
+
+        // import all twice
+        const rows = await config.api.table.csvToJson({
+          csvString: exportedValue,
+        })
+        await config.api.row.bulkImport(tableId, {
+          rows,
+        })
+        await config.api.row.bulkImport(tableId, {
+          rows,
+        })
+
+        const { rows: allRows } = await config.api.row.search(tableId)
+
+        const expectedRow = {
+          ...expectedRowData,
+          _id: expect.any(String),
+          _rev: expect.any(String),
+          type: "row",
+          tableId: tableId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+        expect(allRows).toEqual([expectedRow, expectedRow, expectedRow])
+      })
     })
   })
 
@@ -1805,6 +2440,376 @@ describe.each([
     })
   })
 
+  // Upserting isn't yet supported in MSSQL or Oracle, see:
+  //   https://github.com/knex/knex/pull/6050
+  !isMSSQL &&
+    !isOracle &&
+    describe("relationships", () => {
+      let tableId: string
+      let viewId: string
+
+      let auxData: Row[] = []
+
+      let flagCleanup: (() => void) | undefined
+
+      beforeAll(async () => {
+        flagCleanup = setCoreEnv({
+          TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
+        })
+
+        const aux2Table = await config.api.table.save(saveTableRequest())
+        const aux2Data = await config.api.row.save(aux2Table._id!, {})
+
+        const auxTable = await config.api.table.save(
+          saveTableRequest({
+            primaryDisplay: "name",
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+              age: {
+                name: "age",
+                type: FieldType.NUMBER,
+                constraints: { presence: true },
+              },
+              address: {
+                name: "address",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+                visible: false,
+              },
+              link: {
+                name: "link",
+                type: FieldType.LINK,
+                tableId: aux2Table._id!,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+                fieldName: "fk_aux",
+                constraints: { presence: true },
+              },
+              formula: {
+                name: "formula",
+                type: FieldType.FORMULA,
+                formula: "{{ any }}",
+                constraints: { presence: true },
+              },
+            },
+          })
+        )
+        const auxTableId = auxTable._id!
+
+        for (const name of generator.unique(() => generator.name(), 10)) {
+          auxData.push(
+            await config.api.row.save(auxTableId, {
+              name,
+              age: generator.age(),
+              address: generator.address(),
+              link: [aux2Data],
+            })
+          )
+        }
+
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              title: {
+                name: "title",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+              relWithNoSchema: {
+                name: "relWithNoSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithNoSchema",
+                constraints: { presence: true },
+              },
+              relWithEmptySchema: {
+                name: "relWithEmptySchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithEmptySchema",
+                constraints: { presence: true },
+              },
+              relWithFullSchema: {
+                name: "relWithFullSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithFullSchema",
+                constraints: { presence: true },
+              },
+              relWithHalfSchema: {
+                name: "relWithHalfSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithHalfSchema",
+                constraints: { presence: true },
+              },
+              relWithIllegalSchema: {
+                name: "relWithIllegalSchema",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                type: FieldType.LINK,
+                tableId: auxTableId,
+                fieldName: "fk_relWithIllegalSchema",
+                constraints: { presence: true },
+              },
+            },
+          })
+        )
+        tableId = table._id!
+        const view = await config.api.viewV2.create({
+          name: generator.guid(),
+          tableId,
+          schema: {
+            title: {
+              visible: true,
+            },
+            relWithNoSchema: {
+              visible: true,
+            },
+            relWithEmptySchema: {
+              visible: true,
+              columns: {},
+            },
+            relWithFullSchema: {
+              visible: true,
+              columns: Object.keys(auxTable.schema).reduce<
+                Record<string, RelationSchemaField>
+              >((acc, c) => ({ ...acc, [c]: { visible: true } }), {}),
+            },
+            relWithHalfSchema: {
+              visible: true,
+              columns: {
+                name: { visible: true },
+                age: { visible: false, readonly: true },
+              },
+            },
+            relWithIllegalSchema: {
+              visible: true,
+              columns: {
+                name: { visible: true },
+                address: { visible: true },
+                unexisting: { visible: true },
+              },
+            },
+          },
+        })
+
+        viewId = view.id
+      })
+
+      afterAll(() => {
+        flagCleanup?.()
+      })
+
+      const testScenarios: [string, (row: Row) => Promise<Row> | Row][] = [
+        ["get row", (row: Row) => config.api.row.get(viewId, row._id!)],
+        [
+          "from view search",
+          async (row: Row) => {
+            const { rows } = await config.api.viewV2.search(viewId)
+            return rows.find(r => r._id === row._id!)
+          },
+        ],
+        ["from original saved row", (row: Row) => row],
+        ["from updated  row", (row: Row) => config.api.row.save(viewId, row)],
+      ]
+
+      it.each(testScenarios)(
+        "can retrieve rows with populated relationships (via %s)",
+        async (__, retrieveDelegate) => {
+          const otherRows = _.sampleSize(auxData, 5)
+
+          const row = await config.api.row.save(viewId, {
+            title: generator.word(),
+            relWithNoSchema: [otherRows[0]],
+            relWithEmptySchema: [otherRows[1]],
+            relWithFullSchema: [otherRows[2]],
+            relWithHalfSchema: [otherRows[3]],
+            relWithIllegalSchema: [otherRows[4]],
+          })
+
+          const retrieved = await retrieveDelegate(row)
+
+          expect(retrieved).toEqual(
+            expect.objectContaining({
+              title: row.title,
+              relWithNoSchema: [
+                {
+                  _id: otherRows[0]._id,
+                  primaryDisplay: otherRows[0].name,
+                },
+              ],
+              relWithEmptySchema: [
+                {
+                  _id: otherRows[1]._id,
+                  primaryDisplay: otherRows[1].name,
+                },
+              ],
+              relWithFullSchema: [
+                {
+                  _id: otherRows[2]._id,
+                  primaryDisplay: otherRows[2].name,
+                  name: otherRows[2].name,
+                  age: otherRows[2].age,
+                  id: otherRows[2].id,
+                },
+              ],
+              relWithHalfSchema: [
+                {
+                  _id: otherRows[3]._id,
+                  primaryDisplay: otherRows[3].name,
+                  name: otherRows[3].name,
+                },
+              ],
+              relWithIllegalSchema: [
+                {
+                  _id: otherRows[4]._id,
+                  primaryDisplay: otherRows[4].name,
+                  name: otherRows[4].name,
+                },
+              ],
+            })
+          )
+        }
+      )
+
+      it.each(testScenarios)(
+        "does not enrich relationships when not enabled (via %s)",
+        async (__, retrieveDelegate) => {
+          await withCoreEnv(
+            {
+              TENANT_FEATURE_FLAGS: ``,
+            },
+            async () => {
+              const otherRows = _.sampleSize(auxData, 5)
+
+              const row = await config.api.row.save(viewId, {
+                title: generator.word(),
+                relWithNoSchema: [otherRows[0]],
+                relWithEmptySchema: [otherRows[1]],
+                relWithFullSchema: [otherRows[2]],
+                relWithHalfSchema: [otherRows[3]],
+                relWithIllegalSchema: [otherRows[4]],
+              })
+
+              const retrieved = await retrieveDelegate(row)
+
+              expect(retrieved).toEqual(
+                expect.objectContaining({
+                  title: row.title,
+                  relWithNoSchema: [
+                    {
+                      _id: otherRows[0]._id,
+                      primaryDisplay: otherRows[0].name,
+                    },
+                  ],
+                  relWithEmptySchema: [
+                    {
+                      _id: otherRows[1]._id,
+                      primaryDisplay: otherRows[1].name,
+                    },
+                  ],
+                  relWithFullSchema: [
+                    {
+                      _id: otherRows[2]._id,
+                      primaryDisplay: otherRows[2].name,
+                    },
+                  ],
+                  relWithHalfSchema: [
+                    {
+                      _id: otherRows[3]._id,
+                      primaryDisplay: otherRows[3].name,
+                    },
+                  ],
+                  relWithIllegalSchema: [
+                    {
+                      _id: otherRows[4]._id,
+                      primaryDisplay: otherRows[4].name,
+                    },
+                  ],
+                })
+              )
+            }
+          )
+        }
+      )
+
+      it.each([
+        [
+          "from table fetch",
+          async (row: Row) => {
+            const rows = await config.api.row.fetch(tableId)
+            return rows.find(r => r._id === row._id!)
+          },
+        ],
+        [
+          "from table search",
+          async (row: Row) => {
+            const { rows } = await config.api.row.search(tableId)
+            return rows.find(r => r._id === row._id!)
+          },
+        ],
+      ])(
+        "does not enrich when fetching from the table (via %s)",
+        async (__, retrieveDelegate) => {
+          const otherRows = _.sampleSize(auxData, 5)
+
+          const row = await config.api.row.save(viewId, {
+            title: generator.word(),
+            relWithNoSchema: [otherRows[0]],
+            relWithEmptySchema: [otherRows[1]],
+            relWithFullSchema: [otherRows[2]],
+            relWithHalfSchema: [otherRows[3]],
+            relWithIllegalSchema: [otherRows[4]],
+          })
+
+          const retrieved = await retrieveDelegate(row)
+
+          expect(retrieved).toEqual(
+            expect.objectContaining({
+              title: row.title,
+              relWithNoSchema: [
+                {
+                  _id: otherRows[0]._id,
+                  primaryDisplay: otherRows[0].name,
+                },
+              ],
+              relWithEmptySchema: [
+                {
+                  _id: otherRows[1]._id,
+                  primaryDisplay: otherRows[1].name,
+                },
+              ],
+              relWithFullSchema: [
+                {
+                  _id: otherRows[2]._id,
+                  primaryDisplay: otherRows[2].name,
+                },
+              ],
+              relWithHalfSchema: [
+                {
+                  _id: otherRows[3]._id,
+                  primaryDisplay: otherRows[3].name,
+                },
+              ],
+              relWithIllegalSchema: [
+                {
+                  _id: otherRows[4]._id,
+                  primaryDisplay: otherRows[4].name,
+                },
+              ],
+            })
+          )
+        }
+      )
+    })
+
   describe("Formula fields", () => {
     let table: Table
     let otherTable: Table
@@ -1855,7 +2860,7 @@ describe.each([
 
   describe("Formula JS protection", () => {
     it("should time out JS execution if a single cell takes too long", async () => {
-      await config.withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 40 }, async () => {
+      await withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 40 }, async () => {
         const js = Buffer.from(
           `
               let i = 0;
@@ -1893,7 +2898,7 @@ describe.each([
     })
 
     it("should time out JS execution if a multiple cells take too long", async () => {
-      await config.withEnv(
+      await withEnv(
         {
           JS_PER_INVOCATION_TIMEOUT_MS: 40,
           JS_PER_REQUEST_TIMEOUT_MS: 80,

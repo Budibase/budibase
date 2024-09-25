@@ -25,8 +25,10 @@ zbctl deploy resource onboarding.bpmn --insecure
 zbctl deploy resource free_trial.bpmn --insecure
 zbctl deploy resource verify_sso_login.bpmn --insecure
 
-cd ../../../../../budibase/packages/account-portal/packages/server 
+cd ../../../../../budibase/packages/pro
+yarn && yarn build
 
+cd ../account-portal/packages/server 
 yarn worker:run & cd ../../../.. && yarn dev:accountportal
 
 

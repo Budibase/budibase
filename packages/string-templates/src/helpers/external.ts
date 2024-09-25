@@ -2,25 +2,11 @@
 import helpers from "@budibase/handlebars-helpers"
 
 import { date, duration } from "./date"
-import { HelperFunctionBuiltin } from "./constants"
+import {
+  HelperFunctionBuiltin,
+  EXTERNAL_FUNCTION_COLLECTIONS,
+} from "./constants"
 import Handlebars from "handlebars"
-
-/**
- * full list of supported helpers can be found here:
- * https://github.com/Budibase/handlebars-helpers
- */
-
-const EXTERNAL_FUNCTION_COLLECTIONS = [
-  "math",
-  "array",
-  "number",
-  "url",
-  "string",
-  "comparison",
-  "object",
-  "regex",
-  "uuid",
-]
 
 const ADDED_HELPERS = {
   date: date,
@@ -40,7 +26,7 @@ export function registerAll(handlebars: typeof Handlebars) {
     let hbsHelperInfo = helpers[collection]()
     for (let entry of Object.entries(hbsHelperInfo)) {
       const name = entry[0]
-      // skip built in functions and ones seen already
+      // skip built-in functions and ones seen already
       if (
         HelperFunctionBuiltin.indexOf(name) !== -1 ||
         externalNames.indexOf(name) !== -1

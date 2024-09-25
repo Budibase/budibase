@@ -10,7 +10,6 @@
   export let componentBindings
   export let bindings
   export let parseSettings
-  export let disabled
 
   const draggable = getContext("draggable")
   const dispatch = createEventDispatcher()
@@ -84,6 +83,8 @@
   showPopover={drawers.length === 0}
   clickOutsideOverride={drawers.length > 0}
   maxHeight={600}
+  minWidth={360}
+  maxWidth={360}
   offset={18}
 >
   <span class="popover-wrap">

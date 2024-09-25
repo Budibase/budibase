@@ -9,6 +9,7 @@ import {
   users,
   cache,
   env as coreEnv,
+  features,
 } from "@budibase/backend-core"
 import { watch } from "../watch"
 import * as automations from "../automations"
@@ -80,18 +81,34 @@ export async function startup(
     const address = server.address() as AddressInfo
     env._set("PORT", address.port)
   }
+
+  console.log("Emitting port event")
   eventEmitter.emitPort(env.PORT)
+
+  console.log("Initialising file system")
   fileSystem.init()
+
+  console.log("Initialising redis")
   await redis.init()
+
+  console.log("Initialising writethrough cache")
   cache.docWritethrough.init()
+
+  console.log("Initialising events")
   eventInit()
+
+  console.log("Initialising feature flags")
+  features.init()
+
   if (app && server) {
+    console.log("Initialising websockets")
     initialiseWebsockets(app, server)
   }
 
   // run migrations on startup if not done via http
   // not recommended in a clustered environment
   if (!env.HTTP_MIGRATIONS && !env.isTest()) {
+    console.log("Running migrations")
     try {
       await migrations.migrate()
     } catch (e) {
@@ -107,12 +124,15 @@ export async function startup(
     env.PLUGINS_DIR &&
     fs.existsSync(env.PLUGINS_DIR)
   ) {
+    console.log("Monitoring plugin directory")
     watch()
   }
 
   // check for version updates
+  console.log("Checking for version updates")
   await installation.checkInstallVersion()
 
+  console.log("Initialising queues")
   // get the references to the queue promises, don't await as
   // they will never end, unless the processing stops
   let queuePromises = []
@@ -126,6 +146,7 @@ export async function startup(
   }
   queuePromises.push(initPro())
   if (app) {
+    console.log("Initialising routes")
     // bring routes online as final step once everything ready
     await initRoutes(app)
   }
@@ -141,6 +162,7 @@ export async function startup(
     bbAdminEmail &&
     bbAdminPassword
   ) {
+    console.log("Initialising admin user")
     const tenantId = tenancy.getTenantId()
     await tenancy.doInTenant(tenantId, async () => {
       const exists = await users.doesUserExist(bbAdminEmail)
@@ -171,5 +193,6 @@ export async function startup(
     })
   }
 
+  console.log("Initialising JS runner")
   jsRunner.init()
 }

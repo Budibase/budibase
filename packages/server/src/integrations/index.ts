@@ -41,7 +41,7 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.GOOGLE_SHEETS]: googlesheets.schema,
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
-  [SourceName.ORACLE]: undefined,
+  [SourceName.ORACLE]: oracle.schema,
   [SourceName.BUDIBASE]: undefined,
 }
 
@@ -64,19 +64,9 @@ const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
     [SourceName.GOOGLE_SHEETS]: googlesheets.integration,
     [SourceName.REDIS]: redis.integration,
     [SourceName.SNOWFLAKE]: snowflake.integration,
-    [SourceName.ORACLE]: undefined,
+    [SourceName.ORACLE]: oracle.integration,
     [SourceName.BUDIBASE]: undefined,
   }
-
-// optionally add oracle integration if the oracle binary can be installed
-if (
-  process.arch &&
-  !process.arch.startsWith("arm") &&
-  oracle.integration.isInstalled()
-) {
-  DEFINITIONS[SourceName.ORACLE] = oracle.schema
-  INTEGRATIONS[SourceName.ORACLE] = oracle.integration
-}
 
 export async function getDefinition(
   source: SourceName

@@ -1,11 +1,12 @@
 <script>
-  import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
+  import { Select, Label, Body, Checkbox } from "@budibase/bbui"
   import {
     selectedScreen,
     componentStore,
     tables,
     viewsV2,
   } from "stores/builder"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { getSchemaForDatasourcePlus } from "dataBinding"
   import SaveFields from "./SaveFields.svelte"
   import { getDatasourceLikeProviders } from "components/design/settings/controls/ButtonActionEditor/actions/utils"
@@ -73,22 +74,35 @@
 
     {#if parameters.confirm}
       <Label small>Title</Label>
-      <Input
-        placeholder="Duplicate Row"
-        bind:value={parameters.customTitleText}
+      <DrawerBindableInput
+        placeholder="Prompt User"
+        value={parameters.customTitleText}
+        on:change={e => (parameters.customTitleText = e.detail)}
+        {bindings}
       />
 
       <Label small>Text</Label>
-      <Input
-        placeholder="Are you sure you want to duplicate this row?"
-        bind:value={parameters.confirmText}
+      <DrawerBindableInput
+        placeholder="Are you sure you want to continue?"
+        value={parameters.confirmText}
+        on:change={e => (parameters.confirmText = e.detail)}
+        {bindings}
       />
 
       <Label small>Confirm Text</Label>
-      <Input placeholder="Confirm" bind:value={parameters.confirmButtonText} />
-
+      <DrawerBindableInput
+        placeholder="Confirm"
+        value={parameters.confirmButtonText}
+        on:change={e => (parameters.confirmButtonText = e.detail)}
+        {bindings}
+      />
       <Label small>Cancel Text</Label>
-      <Input placeholder="Cancel" bind:value={parameters.cancelButtonText} />
+      <DrawerBindableInput
+        placeholder="Cancel"
+        value={parameters.cancelButtonText}
+        on:change={e => (parameters.cancelButtonText = e.detail)}
+        {bindings}
+      />
     {/if}
   </div>
 

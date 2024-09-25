@@ -6,6 +6,7 @@ import {
   SearchFilter,
   SearchFilters,
   SearchQueryFields,
+  ArrayOperator,
   SearchFilterOperator,
   SortType,
   FieldConstraints,
@@ -14,13 +15,24 @@ import {
   EmptyFilterOption,
   SearchResponse,
   Table,
+  BasicOperator,
+  RangeOperator,
+  LogicalOperator,
+  isLogicalSearchOperator,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet, schema } from "./helpers"
-import _ from "lodash"
+import { isPlainObject, isEmpty } from "lodash"
+import { decodeNonAscii } from "./helpers/schema"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
+const LOGICAL_OPERATORS = Object.values(LogicalOperator)
+const SEARCH_OPERATORS = [
+  ...Object.values(BasicOperator),
+  ...Object.values(ArrayOperator),
+  ...Object.values(RangeOperator),
+]
 
 /**
  * Returns the valid operator options for a certain data type
@@ -103,29 +115,81 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.NotEquals.value,
   OperatorOptions.Contains.value,
   OperatorOptions.NotContains.value,
+  OperatorOptions.ContainsAny.value,
+  OperatorOptions.In.value,
 ] as (keyof SearchQueryFields)[]
+
+export function recurseLogicalOperators(
+  filters: SearchFilters,
+  fn: (f: SearchFilters) => SearchFilters
+) {
+  for (const logical of LOGICAL_OPERATORS) {
+    if (filters[logical]) {
+      filters[logical]!.conditions = filters[logical]!.conditions.map(
+        condition => fn(condition)
+      )
+    }
+  }
+  return filters
+}
+
+export function recurseSearchFilters(
+  filters: SearchFilters,
+  processFn: (filter: SearchFilters) => SearchFilters
+): SearchFilters {
+  // Process the current level
+  filters = processFn(filters)
+
+  // Recurse through logical operators
+  for (const logical of LOGICAL_OPERATORS) {
+    if (filters[logical]) {
+      filters[logical]!.conditions = filters[logical]!.conditions.map(
+        condition => recurseSearchFilters(condition, processFn)
+      )
+    }
+  }
+
+  return filters
+}
 
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
+ *
+ * don't do a pure falsy check, as 0 is included
+ * https://github.com/Budibase/budibase/issues/10118
  */
-const cleanupQuery = (query: SearchFilters) => {
+export const cleanupQuery = (query: SearchFilters) => {
   if (!query) {
     return query
   }
   for (let filterField of NoEmptyFilterStrings) {
-    const operator = filterField as SearchFilterOperator
-    if (!query[operator]) {
+    if (!query[filterField]) {
       continue
     }
 
-    for (let [key, value] of Object.entries(query[operator]!)) {
-      if (value == null || value === "") {
-        delete query[operator]![key]
+    for (let filterType of Object.keys(query)) {
+      if (filterType !== filterField) {
+        continue
+      }
+      // don't know which one we're checking, type could be anything
+      const value = query[filterType] as unknown
+      if (typeof value === "object") {
+        for (let [key, value] of Object.entries(query[filterType] as object)) {
+          if (value == null || value === "" || isEmptyArray(value)) {
+            // @ts-ignore
+            delete query[filterField][key]
+          }
+        }
       }
     }
   }
+  query = recurseLogicalOperators(query, cleanupQuery)
   return query
+}
+
+function isEmptyArray(value: any) {
+  return Array.isArray(value) && value.length === 0
 }
 
 /**
@@ -160,8 +224,16 @@ export class ColumnSplitter {
   tableIds: string[]
   relationshipColumnNames: string[]
   relationships: string[]
+  aliases?: Record<string, string>
+  columnPrefix?: string
 
-  constructor(tables: Table[]) {
+  constructor(
+    tables: Table[],
+    opts?: {
+      aliases?: Record<string, string>
+      columnPrefix?: string
+    }
+  ) {
     this.tableNames = tables.map(table => table.name)
     this.tableIds = tables.map(table => table._id!)
     this.relationshipColumnNames = tables.flatMap(table =>
@@ -174,16 +246,38 @@ export class ColumnSplitter {
       .concat(this.relationshipColumnNames)
       // sort by length - makes sure there's no mis-matches due to similarities (sub column names)
       .sort((a, b) => b.length - a.length)
+
+    if (opts?.aliases) {
+      this.aliases = {}
+      for (const [key, value] of Object.entries(opts.aliases)) {
+        this.aliases[value] = key
+      }
+    }
+
+    this.columnPrefix = opts?.columnPrefix
   }
 
   run(key: string): {
     numberPrefix?: string
     relationshipPrefix?: string
+    tableName?: string
     column: string
   } {
     let { prefix, key: splitKey } = getKeyNumbering(key)
+
+    let tableName: string | undefined = undefined
+    if (this.aliases) {
+      for (const possibleAlias of Object.keys(this.aliases || {})) {
+        const withDot = `${possibleAlias}.`
+        if (splitKey.startsWith(withDot)) {
+          tableName = this.aliases[possibleAlias]!
+          splitKey = splitKey.slice(withDot.length)
+        }
+      }
+    }
+
     let relationship: string | undefined
-    for (let possibleRelationship of this.relationships) {
+    for (const possibleRelationship of this.relationships) {
       const withDot = `${possibleRelationship}.`
       if (splitKey.startsWith(withDot)) {
         const finalKeyParts = splitKey.split(withDot)
@@ -193,7 +287,15 @@ export class ColumnSplitter {
         break
       }
     }
+
+    if (this.columnPrefix) {
+      if (splitKey.startsWith(this.columnPrefix)) {
+        splitKey = decodeNonAscii(splitKey.slice(this.columnPrefix.length))
+      }
+    }
+
     return {
+      tableName,
       numberPrefix: prefix,
       relationshipPrefix: relationship,
       column: splitKey,
@@ -298,6 +400,8 @@ export const buildQuery = (filter: SearchFilter[]) => {
           high: value,
         }
       }
+    } else if (isLogicalSearchOperator(queryOperator)) {
+      // TODO
     } else if (query[queryOperator] && operator !== "onEmptyFilter") {
       if (type === "boolean") {
         // Transform boolean filters to cope with null.
@@ -310,16 +414,12 @@ export const buildQuery = (filter: SearchFilter[]) => {
           query.equal = query.equal || {}
           query.equal[field] = true
         } else {
-          query[queryOperator] = {
-            ...query[queryOperator],
-            [field]: value,
-          }
+          query[queryOperator] ??= {}
+          query[queryOperator]![field] = value
         }
       } else {
-        query[queryOperator] = {
-          ...query[queryOperator],
-          [field]: value,
-        }
+        query[queryOperator] ??= {}
+        query[queryOperator]![field] = value
       }
     }
   })
@@ -327,10 +427,37 @@ export const buildQuery = (filter: SearchFilter[]) => {
   return query
 }
 
-export const search = (
-  docs: Record<string, any>[],
+// The frontend can send single values for array fields sometimes, so to handle
+// this we convert them to arrays at the controller level so that nothing below
+// this has to worry about the non-array values.
+export function fixupFilterArrays(filters: SearchFilters) {
+  for (const searchField of Object.values(ArrayOperator)) {
+    const field = filters[searchField]
+    if (field == null || !isPlainObject(field)) {
+      continue
+    }
+
+    for (const key of Object.keys(field)) {
+      if (Array.isArray(field[key])) {
+        continue
+      }
+
+      const value = field[key] as any
+      if (typeof value === "string") {
+        field[key] = value.split(",").map((x: string) => x.trim())
+      } else {
+        field[key] = [value]
+      }
+    }
+  }
+  recurseLogicalOperators(filters, fixupFilterArrays)
+  return filters
+}
+
+export function search<T>(
+  docs: Record<string, T>[],
   query: RowSearchParams
-): SearchResponse<Record<string, any>> => {
+): SearchResponse<Record<string, T>> {
   let result = runQuery(docs, query.query)
   if (query.sort) {
     result = sort(result, query.sort, query.sortOrder || SortOrder.ASCENDING)
@@ -351,7 +478,10 @@ export const search = (
  * @param docs the data
  * @param query the JSON query
  */
-export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
+export function runQuery<T extends Record<string, any>>(
+  docs: T[],
+  query: SearchFilters
+): T[] {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
@@ -360,6 +490,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   }
 
   query = cleanupQuery(query)
+  query = fixupFilterArrays(query)
 
   if (
     !hasFilters(query) &&
@@ -373,20 +504,23 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       type: SearchFilterOperator,
       test: (docValue: any, testValue: any) => boolean
     ) =>
-    (doc: Record<string, any>) => {
+    (doc: T) => {
       for (const [key, testValue] of Object.entries(query[type] || {})) {
-        const result = test(deepGet(doc, removeKeyNumbering(key)), testValue)
+        const valueToCheck = isLogicalSearchOperator(type)
+          ? doc
+          : deepGet(doc, removeKeyNumbering(key))
+        const result = test(valueToCheck, testValue)
         if (query.allOr && result) {
           return true
         } else if (!query.allOr && !result) {
           return false
         }
       }
-      return true
+      return !query.allOr
     }
 
   const stringMatch = match(
-    SearchFilterOperator.STRING,
+    BasicOperator.STRING,
     (docValue: any, testValue: any) => {
       if (!(typeof docValue === "string")) {
         return false
@@ -399,7 +533,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   )
 
   const fuzzyMatch = match(
-    SearchFilterOperator.FUZZY,
+    BasicOperator.FUZZY,
     (docValue: any, testValue: any) => {
       if (!(typeof docValue === "string")) {
         return false
@@ -412,17 +546,17 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   )
 
   const rangeMatch = match(
-    SearchFilterOperator.RANGE,
+    RangeOperator.RANGE,
     (docValue: any, testValue: any) => {
       if (docValue == null || docValue === "") {
         return false
       }
 
-      if (_.isObject(testValue.low) && _.isEmpty(testValue.low)) {
+      if (isPlainObject(testValue.low) && isEmpty(testValue.low)) {
         testValue.low = undefined
       }
 
-      if (_.isObject(testValue.high) && _.isEmpty(testValue.high)) {
+      if (isPlainObject(testValue.high) && isEmpty(testValue.high)) {
         testValue.high = undefined
       }
 
@@ -501,11 +635,8 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     (...args: T): boolean =>
       !f(...args)
 
-  const equalMatch = match(SearchFilterOperator.EQUAL, _valueMatches)
-  const notEqualMatch = match(
-    SearchFilterOperator.NOT_EQUAL,
-    not(_valueMatches)
-  )
+  const equalMatch = match(BasicOperator.EQUAL, _valueMatches)
+  const notEqualMatch = match(BasicOperator.NOT_EQUAL, not(_valueMatches))
 
   const _empty = (docValue: any) => {
     if (typeof docValue === "string") {
@@ -514,32 +645,30 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     if (Array.isArray(docValue)) {
       return docValue.length === 0
     }
-    if (typeof docValue === "object") {
+    if (docValue && typeof docValue === "object") {
       return Object.keys(docValue).length === 0
     }
     return docValue == null
   }
 
-  const emptyMatch = match(SearchFilterOperator.EMPTY, _empty)
-  const notEmptyMatch = match(SearchFilterOperator.NOT_EMPTY, not(_empty))
+  const emptyMatch = match(BasicOperator.EMPTY, _empty)
+  const notEmptyMatch = match(BasicOperator.NOT_EMPTY, not(_empty))
 
-  const oneOf = match(
-    SearchFilterOperator.ONE_OF,
-    (docValue: any, testValue: any) => {
-      if (typeof testValue === "string") {
-        testValue = testValue.split(",")
-        if (typeof docValue === "number") {
-          testValue = testValue.map((item: string) => parseFloat(item))
-        }
-      }
-
-      if (!Array.isArray(testValue)) {
-        return false
-      }
-
-      return testValue.some(item => _valueMatches(docValue, item))
+  const oneOf = match(ArrayOperator.ONE_OF, (docValue: any, testValue: any) => {
+    if (typeof testValue === "string") {
+      testValue = testValue.split(",")
     }
-  )
+
+    if (typeof docValue === "number") {
+      testValue = testValue.map((item: string) => parseFloat(item))
+    }
+
+    if (!Array.isArray(testValue)) {
+      return false
+    }
+
+    return testValue.some(item => _valueMatches(docValue, item))
+  })
 
   const _contains =
     (f: "some" | "every") => (docValue: any, testValue: any) => {
@@ -566,7 +695,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     }
 
   const contains = match(
-    SearchFilterOperator.CONTAINS,
+    ArrayOperator.CONTAINS,
     (docValue: any, testValue: any) => {
       if (Array.isArray(testValue) && testValue.length === 0) {
         return true
@@ -575,7 +704,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     }
   )
   const notContains = match(
-    SearchFilterOperator.NOT_CONTAINS,
+    ArrayOperator.NOT_CONTAINS,
     (docValue: any, testValue: any) => {
       // Not sure if this is logically correct, but at the time this code was
       // written the search endpoint behaved this way and we wanted to make this
@@ -586,13 +715,44 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       return not(_contains("every"))(docValue, testValue)
     }
   )
-  const containsAny = match(
-    SearchFilterOperator.CONTAINS_ANY,
-    _contains("some")
+  const containsAny = match(ArrayOperator.CONTAINS_ANY, _contains("some"))
+
+  const and = match(
+    LogicalOperator.AND,
+    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
+      if (!conditions.length) {
+        return false
+      }
+      for (const condition of conditions) {
+        const matchesCondition = runQuery([docValue], condition)
+        if (!matchesCondition.length) {
+          return false
+        }
+      }
+      return true
+    }
+  )
+  const or = match(
+    LogicalOperator.OR,
+    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
+      if (!conditions.length) {
+        return false
+      }
+      for (const condition of conditions) {
+        const matchesCondition = runQuery([docValue], {
+          ...condition,
+          allOr: true,
+        })
+        if (matchesCondition.length) {
+          return true
+        }
+      }
+      return false
+    }
   )
 
-  const docMatch = (doc: Record<string, any>) => {
-    const filterFunctions = {
+  const docMatch = (doc: T) => {
+    const filterFunctions: Record<SearchFilterOperator, (doc: T) => boolean> = {
       string: stringMatch,
       fuzzy: fuzzyMatch,
       range: rangeMatch,
@@ -604,6 +764,8 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       contains: contains,
       containsAny: containsAny,
       notContains: notContains,
+      [LogicalOperator.AND]: and,
+      [LogicalOperator.OR]: or,
     }
 
     const results = Object.entries(query || {})
@@ -617,12 +779,16 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
         return filterFunctions[key as SearchFilterOperator]?.(doc) ?? false
       })
 
-    if (query.allOr) {
+    // there are no filters - logical operators can cover this up
+    if (!hasFilters(query)) {
+      return true
+    } else if (query.allOr) {
       return results.some(result => result === true)
     } else {
       return results.every(result => result === true)
     }
   }
+
   return docs.filter(docMatch)
 }
 
@@ -634,12 +800,12 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
  * @param sortOrder the sort order ("ascending" or "descending")
  * @param sortType the type of sort ("string" or "number")
  */
-export const sort = (
-  docs: any[],
-  sort: string,
+export function sort<T extends Record<string, any>>(
+  docs: T[],
+  sort: keyof T,
   sortOrder: SortOrder,
   sortType = SortType.STRING
-) => {
+): T[] {
   if (!sort || !sortOrder || !sortType) {
     return docs
   }
@@ -654,19 +820,17 @@ export const sort = (
     return parseFloat(x)
   }
 
-  return docs
-    .slice()
-    .sort((a: { [x: string]: any }, b: { [x: string]: any }) => {
-      const colA = parse(a[sort])
-      const colB = parse(b[sort])
+  return docs.slice().sort((a, b) => {
+    const colA = parse(a[sort])
+    const colB = parse(b[sort])
 
-      const result = colB == null || colA > colB ? 1 : -1
-      if (sortOrder.toLowerCase() === "descending") {
-        return result * -1
-      }
+    const result = colB == null || colA > colB ? 1 : -1
+    if (sortOrder.toLowerCase() === "descending") {
+      return result * -1
+    }
 
-      return result
-    })
+    return result
+  })
 }
 
 /**
@@ -675,7 +839,7 @@ export const sort = (
  * @param docs the data
  * @param limit the number of docs to limit to
  */
-export const limit = (docs: any[], limit: string) => {
+export function limit<T>(docs: T[], limit: string): T[] {
   const numLimit = parseFloat(limit)
   if (isNaN(numLimit)) {
     return docs
@@ -687,14 +851,33 @@ export const hasFilters = (query?: SearchFilters) => {
   if (!query) {
     return false
   }
-  const skipped = ["allOr", "onEmptyFilter"]
-  for (let [key, value] of Object.entries(query)) {
-    if (skipped.includes(key) || typeof value !== "object") {
-      continue
+  const check = (filters: SearchFilters): boolean => {
+    for (const logical of LOGICAL_OPERATORS) {
+      if (filters[logical]) {
+        for (const condition of filters[logical]?.conditions || []) {
+          const result = check(condition)
+          if (result) {
+            return result
+          }
+        }
+      }
     }
-    if (Object.keys(value || {}).length !== 0) {
-      return true
+    for (const search of SEARCH_OPERATORS) {
+      const searchValue = filters[search]
+      if (!searchValue || typeof searchValue !== "object") {
+        continue
+      }
+      const filtered = Object.entries(searchValue).filter(entry => {
+        const valueDefined =
+          entry[1] !== undefined || entry[1] !== null || entry[1] !== ""
+        // not empty is an edge case, null is allowed for it - this is covered by test cases
+        return search === BasicOperator.NOT_EMPTY || valueDefined
+      })
+      if (filtered.length !== 0) {
+        return true
+      }
     }
+    return false
   }
-  return false
+  return check(query)
 }

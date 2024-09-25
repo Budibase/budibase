@@ -2,14 +2,15 @@ import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
+  ExternalAppStepOutputs,
+  SlackStepInputs,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Slack Message",
   tagline: "Send a message to Slack",
   description: "Send a message to Slack",
@@ -54,7 +55,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: SlackStepInputs
+}): Promise<ExternalAppStepOutputs> {
   let { url, text } = inputs
   if (!url?.trim()?.length) {
     return {

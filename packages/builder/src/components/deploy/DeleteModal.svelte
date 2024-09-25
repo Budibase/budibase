@@ -38,6 +38,7 @@
       await API.deleteApp(appId)
       appsStore.load()
       notifications.success("App deleted successfully")
+      deleting = false
       onDeleteSuccess()
     } catch (err) {
       notifications.error("Error deleting app")

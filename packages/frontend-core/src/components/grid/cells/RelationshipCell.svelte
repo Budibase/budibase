@@ -7,7 +7,7 @@
 
   const { API, cache } = getContext("grid")
 
-  export let value
+  export let value = []
   export let api
   export let readonly
   export let focused
@@ -29,15 +29,44 @@
   let searching = false
   let container
   let anchor
+  let relationshipFields
 
+  $: fieldValue = parseValue(value)
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = focused && !readonly
-  $: lookupMap = buildLookupMap(value, isOpen)
+  $: lookupMap = buildLookupMap(fieldValue, isOpen)
   $: debouncedSearch(searchString)
   $: {
     if (!focused && isOpen) {
       close()
     }
+  }
+
+  $: relationFields = fieldValue?.reduce((acc, f) => {
+    const fields = {}
+    for (const [column] of Object.entries(schema?.columns || {}).filter(
+      ([key, column]) =>
+        column.visible !== false && f[key] !== null && f[key] !== undefined
+    )) {
+      fields[column] = f[column]
+    }
+    if (Object.keys(fields).length) {
+      acc[f._id] = fields
+    }
+    return acc
+  }, {})
+
+  $: showRelationshipFields =
+    relationshipFields &&
+    Object.keys(relationshipFields).length &&
+    focused &&
+    !isOpen
+
+  const parseValue = value => {
+    if (Array.isArray(value) && value.every(x => x?._id)) {
+      return value
+    }
+    return []
   }
 
   // Builds a lookup map to quickly check which rows are selected
@@ -177,13 +206,13 @@
 
   // Toggles whether a row is included in the relationship or not
   const toggleRow = async row => {
-    if (value?.some(x => x._id === row._id)) {
+    if (fieldValue?.some(x => x._id === row._id)) {
       // If the row is already included, remove it and update the candidate
       // row to be the same position if possible
       if (oneRowOnly) {
         await onChange([])
       } else {
-        const newValue = value.filter(x => x._id !== row._id)
+        const newValue = fieldValue.filter(x => x._id !== row._id)
         if (!newValue.length) {
           candidateIndex = null
         } else {
@@ -196,7 +225,7 @@
       if (oneRowOnly) {
         await onChange([row])
       } else {
-        await onChange(sortRows([...(value || []), row]))
+        await onChange(sortRows([...(fieldValue || []), row]))
       }
       candidateIndex = null
     }
@@ -211,6 +240,14 @@
       return JSON.stringify(value)
     }
     return value
+  }
+
+  const displayRelationshipFields = relationship => {
+    relationshipFields = relationFields[relationship._id]
+  }
+
+  const hideRelationshipFields = () => {
+    relationshipFields = undefined
   }
 
   onMount(() => {
@@ -236,11 +273,18 @@
     <div
       class="values"
       class:wrap={editable || contentLines > 1}
+      class:disabled={!focused}
       on:wheel={e => (focused ? e.stopPropagation() : null)}
     >
-      {#each value || [] as relationship}
+      {#each fieldValue || [] as relationship}
         {#if relationship[primaryDisplay] || relationship.primaryDisplay}
-          <div class="badge">
+          <div
+            class="badge"
+            class:extra-info={!!relationFields[relationship._id]}
+            on:mouseover={() => displayRelationshipFields(relationship)}
+            on:focus={() => {}}
+            on:mouseleave={() => hideRelationshipFields()}
+          >
             <span>
               {readable(
                 relationship[primaryDisplay] || relationship.primaryDisplay
@@ -263,9 +307,9 @@
         </div>
       {/if}
     </div>
-    {#if !hideCounter && value?.length}
+    {#if !hideCounter && fieldValue?.length}
       <div class="count">
-        {value?.length || 0}
+        {fieldValue?.length || 0}
       </div>
     {/if}
   </div>
@@ -310,6 +354,21 @@
           {/each}
         </div>
       {/if}
+    </div>
+  </GridPopover>
+{/if}
+
+{#if showRelationshipFields}
+  <GridPopover {anchor} minWidth={300} maxWidth={400}>
+    <div class="relationship-fields">
+      {#each Object.entries(relationshipFields) as [fieldName, fieldValue]}
+        <div class="relationship-field-name">
+          {fieldName}
+        </div>
+        <div class="relationship-field-value">
+          {fieldValue}
+        </div>
+      {/each}
     </div>
   </GridPopover>
 {/if}
@@ -368,6 +427,9 @@
     padding: var(--cell-padding);
     flex-wrap: nowrap;
   }
+  .values.disabled {
+    pointer-events: none;
+  }
   .values.wrap {
     flex-wrap: wrap;
   }
@@ -399,6 +461,13 @@
     height: 20px;
     max-width: 100%;
   }
+  .values.wrap .badge:hover {
+    filter: brightness(1.25);
+  }
+  .values.wrap .badge.extra-info {
+    cursor: pointer;
+  }
+
   .badge span {
     overflow: hidden;
     white-space: nowrap;
@@ -469,5 +538,26 @@
   }
   .search :global(.spectrum-Form-item) {
     flex: 1 1 auto;
+  }
+
+  .relationship-fields {
+    margin: var(--spacing-m) var(--spacing-l);
+    display: grid;
+    grid-template-columns: minmax(auto, 50%) auto;
+    grid-row-gap: var(--spacing-m);
+    grid-column-gap: var(--spacing-m);
+  }
+
+  .relationship-field-name {
+    text-transform: uppercase;
+    color: var(--spectrum-global-color-gray-600);
+    font-size: var(--font-size-xs);
+  }
+  .relationship-field-value {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
   }
 </style>

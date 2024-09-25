@@ -7,7 +7,8 @@
     sideBarCollapsed,
     enrichedApps,
   } from "stores/portal"
-  import AppRowContext from "components/start/AppRowContext.svelte"
+  import AppContextMenuModals from "components/start/AppContextMenuModals.svelte"
+  import getAppContextMenuItems from "components/start/getAppContextMenuItems.js"
   import FavouriteAppButton from "../FavouriteAppButton.svelte"
   import {
     Link,
@@ -21,12 +22,14 @@
   import { API } from "api"
   import ErrorSVG from "./ErrorSVG.svelte"
   import { getBaseTheme, ClientAppSkeleton } from "@budibase/frontend-core"
+  import { contextMenuStore } from "stores/builder"
 
   $: app = $enrichedApps.find(app => app.appId === $params.appId)
   $: iframeUrl = getIframeURL(app)
   $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
 
   let loading = true
+  let appContextMenuModals
 
   const getIframeURL = app => {
     loading = true
@@ -62,6 +65,24 @@
   onDestroy(() => {
     window.removeEventListener("message", receiveMessage)
   })
+
+  const openContextMenu = e => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const items = getAppContextMenuItems({
+      app,
+      onDuplicate: appContextMenuModals.showDuplicateModal,
+      onExportDev: appContextMenuModals.showExportDevModal,
+      onExportProd: appContextMenuModals.showExportProdModal,
+      onDelete: appContextMenuModals.showDeleteModal,
+    })
+
+    contextMenuStore.open(`${app.appId}-view`, items, {
+      x: e.clientX,
+      y: e.clientY,
+    })
+  }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -116,10 +137,15 @@
         size="S"
       />
     </div>
-    <AppRowContext
-      {app}
-      options={["duplicate", "delete", "exportDev", "exportProd"]}
-      align="left"
+    <Icon
+      color={`${app.appId}-view` === $contextMenuStore.id
+        ? "var(--hover-color)"
+        : null}
+      on:contextmenu={openContextMenu}
+      on:click={openContextMenu}
+      size="S"
+      hoverable
+      name="MoreSmallList"
     />
   </div>
   {#if noScreens}
@@ -155,6 +181,7 @@
     />
   {/if}
 </div>
+<AppContextMenuModals {app} bind:this={appContextMenuModals} />
 
 <style>
   .headerButton {

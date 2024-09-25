@@ -1,5 +1,5 @@
-import { InternalTables } from "../../../../db/utils"
-import * as userController from "../../user"
+import * as utils from "../../../../db/utils"
+
 import { context } from "@budibase/backend-core"
 import {
   Ctx,
@@ -8,22 +8,17 @@ import {
   RelationshipsJson,
   Row,
   Table,
-  UserCtx,
 } from "@budibase/types"
 import {
   processDates,
   processFormulas,
 } from "../../../../utilities/rowProcessor"
-import { isKnexEmptyReadResponse, updateRelationshipColumns } from "./sqlUtils"
-import {
-  basicProcessing,
-  generateIdForRow,
-  fixArrayTypes,
-  getInternalRowId,
-} from "./basic"
+import { isKnexEmptyReadResponse } from "./sqlUtils"
+import { basicProcessing, generateIdForRow, getInternalRowId } from "./basic"
 import sdk from "../../../../sdk"
 import { processStringSync } from "@budibase/string-templates"
 import validateJs from "validate.js"
+import { getFullUser } from "../../../../utilities/users"
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -63,16 +58,12 @@ export async function processRelationshipFields(
   return row
 }
 
-export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
+export async function findRow(tableId: string, rowId: string) {
   const db = context.getAppDB()
   let row: Row
   // TODO remove special user case in future
-  if (tableId === InternalTables.USER_METADATA) {
-    ctx.params = {
-      id: rowId,
-    }
-    await userController.findMetadata(ctx)
-    row = ctx.body
+  if (tableId === utils.InternalTables.USER_METADATA) {
+    row = await getFullUser(rowId)
   } else {
     row = await db.get(rowId)
   }
@@ -82,22 +73,25 @@ export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
   return row
 }
 
-export function getTableId(ctx: Ctx): string {
+export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
   // top priority, use the URL first
   if (ctx.params?.sourceId) {
-    return ctx.params.sourceId
+    const { sourceId } = ctx.params
+    if (utils.isViewID(sourceId)) {
+      return {
+        tableId: utils.extractViewInfoFromID(sourceId).tableId,
+        viewId: sourceId,
+      }
+    }
+    return { tableId: ctx.params.sourceId }
   }
   // now check for old way of specifying table ID
   if (ctx.params?.tableId) {
-    return ctx.params.tableId
+    return { tableId: ctx.params.tableId }
   }
   // check body for a table ID
   if (ctx.request.body?.tableId) {
-    return ctx.request.body.tableId
-  }
-  // now check if a specific view name
-  if (ctx.params?.viewName) {
-    return ctx.params.viewName
+    return { tableId: ctx.request.body.tableId }
   }
   throw new Error("Unable to find table ID in request")
 }
@@ -150,42 +144,18 @@ export async function sqlOutputProcessing(
       rowId = generateIdForRow(row, table)
       row._id = rowId
     }
-    // this is a relationship of some sort
-    if (finalRows[rowId]) {
-      finalRows = await updateRelationshipColumns(
-        table,
-        tables,
-        row,
-        finalRows,
-        relationships,
-        opts
-      )
-      continue
-    }
-    const thisRow = fixArrayTypes(
-      basicProcessing({
-        row,
-        table,
-        isLinked: false,
-        sqs: opts?.sqs,
-      }),
-      table
-    )
+    const thisRow = basicProcessing({
+      row,
+      table,
+      tables: Object.values(tables),
+      isLinked: false,
+      sqs: opts?.sqs,
+    })
     if (thisRow._id == null) {
       throw new Error("Unable to generate row ID for SQL rows")
     }
 
     finalRows[thisRow._id] = fixBooleanFields({ row: thisRow, table })
-
-    // do this at end once its been added to the final rows
-    finalRows = await updateRelationshipColumns(
-      table,
-      tables,
-      row,
-      finalRows,
-      relationships,
-      opts
-    )
   }
 
   // make sure all related rows are correct
@@ -202,7 +172,7 @@ export async function sqlOutputProcessing(
 }
 
 export function isUserMetadataTable(tableId: string) {
-  return tableId === InternalTables.USER_METADATA
+  return tableId === utils.InternalTables.USER_METADATA
 }
 
 export async function enrichArrayContext(

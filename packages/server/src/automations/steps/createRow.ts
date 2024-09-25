@@ -10,12 +10,14 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
+  CreateRowStepInputs,
+  CreateRowStepOutputs,
 } from "@budibase/types"
+import { EventEmitter } from "events"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Create Row",
   tagline: "Create a {{inputs.enriched.table.name}} row",
   icon: "TableRowAddBottom",
@@ -74,7 +76,15 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs, appId, emitter }: AutomationStepInput) {
+export async function run({
+  inputs,
+  appId,
+  emitter,
+}: {
+  inputs: CreateRowStepInputs
+  appId: string
+  emitter: EventEmitter
+}): Promise<CreateRowStepOutputs> {
   if (inputs.row == null || inputs.row.tableId == null) {
     return {
       success: false,
@@ -93,7 +103,7 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   try {
     inputs.row = await cleanUpRow(inputs.row.tableId, inputs.row)
     inputs.row = await sendAutomationAttachmentsToStorage(
-      inputs.row.tableId,
+      inputs.row.tableId!,
       inputs.row
     )
     await save(ctx)

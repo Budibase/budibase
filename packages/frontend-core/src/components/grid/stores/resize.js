@@ -34,7 +34,7 @@ export const createActions = context => {
     // Set initial store state
     resize.set({
       width: column.width,
-      left: column.left,
+      left: column.__left,
       initialWidth: column.width,
       initialMouseX: x,
       column: column.name,

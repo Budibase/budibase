@@ -2,14 +2,15 @@ import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
+  ExternalAppStepOutputs,
+  MakeIntegrationInputs,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Make Integration",
   stepTitle: "Make",
   tagline: "Trigger a Make scenario",
@@ -57,7 +58,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: MakeIntegrationInputs
+}): Promise<ExternalAppStepOutputs> {
   const { url, body } = inputs
 
   let payload = {}

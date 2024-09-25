@@ -3,6 +3,7 @@
     automationStore,
     selectedAutomation,
     permissions,
+    selectedAutomationDisplayData,
   } from "stores/builder"
   import {
     Icon,
@@ -14,6 +15,7 @@
     notifications,
     Label,
     AbsTooltip,
+    InlineAlert,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
@@ -48,6 +50,8 @@
   $: isAppAction = block?.stepId === TriggerStepID.APP
   $: isAppAction && setPermissions(role)
   $: isAppAction && getPermissions(automationId)
+
+  $: triggerInfo = $selectedAutomationDisplayData?.triggerInfo
 
   async function setPermissions(role) {
     if (!role || !automationId) {
@@ -183,6 +187,12 @@
           {block}
           {webhookModal}
         />
+        {#if isTrigger && triggerInfo}
+          <InlineAlert
+            header={triggerInfo.type}
+            message={`This trigger is tied to the row action ${triggerInfo.rowAction.name} on your ${triggerInfo.table.name} table`}
+          />
+        {/if}
         {#if lastStep}
           <Button on:click={() => testDataModal.show()} cta>
             Finish and test automation
@@ -206,7 +216,7 @@
 {/if}
 
 <Modal bind:this={actionModal} width="30%">
-  <ActionModal {lastStep} {blockIdx} />
+  <ActionModal modal={actionModal} {lastStep} {blockIdx} />
 </Modal>
 
 <Modal bind:this={webhookModal} width="30%">

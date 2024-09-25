@@ -36,31 +36,39 @@ export interface QueryResponse {
   pagination: any
 }
 
+export enum BodyType {
+  NONE = "none",
+  FORM_DATA = "form",
+  XML = "xml",
+  ENCODED = "encoded",
+  JSON = "json",
+  TEXT = "text",
+}
+
 export interface RestQueryFields {
-  path: string
+  path?: string
   queryString?: string
-  headers: { [key: string]: any }
-  disabledHeaders: { [key: string]: any }
-  requestBody: any
-  bodyType: string
-  json: object
-  method: string
-  authConfigId: string
-  pagination: PaginationConfig | null
-  paginationValues: PaginationValues | null
+  headers?: { [key: string]: any }
+  disabledHeaders?: { [key: string]: any }
+  requestBody?: any
+  bodyType?: BodyType
+  method?: string
+  authConfigId?: string
+  pagination?: PaginationConfig
+  paginationValues?: PaginationValues
 }
 
 export interface PaginationConfig {
   type: string
   location: string
   pageParam: string
-  sizeParam: string | null
-  responseParam: string | null
+  sizeParam?: string
+  responseParam?: string
 }
 
 export interface PaginationValues {
-  page: string | number | null
-  limit: number | null
+  page?: string | number
+  limit?: number
 }
 
 export enum HttpMethod {

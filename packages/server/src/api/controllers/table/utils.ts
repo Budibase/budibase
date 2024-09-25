@@ -15,7 +15,7 @@ import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { events, context } from "@budibase/backend-core"
+import { events, context, features } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   ContextUser,
@@ -122,13 +122,15 @@ export function makeSureTableUpToDate(table: Table, tableToSave: Table) {
 export async function importToRows(
   data: Row[],
   table: Table,
-  user?: ContextUser
+  user?: ContextUser,
+  opts?: { keepCouchId: boolean }
 ) {
-  let originalTable = table
-  let finalData: any = []
+  const originalTable = table
+  const finalData: Row[] = []
+  const keepCouchId = !!opts?.keepCouchId
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
-    row._id = generateRowID(table._id!)
+    row._id = (keepCouchId && row._id) || generateRowID(table._id!)
     row.type = "row"
     row.tableId = table._id
 
@@ -180,7 +182,11 @@ export async function handleDataImport(
   const db = context.getAppDB()
   const data = parse(importRows, table)
 
-  let finalData: any = await importToRows(data, table, user)
+  const finalData = await importToRows(data, table, user, {
+    keepCouchId: identifierFields.includes("_id"),
+  })
+
+  let newRowCount = finalData.length
 
   //Set IDs of finalData to match existing row if an update is expected
   if (identifierFields.length > 0) {
@@ -203,12 +209,14 @@ export async function handleDataImport(
           if (match) {
             finalItem._id = doc._id
             finalItem._rev = doc._rev
+
+            newRowCount--
           }
         })
       })
   }
 
-  await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
+  await quotas.addRows(newRowCount, () => db.bulkDocs(finalData), {
     tableId: table._id,
   })
 
@@ -324,7 +332,7 @@ class TableSaveFunctions {
       importRows: this.importRows,
       user: this.user,
     })
-    if (env.SQS_SEARCH_ENABLE) {
+    if (await features.flags.isEnabled("SQS")) {
       await sdk.tables.sqs.addTable(table)
     }
     return table
@@ -518,7 +526,7 @@ export async function internalTableCleanup(table: Table, rows?: Row[]) {
   if (rows) {
     await AttachmentCleanup.tableDelete(table, rows)
   }
-  if (env.SQS_SEARCH_ENABLE) {
+  if (await features.flags.isEnabled("SQS")) {
     await sdk.tables.sqs.removeTable(table)
   }
 }

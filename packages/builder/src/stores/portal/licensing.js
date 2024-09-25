@@ -3,7 +3,6 @@ import { API } from "api"
 import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "components/portal/licensing/constants"
-import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
 import { PlanModel } from "@budibase/types"
 
 const UNLIMITED = -1
@@ -23,6 +22,8 @@ export const createLicensingStore = () => {
     backupsEnabled: false,
     brandingEnabled: false,
     scimEnabled: false,
+    budibaseAIEnabled: false,
+    customAIConfigsEnabled: false,
     // the currently used quotas from the db
     quotaUsage: undefined,
     // derived quota metrics for percentages used
@@ -139,8 +140,12 @@ export const createLicensingStore = () => {
         Constants.Features.VIEW_PERMISSIONS
       )
 
-      const isViewReadonlyColumnsEnabled = license.features.includes(
-        Constants.Features.VIEW_READONLY_COLUMNS
+      const budibaseAIEnabled = license.features.includes(
+        Constants.Features.BUDIBASE_AI
+      )
+
+      const customAIConfigsEnabled = license.features.includes(
+        Constants.Features.AI_CUSTOM_CONFIGS
       )
 
       store.update(state => {
@@ -154,6 +159,8 @@ export const createLicensingStore = () => {
           groupsEnabled,
           backupsEnabled,
           brandingEnabled,
+          budibaseAIEnabled,
+          customAIConfigsEnabled,
           scimEnabled,
           environmentVariablesEnabled,
           auditLogsEnabled,
@@ -162,7 +169,6 @@ export const createLicensingStore = () => {
           triggerAutomationRunEnabled,
           isViewPermissionsEnabled,
           perAppBuildersEnabled,
-          isViewReadonlyColumnsEnabled,
         }
       })
     },
@@ -183,93 +189,91 @@ export const createLicensingStore = () => {
       return usersLimitExceeded(userCount, get(store).userLimit)
     },
     setUsageMetrics: async () => {
-      if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
-        const usage = get(store).quotaUsage
-        const license = get(auth).user.license
-        const now = new Date()
+      const usage = get(store).quotaUsage
+      const license = get(auth).user.license
+      const now = new Date()
 
-        const getMetrics = (keys, license, quota) => {
-          if (!license || !quota || !keys) {
-            return {}
-          }
-          return keys.reduce((acc, key) => {
-            const quotaLimit = license[key].value
-            const quotaUsed = (quota[key] / quotaLimit) * 100
-            acc[key] = quotaLimit > -1 ? Math.floor(quotaUsed) : -1
-            return acc
-          }, {})
+      const getMetrics = (keys, license, quota) => {
+        if (!license || !quota || !keys) {
+          return {}
         }
-        const monthlyMetrics = getMetrics(
-          ["dayPasses", "queries", "automations"],
-          license.quotas.usage.monthly,
-          usage.monthly.current
-        )
-        const staticMetrics = getMetrics(
-          ["apps", "rows"],
-          license.quotas.usage.static,
-          usage.usageQuota
-        )
-
-        const getDaysBetween = (dateStart, dateEnd) => {
-          return dateEnd > dateStart
-            ? Math.round(
-                (dateEnd.getTime() - dateStart.getTime()) / oneDayInMilliseconds
-              )
-            : 0
-        }
-
-        const quotaResetDate = new Date(usage.quotaReset)
-        const quotaResetDaysRemaining = getDaysBetween(now, quotaResetDate)
-
-        const accountDowngraded =
-          license?.billing?.subscription?.downgradeAt &&
-          license?.billing?.subscription?.downgradeAt <= now.getTime() &&
-          license?.billing?.subscription?.status === StripeStatus.PAST_DUE &&
-          license?.plan.type === Constants.PlanType.FREE
-
-        const pastDueAtMilliseconds = license?.billing?.subscription?.pastDueAt
-        const downgradeAtMilliseconds =
-          license?.billing?.subscription?.downgradeAt
-        let pastDueDaysRemaining
-        let pastDueEndDate
-
-        if (pastDueAtMilliseconds && downgradeAtMilliseconds) {
-          pastDueEndDate = new Date(downgradeAtMilliseconds)
-          pastDueDaysRemaining = getDaysBetween(
-            new Date(pastDueAtMilliseconds),
-            pastDueEndDate
-          )
-        }
-
-        const userQuota = license.quotas.usage.static.users
-        const userLimit = userQuota?.value
-        const userCount = usage.usageQuota.users
-        const userLimitReached = usersLimitReached(userCount, userLimit)
-        const userLimitExceeded = usersLimitExceeded(userCount, userLimit)
-        const isCloudAccount = await isCloud()
-        const errUserLimit =
-          isCloudAccount &&
-          license.plan.model === PlanModel.PER_USER &&
-          userLimitExceeded
-
-        store.update(state => {
-          return {
-            ...state,
-            usageMetrics: { ...monthlyMetrics, ...staticMetrics },
-            quotaResetDaysRemaining,
-            quotaResetDate,
-            accountDowngraded,
-            accountPastDue: pastDueAtMilliseconds != null,
-            pastDueEndDate,
-            pastDueDaysRemaining,
-            // user limits
-            userCount,
-            userLimit,
-            userLimitReached,
-            errUserLimit,
-          }
-        })
+        return keys.reduce((acc, key) => {
+          const quotaLimit = license[key].value
+          const quotaUsed = (quota[key] / quotaLimit) * 100
+          acc[key] = quotaLimit > -1 ? Math.floor(quotaUsed) : -1
+          return acc
+        }, {})
       }
+      const monthlyMetrics = getMetrics(
+        ["queries", "automations"],
+        license.quotas.usage.monthly,
+        usage.monthly.current
+      )
+      const staticMetrics = getMetrics(
+        ["apps", "rows"],
+        license.quotas.usage.static,
+        usage.usageQuota
+      )
+
+      const getDaysBetween = (dateStart, dateEnd) => {
+        return dateEnd > dateStart
+          ? Math.round(
+              (dateEnd.getTime() - dateStart.getTime()) / oneDayInMilliseconds
+            )
+          : 0
+      }
+
+      const quotaResetDate = new Date(usage.quotaReset)
+      const quotaResetDaysRemaining = getDaysBetween(now, quotaResetDate)
+
+      const accountDowngraded =
+        license?.billing?.subscription?.downgradeAt &&
+        license?.billing?.subscription?.downgradeAt <= now.getTime() &&
+        license?.billing?.subscription?.status === StripeStatus.PAST_DUE &&
+        license?.plan.type === Constants.PlanType.FREE
+
+      const pastDueAtMilliseconds = license?.billing?.subscription?.pastDueAt
+      const downgradeAtMilliseconds =
+        license?.billing?.subscription?.downgradeAt
+      let pastDueDaysRemaining
+      let pastDueEndDate
+
+      if (pastDueAtMilliseconds && downgradeAtMilliseconds) {
+        pastDueEndDate = new Date(downgradeAtMilliseconds)
+        pastDueDaysRemaining = getDaysBetween(
+          new Date(pastDueAtMilliseconds),
+          pastDueEndDate
+        )
+      }
+
+      const userQuota = license.quotas.usage.static.users
+      const userLimit = userQuota?.value
+      const userCount = usage.usageQuota.users
+      const userLimitReached = usersLimitReached(userCount, userLimit)
+      const userLimitExceeded = usersLimitExceeded(userCount, userLimit)
+      const isCloudAccount = await isCloud()
+      const errUserLimit =
+        isCloudAccount &&
+        license.plan.model === PlanModel.PER_USER &&
+        userLimitExceeded
+
+      store.update(state => {
+        return {
+          ...state,
+          usageMetrics: { ...monthlyMetrics, ...staticMetrics },
+          quotaResetDaysRemaining,
+          quotaResetDate,
+          accountDowngraded,
+          accountPastDue: pastDueAtMilliseconds != null,
+          pastDueEndDate,
+          pastDueDaysRemaining,
+          // user limits
+          userCount,
+          userLimit,
+          userLimitReached,
+          errUserLimit,
+        }
+      })
     },
   }
 

@@ -12,11 +12,16 @@ import {
   Table,
   TableSchema,
   SqlClient,
+  ArrayOperator,
 } from "@budibase/types"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
-import { isRelationshipColumn } from "../../../db/utils"
+import {
+  extractViewInfoFromID,
+  isRelationshipColumn,
+  isViewID,
+} from "../../../db/utils"
 import { isSQL } from "../../../integrations/utils"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
@@ -76,7 +81,7 @@ export async function getDatasourceAndQuery(
 }
 
 export function cleanExportRows(
-  rows: any[],
+  rows: Row[],
   schema: TableSchema,
   format: string,
   columns?: string[],
@@ -310,4 +315,20 @@ function validateTimeOnlyField(
   }
 
   return res
+}
+
+// type-guard check
+export function isArrayFilter(operator: any): operator is ArrayOperator {
+  return Object.values(ArrayOperator).includes(operator)
+}
+
+export function tryExtractingTableAndViewId(tableOrViewId: string) {
+  if (isViewID(tableOrViewId)) {
+    return {
+      tableId: extractViewInfoFromID(tableOrViewId).tableId,
+      viewId: tableOrViewId,
+    }
+  }
+
+  return { tableId: tableOrViewId }
 }
