@@ -1,5 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
+  import { GridDragModes } from "utils/grid"
 
   export let top
   export let left
@@ -34,9 +35,20 @@
   class:line
   style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex};"
   class:withText={!!text}
+  class:vCompact={height < 40}
+  class:hCompact={width < 40}
 >
   {#if text || icon}
-    <div class="label" class:flipped class:line class:right={alignRight}>
+    <div
+      class="label"
+      class:flipped
+      class:line
+      class:right={alignRight}
+      draggable="true"
+      data-indicator="true"
+      data-drag-mode={GridDragModes.Move}
+      data-id={componentId}
+    >
       {#if icon}
         <Icon name={icon} size="S" color="white" />
       {/if}
@@ -50,8 +62,10 @@
   {#if showResizeAnchors}
     {#each AnchorSides as side}
       <div
-        draggable="true"
         class="anchor {side}"
+        draggable="true"
+        data-indicator="true"
+        data-drag-mode={GridDragModes.Resize}
         data-side={side}
         data-id={componentId}
       >
@@ -99,6 +113,7 @@
     justify-content: flex-start;
     align-items: center;
     gap: 6px;
+    pointer-events: all;
   }
   .label.line {
     transform: translateY(-50%);
@@ -123,7 +138,7 @@
 
   /* Anchor */
   .anchor {
-    --size: 24px;
+    --size: 20px;
     position: absolute;
     width: var(--size);
     height: var(--size);
@@ -131,53 +146,84 @@
     display: grid;
     place-items: center;
     border-radius: 50%;
+    transform: translateX(-50%) translateY(-50%);
   }
   .anchor-inner {
-    width: 12px;
-    height: 12px;
+    width: calc(var(--size) / 2);
+    height: calc(var(--size) / 2);
     background: white;
     border: 2px solid var(--color);
     pointer-events: none;
+    border-radius: 2px;
   }
+
+  /* Thinner anchors for each edge */
+  .anchor.right,
+  .anchor.left {
+    height: calc(var(--size) * 2);
+  }
+  .anchor.top,
+  .anchor.bottom {
+    width: calc(var(--size) * 2);
+  }
+  .anchor.right .anchor-inner,
+  .anchor.left .anchor-inner {
+    height: calc(var(--size) * 1.2);
+    width: calc(var(--size) * 0.3);
+  }
+  .anchor.top .anchor-inner,
+  .anchor.bottom .anchor-inner {
+    width: calc(var(--size) * 1.2);
+    height: calc(var(--size) * 0.3);
+  }
+
+  /* Hide side indicators when they don't fit */
+  .indicator.hCompact .anchor.top,
+  .indicator.hCompact .anchor.bottom,
+  .indicator.vCompact .anchor.left,
+  .indicator.vCompact .anchor.right {
+    display: none;
+  }
+
+  /* Anchor positions */
   .anchor.right {
-    right: calc(var(--size) / -2 - 1px);
-    top: calc(50% - var(--size) / 2);
+    left: calc(100% + 1px);
+    top: 50%;
     cursor: e-resize;
   }
   .anchor.left {
-    left: calc(var(--size) / -2 - 1px);
-    top: calc(50% - var(--size) / 2);
+    left: -1px;
+    top: 50%;
     cursor: w-resize;
   }
   .anchor.bottom {
-    left: calc(50% - var(--size) / 2 + 1px);
-    bottom: calc(var(--size) / -2 - 1px);
+    left: 50%;
+    top: calc(100% + 1px);
     cursor: s-resize;
   }
   .anchor.top {
-    left: calc(50% - var(--size) / 2 + 1px);
-    top: calc(var(--size) / -2 - 1px);
+    left: 50%;
+    top: -1px;
     cursor: n-resize;
   }
-
   .anchor.bottom-right {
-    right: calc(var(--size) / -2 - 1px);
-    bottom: calc(var(--size) / -2 - 1px);
+    top: 100%;
+    left: 100%;
     cursor: se-resize;
   }
   .anchor.bottom-left {
-    left: calc(var(--size) / -2 - 1px);
-    bottom: calc(var(--size) / -2 - 1px);
+    left: 0;
+    top: 100%;
     cursor: sw-resize;
   }
   .anchor.top-right {
-    right: calc(var(--size) / -2 - 1px);
-    top: calc(var(--size) / -2 - 1px);
+    left: 100%;
+    top: 0;
     cursor: ne-resize;
   }
   .anchor.top-left {
-    left: calc(var(--size) / -2 - 1px);
-    top: calc(var(--size) / -2 - 1px);
+    left: 0;
+    top: 0;
     cursor: nw-resize;
   }
 </style>

@@ -2,12 +2,12 @@ import {
   AutomationCustomIOType,
   AutomationIOType,
   AutomationStepType,
-  AutomationTriggerSchema,
+  AutomationTriggerDefinition,
   AutomationTriggerStepId,
   AutomationEventType,
 } from "@budibase/types"
 
-export const definition: AutomationTriggerSchema = {
+export const definition: AutomationTriggerDefinition = {
   name: "Cron Trigger",
   event: AutomationEventType.CRON_TRIGGER,
   icon: "Clock",

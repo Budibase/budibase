@@ -2,11 +2,11 @@ import {
   AutomationActionStepId,
   AutomationCustomIOType,
   AutomationIOType,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Looping",
   icon: "Reuse",
   tagline: "Loop the block",

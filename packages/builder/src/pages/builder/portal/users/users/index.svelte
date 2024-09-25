@@ -52,6 +52,7 @@
 
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
   let enrichedUsers = []
+  let tenantOwner
   let createUserModal,
     inviteConfirmationModal,
     onboardingTypeModal,
@@ -70,6 +71,7 @@
   ]
   let userData = []
   let invitesLoaded = false
+  let tenantOwnerLoaded = false
   let pendingInvites = []
   let parsedInvites = []
 
@@ -98,8 +100,14 @@
   $: pendingSchema = getPendingSchema(schema)
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
-  $: {
-    enrichedUsers = $fetch.rows?.map(user => {
+  $: setEnrichedUsers($fetch.rows, tenantOwnerLoaded)
+
+  const setEnrichedUsers = async rows => {
+    if (!tenantOwnerLoaded) {
+      enrichedUsers = []
+      return
+    }
+    enrichedUsers = rows?.map(user => {
       let userGroups = []
       $groups.forEach(group => {
         if (group.users) {
@@ -110,15 +118,24 @@
           })
         }
       })
+      user.tenantOwnerEmail = tenantOwner?.email
+      const role = Constants.ExtendedBudibaseRoleOptions.find(
+        x => x.value === users.getUserRole(user)
+      )
       return {
         ...user,
         name: user.firstName ? user.firstName + " " + user.lastName : "",
         userGroups,
+        __selectable:
+          role.value === Constants.BudibaseRoles.Owner ||
+          $auth.user?.email === user.email
+            ? false
+            : true,
         apps: [...new Set(Object.keys(user.roles))],
+        access: role.sortOrder,
       }
     })
   }
-
   const getPendingSchema = tblSchema => {
     if (!tblSchema) {
       return {}
@@ -216,7 +233,7 @@
       const newUser = {
         email: email,
         role: usersRole,
-        password: Math.random().toString(36).substring(2, 22),
+        password: generatePassword(12),
         forceResetPassword: true,
       }
 
@@ -288,12 +305,22 @@
     }
   }
 
+  const generatePassword = length => {
+    const array = new Uint8Array(length)
+    window.crypto.getRandomValues(array)
+    return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
+      .join("")
+      .slice(0, length)
+  }
+
   onMount(async () => {
     try {
       await groups.actions.init()
       groupsLoaded = true
       pendingInvites = await users.getInvites()
       invitesLoaded = true
+      tenantOwner = await users.tenantOwner($auth.tenantId)
+      tenantOwnerLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
     }
@@ -368,6 +395,7 @@
     allowSelectRows={!readonly}
     {customRenderers}
     loading={!$fetch.loaded || !groupsLoaded}
+    defaultSortColumn={"__selectable"}
   />
 
   <div class="pagination">

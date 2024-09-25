@@ -56,7 +56,7 @@
   <Modal
     on:cancel={handleModalClose}
     bind:this={modal}
-    disableCancel={$builderStore.inBuilder}
+    disableCancel={$builderStore.inBuilder || ignoreClicksOutside}
     zIndex={2}
   >
     <div use:styleable={$component.styles} class={`modal-content ${size}`}>

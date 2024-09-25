@@ -2,12 +2,12 @@ import {
   AutomationCustomIOType,
   AutomationIOType,
   AutomationStepType,
-  AutomationTriggerSchema,
   AutomationTriggerStepId,
   AutomationEventType,
+  AutomationTriggerDefinition,
 } from "@budibase/types"
 
-export const definition: AutomationTriggerSchema = {
+export const definition: AutomationTriggerDefinition = {
   name: "Row Created",
   event: AutomationEventType.ROW_SAVE,
   icon: "TableRowAddBottom",
@@ -22,6 +22,11 @@ export const definition: AutomationTriggerSchema = {
           type: AutomationIOType.STRING,
           customType: AutomationCustomIOType.TABLE,
           title: "Table",
+        },
+        filters: {
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.TRIGGER_FILTER,
+          title: "Filtering",
         },
       },
       required: ["tableId"],

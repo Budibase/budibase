@@ -7,10 +7,12 @@ import {
   FieldType,
   FilterType,
   IncludeRelationship,
+  InternalSearchFilterOperator,
   isManyToOne,
   OneToManyRelationshipFieldMetadata,
   Operation,
   PaginationJson,
+  QueryJson,
   RelationshipFieldMetadata,
   Row,
   SearchFilters,
@@ -44,6 +46,7 @@ import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
+import { dataFilters } from "@budibase/shared-core"
 
 export interface ManyRelationship {
   tableId?: string
@@ -65,9 +68,14 @@ export interface RunConfig {
   includeSqlRelationships?: IncludeRelationship
 }
 
+export type ExternalReadRequestReturnType = {
+  rows: Row[]
+  rawResponseSize: number
+}
+
 export type ExternalRequestReturnType<T extends Operation> =
   T extends Operation.READ
-    ? Row[]
+    ? ExternalReadRequestReturnType
     : T extends Operation.COUNT
     ? number
     : { row: Row; table: Table }
@@ -154,7 +162,6 @@ export class ExternalRequest<T extends Operation> {
   private readonly tableId: string
   private datasource?: Datasource
   private tables: { [key: string]: Table } = {}
-  private tableList: Table[]
 
   constructor(operation: T, tableId: string, datasource?: Datasource) {
     this.operation = operation
@@ -163,7 +170,6 @@ export class ExternalRequest<T extends Operation> {
     if (datasource && datasource.entities) {
       this.tables = datasource.entities
     }
-    this.tableList = Object.values(this.tables)
   }
 
   private prepareFilters(
@@ -189,21 +195,33 @@ export class ExternalRequest<T extends Operation> {
     if (filters) {
       // need to map over the filters and make sure the _id field isn't present
       let prefix = 1
-      for (let operator of Object.values(filters)) {
-        for (let field of Object.keys(operator || {})) {
-          if (dbCore.removeKeyNumbering(field) === "_id") {
-            if (primary) {
-              const parts = breakRowIdField(operator[field])
-              for (let field of primary) {
-                operator[`${prefix}:${field}`] = parts.shift()
+      const checkFilters = (innerFilters: SearchFilters): SearchFilters => {
+        for (const [operatorType, operator] of Object.entries(innerFilters)) {
+          const isArrayOp = sdk.rows.utils.isArrayFilter(operatorType)
+          for (const field of Object.keys(operator || {})) {
+            if (dbCore.removeKeyNumbering(field) === "_id") {
+              if (primary) {
+                const parts = breakRowIdField(operator[field])
+                if (primary.length > 1 && isArrayOp) {
+                  operator[InternalSearchFilterOperator.COMPLEX_ID_OPERATOR] = {
+                    id: primary,
+                    values: parts[0],
+                  }
+                } else {
+                  for (let field of primary) {
+                    operator[`${prefix}:${field}`] = parts.shift()
+                  }
+                  prefix++
+                }
               }
-              prefix++
+              // make sure this field doesn't exist on any filter
+              delete operator[field]
             }
-            // make sure this field doesn't exist on any filter
-            delete operator[field]
           }
         }
+        return dataFilters.recurseLogicalOperators(innerFilters, checkFilters)
       }
+      checkFilters(filters)
     }
     // there is no id, just use the user provided filters
     if (!idCopy || !table) {
@@ -282,7 +300,6 @@ export class ExternalRequest<T extends Operation> {
         throw "No tables found, fetch tables before query."
       }
       this.tables = this.datasource.entities
-      this.tableList = Object.values(this.tables)
     }
     return { tables: this.tables, datasource: this.datasource }
   }
@@ -444,7 +461,7 @@ export class ExternalRequest<T extends Operation> {
         breakExternalTableId(relatedTableId)
       // @ts-ignore
       const linkPrimaryKey = this.tables[relatedTableName].primary[0]
-      if (!lookupField || !row[lookupField]) {
+      if (!lookupField || !row?.[lookupField] == null) {
         continue
       }
       const endpoint = getEndpoint(relatedTableId, Operation.READ)
@@ -612,7 +629,8 @@ export class ExternalRequest<T extends Operation> {
       const { datasource: ds } = await this.retrieveMetadata(datasourceId)
       datasource = ds
     }
-    const table = this.tables[tableName]
+    const tables = this.tables
+    const table = tables[tableName]
     let isSql = isSQL(datasource)
     if (!table) {
       throw new Error(
@@ -667,7 +685,7 @@ export class ExternalRequest<T extends Operation> {
     ) {
       throw "Deletion must be filtered"
     }
-    let json = {
+    let json: QueryJson = {
       endpoint: {
         datasourceId: datasourceId!,
         entityId: tableName,
@@ -696,7 +714,7 @@ export class ExternalRequest<T extends Operation> {
       },
       meta: {
         table,
-        id: config.id,
+        tables: tables,
       },
     }
 
@@ -733,9 +751,11 @@ export class ExternalRequest<T extends Operation> {
     )
     // if reading it'll just be an array of rows, return whole thing
     if (operation === Operation.READ) {
-      return (
-        Array.isArray(output) ? output : [output]
-      ) as ExternalRequestReturnType<T>
+      const rows = Array.isArray(output) ? output : [output]
+      return {
+        rows,
+        rawResponseSize: responseRows.length,
+      } as ExternalRequestReturnType<T>
     } else {
       return { row: output[0], table } as ExternalRequestReturnType<T>
     }

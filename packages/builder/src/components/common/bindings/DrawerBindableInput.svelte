@@ -16,6 +16,7 @@
   export let placeholder
   export let label
   export let disabled = false
+  export let allowHBS = true
   export let allowJS = true
   export let allowHelpers = true
   export let updateOnChange = true
@@ -100,6 +101,7 @@
     value={readableValue}
     on:change={event => (tempValue = event.detail)}
     {bindings}
+    {allowHBS}
     {allowJS}
     {allowHelpers}
     {context}

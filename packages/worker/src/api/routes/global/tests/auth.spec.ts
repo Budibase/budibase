@@ -66,7 +66,7 @@ describe("/api/global/auth", () => {
       it("should return 403 with incorrect credentials", async () => {
         const tenantId = config.tenantId!
         const email = config.user?.email!
-        const password = "incorrect"
+        const password = "incorrect123"
 
         const response = await config.api.auth.login(
           tenantId,
@@ -83,7 +83,7 @@ describe("/api/global/auth", () => {
       it("should return 403 when user doesn't exist", async () => {
         const tenantId = config.tenantId!
         const email = "invaliduser@example.com"
-        const password = "password"
+        const password = "password123!"
 
         const response = await config.api.auth.login(
           tenantId,
@@ -203,7 +203,7 @@ describe("/api/global/auth", () => {
         )
         delete user.password
 
-        const newPassword = "newpassword"
+        const newPassword = "newpassword1"
         const res = await config.api.auth.updatePassword(code!, newPassword)
 
         user = (await config.getUser(user.email))!
@@ -292,9 +292,9 @@ describe("/api/global/auth", () => {
       it("redirects to auth provider", async () => {
         nock("http://someconfigurl").get("/").times(1).reply(200, {
           issuer: "test",
-          authorization_endpoint: "http://localhost/auth",
-          token_endpoint: "http://localhost/token",
-          userinfo_endpoint: "http://localhost/userinfo",
+          authorization_endpoint: "http://example.com/auth",
+          token_endpoint: "http://example.com/token",
+          userinfo_endpoint: "http://example.com/userinfo",
         })
 
         const configId = await generateOidcConfig()
@@ -305,7 +305,7 @@ describe("/api/global/auth", () => {
         const location: string = res.get("location")
         expect(
           location.startsWith(
-            `http://localhost/auth?response_type=code&client_id=clientId&redirect_uri=http%3A%2F%2Flocalhost%3A10000%2Fapi%2Fglobal%2Fauth%2F${config.tenantId}%2Foidc%2Fcallback&scope=openid%20profile%20email%20offline_access`
+            `http://example.com/auth?response_type=code&client_id=clientId&redirect_uri=http%3A%2F%2Flocalhost%3A10000%2Fapi%2Fglobal%2Fauth%2F${config.tenantId}%2Foidc%2Fcallback&scope=openid%20profile%20email%20offline_access`
           )
         ).toBe(true)
       })
@@ -313,11 +313,13 @@ describe("/api/global/auth", () => {
 
     describe("GET /api/global/auth/:tenantId/oidc/callback", () => {
       it("logs in", async () => {
+        const email = `${generator.guid()}@example.com`
+
         nock("http://someconfigurl").get("/").times(2).reply(200, {
           issuer: "test",
-          authorization_endpoint: "http://localhost/auth",
-          token_endpoint: "http://localhost/token",
-          userinfo_endpoint: "http://localhost/userinfo",
+          authorization_endpoint: "http://example.com/auth",
+          token_endpoint: "http://example.com/token",
+          userinfo_endpoint: "http://example.com/userinfo",
         })
 
         const token = jwt.sign(
@@ -326,20 +328,20 @@ describe("/api/global/auth", () => {
             sub: "sub",
             aud: "clientId",
             exp: Math.floor(Date.now() / 1000) + 60 * 60,
-            email: "oauth@example.com",
+            email,
           },
           "secret"
         )
 
-        nock("http://localhost").post("/token").reply(200, {
+        nock("http://example.com").post("/token").reply(200, {
           access_token: "access",
           refresh_token: "refresh",
           id_token: token,
         })
 
-        nock("http://localhost").get("/userinfo?schema=openid").reply(200, {
+        nock("http://example.com").get("/userinfo?schema=openid").reply(200, {
           sub: "sub",
-          email: "oauth@example.com",
+          email,
         })
 
         const configId = await generateOidcConfig()
@@ -351,10 +353,7 @@ describe("/api/global/auth", () => {
           )
         }
 
-        expect(events.auth.login).toHaveBeenCalledWith(
-          "oidc",
-          "oauth@example.com"
-        )
+        expect(events.auth.login).toHaveBeenCalledWith("oidc", email)
         expect(events.auth.login).toHaveBeenCalledTimes(1)
         expect(res.status).toBe(302)
         const location: string = res.get("location")

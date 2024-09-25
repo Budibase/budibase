@@ -5,6 +5,7 @@
   import { CookieUtils, Constants } from "@budibase/frontend-core"
   import { API } from "api"
   import Branding from "./Branding.svelte"
+  import ContextMenu from "components/ContextMenu.svelte"
 
   let loaded = false
 
@@ -160,6 +161,7 @@
 
 <!--Portal branding overrides -->
 <Branding />
+<ContextMenu />
 
 {#if loaded}
   <slot />

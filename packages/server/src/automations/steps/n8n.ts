@@ -2,15 +2,16 @@ import fetch, { HeadersInit } from "node-fetch"
 import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
   HttpMethod,
+  ExternalAppStepOutputs,
+  n8nStepInputs,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "n8n Integration",
   stepTitle: "n8n",
   tagline: "Trigger an n8n workflow",
@@ -67,7 +68,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: n8nStepInputs
+}): Promise<ExternalAppStepOutputs> {
   const { url, body, method, authorization } = inputs
 
   let payload = {}

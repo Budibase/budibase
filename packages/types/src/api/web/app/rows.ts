@@ -37,7 +37,7 @@ export interface PaginatedSearchRowResponse
     PaginationResponse {}
 
 export interface ExportRowsRequest {
-  rows: string[]
+  rows?: string[]
   columns?: string[]
   query?: SearchFilters
   sort?: string

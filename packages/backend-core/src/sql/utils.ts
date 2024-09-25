@@ -1,4 +1,11 @@
-import { DocumentType, SqlQuery, Table, TableSourceType } from "@budibase/types"
+import {
+  DocumentType,
+  ManyToManyRelationshipJson,
+  RelationshipsJson,
+  SqlQuery,
+  Table,
+  TableSourceType,
+} from "@budibase/types"
 import { DEFAULT_BB_DATASOURCE_ID } from "../constants"
 import { Knex } from "knex"
 import { SEPARATOR } from "../db"
@@ -8,6 +15,7 @@ const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
 const ENCODED_SPACE = encodeURIComponent(" ")
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/
+const TIME_REGEX = /^(?:\d{2}:)?(?:\d{2}:)(?:\d{2})$/
 
 export function isExternalTableID(tableId: string) {
   return tableId.startsWith(DocumentType.DATASOURCE + SEPARATOR)
@@ -21,6 +29,7 @@ export function getNativeSql(
   query: Knex.SchemaBuilder | Knex.QueryBuilder
 ): SqlQuery | SqlQuery[] {
   let sql = query.toSQL()
+
   if (Array.isArray(sql)) {
     return sql as SqlQuery[]
   }
@@ -147,6 +156,10 @@ export function isValidFilter(value: any) {
   return value != null && value !== ""
 }
 
+export function isValidTime(value: string) {
+  return TIME_REGEX.test(value)
+}
+
 export function sqlLog(client: string, query: string, values?: any[]) {
   if (!environment.SQL_LOGGING_ENABLE) {
     return
@@ -156,4 +169,25 @@ export function sqlLog(client: string, query: string, values?: any[]) {
     string += ` values="${values.join(", ")}"`
   }
   console.log(string)
+}
+
+function isValidManyToManyRelationship(
+  relationship: RelationshipsJson
+): relationship is ManyToManyRelationshipJson {
+  return (
+    !!relationship.through &&
+    !!relationship.fromPrimary &&
+    !!relationship.from &&
+    !!relationship.toPrimary &&
+    !!relationship.to
+  )
+}
+
+export function validateManyToMany(
+  relationship: RelationshipsJson
+): ManyToManyRelationshipJson | undefined {
+  if (isValidManyToManyRelationship(relationship)) {
+    return relationship
+  }
+  return undefined
 }

@@ -1,10 +1,12 @@
 <script>
   import {
+    AbsTooltip,
     Layout,
     Heading,
     Body,
     Button,
     Divider,
+    Icon,
     Tags,
     Tag,
   } from "@budibase/bbui"
@@ -15,6 +17,8 @@
   export let description
   export let enabled
   export let upgradeButtonClick
+
+  $: upgradeDisabled = !$auth.accountPortalAccess && $admin.cloud
 </script>
 
 <Layout noPadding>
@@ -36,8 +40,9 @@
   {:else}
     <div class="buttons">
       <Button
-        primary
-        disabled={!$auth.accountPortalAccess && $admin.cloud}
+        primary={!upgradeDisabled}
+        secondary={upgradeDisabled}
+        disabled={upgradeDisabled}
         on:click={async () => upgradeButtonClick()}
       >
         Upgrade
@@ -51,6 +56,16 @@
       >
         View Plans
       </Button>
+      {#if upgradeDisabled}
+        <AbsTooltip
+          text={"Please contact the account holder to upgrade"}
+          position={"right"}
+        >
+          <div class="icon" on:focus>
+            <Icon name="InfoOutline" size="L" disabled hoverable />
+          </div>
+        </AbsTooltip>
+      {/if}
     </div>
   {/if}
 </Layout>
@@ -67,7 +82,11 @@
     justify-content: flex-start;
     gap: var(--spacing-m);
   }
-
+  .icon {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
   .buttons {
     display: flex;
     flex-direction: row;

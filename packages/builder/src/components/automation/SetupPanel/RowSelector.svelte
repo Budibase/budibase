@@ -79,17 +79,17 @@
 
     table = $tables.list.find(table => table._id === tableId)
 
+    schemaFields = Object.entries(table?.schema ?? {})
+      .filter(entry => {
+        const [, field] = entry
+        return field.type !== "formula" && !field.autocolumn
+      })
+      .sort(([nameA], [nameB]) => {
+        return nameA < nameB ? -1 : 1
+      })
+
     if (table) {
       editableRow["tableId"] = tableId
-
-      schemaFields = Object.entries(table?.schema ?? {})
-        .filter(entry => {
-          const [, field] = entry
-          return field.type !== "formula" && !field.autocolumn
-        })
-        .sort(([nameA], [nameB]) => {
-          return nameA < nameB ? -1 : 1
-        })
 
       // Parse out any data not in the schema.
       for (const column in editableFields) {
@@ -288,29 +288,27 @@
 {/each}
 
 {#if table && schemaFields}
-  {#key editableFields}
-    <div
-      class="add-fields-btn"
-      class:empty={Object.is(editableFields, {})}
-      bind:this={popoverAnchor}
-    >
-      <ActionButton
-        icon="Add"
-        fullWidth
-        on:click={() => {
-          customPopover.show()
-        }}
-        disabled={!schemaFields}
-        >Add fields
-      </ActionButton>
-    </div>
-  {/key}
+  <div
+    class="add-fields-btn"
+    class:empty={Object.is(editableFields, {})}
+    bind:this={popoverAnchor}
+  >
+    <ActionButton
+      icon="Add"
+      fullWidth
+      on:click={() => {
+        customPopover.show()
+      }}
+      disabled={!schemaFields}
+      >Add fields
+    </ActionButton>
+  </div>
 {/if}
 
 <Popover
   align="center"
   bind:this={customPopover}
-  anchor={popoverAnchor}
+  anchor={editableFields ? popoverAnchor : null}
   useAnchorWidth
   maxHeight={300}
   resizable={false}

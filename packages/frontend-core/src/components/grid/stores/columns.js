@@ -1,74 +1,73 @@
 import { derived, get, writable } from "svelte/store"
-import { GutterWidth, DefaultColumnWidth } from "../lib/constants"
+import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
 
 export const createStores = () => {
   const columns = writable([])
-  const stickyColumn = writable(null)
 
-  // Derive an enriched version of columns with left offsets and indexes
-  // automatically calculated
-  const enrichedColumns = derived(
-    columns,
-    $columns => {
-      let offset = 0
-      return $columns.map(column => {
-        const enriched = {
-          ...column,
-          left: offset,
-        }
-        if (column.visible) {
-          offset += column.width
-        }
-        return enriched
-      })
-    },
-    []
-  )
-
-  // Derived list of columns which have not been explicitly hidden
-  const visibleColumns = derived(
-    enrichedColumns,
-    $columns => {
-      return $columns.filter(col => col.visible)
-    },
-    []
-  )
+  // Enrich columns with metadata about their display position
+  const enrichedColumns = derived(columns, $columns => {
+    let offset = GutterWidth
+    let idx = 0
+    return $columns.map(col => {
+      const enriched = {
+        ...col,
+        __idx: idx,
+        __left: offset,
+      }
+      if (col.visible) {
+        idx++
+        offset += col.width
+      }
+      return enriched
+    })
+  })
 
   return {
     columns: {
       ...columns,
       subscribe: enrichedColumns.subscribe,
     },
-    stickyColumn,
-    visibleColumns,
   }
 }
 
 export const deriveStores = context => {
-  const { columns, stickyColumn } = context
+  const { columns } = context
 
-  // Quick access to all columns
-  const allColumns = derived(
-    [columns, stickyColumn],
-    ([$columns, $stickyColumn]) => {
-      let allCols = $columns || []
-      if ($stickyColumn) {
-        allCols = [...allCols, $stickyColumn]
-      }
-      return allCols
-    }
-  )
+  // Derive a lookup map for all columns by name
+  const columnLookupMap = derived(columns, $columns => {
+    let map = {}
+    $columns.forEach(column => {
+      map[column.name] = column
+    })
+    return map
+  })
+
+  // Derived list of columns which have not been explicitly hidden
+  const visibleColumns = derived(columns, $columns => {
+    return $columns.filter(col => col.visible)
+  })
+
+  // Split visible columns into their discrete types
+  const displayColumn = derived(visibleColumns, $visibleColumns => {
+    return $visibleColumns.find(col => col.primaryDisplay)
+  })
+  const scrollableColumns = derived(visibleColumns, $visibleColumns => {
+    return $visibleColumns.filter(col => !col.primaryDisplay)
+  })
 
   // Derive if we have any normal columns
-  const hasNonAutoColumn = derived(allColumns, $allColumns => {
-    const normalCols = $allColumns.filter(column => {
+  const hasNonAutoColumn = derived(columns, $columns => {
+    const normalCols = $columns.filter(column => {
       return !column.schema?.autocolumn
     })
     return normalCols.length > 0
   })
 
   return {
-    allColumns,
+    displayColumn,
+    columnLookupMap,
+    visibleColumns,
+    scrollableColumns,
     hasNonAutoColumn,
   }
 }
@@ -87,60 +86,57 @@ export const createActions = context => {
     await datasource.actions.saveSchemaMutations()
   }
 
+  // Checks if a column is readonly
+  const isReadonly = column => {
+    if (!column?.schema) {
+      return false
+    }
+    return (
+      column.schema.autocolumn ||
+      column.schema.disabled ||
+      column.schema.type === "formula" ||
+      column.schema.readonly
+    )
+  }
+
   return {
     columns: {
       ...columns,
       actions: {
         changeAllColumnWidths,
+        isReadonly,
       },
     },
   }
 }
 
 export const initialise = context => {
-  const {
-    definition,
-    columns,
-    stickyColumn,
-    allColumns,
-    enrichedSchema,
-    compact,
-  } = context
+  const { definition, columns, displayColumn, enrichedSchema } = context
 
   // Merge new schema fields with existing schema in order to preserve widths
   const processColumns = $enrichedSchema => {
     if (!$enrichedSchema) {
       columns.set([])
-      stickyColumn.set(null)
       return
     }
     const $definition = get(definition)
-    const $allColumns = get(allColumns)
-    const $stickyColumn = get(stickyColumn)
-    const $compact = get(compact)
+    const $columns = get(columns)
+    const $displayColumn = get(displayColumn)
 
     // Find primary display
     let primaryDisplay
-    const candidatePD = $definition.primaryDisplay || $stickyColumn?.name
+    const candidatePD = $definition.primaryDisplay || $displayColumn?.name
     if (candidatePD && $enrichedSchema[candidatePD]) {
       primaryDisplay = candidatePD
     }
 
-    // Get field list
-    let fields = []
-    Object.keys($enrichedSchema).forEach(field => {
-      if ($compact || field !== primaryDisplay) {
-        fields.push(field)
-      }
-    })
-
     // Update columns, removing extraneous columns and adding missing ones
     columns.set(
-      fields
+      Object.keys($enrichedSchema)
         .map(field => {
           const fieldSchema = $enrichedSchema[field]
-          const oldColumn = $allColumns?.find(x => x.name === field)
-          return {
+          const oldColumn = $columns?.find(col => col.name === field)
+          let column = {
             name: field,
             label: fieldSchema.displayName || field,
             schema: fieldSchema,
@@ -148,19 +144,25 @@ export const initialise = context => {
             visible: fieldSchema.visible ?? true,
             readonly: fieldSchema.readonly,
             order: fieldSchema.order ?? oldColumn?.order,
-            primaryDisplay: field === primaryDisplay,
+            conditions: fieldSchema.conditions,
           }
+          // Override a few properties for primary display
+          if (field === primaryDisplay) {
+            column.visible = true
+            column.order = 0
+            column.primaryDisplay = true
+          }
+          return column
         })
         .sort((a, b) => {
-          // If we don't have a pinned column then primary display will be in
-          // the normal columns list, and should be first
+          // Display column should always come first
           if (a.name === primaryDisplay) {
             return -1
           } else if (b.name === primaryDisplay) {
             return 1
           }
 
-          // Sort by order first
+          // Then sort by order
           const orderA = a.order
           const orderB = b.order
           if (orderA != null && orderB != null) {
@@ -180,29 +182,8 @@ export const initialise = context => {
           return autoColA ? 1 : -1
         })
     )
-
-    // Update sticky column
-    if ($compact || !primaryDisplay) {
-      stickyColumn.set(null)
-      return
-    }
-    const stickySchema = $enrichedSchema[primaryDisplay]
-    const oldStickyColumn = $allColumns?.find(x => x.name === primaryDisplay)
-    stickyColumn.set({
-      name: primaryDisplay,
-      label: stickySchema.displayName || primaryDisplay,
-      schema: stickySchema,
-      width: stickySchema.width || oldStickyColumn?.width || DefaultColumnWidth,
-      visible: true,
-      order: 0,
-      left: GutterWidth,
-      primaryDisplay: true,
-    })
   }
 
   // Process columns when schema changes
   enrichedSchema.subscribe(processColumns)
-
-  // Process columns when compact flag changes
-  compact.subscribe(() => processColumns(get(enrichedSchema)))
 }

@@ -7,7 +7,6 @@
   import { ExpiringKeys } from "./constants"
   import { getBanners } from "./licensingBanners"
   import { banner } from "@budibase/bbui"
-  import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
 
   const oneDayInSeconds = 86400
 
@@ -89,8 +88,7 @@
     userLoaded &&
     $licensing.usageMetrics &&
     domLoaded &&
-    !licensingLoaded &&
-    isEnabled(TENANT_FEATURE_FLAGS.LICENSING)
+    !licensingLoaded
   ) {
     licensingLoaded = true
     queuedModals = processModals()

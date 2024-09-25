@@ -3,13 +3,14 @@ import { GenericContainer, Wait } from "testcontainers"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
 import knex from "knex"
+import { MSSQL_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>
 
 export async function getDatasource(): Promise<Datasource> {
   if (!ports) {
     ports = startContainer(
-      new GenericContainer("mcr.microsoft.com/mssql/server:2022-latest")
+      new GenericContainer(MSSQL_IMAGE)
         .withExposedPorts(1433)
         .withEnvironment({
           ACCEPT_EULA: "Y",

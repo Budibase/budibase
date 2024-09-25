@@ -33,7 +33,7 @@ export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
   if (!found) {
     throw new Error("No view found")
   }
-  return enrichSchema(found, table.schema)
+  return await enrichSchema(found, table.schema)
 }
 
 export async function create(

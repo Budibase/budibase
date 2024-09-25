@@ -295,4 +295,10 @@ export const buildUserEndpoints = API => ({
       url: `/api/global/users/${userId}/app/${appId}/builder`,
     })
   },
+
+  getTenantInfo: async ({ tenantId }) => {
+    return await API.get({
+      url: `/api/global/tenant/${tenantId}`,
+    })
+  },
 })

@@ -11,9 +11,11 @@ import {
 } from "../../../automations"
 import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
-import { Automation } from "@budibase/types"
+import { Automation, FieldType, Table } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { FilterConditions } from "../../../automations/steps/filter"
+import { removeDeprecated } from "../../../automations/utils"
+import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 
 const MAX_RETRIES = 4
 let {
@@ -23,6 +25,7 @@ let {
   automationStep,
   collectAutomation,
   filterAutomation,
+  updateRowAutomationWithFilters,
 } = setup.structures
 
 describe("/automations", () => {
@@ -68,14 +71,15 @@ describe("/automations", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      let definitionsLength = Object.keys(BUILTIN_ACTION_DEFINITIONS).length
-      definitionsLength-- // OUTGOING_WEBHOOK is deprecated
+      let definitionsLength = Object.keys(
+        removeDeprecated(BUILTIN_ACTION_DEFINITIONS)
+      ).length
 
       expect(Object.keys(res.body.action).length).toBeGreaterThanOrEqual(
         definitionsLength
       )
       expect(Object.keys(res.body.trigger).length).toEqual(
-        Object.keys(TRIGGER_DEFINITIONS).length
+        Object.keys(removeDeprecated(TRIGGER_DEFINITIONS)).length
       )
     })
   })
@@ -118,6 +122,104 @@ describe("/automations", () => {
       expect(events.automation.stepCreated).toHaveBeenCalledTimes(2)
     })
 
+    it("Should ensure you can't have a branch as not a last step", async () => {
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
+      })
+        .appAction({ fields: { status: "active" } })
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {
+              equal: { "trigger.fields.status": "active" },
+            },
+          },
+        })
+        .serverLog({ text: "Inactive user" })
+        .build()
+
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            "Invalid body - Branch steps are only allowed as the last step",
+        },
+      })
+    })
+
+    it("Should check validation on an automation that has a branch step with no children", async () => {
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
+      })
+        .appAction({ fields: { status: "active" } })
+        .branch({})
+        .serverLog({ text: "Inactive user" })
+        .build()
+
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            'Invalid body - "definition.steps[0].inputs.branches" must contain at least 1 items',
+        },
+      })
+    })
+
+    it("Should check validation on a branch step with empty conditions", async () => {
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
+      })
+        .appAction({ fields: { status: "active" } })
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {},
+          },
+        })
+        .build()
+
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            'Invalid body - "definition.steps[0].inputs.branches[0].condition" must have at least 1 key',
+        },
+      })
+    })
+
+    it("Should check validation on an branch that has a condition that is not valid", async () => {
+      const automation = createAutomationBuilder({
+        name: "String Equality Branching",
+        appId: config.getAppId(),
+      })
+        .appAction({ fields: { status: "active" } })
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {
+              //@ts-ignore
+              INCORRECT: { "trigger.fields.status": "active" },
+            },
+          },
+        })
+        .serverLog({ text: "Inactive user" })
+        .build()
+
+      await config.api.automation.post(automation, {
+        status: 400,
+        body: {
+          message:
+            'Invalid body - "definition.steps[0].inputs.branches[0].condition.INCORRECT" is not allowed',
+        },
+      })
+    })
+
     it("should apply authorization to endpoint", async () => {
       const automation = newAutomation()
       await checkBuilderEndpoint({
@@ -154,7 +256,7 @@ describe("/automations", () => {
           tableId: table._id,
         },
       }
-      automation.appId = config.appId
+      automation.appId = config.getAppId()
       automation = await config.createAutomation(automation)
       await setup.delay(500)
       const res = await testAutomation(config, automation, {
@@ -267,8 +369,7 @@ describe("/automations", () => {
     }
 
     it("updates a automations name", async () => {
-      let automation = newAutomation()
-      await config.createAutomation(automation)
+      const automation = await config.createAutomation(newAutomation())
       automation.name = "Updated Name"
       jest.clearAllMocks()
 
@@ -294,8 +395,7 @@ describe("/automations", () => {
     })
 
     it("updates a automations name using POST request", async () => {
-      let automation = newAutomation()
-      await config.createAutomation(automation)
+      const automation = await config.createAutomation(newAutomation())
       automation.name = "Updated Name"
       jest.clearAllMocks()
 
@@ -392,15 +492,16 @@ describe("/automations", () => {
   describe("fetch", () => {
     it("return all the automations for an instance", async () => {
       await clearAllAutomations(config)
-      const autoConfig = basicAutomation()
-      await config.createAutomation(autoConfig)
+      const autoConfig = await config.createAutomation(basicAutomation())
       const res = await request
         .get(`/api/automations`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
 
-      expect(res.body[0]).toEqual(expect.objectContaining(autoConfig))
+      expect(res.body.automations[0]).toEqual(
+        expect.objectContaining(autoConfig)
+      )
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -423,6 +524,22 @@ describe("/automations", () => {
 
       expect(res.body.id).toEqual(automation._id)
       expect(events.automation.deleted).toHaveBeenCalledTimes(1)
+    })
+
+    it("cannot delete a row action automation", async () => {
+      const automation = await config.createAutomation(
+        setup.structures.rowActionAutomation()
+      )
+      await request
+        .delete(`/api/automations/${automation._id}/${automation._rev}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(422, {
+          message: "Row actions automations cannot be deleted",
+          status: 422,
+        })
+
+      expect(events.automation.deleted).not.toHaveBeenCalled()
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -455,14 +572,13 @@ describe("/automations", () => {
 
         let table = await config.createTable()
 
-        let automation = await filterAutomation()
+        let automation = await filterAutomation(config.getAppId())
         automation.definition.trigger.inputs.tableId = table._id
         automation.definition.steps[0].inputs = {
           condition: FilterConditions.EQUAL,
           field: "{{ trigger.row.City }}",
           value: "{{ trigger.oldRow.City }}",
         }
-        automation.appId = config.appId!
         automation = await config.createAutomation(automation)
         let triggerInputs = {
           oldRow: {
@@ -474,6 +590,96 @@ describe("/automations", () => {
         }
         const res = await testAutomation(config, automation, triggerInputs)
         expect(res.body.steps[1].outputs.result).toEqual(expectedResult)
+      }
+    )
+  })
+  describe("Automation Update / Creator row trigger filtering", () => {
+    let table: Table
+
+    beforeAll(async () => {
+      table = await config.createTable({
+        name: "table",
+        type: "table",
+        schema: {
+          Approved: {
+            name: "Approved",
+            type: FieldType.BOOLEAN,
+          },
+        },
+      })
+    })
+
+    const testCases = [
+      {
+        description: "should run when Approved changes from false to true",
+        filters: {
+          equal: { "1:Approved": true },
+        },
+        row: { Approved: "true" },
+        oldRow: { Approved: "false" },
+        expectToRun: true,
+      },
+      {
+        description: "should run when Approved is true in both old and new row",
+        filters: { equal: { "1:Approved": true } },
+        row: { Approved: "true" },
+        oldRow: { Approved: "true" },
+        expectToRun: true,
+      },
+
+      {
+        description:
+          "should run when a contains filter matches the correct options",
+        filters: {
+          contains: { "1:opts": ["Option 1", "Option 3"] },
+        },
+        row: { opts: ["Option 1", "Option 3"] },
+        oldRow: { opts: ["Option 3"] },
+        expectToRun: true,
+      },
+      {
+        description:
+          "should not run when opts doesn't contain any specified option",
+        filters: {
+          contains: { "1:opts": ["Option 1", "Option 2"] },
+        },
+        row: { opts: ["Option 3", "Option 4"] },
+        oldRow: { opts: ["Option 3", "Option 4"] },
+        expectToRun: false,
+      },
+    ]
+
+    it.each(testCases)(
+      "$description",
+      async ({ filters, row, oldRow, expectToRun }) => {
+        let automation = await updateRowAutomationWithFilters(
+          config.getAppId(),
+          table._id!
+        )
+        automation.definition.trigger.inputs = {
+          tableId: table._id,
+          filters,
+        }
+        automation = await config.createAutomation(automation)
+
+        const inputs = {
+          row: {
+            tableId: table._id,
+            ...row,
+          },
+          oldRow: {
+            tableId: table._id,
+            ...oldRow,
+          },
+        }
+
+        const res = await testAutomation(config, automation, inputs)
+
+        if (expectToRun) {
+          expect(res.body.steps[1].outputs.success).toEqual(true)
+        } else {
+          expect(res.body.outputs.success).toEqual(false)
+        }
       }
     )
   })

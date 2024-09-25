@@ -1,11 +1,9 @@
 <script>
-  import { sideBarCollapsed, enrichedApps, auth } from "stores/portal"
+  import { sideBarCollapsed, enrichedApps } from "stores/portal"
   import { params, goto } from "@roxi/routify"
   import NavItem from "components/common/NavItem.svelte"
   import NavHeader from "components/common/NavHeader.svelte"
-  import AppRowContext from "components/start/AppRowContext.svelte"
-  import FavouriteAppButton from "../FavouriteAppButton.svelte"
-  import { sdk } from "@budibase/shared-core"
+  import AppNavItem from "./AppNavItem.svelte"
 
   let searchString
   let opened
@@ -40,34 +38,7 @@
         class:favourite={app.favourite}
         class:actionsOpen={opened == app.appId}
       >
-        <NavItem
-          text={app.name}
-          icon={app.icon?.name || "Apps"}
-          iconColor={app.icon?.color}
-          selected={$params.appId === app.appId}
-          highlighted={opened == app.appId}
-          on:click={() => $goto(`./${app.appId}`)}
-          withActions
-          showActions
-        >
-          <div class="app-entry-actions">
-            {#if sdk.users.isBuilder($auth.user, app?.devId)}
-              <AppRowContext
-                {app}
-                align="left"
-                on:open={() => {
-                  opened = app.appId
-                }}
-                on:close={() => {
-                  opened = null
-                }}
-              />
-            {/if}
-          </div>
-          <div class="favourite-icon">
-            <FavouriteAppButton {app} size="XS" />
-          </div>
-        </NavItem>
+        <AppNavItem {app} />
       </span>
     {/each}
   </div>
@@ -116,18 +87,5 @@
     width: auto;
     display: flex;
     gap: var(--spacing-s);
-  }
-
-  .side-bar-app-entry:hover .app-entry-actions,
-  .side-bar-app-entry:hover .favourite-icon,
-  .side-bar-app-entry.favourite .favourite-icon,
-  .side-bar-app-entry.actionsOpen .app-entry-actions,
-  .side-bar-app-entry.actionsOpen .favourite-icon {
-    opacity: 1;
-  }
-
-  .side-bar-app-entry .app-entry-actions,
-  .side-bar-app-entry .favourite-icon {
-    opacity: 0;
   }
 </style>
