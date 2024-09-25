@@ -42,36 +42,27 @@ export const createStores = () => {
 }
 
 function getRelatedTableValues(row, field, isSingle) {
-  let result = "Not rendable"
+  let result = ""
   try {
     if (isSingle) {
       result = row[field.related.field]?.[0]?.[field.related.subField]
     } else {
-      // TODO: check all types
       result = Array.from(
         new Set(
           row[field.related.field].flatMap(r => r[field.related.subField])
         )
       )
-
       switch (field.type) {
         case FieldType.STRING:
         case FieldType.NUMBER:
         case FieldType.BIGINT:
+        case FieldType.BARCODEQR:
           result = result.join(", ")
           break
-
-        case FieldType.JSON:
-        case FieldType.ATTACHMENTS:
-        case FieldType.SIGNATURE_SINGLE:
-          result = result.map(JSON.parse)
-          break
-
-        case FieldType.LINK:
-          console.error(`${field.type} type is not rendable`)
       }
     }
   } catch (e) {
+    result = "Not rendable"
     console.error(e.message)
   }
 
