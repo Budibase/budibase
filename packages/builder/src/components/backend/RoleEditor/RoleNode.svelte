@@ -31,7 +31,6 @@
   $: descriptionError = validateDescription(tempDescription)
   $: invalid = nameError || descriptionError
   $: targetClasses = `target${$dragging ? "" : " hidden"}`
-  $: sourceClasses = `source${selected ? "" : " hidden"}`
 
   const validateName = (name, roles) => {
     if (!name?.length) {
@@ -75,21 +74,23 @@
 >
   <div class="color" />
   <div class="content">
-    <div class="name">
-      {data.displayName}
+    <div class="text">
+      <div class="name">
+        {data.displayName}
+      </div>
+      {#if data.description}
+        <div class="description" title={data.description}>
+          {data.description}
+        </div>
+      {/if}
     </div>
-    {#if data.description}
-      <div class="description" title={data.description}>
-        {data.description}
+    {#if data.custom}
+      <div class="buttons">
+        <Icon size="S" name="Edit" hoverable on:click={openPopover} />
+        <Icon size="S" name="Delete" hoverable on:click={deleteModal?.show} />
       </div>
     {/if}
   </div>
-  {#if data.custom}
-    <div class="buttons">
-      <Icon size="S" name="Edit" hoverable on:click={openPopover} />
-      <Icon size="S" name="Delete" hoverable on:click={deleteModal?.show} />
-    </div>
-  {/if}
   {#if id !== Roles.BASIC}
     <Handle
       type="target"
@@ -99,7 +100,7 @@
     />
   {/if}
   {#if id !== Roles.ADMIN}
-    <Handle type="source" position={Position.Right} class={sourceClasses} />
+    <Handle type="source" position={Position.Right} />
   {/if}
 </div>
 
@@ -138,6 +139,7 @@
 </Modal>
 
 <style>
+  /* Node styles */
   .node {
     position: relative;
     background: var(--spectrum-global-color-gray-100);
@@ -146,7 +148,6 @@
     height: var(--height);
     display: flex;
     flex-direction: row;
-    gap: 12px;
     box-sizing: border-box;
     cursor: pointer;
     transition: background 130ms ease-out;
@@ -166,36 +167,32 @@
     flex: 0 0 10px;
     background: var(--color);
   }
+
+  /* Main container */
   .content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    border: 1px solid var(--border-color);
+    border-left-width: 0;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding: 12px;
+    gap: 6px;
+  }
+  .node.selected .content {
+    border-color: var(--spectrum-global-color-blue-100);
+  }
+
+  /* Text */
+  .text {
     width: 0;
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
-    gap: 2px;
-    border: 1px solid var(--border-color);
-    border-left-width: 0;
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
   }
-  .node.selected .content {
-    border-color: transparent;
-  }
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-  }
-  .buttons {
-    display: none;
-    padding-right: 12px;
-  }
-  .buttons :global(.spectrum-Icon) {
-    color: var(--spectrum-global-color-gray-600);
-  }
-
   .name,
   .description {
     white-space: nowrap;
@@ -206,9 +203,19 @@
     color: var(--spectrum-global-color-gray-600);
     font-size: 12px;
   }
-  .node.selected .buttons {
+
+  /* Icons */
+  .buttons {
     display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
   }
+  .buttons :global(.spectrum-Icon) {
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  /* Handlers */
   .node :global(.svelte-flow__handle) {
     width: 6px;
     height: 6px;
