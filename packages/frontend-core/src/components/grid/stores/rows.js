@@ -46,18 +46,6 @@ function getRelatedTableValues(row, field, isSingle) {
   try {
     if (isSingle) {
       result = row[field.related.field]?.[0]?.[field.related.subField]
-      switch (field.type) {
-        case FieldType.JSON:
-        case FieldType.SIGNATURE_SINGLE:
-        case FieldType.ATTACHMENT_SINGLE:
-        case FieldType.ATTACHMENTS:
-        case FieldType.BB_REFERENCE:
-          result = JSON.parse(result)
-          break
-
-        case FieldType.LINK:
-          console.error(`${field.type} type is not rendable`)
-      }
     } else {
       // TODO: check all types
       result = Array.from(
