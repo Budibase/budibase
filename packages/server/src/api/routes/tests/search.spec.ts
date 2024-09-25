@@ -2757,7 +2757,7 @@ describe.each([
         })
       })
 
-      it.only("can filter by the row ID with limit 1", async () => {
+      it("can filter by the row ID with limit 1", async () => {
         await expectSearch({
           query: {
             equal: { _id: row._id },
