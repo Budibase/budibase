@@ -1,4 +1,25 @@
 import { FieldType } from "@budibase/types"
+import { Helpers } from "@budibase/bbui"
+
+const columnTypeManyOverrides = {
+  [FieldType.DATETIME]: {
+    overridedType: FieldType.STRING,
+    parser: (value, field) => {
+      const { timeOnly, dateOnly, ignoreTimezones } = field
+      const enableTime = !dateOnly
+      const parsedValue = Helpers.parseDate(value, {
+        timeOnly,
+        enableTime,
+        ignoreTimezones,
+      })
+      const result = Helpers.getDateDisplayValue(parsedValue, {
+        enableTime,
+        timeOnly,
+      })
+      return result
+    },
+  },
+}
 
 export function enrichSchemaWithRelColumns(schema) {
   if (!schema) {
@@ -19,6 +40,9 @@ export function enrichSchemaWithRelColumns(schema) {
           ...relField,
           name,
           related: { field: c, subField: relColumn },
+          cellRenderType:
+            columnTypeManyOverrides[relField.type]?.overridedType ||
+            relField.type,
         }
       }
     }
@@ -34,19 +58,15 @@ export function getRelatedTableValues(row, field, isSingle) {
     if (isSingle) {
       result = row[field.related.field]?.[0]?.[field.related.subField]
     } else {
+      const parser =
+        columnTypeManyOverrides[field.type]?.parser || (value => value)
       result = Array.from(
         new Set(
-          row[field.related.field].flatMap(r => r[field.related.subField])
+          row[field.related.field].flatMap(r =>
+            parser(r[field.related.subField], field)
+          )
         )
-      )
-      switch (field.type) {
-        case FieldType.STRING:
-        case FieldType.NUMBER:
-        case FieldType.BIGINT:
-        case FieldType.BARCODEQR:
-          result = result.join(", ")
-          break
-      }
+      ).join(", ")
     }
   } catch (e) {
     result = "Not rendable"
