@@ -1,7 +1,6 @@
 import { context, db } from "@budibase/backend-core"
 import { Row, Table, ViewV2 } from "@budibase/types"
 import sdk from "../../../sdk"
-import cloneDeep from "lodash/fp/cloneDeep"
 import { finaliseRow } from "../../../api/controllers/row/staticFormula"
 import {
   inputProcessing,
