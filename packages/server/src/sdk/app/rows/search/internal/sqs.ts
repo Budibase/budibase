@@ -495,6 +495,6 @@ export async function search(
     if (err.status === 400 && msg?.match(MISSING_COLUMN_REGEX)) {
       return { rows: [] }
     }
-    throw err
+    throw new Error(`Unable to search by SQL - ${msg}`, { cause: err })
   }
 }
