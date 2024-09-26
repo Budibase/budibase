@@ -91,7 +91,7 @@ class Orchestrator {
     // step zero is never used as the template string is zero indexed for customer facing
     this.context = {
       steps: [{}],
-      stepsByName: {},
+      stepsById: {},
       trigger: triggerOutput,
     }
 
@@ -458,7 +458,7 @@ class Orchestrator {
       })
 
       const stepName = steps[stepToLoopIndex].name || steps[stepToLoopIndex].id
-      this.context.stepsByName![stepName] = tempOutput
+      this.context.stepsById![steps[stepToLoopIndex].id] = tempOutput
       this.context.steps[this.context.steps.length] = tempOutput
       this.context.steps = this.context.steps.filter(
         item => !item.hasOwnProperty.call(item, "currentItem")
@@ -601,7 +601,7 @@ class Orchestrator {
       ...context,
       steps: {
         ...context.steps,
-        ...context.stepsByName,
+        ...context.stepsById,
       },
     }
 
@@ -625,8 +625,7 @@ class Orchestrator {
     } else {
       this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
       this.context.steps[this.context.steps.length] = outputs
-      const stepName = step.name || step.id
-      this.context.stepsByName![stepName] = outputs
+      this.context.stepsById![step.id] = outputs
     }
   }
 }
