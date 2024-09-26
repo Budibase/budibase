@@ -34,10 +34,7 @@ export async function save(
     inputs._id = db.generateRowID(inputs.tableId)
   }
 
-  // need to copy the table so it can be differenced on way out
-  const sourceClone = cloneDeep(source)
-
-  let row = await inputProcessing(userId, sourceClone, inputs)
+  let row = await inputProcessing(userId, source, inputs)
 
   const validateResult = await sdk.rows.utils.validate({
     row,
