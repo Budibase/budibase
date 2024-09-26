@@ -112,7 +112,7 @@
 
   .tag {
     display: flex;
-    color: #FFFFFF;
+    color: #ffffff;
     padding: 4px 8px;
     justify-content: center;
     align-items: center;

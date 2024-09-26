@@ -27,7 +27,6 @@
   let editingUuid
 
   $: isCloud = $admin.cloud
-  $: budibaseAIEnabled = $licensing.budibaseAIEnabled
   $: customAIConfigsEnabled = $licensing.customAIConfigsEnabled
 
   async function fetchAIConfig() {
