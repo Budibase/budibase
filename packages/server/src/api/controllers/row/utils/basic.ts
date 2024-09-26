@@ -134,22 +134,20 @@ export async function basicProcessing({
   }
 
   let columns: string[] = Object.keys(table.schema)
-  if (!isCalculationView) {
-    if (!sqs) {
-      thisRow._id = generateIdForRow(row, table, isLinked)
-      thisRow.tableId = table._id
-      thisRow._rev = "rev"
-      columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)
-    } else {
-      columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)
-      for (let internalColumn of [...PROTECTED_INTERNAL_COLUMNS, ...columns]) {
-        thisRow[internalColumn] = extractFieldValue({
-          row,
-          tableName: table._id!,
-          fieldName: internalColumn,
-          isLinked,
-        })
-      }
+  if (!sqs && !isCalculationView) {
+    thisRow._id = generateIdForRow(row, table, isLinked)
+    thisRow.tableId = table._id
+    thisRow._rev = "rev"
+    columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)
+  } else if (!isCalculationView) {
+    columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)
+    for (let internalColumn of [...PROTECTED_INTERNAL_COLUMNS, ...columns]) {
+      thisRow[internalColumn] = extractFieldValue({
+        row,
+        tableName: table._id!,
+        fieldName: internalColumn,
+        isLinked,
+      })
     }
   }
   for (let col of columns) {
