@@ -859,7 +859,7 @@ class InternalBuilder {
   }
 
   addSorting(query: Knex.QueryBuilder): Knex.QueryBuilder {
-    let { sort } = this.query
+    let { sort, resource } = this.query
     const primaryKey = this.table.primary
     const tableName = getTableName(this.table)
     const aliases = this.query.tableAliases
@@ -896,7 +896,8 @@ class InternalBuilder {
 
     // add sorting by the primary key if the result isn't already sorted by it,
     // to make sure result is deterministic
-    if (!sort || sort[primaryKey[0]] === undefined) {
+    const hasAggregations = (resource?.aggregations?.length ?? 0) > 0
+    if (!hasAggregations && (!sort || sort[primaryKey[0]] === undefined)) {
       query = query.orderBy(`${aliased}.${primaryKey[0]}`)
     }
     return query

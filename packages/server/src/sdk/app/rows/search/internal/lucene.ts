@@ -62,10 +62,13 @@ export async function search(
       response.rows = await getGlobalUsersFromMetadata(response.rows as User[])
     }
 
-    if (options.fields) {
-      const fields = [...options.fields, ...PROTECTED_INTERNAL_COLUMNS]
-      response.rows = response.rows.map((r: any) => pick(r, fields))
-    }
+    const visibleFields =
+      options.fields ||
+      Object.keys(source.schema || {}).filter(
+        key => source.schema?.[key].visible !== false
+      )
+    const allowedFields = [...visibleFields, ...PROTECTED_INTERNAL_COLUMNS]
+    response.rows = response.rows.map((r: any) => pick(r, allowedFields))
 
     response.rows = await outputProcessing(source, response.rows, {
       squash: true,

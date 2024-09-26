@@ -127,10 +127,13 @@ export async function search(
       }
     }
 
-    if (options.fields) {
-      const fields = [...options.fields, ...PROTECTED_EXTERNAL_COLUMNS]
-      processed = processed.map((r: any) => pick(r, fields))
-    }
+    const visibleFields =
+      options.fields ||
+      Object.keys(source.schema || {}).filter(
+        key => source.schema?.[key].visible !== false
+      )
+    const allowedFields = [...visibleFields, ...PROTECTED_EXTERNAL_COLUMNS]
+    processed = processed.map((r: any) => pick(r, allowedFields))
 
     // need wrapper object for bookmarks etc when paginating
     const response: SearchResponse<Row> = { rows: processed, hasNextPage }
