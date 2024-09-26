@@ -127,18 +127,8 @@
 </Modal>
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <Heading size="M">AI</Heading>
-    {#if isCloud && !budibaseAIEnabled}
-      <Tags>
-        <Tag icon="LockClosed">Premium</Tag>
-      </Tags>
-    {/if}
-    <Body>Configure your AI settings within this section:</Body>
-  </Layout>
-  <Divider />
-  <Layout noPadding>
-    <div class="config-heading">
-      <Heading size="S">AI Configurations</Heading>
+    <div class="header">
+      <Heading size="M">AI</Heading>
       {#if !isCloud && !customAIConfigsEnabled}
         <Tags>
           <Tag icon="LockClosed">Premium</Tag>
@@ -150,6 +140,13 @@
       {:else}
         <Button size="S" cta on:click={newConfig}>Add configuration</Button>
       {/if}
+    </div>
+    <Body>Configure your AI settings within this section:</Body>
+  </Layout>
+  <Divider />
+  <Layout noPadding>
+    <div class="config-heading">
+      <Heading size="S">AI Configurations</Heading>
     </div>
     <Body size="S"
       >Use the following interface to select your preferred AI configuration.</Body
@@ -172,5 +169,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 </style>
