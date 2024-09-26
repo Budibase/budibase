@@ -299,9 +299,7 @@ describe("Loop automations", () => {
       { name: "Row 3", value: 3, tableId: table._id },
     ]
 
-    for (const row of rows) {
-      await config.createRow(row)
-    }
+    await config.api.row.bulkImport(table._id!, { rows })
 
     const builder = createAutomationBuilder({
       name: "Test Loop and Update Row",
@@ -385,9 +383,7 @@ describe("Loop automations", () => {
       { name: "Row 3", value: 3, tableId: table._id },
     ]
 
-    for (const row of rows) {
-      await config.createRow(row)
-    }
+    await config.api.row.bulkImport(table._id!, { rows })
 
     const builder = createAutomationBuilder({
       name: "Test Loop and Delete Row",
