@@ -81,19 +81,17 @@
   bind:this={anchor}
 >
   {#each value || [] as attachment}
-    {#if attachment}
-      {#if isImage(attachment.extension)}
-        <img
-          class:light={!$props?.darkMode &&
-            schema.type === FieldType.SIGNATURE_SINGLE}
-          src={attachment.url}
-          alt={attachment.extension}
-        />
-      {:else}
-        <div class="file" title={attachment.name}>
-          {attachment.extension}
-        </div>
-      {/if}
+    {#if isImage(attachment.extension)}
+      <img
+        class:light={!$props?.darkMode &&
+          schema.type === FieldType.SIGNATURE_SINGLE}
+        src={attachment.url}
+        alt={attachment.extension}
+      />
+    {:else}
+      <div class="file" title={attachment.name}>
+        {attachment.extension}
+      </div>
     {/if}
   {/each}
 </div>
