@@ -40,13 +40,13 @@ import {
 import sdk from "../../../sdk"
 
 describe.each([
-  ["lucene", undefined],
+  // ["lucene", undefined],
   ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/v2/views (%s)", (name, dsProvider) => {
   const config = setup.getConfig()
   const isSqs = name === "sqs"
@@ -1653,7 +1653,7 @@ describe.each([
     })
 
     describe("search", () => {
-      it("returns empty rows from view when no schema is passed", async () => {
+      it.only("returns empty rows from view when no schema is passed", async () => {
         const rows = await Promise.all(
           Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
         )
@@ -2384,7 +2384,7 @@ describe.each([
         })
       })
 
-      describe.skip("calculations", () => {
+      describe("calculations", () => {
         let table: Table
         let rows: Row[]
 

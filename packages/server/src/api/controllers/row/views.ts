@@ -5,9 +5,8 @@ import {
   SearchViewRowRequest,
   SearchFilterKey,
   LogicalOperator,
-  Aggregation,
 } from "@budibase/types"
-import { dataFilters, helpers } from "@budibase/shared-core"
+import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import { db, context, features } from "@budibase/backend-core"
 import { enrichSearchContext } from "./utils"
@@ -26,9 +25,6 @@ export async function searchView(
     ctx.throw(400, `This method only supports viewsV2`)
   }
 
-  const viewFields = Object.entries(helpers.views.basicFields(view))
-    .filter(([_, value]) => value.visible)
-    .map(([key]) => key)
   const { body } = ctx.request
 
   // Enrich saved query with ephemeral query params.
@@ -73,25 +69,15 @@ export async function searchView(
     user: sdk.users.getUserContextBindings(ctx.user),
   })
 
-  const aggregations: Aggregation[] = Object.entries(
-    helpers.views.calculationFields(view)
-  ).map(([name, { field, calculationType }]) => ({
-    name,
-    calculationType,
-    field,
-  }))
-
   const result = await sdk.rows.search({
     viewId: view.id,
     tableId: view.tableId,
     query: enrichedQuery,
-    fields: viewFields,
     ...getSortOptions(body, view),
     limit: body.limit,
     bookmark: body.bookmark,
     paginate: body.paginate,
     countRows: body.countRows,
-    aggregations,
   })
 
   result.rows.forEach(r => (r._viewId = view.id))

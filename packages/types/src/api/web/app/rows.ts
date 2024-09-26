@@ -26,7 +26,6 @@ export interface SearchViewRowRequest
     | "paginate"
     | "query"
     | "countRows"
-    | "aggregations"
   > {}
 
 export interface SearchRowResponse {
