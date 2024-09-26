@@ -13,6 +13,7 @@
       label: col.label || col.name,
       value: col.name,
       type: col.schema?.type,
+      related: col.related,
     }))
     .filter(col => canBeSortColumn(col))
   $: orderOptions = getOrderOptions($sort.column, columnOptions)
