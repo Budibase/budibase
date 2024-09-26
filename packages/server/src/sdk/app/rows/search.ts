@@ -83,7 +83,7 @@ export async function search(
       table = source
       options = searchInputMapping(table, options)
     } else {
-      throw new Error(`Invalid source ID: ${options.viewId || options.tableId}`)
+      throw new Error(`Must supply either a view ID or a table ID`)
     }
 
     if (options.query) {
