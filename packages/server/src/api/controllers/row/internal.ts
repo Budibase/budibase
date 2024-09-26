@@ -53,11 +53,8 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     combinedRow[key] = inputs[key]
   }
 
-  // need to copy the table so it can be differenced on way out
-  const tableClone = cloneDeep(table)
-
   // this returns the table and row incase they have been updated
-  let row = await inputProcessing(ctx.user?._id, tableClone, combinedRow)
+  let row = await inputProcessing(ctx.user?._id, source, combinedRow)
   const validateResult = await sdk.rows.utils.validate({
     row,
     source,
