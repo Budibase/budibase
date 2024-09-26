@@ -60,11 +60,11 @@
     await updateRole(target)
   }
 
-  const onEdgeMouseOver = e => {
+  const onEdgeMouseOver = () => {
     edgeHovered = true
   }
 
-  const onEdgeMouseOut = e => {
+  const onEdgeMouseOut = () => {
     edgeHovered = false
   }
 
