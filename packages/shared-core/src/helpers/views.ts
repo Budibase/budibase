@@ -1,20 +1,20 @@
 import {
-  BasicViewUIFieldMetadata,
+  BasicViewFieldMetadata,
   ViewCalculationFieldMetadata,
-  ViewUIFieldMetadata,
+  ViewFieldMetadata,
   ViewV2,
 } from "@budibase/types"
 import { pickBy } from "lodash"
 
 export function isCalculationField(
-  field: ViewUIFieldMetadata
+  field: ViewFieldMetadata
 ): field is ViewCalculationFieldMetadata {
   return "calculationType" in field
 }
 
 export function isBasicViewField(
-  field: ViewUIFieldMetadata
-): field is BasicViewUIFieldMetadata {
+  field: ViewFieldMetadata
+): field is BasicViewFieldMetadata {
   return !isCalculationField(field)
 }
 

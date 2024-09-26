@@ -7,17 +7,17 @@ import {
   ViewResponse,
   ViewResponseEnriched,
   ViewV2,
-  BasicViewUIFieldMetadata,
+  BasicViewFieldMetadata,
   ViewCalculationFieldMetadata,
   RelationSchemaField,
-  ViewUIFieldMetadata,
+  ViewFieldMetadata,
 } from "@budibase/types"
 import { builderSocket, gridSocket } from "../../../websockets"
 import { helpers } from "@budibase/shared-core"
 
 function stripUnknownFields(
-  field: BasicViewUIFieldMetadata
-): RequiredKeys<BasicViewUIFieldMetadata> {
+  field: BasicViewFieldMetadata
+): RequiredKeys<BasicViewFieldMetadata> {
   if (helpers.views.isCalculationField(field)) {
     const strippedField: RequiredKeys<ViewCalculationFieldMetadata> = {
       order: field.order,
@@ -31,7 +31,7 @@ function stripUnknownFields(
     }
     return strippedField
   } else {
-    const strippedField: RequiredKeys<BasicViewUIFieldMetadata> = {
+    const strippedField: RequiredKeys<BasicViewFieldMetadata> = {
       order: field.order,
       width: field.width,
       visible: field.visible,
@@ -83,7 +83,7 @@ async function parseSchema(view: CreateViewRequest) {
 
       p[fieldName] = fieldSchema
       return p
-    }, {} as Record<string, RequiredKeys<ViewUIFieldMetadata>>)
+    }, {} as Record<string, RequiredKeys<ViewFieldMetadata>>)
   return finalViewSchema
 }
 
