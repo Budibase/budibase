@@ -445,46 +445,40 @@ describe("Automation Scenarios", () => {
     ]
 
     it.each(testCases)(
-      "should pass the filter when condition is %s",
+      "should pass the filter when condition is $condition",
       async ({ condition, value, rowValue, expectPass }) => {
-        it(`should ${
-          expectPass ? "pass" : "fail"
-        } the filter when condition is "${condition}" and value is ${value}`, async () => {
-          const builder = createAutomationBuilder({
-            name: `Test ${condition}`,
-          })
-
-          const results = await builder
-            .appAction({ fields: {} })
-            .createRow({
-              row: {
-                name: `${condition} Test`,
-                value: rowValue,
-                tableId: table._id,
-              },
-            })
-            .queryRows({
-              tableId: table._id!,
-            })
-            .filter({
-              field: "{{ steps.2.rows.0.value }}",
-              condition,
-              value,
-            })
-            .serverLog({
-              text: `${condition} condition ${
-                expectPass ? "passed" : "failed"
-              }`,
-            })
-            .run()
-
-          expect(results.steps[2].outputs.result).toBe(expectPass)
-          if (expectPass) {
-            expect(results.steps[3].outputs.success).toBeTrue()
-          } else {
-            expect(results.steps[3]).toBeUndefined()
-          }
+        const builder = createAutomationBuilder({
+          name: `Test ${condition}`,
         })
+
+        const results = await builder
+          .appAction({ fields: {} })
+          .createRow({
+            row: {
+              name: `${condition} Test`,
+              value: rowValue,
+              tableId: table._id,
+            },
+          })
+          .queryRows({
+            tableId: table._id!,
+          })
+          .filter({
+            field: "{{ steps.2.rows.0.value }}",
+            condition,
+            value,
+          })
+          .serverLog({
+            text: `${condition} condition ${expectPass ? "passed" : "failed"}`,
+          })
+          .run()
+
+        expect(results.steps[2].outputs.result).toBe(expectPass)
+        if (expectPass) {
+          expect(results.steps[3].outputs.success).toBeTrue()
+        } else {
+          expect(results.steps[3]).toBeUndefined()
+        }
       }
     )
   })
