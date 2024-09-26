@@ -3,7 +3,8 @@ import * as setup from "../utilities"
 import { LoopStepType, FieldType, Table } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { DatabaseName } from "../../../integrations/tests/utils"
-import { FilterConditions } from "../../../automations/steps/filter"
+import { objectStore } from "@budibase/backend-core"
+import { basicTableWithAttachmentField } from "../../../tests/utilities/structures"
 
 describe("Automation Scenarios", () => {
   let config = setup.getConfig()
@@ -317,6 +318,129 @@ describe("Automation Scenarios", () => {
       expect(results.steps).toHaveLength(3)
       expect(results.steps[1].outputs.success).toBeTruthy()
       expect(results.steps[2].outputs.rows).toHaveLength(1)
+    })
+  })
+
+  describe("Attachment Automations", () => {
+    async function uploadTestFile(filename: string) {
+      let bucket = "testbucket"
+      await objectStore.upload({
+        bucket,
+        filename,
+        body: Buffer.from("test data"),
+      })
+      let presignedUrl = await objectStore.getPresignedUrl(
+        bucket,
+        filename,
+        60000
+      )
+      return presignedUrl
+    }
+
+    it("should check that an attachment field is sent to storage and parsed", async () => {
+      const table = await config.createTable(basicTableWithAttachmentField())
+      const filename = "test1.txt"
+      const presignedUrl = await uploadTestFile(filename)
+      const attachmentObject = [{ url: presignedUrl, filename }]
+
+      const builder = createAutomationBuilder({
+        name: "Test Attachment Field",
+      })
+
+      const results = await builder
+        .appAction({ fields: {} })
+        .createRow({
+          row: {
+            tableId: table._id,
+            file_attachment: attachmentObject,
+          },
+        })
+        .queryRows({
+          tableId: table._id!,
+        })
+        .run()
+
+      expect(results.steps[0].outputs.success).toEqual(true)
+      expect(results.steps[0].outputs.row.file_attachment[0]).toHaveProperty(
+        "key"
+      )
+      const s3Key = results.steps[0].outputs.row.file_attachment[0].key
+
+      const client = objectStore.ObjectStore(
+        objectStore.ObjectStoreBuckets.APPS
+      )
+      const objectData = await client
+        .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
+        .promise()
+
+      expect(objectData).toBeDefined()
+      expect(objectData.ContentLength).toBeGreaterThan(0)
+    })
+
+    it("should check that a single attachment field is sent to storage and parsed", async () => {
+      const table = await config.createTable(basicTableWithAttachmentField())
+      const filename = "test2.txt"
+      const presignedUrl = await uploadTestFile(filename)
+      const attachmentObject = { url: presignedUrl, filename }
+
+      const builder = createAutomationBuilder({
+        name: "Test Single Attachment Field",
+      })
+
+      const results = await builder
+        .appAction({ fields: {} })
+        .createRow({
+          row: {
+            tableId: table._id,
+            single_file_attachment: attachmentObject,
+          },
+        })
+        .run()
+
+      expect(results.steps[0].outputs.success).toEqual(true)
+      expect(
+        results.steps[0].outputs.row.single_file_attachment
+      ).toHaveProperty("key")
+      const s3Key = results.steps[0].outputs.row.single_file_attachment.key
+
+      const client = objectStore.ObjectStore(
+        objectStore.ObjectStoreBuckets.APPS
+      )
+      const objectData = await client
+        .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
+        .promise()
+
+      expect(objectData).toBeDefined()
+      expect(objectData.ContentLength).toBeGreaterThan(0)
+    })
+
+    it("should check that attachment without the correct keys throws an error", async () => {
+      const table = await config.createTable(basicTableWithAttachmentField())
+      const filename = "test2.txt"
+      const presignedUrl = await uploadTestFile(filename)
+      const attachmentObject = {
+        wrongKey: presignedUrl,
+        anotherWrongKey: filename,
+      }
+
+      const builder = createAutomationBuilder({
+        name: "Test Invalid Attachment Keys",
+      })
+
+      const results = await builder
+        .appAction({ fields: {} })
+        .createRow({
+          row: {
+            tableId: table._id,
+            single_file_attachment: attachmentObject,
+          },
+        })
+        .run()
+
+      expect(results.steps[0].outputs.success).toEqual(false)
+      expect(results.steps[0].outputs.response).toEqual(
+        'Error: Attachments must have both "url" and "filename" keys. You have provided: wrongKey, anotherWrongKey'
+      )
     })
   })
 })
