@@ -463,11 +463,13 @@ export async function search(
       aggregations,
     })
 
-    // check if we need to pick specific rows out
-    if (options.fields) {
-      const fields = [...options.fields, ...PROTECTED_INTERNAL_COLUMNS]
-      finalRows = finalRows.map((r: any) => pick(r, fields))
-    }
+    const visibleFields =
+      options.fields ||
+      Object.keys(source.schema || {}).filter(
+        key => source.schema?.[key].visible !== false
+      )
+    const allowedFields = [...visibleFields, ...PROTECTED_INTERNAL_COLUMNS]
+    finalRows = finalRows.map((r: any) => pick(r, allowedFields))
 
     const response: SearchResponse<Row> = {
       rows: finalRows,

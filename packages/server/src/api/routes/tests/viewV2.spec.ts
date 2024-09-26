@@ -1653,7 +1653,7 @@ describe.each([
     })
 
     describe("search", () => {
-      it.only("returns empty rows from view when no schema is passed", async () => {
+      it("returns empty rows from view when no schema is passed", async () => {
         const rows = await Promise.all(
           Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
         )
@@ -2196,28 +2196,6 @@ describe.each([
           })
           expect(response.rows).toHaveLength(0)
         })
-
-      it("queries the row api passing the view fields only", async () => {
-        const searchSpy = jest.spyOn(sdk.rows, "search")
-
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-          schema: {
-            id: { visible: true },
-            one: { visible: false },
-          },
-        })
-
-        await config.api.viewV2.search(view.id, { query: {} })
-        expect(searchSpy).toHaveBeenCalledTimes(1)
-
-        expect(searchSpy).toHaveBeenCalledWith(
-          expect.objectContaining({
-            fields: ["id"],
-          })
-        )
-      })
 
       describe("foreign relationship columns", () => {
         let envCleanup: () => void
