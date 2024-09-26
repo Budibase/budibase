@@ -1,4 +1,5 @@
 import {
+  Aggregation,
   Datasource,
   DocumentType,
   FieldType,
@@ -58,11 +59,34 @@ const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
 const MISSING_TABLE_REGX = new RegExp(`no such table: .+`)
 const DUPLICATE_COLUMN_REGEX = new RegExp(`duplicate column name: .+`)
 
-function buildInternalFieldList(
-  table: Table,
+async function buildInternalFieldList(
+  source: Table | ViewV2,
   tables: Table[],
-  opts?: { relationships?: RelationshipsJson[] }
+  opts?: { relationships?: RelationshipsJson[]; allowedFields?: string[] }
 ) {
+  const { relationships, allowedFields } = opts || {}
+  let schemaFields: string[] = []
+  if (sdk.views.isView(source)) {
+    schemaFields = Object.keys(helpers.views.basicFields(source)).filter(
+      key => source.schema?.[key]?.visible !== false
+    )
+  } else {
+    schemaFields = Object.keys(source.schema).filter(
+      key => source.schema[key].visible !== false
+    )
+  }
+
+  if (allowedFields) {
+    schemaFields = schemaFields.filter(field => allowedFields.includes(field))
+  }
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
+
   let fieldList: string[] = []
   const getJunctionFields = (relatedTable: Table, fields: string[]) => {
     const junctionFields: string[] = []
@@ -73,13 +97,18 @@ function buildInternalFieldList(
     })
     return junctionFields
   }
-  fieldList = fieldList.concat(
-    PROTECTED_INTERNAL_COLUMNS.map(col => `${table._id}.${col}`)
-  )
-  for (let key of Object.keys(table.schema)) {
+  if (sdk.tables.isTable(source)) {
+    for (const key of PROTECTED_INTERNAL_COLUMNS) {
+      if (allowedFields && !allowedFields.includes(key)) {
+        continue
+      }
+      fieldList.push(`${table._id}.${key}`)
+    }
+  }
+  for (let key of schemaFields) {
     const col = table.schema[key]
     const isRelationship = col.type === FieldType.LINK
-    if (!opts?.relationships && isRelationship) {
+    if (!relationships && isRelationship) {
       continue
     }
     if (!isRelationship) {
@@ -90,7 +119,9 @@ function buildInternalFieldList(
       if (!relatedTable) {
         continue
       }
-      const relatedFields = buildInternalFieldList(relatedTable, tables).concat(
+      const relatedFields = (
+        await buildInternalFieldList(relatedTable, tables)
+      ).concat(
         getJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
       )
       // break out of the loop if we have reached the max number of columns
@@ -330,11 +361,20 @@ export async function search(
     documentType: DocumentType.ROW,
   }
 
-  if (options.aggregations) {
-    options.aggregations = options.aggregations.map(a => {
-      a.field = mapToUserColumn(a.field)
-      return a
-    })
+  let aggregations: Aggregation[] = []
+  if (sdk.views.isView(source)) {
+    const calculationFields = helpers.views.calculationFields(source)
+    for (const [key, field] of Object.entries(calculationFields)) {
+      if (options.fields && !options.fields.includes(key)) {
+        continue
+      }
+
+      aggregations.push({
+        name: key,
+        field: mapToUserColumn(field.field),
+        calculationType: field.calculationType,
+      })
+    }
   }
 
   const request: QueryJson = {
@@ -352,8 +392,11 @@ export async function search(
       columnPrefix: USER_COLUMN_PREFIX,
     },
     resource: {
-      fields: buildInternalFieldList(table, allTables, { relationships }),
-      aggregations: options.aggregations,
+      fields: await buildInternalFieldList(source, allTables, {
+        relationships,
+        allowedFields: options.fields,
+      }),
+      aggregations,
     },
     relationships,
   }
@@ -400,7 +443,6 @@ export async function search(
       table,
       await sqlOutputProcessing(rows, source, allTablesMap, relationships, {
         sqs: true,
-        aggregations: options.aggregations,
       })
     )
 
@@ -418,16 +460,12 @@ export async function search(
     let finalRows = await outputProcessing(source, processed, {
       preserveLinks: true,
       squash: true,
-      aggregations: options.aggregations,
+      aggregations,
     })
 
     // check if we need to pick specific rows out
     if (options.fields) {
-      const fields = [
-        ...options.fields,
-        ...PROTECTED_INTERNAL_COLUMNS,
-        ...(options.aggregations || []).map(a => a.name),
-      ]
+      const fields = [...options.fields, ...PROTECTED_INTERNAL_COLUMNS]
       finalRows = finalRows.map((r: any) => pick(r, fields))
     }
 
@@ -450,7 +488,7 @@ export async function search(
     const msg = typeof err === "string" ? err : err.message
     if (!opts?.retrying && resyncDefinitionsRequired(err.status, msg)) {
       await sdk.tables.sqs.syncDefinition()
-      return search(options, table, { retrying: true })
+      return search(options, source, { retrying: true })
     }
     // previously the internal table didn't error when a column didn't exist in search
     if (err.status === 400 && msg?.match(MISSING_COLUMN_REGEX)) {

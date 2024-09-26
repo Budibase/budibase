@@ -7,6 +7,7 @@ import {
   ManyToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
   RelationshipsJson,
+  Row,
   Table,
 } from "@budibase/types"
 import { breakExternalTableId } from "../../../../integrations/utils"
@@ -148,4 +149,8 @@ export function isKnexEmptyReadResponse(resp: DatasourcePlusQueryResponse) {
     resp.length === 0 ||
     (DSPlusOperation.READ in resp[0] && resp[0].read === true)
   )
+}
+
+export function isKnexRows(resp: DatasourcePlusQueryResponse): resp is Row[] {
+  return !isKnexEmptyReadResponse(resp)
 }

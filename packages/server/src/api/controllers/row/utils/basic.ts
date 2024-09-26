@@ -5,7 +5,7 @@ import {
   Row,
   Table,
   JsonTypes,
-  Aggregation,
+  ViewV2,
 } from "@budibase/types"
 import {
   helpers,
@@ -13,6 +13,7 @@ import {
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
 import { generateRowIdField } from "../../../../integrations/utils"
+import sdk from "../../../../sdk"
 
 function extractFieldValue({
   row,
@@ -85,22 +86,28 @@ function fixJsonTypes(row: Row, table: Table) {
   return row
 }
 
-export function basicProcessing({
+export async function basicProcessing({
   row,
-  table,
+  source,
   tables,
   isLinked,
   sqs,
-  aggregations,
 }: {
   row: Row
-  table: Table
+  source: Table | ViewV2
   tables: Table[]
   isLinked: boolean
   sqs?: boolean
-  aggregations?: Aggregation[]
-}): Row {
+}): Promise<Row> {
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
+
   const thisRow: Row = {}
+
   // filter the row down to what is actually the row (not joined)
   for (let fieldName of Object.keys(table.schema)) {
     let value = extractFieldValue({
@@ -118,8 +125,10 @@ export function basicProcessing({
     }
   }
 
-  for (let aggregation of aggregations || []) {
-    thisRow[aggregation.name] = row[aggregation.name]
+  if (sdk.views.isView(source)) {
+    for (const key of Object.keys(helpers.views.calculationFields(source))) {
+      thisRow[key] = row[key]
+    }
   }
 
   let columns: string[] = Object.keys(table.schema)
@@ -163,28 +172,30 @@ export function basicProcessing({
       thisRow[col] = array
       // make sure all of them have an _id
       const sortField = relatedTable.primaryDisplay || relatedTable.primary![0]!
-      thisRow[col] = (thisRow[col] as Row[])
-        .map(relatedRow =>
-          basicProcessing({
-            row: relatedRow,
-            table: relatedTable,
-            tables,
-            isLinked: false,
-            sqs,
-          })
+      thisRow[col] = (
+        await Promise.all(
+          (thisRow[col] as Row[]).map(relatedRow =>
+            basicProcessing({
+              row: relatedRow,
+              source: relatedTable,
+              tables,
+              isLinked: false,
+              sqs,
+            })
+          )
         )
-        .sort((a, b) => {
-          const aField = a?.[sortField],
-            bField = b?.[sortField]
-          if (!aField) {
-            return 1
-          } else if (!bField) {
-            return -1
-          }
-          return aField.localeCompare
-            ? aField.localeCompare(bField)
-            : aField - bField
-        })
+      ).sort((a, b) => {
+        const aField = a?.[sortField],
+          bField = b?.[sortField]
+        if (!aField) {
+          return 1
+        } else if (!bField) {
+          return -1
+        }
+        return aField.localeCompare
+          ? aField.localeCompare(bField)
+          : aField - bField
+      })
     }
   }
   return fixJsonTypes(thisRow, table)

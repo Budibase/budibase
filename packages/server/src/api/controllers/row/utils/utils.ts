@@ -2,7 +2,6 @@ import * as utils from "../../../../db/utils"
 
 import { docIds } from "@budibase/backend-core"
 import {
-  Aggregation,
   Ctx,
   DatasourcePlusQueryResponse,
   FieldType,
@@ -15,7 +14,7 @@ import {
   processDates,
   processFormulas,
 } from "../../../../utilities/rowProcessor"
-import { isKnexEmptyReadResponse } from "./sqlUtils"
+import { isKnexRows } from "./sqlUtils"
 import { basicProcessing, generateIdForRow, getInternalRowId } from "./basic"
 import sdk from "../../../../sdk"
 import { processStringSync } from "@budibase/string-templates"
@@ -97,7 +96,7 @@ export async function getTableFromSource(source: Table | ViewV2) {
   return source
 }
 
-function fixBooleanFields({ row, table }: { row: Row; table: Table }) {
+function fixBooleanFields(row: Row, table: Table) {
   for (let col of Object.values(table.schema)) {
     if (col.type === FieldType.BOOLEAN) {
       if (row[col.name] === 1) {
@@ -115,53 +114,40 @@ export async function sqlOutputProcessing(
   source: Table | ViewV2,
   tables: Record<string, Table>,
   relationships: RelationshipsJson[],
-  opts?: { sqs?: boolean; aggregations?: Aggregation[] }
+  opts?: { sqs?: boolean }
 ): Promise<Row[]> {
-  if (isKnexEmptyReadResponse(rows)) {
+  if (!isKnexRows(rows)) {
     return []
   }
+
   let table: Table
   if (sdk.views.isView(source)) {
     table = await sdk.views.getTable(source.id)
   } else {
     table = source
   }
-  let finalRows: { [key: string]: Row } = {}
-  for (let row of rows as Row[]) {
-    let rowId = row._id
+
+  let processedRows: Row[] = []
+  for (let row of rows) {
     if (opts?.sqs) {
-      rowId = getInternalRowId(row, table)
-      row._id = rowId
-    } else if (!rowId) {
-      rowId = generateIdForRow(row, table)
-      row._id = rowId
+      row._id = getInternalRowId(row, table)
+    } else if (row._id == null) {
+      row._id = generateIdForRow(row, table)
     }
-    const thisRow = basicProcessing({
+
+    row = await basicProcessing({
       row,
-      table,
+      source,
       tables: Object.values(tables),
       isLinked: false,
       sqs: opts?.sqs,
-      aggregations: opts?.aggregations,
     })
-    if (thisRow._id == null) {
-      throw new Error("Unable to generate row ID for SQL rows")
-    }
-
-    finalRows[thisRow._id] = fixBooleanFields({ row: thisRow, table })
+    row = fixBooleanFields(row, table)
+    row = await processRelationshipFields(table, tables, row, relationships)
+    processedRows.push(row)
   }
 
-  // make sure all related rows are correct
-  let finalRowArray = []
-  for (let row of Object.values(finalRows)) {
-    finalRowArray.push(
-      await processRelationshipFields(table, tables, row, relationships)
-    )
-  }
-
-  // process some additional types
-  finalRowArray = processDates(table, finalRowArray)
-  return finalRowArray
+  return processDates(table, processedRows)
 }
 
 export function isUserMetadataTable(tableId: string) {
