@@ -1,6 +1,7 @@
 <script>
   import { getContext, onMount, tick } from "svelte"
-  import { canBeDisplayColumn, canBeSortColumn } from "@budibase/shared-core"
+  import { canBeSortColumn } from "@budibase/shared-core"
+  import { canBeDisplayColumn } from "@budibase/frontend-core"
   import { Icon, Menu, MenuItem, Modal } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
   import { getColumnIcon } from "../lib/utils"
@@ -347,8 +348,7 @@
         <MenuItem
           icon="Label"
           on:click={makeDisplayColumn}
-          disabled={column.primaryDisplay ||
-            !canBeDisplayColumn(column.schema.type)}
+          disabled={column.primaryDisplay || !canBeDisplayColumn(column.schema)}
         >
           Use as display column
         </MenuItem>
