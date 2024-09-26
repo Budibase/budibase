@@ -80,12 +80,14 @@
   bind:this={anchor}
 >
   {#each value || [] as attachment}
-    {#if isImage(attachment.extension)}
-      <img src={attachment.url} alt={attachment.extension} />
-    {:else}
-      <div class="file" title={attachment.name}>
-        {attachment.extension}
-      </div>
+    {#if attachment}
+      {#if isImage(attachment.extension)}
+        <img src={attachment.url} alt={attachment.extension} />
+      {:else}
+        <div class="file" title={attachment.name}>
+          {attachment.extension}
+        </div>
+      {/if}
     {/if}
   {/each}
 </div>
