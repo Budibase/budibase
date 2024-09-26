@@ -396,6 +396,11 @@
     padding: 6px 10px;
     margin-bottom: 8px;
   }
+
+  .compact .placeholder {
+    height: fit-content;
+  }
+
   .title {
     display: flex;
     flex-direction: row;
