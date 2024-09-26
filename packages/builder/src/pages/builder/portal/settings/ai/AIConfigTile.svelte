@@ -112,7 +112,7 @@
 
   .tag {
     display: flex;
-    color: var(--spectrum-body-m-text-color);
+    color: #FFFFFF;
     padding: 4px 8px;
     justify-content: center;
     align-items: center;
