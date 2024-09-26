@@ -5,7 +5,7 @@ import { getCellID, parseCellID } from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
-import { FieldType, RelationshipType } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import { getRelatedTableValues } from "../../../utils"
 
 export const createStores = () => {
