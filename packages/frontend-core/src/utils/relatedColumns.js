@@ -75,36 +75,32 @@ export function getRelatedTableValues(row, field, fromField) {
     fromField?.relationshipType === RelationshipType.ONE_TO_MANY
 
   let result = ""
-  try {
-    if (fromSingle) {
-      result = row[field.related.field]?.[0]?.[field.related.subField]
-    } else {
-      const parser = columnTypeManyParser[field.type] || (value => value)
 
-      result = parser(
-        row[field.related.field]
-          .flatMap(r => r[field.related.subField])
-          .filter(i => i !== undefined && i !== null),
-        field
-      )
+  if (fromSingle) {
+    result = row[field.related.field]?.[0]?.[field.related.subField]
+  } else {
+    const parser = columnTypeManyParser[field.type] || (value => value)
 
-      if (
-        [
-          FieldType.STRING,
-          FieldType.NUMBER,
-          FieldType.BIGINT,
-          FieldType.BOOLEAN,
-          FieldType.DATETIME,
-          FieldType.LONGFORM,
-          FieldType.BARCODEQR,
-        ].includes(field.type)
-      ) {
-        result = result.join(", ")
-      }
+    result = parser(
+      row[field.related.field]
+        ?.flatMap(r => r[field.related.subField])
+        ?.filter(i => i !== undefined && i !== null),
+      field
+    )
+
+    if (
+      [
+        FieldType.STRING,
+        FieldType.NUMBER,
+        FieldType.BIGINT,
+        FieldType.BOOLEAN,
+        FieldType.DATETIME,
+        FieldType.LONGFORM,
+        FieldType.BARCODEQR,
+      ].includes(field.type)
+    ) {
+      result = result?.join(", ")
     }
-  } catch (e) {
-    result = "Not rendable"
-    console.error(e.message)
   }
 
   return result
