@@ -460,7 +460,6 @@ export async function search(
     let finalRows = await outputProcessing(source, processed, {
       preserveLinks: true,
       squash: true,
-      aggregations,
     })
 
     const visibleFields =

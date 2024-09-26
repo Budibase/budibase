@@ -100,8 +100,10 @@ export async function basicProcessing({
   sqs?: boolean
 }): Promise<Row> {
   let table: Table
+  let isCalculationView = false
   if (sdk.views.isView(source)) {
     table = await sdk.views.getTable(source.id)
+    isCalculationView = helpers.views.isCalculationView(source)
   } else {
     table = source
   }
@@ -132,20 +134,22 @@ export async function basicProcessing({
   }
 
   let columns: string[] = Object.keys(table.schema)
-  if (!sqs) {
-    thisRow._id = generateIdForRow(row, table, isLinked)
-    thisRow.tableId = table._id
-    thisRow._rev = "rev"
-    columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)
-  } else {
-    columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)
-    for (let internalColumn of [...PROTECTED_INTERNAL_COLUMNS, ...columns]) {
-      thisRow[internalColumn] = extractFieldValue({
-        row,
-        tableName: table._id!,
-        fieldName: internalColumn,
-        isLinked,
-      })
+  if (!isCalculationView) {
+    if (!sqs) {
+      thisRow._id = generateIdForRow(row, table, isLinked)
+      thisRow.tableId = table._id
+      thisRow._rev = "rev"
+      columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)
+    } else {
+      columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)
+      for (let internalColumn of [...PROTECTED_INTERNAL_COLUMNS, ...columns]) {
+        thisRow[internalColumn] = extractFieldValue({
+          row,
+          tableName: table._id!,
+          fieldName: internalColumn,
+          isLinked,
+        })
+      }
     }
   }
   for (let col of columns) {

@@ -19,6 +19,7 @@ import { basicProcessing, generateIdForRow, getInternalRowId } from "./basic"
 import sdk from "../../../../sdk"
 import { processStringSync } from "@budibase/string-templates"
 import validateJs from "validate.js"
+import { helpers } from "@budibase/shared-core"
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -121,8 +122,10 @@ export async function sqlOutputProcessing(
   }
 
   let table: Table
+  let isCalculationView = false
   if (sdk.views.isView(source)) {
     table = await sdk.views.getTable(source.id)
+    isCalculationView = helpers.views.isCalculationView(source)
   } else {
     table = source
   }
@@ -131,7 +134,7 @@ export async function sqlOutputProcessing(
   for (let row of rows) {
     if (opts?.sqs) {
       row._id = getInternalRowId(row, table)
-    } else if (row._id == null) {
+    } else if (row._id == null && !isCalculationView) {
       row._id = generateIdForRow(row, table)
     }
 

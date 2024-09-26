@@ -1,5 +1,6 @@
 import dayjs from "dayjs"
 import {
+  Aggregation,
   AutoFieldSubType,
   AutoReason,
   Datasource,
@@ -47,7 +48,7 @@ import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import { dataFilters } from "@budibase/shared-core"
+import { dataFilters, helpers } from "@budibase/shared-core"
 
 export interface ManyRelationship {
   tableId?: string
@@ -682,12 +683,26 @@ export class ExternalRequest<T extends Operation> {
         }
       }
     }
+
     if (
       operation === Operation.DELETE &&
       (filters == null || Object.keys(filters).length === 0)
     ) {
       throw "Deletion must be filtered"
     }
+
+    let aggregations: Aggregation[] = []
+    if (sdk.views.isView(this.source)) {
+      const calculationFields = helpers.views.calculationFields(this.source)
+      for (const [key, field] of Object.entries(calculationFields)) {
+        aggregations.push({
+          name: key,
+          field: field.field,
+          calculationType: field.calculationType,
+        })
+      }
+    }
+
     let json: QueryJson = {
       endpoint: {
         datasourceId: this.datasource._id!,
@@ -697,10 +712,11 @@ export class ExternalRequest<T extends Operation> {
       resource: {
         // have to specify the fields to avoid column overlap (for SQL)
         fields: isSql
-          ? buildSqlFieldList(table, this.tables, {
+          ? await buildSqlFieldList(this.source, this.tables, {
               relationships: incRelationships,
             })
           : [],
+        aggregations,
       },
       filters,
       sort,
@@ -748,7 +764,7 @@ export class ExternalRequest<T extends Operation> {
     }
     const output = await sqlOutputProcessing(
       response,
-      table,
+      this.source,
       this.tables,
       relationships
     )

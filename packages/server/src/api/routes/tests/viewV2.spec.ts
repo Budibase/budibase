@@ -37,16 +37,15 @@ import {
   setEnv as setCoreEnv,
   env,
 } from "@budibase/backend-core"
-import sdk from "../../../sdk"
 
 describe.each([
-  // ["lucene", undefined],
+  ["lucene", undefined],
   ["sqs", undefined],
-  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/v2/views (%s)", (name, dsProvider) => {
   const config = setup.getConfig()
   const isSqs = name === "sqs"
@@ -2362,63 +2361,70 @@ describe.each([
         })
       })
 
-      describe("calculations", () => {
-        let table: Table
-        let rows: Row[]
+      !isLucene &&
+        describe("calculations", () => {
+          let table: Table
+          let rows: Row[]
 
-        beforeAll(async () => {
-          table = await config.api.table.save(
-            saveTableRequest({
-              schema: {
-                quantity: {
-                  type: FieldType.NUMBER,
-                  name: "quantity",
+          beforeAll(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  quantity: {
+                    type: FieldType.NUMBER,
+                    name: "quantity",
+                  },
+                  price: {
+                    type: FieldType.NUMBER,
+                    name: "price",
+                  },
                 },
-                price: {
-                  type: FieldType.NUMBER,
-                  name: "price",
+              })
+            )
+
+            rows = await Promise.all(
+              Array.from({ length: 10 }, () =>
+                config.api.row.save(table._id!, {
+                  quantity: generator.natural({ min: 1, max: 10 }),
+                  price: generator.natural({ min: 1, max: 10 }),
+                })
+              )
+            )
+          })
+
+          it("should be able to search by calculations", async () => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                "Quantity Sum": {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "quantity",
                 },
               },
             })
-          )
 
-          rows = await Promise.all(
-            Array.from({ length: 10 }, () =>
-              config.api.row.save(table._id!, {
-                quantity: generator.natural({ min: 1, max: 10 }),
-                price: generator.natural({ min: 1, max: 10 }),
-              })
+            const response = await config.api.viewV2.search(view.id, {
+              query: {},
+            })
+
+            expect(response.rows).toHaveLength(1)
+            expect(response.rows).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({
+                  "Quantity Sum": rows.reduce((acc, r) => acc + r.quantity, 0),
+                }),
+              ])
             )
-          )
-        })
 
-        it("should be able to search by calculations", async () => {
-          const view = await config.api.viewV2.create({
-            tableId: table._id!,
-            name: generator.guid(),
-            schema: {
-              "Quantity Sum": {
-                visible: true,
-                calculationType: CalculationType.SUM,
-                field: "quantity",
-              },
-            },
+            // Calculation views do not return rows that can be linked back to
+            // the source table, and so should not have an _id field.
+            for (const row of response.rows) {
+              expect("_id" in row).toBe(false)
+            }
           })
-
-          const response = await config.api.viewV2.search(view.id, {
-            query: {},
-          })
-
-          expect(response.rows).toHaveLength(1)
-          expect(response.rows).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                "Quantity Sum": rows.reduce((acc, r) => acc + r.quantity, 0),
-              }),
-            ])
-          )
         })
-      })
     })
 
     describe("permissions", () => {

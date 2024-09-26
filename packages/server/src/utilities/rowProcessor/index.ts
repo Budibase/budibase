@@ -11,7 +11,6 @@ import {
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import {
-  Aggregation,
   AutoFieldSubType,
   FieldType,
   IdentityType,
@@ -263,7 +262,6 @@ export async function outputProcessing<T extends Row[] | Row>(
     preserveLinks?: boolean
     fromRow?: Row
     skipBBReferences?: boolean
-    aggregations?: Aggregation[]
   } = {
     squash: true,
     preserveLinks: false,
@@ -411,8 +409,11 @@ export async function outputProcessing<T extends Row[] | Row>(
       f.toLowerCase()
     )
 
-    for (const aggregation of opts.aggregations || []) {
-      fields.push(aggregation.name.toLowerCase())
+    if (sdk.views.isView(source)) {
+      const aggregations = helpers.views.calculationFields(source)
+      for (const key of Object.keys(aggregations)) {
+        fields.push(key.toLowerCase())
+      }
     }
 
     for (const row of enriched) {
