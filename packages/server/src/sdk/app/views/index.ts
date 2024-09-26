@@ -53,7 +53,7 @@ export async function getTable(view: string | ViewV2): Promise<Table> {
 }
 
 export function isView(view: any): view is ViewV2 {
-  return view._id && docIds.isViewId(view._id) && view.version === 2
+  return view.id && docIds.isViewId(view.id) && view.version === 2
 }
 
 async function guardCalculationViewSchema(
