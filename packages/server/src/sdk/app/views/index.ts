@@ -9,7 +9,7 @@ import {
   ViewV2ColumnEnriched,
   ViewV2Enriched,
 } from "@budibase/types"
-import { context, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
@@ -53,9 +53,7 @@ export async function getTable(view: string | ViewV2): Promise<Table> {
 }
 
 export function isView(view: any): view is ViewV2 {
-  return (
-    view.version === 2 && "id" in view && "tableId" in view && "name" in view
-  )
+  return view._id && docIds.isViewId(view._id) && view.version === 2
 }
 
 async function guardCalculationViewSchema(
