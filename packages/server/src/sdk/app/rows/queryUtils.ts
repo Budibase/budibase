@@ -110,7 +110,7 @@ export const getQueryableFields = async (
     "_id", // Querying by _id is always allowed, even if it's never part of the schema
   ]
 
-  if (fields === undefined) {
+  if (fields == null) {
     fields = Object.keys(table.schema)
   }
   result.push(...(await extractTableFields(table, fields, [table._id!])))
