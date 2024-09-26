@@ -137,31 +137,43 @@
         <Tags>
           <Tag icon="LockClosed">Enterprise</Tag>
         </Tags>
-      {:else}
-        <Button size="S" cta on:click={newConfig}>Add configuration</Button>
       {/if}
     </div>
     <Body>Configure your AI settings within this section:</Body>
   </Layout>
   <Divider />
-  <Layout noPadding>
-    <div class="config-heading">
-      <Heading size="S">AI Configurations</Heading>
-    </div>
-    <Body size="S"
-      >Use the following interface to select your preferred AI configuration.</Body
-    >
-    <Body size="S">Select your AI Model:</Body>
-    {#if fullAIConfig?.config}
-      {#each Object.keys(fullAIConfig.config) as key}
-        <AIConfigTile
-          config={fullAIConfig.config[key]}
-          editHandler={() => editConfig(key)}
-          deleteHandler={() => deleteConfig(key)}
-        />
-      {/each}
-    {/if}
-  </Layout>
+  <div style={`opacity: ${customAIConfigsEnabled ? 1 : 0.5}`}>
+    <Layout noPadding>
+      <div class="config-heading">
+        <Heading size="S">AI Configurations</Heading>
+        <Button
+          size="S"
+          cta={customAIConfigsEnabled}
+          secondary={!customAIConfigsEnabled}
+          on:click={customAIConfigsEnabled ? newConfig : null}
+        >
+          Add configuration
+        </Button>
+      </div>
+      <Body size="S"
+        >Use the following interface to select your preferred AI configuration.</Body
+      >
+      {#if customAIConfigsEnabled}
+        <Body size="S">Select your AI Model:</Body>
+      {/if}
+      {#if fullAIConfig?.config}
+        {#each Object.keys(fullAIConfig.config) as key}
+          <AIConfigTile
+            config={fullAIConfig.config[key]}
+            editHandler={customAIConfigsEnabled ? () => editConfig(key) : null}
+            deleteHandler={customAIConfigsEnabled
+              ? () => deleteConfig(key)
+              : null}
+          />
+        {/each}
+      {/if}
+    </Layout>
+  </div>
 </Layout>
 
 <style>
@@ -169,6 +181,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: -18px;
   }
 
   .header {
