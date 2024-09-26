@@ -82,7 +82,9 @@ export function getRelatedTableValues(row, field, fromField) {
       const parser = columnTypeManyParser[field.type] || (value => value)
 
       result = parser(
-        row[field.related.field].flatMap(r => r[field.related.subField]),
+        row[field.related.field]
+          .flatMap(r => r[field.related.subField])
+          .filter(i => i !== undefined && i !== null),
         field
       )
 
