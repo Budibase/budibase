@@ -1,7 +1,6 @@
 <script>
   import { getContext, onMount, tick } from "svelte"
-  import { canBeSortColumn } from "@budibase/shared-core"
-  import { canBeDisplayColumn } from "@budibase/frontend-core"
+  import { canBeSortColumn, canBeDisplayColumn } from "@budibase/frontend-core"
   import { Icon, Menu, MenuItem, Modal } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
   import { getColumnIcon } from "../lib/utils"
@@ -355,7 +354,7 @@
         <MenuItem
           icon="SortOrderUp"
           on:click={sortAscending}
-          disabled={!canBeSortColumn(column.schema.type) ||
+          disabled={!canBeSortColumn(column.schema) ||
             (column.name === $sort.column && $sort.order === "ascending")}
         >
           Sort {sortingLabels.ascending}
@@ -363,7 +362,7 @@
         <MenuItem
           icon="SortOrderDown"
           on:click={sortDescending}
-          disabled={!canBeSortColumn(column.schema.type) ||
+          disabled={!canBeSortColumn(column.schema) ||
             (column.name === $sort.column && $sort.order === "descending")}
         >
           Sort {sortingLabels.descending}

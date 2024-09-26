@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Popover, Select } from "@budibase/bbui"
-  import { canBeSortColumn } from "@budibase/shared-core"
+  import { canBeSortColumn } from "@budibase/frontend-core"
 
   const { sort, columns } = getContext("grid")
 
@@ -14,7 +14,7 @@
       value: col.name,
       type: col.schema?.type,
     }))
-    .filter(col => canBeSortColumn(col.type))
+    .filter(col => canBeSortColumn(col))
   $: orderOptions = getOrderOptions($sort.column, columnOptions)
 
   const getOrderOptions = (column, columnOptions) => {
