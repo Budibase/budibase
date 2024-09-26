@@ -277,5 +277,7 @@ export const flags = new FlagSet({
   AUTOMATION_BRANCHING: Flag.boolean(env.isDev()),
   SQS: Flag.boolean(env.isDev()),
   [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(env.isDev()),
-  [FeatureFlag.ENRICHED_RELATIONSHIPS]: Flag.boolean(env.isDev()),
+  [FeatureFlag.ENRICHED_RELATIONSHIPS]: Flag.boolean(
+    env.isDev() && !env.isTest()
+  ),
 })
