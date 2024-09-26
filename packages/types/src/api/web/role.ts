@@ -6,7 +6,7 @@ export interface SaveRoleRequest {
   name: string
   inherits?: string | string[]
   permissionId: string
-  version: string
+  version?: string
   uiMetadata?: RoleUIMetadata
 }
 
