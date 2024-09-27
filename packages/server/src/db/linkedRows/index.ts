@@ -12,7 +12,6 @@ import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import {
   coreOutputProcessing,
-  outputProcessing,
   processFormulas,
 } from "../../utilities/rowProcessor"
 import { context, features } from "@budibase/backend-core"
