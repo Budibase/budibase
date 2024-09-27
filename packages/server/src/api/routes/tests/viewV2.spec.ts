@@ -2417,6 +2417,11 @@ describe.each([
           level: PermissionLevel.READ,
           resourceId: table._id!,
         })
+        await config.api.permission.revoke({
+          roleId: roles.BUILTIN_ROLE_IDS.PUBLIC, // Don't think this matters since we are revoking the permission
+          level: PermissionLevel.READ,
+          resourceId: view.id,
+        })
         await config.publish()
 
         const response = await config.api.viewV2.publicSearch(view.id)
