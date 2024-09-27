@@ -1,4 +1,5 @@
 <script>
+  import { enrichSchemaWithRelColumns } from "@budibase/frontend-core"
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen, componentStore } from "stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
@@ -27,7 +28,8 @@
       delete schema._rev
     }
 
-    return schema
+    const result = enrichSchemaWithRelColumns(schema)
+    return result
   }
 
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
