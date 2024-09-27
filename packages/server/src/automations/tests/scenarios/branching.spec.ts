@@ -32,25 +32,25 @@ describe("Branching automations", () => {
                 steps: stepBuilder =>
                   stepBuilder.serverLog({ text: "Branch 1.1" }),
                 condition: {
-                  equal: { "steps.1.success": true },
+                  equal: { "{{steps.1.success}}": true },
                 },
               },
               branch2: {
                 steps: stepBuilder =>
                   stepBuilder.serverLog({ text: "Branch 1.2" }),
                 condition: {
-                  equal: { "steps.1.success": false },
+                  equal: { "{{steps.1.success}}": false },
                 },
               },
             }),
           condition: {
-            equal: { "steps.1.success": true },
+            equal: { "{{steps.1.success}}": true },
           },
         },
         topLevelBranch2: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
           condition: {
-            equal: { "steps.1.success": false },
+            equal: { "{{steps.1.success}}": false },
           },
         },
       })
@@ -70,14 +70,14 @@ describe("Branching automations", () => {
         activeBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Active user" }),
           condition: {
-            equal: { "trigger.fields.status": "active" },
+            equal: { "{{trigger.fields.status}}": "active" },
           },
         },
         inactiveBranch: {
           steps: stepBuilder =>
             stepBuilder.serverLog({ text: "Inactive user" }),
           condition: {
-            equal: { "trigger.fields.status": "inactive" },
+            equal: { "{{trigger.fields.status}}": "inactive" },
           },
         },
       })
@@ -102,8 +102,8 @@ describe("Branching automations", () => {
           condition: {
             $and: {
               conditions: [
-                { equal: { "trigger.fields.status": "active" } },
-                { equal: { "trigger.fields.role": "admin" } },
+                { equal: { "{{trigger.fields.status}}": "active" } },
+                { equal: { "{{trigger.fields.role}}": "admin" } },
               ],
             },
           },
@@ -111,7 +111,7 @@ describe("Branching automations", () => {
         otherBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Other user" }),
           condition: {
-            notEqual: { "trigger.fields.status": "active" },
+            notEqual: { "{{trigger.fields.status}}": "active" },
           },
         },
       })
@@ -133,8 +133,8 @@ describe("Branching automations", () => {
           condition: {
             $or: {
               conditions: [
-                { equal: { "trigger.fields.status": "test" } },
-                { equal: { "trigger.fields.role": "admin" } },
+                { equal: { "{{trigger.fields.status}}": "test" } },
+                { equal: { "{{trigger.fields.role}}": "admin" } },
               ],
             },
           },
@@ -144,8 +144,8 @@ describe("Branching automations", () => {
           condition: {
             $and: {
               conditions: [
-                { notEqual: { "trigger.fields.status": "active" } },
-                { notEqual: { "trigger.fields.role": "admin" } },
+                { notEqual: { "{{trigger.fields.status}}": "active" } },
+                { notEqual: { "{{trigger.fields.role}}": "admin" } },
               ],
             },
           },
@@ -170,8 +170,8 @@ describe("Branching automations", () => {
           condition: {
             $or: {
               conditions: [
-                { equal: { "trigger.fields.status": "new" } },
-                { equal: { "trigger.fields.role": "admin" } },
+                { equal: { "{{trigger.fields.status}}": "new" } },
+                { equal: { "{{trigger.fields.role}}": "admin" } },
               ],
             },
           },
@@ -181,8 +181,8 @@ describe("Branching automations", () => {
           condition: {
             $and: {
               conditions: [
-                { equal: { "trigger.fields.status": "active" } },
-                { equal: { "trigger.fields.role": "admin" } },
+                { equal: { "{{trigger.fields.status}}": "active" } },
+                { equal: { "{{trigger.fields.role}}": "admin" } },
               ],
             },
           },
