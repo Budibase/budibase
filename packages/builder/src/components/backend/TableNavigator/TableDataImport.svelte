@@ -1,7 +1,8 @@
 <script>
   import { Select, Icon } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import { canBeDisplayColumn, utils } from "@budibase/shared-core"
+  import { utils } from "@budibase/shared-core"
+  import { canBeDisplayColumn } from "@budibase/frontend-core"
   import { API } from "api"
   import { parseFile } from "./utils"
 
@@ -100,10 +101,10 @@
   let rawRows = []
 
   $: displayColumnOptions = Object.keys(schema || {}).filter(column => {
-    return validation[column] && canBeDisplayColumn(schema[column].type)
+    return validation[column] && canBeDisplayColumn(schema[column])
   })
 
-  $: if (displayColumn && !canBeDisplayColumn(schema[displayColumn].type)) {
+  $: if (displayColumn && !canBeDisplayColumn(schema[displayColumn])) {
     displayColumn = null
   }
 
