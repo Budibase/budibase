@@ -266,16 +266,12 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
   let enriched: Row[]
   // SQS returns the rows with full relationship contents
-  if (!(await features.flags.isEnabled("SQS"))) {
-    // attach any linked row information
-    enriched = !opts.preserveLinks
-      ? await linkRows.attachFullLinkedDocs(table.schema, safeRows, {
-          fromRow: opts?.fromRow,
-        })
-      : safeRows
-  } else {
-    enriched = cloneDeep(safeRows)
-  }
+  // attach any linked row information
+  enriched = !opts.preserveLinks
+    ? await linkRows.attachFullLinkedDocs(table.schema, safeRows, {
+        fromRow: opts?.fromRow,
+      })
+    : safeRows
 
   if (!opts.squash && utils.hasCircularStructure(rows)) {
     opts.squash = true
