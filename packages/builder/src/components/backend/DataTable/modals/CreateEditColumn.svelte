@@ -137,7 +137,9 @@
   $: initialiseField(field, savingColumn)
   $: checkConstraints(editableColumn)
   $: required =
-    primaryDisplay || (!hasDefault && !!editableColumn?.constraints?.presence)
+    primaryDisplay ||
+    editableColumn?.constraints?.presence === true ||
+    editableColumn?.constraints?.presence?.allowEmpty === false
   $: uneditable =
     $tables.selected?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(editableColumn.name)
