@@ -40,9 +40,9 @@ export function enrichSchemaWithRelColumns(schema) {
   if (!schema) {
     return
   }
-  const result = Object.keys(schema).reduce((acc, c) => {
-    const field = schema[c]
-    acc[c] = field
+  const result = Object.keys(schema).reduce((result, fieldName) => {
+    const field = schema[fieldName]
+    result[fieldName] = field
 
     if (field.visible !== false && field.columns) {
       const fromSingle =
@@ -54,17 +54,17 @@ export function enrichSchemaWithRelColumns(schema) {
           continue
         }
         const name = `${field.name}.${relColumn}`
-        acc[name] = {
+        result[name] = {
           ...relField,
           name,
-          related: { field: c, subField: relColumn },
+          related: { field: fieldName, subField: relColumn },
           cellRenderType:
             (!fromSingle && columnTypeManyTypeOverrides[relField.type]) ||
             relField.type,
         }
       }
     }
-    return acc
+    return result
   }, {})
 
   return result

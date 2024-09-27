@@ -55,10 +55,10 @@ export const deriveStores = context => {
       return $rows.map((row, idx) => ({
         ...row,
         __idx: idx,
-        ...customColumns.reduce((acc, c) => {
-          const fromField = $enrichedSchema[c.related.field]
-          acc[c.name] = getRelatedTableValues(row, c, fromField)
-          return acc
+        ...customColumns.reduce((map, column) => {
+          const fromField = $enrichedSchema[column.related.field]
+          map[column.name] = getRelatedTableValues(row, column, fromField)
+          return map
         }, {}),
       }))
     }
