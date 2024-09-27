@@ -6,6 +6,7 @@ import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
 import { FieldType } from "@budibase/types"
+import { getRelatedTableValues } from "../../../utils"
 
 export const createStores = () => {
   const rows = writable([])
@@ -42,15 +43,26 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { rows } = context
+  const { rows, enrichedSchema } = context
 
   // Enrich rows with an index property and any pending changes
-  const enrichedRows = derived(rows, $rows => {
-    return $rows.map((row, idx) => ({
-      ...row,
-      __idx: idx,
-    }))
-  })
+  const enrichedRows = derived(
+    [rows, enrichedSchema],
+    ([$rows, $enrichedSchema]) => {
+      const customColumns = Object.values($enrichedSchema || {}).filter(
+        f => f.related
+      )
+      return $rows.map((row, idx) => ({
+        ...row,
+        __idx: idx,
+        ...customColumns.reduce((map, column) => {
+          const fromField = $enrichedSchema[column.related.field]
+          map[column.name] = getRelatedTableValues(row, column, fromField)
+          return map
+        }, {}),
+      }))
+    }
+  )
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(enrichedRows, $enrichedRows => {
