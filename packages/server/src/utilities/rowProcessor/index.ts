@@ -264,10 +264,9 @@ export async function outputProcessing<T extends Row[] | Row>(
   } else {
     safeRows = rows
   }
-  let enriched: Row[]
   // SQS returns the rows with full relationship contents
   // attach any linked row information
-  enriched = !opts.preserveLinks
+  let enriched = !opts.preserveLinks
     ? await linkRows.attachFullLinkedDocs(table.schema, safeRows, {
         fromRow: opts?.fromRow,
       })
