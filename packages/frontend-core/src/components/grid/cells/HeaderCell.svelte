@@ -165,7 +165,17 @@
   }
 
   const hideColumn = () => {
-    datasource.actions.addSchemaMutation(column.name, { visible: false })
+    const { related } = column
+    const mutation = { visible: false }
+    if (!related) {
+      datasource.actions.addSchemaMutation(column.name, mutation)
+    } else {
+      datasource.actions.addSubSchemaMutation(
+        related.subField,
+        related.field,
+        mutation
+      )
+    }
     datasource.actions.saveSchemaMutations()
     open = false
   }
