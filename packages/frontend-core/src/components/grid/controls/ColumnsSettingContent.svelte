@@ -122,8 +122,10 @@
       label: name,
       schema: {
         type: column.type,
+        subtype: column.subtype,
         visible: column.visible,
         readonly: column.readonly,
+        constraints: column.constraints, // This is needed to properly display "users" column
       },
     }
   })
