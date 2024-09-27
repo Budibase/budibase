@@ -2066,7 +2066,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.32.5":
+"@budibase/backend-core@2.32.8":
   version "0.0.0"
   dependencies:
     "@budibase/nano" "10.1.5"
@@ -2147,14 +2147,15 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "2.32.5"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.32.5.tgz#2beecf566da972a92200faddc97bc152ea2bbdea"
-  integrity sha512-afrklI2A8P7pfl/3KxysqO2Sjr0l2yQ1+jyuouEZliEklLxV8AFlzrODr4V2SK3J8E1xk8wG5ztYQS2uT7TnuA==
+  version "2.32.8"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.32.8.tgz#1b42da2ca7a496ba1ea8687cde6e7f3a8da47e48"
+  integrity sha512-NlY8DkD54FVcy6sL4T+wBJr/KQjXv6CGlqcHyjWVRBd8k/xLTzivrC5gVryDrkja/5ZxIm0qBKVlE81H6urLNA==
   dependencies:
-    "@budibase/backend-core" "2.32.5"
-    "@budibase/shared-core" "2.32.5"
-    "@budibase/string-templates" "2.32.5"
-    "@budibase/types" "2.32.5"
+    "@anthropic-ai/sdk" "^0.27.3"
+    "@budibase/backend-core" "2.32.8"
+    "@budibase/shared-core" "2.32.8"
+    "@budibase/string-templates" "2.32.8"
+    "@budibase/types" "2.32.8"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     dd-trace "5.2.0"
@@ -2163,16 +2164,17 @@
     lru-cache "^7.14.1"
     memorystream "^0.3.1"
     node-fetch "2.6.7"
+    openai "4.59.0"
     scim-patch "^0.8.1"
     scim2-parse-filter "^0.2.8"
 
-"@budibase/shared-core@2.32.5":
+"@budibase/shared-core@2.32.8":
   version "0.0.0"
   dependencies:
     "@budibase/types" "0.0.0"
     cron-validate "1.4.5"
 
-"@budibase/string-templates@2.32.5":
+"@budibase/string-templates@2.32.8":
   version "0.0.0"
   dependencies:
     "@budibase/handlebars-helpers" "^0.13.2"
@@ -2180,7 +2182,7 @@
     handlebars "^4.7.8"
     lodash.clonedeep "^4.5.0"
 
-"@budibase/types@2.32.5":
+"@budibase/types@2.32.8":
   version "0.0.0"
   dependencies:
     scim-patch "^0.8.1"
