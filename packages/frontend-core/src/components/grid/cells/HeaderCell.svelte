@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount, tick } from "svelte"
-  import { canBeDisplayColumn, canBeSortColumn } from "@budibase/shared-core"
+  import { canBeSortColumn, canBeDisplayColumn } from "@budibase/frontend-core"
   import { Icon, Menu, MenuItem, Modal } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
   import { getColumnIcon } from "../lib/utils"
@@ -165,7 +165,17 @@
   }
 
   const hideColumn = () => {
-    datasource.actions.addSchemaMutation(column.name, { visible: false })
+    const { related } = column
+    const mutation = { visible: false }
+    if (!related) {
+      datasource.actions.addSchemaMutation(column.name, mutation)
+    } else {
+      datasource.actions.addSubSchemaMutation(
+        related.subField,
+        related.field,
+        mutation
+      )
+    }
     datasource.actions.saveSchemaMutations()
     open = false
   }
@@ -347,15 +357,14 @@
         <MenuItem
           icon="Label"
           on:click={makeDisplayColumn}
-          disabled={column.primaryDisplay ||
-            !canBeDisplayColumn(column.schema.type)}
+          disabled={column.primaryDisplay || !canBeDisplayColumn(column.schema)}
         >
           Use as display column
         </MenuItem>
         <MenuItem
           icon="SortOrderUp"
           on:click={sortAscending}
-          disabled={!canBeSortColumn(column.schema.type) ||
+          disabled={!canBeSortColumn(column.schema) ||
             (column.name === $sort.column && $sort.order === "ascending")}
         >
           Sort {sortingLabels.ascending}
@@ -363,7 +372,7 @@
         <MenuItem
           icon="SortOrderDown"
           on:click={sortDescending}
-          disabled={!canBeSortColumn(column.schema.type) ||
+          disabled={!canBeSortColumn(column.schema) ||
             (column.name === $sort.column && $sort.order === "descending")}
         >
           Sort {sortingLabels.descending}

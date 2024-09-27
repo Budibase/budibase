@@ -38,6 +38,7 @@ export const createActions = context => {
       initialWidth: column.width,
       initialMouseX: x,
       column: column.name,
+      related: column.related,
     })
 
     // Add mouse event listeners to handle resizing
@@ -50,7 +51,7 @@ export const createActions = context => {
 
   // Handler for moving the mouse to resize columns
   const onResizeMouseMove = e => {
-    const { initialMouseX, initialWidth, width, column } = get(resize)
+    const { initialMouseX, initialWidth, width, column, related } = get(resize)
     const { x } = parseEventLocation(e)
     const dx = x - initialMouseX
     const newWidth = Math.round(Math.max(MinColumnWidth, initialWidth + dx))
@@ -61,7 +62,13 @@ export const createActions = context => {
     }
 
     // Update column state
-    datasource.actions.addSchemaMutation(column, { width })
+    if (!related) {
+      datasource.actions.addSchemaMutation(column, { width })
+    } else {
+      datasource.actions.addSubSchemaMutation(related.subField, related.field, {
+        width,
+      })
+    }
 
     // Update state
     resize.update(state => ({

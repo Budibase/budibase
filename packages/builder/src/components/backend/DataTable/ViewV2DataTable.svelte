@@ -1,6 +1,6 @@
 <script>
   import { viewsV2 } from "stores/builder"
-  import { admin } from "stores/portal"
+  import { admin, themeStore } from "stores/portal"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
@@ -16,6 +16,9 @@
     tableId: $viewsV2.selected?.tableId,
   }
 
+  $: currentTheme = $themeStore?.theme
+  $: darkMode = !currentTheme.includes("light")
+
   const handleGridViewUpdate = async e => {
     viewsV2.replaceView(id, e.detail)
   }
@@ -25,6 +28,7 @@
   <Grid
     {API}
     {datasource}
+    {darkMode}
     allowAddRows
     allowDeleteRows
     showAvatars={false}
