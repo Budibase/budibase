@@ -18,6 +18,7 @@ import {
   RowAttachment,
   Table,
   User,
+  ViewV2,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -33,7 +34,11 @@ import {
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
 import { processString } from "@budibase/string-templates"
-import { isUserMetadataTable } from "../../api/controllers/row/utils"
+import {
+  getTableFromSource,
+  isUserMetadataTable,
+} from "../../api/controllers/row/utils"
+import sdk from "../../sdk"
 
 export * from "./utils"
 export * from "./attachments"
@@ -67,6 +72,7 @@ export async function processAutoColumn(
   // check its not user table, or whether any of the processing options have been disabled
   const shouldUpdateUserFields =
     !isUserTable && !opts?.reprocessing && !opts?.noAutoRelationships && !noUser
+  let tableMutated = false
   for (let [key, schema] of Object.entries(table.schema)) {
     if (!schema.autocolumn) {
       continue
@@ -99,9 +105,16 @@ export async function processAutoColumn(
           row[key] = schema.lastID + 1
           schema.lastID++
           table.schema[key] = schema
+          tableMutated = true
         }
         break
     }
+  }
+
+  if (tableMutated) {
+    const db = context.getAppDB()
+    const resp = await db.put(table)
+    table._rev = resp.rev
   }
 }
 
@@ -169,11 +182,12 @@ export function coerce(row: any, type: string) {
  */
 export async function inputProcessing(
   userId: string | null | undefined,
-  table: Table,
+  source: Table | ViewV2,
   row: Row,
   opts?: AutoColumnProcessingOpts
 ) {
   const clonedRow = cloneDeep(row)
+  const table = await getTableFromSource(source)
 
   const dontCleanseKeys = ["type", "_id", "_rev", "tableId"]
   for (const [key, value] of Object.entries(clonedRow)) {
@@ -228,8 +242,7 @@ export async function inputProcessing(
 
   await processAutoColumn(userId, table, clonedRow, opts)
   await processDefaultValues(table, clonedRow)
-
-  return { table, row: clonedRow }
+  return clonedRow
 }
 
 /**
@@ -242,14 +255,13 @@ export async function inputProcessing(
  * @returns the enriched rows will be returned.
  */
 export async function outputProcessing<T extends Row[] | Row>(
-  table: Table,
+  source: Table | ViewV2,
   rows: T,
   opts: {
     squash?: boolean
     preserveLinks?: boolean
     fromRow?: Row
     skipBBReferences?: boolean
-    fromViewId?: string
   } = {
     squash: true,
     preserveLinks: false,
@@ -264,6 +276,14 @@ export async function outputProcessing<T extends Row[] | Row>(
   } else {
     safeRows = rows
   }
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
+
   // attach any linked row information
   let enriched = !opts.preserveLinks
     ? await linkRows.attachFullLinkedDocs(table.schema, safeRows, {
@@ -353,10 +373,9 @@ export async function outputProcessing<T extends Row[] | Row>(
   enriched = await processFormulas(table, enriched, { dynamic: true })
 
   if (opts.squash) {
-    enriched = await linkRows.squashLinks(table, enriched, {
-      fromViewId: opts?.fromViewId,
-    })
+    enriched = await linkRows.squashLinks(source, enriched)
   }
+
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
   if (isExternal || (await features.flags.isEnabled("SQS"))) {
@@ -385,9 +404,18 @@ export async function outputProcessing<T extends Row[] | Row>(
     const tableFields = Object.keys(table.schema).filter(
       f => table.schema[f].visible !== false
     )
+
     const fields = [...tableFields, ...protectedColumns].map(f =>
       f.toLowerCase()
     )
+
+    if (sdk.views.isView(source)) {
+      const aggregations = helpers.views.calculationFields(source)
+      for (const key of Object.keys(aggregations)) {
+        fields.push(key.toLowerCase())
+      }
+    }
+
     for (const row of enriched) {
       for (const key of Object.keys(row)) {
         if (!fields.includes(key.toLowerCase())) {

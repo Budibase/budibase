@@ -1,10 +1,10 @@
-import { db, roles } from "@budibase/backend-core"
+import { db, docIds, roles } from "@budibase/backend-core"
 import {
   PermissionLevel,
   PermissionSource,
   VirtualDocumentType,
 } from "@budibase/types"
-import { extractViewInfoFromID, isViewID } from "../../../db/utils"
+import { extractViewInfoFromID } from "../../../db/utils"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
@@ -20,7 +20,7 @@ type ResourcePermissions = Record<
 export async function getInheritablePermissions(
   resourceId: string
 ): Promise<ResourcePermissions | undefined> {
-  if (isViewID(resourceId)) {
+  if (docIds.isViewId(resourceId)) {
     return await getResourcePerms(extractViewInfoFromID(resourceId).tableId)
   }
 }

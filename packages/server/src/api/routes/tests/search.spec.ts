@@ -157,7 +157,11 @@ describe.each([
       if (isInMemory) {
         return dataFilters.search(_.cloneDeep(rows), this.query)
       } else {
-        return config.api.row.search(this.query.tableId, this.query)
+        const sourceId = this.query.viewId || this.query.tableId
+        if (!sourceId) {
+          throw new Error("No source ID provided")
+        }
+        return config.api.row.search(sourceId, this.query)
       }
     }
 
