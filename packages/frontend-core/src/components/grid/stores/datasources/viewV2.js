@@ -120,25 +120,29 @@ export const initialise = context => {
     // When sorting changes, ensure view definition is kept up to date
     unsubscribers.push(
       sort.subscribe(async $sort => {
+        // Ensure we're updating the correct view
+        const $view = get(definition)
+        if ($view?.id !== $datasource.id) {
+          return
+        }
+
+        // Skip if nothing actually changed
+        if (
+          $sort?.column === $view.sort?.field &&
+          $sort?.order === $view.sort?.order
+        ) {
+          return
+        }
+
         // If we can mutate schema then update the view definition
         if (get(config).canSaveSchema) {
-          // Ensure we're updating the correct view
-          const $view = get(definition)
-          if ($view?.id !== $datasource.id) {
-            return
-          }
-          if (
-            $sort?.column !== $view.sort?.field ||
-            $sort?.order !== $view.sort?.order
-          ) {
-            await datasource.actions.saveDefinition({
-              ...$view,
-              sort: {
-                field: $sort.column,
-                order: $sort.order || "ascending",
-              },
-            })
-          }
+          await datasource.actions.saveDefinition({
+            ...$view,
+            sort: {
+              field: $sort.column,
+              order: $sort.order || "ascending",
+            },
+          })
         }
 
         // Also update the fetch to ensure the new sort is respected.
