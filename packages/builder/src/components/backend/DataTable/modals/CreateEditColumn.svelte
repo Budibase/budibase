@@ -19,7 +19,6 @@
     helpers,
     PROTECTED_INTERNAL_COLUMNS,
     PROTECTED_EXTERNAL_COLUMNS,
-    canBeDisplayColumn,
     canHaveDefaultColumn,
   } from "@budibase/shared-core"
   import { createEventDispatcher, getContext, onMount } from "svelte"
@@ -43,7 +42,7 @@
     SourceName,
   } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
-  import { RowUtils } from "@budibase/frontend-core"
+  import { RowUtils, canBeDisplayColumn } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import OptionsEditor from "./OptionsEditor.svelte"
   import { isEnabled } from "helpers/featureFlags"
@@ -166,7 +165,7 @@
     : availableAutoColumns
   // used to select what different options can be displayed for column type
   $: canBeDisplay =
-    canBeDisplayColumn(editableColumn.type) && !editableColumn.autocolumn
+    canBeDisplayColumn(editableColumn) && !editableColumn.autocolumn
   $: canHaveDefault =
     isEnabled("DEFAULT_VALUES") && canHaveDefaultColumn(editableColumn.type)
   $: canBeRequired =
