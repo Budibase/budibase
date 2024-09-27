@@ -835,9 +835,9 @@ describe("/rowsActions", () => {
 
             // Delete explicit view permissions so they inherit table permissions
             await config.api.permission.revoke({
+              roleId: roles.BUILTIN_ROLE_IDS.PUBLIC, // Don't think this matters since we are revoking the permission
               level: PermissionLevel.READ,
               resourceId: viewId,
-              roleId: "inherited",
             })
 
             return { permissionResource: tableId, triggerResouce: viewId }
