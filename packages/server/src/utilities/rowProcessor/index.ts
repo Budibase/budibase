@@ -292,6 +292,12 @@ export async function outputProcessing<T extends Row[] | Row>(
   return (wasArray ? enriched : enriched[0]) as T
 }
 
+/**
+ * This function is similar to the outputProcessing function above, it makes sure that all the provided
+ * rows are ready for output, but does not have enrichment for squash capabilities which can cause performance issues.
+ * outputProcessing should be used when responding from the API, while this should be used when internally processing
+ * rows for any reason (like part of view operations).
+ */
 export async function coreOutputProcessing(
   table: Table,
   rows: Row[],
