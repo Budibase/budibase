@@ -1,5 +1,10 @@
 <script>
   import { redirect } from "@roxi/routify"
+  import { licensing } from "stores/portal"
 
-  $redirect("./auth")
+  if ($licensing.customAIConfigsEnabled) {
+    $redirect("./ai")
+  } else {
+    $redirect("./auth")
+  }
 </script>
