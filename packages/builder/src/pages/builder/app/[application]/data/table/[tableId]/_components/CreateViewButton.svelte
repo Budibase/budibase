@@ -1,12 +1,13 @@
 <script>
   import DetailPopover from "components/common/DetailPopover.svelte"
-  import { Input, notifications, Button, Icon } from "@budibase/bbui"
+  import { Input, notifications, Button, Icon, ListItem } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { viewsV2 } from "stores/builder"
 
   export let table
   export let firstView = false
 
+  let calculation = false
   let name
   let popover
 
@@ -39,6 +40,7 @@
         tableId: table._id,
         schema: enrichSchema(table.schema),
         primaryDisplay: table.primaryDisplay,
+        calculation,
       })
       notifications.success(`View ${name} created`)
       $goto(`./${newView.id}`)
@@ -52,6 +54,7 @@
   title="Create view"
   bind:this={popover}
   on:open={() => (name = null)}
+  width={540}
 >
   <svelte:fragment slot="anchor" let:open>
     {#if firstView}
@@ -66,6 +69,28 @@
       </div>
     {/if}
   </svelte:fragment>
+  <div class="options">
+    <div>
+      <ListItem
+        title="Table"
+        subtitle="Create a subset of your data"
+        hoverable
+        on:click={() => (calculation = false)}
+        selected={!calculation}
+        icon="Rail"
+      />
+    </div>
+    <div>
+      <ListItem
+        title="Calculation"
+        subtitle="Calculate groups of rows"
+        hoverable
+        on:click={() => (calculation = true)}
+        selected={calculation}
+        icon="123"
+      />
+    </div>
+  </div>
   <Input
     label="Name"
     thin
@@ -81,6 +106,11 @@
 </DetailPopover>
 
 <style>
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-m);
+  }
   .icon {
     height: 32px;
     padding: 0 8px;

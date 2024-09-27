@@ -72,6 +72,7 @@ export interface ViewV2 {
     type?: SortType
   }
   schema?: Record<string, ViewFieldMetadata>
+  calculation?: boolean
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
