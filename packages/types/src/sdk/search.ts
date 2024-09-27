@@ -2,6 +2,7 @@ import { Operation } from "./datasources"
 import { Row, Table, DocumentType } from "../documents"
 import { SortOrder, SortType } from "../api"
 import { Knex } from "knex"
+import { Aggregation } from "./row"
 
 export enum BasicOperator {
   EQUAL = "equal",
@@ -154,6 +155,7 @@ export interface QueryJson {
   }
   resource?: {
     fields: string[]
+    aggregations?: Aggregation[]
   }
   filters?: SearchFilters
   sort?: SortJson

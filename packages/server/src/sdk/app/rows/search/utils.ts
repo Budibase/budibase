@@ -83,10 +83,7 @@ function userColumnMapping(column: string, options: RowSearchParams) {
 // maps through the search parameters to check if any of the inputs are invalid
 // based on the table schema, converts them to something that is valid.
 export function searchInputMapping(table: Table, options: RowSearchParams) {
-  if (!table?.schema) {
-    return options
-  }
-  for (let [key, column] of Object.entries(table.schema)) {
+  for (let [key, column] of Object.entries(table.schema || {})) {
     switch (column.type) {
       case FieldType.BB_REFERENCE_SINGLE: {
         const subtype = column.subtype
