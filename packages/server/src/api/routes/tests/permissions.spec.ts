@@ -125,7 +125,7 @@ describe("/permission", () => {
     })
 
     it("should be able to access the view data when the table is set to public and with no view permissions overrides", async () => {
-      // Make view inherit table permissions
+      // Make view inherit table permissions. Needed for backwards compatibility with existing views.
       await config.api.permission.revoke({
         roleId: STD_ROLE_ID,
         resourceId: view.id,
@@ -144,7 +144,7 @@ describe("/permission", () => {
         resourceId: table._id,
         level: PermissionLevel.READ,
       })
-      // Make view inherit table permissions
+      // Make view inherit table permissions. Needed for backwards compatibility with existing views.
       await config.api.permission.revoke({
         roleId: STD_ROLE_ID,
         resourceId: view.id,
