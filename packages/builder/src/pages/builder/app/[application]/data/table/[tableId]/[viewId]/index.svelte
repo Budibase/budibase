@@ -26,6 +26,9 @@
   $: currentTheme = $themeStore?.theme
   $: darkMode = !currentTheme.includes("light")
 
+  $: currentTheme = $themeStore?.theme
+  $: darkMode = !currentTheme.includes("light")
+
   const makeRowActionButtons = actions => {
     return (actions || []).map(action => ({
       text: action.name,
@@ -42,6 +45,7 @@
 
 <Grid
   {API}
+  {darkMode}
   {datasource}
   {buttons}
   {darkMode}
