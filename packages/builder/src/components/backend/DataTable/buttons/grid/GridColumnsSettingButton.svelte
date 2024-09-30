@@ -21,7 +21,7 @@
   $: anyRestricted = $tableColumns.filter(
     col => !col.visible || col.readonly
   ).length
-  $: text = anyRestricted ? `Columns: (${anyRestricted} restricted)` : "Columns"
+  $: text = anyRestricted ? `Columns: ${anyRestricted} restricted` : "Columns"
   $: permissions =
     $datasource.type === "viewV2"
       ? [
@@ -39,8 +39,8 @@
     size="M"
     on:click={() => (open = !open)}
     selected={open || anyRestricted}
-    accentColor="#674D00"
     disabled={!$tableColumns.length}
+    accentColor="#674D00"
   >
     {text}
   </ActionButton>
