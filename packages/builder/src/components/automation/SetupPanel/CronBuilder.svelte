@@ -1,7 +1,6 @@
 <script>
   import {
     Select,
-    Icon,
     InlineAlert,
     Input,
     Label,
@@ -61,6 +60,7 @@
   const updateCronExpression = e => {
     aiCronPrompt = ""
     cronExpression = null
+    nextExecutions = null
     onChange(e)
   }
 
@@ -110,6 +110,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <Layout noPadding gap="S">
   <Select
     on:change={updatePreset}
@@ -190,10 +192,6 @@
     color: var(--spectrum-alias-text-color-hover);
     background-color: var(--spectrum-global-color-gray-50);
     border-color: var(--spectrum-alias-border-color-hover);
-  }
-
-  .control:not(.disabled) :global(.spectrum-Textfield-input) {
-    padding-right: 40px;
   }
 
   .error {
