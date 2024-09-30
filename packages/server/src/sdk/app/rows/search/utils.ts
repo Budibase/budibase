@@ -105,11 +105,9 @@ export function searchInputMapping(table: Table, options: RowSearchParams) {
         }
       }
     }
-    return filters
+    return dataFilters.recurseLogicalOperators(filters, checkFilters)
   }
-  options.query = checkFilters(
-    dataFilters.recurseLogicalOperators(options.query, checkFilters)
-  )
+  options.query = checkFilters(options.query)
   return options
 }
 
