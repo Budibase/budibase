@@ -48,7 +48,6 @@
   {darkMode}
   {datasource}
   {buttons}
-  {darkMode}
   allowAddRows
   allowDeleteRows
   showAvatars={false}
