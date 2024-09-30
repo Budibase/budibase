@@ -1,11 +1,11 @@
-import { context, HTTPError, utils } from "@budibase/backend-core"
+import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import {
   AutomationTriggerStepId,
   SEPARATOR,
   TableRowActions,
   VirtualDocumentType,
 } from "@budibase/types"
-import { generateRowActionsID, isViewID } from "../../db/utils"
+import { generateRowActionsID } from "../../db/utils"
 import automations from "./automations"
 import { definitions as TRIGGER_DEFINITIONS } from "../../automations/triggerInfo"
 import * as triggers from "../../automations/triggers"
@@ -155,7 +155,7 @@ export async function update(
 
 async function guardView(tableId: string, viewId: string) {
   let view
-  if (isViewID(viewId)) {
+  if (docIds.isViewId(viewId)) {
     view = await sdk.views.get(viewId)
   }
   if (!view || view.tableId !== tableId) {

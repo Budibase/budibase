@@ -1,5 +1,6 @@
 import dayjs from "dayjs"
 import {
+  Aggregation,
   AutoFieldSubType,
   AutoReason,
   Datasource,
@@ -19,6 +20,7 @@ import {
   SortJson,
   SortType,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import {
   breakExternalTableId,
@@ -46,7 +48,7 @@ import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import { dataFilters } from "@budibase/shared-core"
+import { dataFilters, helpers } from "@budibase/shared-core"
 
 export interface ManyRelationship {
   tableId?: string
@@ -159,17 +161,41 @@ function isEditableColumn(column: FieldSchema) {
 
 export class ExternalRequest<T extends Operation> {
   private readonly operation: T
-  private readonly tableId: string
-  private datasource?: Datasource
-  private tables: { [key: string]: Table } = {}
+  private readonly source: Table | ViewV2
+  private datasource: Datasource
 
-  constructor(operation: T, tableId: string, datasource?: Datasource) {
-    this.operation = operation
-    this.tableId = tableId
-    this.datasource = datasource
-    if (datasource && datasource.entities) {
-      this.tables = datasource.entities
+  public static async for<T extends Operation>(
+    operation: T,
+    source: Table | ViewV2,
+    opts: { datasource?: Datasource } = {}
+  ) {
+    if (!opts.datasource) {
+      if (sdk.views.isView(source)) {
+        const table = await sdk.views.getTable(source.id)
+        opts.datasource = await sdk.datasources.get(table.sourceId!)
+      } else {
+        opts.datasource = await sdk.datasources.get(source.sourceId!)
+      }
     }
+
+    return new ExternalRequest(operation, source, opts.datasource)
+  }
+
+  private get tables(): { [key: string]: Table } {
+    if (!this.datasource.entities) {
+      throw new Error("Datasource does not have entities")
+    }
+    return this.datasource.entities
+  }
+
+  private constructor(
+    operation: T,
+    source: Table | ViewV2,
+    datasource: Datasource
+  ) {
+    this.operation = operation
+    this.source = source
+    this.datasource = datasource
   }
 
   private prepareFilters(
@@ -288,20 +314,6 @@ export class ExternalRequest<T extends Operation> {
     }
     const { tableName } = breakExternalTableId(tableId)
     return this.tables[tableName]
-  }
-
-  // seeds the object with table and datasource information
-  async retrieveMetadata(
-    datasourceId: string
-  ): Promise<{ tables: Record<string, Table>; datasource: Datasource }> {
-    if (!this.datasource) {
-      this.datasource = await sdk.datasources.get(datasourceId)
-      if (!this.datasource || !this.datasource.entities) {
-        throw "No tables found, fetch tables before query."
-      }
-      this.tables = this.datasource.entities
-    }
-    return { tables: this.tables, datasource: this.datasource }
   }
 
   async getRow(table: Table, rowId: string): Promise<Row> {
@@ -619,24 +631,16 @@ export class ExternalRequest<T extends Operation> {
   }
 
   async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
-    const { operation, tableId } = this
-    if (!tableId) {
-      throw new Error("Unable to run without a table ID")
+    const { operation } = this
+    let table: Table
+    if (sdk.views.isView(this.source)) {
+      table = await sdk.views.getTable(this.source.id)
+    } else {
+      table = this.source
     }
-    let { datasourceId, tableName } = breakExternalTableId(tableId)
-    let datasource = this.datasource
-    if (!datasource) {
-      const { datasource: ds } = await this.retrieveMetadata(datasourceId)
-      datasource = ds
-    }
-    const tables = this.tables
-    const table = tables[tableName]
-    let isSql = isSQL(datasource)
-    if (!table) {
-      throw new Error(
-        `Unable to process query, table "${tableName}" not defined.`
-      )
-    }
+
+    let isSql = isSQL(this.datasource)
+
     // look for specific components of config which may not be considered acceptable
     let { id, row, filters, sort, paginate, rows } = cleanupConfig(
       config,
@@ -679,25 +683,40 @@ export class ExternalRequest<T extends Operation> {
         }
       }
     }
+
     if (
       operation === Operation.DELETE &&
       (filters == null || Object.keys(filters).length === 0)
     ) {
       throw "Deletion must be filtered"
     }
+
+    let aggregations: Aggregation[] = []
+    if (sdk.views.isView(this.source)) {
+      const calculationFields = helpers.views.calculationFields(this.source)
+      for (const [key, field] of Object.entries(calculationFields)) {
+        aggregations.push({
+          name: key,
+          field: field.field,
+          calculationType: field.calculationType,
+        })
+      }
+    }
+
     let json: QueryJson = {
       endpoint: {
-        datasourceId: datasourceId!,
-        entityId: tableName,
+        datasourceId: this.datasource._id!,
+        entityId: table.name,
         operation,
       },
       resource: {
         // have to specify the fields to avoid column overlap (for SQL)
         fields: isSql
-          ? buildSqlFieldList(table, this.tables, {
+          ? await buildSqlFieldList(this.source, this.tables, {
               relationships: incRelationships,
             })
           : [],
+        aggregations,
       },
       filters,
       sort,
@@ -714,7 +733,7 @@ export class ExternalRequest<T extends Operation> {
       },
       meta: {
         table,
-        tables: tables,
+        tables: this.tables,
       },
     }
 
@@ -745,7 +764,7 @@ export class ExternalRequest<T extends Operation> {
     }
     const output = await sqlOutputProcessing(
       response,
-      table,
+      this.source,
       this.tables,
       relationships
     )

@@ -53,8 +53,8 @@ export const removeInvalidFilters = (
 }
 
 export const getQueryableFields = async (
-  fields: string[],
-  table: Table
+  table: Table,
+  fields?: string[]
 ): Promise<string[]> => {
   const extractTableFields = async (
     table: Table,
@@ -110,6 +110,9 @@ export const getQueryableFields = async (
     "_id", // Querying by _id is always allowed, even if it's never part of the schema
   ]
 
+  if (fields == null) {
+    fields = Object.keys(table.schema)
+  }
   result.push(...(await extractTableFields(table, fields, [table._id!])))
 
   return result

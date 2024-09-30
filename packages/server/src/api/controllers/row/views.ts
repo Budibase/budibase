@@ -3,8 +3,6 @@ import {
   ViewV2,
   SearchRowResponse,
   SearchViewRowRequest,
-  RequiredKeys,
-  RowSearchParams,
   SearchFilterKey,
   LogicalOperator,
 } from "@budibase/types"
@@ -27,9 +25,6 @@ export async function searchView(
     ctx.throw(400, `This method only supports viewsV2`)
   }
 
-  const viewFields = Object.entries(view.schema || {})
-    .filter(([_, value]) => value.visible)
-    .map(([key]) => key)
   const { body } = ctx.request
 
   // Enrich saved query with ephemeral query params.
@@ -74,22 +69,17 @@ export async function searchView(
     user: sdk.users.getUserContextBindings(ctx.user),
   })
 
-  const searchOptions: RequiredKeys<SearchViewRowRequest> &
-    RequiredKeys<
-      Pick<RowSearchParams, "tableId" | "viewId" | "query" | "fields">
-    > = {
-    tableId: view.tableId,
+  const result = await sdk.rows.search({
     viewId: view.id,
+    tableId: view.tableId,
     query: enrichedQuery,
-    fields: viewFields,
     ...getSortOptions(body, view),
     limit: body.limit,
     bookmark: body.bookmark,
     paginate: body.paginate,
     countRows: body.countRows,
-  }
+  })
 
-  const result = await sdk.rows.search(searchOptions)
   result.rows.forEach(r => (r._viewId = view.id))
   ctx.body = result
 }
