@@ -4,6 +4,7 @@ import {
   FindRoleResponse,
   SaveRoleRequest,
   SaveRoleResponse,
+  Role,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -27,14 +28,18 @@ export class RoleAPI extends TestAPI {
     })
   }
 
-  destroy = async (roleId: string, expectations?: Expectations) => {
-    return await this._delete(`/api/roles/${roleId}`, {
+  destroy = async (role: Role, expectations?: Expectations) => {
+    return await this._delete(`/api/roles/${role._id}/${role._rev}`, {
       expectations,
     })
   }
 
-  accesssible = async (expectations?: Expectations) => {
+  accessible = async (
+    headers: Record<string, string | string[]>,
+    expectations?: Expectations
+  ) => {
     return await this._get<AccessibleRolesResponse>(`/api/roles/accessible`, {
+      headers,
       expectations,
     })
   }
