@@ -1,5 +1,20 @@
-import { ArrayOperator, BasicOperator, SearchFilters } from "@budibase/types"
+import {
+  LegacyFilter,
+  SearchFilterGroup,
+  FilterGroupLogicalOperator,
+  SearchFilters,
+  BasicOperator,
+  ArrayOperator,
+} from "@budibase/types"
 import * as Constants from "./constants"
+import { removeKeyNumbering } from "./filters"
+
+// an array of keys from filter type to properties that are in the type
+// this can then be converted using .fromEntries to an object
+type WhitelistedFilters = [
+  keyof LegacyFilter,
+  LegacyFilter[keyof LegacyFilter]
+][]
 
 export function unreachable(
   value: never,
@@ -103,4 +118,97 @@ export function isSupportedUserSearch(query: SearchFilters) {
     }
   }
   return true
+}
+
+/**
+ * Processes the filter config. Filters are migrated from
+ * SearchFilter[] to SearchFilterGroup
+ *
+ * If filters is not an array, the migration is skipped
+ *
+ * @param {LegacyFilter[] | SearchFilterGroup} filters
+ */
+export const processSearchFilters = (
+  filters: LegacyFilter[] | SearchFilterGroup | undefined
+): SearchFilterGroup | undefined => {
+  if (!filters) {
+    return
+  }
+
+  // Base search config.
+  const defaultCfg: SearchFilterGroup = {
+    logicalOperator: FilterGroupLogicalOperator.ALL,
+    groups: [],
+  }
+
+  const filterWhitelistKeys = [
+    "field",
+    "operator",
+    "value",
+    "type",
+    "externalType",
+    "valueType",
+    "noValue",
+    "formulaType",
+  ]
+
+  if (Array.isArray(filters)) {
+    let baseGroup: SearchFilterGroup = {
+      filters: [],
+      logicalOperator: FilterGroupLogicalOperator.ALL,
+    }
+
+    return filters.reduce((acc: SearchFilterGroup, filter: LegacyFilter) => {
+      // Sort the properties for easier debugging
+      const filterPropertyKeys = (Object.keys(filter) as (keyof LegacyFilter)[])
+        .sort((a, b) => {
+          return a.localeCompare(b)
+        })
+        .filter(key => key in filter)
+
+      if (filterPropertyKeys.length == 1) {
+        const key = filterPropertyKeys[0],
+          value = filter[key]
+        // Global
+        if (key === "onEmptyFilter") {
+          // unset otherwise
+          acc.onEmptyFilter = value
+        } else if (key === "operator" && value === "allOr") {
+          // Group 1 logical operator
+          baseGroup.logicalOperator = FilterGroupLogicalOperator.ANY
+        }
+
+        return acc
+      }
+
+      const whiteListedFilterSettings: WhitelistedFilters =
+        filterPropertyKeys.reduce((acc: WhitelistedFilters, key) => {
+          const value = filter[key]
+          if (filterWhitelistKeys.includes(key)) {
+            if (key === "field") {
+              acc.push([key, removeKeyNumbering(value)])
+            } else {
+              acc.push([key, value])
+            }
+          }
+          return acc
+        }, [])
+
+      const migratedFilter: LegacyFilter = Object.fromEntries(
+        whiteListedFilterSettings
+      ) as LegacyFilter
+
+      baseGroup.filters!.push(migratedFilter)
+
+      if (!acc.groups || !acc.groups.length) {
+        // init the base group
+        acc.groups = [baseGroup]
+      }
+
+      return acc
+    }, defaultCfg)
+  } else if (!filters?.groups) {
+    return
+  }
+  return filters
 }
