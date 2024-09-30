@@ -83,6 +83,7 @@ function userColumnMapping(column: string, filters: SearchFilters) {
 // maps through the search parameters to check if any of the inputs are invalid
 // based on the table schema, converts them to something that is valid.
 export function searchInputMapping(table: Table, options: RowSearchParams) {
+  // need an internal function to loop over filters, because this takes the full options
   function checkFilters(filters: SearchFilters) {
     for (let [key, column] of Object.entries(table.schema || {})) {
       switch (column.type) {
@@ -106,9 +107,8 @@ export function searchInputMapping(table: Table, options: RowSearchParams) {
     }
     return filters
   }
-  options.query = dataFilters.recurseLogicalOperators(
-    options.query,
-    checkFilters
+  options.query = checkFilters(
+    dataFilters.recurseLogicalOperators(options.query, checkFilters)
   )
   return options
 }
