@@ -23,6 +23,8 @@
   }
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
+  $: currentTheme = $themeStore?.theme
+  $: darkMode = !currentTheme.includes("light")
 
   $: currentTheme = $themeStore?.theme
   $: darkMode = !currentTheme.includes("light")
@@ -45,12 +47,12 @@
   {API}
   {darkMode}
   {datasource}
+  {buttons}
   allowAddRows
   allowDeleteRows
   showAvatars={false}
   on:updatedatasource={handleGridViewUpdate}
   isCloud={$admin.cloud}
-  {buttons}
   buttonsCollapsed
 >
   <svelte:fragment slot="controls">
