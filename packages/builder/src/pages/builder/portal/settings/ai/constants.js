@@ -23,7 +23,7 @@ export const Providers = {
     models: [{ label: "Llama 3 8B", value: "meta-llama/Meta-Llama-3-8B" }],
   },
   AzureOpenAI: {
-    name: "Azure Open AI",
+    name: "Azure OpenAI",
     models: [
       { label: "GPT 4o Mini", value: "gpt-4o-mini" },
       { label: "GPT 4o", value: "gpt-4o" },

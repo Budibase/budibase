@@ -27,7 +27,6 @@
   let editingUuid
 
   $: isCloud = $admin.cloud
-  $: budibaseAIEnabled = $licensing.budibaseAIEnabled
   $: customAIConfigsEnabled = $licensing.customAIConfigsEnabled
 
   async function fetchAIConfig() {
@@ -127,18 +126,8 @@
 </Modal>
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <Heading size="M">AI</Heading>
-    {#if isCloud && !budibaseAIEnabled}
-      <Tags>
-        <Tag icon="LockClosed">Premium</Tag>
-      </Tags>
-    {/if}
-    <Body>Configure your AI settings within this section:</Body>
-  </Layout>
-  <Divider />
-  <Layout noPadding>
-    <div class="config-heading">
-      <Heading size="S">AI Configurations</Heading>
+    <div class="header">
+      <Heading size="M">AI</Heading>
       {#if !isCloud && !customAIConfigsEnabled}
         <Tags>
           <Tag icon="LockClosed">Premium</Tag>
@@ -147,24 +136,43 @@
         <Tags>
           <Tag icon="LockClosed">Enterprise</Tag>
         </Tags>
-      {:else}
-        <Button size="S" cta on:click={newConfig}>Add configuration</Button>
       {/if}
     </div>
-    <Body size="S"
-      >Use the following interface to select your preferred AI configuration.</Body
-    >
-    <Body size="S">Select your AI Model:</Body>
-    {#if fullAIConfig?.config}
-      {#each Object.keys(fullAIConfig.config) as key}
-        <AIConfigTile
-          config={fullAIConfig.config[key]}
-          editHandler={() => editConfig(key)}
-          deleteHandler={() => deleteConfig(key)}
-        />
-      {/each}
-    {/if}
+    <Body>Configure your AI settings within this section:</Body>
   </Layout>
+  <Divider />
+  <div style={`opacity: ${customAIConfigsEnabled ? 1 : 0.5}`}>
+    <Layout noPadding>
+      <div class="config-heading">
+        <Heading size="S">AI Configurations</Heading>
+        <Button
+          size="S"
+          cta={customAIConfigsEnabled}
+          secondary={!customAIConfigsEnabled}
+          on:click={customAIConfigsEnabled ? newConfig : null}
+        >
+          Add configuration
+        </Button>
+      </div>
+      <Body size="S"
+        >Use the following interface to select your preferred AI configuration.</Body
+      >
+      {#if customAIConfigsEnabled}
+        <Body size="S">Select your AI Model:</Body>
+      {/if}
+      {#if fullAIConfig?.config}
+        {#each Object.keys(fullAIConfig.config) as key}
+          <AIConfigTile
+            config={fullAIConfig.config[key]}
+            editHandler={customAIConfigsEnabled ? () => editConfig(key) : null}
+            deleteHandler={customAIConfigsEnabled
+              ? () => deleteConfig(key)
+              : null}
+          />
+        {/each}
+      {/if}
+    </Layout>
+  </div>
 </Layout>
 
 <style>
@@ -172,5 +180,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: -18px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 </style>
