@@ -89,7 +89,7 @@ export async function search(
 
       if (!isExternalTable && !(await features.flags.isEnabled("SQS"))) {
         // Lucene does not accept conditional filters, so we need to keep the old logic
-        const query: SearchFilters = {}
+        const query: SearchFilters = viewQuery
 
         // Extract existing fields
         const existingFields =
@@ -101,13 +101,12 @@ export async function search(
         Object.keys(options.query).forEach(key => {
           const operator = key as Exclude<SearchFilterKey, LogicalOperator>
           Object.keys(options.query[operator] || {}).forEach(field => {
-            if (existingFields.includes(db.removeKeyNumbering(field))) {
-              query[operator]![field] = viewQuery[operator]![field]
-            } else {
+            if (!existingFields.includes(db.removeKeyNumbering(field))) {
               query[operator]![field] = options.query[operator]![field]
             }
           })
         })
+        options.query = query
       } else {
         options.query = {
           $and: {
