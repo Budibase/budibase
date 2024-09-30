@@ -78,6 +78,8 @@ export async function search(
 
       const queryableFields = await getQueryableFields(table, visibleFields)
       options.query = removeInvalidFilters(options.query, queryableFields)
+    } else {
+      options.query = {}
     }
 
     if (options.viewId) {
@@ -120,7 +122,7 @@ export async function search(
       options.query = await enrichSearchContext(options.query, context)
     }
 
-    options.query = dataFilters.cleanupQuery(options.query || {})
+    options.query = dataFilters.cleanupQuery(options.query)
     options.query = dataFilters.fixupFilterArrays(options.query)
 
     span.addTags({
