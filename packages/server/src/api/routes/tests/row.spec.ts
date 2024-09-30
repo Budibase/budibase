@@ -2690,7 +2690,7 @@ describe.each([
         async (__, retrieveDelegate) => {
           await withCoreEnv(
             {
-              TENANT_FEATURE_FLAGS: ``,
+              TENANT_FEATURE_FLAGS: `*:!${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
             },
             async () => {
               const otherRows = _.sampleSize(auxData, 5)
