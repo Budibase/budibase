@@ -194,7 +194,10 @@ export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
     let filteredRoles = [roleHeader]
     for (let role of orderedRoles) {
       filteredRoles = [role, ...filteredRoles]
-      if (role === inherits) {
+      if (
+        (Array.isArray(inherits) && inherits.includes(role)) ||
+        role === inherits
+      ) {
         break
       }
     }
