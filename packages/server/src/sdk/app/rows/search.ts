@@ -98,7 +98,7 @@ export async function search(
             .map(filter => db.removeKeyNumbering(filter.field)) || []
 
         // Carry over filters for unused fields
-        Object.keys(options.query).forEach(key => {
+        Object.keys(options.query || {}).forEach(key => {
           const operator = key as Exclude<SearchFilterKey, LogicalOperator>
           Object.keys(options.query[operator] || {}).forEach(field => {
             if (!existingFields.includes(db.removeKeyNumbering(field))) {
