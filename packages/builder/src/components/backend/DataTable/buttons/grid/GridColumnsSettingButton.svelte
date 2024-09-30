@@ -13,12 +13,14 @@
   import { isEnabled } from "helpers/featureFlags"
   import { FeatureFlag } from "@budibase/types"
 
-  const { columns, datasource } = getContext("grid")
+  const { tableColumns, datasource } = getContext("grid")
 
   let open = false
   let anchor
 
-  $: anyRestricted = $columns.filter(col => !col.visible || col.readonly).length
+  $: anyRestricted = $tableColumns.filter(
+    col => !col.visible || col.readonly
+  ).length
   $: text = anyRestricted ? `Columns: ${anyRestricted} restricted` : "Columns"
   $: permissions =
     $datasource.type === "viewV2"
@@ -37,7 +39,7 @@
     size="M"
     on:click={() => (open = !open)}
     selected={open || anyRestricted}
-    disabled={!$columns.length}
+    disabled={!$tableColumns.length}
     accentColor="#674D00"
   >
     {text}
@@ -46,7 +48,7 @@
 
 <Popover bind:open {anchor} align="left">
   <ColumnsSettingContent
-    columns={$columns}
+    columns={$tableColumns}
     canSetRelationshipSchemas={isEnabled(FeatureFlag.ENRICHED_RELATIONSHIPS)}
     {permissions}
   />
