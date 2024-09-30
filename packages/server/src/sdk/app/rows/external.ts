@@ -1,5 +1,11 @@
-import { IncludeRelationship, Operation, Row } from "@budibase/types"
-import { HTTPError } from "@budibase/backend-core"
+import {
+  IncludeRelationship,
+  Operation,
+  Row,
+  Table,
+  ViewV2,
+} from "@budibase/types"
+import { docIds, HTTPError } from "@budibase/backend-core"
 import { handleRequest } from "../../../api/controllers/row/external"
 import { breakRowIdField } from "../../../integrations/utils"
 import sdk from "../../../sdk"
@@ -8,15 +14,24 @@ import {
   outputProcessing,
 } from "../../../utilities/rowProcessor"
 import cloneDeep from "lodash/fp/cloneDeep"
-import isEqual from "lodash/fp/isEqual"
 import { tryExtractingTableAndViewId } from "./utils"
 
 export async function getRow(
-  tableId: string,
+  sourceId: string | Table | ViewV2,
   rowId: string,
   opts?: { relationships?: boolean }
 ) {
-  const response = await handleRequest(Operation.READ, tableId, {
+  let source: Table | ViewV2
+  if (typeof sourceId === "string") {
+    if (docIds.isViewId(sourceId)) {
+      source = await sdk.views.get(sourceId)
+    } else {
+      source = await sdk.tables.getTable(sourceId)
+    }
+  } else {
+    source = sourceId
+  }
+  const response = await handleRequest(Operation.READ, source, {
     id: breakRowIdField(rowId),
     includeSqlRelationships: opts?.relationships
       ? IncludeRelationship.INCLUDE
@@ -27,45 +42,42 @@ export async function getRow(
 }
 
 export async function save(
-  tableOrViewId: string,
+  sourceId: string,
   inputs: Row,
   userId: string | undefined
 ) {
-  const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
-  const table = await sdk.tables.getTable(tableId)
-  const { table: updatedTable, row } = await inputProcessing(
-    userId,
-    cloneDeep(table),
-    inputs
-  )
+  const { tableId, viewId } = tryExtractingTableAndViewId(sourceId)
+  let source: Table | ViewV2
+  if (viewId) {
+    source = await sdk.views.get(viewId)
+  } else {
+    source = await sdk.tables.getTable(tableId)
+  }
+
+  const row = await inputProcessing(userId, cloneDeep(source), inputs)
 
   const validateResult = await sdk.rows.utils.validate({
     row,
-    tableId,
+    source,
   })
   if (!validateResult.valid) {
     throw { validation: validateResult.errors }
   }
 
-  const response = await handleRequest(Operation.CREATE, tableId, {
+  const response = await handleRequest(Operation.CREATE, source, {
     row,
   })
 
-  if (!isEqual(table, updatedTable)) {
-    await sdk.tables.saveTable(updatedTable)
-  }
-
   const rowId = response.row._id
   if (rowId) {
-    const row = await getRow(tableId, rowId, {
+    const row = await getRow(source, rowId, {
       relationships: true,
     })
     return {
       ...response,
-      row: await outputProcessing(table, row, {
+      row: await outputProcessing(source, row, {
         preserveLinks: true,
         squash: true,
-        fromViewId: viewId,
       }),
     }
   } else {
@@ -76,7 +88,14 @@ export async function save(
 export async function find(tableOrViewId: string, rowId: string): Promise<Row> {
   const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
 
-  const row = await getRow(tableId, rowId, {
+  let source: Table | ViewV2
+  if (viewId) {
+    source = await sdk.views.get(viewId)
+  } else {
+    source = await sdk.tables.getTable(tableId)
+  }
+
+  const row = await getRow(source, rowId, {
     relationships: true,
   })
 
@@ -84,11 +103,10 @@ export async function find(tableOrViewId: string, rowId: string): Promise<Row> {
     throw new HTTPError("Row not found", 404)
   }
 
-  const table = await sdk.tables.getTable(tableId)
-  // Preserving links, as the outputProcessing does not support external rows yet and we don't need it in this use case
-  return await outputProcessing(table, row, {
+  // Preserving links, as the outputProcessing does not support external rows
+  // yet and we don't need it in this use case
+  return await outputProcessing(source, row, {
     squash: true,
     preserveLinks: true,
-    fromViewId: viewId,
   })
 }
