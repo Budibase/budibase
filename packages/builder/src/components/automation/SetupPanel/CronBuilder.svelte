@@ -1,9 +1,18 @@
 <script>
-  import { Button, Select, Icon, InlineAlert, Input, Label, Layout, Popover } from "@budibase/bbui"
+  import {
+    Select,
+    Icon,
+    InlineAlert,
+    Input,
+    Label,
+    Layout,
+    notifications,
+  } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { flags } from "stores/builder"
   import { licensing } from "stores/portal"
   import { API } from "api"
+  import MagicWand from "../../../../assets/MagicWand.svelte"
 
   import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 
@@ -18,11 +27,14 @@
   let aiCronPrompt = ""
   let loadingAICronExpression = false
 
-  $: aiEnabled = $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
+  $: aiEnabled =
+    $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
   $: {
     if (cronExpression) {
       try {
-        nextExecutions = helpers.cron.getNextExecutionDates(cronExpression).join("\n")
+        nextExecutions = helpers.cron
+          .getNextExecutionDates(cronExpression)
+          .join("\n")
       } catch (err) {
         nextExecutions = null
       }
@@ -84,12 +96,17 @@
 
   async function generateAICronExpression() {
     loadingAICronExpression = true
-    // make the API call to generate the cron expression
-    const response = await API.generateCronExpression({ prompt: aiCronPrompt })
-    // return it and set it in the field
-    cronExpression = response.message
-    dispatch("change", response.message)
-    loadingAICronExpression = false
+    try {
+      const response = await API.generateCronExpression({
+        prompt: aiCronPrompt,
+      })
+      cronExpression = response.message
+      dispatch("change", response.message)
+      loadingAICronExpression = false
+    } catch (err) {
+      notifications.error(err.message)
+      loadingAICronExpression = false
+    }
   }
 </script>
 
@@ -116,7 +133,7 @@
           class:pulsing-text={loadingAICronExpression}
           on:click={generateAICronExpression}
         >
-          <Icon size="S" name="MagicWand" />
+          <MagicWand height="17" width="17" />
         </div>
       {/if}
     </div>
@@ -162,9 +179,9 @@
     color: var(--spectrum-alias-text-color);
     background-color: var(--spectrum-global-color-gray-75);
     transition: background-color
-    var(--spectrum-global-animation-duration-100, 130ms),
-    box-shadow var(--spectrum-global-animation-duration-100, 130ms),
-    border-color var(--spectrum-global-animation-duration-100, 130ms);
+        var(--spectrum-global-animation-duration-100, 130ms),
+      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
+      border-color var(--spectrum-global-animation-duration-100, 130ms);
     height: calc(var(--spectrum-alias-item-height-m) - 2px);
   }
 
@@ -179,7 +196,6 @@
     padding-right: 40px;
   }
 
-
   .error {
     padding-top: var(--spacing-xs);
     color: var(--spectrum-global-color-red-500);
@@ -188,7 +204,6 @@
   .pulsing-text {
     font-size: 24px;
     font-weight: bold;
-    /*color: #333;*/
     animation: pulse 1.5s infinite;
   }
 
