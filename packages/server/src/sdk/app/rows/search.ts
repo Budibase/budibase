@@ -69,6 +69,8 @@ export async function search(
       throw new Error(`Must supply either a view ID or a table ID`)
     }
 
+    const isExternalTable = isExternalTableID(table._id!)
+
     if (options.query) {
       const visibleFields = (
         options.fields || Object.keys(table.schema)
@@ -142,7 +144,6 @@ export async function search(
 
     options = searchInputMapping(table, options)
 
-    const isExternalTable = isExternalTableID(table._id!)
     let result: SearchResponse<Row>
     if (isExternalTable) {
       span?.addTags({ searchType: "external" })
