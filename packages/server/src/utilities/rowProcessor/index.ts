@@ -284,6 +284,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     table = source
   }
 
+  // SQS returns the rows with full relationship contents
   // attach any linked row information
   let enriched = !opts.preserveLinks
     ? await linkRows.attachFullLinkedDocs(table.schema, safeRows, {
@@ -291,9 +292,42 @@ export async function outputProcessing<T extends Row[] | Row>(
       })
     : safeRows
 
-  // make sure squash is enabled if needed
   if (!opts.squash && utils.hasCircularStructure(rows)) {
     opts.squash = true
+  }
+
+  enriched = await coreOutputProcessing(source, enriched, opts)
+
+  if (opts.squash) {
+    enriched = await linkRows.squashLinks(source, enriched)
+  }
+
+  return (wasArray ? enriched : enriched[0]) as T
+}
+
+/**
+ * This function is similar to the outputProcessing function above, it makes sure that all the provided
+ * rows are ready for output, but does not have enrichment for squash capabilities which can cause performance issues.
+ * outputProcessing should be used when responding from the API, while this should be used when internally processing
+ * rows for any reason (like part of view operations).
+ */
+export async function coreOutputProcessing(
+  source: Table | ViewV2,
+  rows: Row[],
+  opts: {
+    preserveLinks?: boolean
+    skipBBReferences?: boolean
+    fromViewId?: string
+  } = {
+    preserveLinks: false,
+    skipBBReferences: false,
+  }
+): Promise<Row[]> {
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
   }
 
   // process complex types: attachments, bb references...
@@ -303,7 +337,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       column.type === FieldType.ATTACHMENT_SINGLE ||
       column.type === FieldType.SIGNATURE_SINGLE
     ) {
-      for (const row of enriched) {
+      for (const row of rows) {
         if (row[property] == null) {
           continue
         }
@@ -328,7 +362,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       !opts.skipBBReferences &&
       column.type == FieldType.BB_REFERENCE
     ) {
-      for (const row of enriched) {
+      for (const row of rows) {
         row[property] = await processOutputBBReferences(
           row[property],
           column.subtype
@@ -338,14 +372,14 @@ export async function outputProcessing<T extends Row[] | Row>(
       !opts.skipBBReferences &&
       column.type == FieldType.BB_REFERENCE_SINGLE
     ) {
-      for (const row of enriched) {
+      for (const row of rows) {
         row[property] = await processOutputBBReference(
           row[property],
           column.subtype
         )
       }
     } else if (column.type === FieldType.DATETIME && column.timeOnly) {
-      for (const row of enriched) {
+      for (const row of rows) {
         if (row[property] instanceof Date) {
           const hours = row[property].getUTCHours().toString().padStart(2, "0")
           const minutes = row[property]
@@ -360,7 +394,7 @@ export async function outputProcessing<T extends Row[] | Row>(
         }
       }
     } else if (column.type === FieldType.LINK) {
-      for (let row of enriched) {
+      for (let row of rows) {
         // if relationship is empty - remove the array, this has been part of the API for some time
         if (Array.isArray(row[property]) && row[property].length === 0) {
           delete row[property]
@@ -370,16 +404,12 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
 
   // process formulas after the complex types had been processed
-  enriched = await processFormulas(table, enriched, { dynamic: true })
-
-  if (opts.squash) {
-    enriched = await linkRows.squashLinks(source, enriched)
-  }
+  rows = await processFormulas(table, rows, { dynamic: true })
 
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
   if (isExternal || (await features.flags.isEnabled("SQS"))) {
-    for (const row of enriched) {
+    for (const row of rows) {
       for (const key of Object.keys(row)) {
         if (row[key] === null) {
           delete row[key]
@@ -416,7 +446,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       }
     }
 
-    for (const row of enriched) {
+    for (const row of rows) {
       for (const key of Object.keys(row)) {
         if (!fields.includes(key.toLowerCase())) {
           delete row[key]
@@ -425,5 +455,5 @@ export async function outputProcessing<T extends Row[] | Row>(
     }
   }
 
-  return (wasArray ? enriched : enriched[0]) as T
+  return rows
 }

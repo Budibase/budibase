@@ -214,11 +214,20 @@ export const createActions = context => {
     })
 
     // Extract new orders as schema mutations
-    let mutations = {}
     get(columns).forEach((column, idx) => {
-      mutations[column.name] = { order: idx }
+      const { related } = column
+      const mutation = { order: idx }
+      if (!related) {
+        datasource.actions.addSchemaMutation(column.name, mutation)
+      } else {
+        datasource.actions.addSubSchemaMutation(
+          related.subField,
+          related.field,
+          mutation
+        )
+      }
     })
-    datasource.actions.addSchemaMutations(mutations)
+
     await datasource.actions.saveSchemaMutations()
   }
 
