@@ -102,9 +102,9 @@
       })
       cronExpression = response.message
       dispatch("change", response.message)
-      loadingAICronExpression = false
     } catch (err) {
       notifications.error(err.message)
+    } finally {
       loadingAICronExpression = false
     }
   }
