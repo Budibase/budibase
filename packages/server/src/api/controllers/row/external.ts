@@ -17,6 +17,7 @@ import {
   Row,
   Table,
   UserCtx,
+  ViewV2,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import * as utils from "./utils"
@@ -29,39 +30,40 @@ import { generateIdForRow } from "./utils"
 
 export async function handleRequest<T extends Operation>(
   operation: T,
-  tableId: string,
+  source: Table | ViewV2,
   opts?: RunConfig
 ): Promise<ExternalRequestReturnType<T>> {
-  return new ExternalRequest<T>(operation, tableId, opts?.datasource).run(
-    opts || {}
-  )
+  return (
+    await ExternalRequest.for<T>(operation, source, {
+      datasource: opts?.datasource,
+    })
+  ).run(opts || {})
 }
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
-  const { tableId, viewId } = utils.getSourceId(ctx)
-
+  const source = await utils.getSource(ctx)
+  const table = await utils.getTableFromSource(source)
   const { _id, ...rowData } = ctx.request.body
-  const table = await sdk.tables.getTable(tableId)
 
-  const { row: dataToUpdate } = await inputProcessing(
+  const dataToUpdate = await inputProcessing(
     ctx.user?._id,
-    cloneDeep(table),
+    cloneDeep(source),
     rowData
   )
 
   const validateResult = await sdk.rows.utils.validate({
     row: dataToUpdate,
-    tableId,
+    source,
   })
   if (!validateResult.valid) {
     throw { validation: validateResult.errors }
   }
 
-  const beforeRow = await sdk.rows.external.getRow(tableId, _id, {
+  const beforeRow = await sdk.rows.external.getRow(table._id!, _id, {
     relationships: true,
   })
 
-  const response = await handleRequest(Operation.UPDATE, tableId, {
+  const response = await handleRequest(Operation.UPDATE, source, {
     id: breakRowIdField(_id),
     row: dataToUpdate,
   })
@@ -69,17 +71,16 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   // The id might have been changed, so the refetching would fail. Recalculating the id just in case
   const updatedId =
     generateIdForRow({ ...beforeRow, ...dataToUpdate }, table) || _id
-  const row = await sdk.rows.external.getRow(tableId, updatedId, {
+  const row = await sdk.rows.external.getRow(table._id!, updatedId, {
     relationships: true,
   })
 
   const [enrichedRow, oldRow] = await Promise.all([
-    outputProcessing(table, row, {
+    outputProcessing(source, row, {
       squash: true,
       preserveLinks: true,
-      fromViewId: viewId,
     }),
-    outputProcessing(table, beforeRow, {
+    outputProcessing(source, beforeRow, {
       squash: true,
       preserveLinks: true,
     }),
@@ -94,9 +95,9 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 }
 
 export async function destroy(ctx: UserCtx) {
-  const { tableId } = utils.getSourceId(ctx)
+  const source = await utils.getSource(ctx)
   const _id = ctx.request.body._id
-  const { row } = await handleRequest(Operation.DELETE, tableId, {
+  const { row } = await handleRequest(Operation.DELETE, source, {
     id: breakRowIdField(_id),
     includeSqlRelationships: IncludeRelationship.EXCLUDE,
   })
@@ -105,11 +106,11 @@ export async function destroy(ctx: UserCtx) {
 
 export async function bulkDestroy(ctx: UserCtx) {
   const { rows } = ctx.request.body
-  const { tableId } = utils.getSourceId(ctx)
+  const source = await utils.getSource(ctx)
   let promises: Promise<{ row: Row; table: Table }>[] = []
   for (let row of rows) {
     promises.push(
-      handleRequest(Operation.DELETE, tableId, {
+      handleRequest(Operation.DELETE, source, {
         id: breakRowIdField(row._id),
         includeSqlRelationships: IncludeRelationship.EXCLUDE,
       })
@@ -124,6 +125,7 @@ export async function bulkDestroy(ctx: UserCtx) {
 
 export async function fetchEnrichedRow(ctx: UserCtx) {
   const id = ctx.params.rowId
+  const source = await utils.getSource(ctx)
   const { tableId } = utils.getSourceId(ctx)
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   const datasource: Datasource = await sdk.datasources.get(datasourceId)
@@ -131,7 +133,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
   const tables = datasource.entities
-  const response = await handleRequest(Operation.READ, tableId, {
+  const response = await handleRequest(Operation.READ, source, {
     id,
     datasource,
     includeSqlRelationships: IncludeRelationship.INCLUDE,
@@ -155,7 +157,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
     // don't support composite keys right now
     const linkedIds = links.map((link: Row) => breakRowIdField(link._id!)[0])
     const primaryLink = linkedTable.primary?.[0] as string
-    const relatedRows = await handleRequest(Operation.READ, linkedTableId!, {
+    const relatedRows = await handleRequest(Operation.READ, linkedTable, {
       tables,
       filters: {
         oneOf: {

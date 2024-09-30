@@ -1,7 +1,6 @@
 import { context, db } from "@budibase/backend-core"
-import { Row } from "@budibase/types"
+import { Row, Table, ViewV2 } from "@budibase/types"
 import sdk from "../../../sdk"
-import cloneDeep from "lodash/fp/cloneDeep"
 import { finaliseRow } from "../../../api/controllers/row/staticFormula"
 import {
   inputProcessing,
@@ -10,7 +9,7 @@ import {
 import * as linkRows from "../../../db/linkedRows"
 import { InternalTables } from "../../../db/utils"
 import { getFullUser } from "../../../utilities/users"
-import { tryExtractingTableAndViewId } from "./utils"
+import { getSource, tryExtractingTableAndViewId } from "./utils"
 
 export async function save(
   tableOrViewId: string,
@@ -20,21 +19,25 @@ export async function save(
   const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
   inputs.tableId = tableId
 
+  let source: Table | ViewV2
+  let table: Table
+  if (viewId) {
+    source = await sdk.views.get(viewId)
+    table = await sdk.views.getTable(viewId)
+  } else {
+    source = await sdk.tables.getTable(tableId)
+    table = source
+  }
+
   if (!inputs._rev && !inputs._id) {
     inputs._id = db.generateRowID(inputs.tableId)
   }
 
-  // this returns the table and row incase they have been updated
-  const dbTable = await sdk.tables.getTable(inputs.tableId)
-
-  // need to copy the table so it can be differenced on way out
-  const tableClone = cloneDeep(dbTable)
-
-  let { table, row } = await inputProcessing(userId, tableClone, inputs)
+  let row = await inputProcessing(userId, source, inputs)
 
   const validateResult = await sdk.rows.utils.validate({
     row,
-    table,
+    source,
   })
 
   if (!validateResult.valid) {
@@ -49,24 +52,18 @@ export async function save(
     table,
   })) as Row
 
-  return finaliseRow(table, row, {
-    oldTable: dbTable,
-    updateFormula: true,
-    fromViewId: viewId,
+  return finaliseRow(source, row, { updateFormula: true })
+}
+
+export async function find(sourceId: string, rowId: string): Promise<Row> {
+  const source = await getSource(sourceId)
+  return await outputProcessing(source, await findRow(sourceId, rowId), {
+    squash: true,
   })
 }
 
-export async function find(tableOrViewId: string, rowId: string): Promise<Row> {
-  const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
-
-  const table = await sdk.tables.getTable(tableId)
-  let row = await findRow(tableId, rowId)
-
-  row = await outputProcessing(table, row, { squash: true, fromViewId: viewId })
-  return row
-}
-
-async function findRow(tableId: string, rowId: string) {
+export async function findRow(sourceId: string, rowId: string) {
+  const { tableId } = tryExtractingTableAndViewId(sourceId)
   const db = context.getAppDB()
   let row: Row
   // TODO remove special user case in future
