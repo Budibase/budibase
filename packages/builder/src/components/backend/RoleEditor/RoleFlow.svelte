@@ -5,109 +5,51 @@
     SvelteFlow,
     Background,
     BackgroundVariant,
-    Position,
     useSvelteFlow,
+    getNodesBounds,
   } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import RoleNode from "./RoleNode.svelte"
   import RoleEdge from "./RoleEdge.svelte"
-  import { autoLayout } from "./layout"
+  import {
+    autoLayout,
+    getAdminPosition,
+    getBasicPosition,
+    rolesToLayout,
+  } from "./utils"
   import { setContext, tick } from "svelte"
   import Controls from "./Controls.svelte"
   import { GridResolution, MaxAutoZoom } from "./constants"
   import { roles } from "stores/builder"
   import { Roles } from "constants/backend"
   import { getSequentialName } from "helpers/duplicate"
+  import { derivedMemo } from "@budibase/frontend-core"
 
   const flow = useSvelteFlow()
-  const nodes = writable([])
   const edges = writable([])
+  const nodes = writable([])
   const dragging = writable(false)
-  const selectedNodes = derived(nodes, $nodes =>
-    $nodes.filter(x => x.selected).map(x => x.id)
-  )
 
-  // Ensure role changes are synced with nodes and edges
+  // Derive the list of selected nodes
+  const selectedNodes = derived(nodes, $nodes => {
+    return $nodes.filter(node => node.selected).map(node => node.id)
+  })
+
+  // Derive the bounds of all custom role nodes
+  const bounds = derivedMemo(nodes, $nodes => {
+    return getNodesBounds($nodes.filter(node => node.data.custom))
+  })
+
   $: handleExternalRoleChanges($roles)
-
-  // Converts a role doc into a node structure
-  const roleToNode = role => {
-    const custom = !role._id.match(/[A-Z]+/)
-
-    return {
-      id: role._id,
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left,
-      type: "role",
-      position: { x: 0, y: 0 },
-      data: {
-        ...role.uiMetadata,
-        custom,
-      },
-      deletable: custom,
-      draggable: custom,
-      connectable: custom,
-    }
-  }
-
-  // Converts a node structure back into a role doc
-  const nodeToRole = node => {
-    const role = $roles.find(x => x._id === node.id)
-    const inherits = $edges.filter(x => x.target === node.id).map(x => x.source)
-    // TODO save inherits array
-    return {
-      ...role,
-      inherits,
-      uiMetadata: {
-        displayName: node.data.displayName,
-        color: node.data.color,
-        description: node.data.description,
-      },
-    }
-  }
-
-  // Builds a layout from an array of roles
-  const rolesToLayout = roles => {
-    let nodes = []
-    let edges = []
-
-    // Remove some builtins
-    const ignoredRoles = [Roles.PUBLIC, Roles.POWER]
-    roles = roles.filter(role => !ignoredRoles.includes(role._id))
-    for (let role of roles) {
-      // Add node for this role
-      nodes.push(roleToNode(role))
-
-      // Add edges for this role
-      let inherits = []
-      if (role.inherits) {
-        inherits = Array.isArray(role.inherits)
-          ? role.inherits
-          : [role.inherits]
-      }
-      for (let sourceRole of inherits) {
-        if (!roles.some(x => x._id === sourceRole)) {
-          continue
-        }
-        edges.push({
-          id: `${sourceRole}-${role._id}`,
-          source: sourceRole,
-          target: role._id,
-        })
-      }
-    }
-    return {
-      nodes,
-      edges,
-    }
-  }
+  $: updateBuiltins($bounds)
 
   // Updates nodes and edges based on external changes to roles
   const handleExternalRoleChanges = roles => {
     const currentNodes = $nodes
     const newLayout = autoLayout(rolesToLayout(roles))
+    edges.set(newLayout.edges)
 
-    // For nodes we want to persist some metadata
+    // For nodes we want to persist some metadata if possible
     nodes.set(
       newLayout.nodes.map(node => {
         const currentNode = currentNodes.find(x => x.id === node.id)
@@ -121,22 +63,18 @@
         }
       })
     )
-
-    // Edges can always be updated
-    edges.set(newLayout.edges)
   }
 
-  // Manually selects a node
-  const selectNode = roleId => {
-    nodes.update($nodes => {
-      return $nodes.map(node => ({
-        ...node,
-        selected: node.id === roleId,
-      }))
+  // Positions the basic and admin role at either edge of the flow
+  const updateBuiltins = bounds => {
+    flow.updateNode(Roles.BASIC, {
+      position: getBasicPosition(bounds),
+    })
+    flow.updateNode(Roles.ADMIN, {
+      position: getAdminPosition(bounds),
     })
   }
 
-  // Creates a new role
   const createRole = async () => {
     const roleId = Helpers.uuid()
     await roles.save({
@@ -151,30 +89,30 @@
       permissionId: "write",
     })
     await tick()
-    selectNode(roleId)
+
+    // Select the new node
+    nodes.update($nodes => {
+      return $nodes.map(node => ({
+        ...node,
+        selected: node.id === roleId,
+      }))
+    })
   }
 
-  // Updates a role with new metadata
   const updateRole = async (roleId, metadata) => {
-    // Don't update builtins
-    const node = $nodes.find(x => x.id === roleId)
+    const node = $nodes.find(node => node.id === roleId)
     if (!node) {
       return
     }
-
-    // Update metadata
+    // Update metadata immediately, before saving
     if (metadata) {
       flow.updateNodeData(roleId, metadata)
     }
-
-    // Actually save changes
-    const role = nodeToRole(node)
-    await roles.save(role)
+    await roles.save(nodeToRole(node))
   }
 
-  // Deletes a role
   const deleteRole = async roleId => {
-    const role = $roles.find(x => x._id === roleId)
+    const role = $roles.find(role => role._id === roleId)
     if (role) {
       roles.delete(role)
     }
@@ -189,7 +127,7 @@
     await updateRole(edge.target)
   }
 
-  // Saves a new connection
+  // Updates roles which have had a new connection
   const onConnect = async connection => {
     await updateRole(connection.target)
   }
