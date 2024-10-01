@@ -12,14 +12,16 @@
   import GridGenerateButton from "components/backend/DataTable/buttons/grid/GridGenerateButton.svelte"
   import GridScreensButton from "components/backend/DataTable/buttons/grid/GridScreensButton.svelte"
   import GridRowActionsButton from "components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
+  import GridViewCalculationButton from "components/backend/DataTable/buttons/grid/GridViewCalculationButton.svelte"
 
   let generateButton
 
-  $: id = $viewsV2.selected?.id
+  $: view = $viewsV2.selected
+  $: id = view?.id
   $: datasource = {
     type: "viewV2",
     id,
-    tableId: $viewsV2.selected?.tableId,
+    tableId: view?.tableId,
   }
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
@@ -50,13 +52,18 @@
   buttonsCollapsed
 >
   <svelte:fragment slot="controls">
+    {#if view?.calculation}
+      <GridViewCalculationButton />
+    {/if}
     <GridFilterButton />
     <GridSortButton />
     <GridSizeButton />
-    <GridColumnsSettingButton />
     <GridManageAccessButton />
-    <GridRowActionsButton />
-    <GridScreensButton on:request-generate={() => generateButton?.show()} />
+    {#if !view?.calculation}
+      <GridColumnsSettingButton />
+      <GridRowActionsButton />
+      <GridScreensButton on:request-generate={() => generateButton?.show()} />
+    {/if}
   </svelte:fragment>
   <svelte:fragment slot="controls-right">
     <GridGenerateButton bind:this={generateButton} />
