@@ -39,6 +39,18 @@ export default class ViewV2Fetch extends DataFetch {
       this.options
     const { cursor, query, definition } = get(this.store)
 
+    // If this is a calculation view and there are no schema fields then do nothing
+    console.log(definition)
+    if (
+      definition.calculation &&
+      !Object.keys(definition.schema || {}).length
+    ) {
+      return {
+        rows: [],
+        hasNextPage: false,
+      }
+    }
+
     // If sort/filter params are not defined, update options to store the
     // params built in to this view. This ensures that we can accurately
     // compare old and new params and skip a redundant API call.

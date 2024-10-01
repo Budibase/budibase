@@ -17,6 +17,7 @@
   let generateButton
 
   $: view = $viewsV2.selected
+  $: calculation = view?.uiMetadata?.calculation
   $: id = view?.id
   $: datasource = {
     type: "viewV2",
@@ -25,9 +26,6 @@
   }
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
-  $: currentTheme = $themeStore?.theme
-  $: darkMode = !currentTheme.includes("light")
-
   $: currentTheme = $themeStore?.theme
   $: darkMode = !currentTheme.includes("light")
 
@@ -58,14 +56,14 @@
   buttonsCollapsed
 >
   <svelte:fragment slot="controls">
-    {#if view?.calculation}
+    {#if calculation}
       <GridViewCalculationButton />
     {/if}
     <GridFilterButton />
     <GridSortButton />
     <GridSizeButton />
     <GridManageAccessButton />
-    {#if !view?.calculation}
+    {#if !calculation}
       <GridColumnsSettingButton />
       <GridRowActionsButton />
       <GridScreensButton on:request-generate={() => generateButton?.show()} />
