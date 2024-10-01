@@ -9,6 +9,7 @@ import {
   JsonFieldSubType,
   RelationshipType,
 } from "./constants"
+import { AIOperationEnum } from "../ai"
 
 export interface UIFieldMetadata {
   order?: number
@@ -119,10 +120,10 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
 export interface AIFieldMetadata extends BaseFieldSchema {
   type: FieldType.AI
   formula: string
-  // TODO: needs better types
-  operation: string
+  operation: AIOperationEnum
   columns?: string[]
   column?: string
+  categories?: string
   prompt?: string
   language?: string
 }

@@ -198,7 +198,7 @@ export async function runAIColumnChecks(
   table: Table,
   { oldTable }: { oldTable?: Table }
 ) {
-  // look to see if any formula values have changed
+  // look to see if any AI column values have changed
   const shouldUpdate = Object.values(table.schema).find(
     column =>
       column.type === FieldType.AI &&
@@ -206,7 +206,7 @@ export async function runAIColumnChecks(
         !oldTable.schema[column.name] ||
         !isEqual(oldTable.schema[column.name], column))
   )
-  // if a static formula column has updated, then need to run the update
+  // if an AI column has updated, then need to run the update
   if (shouldUpdate != null) {
     await updateAllAIColumnsInTable(table)
   }

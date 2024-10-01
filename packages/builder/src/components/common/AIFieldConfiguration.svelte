@@ -1,5 +1,5 @@
 <script>
-  import { Input, Multiselect, Select, TextArea } from "@budibase/bbui"
+  import { Input, Helpers, Multiselect, Select, TextArea } from "@budibase/bbui"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
 
@@ -44,32 +44,26 @@
   const OperationFields = {
     SUMMARISE_TEXT: {
       columns: OperationFieldTypes.MULTI_COLUMN,
-      prompt: OperationFieldTypes.BINDABLE_TEXT,
     },
     CLEAN_DATA: {
       column: OperationFieldTypes.COLUMN,
-      prompt: OperationFieldTypes.BINDABLE_TEXT,
     },
     TRANSLATE: {
       column: OperationFieldTypes.COLUMN,
       language: OperationFieldTypes.BINDABLE_TEXT,
-      prompt: OperationFieldTypes.BINDABLE_TEXT,
     },
     CATEGORISE_TEXT: {
       columns: OperationFieldTypes.MULTI_COLUMN,
       categories: OperationFieldTypes.BINDABLE_TEXT,
-      prompt: OperationFieldTypes.BINDABLE_TEXT,
     },
     SENTIMENT_ANALYSIS: {
       column: OperationFieldTypes.COLUMN,
-      prompt: OperationFieldTypes.BINDABLE_TEXT,
     },
     PROMPT: {
       prompt: OperationFieldTypes.BINDABLE_TEXT,
     },
     SEARCH_WEB: {
       columns: OperationFieldTypes.MULTI_COLUMN,
-      prompt: OperationFieldTypes.BINDABLE_TEXT,
     }
   }
 
@@ -90,6 +84,7 @@
 </script>
 
 <Select
+  label={"Operation"}
   options={AIFieldConfigOptions}
   bind:value={aiField.operation}
 />
@@ -97,7 +92,7 @@
   {#each Object.keys(OperationField) as key}
     {#if OperationField[key] === OperationFieldTypes.BINDABLE_TEXT}
       <ModalBindableInput
-        label={key}
+        label={Helpers.capitalise(key)}
         panel={ServerBindingPanel}
         title="Prompt"
         on:change={e => aiField[key] = e.detail}
@@ -109,13 +104,13 @@
     {:else if OperationField[key] === OperationFieldTypes.MULTI_COLUMN}
       <Multiselect
         bind:value={aiField[key]}
-        label={key}
+        label={Helpers.capitalise(key)}
         options={schemaWithoutRelations}
       />
     {:else if OperationField[key] === OperationFieldTypes.COLUMN}
       <Select
         bind:value={aiField[key]}
-        label={key}
+        label={Helpers.capitalise(key)}
         options={schemaWithoutRelations}
       />
     {/if}
