@@ -68,6 +68,8 @@ type RangeFilter = Record<
   [InternalSearchFilterOperator.COMPLEX_ID_OPERATOR]?: never
 }
 
+type LogicalFilter = { conditions: SearchFilters[] }
+
 export type AnySearchFilter = BasicFilter | ArrayFilter | RangeFilter
 
 export interface SearchFilters {
@@ -92,12 +94,8 @@ export interface SearchFilters {
   // specific document type (such as just rows)
   documentType?: DocumentType
 
-  [LogicalOperator.AND]?: {
-    conditions: SearchFilters[]
-  }
-  [LogicalOperator.OR]?: {
-    conditions: SearchFilters[]
-  }
+  [LogicalOperator.AND]?: LogicalFilter
+  [LogicalOperator.OR]?: LogicalFilter
 }
 
 export type SearchFilterKey = keyof Omit<

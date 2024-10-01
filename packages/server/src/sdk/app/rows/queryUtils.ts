@@ -18,11 +18,11 @@ export const removeInvalidFilters = (
   for (const filterKey of Object.keys(
     result || {}
   ) as (keyof SearchFilters)[]) {
-    const filter = result[filterKey]
-    if (!filter || typeof filter !== "object") {
-      continue
-    }
     if (isLogicalSearchOperator(filterKey)) {
+      const filter = result[filterKey]
+      if (!filter || typeof filter !== "object") {
+        continue
+      }
       const resultingConditions: SearchFilters[] = []
       for (const condition of filter.conditions) {
         const resultingCondition = removeInvalidFilters(condition, validFields)
@@ -35,6 +35,11 @@ export const removeInvalidFilters = (
       } else {
         delete result[filterKey]
       }
+      continue
+    }
+
+    const filter = result[filterKey]
+    if (!filter || typeof filter !== "object") {
       continue
     }
 
