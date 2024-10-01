@@ -139,8 +139,7 @@ export async function importToRows(
     const processed = await inputProcessing(user?._id, table, row, {
       noAutoRelationships: true,
     })
-    row = processed.row
-    table = processed.table
+    row = processed
 
     // However here we must reference the original table, as we want to mutate
     // the real schema of the table passed in, not the clone used for

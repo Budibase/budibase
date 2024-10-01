@@ -9,6 +9,7 @@ import {
   SortJson,
   SortOrder,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import { handleRequest } from "../../../../api/controllers/row/external"
@@ -60,9 +61,8 @@ function getPaginationAndLimitParameters(
 
 export async function search(
   options: RowSearchParams,
-  table: Table
+  source: Table | ViewV2
 ): Promise<SearchResponse<Row>> {
-  const { tableId } = options
   const { countRows, paginate, query, ...params } = options
   const { limit } = params
   let bookmark =
@@ -106,16 +106,15 @@ export async function search(
       includeSqlRelationships: IncludeRelationship.INCLUDE,
     }
     const [{ rows, rawResponseSize }, totalRows] = await Promise.all([
-      handleRequest(Operation.READ, tableId, parameters),
+      handleRequest(Operation.READ, source, parameters),
       countRows
-        ? handleRequest(Operation.COUNT, tableId, parameters)
+        ? handleRequest(Operation.COUNT, source, parameters)
         : Promise.resolve(undefined),
     ])
 
-    let processed = await outputProcessing(table, rows, {
+    let processed = await outputProcessing(source, rows, {
       preserveLinks: true,
       squash: true,
-      fromViewId: options.viewId,
     })
 
     let hasNextPage = false
@@ -128,10 +127,13 @@ export async function search(
       }
     }
 
-    if (options.fields) {
-      const fields = [...options.fields, ...PROTECTED_EXTERNAL_COLUMNS]
-      processed = processed.map((r: any) => pick(r, fields))
-    }
+    const visibleFields =
+      options.fields ||
+      Object.keys(source.schema || {}).filter(
+        key => source.schema?.[key].visible !== false
+      )
+    const allowedFields = [...visibleFields, ...PROTECTED_EXTERNAL_COLUMNS]
+    processed = processed.map((r: any) => pick(r, allowedFields))
 
     // need wrapper object for bookmarks etc when paginating
     const response: SearchResponse<Row> = { rows: processed, hasNextPage }
@@ -201,7 +203,7 @@ export async function exportRows(
   }
 
   let result = await search(
-    { tableId, query: requestQuery, sort, sortOrder },
+    { tableId: table._id!, query: requestQuery, sort, sortOrder },
     table
   )
   let rows: Row[] = []
@@ -257,10 +259,10 @@ export async function exportRows(
 }
 
 export async function fetch(tableId: string): Promise<Row[]> {
-  const response = await handleRequest(Operation.READ, tableId, {
+  const table = await sdk.tables.getTable(tableId)
+  const response = await handleRequest(Operation.READ, table, {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
-  const table = await sdk.tables.getTable(tableId)
   return await outputProcessing(table, response.rows, {
     preserveLinks: true,
     squash: true,
@@ -268,7 +270,8 @@ export async function fetch(tableId: string): Promise<Row[]> {
 }
 
 export async function fetchRaw(tableId: string): Promise<Row[]> {
-  const response = await handleRequest(Operation.READ, tableId, {
+  const table = await sdk.tables.getTable(tableId)
+  const response = await handleRequest(Operation.READ, table, {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
   return response.rows
