@@ -1738,6 +1738,40 @@ describe.each([
         })
       })
 
+      it("views filters are respected even if the column is hidden", async () => {
+        await config.api.row.save(table._id!, {
+          one: "foo",
+          two: "bar",
+        })
+        const two = await config.api.row.save(table._id!, {
+          one: "foo2",
+          two: "bar2",
+        })
+
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          query: [
+            {
+              operator: BasicOperator.EQUAL,
+              field: "two",
+              value: "bar2",
+            },
+          ],
+          schema: {
+            id: { visible: true },
+            one: { visible: false },
+            two: { visible: false },
+          },
+        })
+
+        const response = await config.api.viewV2.search(view.id)
+        expect(response.rows).toHaveLength(1)
+        expect(response.rows).toEqual([
+          expect.objectContaining({ _id: two._id }),
+        ])
+      })
+
       it("views without data can be returned", async () => {
         const response = await config.api.viewV2.search(view.id)
         expect(response.rows).toHaveLength(0)
@@ -2459,6 +2493,11 @@ describe.each([
           roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
           level: PermissionLevel.READ,
           resourceId: table._id!,
+        })
+        await config.api.permission.revoke({
+          roleId: roles.BUILTIN_ROLE_IDS.PUBLIC, // Don't think this matters since we are revoking the permission
+          level: PermissionLevel.READ,
+          resourceId: view.id,
         })
         await config.publish()
 
