@@ -64,9 +64,9 @@ class BaseStepBuilder {
     stepId: TStep,
     stepSchema: Omit<AutomationStep, "id" | "stepId" | "inputs">,
     inputs: AutomationStepInputs<TStep>,
-    opts?: { stepName?: string; id?: string }
+    opts?: { stepName?: string; stepId?: string }
   ): this {
-    const id = opts?.id || uuidv4()
+    const id = opts?.stepId || uuidv4()
     this.steps.push({
       ...stepSchema,
       inputs: inputs as any,
@@ -107,7 +107,7 @@ class BaseStepBuilder {
   // STEPS
   createRow(
     inputs: CreateRowStepInputs,
-    opts?: { stepName?: string; id?: string }
+    opts?: { stepName?: string; stepId?: string }
   ): this {
     return this.step(
       AutomationActionStepId.CREATE_ROW,
@@ -119,7 +119,7 @@ class BaseStepBuilder {
 
   updateRow(
     inputs: UpdateRowStepInputs,
-    opts?: { stepName?: string; id?: string }
+    opts?: { stepName?: string; stepId?: string }
   ): this {
     return this.step(
       AutomationActionStepId.UPDATE_ROW,
@@ -131,7 +131,7 @@ class BaseStepBuilder {
 
   deleteRow(
     inputs: DeleteRowStepInputs,
-    opts?: { stepName?: string; id?: string }
+    opts?: { stepName?: string; stepId?: string }
   ): this {
     return this.step(
       AutomationActionStepId.DELETE_ROW,
@@ -143,7 +143,7 @@ class BaseStepBuilder {
 
   sendSmtpEmail(
     inputs: SmtpEmailStepInputs,
-    opts?: { stepName?: string; id?: string }
+    opts?: { stepName?: string; stepId?: string }
   ): this {
     return this.step(
       AutomationActionStepId.SEND_EMAIL_SMTP,
@@ -155,7 +155,7 @@ class BaseStepBuilder {
 
   executeQuery(
     inputs: ExecuteQueryStepInputs,
-    opts?: { stepName?: string; id?: string }
+    opts?: { stepName?: string; stepId?: string }
   ): this {
     return this.step(
       AutomationActionStepId.EXECUTE_QUERY,
@@ -167,7 +167,7 @@ class BaseStepBuilder {
 
   queryRows(
     inputs: QueryRowsStepInputs,
-    opts?: { stepName?: string; id?: string }
+    opts?: { stepName?: string; stepId?: string }
   ): this {
     return this.step(
       AutomationActionStepId.QUERY_ROWS,
@@ -178,7 +178,7 @@ class BaseStepBuilder {
   }
   loop(
     inputs: LoopStepInputs,
-    opts?: { stepName?: string; id?: string }
+    opts?: { stepName?: string; stepId?: string }
   ): this {
     return this.step(
       AutomationActionStepId.LOOP,
@@ -190,7 +190,7 @@ class BaseStepBuilder {
 
   serverLog(
     input: ServerLogStepInputs,
-    opts?: { stepName?: string; id?: string }
+    opts?: { stepName?: string; stepId?: string }
   ): this {
     return this.step(
       AutomationActionStepId.SERVER_LOG,
