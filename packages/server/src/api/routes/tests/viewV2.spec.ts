@@ -2546,6 +2546,51 @@ describe.each([
             }
           })
         })
+
+      !isLucene &&
+        it("should not need required fields to be present", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                  constraints: {
+                    presence: true,
+                  },
+                },
+                age: {
+                  name: "age",
+                  type: FieldType.NUMBER,
+                },
+              },
+            })
+          )
+
+          await Promise.all([
+            config.api.row.save(table._id!, { name: "Steve", age: 30 }),
+            config.api.row.save(table._id!, { name: "Jane", age: 31 }),
+          ])
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              sum: {
+                visible: true,
+                calculationType: CalculationType.SUM,
+                field: "age",
+              },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id, {
+            query: {},
+          })
+
+          expect(response.rows).toHaveLength(1)
+          expect(response.rows[0].sum).toEqual(61)
+        })
     })
 
     describe("permissions", () => {
