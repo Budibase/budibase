@@ -160,6 +160,7 @@ export const TypeIconMap = {
   [FieldType.ATTACHMENT_SINGLE]: "DocumentFragment",
   [FieldType.LINK]: "DataCorrelated",
   [FieldType.FORMULA]: "Calculator",
+  [FieldType.AI]: "MagicWand",
   [FieldType.JSON]: "Brackets",
   [FieldType.BIGINT]: "TagBold",
   [FieldType.AUTO]: "MagicWand",

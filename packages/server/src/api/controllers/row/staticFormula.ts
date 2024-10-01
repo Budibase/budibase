@@ -1,6 +1,6 @@
 import { getRowParams } from "../../../db/utils"
 import {
-  outputProcessing,
+  outputProcessing, processAIColumns,
   processFormulas,
 } from "../../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
@@ -101,7 +101,7 @@ export async function updateAllFormulasInTable(table: Table) {
       (enriched: Row) => enriched._id === row._id
     )
     if (enrichedRow) {
-      const processed = await processFormulas(table, cloneDeep(row), {
+      let processed = await processFormulas(table, cloneDeep(row), {
         dynamic: false,
         contextRows: [enrichedRow],
       })
@@ -142,6 +142,10 @@ export async function finaliseRow(
     dynamic: false,
     contextRows: [enrichedRow],
   })
+  row = await processAIColumns(table, row, {
+    contextRows: [enrichedRow],
+  })
+
   // don't worry about rev, tables handle rev/lastID updates
   // if another row has been written since processing this will
   // handle the auto ID clash
@@ -154,6 +158,10 @@ export async function finaliseRow(
   enrichedRow = await processFormulas(table, enrichedRow, {
     dynamic: false,
   })
+  enrichedRow = await processAIColumns(table, row, {
+    contextRows: [enrichedRow],
+  })
+
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
     await updateRelatedFormula(table, enrichedRow)

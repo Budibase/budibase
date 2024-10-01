@@ -56,6 +56,7 @@ interface AuthTokenResponse {
 const isTypeAllowed: Record<FieldType, boolean> = {
   [FieldType.STRING]: true,
   [FieldType.FORMULA]: true,
+  [FieldType.AI]: true,
   [FieldType.NUMBER]: true,
   [FieldType.LONGFORM]: true,
   [FieldType.DATETIME]: true,
@@ -490,7 +491,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
         }
         if (
           !sheet.headerValues.includes(key) &&
-          column.type !== FieldType.FORMULA
+          column.type !== FieldType.FORMULA &&
+          column.type !== FieldType.AI
         ) {
           updatedHeaderValues.push(key)
         }

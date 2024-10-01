@@ -1141,7 +1141,8 @@ class InternalBuilder {
           schema.constraints?.presence === true ||
           schema.type === FieldType.FORMULA ||
           schema.type === FieldType.AUTO ||
-          schema.type === FieldType.LINK
+          schema.type === FieldType.LINK ||
+          schema.type === FieldType.AI
         ) {
           continue
         }

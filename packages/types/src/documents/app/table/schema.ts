@@ -116,6 +116,17 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
   formulaType?: FormulaType
 }
 
+export interface AIFieldMetadata extends BaseFieldSchema {
+  type: FieldType.AI
+  formula: string
+  // TODO: needs better types
+  operation: string
+  columns?: string[]
+  column?: string
+  prompt?: string
+  language?: string
+}
+
 export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE
@@ -190,6 +201,7 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.LINK
     | FieldType.AUTO
     | FieldType.FORMULA
+    | FieldType.AI
     | FieldType.NUMBER
     | FieldType.LONGFORM
     | FieldType.BB_REFERENCE
@@ -207,6 +219,7 @@ export type FieldSchema =
   | RelationshipFieldMetadata
   | AutoColumnFieldMetadata
   | FormulaFieldMetadata
+  | AIFieldMetadata
   | NumberFieldMetadata
   | LongFormFieldMetadata
   | StringFieldMetadata

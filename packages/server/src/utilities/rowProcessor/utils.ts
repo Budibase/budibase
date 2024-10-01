@@ -11,6 +11,7 @@ import {
 } from "@budibase/types"
 import tracer from "dd-trace"
 import { context } from "@budibase/backend-core"
+import * as pro from "@budibase/pro"
 
 interface FormulaOpts {
   dynamic?: boolean
@@ -82,6 +83,56 @@ export async function processFormulas<T extends Row | Row[]>(
             [column]: tracer.trace("processStringSync", {}, span => {
               span?.addTags({ table_id: table._id, column, static: isStatic })
               return processStringSync(formula, context)
+            }),
+          }
+        }
+      }
+    }
+    return Array.isArray(inputRows) ? rows : rows[0]
+  })
+}
+
+/**
+ * Looks through the rows provided and finds AI columns - which it then processes.
+ */
+export async function processAIColumns<T extends Row | Row[]>(
+  table: Table,
+  inputRows: T,
+  { contextRows }: FormulaOpts
+): Promise<T> {
+  return tracer.trace("processAIColumns", {}, async span => {
+    const numRows = Array.isArray(inputRows) ? inputRows.length : 1
+    span?.addTags({ table_id: table._id })
+    const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
+    if (rows) {
+      // Ensure we have snippet context
+      await context.ensureSnippetContext()
+
+      for (let [column, schema] of Object.entries(table.schema)) {
+        if (schema.type !== FieldType.AI) {
+          continue
+        }
+
+        // const llm = pro.ai.LargeLanguageModel()
+        // if (
+        //   schema.formula == null ||
+        //   (dynamic && isStatic) ||
+        //   (!dynamic && !isStatic)
+        // ) {
+        //   continue
+        // }
+        // iterate through rows and process formula
+        for (let i = 0; i < rows.length; i++) {
+          let row = rows[i]
+          // let context = contextRows ? contextRows[i] : row
+          // let formula = schema.prompt
+          rows[i] = {
+            ...row,
+            [column]: tracer.trace("processAIColumn", {}, span => {
+              span?.addTags({ table_id: table._id, column })
+              // return processStringSync(formula, context)
+              // TODO: Add the AI stuff in to this
+              return "YEET AI"
             }),
           }
         }

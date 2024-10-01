@@ -119,6 +119,7 @@ export function buildSqlFieldList(
         ([columnName, column]) =>
           column.type !== FieldType.LINK &&
           column.type !== FieldType.FORMULA &&
+          column.type !== FieldType.AI &&
           !existing.find((field: string) => field === columnName)
       )
       .map(column => `${table.name}.${column[0]}`)

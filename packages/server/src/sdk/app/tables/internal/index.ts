@@ -15,7 +15,7 @@ import {
 import { EventType, updateLinks } from "../../../../db/linkedRows"
 import { cloneDeep } from "lodash/fp"
 import isEqual from "lodash/isEqual"
-import { runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFormula"
+import { runAIColumnChecks, runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFormula"
 import { context } from "@budibase/backend-core"
 import { findDuplicateInternalColumns } from "@budibase/shared-core"
 import { getTable } from "../getters"
@@ -133,6 +133,7 @@ export async function save(
   }
   // has to run after, make sure it has _id
   await runStaticFormulaChecks(table, { oldTable, deletion: false })
+  await runAIColumnChecks(table, { oldTable, deletion: false })
   return { table }
 }
 

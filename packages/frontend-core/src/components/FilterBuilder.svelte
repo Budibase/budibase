@@ -262,7 +262,7 @@
               {/if}
               {#if allowBindings && filter.field && filter.valueType === "Binding"}
                 <slot name="binding" {filter} />
-              {:else if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA].includes(filter.type)}
+              {:else if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA, FieldType.AI].includes(filter.type)}
                 <Input disabled={filter.noValue} bind:value={filter.value} />
               {:else if filter.type === FieldType.ARRAY || (filter.type === FieldType.OPTIONS && filter.operator === ArrayOperator.ONE_OF)}
                 <Multiselect
