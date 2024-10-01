@@ -47,11 +47,11 @@
       prompt: OperationFieldTypes.BINDABLE_TEXT,
     },
     CLEAN_DATA: {
-      columns: OperationFieldTypes.MULTI_COLUMN,
+      column: OperationFieldTypes.COLUMN,
       prompt: OperationFieldTypes.BINDABLE_TEXT,
     },
     TRANSLATE: {
-      columns: OperationFieldTypes.MULTI_COLUMN,
+      column: OperationFieldTypes.COLUMN,
       language: OperationFieldTypes.BINDABLE_TEXT,
       prompt: OperationFieldTypes.BINDABLE_TEXT,
     },
