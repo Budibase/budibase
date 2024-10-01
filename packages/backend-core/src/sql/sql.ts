@@ -811,7 +811,10 @@ class InternalBuilder {
     let table: Table
     if (typeof t === "string") {
       if (!this.query.meta.tables?.[t]) {
-        throw new Error(`Table ${t} not found`)
+        // This can legitimately happen in custom queries, where the user is
+        // querying against a table that may not have been imported into
+        // Budibase.
+        return t
       }
       table = this.query.meta.tables[t]
     } else if (t) {
@@ -1547,12 +1550,12 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       if (!this._isJsonColumn(field)) {
         continue
       }
-      const fullName = `${tableName}.${name}`
+      const fullName = `${tableName}.${name}` as keyof T
       for (let row of results) {
-        if (typeof row[fullName as keyof T] === "string") {
-          row[fullName as keyof T] = JSON.parse(row[fullName])
+        if (typeof row[fullName] === "string") {
+          row[fullName] = JSON.parse(row[fullName])
         }
-        if (typeof row[name as keyof T] === "string") {
+        if (typeof row[name] === "string") {
           row[name as keyof T] = JSON.parse(row[name])
         }
       }
