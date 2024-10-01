@@ -21,6 +21,7 @@
     PROTECTED_EXTERNAL_COLUMNS,
     canHaveDefaultColumn,
   } from "@budibase/shared-core"
+  import { makePropSafe } from "@budibase/string-templates"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
@@ -46,6 +47,7 @@
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import OptionsEditor from "./OptionsEditor.svelte"
   import { isEnabled } from "helpers/featureFlags"
+  import { getUserBindings } from "dataBinding"
 
   const AUTO_TYPE = FieldType.AUTO
   const FORMULA_TYPE = FieldType.FORMULA
@@ -191,6 +193,19 @@
     fieldId: makeFieldId(t.type, t.subtype),
     ...t,
   }))
+  $: defaultValueBindings = [
+    {
+      type: "context",
+      runtimeBinding: `${makePropSafe("now")}`,
+      readableBinding: `Date`,
+      category: "Date",
+      icon: "Date",
+      display: {
+        name: "Server date",
+      },
+    },
+    ...getUserBindings(),
+  ]
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
     // Storing the fields by complex field id
@@ -781,9 +796,8 @@
             setRequired(false)
           }
         }}
-        bindings={getBindings({ table })}
+        bindings={defaultValueBindings}
         allowJS
-        context={rowGoldenSample}
       />
     </div>
   {/if}
