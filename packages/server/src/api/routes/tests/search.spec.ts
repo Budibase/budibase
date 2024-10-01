@@ -74,7 +74,7 @@ describe.each([
       },
       generator.guid().substring(0, 10)
     )
-    sourceId = await createTable(
+    const tableId = await createTable(
       {
         name: { name: "name", type: FieldType.STRING },
         //@ts-ignore - API accepts this structure, will build out rest of definition
@@ -93,6 +93,7 @@ describe.each([
     )
     return {
       relatedTable: await config.api.table.get(relatedTable),
+      tableId,
     }
   }
 
@@ -2246,9 +2247,10 @@ describe.each([
       let productCategoryTable: Table, productCatRows: Row[]
 
       beforeAll(async () => {
-        const { relatedTable } = await basicRelationshipTables(
+        const { relatedTable, tableId } = await basicRelationshipTables(
           RelationshipType.ONE_TO_MANY
         )
+        sourceId = tableId
         productCategoryTable = relatedTable
 
         productCatRows = await Promise.all([
@@ -2298,9 +2300,10 @@ describe.each([
   isSql &&
     describe("big relations", () => {
       beforeAll(async () => {
-        const { relatedTable } = await basicRelationshipTables(
+        const { relatedTable, tableId } = await basicRelationshipTables(
           RelationshipType.MANY_TO_ONE
         )
+        sourceId = tableId
         const mainRow = await config.api.row.save(sourceId, {
           name: "foo",
         })
