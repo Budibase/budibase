@@ -780,6 +780,47 @@ describe.each([
             expect(row.age).toEqual(25)
           })
 
+          it("can reference another field in binding", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  num: {
+                    name: "num",
+                    type: FieldType.NUMBER,
+                  },
+                  age: {
+                    name: "age",
+                    type: FieldType.NUMBER,
+                    default: `{{ add num 1 }}`,
+                  },
+                },
+              })
+            )
+            const row = await config.api.row.save(table._id!, { num: 1 })
+            expect(row.age).toEqual(2)
+          })
+
+          it("cannot reference another default value field in binding", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  num: {
+                    name: "num",
+                    type: FieldType.NUMBER,
+                    default: "1",
+                  },
+                  age: {
+                    name: "age",
+                    type: FieldType.NUMBER,
+                    default: `{{ add num 1 }}`,
+                  },
+                },
+              })
+            )
+            const row = await config.api.row.save(table._id!, { num: 1 })
+            expect(row.age2).toBeUndefined()
+          })
+
           describe("invalid default value", () => {
             beforeAll(async () => {
               table = await config.api.table.save(

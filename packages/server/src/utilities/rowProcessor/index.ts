@@ -119,7 +119,7 @@ export async function processAutoColumn(
 }
 
 async function processDefaultValues(table: Table, row: Row) {
-  const ctx: { ["Current User"]?: User; user?: User } = {}
+  const ctx: Row & { ["Current User"]?: User; user?: User } = { ...row }
 
   const identity = context.getIdentity()
   if (identity?._id && identity.type === IdentityType.USER) {
