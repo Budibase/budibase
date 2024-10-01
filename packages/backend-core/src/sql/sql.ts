@@ -810,13 +810,18 @@ class InternalBuilder {
   getTableName(t?: Table | string): string {
     let table: Table
     if (typeof t === "string") {
-      if (!this.query.meta.tables?.[t]) {
+      if (this.query.table?.name === t) {
+        table = this.query.table
+      } else if (this.query.meta.table?.name === t) {
+        table = this.query.meta.table
+      } else if (!this.query.meta.tables?.[t]) {
         // This can legitimately happen in custom queries, where the user is
         // querying against a table that may not have been imported into
         // Budibase.
         return t
+      } else {
+        table = this.query.meta.tables[t]
       }
-      table = this.query.meta.tables[t]
     } else if (t) {
       table = t
     } else {
