@@ -39,13 +39,13 @@ import {
 } from "@budibase/backend-core"
 
 describe.each([
-  // ["lucene", undefined],
-  // ["sqs", undefined],
+  ["lucene", undefined],
+  ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/v2/views (%s)", (name, dsProvider) => {
   const config = setup.getConfig()
   const isSqs = name === "sqs"
@@ -2459,7 +2459,7 @@ describe.each([
             }
           })
 
-          it.only("should be able to group by a basic field", async () => {
+          it("should be able to group by a basic field", async () => {
             const view = await config.api.viewV2.create({
               tableId: table._id!,
               name: generator.guid(),
@@ -2480,9 +2480,14 @@ describe.each([
               query: {},
             })
 
+            const priceByQuantity: Record<number, number> = {}
+            for (const row of rows) {
+              priceByQuantity[row.quantity] ??= 0
+              priceByQuantity[row.quantity] += row.price
+            }
+
             for (const row of response.rows) {
-              expect(row["quantity"]).toBeGreaterThan(0)
-              expect(row["Total Price"]).toBeGreaterThan(0)
+              expect(row["Total Price"]).toEqual(priceByQuantity[row.quantity])
             }
           })
         })
