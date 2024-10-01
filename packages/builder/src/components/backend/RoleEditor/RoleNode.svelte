@@ -17,6 +17,7 @@
   export let data
   export let id
   export let selected
+  export let isConnectable
 
   const { dragging, updateRole, deleteRole } = getContext("flow")
 
@@ -30,7 +31,7 @@
   $: nameError = validateName(tempDisplayName, $roles)
   $: descriptionError = validateDescription(tempDescription)
   $: invalid = nameError || descriptionError
-  $: targetClasses = `target${$dragging ? "" : " hidden"}`
+  $: targetClasses = `target${!$dragging ? " hidden" : ""}`
 
   const validateName = (name, roles) => {
     if (!name?.length) {
@@ -91,15 +92,13 @@
       </div>
     {/if}
   </div>
-  {#if id !== Roles.BASIC}
+  {#if isConnectable}
     <Handle
       type="target"
       position={Position.Left}
       class={targetClasses}
       isConnectable={$dragging}
     />
-  {/if}
-  {#if id !== Roles.ADMIN}
     <Handle type="source" position={Position.Right} />
   {/if}
 </div>

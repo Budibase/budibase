@@ -31,26 +31,33 @@
   $: handleExternalRoleChanges($roles)
 
   // Converts a role doc into a node structure
-  const roleToNode = role => ({
-    id: role._id,
-    sourcePosition: Position.Right,
-    targetPosition: Position.Left,
-    type: "role",
-    position: { x: 0, y: 0 },
-    data: {
-      ...role.uiMetadata,
-      custom: !role._id.match(/[A-Z]+/),
-    },
-  })
+  const roleToNode = role => {
+    const custom = !role._id.match(/[A-Z]+/)
+
+    return {
+      id: role._id,
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+      type: "role",
+      position: { x: 0, y: 0 },
+      data: {
+        ...role.uiMetadata,
+        custom,
+      },
+      deletable: custom,
+      draggable: custom,
+      connectable: custom,
+    }
+  }
 
   // Converts a node structure back into a role doc
   const nodeToRole = node => {
     const role = $roles.find(x => x._id === node.id)
-    // const inherits = $edges.filter(x => x.target === node.id).map(x => x.source)
+    const inherits = $edges.filter(x => x.target === node.id).map(x => x.source)
     // TODO save inherits array
     return {
       ...role,
-      // inherits,
+      inherits,
       uiMetadata: {
         displayName: node.data.displayName,
         color: node.data.color,
@@ -63,7 +70,11 @@
   const rolesToLayout = roles => {
     let nodes = []
     let edges = []
-    for (let role of roles.filter(role => role._id !== Roles.PUBLIC)) {
+
+    // Remove some builtins
+    const ignoredRoles = [Roles.PUBLIC, Roles.POWER]
+    roles = roles.filter(role => !ignoredRoles.includes(role._id))
+    for (let role of roles) {
       // Add node for this role
       nodes.push(roleToNode(role))
 
@@ -138,7 +149,6 @@
         description: "Custom role",
       },
       permissionId: "write",
-      inherits: Roles.BASIC,
     })
     await tick()
     selectNode(roleId)
@@ -148,7 +158,7 @@
   const updateRole = async (roleId, metadata) => {
     // Don't update builtins
     const node = $nodes.find(x => x.id === roleId)
-    if (!node || !node.data.custom) {
+    if (!node) {
       return
     }
 
@@ -170,6 +180,15 @@
     }
   }
 
+  const deleteEdge = async edgeId => {
+    const edge = $edges.find(x => x.id === edgeId)
+    if (!edge) {
+      return
+    }
+    edges.set($edges.filter(x => x.id !== edgeId))
+    await updateRole(edge.target)
+  }
+
   // Saves a new connection
   const onConnect = async connection => {
     await updateRole(connection.target)
@@ -183,6 +202,7 @@
     createRole,
     updateRole,
     deleteRole,
+    deleteEdge,
   })
 </script>
 

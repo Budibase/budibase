@@ -10,7 +10,7 @@ export const dagreLayout = ({ nodes, edges }) => {
   dagreGraph.setDefaultEdgeLabel(() => ({}))
   dagreGraph.setGraph({
     rankdir: "LR",
-    ranksep: GridResolution * 8,
+    ranksep: GridResolution * 4,
     nodesep: GridResolution * 2,
   })
   nodes.forEach(node => {
@@ -19,6 +19,26 @@ export const dagreLayout = ({ nodes, edges }) => {
   edges.forEach(edge => {
     dagreGraph.setEdge(edge.source, edge.target)
   })
+
+  // Add ephemeral edges for basic and admin so that we can position them properly
+
+  for (let node of nodes) {
+    if (
+      !edges.some(x => x.target === node.id) &&
+      node.id !== Roles.BASIC &&
+      node.id !== Roles.ADMIN
+    ) {
+      dagreGraph.setEdge(Roles.BASIC, node.id)
+    }
+    if (
+      !edges.some(x => x.source === node.id) &&
+      node.id !== Roles.BASIC &&
+      node.id !== Roles.ADMIN
+    ) {
+      dagreGraph.setEdge(node.id, Roles.ADMIN)
+    }
+  }
+
   dagre.layout(dagreGraph)
   nodes.forEach(node => {
     const pos = dagreGraph.node(node.id)
@@ -34,32 +54,14 @@ export const dagreLayout = ({ nodes, edges }) => {
 
 // Adds additional edges as needed to the flow structure to ensure compatibility with BB role logic
 const sanitiseLayout = ({ nodes, edges }) => {
-  let additions = []
-
-  for (let node of nodes) {
-    // If a node does not inherit anything, let it inherit basic
-    if (!edges.some(x => x.target === node.id) && node.id !== Roles.BASIC) {
-      additions.push({
-        id: Helpers.uuid(),
-        source: Roles.BASIC,
-        target: node.id,
-        animated: true,
-      })
-    }
-
-    // If a node is not inherited by anything, let it be inherited by admin
-    if (!edges.some(x => x.source === node.id) && node.id !== Roles.ADMIN) {
-      additions.push({
-        id: Helpers.uuid(),
-        source: node.id,
-        target: Roles.ADMIN,
-      })
-    }
-  }
+  // Remove any inheritance of basic and admin since this is implied
+  edges = edges.filter(
+    edge => edge.source !== Roles.BASIC && edge.target !== Roles.ADMIN
+  )
 
   return {
     nodes,
-    edges: [...edges, ...additions],
+    edges,
   }
 }
 
