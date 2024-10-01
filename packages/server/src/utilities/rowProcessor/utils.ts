@@ -102,8 +102,9 @@ export async function processAIColumns<T extends Row | Row[]>(
 ): Promise<T> {
   return tracer.trace("processAIColumns", {}, async span => {
     const numRows = Array.isArray(inputRows) ? inputRows.length : 1
-    span?.addTags({ table_id: table._id })
+    span?.addTags({ table_id: table._id, numRows })
     const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
+    const llm = await pro.ai.LargeLanguageModel.forCurrentTenant("gpt-4o-mini")
     if (rows) {
       // Ensure we have snippet context
       await context.ensureSnippetContext()
@@ -113,29 +114,34 @@ export async function processAIColumns<T extends Row | Row[]>(
           continue
         }
 
-        // const llm = pro.ai.LargeLanguageModel()
-        // if (
-        //   schema.formula == null ||
-        //   (dynamic && isStatic) ||
-        //   (!dynamic && !isStatic)
-        // ) {
-        //   continue
-        // }
-        // iterate through rows and process formula
-        for (let i = 0; i < rows.length; i++) {
-          let row = rows[i]
-          // let context = contextRows ? contextRows[i] : row
-          // let formula = schema.prompt
-          rows[i] = {
-            ...row,
-            [column]: tracer.trace("processAIColumn", {}, span => {
-              span?.addTags({ table_id: table._id, column })
-              // return processStringSync(formula, context)
-              // TODO: Add the AI stuff in to this
-              return "YEET AI"
-            }),
+        const rowUpdates = rows.map((row, i) => {
+          const contextRow = contextRows ? contextRows[i] : row
+          // TODO: Map the prompts with string-templates
+          // grab the operation based on the schema
+          // then check the types in the fields, and decide whether to pass them through string templates
+          // TODO: cleaner way to map to the schema, move things into BB types and check against the AI schema
+          for (const key in schema) {
+            if (["prompt", "categories"].includes(key)) {
+              schema[key] = processStringSync(schema[key], contextRow)
+            }
           }
-        }
+
+          const prompt = llm.buildPromptFromAIOperation({ schema, row })
+
+          return tracer.trace("processAIColumn", {}, async span => {
+            span?.addTags({ table_id: table._id, column })
+            const llmResponse = await llm.run(prompt)
+            return {
+              ...row,
+              [column]: llmResponse
+            }
+          })
+        })
+
+        const processedRows = await Promise.all(rowUpdates)
+
+        // Promise.all is deterministic so can rely on the indexing here
+        processedRows.forEach((processedRow, index) => rows[index] = processedRow)
       }
     }
     return Array.isArray(inputRows) ? rows : rows[0]
