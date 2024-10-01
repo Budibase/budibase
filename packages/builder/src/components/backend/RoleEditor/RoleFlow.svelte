@@ -137,6 +137,7 @@
     edges,
     dragging,
     selectedNodes,
+    bounds,
     createRole,
     updateRole,
     deleteRole,
