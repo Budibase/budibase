@@ -20,7 +20,7 @@
   export let target
 
   const flow = useSvelteFlow()
-  const { updateRole, selectedNodes } = getContext("flow")
+  const { deleteEdge, selectedNodes } = getContext("flow")
 
   let iconHovered = false
   let edgeHovered = false
@@ -51,13 +51,6 @@
     if (active) classes += `active `
     if (iconHovered) classes += `delete `
     return classes
-  }
-
-  const deleteEdge = async () => {
-    flow.deleteElements({
-      edges: [{ id }],
-    })
-    await updateRole(target)
   }
 
   const onEdgeMouseOver = () => {
@@ -92,7 +85,7 @@
     style:transform="translate(-50%, -50%) translate({labelX}px,{labelY}px)"
     class="edge-label nodrag nopan"
     class:active
-    on:click={deleteEdge}
+    on:click={() => deleteEdge(id)}
     on:mouseover={() => (iconHovered = true)}
     on:mouseout={() => (iconHovered = false)}
   >
