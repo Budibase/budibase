@@ -272,7 +272,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     try {
       const bindings = query.bindings || []
       this.log(query.sql, bindings)
-      return await client.query(query.sql, bindings)
+      const result = await client.query(query.sql, bindings)
+      return result
     } catch (err: any) {
       await this.closeConnection()
       let readableMessage = getReadableErrorMessage(
