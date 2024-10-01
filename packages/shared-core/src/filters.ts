@@ -163,9 +163,6 @@ export function recurseSearchFilters(
  * https://github.com/Budibase/budibase/issues/10118
  */
 export const cleanupQuery = (query: SearchFilters) => {
-  if (!query) {
-    return query
-  }
   for (let filterField of NoEmptyFilterStrings) {
     if (!query[filterField]) {
       continue
@@ -599,7 +596,7 @@ export const buildQuery = (
   const globalOperator: LogicalOperator =
     operatorMap[parsedFilter.logicalOperator as FilterGroupLogicalOperator]
 
-  const coreRequest: SearchFilters = {
+  return {
     ...(globalOnEmpty ? { onEmptyFilter: globalOnEmpty } : {}),
     [globalOperator]: {
       conditions: parsedFilter.groups?.map((group: SearchFilterGroup) => {
@@ -613,16 +610,12 @@ export const buildQuery = (
       }),
     },
   }
-  return coreRequest
 }
 
 // The frontend can send single values for array fields sometimes, so to handle
 // this we convert them to arrays at the controller level so that nothing below
 // this has to worry about the non-array values.
 export function fixupFilterArrays(filters: SearchFilters) {
-  if (!filters) {
-    return filters
-  }
   for (const searchField of Object.values(ArrayOperator)) {
     const field = filters[searchField]
     if (field == null || !isPlainObject(field)) {

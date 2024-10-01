@@ -11,10 +11,7 @@ import { removeKeyNumbering } from "./filters"
 
 // an array of keys from filter type to properties that are in the type
 // this can then be converted using .fromEntries to an object
-type WhitelistedFilters = [
-  keyof LegacyFilter,
-  LegacyFilter[keyof LegacyFilter]
-][]
+type AllowedFilters = [keyof LegacyFilter, LegacyFilter[keyof LegacyFilter]][]
 
 export function unreachable(
   value: never,
@@ -141,7 +138,7 @@ export const processSearchFilters = (
     groups: [],
   }
 
-  const filterWhitelistKeys = [
+  const filterAllowedKeys = [
     "field",
     "operator",
     "value",
@@ -181,10 +178,10 @@ export const processSearchFilters = (
         return acc
       }
 
-      const whiteListedFilterSettings: WhitelistedFilters =
-        filterPropertyKeys.reduce((acc: WhitelistedFilters, key) => {
+      const allowedFilterSettings: AllowedFilters = filterPropertyKeys.reduce(
+        (acc: AllowedFilters, key) => {
           const value = filter[key]
-          if (filterWhitelistKeys.includes(key)) {
+          if (filterAllowedKeys.includes(key)) {
             if (key === "field") {
               acc.push([key, removeKeyNumbering(value)])
             } else {
@@ -192,10 +189,12 @@ export const processSearchFilters = (
             }
           }
           return acc
-        }, [])
+        },
+        []
+      )
 
       const migratedFilter: LegacyFilter = Object.fromEntries(
-        whiteListedFilterSettings
+        allowedFilterSettings
       ) as LegacyFilter
 
       baseGroup.filters!.push(migratedFilter)
