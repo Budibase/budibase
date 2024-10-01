@@ -42,6 +42,11 @@ export const deriveStores = context => {
     return map
   })
 
+  // Derived list of columns which are direct part of the table
+  const tableColumns = derived(columns, $columns => {
+    return $columns.filter(col => !col.related)
+  })
+
   // Derived list of columns which have not been explicitly hidden
   const visibleColumns = derived(columns, $columns => {
     return $columns.filter(col => col.visible)
@@ -64,6 +69,7 @@ export const deriveStores = context => {
   })
 
   return {
+    tableColumns,
     displayColumn,
     columnLookupMap,
     visibleColumns,
@@ -73,16 +79,24 @@ export const deriveStores = context => {
 }
 
 export const createActions = context => {
-  const { columns, datasource, schema } = context
+  const { columns, datasource } = context
 
   // Updates the width of all columns
   const changeAllColumnWidths = async width => {
-    const $schema = get(schema)
-    let mutations = {}
-    Object.keys($schema).forEach(field => {
-      mutations[field] = { width }
+    const $columns = get(columns)
+    $columns.forEach(column => {
+      const { related } = column
+      const mutation = { width }
+      if (!related) {
+        datasource.actions.addSchemaMutation(column.name, mutation)
+      } else {
+        datasource.actions.addSubSchemaMutation(
+          related.subField,
+          related.field,
+          mutation
+        )
+      }
     })
-    datasource.actions.addSchemaMutations(mutations)
     await datasource.actions.saveSchemaMutations()
   }
 
@@ -136,7 +150,7 @@ export const initialise = context => {
         .map(field => {
           const fieldSchema = $enrichedSchema[field]
           const oldColumn = $columns?.find(col => col.name === field)
-          let column = {
+          const column = {
             name: field,
             label: fieldSchema.displayName || field,
             schema: fieldSchema,
@@ -145,6 +159,7 @@ export const initialise = context => {
             readonly: fieldSchema.readonly,
             order: fieldSchema.order ?? oldColumn?.order,
             conditions: fieldSchema.conditions,
+            related: fieldSchema.related,
           }
           // Override a few properties for primary display
           if (field === primaryDisplay) {

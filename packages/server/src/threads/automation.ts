@@ -516,10 +516,8 @@ class Orchestrator {
       filter => {
         Object.entries(filter).forEach(([_, value]) => {
           Object.entries(value).forEach(([field, _]) => {
-            const fromContext = processStringSync(
-              `{{ literal ${field} }}`,
-              this.context
-            )
+            const updatedField = field.replace("{{", "{{ literal ")
+            const fromContext = processStringSync(updatedField, this.context)
             toFilter[field] = fromContext
           })
         })
