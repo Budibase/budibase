@@ -74,7 +74,7 @@ class Orchestrator {
   private job: Job
   private loopStepOutputs: LoopStep[]
   private stopped: boolean
-  private executionOutput: AutomationContext
+  private executionOutput: Omit<AutomationContext, "stepsByName" | "stepsById">
 
   constructor(job: AutomationJob) {
     let automation = job.data.automation
@@ -458,9 +458,9 @@ class Orchestrator {
         inputs: steps[stepToLoopIndex].inputs,
       })
 
-      this.context.stepsById![steps[stepToLoopIndex].id] = tempOutput
+      this.context.stepsById[steps[stepToLoopIndex].id] = tempOutput
       const stepName = steps[stepToLoopIndex].name || steps[stepToLoopIndex].id
-      this.context.stepsByName![stepName] = tempOutput
+      this.context.stepsByName[stepName] = tempOutput
       this.context.steps[this.context.steps.length] = tempOutput
       this.context.steps = this.context.steps.filter(
         item => !item.hasOwnProperty.call(item, "currentItem")

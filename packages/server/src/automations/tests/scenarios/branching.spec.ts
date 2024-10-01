@@ -30,7 +30,7 @@ describe("Branching automations", () => {
       .appAction({ fields: {} })
       .serverLog(
         { text: "Starting automation" },
-        { stepName: "FirstLog", id: firstLogId }
+        { stepName: "FirstLog", stepId: firstLogId }
       )
       .branch({
         topLevelBranch1: {
@@ -38,14 +38,14 @@ describe("Branching automations", () => {
             stepBuilder
               .serverLog(
                 { text: "Branch 1" },
-                { id: "66666666-6666-6666-6666-666666666666" }
+                { stepId: "66666666-6666-6666-6666-666666666666" }
               )
               .branch({
                 branch1: {
                   steps: stepBuilder =>
                     stepBuilder.serverLog(
                       { text: "Branch 1.1" },
-                      { id: branch1LogId }
+                      { stepId: branch1LogId }
                     ),
                   condition: {
                     equal: { [`{{ steps.${firstLogId}.success }}`]: true },
@@ -55,7 +55,7 @@ describe("Branching automations", () => {
                   steps: stepBuilder =>
                     stepBuilder.serverLog(
                       { text: "Branch 1.2" },
-                      { id: branch2LogId }
+                      { stepId: branch2LogId }
                     ),
                   condition: {
                     equal: { [`{{ steps.${firstLogId}.success }}`]: false },
@@ -68,7 +68,7 @@ describe("Branching automations", () => {
         },
         topLevelBranch2: {
           steps: stepBuilder =>
-            stepBuilder.serverLog({ text: "Branch 2" }, { id: branch2Id }),
+            stepBuilder.serverLog({ text: "Branch 2" }, { stepId: branch2Id }),
           condition: {
             equal: { [`{{ steps.${firstLogId}.success }}`]: false },
           },
