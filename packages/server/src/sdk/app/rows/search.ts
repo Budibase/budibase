@@ -81,11 +81,12 @@ export async function search(
       options.query = {}
     }
 
+    // need to make sure filters in correct shape before checking for view
+    options = searchInputMapping(table, options)
+
     if (options.viewId) {
       // Delete extraneous search params that cannot be overridden
       delete options.query.onEmptyFilter
-
-      options = searchInputMapping(table, options)
 
       const view = source as ViewV2
       // Enrich saved query with ephemeral query params.
