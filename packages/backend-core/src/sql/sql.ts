@@ -799,6 +799,14 @@ class InternalBuilder {
     return query
   }
 
+  isSqs(t?: Table): boolean {
+    const table = t || this.table
+    return (
+      table.sourceType === TableSourceType.INTERNAL ||
+      table.sourceId === INTERNAL_TABLE_SOURCE_ID
+    )
+  }
+
   getTableName(t?: Table | string): string {
     let table: Table
     if (typeof t === "string") {
@@ -813,11 +821,7 @@ class InternalBuilder {
     }
 
     let name = table.name
-    if (
-      (table.sourceType === TableSourceType.INTERNAL ||
-        table.sourceId === INTERNAL_TABLE_SOURCE_ID) &&
-      table._id
-    ) {
+    if (this.isSqs(table) && table._id) {
       // SQS uses the table ID rather than the table name
       name = table._id
     }
@@ -830,7 +834,7 @@ class InternalBuilder {
       throw new Error("SQL counting requires primary key to be supplied")
     }
     return query.countDistinct(
-      `${this.getTableName(this.table)}.${this.table.primary[0]} as total`
+      `${this.getTableName()}.${this.table.primary[0]} as total`
     )
   }
 
@@ -842,10 +846,11 @@ class InternalBuilder {
     const tableName = this.getTableName()
     if (fields.length > 0) {
       query = query.groupBy(fields.map(field => `${tableName}.${field}`))
+      query = query.select(fields.map(field => `${tableName}.${field}`))
     }
     for (const aggregation of aggregations) {
       const op = aggregation.calculationType
-      const field = `${this.table.name}.${aggregation.field} as ${aggregation.name}`
+      const field = `${tableName}.${aggregation.field} as ${aggregation.name}`
       switch (op) {
         case CalculationType.COUNT:
           query = query.count(field)
