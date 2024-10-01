@@ -113,11 +113,10 @@ export async function bulkImport(
     const processed = await inputProcessing(ctx.user?._id, table, row, {
       noAutoRelationships: true,
     })
-    parsedRows.push(processed.row)
-    table = processed.table
+    parsedRows.push(processed)
   }
 
-  await handleRequest(Operation.BULK_UPSERT, table._id!, {
+  await handleRequest(Operation.BULK_UPSERT, table, {
     rows: parsedRows,
   })
   await events.rows.imported(table, parsedRows.length)

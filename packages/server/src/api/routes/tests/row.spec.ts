@@ -76,7 +76,7 @@ async function waitForEvent(
 }
 
 describe.each([
-  ["internal", undefined],
+  ["lucene", undefined],
   ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
@@ -2453,9 +2453,15 @@ describe.each([
       let flagCleanup: (() => void) | undefined
 
       beforeAll(async () => {
-        flagCleanup = setCoreEnv({
+        const env = {
           TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
-        })
+        }
+        if (isSqs) {
+          env.TENANT_FEATURE_FLAGS = `${env.TENANT_FEATURE_FLAGS},*:SQS`
+        } else {
+          env.TENANT_FEATURE_FLAGS = `${env.TENANT_FEATURE_FLAGS},*:!SQS`
+        }
+        flagCleanup = setCoreEnv(env)
 
         const aux2Table = await config.api.table.save(saveTableRequest())
         const aux2Data = await config.api.row.save(aux2Table._id!, {})

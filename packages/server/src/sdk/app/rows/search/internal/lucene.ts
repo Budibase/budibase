@@ -8,21 +8,29 @@ import {
   SortType,
   Table,
   User,
+  ViewV2,
 } from "@budibase/types"
 import { getGlobalUsersFromMetadata } from "../../../../../utilities/global"
 import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
+import sdk from "../../../../"
 
 export async function search(
   options: RowSearchParams,
-  table: Table
+  source: Table | ViewV2
 ): Promise<SearchResponse<Row>> {
-  const { tableId } = options
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
 
   const { paginate, query } = options
 
   const params: RowSearchParams = {
     tableId: options.tableId,
+    viewId: options.viewId,
     sort: options.sort,
     sortOrder: options.sortOrder,
     sortType: options.sortType,
@@ -50,18 +58,20 @@ export async function search(
   // Enrich search results with relationships
   if (response.rows && response.rows.length) {
     // enrich with global users if from users table
-    if (tableId === InternalTables.USER_METADATA) {
+    if (table._id === InternalTables.USER_METADATA) {
       response.rows = await getGlobalUsersFromMetadata(response.rows as User[])
     }
 
-    if (options.fields) {
-      const fields = [...options.fields, ...PROTECTED_INTERNAL_COLUMNS]
-      response.rows = response.rows.map((r: any) => pick(r, fields))
-    }
+    const visibleFields =
+      options.fields ||
+      Object.keys(source.schema || {}).filter(
+        key => source.schema?.[key].visible !== false
+      )
+    const allowedFields = [...visibleFields, ...PROTECTED_INTERNAL_COLUMNS]
+    response.rows = response.rows.map((r: any) => pick(r, allowedFields))
 
-    response.rows = await outputProcessing(table, response.rows, {
+    response.rows = await outputProcessing(source, response.rows, {
       squash: true,
-      fromViewId: options.viewId,
     })
   }
 

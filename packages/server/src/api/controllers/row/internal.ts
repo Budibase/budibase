@@ -21,18 +21,19 @@ import {
 import sdk from "../../../sdk"
 import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
 import { flatten } from "lodash"
+import { findRow } from "../../../sdk/app/rows/internal"
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
-  const { tableId, viewId } = utils.getSourceId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
+  const source = await utils.getSource(ctx)
+  const table = sdk.views.isView(source)
+    ? await sdk.views.getTable(source.id)
+    : source
   const inputs = ctx.request.body
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
-  const dbTable = await sdk.tables.getTable(tableId)
   try {
-    oldRow = await outputProcessing(
-      dbTable,
-      await utils.findRow(tableId, inputs._id!)
-    )
+    oldRow = await outputProcessing(source, await findRow(tableId, inputs._id!))
   } catch (err) {
     if (isUserTable) {
       // don't include the rev, it'll be the global rev
@@ -48,22 +49,15 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   // need to build up full patch fields before coerce
   let combinedRow: any = cloneDeep(oldRow)
   for (let key of Object.keys(inputs)) {
-    if (!dbTable.schema[key]) continue
+    if (!table.schema[key]) continue
     combinedRow[key] = inputs[key]
   }
 
-  // need to copy the table so it can be differenced on way out
-  const tableClone = cloneDeep(dbTable)
-
   // this returns the table and row incase they have been updated
-  let { table, row } = await inputProcessing(
-    ctx.user?._id,
-    tableClone,
-    combinedRow
-  )
+  let row = await inputProcessing(ctx.user?._id, source, combinedRow)
   const validateResult = await sdk.rows.utils.validate({
     row,
-    table,
+    source,
   })
 
   if (!validateResult.valid) {
@@ -87,10 +81,8 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     return { row: ctx.body as Row, table, oldRow }
   }
 
-  const result = await finaliseRow(table, row, {
-    oldTable: dbTable,
+  const result = await finaliseRow(source, row, {
     updateFormula: true,
-    fromViewId: viewId,
   })
 
   return { ...result, oldRow }
@@ -186,7 +178,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
     sdk.tables.getTable(tableId),
     linkRows.getLinkDocuments({ tableId, rowId, fieldName }),
   ])
-  let row = await utils.findRow(tableId, rowId)
+  let row = await findRow(tableId, rowId)
   row = await outputProcessing(table, row)
   const linkVals = links as LinkDocumentValue[]
 
