@@ -1,7 +1,10 @@
 import {
   EmptyFilterOption,
+  LogicalOperator,
   Row,
   RowSearchParams,
+  SearchFilterKey,
+  SearchFilters,
   SearchResponse,
   SortOrder,
   Table,
@@ -14,9 +17,10 @@ import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
-import { features } from "@budibase/backend-core"
+import { db, features } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { getQueryableFields, removeInvalidFilters } from "./queryUtils"
+import { enrichSearchContext } from "../../../api/controllers/row/utils"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -34,7 +38,8 @@ function pickApi(tableId: any) {
 }
 
 export async function search(
-  options: RowSearchParams
+  options: RowSearchParams,
+  context?: Record<string, any>
 ): Promise<SearchResponse<Row>> {
   return await tracer.trace("search", async span => {
     span?.addTags({
@@ -51,7 +56,73 @@ export async function search(
       countRows: options.countRows,
     })
 
-    options.query = dataFilters.cleanupQuery(options.query || {})
+    let source: Table | ViewV2
+    let table: Table
+    if (options.viewId) {
+      source = await sdk.views.get(options.viewId)
+      table = await sdk.views.getTable(source)
+      options = searchInputMapping(table, options)
+    } else if (options.tableId) {
+      source = await sdk.tables.getTable(options.tableId)
+      table = source
+    } else {
+      throw new Error(`Must supply either a view ID or a table ID`)
+    }
+
+    const isExternalTable = isExternalTableID(table._id!)
+
+    if (options.query) {
+      const visibleFields = (
+        options.fields || Object.keys(table.schema)
+      ).filter(field => table.schema[field].visible !== false)
+
+      const queryableFields = await getQueryableFields(table, visibleFields)
+      options.query = removeInvalidFilters(options.query, queryableFields)
+    } else {
+      options.query = {}
+    }
+
+    if (options.viewId) {
+      const view = await sdk.views.get(options.viewId)
+      // Enrich saved query with ephemeral query params.
+      // We prevent searching on any fields that are saved as part of the query, as
+      // that could let users find rows they should not be allowed to access.
+      let viewQuery = dataFilters.buildQuery(view.query || [])
+
+      if (!isExternalTable && !(await features.flags.isEnabled("SQS"))) {
+        // Lucene does not accept conditional filters, so we need to keep the old logic
+        const query: SearchFilters = viewQuery
+
+        // Extract existing fields
+        const existingFields =
+          view.query
+            ?.filter(filter => filter.field)
+            .map(filter => db.removeKeyNumbering(filter.field)) || []
+
+        // Carry over filters for unused fields
+        Object.keys(options.query || {}).forEach(key => {
+          const operator = key as Exclude<SearchFilterKey, LogicalOperator>
+          Object.keys(options.query[operator] || {}).forEach(field => {
+            if (!existingFields.includes(db.removeKeyNumbering(field))) {
+              query[operator]![field] = options.query[operator]![field]
+            }
+          })
+        })
+        options.query = query
+      } else {
+        options.query = {
+          $and: {
+            conditions: [viewQuery, options.query],
+          },
+        }
+      }
+    }
+
+    if (context) {
+      options.query = await enrichSearchContext(options.query, context)
+    }
+
+    options.query = dataFilters.cleanupQuery(options.query)
     options.query = dataFilters.fixupFilterArrays(options.query)
 
     span.addTags({
@@ -72,30 +143,8 @@ export async function search(
       options.sortOrder = options.sortOrder.toLowerCase() as SortOrder
     }
 
-    let source: Table | ViewV2
-    let table: Table
-    if (options.viewId) {
-      source = await sdk.views.get(options.viewId)
-      table = await sdk.views.getTable(source)
-      options = searchInputMapping(table, options)
-    } else if (options.tableId) {
-      source = await sdk.tables.getTable(options.tableId)
-      table = source
-      options = searchInputMapping(table, options)
-    } else {
-      throw new Error(`Must supply either a view ID or a table ID`)
-    }
+    options = searchInputMapping(table, options)
 
-    if (options.query) {
-      const visibleFields = (
-        options.fields || Object.keys(table.schema)
-      ).filter(field => table.schema[field].visible !== false)
-
-      const queryableFields = await getQueryableFields(table, visibleFields)
-      options.query = removeInvalidFilters(options.query, queryableFields)
-    }
-
-    const isExternalTable = isExternalTableID(table._id!)
     let result: SearchResponse<Row>
     if (isExternalTable) {
       span?.addTags({ searchType: "external" })

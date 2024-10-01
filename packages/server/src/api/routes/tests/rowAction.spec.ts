@@ -826,11 +826,20 @@ describe("/rowsActions", () => {
               )
             ).id
 
+            // Allow row action on view
             await config.api.rowAction.setViewPermission(
               tableId,
               viewId,
               rowAction.id
             )
+
+            // Delete explicit view permissions so they inherit table permissions
+            await config.api.permission.revoke({
+              roleId: roles.BUILTIN_ROLE_IDS.PUBLIC, // Don't think this matters since we are revoking the permission
+              level: PermissionLevel.READ,
+              resourceId: viewId,
+            })
+
             return { permissionResource: tableId, triggerResouce: viewId }
           },
         ],

@@ -641,6 +641,8 @@
       let hasUserDefinedName = automation.stepNames?.[allSteps[idx]?.id]
       if (isLoopBlock) {
         runtimeName = `loop.${name}`
+      } else if (idx === 0) {
+        runtimeName = `trigger.${name}`
       } else if (block.name.startsWith("JS")) {
         runtimeName = hasUserDefinedName
           ? `stepsByName["${bindingName}"].${name}`
@@ -650,7 +652,7 @@
           ? `stepsByName.${bindingName}.${name}`
           : `steps.${idx - loopBlockCount}.${name}`
       }
-      return idx === 0 ? `trigger.${name}` : runtimeName
+      return runtimeName
     }
 
     const determineCategoryName = (idx, isLoopBlock, bindingName) => {
@@ -677,7 +679,7 @@
       )
       return {
         readableBinding:
-          bindingName && !isLoopBlock
+          bindingName && !isLoopBlock && idx !== 0
             ? `steps.${bindingName}.${name}`
             : runtimeBinding,
         runtimeBinding,
