@@ -5,15 +5,10 @@ import isEqual from "lodash/isEqual"
 import uniq from "lodash/uniq"
 import { updateAllFormulasInTable } from "../row/staticFormula"
 import { context } from "@budibase/backend-core"
-import {
-  FormulaType,
-  FieldSchema,
-  FieldType,
-  FormulaFieldMetadata,
-  Table,
-} from "@budibase/types"
+import { FieldSchema, FieldType, FormulaFieldMetadata, FormulaType, Table, } from "@budibase/types"
 import sdk from "../../../sdk"
 import { isRelationshipColumn } from "../../../db/utils"
+import { updateAllAIColumnsInTable } from "../row/aiColumn"
 
 function isStaticFormula(
   column: FieldSchema
@@ -196,5 +191,23 @@ export async function runStaticFormulaChecks(
   await checkIfFormulaNeedsCleared(table, { oldTable, deletion })
   if (!deletion) {
     await checkIfFormulaUpdated(table, { oldTable })
+  }
+}
+
+export async function runAIColumnChecks(
+  table: Table,
+  { oldTable }: { oldTable?: Table }
+) {
+  // look to see if any formula values have changed
+  const shouldUpdate = Object.values(table.schema).find(
+    column =>
+      column.type === FieldType.AI &&
+      (!oldTable ||
+        !oldTable.schema[column.name] ||
+        !isEqual(oldTable.schema[column.name], column))
+  )
+  // if a static formula column has updated, then need to run the update
+  if (shouldUpdate != null) {
+    await updateAllAIColumnsInTable(table)
   }
 }

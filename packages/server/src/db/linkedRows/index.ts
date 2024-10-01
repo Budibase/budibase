@@ -296,7 +296,7 @@ export async function squashLinks<T = Row[] | Row>(
                 return false
               }
               if (
-                [FieldType.LINK, FieldType.FORMULA].includes(tableColumn.type)
+                [FieldType.LINK, FieldType.FORMULA, FieldType.AI].includes(tableColumn.type)
               ) {
                 return false
               }

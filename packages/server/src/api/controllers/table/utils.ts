@@ -33,7 +33,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import env from "../../../environment"
-import { runStaticFormulaChecks } from "./bulkFormula"
+import { runAIColumnChecks, runStaticFormulaChecks } from "./bulkFormula"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
   const db = context.getAppDB()

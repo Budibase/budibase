@@ -33,6 +33,7 @@
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "helpers/utils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import AIFieldConfiguration from "components/common/AIFieldConfiguration.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
@@ -54,6 +55,7 @@
   const NUMBER_TYPE = FieldType.NUMBER
   const JSON_TYPE = FieldType.JSON
   const DATE_TYPE = FieldType.DATETIME
+  const AI_TYPE = FieldType.AI
 
   const dispatch = createEventDispatcher()
   const { dispatch: gridDispatch, rows } = getContext("grid")
@@ -421,6 +423,7 @@
         FIELDS.ATTACHMENT_SINGLE,
         FIELDS.ATTACHMENTS,
         FIELDS.FORMULA,
+        FIELDS.AI,
         FIELDS.JSON,
         FIELDS.BARCODEQR,
         FIELDS.SIGNATURE_SINGLE,
@@ -732,6 +735,13 @@
         />
       </div>
     </div>
+  {:else if editableColumn.type === AI_TYPE}
+    <AIFieldConfiguration
+      aiField={editableColumn}
+      context={rowGoldenSample}
+      bindings={getBindings({ table })}
+      schema={table.schema}
+    />
   {:else if editableColumn.type === JSON_TYPE}
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button

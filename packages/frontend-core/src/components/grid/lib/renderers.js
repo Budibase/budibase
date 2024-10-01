@@ -30,6 +30,8 @@ const TypeComponentMap = {
   [FieldType.ATTACHMENT_SINGLE]: AttachmentSingleCell,
   [FieldType.LINK]: RelationshipCell,
   [FieldType.FORMULA]: FormulaCell,
+  // TODO: fix
+  [FieldType.AI]: FormulaCell,
   [FieldType.JSON]: JSONCell,
   [FieldType.BB_REFERENCE]: BBReferenceCell,
   [FieldType.BB_REFERENCE_SINGLE]: BBReferenceSingleCell,

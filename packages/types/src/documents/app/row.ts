@@ -77,6 +77,10 @@ export enum FieldType {
    */
   AUTO = "auto",
   /**
+   * A complex type, called an AI column within Budibase. This type has a... TODO: fill out
+   */
+  AI = "ai",
+  /**
    * a JSON type, called JSON within Budibase. This type allows any arbitrary JSON to be input to this column
    * type, which will be represented as a JSON object in the row. This type depends on a schema being
    * provided to make the JSON searchable/bindable, the JSON cannot be fully dynamic.

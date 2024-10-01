@@ -87,6 +87,8 @@ export const getValidOperatorsForType = (
     ops = numOps
   } else if (type === FieldType.FORMULA && formulaType === FormulaType.STATIC) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
+  } else if (type === FieldType.AI) {
+    ops = stringOps.concat([Op.MoreThan, Op.LessThan])
   } else if (
     type === FieldType.BB_REFERENCE_SINGLE ||
     schema.isDeprecatedSingleUserColumn(fieldType)
