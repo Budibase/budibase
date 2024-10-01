@@ -133,7 +133,7 @@ export async function processAIColumns<T extends Row | Row[]>(
             const llmResponse = await llm.run(prompt)
             return {
               ...row,
-              [column]: llmResponse
+              [column]: llmResponse,
             }
           })
         })
@@ -141,7 +141,9 @@ export async function processAIColumns<T extends Row | Row[]>(
         const processedRows = await Promise.all(rowUpdates)
 
         // Promise.all is deterministic so can rely on the indexing here
-        processedRows.forEach((processedRow, index) => rows[index] = processedRow)
+        processedRows.forEach(
+          (processedRow, index) => (rows[index] = processedRow)
+        )
       }
     }
     return Array.isArray(inputRows) ? rows : rows[0]

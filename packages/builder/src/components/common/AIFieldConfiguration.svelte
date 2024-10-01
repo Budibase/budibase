@@ -6,32 +6,32 @@
   const AIOperations = {
     SUMMARISE_TEXT: {
       label: "Summarise Text",
-      value: "SUMMARISE_TEXT"
+      value: "SUMMARISE_TEXT",
     },
     CLEAN_DATA: {
       label: "Clean Data",
-      value: "CLEAN_DATA"
+      value: "CLEAN_DATA",
     },
     TRANSLATE: {
       label: "Translate",
-      value: "TRANSLATE"
+      value: "TRANSLATE",
     },
     CATEGORISE_TEXT: {
       label: "Categorise Text",
-      value: "CATEGORISE_TEXT"
+      value: "CATEGORISE_TEXT",
     },
     SENTIMENT_ANALYSIS: {
       label: "Sentiment Analysis",
-      value: "SENTIMENT_ANALYSIS"
+      value: "SENTIMENT_ANALYSIS",
     },
     PROMPT: {
       label: "Prompt",
-      value: "PROMPT"
+      value: "PROMPT",
     },
     SEARCH_WEB: {
       label: "Search Web",
-      value: "SEARCH_WEB"
-    }
+      value: "SEARCH_WEB",
+    },
   }
 
   const OperationFieldTypes = {
@@ -64,12 +64,12 @@
     },
     SEARCH_WEB: {
       columns: OperationFieldTypes.MULTI_COLUMN,
-    }
+    },
   }
 
   const AIFieldConfigOptions = Object.keys(AIOperations).map(key => ({
     label: AIOperations[key].label,
-    value: AIOperations[key].value
+    value: AIOperations[key].value,
   }))
 
   export let bindings
@@ -80,7 +80,9 @@
   $: OperationField = OperationFields[aiField.operation] || null
   $: console.log(aiField)
   $: console.log(schema)
-  $: schemaWithoutRelations = Object.keys(schema).filter(key => schema[key].type !== "link")
+  $: schemaWithoutRelations = Object.keys(schema).filter(
+    key => schema[key].type !== "link"
+  )
 </script>
 
 <Select
@@ -95,7 +97,7 @@
         label={Helpers.capitalise(key)}
         panel={ServerBindingPanel}
         title="Prompt"
-        on:change={e => aiField[key] = e.detail}
+        on:change={e => (aiField[key] = e.detail)}
         value={aiField[key]}
         {bindings}
         allowJS

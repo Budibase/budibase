@@ -1,4 +1,3 @@
-
 export enum AIOperationEnum {
   SUMMARISE_TEXT = "SUMMARISE_TEXT",
   CLEAN_DATA = "CLEAN_DATA",
@@ -9,13 +8,11 @@ export enum AIOperationEnum {
   SEARCH_WEB = "SEARCH_WEB",
 }
 
-
 enum OperationFieldTypeEnum {
   MULTI_COLUMN = "columns",
   COLUMN = "column",
   BINDABLE_TEXT = "prompt",
 }
-
 
 type OperationFieldsType = {
   [AIOperationEnum.SUMMARISE_TEXT]: {

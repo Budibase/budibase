@@ -15,7 +15,10 @@ import {
 import { EventType, updateLinks } from "../../../../db/linkedRows"
 import { cloneDeep } from "lodash/fp"
 import isEqual from "lodash/isEqual"
-import { runAIColumnChecks, runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFormula"
+import {
+  runAIColumnChecks,
+  runStaticFormulaChecks,
+} from "../../../../api/controllers/table/bulkFormula"
 import { context } from "@budibase/backend-core"
 import { findDuplicateInternalColumns } from "@budibase/shared-core"
 import { getTable } from "../getters"
