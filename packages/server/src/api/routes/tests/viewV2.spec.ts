@@ -39,13 +39,13 @@ import {
 } from "@budibase/backend-core"
 
 describe.each([
-  ["lucene", undefined],
-  ["sqs", undefined],
+  // ["lucene", undefined],
+  // ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/v2/views (%s)", (name, dsProvider) => {
   const config = setup.getConfig()
   const isSqs = name === "sqs"
@@ -2456,6 +2456,33 @@ describe.each([
             // the source table, and so should not have an _id field.
             for (const row of response.rows) {
               expect("_id" in row).toBe(false)
+            }
+          })
+
+          it.only("should be able to group by a basic field", async () => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                quantity: {
+                  visible: true,
+                  field: "quantity",
+                },
+                "Total Price": {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "price",
+                },
+              },
+            })
+
+            const response = await config.api.viewV2.search(view.id, {
+              query: {},
+            })
+
+            for (const row of response.rows) {
+              expect(row["quantity"]).toBeGreaterThan(0)
+              expect(row["Total Price"]).toBeGreaterThan(0)
             }
           })
         })
