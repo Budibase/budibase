@@ -33,7 +33,7 @@ describe("validate", () => {
     it("should accept empty values", async () => {
       const row = {}
       const table = getTable()
-      const output = await validate({ table, tableId: table._id!, row })
+      const output = await validate({ source: table, row })
       expect(output.valid).toBe(true)
       expect(output.errors).toEqual({})
     })
@@ -43,7 +43,7 @@ describe("validate", () => {
         time: `${hour()}:${minute()}`,
       }
       const table = getTable()
-      const output = await validate({ table, tableId: table._id!, row })
+      const output = await validate({ source: table, row })
       expect(output.valid).toBe(true)
     })
 
@@ -52,7 +52,7 @@ describe("validate", () => {
         time: `${hour()}:${minute()}:${second()}`,
       }
       const table = getTable()
-      const output = await validate({ table, tableId: table._id!, row })
+      const output = await validate({ source: table, row })
       expect(output.valid).toBe(true)
     })
 
@@ -67,7 +67,7 @@ describe("validate", () => {
       table.schema.time.constraints = {
         presence: true,
       }
-      const output = await validate({ table, tableId: table._id!, row })
+      const output = await validate({ source: table, row })
       expect(output.valid).toBe(false)
       expect(output.errors).toEqual({ time: ['"time" is not a valid time'] })
     })
@@ -91,7 +91,7 @@ describe("validate", () => {
           `${generator.integer({ min: 11, max: 23 })}:${minute()}`,
         ])("should accept values after config value (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(true)
         })
 
@@ -100,7 +100,7 @@ describe("validate", () => {
           `${generator.integer({ min: 0, max: 9 })}:${minute()}`,
         ])("should reject values before config value (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no earlier than 10:00"],
@@ -125,7 +125,7 @@ describe("validate", () => {
           `${generator.integer({ min: 0, max: 12 })}:${minute()}`,
         ])("should accept values before config value (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(true)
         })
 
@@ -134,7 +134,7 @@ describe("validate", () => {
           `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
         ])("should reject values after config value (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no later than 15:16:17"],
@@ -156,7 +156,7 @@ describe("validate", () => {
           "should accept values in range (%s)",
           async time => {
             const row = { time }
-            const output = await validate({ table, tableId: table._id!, row })
+            const output = await validate({ source: table, row })
             expect(output.valid).toBe(true)
           }
         )
@@ -166,7 +166,7 @@ describe("validate", () => {
           `${generator.integer({ min: 0, max: 9 })}:${minute()}`,
         ])("should reject values before range (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no earlier than 10:00"],
@@ -178,7 +178,7 @@ describe("validate", () => {
           `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
         ])("should reject values after range (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no later than 15:00"],
@@ -199,7 +199,7 @@ describe("validate", () => {
             "should accept values in range (%s)",
             async time => {
               const row = { time }
-              const output = await validate({ table, tableId: table._id!, row })
+              const output = await validate({ source: table, row })
               expect(output.valid).toBe(true)
             }
           )
@@ -208,7 +208,7 @@ describe("validate", () => {
             "should reject values out range (%s)",
             async time => {
               const row = { time }
-              const output = await validate({ table, tableId: table._id!, row })
+              const output = await validate({ source: table, row })
               expect(output.valid).toBe(false)
               expect(output.errors).toEqual({
                 time: ["must be no later than 10:00"],
@@ -226,7 +226,7 @@ describe("validate", () => {
         table.schema.time.constraints = {
           presence: true,
         }
-        const output = await validate({ table, tableId: table._id!, row })
+        const output = await validate({ source: table, row })
         expect(output.valid).toBe(false)
         expect(output.errors).toEqual({ time: ["can't be blank"] })
       })
@@ -237,7 +237,7 @@ describe("validate", () => {
         table.schema.time.constraints = {
           presence: true,
         }
-        const output = await validate({ table, tableId: table._id!, row })
+        const output = await validate({ source: table, row })
         expect(output.valid).toBe(false)
         expect(output.errors).toEqual({ time: ["can't be blank"] })
       })
@@ -257,7 +257,7 @@ describe("validate", () => {
         "should accept values in range (%s)",
         async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(true)
         }
       )
@@ -267,7 +267,7 @@ describe("validate", () => {
         `${generator.integer({ min: 0, max: 9 })}:${minute()}`,
       ])("should reject values before range (%s)", async time => {
         const row = { time }
-        const output = await validate({ table, tableId: table._id!, row })
+        const output = await validate({ source: table, row })
         expect(output.valid).toBe(false)
         expect(output.errors).toEqual({
           time: ["must be no earlier than 10:00"],
@@ -279,7 +279,7 @@ describe("validate", () => {
         `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
       ])("should reject values after range (%s)", async time => {
         const row = { time }
-        const output = await validate({ table, tableId: table._id!, row })
+        const output = await validate({ source: table, row })
         expect(output.valid).toBe(false)
         expect(output.errors).toEqual({
           time: ["must be no later than 15:00"],
@@ -301,7 +301,7 @@ describe("validate", () => {
           "should accept values in range (%s)",
           async time => {
             const row = { time }
-            const output = await validate({ table, tableId: table._id!, row })
+            const output = await validate({ source: table, row })
             expect(output.valid).toBe(true)
           }
         )
@@ -311,7 +311,7 @@ describe("validate", () => {
           `${generator.integer({ min: 0, max: 9 })}:${minute()}`,
         ])("should reject values before range (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no earlier than 10:00"],
@@ -323,7 +323,7 @@ describe("validate", () => {
           `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
         ])("should reject values after range (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no later than 15:00"],

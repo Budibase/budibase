@@ -7,10 +7,14 @@ import {
   ManyToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
   RelationshipsJson,
+  Row,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import { breakExternalTableId } from "../../../../integrations/utils"
 import { generateJunctionTableID } from "../../../../db/utils"
+import sdk from "../../../../sdk"
+import { helpers } from "@budibase/shared-core"
 
 type TableMap = Record<string, Table>
 
@@ -108,11 +112,12 @@ export function buildInternalRelationships(
  * Creating the specific list of fields that we desire, and excluding the ones that are no use to us
  * is more performant and has the added benefit of protecting against this scenario.
  */
-export function buildSqlFieldList(
-  table: Table,
+export async function buildSqlFieldList(
+  source: Table | ViewV2,
   tables: TableMap,
   opts?: { relationships: boolean }
 ) {
+  const { relationships } = opts || {}
   function extractRealFields(table: Table, existing: string[] = []) {
     return Object.entries(table.schema)
       .filter(
@@ -123,22 +128,33 @@ export function buildSqlFieldList(
       )
       .map(column => `${table.name}.${column[0]}`)
   }
-  let fields = extractRealFields(table)
+
+  let fields: string[] = []
+  if (sdk.views.isView(source)) {
+    fields = Object.keys(helpers.views.basicFields(source)).filter(
+      key => source.schema?.[key]?.visible !== false
+    )
+  } else {
+    fields = extractRealFields(source)
+  }
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
+
   for (let field of Object.values(table.schema)) {
-    if (
-      field.type !== FieldType.LINK ||
-      !opts?.relationships ||
-      !field.tableId
-    ) {
+    if (field.type !== FieldType.LINK || !relationships || !field.tableId) {
       continue
     }
-    const { tableName: linkTableName } = breakExternalTableId(field.tableId)
-    const linkTable = tables[linkTableName]
-    if (linkTable) {
-      const linkedFields = extractRealFields(linkTable, fields)
-      fields = fields.concat(linkedFields)
+    const { tableName } = breakExternalTableId(field.tableId)
+    if (tables[tableName]) {
+      fields = fields.concat(extractRealFields(tables[tableName], fields))
     }
   }
+
   return fields
 }
 
@@ -148,4 +164,8 @@ export function isKnexEmptyReadResponse(resp: DatasourcePlusQueryResponse) {
     resp.length === 0 ||
     (DSPlusOperation.READ in resp[0] && resp[0].read === true)
   )
+}
+
+export function isKnexRows(resp: DatasourcePlusQueryResponse): resp is Row[] {
+  return !isKnexEmptyReadResponse(resp)
 }
