@@ -9,7 +9,7 @@
     FieldLabel,
   } from "@budibase/bbui"
   import { Roles } from "constants/backend"
-  import { NodeWidth, NodeHeight } from "./constants"
+  import { NodeWidth, NodeHeight, NodeVSpacing } from "./constants"
   import { getContext } from "svelte"
   import { roles } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -19,7 +19,7 @@
   export let selected
   export let isConnectable
 
-  const { dragging, updateRole, deleteRole } = getContext("flow")
+  const { dragging, updateRole, deleteRole, bounds } = getContext("flow")
 
   let anchor
   let modal
@@ -102,6 +102,14 @@
     <Handle type="source" position={Position.Right} />
   {/if}
 </div>
+
+{#if id === Roles.BASIC || id === Roles.ADMIN}
+  <div
+    class="bounds"
+    class:flip={id === Roles.ADMIN}
+    style="--height:{$bounds.height}px; --spacing:{NodeVSpacing}px;"
+  />
+{/if}
 
 <ConfirmDialog
   bind:this={deleteModal}
@@ -226,5 +234,35 @@
   .node :global(.svelte-flow__handle.hidden) {
     opacity: 0;
     pointer-events: none;
+  }
+
+  /* Bounds brackets */
+  .bounds {
+    height: calc(var(--height) + 2 * var(--spacing));
+    position: absolute;
+    width: calc(var(--spacing) / 1.5);
+    border: 2px dashed var(--edge-color);
+    border-right: none;
+    top: 50%;
+    left: calc(100% + var(--spacing));
+    transform: translateY(-50%);
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+  }
+  .bounds.flip {
+    left: calc(-1 * var(--spacing));
+    transform: translateY(-50%) translateX(-100%) scale(-1, 1);
+  }
+  .bounds::after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: calc(-1 * var(--spacing));
+    height: 0;
+    border-top: 2px dashed var(--edge-color);
+    width: var(--spacing);
+    box-sizing: border-box;
+    transform: translateY(-50%);
   }
 </style>
