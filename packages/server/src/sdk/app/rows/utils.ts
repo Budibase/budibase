@@ -13,16 +13,15 @@ import {
   TableSchema,
   SqlClient,
   ArrayOperator,
+  ViewV2,
 } from "@budibase/types"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
-import {
-  extractViewInfoFromID,
-  isRelationshipColumn,
-  isViewID,
-} from "../../../db/utils"
+import { extractViewInfoFromID, isRelationshipColumn } from "../../../db/utils"
 import { isSQL } from "../../../integrations/utils"
+import { docIds } from "@budibase/backend-core"
+import { getTableFromSource } from "../../../api/controllers/row/utils"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.POSTGRES]: SqlClient.POSTGRES,
@@ -142,37 +141,27 @@ function isForeignKey(key: string, table: Table) {
 }
 
 export async function validate({
-  tableId,
+  source,
   row,
-  table,
 }: {
-  tableId?: string
+  source: Table | ViewV2
   row: Row
-  table?: Table
 }): Promise<{
   valid: boolean
   errors: Record<string, any>
 }> {
-  let fetchedTable: Table | undefined
-  if (!table && tableId) {
-    fetchedTable = await sdk.tables.getTable(tableId)
-  } else if (table) {
-    fetchedTable = table
-  }
-  if (fetchedTable === undefined) {
-    throw new Error("Unable to fetch table for validation")
-  }
+  const table = await getTableFromSource(source)
   const errors: Record<string, any> = {}
   const disallowArrayTypes = [
     FieldType.ATTACHMENT_SINGLE,
     FieldType.BB_REFERENCE_SINGLE,
   ]
-  for (let fieldName of Object.keys(fetchedTable.schema)) {
-    const column = fetchedTable.schema[fieldName]
+  for (let fieldName of Object.keys(table.schema)) {
+    const column = table.schema[fieldName]
     const constraints = cloneDeep(column.constraints)
     const type = column.type
     // foreign keys are likely to be enriched
-    if (isForeignKey(fieldName, fetchedTable)) {
+    if (isForeignKey(fieldName, table)) {
       continue
     }
     // formulas shouldn't validated, data will be deleted anyway
@@ -323,7 +312,7 @@ export function isArrayFilter(operator: any): operator is ArrayOperator {
 }
 
 export function tryExtractingTableAndViewId(tableOrViewId: string) {
-  if (isViewID(tableOrViewId)) {
+  if (docIds.isViewId(tableOrViewId)) {
     return {
       tableId: extractViewInfoFromID(tableOrViewId).tableId,
       viewId: tableOrViewId,
@@ -331,4 +320,11 @@ export function tryExtractingTableAndViewId(tableOrViewId: string) {
   }
 
   return { tableId: tableOrViewId }
+}
+
+export function getSource(tableOrViewId: string) {
+  if (docIds.isViewId(tableOrViewId)) {
+    return sdk.views.get(tableOrViewId)
+  }
+  return sdk.tables.getTable(tableOrViewId)
 }

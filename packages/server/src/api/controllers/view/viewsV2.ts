@@ -7,10 +7,49 @@ import {
   ViewResponse,
   ViewResponseEnriched,
   ViewV2,
-  ViewFieldMetadata,
+  BasicViewFieldMetadata,
+  ViewCalculationFieldMetadata,
   RelationSchemaField,
+  ViewFieldMetadata,
 } from "@budibase/types"
 import { builderSocket, gridSocket } from "../../../websockets"
+import { helpers } from "@budibase/shared-core"
+
+function stripUnknownFields(
+  field: BasicViewFieldMetadata
+): RequiredKeys<BasicViewFieldMetadata> {
+  if (helpers.views.isCalculationField(field)) {
+    const strippedField: RequiredKeys<ViewCalculationFieldMetadata> = {
+      order: field.order,
+      width: field.width,
+      visible: field.visible,
+      readonly: field.readonly,
+      icon: field.icon,
+      calculationType: field.calculationType,
+      field: field.field,
+      columns: field.columns,
+    }
+    return strippedField
+  } else {
+    const strippedField: RequiredKeys<BasicViewFieldMetadata> = {
+      order: field.order,
+      width: field.width,
+      visible: field.visible,
+      readonly: field.readonly,
+      icon: field.icon,
+      columns: field.columns,
+    }
+    return strippedField
+  }
+}
+
+function stripUndefinedFields(obj: Record<string, any>): void {
+  Object.keys(obj)
+    .filter(key => obj[key] === undefined)
+    .forEach(key => {
+      delete obj[key]
+    })
+}
 
 async function parseSchema(view: CreateViewRequest) {
   if (!view.schema) {
@@ -22,6 +61,7 @@ async function parseSchema(view: CreateViewRequest) {
       let fieldRelatedSchema:
         | Record<string, RequiredKeys<RelationSchemaField>>
         | undefined
+
       if (schemaValue.columns) {
         fieldRelatedSchema = Object.entries(schemaValue.columns).reduce<
           NonNullable<typeof fieldRelatedSchema>
@@ -35,25 +75,12 @@ async function parseSchema(view: CreateViewRequest) {
           }
           return acc
         }, {})
+        schemaValue.columns = fieldRelatedSchema
       }
 
-      const fieldSchema: RequiredKeys<
-        ViewFieldMetadata & {
-          columns: typeof fieldRelatedSchema
-        }
-      > = {
-        order: schemaValue.order,
-        width: schemaValue.width,
-        visible: schemaValue.visible,
-        readonly: schemaValue.readonly,
-        icon: schemaValue.icon,
-        columns: fieldRelatedSchema,
-      }
-      Object.entries(fieldSchema)
-        .filter(([, val]) => val === undefined)
-        .forEach(([key]) => {
-          delete fieldSchema[key as keyof ViewFieldMetadata]
-        })
+      const fieldSchema = stripUnknownFields(schemaValue)
+      stripUndefinedFields(fieldSchema)
+
       p[fieldName] = fieldSchema
       return p
     }, {} as Record<string, RequiredKeys<ViewFieldMetadata>>)
