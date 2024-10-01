@@ -2,7 +2,7 @@
   import { Button, ActionButton } from "@budibase/bbui"
   import { useSvelteFlow } from "@xyflow/svelte"
   import { getContext } from "svelte"
-  import { autoLayout } from "./layout"
+  import { autoLayout } from "./utils"
   import { MaxAutoZoom, ZoomDuration } from "./constants"
 
   const { nodes, edges, createRole } = getContext("flow")
