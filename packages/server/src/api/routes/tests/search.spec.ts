@@ -64,7 +64,7 @@ describe.each([
   let envCleanup: (() => void) | undefined
   let datasource: Datasource | undefined
   let client: Knex | undefined
-  let table: Table
+  let sourceId: string
   let rows: Row[]
 
   async function basicRelationshipTables(type: RelationshipType) {
@@ -74,7 +74,7 @@ describe.each([
       },
       generator.guid().substring(0, 10)
     )
-    table = await createTable(
+    sourceId = await createTable(
       {
         name: { name: "name", type: FieldType.STRING },
         //@ts-ignore - API accepts this structure, will build out rest of definition
@@ -83,7 +83,7 @@ describe.each([
           relationshipType: type,
           name: "productCat",
           fieldName: "product",
-          tableId: relatedTable._id!,
+          tableId: relatedTable,
           constraints: {
             type: "array",
           },
@@ -92,8 +92,7 @@ describe.each([
       generator.guid().substring(0, 10)
     )
     return {
-      relatedTable: await config.api.table.get(relatedTable._id!),
-      table,
+      relatedTable: await config.api.table.get(relatedTable),
     }
   }
 
@@ -137,17 +136,18 @@ describe.each([
   })
 
   async function createTable(schema: TableSchema, name?: string) {
-    return await config.api.table.save(
+    const table = await config.api.table.save(
       tableForDatasource(datasource, { schema, name })
     )
+    return table._id!
   }
 
   async function createRows(arr: Record<string, any>[]) {
     // Shuffling to avoid false positives given a fixed order
-    await config.api.row.bulkImport(table._id!, {
+    await config.api.row.bulkImport(sourceId, {
       rows: _.shuffle(arr),
     })
-    rows = await config.api.row.fetch(table._id!)
+    rows = await config.api.row.fetch(sourceId)
   }
 
   class SearchAssertion {
@@ -332,7 +332,7 @@ describe.each([
   }
 
   function expectSearch(query: Omit<RowSearchParams, "tableId">) {
-    return new SearchAssertion({ ...query, tableId: table._id! })
+    return new SearchAssertion({ ...query, tableId: sourceId })
   }
 
   function expectQuery(query: SearchFilters) {
@@ -341,7 +341,7 @@ describe.each([
 
   describe("boolean", () => {
     beforeAll(async () => {
-      table = await createTable({
+      sourceId = await createTable({
         isTrue: { name: "isTrue", type: FieldType.BOOLEAN },
       })
       await createRows([{ isTrue: true }, { isTrue: false }])
@@ -482,7 +482,7 @@ describe.each([
             })
         )
 
-        table = await createTable({
+        sourceId = await createTable({
           name: { name: "name", type: FieldType.STRING },
           appointment: { name: "appointment", type: FieldType.DATETIME },
           single_user: {
@@ -764,7 +764,7 @@ describe.each([
 
   describe.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
     beforeAll(async () => {
-      table = await createTable({
+      sourceId = await createTable({
         name: { name: "name", type: FieldType.STRING },
       })
       await createRows([{ name: "foo" }, { name: "bar" }])
@@ -1055,7 +1055,7 @@ describe.each([
               datasourceId: datasource!._id!,
             })
 
-            table = resp.datasource.entities![tableName]
+            sourceId = resp.datasource.entities![tableName]._id!
 
             await createRows([{ name: "foo" }, { name: "bar" }])
           })
@@ -1079,7 +1079,7 @@ describe.each([
 
   describe("numbers", () => {
     beforeAll(async () => {
-      table = await createTable({
+      sourceId = await createTable({
         age: { name: "age", type: FieldType.NUMBER },
       })
       await createRows([{ age: 1 }, { age: 10 }])
@@ -1252,7 +1252,7 @@ describe.each([
     const JAN_10TH = "2020-01-10T00:00:00.000Z"
 
     beforeAll(async () => {
-      table = await createTable({
+      sourceId = await createTable({
         dob: { name: "dob", type: FieldType.DATETIME },
       })
 
@@ -1399,7 +1399,7 @@ describe.each([
       const NULL_TIME__ID = `null_time__id`
 
       beforeAll(async () => {
-        table = await createTable({
+        sourceId = await createTable({
           timeid: { name: "timeid", type: FieldType.STRING },
           time: { name: "time", type: FieldType.DATETIME, timeOnly: true },
         })
@@ -1560,7 +1560,7 @@ describe.each([
 
   describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
     beforeAll(async () => {
-      table = await createTable({
+      sourceId = await createTable({
         numbers: {
           name: "numbers",
           type: FieldType.ARRAY,
@@ -1657,7 +1657,7 @@ describe.each([
     let BIG = "9223372036854775807"
 
     beforeAll(async () => {
-      table = await createTable({
+      sourceId = await createTable({
         num: { name: "num", type: FieldType.BIGINT },
       })
       await createRows([{ num: SMALL }, { num: MEDIUM }, { num: BIG }])
@@ -1762,7 +1762,7 @@ describe.each([
   isInternal &&
     describe("auto", () => {
       beforeAll(async () => {
-        table = await createTable({
+        sourceId = await createTable({
           auto: {
             name: "auto",
             type: FieldType.AUTO,
@@ -1912,21 +1912,18 @@ describe.each([
           // be stable or pagination will break. We don't want the user to need
           // to specify an order for pagination to work.
           it("is stable without a sort specified", async () => {
-            let { rows: fullRowList } = await config.api.row.search(
-              table._id!,
-              {
-                tableId: table._id!,
-                query: {},
-              }
-            )
+            let { rows: fullRowList } = await config.api.row.search(sourceId, {
+              tableId: sourceId,
+              query: {},
+            })
 
             // repeat the search many times to check the first row is always the same
             let bookmark: string | number | undefined,
               hasNextPage: boolean | undefined = true,
               rowCount: number = 0
             do {
-              const response = await config.api.row.search(table._id!, {
-                tableId: table._id!,
+              const response = await config.api.row.search(sourceId, {
+                tableId: sourceId,
                 limit: 1,
                 paginate: true,
                 query: {},
@@ -1949,8 +1946,8 @@ describe.each([
 
           // eslint-disable-next-line no-constant-condition
           while (true) {
-            const response = await config.api.row.search(table._id!, {
-              tableId: table._id!,
+            const response = await config.api.row.search(sourceId, {
+              tableId: sourceId,
               limit: 3,
               query: {},
               bookmark,
@@ -1973,7 +1970,7 @@ describe.each([
 
   describe("field name 1:name", () => {
     beforeAll(async () => {
-      table = await createTable({
+      sourceId = await createTable({
         "1:name": { name: "1:name", type: FieldType.STRING },
       })
       await createRows([{ "1:name": "bar" }, { "1:name": "foo" }])
@@ -2007,14 +2004,14 @@ describe.each([
           },
           "array"
         )
-        table = await createTable(
+        sourceId = await createTable(
           {
             relationship: {
               type: FieldType.LINK,
               relationshipType: RelationshipType.MANY_TO_ONE,
               name: "relationship",
               fieldName: "relate",
-              tableId: arrayTable._id!,
+              tableId: arrayTable,
               constraints: {
                 type: "array",
               },
@@ -2030,17 +2027,17 @@ describe.each([
           "main"
         )
         const arrayRows = await Promise.all([
-          config.api.row.save(arrayTable._id!, {
+          config.api.row.save(arrayTable, {
             name: "foo",
             array: ["option 1"],
           }),
-          config.api.row.save(arrayTable._id!, {
+          config.api.row.save(arrayTable, {
             name: "bar",
             array: ["option 2"],
           }),
         ])
         await Promise.all([
-          config.api.row.save(table._id!, {
+          config.api.row.save(sourceId, {
             relationship: [arrayRows[0]._id, arrayRows[1]._id],
           }),
         ])
@@ -2059,7 +2056,7 @@ describe.each([
       user1 = await config.createUser({ _id: `us_${utils.newid()}` })
       user2 = await config.createUser({ _id: `us_${utils.newid()}` })
 
-      table = await createTable({
+      sourceId = await createTable({
         user: {
           name: "user",
           type: FieldType.BB_REFERENCE_SINGLE,
@@ -2139,7 +2136,7 @@ describe.each([
       user1 = await config.createUser({ _id: `us_${utils.newid()}` })
       user2 = await config.createUser({ _id: `us_${utils.newid()}` })
 
-      table = await createTable({
+      sourceId = await createTable({
         users: {
           name: "users",
           type: FieldType.BB_REFERENCE,
@@ -2260,15 +2257,15 @@ describe.each([
         ])
 
         await Promise.all([
-          config.api.row.save(table._id!, {
+          config.api.row.save(sourceId, {
             name: "foo",
             productCat: [productCatRows[0]._id],
           }),
-          config.api.row.save(table._id!, {
+          config.api.row.save(sourceId, {
             name: "bar",
             productCat: [productCatRows[1]._id],
           }),
-          config.api.row.save(table._id!, {
+          config.api.row.save(sourceId, {
             name: "baz",
             productCat: [],
           }),
@@ -2304,7 +2301,7 @@ describe.each([
         const { relatedTable } = await basicRelationshipTables(
           RelationshipType.MANY_TO_ONE
         )
-        const mainRow = await config.api.row.save(table._id!, {
+        const mainRow = await config.api.row.save(sourceId, {
           name: "foo",
         })
         for (let i = 0; i < 11; i++) {
@@ -2329,7 +2326,7 @@ describe.each([
     })
   ;(isSqs || isLucene) &&
     describe("relations to same table", () => {
-      let relatedTable: Table, relatedRows: Row[]
+      let relatedTable: string, relatedRows: Row[]
 
       beforeAll(async () => {
         relatedTable = await createTable(
@@ -2338,36 +2335,36 @@ describe.each([
           },
           "productCategory"
         )
-        table = await createTable({
+        sourceId = await createTable({
           name: { name: "name", type: FieldType.STRING },
           related1: {
             type: FieldType.LINK,
             name: "related1",
             fieldName: "main1",
-            tableId: relatedTable._id!,
+            tableId: relatedTable,
             relationshipType: RelationshipType.MANY_TO_MANY,
           },
           related2: {
             type: FieldType.LINK,
             name: "related2",
             fieldName: "main2",
-            tableId: relatedTable._id!,
+            tableId: relatedTable,
             relationshipType: RelationshipType.MANY_TO_MANY,
           },
         })
         relatedRows = await Promise.all([
-          config.api.row.save(relatedTable._id!, { name: "foo" }),
-          config.api.row.save(relatedTable._id!, { name: "bar" }),
-          config.api.row.save(relatedTable._id!, { name: "baz" }),
-          config.api.row.save(relatedTable._id!, { name: "boo" }),
+          config.api.row.save(relatedTable, { name: "foo" }),
+          config.api.row.save(relatedTable, { name: "bar" }),
+          config.api.row.save(relatedTable, { name: "baz" }),
+          config.api.row.save(relatedTable, { name: "boo" }),
         ])
         await Promise.all([
-          config.api.row.save(table._id!, {
+          config.api.row.save(sourceId, {
             name: "test",
             related1: [relatedRows[0]._id!],
             related2: [relatedRows[1]._id!],
           }),
-          config.api.row.save(table._id!, {
+          config.api.row.save(sourceId, {
             name: "test2",
             related1: [relatedRows[2]._id!],
             related2: [relatedRows[3]._id!],
@@ -2430,7 +2427,7 @@ describe.each([
   isInternal &&
     describe("no column error backwards compat", () => {
       beforeAll(async () => {
-        table = await createTable({
+        sourceId = await createTable({
           name: {
             name: "name",
             type: FieldType.STRING,
@@ -2453,7 +2450,7 @@ describe.each([
   !isLucene &&
     describe("row counting", () => {
       beforeAll(async () => {
-        table = await createTable({
+        sourceId = await createTable({
           name: {
             name: "name",
             type: FieldType.STRING,
@@ -2488,7 +2485,7 @@ describe.each([
   describe("Invalid column definitions", () => {
     beforeAll(async () => {
       // need to create an invalid table - means ignoring typescript
-      table = await createTable({
+      sourceId = await createTable({
         // @ts-ignore
         invalid: {
           type: FieldType.STRING,
@@ -2518,7 +2515,7 @@ describe.each([
     "special (%s) case",
     column => {
       beforeAll(async () => {
-        table = await createTable({
+        sourceId = await createTable({
           [column]: {
             name: column,
             type: FieldType.STRING,
@@ -2543,8 +2540,8 @@ describe.each([
     describe("sample data", () => {
       beforeAll(async () => {
         await config.api.application.addSampleData(config.appId!)
-        table = DEFAULT_EMPLOYEE_TABLE_SCHEMA
-        rows = await config.api.row.fetch(table._id!)
+        sourceId = DEFAULT_EMPLOYEE_TABLE_SCHEMA._id!
+        rows = await config.api.row.fetch(sourceId)
       })
 
       it("should be able to search sample data", async () => {
@@ -2567,7 +2564,7 @@ describe.each([
     const earlyDate = "2024-07-03T10:00:00.000Z",
       laterDate = "2024-07-03T11:00:00.000Z"
     beforeAll(async () => {
-      table = await createTable({
+      sourceId = await createTable({
         date: {
           name: "date",
           type: FieldType.DATETIME,
@@ -2610,7 +2607,7 @@ describe.each([
     "ชื่อผู้ใช้", // Thai for "username"
   ])("non-ascii column name: %s", name => {
     beforeAll(async () => {
-      table = await createTable({
+      sourceId = await createTable({
         [name]: {
           name,
           type: FieldType.STRING,
@@ -2637,7 +2634,7 @@ describe.each([
   isInternal &&
     describe("space at end of column name", () => {
       beforeAll(async () => {
-        table = await createTable({
+        sourceId = await createTable({
           "name ": {
             name: "name ",
             type: FieldType.STRING,
@@ -2672,7 +2669,7 @@ describe.each([
   ;(isSqs || isInMemory) &&
     describe("space at start of column name", () => {
       beforeAll(async () => {
-        table = await createTable({
+        sourceId = await createTable({
           " name": {
             name: " name",
             type: FieldType.STRING,
@@ -2705,7 +2702,7 @@ describe.each([
   isSqs &&
     describe("duplicate columns", () => {
       beforeAll(async () => {
-        table = await createTable({
+        sourceId = await createTable({
           name: {
             name: "name",
             type: FieldType.STRING,
@@ -2713,7 +2710,7 @@ describe.each([
         })
         await context.doInAppContext(config.getAppId(), async () => {
           const db = context.getAppDB()
-          const tableDoc = await db.get<Table>(table._id!)
+          const tableDoc = await db.get<Table>(sourceId)
           tableDoc.schema.Name = {
             name: "Name",
             type: FieldType.STRING,
@@ -2747,7 +2744,7 @@ describe.each([
             type: FieldType.STRING,
           },
         })
-        table = await createTable({
+        sourceId = await createTable({
           name: {
             name: "name",
             type: FieldType.STRING,
@@ -2756,15 +2753,15 @@ describe.each([
             name: "rel",
             type: FieldType.LINK,
             relationshipType: RelationshipType.MANY_TO_MANY,
-            tableId: toRelateTable._id!,
+            tableId: toRelateTable,
             fieldName: "rel",
           },
         })
         const [row1, row2] = await Promise.all([
-          config.api.row.save(toRelateTable._id!, { name: "tag 1" }),
-          config.api.row.save(toRelateTable._id!, { name: "tag 2" }),
+          config.api.row.save(toRelateTable, { name: "tag 1" }),
+          config.api.row.save(toRelateTable, { name: "tag 2" }),
         ])
-        row = await config.api.row.save(table._id!, {
+        row = await config.api.row.save(sourceId, {
           name: "product 1",
           rel: [row1._id, row2._id],
         })
@@ -2783,7 +2780,7 @@ describe.each([
   !isInternal &&
     describe("search by composite key", () => {
       beforeAll(async () => {
-        table = await config.api.table.save(
+        const table = await config.api.table.save(
           tableForDatasource(datasource, {
             schema: {
               idColumn1: {
@@ -2798,6 +2795,7 @@ describe.each([
             primary: ["idColumn1", "idColumn2"],
           })
         )
+        sourceId = table._id!
         await createRows([{ idColumn1: 1, idColumn2: 2 }])
       })
 
@@ -2819,13 +2817,13 @@ describe.each([
   isSql &&
     describe("primaryDisplay", () => {
       beforeAll(async () => {
-        let toRelateTable = await createTable({
+        let toRelateTableId = await createTable({
           name: {
             name: "name",
             type: FieldType.STRING,
           },
         })
-        table = await config.api.table.save(
+        const table = await config.api.table.save(
           tableForDatasource(datasource, {
             schema: {
               name: {
@@ -2836,13 +2834,14 @@ describe.each([
                 name: "link",
                 type: FieldType.LINK,
                 relationshipType: RelationshipType.MANY_TO_ONE,
-                tableId: toRelateTable._id!,
+                tableId: toRelateTableId,
                 fieldName: "link",
               },
             },
           })
         )
-        toRelateTable = await config.api.table.get(toRelateTable._id!)
+        sourceId = table._id!
+        const toRelateTable = await config.api.table.get(toRelateTableId)
         await config.api.table.save({
           ...toRelateTable,
           primaryDisplay: "link",
@@ -2851,7 +2850,7 @@ describe.each([
           config.api.row.save(toRelateTable._id!, { name: "test" }),
         ])
         await Promise.all([
-          config.api.row.save(table._id!, {
+          config.api.row.save(sourceId, {
             name: "test",
             link: relatedRows.map(row => row._id),
           }),
@@ -2870,7 +2869,7 @@ describe.each([
   !isLucene &&
     describe("$and", () => {
       beforeAll(async () => {
-        table = await createTable({
+        sourceId = await createTable({
           age: { name: "age", type: FieldType.NUMBER },
           name: { name: "name", type: FieldType.STRING },
         })
@@ -2999,7 +2998,7 @@ describe.each([
   !isLucene &&
     describe("$or", () => {
       beforeAll(async () => {
-        table = await createTable({
+        sourceId = await createTable({
           age: { name: "age", type: FieldType.NUMBER },
           name: { name: "name", type: FieldType.STRING },
         })
@@ -3159,20 +3158,20 @@ describe.each([
           row[name] = i
         }
         const relatedTable = await createTable(relatedSchema)
-        table = await createTable({
+        sourceId = await createTable({
           name: { name: "name", type: FieldType.STRING },
           related1: {
             type: FieldType.LINK,
             name: "related1",
             fieldName: "main1",
-            tableId: relatedTable._id!,
+            tableId: relatedTable,
             relationshipType: RelationshipType.MANY_TO_MANY,
           },
         })
         relatedRows = await Promise.all([
-          config.api.row.save(relatedTable._id!, row),
+          config.api.row.save(relatedTable, row),
         ])
-        await config.api.row.save(table._id!, {
+        await config.api.row.save(sourceId, {
           name: "foo",
           related1: [relatedRows[0]._id],
         })
