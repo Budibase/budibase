@@ -38,9 +38,11 @@
       const newView = await viewsV2.create({
         name: trimmedName,
         tableId: table._id,
-        schema: calculation ? {} : enrichSchema(table.schema),
+        schema: enrichSchema(table.schema),
         primaryDisplay: calculation ? undefined : table.primaryDisplay,
-        calculation,
+        uiMetadata: {
+          calculation,
+        },
       })
       notifications.success(`View ${name} created`)
       $goto(`./${newView.id}`)
