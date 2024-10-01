@@ -408,7 +408,6 @@ describe.each([
     })
   })
 
-  // We've decided not to try and support binding for in-memory search just now.
   !isInMemory &&
     describe("bindings", () => {
       let globalUsers: any = []
@@ -527,6 +526,20 @@ describe.each([
           },
         ])
       })
+
+      !isLucene &&
+        it("should return all rows matching the session user firstname when logical operator used", async () => {
+          await expectQuery({
+            $and: {
+              conditions: [{ equal: { name: "{{ [user].firstName }}" } }],
+            },
+          }).toContainExactly([
+            {
+              name: config.getUser().firstName,
+              appointment: future.toISOString(),
+            },
+          ])
+        })
 
       it("should parse the date binding and return all rows after the resolved value", async () => {
         await tk.withFreeze(serverTime, async () => {
