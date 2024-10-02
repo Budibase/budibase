@@ -15,6 +15,7 @@ function convertToSearchFilters(view) {
 function convertToSearchFilterGroup(view) {
   if (view.queryUI) {
     view.query = view.queryUI
+    delete view.queryUI
   }
   return view
 }
