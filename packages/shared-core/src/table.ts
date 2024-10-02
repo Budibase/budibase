@@ -54,6 +54,7 @@ const allowDefaultColumnByType: Record<FieldType, boolean> = {
   [FieldType.LONGFORM]: true,
   [FieldType.STRING]: true,
   [FieldType.OPTIONS]: true,
+  [FieldType.ARRAY]: true,
 
   [FieldType.AUTO]: false,
   [FieldType.INTERNAL]: false,
@@ -64,7 +65,6 @@ const allowDefaultColumnByType: Record<FieldType, boolean> = {
   [FieldType.ATTACHMENTS]: false,
   [FieldType.ATTACHMENT_SINGLE]: false,
   [FieldType.SIGNATURE_SINGLE]: false,
-  [FieldType.ARRAY]: false,
   [FieldType.LINK]: false,
   [FieldType.BB_REFERENCE]: false,
   [FieldType.BB_REFERENCE_SINGLE]: false,
