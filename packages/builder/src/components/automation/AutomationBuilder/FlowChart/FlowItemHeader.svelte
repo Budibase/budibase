@@ -16,9 +16,11 @@
   export let enableNaming = true
   let validRegex = /^[A-Za-z0-9_\s]+$/
   let typing = false
+  let editing = false
   const dispatch = createEventDispatcher()
 
   $: stepNames = $selectedAutomation?.definition.stepNames
+  $: allSteps = $selectedAutomation?.definition.steps || []
   $: automationName = stepNames?.[block.id] || block?.name || ""
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult)
@@ -56,10 +58,18 @@
     }
   }
   const getAutomationNameError = name => {
-    if (stepNames) {
+    const duplicateError =
+      "This name already exists, please enter a unique name"
+    if (stepNames && editing) {
       for (const [key, value] of Object.entries(stepNames)) {
-        if (name === value && key !== block.id) {
-          return "This name already exists, please enter a unique name"
+        if (name !== block.name && name === value && key !== block.id) {
+          return duplicateError
+        }
+      }
+
+      for (const step of allSteps) {
+        if (step.id !== block.id && name === step.name) {
+          return duplicateError
         }
       }
     }
@@ -67,15 +77,11 @@
     if (name !== block.name && name?.length > 0) {
       let invalidRoleName = !validRegex.test(name)
       if (invalidRoleName) {
-        return "Please enter a role name consisting of only alphanumeric symbols and underscores"
+        return "Please enter a name consisting of only alphanumeric symbols and underscores"
       }
-
-      return null
     }
-  }
 
-  const startTyping = async () => {
-    typing = true
+    return null
   }
 
   const saveName = async () => {
@@ -89,13 +95,28 @@
       await automationStore.actions.saveAutomationName(block.id, automationName)
     }
   }
+
+  const startEditing = () => {
+    editing = true
+    typing = true
+  }
+
+  const stopEditing = async () => {
+    editing = false
+    typing = false
+    if (automationNameError) {
+      automationName = stepNames[block.id] || block?.name
+    } else {
+      await saveName()
+    }
+  }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-  class:typing={typing && !automationNameError}
-  class:typing-error={automationNameError}
+  class:typing={typing && !automationNameError && editing}
+  class:typing-error={automationNameError && editing}
   class="blockSection"
   on:click={() => dispatch("toggle")}
 >
@@ -132,7 +153,7 @@
           <input
             class="input-text"
             disabled={!enableNaming}
-            placeholder="Enter some text"
+            placeholder="Enter step name"
             name="name"
             autocomplete="off"
             value={automationName}
@@ -141,26 +162,14 @@
             }}
             on:click={e => {
               e.stopPropagation()
-              startTyping()
+              startEditing()
             }}
             on:keydown={async e => {
               if (e.key === "Enter") {
-                typing = false
-                if (automationNameError) {
-                  automationName = stepNames[block.id] || block?.name
-                } else {
-                  await saveName()
-                }
+                await stopEditing()
               }
             }}
-            on:blur={async () => {
-              typing = false
-              if (automationNameError) {
-                automationName = stepNames[block.id] || block?.name
-              } else {
-                await saveName()
-              }
-            }}
+            on:blur={stopEditing}
           />
         {:else}
           <div class="input-text">
@@ -222,7 +231,7 @@
           />
         {/if}
       </div>
-      {#if automationNameError}
+      {#if automationNameError && editing}
         <div class="error-container">
           <AbsTooltip type="negative" text={automationNameError}>
             <div class="error-icon">

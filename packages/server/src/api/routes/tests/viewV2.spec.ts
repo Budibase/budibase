@@ -18,10 +18,13 @@ import {
   ViewV2,
   SearchResponse,
   BasicOperator,
+  CalculationType,
   RelationshipType,
   TableSchema,
-  ViewFieldMetadata,
   RenameColumn,
+  ViewFieldMetadata,
+  FeatureFlag,
+  BBReferenceFieldSubType,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -32,8 +35,8 @@ import {
   roles,
   withEnv as withCoreEnv,
   setEnv as setCoreEnv,
+  env,
 } from "@budibase/backend-core"
-import sdk from "../../../sdk"
 
 describe.each([
   ["lucene", undefined],
@@ -694,22 +697,23 @@ describe.each([
         )
       })
 
-      it("cannot update views v1", async () => {
-        const viewV1 = await config.api.legacyView.save({
-          tableId: table._id!,
-          name: generator.guid(),
-          filters: [],
-          schema: {},
-        })
+      isInternal &&
+        it("cannot update views v1", async () => {
+          const viewV1 = await config.api.legacyView.save({
+            tableId: table._id!,
+            name: generator.guid(),
+            filters: [],
+            schema: {},
+          })
 
-        await config.api.viewV2.update(viewV1 as unknown as ViewV2, {
-          status: 400,
-          body: {
-            message: "Only views V2 can be updated",
+          await config.api.viewV2.update(viewV1 as unknown as ViewV2, {
             status: 400,
-          },
+            body: {
+              message: "Only views V2 can be updated",
+              status: 400,
+            },
+          })
         })
-      })
 
       it("cannot update the a view with unmatching ids between url and body", async () => {
         const anotherView = await config.api.viewV2.create({
@@ -1734,6 +1738,40 @@ describe.each([
         })
       })
 
+      it("views filters are respected even if the column is hidden", async () => {
+        await config.api.row.save(table._id!, {
+          one: "foo",
+          two: "bar",
+        })
+        const two = await config.api.row.save(table._id!, {
+          one: "foo2",
+          two: "bar2",
+        })
+
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          query: [
+            {
+              operator: BasicOperator.EQUAL,
+              field: "two",
+              value: "bar2",
+            },
+          ],
+          schema: {
+            id: { visible: true },
+            one: { visible: false },
+            two: { visible: false },
+          },
+        })
+
+        const response = await config.api.viewV2.search(view.id)
+        expect(response.rows).toHaveLength(1)
+        expect(response.rows).toEqual([
+          expect.objectContaining({ _id: two._id }),
+        ])
+      })
+
       it("views without data can be returned", async () => {
         const response = await config.api.viewV2.search(view.id)
         expect(response.rows).toHaveLength(0)
@@ -2192,27 +2230,267 @@ describe.each([
           expect(response.rows).toHaveLength(0)
         })
 
-      it("queries the row api passing the view fields only", async () => {
-        const searchSpy = jest.spyOn(sdk.rows, "search")
-
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-          schema: {
-            id: { visible: true },
-            one: { visible: false },
-          },
+      describe("foreign relationship columns", () => {
+        let envCleanup: () => void
+        beforeAll(() => {
+          const flags = [`*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`]
+          if (env.TENANT_FEATURE_FLAGS) {
+            flags.push(...env.TENANT_FEATURE_FLAGS.split(","))
+          }
+          envCleanup = setCoreEnv({
+            TENANT_FEATURE_FLAGS: flags.join(","),
+          })
         })
 
-        await config.api.viewV2.search(view.id, { query: {} })
-        expect(searchSpy).toHaveBeenCalledTimes(1)
+        afterAll(() => {
+          envCleanup?.()
+        })
 
-        expect(searchSpy).toHaveBeenCalledWith(
-          expect.objectContaining({
-            fields: ["id"],
+        const createMainTable = async (
+          links: {
+            name: string
+            tableId: string
+            fk: string
+          }[]
+        ) => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: { title: { name: "title", type: FieldType.STRING } },
+            })
+          )
+          await config.api.table.save({
+            ...table,
+            schema: {
+              ...table.schema,
+              ...links.reduce<TableSchema>((acc, c) => {
+                acc[c.name] = {
+                  name: c.name,
+                  relationshipType: RelationshipType.ONE_TO_MANY,
+                  type: FieldType.LINK,
+                  tableId: c.tableId,
+                  fieldName: c.fk,
+                  constraints: { type: "array" },
+                }
+                return acc
+              }, {}),
+            },
           })
-        )
+          return table
+        }
+        const createAuxTable = (schema: TableSchema) =>
+          config.api.table.save(
+            saveTableRequest({
+              primaryDisplay: "name",
+              schema: {
+                ...schema,
+                name: { name: "name", type: FieldType.STRING },
+              },
+            })
+          )
+
+        it("returns squashed fields respecting the view config", async () => {
+          const auxTable = await createAuxTable({
+            age: { name: "age", type: FieldType.NUMBER },
+          })
+          const auxRow = await config.api.row.save(auxTable._id!, {
+            name: generator.name(),
+            age: generator.age(),
+          })
+
+          const table = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+          ])
+          await config.api.row.save(table._id!, {
+            title: generator.word(),
+            aux: [auxRow],
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              title: { visible: true },
+              aux: {
+                visible: true,
+                columns: {
+                  name: { visible: false, readonly: false },
+                  age: { visible: true, readonly: true },
+                },
+              },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id)
+          expect(response.rows).toEqual([
+            expect.objectContaining({
+              aux: [
+                {
+                  _id: auxRow._id,
+                  primaryDisplay: auxRow.name,
+                  age: auxRow.age,
+                },
+              ],
+            }),
+          ])
+        })
+
+        it("enriches squashed fields", async () => {
+          const auxTable = await createAuxTable({
+            user: {
+              name: "user",
+              type: FieldType.BB_REFERENCE_SINGLE,
+              subtype: BBReferenceFieldSubType.USER,
+              constraints: { presence: true },
+            },
+          })
+          const table = await createMainTable([
+            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+          ])
+
+          const user = config.getUser()
+          const auxRow = await config.api.row.save(auxTable._id!, {
+            name: generator.name(),
+            user: user._id,
+          })
+          await config.api.row.save(table._id!, {
+            title: generator.word(),
+            aux: [auxRow],
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              title: { visible: true },
+              aux: {
+                visible: true,
+                columns: {
+                  name: { visible: true, readonly: true },
+                  user: { visible: true, readonly: true },
+                },
+              },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id)
+
+          expect(response.rows).toEqual([
+            expect.objectContaining({
+              aux: [
+                {
+                  _id: auxRow._id,
+                  primaryDisplay: auxRow.name,
+                  name: auxRow.name,
+                  user: {
+                    _id: user._id,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    primaryDisplay: user.email,
+                  },
+                },
+              ],
+            }),
+          ])
+        })
       })
+
+      !isLucene &&
+        describe("calculations", () => {
+          let table: Table
+          let rows: Row[]
+
+          beforeAll(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  quantity: {
+                    type: FieldType.NUMBER,
+                    name: "quantity",
+                  },
+                  price: {
+                    type: FieldType.NUMBER,
+                    name: "price",
+                  },
+                },
+              })
+            )
+
+            rows = await Promise.all(
+              Array.from({ length: 10 }, () =>
+                config.api.row.save(table._id!, {
+                  quantity: generator.natural({ min: 1, max: 10 }),
+                  price: generator.natural({ min: 1, max: 10 }),
+                })
+              )
+            )
+          })
+
+          it("should be able to search by calculations", async () => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                "Quantity Sum": {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "quantity",
+                },
+              },
+            })
+
+            const response = await config.api.viewV2.search(view.id, {
+              query: {},
+            })
+
+            expect(response.rows).toHaveLength(1)
+            expect(response.rows).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({
+                  "Quantity Sum": rows.reduce((acc, r) => acc + r.quantity, 0),
+                }),
+              ])
+            )
+
+            // Calculation views do not return rows that can be linked back to
+            // the source table, and so should not have an _id field.
+            for (const row of response.rows) {
+              expect("_id" in row).toBe(false)
+            }
+          })
+
+          it("should be able to group by a basic field", async () => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                quantity: {
+                  visible: true,
+                  field: "quantity",
+                },
+                "Total Price": {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "price",
+                },
+              },
+            })
+
+            const response = await config.api.viewV2.search(view.id, {
+              query: {},
+            })
+
+            const priceByQuantity: Record<number, number> = {}
+            for (const row of rows) {
+              priceByQuantity[row.quantity] ??= 0
+              priceByQuantity[row.quantity] += row.price
+            }
+
+            for (const row of response.rows) {
+              expect(row["Total Price"]).toEqual(priceByQuantity[row.quantity])
+            }
+          })
+        })
     })
 
     describe("permissions", () => {
@@ -2247,6 +2525,11 @@ describe.each([
           roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
           level: PermissionLevel.READ,
           resourceId: table._id!,
+        })
+        await config.api.permission.revoke({
+          roleId: roles.BUILTIN_ROLE_IDS.PUBLIC, // Don't think this matters since we are revoking the permission
+          level: PermissionLevel.READ,
+          resourceId: view.id,
         })
         await config.publish()
 

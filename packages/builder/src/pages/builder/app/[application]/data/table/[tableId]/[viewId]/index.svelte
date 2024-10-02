@@ -1,6 +1,6 @@
 <script>
   import { viewsV2, rowActions } from "stores/builder"
-  import { admin } from "stores/portal"
+  import { admin, themeStore } from "stores/portal"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
@@ -23,6 +23,11 @@
   }
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
+  $: currentTheme = $themeStore?.theme
+  $: darkMode = !currentTheme.includes("light")
+
+  $: currentTheme = $themeStore?.theme
+  $: darkMode = !currentTheme.includes("light")
 
   const makeRowActionButtons = actions => {
     return (actions || []).map(action => ({
@@ -40,13 +45,14 @@
 
 <Grid
   {API}
+  {darkMode}
   {datasource}
+  {buttons}
   allowAddRows
   allowDeleteRows
   showAvatars={false}
   on:updatedatasource={handleGridViewUpdate}
   isCloud={$admin.cloud}
-  {buttons}
   buttonsCollapsed
 >
   <svelte:fragment slot="controls">

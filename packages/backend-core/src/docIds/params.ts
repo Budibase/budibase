@@ -6,7 +6,7 @@ import {
   ViewName,
 } from "../constants"
 import { getProdAppID } from "./conversions"
-import { DatabaseQueryOpts } from "@budibase/types"
+import { DatabaseQueryOpts, VirtualDocumentType } from "@budibase/types"
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -66,9 +66,8 @@ export function getQueryIndex(viewName: ViewName) {
 
 /**
  * Check if a given ID is that of a table.
- * @returns {boolean}
  */
-export const isTableId = (id: string) => {
+export const isTableId = (id: string): boolean => {
   // this includes datasource plus tables
   return (
     !!id &&
@@ -77,13 +76,16 @@ export const isTableId = (id: string) => {
   )
 }
 
+export function isViewId(id: string): boolean {
+  return !!id && id.startsWith(`${VirtualDocumentType.VIEW}${SEPARATOR}`)
+}
+
 /**
  * Check if a given ID is that of a datasource or datasource plus.
- * @returns {boolean}
  */
-export const isDatasourceId = (id: string) => {
+export const isDatasourceId = (id: string): boolean => {
   // this covers both datasources and datasource plus
-  return id && id.startsWith(`${DocumentType.DATASOURCE}${SEPARATOR}`)
+  return !!id && id.startsWith(`${DocumentType.DATASOURCE}${SEPARATOR}`)
 }
 
 /**

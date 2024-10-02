@@ -11,10 +11,12 @@ import {
 } from "./utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
+  Aggregation,
   AnySearchFilter,
   ArrayOperator,
   BasicOperator,
   BBReferenceFieldMetadata,
+  CalculationType,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -69,18 +71,6 @@ function prioritisedArraySort(toSort: string[], priorities: string[]) {
   })
 }
 
-function getTableName(table?: Table): string | undefined {
-  // SQS uses the table ID rather than the table name
-  if (
-    table?.sourceType === TableSourceType.INTERNAL ||
-    table?.sourceId === INTERNAL_TABLE_SOURCE_ID
-  ) {
-    return table?._id
-  } else {
-    return table?.name
-  }
-}
-
 function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
   if (Array.isArray(query)) {
     return query.map((q: SqlQuery) => convertBooleans(q) as SqlQuery)
@@ -95,6 +85,13 @@ function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
     }
   }
   return query
+}
+
+function isSqs(table: Table): boolean {
+  return (
+    table.sourceType === TableSourceType.INTERNAL ||
+    table.sourceId === INTERNAL_TABLE_SOURCE_ID
+  )
 }
 
 class InternalBuilder {
@@ -150,6 +147,7 @@ class InternalBuilder {
         return `"${str}"`
       case SqlClient.MS_SQL:
         return `[${str}]`
+      case SqlClient.MARIADB:
       case SqlClient.MY_SQL:
         return `\`${str}\``
     }
@@ -177,15 +175,13 @@ class InternalBuilder {
   }
 
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
-    const { meta, endpoint, resource, tableAliases } = this.query
+    const { meta, endpoint, resource } = this.query
 
     if (!resource || !resource.fields || resource.fields.length === 0) {
       return "*"
     }
 
-    const alias = tableAliases?.[endpoint.entityId]
-      ? tableAliases?.[endpoint.entityId]
-      : endpoint.entityId
+    const alias = this.getTableName(endpoint.entityId)
     const schema = meta.table.schema
     if (!this.isFullSelectStatementRequired()) {
       return [this.knex.raw(`${this.quote(alias)}.*`)]
@@ -559,7 +555,10 @@ class InternalBuilder {
             )}${wrap}, FALSE)`
           )
         })
-      } else if (this.client === SqlClient.MY_SQL) {
+      } else if (
+        this.client === SqlClient.MY_SQL ||
+        this.client === SqlClient.MARIADB
+      ) {
         const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
         iterate(mode, (q, key, value) => {
           return q[rawFnc](
@@ -807,26 +806,88 @@ class InternalBuilder {
     return query
   }
 
+  isSqs(): boolean {
+    return isSqs(this.table)
+  }
+
+  getTableName(tableOrName?: Table | string): string {
+    let table: Table
+    if (typeof tableOrName === "string") {
+      const name = tableOrName
+      if (this.query.table?.name === name) {
+        table = this.query.table
+      } else if (this.query.meta.table?.name === name) {
+        table = this.query.meta.table
+      } else if (!this.query.meta.tables?.[name]) {
+        // This can legitimately happen in custom queries, where the user is
+        // querying against a table that may not have been imported into
+        // Budibase.
+        return name
+      } else {
+        table = this.query.meta.tables[name]
+      }
+    } else if (tableOrName) {
+      table = tableOrName
+    } else {
+      table = this.table
+    }
+
+    let name = table.name
+    if (isSqs(table) && table._id) {
+      // SQS uses the table ID rather than the table name
+      name = table._id
+    }
+    const aliases = this.query.tableAliases || {}
+    return aliases[name] ? aliases[name] : name
+  }
+
   addDistinctCount(query: Knex.QueryBuilder): Knex.QueryBuilder {
-    const primary = this.table.primary
-    const aliases = this.query.tableAliases
-    const aliased =
-      this.table.name && aliases?.[this.table.name]
-        ? aliases[this.table.name]
-        : this.table.name
-    if (!primary) {
+    if (!this.table.primary) {
       throw new Error("SQL counting requires primary key to be supplied")
     }
-    return query.countDistinct(`${aliased}.${primary[0]} as total`)
+    return query.countDistinct(
+      `${this.getTableName()}.${this.table.primary[0]} as __bb_total`
+    )
+  }
+
+  addAggregations(
+    query: Knex.QueryBuilder,
+    aggregations: Aggregation[]
+  ): Knex.QueryBuilder {
+    const fields = this.query.resource?.fields || []
+    const tableName = this.getTableName()
+    if (fields.length > 0) {
+      query = query.groupBy(fields.map(field => `${tableName}.${field}`))
+      query = query.select(fields.map(field => `${tableName}.${field}`))
+    }
+    for (const aggregation of aggregations) {
+      const op = aggregation.calculationType
+      const field = `${tableName}.${aggregation.field} as ${aggregation.name}`
+      switch (op) {
+        case CalculationType.COUNT:
+          query = query.count(field)
+          break
+        case CalculationType.SUM:
+          query = query.sum(field)
+          break
+        case CalculationType.AVG:
+          query = query.avg(field)
+          break
+        case CalculationType.MIN:
+          query = query.min(field)
+          break
+        case CalculationType.MAX:
+          query = query.max(field)
+          break
+      }
+    }
+    return query
   }
 
   addSorting(query: Knex.QueryBuilder): Knex.QueryBuilder {
-    let { sort } = this.query
+    let { sort, resource } = this.query
     const primaryKey = this.table.primary
-    const tableName = getTableName(this.table)
-    const aliases = this.query.tableAliases
-    const aliased =
-      tableName && aliases?.[tableName] ? aliases[tableName] : this.table?.name
+    const aliased = this.getTableName()
     if (!Array.isArray(primaryKey)) {
       throw new Error("Sorting requires primary key to be specified for table")
     }
@@ -858,7 +919,8 @@ class InternalBuilder {
 
     // add sorting by the primary key if the result isn't already sorted by it,
     // to make sure result is deterministic
-    if (!sort || sort[primaryKey[0]] === undefined) {
+    const hasAggregations = (resource?.aggregations?.length ?? 0) > 0
+    if (!hasAggregations && (!sort || sort[primaryKey[0]] === undefined)) {
       query = query.orderBy(`${aliased}.${primaryKey[0]}`)
     }
     return query
@@ -930,7 +992,8 @@ class InternalBuilder {
       }
       const relatedTable = meta.tables?.[toTable]
       const toAlias = aliases?.[toTable] || toTable,
-        fromAlias = aliases?.[fromTable] || fromTable
+        fromAlias = aliases?.[fromTable] || fromTable,
+        throughAlias = (throughTable && aliases?.[throughTable]) || throughTable
       let toTableWithSchema = this.tableNameWithSchema(toTable, {
         alias: toAlias,
         schema: endpoint.schema,
@@ -957,38 +1020,36 @@ class InternalBuilder {
       const primaryKey = `${toAlias}.${toPrimary || toKey}`
       let subQuery: Knex.QueryBuilder = knex
         .from(toTableWithSchema)
-        .limit(getRelationshipLimit())
         // add sorting to get consistent order
         .orderBy(primaryKey)
 
-      // many-to-many relationship with junction table
-      if (throughTable && toPrimary && fromPrimary) {
-        const throughAlias = aliases?.[throughTable] || throughTable
+      const isManyToMany = throughTable && toPrimary && fromPrimary
+      let correlatedTo = isManyToMany
+          ? `${throughAlias}.${fromKey}`
+          : `${toAlias}.${toKey}`,
+        correlatedFrom = isManyToMany
+          ? `${fromAlias}.${fromPrimary}`
+          : `${fromAlias}.${fromKey}`
+      // many-to-many relationship needs junction table join
+      if (isManyToMany) {
         let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
           alias: throughAlias,
           schema: endpoint.schema,
         })
-        subQuery = subQuery
-          .join(throughTableWithSchema, function () {
-            this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
-          })
-          .where(
-            `${throughAlias}.${fromKey}`,
-            "=",
-            knex.raw(this.quotedIdentifier(`${fromAlias}.${fromPrimary}`))
-          )
-      }
-      // one-to-many relationship with foreign key
-      else {
-        subQuery = subQuery.where(
-          `${toAlias}.${toKey}`,
-          "=",
-          knex.raw(this.quotedIdentifier(`${fromAlias}.${fromKey}`))
-        )
+        subQuery = subQuery.join(throughTableWithSchema, function () {
+          this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
+        })
       }
 
+      // add the correlation to the overall query
+      subQuery = subQuery.where(
+        correlatedTo,
+        "=",
+        knex.raw(this.quotedIdentifier(correlatedFrom))
+      )
+
       const standardWrap = (select: string): Knex.QueryBuilder => {
-        subQuery = subQuery.select(`${toAlias}.*`)
+        subQuery = subQuery.select(`${toAlias}.*`).limit(getRelationshipLimit())
         // @ts-ignore - the from alias syntax isn't in Knex typing
         return knex.select(knex.raw(select)).from({
           [toAlias]: subQuery,
@@ -1008,11 +1069,15 @@ class InternalBuilder {
             `json_agg(json_build_object(${fieldList}))`
           )
           break
-        case SqlClient.MY_SQL:
+        case SqlClient.MARIADB:
+          // can't use the standard wrap due to correlated sub-query limitations in MariaDB
           wrapperQuery = subQuery.select(
-            knex.raw(`json_arrayagg(json_object(${fieldList}))`)
+            knex.raw(
+              `json_arrayagg(json_object(${fieldList}) LIMIT ${getRelationshipLimit()})`
+            )
           )
           break
+        case SqlClient.MY_SQL:
         case SqlClient.ORACLE:
           wrapperQuery = standardWrap(
             `json_arrayagg(json_object(${fieldList}))`
@@ -1024,7 +1089,9 @@ class InternalBuilder {
               .select(`${fromAlias}.*`)
               // @ts-ignore - from alias syntax not TS supported
               .from({
-                [fromAlias]: subQuery.select(`${toAlias}.*`),
+                [fromAlias]: subQuery
+                  .select(`${toAlias}.*`)
+                  .limit(getRelationshipLimit()),
               })} FOR JSON PATH))`
           )
           break
@@ -1179,7 +1246,8 @@ class InternalBuilder {
     if (
       this.client === SqlClient.POSTGRES ||
       this.client === SqlClient.SQL_LITE ||
-      this.client === SqlClient.MY_SQL
+      this.client === SqlClient.MY_SQL ||
+      this.client === SqlClient.MARIADB
     ) {
       const primary = this.table.primary
       if (!primary) {
@@ -1236,10 +1304,15 @@ class InternalBuilder {
       }
     }
 
-    // if counting, use distinct count, else select
-    query = !counting
-      ? query.select(this.generateSelectStatement())
-      : this.addDistinctCount(query)
+    const aggregations = this.query.resource?.aggregations || []
+    if (counting) {
+      query = this.addDistinctCount(query)
+    } else if (aggregations.length > 0) {
+      query = this.addAggregations(query, aggregations)
+    } else {
+      query = query.select(this.generateSelectStatement())
+    }
+
     // have to add after as well (this breaks MS-SQL)
     if (!counting) {
       query = this.addSorting(query)
@@ -1326,12 +1399,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   _query(json: QueryJson, opts: QueryOptions = {}): SqlQuery | SqlQuery[] {
     const sqlClient = this.getSqlClient()
     const config: Knex.Config = {
-      client: sqlClient,
+      client: this.getBaseSqlClient(),
     }
     if (sqlClient === SqlClient.SQL_LITE || sqlClient === SqlClient.ORACLE) {
       config.useNullAsDefault = true
     }
-
     const client = knex(config)
     let query: Knex.QueryBuilder
     const builder = new InternalBuilder(sqlClient, client, json)
@@ -1440,7 +1512,10 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       let id
       if (sqlClient === SqlClient.MS_SQL) {
         id = results?.[0].id
-      } else if (sqlClient === SqlClient.MY_SQL) {
+      } else if (
+        sqlClient === SqlClient.MY_SQL ||
+        sqlClient === SqlClient.MARIADB
+      ) {
         id = results?.insertId
       }
       row = processFn(
@@ -1456,23 +1531,40 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
 
+  private getTableName(
+    table: Table,
+    aliases?: Record<string, string>
+  ): string | undefined {
+    let name = table.name
+    if (
+      table.sourceType === TableSourceType.INTERNAL ||
+      table.sourceId === INTERNAL_TABLE_SOURCE_ID
+    ) {
+      if (!table._id) {
+        return
+      }
+      // SQS uses the table ID rather than the table name
+      name = table._id
+    }
+    return aliases?.[name] || name
+  }
+
   convertJsonStringColumns<T extends Record<string, any>>(
     table: Table,
     results: T[],
     aliases?: Record<string, string>
   ): T[] {
-    const tableName = getTableName(table)
+    const tableName = this.getTableName(table, aliases)
     for (const [name, field] of Object.entries(table.schema)) {
       if (!this._isJsonColumn(field)) {
         continue
       }
-      const aliasedTableName = (tableName && aliases?.[tableName]) || tableName
-      const fullName = `${aliasedTableName}.${name}`
+      const fullName = `${tableName}.${name}` as keyof T
       for (let row of results) {
-        if (typeof row[fullName as keyof T] === "string") {
-          row[fullName as keyof T] = JSON.parse(row[fullName])
+        if (typeof row[fullName] === "string") {
+          row[fullName] = JSON.parse(row[fullName])
         }
-        if (typeof row[name as keyof T] === "string") {
+        if (typeof row[name] === "string") {
           row[name as keyof T] = JSON.parse(row[name])
         }
       }

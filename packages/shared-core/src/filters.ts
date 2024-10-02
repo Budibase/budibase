@@ -127,7 +127,7 @@ export function recurseLogicalOperators(
   fn: (f: SearchFilters) => SearchFilters
 ) {
   for (const logical of LOGICAL_OPERATORS) {
-    if (filters[logical]) {
+    if (filters?.[logical]) {
       filters[logical]!.conditions = filters[logical]!.conditions.map(
         condition => fn(condition)
       )

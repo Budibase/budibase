@@ -10,7 +10,10 @@ import flatten from "lodash/flatten"
 import { USER_METDATA_PREFIX } from "../utils"
 import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
-import { processFormulas } from "../../utilities/rowProcessor"
+import {
+  coreOutputProcessing,
+  processFormulas,
+} from "../../utilities/rowProcessor"
 import { context, features } from "@budibase/backend-core"
 import {
   ContextUser,
@@ -24,6 +27,7 @@ import {
   ViewV2,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { helpers } from "@budibase/shared-core"
 
 export { IncludeDocs, getLinkDocuments, createLinkView } from "./linkUtils"
 
@@ -156,9 +160,6 @@ export async function updateLinks(args: {
 /**
  * Given a table and a list of rows this will retrieve all of the attached docs and enrich them into the row.
  * This is required for formula fields, this may only be utilised internally (for now).
- * @param table The table from which the rows originated.
- * @param rows The rows which are to be enriched.
- * @param opts optional - options like passing in a base row to use for enrichment.
  * @return returns the rows with all of the enriched relationships on it.
  */
 export async function attachFullLinkedDocs(
@@ -247,35 +248,42 @@ function getPrimaryDisplayValue(row: Row, table?: Table) {
 export type SquashTableFields = Record<string, { visibleFieldNames: string[] }>
 
 /**
- * This function will take the given enriched rows and squash the links to only contain the primary display field.
- * @param table The table from which the rows originated.
- * @param enriched The pre-enriched rows (full docs) which are to be squashed.
- * @param squashFields Per link column (key) define which columns are allowed while squashing.
- * @returns The rows after having their links squashed to only contain the ID and primary display.
+ * This function will take the given enriched rows and squash the links to only
+ * contain the primary display field.
+ *
+ * @returns The rows after having their links squashed to only contain the ID
+ * and primary display.
  */
 export async function squashLinks<T = Row[] | Row>(
-  table: Table,
-  enriched: T,
-  options?: {
-    fromViewId?: string
-  }
+  source: Table | ViewV2,
+  enriched: T
 ): Promise<T> {
   const allowRelationshipSchemas = await features.flags.isEnabled(
     FeatureFlag.ENRICHED_RELATIONSHIPS
   )
 
   let viewSchema: Record<string, ViewFieldMetadata> = {}
-  if (options?.fromViewId && allowRelationshipSchemas) {
-    const view = Object.values(table.views || {}).find(
-      (v): v is ViewV2 => sdk.views.isV2(v) && v.id === options?.fromViewId
-    )
-    viewSchema = view?.schema || {}
+  if (sdk.views.isView(source)) {
+    if (helpers.views.isCalculationView(source)) {
+      return enriched
+    }
+
+    if (allowRelationshipSchemas) {
+      viewSchema = source.schema || {}
+    }
+  }
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
   }
 
   // will populate this as we find them
   const linkedTables = [table]
   const isArray = Array.isArray(enriched)
-  const enrichedArray = !isArray ? [enriched] : enriched
+  const enrichedArray = !isArray ? [enriched as Row] : (enriched as Row[])
   for (const row of enrichedArray) {
     // this only fetches the table if its not already in array
     const rowTable = await getLinkedTable(row.tableId!, linkedTables)
@@ -283,18 +291,18 @@ export async function squashLinks<T = Row[] | Row>(
       if (schema.type !== FieldType.LINK || !Array.isArray(row[column])) {
         continue
       }
-      const newLinks = []
-      for (const link of row[column]) {
-        const linkTblId =
-          link.tableId || getRelatedTableForField(table.schema, column)
-        const linkedTable = await getLinkedTable(linkTblId!, linkedTables)
+      const relatedTable = await getLinkedTable(schema.tableId, linkedTables)
+      if (viewSchema[column]?.columns) {
+        row[column] = await coreOutputProcessing(relatedTable, row[column])
+      }
+      row[column] = row[column].map((link: Row) => {
         const obj: any = { _id: link._id }
-        obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
+        obj.primaryDisplay = getPrimaryDisplayValue(link, relatedTable)
 
         if (viewSchema[column]?.columns) {
-          const squashFields = Object.entries(viewSchema[column].columns)
+          const squashFields = Object.entries(viewSchema[column].columns || {})
             .filter(([columnName, viewColumnConfig]) => {
-              const tableColumn = linkedTable.schema[columnName]
+              const tableColumn = relatedTable.schema[columnName]
               if (!tableColumn) {
                 return false
               }
@@ -312,14 +320,15 @@ export async function squashLinks<T = Row[] | Row>(
             .map(([columnName]) => columnName)
 
           for (const relField of squashFields) {
-            obj[relField] = link[relField]
+            if (link[relField] != null) {
+              obj[relField] = link[relField]
+            }
           }
         }
 
-        newLinks.push(obj)
-      }
-      row[column] = newLinks
+        return obj
+      })
     }
   }
-  return isArray ? enrichedArray : enrichedArray[0]
+  return (isArray ? enrichedArray : enrichedArray[0]) as T
 }

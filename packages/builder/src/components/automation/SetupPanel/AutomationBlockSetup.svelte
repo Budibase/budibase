@@ -648,16 +648,18 @@
       let hasUserDefinedName = automation.stepNames?.[allSteps[idx]?.id]
       if (isLoopBlock) {
         runtimeName = `loop.${name}`
+      } else if (idx === 0) {
+        runtimeName = `trigger.${name}`
       } else if (block.name.startsWith("JS")) {
         runtimeName = hasUserDefinedName
-          ? `stepsByName[${bindingName}].${name}`
-          : `steps[${idx - loopBlockCount}].${name}`
+          ? `stepsByName["${bindingName}"].${name}`
+          : `steps["${idx - loopBlockCount}"].${name}`
       } else {
         runtimeName = hasUserDefinedName
           ? `stepsByName.${bindingName}.${name}`
           : `steps.${idx - loopBlockCount}.${name}`
       }
-      return idx === 0 ? `trigger.${name}` : runtimeName
+      return runtimeName
     }
 
     const determineCategoryName = (idx, isLoopBlock, bindingName) => {
@@ -684,7 +686,7 @@
       )
       return {
         readableBinding:
-          bindingName && !isLoopBlock
+          bindingName && !isLoopBlock && idx !== 0
             ? `steps.${bindingName}.${name}`
             : runtimeBinding,
         runtimeBinding,
@@ -759,12 +761,20 @@
           : allSteps[idx].icon
 
       if (wasLoopBlock) {
-        loopBlockCount++
         schema = cloneDeep(allSteps[idx - 1]?.schema?.outputs?.properties)
       }
       Object.entries(schema).forEach(([name, value]) => {
         addBinding(name, value, icon, idx, isLoopBlock, bindingName)
       })
+    }
+
+    if (
+      allSteps[blockIdx - 1]?.stepId !== ActionStepID.LOOP &&
+      allSteps
+        .slice(0, blockIdx)
+        .some(step => step.stepId === ActionStepID.LOOP)
+    ) {
+      bindings = bindings.filter(x => !x.readableBinding.includes("loop"))
     }
     return bindings
   }
@@ -1052,7 +1062,7 @@
             {:else if value.customType === "cron"}
               <CronBuilder
                 on:change={e => onChange({ [key]: e.detail })}
-                value={inputData[key]}
+                cronExpression={inputData[key]}
               />
             {:else if value.customType === "automationFields"}
               <AutomationSelector
