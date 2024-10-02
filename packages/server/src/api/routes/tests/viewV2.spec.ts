@@ -2458,6 +2458,93 @@ describe.each([
               expect("_id" in row).toBe(false)
             }
           })
+
+          it("should be able to group by a basic field", async () => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                quantity: {
+                  visible: true,
+                  field: "quantity",
+                },
+                "Total Price": {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "price",
+                },
+              },
+            })
+
+            const response = await config.api.viewV2.search(view.id, {
+              query: {},
+            })
+
+            const priceByQuantity: Record<number, number> = {}
+            for (const row of rows) {
+              priceByQuantity[row.quantity] ??= 0
+              priceByQuantity[row.quantity] += row.price
+            }
+
+            for (const row of response.rows) {
+              expect(row["Total Price"]).toEqual(priceByQuantity[row.quantity])
+            }
+          })
+
+          it.each([
+            CalculationType.COUNT,
+            CalculationType.SUM,
+            CalculationType.AVG,
+            CalculationType.MIN,
+            CalculationType.MAX,
+          ])("should be able to calculate $type", async type => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                aggregate: {
+                  visible: true,
+                  calculationType: type,
+                  field: "price",
+                },
+              },
+            })
+
+            const response = await config.api.viewV2.search(view.id, {
+              query: {},
+            })
+
+            function calculate(
+              type: CalculationType,
+              numbers: number[]
+            ): number {
+              switch (type) {
+                case CalculationType.COUNT:
+                  return numbers.length
+                case CalculationType.SUM:
+                  return numbers.reduce((a, b) => a + b, 0)
+                case CalculationType.AVG:
+                  return numbers.reduce((a, b) => a + b, 0) / numbers.length
+                case CalculationType.MIN:
+                  return Math.min(...numbers)
+                case CalculationType.MAX:
+                  return Math.max(...numbers)
+              }
+            }
+
+            const prices = rows.map(row => row.price)
+            const expected = calculate(type, prices)
+            const actual = response.rows[0].aggregate
+
+            if (type === CalculationType.AVG) {
+              // The average calculation can introduce floating point rounding
+              // errors, so we need to compare to within a small margin of
+              // error.
+              expect(actual).toBeCloseTo(expected)
+            } else {
+              expect(actual).toEqual(expected)
+            }
+          })
         })
     })
 
