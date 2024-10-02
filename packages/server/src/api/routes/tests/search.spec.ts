@@ -178,7 +178,9 @@ describe.each([
       },
     ],
   ])("from %s", (tableOrView, createTableOrView) => {
-    if (tableOrView === "view" && isLucene) {
+    const isView = tableOrView === "view"
+
+    if (isView && isLucene) {
       // Some tests don't have the expected result in views via lucene, and given that it is getting deprecated, we exclude them from the tests
       return
     }
@@ -824,11 +826,13 @@ describe.each([
           }).toContainExactly([{ name: "foo" }, { name: "bar" }])
         })
 
-        it("should return nothing if onEmptyFilter is RETURN_NONE", async () => {
-          await expectQuery({
-            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-          }).toFindNothing()
-        })
+        // onEmptyFilter cannot be sent to view searches
+        !isView &&
+          it("should return nothing if onEmptyFilter is RETURN_NONE", async () => {
+            await expectQuery({
+              onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+            }).toFindNothing()
+          })
 
         it("should respect limit", async () => {
           await expectSearch({
@@ -924,12 +928,14 @@ describe.each([
           }).toContainExactly([{ name: "foo" }, { name: "bar" }])
         })
 
-        it("empty arrays returns all when onEmptyFilter is set to return 'none'", async () => {
-          await expectQuery({
-            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-            oneOf: { name: [] },
-          }).toContainExactly([])
-        })
+        // onEmptyFilter cannot be sent to view searches
+        !isView &&
+          it("empty arrays returns all when onEmptyFilter is set to return 'none'", async () => {
+            await expectQuery({
+              onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+              oneOf: { name: [] },
+            }).toContainExactly([])
+          })
       })
 
       describe("fuzzy", () => {
@@ -2743,6 +2749,7 @@ describe.each([
       })
 
     isSqs &&
+      !isView &&
       describe("duplicate columns", () => {
         beforeAll(async () => {
           tableOrViewId = await createTableOrView({
@@ -2860,51 +2867,45 @@ describe.each([
     isSql &&
       describe("primaryDisplay", () => {
         beforeAll(async () => {
-          let toRelateTableId = await createTableOrView({
+          let toRelateTableId = await createTable({
             name: {
               name: "name",
               type: FieldType.STRING,
             },
           })
-          const table = await config.api.table.save(
-            tableForDatasource(datasource, {
-              schema: {
-                name: {
-                  name: "name",
-                  type: FieldType.STRING,
-                },
-                link: {
-                  name: "link",
-                  type: FieldType.LINK,
-                  relationshipType: RelationshipType.MANY_TO_ONE,
-                  tableId: toRelateTableId,
-                  fieldName: "link",
-                },
-              },
-            })
-          )
-          tableOrViewId = table._id!
+          tableOrViewId = await createTableOrView({
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+            link: {
+              name: "link",
+              type: FieldType.LINK,
+              relationshipType: RelationshipType.MANY_TO_ONE,
+              tableId: toRelateTableId,
+              fieldName: "link",
+            },
+          })
+
           const toRelateTable = await config.api.table.get(toRelateTableId)
           await config.api.table.save({
             ...toRelateTable,
             primaryDisplay: "link",
           })
           const relatedRows = await Promise.all([
-            config.api.row.save(toRelateTable._id!, { name: "test" }),
+            config.api.row.save(toRelateTable._id!, { name: "related" }),
           ])
-          await Promise.all([
-            config.api.row.save(tableOrViewId, {
-              name: "test",
-              link: relatedRows.map(row => row._id),
-            }),
-          ])
+          await config.api.row.save(tableOrViewId, {
+            name: "test",
+            link: relatedRows.map(row => row._id),
+          })
         })
 
         it("should be able to query, primary display on related table shouldn't be used", async () => {
           // this test makes sure that if a relationship has been specified as the primary display on a table
           // it is ignored and another column is used instead
           await expectQuery({}).toContain([
-            { name: "test", link: [{ primaryDisplay: "test" }] },
+            { name: "test", link: [{ primaryDisplay: "related" }] },
           ])
         })
       })
@@ -3018,16 +3019,18 @@ describe.each([
             )
           })
 
-        it("returns no rows when onEmptyFilter set to none", async () => {
-          await expectSearch({
-            query: {
-              onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-              $and: {
-                conditions: [{ equal: { name: "" } }],
+        // onEmptyFilter cannot be sent to view searches
+        !isView &&
+          it("returns no rows when onEmptyFilter set to none", async () => {
+            await expectSearch({
+              query: {
+                onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+                $and: {
+                  conditions: [{ equal: { name: "" } }],
+                },
               },
-            },
-          }).toFindNothing()
-        })
+            }).toFindNothing()
+          })
 
         it("returns all rows when onEmptyFilter set to all", async () => {
           await expectSearch({
@@ -3168,16 +3171,18 @@ describe.each([
           }).toContainExactly([{ age: 1, name: "Jane" }])
         })
 
-        it("returns no rows when onEmptyFilter set to none", async () => {
-          await expectSearch({
-            query: {
-              onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-              $or: {
-                conditions: [{ equal: { name: "" } }],
+        // onEmptyFilter cannot be sent to view searches
+        !isView &&
+          it("returns no rows when onEmptyFilter set to none", async () => {
+            await expectSearch({
+              query: {
+                onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+                $or: {
+                  conditions: [{ equal: { name: "" } }],
+                },
               },
-            },
-          }).toFindNothing()
-        })
+            }).toFindNothing()
+          })
 
         it("returns all rows when onEmptyFilter set to all", async () => {
           await expectSearch({
