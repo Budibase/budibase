@@ -767,7 +767,7 @@
               formula: e.detail,
             }
           }}
-          {bindings}
+          bindings={getBindings({ table })}
           allowJS
           context={rowGoldenSample}
         />
