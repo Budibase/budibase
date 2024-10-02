@@ -63,6 +63,7 @@
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
 
+  export let automation
   export let block
   export let testData
   export let schemaProperties
@@ -107,7 +108,7 @@
 
   $: automationBindings = automationStore.actions.getPathBindings(
     $memoBlock.id,
-    $selectedAutomation
+    automation
   )
   $: environmentBindings = buildEnvironmentBindings($memoEnvVariables)
   $: bindings = [...automationBindings, ...environmentBindings]
@@ -435,7 +436,7 @@
 
         if (
           Object.hasOwn(update, "tableId") &&
-          $selectedAutomation.testData?.row?.tableId !== update.tableId
+          automation.testData?.row?.tableId !== update.tableId
         ) {
           const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
             searchableSchema: true,
@@ -567,7 +568,7 @@
             ...newTestData,
             body: {
               ...update,
-              ...$selectedAutomation.testData?.body,
+              ...automation.testData?.body,
             },
           }
         }
