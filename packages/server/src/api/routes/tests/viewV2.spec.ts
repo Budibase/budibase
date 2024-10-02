@@ -2796,6 +2796,30 @@ describe.each([
             expect(rows).toHaveLength(1)
             expect(rows[0].count).toEqual(2)
           })
+
+          it("should not be able to COUNT(DISTINCT ...) against a non-existent field", async () => {
+            await config.api.viewV2.create(
+              {
+                tableId: table._id!,
+                name: generator.guid(),
+                schema: {
+                  count: {
+                    visible: true,
+                    calculationType: CalculationType.COUNT,
+                    distinct: true,
+                    field: "does not exist oh no",
+                  },
+                },
+              },
+              {
+                status: 400,
+                body: {
+                  message:
+                    'Calculation field "count" references field "does not exist oh no" which does not exist in the table schema',
+                },
+              }
+            )
+          })
         })
 
       !isLucene &&
