@@ -25,6 +25,7 @@ import {
   ViewFieldMetadata,
   FeatureFlag,
   BBReferenceFieldSubType,
+  ViewCalculationFieldMetadata,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -539,6 +540,31 @@ describe.each([
         await config.api.viewV2.create(newView, {
           status: 201,
         })
+      })
+
+      it.only("can create a view with calculation fields", async () => {
+        let view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            sum: {
+              visible: true,
+              calculationType: CalculationType.SUM,
+              field: "Price",
+            },
+          },
+        })
+
+        let sum = view.schema!.sum as ViewCalculationFieldMetadata
+        expect(sum).toBeDefined()
+        expect(sum.calculationType).toEqual(CalculationType.SUM)
+        expect(sum.field).toEqual("Price")
+
+        view = await config.api.viewV2.get(view.id)
+        sum = view.schema!.sum as ViewCalculationFieldMetadata
+        expect(sum).toBeDefined()
+        expect(sum.calculationType).toEqual(CalculationType.SUM)
+        expect(sum.field).toEqual("Price")
       })
     })
 
