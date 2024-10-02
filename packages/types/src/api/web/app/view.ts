@@ -9,6 +9,7 @@ export interface ViewResponseEnriched {
   data: ViewV2Enriched
 }
 
-export interface CreateViewRequest extends Omit<ViewV2, "version" | "id"> {}
+export interface CreateViewRequest
+  extends Omit<ViewV2, "version" | "id" | "queryUI"> {}
 
-export interface UpdateViewRequest extends ViewV2 {}
+export interface UpdateViewRequest extends Omit<ViewV2, "queryUI"> {}
