@@ -9,7 +9,7 @@
   export let options
 </script>
 
-<div class="permissionPicker">
+<div>
   {#each options as option}
     <AbsTooltip text={option.tooltip} type={TooltipType.Info}>
       <ActionButton
@@ -26,15 +26,14 @@
 </div>
 
 <style>
-  .permissionPicker {
+  div {
     display: flex;
     gap: var(--spacing-xs);
   }
-
-  .permissionPicker :global(.spectrum-Icon) {
+  div :global(.spectrum-Icon) {
     width: 14px;
   }
-  .permissionPicker :global(.spectrum-ActionButton) {
+  div :global(.spectrum-ActionButton) {
     width: 28px;
     height: 28px;
   }

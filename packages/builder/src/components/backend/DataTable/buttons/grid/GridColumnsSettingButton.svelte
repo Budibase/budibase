@@ -1,8 +1,17 @@
+<script context="module">
+  export const FieldPermissions = {
+    WRITABLE: "writable",
+    READONLY: "readonly",
+    HIDDEN: "hidden",
+  }
+</script>
+
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Popover } from "@budibase/bbui"
   import ColumnsSettingContent from "./ColumnsSettingContent.svelte"
-  import { FieldPermissions } from "../../../constants"
+  import { isEnabled } from "helpers/featureFlags"
+  import { FeatureFlag } from "@budibase/types"
 
   const { tableColumns, datasource } = getContext("grid")
 
@@ -12,7 +21,7 @@
   $: anyRestricted = $tableColumns.filter(
     col => !col.visible || col.readonly
   ).length
-  $: text = anyRestricted ? `Columns (${anyRestricted} restricted)` : "Columns"
+  $: text = anyRestricted ? `Columns: ${anyRestricted} restricted` : "Columns"
   $: permissions =
     $datasource.type === "viewV2"
       ? [
@@ -31,11 +40,16 @@
     on:click={() => (open = !open)}
     selected={open || anyRestricted}
     disabled={!$tableColumns.length}
+    accentColor="#674D00"
   >
     {text}
   </ActionButton>
 </div>
 
 <Popover bind:open {anchor} align="left">
-  <ColumnsSettingContent columns={$tableColumns} {permissions} />
+  <ColumnsSettingContent
+    columns={$tableColumns}
+    canSetRelationshipSchemas={isEnabled(FeatureFlag.ENRICHED_RELATIONSHIPS)}
+    {permissions}
+  />
 </Popover>

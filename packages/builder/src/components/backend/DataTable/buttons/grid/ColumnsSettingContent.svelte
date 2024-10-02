@@ -1,20 +1,19 @@
 <script>
   import { getContext } from "svelte"
-  import { Icon, notifications, ActionButton, Popover } from "@budibase/bbui"
-  import { getColumnIcon } from "../lib/utils"
-  import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
+  import ToggleActionButtonGroup from "components/common/ToggleActionButtonGroup.svelte"
   import { helpers } from "@budibase/shared-core"
+  import { SchemaUtils } from "@budibase/frontend-core"
+  import { Icon, notifications, ActionButton, Popover } from "@budibase/bbui"
   import { FieldType } from "@budibase/types"
-  import { FieldPermissions } from "../../../constants"
+  import { FieldPermissions } from "./GridColumnsSettingButton.svelte"
 
   export let permissions = [FieldPermissions.WRITABLE, FieldPermissions.HIDDEN]
   export let disabledPermissions = []
   export let columns
   export let fromRelationshipField
+  export let canSetRelationshipSchemas
 
-  const { datasource, dispatch, config } = getContext("grid")
-
-  $: canSetRelationshipSchemas = $config.canSetRelationshipSchemas
+  const { datasource, dispatch } = getContext("grid")
 
   let relationshipPanelAnchor
   let relationshipFieldName
@@ -153,9 +152,6 @@
       await datasource.actions.saveSchemaMutations()
     } catch (e) {
       notifications.error(e.message)
-    } finally {
-      await datasource.actions.resetSchemaMutations()
-      await datasource.actions.refreshDefinition()
     }
     dispatch(visible ? "show-column" : "hide-column")
   }
@@ -177,7 +173,7 @@
   <div class="columns">
     {#each displayColumns as column}
       <div class="column">
-        <Icon size="S" name={getColumnIcon(column)} />
+        <Icon size="S" name={SchemaUtils.getColumnIcon(column)} />
         <div class="column-label" title={column.label}>
           {column.label}
         </div>
@@ -198,6 +194,7 @@
               size="S"
               icon="ChevronRight"
               quiet
+              selected={relationshipFieldName === column.name}
             />
           </div>
         {/if}

@@ -29,8 +29,18 @@ export const createActions = context => {
     })
   }
 
-  const getRow = () => {
-    throw "Views don't support fetching individual rows"
+  const getRow = async id => {
+    const res = await API.viewV2.fetch({
+      viewId: get(datasource).id,
+      limit: 1,
+      query: {
+        equal: {
+          _id: id,
+        },
+      },
+      paginate: false,
+    })
+    return res?.rows?.[0]
   }
 
   const isDatasourceValid = datasource => {
@@ -97,9 +107,12 @@ export const initialise = context => {
       order: get(initialSortOrder) || "ascending",
     })
 
-    // Keep sort and filter state in line with the view definition
+    // Keep sort and filter state in line with the view definition when in builder
     unsubscribers.push(
       definition.subscribe($definition => {
+        if (!get(config).canSaveSchema) {
+          return
+        }
         if ($definition?.id !== $datasource.id) {
           return
         }
@@ -148,7 +161,7 @@ export const initialise = context => {
         // Also update the fetch to ensure the new sort is respected.
         // Ensure we're updating the correct fetch.
         const $fetch = get(fetch)
-        if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+        if ($fetch?.options?.datasource?.id !== $datasource.id) {
           return
         }
         $fetch.update({
@@ -161,32 +174,49 @@ export const initialise = context => {
     // When filters change, ensure view definition is kept up to date
     unsubscribers?.push(
       filter.subscribe(async $filter => {
-        // If we can mutate schema then update the view definition
-        if (get(config).canSaveSchema) {
-          // Ensure we're updating the correct view
-          const $view = get(definition)
-          if ($view?.id !== $datasource.id) {
-            return
-          }
-          if (JSON.stringify($filter) !== JSON.stringify($view.query)) {
-            await datasource.actions.saveDefinition({
-              ...$view,
-              query: $filter,
-            })
-          }
+        if (!get(config).canSaveSchema) {
+          return
+        }
+        const $view = get(definition)
+        if ($view?.id !== $datasource.id) {
+          return
+        }
+        if (JSON.stringify($filter) !== JSON.stringify($view.query)) {
+          await datasource.actions.saveDefinition({
+            ...$view,
+            query: $filter,
+          })
+
+          // Refresh data since view definition changed
+          await rows.actions.refreshData()
         }
       })
     )
 
-    // Keep fetch up to date with filters.
-    // If we're able to save filters against the view then we only need to apply
-    // inline filters to the fetch, as saved filters are applied server side.
-    // If we can't save filters, then all filters must be applied to the fetch.
+    // Keep fetch up to date with inline filters when in the data section
+    unsubscribers.push(
+      inlineFilters.subscribe($inlineFilters => {
+        if (!get(config).canSaveSchema) {
+          return
+        }
+        const $fetch = get(fetch)
+        if ($fetch?.options?.datasource?.id !== $datasource.id) {
+          return
+        }
+        $fetch.update({
+          filter: $inlineFilters,
+        })
+      })
+    )
+
+    // Keep fetch up to date with all filters when not in the data section
     unsubscribers.push(
       allFilters.subscribe($allFilters => {
-        // Ensure we're updating the correct fetch
+        if (get(config).canSaveSchema) {
+          return
+        }
         const $fetch = get(fetch)
-        if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+        if ($fetch?.options?.datasource?.id !== $datasource.id) {
           return
         }
         $fetch.update({

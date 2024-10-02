@@ -177,6 +177,21 @@ export const OptionColours = [...new Array(12).keys()].map(idx => {
   return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, 0.3)`
 })
 
+export const FilterOperator = {
+  ANY: "any",
+  ALL: "all",
+}
+
+export const OnEmptyFilter = {
+  RETURN_ALL: "all",
+  RETURN_NONE: "none",
+}
+
+export const FilterValueType = {
+  BINDING: "Binding",
+  VALUE: "Value",
+}
+
 export const FieldPermissions = {
   WRITABLE: "writable",
   READONLY: "readonly",
