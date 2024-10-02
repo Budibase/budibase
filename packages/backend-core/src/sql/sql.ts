@@ -842,7 +842,7 @@ class InternalBuilder {
       throw new Error("SQL counting requires primary key to be supplied")
     }
     return query.countDistinct(
-      `${this.getTableName()}.${this.table.primary[0]} as total`
+      `${this.getTableName()}.${this.table.primary[0]} as __bb_total`
     )
   }
 
