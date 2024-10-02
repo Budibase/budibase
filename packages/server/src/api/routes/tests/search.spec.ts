@@ -177,7 +177,7 @@ describe.each([
         return view.id
       },
     ],
-  ])("from %s", (tableOrView, createSource) => {
+  ])("from %s", (tableOrView, createTableOrView) => {
     if (tableOrView === "view" && isLucene) {
       // Some tests don't have the expected result in views via lucene, and given that it is getting deprecated, we exclude them from the tests
       return
@@ -373,7 +373,7 @@ describe.each([
 
     describe("boolean", () => {
       beforeAll(async () => {
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           isTrue: { name: "isTrue", type: FieldType.BOOLEAN },
         })
         await createRows([{ isTrue: true }, { isTrue: false }])
@@ -511,7 +511,7 @@ describe.each([
               })
           )
 
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             name: { name: "name", type: FieldType.STRING },
             appointment: { name: "appointment", type: FieldType.DATETIME },
             single_user: {
@@ -797,7 +797,7 @@ describe.each([
 
     describe.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
       beforeAll(async () => {
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           name: { name: "name", type: FieldType.STRING },
         })
         await createRows([{ name: "foo" }, { name: "bar" }])
@@ -1112,7 +1112,7 @@ describe.each([
 
     describe("numbers", () => {
       beforeAll(async () => {
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           age: { name: "age", type: FieldType.NUMBER },
         })
         await createRows([{ age: 1 }, { age: 10 }])
@@ -1287,7 +1287,7 @@ describe.each([
       const JAN_10TH = "2020-01-10T00:00:00.000Z"
 
       beforeAll(async () => {
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           dob: { name: "dob", type: FieldType.DATETIME },
         })
 
@@ -1442,7 +1442,7 @@ describe.each([
         const NULL_TIME__ID = `null_time__id`
 
         beforeAll(async () => {
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             timeid: { name: "timeid", type: FieldType.STRING },
             time: { name: "time", type: FieldType.DATETIME, timeOnly: true },
           })
@@ -1603,7 +1603,7 @@ describe.each([
 
     describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
       beforeAll(async () => {
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           numbers: {
             name: "numbers",
             type: FieldType.ARRAY,
@@ -1700,7 +1700,7 @@ describe.each([
       let BIG = "9223372036854775807"
 
       beforeAll(async () => {
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           num: { name: "num", type: FieldType.BIGINT },
         })
         await createRows([{ num: SMALL }, { num: MEDIUM }, { num: BIG }])
@@ -1805,7 +1805,7 @@ describe.each([
     isInternal &&
       describe("auto", () => {
         beforeAll(async () => {
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             auto: {
               name: "auto",
               type: FieldType.AUTO,
@@ -2016,7 +2016,7 @@ describe.each([
 
     describe("field name 1:name", () => {
       beforeAll(async () => {
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           "1:name": { name: "1:name", type: FieldType.STRING },
         })
         await createRows([{ "1:name": "bar" }, { "1:name": "foo" }])
@@ -2036,7 +2036,7 @@ describe.each([
     isSql &&
       describe("related formulas", () => {
         beforeAll(async () => {
-          const arrayTable = await createSource(
+          const arrayTable = await createTable(
             {
               name: { name: "name", type: FieldType.STRING },
               array: {
@@ -2050,7 +2050,7 @@ describe.each([
             },
             "array"
           )
-          tableOrViewId = await createSource(
+          tableOrViewId = await createTableOrView(
             {
               relationship: {
                 type: FieldType.LINK,
@@ -2102,7 +2102,7 @@ describe.each([
         user1 = await config.createUser({ _id: `us_${utils.newid()}` })
         user2 = await config.createUser({ _id: `us_${utils.newid()}` })
 
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           user: {
             name: "user",
             type: FieldType.BB_REFERENCE_SINGLE,
@@ -2175,7 +2175,7 @@ describe.each([
         user1 = await config.createUser({ _id: `us_${utils.newid()}` })
         user2 = await config.createUser({ _id: `us_${utils.newid()}` })
 
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           users: {
             name: "users",
             type: FieldType.BB_REFERENCE,
@@ -2372,13 +2372,13 @@ describe.each([
         let relatedTable: string, relatedRows: Row[]
 
         beforeAll(async () => {
-          relatedTable = await createSource(
+          relatedTable = await createTable(
             {
               name: { name: "name", type: FieldType.STRING },
             },
             "productCategory"
           )
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             name: { name: "name", type: FieldType.STRING },
             related1: {
               type: FieldType.LINK,
@@ -2470,7 +2470,7 @@ describe.each([
     isInternal &&
       describe("no column error backwards compat", () => {
         beforeAll(async () => {
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             name: {
               name: "name",
               type: FieldType.STRING,
@@ -2493,7 +2493,7 @@ describe.each([
     !isLucene &&
       describe("row counting", () => {
         beforeAll(async () => {
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             name: {
               name: "name",
               type: FieldType.STRING,
@@ -2528,7 +2528,7 @@ describe.each([
     describe("Invalid column definitions", () => {
       beforeAll(async () => {
         // need to create an invalid table - means ignoring typescript
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           // @ts-ignore
           invalid: {
             type: FieldType.STRING,
@@ -2558,7 +2558,7 @@ describe.each([
       "special (%s) case",
       column => {
         beforeAll(async () => {
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             [column]: {
               name: column,
               type: FieldType.STRING,
@@ -2607,7 +2607,7 @@ describe.each([
       const earlyDate = "2024-07-03T10:00:00.000Z",
         laterDate = "2024-07-03T11:00:00.000Z"
       beforeAll(async () => {
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           date: {
             name: "date",
             type: FieldType.DATETIME,
@@ -2650,7 +2650,7 @@ describe.each([
       "ชื่อผู้ใช้", // Thai for "username"
     ])("non-ascii column name: %s", name => {
       beforeAll(async () => {
-        tableOrViewId = await createSource({
+        tableOrViewId = await createTableOrView({
           [name]: {
             name,
             type: FieldType.STRING,
@@ -2677,7 +2677,7 @@ describe.each([
     isInternal &&
       describe("space at end of column name", () => {
         beforeAll(async () => {
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             "name ": {
               name: "name ",
               type: FieldType.STRING,
@@ -2712,7 +2712,7 @@ describe.each([
     ;(isSqs || isInMemory) &&
       describe("space at start of column name", () => {
         beforeAll(async () => {
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             " name": {
               name: " name",
               type: FieldType.STRING,
@@ -2745,7 +2745,7 @@ describe.each([
     isSqs &&
       describe("duplicate columns", () => {
         beforeAll(async () => {
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             name: {
               name: "name",
               type: FieldType.STRING,
@@ -2781,13 +2781,13 @@ describe.each([
         let row: Row
 
         beforeAll(async () => {
-          const toRelateTable = await createSource({
+          const toRelateTable = await createTable({
             name: {
               name: "name",
               type: FieldType.STRING,
             },
           })
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             name: {
               name: "name",
               type: FieldType.STRING,
@@ -2860,7 +2860,7 @@ describe.each([
     isSql &&
       describe("primaryDisplay", () => {
         beforeAll(async () => {
-          let toRelateTableId = await createSource({
+          let toRelateTableId = await createTableOrView({
             name: {
               name: "name",
               type: FieldType.STRING,
@@ -2912,7 +2912,7 @@ describe.each([
     !isLucene &&
       describe("$and", () => {
         beforeAll(async () => {
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             age: { name: "age", type: FieldType.NUMBER },
             name: { name: "name", type: FieldType.STRING },
           })
@@ -3044,7 +3044,7 @@ describe.each([
     !isLucene &&
       describe("$or", () => {
         beforeAll(async () => {
-          tableOrViewId = await createSource({
+          tableOrViewId = await createTableOrView({
             age: { name: "age", type: FieldType.NUMBER },
             name: { name: "name", type: FieldType.STRING },
           })
@@ -3203,8 +3203,8 @@ describe.each([
             relatedSchema[name] = { name, type: FieldType.NUMBER }
             row[name] = i
           }
-          const relatedTable = await createSource(relatedSchema)
-          tableOrViewId = await createSource({
+          const relatedTable = await createTable(relatedSchema)
+          tableOrViewId = await createTableOrView({
             name: { name: "name", type: FieldType.STRING },
             related1: {
               type: FieldType.LINK,
