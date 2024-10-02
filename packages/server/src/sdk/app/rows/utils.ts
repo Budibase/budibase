@@ -57,8 +57,8 @@ export function getSQLClient(datasource: Datasource): SqlClient {
 export function processRowCountResponse(
   response: DatasourcePlusQueryResponse
 ): number {
-  if (response && response.length === 1 && "total" in response[0]) {
-    const total = response[0].total
+  if (response && response.length === 1 && "__bb_total" in response[0]) {
+    const total = response[0].__bb_total
     return typeof total === "number" ? total : parseInt(total)
   } else {
     throw new Error("Unable to count rows in query - no count response")
