@@ -69,6 +69,7 @@
     "@xyflow/svelte": "^0.1.18",
     "@zerodevx/svelte-json-view": "^1.0.7",
     "codemirror": "^5.65.16",
+    "cron-parser": "^4.9.0",
     "dayjs": "^1.10.8",
     "downloadjs": "1.4.7",
     "fast-json-patch": "^3.1.1",

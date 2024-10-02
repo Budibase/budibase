@@ -11,7 +11,7 @@ import {
   RowSearchParams,
 } from "@budibase/types"
 import { db as dbCore, context } from "@budibase/backend-core"
-import { utils } from "@budibase/shared-core"
+import { utils, dataFilters } from "@budibase/shared-core"
 
 export async function paginatedSearch(
   query: SearchFilters,
@@ -31,13 +31,13 @@ export async function fullSearch(
 
 function findColumnInQueries(
   column: string,
-  options: RowSearchParams,
+  filters: SearchFilters,
   callback: (filter: any) => any
 ) {
-  if (!options.query) {
+  if (!filters) {
     return
   }
-  for (let filterBlock of Object.values(options.query)) {
+  for (let filterBlock of Object.values(filters)) {
     if (typeof filterBlock !== "object") {
       continue
     }
@@ -49,8 +49,8 @@ function findColumnInQueries(
   }
 }
 
-function userColumnMapping(column: string, options: RowSearchParams) {
-  findColumnInQueries(column, options, (filterValue: any): any => {
+function userColumnMapping(column: string, filters: SearchFilters) {
+  findColumnInQueries(column, filters, (filterValue: any): any => {
     const isArray = Array.isArray(filterValue),
       isString = typeof filterValue === "string"
     if (!isString && !isArray) {
@@ -83,29 +83,31 @@ function userColumnMapping(column: string, options: RowSearchParams) {
 // maps through the search parameters to check if any of the inputs are invalid
 // based on the table schema, converts them to something that is valid.
 export function searchInputMapping(table: Table, options: RowSearchParams) {
-  if (!table?.schema) {
-    return options
-  }
-  for (let [key, column] of Object.entries(table.schema)) {
-    switch (column.type) {
-      case FieldType.BB_REFERENCE_SINGLE: {
-        const subtype = column.subtype
-        switch (subtype) {
-          case BBReferenceFieldSubType.USER:
-            userColumnMapping(key, options)
-            break
+  // need an internal function to loop over filters, because this takes the full options
+  function checkFilters(filters: SearchFilters) {
+    for (let [key, column] of Object.entries(table.schema || {})) {
+      switch (column.type) {
+        case FieldType.BB_REFERENCE_SINGLE: {
+          const subtype = column.subtype
+          switch (subtype) {
+            case BBReferenceFieldSubType.USER:
+              userColumnMapping(key, filters)
+              break
 
-          default:
-            utils.unreachable(subtype)
+            default:
+              utils.unreachable(subtype)
+          }
+          break
         }
-        break
-      }
-      case FieldType.BB_REFERENCE: {
-        userColumnMapping(key, options)
-        break
+        case FieldType.BB_REFERENCE: {
+          userColumnMapping(key, filters)
+          break
+        }
       }
     }
+    return dataFilters.recurseLogicalOperators(filters, checkFilters)
   }
+  options.query = checkFilters(options.query)
   return options
 }
 

@@ -27,6 +27,7 @@ import {
   ViewV2,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { helpers } from "@budibase/shared-core"
 
 export { IncludeDocs, getLinkDocuments, createLinkView } from "./linkUtils"
 
@@ -247,26 +248,36 @@ function getPrimaryDisplayValue(row: Row, table?: Table) {
 export type SquashTableFields = Record<string, { visibleFieldNames: string[] }>
 
 /**
- * This function will take the given enriched rows and squash the links to only contain the primary display field.
- * @returns The rows after having their links squashed to only contain the ID and primary display.
+ * This function will take the given enriched rows and squash the links to only
+ * contain the primary display field.
+ *
+ * @returns The rows after having their links squashed to only contain the ID
+ * and primary display.
  */
 export async function squashLinks<T = Row[] | Row>(
-  table: Table,
-  enriched: T,
-  options?: {
-    fromViewId?: string
-  }
+  source: Table | ViewV2,
+  enriched: T
 ): Promise<T> {
   const allowRelationshipSchemas = await features.flags.isEnabled(
     FeatureFlag.ENRICHED_RELATIONSHIPS
   )
 
   let viewSchema: Record<string, ViewFieldMetadata> = {}
-  if (options?.fromViewId && allowRelationshipSchemas) {
-    const view = Object.values(table.views || {}).find(
-      (v): v is ViewV2 => sdk.views.isV2(v) && v.id === options?.fromViewId
-    )
-    viewSchema = view?.schema || {}
+  if (sdk.views.isView(source)) {
+    if (helpers.views.isCalculationView(source)) {
+      return enriched
+    }
+
+    if (allowRelationshipSchemas) {
+      viewSchema = source.schema || {}
+    }
+  }
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
   }
 
   // will populate this as we find them

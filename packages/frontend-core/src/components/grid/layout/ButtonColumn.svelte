@@ -98,7 +98,6 @@
                   align="right"
                   offset={5}
                   size="S"
-                  quiet
                   animate={false}
                   on:mouseenter={() => ($hoveredRowId = row._id)}
                 />
