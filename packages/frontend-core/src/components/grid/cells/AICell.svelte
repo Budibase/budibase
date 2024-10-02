@@ -42,11 +42,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div
-  class="long-form-cell"
-  on:click={open}
-  bind:this={anchor}
->
+<div class="long-form-cell" on:click={open} bind:this={anchor}>
   <div class="value">
     {value || ""}
   </div>
