@@ -63,7 +63,7 @@
     // Look up the component tree and find something that is provided by an
     // ancestor that matches our datasource. This is for backwards compatibility
     // as previously we could use the "closest" context.
-    for (let id of path.reverse().slice(1)) {
+    for (let id of path.toReversed().slice(1)) {
       // Check for matching view datasource
       if (
         dataSource.type === "viewV2" &&
