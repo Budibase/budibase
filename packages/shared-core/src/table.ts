@@ -55,8 +55,9 @@ const allowDefaultColumnByType: Record<FieldType, boolean> = {
   [FieldType.DATETIME]: true,
   [FieldType.LONGFORM]: true,
   [FieldType.STRING]: true,
+  [FieldType.OPTIONS]: true,
+  [FieldType.ARRAY]: true,
 
-  [FieldType.OPTIONS]: false,
   [FieldType.AUTO]: false,
   [FieldType.INTERNAL]: false,
   [FieldType.BARCODEQR]: false,
@@ -67,7 +68,6 @@ const allowDefaultColumnByType: Record<FieldType, boolean> = {
   [FieldType.ATTACHMENTS]: false,
   [FieldType.ATTACHMENT_SINGLE]: false,
   [FieldType.SIGNATURE_SINGLE]: false,
-  [FieldType.ARRAY]: false,
   [FieldType.LINK]: false,
   [FieldType.BB_REFERENCE]: false,
   [FieldType.BB_REFERENCE_SINGLE]: false,
