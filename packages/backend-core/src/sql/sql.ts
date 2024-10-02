@@ -1542,7 +1542,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       // SQS uses the table ID rather than the table name
       name = table._id
     }
-    return aliases?.[name] ? aliases[name] : name
+    return aliases?.[name] || name
   }
 
   convertJsonStringColumns<T extends Record<string, any>>(
