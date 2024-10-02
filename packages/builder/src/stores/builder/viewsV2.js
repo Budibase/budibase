@@ -1,6 +1,23 @@
 import { writable, derived, get } from "svelte/store"
 import { tables } from "./tables"
 import { API } from "api"
+import { dataFilters } from "@budibase/shared-core"
+
+function convertToSearchFilters(view) {
+  // convert from SearchFilterGroup type
+  if (view.query) {
+    view.queryUI = view.query
+    view.query = dataFilters.buildQuery(view.query)
+  }
+  return view
+}
+
+function convertToSearchFilterGroup(view) {
+  if (view.queryUI) {
+    view.query = view.queryUI
+  }
+  return view
+}
 
 export function createViewsV2Store() {
   const store = writable({
@@ -12,7 +29,7 @@ export function createViewsV2Store() {
       const views = Object.values(table?.views || {}).filter(view => {
         return view.version === 2
       })
-      list = list.concat(views)
+      list = list.concat(views.map(view => convertToSearchFilterGroup(view)))
     })
     return {
       ...$store,
@@ -34,6 +51,7 @@ export function createViewsV2Store() {
   }
 
   const create = async view => {
+    view = convertToSearchFilters(view)
     const savedViewResponse = await API.viewV2.create(view)
     const savedView = savedViewResponse.data
     replaceView(savedView.id, savedView)
@@ -41,6 +59,7 @@ export function createViewsV2Store() {
   }
 
   const save = async view => {
+    view = convertToSearchFilters(view)
     const res = await API.viewV2.update(view)
     const savedView = res?.data
     replaceView(view.id, savedView)
@@ -51,6 +70,7 @@ export function createViewsV2Store() {
     if (!viewId) {
       return
     }
+    view = convertToSearchFilterGroup(view)
     const existingView = get(derivedStore).list.find(view => view.id === viewId)
     const tableIndex = get(tables).list.findIndex(table => {
       return table._id === view?.tableId || table._id === existingView?.tableId
