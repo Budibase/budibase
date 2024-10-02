@@ -4,6 +4,7 @@
     Button,
     Label,
     Select,
+    Multiselect,
     Toggle,
     Icon,
     DatePicker,
@@ -19,9 +20,9 @@
     helpers,
     PROTECTED_INTERNAL_COLUMNS,
     PROTECTED_EXTERNAL_COLUMNS,
-    canBeDisplayColumn,
     canHaveDefaultColumn,
   } from "@budibase/shared-core"
+  import { makePropSafe } from "@budibase/string-templates"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
@@ -43,10 +44,11 @@
     SourceName,
   } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
-  import { RowUtils } from "@budibase/frontend-core"
+  import { RowUtils, canBeDisplayColumn } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import OptionsEditor from "./OptionsEditor.svelte"
   import { isEnabled } from "helpers/featureFlags"
+  import { getUserBindings } from "dataBinding"
 
   const AUTO_TYPE = FieldType.AUTO
   const FORMULA_TYPE = FieldType.FORMULA
@@ -167,7 +169,7 @@
     : availableAutoColumns
   // used to select what different options can be displayed for column type
   $: canBeDisplay =
-    canBeDisplayColumn(editableColumn.type) && !editableColumn.autocolumn
+    canBeDisplayColumn(editableColumn) && !editableColumn.autocolumn
   $: defaultValuesEnabled = isEnabled("DEFAULT_VALUES")
   $: canHaveDefault = !required && canHaveDefaultColumn(editableColumn.type)
   $: canBeRequired =
@@ -192,7 +194,19 @@
     fieldId: makeFieldId(t.type, t.subtype),
     ...t,
   }))
-  $: bindings = getBindings({ table })
+  $: defaultValueBindings = [
+    {
+      type: "context",
+      runtimeBinding: `${makePropSafe("now")}`,
+      readableBinding: `Date`,
+      category: "Date",
+      icon: "Date",
+      display: {
+        name: "Server date",
+      },
+    },
+    ...getUserBindings(),
+  ]
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
     // Storing the fields by complex field id
@@ -801,6 +815,15 @@
         on:change={e => (editableColumn.default = e.detail)}
         placeholder="None"
       />
+    {:else if editableColumn.type === FieldType.ARRAY}
+      <Multiselect
+        disabled={!canHaveDefault}
+        options={editableColumn.constraints?.inclusion || []}
+        label="Default value"
+        value={editableColumn.default}
+        on:change={e => (editableColumn.default = e.detail)}
+        placeholder="None"
+      />
     {:else}
       <ModalBindableInput
         disabled={!canHaveDefault}
@@ -810,9 +833,8 @@
         placeholder="None"
         value={editableColumn.default}
         on:change={e => (editableColumn.default = e.detail)}
-        {bindings}
+        bindings={defaultValueBindings}
         allowJS
-        context={rowGoldenSample}
       />
     {/if}
   {/if}

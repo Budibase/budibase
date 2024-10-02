@@ -18,11 +18,11 @@ export const removeInvalidFilters = (
   for (const filterKey of Object.keys(
     result || {}
   ) as (keyof SearchFilters)[]) {
-    const filter = result[filterKey]
-    if (!filter || typeof filter !== "object") {
-      continue
-    }
     if (isLogicalSearchOperator(filterKey)) {
+      const filter = result[filterKey]
+      if (!filter || typeof filter !== "object") {
+        continue
+      }
       const resultingConditions: SearchFilters[] = []
       for (const condition of filter.conditions) {
         const resultingCondition = removeInvalidFilters(condition, validFields)
@@ -35,6 +35,11 @@ export const removeInvalidFilters = (
       } else {
         delete result[filterKey]
       }
+      continue
+    }
+
+    const filter = result[filterKey]
+    if (!filter || typeof filter !== "object") {
       continue
     }
 
@@ -55,8 +60,8 @@ export const removeInvalidFilters = (
 }
 
 export const getQueryableFields = async (
-  fields: string[],
-  table: Table
+  table: Table,
+  fields?: string[]
 ): Promise<string[]> => {
   const extractTableFields = async (
     table: Table,
@@ -112,6 +117,9 @@ export const getQueryableFields = async (
     "_id", // Querying by _id is always allowed, even if it's never part of the schema
   ]
 
+  if (fields == null) {
+    fields = Object.keys(table.schema)
+  }
   result.push(...(await extractTableFields(table, fields, [table._id!])))
 
   return result
