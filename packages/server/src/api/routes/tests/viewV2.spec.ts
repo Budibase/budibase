@@ -542,7 +542,7 @@ describe.each([
         })
       })
 
-      it.only("can create a view with calculation fields", async () => {
+      it("can create a view with calculation fields", async () => {
         let view = await config.api.viewV2.create({
           tableId: table._id!,
           name: generator.guid(),
@@ -554,6 +554,8 @@ describe.each([
             },
           },
         })
+
+        expect(Object.keys(view.schema!)).toHaveLength(1)
 
         let sum = view.schema!.sum as ViewCalculationFieldMetadata
         expect(sum).toBeDefined()
