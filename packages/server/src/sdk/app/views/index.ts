@@ -16,10 +16,8 @@ import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
-
 import * as utils from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
-
 import * as internal from "./internal"
 import * as external from "./external"
 import sdk from "../../../sdk"
@@ -192,7 +190,6 @@ export async function create(
   viewRequest: Omit<ViewV2, "id" | "version">
 ): Promise<ViewV2> {
   await guardViewSchema(tableId, viewRequest)
-
   const view = await pickApi(tableId).create(tableId, viewRequest)
 
   // Set permissions to be the same as the table

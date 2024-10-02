@@ -131,7 +131,6 @@ describe("/permission", () => {
         resourceId: view.id,
         level: PermissionLevel.READ,
       })
-
       // replicate changes before checking permissions
       await config.publish()
 
@@ -145,14 +144,12 @@ describe("/permission", () => {
         resourceId: table._id,
         level: PermissionLevel.READ,
       })
-
       // Make view inherit table permissions. Needed for backwards compatibility with existing views.
       await config.api.permission.revoke({
         roleId: STD_ROLE_ID,
         resourceId: view.id,
         level: PermissionLevel.READ,
       })
-
       // replicate changes before checking permissions
       await config.publish()
 

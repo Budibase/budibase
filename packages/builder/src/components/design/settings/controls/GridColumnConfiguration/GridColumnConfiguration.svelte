@@ -7,6 +7,7 @@
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
   import getColumns from "./getColumns.js"
+  import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let value
   export let componentInstance
@@ -60,16 +61,25 @@
     </div>
   </div>
 {/if}
-<DraggableList
-  on:change={e => columns.updateSortable(e.detail)}
-  on:itemChange={e => columns.update(e.detail)}
-  items={columns.sortable}
-  listItemKey={"_id"}
-  listType={FieldSetting}
-  listTypeProps={{
-    bindings,
-  }}
-/>
+
+{#if columns?.sortable?.length}
+  <DraggableList
+    on:change={e => columns.updateSortable(e.detail)}
+    on:itemChange={e => columns.update(e.detail)}
+    items={columns.sortable}
+    listItemKey={"_id"}
+    listType={FieldSetting}
+    listTypeProps={{
+      bindings,
+    }}
+  />
+{:else}
+  <InfoDisplay
+    body={datasource?.type !== "custom"
+      ? "No available columns"
+      : "No available columns for JSON/CSV data sources"}
+  />
+{/if}
 
 <style>
   .right-content {

@@ -3,7 +3,7 @@
   import { canBeSortColumn, canBeDisplayColumn } from "@budibase/frontend-core"
   import { Icon, Menu, MenuItem, Modal } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
-  import { getColumnIcon } from "../lib/utils"
+  import { getColumnIcon } from "../../../utils/schema"
   import MigrationModal from "../controls/MigrationModal.svelte"
   import { debounce } from "../../../utils/utils"
   import { FieldType, FormulaType } from "@budibase/types"
