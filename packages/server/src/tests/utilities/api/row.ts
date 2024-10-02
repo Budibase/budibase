@@ -7,11 +7,11 @@ import {
   BulkImportRequest,
   BulkImportResponse,
   SearchRowResponse,
-  RowSearchParams,
   DeleteRows,
   DeleteRow,
   PaginatedSearchRowResponse,
   RowExportFormat,
+  SearchRowRequest,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -136,7 +136,7 @@ export class RowAPI extends TestAPI {
     )
   }
 
-  search = async <T extends RowSearchParams>(
+  search = async <T extends SearchRowRequest>(
     sourceId: string,
     params?: T,
     expectations?: Expectations
