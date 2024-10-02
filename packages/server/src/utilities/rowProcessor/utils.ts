@@ -8,7 +8,10 @@ import {
   FormulaType,
   AutoFieldSubType,
   FieldType,
+  OperationFieldTypeEnum,
+  AIFieldMetadata,
 } from "@budibase/types"
+import { OperationFields } from "@budibase/shared-core"
 import tracer from "dd-trace"
 import { context } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
@@ -116,12 +119,13 @@ export async function processAIColumns<T extends Row | Row[]>(
 
         const rowUpdates = rows.map((row, i) => {
           const contextRow = contextRows ? contextRows[i] : row
-          // TODO: Map the prompts with string-templates
-          // grab the operation based on the schema
-          // then check the types in the fields, and decide whether to pass them through string templates
-          // TODO: cleaner way to map to the schema, move things into BB types and check against the AI schema
+
+          // Check if the type is bindable and pass through HBS if so
+          const operationField =
+            OperationFields[(schema as AIFieldMetadata).operation]
           for (const key in schema) {
-            if (["prompt", "categories"].includes(key)) {
+            const fieldType = operationField[key]
+            if (fieldType === OperationFieldTypeEnum.BINDABLE_TEXT) {
               schema[key] = processStringSync(schema[key], contextRow)
             }
           }

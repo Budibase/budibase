@@ -8,13 +8,13 @@ export enum AIOperationEnum {
   SEARCH_WEB = "SEARCH_WEB",
 }
 
-enum OperationFieldTypeEnum {
+export enum OperationFieldTypeEnum {
   MULTI_COLUMN = "columns",
   COLUMN = "column",
   BINDABLE_TEXT = "prompt",
 }
 
-type OperationFieldsType = {
+export type OperationFieldsType = {
   [AIOperationEnum.SUMMARISE_TEXT]: {
     columns: OperationFieldTypeEnum.MULTI_COLUMN
   }
@@ -38,17 +38,6 @@ type OperationFieldsType = {
   [AIOperationEnum.SEARCH_WEB]: {
     columns: OperationFieldTypeEnum.MULTI_COLUMN
   }
-}
-
-// Define the AI operations with just their labels (no need for separate 'value' property)
-const AIOperations: { [key in AIOperationEnum]: string } = {
-  [AIOperationEnum.SUMMARISE_TEXT]: "Summarise Text",
-  [AIOperationEnum.CLEAN_DATA]: "Clean Data",
-  [AIOperationEnum.TRANSLATE]: "Translate",
-  [AIOperationEnum.CATEGORISE_TEXT]: "Categorise Text",
-  [AIOperationEnum.SENTIMENT_ANALYSIS]: "Sentiment Analysis",
-  [AIOperationEnum.PROMPT]: "Prompt",
-  [AIOperationEnum.SEARCH_WEB]: "Search Web",
 }
 
 type BaseSchema = {

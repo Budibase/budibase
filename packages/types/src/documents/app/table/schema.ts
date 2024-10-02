@@ -9,7 +9,7 @@ import {
   JsonFieldSubType,
   RelationshipType,
 } from "./constants"
-import { AIOperationEnum } from "../ai"
+import { AIOperationEnum } from "../../../sdk/ai"
 
 export interface UIFieldMetadata {
   order?: number

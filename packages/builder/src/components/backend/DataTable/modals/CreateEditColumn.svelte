@@ -106,7 +106,8 @@
   let optionsValid = true
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
-  $: aiEnabled = $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
+  $: aiEnabled =
+    $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
