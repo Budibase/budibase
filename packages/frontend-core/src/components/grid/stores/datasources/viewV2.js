@@ -1,4 +1,14 @@
 import { get } from "svelte/store"
+import { dataFilters } from "@budibase/shared-core"
+
+function convertToSearchFilters(view) {
+  // convert from SearchFilterGroup type
+  if (view.query) {
+    view.queryUI = view.query
+    view.query = dataFilters.buildQuery(view.query)
+  }
+  return view
+}
 
 const SuppressErrors = true
 
@@ -6,7 +16,7 @@ export const createActions = context => {
   const { API, datasource, columns } = context
 
   const saveDefinition = async newDefinition => {
-    await API.viewV2.update(newDefinition)
+    await API.viewV2.update(convertToSearchFilters(newDefinition))
   }
 
   const saveRow = async row => {
