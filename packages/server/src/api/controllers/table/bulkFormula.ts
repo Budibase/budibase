@@ -14,7 +14,6 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { isRelationshipColumn } from "../../../db/utils"
-import { updateAllAIColumnsInTable } from "../row/aiColumn"
 
 function isStaticFormula(
   column: FieldSchema
@@ -197,23 +196,5 @@ export async function runStaticFormulaChecks(
   await checkIfFormulaNeedsCleared(table, { oldTable, deletion })
   if (!deletion) {
     await checkIfFormulaUpdated(table, { oldTable })
-  }
-}
-
-export async function runAIColumnChecks(
-  table: Table,
-  { oldTable }: { oldTable?: Table }
-) {
-  // look to see if any AI column values have changed
-  const shouldUpdate = Object.values(table.schema).find(
-    column =>
-      column.type === FieldType.AI &&
-      (!oldTable ||
-        !oldTable.schema[column.name] ||
-        !isEqual(oldTable.schema[column.name], column))
-  )
-  // if an AI column has updated, then need to run the update
-  if (shouldUpdate != null) {
-    await updateAllAIColumnsInTable(table)
   }
 }

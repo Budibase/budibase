@@ -135,7 +135,6 @@ export async function save(
   }
   // has to run after, make sure it has _id
   await runStaticFormulaChecks(table, { oldTable, deletion: false })
-  // await runAIColumnChecks(table, { oldTable, deletion: false })
   return { table }
 }
 
