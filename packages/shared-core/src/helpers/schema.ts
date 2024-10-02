@@ -45,3 +45,7 @@ export function decodeNonAscii(str: string): string {
     String.fromCharCode(parseInt(p1, 16))
   )
 }
+
+export function isNumeric(field: FieldSchema) {
+  return field.type === FieldType.NUMBER || field.type === FieldType.BIGINT
+}

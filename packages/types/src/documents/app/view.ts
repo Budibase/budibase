@@ -33,14 +33,23 @@ export interface View {
   groupBy?: string
 }
 
-export type ViewFieldMetadata = UIFieldMetadata & {
+export interface BasicViewFieldMetadata extends UIFieldMetadata {
   readonly?: boolean
   columns?: Record<string, RelationSchemaField>
 }
 
-export type RelationSchemaField = UIFieldMetadata & {
+export interface RelationSchemaField extends UIFieldMetadata {
   readonly?: boolean
 }
+
+export interface ViewCalculationFieldMetadata extends BasicViewFieldMetadata {
+  calculationType: CalculationType
+  field: string
+}
+
+export type ViewFieldMetadata =
+  | BasicViewFieldMetadata
+  | ViewCalculationFieldMetadata
 
 export enum CalculationType {
   SUM = "sum",
@@ -48,11 +57,6 @@ export enum CalculationType {
   COUNT = "count",
   MIN = "min",
   MAX = "max",
-}
-
-export type ViewCalculationFieldMetadata = ViewFieldMetadata & {
-  calculationType: CalculationType
-  field: string
 }
 
 export interface ViewV2 {
@@ -67,7 +71,7 @@ export interface ViewV2 {
     order?: SortOrder
     type?: SortType
   }
-  schema?: Record<string, ViewFieldMetadata | ViewCalculationFieldMetadata>
+  schema?: Record<string, ViewFieldMetadata>
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema

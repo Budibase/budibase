@@ -1,5 +1,5 @@
 <script>
-  import { Banner } from "@budibase/bbui"
+  import { Banner, notifications } from "@budibase/bbui"
   import {
     datasources,
     tables,
@@ -72,6 +72,7 @@
       text: action.name,
       onClick: async row => {
         await rowActions.trigger(id, action.id, row._id)
+        notifications.success("Row action triggered successfully")
       },
     }))
   }

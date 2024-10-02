@@ -1,4 +1,5 @@
 import {
+  Aggregation,
   Datasource,
   DocumentType,
   FieldType,
@@ -15,6 +16,7 @@ import {
   SortType,
   SqlClient,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import {
   buildInternalRelationships,
@@ -44,10 +46,12 @@ import {
 import {
   dataFilters,
   helpers,
+  isInternalColumnName,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
 import { isSearchingByRowID } from "../utils"
 import tracer from "dd-trace"
+import { cloneDeep } from "lodash"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const SQLITE_COLUMN_LIMIT = 2000
@@ -55,11 +59,34 @@ const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
 const MISSING_TABLE_REGX = new RegExp(`no such table: .+`)
 const DUPLICATE_COLUMN_REGEX = new RegExp(`duplicate column name: .+`)
 
-function buildInternalFieldList(
-  table: Table,
+async function buildInternalFieldList(
+  source: Table | ViewV2,
   tables: Table[],
-  opts?: { relationships?: RelationshipsJson[] }
+  opts?: { relationships?: RelationshipsJson[]; allowedFields?: string[] }
 ) {
+  const { relationships, allowedFields } = opts || {}
+  let schemaFields: string[] = []
+  if (sdk.views.isView(source)) {
+    schemaFields = Object.keys(helpers.views.basicFields(source)).filter(
+      key => source.schema?.[key]?.visible !== false
+    )
+  } else {
+    schemaFields = Object.keys(source.schema).filter(
+      key => source.schema[key].visible !== false
+    )
+  }
+
+  if (allowedFields) {
+    schemaFields = schemaFields.filter(field => allowedFields.includes(field))
+  }
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
+
   let fieldList: string[] = []
   const getJunctionFields = (relatedTable: Table, fields: string[]) => {
     const junctionFields: string[] = []
@@ -70,13 +97,18 @@ function buildInternalFieldList(
     })
     return junctionFields
   }
-  fieldList = fieldList.concat(
-    PROTECTED_INTERNAL_COLUMNS.map(col => `${table._id}.${col}`)
-  )
-  for (let key of Object.keys(table.schema)) {
+  if (sdk.tables.isTable(source)) {
+    for (const key of PROTECTED_INTERNAL_COLUMNS) {
+      if (allowedFields && !allowedFields.includes(key)) {
+        continue
+      }
+      fieldList.push(`${table._id}.${key}`)
+    }
+  }
+  for (let key of schemaFields) {
     const col = table.schema[key]
     const isRelationship = col.type === FieldType.LINK
-    if (!opts?.relationships && isRelationship) {
+    if (!relationships && isRelationship) {
       continue
     }
     if (!isRelationship) {
@@ -87,7 +119,9 @@ function buildInternalFieldList(
       if (!relatedTable) {
         continue
       }
-      const relatedFields = buildInternalFieldList(relatedTable, tables).concat(
+      const relatedFields = (
+        await buildInternalFieldList(relatedTable, tables)
+      ).concat(
         getJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
       )
       // break out of the loop if we have reached the max number of columns
@@ -128,15 +162,22 @@ function cleanupFilters(
   // generate a map of all possible column names (these can be duplicated across tables
   // the map of them will always be the same
   const userColumnMap: Record<string, string> = {}
-  allTables.forEach(table =>
-    Object.keys(table.schema).forEach(
-      key => (userColumnMap[key] = mapToUserColumn(key))
-    )
-  )
+  for (const table of allTables) {
+    for (const key of Object.keys(table.schema)) {
+      if (isInternalColumnName(key)) {
+        continue
+      }
+      userColumnMap[key] = mapToUserColumn(key)
+    }
+  }
 
   // update the keys of filters to manage user columns
-  const keyInAnyTable = (key: string): boolean =>
-    allTables.some(table => table.schema[key])
+  const keyInAnyTable = (key: string): boolean => {
+    if (isInternalColumnName(key)) {
+      return false
+    }
+    return allTables.some(table => table.schema[key])
+  }
 
   const splitter = new dataFilters.ColumnSplitter(allTables)
 
@@ -291,16 +332,23 @@ function resyncDefinitionsRequired(status: number, message: string) {
 
 export async function search(
   options: RowSearchParams,
-  table: Table,
+  source: Table | ViewV2,
   opts?: { retrying?: boolean }
 ): Promise<SearchResponse<Row>> {
-  let { paginate, query, ...params } = options
+  let { paginate, query, ...params } = cloneDeep(options)
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
 
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
   // make sure we have the mapped/latest table
-  if (table?._id) {
-    table = allTablesMap[table?._id]
+  if (table._id) {
+    table = allTablesMap[table._id]
   }
   if (!table) {
     throw new Error("Unable to find table")
@@ -312,6 +360,23 @@ export async function search(
     ...cleanupFilters(query, table, allTables),
     documentType: DocumentType.ROW,
   }
+
+  let aggregations: Aggregation[] = []
+  if (sdk.views.isView(source)) {
+    const calculationFields = helpers.views.calculationFields(source)
+    for (const [key, field] of Object.entries(calculationFields)) {
+      if (options.fields && !options.fields.includes(key)) {
+        continue
+      }
+
+      aggregations.push({
+        name: key,
+        field: mapToUserColumn(field.field),
+        calculationType: field.calculationType,
+      })
+    }
+  }
+
   const request: QueryJson = {
     endpoint: {
       // not important, we query ourselves
@@ -327,7 +392,11 @@ export async function search(
       columnPrefix: USER_COLUMN_PREFIX,
     },
     resource: {
-      fields: buildInternalFieldList(table, allTables, { relationships }),
+      fields: await buildInternalFieldList(source, allTables, {
+        relationships,
+        allowedFields: options.fields,
+      }),
+      aggregations,
     },
     relationships,
   }
@@ -372,7 +441,7 @@ export async function search(
     // make sure JSON columns corrected
     const processed = builder.convertJsonStringColumns<Row>(
       table,
-      await sqlOutputProcessing(rows, table!, allTablesMap, relationships, {
+      await sqlOutputProcessing(rows, source, allTablesMap, relationships, {
         sqs: true,
       })
     )
@@ -388,17 +457,18 @@ export async function search(
     }
 
     // get the rows
-    let finalRows = await outputProcessing(table, processed, {
+    let finalRows = await outputProcessing(source, processed, {
       preserveLinks: true,
       squash: true,
-      fromViewId: options.viewId,
     })
 
-    // check if we need to pick specific rows out
-    if (options.fields) {
-      const fields = [...options.fields, ...PROTECTED_INTERNAL_COLUMNS]
-      finalRows = finalRows.map((r: any) => pick(r, fields))
-    }
+    const visibleFields =
+      options.fields ||
+      Object.keys(source.schema || {}).filter(
+        key => source.schema?.[key].visible !== false
+      )
+    const allowedFields = [...visibleFields, ...PROTECTED_INTERNAL_COLUMNS]
+    finalRows = finalRows.map((r: any) => pick(r, allowedFields))
 
     const response: SearchResponse<Row> = {
       rows: finalRows,
@@ -419,7 +489,7 @@ export async function search(
     const msg = typeof err === "string" ? err : err.message
     if (!opts?.retrying && resyncDefinitionsRequired(err.status, msg)) {
       await sdk.tables.sqs.syncDefinition()
-      return search(options, table, { retrying: true })
+      return search(options, source, { retrying: true })
     }
     // previously the internal table didn't error when a column didn't exist in search
     if (err.status === 400 && msg?.match(MISSING_COLUMN_REGEX)) {

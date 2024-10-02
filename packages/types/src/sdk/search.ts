@@ -2,6 +2,7 @@ import { Operation } from "./datasources"
 import { Row, Table, DocumentType } from "../documents"
 import { SortOrder, SortType } from "../api"
 import { Knex } from "knex"
+import { Aggregation } from "./row"
 
 export enum BasicOperator {
   EQUAL = "equal",
@@ -67,6 +68,8 @@ type RangeFilter = Record<
   [InternalSearchFilterOperator.COMPLEX_ID_OPERATOR]?: never
 }
 
+type LogicalFilter = { conditions: SearchFilters[] }
+
 export type AnySearchFilter = BasicFilter | ArrayFilter | RangeFilter
 
 export interface SearchFilters {
@@ -91,12 +94,8 @@ export interface SearchFilters {
   // specific document type (such as just rows)
   documentType?: DocumentType
 
-  [LogicalOperator.AND]?: {
-    conditions: SearchFilters[]
-  }
-  [LogicalOperator.OR]?: {
-    conditions: SearchFilters[]
-  }
+  [LogicalOperator.AND]?: LogicalFilter
+  [LogicalOperator.OR]?: LogicalFilter
 }
 
 export type SearchFilterKey = keyof Omit<
@@ -154,6 +153,7 @@ export interface QueryJson {
   }
   resource?: {
     fields: string[]
+    aggregations?: Aggregation[]
   }
   filters?: SearchFilters
   sort?: SortJson
