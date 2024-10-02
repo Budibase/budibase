@@ -113,10 +113,12 @@ export async function search(
         options.query = query
       } else {
         options.query = {
-          onEmptyFilter: viewQuery.onEmptyFilter,
           $and: {
             conditions: [viewQuery, options.query],
           },
+        }
+        if (viewQuery.onEmptyFilter) {
+          options.query.onEmptyFilter = viewQuery.onEmptyFilter
         }
       }
     }
