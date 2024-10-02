@@ -34,6 +34,7 @@ import {
   Table,
   TableSchema,
   User,
+  ViewFieldMetadata,
 } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
@@ -154,29 +155,33 @@ describe.each([
 
   describe.each([
     ["table", createTable],
-    // [
-    //   "view",
-    //   async (schema: TableSchema, name?: string) => {
-    //     const tableId = await createTable(schema, name)
-    //     const view = await config.api.viewV2.create({
-    //       tableId: tableId,
-    //       name: generator.guid(),
-    //       schema: Object.keys(schema).reduce<Record<string, ViewFieldMetadata>>(
-    //         (viewSchema, fieldName) => {
-    //           const field = schema[fieldName]
-    //           viewSchema[fieldName] = {
-    //             visible: field.visible ?? true,
-    //             readonly: false,
-    //           }
-    //           return viewSchema
-    //         },
-    //         {}
-    //       ),
-    //     })
-    //     return view.id
-    //   },
-    // ],
-  ])("from %s", (__, createSource) => {
+    [
+      "view",
+      async (schema: TableSchema, name?: string) => {
+        const tableId = await createTable(schema, name)
+        const view = await config.api.viewV2.create({
+          tableId: tableId,
+          name: generator.guid(),
+          schema: Object.keys(schema).reduce<Record<string, ViewFieldMetadata>>(
+            (viewSchema, fieldName) => {
+              const field = schema[fieldName]
+              viewSchema[fieldName] = {
+                visible: field.visible ?? true,
+                readonly: false,
+              }
+              return viewSchema
+            },
+            {}
+          ),
+        })
+        return view.id
+      },
+    ],
+  ])("from %s", (tableOrView, createSource) => {
+    if (isInMemory && tableOrView === "view") {
+      return
+    }
+
     class SearchAssertion {
       constructor(private readonly query: SearchRowRequest) {}
 
