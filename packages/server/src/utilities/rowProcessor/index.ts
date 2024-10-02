@@ -134,10 +134,8 @@ async function processDefaultValues(table: Table, row: Row) {
 
   for (const [key, schema] of Object.entries(table.schema)) {
     if ("default" in schema && schema.default != null && row[key] == null) {
-      const processed =
-        typeof schema.default === "string"
-          ? await processString(schema.default, ctx)
-          : schema.default
+      const processed = await processString(schema.default, ctx)
+
       try {
         row[key] = coerce(processed, schema.type)
       } catch (err: any) {
