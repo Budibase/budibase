@@ -1050,7 +1050,7 @@
             {:else if value.customType === "cron"}
               <CronBuilder
                 on:change={e => onChange({ [key]: e.detail })}
-                value={inputData[key]}
+                cronExpression={inputData[key]}
               />
             {:else if value.customType === "automationFields"}
               <AutomationSelector
