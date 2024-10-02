@@ -64,18 +64,18 @@ class BaseStepBuilder {
     stepId: TStep,
     stepSchema: Omit<AutomationStep, "id" | "stepId" | "inputs">,
     inputs: AutomationStepInputs<TStep>,
-    stepName?: string
+    opts?: { stepName?: string; stepId?: string }
   ): this {
-    const id = uuidv4()
+    const id = opts?.stepId || uuidv4()
     this.steps.push({
       ...stepSchema,
       inputs: inputs as any,
       id,
       stepId,
-      name: stepName || stepSchema.name,
+      name: opts?.stepName || stepSchema.name,
     })
-    if (stepName) {
-      this.stepNames[id] = stepName
+    if (opts?.stepName) {
+      this.stepNames[id] = opts.stepName
     }
     return this
   }
@@ -95,7 +95,6 @@ class BaseStepBuilder {
       })
       branchStepInputs.children![key] = stepBuilder.build()
     })
-
     const branchStep: AutomationStep = {
       ...definition,
       id: uuidv4(),
@@ -106,80 +105,98 @@ class BaseStepBuilder {
   }
 
   // STEPS
-  createRow(inputs: CreateRowStepInputs, opts?: { stepName?: string }): this {
+  createRow(
+    inputs: CreateRowStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
     return this.step(
       AutomationActionStepId.CREATE_ROW,
       BUILTIN_ACTION_DEFINITIONS.CREATE_ROW,
       inputs,
-      opts?.stepName
+      opts
     )
   }
 
-  updateRow(inputs: UpdateRowStepInputs, opts?: { stepName?: string }): this {
+  updateRow(
+    inputs: UpdateRowStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
     return this.step(
       AutomationActionStepId.UPDATE_ROW,
       BUILTIN_ACTION_DEFINITIONS.UPDATE_ROW,
       inputs,
-      opts?.stepName
+      opts
     )
   }
 
-  deleteRow(inputs: DeleteRowStepInputs, opts?: { stepName?: string }): this {
+  deleteRow(
+    inputs: DeleteRowStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
     return this.step(
       AutomationActionStepId.DELETE_ROW,
       BUILTIN_ACTION_DEFINITIONS.DELETE_ROW,
       inputs,
-      opts?.stepName
+      opts
     )
   }
 
   sendSmtpEmail(
     inputs: SmtpEmailStepInputs,
-    opts?: { stepName?: string }
+    opts?: { stepName?: string; stepId?: string }
   ): this {
     return this.step(
       AutomationActionStepId.SEND_EMAIL_SMTP,
       BUILTIN_ACTION_DEFINITIONS.SEND_EMAIL_SMTP,
       inputs,
-      opts?.stepName
+      opts
     )
   }
 
   executeQuery(
     inputs: ExecuteQueryStepInputs,
-    opts?: { stepName?: string }
+    opts?: { stepName?: string; stepId?: string }
   ): this {
     return this.step(
       AutomationActionStepId.EXECUTE_QUERY,
       BUILTIN_ACTION_DEFINITIONS.EXECUTE_QUERY,
       inputs,
-      opts?.stepName
+      opts
     )
   }
 
-  queryRows(inputs: QueryRowsStepInputs, opts?: { stepName?: string }): this {
+  queryRows(
+    inputs: QueryRowsStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
     return this.step(
       AutomationActionStepId.QUERY_ROWS,
       BUILTIN_ACTION_DEFINITIONS.QUERY_ROWS,
       inputs,
-      opts?.stepName
+      opts
     )
   }
-  loop(inputs: LoopStepInputs, opts?: { stepName?: string }): this {
+  loop(
+    inputs: LoopStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
     return this.step(
       AutomationActionStepId.LOOP,
       BUILTIN_ACTION_DEFINITIONS.LOOP,
       inputs,
-      opts?.stepName
+      opts
     )
   }
 
-  serverLog(input: ServerLogStepInputs, opts?: { stepName?: string }): this {
+  serverLog(
+    input: ServerLogStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
     return this.step(
       AutomationActionStepId.SERVER_LOG,
       BUILTIN_ACTION_DEFINITIONS.SERVER_LOG,
       input,
-      opts?.stepName
+      opts
     )
   }
 
