@@ -17,44 +17,65 @@ describe("Branching automations", () => {
   afterAll(setup.afterAll)
 
   it("should run a multiple nested branching automation", async () => {
+    const firstLogId = "11111111-1111-1111-1111-111111111111"
+    const branch1LogId = "22222222-2222-2222-2222-222222222222"
+    const branch2LogId = "33333333-3333-3333-3333-333333333333"
+    const branch2Id = "44444444-4444-4444-4444-444444444444"
+
     const builder = createAutomationBuilder({
       name: "Test Trigger with Loop and Create Row",
     })
 
     const results = await builder
       .appAction({ fields: {} })
-      .serverLog({ text: "Starting automation" })
+      .serverLog(
+        { text: "Starting automation" },
+        { stepName: "FirstLog", stepId: firstLogId }
+      )
       .branch({
         topLevelBranch1: {
           steps: stepBuilder =>
-            stepBuilder.serverLog({ text: "Branch 1" }).branch({
-              branch1: {
-                steps: stepBuilder =>
-                  stepBuilder.serverLog({ text: "Branch 1.1" }),
-                condition: {
-                  equal: { "{{steps.1.success}}": true },
+            stepBuilder
+              .serverLog(
+                { text: "Branch 1" },
+                { stepId: "66666666-6666-6666-6666-666666666666" }
+              )
+              .branch({
+                branch1: {
+                  steps: stepBuilder =>
+                    stepBuilder.serverLog(
+                      { text: "Branch 1.1" },
+                      { stepId: branch1LogId }
+                    ),
+                  condition: {
+                    equal: { [`{{ steps.${firstLogId}.success }}`]: true },
+                  },
                 },
-              },
-              branch2: {
-                steps: stepBuilder =>
-                  stepBuilder.serverLog({ text: "Branch 1.2" }),
-                condition: {
-                  equal: { "{{steps.1.success}}": false },
+                branch2: {
+                  steps: stepBuilder =>
+                    stepBuilder.serverLog(
+                      { text: "Branch 1.2" },
+                      { stepId: branch2LogId }
+                    ),
+                  condition: {
+                    equal: { [`{{ steps.${firstLogId}.success }}`]: false },
+                  },
                 },
-              },
-            }),
+              }),
           condition: {
-            equal: { "{{steps.1.success}}": true },
+            equal: { [`{{ steps.${firstLogId}.success }}`]: true },
           },
         },
         topLevelBranch2: {
-          steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
+          steps: stepBuilder =>
+            stepBuilder.serverLog({ text: "Branch 2" }, { stepId: branch2Id }),
           condition: {
-            equal: { "{{steps.1.success}}": false },
+            equal: { [`{{ steps.${firstLogId}.success }}`]: false },
           },
         },
       })
       .run()
+
     expect(results.steps[3].outputs.status).toContain("branch1 branch taken")
     expect(results.steps[4].outputs.message).toContain("Branch 1.1")
   })
