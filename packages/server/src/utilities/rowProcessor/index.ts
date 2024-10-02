@@ -426,6 +426,25 @@ export async function coreOutputProcessing(
         }
       }
     }
+
+    if (sdk.views.isView(source)) {
+      const calculationFields = Object.keys(
+        helpers.views.calculationFields(source)
+      )
+
+      // We ensure all calculation fields are returned as numbers.  During the
+      // testing of this feature it was discovered that the COUNT operation
+      // returns a string for MySQL, MariaDB, and Postgres. But given that all
+      // calculation fields should be numbers, we blanket make sure of that
+      // here.
+      for (const key of calculationFields) {
+        for (const row of rows) {
+          if (typeof row[key] === "string") {
+            row[key] = parseFloat(row[key])
+          }
+        }
+      }
+    }
   }
 
   if (!isUserMetadataTable(table._id!)) {
