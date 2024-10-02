@@ -70,29 +70,23 @@ describe.each([
   let rows: Row[]
 
   async function basicRelationshipTables(type: RelationshipType) {
-    const relatedTable = await createTable(
-      {
-        name: { name: "name", type: FieldType.STRING },
-      },
-      generator.guid().substring(0, 10)
-    )
-    const tableId = await createTable(
-      {
-        name: { name: "name", type: FieldType.STRING },
-        //@ts-ignore - API accepts this structure, will build out rest of definition
-        productCat: {
-          type: FieldType.LINK,
-          relationshipType: type,
-          name: "productCat",
-          fieldName: "product",
-          tableId: relatedTable,
-          constraints: {
-            type: "array",
-          },
+    const relatedTable = await createTable({
+      name: { name: "name", type: FieldType.STRING },
+    })
+    const tableId = await createTable({
+      name: { name: "name", type: FieldType.STRING },
+      //@ts-ignore - API accepts this structure, will build out rest of definition
+      productCat: {
+        type: FieldType.LINK,
+        relationshipType: type,
+        name: "productCat",
+        fieldName: "product",
+        tableId: relatedTable,
+        constraints: {
+          type: "array",
         },
       },
-      generator.guid().substring(0, 10)
-    )
+    })
     return {
       relatedTable: await config.api.table.get(relatedTable),
       tableId,
@@ -138,9 +132,9 @@ describe.each([
     }
   })
 
-  async function createTable(schema: TableSchema, name?: string) {
+  async function createTable(schema: TableSchema) {
     const table = await config.api.table.save(
-      tableForDatasource(datasource, { schema, name })
+      tableForDatasource(datasource, { schema })
     )
     return table._id!
   }
@@ -157,8 +151,8 @@ describe.each([
     ["table", createTable],
     [
       "view",
-      async (schema: TableSchema, name?: string) => {
-        const tableId = await createTable(schema, name)
+      async (schema: TableSchema) => {
+        const tableId = await createTable(schema)
         const view = await config.api.viewV2.create({
           tableId: tableId,
           name: generator.guid(),
@@ -2042,42 +2036,36 @@ describe.each([
     isSql &&
       describe("related formulas", () => {
         beforeAll(async () => {
-          const arrayTable = await createTable(
-            {
-              name: { name: "name", type: FieldType.STRING },
-              array: {
-                name: "array",
-                type: FieldType.ARRAY,
-                constraints: {
-                  type: JsonFieldSubType.ARRAY,
-                  inclusion: ["option 1", "option 2"],
-                },
+          const arrayTable = await createTable({
+            name: { name: "name", type: FieldType.STRING },
+            array: {
+              name: "array",
+              type: FieldType.ARRAY,
+              constraints: {
+                type: JsonFieldSubType.ARRAY,
+                inclusion: ["option 1", "option 2"],
               },
             },
-            "array"
-          )
-          tableOrViewId = await createTableOrView(
-            {
-              relationship: {
-                type: FieldType.LINK,
-                relationshipType: RelationshipType.MANY_TO_ONE,
-                name: "relationship",
-                fieldName: "relate",
-                tableId: arrayTable,
-                constraints: {
-                  type: "array",
-                },
-              },
-              formula: {
-                type: FieldType.FORMULA,
-                name: "formula",
-                formula: encodeJSBinding(
-                  `let array = [];$("relationship").forEach(rel => array = array.concat(rel.array));return array.sort().join(",")`
-                ),
+          })
+          tableOrViewId = await createTableOrView({
+            relationship: {
+              type: FieldType.LINK,
+              relationshipType: RelationshipType.MANY_TO_ONE,
+              name: "relationship",
+              fieldName: "relate",
+              tableId: arrayTable,
+              constraints: {
+                type: "array",
               },
             },
-            "main"
-          )
+            formula: {
+              type: FieldType.FORMULA,
+              name: "formula",
+              formula: encodeJSBinding(
+                `let array = [];$("relationship").forEach(rel => array = array.concat(rel.array));return array.sort().join(",")`
+              ),
+            },
+          })
           const arrayRows = await Promise.all([
             config.api.row.save(arrayTable, {
               name: "foo",
@@ -2378,12 +2366,9 @@ describe.each([
         let relatedTable: string, relatedRows: Row[]
 
         beforeAll(async () => {
-          relatedTable = await createTable(
-            {
-              name: { name: "name", type: FieldType.STRING },
-            },
-            "productCategory"
-          )
+          relatedTable = await createTable({
+            name: { name: "name", type: FieldType.STRING },
+          })
           tableOrViewId = await createTableOrView({
             name: { name: "name", type: FieldType.STRING },
             related1: {
