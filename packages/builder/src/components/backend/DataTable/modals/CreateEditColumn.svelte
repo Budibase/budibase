@@ -207,6 +207,11 @@
     },
     ...getUserBindings(),
   ]
+  $: sanitiseDefaultValue(
+    editableColumn.type,
+    editableColumn.constraints?.inclusion || [],
+    editableColumn.default
+  )
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
     // Storing the fields by complex field id
@@ -301,15 +306,6 @@
       delete saveColumn.default
     }
 
-    // Delete default value for options fields if the option is no longer available
-    if (
-      saveColumn.type === FieldType.OPTIONS &&
-      saveColumn.default &&
-      !saveColumn.constraints.inclusion?.includes(saveColumn.default)
-    ) {
-      delete saveColumn.default
-    }
-
     // Ensure primary display columns are always required and don't have default values
     if (primaryDisplay) {
       saveColumn.constraints.presence = { allowEmpty: false }
@@ -318,7 +314,7 @@
 
     // Ensure the field is not required if we have a default value
     if (saveColumn.default) {
-      saveColumn.constraints.presence = { allowEmpty: true }
+      saveColumn.constraints.presence = false
     }
 
     try {
@@ -567,6 +563,20 @@
     return newError
   }
 
+  const sanitiseDefaultValue = (type, options, defaultValue) => {
+    if (!defaultValue?.length) {
+      return
+    }
+    // Delete default value for options fields if the option is no longer available
+    if (type === FieldType.OPTIONS && !options.includes(defaultValue)) {
+      delete editableColumn.default
+    }
+    // Filter array default values to only valid options
+    if (type === FieldType.ARRAY) {
+      editableColumn.default = defaultValue.filter(x => options.includes(x))
+    }
+  }
+
   onMount(() => {
     mounted = true
   })
@@ -774,9 +784,9 @@
       </div>
     </div>
   {:else if editableColumn.type === JSON_TYPE}
-    <Button primary text on:click={openJsonSchemaEditor}
-      >Open schema editor</Button
-    >
+    <Button primary text on:click={openJsonSchemaEditor}>
+      Open schema editor
+    </Button>
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
     <Select
@@ -821,7 +831,8 @@
         options={editableColumn.constraints?.inclusion || []}
         label="Default value"
         value={editableColumn.default}
-        on:change={e => (editableColumn.default = e.detail)}
+        on:change={e =>
+          (editableColumn.default = e.detail?.length ? e.detail : undefined)}
         placeholder="None"
       />
     {:else}
