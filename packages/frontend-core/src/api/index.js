@@ -2,6 +2,7 @@ import { Helpers } from "@budibase/bbui"
 import { Header } from "@budibase/shared-core"
 import { ApiVersion } from "../constants"
 import { buildAnalyticsEndpoints } from "./analytics"
+import { buildAIEndpoints } from "./ai"
 import { buildAppEndpoints } from "./app"
 import { buildAttachmentEndpoints } from "./attachments"
 import { buildAuthEndpoints } from "./auth"
@@ -268,6 +269,7 @@ export const createAPIClient = config => {
   // Attach all endpoints
   return {
     ...API,
+    ...buildAIEndpoints(API),
     ...buildAnalyticsEndpoints(API),
     ...buildAppEndpoints(API),
     ...buildAttachmentEndpoints(API),
