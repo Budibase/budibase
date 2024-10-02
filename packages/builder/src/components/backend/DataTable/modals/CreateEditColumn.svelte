@@ -25,6 +25,7 @@
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
+  import { licensing } from "stores/portal"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
@@ -105,6 +106,7 @@
   let optionsValid = true
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
+  $: aiEnabled = $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
@@ -432,7 +434,7 @@
         FIELDS.BOOLEAN,
         FIELDS.DATETIME,
         FIELDS.LINK,
-        FIELDS.AI,
+        ...(aiEnabled ? [FIELDS.AI] : []),
         FIELDS.LONGFORM,
         FIELDS.USER,
         FIELDS.USERS,
