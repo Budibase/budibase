@@ -4,7 +4,7 @@ export const buildAIEndpoints = API => ({
    */
   generateCronExpression: async ({ prompt }) => {
     return await API.post({
-      url: "/api/ai/generate/cron",
+      url: "/api/ai/cron",
       body: { prompt },
     })
   },

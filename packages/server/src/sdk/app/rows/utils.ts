@@ -20,7 +20,7 @@ import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
 import { extractViewInfoFromID, isRelationshipColumn } from "../../../db/utils"
 import { isSQL } from "../../../integrations/utils"
-import { docIds } from "@budibase/backend-core"
+import { docIds, sql } from "@budibase/backend-core"
 import { getTableFromSource } from "../../../api/controllers/row/utils"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
@@ -57,8 +57,12 @@ export function getSQLClient(datasource: Datasource): SqlClient {
 export function processRowCountResponse(
   response: DatasourcePlusQueryResponse
 ): number {
-  if (response && response.length === 1 && "total" in response[0]) {
-    const total = response[0].total
+  if (
+    response &&
+    response.length === 1 &&
+    sql.COUNT_FIELD_NAME in response[0]
+  ) {
+    const total = response[0][sql.COUNT_FIELD_NAME]
     return typeof total === "number" ? total : parseInt(total)
   } else {
     throw new Error("Unable to count rows in query - no count response")
