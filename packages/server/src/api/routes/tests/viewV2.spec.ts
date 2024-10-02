@@ -2490,6 +2490,61 @@ describe.each([
               expect(row["Total Price"]).toEqual(priceByQuantity[row.quantity])
             }
           })
+
+          it.each([
+            CalculationType.COUNT,
+            CalculationType.SUM,
+            CalculationType.AVG,
+            CalculationType.MIN,
+            CalculationType.MAX,
+          ])("should be able to calculate $type", async type => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                aggregate: {
+                  visible: true,
+                  calculationType: type,
+                  field: "price",
+                },
+              },
+            })
+
+            const response = await config.api.viewV2.search(view.id, {
+              query: {},
+            })
+
+            function calculate(
+              type: CalculationType,
+              numbers: number[]
+            ): number {
+              switch (type) {
+                case CalculationType.COUNT:
+                  return numbers.length
+                case CalculationType.SUM:
+                  return numbers.reduce((a, b) => a + b, 0)
+                case CalculationType.AVG:
+                  return numbers.reduce((a, b) => a + b, 0) / numbers.length
+                case CalculationType.MIN:
+                  return Math.min(...numbers)
+                case CalculationType.MAX:
+                  return Math.max(...numbers)
+              }
+            }
+
+            const prices = rows.map(row => row.price)
+            const expected = calculate(type, prices)
+            const actual = response.rows[0].aggregate
+
+            if (type === CalculationType.AVG) {
+              // The average calculation can introduce floating point rounding
+              // errors, so we need to compare to within a small margin of
+              // error.
+              expect(actual).toBeCloseTo(expected)
+            } else {
+              expect(actual).toEqual(expected)
+            }
+          })
         })
     })
 
