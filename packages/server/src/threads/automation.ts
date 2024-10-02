@@ -74,7 +74,7 @@ class Orchestrator {
   private job: Job
   private loopStepOutputs: LoopStep[]
   private stopped: boolean
-  private executionOutput: AutomationContext
+  private executionOutput: Omit<AutomationContext, "stepsByName" | "stepsById">
 
   constructor(job: AutomationJob) {
     let automation = job.data.automation
@@ -91,6 +91,7 @@ class Orchestrator {
     // step zero is never used as the template string is zero indexed for customer facing
     this.context = {
       steps: [{}],
+      stepsById: {},
       stepsByName: {},
       trigger: triggerOutput,
     }
@@ -457,8 +458,9 @@ class Orchestrator {
         inputs: steps[stepToLoopIndex].inputs,
       })
 
+      this.context.stepsById[steps[stepToLoopIndex].id] = tempOutput
       const stepName = steps[stepToLoopIndex].name || steps[stepToLoopIndex].id
-      this.context.stepsByName![stepName] = tempOutput
+      this.context.stepsByName[stepName] = tempOutput
       this.context.steps[this.context.steps.length] = tempOutput
       this.context.steps = this.context.steps.filter(
         item => !item.hasOwnProperty.call(item, "currentItem")
@@ -517,7 +519,10 @@ class Orchestrator {
         Object.entries(filter).forEach(([_, value]) => {
           Object.entries(value).forEach(([field, _]) => {
             const updatedField = field.replace("{{", "{{ literal ")
-            const fromContext = processStringSync(updatedField, this.context)
+            const fromContext = processStringSync(
+              updatedField,
+              this.processContext(this.context)
+            )
             toFilter[field] = fromContext
           })
         })
@@ -563,9 +568,9 @@ class Orchestrator {
         }
 
         const stepFn = await this.getStepFunctionality(step.stepId)
-        let inputs = await this.addContextAndProcess(
+        let inputs = await processObject(
           originalStepInput,
-          this.context
+          this.processContext(this.context)
         )
 
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
@@ -594,16 +599,16 @@ class Orchestrator {
     return null
   }
 
-  private async addContextAndProcess(inputs: any, context: any) {
+  private processContext(context: AutomationContext) {
     const processContext = {
       ...context,
       steps: {
         ...context.steps,
+        ...context.stepsById,
         ...context.stepsByName,
       },
     }
-
-    return processObject(inputs, processContext)
+    return processContext
   }
 
   private handleStepOutput(
@@ -623,6 +628,7 @@ class Orchestrator {
     } else {
       this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
       this.context.steps[this.context.steps.length] = outputs
+      this.context.stepsById![step.id] = outputs
       const stepName = step.name || step.id
       this.context.stepsByName![stepName] = outputs
     }

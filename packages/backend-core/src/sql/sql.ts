@@ -87,6 +87,13 @@ function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
   return query
 }
 
+function isSqs(table: Table): boolean {
+  return (
+    table.sourceType === TableSourceType.INTERNAL ||
+    table.sourceId === INTERNAL_TABLE_SOURCE_ID
+  )
+}
+
 class InternalBuilder {
   private readonly client: SqlClient
   private readonly query: QueryJson
@@ -799,37 +806,34 @@ class InternalBuilder {
     return query
   }
 
-  isSqs(t?: Table): boolean {
-    const table = t || this.table
-    return (
-      table.sourceType === TableSourceType.INTERNAL ||
-      table.sourceId === INTERNAL_TABLE_SOURCE_ID
-    )
+  isSqs(): boolean {
+    return isSqs(this.table)
   }
 
-  getTableName(t?: Table | string): string {
+  getTableName(tableOrName?: Table | string): string {
     let table: Table
-    if (typeof t === "string") {
-      if (this.query.table?.name === t) {
+    if (typeof tableOrName === "string") {
+      const name = tableOrName
+      if (this.query.table?.name === name) {
         table = this.query.table
-      } else if (this.query.meta.table?.name === t) {
+      } else if (this.query.meta.table?.name === name) {
         table = this.query.meta.table
-      } else if (!this.query.meta.tables?.[t]) {
+      } else if (!this.query.meta.tables?.[name]) {
         // This can legitimately happen in custom queries, where the user is
         // querying against a table that may not have been imported into
         // Budibase.
-        return t
+        return name
       } else {
-        table = this.query.meta.tables[t]
+        table = this.query.meta.tables[name]
       }
-    } else if (t) {
-      table = t
+    } else if (tableOrName) {
+      table = tableOrName
     } else {
       table = this.table
     }
 
     let name = table.name
-    if (this.isSqs(table) && table._id) {
+    if (isSqs(table) && table._id) {
       // SQS uses the table ID rather than the table name
       name = table._id
     }
@@ -842,7 +846,7 @@ class InternalBuilder {
       throw new Error("SQL counting requires primary key to be supplied")
     }
     return query.countDistinct(
-      `${this.getTableName()}.${this.table.primary[0]} as total`
+      `${this.getTableName()}.${this.table.primary[0]} as __bb_total`
     )
   }
 
@@ -1542,7 +1546,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       // SQS uses the table ID rather than the table name
       name = table._id
     }
-    return aliases?.[name] ? aliases[name] : name
+    return aliases?.[name] || name
   }
 
   convertJsonStringColumns<T extends Record<string, any>>(
