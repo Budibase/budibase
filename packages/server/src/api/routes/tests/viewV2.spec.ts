@@ -2458,6 +2458,38 @@ describe.each([
               expect("_id" in row).toBe(false)
             }
           })
+
+          it("should be able to group by a basic field", async () => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                quantity: {
+                  visible: true,
+                  field: "quantity",
+                },
+                "Total Price": {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "price",
+                },
+              },
+            })
+
+            const response = await config.api.viewV2.search(view.id, {
+              query: {},
+            })
+
+            const priceByQuantity: Record<number, number> = {}
+            for (const row of rows) {
+              priceByQuantity[row.quantity] ??= 0
+              priceByQuantity[row.quantity] += row.price
+            }
+
+            for (const row of response.rows) {
+              expect(row["Total Price"]).toEqual(priceByQuantity[row.quantity])
+            }
+          })
         })
     })
 
