@@ -293,14 +293,16 @@ export async function enrichSchema(
   const viewSchema = view.schema || {}
   const anyViewOrder = Object.values(viewSchema).some(ui => ui.order != null)
 
-  const visibleSchemaFields = Object.keys(viewSchema).filter(
-    key => viewSchema[key].visible !== false
-  )
+  const visibleSchemaFields = Object.keys(viewSchema).filter(key => {
+    if (helpers.views.isCalculationField(viewSchema[key])) {
+      return viewSchema[key].visible !== false
+    }
+    return key in tableSchema && tableSchema[key].visible !== false
+  })
   const visibleTableFields = Object.keys(tableSchema).filter(
     key => tableSchema[key].visible !== false
   )
   const visibleFields = new Set([...visibleSchemaFields, ...visibleTableFields])
-
   for (const key of visibleFields) {
     // if nothing specified in view, then it is not visible
     const ui = viewSchema[key] || { visible: false }
