@@ -135,7 +135,7 @@ export const initialise = context => {
         }
         // Only override filter state if we don't have an initial filter
         if (!get(initialFilter)) {
-          filter.set($definition.query)
+          filter.set($definition.queryUI || $definition.query)
         }
       })
     )
