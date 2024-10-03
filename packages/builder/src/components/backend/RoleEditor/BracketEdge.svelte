@@ -7,14 +7,14 @@
   export let sourceY
 
   const { bounds } = getContext("flow")
-  const BracketWidth = GridResolution * 2
-  const BracketHeight = $bounds.height / 2 + GridResolution * 2
 
+  $: bracketWidth = GridResolution * 3
+  $: bracketHeight = $bounds.height / 2 + GridResolution * 2
   $: path = getCurlyBracePath(
-    sourceX + BracketWidth,
-    sourceY - BracketHeight,
-    sourceX + BracketWidth,
-    sourceY + BracketHeight
+    sourceX + bracketWidth,
+    sourceY - bracketHeight,
+    sourceX + bracketWidth,
+    sourceY + bracketHeight
   )
 
   const getCurlyBracePath = (x1, y1, x2, y2) => {
@@ -35,7 +35,7 @@
     const qy1 = y1 - q * w * dx
     const qx2 = x1 - 0.25 * len * dx + (1 - q) * w * dy - i
     const qy2 = y1 - 0.25 * len * dy - (1 - q) * w * dx
-    const tx1 = x1 - 0.5 * len * dx + w * dy - BracketWidth
+    const tx1 = x1 - 0.5 * len * dx + w * dy - bracketWidth
     const ty1 = y1 - 0.5 * len * dy - w * dx
     const qx3 = x2 + q * w * dy - j
     const qy3 = y2 - q * w * dx
