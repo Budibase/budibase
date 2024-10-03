@@ -176,8 +176,8 @@ describe.each([
         return viewId
       },
     ],
-  ])("from %s", (tableOrView, createTableOrView) => {
-    const isView = tableOrView === "view"
+  ])("from %s", (sourceType, createTableOrView) => {
+    const isView = sourceType === "view"
 
     if (isView && isLucene) {
       // Some tests don't have the expected result in views via lucene, and given that it is getting deprecated, we exclude them from the tests
