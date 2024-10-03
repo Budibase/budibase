@@ -10,6 +10,7 @@ import * as linkRows from "../../../db/linkedRows"
 import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
 import sdk from "../../../sdk"
+import * as pro from "@budibase/pro"
 
 /**
  * This function runs through a list of enriched rows, looks at the rows which
@@ -143,9 +144,12 @@ export async function finaliseRow(
     dynamic: false,
     contextRows: [enrichedRow],
   })
-  row = await processAIColumns(table, row, {
-    contextRows: [enrichedRow],
-  })
+  const aiEnabled = await pro.features.isBudibaseAIEnabled() || await pro.features.isAICustomConfigsEnabled()
+  if (aiEnabled) {
+    row = await processAIColumns(table, row, {
+      contextRows: [enrichedRow],
+    })
+  }
 
   const response = await db.put(row)
   // for response, calculate the formulas for the enriched row
@@ -153,9 +157,11 @@ export async function finaliseRow(
   enrichedRow = await processFormulas(table, enrichedRow, {
     dynamic: false,
   })
-  enrichedRow = await processAIColumns(table, row, {
-    contextRows: [enrichedRow],
-  })
+  if (aiEnabled) {
+    enrichedRow = await processAIColumns(table, row, {
+      contextRows: [enrichedRow],
+    })
+  }
 
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
