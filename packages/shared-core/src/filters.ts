@@ -3,7 +3,7 @@ import {
   BBReferenceFieldSubType,
   FieldType,
   FormulaType,
-  SearchFilter,
+  LegacyFilter,
   SearchFilters,
   SearchQueryFields,
   ArrayOperator,
@@ -127,7 +127,7 @@ export function recurseLogicalOperators(
   fn: (f: SearchFilters) => SearchFilters
 ) {
   for (const logical of LOGICAL_OPERATORS) {
-    if (filters?.[logical]) {
+    if (filters[logical]) {
       filters[logical]!.conditions = filters[logical]!.conditions.map(
         condition => fn(condition)
       )
@@ -163,9 +163,6 @@ export function recurseSearchFilters(
  * https://github.com/Budibase/budibase/issues/10118
  */
 export const cleanupQuery = (query: SearchFilters) => {
-  if (!query) {
-    return query
-  }
   for (let filterField of NoEmptyFilterStrings) {
     if (!query[filterField]) {
       continue
@@ -311,7 +308,7 @@ export class ColumnSplitter {
  * @param filter the builder filter structure
  */
 
-const buildCondition = (expression: SearchFilter) => {
+const buildCondition = (expression: LegacyFilter) => {
   // Filter body
   let query: SearchFilters = {
     string: {},
@@ -437,8 +434,13 @@ const buildCondition = (expression: SearchFilter) => {
 }
 
 export const buildQueryLegacy = (
-  filter?: SearchFilterGroup | SearchFilter[]
+  filter?: LegacyFilter[] | SearchFilters
 ): SearchFilters | undefined => {
+  // this is of type SearchFilters or is undefined
+  if (!Array.isArray(filter)) {
+    return filter
+  }
+
   let query: SearchFilters = {
     string: {},
     fuzzy: {},
@@ -572,7 +574,7 @@ export const buildQueryLegacy = (
  */
 
 export const buildQuery = (
-  filter?: SearchFilterGroup | SearchFilter[]
+  filter?: SearchFilterGroup | LegacyFilter[]
 ): SearchFilters | undefined => {
   const parsedFilter: SearchFilterGroup | undefined =
     processSearchFilters(filter)
@@ -594,7 +596,7 @@ export const buildQuery = (
   const globalOperator: LogicalOperator =
     operatorMap[parsedFilter.logicalOperator as FilterGroupLogicalOperator]
 
-  const coreRequest: SearchFilters = {
+  return {
     ...(globalOnEmpty ? { onEmptyFilter: globalOnEmpty } : {}),
     [globalOperator]: {
       conditions: parsedFilter.groups?.map((group: SearchFilterGroup) => {
@@ -608,7 +610,6 @@ export const buildQuery = (
       }),
     },
   }
-  return coreRequest
 }
 
 // The frontend can send single values for array fields sometimes, so to handle
