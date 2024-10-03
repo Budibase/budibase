@@ -33,7 +33,7 @@ import {
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
-import { cloneDeep, isEqual } from "lodash"
+import { cloneDeep } from "lodash"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
@@ -149,12 +149,7 @@ export async function bulkImport(
   ctx: UserCtx<BulkImportRequest, BulkImportResponse>
 ) {
   const tableId = ctx.params.tableId
-  let tableBefore = await sdk.tables.getTable(tableId)
-  let tableAfter = await pickApi({ tableId }).bulkImport(ctx)
-
-  if (!isEqual(tableBefore, tableAfter)) {
-    await sdk.tables.saveTable(tableAfter)
-  }
+  await pickApi({ tableId }).bulkImport(ctx)
 
   // right now we don't trigger anything for bulk import because it
   // can only be done in the builder, but in the future we may need to
