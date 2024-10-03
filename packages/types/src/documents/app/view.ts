@@ -1,7 +1,7 @@
-import { SearchFilter, SortOrder, SortType } from "../../api"
+import { LegacyFilter, SearchFilterGroup, SortOrder, SortType } from "../../api"
 import { UIFieldMetadata } from "./table"
 import { Document } from "../document"
-import { DBView } from "../../sdk"
+import { DBView, SearchFilters } from "../../sdk"
 
 export type ViewTemplateOpts = {
   field: string
@@ -33,14 +33,23 @@ export interface View {
   groupBy?: string
 }
 
-export type ViewFieldMetadata = UIFieldMetadata & {
+export interface BasicViewFieldMetadata extends UIFieldMetadata {
   readonly?: boolean
   columns?: Record<string, RelationSchemaField>
 }
 
-export type RelationSchemaField = UIFieldMetadata & {
+export interface RelationSchemaField extends UIFieldMetadata {
   readonly?: boolean
 }
+
+export interface ViewCalculationFieldMetadata extends BasicViewFieldMetadata {
+  calculationType: CalculationType
+  field: string
+}
+
+export type ViewFieldMetadata =
+  | BasicViewFieldMetadata
+  | ViewCalculationFieldMetadata
 
 export enum CalculationType {
   SUM = "sum",
@@ -50,25 +59,24 @@ export enum CalculationType {
   MAX = "max",
 }
 
-export type ViewCalculationFieldMetadata = ViewFieldMetadata & {
-  calculationType: CalculationType
-  field: string
-}
-
 export interface ViewV2 {
   version: 2
   id: string
   name: string
   primaryDisplay?: string
   tableId: string
-  query?: SearchFilter[]
+  query?: LegacyFilter[] | SearchFilters
+  // duplicate to store UI information about filters
+  queryUI?: SearchFilterGroup
   sort?: {
     field: string
     order?: SortOrder
     type?: SortType
   }
-  schema?: Record<string, ViewFieldMetadata | ViewCalculationFieldMetadata>
+  schema?: ViewV2Schema
 }
+
+export type ViewV2Schema = Record<string, ViewFieldMetadata>
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
 

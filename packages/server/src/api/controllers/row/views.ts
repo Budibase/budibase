@@ -5,14 +5,9 @@ import {
   SearchViewRowRequest,
   RequiredKeys,
   RowSearchParams,
-  SearchFilterKey,
-  LogicalOperator,
 } from "@budibase/types"
-import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
-import { db, context, features } from "@budibase/backend-core"
-import { enrichSearchContext } from "./utils"
-import { isExternalTableID } from "../../../integrations/utils"
+import { context } from "@budibase/backend-core"
 
 export async function searchView(
   ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
@@ -32,47 +27,7 @@ export async function searchView(
     .map(([key]) => key)
   const { body } = ctx.request
 
-  // Enrich saved query with ephemeral query params.
-  // We prevent searching on any fields that are saved as part of the query, as
-  // that could let users find rows they should not be allowed to access.
-  let query = dataFilters.buildQuery(view.query || [])
-  if (body.query) {
-    // Delete extraneous search params that cannot be overridden
-    delete body.query.onEmptyFilter
-
-    if (
-      !isExternalTableID(view.tableId) &&
-      !(await features.flags.isEnabled("SQS"))
-    ) {
-      // Extract existing fields
-      const existingFields =
-        view.query
-          ?.filter(filter => filter.field)
-          .map(filter => db.removeKeyNumbering(filter.field)) || []
-
-      // Carry over filters for unused fields
-      Object.keys(body.query).forEach(key => {
-        const operator = key as Exclude<SearchFilterKey, LogicalOperator>
-        Object.keys(body.query[operator] || {}).forEach(field => {
-          if (!existingFields.includes(db.removeKeyNumbering(field))) {
-            query[operator]![field] = body.query[operator]![field]
-          }
-        })
-      })
-    } else {
-      query = {
-        $and: {
-          conditions: [query, body.query],
-        },
-      }
-    }
-  }
-
   await context.ensureSnippetContext(true)
-
-  const enrichedQuery = await enrichSearchContext(query, {
-    user: sdk.users.getUserContextBindings(ctx.user),
-  })
 
   const searchOptions: RequiredKeys<SearchViewRowRequest> &
     RequiredKeys<
@@ -80,7 +35,7 @@ export async function searchView(
     > = {
     tableId: view.tableId,
     viewId: view.id,
-    query: enrichedQuery,
+    query: body.query,
     fields: viewFields,
     ...getSortOptions(body, view),
     limit: body.limit,
@@ -89,11 +44,12 @@ export async function searchView(
     countRows: body.countRows,
   }
 
-  const result = await sdk.rows.search(searchOptions)
+  const result = await sdk.rows.search(searchOptions, {
+    user: sdk.users.getUserContextBindings(ctx.user),
+  })
   result.rows.forEach(r => (r._viewId = view.id))
   ctx.body = result
 }
-
 function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
   if (request.sort) {
     return {
