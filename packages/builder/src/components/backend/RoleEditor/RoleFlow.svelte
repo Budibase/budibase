@@ -6,7 +6,6 @@
     Background,
     BackgroundVariant,
     useSvelteFlow,
-    getNodesBounds,
   } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import RoleNode from "./RoleNode.svelte"
@@ -23,7 +22,7 @@
   } from "./utils"
   import { setContext, tick } from "svelte"
   import Controls from "./Controls.svelte"
-  import { GridResolution, MaxAutoZoom } from "./constants"
+  import { GridResolution, MaxAutoZoom, ZoomDuration } from "./constants"
   import { roles } from "stores/builder"
   import { Roles } from "constants/backend"
   import { getSequentialName } from "helpers/duplicate"
@@ -77,6 +76,14 @@
     })
   }
 
+  // Automatically lays out all roles and edges and zooms to fit them
+  const layoutAndFit = () => {
+    const layout = autoLayout({ nodes: $nodes, edges: $edges })
+    nodes.set(layout.nodes)
+    edges.set(layout.edges)
+    flow.fitView({ maxZoom: MaxAutoZoom, duration: ZoomDuration })
+  }
+
   const createRole = async () => {
     const roleId = Helpers.uuid()
     await roles.save({
@@ -91,6 +98,7 @@
       permissionId: "write",
     })
     await tick()
+    layoutAndFit()
 
     // Select the new node
     nodes.update($nodes => {
@@ -114,6 +122,8 @@
   }
 
   const deleteRole = async roleId => {
+    nodes.set($nodes.filter(node => node.id !== roleId))
+    layoutAndFit()
     const role = $roles.find(role => role._id === roleId)
     if (role) {
       roles.delete(role)
@@ -122,15 +132,13 @@
 
   const deleteEdge = async edgeId => {
     const edge = $edges.find(edge => edge.id === edgeId)
-    if (!edge) {
-      return
-    }
     edges.set($edges.filter(edge => edge.id !== edgeId))
+    layoutAndFit()
     await updateRole(edge.target)
   }
 
-  // Updates roles which have had a new connection
   const onConnect = async connection => {
+    layoutAndFit()
     await updateRole(connection.target)
   }
 
@@ -144,6 +152,7 @@
     updateRole,
     deleteRole,
     deleteEdge,
+    layoutAndFit,
   })
 </script>
 
