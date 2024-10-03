@@ -34,7 +34,7 @@ import {
   Table,
   TableSchema,
   User,
-  ViewFieldMetadata,
+  ViewV2Schema,
 } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
@@ -139,6 +139,15 @@ describe.each([
     return table._id!
   }
 
+  async function createView(tableId: string, schema: ViewV2Schema) {
+    const view = await config.api.viewV2.create({
+      tableId: tableId,
+      name: generator.guid(),
+      schema,
+    })
+    return view
+  }
+
   async function createRows(arr: Record<string, any>[]) {
     // Shuffling to avoid false positives given a fixed order
     for (const row of _.shuffle(arr)) {
@@ -153,21 +162,17 @@ describe.each([
       "view",
       async (schema: TableSchema) => {
         const tableId = await createTable(schema)
-        const view = await config.api.viewV2.create({
-          tableId: tableId,
-          name: generator.guid(),
-          schema: Object.keys(schema).reduce<Record<string, ViewFieldMetadata>>(
-            (viewSchema, fieldName) => {
-              const field = schema[fieldName]
-              viewSchema[fieldName] = {
-                visible: field.visible ?? true,
-                readonly: false,
-              }
-              return viewSchema
-            },
-            {}
-          ),
-        })
+        const view = await createView(
+          tableId,
+          Object.keys(schema).reduce<ViewV2Schema>((viewSchema, fieldName) => {
+            const field = schema[fieldName]
+            viewSchema[fieldName] = {
+              visible: field.visible ?? true,
+              readonly: false,
+            }
+            return viewSchema
+          }, {})
+        )
         return view.id
       },
     ],
