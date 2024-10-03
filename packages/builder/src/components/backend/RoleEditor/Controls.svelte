@@ -2,25 +2,10 @@
   import { Button, ActionButton } from "@budibase/bbui"
   import { useSvelteFlow } from "@xyflow/svelte"
   import { getContext } from "svelte"
-  import { autoLayout } from "./utils"
-  import { MaxAutoZoom, ZoomDuration } from "./constants"
+  import { ZoomDuration } from "./constants"
 
-  const { nodes, edges, createRole } = getContext("flow")
+  const { createRole, layoutAndFit } = getContext("flow")
   const flow = useSvelteFlow()
-  const autoFit = () =>
-    flow.fitView({ maxZoom: MaxAutoZoom, duration: ZoomDuration })
-
-  const addRole = async () => {
-    await createRole()
-    doAutoLayout()
-    autoFit()
-  }
-
-  const doAutoLayout = () => {
-    const layout = autoLayout({ nodes: $nodes, edges: $edges })
-    nodes.set(layout.nodes)
-    edges.set(layout.edges)
-  }
 </script>
 
 <div class="control top-left">
@@ -36,11 +21,10 @@
       on:click={() => flow.zoomOut({ duration: ZoomDuration })}
     />
   </div>
-  <Button secondary on:click={autoFit}>Zoom to fit</Button>
-  <Button secondary on:click={doAutoLayout}>Auto layout</Button>
+  <Button secondary on:click={layoutAndFit}>Auto layout</Button>
 </div>
 <div class="control bottom-right">
-  <Button icon="Add" cta on:click={addRole}>Add role</Button>
+  <Button icon="Add" cta on:click={createRole}>Add role</Button>
 </div>
 
 <style>
