@@ -105,6 +105,8 @@ export async function search(
           ? view.query
           : []
 
+        delete options.query.onEmptyFilter
+
         // Extract existing fields
         const existingFields =
           queryFilters
@@ -128,6 +130,9 @@ export async function search(
           $and: {
             conditions: [...conditions, options.query],
           },
+        }
+        if (viewQuery.onEmptyFilter) {
+          options.query.onEmptyFilter = viewQuery.onEmptyFilter
         }
       }
     }
