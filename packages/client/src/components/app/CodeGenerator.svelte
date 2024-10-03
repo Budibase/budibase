@@ -6,11 +6,13 @@
   import "@spectrum-css/vars/dist/spectrum-global.css"
 
   export let value
-  export let showQR
+  export let codeType
   export let showValue
+  export let showLogo
   export let customLogo
-  export let size = 200
+  export let size
   export let primColor
+  export let invertColors
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
@@ -23,20 +25,20 @@
         displayValue: false, // Hide the library's built in value, optionally display it later
         width: barcodeSize,
         height: size,
-        lineColor: "black",
-        background: "white",
+        lineColor: invertColors ? "white" : "black",
+        background: invertColors ? "black" : "white",
       })
     }
   }
 
   onMount(() => {
-    if (!showQR) {
+    if (codeType === "Barcode") {
       generateBarcode()
     }
   })
 
   afterUpdate(() => {
-    if (!showQR) {
+    if (codeType === "Barcode") {
       generateBarcode()
     }
   })
@@ -44,7 +46,7 @@
 
 <div class="overall" use:styleable={$component.styles}>
   {#if value}
-    {#if showQR}
+    {#if codeType === "QR Code"}
       <div class="qr-container">
         {@html createQrSvgString({
           data: value,
@@ -60,9 +62,12 @@
         </div>
       </div>
     {:else}
-      <div class="barcode-container">
+      <div
+        class="barcode-container"
+        style="background-color: {invertColors ? 'black' : 'white'}"
+      >
         <div class="logo-and-barcode">
-          {#if customLogo}
+          {#if showLogo && customLogo}
             <img
               src={customLogo}
               alt="logo"
@@ -78,13 +83,18 @@
         </div>
         {#if showValue}
           <div class="barcode-value">
+            <p style="background-color: {invertColors ? 'white' : 'black'}" />
             {value}
           </div>
         {/if}
       </div>
     {/if}
   {:else}
-    <p>Please add a value to generate your {showQR ? "QR Code" : "Barcode"}</p>
+    <p>
+      Please add a value to generate your {codeType === "QR Code"
+        ? "QR Code"
+        : "Barcode"}
+    </p>
   {/if}
 </div>
 
@@ -94,9 +104,6 @@
     flex-direction: row;
     justify-content: center;
   }
-  .barcode-container {
-    background-color: white;
-  }
 
   .logo-and-barcode {
     display: flex;
@@ -105,7 +112,6 @@
   }
 
   .barcode-value {
-    color: black;
     text-align: center;
     padding-bottom: 5px;
   }

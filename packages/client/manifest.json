@@ -4429,34 +4429,11 @@
     "icon": "Vignette",
     "settings": [
       {
-        "type": "text",
-        "key": "value",
-        "label": "Value",
-        "defaultValue": "https://docs.budibase.com/"
-      },
-      {
-        "type": "boolean",
-        "key": "showValue",
-        "label": "Display value",
-        "defaultValue": true
-      },
-      {
-        "type": "boolean",
-        "key": "showQR",
-        "label": "QR",
-        "defaultValue": true
-      },
-      {
-        "type": "text",
-        "key": "customLogo",
-        "label": "Logo",
-        "defaultValue": "https://files.readme.io/3440fe8-Budibase_Symbol_RGB_FullColour_cbqvha_1_z5cwq2_3.svg"
-      },
-      {
-        "type": "color",
-        "label": "Primary color",
-        "key": "primColor",
-        "defaultValue": "#000"
+        "type": "radio",
+        "label": "Barcode/QR",
+        "key": "codeType",
+        "options": ["QR Code", "Barcode"],
+        "defaultValue": "QR Code"
       },
       {
         "type": "select",
@@ -4493,6 +4470,57 @@
             "value": 400
           }
         ]
+      },
+      {
+        "type": "text",
+        "key": "value",
+        "label": "Value",
+        "defaultValue": "https://docs.budibase.com/"
+      },
+      {
+        "type": "boolean",
+        "key": "showValue",
+        "label": "Display value",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "key": "showLogo",
+        "label": "showLogo",
+        "defaultValue": true
+      },
+
+      {
+        "type": "text",
+        "key": "customLogo",
+        "label": "Logo",
+        "defaultValue": "https://files.readme.io/3440fe8-Budibase_Symbol_RGB_FullColour_cbqvha_1_z5cwq2_3.svg",
+        "dependsOn": {
+          "setting": "showLogo",
+          "value": true
+        }
+      },
+      {
+        "type": "boolean",
+        "key": "invertColors",
+        "label": "Invert Colors",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "codeType",
+          "value": "Barcode",
+          "invert": false
+        }
+      },
+      {
+        "type": "color",
+        "label": "Primary color",
+        "key": "primColor",
+        "defaultValue": "#000",
+        "dependsOn": {
+          "setting": "codeType",
+          "value": "QR Code",
+          "invert": false
+        }
       }
     ]
   },
