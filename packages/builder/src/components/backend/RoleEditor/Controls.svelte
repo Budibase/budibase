@@ -8,7 +8,7 @@
   const flow = useSvelteFlow()
 </script>
 
-<div class="control top-left">
+<div class="control top-right">
   <div class="group">
     <ActionButton
       icon="Add"
@@ -36,25 +36,25 @@
     align-items: center;
     gap: 12px;
   }
-  .top-left {
+  .top-right {
     top: 20px;
-    left: 20px;
+    right: 20px;
   }
   .bottom-right {
     bottom: 20px;
     right: 20px;
   }
-  .top-left :global(.spectrum-Button),
-  .top-left :global(.spectrum-ActionButton),
-  .top-left :global(.spectrum-Icon) {
+  .top-right :global(.spectrum-Button),
+  .top-right :global(.spectrum-ActionButton),
+  .top-right :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
-  .top-left :global(.spectrum-Button),
-  .top-left :global(.spectrum-ActionButton) {
+  .top-right :global(.spectrum-Button),
+  .top-right :global(.spectrum-ActionButton) {
     background: var(--spectrum-global-color-gray-200) !important;
   }
-  .top-left :global(.spectrum-Button:hover),
-  .top-left :global(.spectrum-ActionButton:hover) {
+  .top-right :global(.spectrum-Button:hover),
+  .top-right :global(.spectrum-ActionButton:hover) {
     background: var(--spectrum-global-color-gray-300) !important;
   }
   .group {
