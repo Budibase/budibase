@@ -81,7 +81,14 @@ export async function processFormulas<T extends Row | Row[]>(
             ...row,
             [column]: tracer.trace("processStringSync", {}, span => {
               span?.addTags({ table_id: table._id, column, static: isStatic })
-              return processStringSync(formula, context)
+              try {
+                return processStringSync(formula, context)
+              } catch (err: any) {
+                if (err.code === "USER_SCRIPT_ERROR") {
+                  return err.userScriptError.toString()
+                }
+                throw err
+              }
             }),
           }
         }

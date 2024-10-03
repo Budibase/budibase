@@ -5,32 +5,35 @@
   import { fade } from "svelte/transition"
 
   export let expressionResult
+  export let expressionError
   export let evaluating = false
   export let expression = null
 
-  $: error = expressionResult && expressionResult.error != null
+  $: error = expressionError != null
   $: empty = expression == null || expression?.trim() === ""
   $: success = !error && !empty
   $: highlightedResult = highlight(expressionResult)
 
-  const highlight = result => {
-    if (result == null) {
+  const formatError = err => {
+    if (err.code === "USER_SCRIPT_ERROR") {
+      return err.userScriptError.toString()
+    }
+    return err.toString()
+  }
+
+  const highlight = json => {
+    if (json == null) {
       return ""
     }
 
-    let str
-    if (result.error) {
-      str = result.error.toString()
-    } else {
-      // Attempt to parse and then stringify, in case this is valid result
-      try {
-        str = JSON.stringify(JSON.parse(result.result), null, 2)
-      } catch (err) {
-        // Ignore
-      }
+    // Attempt to parse and then stringify, in case this is valid result
+    try {
+      json = JSON.stringify(JSON.parse(json), null, 2)
+    } catch (err) {
+      // Ignore
     }
 
-    return formatHighlight(str, {
+    return formatHighlight(json, {
       keyColor: "#e06c75",
       numberColor: "#e5c07b",
       stringColor: "#98c379",
@@ -80,6 +83,8 @@
   <div class="body">
     {#if empty}
       Your expression will be evaluated here
+    {:else if error}
+      {formatError(expressionError)}
     {:else}
       <!-- eslint-disable-next-line svelte/no-at-html-tags-->
       {@html highlightedResult}
