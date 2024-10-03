@@ -1,5 +1,5 @@
 import { AutoFieldDefaultNames } from "../../constants"
-import { processStringSync } from "@budibase/string-templates"
+import { processStringSync, UserScriptError } from "@budibase/string-templates"
 import {
   AutoColumnFieldMetadata,
   FieldSchema,
@@ -84,7 +84,7 @@ export async function processFormulas<T extends Row | Row[]>(
               try {
                 return processStringSync(formula, context)
               } catch (err: any) {
-                if (err.code === "USER_SCRIPT_ERROR") {
+                if (err.code === UserScriptError.code) {
                   return err.userScriptError.toString()
                 }
                 throw err

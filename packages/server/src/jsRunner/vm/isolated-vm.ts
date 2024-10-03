@@ -7,26 +7,12 @@ import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
 import { Snippet, VM } from "@budibase/types"
-import { iifeWrapper } from "@budibase/string-templates"
+import {
+  iifeWrapper,
+  JsErrorTimeout,
+  UserScriptError,
+} from "@budibase/string-templates"
 import environment from "../../environment"
-
-class ExecutionTimeoutError extends Error {
-  code = "ERR_SCRIPT_EXECUTION_TIMEOUT"
-  constructor(message: string) {
-    super(message)
-    this.name = "ExecutionTimeoutError"
-  }
-}
-
-class UserScriptError extends Error {
-  code = "USER_SCRIPT_ERROR"
-  constructor(readonly userScriptError: Error) {
-    super(
-      `error while running user-supplied JavaScript: ${userScriptError.toString()}`,
-      { cause: userScriptError }
-    )
-  }
-}
 
 export class IsolatedVM implements VM {
   private isolate: ivm.Isolate
@@ -223,7 +209,7 @@ export class IsolatedVM implements VM {
     if (this.isolateAccumulatedTimeout) {
       const cpuMs = Number(this.isolate.cpuTime) / 1e6
       if (cpuMs > this.isolateAccumulatedTimeout) {
-        throw new ExecutionTimeoutError(
+        throw new JsErrorTimeout(
           `CPU time limit exceeded (${cpuMs}ms > ${this.isolateAccumulatedTimeout}ms)`
         )
       }

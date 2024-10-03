@@ -3,6 +3,7 @@
   import { Icon, ProgressCircle, notifications } from "@budibase/bbui"
   import { copyToClipboard } from "@budibase/bbui/helpers"
   import { fade } from "svelte/transition"
+  import { UserScriptError } from "@budibase/string-templates"
 
   export let expressionResult
   export let expressionError
@@ -15,7 +16,7 @@
   $: highlightedResult = highlight(expressionResult)
 
   const formatError = err => {
-    if (err.code === "USER_SCRIPT_ERROR") {
+    if (err.code === UserScriptError.code) {
       return err.userScriptError.toString()
     }
     return err.toString()
