@@ -16,6 +16,7 @@ import { removeJSRunner, setJSRunner } from "./helpers/javascript"
 
 import manifest from "./manifest.json"
 import { ProcessOptions } from "./types"
+import { UserScriptError } from "./errors"
 
 export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
 export { FIND_ANY_HBS_REGEX } from "./utilities"
@@ -230,6 +231,9 @@ export function processStringSync(
       return process(string)
     }
   } catch (err) {
+    if (err.code === "USER_SCRIPT_ERROR") {
+      throw err
+    }
     return input
   }
 }
@@ -448,7 +452,7 @@ export function convertToJS(hbs: string) {
   return `${varBlock}${js}`
 }
 
-export { JsErrorTimeout } from "./errors"
+export { JsErrorTimeout, UserScriptError } from "./errors"
 
 export function defaultJSSetup() {
   if (!isBackendService()) {
@@ -473,13 +477,17 @@ export function defaultJSSetup() {
         try {
           result.result = ${js};
         } catch (e) {
-          result.error = e.toString();
+          result.error = e;
         }
 
         result;
       `
 
-      return runInNewContext(js, context, { timeout: 1000 })
+      const result = runInNewContext(js, context, { timeout: 1000 })
+      if (result.error) {
+        throw new UserScriptError(result.error)
+      }
+      return result.result
     })
   } else {
     removeJSRunner()

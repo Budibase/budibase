@@ -11,6 +11,7 @@ import { iifeWrapper } from "@budibase/string-templates"
 import environment from "../../environment"
 
 class ExecutionTimeoutError extends Error {
+  code = "ERR_SCRIPT_EXECUTION_TIMEOUT"
   constructor(message: string) {
     super(message)
     this.name = "ExecutionTimeoutError"
@@ -18,6 +19,7 @@ class ExecutionTimeoutError extends Error {
 }
 
 class UserScriptError extends Error {
+  code = "USER_SCRIPT_ERROR"
   constructor(readonly userScriptError: Error) {
     super(
       `error while running user-supplied JavaScript: ${userScriptError.message}`,
