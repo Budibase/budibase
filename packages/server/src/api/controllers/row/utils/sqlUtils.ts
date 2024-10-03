@@ -124,9 +124,11 @@ export async function buildSqlFieldList(
         ([columnName, column]) =>
           column.type !== FieldType.LINK &&
           column.type !== FieldType.FORMULA &&
-          !existing.find((field: string) => field === columnName)
+          !existing.find(
+            (field: string) => field === `${table.name}.${columnName}`
+          )
       )
-      .map(column => `${table.name}.${column[0]}`)
+      .map(([columnName]) => `${table.name}.${columnName}`)
   }
 
   let fields: string[] = []
