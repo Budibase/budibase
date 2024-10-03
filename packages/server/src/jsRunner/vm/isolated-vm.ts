@@ -7,12 +7,13 @@ import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
 import { Snippet, VM } from "@budibase/types"
-import {
-  iifeWrapper,
-  JsErrorTimeout,
-  UserScriptError,
-} from "@budibase/string-templates"
+import { iifeWrapper, UserScriptError } from "@budibase/string-templates"
 import environment from "../../environment"
+
+export class JsRequestTimeoutError extends Error {
+  static code = "JS_REQUEST_TIMEOUT_ERROR"
+  code = JsRequestTimeoutError.code
+}
 
 export class IsolatedVM implements VM {
   private isolate: ivm.Isolate
@@ -209,7 +210,7 @@ export class IsolatedVM implements VM {
     if (this.isolateAccumulatedTimeout) {
       const cpuMs = Number(this.isolate.cpuTime) / 1e6
       if (cpuMs > this.isolateAccumulatedTimeout) {
-        throw new JsErrorTimeout(
+        throw new JsRequestTimeoutError(
           `CPU time limit exceeded (${cpuMs}ms > ${this.isolateAccumulatedTimeout}ms)`
         )
       }

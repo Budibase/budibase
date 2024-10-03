@@ -452,7 +452,7 @@ export function convertToJS(hbs: string) {
   return `${varBlock}${js}`
 }
 
-export { JsErrorTimeout, UserScriptError } from "./errors"
+export { JsTimeoutError, UserScriptError } from "./errors"
 
 export function defaultJSSetup() {
   if (!isBackendService()) {
