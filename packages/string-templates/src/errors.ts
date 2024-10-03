@@ -1,9 +1,9 @@
 export class JsErrorTimeout extends Error {
-  code = "ERR_SCRIPT_EXECUTION_TIMEOUT"
+  static code = "ERR_SCRIPT_EXECUTION_TIMEOUT"
 }
 
 export class UserScriptError extends Error {
-  code = "USER_SCRIPT_ERROR"
+  static code = "USER_SCRIPT_ERROR"
 
   constructor(readonly userScriptError: Error) {
     super(

@@ -231,7 +231,7 @@ export function processStringSync(
       return process(string)
     }
   } catch (err: any) {
-    if (err.code === "USER_SCRIPT_ERROR") {
+    if (err.code === UserScriptError.code) {
       throw err
     }
     return input
@@ -468,7 +468,7 @@ export function defaultJSSetup() {
       }
       createContext(context)
 
-      js = `
+      const wrappedJs = `
         result = {
           result: null,
           error: null,
@@ -483,7 +483,7 @@ export function defaultJSSetup() {
         result;
       `
 
-      const result = runInNewContext(js, context, { timeout: 1000 })
+      const result = runInNewContext(wrappedJs, context, { timeout: 1000 })
       if (result.error) {
         throw new UserScriptError(result.error)
       }
