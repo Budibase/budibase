@@ -157,10 +157,7 @@
 </script>
 
 <div class="title">
-  <div class="heading">
-    <Heading size="S">Manage roles</Heading>
-  </div>
-  <div class="description">Roles inherit permissions from each other.</div>
+  <div class="heading" />
 </div>
 <div class="flow">
   <SvelteFlow
@@ -180,22 +177,17 @@
   >
     <Background variant={BackgroundVariant.Dots} />
     <Controls />
+    <div class="title">
+      <Heading size="S">Manage roles</Heading>
+    </div>
+    <div class="footer">Roles inherit permissions from each other</div>
   </SvelteFlow>
 </div>
 
 <style>
-  .heading {
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-  }
-  .description {
-    color: var(--spectrum-global-color-gray-600);
-    margin-bottom: calc(20px - var(--spacing-l));
-  }
   .flow {
+    margin: -28px -40px -40px -40px;
     flex: 1 1 auto;
-    border-radius: 8px;
     overflow: hidden;
     position: relative;
     --background-color: var(--spectrum-global-color-gray-50);
@@ -203,6 +195,17 @@
     --edge-color: var(--spectrum-global-color-gray-500);
     --handle-color: var(--spectrum-global-color-gray-600);
     --selected-color: var(--spectrum-global-color-blue-400);
+  }
+  .title {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+  }
+  .footer {
+    position: absolute;
+    left: 20px;
+    bottom: 20px;
+    color: var(--spectrum-global-color-gray-600);
   }
 
   /* Customise svelte-flow theme */
