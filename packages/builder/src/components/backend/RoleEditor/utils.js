@@ -8,18 +8,35 @@ import {
 } from "./constants"
 import { getNodesBounds, Position } from "@xyflow/svelte"
 import { Roles } from "constants/backend"
+import { roles } from "stores/builder"
+import { get } from "svelte/store"
 
 // Gets the position of the basic role
 export const getBasicPosition = bounds => ({
-  x: bounds.x - NodeHSpacing - NodeWidth,
+  x: bounds.x - GridResolution * 4 - NodeWidth,
   y: bounds.y + bounds.height / 2 - NodeHeight / 2,
 })
 
 // Gets the position of the admin role
 export const getAdminPosition = bounds => ({
-  x: bounds.x + bounds.width + NodeHSpacing,
+  x: bounds.x + bounds.width + GridResolution * 4,
   y: bounds.y + bounds.height / 2 - NodeHeight / 2,
 })
+
+// Filters out invalid nodes and edges
+const preProcessLayout = ({ nodes, edges }) => {
+  const ignoredRoles = [Roles.PUBLIC, Roles.POWER]
+  const edglessRoles = [...ignoredRoles, Roles.BASIC, Roles.ADMIN]
+  return {
+    nodes: nodes.filter(node => !ignoredRoles.includes(node.id)),
+    edges: edges.filter(edge => {
+      return (
+        !edglessRoles.includes(edge.source) &&
+        !edglessRoles.includes(edge.target)
+      )
+    }),
+  }
+}
 
 // Updates positions of nodes and edges into a nice graph structure
 export const dagreLayout = ({ nodes, edges }) => {
@@ -46,33 +63,34 @@ export const dagreLayout = ({ nodes, edges }) => {
       y: Math.round((pos.y - NodeHeight / 2) / GridResolution) * GridResolution,
     }
   })
+  return { nodes, edges }
+}
 
+const postProcessLayout = ({ nodes, edges }) => {
   // Reposition basic and admin to bound the custom nodes
   const bounds = getNodesBounds(nodes.filter(node => node.data.custom))
   nodes.find(x => x.id === Roles.BASIC).position = getBasicPosition(bounds)
   nodes.find(x => x.id === Roles.ADMIN).position = getAdminPosition(bounds)
 
+  // Add custom edges for basic and admin brackets
+  edges.push({
+    id: "basic-bracket",
+    source: Roles.BASIC,
+    target: Roles.ADMIN,
+    type: "bracket",
+  })
+  edges.push({
+    id: "admin-bracket",
+    source: Roles.ADMIN,
+    target: Roles.BASIC,
+    type: "bracket",
+  })
   return { nodes, edges }
-}
-
-// Adds additional edges as needed to the flow structure to ensure compatibility with BB role logic
-const sanitiseLayout = ({ nodes, edges }) => {
-  const ignoredRoles = [Roles.PUBLIC, Roles.POWER]
-  const edglessRoles = [...ignoredRoles, Roles.BASIC, Roles.ADMIN]
-  return {
-    nodes: nodes.filter(node => !ignoredRoles.includes(node.id)),
-    edges: edges.filter(edge => {
-      return (
-        !edglessRoles.includes(edge.source) &&
-        !edglessRoles.includes(edge.target)
-      )
-    }),
-  }
 }
 
 // Automatically lays out the graph, sanitising and enriching the structure
 export const autoLayout = ({ nodes, edges }) => {
-  return dagreLayout(sanitiseLayout({ nodes, edges }))
+  return postProcessLayout(dagreLayout(preProcessLayout({ nodes, edges })))
 }
 
 // Converts a role doc into a node structure
@@ -99,27 +117,22 @@ export const roleToNode = role => {
 }
 
 // Converts a node structure back into a role doc
-export const nodeToRole = node => {
-  const role = $roles.find(x => x._id === node.id)
-  const inherits = $edges.filter(x => x.target === node.id).map(x => x.source)
-  // TODO save inherits array
-  return {
-    ...role,
-    inherits,
-    uiMetadata: {
-      displayName: node.data.displayName,
-      color: node.data.color,
-      description: node.data.description,
-    },
-  }
-}
+export const nodeToRole = ({ node, edges }) => ({
+  ...get(roles).find(role => role._id === node.id),
+  inherits: edges.filter(x => x.target === node.id).map(x => x.source),
+  uiMetadata: {
+    displayName: node.data.displayName,
+    color: node.data.color,
+    description: node.data.description,
+  },
+})
 
-// Builds a layout from an array of roles
+// Builds a default layout from an array of roles
 export const rolesToLayout = roles => {
   let nodes = []
   let edges = []
 
-  // Remove some builtins
+  // Add all nodes and edges
   for (let role of roles) {
     // Add node for this role
     nodes.push(roleToNode(role))
