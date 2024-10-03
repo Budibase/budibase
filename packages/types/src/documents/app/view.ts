@@ -71,8 +71,10 @@ export interface ViewV2 {
     order?: SortOrder
     type?: SortType
   }
-  schema?: Record<string, ViewFieldMetadata>
+  schema?: ViewV2Schema
 }
+
+export type ViewV2Schema = Record<string, ViewFieldMetadata>
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
 

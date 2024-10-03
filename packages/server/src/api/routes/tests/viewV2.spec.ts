@@ -22,9 +22,9 @@ import {
   RelationshipType,
   TableSchema,
   RenameColumn,
-  ViewFieldMetadata,
   FeatureFlag,
   BBReferenceFieldSubType,
+  ViewV2Schema,
   ViewCalculationFieldMetadata,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
@@ -1180,10 +1180,7 @@ describe.each([
           return table
         }
 
-        const createView = async (
-          tableId: string,
-          schema: Record<string, ViewFieldMetadata>
-        ) =>
+        const createView = async (tableId: string, schema: ViewV2Schema) =>
           await config.api.viewV2.create({
             name: generator.guid(),
             tableId,
