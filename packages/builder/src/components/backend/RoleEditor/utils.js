@@ -13,13 +13,13 @@ import { get } from "svelte/store"
 
 // Gets the position of the basic role
 export const getBasicPosition = bounds => ({
-  x: bounds.x - GridResolution * 4 - NodeWidth,
+  x: bounds.x - NodeHSpacing - NodeWidth,
   y: bounds.y + bounds.height / 2 - NodeHeight / 2,
 })
 
 // Gets the position of the admin role
 export const getAdminPosition = bounds => ({
-  x: bounds.x + bounds.width + GridResolution * 4,
+  x: bounds.x + bounds.width + NodeHSpacing,
   y: bounds.y + bounds.height / 2 - NodeHeight / 2,
 })
 
