@@ -4,6 +4,8 @@
   import JsBarcode from "jsbarcode"
   import { createQrSvgString, createQrSvgDataUrl } from "@svelte-put/qr"
   import "@spectrum-css/vars/dist/spectrum-global.css"
+  import { sdk } from "@budibase/shared-core"
+  import { orgStore } from "stores"
 
   export let value
   export let codeType
