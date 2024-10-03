@@ -200,12 +200,14 @@
     position: absolute;
     top: 20px;
     left: 20px;
+    z-index: 10;
   }
   .footer {
     position: absolute;
     left: 20px;
     bottom: 20px;
     color: var(--spectrum-global-color-gray-600);
+    z-index: 10;
   }
 
   /* Customise svelte-flow theme */
