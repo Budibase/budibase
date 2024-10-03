@@ -70,6 +70,7 @@
   class="node"
   class:selected
   class:custom={data.custom}
+  class:selectable={isConnectable}
   style={`--color:${data.color}; --width:${NodeWidth}px; --height:${NodeHeight}px;`}
   bind:this={anchor}
 >
@@ -146,13 +147,13 @@
     display: flex;
     flex-direction: row;
     box-sizing: border-box;
-    cursor: pointer;
     transition: background 130ms ease-out;
   }
-  .node:hover {
+  .node.selectable:hover {
+    cursor: pointer;
     background: var(--spectrum-global-color-gray-200);
   }
-  .node.selected {
+  .node.selectable.selected {
     background: var(--spectrum-global-color-blue-100);
     cursor: grab;
   }

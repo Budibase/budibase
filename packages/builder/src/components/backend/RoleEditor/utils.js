@@ -127,6 +127,7 @@ export const roleToNode = role => {
     deletable: custom,
     draggable: custom,
     connectable: custom,
+    selectable: custom,
   }
 }
 
