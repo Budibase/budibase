@@ -44,7 +44,7 @@ describe("jsRunner (using isolated-vm)", () => {
     const output = await processJS(
       `return this.constructor.constructor("return process.env")()`
     )
-    expect(output).toBe("Error while executing JS")
+    expect(output).toBe("ReferenceError: process is not defined")
   })
 
   describe("helpers", () => {
