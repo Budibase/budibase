@@ -214,8 +214,10 @@ class LinkController {
             let links = await getLinkDocuments({
               tableId: field.tableId,
               rowId: linkId,
-              fieldName: linkedSchema.name,
-            })
+            }).filter(
+              link =>
+                link.id !== row._id && link.fieldName === linkedSchema.name
+            )
 
             // check all the related rows exist
             const foundRecords = await this._db.getMultiple(
