@@ -317,7 +317,7 @@ export async function enrichSchema(
     // if nothing specified in view, then it is not visible
     const ui = viewSchema[key] || { visible: false }
     schema[key] = {
-      ...(tableSchema[key] || {}),
+      ...tableSchema[key],
       ...ui,
       order: anyViewOrder ? ui?.order ?? undefined : tableSchema[key]?.order,
       columns: undefined,
