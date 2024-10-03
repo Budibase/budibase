@@ -211,19 +211,21 @@ class LinkController {
             linkedSchema?.type === FieldType.LINK &&
             linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY
           ) {
-            let links = (
-              await getLinkDocuments({
-                tableId: field.tableId,
-                rowId: linkId,
-              })
-            ).filter(
-              link =>
-                link.id !== row._id && link.fieldName === linkedSchema.name
+            let links = await getLinkDocuments({
+              tableId: field.tableId,
+              rowId: linkId,
+              fieldName: linkedSchema.name,
+            })
+
+            // check all the related rows exist
+            const foundRecords = await this._db.getMultiple(
+              links.map(l => l.id),
+              { allowMissing: true, excludeDocs: true }
             )
 
             // The 1 side of 1:N is already related to something else
             // You must remove the existing relationship
-            if (links.length > 0) {
+            if (foundRecords.length > 0) {
               throw new Error(
                 `1:N Relationship Error: Record already linked to another.`
               )

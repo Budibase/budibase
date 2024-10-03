@@ -213,17 +213,21 @@ export class DatabaseImpl implements Database {
 
   async getMultiple<T extends Document>(
     ids: string[],
-    opts?: { allowMissing?: boolean }
+    opts?: { allowMissing?: boolean; excludeDocs?: boolean }
   ): Promise<T[]> {
     // get unique
     ids = [...new Set(ids)]
+    const includeDocs = !opts?.excludeDocs
     const response = await this.allDocs<T>({
       keys: ids,
-      include_docs: true,
+      include_docs: includeDocs,
     })
     const rowUnavailable = (row: RowResponse<T>) => {
       // row is deleted - key lookup can return this
-      if (row.doc == null || ("deleted" in row.value && row.value.deleted)) {
+      if (
+        (includeDocs && row.doc == null) ||
+        (row.value && "deleted" in row.value && row.value.deleted)
+      ) {
         return true
       }
       return row.error === "not_found"
@@ -237,7 +241,7 @@ export class DatabaseImpl implements Database {
       const missingIds = missing.map(row => row.key).join(", ")
       throw new Error(`Unable to get documents: ${missingIds}`)
     }
-    return rows.map(row => row.doc!)
+    return rows.map(row => (includeDocs ? row.doc! : row.value))
   }
 
   async remove(idOrDoc: string | Document, rev?: string) {
