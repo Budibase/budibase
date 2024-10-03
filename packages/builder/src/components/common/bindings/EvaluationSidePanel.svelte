@@ -8,22 +8,29 @@
   export let evaluating = false
   export let expression = null
 
-  $: error = expressionResult === "Error while executing JS"
+  $: error = expressionResult && expressionResult.error != null
   $: empty = expression == null || expression?.trim() === ""
   $: success = !error && !empty
   $: highlightedResult = highlight(expressionResult)
 
-  const highlight = json => {
-    if (json == null) {
+  const highlight = result => {
+    if (result == null) {
       return ""
     }
-    // Attempt to parse and then stringify, in case this is valid JSON
-    try {
-      json = JSON.stringify(JSON.parse(json), null, 2)
-    } catch (err) {
-      // Ignore
+
+    let str
+    if (result.error) {
+      str = result.error.toString()
+    } else {
+      // Attempt to parse and then stringify, in case this is valid result
+      try {
+        str = JSON.stringify(JSON.parse(result.result), null, 2)
+      } catch (err) {
+        // Ignore
+      }
     }
-    return formatHighlight(json, {
+
+    return formatHighlight(str, {
       keyColor: "#e06c75",
       numberColor: "#e5c07b",
       stringColor: "#98c379",
@@ -34,7 +41,7 @@
   }
 
   const copy = () => {
-    let clipboardVal = expressionResult
+    let clipboardVal = expressionResult.result
     if (typeof clipboardVal === "object") {
       clipboardVal = JSON.stringify(clipboardVal, null, 2)
     }

@@ -463,6 +463,22 @@ export function defaultJSSetup() {
         setTimeout: undefined,
       }
       createContext(context)
+
+      js = `
+        result = {
+          result: null,
+          error: null,
+        };
+
+        try {
+          result.result = ${js};
+        } catch (e) {
+          result.error = e.toString();
+        }
+
+        result;
+      `
+
       return runInNewContext(js, context, { timeout: 1000 })
     })
   } else {
