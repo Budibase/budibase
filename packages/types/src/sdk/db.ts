@@ -133,7 +133,7 @@ export interface Database {
   exists(docId: string): Promise<boolean>
   getMultiple<T extends Document>(
     ids: string[],
-    opts?: { allowMissing?: boolean }
+    opts?: { allowMissing?: boolean; excludeDocs?: boolean }
   ): Promise<T[]>
   remove(idOrDoc: Document): Promise<Nano.DocumentDestroyResponse>
   remove(idOrDoc: string, rev?: string): Promise<Nano.DocumentDestroyResponse>
