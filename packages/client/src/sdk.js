@@ -18,6 +18,7 @@ import {
   appStore,
   stateStore,
   createContextStore,
+  orgStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -60,6 +61,7 @@ export default {
   confirmationStore,
   roleStore,
   stateStore,
+  orgStore,
 
   // Utils
   styleable,
