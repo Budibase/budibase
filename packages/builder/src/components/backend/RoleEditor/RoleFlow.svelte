@@ -10,6 +10,7 @@
   } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import RoleNode from "./RoleNode.svelte"
+  import EmptyStateNode from "./EmptyStateNode.svelte"
   import RoleEdge from "./RoleEdge.svelte"
   import BracketEdge from "./BracketEdge.svelte"
   import {
@@ -18,6 +19,7 @@
     getBasicPosition,
     rolesToLayout,
     nodeToRole,
+    getBounds,
   } from "./utils"
   import { setContext, tick } from "svelte"
   import Controls from "./Controls.svelte"
@@ -38,9 +40,7 @@
   })
 
   // Derive the bounds of all custom role nodes
-  const bounds = derivedMemo(nodes, $nodes => {
-    return getNodesBounds($nodes.filter(node => node.data.custom))
-  })
+  const bounds = derivedMemo(nodes, getBounds)
 
   $: handleExternalRoleChanges($roles)
   $: updateBuiltins($bounds)
@@ -159,7 +159,7 @@
     {nodes}
     {edges}
     snapGrid={[GridResolution, GridResolution]}
-    nodeTypes={{ role: RoleNode }}
+    nodeTypes={{ role: RoleNode, empty: EmptyStateNode }}
     edgeTypes={{ role: RoleEdge, bracket: BracketEdge }}
     proOptions={{ hideAttribution: true }}
     fitViewOptions={{ maxZoom: MaxAutoZoom }}

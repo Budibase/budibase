@@ -11,6 +11,22 @@ import { Roles } from "constants/backend"
 import { roles } from "stores/builder"
 import { get } from "svelte/store"
 
+// Calculates the bounds of all custom nodes
+export const getBounds = nodes => {
+  const customNodes = nodes.filter(node => node.data.custom)
+
+  // Empty state bounds which line up with bounds after adding first node
+  if (!customNodes.length) {
+    return {
+      x: 0,
+      y: 6.5 * GridResolution,
+      width: 12 * GridResolution,
+      height: 10 * GridResolution,
+    }
+  }
+  return getNodesBounds(customNodes)
+}
+
 // Gets the position of the basic role
 export const getBasicPosition = bounds => ({
   x: bounds.x - NodeHSpacing - NodeWidth,
@@ -31,6 +47,10 @@ const preProcessLayout = ({ nodes, edges }) => {
     nodes: nodes.filter(node => {
       // Filter out ignored roles
       if (ignoredRoles.includes(node.id)) {
+        return false
+      }
+      // Filter out empty state
+      if (node.id === "empty") {
         return false
       }
       return true
@@ -82,7 +102,7 @@ export const dagreLayout = ({ nodes, edges }) => {
 
 const postProcessLayout = ({ nodes, edges }) => {
   // Reposition basic and admin to bound the custom nodes
-  const bounds = getNodesBounds(nodes.filter(node => node.data.custom))
+  const bounds = getBounds(nodes)
   nodes.find(x => x.id === Roles.BASIC).position = getBasicPosition(bounds)
   nodes.find(x => x.id === Roles.ADMIN).position = getAdminPosition(bounds)
 
@@ -99,6 +119,28 @@ const postProcessLayout = ({ nodes, edges }) => {
     target: Roles.BASIC,
     type: "bracket",
   })
+
+  // Add empty state node if required
+  if (!nodes.filter(node => node.data.custom).length) {
+    nodes.push({
+      id: "empty",
+      type: "empty",
+      position: {
+        x: bounds.x + bounds.width / 2 - NodeWidth / 2,
+        y: bounds.y + bounds.height / 2 - NodeHeight / 2,
+      },
+      data: {},
+      measured: {
+        width: NodeWidth,
+        height: NodeHeight,
+      },
+      deletable: false,
+      draggable: false,
+      connectable: false,
+      selectable: false,
+    })
+  }
+
   return { nodes, edges }
 }
 
