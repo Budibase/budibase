@@ -3,7 +3,7 @@ import cloneDeep from "lodash/fp/cloneDeep"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
-import { JsErrorTimeout, UserScriptError } from "../errors"
+import { JsTimeoutError, UserScriptError } from "../errors"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
@@ -95,8 +95,11 @@ export function processJS(handlebars: string, context: any) {
   } catch (error: any) {
     onErrorLog && onErrorLog(error)
 
-    if (error.code === JsErrorTimeout.code) {
-      return "Timed out while executing JS"
+    if (error.code === "JS_REQUEST_TIMEOUT_ERROR") {
+      return error.message
+    }
+    if (error.code === JsTimeoutError.code) {
+      return JsTimeoutError.message
     }
     if (error.code === UserScriptError.code) {
       throw error
