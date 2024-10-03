@@ -13,18 +13,18 @@ import { get } from "svelte/store"
 
 // Calculates the bounds of all custom nodes
 export const getBounds = nodes => {
-  const customNodes = nodes.filter(node => node.data.custom)
+  const interactiveNodes = nodes.filter(node => node.data.interactive)
 
   // Empty state bounds which line up with bounds after adding first node
-  if (!customNodes.length) {
+  if (!interactiveNodes.length) {
     return {
       x: 0,
-      y: 6.5 * GridResolution,
+      y: -3.5 * GridResolution,
       width: 12 * GridResolution,
       height: 10 * GridResolution,
     }
   }
-  return getNodesBounds(customNodes)
+  return getNodesBounds(interactiveNodes)
 }
 
 // Gets the position of the basic role
@@ -41,30 +41,30 @@ export const getAdminPosition = bounds => ({
 
 // Filters out invalid nodes and edges
 const preProcessLayout = ({ nodes, edges }) => {
-  const ignoredRoles = [Roles.PUBLIC, Roles.POWER]
-  const edglessRoles = [...ignoredRoles, Roles.BASIC, Roles.ADMIN]
+  const ignoredIds = [Roles.PUBLIC, Roles.BASIC, Roles.ADMIN, "empty"]
+  const targetlessIds = [Roles.POWER]
   return {
     nodes: nodes.filter(node => {
-      // Filter out ignored roles
-      if (ignoredRoles.includes(node.id)) {
-        return false
-      }
-      // Filter out empty state
-      if (node.id === "empty") {
+      // Filter out ignored IDs
+      if (ignoredIds.includes(node.id)) {
         return false
       }
       return true
     }),
     edges: edges.filter(edge => {
-      // Filter out edges from ignored roles
+      // Filter out edges from ignored IDs
       if (
-        edglessRoles.includes(edge.source) ||
-        edglessRoles.includes(edge.target)
+        ignoredIds.includes(edge.source) ||
+        ignoredIds.includes(edge.target)
       ) {
         return false
       }
       // Filter out edges which have the same source and target
       if (edge.source === edge.target) {
+        return false
+      }
+      // Filter out edges which target targetless roles
+      if (targetlessIds.includes(edge.target)) {
         return false
       }
       return true
@@ -101,10 +101,17 @@ export const dagreLayout = ({ nodes, edges }) => {
 }
 
 const postProcessLayout = ({ nodes, edges }) => {
-  // Reposition basic and admin to bound the custom nodes
+  // Add basic and admin nodes at each edge
   const bounds = getBounds(nodes)
-  nodes.find(x => x.id === Roles.BASIC).position = getBasicPosition(bounds)
-  nodes.find(x => x.id === Roles.ADMIN).position = getAdminPosition(bounds)
+  const $roles = get(roles)
+  nodes.push({
+    ...roleToNode($roles.find(role => role._id === Roles.BASIC)),
+    position: getBasicPosition(bounds),
+  })
+  nodes.push({
+    ...roleToNode($roles.find(role => role._id === Roles.ADMIN)),
+    position: getAdminPosition(bounds),
+  })
 
   // Add custom edges for basic and admin brackets
   edges.push({
@@ -121,7 +128,7 @@ const postProcessLayout = ({ nodes, edges }) => {
   })
 
   // Add empty state node if required
-  if (!nodes.filter(node => node.data.custom).length) {
+  if (!nodes.some(node => node.data.interactive)) {
     nodes.push({
       id: "empty",
       type: "empty",
@@ -152,6 +159,7 @@ export const autoLayout = ({ nodes, edges }) => {
 // Converts a role doc into a node structure
 export const roleToNode = role => {
   const custom = !role._id.match(/[A-Z]+/)
+  const interactive = custom || role._id === Roles.POWER
   return {
     id: role._id,
     sourcePosition: Position.Right,
@@ -161,15 +169,16 @@ export const roleToNode = role => {
     data: {
       ...role.uiMetadata,
       custom,
+      interactive,
     },
     measured: {
       width: NodeWidth,
       height: NodeHeight,
     },
     deletable: custom,
-    draggable: custom,
-    connectable: custom,
-    selectable: custom,
+    draggable: interactive,
+    connectable: interactive,
+    selectable: interactive,
   }
 }
 
