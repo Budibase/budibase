@@ -695,6 +695,69 @@ describe.each([
         })
       })
 
+      describe("options column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                status: {
+                  name: "status",
+                  type: FieldType.OPTIONS,
+                  default: "requested",
+                  constraints: {
+                    inclusion: ["requested", "approved"],
+                  },
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.status).toEqual("requested")
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            status: "approved",
+          })
+          expect(row.status).toEqual("approved")
+        })
+      })
+
+      describe("array column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                food: {
+                  name: "food",
+                  type: FieldType.ARRAY,
+                  default: ["apple", "orange"],
+                  constraints: {
+                    type: JsonFieldSubType.ARRAY,
+                    inclusion: ["apple", "orange", "banana"],
+                  },
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.food).toEqual(["apple", "orange"])
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            food: ["orange"],
+          })
+          expect(row.food).toEqual(["orange"])
+        })
+      })
+
       describe("bindings", () => {
         describe("string column", () => {
           beforeAll(async () => {

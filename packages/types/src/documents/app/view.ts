@@ -1,7 +1,7 @@
-import { SearchFilter, SearchFilterGroup, SortOrder, SortType } from "../../api"
+import { LegacyFilter, SearchFilterGroup, SortOrder, SortType } from "../../api"
 import { UIFieldMetadata } from "./table"
 import { Document } from "../document"
-import { DBView } from "../../sdk"
+import { DBView, SearchFilters } from "../../sdk"
 
 export type ViewTemplateOpts = {
   field: string
@@ -65,14 +65,18 @@ export interface ViewV2 {
   name: string
   primaryDisplay?: string
   tableId: string
-  query?: SearchFilter[] | SearchFilterGroup
+  query?: LegacyFilter[] | SearchFilters
+  // duplicate to store UI information about filters
+  queryUI?: SearchFilterGroup
   sort?: {
     field: string
     order?: SortOrder
     type?: SortType
   }
-  schema?: Record<string, ViewFieldMetadata>
+  schema?: ViewV2Schema
 }
+
+export type ViewV2Schema = Record<string, ViewFieldMetadata>
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
 

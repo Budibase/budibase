@@ -161,6 +161,7 @@ export interface OptionsFieldMetadata extends BaseFieldSchema {
   constraints: FieldConstraints & {
     inclusion: string[]
   }
+  default?: string
 }
 
 export interface ArrayFieldMetadata extends BaseFieldSchema {
@@ -169,6 +170,7 @@ export interface ArrayFieldMetadata extends BaseFieldSchema {
     type: JsonFieldSubType.ARRAY
     inclusion: string[]
   }
+  default?: string[]
 }
 
 interface BaseFieldSchema extends UIFieldMetadata {
