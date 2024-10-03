@@ -154,7 +154,7 @@ describe.each([
       })
 
       it("can persist views with all fields", async () => {
-        const newView: Required<CreateViewRequest> = {
+        const newView: Required<Omit<CreateViewRequest, "queryUI">> = {
           name: generator.name(),
           tableId: table._id!,
           primaryDisplay: "id",
@@ -584,7 +584,7 @@ describe.each([
       it("can update all fields", async () => {
         const tableId = table._id!
 
-        const updatedData: Required<UpdateViewRequest> = {
+        const updatedData: Required<Omit<UpdateViewRequest, "queryUI">> = {
           version: view.version,
           id: view.id,
           tableId,
