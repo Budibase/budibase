@@ -30,7 +30,7 @@
 <style>
   .control {
     position: absolute;
-    z-index: 999;
+    z-index: 10;
     display: flex;
     flex-direction: row;
     align-items: center;
