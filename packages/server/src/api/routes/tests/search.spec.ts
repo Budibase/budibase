@@ -145,7 +145,7 @@ describe.each([
       name: generator.guid(),
       schema,
     })
-    return view
+    return view.id
   }
 
   async function createRows(arr: Record<string, any>[]) {
@@ -162,7 +162,7 @@ describe.each([
       "view",
       async (schema: TableSchema) => {
         const tableId = await createTable(schema)
-        const view = await createView(
+        const viewId = await createView(
           tableId,
           Object.keys(schema).reduce<ViewV2Schema>((viewSchema, fieldName) => {
             const field = schema[fieldName]
@@ -173,7 +173,7 @@ describe.each([
             return viewSchema
           }, {})
         )
-        return view.id
+        return viewId
       },
     ],
   ])("from %s", (tableOrView, createTableOrView) => {
