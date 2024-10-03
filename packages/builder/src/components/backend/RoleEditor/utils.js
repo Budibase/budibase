@@ -28,12 +28,26 @@ const preProcessLayout = ({ nodes, edges }) => {
   const ignoredRoles = [Roles.PUBLIC, Roles.POWER]
   const edglessRoles = [...ignoredRoles, Roles.BASIC, Roles.ADMIN]
   return {
-    nodes: nodes.filter(node => !ignoredRoles.includes(node.id)),
+    nodes: nodes.filter(node => {
+      // Filter out ignored roles
+      if (ignoredRoles.includes(node.id)) {
+        return false
+      }
+      return true
+    }),
     edges: edges.filter(edge => {
-      return (
-        !edglessRoles.includes(edge.source) &&
-        !edglessRoles.includes(edge.target)
-      )
+      // Filter out edges from ignored roles
+      if (
+        edglessRoles.includes(edge.source) ||
+        edglessRoles.includes(edge.target)
+      ) {
+        return false
+      }
+      // Filter out edges which have the same source and target
+      if (edge.source === edge.target) {
+        return false
+      }
+      return true
     }),
   }
 }
