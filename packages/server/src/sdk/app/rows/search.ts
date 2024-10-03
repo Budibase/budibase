@@ -93,6 +93,8 @@ export async function search(
         // Lucene does not accept conditional filters, so we need to keep the old logic
         const query: SearchFilters = viewQuery
 
+        delete options.query.onEmptyFilter
+
         // Extract existing fields
         const existingFields =
           view.query
@@ -114,6 +116,9 @@ export async function search(
           $and: {
             conditions: [viewQuery, options.query],
           },
+        }
+        if (viewQuery.onEmptyFilter) {
+          options.query.onEmptyFilter = viewQuery.onEmptyFilter
         }
       }
     }
