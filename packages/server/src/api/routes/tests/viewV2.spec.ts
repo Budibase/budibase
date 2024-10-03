@@ -22,9 +22,10 @@ import {
   RelationshipType,
   TableSchema,
   RenameColumn,
-  ViewFieldMetadata,
   FeatureFlag,
   BBReferenceFieldSubType,
+  ViewV2Schema,
+  ViewCalculationFieldMetadata,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -539,6 +540,33 @@ describe.each([
         await config.api.viewV2.create(newView, {
           status: 201,
         })
+      })
+
+      it("can create a view with calculation fields", async () => {
+        let view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            sum: {
+              visible: true,
+              calculationType: CalculationType.SUM,
+              field: "Price",
+            },
+          },
+        })
+
+        expect(Object.keys(view.schema!)).toHaveLength(1)
+
+        let sum = view.schema!.sum as ViewCalculationFieldMetadata
+        expect(sum).toBeDefined()
+        expect(sum.calculationType).toEqual(CalculationType.SUM)
+        expect(sum.field).toEqual("Price")
+
+        view = await config.api.viewV2.get(view.id)
+        sum = view.schema!.sum as ViewCalculationFieldMetadata
+        expect(sum).toBeDefined()
+        expect(sum.calculationType).toEqual(CalculationType.SUM)
+        expect(sum.field).toEqual("Price")
       })
     })
 
@@ -1152,10 +1180,7 @@ describe.each([
           return table
         }
 
-        const createView = async (
-          tableId: string,
-          schema: Record<string, ViewFieldMetadata>
-        ) =>
+        const createView = async (tableId: string, schema: ViewV2Schema) =>
           await config.api.viewV2.create({
             name: generator.guid(),
             tableId,
@@ -2545,6 +2570,51 @@ describe.each([
               expect(actual).toEqual(expected)
             }
           })
+        })
+
+      !isLucene &&
+        it("should not need required fields to be present", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                  constraints: {
+                    presence: true,
+                  },
+                },
+                age: {
+                  name: "age",
+                  type: FieldType.NUMBER,
+                },
+              },
+            })
+          )
+
+          await Promise.all([
+            config.api.row.save(table._id!, { name: "Steve", age: 30 }),
+            config.api.row.save(table._id!, { name: "Jane", age: 31 }),
+          ])
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              sum: {
+                visible: true,
+                calculationType: CalculationType.SUM,
+                field: "age",
+              },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id, {
+            query: {},
+          })
+
+          expect(response.rows).toHaveLength(1)
+          expect(response.rows[0].sum).toEqual(61)
         })
     })
 
