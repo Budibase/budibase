@@ -22,7 +22,7 @@ class UserScriptError extends Error {
   code = "USER_SCRIPT_ERROR"
   constructor(readonly userScriptError: Error) {
     super(
-      `error while running user-supplied JavaScript: ${userScriptError.message}`,
+      `error while running user-supplied JavaScript: ${userScriptError.toString()}`,
       { cause: userScriptError }
     )
   }
