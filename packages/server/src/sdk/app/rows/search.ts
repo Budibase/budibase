@@ -92,7 +92,7 @@ export async function search(
       // Enrich saved query with ephemeral query params.
       // We prevent searching on any fields that are saved as part of the query, as
       // that could let users find rows they should not be allowed to access.
-      let viewQuery = dataFilters.buildQueryLegacy(view.query || [])
+      let viewQuery = dataFilters.buildQueryLegacy(view.query) || {}
       delete viewQuery?.onEmptyFilter
 
       const sqsEnabled = await features.flags.isEnabled("SQS")
