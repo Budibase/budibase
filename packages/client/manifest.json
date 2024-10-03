@@ -4425,7 +4425,7 @@
     ]
   },
   "codegenerator": {
-    "name": "Barcode/QR Scanner",
+    "name": "Barcode/QR Generator",
     "icon": "Vignette",
     "settings": [
       {
