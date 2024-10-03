@@ -22,10 +22,10 @@ import {
   RelationshipType,
   TableSchema,
   RenameColumn,
-  ViewFieldMetadata,
   FeatureFlag,
   BBReferenceFieldSubType,
   NumericCalculationFieldMetadata,
+  ViewV2Schema,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -155,7 +155,7 @@ describe.each([
       })
 
       it("can persist views with all fields", async () => {
-        const newView: Required<CreateViewRequest> = {
+        const newView: Required<Omit<CreateViewRequest, "queryUI">> = {
           name: generator.name(),
           tableId: table._id!,
           primaryDisplay: "id",
@@ -612,7 +612,7 @@ describe.each([
       it("can update all fields", async () => {
         const tableId = table._id!
 
-        const updatedData: Required<UpdateViewRequest> = {
+        const updatedData: Required<Omit<UpdateViewRequest, "queryUI">> = {
           version: view.version,
           id: view.id,
           tableId,
@@ -1359,10 +1359,7 @@ describe.each([
           return table
         }
 
-        const createView = async (
-          tableId: string,
-          schema: Record<string, ViewFieldMetadata>
-        ) =>
+        const createView = async (tableId: string, schema: ViewV2Schema) =>
           await config.api.viewV2.create({
             name: generator.guid(),
             tableId,

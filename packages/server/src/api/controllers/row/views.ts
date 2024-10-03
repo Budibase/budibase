@@ -3,6 +3,8 @@ import {
   ViewV2,
   SearchRowResponse,
   SearchViewRowRequest,
+  RequiredKeys,
+  RowSearchParams,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { context } from "@budibase/backend-core"
@@ -20,30 +22,34 @@ export async function searchView(
     ctx.throw(400, `This method only supports viewsV2`)
   }
 
+  const viewFields = Object.entries(view.schema || {})
+    .filter(([_, value]) => value.visible)
+    .map(([key]) => key)
   const { body } = ctx.request
 
   await context.ensureSnippetContext(true)
 
-  const result = await sdk.rows.search(
-    {
-      viewId: view.id,
-      tableId: view.tableId,
-      query: body.query,
-      ...getSortOptions(body, view),
-      limit: body.limit,
-      bookmark: body.bookmark,
-      paginate: body.paginate,
-      countRows: body.countRows,
-    },
-    {
-      user: sdk.users.getUserContextBindings(ctx.user),
-    }
-  )
+  const searchOptions: RequiredKeys<SearchViewRowRequest> &
+    RequiredKeys<
+      Pick<RowSearchParams, "tableId" | "viewId" | "query" | "fields">
+    > = {
+    tableId: view.tableId,
+    viewId: view.id,
+    query: body.query,
+    fields: viewFields,
+    ...getSortOptions(body, view),
+    limit: body.limit,
+    bookmark: body.bookmark,
+    paginate: body.paginate,
+    countRows: body.countRows,
+  }
 
+  const result = await sdk.rows.search(searchOptions, {
+    user: sdk.users.getUserContextBindings(ctx.user),
+  })
   result.rows.forEach(r => (r._viewId = view.id))
   ctx.body = result
 }
-
 function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
   if (request.sort) {
     return {
