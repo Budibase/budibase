@@ -230,7 +230,7 @@ export function processStringSync(
     } else {
       return process(string)
     }
-  } catch (err) {
+  } catch (err: any) {
     if (err.code === "USER_SCRIPT_ERROR") {
       throw err
     }
