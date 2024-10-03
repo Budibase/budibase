@@ -11,11 +11,13 @@
   import "@xyflow/svelte/dist/style.css"
   import RoleNode from "./RoleNode.svelte"
   import RoleEdge from "./RoleEdge.svelte"
+  import BracketEdge from "./BracketEdge.svelte"
   import {
     autoLayout,
     getAdminPosition,
     getBasicPosition,
     rolesToLayout,
+    nodeToRole,
   } from "./utils"
   import { setContext, tick } from "svelte"
   import Controls from "./Controls.svelte"
@@ -81,7 +83,7 @@
       name: roleId,
       uiMetadata: {
         displayName: getSequentialName($roles, "New role ", {
-          getName: x => x.uiMetadata.displayName,
+          getName: role => role.uiMetadata.displayName,
         }),
         color: "var(--spectrum-global-color-gray-700)",
         description: "Custom role",
@@ -108,7 +110,7 @@
     if (metadata) {
       flow.updateNodeData(roleId, metadata)
     }
-    await roles.save(nodeToRole(node))
+    await roles.save(nodeToRole({ node, edges: $edges }))
   }
 
   const deleteRole = async roleId => {
@@ -119,11 +121,11 @@
   }
 
   const deleteEdge = async edgeId => {
-    const edge = $edges.find(x => x.id === edgeId)
+    const edge = $edges.find(edge => edge.id === edgeId)
     if (!edge) {
       return
     }
-    edges.set($edges.filter(x => x.id !== edgeId))
+    edges.set($edges.filter(edge => edge.id !== edgeId))
     await updateRole(edge.target)
   }
 
@@ -158,7 +160,7 @@
     {edges}
     snapGrid={[GridResolution, GridResolution]}
     nodeTypes={{ role: RoleNode }}
-    edgeTypes={{ role: RoleEdge }}
+    edgeTypes={{ role: RoleEdge, bracket: BracketEdge }}
     proOptions={{ hideAttribution: true }}
     fitViewOptions={{ maxZoom: MaxAutoZoom }}
     defaultEdgeOptions={{ type: "role", animated: true, selectable: false }}
