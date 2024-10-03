@@ -43,6 +43,8 @@ import { cloneDeep } from "lodash"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 
+export const COUNT_FIELD_NAME = "__bb_total"
+
 function getBaseLimit() {
   const envLimit = environment.SQL_MAX_ROWS
     ? parseInt(environment.SQL_MAX_ROWS)
@@ -846,7 +848,7 @@ class InternalBuilder {
       throw new Error("SQL counting requires primary key to be supplied")
     }
     return query.countDistinct(
-      `${this.getTableName()}.${this.table.primary[0]} as __bb_total`
+      `${this.getTableName()}.${this.table.primary[0]} as ${COUNT_FIELD_NAME}`
     )
   }
 
