@@ -211,10 +211,12 @@ class LinkController {
             linkedSchema?.type === FieldType.LINK &&
             linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY
           ) {
-            let links = await getLinkDocuments({
-              tableId: field.tableId,
-              rowId: linkId,
-            }).filter(
+            let links = (
+              await getLinkDocuments({
+                tableId: field.tableId,
+                rowId: linkId,
+              })
+            ).filter(
               link =>
                 link.id !== row._id && link.fieldName === linkedSchema.name
             )
