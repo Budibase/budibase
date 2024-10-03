@@ -12,6 +12,7 @@
   import { getContext } from "svelte"
   import { roles } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { Roles } from "constants/backend"
 
   export let data
   export let id
@@ -68,7 +69,9 @@
 
 <div
   class="node"
+  class:dragging={$dragging}
   class:selected
+  class:interactive={data.interactive}
   class:custom={data.custom}
   class:selectable={isConnectable}
   style={`--color:${data.color}; --width:${NodeWidth}px; --height:${NodeHeight}px;`}
@@ -96,8 +99,7 @@
   <Handle
     type="target"
     position={Position.Left}
-    class={targetClasses}
-    isConnectable={isConnectable && $dragging}
+    isConnectable={isConnectable && $dragging && data.custom}
   />
   <Handle type="source" position={Position.Right} {isConnectable} />
 </div>
@@ -222,11 +224,9 @@
   .node :global(.svelte-flow__handle.target) {
     background: var(--background-color);
   }
-  .node :global(.svelte-flow__handle.hidden) {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .node:not(.custom) :global(.svelte-flow__handle) {
+  .node:not(.dragging) :global(.svelte-flow__handle.target),
+  .node:not(.interactive) :global(.svelte-flow__handle),
+  .node:not(.custom) :global(.svelte-flow__handle.target) {
     visibility: hidden;
     pointer-events: none;
   }
