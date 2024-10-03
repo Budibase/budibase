@@ -1,10 +1,10 @@
 import {
   EmptyFilterOption,
+  LegacyFilter,
   LogicalOperator,
   Row,
   RowSearchParams,
   SearchFilterKey,
-  SearchFilters,
   SearchResponse,
   SortOrder,
   Table,
@@ -61,7 +61,6 @@ export async function search(
     if (options.viewId) {
       source = await sdk.views.get(options.viewId)
       table = await sdk.views.getTable(source)
-      options = searchInputMapping(table, options)
     } else if (options.tableId) {
       source = await sdk.tables.getTable(options.tableId)
       table = source
@@ -74,7 +73,7 @@ export async function search(
     if (options.query) {
       const visibleFields = (
         options.fields || Object.keys(table.schema)
-      ).filter(field => table.schema[field].visible !== false)
+      ).filter(field => table.schema[field]?.visible !== false)
 
       const queryableFields = await getQueryableFields(table, visibleFields)
       options.query = removeInvalidFilters(options.query, queryableFields)
@@ -82,38 +81,58 @@ export async function search(
       options.query = {}
     }
 
+    // need to make sure filters in correct shape before checking for view
+    options = searchInputMapping(table, options)
+
     if (options.viewId) {
-      const view = await sdk.views.get(options.viewId)
+      // Delete extraneous search params that cannot be overridden
+      delete options.query.onEmptyFilter
+
+      const view = source as ViewV2
       // Enrich saved query with ephemeral query params.
       // We prevent searching on any fields that are saved as part of the query, as
       // that could let users find rows they should not be allowed to access.
-      let viewQuery = dataFilters.buildQuery(view.query || [])
+      let viewQuery = dataFilters.buildQueryLegacy(view.query) || {}
+      delete viewQuery?.onEmptyFilter
 
-      if (!isExternalTable && !(await features.flags.isEnabled("SQS"))) {
-        // Lucene does not accept conditional filters, so we need to keep the old logic
-        const query: SearchFilters = viewQuery
+      const sqsEnabled = await features.flags.isEnabled("SQS")
+      const supportsLogicalOperators =
+        isExternalTableID(view.tableId) || sqsEnabled
+      if (!supportsLogicalOperators) {
+        // In the unlikely event that a Grouped Filter is in a non-SQS environment
+        // It needs to be ignored entirely
+        let queryFilters: LegacyFilter[] = Array.isArray(view.query)
+          ? view.query
+          : []
+
+        delete options.query.onEmptyFilter
 
         // Extract existing fields
         const existingFields =
-          view.query
+          queryFilters
             ?.filter(filter => filter.field)
             .map(filter => db.removeKeyNumbering(filter.field)) || []
 
+        viewQuery ??= {}
         // Carry over filters for unused fields
-        Object.keys(options.query || {}).forEach(key => {
+        Object.keys(options.query).forEach(key => {
           const operator = key as Exclude<SearchFilterKey, LogicalOperator>
           Object.keys(options.query[operator] || {}).forEach(field => {
             if (!existingFields.includes(db.removeKeyNumbering(field))) {
-              query[operator]![field] = options.query[operator]![field]
+              viewQuery![operator]![field] = options.query[operator]![field]
             }
           })
         })
-        options.query = query
+        options.query = viewQuery
       } else {
+        const conditions = viewQuery ? [viewQuery] : []
         options.query = {
           $and: {
-            conditions: [viewQuery, options.query],
+            conditions: [...conditions, options.query],
           },
+        }
+        if (viewQuery.onEmptyFilter) {
+          options.query.onEmptyFilter = viewQuery.onEmptyFilter
         }
       }
     }
@@ -142,8 +161,6 @@ export async function search(
     if (options.sortOrder) {
       options.sortOrder = options.sortOrder.toLowerCase() as SortOrder
     }
-
-    options = searchInputMapping(table, options)
 
     let result: SearchResponse<Row>
     if (isExternalTable) {
