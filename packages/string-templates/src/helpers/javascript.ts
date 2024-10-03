@@ -100,6 +100,9 @@ export function processJS(handlebars: string, context: any) {
     if (error.name === "ExecutionTimeoutError") {
       return "Request JS execution limit hit"
     }
+    if ("userScriptError" in error) {
+      return error.userScriptError.toString()
+    }
     return "Error while executing JS"
   }
 }

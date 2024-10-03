@@ -17,6 +17,15 @@ class ExecutionTimeoutError extends Error {
   }
 }
 
+class UserScriptError extends Error {
+  constructor(readonly userScriptError: Error) {
+    super(
+      `error while running user-supplied JavaScript: ${userScriptError.message}`,
+      { cause: userScriptError }
+    )
+  }
+}
+
 export class IsolatedVM implements VM {
   private isolate: ivm.Isolate
   private vm: ivm.Context
@@ -29,6 +38,7 @@ export class IsolatedVM implements VM {
 
   private readonly resultKey = "results"
   private runResultKey: string
+  private runErrorKey: string
 
   constructor({
     memoryLimit,
@@ -47,6 +57,7 @@ export class IsolatedVM implements VM {
     this.jail.setSync("global", this.jail.derefInto())
 
     this.runResultKey = crypto.randomUUID()
+    this.runErrorKey = crypto.randomUUID()
     this.addToContext({
       [this.resultKey]: { [this.runResultKey]: "" },
     })
@@ -216,7 +227,13 @@ export class IsolatedVM implements VM {
       }
     }
 
-    code = `results['${this.runResultKey}']=${this.codeWrapper(code)}`
+    code = `
+      try {
+        results['${this.runResultKey}']=${this.codeWrapper(code)}
+      } catch (e) {
+        results['${this.runErrorKey}']=e
+      }
+    `
 
     const script = this.isolate.compileScriptSync(code)
 
@@ -227,6 +244,9 @@ export class IsolatedVM implements VM {
 
     // We can't rely on the script run result as it will not work for non-transferable values
     const result = this.getFromContext(this.resultKey)
+    if (result[this.runErrorKey]) {
+      throw new UserScriptError(result[this.runErrorKey])
+    }
     return result[this.runResultKey]
   }
 
