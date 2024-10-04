@@ -1,10 +1,5 @@
 <script>
-  import {
-    getBezierPath,
-    BaseEdge,
-    EdgeLabelRenderer,
-    useSvelteFlow,
-  } from "@xyflow/svelte"
+  import { getBezierPath, BaseEdge, EdgeLabelRenderer } from "@xyflow/svelte"
   import { Icon, TooltipPosition } from "@budibase/bbui"
   import { getContext, onMount } from "svelte"
   import { roles } from "stores/builder"
@@ -19,7 +14,6 @@
   export let source
   export let target
 
-  const flow = useSvelteFlow()
   const { deleteEdge, selectedNodes } = getContext("flow")
 
   let iconHovered = false

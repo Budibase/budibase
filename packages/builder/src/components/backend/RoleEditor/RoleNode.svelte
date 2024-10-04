@@ -12,14 +12,13 @@
   import { getContext } from "svelte"
   import { roles } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { Roles } from "constants/backend"
 
   export let data
   export let id
   export let selected
   export let isConnectable
 
-  const { dragging, updateRole, deleteRole, bounds } = getContext("flow")
+  const { dragging, updateRole, deleteRole } = getContext("flow")
 
   let anchor
   let modal
@@ -31,7 +30,6 @@
   $: nameError = validateName(tempDisplayName, $roles)
   $: descriptionError = validateDescription(tempDescription)
   $: invalid = nameError || descriptionError
-  $: targetClasses = `target${!$dragging ? " hidden" : ""}`
 
   const validateName = (name, roles) => {
     if (!name?.length) {
