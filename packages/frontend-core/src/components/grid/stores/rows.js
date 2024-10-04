@@ -465,6 +465,29 @@ export const createActions = context => {
     return true
   }
 
+  const saveRow = async ({ rowId }) => {
+    const $rowLookupMap = get(rowLookupMap)
+    const row = $rowLookupMap[rowId]
+    if (row == null) {
+      return
+    }
+    let savedRow
+
+    // Save row
+    try {
+      const newRow = cleanRow(row)
+      savedRow = await datasource.actions.updateRow(newRow)
+
+      if (savedRow?.id) {
+        // Handle users table edge case
+        await refreshRow(savedRow.id)
+      }
+    } catch (error) {
+      handleValidationError(rowId, error)
+    }
+    return savedRow
+  }
+
   // Saves any pending changes to a row, as well as any additional changes
   // specified
   const applyRowChanges = async ({
@@ -685,6 +708,7 @@ export const createActions = context => {
       ...rows,
       actions: {
         addRow,
+        saveRow,
         duplicateRow,
         bulkDuplicate,
         updateValue,

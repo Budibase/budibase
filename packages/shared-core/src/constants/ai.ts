@@ -4,7 +4,7 @@ import {
   OperationFieldTypeEnum,
 } from "@budibase/types"
 
-const AIOperations = {
+export const AIOperations = {
   SUMMARISE_TEXT: {
     label: "Summarise Text",
     value: "SUMMARISE_TEXT",
