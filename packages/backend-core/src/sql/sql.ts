@@ -139,29 +139,61 @@ class InternalBuilder {
     return this.table.schema[column]
   }
 
-  // Takes a string like foo and returns a quoted string like [foo] for SQL Server
-  // and "foo" for Postgres.
-  private quote(str: string): string {
+  private quoteChars(): [string, string] {
     switch (this.client) {
-      case SqlClient.SQL_LITE:
       case SqlClient.ORACLE:
       case SqlClient.POSTGRES:
-        return `"${str}"`
+        return ['"', '"']
       case SqlClient.MS_SQL:
-        return `[${str}]`
+        return ["[", "]"]
       case SqlClient.MARIADB:
       case SqlClient.MY_SQL:
-        return `\`${str}\``
+      case SqlClient.SQL_LITE:
+        return ["`", "`"]
     }
   }
 
-  // Takes a string like a.b.c and returns a quoted identifier like [a].[b].[c]
-  // for SQL Server and `a`.`b`.`c` for MySQL.
-  private quotedIdentifier(key: string): string {
-    return key
-      .split(".")
-      .map(part => this.quote(part))
-      .join(".")
+  // Takes a string like foo and returns a quoted string like [foo] for SQL Server
+  // and "foo" for Postgres.
+  private quote(str: string): string {
+    const [start, end] = this.quoteChars()
+    return `${start}${str}${end}`
+  }
+
+  private isQuoted(key: string): boolean {
+    const [start, end] = this.quoteChars()
+    return key.startsWith(start) && key.endsWith(end)
+  }
+
+  // Takes a string like a.b.c or an array like ["a", "b", "c"] and returns a
+  // quoted identifier like [a].[b].[c] for SQL Server and `a`.`b`.`c` for
+  // MySQL.
+  private quotedIdentifier(key: string | string[]): string {
+    if (!Array.isArray(key)) {
+      key = this.splitIdentifier(key)
+    }
+    return key.map(part => this.quote(part)).join(".")
+  }
+
+  // Turns an identifier like a.b.c or `a`.`b`.`c` into ["a", "b", "c"]
+  private splitIdentifier(key: string): string[] {
+    const [start, end] = this.quoteChars()
+    if (this.isQuoted(key)) {
+      return key.slice(1, -1).split(`${end}.${start}`)
+    }
+    return key.split(".")
+  }
+
+  private qualifyIdentifier(key: string): string {
+    const tableName = this.getTableName()
+    const parts = this.splitIdentifier(key)
+    if (parts[0] !== tableName) {
+      parts.unshift(tableName)
+    }
+    if (this.isQuoted(key)) {
+      return this.quotedIdentifier(parts)
+    }
+    return parts.join(".")
   }
 
   private isFullSelectStatementRequired(): boolean {
@@ -231,8 +263,13 @@ class InternalBuilder {
   // OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
   // so when we use them we need to wrap them in to_char(). This function
   // converts a field name to the appropriate identifier.
-  private convertClobs(field: string): string {
-    const parts = field.split(".")
+  private convertClobs(field: string, opts?: { forSelect?: boolean }): string {
+    if (this.client !== SqlClient.ORACLE) {
+      throw new Error(
+        "you've called convertClobs on a DB that's not Oracle, this is a mistake"
+      )
+    }
+    const parts = this.splitIdentifier(field)
     const col = parts.pop()!
     const schema = this.table.schema[col]
     let identifier = this.quotedIdentifier(field)
@@ -244,7 +281,11 @@ class InternalBuilder {
       schema.type === FieldType.OPTIONS ||
       schema.type === FieldType.BARCODEQR
     ) {
-      identifier = `to_char(${identifier})`
+      if (opts?.forSelect) {
+        identifier = `to_char(${identifier}) as ${this.quotedIdentifier(col)}`
+      } else {
+        identifier = `to_char(${identifier})`
+      }
     }
     return identifier
   }
@@ -859,28 +900,58 @@ class InternalBuilder {
     const fields = this.query.resource?.fields || []
     const tableName = this.getTableName()
     if (fields.length > 0) {
-      query = query.groupBy(fields.map(field => `${tableName}.${field}`))
-      query = query.select(fields.map(field => `${tableName}.${field}`))
+      const qualifiedFields = fields.map(field => this.qualifyIdentifier(field))
+      if (this.client === SqlClient.ORACLE) {
+        const groupByFields = qualifiedFields.map(field =>
+          this.convertClobs(field)
+        )
+        const selectFields = qualifiedFields.map(field =>
+          this.convertClobs(field, { forSelect: true })
+        )
+        query = query
+          .groupByRaw(groupByFields.join(", "))
+          .select(this.knex.raw(selectFields.join(", ")))
+      } else {
+        query = query.groupBy(qualifiedFields).select(qualifiedFields)
+      }
     }
     for (const aggregation of aggregations) {
       const op = aggregation.calculationType
-      const field = `${tableName}.${aggregation.field} as ${aggregation.name}`
-      switch (op) {
-        case CalculationType.COUNT:
-          query = query.count(field)
-          break
-        case CalculationType.SUM:
-          query = query.sum(field)
-          break
-        case CalculationType.AVG:
-          query = query.avg(field)
-          break
-        case CalculationType.MIN:
-          query = query.min(field)
-          break
-        case CalculationType.MAX:
-          query = query.max(field)
-          break
+      if (op === CalculationType.COUNT) {
+        if ("distinct" in aggregation && aggregation.distinct) {
+          if (this.client === SqlClient.ORACLE) {
+            const field = this.convertClobs(`${tableName}.${aggregation.field}`)
+            query = query.select(
+              this.knex.raw(
+                `COUNT(DISTINCT ${field}) as ${this.quotedIdentifier(
+                  aggregation.name
+                )}`
+              )
+            )
+          } else {
+            query = query.countDistinct(
+              `${tableName}.${aggregation.field} as ${aggregation.name}`
+            )
+          }
+        } else {
+          query = query.count(`* as ${aggregation.name}`)
+        }
+      } else {
+        const field = `${tableName}.${aggregation.field} as ${aggregation.name}`
+        switch (op) {
+          case CalculationType.SUM:
+            query = query.sum(field)
+            break
+          case CalculationType.AVG:
+            query = query.avg(field)
+            break
+          case CalculationType.MIN:
+            query = query.min(field)
+            break
+          case CalculationType.MAX:
+            query = query.max(field)
+            break
+        }
       }
     }
     return query

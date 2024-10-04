@@ -1,4 +1,5 @@
 import {
+  CalculationType,
   FieldType,
   PermissionLevel,
   RelationSchemaField,
@@ -65,6 +66,15 @@ async function guardCalculationViewSchema(
   const calculationFields = helpers.views.calculationFields(view)
   for (const calculationFieldName of Object.keys(calculationFields)) {
     const schema = calculationFields[calculationFieldName]
+    const isCount = schema.calculationType === CalculationType.COUNT
+    const isDistinct = isCount && "distinct" in schema && schema.distinct
+
+    // Count fields that aren't distinct don't need to reference another field,
+    // so we don't validate it.
+    if (isCount && !isDistinct) {
+      continue
+    }
+
     const targetSchema = table.schema[schema.field]
     if (!targetSchema) {
       throw new HTTPError(
@@ -73,7 +83,7 @@ async function guardCalculationViewSchema(
       )
     }
 
-    if (!helpers.schema.isNumeric(targetSchema)) {
+    if (!isCount && !helpers.schema.isNumeric(targetSchema)) {
       throw new HTTPError(
         `Calculation field "${calculationFieldName}" references field "${schema.field}" which is not a numeric field`,
         400
