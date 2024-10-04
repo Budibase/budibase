@@ -1,5 +1,6 @@
 import {
   Aggregation,
+  CalculationType,
   Datasource,
   DocumentType,
   FieldType,
@@ -369,11 +370,27 @@ export async function search(
         continue
       }
 
-      aggregations.push({
-        name: key,
-        field: mapToUserColumn(field.field),
-        calculationType: field.calculationType,
-      })
+      if (field.calculationType === CalculationType.COUNT) {
+        if ("distinct" in field && field.distinct) {
+          aggregations.push({
+            name: key,
+            distinct: true,
+            field: mapToUserColumn(field.field),
+            calculationType: field.calculationType,
+          })
+        } else {
+          aggregations.push({
+            name: key,
+            calculationType: field.calculationType,
+          })
+        }
+      } else {
+        aggregations.push({
+          name: key,
+          field: mapToUserColumn(field.field),
+          calculationType: field.calculationType,
+        })
+      }
     }
   }
 
