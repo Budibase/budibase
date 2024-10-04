@@ -751,6 +751,7 @@ describe("/rowsActions", () => {
       )
 
       await config.publish()
+      // Travel time in order to "trim" the selected `getAutomationLogs`
       tk.travel(Date.now() + 100)
     })
 
