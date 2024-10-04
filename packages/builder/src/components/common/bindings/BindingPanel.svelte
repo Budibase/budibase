@@ -66,6 +66,7 @@
   let insertAtPos
   let targetMode = null
   let expressionResult
+  let expressionError
   let evaluating = false
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
@@ -142,10 +143,22 @@
   }
 
   const debouncedEval = Utils.debounce((expression, context, snippets) => {
-    expressionResult = processStringSync(expression || "", {
-      ...context,
-      snippets,
-    })
+    try {
+      expressionError = null
+      expressionResult = processStringSync(
+        expression || "",
+        {
+          ...context,
+          snippets,
+        },
+        {
+          noThrow: false,
+        }
+      )
+    } catch (err) {
+      expressionResult = null
+      expressionError = err
+    }
     evaluating = false
   }, 260)
 
@@ -370,6 +383,7 @@
       {:else if sidePanel === SidePanels.Evaluation}
         <EvaluationSidePanel
           {expressionResult}
+          {expressionError}
           {evaluating}
           expression={editorValue}
         />
