@@ -1,5 +1,4 @@
 import { atob, isJSAllowed } from "../utilities"
-import cloneDeep from "lodash/fp/cloneDeep"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
