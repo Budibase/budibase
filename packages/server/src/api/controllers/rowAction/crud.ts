@@ -36,7 +36,7 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
           tableId: table._id!,
           name: action.name,
           automationId: action.automationId,
-          allowedViews: flattenAllowedViews(action.permissions.views),
+          allowedSources: flattenAllowedViews(action.permissions.views),
         },
       }),
       {}
@@ -59,7 +59,7 @@ export async function create(
     id: createdAction.id,
     name: createdAction.name,
     automationId: createdAction.automationId,
-    allowedViews: undefined,
+    allowedSources: undefined,
   }
   ctx.status = 201
 }
@@ -79,7 +79,7 @@ export async function update(
     id: action.id,
     name: action.name,
     automationId: action.automationId,
-    allowedViews: undefined,
+    allowedSources: undefined,
   }
 }
 
@@ -105,7 +105,7 @@ export async function setViewPermission(ctx: Ctx<void, RowActionResponse>) {
     id: action.id,
     name: action.name,
     automationId: action.automationId,
-    allowedViews: flattenAllowedViews(action.permissions.views),
+    allowedSources: flattenAllowedViews(action.permissions.views),
   }
 }
 
@@ -124,7 +124,7 @@ export async function unsetViewPermission(ctx: Ctx<void, RowActionResponse>) {
     id: action.id,
     name: action.name,
     automationId: action.automationId,
-    allowedViews: flattenAllowedViews(action.permissions.views),
+    allowedSources: flattenAllowedViews(action.permissions.views),
   }
 }
 
