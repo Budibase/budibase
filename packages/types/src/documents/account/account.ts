@@ -7,10 +7,9 @@ export interface CreateAccount {
   tenantId: string
   hosting: Hosting
   authType: AuthType
+  accountName: string
   // optional fields - for sso based sign ups
   registrationStep?: string
-  // profile
-  tenantName?: string
   name?: string
   size?: string
   profession?: string
@@ -18,11 +17,6 @@ export interface CreateAccount {
 
 export interface CreatePassswordAccount extends CreateAccount {
   password: string
-}
-
-export interface CreateVerifiableSSOAccount extends CreateAccount {
-  provider?: AccountSSOProvider
-  thirdPartyProfile?: any
 }
 
 export const isCreatePasswordAccount = (
