@@ -3,6 +3,7 @@ import cloneDeep from "lodash/fp/cloneDeep"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
+import { JsTimeoutError, UserScriptError } from "../errors"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
@@ -94,12 +95,49 @@ export function processJS(handlebars: string, context: any) {
   } catch (error: any) {
     onErrorLog && onErrorLog(error)
 
+    const { noThrow = true } = context.__opts || {}
+
+    // The error handling below is quite messy, because it has fallen to
+    // string-templates to handle a variety of types of error specific to usages
+    // above it in the stack. It would be nice some day to refactor this to
+    // allow each user of processStringSync to handle errors in the way they see
+    // fit.
+
+    // This is to catch the error vm.runInNewContext() throws when the timeout
+    // is exceeded.
     if (error.code === "ERR_SCRIPT_EXECUTION_TIMEOUT") {
       return "Timed out while executing JS"
     }
-    if (error.name === "ExecutionTimeoutError") {
-      return "Request JS execution limit hit"
+
+    // This is to catch the JsRequestTimeoutError we throw when we detect a
+    // timeout across an entire request in the backend. We use a magic string
+    // because we can't import from the backend into string-templates.
+    if (error.code === "JS_REQUEST_TIMEOUT_ERROR") {
+      return error.message
     }
+
+    // This is to catch the JsTimeoutError we throw when we detect a timeout in
+    // a single JS execution.
+    if (error.code === JsTimeoutError.code) {
+      return JsTimeoutError.message
+    }
+
+    // This is to catch the error that happens if a user-supplied JS script
+    // throws for reasons introduced by the user.
+    if (error.code === UserScriptError.code) {
+      if (noThrow) {
+        return error.userScriptError.toString()
+      }
+      throw error
+    }
+
+    if (error.name === "SyntaxError") {
+      if (noThrow) {
+        return error.toString()
+      }
+      throw error
+    }
+
     return "Error while executing JS"
   }
 }

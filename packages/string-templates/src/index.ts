@@ -16,6 +16,7 @@ import { removeJSRunner, setJSRunner } from "./helpers/javascript"
 
 import manifest from "./manifest.json"
 import { ProcessOptions } from "./types"
+import { UserScriptError } from "./errors"
 
 export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
 export { FIND_ANY_HBS_REGEX } from "./utilities"
@@ -122,7 +123,7 @@ function createTemplate(
 export async function processObject<T extends Record<string, any>>(
   object: T,
   context: object,
-  opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound?: boolean }
+  opts?: ProcessOptions
 ): Promise<T> {
   testObject(object)
 
@@ -172,7 +173,7 @@ export async function processString(
 export function processObjectSync(
   object: { [x: string]: any },
   context: any,
-  opts: any
+  opts?: ProcessOptions
 ): object | Array<any> {
   testObject(object)
   for (let key of Object.keys(object || {})) {
@@ -229,8 +230,12 @@ export function processStringSync(
     } else {
       return process(string)
     }
-  } catch (err) {
-    return input
+  } catch (err: any) {
+    const { noThrow = true } = opts || {}
+    if (noThrow) {
+      return input
+    }
+    throw err
   }
 }
 
@@ -448,7 +453,7 @@ export function convertToJS(hbs: string) {
   return `${varBlock}${js}`
 }
 
-export { JsErrorTimeout } from "./errors"
+export { JsTimeoutError, UserScriptError } from "./errors"
 
 export function defaultJSSetup() {
   if (!isBackendService()) {
@@ -463,7 +468,27 @@ export function defaultJSSetup() {
         setTimeout: undefined,
       }
       createContext(context)
-      return runInNewContext(js, context, { timeout: 1000 })
+
+      const wrappedJs = `
+        result = {
+          result: null,
+          error: null,
+        };
+
+        try {
+          result.result = ${js};
+        } catch (e) {
+          result.error = e;
+        }
+
+        result;
+      `
+
+      const result = runInNewContext(wrappedJs, context, { timeout: 1000 })
+      if (result.error) {
+        throw new UserScriptError(result.error)
+      }
+      return result.result
     })
   } else {
     removeJSRunner()

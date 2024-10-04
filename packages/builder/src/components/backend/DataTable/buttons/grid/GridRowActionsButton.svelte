@@ -95,7 +95,7 @@
             {#if isView}
               <span>
                 <Toggle
-                  value={action.allowedViews?.includes(viewId)}
+                  value={action.allowedSources?.includes(viewId)}
                   on:change={e => toggleAction(action, e.detail)}
                 />
               </span>
