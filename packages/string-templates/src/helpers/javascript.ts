@@ -95,6 +95,8 @@ export function processJS(handlebars: string, context: any) {
   } catch (error: any) {
     onErrorLog && onErrorLog(error)
 
+    const { noThrow = true } = context.__opts || {}
+
     // The error handling below is quite messy, because it has fallen to
     // string-templates to handle a variety of types of error specific to usages
     // above it in the stack. It would be nice some day to refactor this to
@@ -123,11 +125,17 @@ export function processJS(handlebars: string, context: any) {
     // This is to catch the error that happens if a user-supplied JS script
     // throws for reasons introduced by the user.
     if (error.code === UserScriptError.code) {
+      if (noThrow) {
+        return error.userScriptError.toString()
+      }
       throw error
     }
 
     if (error.name === "SyntaxError") {
-      return error.toString()
+      if (noThrow) {
+        return error.toString()
+      }
+      throw error
     }
 
     return "Error while executing JS"
