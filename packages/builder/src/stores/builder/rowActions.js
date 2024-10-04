@@ -131,7 +131,7 @@ const derivedStore = derived(store, $store => {
   Object.keys($store || {}).forEach(tableId => {
     map[tableId] = $store[tableId]
     for (let action of $store[tableId]) {
-      for (let viewId of action.allowedViews || []) {
+      for (let viewId of action.allowedSources || []) {
         if (!map[viewId]) {
           map[viewId] = []
         }
