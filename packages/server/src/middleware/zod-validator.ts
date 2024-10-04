@@ -1,5 +1,7 @@
-import { AnyZodObject } from "zod"
 import { Ctx } from "@budibase/types"
+
+import { AnyZodObject } from "zod"
+import { fromZodError } from "zod-validation-error"
 
 function validate(schema: AnyZodObject, property: "body" | "params") {
   // Return a Koa middleware function
@@ -18,7 +20,7 @@ function validate(schema: AnyZodObject, property: "body" | "params") {
 
     const { error } = schema.safeParse(params)
     if (error) {
-      ctx.throw(400, `Invalid ${property} - ${error.message}`)
+      ctx.throw(400, fromZodError(error))
     }
     return next()
   }
