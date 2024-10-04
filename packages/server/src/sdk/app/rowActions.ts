@@ -75,7 +75,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
     name: action.name,
     automationId: automation._id!,
     permissions: {
-      table: { runAllowed: false },
+      table: { runAllowed: true },
       views: {},
     },
   }
