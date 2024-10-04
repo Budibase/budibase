@@ -63,13 +63,15 @@
   $: rowActions.refreshRowActions(id)
 
   const makeRowActionButtons = actions => {
-    return (actions || []).map(action => ({
-      text: action.name,
-      onClick: async row => {
-        await rowActions.trigger(id, action.id, row._id)
-        notifications.success("Row action triggered successfully")
-      },
-    }))
+    return (actions || [])
+      .filter(action => action.allowedSources?.includes(id))
+      .map(action => ({
+        text: action.name,
+        onClick: async row => {
+          await rowActions.trigger(id, action.id, row._id)
+          notifications.success("Row action triggered successfully")
+        },
+      }))
   }
 
   const relationshipSupport = datasource => {
