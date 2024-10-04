@@ -16,6 +16,7 @@ import { removeJSRunner, setJSRunner } from "./helpers/javascript"
 
 import manifest from "./manifest.json"
 import { ProcessOptions } from "./types"
+import { UserScriptError } from "./errors"
 
 export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
 export { FIND_ANY_HBS_REGEX } from "./utilities"
@@ -229,7 +230,10 @@ export function processStringSync(
     } else {
       return process(string)
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (err.code === UserScriptError.code) {
+      throw err
+    }
     return input
   }
 }
@@ -448,7 +452,7 @@ export function convertToJS(hbs: string) {
   return `${varBlock}${js}`
 }
 
-export { JsErrorTimeout } from "./errors"
+export { JsTimeoutError, UserScriptError } from "./errors"
 
 export function defaultJSSetup() {
   if (!isBackendService()) {
@@ -463,7 +467,27 @@ export function defaultJSSetup() {
         setTimeout: undefined,
       }
       createContext(context)
-      return runInNewContext(js, context, { timeout: 1000 })
+
+      const wrappedJs = `
+        result = {
+          result: null,
+          error: null,
+        };
+
+        try {
+          result.result = ${js};
+        } catch (e) {
+          result.error = e;
+        }
+
+        result;
+      `
+
+      const result = runInNewContext(wrappedJs, context, { timeout: 1000 })
+      if (result.error) {
+        throw new UserScriptError(result.error)
+      }
+      return result.result
     })
   } else {
     removeJSRunner()
