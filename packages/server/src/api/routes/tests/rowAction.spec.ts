@@ -803,6 +803,38 @@ describe("/rowsActions", () => {
       ])
     })
 
+    it("triggers from an allowed table", async () => {
+      expect(await getAutomationLogs()).toBeEmpty()
+      await config.api.rowAction.trigger(tableId, rowAction.id, { rowId })
+
+      const automationLogs = await getAutomationLogs()
+      expect(automationLogs).toEqual([
+        expect.objectContaining({
+          automationId: rowAction.automationId,
+        }),
+      ])
+    })
+
+    it("rejects triggering from a non-allowed table", async () => {
+      await config.api.rowAction.unsetTablePermission(tableId, rowAction.id)
+      await config.publish()
+
+      await config.api.rowAction.trigger(
+        tableId,
+        rowAction.id,
+        { rowId },
+        {
+          status: 403,
+          body: {
+            message: `Row action '${rowAction.id}' is not enabled for table '${tableId}'`,
+          },
+        }
+      )
+
+      const automationLogs = await getAutomationLogs()
+      expect(automationLogs).toEqual([])
+    })
+
     it("rejects triggering from a non-allowed view", async () => {
       const viewId = (
         await config.api.viewV2.create(
