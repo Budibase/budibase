@@ -3,6 +3,7 @@
   import { admin, themeStore } from "stores/portal"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
+  import { notifications } from "@budibase/bbui"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridFilterButton from "components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
   import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
@@ -34,6 +35,7 @@
       text: action.name,
       onClick: async row => {
         await rowActions.trigger(id, action.id, row._id)
+        notifications.success("Row action triggered successfully")
       },
     }))
   }

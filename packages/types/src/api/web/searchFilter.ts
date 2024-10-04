@@ -5,7 +5,7 @@ import {
   SearchFilters,
 } from "../../sdk"
 
-export type SearchFilter = {
+export type LegacyFilter = {
   operator: keyof SearchFilters | "rangeLow" | "rangeHigh"
   onEmptyFilter?: EmptyFilterOption
   field: string
@@ -14,9 +14,10 @@ export type SearchFilter = {
   externalType?: string
 }
 
+// this is a type purely used by the UI
 export type SearchFilterGroup = {
   logicalOperator: FilterGroupLogicalOperator
   onEmptyFilter?: EmptyFilterOption
   groups?: SearchFilterGroup[]
-  filters?: SearchFilter[]
+  filters?: LegacyFilter[]
 }
