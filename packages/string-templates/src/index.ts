@@ -179,7 +179,11 @@ export function processObjectSync(
   for (let key of Object.keys(object || {})) {
     let val = object[key]
     if (typeof val === "string") {
-      object[key] = processStringSync(object[key], context, opts)
+      try {
+        object[key] = processStringSync(object[key], context, opts)
+      } catch (error: any) {
+        object[key] = error.toString()
+      }
     } else if (typeof val === "object") {
       object[key] = processObjectSync(object[key], context, opts)
     }
