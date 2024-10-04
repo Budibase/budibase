@@ -62,7 +62,7 @@ export async function create(
     id: createdAction.id,
     name: createdAction.name,
     automationId: createdAction.automationId,
-    allowedSources: undefined,
+    allowedSources: flattenAllowedSources(tableId, createdAction.permissions),
   }
   ctx.status = 201
 }
@@ -83,7 +83,7 @@ export async function update(
     id: action.id,
     name: action.name,
     automationId: action.automationId,
-    allowedSources: undefined,
+    allowedSources: flattenAllowedSources(tableId, action.permissions),
   }
 }
 
