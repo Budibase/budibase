@@ -129,6 +129,7 @@ const derivedStore = derived(store, $store => {
 
   // Generate an entry for every view as well
   Object.keys($store || {}).forEach(tableId => {
+    // We need to have all the actions for the table in order to be displayed in the crud section
     map[tableId] = $store[tableId]
     for (let action of $store[tableId]) {
       const otherSources = (action.allowedSources || []).filter(
