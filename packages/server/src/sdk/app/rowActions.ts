@@ -163,6 +163,23 @@ async function guardView(tableId: string, viewId: string) {
   }
 }
 
+export async function setTablePermission(tableId: string, rowActionId: string) {
+  return await updateDoc(tableId, rowActionId, async actionsDoc => {
+    actionsDoc.actions[rowActionId].permissions.table.runAllowed = true
+    return actionsDoc
+  })
+}
+
+export async function unsetTablePermission(
+  tableId: string,
+  rowActionId: string
+) {
+  return await updateDoc(tableId, rowActionId, async actionsDoc => {
+    actionsDoc.actions[rowActionId].permissions.table.runAllowed = false
+    return actionsDoc
+  })
+}
+
 export async function setViewPermission(
   tableId: string,
   rowActionId: string,
