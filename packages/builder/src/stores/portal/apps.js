@@ -9,7 +9,6 @@ const DEV_PROPS = ["updatedBy", "updatedAt"]
 
 export const INITIAL_APPS_STATE = {
   apps: [],
-  sortBy: "name",
 }
 
 export class AppsStore extends BudiStore {
@@ -53,6 +52,15 @@ export class AppsStore extends BudiStore {
       ...state,
       sortBy,
     }))
+    this.updateUserSort(sortBy)
+  }
+
+  async updateUserSort(sortBy) {
+    try {
+      await auth.updateSelf({ appSort: sortBy })
+    } catch (err) {
+      console.error("couldn't save user sort: ", err)
+    }
   }
 
   async load() {
@@ -140,43 +148,50 @@ export class AppsStore extends BudiStore {
 
 export const appsStore = new AppsStore()
 
-// Centralise any logic that enriches the apps list
-export const enrichedApps = derived([appsStore, auth], ([$store, $auth]) => {
-  const enrichedApps = $store.apps
-    ? $store.apps.map(app => ({
-        ...app,
-        deployed: app.status === AppStatus.DEPLOYED,
-        lockedYou: app.lockedBy && app.lockedBy.email === $auth.user?.email,
-        lockedOther: app.lockedBy && app.lockedBy.email !== $auth.user?.email,
-        favourite: $auth.user?.appFavourites?.includes(app.appId),
-      }))
-    : []
+export const sortBy = derived([appsStore, auth], ([$store, $auth]) => {
+  return $store.sortBy || $auth.user?.appSort || "name"
+})
 
-  if ($store.sortBy === "status") {
-    return enrichedApps.sort((a, b) => {
-      if (a.favourite === b.favourite) {
-        if (a.status === b.status) {
+// Centralise any logic that enriches the apps list
+export const enrichedApps = derived(
+  [appsStore, auth, sortBy],
+  ([$store, $auth, $sortBy]) => {
+    const enrichedApps = $store.apps
+      ? $store.apps.map(app => ({
+          ...app,
+          deployed: app.status === AppStatus.DEPLOYED,
+          lockedYou: app.lockedBy && app.lockedBy.email === $auth.user?.email,
+          lockedOther: app.lockedBy && app.lockedBy.email !== $auth.user?.email,
+          favourite: $auth.user?.appFavourites?.includes(app.appId),
+        }))
+      : []
+
+    if ($sortBy === "status") {
+      return enrichedApps.sort((a, b) => {
+        if (a.favourite === b.favourite) {
+          if (a.status === b.status) {
+            return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
+          }
+          return a.status === AppStatus.DEPLOYED ? -1 : 1
+        }
+        return a.favourite ? -1 : 1
+      })
+    } else if ($sortBy === "updated") {
+      return enrichedApps?.sort((a, b) => {
+        if (a.favourite === b.favourite) {
+          const aUpdated = a.updatedAt || "9999"
+          const bUpdated = b.updatedAt || "9999"
+          return aUpdated < bUpdated ? 1 : -1
+        }
+        return a.favourite ? -1 : 1
+      })
+    } else {
+      return enrichedApps?.sort((a, b) => {
+        if (a.favourite === b.favourite) {
           return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
         }
-        return a.status === AppStatus.DEPLOYED ? -1 : 1
-      }
-      return a.favourite ? -1 : 1
-    })
-  } else if ($store.sortBy === "updated") {
-    return enrichedApps?.sort((a, b) => {
-      if (a.favourite === b.favourite) {
-        const aUpdated = a.updatedAt || "9999"
-        const bUpdated = b.updatedAt || "9999"
-        return aUpdated < bUpdated ? 1 : -1
-      }
-      return a.favourite ? -1 : 1
-    })
-  } else {
-    return enrichedApps?.sort((a, b) => {
-      if (a.favourite === b.favourite) {
-        return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
-      }
-      return a.favourite ? -1 : 1
-    })
+        return a.favourite ? -1 : 1
+      })
+    }
   }
-})
+)
