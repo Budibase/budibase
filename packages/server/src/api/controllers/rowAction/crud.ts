@@ -178,9 +178,6 @@ function flattenAllowedSources(
       viewId => permissions.views[viewId].runAllowed
     )
   )
-  if (!allowedPermissions.length) {
-    return undefined
-  }
 
   return allowedPermissions
 }

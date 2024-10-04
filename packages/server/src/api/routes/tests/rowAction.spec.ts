@@ -524,6 +524,88 @@ describe("/rowsActions", () => {
     })
   })
 
+  describe("set/unsetTablePermission", () => {
+    describe.each([
+      ["setTablePermission", config.api.rowAction.setTablePermission],
+      ["unsetTablePermission", config.api.rowAction.unsetTablePermission],
+    ])("unauthorisedTests for %s", (__, delegateTest) => {
+      unauthorisedTests((expectations, testConfig) =>
+        delegateTest(tableId, generator.guid(), expectations, testConfig)
+      )
+    })
+
+    let tableIdForDescribe: string
+    let actionId1: string, actionId2: string
+
+    beforeAll(async () => {
+      tableIdForDescribe = tableId
+      for (const rowAction of createRowActionRequests(3)) {
+        await createRowAction(tableId, rowAction)
+      }
+      const persisted = await config.api.rowAction.find(tableId)
+
+      const actions = _.sampleSize(Object.keys(persisted.actions), 2)
+      actionId1 = actions[0]
+      actionId2 = actions[1]
+    })
+
+    beforeEach(() => {
+      // Hack to reuse tables for these given tests
+      tableId = tableIdForDescribe
+    })
+
+    it("can set table permission", async () => {
+      await config.api.rowAction.unsetTablePermission(tableId, actionId1)
+      await config.api.rowAction.unsetTablePermission(tableId, actionId2)
+      const actionResult = await config.api.rowAction.setTablePermission(
+        tableId,
+        actionId1
+      )
+      const expectedAction1 = expect.objectContaining({
+        allowedSources: [tableId],
+      })
+
+      const expectedActions = expect.objectContaining({
+        [actionId1]: expectedAction1,
+        [actionId2]: expect.objectContaining({
+          allowedSources: [],
+        }),
+      })
+      expect(actionResult).toEqual(expectedAction1)
+      expect((await config.api.rowAction.find(tableId)).actions).toEqual(
+        expectedActions
+      )
+    })
+
+    it("can unset table permission", async () => {
+      const actionResult = await config.api.rowAction.unsetTablePermission(
+        tableId,
+        actionId1
+      )
+
+      const expectedAction = expect.objectContaining({
+        allowedSources: [],
+      })
+      expect(actionResult).toEqual(expectedAction)
+      expect(
+        (await config.api.rowAction.find(tableId)).actions[actionId1]
+      ).toEqual(expectedAction)
+    })
+
+    it.each([
+      ["setTablePermission", config.api.rowAction.setTablePermission],
+      ["unsetTablePermission", config.api.rowAction.unsetTablePermission],
+    ])(
+      "cannot update permission for unexisting tables (%s)",
+      async (__, delegateTest) => {
+        const tableId = generator.guid()
+        await delegateTest(tableId, actionId1, {
+          status: 404,
+        })
+      }
+    )
+  })
+
   describe("set/unsetViewPermission", () => {
     describe.each([
       ["setViewPermission", config.api.rowAction.setViewPermission],
