@@ -698,6 +698,8 @@ describe("/rowsActions", () => {
             inputs: null,
             outputs: {
               fields: {},
+              id: rowId,
+              revision: (await config.api.row.get(tableId, rowId))._rev,
               row: await config.api.row.get(tableId, rowId),
               table: {
                 ...(await config.api.table.get(tableId)),
