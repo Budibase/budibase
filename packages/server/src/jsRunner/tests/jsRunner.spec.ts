@@ -41,11 +41,11 @@ describe("jsRunner (using isolated-vm)", () => {
   })
 
   it("should prevent sandbox escape", async () => {
-    await expect(
-      processJS(`return this.constructor.constructor("return process.env")()`)
-    ).rejects.toThrow(
-      "error while running user-supplied JavaScript: ReferenceError: process is not defined"
-    )
+    expect(
+      await processJS(
+        `return this.constructor.constructor("return process.env")()`
+      )
+    ).toEqual("ReferenceError: process is not defined")
   })
 
   describe("helpers", () => {

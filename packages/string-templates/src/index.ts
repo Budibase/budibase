@@ -123,7 +123,7 @@ function createTemplate(
 export async function processObject<T extends Record<string, any>>(
   object: T,
   context: object,
-  opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound?: boolean }
+  opts?: ProcessOptions
 ): Promise<T> {
   testObject(object)
 
@@ -173,17 +173,13 @@ export async function processString(
 export function processObjectSync(
   object: { [x: string]: any },
   context: any,
-  opts: any
+  opts?: ProcessOptions
 ): object | Array<any> {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     let val = object[key]
     if (typeof val === "string") {
-      try {
-        object[key] = processStringSync(object[key], context, opts)
-      } catch (error: any) {
-        object[key] = error.toString()
-      }
+      object[key] = processStringSync(object[key], context, opts)
     } else if (typeof val === "object") {
       object[key] = processObjectSync(object[key], context, opts)
     }
@@ -235,9 +231,6 @@ export function processStringSync(
       return process(string)
     }
   } catch (err: any) {
-    if (err.code === UserScriptError.code) {
-      throw err
-    }
     return input
   }
 }
