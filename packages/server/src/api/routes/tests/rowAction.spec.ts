@@ -133,6 +133,7 @@ describe("/rowsActions", () => {
         id: expect.stringMatching(/^row_action_\w+/),
         tableId: tableId,
         automationId: expectAutomationId(),
+        allowedSources: [tableId],
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
@@ -142,6 +143,7 @@ describe("/rowsActions", () => {
             id: res.id,
             tableId: tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
         },
       })
@@ -180,18 +182,21 @@ describe("/rowsActions", () => {
             id: responses[0].id,
             tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
           [responses[1].id]: {
             name: rowActions[1].name,
             id: responses[1].id,
             tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
           [responses[2].id]: {
             name: rowActions[2].name,
             id: responses[2].id,
             tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
         },
       })
@@ -224,6 +229,7 @@ describe("/rowsActions", () => {
         id: expect.any(String),
         tableId,
         automationId: expectAutomationId(),
+        allowedSources: [tableId],
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
@@ -233,6 +239,7 @@ describe("/rowsActions", () => {
             id: res.id,
             tableId: tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
         },
       })
@@ -354,6 +361,7 @@ describe("/rowsActions", () => {
         tableId,
         name: updatedName,
         automationId: actionData.automationId,
+        allowedSources: [tableId],
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual(
@@ -364,6 +372,7 @@ describe("/rowsActions", () => {
               id: actionData.id,
               tableId: actionData.tableId,
               automationId: actionData.automationId,
+              allowedSources: [tableId],
             },
           }),
         })
@@ -576,10 +585,10 @@ describe("/rowsActions", () => {
       )
 
       const expectedAction1 = expect.objectContaining({
-        allowedSources: [viewId1, viewId2],
+        allowedSources: [tableId, viewId1, viewId2],
       })
       const expectedAction2 = expect.objectContaining({
-        allowedSources: [viewId1],
+        allowedSources: [tableId, viewId1],
       })
 
       const expectedActions = expect.objectContaining({
@@ -601,7 +610,7 @@ describe("/rowsActions", () => {
       )
 
       const expectedAction = expect.objectContaining({
-        allowedSources: [viewId2],
+        allowedSources: [tableId, viewId2],
       })
       expect(actionResult).toEqual(expectedAction)
       expect(
@@ -901,7 +910,7 @@ describe("/rowsActions", () => {
       })
 
       it.each(allowedRoleConfig)(
-        "does not allow running row actions for tables by default even",
+        "allow running row actions for tables by default",
         async (userRole, resourcePermission) => {
           await config.api.permission.add({
             level: PermissionLevel.READ,
@@ -918,15 +927,12 @@ describe("/rowsActions", () => {
               rowAction.id,
               { rowId },
               {
-                status: 403,
-                body: {
-                  message: `Row action '${rowAction.id}' is not enabled for table '${tableId}'`,
-                },
+                status: 200,
               }
             )
 
             const automationLogs = await getAutomationLogs()
-            expect(automationLogs).toBeEmpty()
+            expect(automationLogs).toHaveLength(1)
           })
         }
       )
