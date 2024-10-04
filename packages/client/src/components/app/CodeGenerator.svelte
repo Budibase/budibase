@@ -52,7 +52,7 @@
       <div class="qr-container">
         {@html createQrSvgString({
           data: value,
-          logo: customLogo,
+          logo: showLogo ? customLogo : "",
           moduleFill: primColor,
           anchorOuterFill: primColor,
           anchorInnerFill: primColor,
@@ -85,7 +85,11 @@
         </div>
         {#if showValue}
           <div class="barcode-value">
-            <p style="background-color: {invertColors ? 'white' : 'black'}" />
+            <p
+              style="background-color: {invertColors
+                ? 'white'
+                : 'black'}; color: {invertColors ? 'black' : 'white'}"
+            />
             {value}
           </div>
         {/if}
