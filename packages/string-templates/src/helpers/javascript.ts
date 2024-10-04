@@ -126,7 +126,10 @@ export function processJS(handlebars: string, context: any) {
       throw error
     }
 
-    // If all else fails, generic error message.
+    if (error.name === "SyntaxError") {
+      return error.toString()
+    }
+
     return "Error while executing JS"
   }
 }
