@@ -231,7 +231,7 @@ export function processStringSync(
       return process(string)
     }
   } catch (err: any) {
-    const { noThrow = true } = opts
+    const { noThrow = true } = opts || {}
     if (noThrow) {
       return input
     }
