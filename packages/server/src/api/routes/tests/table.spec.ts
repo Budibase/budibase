@@ -1,4 +1,4 @@
-import { context, docIds, events } from "@budibase/backend-core"
+import { context, docIds, events, roles } from "@budibase/backend-core"
 import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
@@ -189,6 +189,13 @@ describe.each([
         )
       }
     )
+
+    it("should create tables with ADMIN read and write permissions", async () => {
+      const table = await config.api.table.save(tableForDatasource(datasource))
+      const { permissions } = await config.api.permission.get(table._id!)
+      expect(permissions.read.role).toEqual(roles.BUILTIN_ROLE_IDS.ADMIN)
+      expect(permissions.write.role).toEqual(roles.BUILTIN_ROLE_IDS.ADMIN)
+    })
   })
 
   describe("update", () => {
