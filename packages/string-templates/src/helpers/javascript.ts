@@ -49,6 +49,16 @@ const getContextValue = (path: string, context: any) => {
   return data
 }
 
+export function deepFreeze<T>(o: T) {
+  // We assume that if the top-level object is frozen, it has likely already
+  // been frozen by this function and we don't recurse.
+  if (Object.isFrozen(o)) {
+    return o
+  }
+  Object.values(o).forEach(v => Object.isFrozen(v) || deepFreeze(v))
+  return Object.freeze(o)
+}
+
 // Evaluates JS code against a certain context
 export function processJS(handlebars: string, context: any) {
   if (!isJSAllowed() || !runJS) {
@@ -70,9 +80,9 @@ export function processJS(handlebars: string, context: any) {
     // Our $ context function gets a value from context.
     // We clone the context to avoid mutation in the binding affecting real
     // app context.
-    const clonedContext = cloneDeep({ ...context, snippets: null })
+    const frozenContext = deepFreeze(context)
     const sandboxContext = {
-      $: (path: string) => getContextValue(path, clonedContext),
+      $: (path: string) => getContextValue(path, frozenContext),
       helpers: getJsHelperList(),
 
       // Proxy to evaluate snippets when running in the browser
