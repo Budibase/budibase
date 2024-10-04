@@ -134,8 +134,10 @@ async function processDefaultValues(table: Table, row: Row) {
 
   for (const [key, schema] of Object.entries(table.schema)) {
     if ("default" in schema && schema.default != null && row[key] == null) {
-      const processed = await processString(schema.default, ctx)
-
+      const processed =
+        typeof schema.default === "string"
+          ? await processString(schema.default, ctx)
+          : schema.default
       try {
         row[key] = coerce(processed, schema.type)
       } catch (err: any) {
@@ -422,6 +424,25 @@ export async function coreOutputProcessing(
                 delete link[linkKey]
               }
             }
+          }
+        }
+      }
+    }
+
+    if (sdk.views.isView(source)) {
+      const calculationFields = Object.keys(
+        helpers.views.calculationFields(source)
+      )
+
+      // We ensure all calculation fields are returned as numbers.  During the
+      // testing of this feature it was discovered that the COUNT operation
+      // returns a string for MySQL, MariaDB, and Postgres. But given that all
+      // calculation fields should be numbers, we blanket make sure of that
+      // here.
+      for (const key of calculationFields) {
+        for (const row of rows) {
+          if (typeof row[key] === "string") {
+            row[key] = parseFloat(row[key])
           }
         }
       }
