@@ -50,6 +50,7 @@ export interface Account extends CreateAccount {
   providerType?: AccountSSOProviderType
   quotaUsage?: QuotaUsage
   offlineLicenseToken?: string
+  tenantName?: string
 }
 
 export interface PasswordAccount extends Account {
