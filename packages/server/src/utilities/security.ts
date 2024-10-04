@@ -1,5 +1,6 @@
 import { permissions, roles } from "@budibase/backend-core"
 import { DocumentType, VirtualDocumentType } from "../db/utils"
+import { getDocumentType, getVirtualDocumentType } from "@budibase/types"
 
 export const CURRENTLY_SUPPORTED_LEVELS: string[] = [
   permissions.PermissionLevel.WRITE,
@@ -8,14 +9,16 @@ export const CURRENTLY_SUPPORTED_LEVELS: string[] = [
 ]
 
 export function getPermissionType(resourceId: string) {
-  const docType = Object.values(DocumentType).filter(docType =>
-    resourceId.startsWith(docType)
-  )[0]
-  switch (docType as DocumentType | VirtualDocumentType) {
-    case DocumentType.TABLE:
-    case DocumentType.ROW:
+  const virtualDocType = getVirtualDocumentType(resourceId)
+  switch (virtualDocType) {
     case VirtualDocumentType.VIEW:
       return permissions.PermissionType.TABLE
+  }
+
+  const docType = getDocumentType(resourceId)
+  switch (docType) {
+    case DocumentType.TABLE:
+    case DocumentType.ROW:
     case DocumentType.AUTOMATION:
       return permissions.PermissionType.AUTOMATION
     case DocumentType.WEBHOOK:
@@ -39,15 +42,18 @@ export function getBasePermissions(resourceId: string) {
     if (!role.permissionId) {
       continue
     }
+
     const perms = permissions.getBuiltinPermissionByID(role.permissionId)
     if (!perms) {
       continue
     }
+
     const typedPermission = perms.permissions.find(perm => perm.type === type)
-    if (
-      typedPermission &&
-      CURRENTLY_SUPPORTED_LEVELS.indexOf(typedPermission.level) !== -1
-    ) {
+    if (!typedPermission) {
+      continue
+    }
+
+    if (CURRENTLY_SUPPORTED_LEVELS.includes(typedPermission.level)) {
       const level = typedPermission.level
       basePermissions[level] = roles.lowerBuiltinRoleID(
         basePermissions[level],
