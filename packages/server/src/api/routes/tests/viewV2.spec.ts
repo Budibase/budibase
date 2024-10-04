@@ -24,8 +24,8 @@ import {
   RenameColumn,
   FeatureFlag,
   BBReferenceFieldSubType,
+  NumericCalculationFieldMetadata,
   ViewV2Schema,
-  ViewCalculationFieldMetadata,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -557,13 +557,13 @@ describe.each([
 
         expect(Object.keys(view.schema!)).toHaveLength(1)
 
-        let sum = view.schema!.sum as ViewCalculationFieldMetadata
+        let sum = view.schema!.sum as NumericCalculationFieldMetadata
         expect(sum).toBeDefined()
         expect(sum.calculationType).toEqual(CalculationType.SUM)
         expect(sum.field).toEqual("Price")
 
         view = await config.api.viewV2.get(view.id)
-        sum = view.schema!.sum as ViewCalculationFieldMetadata
+        sum = view.schema!.sum as NumericCalculationFieldMetadata
         expect(sum).toBeDefined()
         expect(sum.calculationType).toEqual(CalculationType.SUM)
         expect(sum.field).toEqual("Price")
@@ -863,6 +863,185 @@ describe.each([
               },
             }
           )
+        })
+
+      !isLucene &&
+        describe("calculation views", () => {
+          let table: Table
+          let view: ViewV2
+
+          beforeEach(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  name: {
+                    name: "name",
+                    type: FieldType.STRING,
+                    constraints: {
+                      presence: true,
+                    },
+                  },
+                  country: {
+                    name: "country",
+                    type: FieldType.STRING,
+                  },
+                  age: {
+                    name: "age",
+                    type: FieldType.NUMBER,
+                  },
+                },
+              })
+            )
+
+            view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                country: {
+                  visible: true,
+                },
+                age: {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "age",
+                },
+              },
+            })
+
+            await config.api.row.bulkImport(table._id!, {
+              rows: [
+                {
+                  name: "Steve",
+                  age: 30,
+                  country: "UK",
+                },
+                {
+                  name: "Jane",
+                  age: 31,
+                  country: "UK",
+                },
+                {
+                  name: "Ruari",
+                  age: 32,
+                  country: "USA",
+                },
+                {
+                  name: "Alice",
+                  age: 33,
+                  country: "USA",
+                },
+              ],
+            })
+          })
+
+          it("returns the expected rows prior to modification", async () => {
+            const { rows } = await config.api.row.search(view.id)
+            expect(rows).toHaveLength(2)
+            expect(rows).toEqual(
+              expect.arrayContaining([
+                {
+                  country: "USA",
+                  age: 65,
+                },
+                {
+                  country: "UK",
+                  age: 61,
+                },
+              ])
+            )
+          })
+
+          it("can remove a group by field", async () => {
+            delete view.schema!.country
+            await config.api.viewV2.update(view)
+
+            const { rows } = await config.api.row.search(view.id)
+            expect(rows).toHaveLength(1)
+            expect(rows).toEqual(
+              expect.arrayContaining([
+                {
+                  age: 126,
+                },
+              ])
+            )
+          })
+
+          it("can remove a calculation field", async () => {
+            delete view.schema!.age
+            await config.api.viewV2.update(view)
+
+            const { rows } = await config.api.row.search(view.id)
+            expect(rows).toHaveLength(4)
+
+            // Because the removal of the calculation field actually makes this
+            // no longer a calculation view, these rows will now have _id and
+            // _rev fields.
+            expect(rows).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({ country: "UK" }),
+                expect.objectContaining({ country: "UK" }),
+                expect.objectContaining({ country: "USA" }),
+                expect.objectContaining({ country: "USA" }),
+              ])
+            )
+          })
+
+          it("can add a new group by field", async () => {
+            view.schema!.name = { visible: true }
+            await config.api.viewV2.update(view)
+
+            const { rows } = await config.api.row.search(view.id)
+            expect(rows).toHaveLength(4)
+            expect(rows).toEqual(
+              expect.arrayContaining([
+                {
+                  name: "Steve",
+                  age: 30,
+                  country: "UK",
+                },
+                {
+                  name: "Jane",
+                  age: 31,
+                  country: "UK",
+                },
+                {
+                  name: "Ruari",
+                  age: 32,
+                  country: "USA",
+                },
+                {
+                  name: "Alice",
+                  age: 33,
+                  country: "USA",
+                },
+              ])
+            )
+          })
+
+          it("can add a new calculation field", async () => {
+            view.schema!.count = {
+              visible: true,
+              calculationType: CalculationType.COUNT,
+            }
+            await config.api.viewV2.update(view)
+
+            const { rows } = await config.api.row.search(view.id)
+            expect(rows).toHaveLength(2)
+            expect(rows).toEqual(
+              expect.arrayContaining([
+                {
+                  country: "USA",
+                  age: 65,
+                  count: 2,
+                },
+                {
+                  country: "UK",
+                  age: 61,
+                  count: 2,
+                },
+              ])
+            )
+          })
         })
     })
 
@@ -2569,6 +2748,74 @@ describe.each([
             } else {
               expect(actual).toEqual(expected)
             }
+          })
+
+          it("should be able to do a COUNT(DISTINCT)", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  name: {
+                    name: "name",
+                    type: FieldType.STRING,
+                  },
+                },
+              })
+            )
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                count: {
+                  visible: true,
+                  calculationType: CalculationType.COUNT,
+                  distinct: true,
+                  field: "name",
+                },
+              },
+            })
+
+            await config.api.row.bulkImport(table._id!, {
+              rows: [
+                {
+                  name: "John",
+                },
+                {
+                  name: "John",
+                },
+                {
+                  name: "Sue",
+                },
+              ],
+            })
+
+            const { rows } = await config.api.row.search(view.id)
+            expect(rows).toHaveLength(1)
+            expect(rows[0].count).toEqual(2)
+          })
+
+          it("should not be able to COUNT(DISTINCT ...) against a non-existent field", async () => {
+            await config.api.viewV2.create(
+              {
+                tableId: table._id!,
+                name: generator.guid(),
+                schema: {
+                  count: {
+                    visible: true,
+                    calculationType: CalculationType.COUNT,
+                    distinct: true,
+                    field: "does not exist oh no",
+                  },
+                },
+              },
+              {
+                status: 400,
+                body: {
+                  message:
+                    'Calculation field "count" references field "does not exist oh no" which does not exist in the table schema',
+                },
+              }
+            )
           })
         })
 
