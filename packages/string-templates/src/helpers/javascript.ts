@@ -48,14 +48,31 @@ const getContextValue = (path: string, context: any) => {
   return data
 }
 
-export function deepFreeze<T>(o: T) {
+function deepFreeze<T>(o: T): Readonly<T> {
+  if (o === undefined) {
+    return o
+  }
+
   // We assume that if the top-level object is frozen, it has likely already
   // been frozen by this function and we don't recurse.
   if (Object.isFrozen(o)) {
     return o
   }
-  Object.values(o).forEach(v => Object.isFrozen(v) || deepFreeze(v))
-  return Object.freeze(o)
+
+  Object.freeze(o)
+
+  Object.getOwnPropertyNames(o).forEach(function (prop) {
+    const key = prop as keyof typeof o
+    if (
+      o[key] !== null &&
+      (typeof o[key] === "object" || typeof o[key] === "function") &&
+      !Object.isFrozen(o[key])
+    ) {
+      deepFreeze(o[key])
+    }
+  })
+
+  return o
 }
 
 // Evaluates JS code against a certain context
