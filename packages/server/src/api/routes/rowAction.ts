@@ -52,6 +52,16 @@ router
     rowActionController.remove
   )
   .post(
+    "/api/tables/:tableId/actions/:actionId/permissions",
+    authorized(BUILDER),
+    rowActionController.setTablePermission
+  )
+  .delete(
+    "/api/tables/:tableId/actions/:actionId/permissions",
+    authorized(BUILDER),
+    rowActionController.unsetTablePermission
+  )
+  .post(
     "/api/tables/:tableId/actions/:actionId/permissions/:viewId",
     authorized(BUILDER),
     rowActionController.setViewPermission

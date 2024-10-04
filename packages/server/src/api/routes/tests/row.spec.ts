@@ -49,6 +49,7 @@ import * as uuid from "uuid"
 import { Knex } from "knex"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
+import { JsTimeoutError } from "@budibase/string-templates"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -3013,7 +3014,7 @@ describe.each([
             let i = 0
             for (; i < 10; i++) {
               const row = rows[i]
-              if (row.formula !== "Timed out while executing JS") {
+              if (row.formula !== JsTimeoutError.message) {
                 break
               }
             }
@@ -3027,7 +3028,7 @@ describe.each([
             for (; i < 10; i++) {
               const row = rows[i]
               expect(row.text).toBe("foo")
-              expect(row.formula).toBe("Request JS execution limit hit")
+              expect(row.formula).toStartWith("CPU time limit exceeded ")
             }
           }
         }
