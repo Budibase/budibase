@@ -53,6 +53,13 @@
     await Helpers.copyToClipboard(value)
     $notifications.success("Copied to clipboard")
   }
+
+  const generateAIColumns = async () => {
+    await rows.actions.saveRow({ rowId: $focusedRowId })
+    await rows.actions.refreshData()
+    menu.actions.close()
+    $notifications.success("Generated AI columns")
+  }
 </script>
 
 <div bind:this={anchor} {style} class="menu-anchor" />
@@ -161,6 +168,15 @@
           >
             Delete row
           </MenuItem>
+            <MenuItem
+              icon="MagicWand"
+              disabled={isNewRow ||
+                !$focusedRow?._rev ||
+                !$hasBudibaseIdentifiers}
+              on:click={generateAIColumns}
+            >
+              Generate AI Columns
+            </MenuItem>
         {/if}
       </Menu>
     </GridPopover>
