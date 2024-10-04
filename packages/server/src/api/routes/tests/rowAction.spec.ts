@@ -576,10 +576,10 @@ describe("/rowsActions", () => {
       )
 
       const expectedAction1 = expect.objectContaining({
-        allowedViews: [viewId1, viewId2],
+        allowedSources: [viewId1, viewId2],
       })
       const expectedAction2 = expect.objectContaining({
-        allowedViews: [viewId1],
+        allowedSources: [viewId1],
       })
 
       const expectedActions = expect.objectContaining({
@@ -601,7 +601,7 @@ describe("/rowsActions", () => {
       )
 
       const expectedAction = expect.objectContaining({
-        allowedViews: [viewId2],
+        allowedSources: [viewId2],
       })
       expect(actionResult).toEqual(expectedAction)
       expect(
