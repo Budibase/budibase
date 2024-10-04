@@ -534,11 +534,9 @@ describe("/rowsActions", () => {
       )
     })
 
-    let tableIdForDescribe: string
     let actionId1: string, actionId2: string
 
-    beforeAll(async () => {
-      tableIdForDescribe = tableId
+    beforeEach(async () => {
       for (const rowAction of createRowActionRequests(3)) {
         await createRowAction(tableId, rowAction)
       }
@@ -547,11 +545,6 @@ describe("/rowsActions", () => {
       const actions = _.sampleSize(Object.keys(persisted.actions), 2)
       actionId1 = actions[0]
       actionId2 = actions[1]
-    })
-
-    beforeEach(() => {
-      // Hack to reuse tables for these given tests
-      tableId = tableIdForDescribe
     })
 
     it("can set table permission", async () => {
@@ -622,11 +615,9 @@ describe("/rowsActions", () => {
       )
     })
 
-    let tableIdForDescribe: string
     let actionId1: string, actionId2: string
     let viewId1: string, viewId2: string
-    beforeAll(async () => {
-      tableIdForDescribe = tableId
+    beforeEach(async () => {
       for (const rowAction of createRowActionRequests(3)) {
         await createRowAction(tableId, rowAction)
       }
@@ -646,11 +637,6 @@ describe("/rowsActions", () => {
           setup.structures.viewV2.createRequest(tableId)
         )
       ).id
-    })
-
-    beforeEach(() => {
-      // Hack to reuse tables for these given tests
-      tableId = tableIdForDescribe
     })
 
     it("can set permission views", async () => {
