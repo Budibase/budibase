@@ -671,6 +671,8 @@ describe("/rowsActions", () => {
     })
 
     it("can unset permission views", async () => {
+      await config.api.rowAction.setViewPermission(tableId, viewId2, actionId1)
+      await config.api.rowAction.setViewPermission(tableId, viewId1, actionId2)
       const actionResult = await config.api.rowAction.unsetViewPermission(
         tableId,
         viewId1,
