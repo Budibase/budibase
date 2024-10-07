@@ -1,13 +1,14 @@
-import { atob, isJSAllowed } from "../utilities"
-import cloneDeep from "lodash/fp/cloneDeep"
+import { atob, isBackendService, isJSAllowed } from "../utilities"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
 import { JsTimeoutError, UserScriptError } from "../errors"
+import { cloneDeep } from "lodash/fp"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
-let runJS: ((js: string, context: any) => any) | undefined = undefined
+let runJS: ((js: string, context: Record<string, any>) => any) | undefined =
+  undefined
 export const setJSRunner = (runner: typeof runJS) => (runJS = runner)
 
 export const removeJSRunner = () => {
@@ -31,9 +32,19 @@ const removeSquareBrackets = (value: string) => {
   return value
 }
 
+const isReservedKey = (key: string) =>
+  key === "snippets" ||
+  key === "helpers" ||
+  key.startsWith("snippets.") ||
+  key.startsWith("helpers.")
+
 // Our context getter function provided to JS code as $.
 // Extracts a value from context.
 const getContextValue = (path: string, context: any) => {
+  // We populate `snippets` ourselves, don't allow access to it.
+  if (isReservedKey(path)) {
+    return undefined
+  }
   const literalStringRegex = /^(["'`]).*\1$/
   let data = context
   // check if it's a literal string - just return path if its quoted
@@ -46,7 +57,15 @@ const getContextValue = (path: string, context: any) => {
     }
     data = data[removeSquareBrackets(key)]
   })
-  return data
+
+  // When data is returned from this function in the backend, isolated-vm copies
+  // it across the vm boundary. We need to replicate that behaviour on the
+  // frontend to ensure that JS runs the same in both environments.
+  if (isBackendService()) {
+    return data
+  } else {
+    return cloneDeep(data)
+  }
 }
 
 // Evaluates JS code against a certain context
@@ -70,9 +89,8 @@ export function processJS(handlebars: string, context: any) {
     // Our $ context function gets a value from context.
     // We clone the context to avoid mutation in the binding affecting real
     // app context.
-    const clonedContext = cloneDeep({ ...context, snippets: null })
     const sandboxContext = {
-      $: (path: string) => getContextValue(path, clonedContext),
+      $: (path: string) => getContextValue(path, context),
       helpers: getJsHelperList(),
 
       // Proxy to evaluate snippets when running in the browser
