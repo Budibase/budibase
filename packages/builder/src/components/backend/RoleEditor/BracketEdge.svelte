@@ -19,7 +19,7 @@
 
   const getCurlyBracePath = (x1, y1, x2, y2) => {
     const w = 2 // Thickness
-    const q = 2 // Intensity
+    const q = 1 // Intensity
     const i = 28 // Inner radius strenth (lower is stronger)
     const j = 32 // Outer radius strength (higher is stronger)
 

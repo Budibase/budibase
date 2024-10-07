@@ -5,6 +5,7 @@ import {
   GridResolution,
   NodeHSpacing,
   NodeVSpacing,
+  MinHeight,
 } from "./constants"
 import { getNodesBounds, Position } from "@xyflow/svelte"
 import { Roles } from "constants/backend"
@@ -24,7 +25,15 @@ export const getBounds = nodes => {
       height: 10 * GridResolution,
     }
   }
-  return getNodesBounds(interactiveNodes)
+  let bounds = getNodesBounds(interactiveNodes)
+
+  // Enforce a min size
+  if (bounds.height < MinHeight) {
+    const diff = MinHeight - bounds.height
+    bounds.height = MinHeight
+    bounds.y -= diff / 2
+  }
+  return bounds
 }
 
 // Gets the position of the basic role
