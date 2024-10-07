@@ -371,11 +371,15 @@ export class DatabaseImpl implements Database {
     return this.performCall(() => {
       return async () => {
         const response = await directCouchUrlCall(args)
-        const json = await response.json()
-        if (response.status > 300) {
-          throw json
+        if (response.status >= 300) {
+          const text = await response.text()
+          console.error(`SQS error: ${text}`)
+          throw new CouchDBError(
+            "error while running SQS query, please try again later",
+            { name: "sqs_error", status: response.status }
+          )
         }
-        return json as T
+        return (await response.json()) as T
       }
     })
   }
