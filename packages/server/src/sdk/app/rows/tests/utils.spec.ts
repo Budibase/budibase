@@ -364,7 +364,7 @@ describe("validate", () => {
       "/* This is a comment */ SELECT * FROM users",
       '<iframe src="http://malicious-site.com"></iframe>',
     ])("test potentially unsafe input: %s", async input => {
-      withEnv({ XSS_SAFE_MODE: "1" }, async () => {
+      await withEnv({ XSS_SAFE_MODE: "1" }, async () => {
         const table = getTable()
         const row = { text: input }
         const output = await validate({ source: table, row })
