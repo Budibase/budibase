@@ -19,6 +19,7 @@ import {
   utils,
   context,
   withEnv as withCoreEnv,
+  features,
 } from "@budibase/backend-core"
 import env from "../../../environment"
 import { type App } from "@budibase/types"
@@ -358,9 +359,13 @@ describe("/applications", () => {
         .delete(`/api/global/roles/${prodAppId}`)
         .reply(200, {})
 
-      await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, async () => {
-        await config.api.application.delete(app.appId)
-      })
+      await features.testutils.withFeatureFlags(
+        "*",
+        { SQS: true },
+        async () => {
+          await config.api.application.delete(app.appId)
+        }
+      )
     })
   })
 

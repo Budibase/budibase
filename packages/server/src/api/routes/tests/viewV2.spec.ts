@@ -37,6 +37,7 @@ import {
   withEnv as withCoreEnv,
   setEnv as setCoreEnv,
   env,
+  features,
 } from "@budibase/backend-core"
 
 describe.each([
@@ -102,18 +103,13 @@ describe.each([
   }
 
   beforeAll(async () => {
-    await withCoreEnv({ TENANT_FEATURE_FLAGS: isSqs ? "*:SQS" : "" }, () =>
+    await features.testutils.withFeatureFlags("*", { SQS: isSqs }, () =>
       config.init()
     )
-    if (isLucene) {
-      envCleanup = setCoreEnv({
-        TENANT_FEATURE_FLAGS: "*:!SQS",
-      })
-    } else if (isSqs) {
-      envCleanup = setCoreEnv({
-        TENANT_FEATURE_FLAGS: "*:SQS",
-      })
-    }
+
+    envCleanup = features.testutils.setFeatureFlags("*", {
+      SQS: isSqs,
+    })
 
     if (dsProvider) {
       datasource = await config.createDatasource({
@@ -2490,12 +2486,8 @@ describe.each([
       describe("foreign relationship columns", () => {
         let envCleanup: () => void
         beforeAll(() => {
-          const flags = [`*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`]
-          if (env.TENANT_FEATURE_FLAGS) {
-            flags.push(...env.TENANT_FEATURE_FLAGS.split(","))
-          }
-          envCleanup = setCoreEnv({
-            TENANT_FEATURE_FLAGS: flags.join(","),
+          envCleanup = features.testutils.setFeatureFlags("*", {
+            ENRICHED_RELATIONSHIPS: true,
           })
         })
 

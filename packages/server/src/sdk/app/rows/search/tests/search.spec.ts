@@ -13,6 +13,7 @@ import { generator } from "@budibase/backend-core/tests"
 import {
   withEnv as withCoreEnv,
   setEnv as setCoreEnv,
+  features,
 } from "@budibase/backend-core"
 import {
   DatabaseName,
@@ -41,19 +42,13 @@ describe.each([
   let table: Table
 
   beforeAll(async () => {
-    await withCoreEnv({ TENANT_FEATURE_FLAGS: isSqs ? "*:SQS" : "" }, () =>
+    await features.testutils.withFeatureFlags("*", { SQS: isSqs }, () =>
       config.init()
     )
 
-    if (isLucene) {
-      envCleanup = setCoreEnv({
-        TENANT_FEATURE_FLAGS: "*:!SQS",
-      })
-    } else if (isSqs) {
-      envCleanup = setCoreEnv({
-        TENANT_FEATURE_FLAGS: "*:SQS",
-      })
-    }
+    envCleanup = features.testutils.setFeatureFlags("*", {
+      SQS: isSqs,
+    })
 
     if (dsProvider) {
       datasource = await config.createDatasource({

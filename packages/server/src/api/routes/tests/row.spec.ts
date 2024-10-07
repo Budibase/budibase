@@ -15,6 +15,7 @@ import {
   tenancy,
   withEnv as withCoreEnv,
   setEnv as setCoreEnv,
+  features,
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
@@ -98,12 +99,12 @@ describe.each([
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
-    if (isLucene) {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" })
-    } else if (isSqs) {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" })
-    }
+    await features.testutils.withFeatureFlags("*", { SQS: true }, () =>
+      config.init()
+    )
+    envCleanup = features.testutils.setFeatureFlags("*", {
+      SQS: isSqs,
+    })
 
     if (dsProvider) {
       const rawDatasource = await dsProvider
@@ -2517,15 +2518,9 @@ describe.each([
       let flagCleanup: (() => void) | undefined
 
       beforeAll(async () => {
-        const env = {
-          TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
-        }
-        if (isSqs) {
-          env.TENANT_FEATURE_FLAGS = `${env.TENANT_FEATURE_FLAGS},*:SQS`
-        } else {
-          env.TENANT_FEATURE_FLAGS = `${env.TENANT_FEATURE_FLAGS},*:!SQS`
-        }
-        flagCleanup = setCoreEnv(env)
+        flagCleanup = features.testutils.setFeatureFlags("*", {
+          ENRICHED_RELATIONSHIPS: true,
+        })
 
         const aux2Table = await config.api.table.save(saveTableRequest())
         const aux2Data = await config.api.row.save(aux2Table._id!, {})
@@ -2752,9 +2747,10 @@ describe.each([
       it.each(testScenarios)(
         "does not enrich relationships when not enabled (via %s)",
         async (__, retrieveDelegate) => {
-          await withCoreEnv(
+          await features.testutils.withFeatureFlags(
+            "*",
             {
-              TENANT_FEATURE_FLAGS: `*:!${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
+              ENRICHED_RELATIONSHIPS: false,
             },
             async () => {
               const otherRows = _.sampleSize(auxData, 5)
