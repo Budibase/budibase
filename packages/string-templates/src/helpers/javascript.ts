@@ -49,7 +49,7 @@ const getContextValue = (path: string, context: any) => {
 }
 
 function deepFreeze<T>(o: T): Readonly<T> {
-  if (o === undefined) {
+  if (o == null) {
     return o
   }
 
