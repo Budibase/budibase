@@ -178,9 +178,6 @@ describe.each([
               visible: true,
             },
           },
-          uiMetadata: {
-            foo: "bar",
-          },
         }
         const res = await config.api.viewV2.create(newView)
 
@@ -669,9 +666,6 @@ describe.each([
               visible: true,
               readonly: true,
             },
-          },
-          uiMetadata: {
-            foo: "bar",
           },
         }
         await config.api.viewV2.update(updatedData)
