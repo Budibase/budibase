@@ -114,7 +114,11 @@ async function guardViewSchema(
   }
 
   await checkReadonlyFields(table, view)
-  checkRequiredFields(table, view)
+
+  if (!helpers.views.isCalculationView(view)) {
+    checkRequiredFields(table, view)
+  }
+
   checkDisplayField(view)
 }
 
@@ -178,7 +182,7 @@ function checkRequiredFields(
       continue
     }
 
-    if (!helpers.views.isCalculationView(view) && !viewSchemaField?.visible) {
+    if (!viewSchemaField?.visible) {
       throw new HTTPError(
         `You can't hide "${field.name}" because it is a required field.`,
         400
@@ -186,7 +190,6 @@ function checkRequiredFields(
     }
 
     if (
-      viewSchemaField &&
       helpers.views.isBasicViewField(viewSchemaField) &&
       viewSchemaField.readonly
     ) {
