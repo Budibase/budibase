@@ -178,7 +178,7 @@ function checkRequiredFields(
       continue
     }
 
-    if (!viewSchemaField?.visible) {
+    if (!helpers.views.isCalculationView(view) && !viewSchemaField?.visible) {
       throw new HTTPError(
         `You can't hide "${field.name}" because it is a required field.`,
         400
@@ -186,6 +186,7 @@ function checkRequiredFields(
     }
 
     if (
+      viewSchemaField &&
       helpers.views.isBasicViewField(viewSchemaField) &&
       viewSchemaField.readonly
     ) {
