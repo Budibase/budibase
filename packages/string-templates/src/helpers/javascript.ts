@@ -64,7 +64,11 @@ const getContextValue = (path: string, context: any) => {
   if (isBackendService()) {
     return data
   } else {
-    return cloneDeep(data)
+    if (typeof data === "object") {
+      return cloneDeep(data)
+    } else {
+      return data
+    }
   }
 }
 
