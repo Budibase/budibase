@@ -176,19 +176,6 @@ describe("Javascript", () => {
       expect(result).toEqual(2)
       expect(context.array).toEqual([1])
     })
-
-    it("should copy values whenever returning them from $", async () => {
-      const context = { array: [1] }
-      const result = await processJS(
-        `
-        $("array").push(2);
-        return $("array")[1];
-      `,
-        context
-      )
-      expect(result).toEqual(undefined)
-      expect(context.array).toEqual([1])
-    })
   })
 
   describe("malice", () => {

@@ -58,18 +58,7 @@ const getContextValue = (path: string, context: any) => {
     data = data[removeSquareBrackets(key)]
   })
 
-  // When data is returned from this function in the backend, isolated-vm copies
-  // it across the vm boundary. We need to replicate that behaviour on the
-  // frontend to ensure that JS runs the same in both environments.
-  if (isBackendService()) {
-    return data
-  } else {
-    if (typeof data === "object") {
-      return cloneDeep(data)
-    } else {
-      return data
-    }
-  }
+  return data
 }
 
 // Evaluates JS code against a certain context
@@ -90,8 +79,25 @@ export function processJS(handlebars: string, context: any) {
       snippetMap[snippet.name] = snippet.code
     }
 
+    let clonedContext: Record<string, any>
+    if (isBackendService()) {
+      // On the backned, values are copied across the isolated-vm boundary and
+      // so we don't need to do any cloning here. This does create a fundamental
+      // difference in how JS executes on the frontend vs the backend, e.g.
+      // consider this snippet:
+      //
+      //   $("array").push(2)
+      //   return $("array")[1]
+      //
+      // With the context of `{ array: [1] }`, the backend will return
+      // `undefined` whereas the frontend will return `2`. We should fix this.
+      clonedContext = context
+    } else {
+      clonedContext = cloneDeep(context)
+    }
+
     const sandboxContext = {
-      $: (path: string) => getContextValue(path, context),
+      $: (path: string) => getContextValue(path, clonedContext),
       helpers: getJsHelperList(),
 
       // Proxy to evaluate snippets when running in the browser
