@@ -145,10 +145,16 @@
   const debouncedEval = Utils.debounce((expression, context, snippets) => {
     try {
       expressionError = null
-      expressionResult = processStringSync(expression || "", {
-        ...context,
-        snippets,
-      })
+      expressionResult = processStringSync(
+        expression || "",
+        {
+          ...context,
+          snippets,
+        },
+        {
+          noThrow: false,
+        }
+      )
     } catch (err) {
       expressionResult = null
       expressionError = err
