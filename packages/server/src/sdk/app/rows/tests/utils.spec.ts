@@ -354,7 +354,7 @@ describe("validate", () => {
       "1' OR '1' = '1",
       "' OR 'a' = 'a",
       "<script>alert('XSS');</script>",
-      "\"><img src=x onerror=alert(1)>",
+      '"><img src=x onerror=alert(1)>',
       "</script><script>alert('test')</script>",
       "<div onmouseover=\"alert('XSS')\">Hover over me!</div>",
       "'; EXEC sp_msforeachtable 'DROP TABLE ?'; --",
@@ -362,14 +362,16 @@ describe("validate", () => {
       "UNION SELECT * FROM users",
       "INSERT INTO users (username, password) VALUES ('admin', 'password')",
       "/* This is a comment */ SELECT * FROM users",
-      "<iframe src=\"http://malicious-site.com\"></iframe>"
-    ])('test potentially unsafe input: %s', async input => {
+      '<iframe src="http://malicious-site.com"></iframe>',
+    ])("test potentially unsafe input: %s", async input => {
       environment.XSS_SAFE_MODE = true
       const table = getTable()
       const row = { text: input }
       const output = await validate({ source: table, row })
       expect(output.valid).toBe(false)
-      expect(output.errors).toBe(["Input not sanitised - potentially vulnerable to XSS"])
+      expect(output.errors).toBe([
+        "Input not sanitised - potentially vulnerable to XSS",
+      ])
       environment.XSS_SAFE_MODE = false
     })
   })

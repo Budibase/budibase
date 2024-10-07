@@ -44,7 +44,8 @@ const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.BUDIBASE]: undefined,
 }
 
-const XSS_INPUT_REGEX =  /[<>;"'(){}]|--|\/\*|\*\/|union|select|insert|drop|delete|update|exec|script/i
+const XSS_INPUT_REGEX =
+  /[<>;"'(){}]|--|\/\*|\*\/|union|select|insert|drop|delete|update|exec|script/i
 
 export function getSQLClient(datasource: Datasource): SqlClient {
   if (!isSQL(datasource)) {
@@ -228,7 +229,9 @@ export async function validate({
 
     if (env.XSS_SAFE_MODE && typeof row[fieldName] === "string") {
       if (XSS_INPUT_REGEX.test(row[fieldName])) {
-        errors[fieldName] = ['Input not sanitised - potentially vulnerable to XSS']
+        errors[fieldName] = [
+          "Input not sanitised - potentially vulnerable to XSS",
+        ]
       }
     }
 
