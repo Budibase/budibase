@@ -8,7 +8,6 @@ import { init } from ".."
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 
 const DATE = "2021-01-21T12:00:00"
-
 tk.freeze(DATE)
 
 describe("jsRunner (using isolated-vm)", () => {
@@ -41,11 +40,38 @@ describe("jsRunner (using isolated-vm)", () => {
   })
 
   it("should prevent sandbox escape", async () => {
-    await expect(
-      processJS(`return this.constructor.constructor("return process.env")()`)
-    ).rejects.toThrow(
-      "error while running user-supplied JavaScript: ReferenceError: process is not defined"
+    expect(
+      await processJS(
+        `return this.constructor.constructor("return process.env")()`
+      )
+    ).toEqual("ReferenceError: process is not defined")
+  })
+
+  it("should not allow the context to be mutated", async () => {
+    const context = { array: [1] }
+    const result = await processJS(
+      `
+        const array = $("array");
+        array.push(2);
+        return array[1]
+      `,
+      context
     )
+    expect(result).toEqual(2)
+    expect(context.array).toEqual([1])
+  })
+
+  it("should copy values whenever returning them from $", async () => {
+    const context = { array: [1] }
+    const result = await processJS(
+      `
+        $("array").push(2);
+        return $("array")[1];
+      `,
+      context
+    )
+    expect(result).toEqual(undefined)
+    expect(context.array).toEqual([1])
   })
 
   describe("helpers", () => {

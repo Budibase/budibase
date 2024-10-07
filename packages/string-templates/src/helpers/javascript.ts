@@ -1,13 +1,14 @@
-import { atob, isJSAllowed } from "../utilities"
-import cloneDeep from "lodash/fp/cloneDeep"
+import { atob, isBackendService, isJSAllowed } from "../utilities"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
 import { JsTimeoutError, UserScriptError } from "../errors"
+import { cloneDeep } from "lodash/fp"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
-let runJS: ((js: string, context: any) => any) | undefined = undefined
+let runJS: ((js: string, context: Record<string, any>) => any) | undefined =
+  undefined
 export const setJSRunner = (runner: typeof runJS) => (runJS = runner)
 
 export const removeJSRunner = () => {
@@ -31,9 +32,19 @@ const removeSquareBrackets = (value: string) => {
   return value
 }
 
+const isReservedKey = (key: string) =>
+  key === "snippets" ||
+  key === "helpers" ||
+  key.startsWith("snippets.") ||
+  key.startsWith("helpers.")
+
 // Our context getter function provided to JS code as $.
 // Extracts a value from context.
 const getContextValue = (path: string, context: any) => {
+  // We populate `snippets` ourselves, don't allow access to it.
+  if (isReservedKey(path)) {
+    return undefined
+  }
   const literalStringRegex = /^(["'`]).*\1$/
   let data = context
   // check if it's a literal string - just return path if its quoted
@@ -46,6 +57,7 @@ const getContextValue = (path: string, context: any) => {
     }
     data = data[removeSquareBrackets(key)]
   })
+
   return data
 }
 
@@ -67,10 +79,23 @@ export function processJS(handlebars: string, context: any) {
       snippetMap[snippet.name] = snippet.code
     }
 
-    // Our $ context function gets a value from context.
-    // We clone the context to avoid mutation in the binding affecting real
-    // app context.
-    const clonedContext = cloneDeep({ ...context, snippets: null })
+    let clonedContext: Record<string, any>
+    if (isBackendService()) {
+      // On the backned, values are copied across the isolated-vm boundary and
+      // so we don't need to do any cloning here. This does create a fundamental
+      // difference in how JS executes on the frontend vs the backend, e.g.
+      // consider this snippet:
+      //
+      //   $("array").push(2)
+      //   return $("array")[1]
+      //
+      // With the context of `{ array: [1] }`, the backend will return
+      // `undefined` whereas the frontend will return `2`. We should fix this.
+      clonedContext = context
+    } else {
+      clonedContext = cloneDeep(context)
+    }
+
     const sandboxContext = {
       $: (path: string) => getContextValue(path, clonedContext),
       helpers: getJsHelperList(),
@@ -94,6 +119,8 @@ export function processJS(handlebars: string, context: any) {
     return `{{${LITERAL_MARKER} js_result-${JSON.stringify(res)}}}`
   } catch (error: any) {
     onErrorLog && onErrorLog(error)
+
+    const { noThrow = true } = context.__opts || {}
 
     // The error handling below is quite messy, because it has fallen to
     // string-templates to handle a variety of types of error specific to usages
@@ -123,11 +150,17 @@ export function processJS(handlebars: string, context: any) {
     // This is to catch the error that happens if a user-supplied JS script
     // throws for reasons introduced by the user.
     if (error.code === UserScriptError.code) {
+      if (noThrow) {
+        return error.userScriptError.toString()
+      }
       throw error
     }
 
     if (error.name === "SyntaxError") {
-      return error.toString()
+      if (noThrow) {
+        return error.toString()
+      }
+      throw error
     }
 
     return "Error while executing JS"
