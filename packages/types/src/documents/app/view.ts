@@ -99,7 +99,6 @@ export interface ViewV2 {
     type?: SortType
   }
   schema?: ViewV2Schema
-  uiMetadata?: Record<string, any>
 }
 
 export type ViewV2Schema = Record<string, ViewFieldMetadata>
