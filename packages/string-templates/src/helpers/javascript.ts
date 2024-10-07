@@ -90,9 +90,6 @@ export function processJS(handlebars: string, context: any) {
       snippetMap[snippet.name] = snippet.code
     }
 
-    // Our $ context function gets a value from context.
-    // We clone the context to avoid mutation in the binding affecting real
-    // app context.
     const sandboxContext = {
       $: (path: string) => getContextValue(path, context),
       helpers: getJsHelperList(),
