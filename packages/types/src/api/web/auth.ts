@@ -21,6 +21,7 @@ export interface UpdateSelfRequest {
   freeTrialConfirmedAt?: string
   appFavourites?: string[]
   tours?: Record<string, Date>
+  appSort?: string
 }
 
 export interface UpdateSelfResponse {

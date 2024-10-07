@@ -696,9 +696,8 @@ export class ExternalRequest<T extends Operation> {
       const calculationFields = helpers.views.calculationFields(this.source)
       for (const [key, field] of Object.entries(calculationFields)) {
         aggregations.push({
+          ...field,
           name: key,
-          field: field.field,
-          calculationType: field.calculationType,
         })
       }
     }

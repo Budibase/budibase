@@ -42,10 +42,30 @@ export interface RelationSchemaField extends UIFieldMetadata {
   readonly?: boolean
 }
 
-export interface ViewCalculationFieldMetadata extends BasicViewFieldMetadata {
-  calculationType: CalculationType
+export interface NumericCalculationFieldMetadata
+  extends BasicViewFieldMetadata {
+  calculationType:
+    | CalculationType.MIN
+    | CalculationType.MAX
+    | CalculationType.SUM
+    | CalculationType.AVG
   field: string
 }
+
+export interface CountCalculationFieldMetadata extends BasicViewFieldMetadata {
+  calculationType: CalculationType.COUNT
+}
+
+export interface CountDistinctCalculationFieldMetadata
+  extends CountCalculationFieldMetadata {
+  distinct: true
+  field: string
+}
+
+export type ViewCalculationFieldMetadata =
+  | NumericCalculationFieldMetadata
+  | CountCalculationFieldMetadata
+  | CountDistinctCalculationFieldMetadata
 
 export type ViewFieldMetadata =
   | BasicViewFieldMetadata
