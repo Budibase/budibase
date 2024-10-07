@@ -8,7 +8,7 @@ import {
 import { generateTableID } from "../../../../db/utils"
 import { validate } from "../utils"
 import { generator } from "@budibase/backend-core/tests"
-import environment from "../../../../environment"
+import { withEnv } from "../../../../environment"
 
 describe("validate", () => {
   const hour = () => generator.hour().toString().padStart(2, "0")
@@ -364,15 +364,15 @@ describe("validate", () => {
       "/* This is a comment */ SELECT * FROM users",
       '<iframe src="http://malicious-site.com"></iframe>',
     ])("test potentially unsafe input: %s", async input => {
-      environment.XSS_SAFE_MODE = true
-      const table = getTable()
-      const row = { text: input }
-      const output = await validate({ source: table, row })
-      expect(output.valid).toBe(false)
-      expect(output.errors).toBe([
-        "Input not sanitised - potentially vulnerable to XSS",
-      ])
-      environment.XSS_SAFE_MODE = false
+      withEnv({ XSS_SAFE_MODE: "1" }, async () => {
+        const table = getTable()
+        const row = { text: input }
+        const output = await validate({ source: table, row })
+        expect(output.valid).toBe(false)
+        expect(output.errors).toStrictEqual({
+          text: ["Input not sanitised - potentially vulnerable to XSS"],
+        })
+      })
     })
   })
 })
