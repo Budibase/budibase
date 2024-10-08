@@ -618,6 +618,109 @@ describe.each([
           }
         )
       })
+
+      it("cannot create a calculation view with duplicate calculations", async () => {
+        await config.api.viewV2.create(
+          {
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              sum: {
+                visible: true,
+                calculationType: CalculationType.SUM,
+                field: "Price",
+              },
+              sum2: {
+                visible: true,
+                calculationType: CalculationType.SUM,
+                field: "Price",
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              message:
+                'Duplicate calculation on field "Price", calculation type "sum"',
+            },
+          }
+        )
+      })
+
+      it("finds duplicate counts", async () => {
+        await config.api.viewV2.create(
+          {
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              count: {
+                visible: true,
+                calculationType: CalculationType.COUNT,
+              },
+              count2: {
+                visible: true,
+                calculationType: CalculationType.COUNT,
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              message:
+                'Duplicate calculation on field "*", calculation type "count"',
+            },
+          }
+        )
+      })
+
+      it("finds duplicate count distincts", async () => {
+        await config.api.viewV2.create(
+          {
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              count: {
+                visible: true,
+                calculationType: CalculationType.COUNT,
+                distinct: true,
+                field: "Price",
+              },
+              count2: {
+                visible: true,
+                calculationType: CalculationType.COUNT,
+                distinct: true,
+                field: "Price",
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              message:
+                'Duplicate calculation on field "Price", calculation type "count"',
+            },
+          }
+        )
+      })
+
+      it("does not confuse counts and count distincts in the duplicate check", async () => {
+        await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            count: {
+              visible: true,
+              calculationType: CalculationType.COUNT,
+            },
+            count2: {
+              visible: true,
+              calculationType: CalculationType.COUNT,
+              distinct: true,
+              field: "Price",
+            },
+          },
+        })
+      })
     })
 
     describe("update", () => {
