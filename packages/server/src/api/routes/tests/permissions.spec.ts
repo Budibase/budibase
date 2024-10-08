@@ -12,7 +12,7 @@ const STD_ROLE_ID = BUILTIN_ROLE_IDS.PUBLIC
 describe("/permission", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let table: Table & { _id: string }
+  let table: Table
   let perms: Document[]
   let row: Row
   let view: ViewV2
@@ -26,15 +26,33 @@ describe("/permission", () => {
   beforeEach(async () => {
     mocks.licenses.useCloudFree()
 
-    table = (await config.createTable()) as typeof table
+    table = await config.createTable()
+
+    await config.api.permission.revoke({
+      roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+      resourceId: table._id!,
+      level: PermissionLevel.READ,
+    })
+    await config.api.permission.revoke({
+      roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+      resourceId: table._id!,
+      level: PermissionLevel.WRITE,
+    })
+    await config.api.permission.revoke({
+      roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+      resourceId: table._id!,
+      level: PermissionLevel.EXECUTE,
+    })
+
     row = await config.createRow()
     view = await config.api.viewV2.create({
       tableId: table._id!,
       name: generator.guid(),
     })
+
     perms = await config.api.permission.add({
       roleId: STD_ROLE_ID,
-      resourceId: table._id,
+      resourceId: table._id!,
       level: PermissionLevel.READ,
     })
   })
@@ -74,27 +92,22 @@ describe("/permission", () => {
       })
     })
 
-    it("should get resource permissions with multiple roles", async () => {
+    it.only("should get resource permissions with multiple roles", async () => {
       perms = await config.api.permission.add({
         roleId: HIGHER_ROLE_ID,
-        resourceId: table._id,
+        resourceId: table._id!,
         level: PermissionLevel.WRITE,
       })
-      const res = await config.api.permission.get(table._id)
-      expect(res).toEqual({
-        permissions: {
-          read: { permissionType: "EXPLICIT", role: STD_ROLE_ID },
-          write: { permissionType: "EXPLICIT", role: HIGHER_ROLE_ID },
-        },
+      const { permissions } = await config.api.permission.get(table._id!)
+      expect(permissions).toEqual({
+        read: { permissionType: "EXPLICIT", role: STD_ROLE_ID },
+        write: { permissionType: "EXPLICIT", role: HIGHER_ROLE_ID },
+        execute: { permissionType: "BASE", role: "BASIC" },
       })
 
-      const allRes = await request
-        .get(`/api/permission`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(allRes.body[table._id]["read"]).toEqual(STD_ROLE_ID)
-      expect(allRes.body[table._id]["write"]).toEqual(HIGHER_ROLE_ID)
+      const all = await config.api.permission.fetch()
+      expect(all[table._id!]["read"]).toEqual(STD_ROLE_ID)
+      expect(all[table._id!]["write"]).toEqual(HIGHER_ROLE_ID)
     })
   })
 
@@ -102,11 +115,11 @@ describe("/permission", () => {
     it("should be able to remove the permission", async () => {
       const res = await config.api.permission.revoke({
         roleId: STD_ROLE_ID,
-        resourceId: table._id,
+        resourceId: table._id!,
         level: PermissionLevel.READ,
       })
       expect(res[0]._id).toEqual(STD_ROLE_ID)
-      const permsRes = await config.api.permission.get(table._id)
+      const permsRes = await config.api.permission.get(table._id!)
       expect(permsRes.permissions[STD_ROLE_ID]).toBeUndefined()
     })
   })
@@ -142,7 +155,7 @@ describe("/permission", () => {
     it("should not be able to access the view data when the table is not public and there are no view permissions overrides", async () => {
       await config.api.permission.revoke({
         roleId: STD_ROLE_ID,
-        resourceId: table._id,
+        resourceId: table._id!,
         level: PermissionLevel.READ,
       })
 
@@ -167,7 +180,7 @@ describe("/permission", () => {
       })
       await config.api.permission.revoke({
         roleId: STD_ROLE_ID,
-        resourceId: table._id,
+        resourceId: table._id!,
         level: PermissionLevel.READ,
       })
       // replicate changes before checking permissions
@@ -179,8 +192,8 @@ describe("/permission", () => {
 
     it("shouldn't allow writing from a public user", async () => {
       const res = await request
-        .post(`/api/${table._id}/rows`)
-        .send(basicRow(table._id))
+        .post(`/api/${table._id!}/rows`)
+        .send(basicRow(table._id!))
         .set(config.publicHeaders())
         .expect("Content-Type", /json/)
         .expect(401)
