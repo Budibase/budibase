@@ -13,8 +13,6 @@ import {
   context,
   InternalTable,
   tenancy,
-  withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
   features,
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
@@ -41,7 +39,6 @@ import {
   TableSchema,
   JsonFieldSubType,
   RowExportFormat,
-  FeatureFlag,
   RelationSchemaField,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"

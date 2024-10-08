@@ -10,11 +10,7 @@ import {
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
 import { search } from "../../../../../sdk/app/rows/search"
 import { generator } from "@budibase/backend-core/tests"
-import {
-  withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
-  features,
-} from "@budibase/backend-core"
+import { features } from "@budibase/backend-core"
 import {
   DatabaseName,
   getDatasource,

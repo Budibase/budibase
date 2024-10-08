@@ -22,7 +22,6 @@ import {
   RelationshipType,
   TableSchema,
   RenameColumn,
-  FeatureFlag,
   BBReferenceFieldSubType,
   NumericCalculationFieldMetadata,
   ViewV2Schema,
@@ -31,14 +30,7 @@ import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import {
-  db,
-  roles,
-  withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
-  env,
-  features,
-} from "@budibase/backend-core"
+import { db, roles, features } from "@budibase/backend-core"
 
 describe.each([
   ["lucene", undefined],
