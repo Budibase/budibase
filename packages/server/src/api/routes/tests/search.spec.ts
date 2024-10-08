@@ -7,9 +7,9 @@ import {
 import {
   context,
   db as dbCore,
+  features,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
-  setEnv as setCoreEnv,
   SQLITE_DESIGN_DOC_ID,
   utils,
   withEnv as withCoreEnv,
@@ -94,16 +94,12 @@ describe.each([
   }
 
   beforeAll(async () => {
-    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
-    if (isLucene) {
-      envCleanup = setCoreEnv({
-        TENANT_FEATURE_FLAGS: "*:!SQS",
-      })
-    } else if (isSqs) {
-      envCleanup = setCoreEnv({
-        TENANT_FEATURE_FLAGS: "*:SQS",
-      })
-    }
+    await features.testutils.withFeatureFlags("*", { SQS: true }, () =>
+      config.init()
+    )
+    envCleanup = features.testutils.setFeatureFlags("*", {
+      SQS: isSqs,
+    })
 
     if (config.app?.appId) {
       config.app = await config.api.application.update(config.app?.appId, {
