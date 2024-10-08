@@ -64,6 +64,14 @@ async function guardCalculationViewSchema(
   view: Omit<ViewV2, "id" | "version">
 ) {
   const calculationFields = helpers.views.calculationFields(view)
+
+  if (Object.keys(calculationFields).length > 5) {
+    throw new HTTPError(
+      "Calculation views can only have a maximum of 5 fields",
+      400
+    )
+  }
+
   for (const calculationFieldName of Object.keys(calculationFields)) {
     const schema = calculationFields[calculationFieldName]
     const isCount = schema.calculationType === CalculationType.COUNT
