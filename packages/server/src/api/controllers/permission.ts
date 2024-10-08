@@ -33,7 +33,7 @@ export async function fetch(
   ctx: UserCtx<void, FetchResourcePermissionInfoResponse>
 ) {
   const db = context.getAppDB()
-  const dbRoles: Role[] = await sdk.permissions.getAllDBRoles(db)
+  const dbRoles = await sdk.permissions.getAllDBRoles(db)
   let permissions: any = {}
   // create an object with structure role ID -> resource ID -> level
   for (let role of dbRoles) {
