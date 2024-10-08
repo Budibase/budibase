@@ -122,7 +122,11 @@ async function guardViewSchema(
   }
 
   await checkReadonlyFields(table, view)
-  checkRequiredFields(table, view)
+
+  if (!helpers.views.isCalculationView(view)) {
+    checkRequiredFields(table, view)
+  }
+
   checkDisplayField(view)
 }
 
