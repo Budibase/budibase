@@ -1,5 +1,6 @@
 import {
   CalculationType,
+  canGroupBy,
   FieldType,
   isNumeric,
   PermissionLevel,
@@ -118,6 +119,13 @@ async function guardCalculationViewSchema(
     if (!targetSchema) {
       throw new HTTPError(
         `Group by field "${groupByFieldName}" does not exist in the table schema`,
+        400
+      )
+    }
+
+    if (!canGroupBy(targetSchema.type)) {
+      throw new HTTPError(
+        `Grouping by fields of type "${targetSchema.type}" is not supported`,
         400
       )
     }
