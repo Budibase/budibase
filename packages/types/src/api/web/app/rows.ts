@@ -1,7 +1,8 @@
 import { SearchFilters, RowSearchParams } from "../../../sdk"
 import { Row } from "../../../documents"
-import { PaginationResponse, SortOrder } from "../../../api"
+import { PaginationResponse, SortOrder, SortType } from "../../../api"
 import { ReadStream } from "fs"
+import { z } from "zod"
 
 export interface SaveRowRequest extends Row {}
 
@@ -13,7 +14,29 @@ export interface PatchRowRequest extends Row {
 
 export interface PatchRowResponse extends Row {}
 
-export interface SearchRowRequest extends Omit<RowSearchParams, "tableId"> {}
+const searchRowRequest = z.object({
+  table: z.string(),
+  query: z.object({
+    allOr: z.boolean().optional(),
+  }),
+  paginate: z.boolean().optional(),
+  bookmark: z.union([z.string(), z.number()]).optional(),
+  limit: z.number().optional(),
+  sort: z.string().optional(),
+  sortOrder: z.nativeEnum(SortOrder).optional(),
+  sortType: z.nativeEnum(SortType).optional(),
+  version: z.string().optional(),
+  disableEscaping: z.boolean().optional(),
+  countRows: z.boolean().optional(),
+
+  // viewId?: string
+  // query?: SearchFilters
+
+  // fields?: string[]
+  // indexer?: () => Promise<any>
+  // rows?: Row[]
+})
+export type SearchRowRequest = z.infer<typeof searchRowRequest>
 
 export interface SearchViewRowRequest
   extends Pick<
