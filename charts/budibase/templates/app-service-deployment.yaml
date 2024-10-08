@@ -184,6 +184,10 @@ spec:
         - name: NODE_DEBUG
           value: {{ .Values.services.apps.nodeDebug | quote }}
         {{ end }}
+        {{ if .Values.services.apps.xssSafeMode }}
+        - name: XSS_SAFE_MODE
+          value: {{ .Values.services.apps.xssSafeMode | quote }}
+        {{ end }}
         {{ if .Values.globals.datadogApmEnabled }}
         - name: DD_LOGS_INJECTION
           value: {{ .Values.globals.datadogApmEnabled | quote }}
