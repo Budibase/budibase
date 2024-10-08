@@ -647,6 +647,7 @@ describe.each([
           {
             tableId: table._id!,
             name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
             schema: {
               sum: {
                 visible: true,
@@ -675,6 +676,7 @@ describe.each([
           {
             tableId: table._id!,
             name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
             schema: {
               count: {
                 visible: true,
@@ -701,6 +703,7 @@ describe.each([
           {
             tableId: table._id!,
             name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
             schema: {
               count: {
                 visible: true,
@@ -730,6 +733,7 @@ describe.each([
         await config.api.viewV2.create({
           tableId: table._id!,
           name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
           schema: {
             count: {
               visible: true,
