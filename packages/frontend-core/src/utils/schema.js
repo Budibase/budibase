@@ -2,14 +2,15 @@ import { helpers } from "@budibase/shared-core"
 import { TypeIconMap } from "../constants"
 
 export const getColumnIcon = column => {
+  if (column.calculation) {
+    return "Calculator"
+  }
   if (column.schema.autocolumn) {
     return "MagicWand"
   }
-
   if (helpers.schema.isDeprecatedSingleUserColumn(column.schema)) {
     return "User"
   }
-
   const { type, subtype } = column.schema
   const result =
     typeof TypeIconMap[type] === "object" && subtype
