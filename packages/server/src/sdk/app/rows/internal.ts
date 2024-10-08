@@ -1,4 +1,4 @@
-import { context, db } from "@budibase/backend-core"
+import { context, db, HTTPError } from "@budibase/backend-core"
 import { Row, Table, ViewV2 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { finaliseRow } from "../../../api/controllers/row/staticFormula"
@@ -10,6 +10,7 @@ import * as linkRows from "../../../db/linkedRows"
 import { InternalTables } from "../../../db/utils"
 import { getFullUser } from "../../../utilities/users"
 import { getSource, tryExtractingTableAndViewId } from "./utils"
+import { helpers } from "@budibase/shared-core"
 
 export async function save(
   tableOrViewId: string,
@@ -27,6 +28,10 @@ export async function save(
   } else {
     source = await sdk.tables.getTable(tableId)
     table = source
+  }
+
+  if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
+    throw new HTTPError("Cannot insert rows through a calculation view", 400)
   }
 
   if (!inputs._rev && !inputs._id) {
