@@ -27,6 +27,7 @@ import {
 } from "../../../utilities/rowProcessor"
 import { cloneDeep } from "lodash"
 import { generateIdForRow } from "./utils"
+import { helpers } from "@budibase/shared-core"
 
 export async function handleRequest<T extends Operation>(
   operation: T,
@@ -42,6 +43,11 @@ export async function handleRequest<T extends Operation>(
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const source = await utils.getSource(ctx)
+
+  if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
+    ctx.throw(400, "Cannot update rows through a calculation view")
+  }
+
   const table = await utils.getTableFromSource(source)
   const { _id, ...rowData } = ctx.request.body
 
