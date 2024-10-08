@@ -33,7 +33,7 @@ export async function fetch(
 ) {
   const db = context.getAppDB()
   const dbRoles = await sdk.permissions.getAllDBRoles(db)
-  let permissions: any = {}
+  let permissions: Record<string, Record<string, string>> = {}
   // create an object with structure role ID -> resource ID -> level
   for (let role of dbRoles) {
     if (!role.permissions) {
@@ -45,7 +45,7 @@ export async function fetch(
     }
     for (let [resource, levelArr] of Object.entries(role.permissions)) {
       const levels: string[] = Array.isArray(levelArr) ? levelArr : [levelArr]
-      const perms: Record<string, string> = {}
+      const perms: Record<string, string> = permissions[resource] || {}
       levels.forEach(level => (perms[level] = roleId!))
       permissions[resource] = perms
     }

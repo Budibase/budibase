@@ -39,6 +39,8 @@ describe("/permission", () => {
   })
 
   describe("table permissions", () => {
+    const DEFAULT_TABLE_ROLE_ID = BUILTIN_ROLE_IDS.ADMIN
+
     let tableId: string
     let row: Row
     let view: ViewV2
@@ -67,11 +69,11 @@ describe("/permission", () => {
       expect(permissions).toEqual({
         read: {
           permissionType: "BASE",
-          role: "BASIC",
+          role: DEFAULT_TABLE_ROLE_ID,
         },
         write: {
           permissionType: "BASE",
-          role: "BASIC",
+          role: DEFAULT_TABLE_ROLE_ID,
         },
       })
     })
@@ -91,7 +93,7 @@ describe("/permission", () => {
         expect(res.body).toEqual({
           permissions: {
             read: { permissionType: "EXPLICIT", role: STD_ROLE_ID },
-            write: { permissionType: "BASE", role: HIGHER_ROLE_ID },
+            write: { permissionType: "BASE", role: DEFAULT_TABLE_ROLE_ID },
           },
         })
       })
