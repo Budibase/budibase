@@ -2,6 +2,7 @@ import { derived, get } from "svelte/store"
 import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
 import { enrichSchemaWithRelColumns, memo } from "../../../utils"
 import { cloneDeep } from "lodash"
+import { ViewV2Type } from "@budibase/types"
 
 export const createStores = () => {
   const definition = memo(null)
@@ -81,13 +82,20 @@ export const deriveStores = context => {
     }
   )
 
-  const hasBudibaseIdentifiers = derived(datasource, $datasource => {
-    let type = $datasource?.type
-    if (type === "provider") {
-      type = $datasource.value?.datasource?.type
+  const hasBudibaseIdentifiers = derived(
+    [datasource, definition],
+    ([$datasource, $definition]) => {
+      let type = $datasource?.type
+      if (type === "provider") {
+        type = $datasource.value?.datasource?.type
+      }
+      // Handle calculation views
+      if (type === "viewV2" && $definition?.type === ViewV2Type.CALCULATION) {
+        return false
+      }
+      return ["table", "viewV2", "link"].includes(type)
     }
-    return ["table", "viewV2", "link"].includes(type)
-  })
+  )
 
   return {
     schema,
