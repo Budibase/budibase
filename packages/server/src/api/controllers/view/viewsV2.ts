@@ -127,13 +127,13 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
 
   const parsedView: Omit<RequiredKeys<ViewV2>, "id" | "version"> = {
     name: view.name,
+    type: view.type,
     tableId: view.tableId,
     query: view.query,
     queryUI: view.queryUI,
     sort: view.sort,
     schema,
     primaryDisplay: view.primaryDisplay,
-    uiMetadata: view.uiMetadata,
   }
   const result = await sdk.views.create(tableId, parsedView)
   ctx.status = 201
@@ -163,6 +163,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
   const parsedView: RequiredKeys<ViewV2> = {
     id: view.id,
     name: view.name,
+    type: view.type,
     version: view.version,
     tableId: view.tableId,
     query: view.query,
@@ -170,7 +171,6 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
     sort: view.sort,
     schema,
     primaryDisplay: view.primaryDisplay,
-    uiMetadata: view.uiMetadata,
   }
 
   const result = await sdk.views.update(tableId, parsedView)
