@@ -4,7 +4,6 @@ import {
   db as dbCore,
   features,
   SQLITE_DESIGN_DOC_ID,
-  withEnv as withCoreEnv,
 } from "@budibase/backend-core"
 import {
   LinkDocument,

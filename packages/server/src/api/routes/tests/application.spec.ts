@@ -14,13 +14,7 @@ jest.mock("../../../utilities/redis", () => ({
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
-import {
-  events,
-  utils,
-  context,
-  withEnv as withCoreEnv,
-  features,
-} from "@budibase/backend-core"
+import { events, utils, context, features } from "@budibase/backend-core"
 import env from "../../../environment"
 import { type App } from "@budibase/types"
 import tk from "timekeeper"

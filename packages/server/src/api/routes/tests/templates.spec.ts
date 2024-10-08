@@ -2,11 +2,7 @@ import * as setup from "./utilities"
 import path from "path"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
-import {
-  withEnv as withCoreEnv,
-  env as coreEnv,
-  features,
-} from "@budibase/backend-core"
+import { features } from "@budibase/backend-core"
 
 interface App {
   background: string
