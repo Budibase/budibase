@@ -6,9 +6,6 @@ import {
   AccountSSOProviderType,
   AuthType,
   CloudAccount,
-  CreateAccount,
-  CreatePassswordAccount,
-  CreateVerifiableSSOAccount,
   Hosting,
   SSOAccount,
 } from "@budibase/types"
@@ -19,6 +16,7 @@ export const account = (partial: Partial<Account> = {}): Account => {
     accountId: uuid(),
     tenantId: generator.word(),
     email: generator.email({ domain: "example.com" }),
+    accountName: generator.word(),
     tenantName: generator.word(),
     hosting: Hosting.SELF,
     createdAt: Date.now(),
@@ -61,10 +59,8 @@ export function ssoAccount(account: Account = cloudAccount()): SSOAccount {
       accessToken: generator.string(),
       refreshToken: generator.string(),
     },
-    pictureUrl: generator.url(),
     provider: provider(),
     providerType: providerType(),
-    thirdPartyProfile: {},
   }
 }
 
@@ -78,68 +74,7 @@ export function verifiableSsoAccount(
       accessToken: generator.string(),
       refreshToken: generator.string(),
     },
-    pictureUrl: generator.url(),
     provider: AccountSSOProvider.MICROSOFT,
     providerType: AccountSSOProviderType.MICROSOFT,
-    thirdPartyProfile: { id: "abc123" },
   }
-}
-
-export const cloudCreateAccount: CreatePassswordAccount = {
-  email: "cloud@budibase.com",
-  tenantId: "cloud",
-  hosting: Hosting.CLOUD,
-  authType: AuthType.PASSWORD,
-  password: "Password123!",
-  tenantName: "cloud",
-  name: "Budi Armstrong",
-  size: "10+",
-  profession: "Software Engineer",
-}
-
-export const cloudSSOCreateAccount: CreateAccount = {
-  email: "cloud-sso@budibase.com",
-  tenantId: "cloud-sso",
-  hosting: Hosting.CLOUD,
-  authType: AuthType.SSO,
-  tenantName: "cloudsso",
-  name: "Budi Armstrong",
-  size: "10+",
-  profession: "Software Engineer",
-}
-
-export const cloudVerifiableSSOCreateAccount: CreateVerifiableSSOAccount = {
-  email: "cloud-sso@budibase.com",
-  tenantId: "cloud-sso",
-  hosting: Hosting.CLOUD,
-  authType: AuthType.SSO,
-  tenantName: "cloudsso",
-  name: "Budi Armstrong",
-  size: "10+",
-  profession: "Software Engineer",
-  provider: AccountSSOProvider.MICROSOFT,
-  thirdPartyProfile: { id: "abc123" },
-}
-
-export const selfCreateAccount: CreatePassswordAccount = {
-  email: "self@budibase.com",
-  tenantId: "self",
-  hosting: Hosting.SELF,
-  authType: AuthType.PASSWORD,
-  password: "Password123!",
-  tenantName: "self",
-  name: "Budi Armstrong",
-  size: "10+",
-  profession: "Software Engineer",
-}
-
-export const selfSSOCreateAccount: CreateAccount = {
-  email: "self-sso@budibase.com",
-  tenantId: "self-sso",
-  hosting: Hosting.SELF,
-  authType: AuthType.SSO,
-  tenantName: "selfsso",
-  name: "Budi Armstrong",
-  size: "10+",
-  profession: "Software Engineer",
 }
