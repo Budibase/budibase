@@ -26,6 +26,8 @@ import {
   BBReferenceFieldSubType,
   NumericCalculationFieldMetadata,
   ViewV2Schema,
+  canGroupBy,
+  ViewV2Type,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -720,6 +722,34 @@ describe.each([
             },
           },
         })
+      })
+
+      it.only("cannot use complex types as group-by fields", async () => {
+        const complexTypes = Object.values(FieldType).filter(
+          type => !canGroupBy(type)
+        )
+        for (const type of complexTypes) {
+          const field = { name: "field", type } as FieldSchema
+          const table = await config.api.table.save(
+            saveTableRequest({ schema: { field } })
+          )
+          await config.api.viewV2.create(
+            {
+              tableId: table._id!,
+              name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
+              schema: {
+                field: { visible: true },
+              },
+            },
+            {
+              status: 400,
+              body: {
+                message: "",
+              },
+            }
+          )
+        }
       })
     })
 
