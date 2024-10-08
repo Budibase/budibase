@@ -1,6 +1,7 @@
 import {
   CalculationType,
   FieldType,
+  isNumeric,
   PermissionLevel,
   RelationSchemaField,
   RenameColumn,
@@ -103,7 +104,7 @@ async function guardCalculationViewSchema(
       )
     }
 
-    if (!isCount && !helpers.schema.isNumeric(targetSchema)) {
+    if (!isCount && !isNumeric(targetSchema.type)) {
       throw new HTTPError(
         `Calculation field "${name}" references field "${schema.field}" which is not a numeric field`,
         400
