@@ -738,6 +738,41 @@ describe.each([
         })
       })
 
+      !isLucene &&
+        it("does not get confused when a calculation field shadows a basic one", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                age: {
+                  name: "age",
+                  type: FieldType.NUMBER,
+                },
+              },
+            })
+          )
+
+          await config.api.row.bulkImport(table._id!, {
+            rows: [{ age: 1 }, { age: 2 }, { age: 3 }],
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
+            schema: {
+              age: {
+                visible: true,
+                calculationType: CalculationType.SUM,
+                field: "age",
+              },
+            },
+          })
+
+          const { rows } = await config.api.row.search(view.id)
+          expect(rows).toHaveLength(1)
+          expect(rows[0].age).toEqual(6)
+        })
+
       // We don't allow the creation of tables with most JsonTypes when using
       // external datasources.
       isInternal &&
