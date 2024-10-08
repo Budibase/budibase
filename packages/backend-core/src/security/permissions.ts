@@ -84,7 +84,8 @@ export const BUILTIN_PERMISSIONS: {
     name: "Read only",
     permissions: [
       new Permission(PermissionType.QUERY, PermissionLevel.READ),
-      new Permission(PermissionType.TABLE, PermissionLevel.READ),
+      // TODO: don't add "breaking changes"
+      // new Permission(PermissionType.TABLE, PermissionLevel.READ),
       new Permission(PermissionType.APP, PermissionLevel.READ),
     ],
   },
@@ -93,7 +94,7 @@ export const BUILTIN_PERMISSIONS: {
     name: "Read/Write",
     permissions: [
       new Permission(PermissionType.QUERY, PermissionLevel.WRITE),
-      new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
+      // new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
       new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
       new Permission(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
       new Permission(PermissionType.APP, PermissionLevel.READ),
@@ -103,7 +104,7 @@ export const BUILTIN_PERMISSIONS: {
     _id: BuiltinPermissionID.POWER,
     name: "Power",
     permissions: [
-      new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
+      // new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
       new Permission(PermissionType.USER, PermissionLevel.READ),
       new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
       new Permission(PermissionType.WEBHOOK, PermissionLevel.READ),
