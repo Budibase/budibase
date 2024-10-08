@@ -178,6 +178,7 @@ jobs:
           key: image-cache-${{ hashFiles('packages/server/datasource-sha.env') }}
 
       - if: steps.image-cache.outputs.cache-hit != 'true'
+        name: Pull and cache Docker images
         run: |
           docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }} &
           docker pull mysql@${{ steps.dotenv.outputs.MYSQL_SHA }} &
@@ -192,6 +193,7 @@ jobs:
 
           wait $(jobs -p)
 
+          mkdir -p ~/image-cache
           docker save -o ~/image-cache/mssql.tar mcr.microsoft.com/mssql/server
           docker save -o ~/image-cache/mysql.tar mysql
           docker save -o ~/image-cache/postgres.tar postgres
@@ -204,6 +206,7 @@ jobs:
           docker save -o ~/image-cache/couchdb.tar budibase/couchdb:v3.3.3-sqs-v2.1.1
 
       - if: steps.image-cache.outputs.cache-hit == 'true'
+        name: Load Docker images from cache
         run: |
           docker load -i ~/image-cache/mssql.tar
           docker load -i ~/image-cache/mysql.tar
