@@ -22,7 +22,6 @@ import {
   RelationshipType,
   TableSchema,
   RenameColumn,
-  FeatureFlag,
   BBReferenceFieldSubType,
   NumericCalculationFieldMetadata,
   ViewV2Schema,
@@ -32,13 +31,7 @@ import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import {
-  db,
-  roles,
-  withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
-  env,
-} from "@budibase/backend-core"
+import { db, roles, features } from "@budibase/backend-core"
 
 describe.each([
   ["lucene", undefined],
@@ -103,18 +96,13 @@ describe.each([
   }
 
   beforeAll(async () => {
-    await withCoreEnv({ TENANT_FEATURE_FLAGS: isSqs ? "*:SQS" : "" }, () =>
+    await features.testutils.withFeatureFlags("*", { SQS: isSqs }, () =>
       config.init()
     )
-    if (isLucene) {
-      envCleanup = setCoreEnv({
-        TENANT_FEATURE_FLAGS: "*:!SQS",
-      })
-    } else if (isSqs) {
-      envCleanup = setCoreEnv({
-        TENANT_FEATURE_FLAGS: "*:SQS",
-      })
-    }
+
+    envCleanup = features.testutils.setFeatureFlags("*", {
+      SQS: isSqs,
+    })
 
     if (dsProvider) {
       datasource = await config.createDatasource({
@@ -2666,12 +2654,8 @@ describe.each([
       describe("foreign relationship columns", () => {
         let envCleanup: () => void
         beforeAll(() => {
-          const flags = [`*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`]
-          if (env.TENANT_FEATURE_FLAGS) {
-            flags.push(...env.TENANT_FEATURE_FLAGS.split(","))
-          }
-          envCleanup = setCoreEnv({
-            TENANT_FEATURE_FLAGS: flags.join(","),
+          envCleanup = features.testutils.setFeatureFlags("*", {
+            ENRICHED_RELATIONSHIPS: true,
           })
         })
 
