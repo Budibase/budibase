@@ -42,7 +42,7 @@ export class Role implements RoleDoc {
   _id: string
   _rev?: string
   name: string
-  permissionId: string
+  permissionId: BuiltinPermissionID
   inherits?: string
   version?: string
   permissions: Record<string, PermissionLevel[]> = {}
@@ -51,7 +51,7 @@ export class Role implements RoleDoc {
   constructor(
     id: string,
     name: string,
-    permissionId: string,
+    permissionId: BuiltinPermissionID,
     uiMetadata?: RoleUIMetadata
   ) {
     this._id = id
