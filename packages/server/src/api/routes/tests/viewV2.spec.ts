@@ -1071,6 +1071,26 @@ describe.each([
             )
           })
 
+          it("can add a new group by field that is invisible, even if required on the table", async () => {
+            view.schema!.name = { visible: false }
+            await config.api.viewV2.update(view)
+
+            const { rows } = await config.api.row.search(view.id)
+            expect(rows).toHaveLength(2)
+            expect(rows).toEqual(
+              expect.arrayContaining([
+                {
+                  country: "USA",
+                  age: 65,
+                },
+                {
+                  country: "UK",
+                  age: 61,
+                },
+              ])
+            )
+          })
+
           it("can add a new calculation field", async () => {
             view.schema!.count = {
               visible: true,
