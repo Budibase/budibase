@@ -72,10 +72,22 @@ async function guardCalculationViewSchema(
     )
   }
 
-  for (const calculationFieldName of Object.keys(calculationFields)) {
-    const schema = calculationFields[calculationFieldName]
+  const seen: Record<string, Record<CalculationType, boolean>> = {}
+
+  for (const name of Object.keys(calculationFields)) {
+    const schema = calculationFields[name]
     const isCount = schema.calculationType === CalculationType.COUNT
     const isDistinct = isCount && "distinct" in schema && schema.distinct
+
+    const field = isCount && !isDistinct ? "*" : schema.field
+    if (seen[field]?.[schema.calculationType]) {
+      throw new HTTPError(
+        `Duplicate calculation on field "${field}", calculation type "${schema.calculationType}"`,
+        400
+      )
+    }
+    seen[field] ??= {} as Record<CalculationType, boolean>
+    seen[field][schema.calculationType] = true
 
     // Count fields that aren't distinct don't need to reference another field,
     // so we don't validate it.
@@ -86,14 +98,14 @@ async function guardCalculationViewSchema(
     const targetSchema = table.schema[schema.field]
     if (!targetSchema) {
       throw new HTTPError(
-        `Calculation field "${calculationFieldName}" references field "${schema.field}" which does not exist in the table schema`,
+        `Calculation field "${name}" references field "${schema.field}" which does not exist in the table schema`,
         400
       )
     }
 
     if (!isCount && !helpers.schema.isNumeric(targetSchema)) {
       throw new HTTPError(
-        `Calculation field "${calculationFieldName}" references field "${schema.field}" which is not a numeric field`,
+        `Calculation field "${name}" references field "${schema.field}" which is not a numeric field`,
         400
       )
     }
