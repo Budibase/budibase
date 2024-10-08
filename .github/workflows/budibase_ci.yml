@@ -168,7 +168,16 @@ jobs:
         with:
           path: ./packages/server/datasource-sha.env
 
-      - name: Pull testcontainers images
+      - id: image-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/image-cache
+          # Adjust key to meet your cache time requirements e.g.
+          # ${{ hashFiles(*) }} can be useful here to invalidate
+          # cache on file changes
+          key: image-cache-${{ hashFiles('packages/server/datasource-sha.env') }}
+
+      - if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
           docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }} &
           docker pull mysql@${{ steps.dotenv.outputs.MYSQL_SHA }} &
@@ -183,8 +192,31 @@ jobs:
 
           wait $(jobs -p)
 
-      - run: yarn --frozen-lockfile
+          docker save -o ~/image-cache/mssql.tar mcr.microsoft.com/mssql/server
+          docker save -o ~/image-cache/mysql.tar mysql
+          docker save -o ~/image-cache/postgres.tar postgres
+          docker save -o ~/image-cache/mariadb.tar mariadb
+          docker save -o ~/image-cache/mongo.tar mongo
+          docker save -o ~/image-cache/oracle.tar budibase/oracle-database:23.2-slim-faststart
+          docker save -o ~/image-cache/minio.tar minio/minio
+          docker save -o ~/image-cache/redis.tar redis
+          docker save -o ~/image-cache/ryuk.tar testcontainers/ryuk:0.5.1
+          docker save -o ~/image-cache/couchdb.tar budibase/couchdb:v3.3.3-sqs-v2.1.1
 
+      - if: steps.image-cache.outputs.cache-hit == 'true'
+        run: |
+          docker load -i ~/image-cache/mssql.tar
+          docker load -i ~/image-cache/mysql.tar
+          docker load -i ~/image-cache/postgres.tar
+          docker load -i ~/image-cache/mariadb.tar
+          docker load -i ~/image-cache/mongo.tar
+          docker load -i ~/image-cache/oracle.tar
+          docker load -i ~/image-cache/minio.tar
+          docker load -i ~/image-cache/redis.tar
+          docker load -i ~/image-cache/ryuk.tar
+          docker load -i ~/image-cache/couchdb.tar
+
+      - run: yarn --frozen-lockfile
       - name: Test server
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
