@@ -14,11 +14,12 @@
   import GridScreensButton from "components/backend/DataTable/buttons/grid/GridScreensButton.svelte"
   import GridRowActionsButton from "components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
   import GridViewCalculationButton from "components/backend/DataTable/buttons/grid/GridViewCalculationButton.svelte"
+  import { ViewV2Type } from "@budibase/types"
 
   let generateButton
 
   $: view = $viewsV2.selected
-  $: calculation = view?.uiMetadata?.calculation
+  $: calculation = view?.type === ViewV2Type.CALCULATION
   $: id = view?.id
   $: datasource = {
     type: "viewV2",
