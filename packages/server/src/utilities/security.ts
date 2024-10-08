@@ -35,9 +35,9 @@ export function getPermissionType(resourceId: string) {
 /**
  *  works out the basic permissions based on builtin roles for a resource, using its ID
  */
-export function getBasePermissions(resourceId: string) {
+export function getBasePermissions(resourceId: string): Record<string, string> {
   const type = getPermissionType(resourceId)
-  const basePermissions: { [key: string]: string } = {}
+  const basePermissions: Record<string, string> = {}
   for (let [roleId, role] of Object.entries(roles.getBuiltinRoles())) {
     if (!role.permissionId) {
       continue

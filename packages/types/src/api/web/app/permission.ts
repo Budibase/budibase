@@ -1,5 +1,9 @@
 import { PermissionLevel } from "../../../sdk"
 
+export interface FetchResourcePermissionInfoResponse {
+  [key: string]: Record<string, string>
+}
+
 export interface ResourcePermissionInfo {
   role: string
   permissionType: string

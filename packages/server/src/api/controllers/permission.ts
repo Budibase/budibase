@@ -9,6 +9,7 @@ import {
   AddPermissionRequest,
   RemovePermissionRequest,
   RemovePermissionResponse,
+  FetchResourcePermissionInfoResponse,
 } from "@budibase/types"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
@@ -28,7 +29,9 @@ export function fetchLevels(ctx: UserCtx) {
   ctx.body = SUPPORTED_LEVELS
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(
+  ctx: UserCtx<void, FetchResourcePermissionInfoResponse>
+) {
   const db = context.getAppDB()
   const dbRoles: Role[] = await sdk.permissions.getAllDBRoles(db)
   let permissions: any = {}
@@ -49,7 +52,7 @@ export async function fetch(ctx: UserCtx) {
     }
   }
   // apply the base permissions
-  const finalPermissions: Record<string, Record<string, string>> = {}
+  const finalPermissions: FetchResourcePermissionInfoResponse = {}
   for (let [resource, permission] of Object.entries(permissions)) {
     const basePerms = getBasePermissions(resource)
     finalPermissions[resource] = Object.assign(basePerms, permission)
