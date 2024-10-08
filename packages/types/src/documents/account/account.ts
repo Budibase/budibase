@@ -98,8 +98,6 @@ export interface AccountSSO {
   provider: AccountSSOProvider
   providerType: AccountSSOProviderType
   oauth2?: OAuthTokens
-  pictureUrl?: string
-  thirdPartyProfile: any // TODO: define what the google profile looks like
 }
 
 export type SSOAccount = (Account | CloudAccount) & AccountSSO
