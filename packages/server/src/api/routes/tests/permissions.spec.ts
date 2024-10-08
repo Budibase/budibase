@@ -270,6 +270,28 @@ describe("/permission", () => {
         },
       })
     })
+
+    it("can sets permissions inherits explicit view permissions", async () => {
+      await config.api.permission.add({
+        roleId: HIGHER_ROLE_ID,
+        resourceId: viewId,
+        level: PermissionLevel.WRITE,
+      })
+
+      const { permissions } = await config.api.permission.get(viewId)
+      expect(permissions).toEqual({
+        read: {
+          permissionType: "INHERITED",
+          role: DEFAULT_TABLE_ROLE_ID,
+          inheritablePermission: DEFAULT_TABLE_ROLE_ID,
+        },
+        write: {
+          permissionType: "EXPLICIT",
+          role: HIGHER_ROLE_ID,
+          inheritablePermission: DEFAULT_TABLE_ROLE_ID,
+        },
+      })
+    })
   })
 
   describe("fetch builtins", () => {
