@@ -59,10 +59,8 @@ export function ssoAccount(account: Account = cloudAccount()): SSOAccount {
       accessToken: generator.string(),
       refreshToken: generator.string(),
     },
-    pictureUrl: generator.url(),
     provider: provider(),
     providerType: providerType(),
-    thirdPartyProfile: {},
   }
 }
 
@@ -76,9 +74,7 @@ export function verifiableSsoAccount(
       accessToken: generator.string(),
       refreshToken: generator.string(),
     },
-    pictureUrl: generator.url(),
     provider: AccountSSOProvider.MICROSOFT,
     providerType: AccountSSOProviderType.MICROSOFT,
-    thirdPartyProfile: { id: "abc123" },
   }
 }
