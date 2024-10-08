@@ -43,6 +43,14 @@ export const deriveStores = context => {
       // Disable some features if we're editing a view
       if (type === "viewV2") {
         config.canEditColumns = false
+
+        // Disable features for calculation views
+        if ($definition?.type === ViewV2Type.CALCULATION) {
+          config.canAddRows = false
+          config.canEditRows = false
+          config.canDeleteRows = false
+          config.canExpandRows = false
+        }
       }
 
       // Disable adding rows if we don't have any valid columns
@@ -60,19 +68,7 @@ export const deriveStores = context => {
         config.canEditColumns = false
       }
 
-      // Disable features for calculation views
-      if (type === "viewV2" && $definition?.type === ViewV2Type.CALCULATION) {
-        config.canAddRows = false
-        config.canEditRows = false
-        config.canDeleteRows = false
-        config.canExpandRows = false
-      }
-
       return config
     }
   )
-
-  return {
-    config,
-  }
 }
