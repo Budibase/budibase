@@ -92,7 +92,7 @@ describe("/permission", () => {
       })
     })
 
-    it.only("should get resource permissions with multiple roles", async () => {
+    it("should get resource permissions with multiple roles", async () => {
       perms = await config.api.permission.add({
         roleId: HIGHER_ROLE_ID,
         resourceId: table._id!,
@@ -102,7 +102,6 @@ describe("/permission", () => {
       expect(permissions).toEqual({
         read: { permissionType: "EXPLICIT", role: STD_ROLE_ID },
         write: { permissionType: "EXPLICIT", role: HIGHER_ROLE_ID },
-        execute: { permissionType: "BASE", role: "BASIC" },
       })
 
       const all = await config.api.permission.fetch()

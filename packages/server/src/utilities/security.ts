@@ -19,6 +19,7 @@ export function getPermissionType(resourceId: string) {
   switch (docType) {
     case DocumentType.TABLE:
     case DocumentType.ROW:
+      return permissions.PermissionType.TABLE
     case DocumentType.AUTOMATION:
       return permissions.PermissionType.AUTOMATION
     case DocumentType.WEBHOOK:
