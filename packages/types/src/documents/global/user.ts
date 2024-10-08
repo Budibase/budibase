@@ -67,6 +67,7 @@ export interface User extends Document {
   scimInfo?: { isSync: true } & Record<string, any>
   appFavourites?: string[]
   ssoId?: string
+  appSort?: string
 }
 
 export enum UserStatus {

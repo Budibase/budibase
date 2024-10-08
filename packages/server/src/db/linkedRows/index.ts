@@ -23,8 +23,8 @@ import {
   Row,
   Table,
   TableSchema,
-  ViewFieldMetadata,
   ViewV2,
+  ViewV2Schema,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { helpers } from "@budibase/shared-core"
@@ -262,7 +262,7 @@ export async function squashLinks<T = Row[] | Row>(
     FeatureFlag.ENRICHED_RELATIONSHIPS
   )
 
-  let viewSchema: Record<string, ViewFieldMetadata> = {}
+  let viewSchema: ViewV2Schema = {}
   if (sdk.views.isView(source)) {
     if (helpers.views.isCalculationView(source)) {
       return enriched

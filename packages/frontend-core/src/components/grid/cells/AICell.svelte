@@ -70,9 +70,6 @@
     align-items: flex-start;
     overflow: hidden;
   }
-  .long-form-cell.editable:hover {
-    cursor: text;
-  }
   .value {
     display: -webkit-box;
     -webkit-line-clamp: var(--content-lines);

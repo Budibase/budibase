@@ -1,4 +1,5 @@
 import {
+  CalculationType,
   FieldType,
   PermissionLevel,
   RelationSchemaField,
@@ -63,6 +64,15 @@ async function guardCalculationViewSchema(
   const calculationFields = helpers.views.calculationFields(view)
   for (const calculationFieldName of Object.keys(calculationFields)) {
     const schema = calculationFields[calculationFieldName]
+    const isCount = schema.calculationType === CalculationType.COUNT
+    const isDistinct = isCount && "distinct" in schema && schema.distinct
+
+    // Count fields that aren't distinct don't need to reference another field,
+    // so we don't validate it.
+    if (isCount && !isDistinct) {
+      continue
+    }
+
     const targetSchema = table.schema[schema.field]
     if (!targetSchema) {
       throw new HTTPError(
@@ -71,7 +81,7 @@ async function guardCalculationViewSchema(
       )
     }
 
-    if (!helpers.schema.isNumeric(targetSchema)) {
+    if (!isCount && !helpers.schema.isNumeric(targetSchema)) {
       throw new HTTPError(
         `Calculation field "${calculationFieldName}" references field "${schema.field}" which is not a numeric field`,
         400
@@ -255,19 +265,12 @@ export async function enrichSchema(
   view: ViewV2,
   tableSchema: TableSchema
 ): Promise<ViewV2Enriched> {
-  const tableCache: Record<string, Table> = {}
-
   async function populateRelTableSchema(
     tableId: string,
     viewFields: Record<string, RelationSchemaField>
   ) {
-    if (!tableCache[tableId]) {
-      tableCache[tableId] = await sdk.tables.getTable(tableId)
-    }
-    const relTable = tableCache[tableId]
-
+    const relTable = await sdk.tables.getTable(tableId)
     const result: Record<string, ViewV2ColumnEnriched> = {}
-
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
       if (
@@ -300,15 +303,24 @@ export async function enrichSchema(
 
   const viewSchema = view.schema || {}
   const anyViewOrder = Object.values(viewSchema).some(ui => ui.order != null)
-  for (const key of Object.keys(tableSchema).filter(
-    k => tableSchema[k].visible !== false
-  )) {
+
+  const visibleSchemaFields = Object.keys(viewSchema).filter(key => {
+    if (helpers.views.isCalculationField(viewSchema[key])) {
+      return viewSchema[key].visible !== false
+    }
+    return key in tableSchema && tableSchema[key].visible !== false
+  })
+  const visibleTableFields = Object.keys(tableSchema).filter(
+    key => tableSchema[key].visible !== false
+  )
+  const visibleFields = new Set([...visibleSchemaFields, ...visibleTableFields])
+  for (const key of visibleFields) {
     // if nothing specified in view, then it is not visible
     const ui = viewSchema[key] || { visible: false }
     schema[key] = {
       ...tableSchema[key],
       ...ui,
-      order: anyViewOrder ? ui?.order ?? undefined : tableSchema[key].order,
+      order: anyViewOrder ? ui?.order ?? undefined : tableSchema[key]?.order,
       columns: undefined,
     }
 
@@ -320,10 +332,7 @@ export async function enrichSchema(
     }
   }
 
-  return {
-    ...view,
-    schema: schema,
-  }
+  return { ...view, schema }
 }
 
 export function syncSchema(
