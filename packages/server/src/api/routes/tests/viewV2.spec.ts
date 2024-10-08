@@ -599,6 +599,7 @@ describe.each([
           {
             tableId: table._id!,
             name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
             schema: {
               sum: {
                 visible: true,
