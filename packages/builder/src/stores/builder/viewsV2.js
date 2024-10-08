@@ -5,7 +5,7 @@ import { dataFilters } from "@budibase/shared-core"
 
 function convertToSearchFilters(view) {
   // convert from SearchFilterGroup type
-  if (view.query) {
+  if (view?.query) {
     view.queryUI = view.query
     view.query = dataFilters.buildQuery(view.query)
   }
@@ -13,7 +13,7 @@ function convertToSearchFilters(view) {
 }
 
 function convertToSearchFilterGroup(view) {
-  if (view.queryUI) {
+  if (view?.queryUI) {
     view.query = view.queryUI
     delete view.queryUI
   }
