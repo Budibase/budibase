@@ -79,10 +79,15 @@ export enum CalculationType {
   MAX = "max",
 }
 
+export enum ViewV2Type {
+  CALCULATION = "calculation",
+}
+
 export interface ViewV2 {
   version: 2
   id: string
   name: string
+  type?: ViewV2Type
   primaryDisplay?: string
   tableId: string
   query?: LegacyFilter[] | SearchFilters
@@ -94,7 +99,6 @@ export interface ViewV2 {
     type?: SortType
   }
   schema?: ViewV2Schema
-  uiMetadata?: Record<string, any>
 }
 
 export type ViewV2Schema = Record<string, ViewFieldMetadata>

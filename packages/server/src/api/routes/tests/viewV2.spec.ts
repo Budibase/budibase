@@ -26,6 +26,7 @@ import {
   BBReferenceFieldSubType,
   NumericCalculationFieldMetadata,
   ViewV2Schema,
+  ViewV2Type,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -155,7 +156,7 @@ describe.each([
       })
 
       it("can persist views with all fields", async () => {
-        const newView: Required<Omit<CreateViewRequest, "queryUI">> = {
+        const newView: Required<Omit<CreateViewRequest, "queryUI" | "type">> = {
           name: generator.name(),
           tableId: table._id!,
           primaryDisplay: "id",
@@ -176,9 +177,6 @@ describe.each([
             Price: {
               visible: true,
             },
-          },
-          uiMetadata: {
-            foo: "bar",
           },
         }
         const res = await config.api.viewV2.create(newView)
@@ -549,6 +547,7 @@ describe.each([
         let view = await config.api.viewV2.create({
           tableId: table._id!,
           name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
           schema: {
             sum: {
               visible: true,
@@ -572,11 +571,35 @@ describe.each([
         expect(sum.field).toEqual("Price")
       })
 
+      it("cannot create a view with calculation fields unless it has the right type", async () => {
+        await config.api.viewV2.create(
+          {
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              sum: {
+                visible: true,
+                calculationType: CalculationType.SUM,
+                field: "Price",
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              message:
+                "Calculation fields are not allowed in non-calculation views",
+            },
+          }
+        )
+      })
+
       it("cannot create a calculation view with more than 5 aggregations", async () => {
         await config.api.viewV2.create(
           {
             tableId: table._id!,
             name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
             schema: {
               sum: {
                 visible: true,
@@ -624,6 +647,7 @@ describe.each([
           {
             tableId: table._id!,
             name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
             schema: {
               sum: {
                 visible: true,
@@ -652,6 +676,7 @@ describe.each([
           {
             tableId: table._id!,
             name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
             schema: {
               count: {
                 visible: true,
@@ -678,6 +703,7 @@ describe.each([
           {
             tableId: table._id!,
             name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
             schema: {
               count: {
                 visible: true,
@@ -707,6 +733,7 @@ describe.each([
         await config.api.viewV2.create({
           tableId: table._id!,
           name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
           schema: {
             count: {
               visible: true,
@@ -765,7 +792,9 @@ describe.each([
       it("can update all fields", async () => {
         const tableId = table._id!
 
-        const updatedData: Required<Omit<UpdateViewRequest, "queryUI">> = {
+        const updatedData: Required<
+          Omit<UpdateViewRequest, "queryUI" | "type">
+        > = {
           version: view.version,
           id: view.id,
           tableId,
@@ -792,9 +821,6 @@ describe.each([
               visible: true,
               readonly: true,
             },
-          },
-          uiMetadata: {
-            foo: "bar",
           },
         }
         await config.api.viewV2.update(updatedData)
@@ -980,6 +1006,32 @@ describe.each([
         )
       })
 
+      it("cannot update view type after creation", async () => {
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
+            },
+          },
+        })
+
+        await config.api.viewV2.update(
+          {
+            ...view,
+            type: ViewV2Type.CALCULATION,
+          },
+          {
+            status: 400,
+            body: {
+              message: "Cannot update view type after creation",
+            },
+          }
+        )
+      })
+
       isInternal &&
         it("updating schema will only validate modified field", async () => {
           let view = await config.api.viewV2.create({
@@ -1052,6 +1104,7 @@ describe.each([
             view = await config.api.viewV2.create({
               tableId: table._id!,
               name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
               schema: {
                 country: {
                   visible: true,
@@ -2809,6 +2862,7 @@ describe.each([
           it("should be able to search by calculations", async () => {
             const view = await config.api.viewV2.create({
               tableId: table._id!,
+              type: ViewV2Type.CALCULATION,
               name: generator.guid(),
               schema: {
                 "Quantity Sum": {
@@ -2843,6 +2897,7 @@ describe.each([
             const view = await config.api.viewV2.create({
               tableId: table._id!,
               name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
               schema: {
                 quantity: {
                   visible: true,
@@ -2881,6 +2936,7 @@ describe.each([
             const view = await config.api.viewV2.create({
               tableId: table._id!,
               name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
               schema: {
                 aggregate: {
                   visible: true,
@@ -2941,6 +2997,7 @@ describe.each([
             const view = await config.api.viewV2.create({
               tableId: table._id!,
               name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
               schema: {
                 count: {
                   visible: true,
@@ -2975,6 +3032,7 @@ describe.each([
               {
                 tableId: table._id!,
                 name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
                 schema: {
                   count: {
                     visible: true,
@@ -3023,6 +3081,7 @@ describe.each([
           const view = await config.api.viewV2.create({
             tableId: table._id!,
             name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
             schema: {
               sum: {
                 visible: true,
