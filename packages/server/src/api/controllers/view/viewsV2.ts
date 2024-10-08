@@ -133,6 +133,7 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
     sort: view.sort,
     schema,
     primaryDisplay: view.primaryDisplay,
+    uiMetadata: view.uiMetadata,
   }
   const result = await sdk.views.create(tableId, parsedView)
   ctx.status = 201
@@ -169,6 +170,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
     sort: view.sort,
     schema,
     primaryDisplay: view.primaryDisplay,
+    uiMetadata: view.uiMetadata,
   }
 
   const result = await sdk.views.update(tableId, parsedView)
