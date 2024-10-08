@@ -63,7 +63,7 @@ type TranslateSchema = BaseSchema & {
 type CategoriseTextSchema = BaseSchema & {
   operation: AIOperationEnum.CATEGORISE_TEXT
   columns: string[]
-  categories: string
+  categories: string[]
 }
 
 type SentimentAnalysisSchema = BaseSchema & {

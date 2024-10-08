@@ -168,15 +168,15 @@
           >
             Delete row
           </MenuItem>
-            <MenuItem
-              icon="MagicWand"
-              disabled={isNewRow ||
-                !$focusedRow?._rev ||
-                !$hasBudibaseIdentifiers}
-              on:click={generateAIColumns}
-            >
-              Generate AI Columns
-            </MenuItem>
+          <MenuItem
+            icon="MagicWand"
+            disabled={isNewRow ||
+              !$focusedRow?._rev ||
+              !$hasBudibaseIdentifiers}
+            on:click={generateAIColumns}
+          >
+            Generate AI Columns
+          </MenuItem>
         {/if}
       </Menu>
     </GridPopover>
