@@ -71,4 +71,8 @@ export const deriveStores = context => {
       return config
     }
   )
+
+  return {
+    config,
+  }
 }
