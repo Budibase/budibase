@@ -2,7 +2,6 @@ import { generateGlobalUserID } from "../../../db"
 import { authError } from "../utils"
 import * as users from "../../../users"
 import * as context from "../../../context"
-import fetch from "node-fetch"
 import {
   SaveSSOUserFunction,
   SSOAuthDetails,
