@@ -43,19 +43,12 @@ describe("/permission", () => {
 
     let tableId: string
     let row: Row
-    let view: ViewV2
     let perms: Document[]
 
     beforeEach(async () => {
-      mocks.licenses.useCloudFree()
-
       const table = await config.createTable()
       tableId = table._id!
       row = await config.createRow()
-      view = await config.api.viewV2.create({
-        tableId,
-        name: generator.guid(),
-      })
       perms = await config.api.permission.add({
         roleId: STD_ROLE_ID,
         resourceId: tableId,
@@ -136,6 +129,15 @@ describe("/permission", () => {
     })
 
     describe("check public user allowed", () => {
+      let view: ViewV2
+
+      beforeEach(async () => {
+        view = await config.api.viewV2.create({
+          tableId,
+          name: generator.guid(),
+        })
+      })
+
       it("should be able to read the row", async () => {
         // replicate changes before checking permissions
         await config.publish()
