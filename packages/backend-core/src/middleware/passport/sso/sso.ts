@@ -97,28 +97,13 @@ export async function authenticate(
   return done(null, ssoUser)
 }
 
-async function getProfilePictureUrl(user: User, details: SSOAuthDetails) {
-  const pictureUrl = details.profile?._json.picture
-  if (pictureUrl) {
-    const response = await fetch(pictureUrl)
-    if (response.status === 200) {
-      const type = response.headers.get("content-type") as string
-      if (type.startsWith("image/")) {
-        return pictureUrl
-      }
-    }
-  }
-}
-
 /**
  * @returns a user that has been sync'd with third party information
  */
 async function syncUser(user: User, details: SSOAuthDetails): Promise<SSOUser> {
   let firstName
   let lastName
-  let pictureUrl
   let oauth2
-  let thirdPartyProfile
 
   if (details.profile) {
     const profile = details.profile
@@ -133,12 +118,6 @@ async function syncUser(user: User, details: SSOAuthDetails): Promise<SSOUser> {
       if (name.familyName) {
         lastName = name.familyName
       }
-    }
-
-    pictureUrl = await getProfilePictureUrl(user, details)
-
-    thirdPartyProfile = {
-      ...profile._json,
     }
   }
 
@@ -155,8 +134,6 @@ async function syncUser(user: User, details: SSOAuthDetails): Promise<SSOUser> {
     providerType: details.providerType,
     firstName,
     lastName,
-    thirdPartyProfile,
-    pictureUrl,
     oauth2,
   }
 }
