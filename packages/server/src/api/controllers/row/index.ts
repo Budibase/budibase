@@ -17,6 +17,7 @@ import {
   GetRowResponse,
   PatchRowRequest,
   PatchRowResponse,
+  RequiredKeys,
   Row,
   RowAttachment,
   RowSearchParams,
@@ -211,15 +212,17 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
 
   await context.ensureSnippetContext(true)
 
+  const searchRequest = ctx.request.body
+
   const enrichedQuery = await utils.enrichSearchContext(
-    { ...ctx.request.body.query },
+    { ...searchRequest.query },
     {
       user: sdk.users.getUserContextBindings(ctx.user),
     }
   )
 
-  const searchParams: RowSearchParams = {
-    ...ctx.request.body,
+  const searchParams: RequiredKeys<RowSearchParams> = {
+    ...searchRequest,
     query: enrichedQuery,
     tableId,
     viewId,
