@@ -131,6 +131,13 @@ async function guardViewSchema(
 
   if (helpers.views.isCalculationView(view)) {
     await guardCalculationViewSchema(table, view)
+  } else {
+    if (helpers.views.hasCalculationFields(view)) {
+      throw new HTTPError(
+        "Calculation fields are not allowed in non-calculation views",
+        400
+      )
+    }
   }
 
   await checkReadonlyFields(table, view)
