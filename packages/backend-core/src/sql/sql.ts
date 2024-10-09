@@ -325,14 +325,18 @@ class InternalBuilder {
     return input
   }
 
-  private parseBody(body: any) {
-    for (let [key, value] of Object.entries(body)) {
-      const { column } = this.splitter.run(key)
-      const schema = this.table.schema[column]
-      if (!schema) {
-        continue
+  private parseBody(body: Record<string, any>) {
+    try {
+      for (let [key, value] of Object.entries(body)) {
+        const { column } = this.splitter.run(key)
+        const schema = this.table.schema[column]
+        if (!schema) {
+          continue
+        }
+        body[key] = this.parse(value, schema)
       }
-      body[key] = this.parse(value, schema)
+    } catch (err) {
+      console.log(err)
     }
     return body
   }
@@ -1259,6 +1263,10 @@ class InternalBuilder {
 
   create(opts: QueryOptions): Knex.QueryBuilder {
     const { body } = this.query
+    if (!body) {
+      throw new Error("Cannot create without row body")
+    }
+
     let query = this.qualifiedKnex({ alias: false })
     const parsedBody = this.parseBody(body)
 
@@ -1417,6 +1425,9 @@ class InternalBuilder {
 
   update(opts: QueryOptions): Knex.QueryBuilder {
     const { body, filters } = this.query
+    if (!body) {
+      throw new Error("Cannot update without row body")
+    }
     let query = this.qualifiedKnex()
     const parsedBody = this.parseBody(body)
     query = this.addFilters(query, filters)
