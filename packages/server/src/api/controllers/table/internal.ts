@@ -12,7 +12,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-export async function save(
+export async function updateTable(
   ctx: UserCtx<SaveTableRequest, SaveTableResponse>,
   renaming?: RenameColumn
 ) {

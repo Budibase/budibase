@@ -117,7 +117,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     await events.table.created(savedTable)
   } else {
     const api = pickApi({ table })
-    savedTable = await api.save(ctx, renaming)
+    savedTable = await api.updateTable(ctx, renaming)
     await events.table.updated(savedTable)
   }
   if (renaming) {
