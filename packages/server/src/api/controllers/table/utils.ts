@@ -18,7 +18,6 @@ import { quotas } from "@budibase/pro"
 import { events, context, features } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
-  ContextUser,
   Datasource,
   Row,
   SourceName,
@@ -122,7 +121,7 @@ export function makeSureTableUpToDate(table: Table, tableToSave: Table) {
 export async function importToRows(
   data: Row[],
   table: Table,
-  user?: ContextUser,
+  userId?: string,
   opts?: { keepCouchId: boolean }
 ) {
   const originalTable = table
@@ -136,7 +135,7 @@ export async function importToRows(
 
     // We use a reference to table here and update it after input processing,
     // so that we can auto increment auto IDs in imported data properly
-    const processed = await inputProcessing(user?._id, table, row, {
+    const processed = await inputProcessing(userId, table, row, {
       noAutoRelationships: true,
     })
     row = processed
@@ -167,11 +166,10 @@ export async function importToRows(
 
 export async function handleDataImport(
   table: Table,
-  opts?: { identifierFields?: string[]; user?: ContextUser; importRows?: Row[] }
+  opts?: { identifierFields?: string[]; userId?: string; importRows?: Row[] }
 ) {
   const schema = table.schema
   const identifierFields = opts?.identifierFields || []
-  const user = opts?.user
   const importRows = opts?.importRows
 
   if (!importRows || !isRows(importRows) || !isSchema(schema)) {
@@ -181,7 +179,7 @@ export async function handleDataImport(
   const db = context.getAppDB()
   const data = parse(importRows, table)
 
-  const finalData = await importToRows(data, table, user, {
+  const finalData = await importToRows(data, table, opts?.userId, {
     keepCouchId: identifierFields.includes("_id"),
   })
 
@@ -282,22 +280,22 @@ export function checkStaticTables(table: Table) {
 
 class TableSaveFunctions {
   db: Database
-  user?: ContextUser
+  userId?: string
   oldTable?: Table
   importRows?: Row[]
   rows: Row[]
 
   constructor({
-    user,
+    userId,
     oldTable,
     importRows,
   }: {
-    user?: ContextUser
+    userId?: string
     oldTable?: Table
     importRows?: Row[]
   }) {
     this.db = context.getAppDB()
-    this.user = user
+    this.userId = userId
     this.oldTable = oldTable
     this.importRows = importRows
     // any rows that need updated
@@ -329,7 +327,7 @@ class TableSaveFunctions {
     table = await handleSearchIndexes(table)
     table = await handleDataImport(table, {
       importRows: this.importRows,
-      user: this.user,
+      userId: this.userId,
     })
     if (await features.flags.isEnabled("SQS")) {
       await sdk.tables.sqs.addTable(table)
