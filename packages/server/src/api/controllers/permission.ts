@@ -94,18 +94,17 @@ export async function getDependantResources(
 
 export async function addPermission(ctx: UserCtx<void, AddPermissionResponse>) {
   const params: AddPermissionRequest = ctx.params
-  ctx.body = await sdk.permissions.updatePermissionOnRole(
-    params,
-    PermissionUpdateType.ADD
-  )
+  await sdk.permissions.updatePermissionOnRole(params, PermissionUpdateType.ADD)
+  ctx.status = 200
 }
 
 export async function removePermission(
   ctx: UserCtx<void, RemovePermissionResponse>
 ) {
   const params: RemovePermissionRequest = ctx.params
-  ctx.body = await sdk.permissions.updatePermissionOnRole(
+  await sdk.permissions.updatePermissionOnRole(
     params,
     PermissionUpdateType.REMOVE
   )
+  ctx.status = 200
 }
