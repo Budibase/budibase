@@ -1,4 +1,4 @@
-import { IdentityContext, IdentityType, UserCtx } from "@budibase/types"
+import { IdentityContext, IdentityType } from "@budibase/types"
 import { Flag, FlagSet, FlagValues, init, shutdown } from "../"
 import * as context from "../../context"
 import environment, { withEnv } from "../../environment"
