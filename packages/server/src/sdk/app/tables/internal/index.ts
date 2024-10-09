@@ -5,7 +5,6 @@ import {
   ViewStatisticsSchema,
   ViewV2,
   Row,
-  ContextUser,
 } from "@budibase/types"
 import {
   hasTypeChanged,
@@ -27,7 +26,7 @@ import { quotas } from "@budibase/pro"
 export async function save(
   table: Table,
   opts?: {
-    user?: ContextUser
+    userId?: string
     tableId?: string
     rowsToImport?: Row[]
     renaming?: RenameColumn
@@ -63,7 +62,7 @@ export async function save(
   // saving a table is a complex operation, involving many different steps, this
   // has been broken out into a utility to make it more obvious/easier to manipulate
   const tableSaveFunctions = new TableSaveFunctions({
-    user: opts?.user,
+    userId: opts?.userId,
     oldTable,
     importRows: opts?.rowsToImport,
   })
