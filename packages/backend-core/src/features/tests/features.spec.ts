@@ -18,7 +18,6 @@ interface TestCase {
   identity?: Partial<IdentityContext>
   environmentFlags?: string
   posthogFlags?: PostHogFlags
-  licenseFlags?: Array<string>
   expected?: Partial<FlagValues<typeof schema>>
   errorMessage?: string | RegExp
 }
@@ -118,26 +117,10 @@ describe("feature flags", () => {
       expected: { TEST_BOOLEAN: true },
     },
     {
-      it: "should be able to set boolean flags through the license",
-      licenseFlags: ["TEST_BOOLEAN"],
-      expected: { TEST_BOOLEAN: true },
-    },
-    {
-      it: "should not be able to override a negative environment flag from license",
-      environmentFlags: "default:!TEST_BOOLEAN",
-      licenseFlags: ["TEST_BOOLEAN"],
-      expected: { TEST_BOOLEAN: false },
-    },
-    {
       it: "should not error on unrecognised PostHog flag",
       posthogFlags: {
         featureFlags: { UNDEFINED: true },
       },
-      expected: flags.defaults(),
-    },
-    {
-      it: "should not error on unrecognised license flag",
-      licenseFlags: ["UNDEFINED"],
       expected: flags.defaults(),
     },
   ])(
@@ -146,7 +129,6 @@ describe("feature flags", () => {
       identity,
       environmentFlags,
       posthogFlags,
-      licenseFlags,
       expected,
       errorMessage,
     }) => {
@@ -161,8 +143,6 @@ describe("feature flags", () => {
         env.POSTHOG_TOKEN = "test"
         env.POSTHOG_API_HOST = "https://us.i.posthog.com"
       }
-
-      const ctx = { user: { license: { features: licenseFlags || [] } } }
 
       await withEnv(env, async () => {
         // We need to pass in node-fetch here otherwise nock won't get used
@@ -185,18 +165,13 @@ describe("feature flags", () => {
 
         await context.doInIdentityContext(fullIdentity, async () => {
           if (errorMessage) {
-            await expect(flags.fetch(ctx as UserCtx)).rejects.toThrow(
-              errorMessage
-            )
+            await expect(flags.fetch()).rejects.toThrow(errorMessage)
           } else if (expected) {
-            const values = await flags.fetch(ctx as UserCtx)
+            const values = await flags.fetch()
             expect(values).toMatchObject(expected)
 
             for (const [key, expectedValue] of Object.entries(expected)) {
-              const value = await flags.get(
-                key as keyof typeof schema,
-                ctx as UserCtx
-              )
+              const value = await flags.get(key as keyof typeof schema)
               expect(value).toBe(expectedValue)
             }
           } else {
@@ -252,8 +227,8 @@ describe("feature flags", () => {
       POSTHOG_TOKEN: "test",
     }
 
-    const ctx = { ip: "127.0.0.1" } as UserCtx
-    const hashedIp = crypto.createHash("sha512").update(ctx.ip).digest("hex")
+    const ip = "127.0.0.1"
+    const hashedIp = crypto.createHash("sha512").update(ip).digest("hex")
 
     await withEnv(env, async () => {
       mockPosthogFlags(
@@ -273,9 +248,11 @@ describe("feature flags", () => {
         },
       })
 
-      await context.doInTenant("default", async () => {
-        const result = await flags.fetch(ctx)
-        expect(result.TEST_BOOLEAN).toBe(true)
+      await context.doInIPContext(ip, async () => {
+        await context.doInTenant("default", async () => {
+          const result = await flags.fetch()
+          expect(result.TEST_BOOLEAN).toBe(true)
+        })
       })
 
       shutdown()

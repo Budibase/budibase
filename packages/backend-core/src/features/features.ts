@@ -197,7 +197,10 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 
       let userId = identity?._id
       if (!userId) {
-        userId = context.getIP()
+        const ip = context.getIP()
+        if (ip) {
+          userId = crypto.createHash("sha512").update(ip).digest("hex")
+        }
       }
 
       let tenantId = identity?.tenantId
