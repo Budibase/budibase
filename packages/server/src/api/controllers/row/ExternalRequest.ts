@@ -4,6 +4,7 @@ import {
   AutoFieldSubType,
   AutoReason,
   Datasource,
+  DatasourcePlusQueryResponse,
   FieldSchema,
   FieldType,
   FilterType,
@@ -557,8 +558,9 @@ export class ExternalRequest<T extends Operation> {
           return matchesPrimaryLink
         }
 
-        const matchesSecondayLink = row[linkSecondary] === body?.[linkSecondary]
-        return matchesPrimaryLink && matchesSecondayLink
+        const matchesSecondaryLink =
+          row[linkSecondary] === body?.[linkSecondary]
+        return matchesPrimaryLink && matchesSecondaryLink
       }
 
       const existingRelationship = rows.find((row: { [key: string]: any }) =>
@@ -743,9 +745,19 @@ export class ExternalRequest<T extends Operation> {
 
     // aliasing can be disabled fully if desired
     const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
-    let response = env.SQL_ALIASING_DISABLE
-      ? await getDatasourceAndQuery(json)
-      : await aliasing.queryWithAliasing(json, makeExternalQuery)
+    let response: DatasourcePlusQueryResponse
+    // there's a chance after input processing nothing needs updated, so pass over the call
+    // we might still need to perform other operations like updating the foreign keys on other rows
+    if (
+      this.operation === Operation.UPDATE &&
+      Object.keys(row || {}).length === 0
+    ) {
+      response = [config.row!]
+    } else {
+      response = env.SQL_ALIASING_DISABLE
+        ? await getDatasourceAndQuery(json)
+        : await aliasing.queryWithAliasing(json, makeExternalQuery)
+    }
 
     // if it's a counting operation there will be no more processing, just return the number
     if (this.operation === Operation.COUNT) {

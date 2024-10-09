@@ -1114,6 +1114,32 @@ describe.each([
       expect(getResp.user2[0]._id).toEqual(user2._id)
     })
 
+    it("should be able to remove a relationship from many side", async () => {
+      const row = await config.api.row.save(otherTable._id!, {
+        name: "test",
+        description: "test",
+      })
+      const row2 = await config.api.row.save(otherTable._id!, {
+        name: "test",
+        description: "test",
+      })
+      const { _id } = await config.api.row.save(table._id!, {
+        relationship: [{ _id: row._id }, { _id: row2._id }],
+      })
+      const relatedRow = await config.api.row.get(table._id!, _id!, {
+        status: 200,
+      })
+      expect(relatedRow.relationship.length).toEqual(2)
+      await config.api.row.save(table._id!, {
+        ...relatedRow,
+        relationship: [{ _id: row._id }],
+      })
+      const afterRelatedRow = await config.api.row.get(table._id!, _id!, {
+        status: 200,
+      })
+      expect(afterRelatedRow.relationship.length).toEqual(1)
+    })
+
     it("should be able to update relationships when both columns are same name", async () => {
       let row = await config.api.row.save(table._id!, {
         name: "test",
