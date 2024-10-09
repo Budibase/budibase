@@ -33,7 +33,7 @@ export async function save(
 
   try {
     const { table } = await sdk.tables.internal.save(tableToSave, {
-      user: ctx.user,
+      userId: ctx.user._id,
       rowsToImport: rows,
       tableId: ctx.request.body._id,
       renaming,
@@ -72,7 +72,7 @@ export async function bulkImport(
   await handleDataImport(table, {
     importRows: rows,
     identifierFields,
-    user: ctx.user,
+    userId: ctx.user._id,
   })
   return table
 }
