@@ -5,6 +5,7 @@ import {
   SearchFilters,
   BasicOperator,
   ArrayOperator,
+  isLogicalSearchOperator,
 } from "@budibase/types"
 import * as Constants from "./constants"
 import { removeKeyNumbering } from "./filters"
@@ -97,10 +98,20 @@ export function isSupportedUserSearch(query: SearchFilters) {
     { op: BasicOperator.EQUAL, key: "_id" },
     { op: ArrayOperator.ONE_OF, key: "_id" },
   ]
-  for (let [key, operation] of Object.entries(query)) {
+  for (const [key, operation] of Object.entries(query)) {
     if (typeof operation !== "object") {
       return false
     }
+
+    if (isLogicalSearchOperator(key)) {
+      for (const condition of query[key]!.conditions) {
+        if (!isSupportedUserSearch(condition)) {
+          return false
+        }
+      }
+      return true
+    }
+
     const fields = Object.keys(operation || {})
     // this filter doesn't contain options - ignore
     if (fields.length === 0) {

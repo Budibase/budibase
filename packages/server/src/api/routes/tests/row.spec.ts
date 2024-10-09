@@ -13,8 +13,7 @@ import {
   context,
   InternalTable,
   tenancy,
-  withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
+  features,
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
@@ -40,7 +39,6 @@ import {
   TableSchema,
   JsonFieldSubType,
   RowExportFormat,
-  FeatureFlag,
   RelationSchemaField,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
@@ -98,12 +96,12 @@ describe.each([
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
-    if (isLucene) {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" })
-    } else if (isSqs) {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" })
-    }
+    await features.testutils.withFeatureFlags("*", { SQS: true }, () =>
+      config.init()
+    )
+    envCleanup = features.testutils.setFeatureFlags("*", {
+      SQS: isSqs,
+    })
 
     if (dsProvider) {
       const rawDatasource = await dsProvider
@@ -1848,7 +1846,7 @@ describe.each([
     })
 
   describe("exportRows", () => {
-    beforeAll(async () => {
+    beforeEach(async () => {
       table = await config.api.table.save(defaultTable())
     })
 
@@ -1884,6 +1882,16 @@ describe.each([
           expect(row[key]).toEqual(existing[key])
         })
       })
+
+    it("should allow exporting without filtering", async () => {
+      const existing = await config.api.row.save(table._id!, {})
+      const res = await config.api.row.exportRows(table._id!)
+      const results = JSON.parse(res)
+      expect(results.length).toEqual(1)
+      const row = results[0]
+
+      expect(row._id).toEqual(existing._id)
+    })
 
     it("should allow exporting only certain columns", async () => {
       const existing = await config.api.row.save(table._id!, {})
@@ -2517,15 +2525,9 @@ describe.each([
       let flagCleanup: (() => void) | undefined
 
       beforeAll(async () => {
-        const env = {
-          TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
-        }
-        if (isSqs) {
-          env.TENANT_FEATURE_FLAGS = `${env.TENANT_FEATURE_FLAGS},*:SQS`
-        } else {
-          env.TENANT_FEATURE_FLAGS = `${env.TENANT_FEATURE_FLAGS},*:!SQS`
-        }
-        flagCleanup = setCoreEnv(env)
+        flagCleanup = features.testutils.setFeatureFlags("*", {
+          ENRICHED_RELATIONSHIPS: true,
+        })
 
         const aux2Table = await config.api.table.save(saveTableRequest())
         const aux2Data = await config.api.row.save(aux2Table._id!, {})
@@ -2752,9 +2754,10 @@ describe.each([
       it.each(testScenarios)(
         "does not enrich relationships when not enabled (via %s)",
         async (__, retrieveDelegate) => {
-          await withCoreEnv(
+          await features.testutils.withFeatureFlags(
+            "*",
             {
-              TENANT_FEATURE_FLAGS: `*:!${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
+              ENRICHED_RELATIONSHIPS: false,
             },
             async () => {
               const otherRows = _.sampleSize(auxData, 5)

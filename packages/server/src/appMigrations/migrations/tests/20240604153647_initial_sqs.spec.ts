@@ -2,8 +2,8 @@ import * as setup from "../../../api/routes/tests/utilities"
 import { basicTable } from "../../../tests/utilities/structures"
 import {
   db as dbCore,
+  features,
   SQLITE_DESIGN_DOC_ID,
-  withEnv as withCoreEnv,
 } from "@budibase/backend-core"
 import {
   LinkDocument,
@@ -71,11 +71,11 @@ function oldLinkDocument(): Omit<LinkDocument, "tableId"> {
 }
 
 async function sqsDisabled(cb: () => Promise<void>) {
-  await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" }, cb)
+  await features.testutils.withFeatureFlags("*", { SQS: false }, cb)
 }
 
 async function sqsEnabled(cb: () => Promise<void>) {
-  await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, cb)
+  await features.testutils.withFeatureFlags("*", { SQS: true }, cb)
 }
 
 describe("SQS migration", () => {
