@@ -1,6 +1,8 @@
 import {
   CalculationType,
+  canGroupBy,
   FieldType,
+  isNumeric,
   PermissionLevel,
   RelationSchemaField,
   RenameColumn,
@@ -11,7 +13,7 @@ import {
   ViewV2ColumnEnriched,
   ViewV2Enriched,
 } from "@budibase/types"
-import { context, docIds, HTTPError, roles } from "@budibase/backend-core"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
@@ -24,7 +26,6 @@ import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"
 import * as external from "./external"
 import sdk from "../../../sdk"
-import { PermissionUpdateType, updatePermissionOnRole } from "../permissions"
 
 function pickApi(tableId: any) {
   if (isExternalTableID(tableId)) {
@@ -103,7 +104,7 @@ async function guardCalculationViewSchema(
       )
     }
 
-    if (!isCount && !helpers.schema.isNumeric(targetSchema)) {
+    if (!isCount && !isNumeric(targetSchema.type)) {
       throw new HTTPError(
         `Calculation field "${name}" references field "${schema.field}" which is not a numeric field`,
         400
@@ -117,6 +118,13 @@ async function guardCalculationViewSchema(
     if (!targetSchema) {
       throw new HTTPError(
         `Group by field "${groupByFieldName}" does not exist in the table schema`,
+        400
+      )
+    }
+
+    if (!canGroupBy(targetSchema.type)) {
+      throw new HTTPError(
+        `Grouping by fields of type "${targetSchema.type}" is not supported`,
         400
       )
     }
@@ -238,24 +246,10 @@ export async function create(
 
   // Set permissions to be the same as the table
   const tablePerms = await sdk.permissions.getResourcePerms(tableId)
-  const readRole = tablePerms[PermissionLevel.READ]?.role
-  const writeRole = tablePerms[PermissionLevel.WRITE]?.role
-  await updatePermissionOnRole(
-    {
-      roleId: readRole || roles.BUILTIN_ROLE_IDS.BASIC,
-      resourceId: view.id,
-      level: PermissionLevel.READ,
-    },
-    PermissionUpdateType.ADD
-  )
-  await updatePermissionOnRole(
-    {
-      roleId: writeRole || roles.BUILTIN_ROLE_IDS.BASIC,
-      resourceId: view.id,
-      level: PermissionLevel.WRITE,
-    },
-    PermissionUpdateType.ADD
-  )
+  await sdk.permissions.setPermissions(view.id, {
+    writeRole: tablePerms[PermissionLevel.WRITE].role,
+    readRole: tablePerms[PermissionLevel.READ].role,
+  })
 
   return view
 }
