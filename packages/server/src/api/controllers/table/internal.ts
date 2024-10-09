@@ -12,7 +12,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-export async function save(
+export async function updateTable(
   ctx: UserCtx<SaveTableRequest, SaveTableResponse>,
   renaming?: RenameColumn
 ) {
@@ -25,19 +25,16 @@ export async function save(
     sourceType: rest.sourceType || TableSourceType.INTERNAL,
   }
 
-  const isImport = !!rows
-
   if (!tableToSave.views) {
     tableToSave.views = {}
   }
 
   try {
     const { table } = await sdk.tables.internal.save(tableToSave, {
-      user: ctx.user,
+      userId: ctx.user._id,
       rowsToImport: rows,
       tableId: ctx.request.body._id,
       renaming,
-      isImport,
     })
 
     return table
@@ -72,7 +69,7 @@ export async function bulkImport(
   await handleDataImport(table, {
     importRows: rows,
     identifierFields,
-    user: ctx.user,
+    userId: ctx.user._id,
   })
   return table
 }
