@@ -26,6 +26,7 @@ import {
   NumericCalculationFieldMetadata,
   ViewV2Schema,
   ViewV2Type,
+  JsonTypes,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -736,6 +737,69 @@ describe.each([
           },
         })
       })
+
+      !isLucene &&
+        it("does not get confused when a calculation field shadows a basic one", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                age: {
+                  name: "age",
+                  type: FieldType.NUMBER,
+                },
+              },
+            })
+          )
+
+          await config.api.row.bulkImport(table._id!, {
+            rows: [{ age: 1 }, { age: 2 }, { age: 3 }],
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
+            schema: {
+              age: {
+                visible: true,
+                calculationType: CalculationType.SUM,
+                field: "age",
+              },
+            },
+          })
+
+          const { rows } = await config.api.row.search(view.id)
+          expect(rows).toHaveLength(1)
+          expect(rows[0].age).toEqual(6)
+        })
+
+      // We don't allow the creation of tables with most JsonTypes when using
+      // external datasources.
+      isInternal &&
+        it("cannot use complex types as group-by fields", async () => {
+          for (const type of JsonTypes) {
+            const field = { name: "field", type } as FieldSchema
+            const table = await config.api.table.save(
+              saveTableRequest({ schema: { field } })
+            )
+            await config.api.viewV2.create(
+              {
+                tableId: table._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                schema: {
+                  field: { visible: true },
+                },
+              },
+              {
+                status: 400,
+                body: {
+                  message: `Grouping by fields of type "${type}" is not supported`,
+                },
+              }
+            )
+          }
+        })
     })
 
     describe("update", () => {
@@ -1914,6 +1978,30 @@ describe.each([
         expect(newRow.one).toBeUndefined()
         expect(newRow.two).toEqual("bar")
       })
+
+      it("should not be possible to create a row in a calculation view", async () => {
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
+          schema: {
+            id: { visible: true },
+            one: { visible: true },
+          },
+        })
+
+        await config.api.row.save(
+          view.id,
+          { one: "foo" },
+          {
+            status: 400,
+            body: {
+              message: "Cannot insert rows through a calculation view",
+              status: 400,
+            },
+          }
+        )
+      })
     })
 
     describe("patch", () => {
@@ -1977,6 +2065,40 @@ describe.each([
         const row = await config.api.row.get(table._id!, newRow._id!)
         expect(row.one).toEqual("foo")
         expect(row.two).toEqual("newBar")
+      })
+
+      it("should not be possible to modify a row in a calculation view", async () => {
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
+          schema: {
+            id: { visible: true },
+            one: { visible: true },
+          },
+        })
+
+        const newRow = await config.api.row.save(table._id!, {
+          one: "foo",
+          two: "bar",
+        })
+
+        await config.api.row.patch(
+          view.id,
+          {
+            tableId: table._id!,
+            _id: newRow._id!,
+            _rev: newRow._rev!,
+            one: "newFoo",
+            two: "newBar",
+          },
+          {
+            status: 400,
+            body: {
+              message: "Cannot update rows through a calculation view",
+            },
+          }
+        )
       })
     })
 
