@@ -203,10 +203,6 @@ describe.each([
           permissionType: PermissionSource.EXPLICIT,
           role: roles.BUILTIN_ROLE_IDS.ADMIN,
         },
-        execute: {
-          permissionType: PermissionSource.EXPLICIT,
-          role: roles.BUILTIN_ROLE_IDS.ADMIN,
-        },
       })
     })
   })
