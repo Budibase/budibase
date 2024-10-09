@@ -191,7 +191,7 @@ export const initialise = context => {
         if ($view?.id !== $datasource.id) {
           return
         }
-        if (JSON.stringify($filter) !== JSON.stringify($view.query)) {
+        if (JSON.stringify($filter) !== JSON.stringify($view.queryUI)) {
           await datasource.actions.saveDefinition({
             ...$view,
             query: $filter,
