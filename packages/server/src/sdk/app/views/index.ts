@@ -3,6 +3,7 @@ import {
   canGroupBy,
   FieldType,
   isNumeric,
+  PermissionLevel,
   RelationSchemaField,
   RenameColumn,
   Table,
@@ -242,6 +243,13 @@ export async function create(
   await guardViewSchema(tableId, viewRequest)
 
   const view = await pickApi(tableId).create(tableId, viewRequest)
+
+  // Set permissions to be the same as the table
+  const tablePerms = await sdk.permissions.getResourcePerms(tableId)
+  await sdk.permissions.setPermissions(view.id, {
+    writeRole: tablePerms[PermissionLevel.WRITE].role,
+    readRole: tablePerms[PermissionLevel.READ].role,
+  })
 
   return view
 }

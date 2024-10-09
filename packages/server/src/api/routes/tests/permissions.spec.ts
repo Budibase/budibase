@@ -227,23 +227,23 @@ describe("/permission", () => {
       viewId = view.id
     })
 
-    it("default permissions inherits the table default value", async () => {
+    it("default permissions inherits and persists the table default value", async () => {
       const { permissions } = await config.api.permission.get(viewId)
       expect(permissions).toEqual({
         read: {
-          permissionType: "INHERITED",
+          permissionType: "EXPLICIT",
           role: DEFAULT_TABLE_ROLE_ID,
           inheritablePermission: DEFAULT_TABLE_ROLE_ID,
         },
         write: {
-          permissionType: "INHERITED",
+          permissionType: "EXPLICIT",
           role: DEFAULT_TABLE_ROLE_ID,
           inheritablePermission: DEFAULT_TABLE_ROLE_ID,
         },
       })
     })
 
-    it("default permissions inherits explicit table permissions", async () => {
+    it("does not update view permissions once persisted, even if table permissions change", async () => {
       await config.api.permission.add({
         roleId: STD_ROLE_ID,
         resourceId: tableId,
@@ -253,12 +253,12 @@ describe("/permission", () => {
       const { permissions } = await config.api.permission.get(viewId)
       expect(permissions).toEqual({
         read: {
-          permissionType: "INHERITED",
-          role: STD_ROLE_ID,
+          permissionType: "EXPLICIT",
+          role: DEFAULT_TABLE_ROLE_ID,
           inheritablePermission: STD_ROLE_ID,
         },
         write: {
-          permissionType: "INHERITED",
+          permissionType: "EXPLICIT",
           role: DEFAULT_TABLE_ROLE_ID,
           inheritablePermission: DEFAULT_TABLE_ROLE_ID,
         },
@@ -275,7 +275,7 @@ describe("/permission", () => {
       const { permissions } = await config.api.permission.get(viewId)
       expect(permissions).toEqual({
         read: {
-          permissionType: "INHERITED",
+          permissionType: "EXPLICIT",
           role: DEFAULT_TABLE_ROLE_ID,
           inheritablePermission: DEFAULT_TABLE_ROLE_ID,
         },
