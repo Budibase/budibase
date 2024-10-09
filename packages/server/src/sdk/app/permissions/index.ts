@@ -185,6 +185,26 @@ export async function updatePermissionOnRole(
   })
 }
 
+export async function setPermissions(
+  resourceId: string,
+  {
+    writeRole,
+    readRole,
+  }: {
+    writeRole: string
+    readRole: string
+  }
+) {
+  await updatePermissionOnRole(
+    { roleId: writeRole, resourceId, level: PermissionLevel.WRITE },
+    PermissionUpdateType.ADD
+  )
+  await updatePermissionOnRole(
+    { roleId: readRole, resourceId, level: PermissionLevel.READ },
+    PermissionUpdateType.ADD
+  )
+}
+
 // utility function to stop this repetition - permissions always stored under roles
 export async function getAllDBRoles(db: Database) {
   const body = await db.allDocs<Role>(
