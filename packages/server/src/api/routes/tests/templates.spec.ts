@@ -2,7 +2,7 @@ import * as setup from "./utilities"
 import path from "path"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
-import { withEnv as withCoreEnv, env as coreEnv } from "@budibase/backend-core"
+import { features } from "@budibase/backend-core"
 
 interface App {
   background: string
@@ -85,41 +85,44 @@ describe("/templates", () => {
     it.each(["sqs", "lucene"])(
       `should be able to create an app from a template (%s)`,
       async source => {
-        const env: Partial<typeof coreEnv> = {
-          TENANT_FEATURE_FLAGS: source === "sqs" ? "*:SQS" : "",
-        }
+        await features.testutils.withFeatureFlags(
+          "*",
+          { SQS: source === "sqs" },
+          async () => {
+            const name = generator.guid().replaceAll("-", "")
+            const url = `/${name}`
 
-        await withCoreEnv(env, async () => {
-          const name = generator.guid().replaceAll("-", "")
-          const url = `/${name}`
-
-          const app = await config.api.application.create({
-            name,
-            url,
-            useTemplate: "true",
-            templateName: "Agency Client Portal",
-            templateKey: "app/agency-client-portal",
-          })
-          expect(app.name).toBe(name)
-          expect(app.url).toBe(url)
-
-          await config.withApp(app, async () => {
-            const tables = await config.api.table.fetch()
-            expect(tables).toHaveLength(2)
-
-            tables.sort((a, b) => a.name.localeCompare(b.name))
-            const [agencyProjects, users] = tables
-            expect(agencyProjects.name).toBe("Agency Projects")
-            expect(users.name).toBe("Users")
-
-            const { rows } = await config.api.row.search(agencyProjects._id!, {
-              tableId: agencyProjects._id!,
-              query: {},
+            const app = await config.api.application.create({
+              name,
+              url,
+              useTemplate: "true",
+              templateName: "Agency Client Portal",
+              templateKey: "app/agency-client-portal",
             })
+            expect(app.name).toBe(name)
+            expect(app.url).toBe(url)
 
-            expect(rows).toHaveLength(3)
-          })
-        })
+            await config.withApp(app, async () => {
+              const tables = await config.api.table.fetch()
+              expect(tables).toHaveLength(2)
+
+              tables.sort((a, b) => a.name.localeCompare(b.name))
+              const [agencyProjects, users] = tables
+              expect(agencyProjects.name).toBe("Agency Projects")
+              expect(users.name).toBe("Users")
+
+              const { rows } = await config.api.row.search(
+                agencyProjects._id!,
+                {
+                  tableId: agencyProjects._id!,
+                  query: {},
+                }
+              )
+
+              expect(rows).toHaveLength(3)
+            })
+          }
+        )
       }
     )
   })

@@ -75,7 +75,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
     name: action.name,
     automationId: automation._id!,
     permissions: {
-      table: { runAllowed: false },
+      table: { runAllowed: true },
       views: {},
     },
   }
@@ -163,6 +163,23 @@ async function guardView(tableId: string, viewId: string) {
   }
 }
 
+export async function setTablePermission(tableId: string, rowActionId: string) {
+  return await updateDoc(tableId, rowActionId, async actionsDoc => {
+    actionsDoc.actions[rowActionId].permissions.table.runAllowed = true
+    return actionsDoc
+  })
+}
+
+export async function unsetTablePermission(
+  tableId: string,
+  rowActionId: string
+) {
+  return await updateDoc(tableId, rowActionId, async actionsDoc => {
+    actionsDoc.actions[rowActionId].permissions.table.runAllowed = false
+    return actionsDoc
+  })
+}
+
 export async function setViewPermission(
   tableId: string,
   rowActionId: string,
@@ -220,6 +237,8 @@ export async function run(tableId: any, rowActionId: any, rowId: string) {
     automation,
     {
       fields: {
+        id: row._id,
+        revision: row._rev,
         row,
         table,
       },

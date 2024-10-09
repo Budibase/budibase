@@ -127,6 +127,26 @@ export const JsonTypes = [
   FieldType.ARRAY,
 ]
 
+export const NumericTypes = [FieldType.NUMBER, FieldType.BIGINT]
+
+export function isNumeric(type: FieldType) {
+  return NumericTypes.includes(type)
+}
+
+export const GroupByTypes = [
+  FieldType.STRING,
+  FieldType.LONGFORM,
+  FieldType.OPTIONS,
+  FieldType.NUMBER,
+  FieldType.BOOLEAN,
+  FieldType.DATETIME,
+  FieldType.BIGINT,
+]
+
+export function canGroupBy(type: FieldType) {
+  return GroupByTypes.includes(type)
+}
+
 export interface RowAttachment {
   size: number
   name: string

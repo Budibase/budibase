@@ -253,6 +253,11 @@ export function getAppId(): string | undefined {
   }
 }
 
+export function getIP(): string | undefined {
+  const context = Context.get()
+  return context?.ip
+}
+
 export const getProdAppId = () => {
   const appId = getAppId()
   if (!appId) {
@@ -279,6 +284,10 @@ export function doInScimContext(task: any) {
     isScim: true,
   }
   return newContext(updates, task)
+}
+
+export function doInIPContext(ip: string, task: any) {
+  return newContext({ ip }, task)
 }
 
 export async function ensureSnippetContext(enabled = !env.isTest()) {
