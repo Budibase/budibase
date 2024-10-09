@@ -1,5 +1,6 @@
 import { permissions, roles } from "@budibase/backend-core"
 import { DocumentType, VirtualDocumentType } from "../db/utils"
+import { getDocumentType, getVirtualDocumentType } from "@budibase/types"
 
 export const CURRENTLY_SUPPORTED_LEVELS: string[] = [
   permissions.PermissionLevel.WRITE,
@@ -8,13 +9,16 @@ export const CURRENTLY_SUPPORTED_LEVELS: string[] = [
 ]
 
 export function getPermissionType(resourceId: string) {
-  const docType = Object.values(DocumentType).filter(docType =>
-    resourceId.startsWith(docType)
-  )[0]
-  switch (docType as DocumentType | VirtualDocumentType) {
+  const virtualDocType = getVirtualDocumentType(resourceId)
+  switch (virtualDocType) {
+    case VirtualDocumentType.VIEW:
+      return permissions.PermissionType.TABLE
+  }
+
+  const docType = getDocumentType(resourceId)
+  switch (docType) {
     case DocumentType.TABLE:
     case DocumentType.ROW:
-    case VirtualDocumentType.VIEW:
       return permissions.PermissionType.TABLE
     case DocumentType.AUTOMATION:
       return permissions.PermissionType.AUTOMATION
@@ -32,22 +36,25 @@ export function getPermissionType(resourceId: string) {
 /**
  *  works out the basic permissions based on builtin roles for a resource, using its ID
  */
-export function getBasePermissions(resourceId: string) {
+export function getBasePermissions(resourceId: string): Record<string, string> {
   const type = getPermissionType(resourceId)
-  const basePermissions: { [key: string]: string } = {}
+  const basePermissions: Record<string, string> = {}
   for (let [roleId, role] of Object.entries(roles.getBuiltinRoles())) {
     if (!role.permissionId) {
       continue
     }
+
     const perms = permissions.getBuiltinPermissionByID(role.permissionId)
     if (!perms) {
       continue
     }
+
     const typedPermission = perms.permissions.find(perm => perm.type === type)
-    if (
-      typedPermission &&
-      CURRENTLY_SUPPORTED_LEVELS.indexOf(typedPermission.level) !== -1
-    ) {
+    if (!typedPermission) {
+      continue
+    }
+
+    if (CURRENTLY_SUPPORTED_LEVELS.includes(typedPermission.level)) {
       const level = typedPermission.level
       basePermissions[level] = roles.lowerBuiltinRoleID(
         basePermissions[level],
