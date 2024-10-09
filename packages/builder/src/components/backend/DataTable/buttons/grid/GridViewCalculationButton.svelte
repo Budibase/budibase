@@ -1,29 +1,161 @@
 <script>
-  import { ActionButton, Modal, ModalContent } from "@budibase/bbui"
-  import { CalculationType } from "@budibase/types"
-  import { API } from "api"
-  import { getContext, createEventDispatcher } from "svelte"
+  import {
+    ActionButton,
+    Modal,
+    ModalContent,
+    Select,
+    Icon,
+  } from "@budibase/bbui"
+  import { CalculationType, FieldType } from "@budibase/types"
+  import { getContext } from "svelte"
 
-  const { definition } = getContext("grid")
-  const dispatch = createEventDispatcher()
+  const { definition, datasource, rows } = getContext("grid")
+  const calculationTypeOptions = [
+    {
+      label: "Average (mean)",
+      value: CalculationType.AVG,
+    },
+    {
+      label: "Sum",
+      value: CalculationType.SUM,
+    },
+    {
+      label: "Minimum",
+      value: CalculationType.MIN,
+    },
+    {
+      label: "Maximum",
+      value: CalculationType.MAX,
+    },
+    {
+      label: "Count",
+      value: CalculationType.COUNT,
+    },
+  ]
 
   let modal
+  let calculations = []
+  let groupings = []
+
+  $: schema = $definition?.schema || {}
+
+  const open = () => {
+    calculations = extractCalculations(schema)
+    groupings = extractGroupings(schema)
+    modal?.show()
+  }
+
+  const extractCalculations = schema => {
+    if (!schema) {
+      return []
+    }
+    return Object.keys(schema)
+      .filter(field => {
+        return schema[field].calculationType != null
+      })
+      .map(field => ({
+        type: schema[field].calculationType,
+        field: schema[field].field,
+      }))
+  }
+
+  const extractGroupings = schema => {
+    if (!schema) {
+      return []
+    }
+    return Object.keys(schema)
+      .filter(field => {
+        return schema[field].calculationType == null && schema[field].visible
+      })
+      .map(field => ({ field }))
+  }
+
+  // Gets the available types for a given calculation
+  const getTypeOptions = (self, calculations) => {
+    return calculationTypeOptions.filter(option => {
+      return !calculations.some(
+        calc =>
+          calc !== self &&
+          calc.field === self.field &&
+          calc.type === option.value
+      )
+    })
+  }
+
+  // Gets the available fields for a given calculation
+  const getFieldOptions = (self, calculations, schema) => {
+    return Object.entries(schema)
+      .filter(([field, fieldSchema]) => {
+        // Only allow numeric fields that are not calculations themselves
+        if (
+          fieldSchema.calculationType ||
+          fieldSchema.type !== FieldType.NUMBER
+        ) {
+          return false
+        }
+        // Don't allow duplicates
+        return !calculations.some(calc => {
+          return (
+            calc !== self && calc.type === self.type && calc.field === field
+          )
+        })
+      })
+      .map(([field]) => field)
+  }
+
+  // Gets the available fields to group by for a given grouping
+  const getGroupingOptions = (self, groupings, schema) => {
+    return Object.entries(schema)
+      .filter(([field, fieldSchema]) => {
+        // Don't allow grouping by calculations
+        if (fieldSchema.calculationType) {
+          return false
+        }
+        // Don't allow duplicates
+        return !groupings.some(grouping => {
+          return grouping !== self && grouping.field === field
+        })
+      })
+      .map(([field]) => field)
+  }
+
+  const addCalc = () => {
+    calculations = [...calculations, {}]
+  }
+
+  const deleteCalc = idx => {
+    calculations = calculations.toSpliced(idx, 1)
+  }
+
+  const addGrouping = () => {
+    groupings = [...groupings, {}]
+  }
+
+  const deleteGrouping = idx => {
+    groupings = groupings.toSpliced(idx, 1)
+  }
 
   const save = async () => {
-    await API.viewV2.update({
+    let schema = {}
+
+    const rand = ("" + Math.random()).substring(2)
+    await datasource.actions.saveDefinition({
       ...$definition,
+      primaryDisplay: null,
       schema: {
-        "Average game length": {
+        ["Average game length " + rand]: {
           visible: true,
           calculationType: CalculationType.AVG,
           field: "Game Length",
+          width: 300,
         },
       },
     })
+    await rows.actions.refreshData()
   }
 </script>
 
-<ActionButton icon="WebPage" quiet on:click={modal?.show}>
+<ActionButton icon="WebPage" quiet on:click={open}>
   Configure calculations
 </ActionButton>
 
@@ -34,6 +166,76 @@
     size="L"
     onConfirm={save}
   >
-    Show calculations which are based on
+    {#if !calculations.length}
+      <div>
+        <ActionButton quiet icon="Add">Add your first calculation</ActionButton>
+      </div>
+    {:else}
+      <div class="calculations">
+        {#each calculations as calc, idx}
+          <span>{idx === 0 ? "Calculate" : "and"} the</span>
+          <Select
+            options={getTypeOptions(calc, calculations)}
+            bind:value={calc.type}
+            placeholder="Function"
+          />
+          <span>of</span>
+          <Select
+            options={getFieldOptions(calc, calculations, schema)}
+            bind:value={calc.field}
+            placeholder="Column"
+          />
+          <Icon
+            hoverable
+            name="Close"
+            size="S"
+            on:click={() => deleteCalc(idx)}
+            color="var(--spectrum-global-color-gray-700)"
+          />
+        {/each}
+        {#each groupings as group, idx}
+          <span>{idx === 0 ? "Group by" : "and"}</span>
+          <Select
+            options={getGroupingOptions(group, groupings, schema)}
+            bind:value={group.field}
+            placeholder="Column"
+          />
+          <Icon
+            hoverable
+            name="Close"
+            size="S"
+            on:click={() => deleteGrouping(idx)}
+            color="var(--spectrum-global-color-gray-700)"
+          />
+          <span />
+          <span />
+        {/each}
+      </div>
+      <div class="buttons">
+        <ActionButton quiet icon="Add" on:click={addCalc}>
+          Add calculation
+        </ActionButton>
+        <ActionButton quiet icon="Add" on:click={addGrouping}>
+          Group by
+        </ActionButton>
+      </div>
+    {/if}
   </ModalContent>
 </Modal>
+
+<style>
+  .calculations {
+    display: grid;
+    grid-template-columns: auto 1fr auto 1fr auto;
+    align-items: center;
+    column-gap: var(--spacing-m);
+    row-gap: var(--spacing-m);
+  }
+  .buttons {
+    display: flex;
+    flex-direction: row;
+  }
+  span {
+    text-align: right;
+  }
+</style>
