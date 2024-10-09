@@ -65,7 +65,13 @@ export enum BuiltinPermissionID {
   POWER = "power",
 }
 
-export const BUILTIN_PERMISSIONS = {
+export const BUILTIN_PERMISSIONS: {
+  [key in keyof typeof BuiltinPermissionID]: {
+    _id: (typeof BuiltinPermissionID)[key]
+    name: string
+    permissions: Permission[]
+  }
+} = {
   PUBLIC: {
     _id: BuiltinPermissionID.PUBLIC,
     name: "Public",
