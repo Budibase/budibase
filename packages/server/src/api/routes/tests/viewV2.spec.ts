@@ -1978,6 +1978,30 @@ describe.each([
         expect(newRow.one).toBeUndefined()
         expect(newRow.two).toEqual("bar")
       })
+
+      it("should not be possible to create a row in a calculation view", async () => {
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
+          schema: {
+            id: { visible: true },
+            one: { visible: true },
+          },
+        })
+
+        await config.api.row.save(
+          view.id,
+          { one: "foo" },
+          {
+            status: 400,
+            body: {
+              message: "Cannot insert rows through a calculation view",
+              status: 400,
+            },
+          }
+        )
+      })
     })
 
     describe("patch", () => {
@@ -2041,6 +2065,40 @@ describe.each([
         const row = await config.api.row.get(table._id!, newRow._id!)
         expect(row.one).toEqual("foo")
         expect(row.two).toEqual("newBar")
+      })
+
+      it("should not be possible to modify a row in a calculation view", async () => {
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
+          schema: {
+            id: { visible: true },
+            one: { visible: true },
+          },
+        })
+
+        const newRow = await config.api.row.save(table._id!, {
+          one: "foo",
+          two: "bar",
+        })
+
+        await config.api.row.patch(
+          view.id,
+          {
+            tableId: table._id!,
+            _id: newRow._id!,
+            _rev: newRow._rev!,
+            one: "newFoo",
+            two: "newBar",
+          },
+          {
+            status: 400,
+            body: {
+              message: "Cannot update rows through a calculation view",
+            },
+          }
+        )
       })
     })
 

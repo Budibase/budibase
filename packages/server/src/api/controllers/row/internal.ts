@@ -22,13 +22,20 @@ import sdk from "../../../sdk"
 import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
 import { flatten } from "lodash"
 import { findRow } from "../../../sdk/app/rows/internal"
+import { helpers } from "@budibase/shared-core"
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const { tableId } = utils.getSourceId(ctx)
   const source = await utils.getSource(ctx)
+
+  if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
+    ctx.throw(400, "Cannot update rows through a calculation view")
+  }
+
   const table = sdk.views.isView(source)
     ? await sdk.views.getTable(source.id)
     : source
+
   const inputs = ctx.request.body
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
