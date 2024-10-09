@@ -2148,6 +2148,32 @@ describe.each([
         })
         await config.api.row.get(table._id!, rows[1]._id!, { status: 200 })
       })
+
+      it("should not be possible to delete a row in a calculation view", async () => {
+        const row = await config.api.row.save(table._id!, {})
+
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
+          schema: {
+            id: { visible: true },
+            one: { visible: true },
+          },
+        })
+
+        await config.api.row.delete(
+          view.id,
+          { _id: row._id! },
+          {
+            status: 400,
+            body: {
+              message: "Cannot delete rows through a calculation view",
+              status: 400,
+            },
+          }
+        )
+      })
     })
 
     describe("read", () => {
