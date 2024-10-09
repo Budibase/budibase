@@ -21,7 +21,7 @@ import {
 } from "@budibase/types"
 import { RoleColor, sdk as sharedSdk } from "@budibase/shared-core"
 import sdk from "../../sdk"
-import { builderSocket } from "src/websockets"
+import { builderSocket } from "../../websockets"
 
 const UpdateRolesOptions = {
   CREATED: "created",
