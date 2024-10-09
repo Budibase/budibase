@@ -671,6 +671,7 @@ export class ExternalRequest<T extends Operation> {
       config.includeSqlRelationships === IncludeRelationship.INCLUDE
 
     // clean up row on ingress using schema
+    const unprocessedRow = config.row
     const processed = this.inputProcessing(row, table)
     row = processed.row
     let manyRelationships = processed.manyRelationships
@@ -750,9 +751,10 @@ export class ExternalRequest<T extends Operation> {
     // we might still need to perform other operations like updating the foreign keys on other rows
     if (
       this.operation === Operation.UPDATE &&
-      Object.keys(row || {}).length === 0
+      Object.keys(row || {}).length === 0 &&
+      unprocessedRow
     ) {
-      response = [config.row!]
+      response = [unprocessedRow]
     } else {
       response = env.SQL_ALIASING_DISABLE
         ? await getDatasourceAndQuery(json)

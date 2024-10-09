@@ -326,17 +326,13 @@ class InternalBuilder {
   }
 
   private parseBody(body: Record<string, any>) {
-    try {
-      for (let [key, value] of Object.entries(body)) {
-        const { column } = this.splitter.run(key)
-        const schema = this.table.schema[column]
-        if (!schema) {
-          continue
-        }
-        body[key] = this.parse(value, schema)
+    for (let [key, value] of Object.entries(body)) {
+      const { column } = this.splitter.run(key)
+      const schema = this.table.schema[column]
+      if (!schema) {
+        continue
       }
-    } catch (err) {
-      console.log(err)
+      body[key] = this.parse(value, schema)
     }
     return body
   }
