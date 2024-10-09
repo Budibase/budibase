@@ -41,7 +41,7 @@
 
   const open = () => {
     calculations = extractCalculations(schema)
-    groupings = extractGroupings(schema)
+    groupings = calculations.length ? extractGroupings(schema) : []
     modal?.show()
   }
 
@@ -138,18 +138,26 @@
   const save = async () => {
     let schema = {}
 
-    const rand = ("" + Math.random()).substring(2)
+    // Add calculations
+    for (let calc of calculations) {
+      const name = `${calc.type} of ${calc.field}`
+      schema[name] = {
+        calculationType: calc.type,
+        field: calc.field,
+        visible: true,
+      }
+    }
+
+    // Add groupings
+    for (let grouping of groupings) {
+      schema[grouping.field] = {
+        visible: true,
+      }
+    }
     await datasource.actions.saveDefinition({
       ...$definition,
       primaryDisplay: null,
-      schema: {
-        ["Average game length " + rand]: {
-          visible: true,
-          calculationType: CalculationType.AVG,
-          field: "Game Length",
-          width: 300,
-        },
-      },
+      schema,
     })
     await rows.actions.refreshData()
   }
@@ -168,7 +176,9 @@
   >
     {#if !calculations.length}
       <div>
-        <ActionButton quiet icon="Add">Add your first calculation</ActionButton>
+        <ActionButton quiet icon="Add" on:click={addCalc}>
+          Add your first calculation
+        </ActionButton>
       </div>
     {:else}
       <div class="calculations">

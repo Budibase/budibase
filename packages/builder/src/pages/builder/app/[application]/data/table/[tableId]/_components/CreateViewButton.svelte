@@ -39,7 +39,7 @@
       const newView = await viewsV2.create({
         name: trimmedName,
         tableId: table._id,
-        schema: enrichSchema(table.schema),
+        schema: calculation ? {} : enrichSchema(table.schema),
         primaryDisplay: calculation ? undefined : table.primaryDisplay,
         type: calculation ? ViewV2Type.CALCULATION : undefined,
       })
