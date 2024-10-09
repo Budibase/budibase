@@ -24,7 +24,11 @@ import * as viewsSdk from "../../views"
 import { generateTableID, getRowParams } from "../../../../db/utils"
 import { quotas } from "@budibase/pro"
 
-export async function create(table: Table, rows?: Row[], userId?: string) {
+export async function create(
+  table: Omit<Table, "_id" | "_rev">,
+  rows?: Row[],
+  userId?: string
+) {
   const tableId = generateTableID()
 
   let tableToSave: Table = {
