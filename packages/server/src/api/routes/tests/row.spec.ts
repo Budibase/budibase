@@ -1846,7 +1846,7 @@ describe.each([
     })
 
   describe("exportRows", () => {
-    beforeAll(async () => {
+    beforeEach(async () => {
       table = await config.api.table.save(defaultTable())
     })
 
@@ -1882,6 +1882,16 @@ describe.each([
           expect(row[key]).toEqual(existing[key])
         })
       })
+
+    it("should allow exporting without filtering", async () => {
+      const existing = await config.api.row.save(table._id!, {})
+      const res = await config.api.row.exportRows(table._id!)
+      const results = JSON.parse(res)
+      expect(results.length).toEqual(1)
+      const row = results[0]
+
+      expect(row._id).toEqual(existing._id)
+    })
 
     it("should allow exporting only certain columns", async () => {
       const existing = await config.api.row.save(table._id!, {})
