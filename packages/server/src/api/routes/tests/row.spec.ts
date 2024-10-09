@@ -1138,6 +1138,7 @@ describe.each([
         status: 200,
       })
       expect(afterRelatedRow.relationship.length).toEqual(1)
+      expect(afterRelatedRow.relationship[0]._id).toEqual(row._id)
     })
 
     it("should be able to update relationships when both columns are same name", async () => {
