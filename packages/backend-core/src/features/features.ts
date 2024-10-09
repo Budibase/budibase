@@ -198,6 +198,8 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
       let userId = identity?._id
       if (!userId) {
         const ip = context.getIP()
+        // TODO; REMOVE THIS
+        tags["userIP"] = ip
         if (ip) {
           userId = crypto.createHash("sha512").update(ip).digest("hex")
         }

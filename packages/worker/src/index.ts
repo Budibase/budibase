@@ -46,6 +46,7 @@ bootstrap()
 const app: Application = new Application()
 
 app.keys = ["secret", "key"]
+app.proxy = true
 
 // set up top level koa middleware
 app.use(handleScimBody)
