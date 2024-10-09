@@ -79,10 +79,15 @@ export enum CalculationType {
   MAX = "max",
 }
 
+export enum ViewV2Type {
+  CALCULATION = "calculation",
+}
+
 export interface ViewV2 {
   version: 2
   id: string
   name: string
+  type?: ViewV2Type
   primaryDisplay?: string
   tableId: string
   query?: LegacyFilter[] | SearchFilters

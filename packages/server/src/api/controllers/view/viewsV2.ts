@@ -127,6 +127,7 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
 
   const parsedView: Omit<RequiredKeys<ViewV2>, "id" | "version"> = {
     name: view.name,
+    type: view.type,
     tableId: view.tableId,
     query: view.query,
     queryUI: view.queryUI,
@@ -162,6 +163,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
   const parsedView: RequiredKeys<ViewV2> = {
     id: view.id,
     name: view.name,
+    type: view.type,
     version: view.version,
     tableId: view.tableId,
     query: view.query,
