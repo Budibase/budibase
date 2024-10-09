@@ -4,6 +4,7 @@ import * as context from "../../context"
 import environment, { withEnv } from "../../environment"
 import nodeFetch from "node-fetch"
 import nock from "nock"
+import * as crypto from "crypto"
 
 const schema = {
   TEST_BOOLEAN: Flag.boolean(false),
@@ -27,10 +28,14 @@ interface PostHogFlags {
   featureFlagPayloads?: Record<string, string>
 }
 
-function mockPosthogFlags(flags: PostHogFlags) {
+function mockPosthogFlags(
+  flags: PostHogFlags,
+  opts?: { token?: string; distinct_id?: string }
+) {
+  const { token = "test", distinct_id = "us_1234" } = opts || {}
   nock("https://us.i.posthog.com")
     .post("/decide/?v=3", body => {
-      return body.token === "test" && body.distinct_id === "us_1234"
+      return body.token === token && body.distinct_id === distinct_id
     })
     .reply(200, flags)
     .persist()
@@ -214,6 +219,14 @@ describe("feature flags", () => {
       lastName: "User",
     }
 
+    // We need to pass in node-fetch here otherwise nock won't get used
+    // because posthog-node uses axios under the hood.
+    init({
+      fetch: (url, opts) => {
+        return nodeFetch(url, opts)
+      },
+    })
+
     nock("https://us.i.posthog.com")
       .post("/decide/?v=3", body => {
         return body.token === "test" && body.distinct_id === "us_1234"
@@ -229,5 +242,43 @@ describe("feature flags", () => {
         })
       }
     )
+  })
+
+  it("should still get flags when user is logged out", async () => {
+    const env: Partial<typeof environment> = {
+      SELF_HOSTED: false,
+      POSTHOG_FEATURE_FLAGS_ENABLED: "true",
+      POSTHOG_API_HOST: "https://us.i.posthog.com",
+      POSTHOG_TOKEN: "test",
+    }
+
+    const ctx = { ip: "127.0.0.1" } as UserCtx
+    const hashedIp = crypto.createHash("sha512").update(ctx.ip).digest("hex")
+
+    await withEnv(env, async () => {
+      mockPosthogFlags(
+        {
+          featureFlags: { TEST_BOOLEAN: true },
+        },
+        {
+          distinct_id: hashedIp,
+        }
+      )
+
+      // We need to pass in node-fetch here otherwise nock won't get used
+      // because posthog-node uses axios under the hood.
+      init({
+        fetch: (url, opts) => {
+          return nodeFetch(url, opts)
+        },
+      })
+
+      await context.doInTenant("default", async () => {
+        const result = await flags.fetch(ctx)
+        expect(result.TEST_BOOLEAN).toBe(true)
+      })
+
+      shutdown()
+    })
   })
 })

@@ -1,7 +1,8 @@
 import env from "../environment"
+import * as crypto from "crypto"
 import * as context from "../context"
 import { PostHog, PostHogOptions } from "posthog-node"
-import { FeatureFlag, IdentityType, UserCtx } from "@budibase/types"
+import { FeatureFlag, UserCtx } from "@budibase/types"
 import tracer from "dd-trace"
 import { Duration } from "../utils"
 
@@ -224,24 +225,29 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
       }
 
       const identity = context.getIdentity()
-      tags[`identity.type`] = identity?.type
-      tags[`identity.tenantId`] = identity?.tenantId
-      tags[`identity._id`] = identity?._id
 
-      if (posthog && identity?.type === IdentityType.USER) {
+      let userId = identity?._id
+      if (!userId && ctx?.ip) {
+        userId = crypto.createHash("sha512").update(ctx.ip).digest("hex")
+      }
+
+      let tenantId = identity?.tenantId
+      if (!tenantId) {
+        tenantId = currentTenantId
+      }
+
+      tags[`identity.type`] = identity?.type
+      tags[`identity._id`] = identity?._id
+      tags[`tenantId`] = tenantId
+      tags[`userId`] = userId
+
+      if (posthog && userId) {
         tags[`readFromPostHog`] = true
 
-        const personProperties: Record<string, string> = {}
-        if (identity.tenantId) {
-          personProperties.tenantId = identity.tenantId
-        }
-
-        const posthogFlags = await posthog.getAllFlagsAndPayloads(
-          identity._id,
-          {
-            personProperties,
-          }
-        )
+        const personProperties: Record<string, string> = { tenantId }
+        const posthogFlags = await posthog.getAllFlagsAndPayloads(userId, {
+          personProperties,
+        })
 
         for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
           if (!this.isFlagName(name)) {
