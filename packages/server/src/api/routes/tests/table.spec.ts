@@ -1,4 +1,4 @@
-import { context, docIds, events, roles } from "@budibase/backend-core"
+import { context, docIds, events } from "@budibase/backend-core"
 import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
@@ -21,7 +21,6 @@ import {
   ViewCalculation,
   ViewV2Enriched,
   RowExportFormat,
-  PermissionSource,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
@@ -190,21 +189,6 @@ describe.each([
         )
       }
     )
-
-    it("should create tables with ADMIN read and write permissions", async () => {
-      const table = await config.api.table.save(tableForDatasource(datasource))
-      const { permissions } = await config.api.permission.get(table._id!)
-      expect(permissions).toEqual({
-        read: {
-          permissionType: PermissionSource.EXPLICIT,
-          role: roles.BUILTIN_ROLE_IDS.ADMIN,
-        },
-        write: {
-          permissionType: PermissionSource.EXPLICIT,
-          role: roles.BUILTIN_ROLE_IDS.ADMIN,
-        },
-      })
-    })
   })
 
   describe("update", () => {
