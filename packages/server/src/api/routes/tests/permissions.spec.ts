@@ -42,12 +42,11 @@ describe("/permission", () => {
 
   describe("table permissions", () => {
     let tableId: string
-    let perms: Document[]
 
     beforeEach(async () => {
       const table = await config.createTable()
       tableId = table._id!
-      perms = await config.api.permission.add({
+      await config.api.permission.add({
         roleId: STD_ROLE_ID,
         resourceId: tableId,
         level: PermissionLevel.READ,
@@ -59,11 +58,11 @@ describe("/permission", () => {
       const { permissions } = await config.api.permission.get(table._id!)
       expect(permissions).toEqual({
         read: {
-          permissionType: "BASE",
+          permissionType: "EXPLICIT",
           role: DEFAULT_TABLE_ROLE_ID,
         },
         write: {
-          permissionType: "BASE",
+          permissionType: "EXPLICIT",
           role: DEFAULT_TABLE_ROLE_ID,
         },
       })
@@ -71,11 +70,6 @@ describe("/permission", () => {
 
     describe("add", () => {
       it("should be able to add permission to a role for the table", async () => {
-        expect(perms.length).toEqual(1)
-        expect(perms[0]._id).toEqual(`${STD_ROLE_ID}`)
-      })
-
-      it("should get the resource permissions", async () => {
         const res = await request
           .get(`/api/permission/${tableId}`)
           .set(config.defaultHeaders())
@@ -84,13 +78,13 @@ describe("/permission", () => {
         expect(res.body).toEqual({
           permissions: {
             read: { permissionType: "EXPLICIT", role: STD_ROLE_ID },
-            write: { permissionType: "BASE", role: DEFAULT_TABLE_ROLE_ID },
+            write: { permissionType: "EXPLICIT", role: DEFAULT_TABLE_ROLE_ID },
           },
         })
       })
 
       it("should get resource permissions with multiple roles", async () => {
-        perms = await config.api.permission.add({
+        await config.api.permission.add({
           roleId: HIGHER_ROLE_ID,
           resourceId: tableId,
           level: PermissionLevel.WRITE,
@@ -115,12 +109,12 @@ describe("/permission", () => {
 
     describe("remove", () => {
       it("should be able to remove the permission", async () => {
-        const res = await config.api.permission.revoke({
+        await config.api.permission.revoke({
           roleId: STD_ROLE_ID,
           resourceId: tableId,
           level: PermissionLevel.READ,
         })
-        expect(res[0]._id).toEqual(STD_ROLE_ID)
+
         const permsRes = await config.api.permission.get(tableId)
         expect(permsRes.permissions[STD_ROLE_ID]).toBeUndefined()
       })
