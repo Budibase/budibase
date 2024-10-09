@@ -24,6 +24,7 @@ import * as context from "../context"
 import { getGlobalDB } from "../context"
 import { isCreator } from "./utils"
 import { UserDB } from "./db"
+import { dataFilters } from "@budibase/shared-core"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -263,9 +264,12 @@ export async function paginatedUsers({
       cleanup: true,
     })
   } else {
-    // no search, query allDocs
-    const response = await db.allDocs(getGlobalUserParams(null, opts))
-    userList = response.rows.map((row: any) => row.doc)
+    const response = await db.allDocs<User>(getGlobalUserParams(null, opts))
+    userList = response.rows.map(row => row.doc!)
+
+    if (query) {
+      userList = dataFilters.search(userList, { query }).rows
+    }
   }
   return pagination(userList, pageSize, {
     paginate: true,
