@@ -54,6 +54,7 @@ app.use(koaBody({ multipart: true }))
 app.use(koaSession(app))
 app.use(middleware.correlation)
 app.use(middleware.pino)
+app.use(middleware.ip)
 app.use(userAgent)
 
 // authentication

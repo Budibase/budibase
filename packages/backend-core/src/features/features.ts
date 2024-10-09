@@ -2,7 +2,7 @@ import env from "../environment"
 import * as crypto from "crypto"
 import * as context from "../context"
 import { PostHog, PostHogOptions } from "posthog-node"
-import { FeatureFlag, UserCtx } from "@budibase/types"
+import { FeatureFlag } from "@budibase/types"
 import tracer from "dd-trace"
 import { Duration } from "../utils"
 
@@ -142,23 +142,17 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
     return this.flagSchema[name as keyof T] !== undefined
   }
 
-  async get<K extends keyof T>(
-    key: K,
-    ctx?: UserCtx
-  ): Promise<FlagValues<T>[K]> {
-    const flags = await this.fetch(ctx)
+  async get<K extends keyof T>(key: K): Promise<FlagValues<T>[K]> {
+    const flags = await this.fetch()
     return flags[key]
   }
 
-  async isEnabled<K extends KeysOfType<T, boolean>>(
-    key: K,
-    ctx?: UserCtx
-  ): Promise<boolean> {
-    const flags = await this.fetch(ctx)
+  async isEnabled<K extends KeysOfType<T, boolean>>(key: K): Promise<boolean> {
+    const flags = await this.fetch()
     return flags[key]
   }
 
-  async fetch(ctx?: UserCtx): Promise<FlagValues<T>> {
+  async fetch(): Promise<FlagValues<T>> {
     return await tracer.trace("features.fetch", async span => {
       const cachedFlags = context.getFeatureFlags<FlagValues<T>>(this.setId)
       if (cachedFlags) {
@@ -199,36 +193,11 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
         tags[`flags.${key}.source`] = "environment"
       }
 
-      const license = ctx?.user?.license
-      if (license) {
-        tags[`readFromLicense`] = true
-
-        for (const feature of license.features) {
-          if (!this.isFlagName(feature)) {
-            continue
-          }
-
-          if (
-            flagValues[feature] === true ||
-            specificallySetFalse.has(feature)
-          ) {
-            // If the flag is already set to through environment variables, we
-            // don't want to override it back to false here.
-            continue
-          }
-
-          // @ts-expect-error - TS does not like you writing into a generic type,
-          // but we know that it's okay in this case because it's just an object.
-          flagValues[feature] = true
-          tags[`flags.${feature}.source`] = "license"
-        }
-      }
-
       const identity = context.getIdentity()
 
       let userId = identity?._id
-      if (!userId && ctx?.ip) {
-        userId = crypto.createHash("sha512").update(ctx.ip).digest("hex")
+      if (!userId) {
+        userId = context.getIP()
       }
 
       let tenantId = identity?.tenantId
