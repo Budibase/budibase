@@ -26,6 +26,7 @@ import {
   NumericCalculationFieldMetadata,
   ViewV2Schema,
   ViewV2Type,
+  JsonTypes,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -736,6 +737,34 @@ describe.each([
           },
         })
       })
+
+      // We don't allow the creation of tables with most JsonTypes when using
+      // external datasources.
+      isInternal &&
+        it("cannot use complex types as group-by fields", async () => {
+          for (const type of JsonTypes) {
+            const field = { name: "field", type } as FieldSchema
+            const table = await config.api.table.save(
+              saveTableRequest({ schema: { field } })
+            )
+            await config.api.viewV2.create(
+              {
+                tableId: table._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                schema: {
+                  field: { visible: true },
+                },
+              },
+              {
+                status: 400,
+                body: {
+                  message: `Grouping by fields of type "${type}" is not supported`,
+                },
+              }
+            )
+          }
+        })
     })
 
     describe("update", () => {
