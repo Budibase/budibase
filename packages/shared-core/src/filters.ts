@@ -639,19 +639,19 @@ export function fixupFilterArrays(filters: SearchFilters) {
   return filters
 }
 
-export function search<T>(
-  docs: Record<string, T>[],
-  query: RowSearchParams
-): SearchResponse<Record<string, T>> {
+export function search<T extends Record<string, any>>(
+  docs: T[],
+  query: Omit<RowSearchParams, "tableId">
+): SearchResponse<T> {
   let result = runQuery(docs, query.query)
   if (query.sort) {
     result = sort(result, query.sort, query.sortOrder || SortOrder.ASCENDING)
   }
-  let totalRows = result.length
+  const totalRows = result.length
   if (query.limit) {
     result = limit(result, query.limit.toString())
   }
-  const response: SearchResponse<Record<string, any>> = { rows: result }
+  const response: SearchResponse<T> = { rows: result }
   if (query.countRows) {
     response.totalRows = totalRows
   }
