@@ -23,7 +23,7 @@ export function checkLinkFields(table: Table) {
     }
 
     const fieldNameSchema = table.schema[schema.fieldName]
-    if (fieldNameSchema !== undefined) {
+    if (key !== schema.fieldName && fieldNameSchema !== undefined) {
       throw new HTTPError(
         `Cannot use "${schema.fieldName}" as a field name for a link field, it is already used as a field name on the table`,
         400
