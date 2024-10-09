@@ -12,6 +12,7 @@ import { userAgent } from "koa-useragent"
 
 export default function createKoaApp() {
   const app = new Koa()
+  app.proxy = true
 
   let mbNumber = parseInt(env.HTTP_MB_LIMIT || "10")
   if (!mbNumber || isNaN(mbNumber)) {
