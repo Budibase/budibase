@@ -23,6 +23,7 @@ import { checkAutoColumns } from "./utils"
 import * as viewsSdk from "../../views"
 import { getRowParams } from "../../../../db/utils"
 import { quotas } from "@budibase/pro"
+import { checkLinkFields } from "../utils"
 
 export async function save(
   table: Table,
@@ -59,6 +60,7 @@ export async function save(
 
   // check that subtypes have been maintained
   table = checkAutoColumns(table, oldTable)
+  checkLinkFields(table)
 
   // saving a table is a complex operation, involving many different steps, this
   // has been broken out into a utility to make it more obvious/easier to manipulate

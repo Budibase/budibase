@@ -189,6 +189,44 @@ describe.each([
         )
       }
     )
+
+    it("should block creation of a link field that atttempts to overwrite a normal field", async () => {
+      const table1 = await config.api.table.save(
+        tableForDatasource(datasource, {
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+          },
+        })
+      )
+
+      await config.api.table.save(
+        tableForDatasource(datasource, {
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+            otherName: {
+              name: "otherName",
+              type: FieldType.LINK,
+              tableId: table1._id!,
+              // this is wrong because it tries to overwrite another field
+              fieldName: "name",
+              relationshipType: RelationshipType.ONE_TO_MANY,
+            },
+          },
+        }),
+        {
+          status: 400,
+          body: {
+            message: `Cannot use "name" as a field name for a link field, it is already used as a field name on the table`,
+          },
+        }
+      )
+    })
   })
 
   describe("update", () => {

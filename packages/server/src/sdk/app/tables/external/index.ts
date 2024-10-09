@@ -29,6 +29,7 @@ import { getTable } from "../getters"
 import { populateExternalTableSchemas } from "../validation"
 import datasourceSdk from "../../datasources"
 import * as viewSdk from "../../views"
+import { checkLinkFields } from "../utils"
 
 const DEFAULT_PRIMARY_COLUMN = "id"
 
@@ -50,6 +51,8 @@ function validate(table: Table, oldTable?: Table) {
   if (hasTypeChanged(table, oldTable)) {
     throw new Error("A column type has changed.")
   }
+
+  checkLinkFields(table)
 
   const autoSubTypes = Object.values(AutoFieldSubType)
   // check for auto columns, they are not allowed
