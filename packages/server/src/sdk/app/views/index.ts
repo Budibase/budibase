@@ -1,6 +1,7 @@
 import {
   CalculationType,
   canGroupBy,
+  FeatureFlag,
   FieldType,
   isNumeric,
   PermissionLevel,
@@ -13,7 +14,7 @@ import {
   ViewV2ColumnEnriched,
   ViewV2Enriched,
 } from "@budibase/types"
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, docIds, features, HTTPError } from "@budibase/backend-core"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
@@ -94,6 +95,13 @@ async function guardCalculationViewSchema(
     // so we don't validate it.
     if (isCount && !isDistinct) {
       continue
+    }
+
+    if (!schema.field) {
+      throw new HTTPError(
+        `Calculation field "${name}" is missing a "field" property`,
+        400
+      )
     }
 
     const targetSchema = table.schema[schema.field]
@@ -244,12 +252,17 @@ export async function create(
 
   const view = await pickApi(tableId).create(tableId, viewRequest)
 
-  // Set permissions to be the same as the table
-  const tablePerms = await sdk.permissions.getResourcePerms(tableId)
-  await sdk.permissions.setPermissions(view.id, {
-    writeRole: tablePerms[PermissionLevel.WRITE].role,
-    readRole: tablePerms[PermissionLevel.READ].role,
-  })
+  const setExplicitPermission = await features.flags.isEnabled(
+    FeatureFlag.TABLES_DEFAULT_ADMIN
+  )
+  if (setExplicitPermission) {
+    // Set permissions to be the same as the table
+    const tablePerms = await sdk.permissions.getResourcePerms(tableId)
+    await sdk.permissions.setPermissions(view.id, {
+      writeRole: tablePerms[PermissionLevel.WRITE].role,
+      readRole: tablePerms[PermissionLevel.READ].role,
+    })
+  }
 
   return view
 }
@@ -371,7 +384,8 @@ export function syncSchema(
 
   if (view.schema) {
     for (const fieldName of Object.keys(view.schema)) {
-      if (!schema[fieldName]) {
+      const viewSchema = view.schema[fieldName]
+      if (!helpers.views.isCalculationField(viewSchema) && !schema[fieldName]) {
         delete view.schema[fieldName]
       }
     }
