@@ -35,7 +35,7 @@ export async function searchView(
     > = {
     tableId: view.tableId,
     viewId: view.id,
-    query: body.query,
+    query: body.query || {},
     fields: viewFields,
     ...getSortOptions(body, view),
     limit: body.limit,
