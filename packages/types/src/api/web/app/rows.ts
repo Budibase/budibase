@@ -1,6 +1,7 @@
 import {
   ArrayOperator,
   BasicOperator,
+  EmptyFilterOption,
   LogicalOperator,
   RangeOperator,
   SearchFilterKey,
@@ -59,10 +60,13 @@ const queryFilterValidation: Record<SearchFilterKey, z.ZodTypeAny> = {
 }
 
 const searchRowRequest = z.object({
-  query: z.object({
-    allOr: z.boolean().optional(),
-    ...queryFilterValidation,
-  }),
+  query: z
+    .object({
+      allOr: z.boolean().optional(),
+      onEmptyFilter: z.nativeEnum(EmptyFilterOption).optional(),
+      ...queryFilterValidation,
+    })
+    .optional(),
   paginate: z.boolean().optional(),
   bookmark: z.union([z.string(), z.number()]).optional(),
   limit: z.number().optional(),
