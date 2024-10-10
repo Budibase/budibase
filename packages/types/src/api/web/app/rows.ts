@@ -29,7 +29,7 @@ export interface PatchRowResponse extends Row {}
 // TODO: exclude InternalSearchFilterOperator.COMPLEX_ID_OPERATOR
 const stringBasicFilter = z.record(z.string(), z.string())
 const basicFilter = z.record(z.string(), z.any())
-const arrayFilter = z.any()
+const arrayFilter = z.record(z.string(), z.union([z.any().array(), z.string()]))
 const logicFilter = z.any()
 
 const stringOrNumber = z.union([z.string(), z.number()])
