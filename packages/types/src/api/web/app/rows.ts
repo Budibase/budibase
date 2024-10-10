@@ -1,6 +1,10 @@
-import { SearchFilters, RowSearchParams } from "../../../sdk"
+import { SearchFilters } from "../../../sdk"
 import { Row } from "../../../documents"
-import { PaginationResponse, SortOrder, SortType } from "../../../api"
+import {
+  PaginationResponse,
+  SortOrder,
+  SortType,
+} from "../../../api/web/pagination"
 import { ReadStream } from "fs"
 import { z } from "zod"
 
