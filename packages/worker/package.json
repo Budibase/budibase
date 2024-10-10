@@ -89,7 +89,7 @@
     "rimraf": "3.0.2",
     "supertest": "6.3.3",
     "timekeeper": "2.2.0",
-    "typescript": "5.5.2",
+    "typescript": "5.6.3",
     "update-dotenv": "1.1.1"
   },
   "nx": {
