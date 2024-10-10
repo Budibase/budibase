@@ -3158,7 +3158,7 @@ describe.each([
             )
           })
 
-          it("should be able to filter rows to be calculated on on the view", async () => {
+          it("should be able to filter rows on the view itself", async () => {
             const table = await config.api.table.save(
               saveTableRequest({
                 schema: {
@@ -3236,11 +3236,6 @@ describe.each([
               tableId: table._id!,
               name: generator.guid(),
               type: ViewV2Type.CALCULATION,
-              query: {
-                equal: {
-                  quantity: 1,
-                },
-              },
               schema: {
                 quantity: { visible: true },
                 sum: {
