@@ -222,10 +222,21 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   )
 
   const searchParams: RequiredKeys<RowSearchParams> = {
-    ...searchRequest,
     query: enrichedQuery,
     tableId,
     viewId,
+    bookmark: searchRequest.bookmark,
+    paginate: searchRequest.paginate,
+    limit: searchRequest.limit,
+    sort: searchRequest.sort,
+    sortOrder: searchRequest.sortOrder,
+    sortType: searchRequest.sortType,
+    countRows: searchRequest.countRows,
+    version: searchRequest.version,
+    disableEscaping: searchRequest.disableEscaping,
+    fields: undefined,
+    indexer: undefined,
+    rows: undefined,
   }
 
   ctx.status = 200
