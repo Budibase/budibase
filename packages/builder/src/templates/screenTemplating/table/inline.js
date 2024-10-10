@@ -2,8 +2,9 @@ import { Screen } from "../Screen"
 import { Component } from "../../Component"
 import { capitalise } from "helpers"
 import getValidRoute from "../getValidRoute"
+import { getRowActionButtonTemplates } from "templates/rowActions"
 
-const inline = ({ tableOrView, permissions, screens }) => {
+const inline = async ({ tableOrView, permissions, screens }) => {
   const heading = new Component("@budibase/standard-components/heading")
     .instanceName("Table heading")
     .customProps({
@@ -12,13 +13,24 @@ const inline = ({ tableOrView, permissions, screens }) => {
     .gridDesktopColSpan(1, 13)
     .gridDesktopRowSpan(1, 3)
 
-  const tableBlock = new Component("@budibase/standard-components/gridblock")
+  let tableBlock = new Component("@budibase/standard-components/gridblock")
     .instanceName(`${tableOrView.name} - Table`)
     .customProps({
       table: tableOrView.datasourceSelectFormat,
     })
     .gridDesktopColSpan(1, 13)
     .gridDesktopRowSpan(3, 21)
+
+  // Add row actions to table
+  const rowActionButtons = await getRowActionButtonTemplates({
+    instance: tableBlock.json(),
+  })
+  if (rowActionButtons.length) {
+    tableBlock = tableBlock.customProps({
+      buttons: rowActionButtons,
+      buttonsCollapsed: rowActionButtons.length > 1,
+    })
+  }
 
   const screenTemplate = new Screen()
     .route(getValidRoute(screens, tableOrView.name, permissions.write))

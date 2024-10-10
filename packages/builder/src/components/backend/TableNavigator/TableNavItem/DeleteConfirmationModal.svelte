@@ -104,7 +104,7 @@
         </InlineAlert>
       </div>
     {/if}
-    <p class="fourthWarning">Please enter the app name below to confirm.</p>
+    <p class="fourthWarning">Please enter the table name below to confirm.</p>
     <Input bind:value={deleteTableName} placeholder={table.name} />
   </div>
 </ConfirmDialog>

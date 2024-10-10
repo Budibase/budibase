@@ -72,3 +72,9 @@ export const PlanModel = {
 }
 
 export const ChangelogURL = "https://docs.budibase.com/changelog"
+
+export const AutoScreenTypes = {
+  BLANK: "blank",
+  TABLE: "table",
+  FORM: "form",
+}

@@ -151,9 +151,9 @@ export default function positionDropdown(element, opts) {
       // Determine X strategy
       if (align === "right") {
         applyXStrategy(Strategies.EndToEnd)
-      } else if (align === "right-outside") {
+      } else if (align === "right-outside" || align === "right-context-menu") {
         applyXStrategy(Strategies.StartToEnd)
-      } else if (align === "left-outside") {
+      } else if (align === "left-outside" || align === "left-context-menu") {
         applyXStrategy(Strategies.EndToStart)
       } else if (align === "center") {
         applyXStrategy(Strategies.MidPoint)
@@ -164,6 +164,12 @@ export default function positionDropdown(element, opts) {
       // Determine Y strategy
       if (align === "right-outside" || align === "left-outside") {
         applyYStrategy(Strategies.MidPoint)
+      } else if (
+        align === "right-context-menu" ||
+        align === "left-context-menu"
+      ) {
+        applyYStrategy(Strategies.StartToStart)
+        styles.top -= 5 // Manual adjustment for action menu padding
       } else {
         applyYStrategy(Strategies.StartToEnd)
       }
@@ -240,7 +246,7 @@ export default function positionDropdown(element, opts) {
   }
 
   // Apply initial styles which don't need to change
-  element.style.position = "absolute"
+  element.style.position = "fixed"
   element.style.zIndex = "9999"
 
   // Set up a scroll listener

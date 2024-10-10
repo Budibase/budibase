@@ -8,6 +8,7 @@
   import InfoDisplay from "./InfoDisplay.svelte"
   import analytics, { Events } from "analytics"
   import { shouldDisplaySetting } from "@budibase/frontend-core"
+  import { getContext, setContext } from "svelte"
 
   export let componentDefinition
   export let componentInstance
@@ -18,6 +19,16 @@
   export let showSectionTitle = true
   export let includeHidden = false
   export let tag
+
+  // Sometimes we render component settings using a complicated nested
+  // component instance technique. This results in instances with IDs that
+  // don't exist anywhere in the tree. Therefore we need to keep track of
+  // what the real component tree ID is so we can always find it.
+  const rootId = getContext("rootId")
+  if (!rootId) {
+    setContext("rootId", componentInstance._id)
+  }
+  $: componentInstance._rootId = rootId || componentInstance._id
 
   $: sections = getSections(
     componentInstance,

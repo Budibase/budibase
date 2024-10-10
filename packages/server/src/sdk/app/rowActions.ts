@@ -255,6 +255,8 @@ export async function run(tableId: any, rowActionId: any, rowId: string) {
     automation,
     {
       fields: {
+        id: row._id,
+        revision: row._rev,
         row,
         table,
       },

@@ -616,6 +616,9 @@ export const buildQuery = (
 // this we convert them to arrays at the controller level so that nothing below
 // this has to worry about the non-array values.
 export function fixupFilterArrays(filters: SearchFilters) {
+  if (!filters) {
+    return filters
+  }
   for (const searchField of Object.values(ArrayOperator)) {
     const field = filters[searchField]
     if (field == null || !isPlainObject(field)) {

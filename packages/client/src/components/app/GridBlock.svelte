@@ -19,6 +19,8 @@
   export let columns = null
   export let onRowClick = null
   export let buttons = null
+  export let buttonsCollapsed = false
+  export let buttonsCollapsedText = null
 
   const context = getContext("context")
   const component = getContext("component")
@@ -181,6 +183,8 @@
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
     buttons={enrichedButtons}
+    {buttonsCollapsed}
+    {buttonsCollapsedText}
     isCloud={$environmentStore.cloud}
     on:rowclick={e => onRowClick?.({ row: e.detail })}
   />

@@ -35,15 +35,8 @@ export default class ViewV2Fetch extends DataFetch {
   }
 
   async getData() {
-    const {
-      datasource,
-      limit,
-      sortColumn,
-      sortOrder,
-      sortType,
-      paginate,
-      filter,
-    } = this.options
+    const { datasource, limit, sortColumn, sortOrder, sortType, paginate } =
+      this.options
     const { cursor, query, definition } = get(this.store)
 
     // If sort/filter params are not defined, update options to store the
@@ -53,14 +46,11 @@ export default class ViewV2Fetch extends DataFetch {
       this.options.sortColumn = definition.sort.field
       this.options.sortOrder = definition.sort.order
     }
-    if (!filter?.length && definition.query?.length) {
-      this.options.filter = definition.query
-    }
 
     try {
       const res = await this.API.viewV2.fetch({
         viewId: datasource.id,
-        query,
+        ...(query ? { query } : {}),
         paginate,
         limit,
         bookmark: cursor,
