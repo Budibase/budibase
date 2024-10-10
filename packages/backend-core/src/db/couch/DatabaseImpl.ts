@@ -211,6 +211,17 @@ export class DatabaseImpl implements Database {
     })
   }
 
+  async tryGet<T extends Document>(id?: string): Promise<T | undefined> {
+    try {
+      return await this.get<T>(id)
+    } catch (err: any) {
+      if (err.statusCode === 404) {
+        return undefined
+      }
+      throw err
+    }
+  }
+
   async getMultiple<T extends Document>(
     ids: string[],
     opts?: { allowMissing?: boolean; excludeDocs?: boolean }
