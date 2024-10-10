@@ -1,5 +1,9 @@
 import {
+  CalculationType,
+  canGroupBy,
+  FeatureFlag,
   FieldType,
+  isNumeric,
   PermissionLevel,
   RelationSchemaField,
   RenameColumn,
@@ -10,7 +14,7 @@ import {
   ViewV2ColumnEnriched,
   ViewV2Enriched,
 } from "@budibase/types"
-import { context, docIds, HTTPError, roles } from "@budibase/backend-core"
+import { context, docIds, features, HTTPError } from "@budibase/backend-core"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
@@ -23,7 +27,6 @@ import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"
 import * as external from "./external"
 import sdk from "../../../sdk"
-import { PermissionUpdateType, updatePermissionOnRole } from "../permissions"
 
 function pickApi(tableId: any) {
   if (isExternalTableID(tableId)) {
@@ -63,19 +66,48 @@ async function guardCalculationViewSchema(
   view: Omit<ViewV2, "id" | "version">
 ) {
   const calculationFields = helpers.views.calculationFields(view)
-  for (const calculationFieldName of Object.keys(calculationFields)) {
-    const schema = calculationFields[calculationFieldName]
+
+  if (Object.keys(calculationFields).length > 5) {
+    throw new HTTPError(
+      "Calculation views can only have a maximum of 5 fields",
+      400
+    )
+  }
+
+  const seen: Record<string, Record<CalculationType, boolean>> = {}
+
+  for (const name of Object.keys(calculationFields)) {
+    const schema = calculationFields[name]
+    const isCount = schema.calculationType === CalculationType.COUNT
+    const isDistinct = isCount && "distinct" in schema && schema.distinct
+
+    const field = isCount && !isDistinct ? "*" : schema.field
+    if (seen[field]?.[schema.calculationType]) {
+      throw new HTTPError(
+        `Duplicate calculation on field "${field}", calculation type "${schema.calculationType}"`,
+        400
+      )
+    }
+    seen[field] ??= {} as Record<CalculationType, boolean>
+    seen[field][schema.calculationType] = true
+
+    // Count fields that aren't distinct don't need to reference another field,
+    // so we don't validate it.
+    if (isCount && !isDistinct) {
+      continue
+    }
+
     const targetSchema = table.schema[schema.field]
     if (!targetSchema) {
       throw new HTTPError(
-        `Calculation field "${calculationFieldName}" references field "${schema.field}" which does not exist in the table schema`,
+        `Calculation field "${name}" references field "${schema.field}" which does not exist in the table schema`,
         400
       )
     }
 
-    if (!helpers.schema.isNumeric(targetSchema)) {
+    if (!isCount && !isNumeric(targetSchema.type)) {
       throw new HTTPError(
-        `Calculation field "${calculationFieldName}" references field "${schema.field}" which is not a numeric field`,
+        `Calculation field "${name}" references field "${schema.field}" which is not a numeric field`,
         400
       )
     }
@@ -90,6 +122,13 @@ async function guardCalculationViewSchema(
         400
       )
     }
+
+    if (!canGroupBy(targetSchema.type)) {
+      throw new HTTPError(
+        `Grouping by fields of type "${targetSchema.type}" is not supported`,
+        400
+      )
+    }
   }
 }
 
@@ -101,10 +140,21 @@ async function guardViewSchema(
 
   if (helpers.views.isCalculationView(view)) {
     await guardCalculationViewSchema(table, view)
+  } else {
+    if (helpers.views.hasCalculationFields(view)) {
+      throw new HTTPError(
+        "Calculation fields are not allowed in non-calculation views",
+        400
+      )
+    }
   }
 
   await checkReadonlyFields(table, view)
-  checkRequiredFields(table, view)
+
+  if (!helpers.views.isCalculationView(view)) {
+    checkRequiredFields(table, view)
+  }
+
   checkDisplayField(view)
 }
 
@@ -195,26 +245,17 @@ export async function create(
 
   const view = await pickApi(tableId).create(tableId, viewRequest)
 
-  // Set permissions to be the same as the table
-  const tablePerms = await sdk.permissions.getResourcePerms(tableId)
-  const readRole = tablePerms[PermissionLevel.READ]?.role
-  const writeRole = tablePerms[PermissionLevel.WRITE]?.role
-  await updatePermissionOnRole(
-    {
-      roleId: readRole || roles.BUILTIN_ROLE_IDS.BASIC,
-      resourceId: view.id,
-      level: PermissionLevel.READ,
-    },
-    PermissionUpdateType.ADD
+  const setExplicitPermission = await features.flags.isEnabled(
+    FeatureFlag.TABLES_DEFAULT_ADMIN
   )
-  await updatePermissionOnRole(
-    {
-      roleId: writeRole || roles.BUILTIN_ROLE_IDS.BASIC,
-      resourceId: view.id,
-      level: PermissionLevel.WRITE,
-    },
-    PermissionUpdateType.ADD
-  )
+  if (setExplicitPermission) {
+    // Set permissions to be the same as the table
+    const tablePerms = await sdk.permissions.getResourcePerms(tableId)
+    await sdk.permissions.setPermissions(view.id, {
+      writeRole: tablePerms[PermissionLevel.WRITE].role,
+      readRole: tablePerms[PermissionLevel.READ].role,
+    })
+  }
 
   return view
 }

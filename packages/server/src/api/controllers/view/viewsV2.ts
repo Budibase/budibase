@@ -11,14 +11,40 @@ import {
   ViewCalculationFieldMetadata,
   RelationSchemaField,
   ViewFieldMetadata,
+  CalculationType,
 } from "@budibase/types"
 import { builderSocket, gridSocket } from "../../../websockets"
 import { helpers } from "@budibase/shared-core"
 
 function stripUnknownFields(
-  field: BasicViewFieldMetadata
-): RequiredKeys<BasicViewFieldMetadata> {
+  field: ViewFieldMetadata
+): RequiredKeys<ViewFieldMetadata> {
   if (helpers.views.isCalculationField(field)) {
+    if (field.calculationType === CalculationType.COUNT) {
+      if ("distinct" in field && field.distinct) {
+        return {
+          order: field.order,
+          width: field.width,
+          visible: field.visible,
+          readonly: field.readonly,
+          icon: field.icon,
+          distinct: field.distinct,
+          calculationType: field.calculationType,
+          field: field.field,
+          columns: field.columns,
+        }
+      } else {
+        return {
+          order: field.order,
+          width: field.width,
+          visible: field.visible,
+          readonly: field.readonly,
+          icon: field.icon,
+          calculationType: field.calculationType,
+          columns: field.columns,
+        }
+      }
+    }
     const strippedField: RequiredKeys<ViewCalculationFieldMetadata> = {
       order: field.order,
       width: field.width,
@@ -101,6 +127,7 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
 
   const parsedView: Omit<RequiredKeys<ViewV2>, "id" | "version"> = {
     name: view.name,
+    type: view.type,
     tableId: view.tableId,
     query: view.query,
     queryUI: view.queryUI,
@@ -136,6 +163,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
   const parsedView: RequiredKeys<ViewV2> = {
     id: view.id,
     name: view.name,
+    type: view.type,
     version: view.version,
     tableId: view.tableId,
     query: view.query,
