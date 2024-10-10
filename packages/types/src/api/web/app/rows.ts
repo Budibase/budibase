@@ -15,7 +15,6 @@ export interface PatchRowRequest extends Row {
 export interface PatchRowResponse extends Row {}
 
 const searchRowRequest = z.object({
-  table: z.string(),
   query: z.object({
     allOr: z.boolean().optional(),
   }),
@@ -36,6 +35,7 @@ const searchRowRequest = z.object({
   // indexer?: () => Promise<any>
   // rows?: Row[]
 })
+export const searchRowRequestValidator = searchRowRequest
 export type SearchRowRequest = z.infer<typeof searchRowRequest>
 
 export interface SearchViewRowRequest
