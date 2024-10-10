@@ -5,8 +5,10 @@
     ModalContent,
     Select,
     Icon,
+    Multiselect,
   } from "@budibase/bbui"
-  import { CalculationType, FieldType } from "@budibase/types"
+  import { CalculationType, canGroupBy, FieldType } from "@budibase/types"
+  import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { getContext } from "svelte"
 
   const { definition, datasource, rows } = getContext("grid")
@@ -35,13 +37,16 @@
 
   let modal
   let calculations = []
-  let groupings = []
+  let groupBy = []
+  let schema = {}
 
   $: schema = $definition?.schema || {}
+  $: count = extractCalculations($definition?.schema || {}).length
+  $: groupByOptions = getGroupByOptions(schema)
 
   const open = () => {
     calculations = extractCalculations(schema)
-    groupings = calculations.length ? extractGroupings(schema) : []
+    groupBy = calculations.length ? extractGroupBy(schema) : []
     modal?.show()
   }
 
@@ -59,15 +64,13 @@
       }))
   }
 
-  const extractGroupings = schema => {
+  const extractGroupBy = schema => {
     if (!schema) {
       return []
     }
-    return Object.keys(schema)
-      .filter(field => {
-        return schema[field].calculationType == null && schema[field].visible
-      })
-      .map(field => ({ field }))
+    return Object.keys(schema).filter(field => {
+      return schema[field].calculationType == null && schema[field].visible
+    })
   }
 
   // Gets the available types for a given calculation
@@ -103,18 +106,16 @@
       .map(([field]) => field)
   }
 
-  // Gets the available fields to group by for a given grouping
-  const getGroupingOptions = (self, groupings, schema) => {
+  // Gets the available fields to group by
+  const getGroupByOptions = schema => {
     return Object.entries(schema)
       .filter(([field, fieldSchema]) => {
         // Don't allow grouping by calculations
         if (fieldSchema.calculationType) {
           return false
         }
-        // Don't allow duplicates
-        return !groupings.some(grouping => {
-          return grouping !== self && grouping.field === field
-        })
+        // Don't allow complex types
+        return canGroupBy(fieldSchema.type)
       })
       .map(([field]) => field)
   }
@@ -126,71 +127,65 @@
   const deleteCalc = idx => {
     calculations = calculations.toSpliced(idx, 1)
 
-    // Remove any groupings if clearing the last calculation
+    // Remove any grouping if clearing the last calculation
     if (!calculations.length) {
-      groupings = []
+      groupBy = []
     }
   }
 
-  const addGrouping = () => {
-    groupings = [...groupings, {}]
-  }
-
-  const deleteGrouping = idx => {
-    groupings = groupings.toSpliced(idx, 1)
-  }
-
   const save = async () => {
-    let schema = {}
-
-    // Prune empty stuff
-    calculations = calculations.filter(calc => calc.type && calc.field)
-    groupings = groupings.filter(grouping => grouping.field)
+    let newSchema = {}
 
     // Add calculations
     for (let calc of calculations) {
+      if (!calc.type || !calc.field) {
+        continue
+      }
       const typeOption = calculationTypeOptions.find(x => x.value === calc.type)
       const name = `${typeOption.label} ${calc.field}`
-      schema[name] = {
+      newSchema[name] = {
         calculationType: calc.type,
         field: calc.field,
         visible: true,
       }
     }
 
-    // Add groupings
-    for (let grouping of groupings) {
-      schema[grouping.field] = {
-        ...$definition.schema[grouping.field],
-        visible: true,
+    // Add other fields
+    for (let field of Object.keys(schema)) {
+      if (schema[field].calculationType) {
+        continue
+      }
+      newSchema[field] = {
+        ...schema[field],
+        visible: groupBy.includes(field),
       }
     }
 
     // Ensure primary display is valid
     let primaryDisplay = $definition.primaryDisplay
-    if (!primaryDisplay || !schema[primaryDisplay]) {
-      primaryDisplay = groupings[0]?.field
+    if (!primaryDisplay || !newSchema[primaryDisplay]?.visible) {
+      primaryDisplay = groupBy[0]
     }
 
     // Save changes
     await datasource.actions.saveDefinition({
       ...$definition,
       primaryDisplay,
-      schema,
+      schema: newSchema,
     })
     await rows.actions.refreshData()
   }
 </script>
 
 <ActionButton icon="WebPage" quiet on:click={open}>
-  Configure calculations
+  Configure calculations{count ? `: ${count}` : ""}
 </ActionButton>
 
 <Modal bind:this={modal}>
   <ModalContent
     title="Calculations"
     confirmText="Save"
-    size="L"
+    size="M"
     onConfirm={save}
   >
     {#if !calculations.length}
@@ -222,32 +217,30 @@
             color="var(--spectrum-global-color-gray-700)"
           />
         {/each}
-        {#each groupings as group, idx}
-          <span>{idx === 0 ? "Group by" : "and"}</span>
-          <Select
-            options={getGroupingOptions(group, groupings, schema)}
-            bind:value={group.field}
-            placeholder="Column"
+        <span>Group by</span>
+        <div class="group-by">
+          <Multiselect
+            options={groupByOptions}
+            bind:value={groupBy}
+            placeholder="None"
           />
-          <Icon
-            hoverable
-            name="Close"
-            size="S"
-            on:click={() => deleteGrouping(idx)}
-            color="var(--spectrum-global-color-gray-700)"
-          />
-          <span />
-          <span />
-        {/each}
+        </div>
       </div>
       <div class="buttons">
-        <ActionButton quiet icon="Add" on:click={addCalc}>
+        <ActionButton
+          quiet
+          icon="Add"
+          on:click={addCalc}
+          disabled={calculations.length >= 5}
+        >
           Add calculation
         </ActionButton>
-        <ActionButton quiet icon="Add" on:click={addGrouping}>
-          Group by
-        </ActionButton>
       </div>
+      <InfoDisplay
+        icon="Help"
+        quiet
+        body="Calculations only work with numeric columns and a maximum of 5 calculations can be added at once."
+      />
     {/if}
   </ModalContent>
 </Modal>
@@ -264,7 +257,9 @@
     display: flex;
     flex-direction: row;
   }
+  .group-by {
+    grid-column: 2 / 5;
+  }
   span {
-    text-align: right;
   }
 </style>
