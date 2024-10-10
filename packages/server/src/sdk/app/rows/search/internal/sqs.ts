@@ -68,9 +68,7 @@ async function buildInternalFieldList(
   const { relationships, allowedFields } = opts || {}
   let schemaFields: string[] = []
   if (sdk.views.isView(source)) {
-    schemaFields = Object.keys(helpers.views.basicFields(source)).filter(
-      key => source.schema?.[key]?.visible !== false
-    )
+    schemaFields = Object.keys(helpers.views.basicFields(source))
   } else {
     schemaFields = Object.keys(source.schema).filter(
       key => source.schema[key].visible !== false
