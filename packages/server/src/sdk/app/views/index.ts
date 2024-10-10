@@ -1,4 +1,5 @@
 import {
+  BBReferenceFieldSubType,
   CalculationType,
   canGroupBy,
   FeatureFlag,
@@ -7,6 +8,7 @@ import {
   PermissionLevel,
   RelationSchemaField,
   RenameColumn,
+  RequiredKeys,
   Table,
   TableSchema,
   View,
@@ -325,13 +327,26 @@ export async function enrichSchema(
       const viewFieldSchema = viewFields[relTableFieldName]
       const isVisible = !!viewFieldSchema?.visible
       const isReadonly = !!viewFieldSchema?.readonly
-      result[relTableFieldName] = {
-        ...relTableField,
-        ...viewFieldSchema,
-        name: relTableField.name,
+      const enrichedFieldSchema: RequiredKeys<ViewV2ColumnEnriched> = {
         visible: isVisible,
         readonly: isReadonly,
+        order: viewFieldSchema?.order,
+        width: viewFieldSchema?.width,
+
+        icon: relTableField.icon,
+        type: relTableField.type,
+        subtype: relTableField.subtype,
       }
+      if (
+        !enrichedFieldSchema.icon &&
+        relTableField.type === FieldType.BB_REFERENCE &&
+        relTableField.subtype === BBReferenceFieldSubType.USER &&
+        !helpers.schema.isDeprecatedSingleUserColumn(relTableField)
+      ) {
+        // Forcing the icon, otherwise we would need to pass the constraints to show the proper icon
+        enrichedFieldSchema.icon = "UserGroup"
+      }
+      result[relTableFieldName] = enrichedFieldSchema
     }
     return result
   }

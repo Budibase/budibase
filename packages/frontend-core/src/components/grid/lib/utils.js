@@ -19,6 +19,10 @@ export const getCellID = (rowId, fieldName) => {
 }
 
 export const getColumnIcon = column => {
+  if (column.schema.icon) {
+    return column.schema.icon
+  }
+
   if (column.schema.autocolumn) {
     return "MagicWand"
   }
