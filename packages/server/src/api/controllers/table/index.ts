@@ -139,6 +139,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 export async function destroy(ctx: UserCtx) {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
+  await sdk.rowActions.deleteAll(tableId)
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
   await events.table.deleted(deletedTable)
   ctx.eventEmitter &&
