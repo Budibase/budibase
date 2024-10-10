@@ -1,10 +1,10 @@
-import { Row, Table } from "@budibase/types"
+import { FeatureFlag, Row, Table } from "@budibase/types"
 
 import * as external from "./external"
 import * as internal from "./internal"
 import { isExternal } from "./utils"
 import { setPermissions } from "../permissions"
-import { roles } from "@budibase/backend-core"
+import { features, roles } from "@budibase/backend-core"
 
 export async function create(
   table: Omit<Table, "_id" | "_rev">,
@@ -18,10 +18,16 @@ export async function create(
     createdTable = await internal.create(table, rows, userId)
   }
 
-  await setPermissions(createdTable._id!, {
-    writeRole: roles.BUILTIN_ROLE_IDS.ADMIN,
-    readRole: roles.BUILTIN_ROLE_IDS.ADMIN,
-  })
+  const setExplicitPermission = await features.flags.isEnabled(
+    FeatureFlag.TABLES_DEFAULT_ADMIN
+  )
+
+  if (setExplicitPermission) {
+    await setPermissions(createdTable._id!, {
+      writeRole: roles.BUILTIN_ROLE_IDS.ADMIN,
+      readRole: roles.BUILTIN_ROLE_IDS.ADMIN,
+    })
+  }
 
   return createdTable
 }
