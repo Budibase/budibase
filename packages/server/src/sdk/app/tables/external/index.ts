@@ -8,8 +8,11 @@ import {
   ViewV2,
   AutoFieldSubType,
 } from "@budibase/types"
-import { context } from "@budibase/backend-core"
-import { buildExternalTableId } from "../../../../integrations/utils"
+import { context, HTTPError } from "@budibase/backend-core"
+import {
+  breakExternalTableId,
+  buildExternalTableId,
+} from "../../../../integrations/utils"
 import {
   foreignKeyStructure,
   hasTypeChanged,
@@ -82,6 +85,35 @@ function validate(table: Table, oldTable?: Table) {
           `Column "${key}" can not change from time to datetime or viceversa.`
         )
       }
+    }
+  }
+}
+
+function getDatasourceId(table: Table) {
+  if (!table) {
+    throw new Error("No table supplied")
+  }
+  if (table.sourceId) {
+    return table.sourceId
+  }
+  if (!table._id) {
+    throw new Error("No table ID supplied")
+  }
+  return breakExternalTableId(table._id).datasourceId
+}
+
+export async function create(table: Omit<Table, "_id" | "_rev">) {
+  const datasourceId = getDatasourceId(table)
+
+  const tableToCreate = { ...table, created: true }
+  try {
+    const result = await save(datasourceId!, tableToCreate)
+    return result.table
+  } catch (err: any) {
+    if (err instanceof Error) {
+      throw new HTTPError(err.message, 400)
+    } else {
+      throw new HTTPError(err?.message || err, err.status || 500)
     }
   }
 }

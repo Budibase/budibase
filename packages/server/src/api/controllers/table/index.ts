@@ -102,18 +102,22 @@ export async function find(ctx: UserCtx<void, TableResponse>) {
 
 export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const appId = ctx.appId
-  const table = ctx.request.body
-  const isImport = table.rows
+  const { rows, ...table } = ctx.request.body
+  const isImport = rows
   const renaming = ctx.request.body._rename
+
+  const isCreate = !table._id
 
   checkDefaultFields(table)
 
-  const api = pickApi({ table })
-  let savedTable = await api.save(ctx, renaming)
-  if (!table._id) {
+  let savedTable: Table
+  if (isCreate) {
+    savedTable = await sdk.tables.create(table, rows, ctx.user._id)
     savedTable = await sdk.tables.enrichViewSchemas(savedTable)
     await events.table.created(savedTable)
   } else {
+    const api = pickApi({ table })
+    savedTable = await api.updateTable(ctx, renaming)
     await events.table.updated(savedTable)
   }
   if (renaming) {
