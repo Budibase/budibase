@@ -161,4 +161,37 @@ describe("/roles", () => {
       expect(res[2]).toBe("PUBLIC")
     })
   })
+
+  describe("accessible - multi-inheritance", () => {
+    it("should list access correctly for multi-inheritance role", async () => {
+      const role1 = "custom_role_1",
+        role2 = "custom_role_2",
+        role3 = "custom_role_3"
+      const { _id: roleId1 } = await config.api.roles.save({
+        name: role1,
+        inherits: roles.BUILTIN_ROLE_IDS.BASIC,
+        permissionId: permissions.BuiltinPermissionID.WRITE,
+        version: "name",
+      })
+      const { _id: roleId2 } = await config.api.roles.save({
+        name: role2,
+        inherits: roles.BUILTIN_ROLE_IDS.POWER,
+        permissionId: permissions.BuiltinPermissionID.POWER,
+        version: "name",
+      })
+      await config.api.roles.save({
+        name: role3,
+        inherits: role1,
+        permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+        version: "name",
+      })
+      const headers = await config.roleHeaders({
+        roleId: role3,
+      })
+      const res = await config.api.roles.accessible(headers, {
+        status: 200,
+      })
+      expect(res.length).toBe(4)
+    })
+  })
 })
