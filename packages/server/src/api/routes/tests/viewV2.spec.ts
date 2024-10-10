@@ -800,6 +800,34 @@ describe.each([
             )
           }
         })
+
+      isInternal &&
+        it("shouldn't trigger a complex type check on a group by field if field is invisible", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                field: {
+                  name: "field",
+                  type: FieldType.JSON,
+                },
+              },
+            })
+          )
+
+          await config.api.viewV2.create(
+            {
+              tableId: table._id!,
+              name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
+              schema: {
+                field: { visible: false },
+              },
+            },
+            {
+              status: 201,
+            }
+          )
+        })
     })
 
     describe("update", () => {
@@ -1902,6 +1930,59 @@ describe.each([
             )
           }
         })
+      })
+    })
+
+    describe("calculation views", () => {
+      it("should not remove calculation columns when modifying table schema", async () => {
+        let table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+              age: {
+                name: "age",
+                type: FieldType.NUMBER,
+              },
+            },
+          })
+        )
+
+        let view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
+          schema: {
+            sum: {
+              visible: true,
+              calculationType: CalculationType.SUM,
+              field: "age",
+            },
+          },
+        })
+
+        table = await config.api.table.get(table._id!)
+        await config.api.table.save({
+          ...table,
+          schema: {
+            ...table.schema,
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+              constraints: { presence: true },
+            },
+          },
+        })
+
+        view = await config.api.viewV2.get(view.id)
+        expect(Object.keys(view.schema!).sort()).toEqual([
+          "age",
+          "id",
+          "name",
+          "sum",
+        ])
       })
     })
   })
@@ -3182,6 +3263,123 @@ describe.each([
                 },
               }
             )
+          })
+
+          it("should be able to filter rows on the view itself", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  quantity: {
+                    type: FieldType.NUMBER,
+                    name: "quantity",
+                  },
+                  price: {
+                    type: FieldType.NUMBER,
+                    name: "price",
+                  },
+                },
+              })
+            )
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
+              query: {
+                equal: {
+                  quantity: 1,
+                },
+              },
+              schema: {
+                sum: {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "price",
+                },
+              },
+            })
+
+            await config.api.row.bulkImport(table._id!, {
+              rows: [
+                {
+                  quantity: 1,
+                  price: 1,
+                },
+                {
+                  quantity: 1,
+                  price: 2,
+                },
+                {
+                  quantity: 2,
+                  price: 10,
+                },
+              ],
+            })
+
+            const { rows } = await config.api.viewV2.search(view.id, {
+              query: {},
+            })
+            expect(rows).toHaveLength(1)
+            expect(rows[0].sum).toEqual(3)
+          })
+
+          it("should be able to filter on group by fields", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  quantity: {
+                    type: FieldType.NUMBER,
+                    name: "quantity",
+                  },
+                  price: {
+                    type: FieldType.NUMBER,
+                    name: "price",
+                  },
+                },
+              })
+            )
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
+              schema: {
+                quantity: { visible: true },
+                sum: {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "price",
+                },
+              },
+            })
+
+            await config.api.row.bulkImport(table._id!, {
+              rows: [
+                {
+                  quantity: 1,
+                  price: 1,
+                },
+                {
+                  quantity: 1,
+                  price: 2,
+                },
+                {
+                  quantity: 2,
+                  price: 10,
+                },
+              ],
+            })
+
+            const { rows } = await config.api.viewV2.search(view.id, {
+              query: {
+                equal: {
+                  quantity: 1,
+                },
+              },
+            })
+
+            expect(rows).toHaveLength(1)
+            expect(rows[0].sum).toEqual(3)
           })
         })
 

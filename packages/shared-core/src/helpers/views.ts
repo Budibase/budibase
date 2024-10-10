@@ -33,6 +33,13 @@ export function calculationFields(view: UnsavedViewV2) {
   return pickBy(view.schema || {}, isCalculationField)
 }
 
-export function basicFields(view: UnsavedViewV2) {
-  return pickBy(view.schema || {}, field => !isCalculationField(field))
+export function isVisible(field: ViewFieldMetadata) {
+  return field.visible !== false
+}
+
+export function basicFields(view: UnsavedViewV2, opts?: { visible?: boolean }) {
+  const { visible = true } = opts || {}
+  return pickBy(view.schema || {}, field => {
+    return !isCalculationField(field) && (!visible || isVisible(field))
+  })
 }
