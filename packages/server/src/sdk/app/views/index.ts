@@ -97,6 +97,13 @@ async function guardCalculationViewSchema(
       continue
     }
 
+    if (!schema.field) {
+      throw new HTTPError(
+        `Calculation field "${name}" is missing a "field" property`,
+        400
+      )
+    }
+
     const targetSchema = table.schema[schema.field]
     if (!targetSchema) {
       throw new HTTPError(
@@ -377,7 +384,8 @@ export function syncSchema(
 
   if (view.schema) {
     for (const fieldName of Object.keys(view.schema)) {
-      if (!schema[fieldName]) {
+      const viewSchema = view.schema[fieldName]
+      if (!helpers.views.isCalculationField(viewSchema) && !schema[fieldName]) {
         delete view.schema[fieldName]
       }
     }
