@@ -1,4 +1,4 @@
-import { Automation } from "@budibase/types"
+import { Automation, FetchAutomationResponse } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
 export class AutomationAPI extends TestAPI {
@@ -14,6 +14,26 @@ export class AutomationAPI extends TestAPI {
     )
     return result
   }
+
+  fetch = async (
+    expectations?: Expectations
+  ): Promise<FetchAutomationResponse> => {
+    return await this._get<FetchAutomationResponse>(`/api/automations`, {
+      expectations,
+    })
+  }
+
+  fetchEnriched = async (
+    expectations?: Expectations
+  ): Promise<FetchAutomationResponse> => {
+    return await this._get<FetchAutomationResponse>(
+      `/api/automations?enrich=true`,
+      {
+        expectations,
+      }
+    )
+  }
+
   post = async (
     body: Automation,
     expectations?: Expectations
