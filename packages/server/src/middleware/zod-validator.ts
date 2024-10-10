@@ -10,18 +10,25 @@ function validate(schema: AnyZodObject, property: "body" | "params") {
       return next()
     }
     let params = null
+    let setClean: ((data: any) => void) | undefined
     if (ctx[property] != null) {
       params = ctx[property]
+      setClean = data => (ctx[property] = data)
     } else if (property === "body" && ctx.request[property] != null) {
       params = ctx.request[property]
-    } else if (ctx.request.get(property) != null) {
-      params = ctx.request.get(property)
+      setClean = data => (ctx.request[property] = data)
+    } else if (property === "params") {
+      params = ctx.request.query
+      setClean = data => (ctx.request.query = data)
     }
 
-    const { error } = schema.safeParse(params)
-    if (error) {
-      ctx.throw(400, fromZodError(error))
+    const result = schema.safeParse(params)
+    if (!result.success) {
+      ctx.throw(400, fromZodError(result.error))
+    } else {
+      setClean?.(result.data)
     }
+
     return next()
   }
 }
