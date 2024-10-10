@@ -27,9 +27,7 @@
   let candidateIndex
   let lastSearchId
   let searching = false
-  let container
   let anchor
-  let relationshipFields
 
   $: fieldValue = parseValue(value)
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
@@ -236,14 +234,6 @@
     return value
   }
 
-  const displayRelationshipFields = relationship => {
-    relationshipFields = relationFields[relationship._id]
-  }
-
-  const hideRelationshipFields = () => {
-    relationshipFields = undefined
-  }
-
   onMount(() => {
     api = {
       focus: open,
@@ -263,7 +253,7 @@
   style="--color:{color};"
   bind:this={anchor}
 >
-  <div class="container" bind:this={container}>
+  <div class="container">
     <div
       class="values"
       class:wrap={editable || contentLines > 1}
@@ -275,9 +265,7 @@
           <div
             class="badge"
             class:extra-info={!!relationFields[relationship._id]}
-            on:mouseover={() => displayRelationshipFields(relationship)}
             on:focus={() => {}}
-            on:mouseleave={() => hideRelationshipFields()}
           >
             <span>
               {readable(
