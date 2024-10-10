@@ -142,7 +142,7 @@ describe("/roles", () => {
     })
 
     it("should not fetch higher level accessible roles when a custom role header is provided", async () => {
-      const customRoleName = "CUSTOM_ROLE"
+      const customRoleName = "custom_role_1"
       await config.api.roles.save({
         name: customRoleName,
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
@@ -164,9 +164,9 @@ describe("/roles", () => {
 
   describe("accessible - multi-inheritance", () => {
     it("should list access correctly for multi-inheritance role", async () => {
-      const role1 = "custom_role_1",
-        role2 = "custom_role_2",
-        role3 = "custom_role_3"
+      const role1 = "multi_role_1",
+        role2 = "multi_role_2",
+        role3 = "multi_role_3"
       const { _id: roleId1 } = await config.api.roles.save({
         name: role1,
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,

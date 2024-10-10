@@ -1041,4 +1041,44 @@ describe("/rowsActions", () => {
       )
     })
   })
+
+  describe("scenarios", () => {
+    // https://linear.app/budibase/issue/BUDI-8717/
+    it("should not brick the app when deleting a table with row actions", async () => {
+      const view = await config.api.viewV2.create({
+        tableId,
+        name: generator.guid(),
+        schema: {
+          name: { visible: true },
+        },
+      })
+
+      const rowAction = await config.api.rowAction.save(tableId, {
+        name: generator.guid(),
+      })
+
+      await config.api.rowAction.setViewPermission(
+        tableId,
+        view.id,
+        rowAction.id
+      )
+
+      let actionsResp = await config.api.rowAction.find(tableId)
+      expect(actionsResp.actions[rowAction.id]).toEqual({
+        ...rowAction,
+        allowedSources: [tableId, view.id],
+      })
+
+      const table = await config.api.table.get(tableId)
+      await config.api.table.destroy(table._id!, table._rev!)
+
+      // In the bug reported by Conor, when a delete got deleted its row action
+      // document was not being cleaned up. This meant there existed code paths
+      // that would find it and try to reference the tables within it, resulting
+      // in errors.
+      await config.api.automation.fetchEnriched({
+        status: 200,
+      })
+    })
+  })
 })
