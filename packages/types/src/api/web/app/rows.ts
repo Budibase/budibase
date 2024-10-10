@@ -1,4 +1,11 @@
-import { SearchFilters } from "../../../sdk"
+import {
+  ArrayOperator,
+  BasicOperator,
+  LogicalOperator,
+  RangeOperator,
+  SearchFilterKey,
+  SearchFilters,
+} from "../../../sdk"
 import { Row } from "../../../documents"
 import {
   PaginationResponse,
@@ -18,9 +25,43 @@ export interface PatchRowRequest extends Row {
 
 export interface PatchRowResponse extends Row {}
 
+// TODO: exclude InternalSearchFilterOperator.COMPLEX_ID_OPERATOR
+const stringBasicFilter = z.record(z.string(), z.string())
+const basicFilter = z.record(z.string(), z.any())
+const arrayFilter = z.any()
+const logicFilter = z.any()
+
+const stringOrNumber = z.union([z.string(), z.number()])
+
+const queryFilterValidation: Record<SearchFilterKey, z.ZodTypeAny> = {
+  [BasicOperator.STRING]: stringBasicFilter.optional(),
+  [BasicOperator.FUZZY]: stringBasicFilter.optional(),
+  [RangeOperator.RANGE]: z
+    .record(
+      z.string(),
+      z.union([
+        z.object({ high: stringOrNumber, low: stringOrNumber }),
+        z.object({ high: stringOrNumber }),
+        z.object({ low: stringOrNumber }),
+      ])
+    )
+    .optional(),
+  [BasicOperator.EQUAL]: basicFilter.optional(),
+  [BasicOperator.NOT_EQUAL]: basicFilter.optional(),
+  [BasicOperator.EMPTY]: basicFilter.optional(),
+  [BasicOperator.NOT_EMPTY]: basicFilter.optional(),
+  [ArrayOperator.ONE_OF]: arrayFilter.optional(),
+  [ArrayOperator.CONTAINS]: arrayFilter.optional(),
+  [ArrayOperator.NOT_CONTAINS]: arrayFilter.optional(),
+  [ArrayOperator.CONTAINS_ANY]: arrayFilter.optional(),
+  [LogicalOperator.AND]: logicFilter.optional(),
+  [LogicalOperator.OR]: logicFilter.optional(),
+}
+
 const searchRowRequest = z.object({
   query: z.object({
     allOr: z.boolean().optional(),
+    ...queryFilterValidation,
   }),
   paginate: z.boolean().optional(),
   bookmark: z.union([z.string(), z.number()]).optional(),
