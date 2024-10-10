@@ -30,7 +30,11 @@ export interface PatchRowResponse extends Row {}
 const stringBasicFilter = z.record(z.string(), z.string())
 const basicFilter = z.record(z.string(), z.any())
 const arrayFilter = z.record(z.string(), z.union([z.any().array(), z.string()]))
-const logicFilter = z.any()
+const logicFilter = z.lazy(() =>
+  z.object({
+    conditions: z.array(z.object(queryFilterValidation)),
+  })
+)
 
 const stringOrNumber = z.union([z.string(), z.number()])
 
