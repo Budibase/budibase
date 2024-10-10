@@ -187,6 +187,7 @@ describe.each([
         if (isInMemory) {
           return dataFilters.search(_.cloneDeep(rows), {
             ...this.query,
+            query: this.query.query!,
           })
         } else {
           return config.api.row.search(tableOrViewId, this.query)
