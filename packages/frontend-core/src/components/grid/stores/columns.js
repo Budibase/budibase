@@ -164,7 +164,6 @@ export const initialise = context => {
           }
           // Override a few properties for primary display
           if (field === primaryDisplay) {
-            column.visible = true
             column.order = 0
             column.primaryDisplay = true
           }
