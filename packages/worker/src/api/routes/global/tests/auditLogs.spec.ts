@@ -1,5 +1,5 @@
 import { mocks, structures } from "@budibase/backend-core/tests"
-import { context, events, setEnv as setCoreEnv } from "@budibase/backend-core"
+import { context, events, features } from "@budibase/backend-core"
 import { Event, IdentityType } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
 
@@ -17,11 +17,9 @@ describe.each(["lucene", "sql"])("/api/global/auditlogs (%s)", method => {
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    if (method === "lucene") {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" })
-    } else if (method === "sql") {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" })
-    }
+    envCleanup = features.testutils.setFeatureFlags("*", {
+      SQS: method === "sql",
+    })
     await config.beforeAll()
   })
 
