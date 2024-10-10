@@ -3185,6 +3185,123 @@ describe.each([
               }
             )
           })
+
+          it("should be able to filter rows on the view itself", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  quantity: {
+                    type: FieldType.NUMBER,
+                    name: "quantity",
+                  },
+                  price: {
+                    type: FieldType.NUMBER,
+                    name: "price",
+                  },
+                },
+              })
+            )
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
+              query: {
+                equal: {
+                  quantity: 1,
+                },
+              },
+              schema: {
+                sum: {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "price",
+                },
+              },
+            })
+
+            await config.api.row.bulkImport(table._id!, {
+              rows: [
+                {
+                  quantity: 1,
+                  price: 1,
+                },
+                {
+                  quantity: 1,
+                  price: 2,
+                },
+                {
+                  quantity: 2,
+                  price: 10,
+                },
+              ],
+            })
+
+            const { rows } = await config.api.viewV2.search(view.id, {
+              query: {},
+            })
+            expect(rows).toHaveLength(1)
+            expect(rows[0].sum).toEqual(3)
+          })
+
+          it("should be able to filter on group by fields", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  quantity: {
+                    type: FieldType.NUMBER,
+                    name: "quantity",
+                  },
+                  price: {
+                    type: FieldType.NUMBER,
+                    name: "price",
+                  },
+                },
+              })
+            )
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
+              schema: {
+                quantity: { visible: true },
+                sum: {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "price",
+                },
+              },
+            })
+
+            await config.api.row.bulkImport(table._id!, {
+              rows: [
+                {
+                  quantity: 1,
+                  price: 1,
+                },
+                {
+                  quantity: 1,
+                  price: 2,
+                },
+                {
+                  quantity: 2,
+                  price: 10,
+                },
+              ],
+            })
+
+            const { rows } = await config.api.viewV2.search(view.id, {
+              query: {
+                equal: {
+                  quantity: 1,
+                },
+              },
+            })
+
+            expect(rows).toHaveLength(1)
+            expect(rows[0].sum).toEqual(3)
+          })
         })
 
       !isLucene &&
