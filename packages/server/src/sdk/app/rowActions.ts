@@ -1,5 +1,6 @@
 import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import {
+  Automation,
   AutomationTriggerStepId,
   SEPARATOR,
   TableRowActions,
@@ -103,6 +104,20 @@ export async function getAll(tableId: string) {
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
   return await db.get<TableRowActions>(rowActionsId)
+}
+
+export async function deleteAll(tableId: string) {
+  const db = context.getAppDB()
+
+  const doc = await getAll(tableId)
+  const automationIds = Object.values(doc.actions).map(a => a.automationId)
+  const automations = await db.getMultiple<Automation>(automationIds)
+
+  for (const automation of automations) {
+    await sdk.automations.remove(automation._id!, automation._rev!)
+  }
+
+  await db.remove(doc)
 }
 
 export async function docExists(tableId: string) {
