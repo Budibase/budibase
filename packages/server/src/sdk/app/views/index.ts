@@ -337,6 +337,14 @@ export async function enrichSchema(
         type: relTableField.type,
         subtype: relTableField.subtype,
       }
+      if (
+        !enrichedFieldSchema.icon &&
+        relTableField.type === FieldType.BB_REFERENCE &&
+        relTableField.subtype === BBReferenceFieldSubType.USER &&
+        !helpers.schema.isDeprecatedSingleUserColumn(relTableField)
+      ) {
+        // Forcing the icon, otherwise we would need to pass the constraints to show the proper icon
+        enrichedFieldSchema.icon = "UserGroup"
       }
       result[relTableFieldName] = enrichedFieldSchema
     }
