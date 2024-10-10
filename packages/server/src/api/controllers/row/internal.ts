@@ -8,7 +8,7 @@ import {
 } from "../../../utilities/rowProcessor"
 import * as utils from "./utils"
 import { cloneDeep } from "lodash/fp"
-import { context } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
 import {
   FieldType,
@@ -16,6 +16,7 @@ import {
   PatchRowRequest,
   PatchRowResponse,
   Row,
+  Table,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -97,15 +98,26 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 
 export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
-  const { tableId } = utils.getSourceId(ctx)
+  const source = await utils.getSource(ctx)
+
+  if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
+    throw new HTTPError("Cannot delete rows through a calculation view", 400)
+  }
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
+
   const { _id } = ctx.request.body
   let row = await db.get<Row>(_id)
   let _rev = ctx.request.body._rev || row._rev
 
-  if (row.tableId !== tableId) {
+  if (row.tableId !== table._id) {
     throw "Supplied tableId doesn't match the row's tableId"
   }
-  const table = await sdk.tables.getTable(tableId)
   // update the row to include full relationships before deleting them
   row = await outputProcessing(table, row, {
     squash: false,
@@ -115,7 +127,7 @@ export async function destroy(ctx: UserCtx) {
   await linkRows.updateLinks({
     eventType: linkRows.EventType.ROW_DELETE,
     row,
-    tableId,
+    tableId: table._id!,
   })
   // remove any attachments that were on the row from object storage
   await AttachmentCleanup.rowDelete(table, [row])
@@ -123,7 +135,7 @@ export async function destroy(ctx: UserCtx) {
   await updateRelatedFormula(table, row)
 
   let response
-  if (tableId === InternalTables.USER_METADATA) {
+  if (table._id === InternalTables.USER_METADATA) {
     ctx.params = {
       id: _id,
     }

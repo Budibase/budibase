@@ -28,6 +28,7 @@ import {
 import { cloneDeep } from "lodash"
 import { generateIdForRow } from "./utils"
 import { helpers } from "@budibase/shared-core"
+import { HTTPError } from "@budibase/backend-core"
 
 export async function handleRequest<T extends Operation>(
   operation: T,
@@ -102,6 +103,11 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 
 export async function destroy(ctx: UserCtx) {
   const source = await utils.getSource(ctx)
+
+  if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
+    throw new HTTPError("Cannot delete rows through a calculation view", 400)
+  }
+
   const _id = ctx.request.body._id
   const { row } = await handleRequest(Operation.DELETE, source, {
     id: breakRowIdField(_id),
