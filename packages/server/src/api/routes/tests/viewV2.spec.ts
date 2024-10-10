@@ -1932,6 +1932,59 @@ describe.each([
         })
       })
     })
+
+    describe("calculation views", () => {
+      it("should not remove calculation columns when modifying table schema", async () => {
+        let table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+              age: {
+                name: "age",
+                type: FieldType.NUMBER,
+              },
+            },
+          })
+        )
+
+        let view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
+          schema: {
+            sum: {
+              visible: true,
+              calculationType: CalculationType.SUM,
+              field: "age",
+            },
+          },
+        })
+
+        table = await config.api.table.get(table._id!)
+        await config.api.table.save({
+          ...table,
+          schema: {
+            ...table.schema,
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+              constraints: { presence: true },
+            },
+          },
+        })
+
+        view = await config.api.viewV2.get(view.id)
+        expect(Object.keys(view.schema!).sort()).toEqual([
+          "age",
+          "id",
+          "name",
+          "sum",
+        ])
+      })
+    })
   })
 
   describe("row operations", () => {
