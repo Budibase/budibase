@@ -26,13 +26,13 @@ export async function getBuilderData(
     return tableNameCache[tableId]
   }
 
-  const rowActionNameCache: Record<string, TableRowActions> = {}
+  const rowActionNameCache: Record<string, TableRowActions | undefined> = {}
   async function getRowActionName(tableId: string, rowActionId: string) {
     if (!rowActionNameCache[tableId]) {
       rowActionNameCache[tableId] = await sdk.rowActions.getAll(tableId)
     }
 
-    return rowActionNameCache[tableId].actions[rowActionId]?.name
+    return rowActionNameCache[tableId]?.actions[rowActionId]?.name
   }
 
   const result: Record<string, AutomationBuilderData> = {}
@@ -50,6 +50,10 @@ export async function getBuilderData(
 
     const tableName = await getTableName(tableId)
     const rowActionName = await getRowActionName(tableId, rowActionId)
+
+    if (!rowActionName) {
+      throw new Error(`Row action not found: ${rowActionId}`)
+    }
 
     result[automation._id!] = {
       displayName: `${tableName}: ${automation.name}`,
