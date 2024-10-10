@@ -1,5 +1,6 @@
 import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import {
+  Automation,
   AutomationTriggerStepId,
   SEPARATOR,
   TableRowActions,
@@ -102,7 +103,25 @@ export async function get(tableId: string, rowActionId: string) {
 export async function getAll(tableId: string) {
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
-  return await db.get<TableRowActions>(rowActionsId)
+  return await db.tryGet<TableRowActions>(rowActionsId)
+}
+
+export async function deleteAll(tableId: string) {
+  const db = context.getAppDB()
+
+  const doc = await getAll(tableId)
+  if (!doc) {
+    return
+  }
+
+  const automationIds = Object.values(doc.actions).map(a => a.automationId)
+  const automations = await db.getMultiple<Automation>(automationIds)
+
+  for (const automation of automations) {
+    await sdk.automations.remove(automation._id!, automation._rev!)
+  }
+
+  await db.remove(doc)
 }
 
 export async function docExists(tableId: string) {
@@ -223,9 +242,8 @@ export async function run(tableId: any, rowActionId: any, rowId: string) {
     throw new HTTPError("Table not found", 404)
   }
 
-  const { actions } = await getAll(tableId)
-
-  const rowAction = actions[rowActionId]
+  const rowActions = await getAll(tableId)
+  const rowAction = rowActions?.actions[rowActionId]
   if (!rowAction) {
     throw new HTTPError("Row action not found", 404)
   }
