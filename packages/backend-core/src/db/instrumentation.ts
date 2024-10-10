@@ -42,6 +42,13 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
+  tryGet<T extends Document>(id?: string | undefined): Promise<T | undefined> {
+    return tracer.trace("db.tryGet", span => {
+      span?.addTags({ db_name: this.name, doc_id: id })
+      return this.db.tryGet(id)
+    })
+  }
+
   getMultiple<T extends Document>(
     ids: string[],
     opts?: { allowMissing?: boolean | undefined } | undefined
