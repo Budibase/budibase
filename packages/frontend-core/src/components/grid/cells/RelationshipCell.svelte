@@ -27,9 +27,7 @@
   let candidateIndex
   let lastSearchId
   let searching = false
-  let container
   let anchor
-  let relationshipFields
 
   $: fieldValue = parseValue(value)
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
@@ -55,12 +53,6 @@
     }
     return acc
   }, {})
-
-  $: showRelationshipFields =
-    relationshipFields &&
-    Object.keys(relationshipFields).length &&
-    focused &&
-    !isOpen
 
   const parseValue = value => {
     if (Array.isArray(value) && value.every(x => x?._id)) {
@@ -242,14 +234,6 @@
     return value
   }
 
-  const displayRelationshipFields = relationship => {
-    relationshipFields = relationFields[relationship._id]
-  }
-
-  const hideRelationshipFields = () => {
-    relationshipFields = undefined
-  }
-
   onMount(() => {
     api = {
       focus: open,
@@ -269,7 +253,7 @@
   style="--color:{color};"
   bind:this={anchor}
 >
-  <div class="container" bind:this={container}>
+  <div class="container">
     <div
       class="values"
       class:wrap={editable || contentLines > 1}
@@ -281,9 +265,7 @@
           <div
             class="badge"
             class:extra-info={!!relationFields[relationship._id]}
-            on:mouseover={() => displayRelationshipFields(relationship)}
             on:focus={() => {}}
-            on:mouseleave={() => hideRelationshipFields()}
           >
             <span>
               {readable(
@@ -354,21 +336,6 @@
           {/each}
         </div>
       {/if}
-    </div>
-  </GridPopover>
-{/if}
-
-{#if showRelationshipFields}
-  <GridPopover {anchor} minWidth={300} maxWidth={400}>
-    <div class="relationship-fields">
-      {#each Object.entries(relationshipFields) as [fieldName, fieldValue]}
-        <div class="relationship-field-name">
-          {fieldName}
-        </div>
-        <div class="relationship-field-value">
-          {fieldValue}
-        </div>
-      {/each}
     </div>
   </GridPopover>
 {/if}
@@ -538,26 +505,5 @@
   }
   .search :global(.spectrum-Form-item) {
     flex: 1 1 auto;
-  }
-
-  .relationship-fields {
-    margin: var(--spacing-m) var(--spacing-l);
-    display: grid;
-    grid-template-columns: minmax(auto, 50%) auto;
-    grid-row-gap: var(--spacing-m);
-    grid-column-gap: var(--spacing-m);
-  }
-
-  .relationship-field-name {
-    text-transform: uppercase;
-    color: var(--spectrum-global-color-gray-600);
-    font-size: var(--font-size-xs);
-  }
-  .relationship-field-value {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
   }
 </style>
