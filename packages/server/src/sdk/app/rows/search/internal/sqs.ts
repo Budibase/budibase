@@ -418,13 +418,26 @@ export async function search(
 
   if (params.sort) {
     const sortField = table.schema[params.sort]
-    const sortType =
-      sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
-    request.sort = {
-      [mapToUserColumn(sortField.name)]: {
-        direction: params.sortOrder || SortOrder.ASCENDING,
-        type: sortType as SortType,
-      },
+    const isAggregateField = aggregations.some(agg => agg.name === params.sort)
+
+    if (isAggregateField) {
+      request.sort = {
+        [params.sort]: {
+          direction: params.sortOrder || SortOrder.ASCENDING,
+          type: SortType.NUMBER,
+        },
+      }
+    } else if (sortField) {
+      const sortType =
+        sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
+      request.sort = {
+        [mapToUserColumn(sortField.name)]: {
+          direction: params.sortOrder || SortOrder.ASCENDING,
+          type: sortType as SortType,
+        },
+      }
+    } else {
+      throw new Error(`Unable to sort by ${params.sort}`)
     }
   }
 
