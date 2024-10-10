@@ -80,13 +80,6 @@ const searchRowRequest = z.object({
   version: z.string().optional(),
   disableEscaping: z.boolean().optional(),
   countRows: z.boolean().optional(),
-
-  // viewId?: string
-  // query?: SearchFilters
-
-  // fields?: string[]
-  // indexer?: () => Promise<any>
-  // rows?: Row[]
 })
 export const searchRowRequestValidator = searchRowRequest
 export type SearchRowRequest = z.infer<typeof searchRowRequest>
