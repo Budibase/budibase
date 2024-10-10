@@ -800,6 +800,34 @@ describe.each([
             )
           }
         })
+
+      isInternal &&
+        it("shouldn't trigger a complex type check on a group by field if field is invisible", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                field: {
+                  name: "field",
+                  type: FieldType.JSON,
+                },
+              },
+            })
+          )
+
+          await config.api.viewV2.create(
+            {
+              tableId: table._id!,
+              name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
+              schema: {
+                field: { visible: false },
+              },
+            },
+            {
+              status: 201,
+            }
+          )
+        })
     })
 
     describe("update", () => {
