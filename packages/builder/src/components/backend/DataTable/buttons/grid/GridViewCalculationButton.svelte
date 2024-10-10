@@ -12,7 +12,7 @@
   const { definition, datasource, rows } = getContext("grid")
   const calculationTypeOptions = [
     {
-      label: "Average (mean)",
+      label: "Average",
       value: CalculationType.AVG,
     },
     {
@@ -149,7 +149,8 @@
 
     // Add calculations
     for (let calc of calculations) {
-      const name = `${calc.type} of ${calc.field}`
+      const typeOption = calculationTypeOptions.find(x => x.value === calc.type)
+      const name = `${typeOption.label} ${calc.field}`
       schema[name] = {
         calculationType: calc.type,
         field: calc.field,
@@ -160,16 +161,16 @@
     // Add groupings
     for (let grouping of groupings) {
       schema[grouping.field] = {
+        ...$definition.schema[grouping.field],
         visible: true,
       }
     }
 
-    // Ensure primary display is visible
+    // Ensure primary display is valid
     let primaryDisplay = $definition.primaryDisplay
     if (!primaryDisplay || !schema[primaryDisplay]) {
       primaryDisplay = groupings[0]?.field
     }
-    console.log("pd", primaryDisplay, groupings)
 
     // Save changes
     await datasource.actions.saveDefinition({
