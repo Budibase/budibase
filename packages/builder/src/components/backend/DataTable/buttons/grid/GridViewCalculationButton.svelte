@@ -125,6 +125,11 @@
 
   const deleteCalc = idx => {
     calculations = calculations.toSpliced(idx, 1)
+
+    // Remove any groupings if clearing the last calculation
+    if (!calculations.length) {
+      groupings = []
+    }
   }
 
   const addGrouping = () => {
@@ -137,6 +142,10 @@
 
   const save = async () => {
     let schema = {}
+
+    // Prune empty stuff
+    calculations = calculations.filter(calc => calc.type && calc.field)
+    groupings = groupings.filter(grouping => grouping.field)
 
     // Add calculations
     for (let calc of calculations) {
@@ -154,9 +163,18 @@
         visible: true,
       }
     }
+
+    // Ensure primary display is visible
+    let primaryDisplay = $definition.primaryDisplay
+    if (!primaryDisplay || !schema[primaryDisplay]) {
+      primaryDisplay = groupings[0]?.field
+    }
+    console.log("pd", primaryDisplay, groupings)
+
+    // Save changes
     await datasource.actions.saveDefinition({
       ...$definition,
-      primaryDisplay: null,
+      primaryDisplay,
       schema,
     })
     await rows.actions.refreshData()
