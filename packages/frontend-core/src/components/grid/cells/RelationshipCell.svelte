@@ -56,12 +56,6 @@
     return acc
   }, {})
 
-  $: showRelationshipFields =
-    relationshipFields &&
-    Object.keys(relationshipFields).length &&
-    focused &&
-    !isOpen
-
   const parseValue = value => {
     if (Array.isArray(value) && value.every(x => x?._id)) {
       return value
@@ -358,21 +352,6 @@
   </GridPopover>
 {/if}
 
-{#if showRelationshipFields}
-  <GridPopover {anchor} minWidth={300} maxWidth={400}>
-    <div class="relationship-fields">
-      {#each Object.entries(relationshipFields) as [fieldName, fieldValue]}
-        <div class="relationship-field-name">
-          {fieldName}
-        </div>
-        <div class="relationship-field-value">
-          {fieldValue}
-        </div>
-      {/each}
-    </div>
-  </GridPopover>
-{/if}
-
 <style>
   .wrapper {
     flex: 1 1 auto;
@@ -538,26 +517,5 @@
   }
   .search :global(.spectrum-Form-item) {
     flex: 1 1 auto;
-  }
-
-  .relationship-fields {
-    margin: var(--spacing-m) var(--spacing-l);
-    display: grid;
-    grid-template-columns: minmax(auto, 50%) auto;
-    grid-row-gap: var(--spacing-m);
-    grid-column-gap: var(--spacing-m);
-  }
-
-  .relationship-field-name {
-    text-transform: uppercase;
-    color: var(--spectrum-global-color-gray-600);
-    font-size: var(--font-size-xs);
-  }
-  .relationship-field-value {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
   }
 </style>
