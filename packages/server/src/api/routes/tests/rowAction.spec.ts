@@ -133,6 +133,7 @@ describe("/rowsActions", () => {
         id: expect.stringMatching(/^row_action_\w+/),
         tableId: tableId,
         automationId: expectAutomationId(),
+        allowedSources: [tableId],
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
@@ -142,6 +143,7 @@ describe("/rowsActions", () => {
             id: res.id,
             tableId: tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
         },
       })
@@ -180,18 +182,21 @@ describe("/rowsActions", () => {
             id: responses[0].id,
             tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
           [responses[1].id]: {
             name: rowActions[1].name,
             id: responses[1].id,
             tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
           [responses[2].id]: {
             name: rowActions[2].name,
             id: responses[2].id,
             tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
         },
       })
@@ -224,6 +229,7 @@ describe("/rowsActions", () => {
         id: expect.any(String),
         tableId,
         automationId: expectAutomationId(),
+        allowedSources: [tableId],
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
@@ -233,6 +239,7 @@ describe("/rowsActions", () => {
             id: res.id,
             tableId: tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
         },
       })
@@ -354,6 +361,7 @@ describe("/rowsActions", () => {
         tableId,
         name: updatedName,
         automationId: actionData.automationId,
+        allowedSources: [tableId],
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual(
@@ -364,6 +372,7 @@ describe("/rowsActions", () => {
               id: actionData.id,
               tableId: actionData.tableId,
               automationId: actionData.automationId,
+              allowedSources: [tableId],
             },
           }),
         })
@@ -515,6 +524,81 @@ describe("/rowsActions", () => {
     })
   })
 
+  describe("set/unsetTablePermission", () => {
+    describe.each([
+      ["setTablePermission", config.api.rowAction.setTablePermission],
+      ["unsetTablePermission", config.api.rowAction.unsetTablePermission],
+    ])("unauthorisedTests for %s", (__, delegateTest) => {
+      unauthorisedTests((expectations, testConfig) =>
+        delegateTest(tableId, generator.guid(), expectations, testConfig)
+      )
+    })
+
+    let actionId1: string, actionId2: string
+
+    beforeEach(async () => {
+      for (const rowAction of createRowActionRequests(3)) {
+        await createRowAction(tableId, rowAction)
+      }
+      const persisted = await config.api.rowAction.find(tableId)
+
+      const actions = _.sampleSize(Object.keys(persisted.actions), 2)
+      actionId1 = actions[0]
+      actionId2 = actions[1]
+    })
+
+    it("can set table permission", async () => {
+      await config.api.rowAction.unsetTablePermission(tableId, actionId1)
+      await config.api.rowAction.unsetTablePermission(tableId, actionId2)
+      const actionResult = await config.api.rowAction.setTablePermission(
+        tableId,
+        actionId1
+      )
+      const expectedAction1 = expect.objectContaining({
+        allowedSources: [tableId],
+      })
+
+      const expectedActions = expect.objectContaining({
+        [actionId1]: expectedAction1,
+        [actionId2]: expect.objectContaining({
+          allowedSources: [],
+        }),
+      })
+      expect(actionResult).toEqual(expectedAction1)
+      expect((await config.api.rowAction.find(tableId)).actions).toEqual(
+        expectedActions
+      )
+    })
+
+    it("can unset table permission", async () => {
+      const actionResult = await config.api.rowAction.unsetTablePermission(
+        tableId,
+        actionId1
+      )
+
+      const expectedAction = expect.objectContaining({
+        allowedSources: [],
+      })
+      expect(actionResult).toEqual(expectedAction)
+      expect(
+        (await config.api.rowAction.find(tableId)).actions[actionId1]
+      ).toEqual(expectedAction)
+    })
+
+    it.each([
+      ["setTablePermission", config.api.rowAction.setTablePermission],
+      ["unsetTablePermission", config.api.rowAction.unsetTablePermission],
+    ])(
+      "cannot update permission for unexisting tables (%s)",
+      async (__, delegateTest) => {
+        const tableId = generator.guid()
+        await delegateTest(tableId, actionId1, {
+          status: 404,
+        })
+      }
+    )
+  })
+
   describe("set/unsetViewPermission", () => {
     describe.each([
       ["setViewPermission", config.api.rowAction.setViewPermission],
@@ -531,11 +615,9 @@ describe("/rowsActions", () => {
       )
     })
 
-    let tableIdForDescribe: string
     let actionId1: string, actionId2: string
     let viewId1: string, viewId2: string
-    beforeAll(async () => {
-      tableIdForDescribe = tableId
+    beforeEach(async () => {
       for (const rowAction of createRowActionRequests(3)) {
         await createRowAction(tableId, rowAction)
       }
@@ -557,11 +639,6 @@ describe("/rowsActions", () => {
       ).id
     })
 
-    beforeEach(() => {
-      // Hack to reuse tables for these given tests
-      tableId = tableIdForDescribe
-    })
-
     it("can set permission views", async () => {
       await config.api.rowAction.setViewPermission(tableId, viewId1, actionId1)
       const action1Result = await config.api.rowAction.setViewPermission(
@@ -576,10 +653,10 @@ describe("/rowsActions", () => {
       )
 
       const expectedAction1 = expect.objectContaining({
-        allowedViews: [viewId1, viewId2],
+        allowedSources: [tableId, viewId1, viewId2],
       })
       const expectedAction2 = expect.objectContaining({
-        allowedViews: [viewId1],
+        allowedSources: [tableId, viewId1],
       })
 
       const expectedActions = expect.objectContaining({
@@ -594,6 +671,8 @@ describe("/rowsActions", () => {
     })
 
     it("can unset permission views", async () => {
+      await config.api.rowAction.setViewPermission(tableId, viewId2, actionId1)
+      await config.api.rowAction.setViewPermission(tableId, viewId1, actionId2)
       const actionResult = await config.api.rowAction.unsetViewPermission(
         tableId,
         viewId1,
@@ -601,7 +680,7 @@ describe("/rowsActions", () => {
       )
 
       const expectedAction = expect.objectContaining({
-        allowedViews: [viewId2],
+        allowedSources: [tableId, viewId2],
       })
       expect(actionResult).toEqual(expectedAction)
       expect(
@@ -672,6 +751,7 @@ describe("/rowsActions", () => {
       )
 
       await config.publish()
+      // Travel time in order to "trim" the selected `getAutomationLogs`
       tk.travel(Date.now() + 100)
     })
 
@@ -710,6 +790,38 @@ describe("/rowsActions", () => {
           },
         }),
       ])
+    })
+
+    it("triggers from an allowed table", async () => {
+      expect(await getAutomationLogs()).toBeEmpty()
+      await config.api.rowAction.trigger(tableId, rowAction.id, { rowId })
+
+      const automationLogs = await getAutomationLogs()
+      expect(automationLogs).toEqual([
+        expect.objectContaining({
+          automationId: rowAction.automationId,
+        }),
+      ])
+    })
+
+    it("rejects triggering from a non-allowed table", async () => {
+      await config.api.rowAction.unsetTablePermission(tableId, rowAction.id)
+      await config.publish()
+
+      await config.api.rowAction.trigger(
+        tableId,
+        rowAction.id,
+        { rowId },
+        {
+          status: 403,
+          body: {
+            message: `Row action '${rowAction.id}' is not enabled for table '${tableId}'`,
+          },
+        }
+      )
+
+      const automationLogs = await getAutomationLogs()
+      expect(automationLogs).toEqual([])
     })
 
     it("rejects triggering from a non-allowed view", async () => {
@@ -901,7 +1013,7 @@ describe("/rowsActions", () => {
       })
 
       it.each(allowedRoleConfig)(
-        "does not allow running row actions for tables by default even",
+        "allow running row actions for tables by default",
         async (userRole, resourcePermission) => {
           await config.api.permission.add({
             level: PermissionLevel.READ,
@@ -918,15 +1030,12 @@ describe("/rowsActions", () => {
               rowAction.id,
               { rowId },
               {
-                status: 403,
-                body: {
-                  message: `Row action '${rowAction.id}' is not enabled for table '${tableId}'`,
-                },
+                status: 200,
               }
             )
 
             const automationLogs = await getAutomationLogs()
-            expect(automationLogs).toBeEmpty()
+            expect(automationLogs).toHaveLength(1)
           })
         }
       )

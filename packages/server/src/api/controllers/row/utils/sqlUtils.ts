@@ -133,9 +133,7 @@ export async function buildSqlFieldList(
 
   let fields: string[] = []
   if (sdk.views.isView(source)) {
-    fields = Object.keys(helpers.views.basicFields(source)).filter(
-      key => source.schema?.[key]?.visible !== false
-    )
+    fields = Object.keys(helpers.views.basicFields(source))
   } else {
     fields = extractRealFields(source)
   }

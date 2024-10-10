@@ -1,5 +1,6 @@
 import {
   Aggregation,
+  CalculationType,
   Datasource,
   DocumentType,
   FieldType,
@@ -67,9 +68,7 @@ async function buildInternalFieldList(
   const { relationships, allowedFields } = opts || {}
   let schemaFields: string[] = []
   if (sdk.views.isView(source)) {
-    schemaFields = Object.keys(helpers.views.basicFields(source)).filter(
-      key => source.schema?.[key]?.visible !== false
-    )
+    schemaFields = Object.keys(helpers.views.basicFields(source))
   } else {
     schemaFields = Object.keys(source.schema).filter(
       key => source.schema[key].visible !== false
@@ -369,11 +368,27 @@ export async function search(
         continue
       }
 
-      aggregations.push({
-        name: key,
-        field: mapToUserColumn(field.field),
-        calculationType: field.calculationType,
-      })
+      if (field.calculationType === CalculationType.COUNT) {
+        if ("distinct" in field && field.distinct) {
+          aggregations.push({
+            name: key,
+            distinct: true,
+            field: mapToUserColumn(field.field),
+            calculationType: field.calculationType,
+          })
+        } else {
+          aggregations.push({
+            name: key,
+            calculationType: field.calculationType,
+          })
+        }
+      } else {
+        aggregations.push({
+          name: key,
+          field: mapToUserColumn(field.field),
+          calculationType: field.calculationType,
+        })
+      }
     }
   }
 
