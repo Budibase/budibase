@@ -21,6 +21,7 @@ import {
 } from "@budibase/types"
 import { RoleColor, sdk as sharedSdk } from "@budibase/shared-core"
 import sdk from "../../sdk"
+import { builderSocket } from "../../websockets"
 
 const UpdateRolesOptions = {
   CREATED: "created",
@@ -130,6 +131,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
       },
     })
   }
+  builderSocket?.emitRoleUpdate(ctx, role)
 }
 
 export async function destroy(ctx: UserCtx<void, DestroyRoleResponse>) {
@@ -165,6 +167,7 @@ export async function destroy(ctx: UserCtx<void, DestroyRoleResponse>) {
   )
   ctx.message = `Role ${ctx.params.roleId} deleted successfully`
   ctx.status = 200
+  builderSocket?.emitRoleDeletion(ctx, role)
 }
 
 export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
@@ -191,7 +194,10 @@ export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
     let filteredRoles = [roleHeader]
     for (let role of orderedRoles) {
       filteredRoles = [role, ...filteredRoles]
-      if (role === inherits) {
+      if (
+        (Array.isArray(inherits) && inherits.includes(role)) ||
+        role === inherits
+      ) {
         break
       }
     }

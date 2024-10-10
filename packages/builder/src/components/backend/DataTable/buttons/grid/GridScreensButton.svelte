@@ -22,7 +22,7 @@
 
   const generateScreen = () => {
     popover?.hide()
-    dispatch("request-generate")
+    dispatch("generate")
   }
 </script>
 

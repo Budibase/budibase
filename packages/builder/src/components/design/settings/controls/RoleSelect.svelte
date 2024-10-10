@@ -1,7 +1,6 @@
 <script>
   import { Select } from "@budibase/bbui"
   import { roles } from "stores/builder"
-  import { RoleUtils } from "@budibase/frontend-core"
 
   export let value
   export let error
@@ -12,9 +11,9 @@
   bind:value
   on:change
   options={$roles}
-  getOptionLabel={role => role.name}
+  getOptionLabel={role => role.uiMetadata.displayName}
   getOptionValue={role => role._id}
-  getOptionColour={role => RoleUtils.getRoleColour(role._id)}
+  getOptionColour={role => role.uiMetadata.color}
   {placeholder}
   {error}
 />

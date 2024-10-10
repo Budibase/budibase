@@ -1,5 +1,6 @@
 <script>
   import Icon from "../Icon/Icon.svelte"
+  import StatusLight from "../StatusLight/StatusLight.svelte"
 
   export let icon = null
   export let iconColor = null
@@ -8,6 +9,7 @@
   export let url = null
   export let hoverable = false
   export let showArrow = false
+  export let selected = false
 </script>
 
 <a
@@ -15,9 +17,12 @@
   class="list-item"
   class:hoverable={hoverable || url != null}
   on:click
+  class:selected
 >
   <div class="left">
-    {#if icon}
+    {#if icon === "StatusLight"}
+      <StatusLight square size="L" color={iconColor} />
+    {:else if icon}
       <Icon name={icon} color={iconColor} />
     {/if}
     <div class="list-item__text">
@@ -43,7 +48,7 @@
 
 <style>
   .list-item {
-    padding: var(--spacing-m);
+    padding: var(--spacing-m) var(--spacing-l);
     background: var(--spectrum-global-color-gray-75);
     display: flex;
     flex-direction: row;
@@ -66,7 +71,12 @@
   }
   .hoverable:hover {
     cursor: pointer;
+  }
+  .hoverable:not(.selected):hover {
     background: var(--spectrum-global-color-gray-200);
+  }
+  .selected {
+    background: var(--spectrum-global-color-blue-100);
   }
 
   .left,
@@ -74,7 +84,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
   }
   .left {
     width: 0;
