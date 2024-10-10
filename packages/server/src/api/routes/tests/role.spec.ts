@@ -155,10 +155,7 @@ describe("/roles", () => {
           status: 200,
         }
       )
-      expect(res.length).toBe(3)
-      expect(res[0]).toBe(customRoleName)
-      expect(res[1]).toBe("BASIC")
-      expect(res[2]).toBe("PUBLIC")
+      expect(res).toEqual([customRoleName, "BASIC", "PUBLIC"])
     })
   })
 
@@ -181,7 +178,7 @@ describe("/roles", () => {
       })
       await config.api.roles.save({
         name: role3,
-        inherits: role1,
+        inherits: [roleId1!, roleId2!],
         permissionId: permissions.BuiltinPermissionID.READ_ONLY,
         version: "name",
       })
@@ -191,7 +188,7 @@ describe("/roles", () => {
       const res = await config.api.roles.accessible(headers, {
         status: 200,
       })
-      expect(res.length).toBe(4)
+      expect(res).toEqual([role3, role1, "BASIC", "PUBLIC", role2, "POWER"])
     })
   })
 })
