@@ -5,37 +5,82 @@
     automationHistoryStore,
   } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import FlowItem from "./FlowItem.svelte"
   import TestDataModal from "./TestDataModal.svelte"
-  import { flip } from "svelte/animate"
-  import { fly } from "svelte/transition"
   import { Icon, notifications, Modal, Toggle } from "@budibase/bbui"
   import { ActionStepID } from "constants/backend/automations"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
   import StepNode from "./StepNode.svelte"
-
-  // Test test test
-  import { FIELDS } from "constants/backend"
-  import { tables } from "stores/builder"
-  import { AutomationEventType } from "@budibase/types"
-  import { writable } from "svelte/store"
-  import { setContext } from "svelte"
-
-  const test = writable({
-    someupdate: () => {
-      console.log("updated")
-    },
-  })
+  import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
+  import { migrateReferencesInObject } from "dataBinding"
+  import { cloneDeep } from "lodash/fp"
+  import { onMount } from "svelte"
 
   export let automation
+
+  const memoAutomation = memo(automation)
 
   let testDataModal
   let confirmDeleteDialog
   let scrolling = false
+  let blockRefs = {}
+  let treeEle
 
-  $: blocks = getBlocks(automation).filter(x => x.stepId !== ActionStepID.LOOP)
-  $: isRowAction = sdk.automations.isRowAction(automation)
+  // Memo auto
+  $: memoAutomation.set(automation)
+
+  // Parse the automation tree state
+  $: refresh($memoAutomation)
+
+  $: blocks = getBlocks($memoAutomation).filter(
+    x => x.stepId !== ActionStepID.LOOP
+  )
+  $: isRowAction = sdk.automations.isRowAction($memoAutomation)
+
+  const refresh = auto => {
+    automationStore.update(state => {
+      return {
+        ...state,
+        blocks: {},
+      }
+    })
+
+    // Traverse the automation and build metadata
+    automationStore.actions.traverse(auto)
+
+    blockRefs = $automationStore.blocks
+
+    // Build global automation bindings.
+    const environmentBindings =
+      automationStore.actions.buildEnvironmentBindings()
+
+    // Push common bindings globally
+    automationStore.update(state => ({
+      ...state,
+      bindings: [...environmentBindings],
+    }))
+
+    // Parse the steps for references to sequential binding
+    const updatedAuto = cloneDeep(auto)
+
+    // Parse and migrate all bindings
+    Object.values(blockRefs)
+      .filter(blockRef => {
+        // Pulls out all distinct terminating nodes
+        return blockRef.terminating
+      })
+      .forEach(blockRef => {
+        automationStore.actions
+          .getPathSteps(blockRef.pathTo, updatedAuto)
+          .forEach((step, idx, steps) => {
+            migrateReferencesInObject({
+              obj: step,
+              originalIndex: idx,
+              steps,
+            })
+          })
+      })
+  }
 
   const getBlocks = automation => {
     let blocks = []
@@ -62,19 +107,21 @@
       scrolling = false
     }
   }
+
+  onMount(() => {
+    // Ensure the trigger element is centered in the view on load.
+    const triggerBlock = treeEle?.querySelector(".block.TRIGGER")
+    triggerBlock?.scrollIntoView({
+      behavior: "instant",
+      block: "nearest",
+      inline: "center",
+    })
+  })
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="header" class:scrolling>
-  <button
-    on:click={() => {
-      automationStore.actions.traverse($selectedAutomation)
-      console.log($automationStore)
-    }}
-  >
-    TEST
-  </button>
   <div class="header-left">
     <UndoRedoControl store={automationHistoryStore} />
   </div>
@@ -117,32 +164,21 @@
 </div>
 <div class="canvas" on:scroll={handleScroll}>
   <div class="content">
-    <!--
-      Separate out the Trigger node?
-    -->
-    <div class="root">
-      {#each blocks as block, idx (block.id)}
-        <StepNode
-          step={blocks[idx]}
-          stepIdx={idx}
-          isLast={blocks?.length - 1 === idx}
-          {automation}
-        />
-      {/each}
-    </div>
-
-    <!-- {#each blocks as block, idx (block.id)}
-      <div
-        class="block"
-        animate:flip={{ duration: 500 }}
-        in:fly={{ x: 500, duration: 500 }}
-        out:fly|local={{ x: 500, duration: 500 }}
-      >
-        {#if block.stepId !== ActionStepID.LOOP}
-          <FlowItem {testDataModal} {block} {idx} />
+    <div class="tree">
+      <div class="root" bind:this={treeEle}>
+        {#if Object.keys(blockRefs).length}
+          {#each blocks as block, idx (block.id)}
+            <StepNode
+              step={blocks[idx]}
+              stepIdx={idx}
+              isLast={blocks?.length - 1 === idx}
+              automation={$memoAutomation}
+              blocks={blockRefs}
+            />
+          {/each}
         {/if}
       </div>
-    {/each} -->
+    </div>
   </div>
 </div>
 <ConfirmDialog
@@ -193,15 +229,7 @@
     box-sizing: border-box;
   }
 
-  /* .block {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-  } */
-
   .content {
-    flex-grow: 1;
     padding: 23px 23px 80px;
     box-sizing: border-box;
     /* overflow-x: hidden; */
@@ -212,7 +240,11 @@
     border-bottom: var(--border-light);
     z-index: 1;
   }
-
+  .tree {
+    justify-content: center;
+    display: inline-flex;
+    min-width: 100%;
+  }
   .header {
     z-index: 1;
     display: flex;

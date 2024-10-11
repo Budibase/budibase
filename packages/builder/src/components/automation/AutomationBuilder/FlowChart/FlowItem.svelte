@@ -11,45 +11,47 @@
     Layout,
     Detail,
     Modal,
-    Button,
-    notifications,
     Label,
     AbsTooltip,
     InlineAlert,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import ActionModal from "./ActionModal.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+  import { AutomationStepType } from "@budibase/types"
   import FlowItemActions from "./FlowItemActions.svelte"
 
   export let block
+  export let blockRef
   export let testDataModal
   export let idx
-  export let isLast
+  export let automation
+  export let bindings
 
   let selected
   let webhookModal
-  let actionModal
   let open = true
   let showLooping = false
   let role
 
-  $: collectBlockExists = $selectedAutomation.definition.steps.some(
+  $: pathSteps = loadSteps(blockRef)
+
+  const loadSteps = blockRef => {
+    return blockRef
+      ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
+      : []
+  }
+
+  $: collectBlockExists = pathSteps.some(
     step => step.stepId === ActionStepID.COLLECT
   )
-  $: automationId = $selectedAutomation?._id
-  $: isTrigger = block.type === "TRIGGER"
+  $: automationId = automation?._id
+  $: isTrigger = block.type === AutomationStepType.TRIGGER
+  $: lastStep = blockRef?.terminating
 
-  $: steps = $selectedAutomation?.definition?.steps ?? []
-  $: blockIdx = steps.findIndex(step => step.id === block.id)
-  $: lastStep = !isTrigger && blockIdx + 1 === steps.length
-  $: totalBlocks = $selectedAutomation?.definition?.steps.length + 1
-  $: loopBlock = $selectedAutomation?.definition.steps.find(
-    x => x.blockToLoop === block.id
-  )
+  $: loopBlock = pathSteps.find(x => x.blockToLoop === block.id)
   $: isAppAction = block?.stepId === TriggerStepID.APP
   $: isAppAction && setPermissions(role)
   $: isAppAction && getPermissions(automationId)
@@ -79,23 +81,13 @@
     }
   }
 
-  async function removeLooping() {
-    try {
-      await automationStore.actions.deleteAutomationBlock(loopBlock)
-    } catch (error) {
-      notifications.error("Error saving automation")
-    }
+  async function deleteStep() {
+    await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
   }
 
-  async function deleteStep() {
-    try {
-      if (loopBlock) {
-        await automationStore.actions.deleteAutomationBlock(loopBlock)
-      }
-      await automationStore.actions.deleteAutomationBlock(block, blockIdx)
-    } catch (error) {
-      notifications.error("Error saving automation")
-    }
+  async function removeLooping() {
+    let loopBlockRef = $automationStore.blocks[blockRef.looped]
+    await automationStore.actions.deleteAutomationBlock(loopBlockRef.pathTo)
   }
 
   async function addLooping() {
@@ -106,127 +98,142 @@
       loopDefinition
     )
     loopBlock.blockToLoop = block.id
-    await automationStore.actions.addBlockToAutomation(loopBlock, blockIdx)
+    await automationStore.actions.addBlockToAutomation(
+      loopBlock,
+      blockRef.pathTo
+    )
   }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class={`block ${block.type} hoverable`} class:selected on:click={() => {}}>
-  {#if loopBlock}
-    <div class="blockSection">
-      <div
-        on:click={() => {
-          showLooping = !showLooping
-        }}
-        class="splitHeader"
-      >
-        <div class="center-items">
-          <svg
-            width="28px"
-            height="28px"
-            class="spectrum-Icon"
-            style="color:var(--spectrum-global-color-gray-700);"
-            focusable="false"
-          >
-            <use xlink:href="#spectrum-icon-18-Reuse" />
-          </svg>
-          <div class="iconAlign">
-            <Detail size="S">Looping</Detail>
+{#if block.stepId !== "LOOP"}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div
+    id={`block-${block.id}`}
+    class={`block ${block.type} hoverable`}
+    class:selected
+    on:click={() => {}}
+  >
+    {#if loopBlock}
+      <div class="blockSection">
+        <div
+          on:click={() => {
+            showLooping = !showLooping
+          }}
+          class="splitHeader"
+        >
+          <div class="center-items">
+            <svg
+              width="28px"
+              height="28px"
+              class="spectrum-Icon"
+              style="color:var(--spectrum-global-color-gray-700);"
+              focusable="false"
+            >
+              <use xlink:href="#spectrum-icon-18-Reuse" />
+            </svg>
+            <div class="iconAlign">
+              <Detail size="S">Looping</Detail>
+            </div>
           </div>
-        </div>
 
-        <div class="blockTitle">
-          <AbsTooltip type="negative" text="Remove looping">
-            <Icon on:click={removeLooping} hoverable name="DeleteOutline" />
-          </AbsTooltip>
+          <div class="blockTitle">
+            <AbsTooltip type="negative" text="Remove looping">
+              <Icon on:click={removeLooping} hoverable name="DeleteOutline" />
+            </AbsTooltip>
 
-          <div style="margin-left: 10px;" on:click={() => {}}>
-            <Icon hoverable name={showLooping ? "ChevronDown" : "ChevronUp"} />
+            <div style="margin-left: 10px;" on:click={() => {}}>
+              <Icon
+                hoverable
+                name={showLooping ? "ChevronDown" : "ChevronUp"}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <Divider noMargin />
-    {#if !showLooping}
+      <Divider noMargin />
+      {#if !showLooping}
+        <div class="blockSection">
+          <Layout noPadding gap="S">
+            <AutomationBlockSetup
+              schemaProperties={Object.entries(
+                $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
+                  .properties
+              )}
+              {webhookModal}
+              block={loopBlock}
+              {automation}
+              {bindings}
+            />
+          </Layout>
+        </div>
+        <Divider noMargin />
+      {/if}
+    {/if}
+
+    <FlowItemHeader
+      {open}
+      {block}
+      {testDataModal}
+      {idx}
+      {addLooping}
+      {deleteStep}
+      on:toggle={() => (open = !open)}
+      on:update={async e => {
+        const newName = e.detail
+        if (newName.length === 0) {
+          await automationStore.actions.deleteAutomationName(block.id)
+        } else {
+          await automationStore.actions.saveAutomationName(block.id, newName)
+        }
+      }}
+    />
+    {#if open}
+      <Divider noMargin />
       <div class="blockSection">
         <Layout noPadding gap="S">
+          {#if isAppAction}
+            <div>
+              <Label>Role</Label>
+              <RoleSelect bind:value={role} />
+            </div>
+          {/if}
           <AutomationBlockSetup
             schemaProperties={Object.entries(
-              $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
-                .properties
+              block?.schema?.inputs?.properties || {}
             )}
+            {block}
             {webhookModal}
-            block={loopBlock}
+            {automation}
+            {bindings}
           />
+          {#if isTrigger && triggerInfo}
+            <InlineAlert
+              header={triggerInfo.type}
+              message={`This trigger is tied to the "${triggerInfo.rowAction.name}" row action in your ${triggerInfo.table.name} table`}
+            />
+          {/if}
         </Layout>
       </div>
-      <Divider noMargin />
+    {/if}
+  </div>
+  {#if !collectBlockExists || !lastStep}
+    <div class="separator" />
+    <FlowItemActions
+      {block}
+      on:branch={() => {
+        automationStore.actions.branchAutomation(
+          $automationStore.blocks[block.id].pathTo,
+          $selectedAutomation
+        )
+      }}
+    />
+    {#if !lastStep}
+      <div class="separator" />
     {/if}
   {/if}
-
-  <FlowItemHeader
-    {open}
-    {block}
-    {testDataModal}
-    {idx}
-    {addLooping}
-    {deleteStep}
-    on:toggle={() => (open = !open)}
-  />
-  {#if open}
-    <Divider noMargin />
-    <div class="blockSection">
-      <Layout noPadding gap="S">
-        {#if isAppAction}
-          <div>
-            <Label>Role</Label>
-            <RoleSelect bind:value={role} />
-          </div>
-        {/if}
-        <AutomationBlockSetup
-          schemaProperties={Object.entries(
-            block?.schema?.inputs?.properties || {}
-          )}
-          {block}
-          {webhookModal}
-        />
-        {#if isTrigger && triggerInfo}
-          <InlineAlert
-            header={triggerInfo.type}
-            message={`This trigger is tied to the "${triggerInfo.rowAction.name}" row action in your ${triggerInfo.table.name} table`}
-          />
-        {/if}
-        {#if lastStep}
-          <Button on:click={() => testDataModal.show()} cta>
-            Finish and test automation
-          </Button>
-        {/if}
-      </Layout>
-    </div>
-  {/if}
-</div>
-{#if !collectBlockExists || !lastStep}
-  <div class="separator" />
-
-  <!-- Need to break out the separators -->
-  <FlowItemActions on:addStep={actionModal.show()} />
-
-  <!-- <Icon
-    on:click={() => actionModal.show()}
-    hoverable
-    name="AddCircle"
-    size="S"
-  /> -->
-  {#if isTrigger ? !isLast || totalBlocks > 1 : blockIdx !== totalBlocks - 2}
-    <div class="separator" />
-  {/if}
 {/if}
-
-<Modal bind:this={actionModal} width="30%">
-  <ActionModal modal={actionModal} {lastStep} {blockIdx} />
-</Modal>
 
 <Modal bind:this={webhookModal} width="30%">
   <CreateWebhookModal />

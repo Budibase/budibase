@@ -21,8 +21,8 @@
   } from "@budibase/bbui"
 
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, selectedAutomation, tables } from "stores/builder"
-  import { environment, licensing } from "stores/portal"
+  import { automationStore, tables } from "stores/builder"
+  import { environment } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import {
     BindingSidePanel,
@@ -46,10 +46,7 @@
   } from "components/common/CodeEditor"
   import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { QueryUtils, Utils, search, memo } from "@budibase/frontend-core"
-  import {
-    getSchemaForDatasourcePlus,
-    getEnvironmentBindings,
-  } from "dataBinding"
+  import { getSchemaForDatasourcePlus } from "dataBinding"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { writable } from "svelte/store"
@@ -110,7 +107,8 @@
     $memoBlock.id,
     automation
   )
-  $: environmentBindings = buildEnvironmentBindings($memoEnvVariables)
+  $: environmentBindings =
+    automationStore.actions.buildEnvironmentBindings($memoEnvVariables)
   $: bindings = [...automationBindings, ...environmentBindings]
 
   $: getInputData(testData, $memoBlock.inputs)
@@ -144,21 +142,6 @@
     codeMode === EditorModes.Handlebars
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
-
-  const buildEnvironmentBindings = () => {
-    if ($licensing.environmentVariablesEnabled) {
-      return getEnvironmentBindings().map(binding => {
-        return {
-          ...binding,
-          display: {
-            ...binding.display,
-            rank: 98,
-          },
-        }
-      })
-    }
-    return []
-  }
 
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
@@ -529,9 +512,6 @@
     })
    */
   const onChange = Utils.sequential(async update => {
-    if (1 == 1) {
-      console.error("ABORT UPDATE")
-    }
     const request = cloneDeep(update)
     // Process app trigger updates
     if (isTrigger && !isTestModal) {
@@ -576,8 +556,8 @@
           ...newTestData,
           ...request,
         }
-        // TO DO - uncomment
-        // await automationStore.actions.addTestDataToAutomation(newTestData)
+
+        await automationStore.actions.addTestDataToAutomation(newTestData)
       } else {
         const data = { schema, ...request }
         await automationStore.actions.updateBlockInputs(block, data)

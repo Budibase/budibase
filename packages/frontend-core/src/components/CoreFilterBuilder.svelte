@@ -16,6 +16,7 @@
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { getContext, createEventDispatcher } from "svelte"
   import FilterField from "./FilterField.svelte"
+  import ConditionField from "./ConditionField.svelte"
 
   const dispatch = createEventDispatcher()
   const {
@@ -32,8 +33,10 @@
   export let datasource
   export let behaviourFilters = false
   export let allowBindings = false
+  export let allowOnEmpty = true
+  export let builderType = "filter"
+  export let docsURL = "https://docs.budibase.com/docs/searchfilter-data"
 
-  // Review
   export let bindings
   export let panel
   export let toReadable
@@ -91,6 +94,10 @@
   }
 
   const getValidOperatorsForType = filter => {
+    if (builderType === "condition") {
+      return [OperatorOptions.Equals, OperatorOptions.NotEquals]
+    }
+
     if (!filter?.field && !filter?.name) {
       return []
     }
@@ -210,6 +217,9 @@
       } else if (addFilter) {
         targetGroup.filters.push({
           valueType: FilterValueType.VALUE,
+          ...(builderType === "condition"
+            ? { operator: OperatorOptions.Equals.value }
+            : {}),
         })
       } else if (group) {
         editable.groups[groupIdx] = {
@@ -274,7 +284,7 @@
               placeholder={false}
             />
           </span>
-          <span>of the following filter groups:</span>
+          <span>of the following {builderType} groups:</span>
         </div>
       {/if}
       {#if editableFilters?.groups?.length}
@@ -303,7 +313,7 @@
                       placeholder={false}
                     />
                   </span>
-                  <span>of the following filters are matched:</span>
+                  <span>of the following {builderType}s are matched:</span>
                 </div>
                 <div class="group-actions">
                   <Icon
@@ -334,20 +344,39 @@
               <div class="filters">
                 {#each group.filters as filter, filterIdx}
                   <div class="filter">
-                    <Select
-                      value={filter.field}
-                      options={fieldOptions}
-                      on:change={e => {
-                        const updated = { ...filter, field: e.detail }
-                        onFieldChange(updated)
-                        onFilterFieldUpdate(updated, groupIdx, filterIdx)
-                      }}
-                      placeholder="Column"
-                    />
-
+                    {#if builderType === "filter"}
+                      <Select
+                        value={filter.field}
+                        options={fieldOptions}
+                        on:change={e => {
+                          const updated = { ...filter, field: e.detail }
+                          onFieldChange(updated)
+                          onFilterFieldUpdate(updated, groupIdx, filterIdx)
+                        }}
+                        placeholder="Column"
+                      />
+                    {:else}
+                      <ConditionField
+                        placeholder="Value"
+                        {filter}
+                        drawerTitle={"Edit Binding"}
+                        {bindings}
+                        {panel}
+                        {toReadable}
+                        {toRuntime}
+                        on:change={e => {
+                          const updated = {
+                            ...filter,
+                            field: e.detail.field,
+                          }
+                          delete updated.valueType
+                          onFilterFieldUpdate(updated, groupIdx, filterIdx)
+                        }}
+                      />
+                    {/if}
                     <Select
                       value={filter.operator}
-                      disabled={!filter.field}
+                      disabled={!filter.field && builderType === "filter"}
                       options={getValidOperatorsForType(filter)}
                       on:change={e => {
                         const updated = { ...filter, operator: e.detail }
@@ -356,9 +385,11 @@
                       }}
                       placeholder={false}
                     />
-
                     <FilterField
                       placeholder="Value"
+                      drawerTitle={builderType === "condition"
+                        ? "Edit binding"
+                        : null}
                       {allowBindings}
                       {filter}
                       {schemaFields}
@@ -396,7 +427,7 @@
 
       <div class="filters-footer">
         <Layout noPadding>
-          {#if behaviourFilters && editableFilters?.groups?.length}
+          {#if behaviourFilters && allowOnEmpty && editableFilters?.groups?.length}
             <div class="empty-filter">
               <span>Return</span>
               <span class="empty-filter-picker">
@@ -413,7 +444,7 @@
                   placeholder={false}
                 />
               </span>
-              <span>when all filters are empty</span>
+              <span>when all {builderType}s are empty</span>
             </div>
           {/if}
           <div class="add-group">
@@ -427,17 +458,16 @@
                 })
               }}
             >
-              Add filter group
+              Add {builderType} group
             </Button>
-            <a
-              href="https://docs.budibase.com/docs/searchfilter-data"
-              target="_blank"
-            >
-              <Icon
-                name="HelpOutline"
-                color="var(--spectrum-global-color-gray-600)"
-              />
-            </a>
+            {#if docsURL}
+              <a href={docsURL} target="_blank">
+                <Icon
+                  name="HelpOutline"
+                  color="var(--spectrum-global-color-gray-600)"
+                />
+              </a>
+            {/if}
           </div>
         </Layout>
       </div>
