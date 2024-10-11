@@ -81,6 +81,10 @@ export async function search(
       options.query = {}
     }
 
+    if (context) {
+      options.query = await enrichSearchContext(options.query, context)
+    }
+
     // need to make sure filters in correct shape before checking for view
     options = searchInputMapping(table, options)
 
@@ -100,6 +104,7 @@ export async function search(
       const sqsEnabled = await features.flags.isEnabled("SQS")
       const supportsLogicalOperators =
         isExternalTableID(view.tableId) || sqsEnabled
+
       if (!supportsLogicalOperators) {
         // In the unlikely event that a Grouped Filter is in a non-SQS environment
         // It needs to be ignored entirely
@@ -136,10 +141,6 @@ export async function search(
           options.query.onEmptyFilter = query.onEmptyFilter
         }
       }
-    }
-
-    if (context) {
-      options.query = await enrichSearchContext(options.query, context)
     }
 
     options.query = dataFilters.cleanupQuery(options.query)

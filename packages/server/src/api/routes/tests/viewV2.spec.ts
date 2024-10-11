@@ -3428,6 +3428,50 @@ describe.each([
           expect(response.rows).toHaveLength(1)
           expect(response.rows[0].sum).toEqual(61)
         })
+
+      it("should be able to filter on a single user field in both the view query and search query", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              user: {
+                name: "user",
+                type: FieldType.BB_REFERENCE_SINGLE,
+                subtype: BBReferenceFieldSubType.USER,
+              },
+            },
+          })
+        )
+
+        await config.api.row.save(table._id!, {
+          user: config.getUser()._id,
+        })
+
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          query: {
+            equal: {
+              user: "{{ [user].[_id] }}",
+            },
+          },
+          schema: {
+            user: {
+              visible: true,
+            },
+          },
+        })
+
+        const { rows } = await config.api.viewV2.search(view.id, {
+          query: {
+            equal: {
+              user: "{{ [user].[_id] }}",
+            },
+          },
+        })
+
+        expect(rows).toHaveLength(1)
+        expect(rows[0].user._id).toEqual(config.getUser()._id)
+      })
     })
 
     describe("permissions", () => {
