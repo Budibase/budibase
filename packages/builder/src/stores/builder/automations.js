@@ -335,7 +335,6 @@ const automationActions = store => ({
       }
       /* End special cases for generating custom schemas based on triggers */
 
-      //let hasUserDefinedName = automation.stepNames?.[pathSteps[idx]?.id]
       if (isLoopBlock) {
         runtimeName = `loop.${name}`
       } else if (idx === 0) {
@@ -1037,30 +1036,14 @@ const automationActions = store => ({
       return
     }
 
-    const stepIndex = newAutomation.definition.steps.findIndex(
-      step => step.id === blockId
-    )
+    const newName = name.trim()
 
-    if (stepIndex !== -1) {
-      const oldName = newAutomation.definition.steps[stepIndex].name
-      const newName = name.trim()
-
-      newAutomation.definition.stepNames = {
-        ...newAutomation.definition.stepNames,
-        [blockId]: newName,
-      }
-
-      newAutomation.definition.steps[stepIndex].name = newName
-
-      newAutomation.definition.steps = updateBindingsInSteps(
-        newAutomation.definition.steps,
-        oldName,
-        newName,
-        stepIndex
-      )
-
-      await store.actions.save(newAutomation)
+    newAutomation.definition.stepNames = {
+      ...newAutomation.definition.stepNames,
+      [blockId]: newName,
     }
+
+    await store.actions.save(newAutomation)
   },
   deleteAutomationName: async blockId => {
     const automation = get(selectedAutomation)
