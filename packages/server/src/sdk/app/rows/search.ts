@@ -16,7 +16,7 @@ import * as external from "./search/external"
 import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
-import { searchInputMapping } from "./search/utils"
+import { checkFilters, searchInputMapping } from "./search/utils"
 import { db, features } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { getQueryableFields, removeInvalidFilters } from "./queryUtils"
@@ -92,8 +92,10 @@ export async function search(
       // Enrich saved query with ephemeral query params.
       // We prevent searching on any fields that are saved as part of the query, as
       // that could let users find rows they should not be allowed to access.
-      let viewQuery = dataFilters.buildQueryLegacy(view.query) || {}
-      delete viewQuery?.onEmptyFilter
+      let query = await enrichSearchContext(view.query || {}, context)
+      query = dataFilters.buildQueryLegacy(query) || {}
+      query = checkFilters(table, query)
+      delete query?.onEmptyFilter
 
       const sqsEnabled = await features.flags.isEnabled("SQS")
       const supportsLogicalOperators =
@@ -113,26 +115,25 @@ export async function search(
             ?.filter(filter => filter.field)
             .map(filter => db.removeKeyNumbering(filter.field)) || []
 
-        viewQuery ??= {}
         // Carry over filters for unused fields
         Object.keys(options.query).forEach(key => {
           const operator = key as Exclude<SearchFilterKey, LogicalOperator>
           Object.keys(options.query[operator] || {}).forEach(field => {
             if (!existingFields.includes(db.removeKeyNumbering(field))) {
-              viewQuery![operator]![field] = options.query[operator]![field]
+              query[operator]![field] = options.query[operator]![field]
             }
           })
         })
-        options.query = viewQuery
+        options.query = query
       } else {
-        const conditions = viewQuery ? [viewQuery] : []
+        const conditions = query ? [query] : []
         options.query = {
           $and: {
             conditions: [...conditions, options.query],
           },
         }
-        if (viewQuery.onEmptyFilter) {
-          options.query.onEmptyFilter = viewQuery.onEmptyFilter
+        if (query.onEmptyFilter) {
+          options.query.onEmptyFilter = query.onEmptyFilter
         }
       }
     }
