@@ -5,7 +5,7 @@ export const getColumnIcon = column => {
   if (column.schema.icon) {
     return column.schema.icon
   }
-  if (column.calculation) {
+  if (column.calculationType) {
     return "Calculator"
   }
   if (column.schema.autocolumn) {

@@ -160,7 +160,7 @@ export const initialise = context => {
             order: fieldSchema.order ?? oldColumn?.order,
             conditions: fieldSchema.conditions,
             related: fieldSchema.related,
-            calculation: fieldSchema.calculationType != null,
+            calculationType: fieldSchema.calculationType,
           }
           // Override a few properties for primary display
           if (field === primaryDisplay) {
