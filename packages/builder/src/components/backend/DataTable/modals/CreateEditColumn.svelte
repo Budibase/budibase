@@ -49,6 +49,9 @@
   import OptionsEditor from "./OptionsEditor.svelte"
   import { isEnabled } from "helpers/featureFlags"
   import { getUserBindings } from "dataBinding"
+  import { makePropSafe as safe } from "@budibase/string-templates"
+
+  export let field
 
   const AUTO_TYPE = FieldType.AUTO
   const FORMULA_TYPE = FieldType.FORMULA
@@ -57,11 +60,11 @@
   const NUMBER_TYPE = FieldType.NUMBER
   const JSON_TYPE = FieldType.JSON
   const DATE_TYPE = FieldType.DATETIME
+  const SINGLE_USER_DEFAULT = `{{ ${safe("user")}.${safe("_id")} }}`
+  const MULTI_USER_DEFAULT = `{{ js "cmV0dXJuIFskKCJbdXNlcl0uW19pZF0iKV0=" }}`
 
   const dispatch = createEventDispatcher()
   const { dispatch: gridDispatch, rows } = getContext("grid")
-
-  export let field
 
   let mounted = false
   let originalName
@@ -834,6 +837,18 @@
         on:change={e =>
           (editableColumn.default = e.detail?.length ? e.detail : undefined)}
         placeholder="None"
+      />
+    {:else if editableColumn.subtype === BBReferenceFieldSubType.USER}
+      {@const defaultValue =
+        editableColumn.type === FieldType.BB_REFERENCE
+          ? SINGLE_USER_DEFAULT
+          : MULTI_USER_DEFAULT}
+      <Toggle
+        disabled={!canHaveDefault}
+        text="Default to current user"
+        value={editableColumn.default === defaultValue}
+        on:change={e =>
+          (editableColumn.default = e.detail ? defaultValue : undefined)}
       />
     {:else}
       <ModalBindableInput
