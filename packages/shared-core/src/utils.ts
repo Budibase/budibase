@@ -172,7 +172,7 @@ export const processSearchFilters = (
         .sort((a, b) => {
           return a.localeCompare(b)
         })
-        .filter(key => key in filter)
+        .filter(key => filter[key])
 
       if (filterPropertyKeys.length == 1) {
         const key = filterPropertyKeys[0],
