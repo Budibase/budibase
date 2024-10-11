@@ -27,10 +27,7 @@
   let candidateIndex
   let lastSearchId
   let searching = false
-  let container
   let anchor
-  let relationshipAnchor
-  let relationshipFields
 
   $: fieldValue = parseValue(value)
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
@@ -56,13 +53,6 @@
     }
     return acc
   }, {})
-
-  $: showRelationshipFields =
-    relationshipAnchor &&
-    relationshipFields &&
-    Object.keys(relationshipFields).length &&
-    focused &&
-    !isOpen
 
   const parseValue = value => {
     if (Array.isArray(value) && value.every(x => x?._id)) {
@@ -245,16 +235,6 @@
     return value
   }
 
-  const displayRelationshipFields = (e, relationship) => {
-    relationshipAnchor = e.target
-    relationshipFields = relationFields[relationship._id]
-  }
-
-  const hideRelationshipFields = () => {
-    relationshipAnchor = null
-    relationshipFields = undefined
-  }
-
   onMount(() => {
     api = {
       focus: open,
@@ -274,7 +254,7 @@
   style="--color:{color};"
   bind:this={anchor}
 >
-  <div class="container" bind:this={container}>
+  <div class="container">
     <div
       class="values"
       class:wrap={editable || contentLines > 1}
@@ -286,9 +266,7 @@
           <div
             class="badge"
             class:extra-info={!!relationFields[relationship._id]}
-            on:mouseenter={e => displayRelationshipFields(e, relationship)}
             on:focus={() => {}}
-            on:mouseleave={() => hideRelationshipFields()}
           >
             <span>
               {readable(
@@ -359,26 +337,6 @@
           {/each}
         </div>
       {/if}
-    </div>
-  </GridPopover>
-{/if}
-
-{#if showRelationshipFields}
-  <GridPopover
-    anchor={relationshipAnchor}
-    maxWidth={400}
-    offset={4}
-    clickOutsideOverride
-  >
-    <div class="relationship-fields">
-      {#each Object.entries(relationshipFields) as [fieldName, fieldValue]}
-        <div class="relationship-field-name">
-          {fieldName}
-        </div>
-        <div class="relationship-field-value">
-          {fieldValue}
-        </div>
-      {/each}
     </div>
   </GridPopover>
 {/if}
@@ -546,30 +504,5 @@
   }
   .search :global(.spectrum-Form-item) {
     flex: 1 1 auto;
-  }
-
-  .relationship-fields {
-    margin: var(--spacing-m) var(--spacing-l);
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-row-gap: var(--spacing-m);
-    grid-column-gap: var(--spacing-xl);
-  }
-
-  .relationship-field-name {
-    text-transform: uppercase;
-    color: var(--spectrum-global-color-gray-600);
-    font-size: 12px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    max-width: 120px;
-  }
-  .relationship-field-value {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
   }
 </style>
