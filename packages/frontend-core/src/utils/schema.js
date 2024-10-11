@@ -2,6 +2,10 @@ import { helpers } from "@budibase/shared-core"
 import { TypeIconMap } from "../constants"
 
 export const getColumnIcon = column => {
+  if (column.schema.icon) {
+    return column.schema.icon
+  }
+
   if (column.schema.autocolumn) {
     return "MagicWand"
   }
