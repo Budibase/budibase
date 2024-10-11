@@ -8,6 +8,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { context } from "@budibase/backend-core"
+import * as utils from "./utils"
 
 export async function searchView(
   ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
