@@ -2331,82 +2331,132 @@ describe.each([
         })
 
         describe("logical filters", () => {
-          it("should allow nested ands with single conditions", async () => {
-            await expectQuery({
-              $and: {
-                conditions: [
-                  {
-                    $and: {
-                      conditions: [
-                        {
-                          equal: { ["productCat.name"]: "foo" },
-                        },
-                      ],
+          describe("just $ands", () => {
+            it("should allow nested ands with single conditions", async () => {
+              await expectQuery({
+                $and: {
+                  conditions: [
+                    {
+                      $and: {
+                        conditions: [
+                          {
+                            equal: { ["productCat.name"]: "foo" },
+                          },
+                        ],
+                      },
                     },
-                  },
-                ],
-              },
-            }).toContainExactly([
-              { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
-            ])
+                  ],
+                },
+              }).toContainExactly([
+                { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+              ])
+            })
+
+            it("should allow nested ands with exclusive conditions", async () => {
+              await expectQuery({
+                $and: {
+                  conditions: [
+                    {
+                      $and: {
+                        conditions: [
+                          {
+                            equal: { ["productCat.name"]: "foo" },
+                            notEqual: { ["productCat.name"]: "foo" },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              }).toContainExactly([])
+            })
+
+            it("should allow nested ands with multiple conditions", async () => {
+              await expectQuery({
+                $and: {
+                  conditions: [
+                    {
+                      $and: {
+                        conditions: [
+                          {
+                            equal: { ["productCat.name"]: "foo" },
+                          },
+                        ],
+                      },
+                      notEqual: { ["productCat.name"]: "foo" },
+                    },
+                  ],
+                },
+              }).toContainExactly([])
+            })
           })
 
-          it("should allow nested ands with exclusive conditions", async () => {
-            await expectQuery({
-              $and: {
-                conditions: [
-                  {
-                    $and: {
-                      conditions: [
-                        {
-                          equal: { ["productCat.name"]: "foo" },
-                          notEqual: { ["productCat.name"]: "foo" },
-                        },
-                      ],
+          describe("just $ors", () => {
+            it("should allow nested ands with single conditions", async () => {
+              await expectQuery({
+                $or: {
+                  conditions: [
+                    {
+                      $or: {
+                        conditions: [
+                          {
+                            equal: { ["productCat.name"]: "foo" },
+                          },
+                        ],
+                      },
                     },
-                  },
-                ],
-              },
-            }).toContainExactly([])
-          })
+                  ],
+                },
+              }).toContainExactly([
+                { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+              ])
+            })
 
-          it("should allow nested ands with multiple conditions", async () => {
-            await expectQuery({
-              $and: {
-                conditions: [
-                  {
-                    $and: {
-                      conditions: [
-                        {
-                          equal: { ["productCat.name"]: "foo" },
-                        },
-                      ],
+            it("should allow nested ands with exclusive conditions", async () => {
+              await expectQuery({
+                $or: {
+                  conditions: [
+                    {
+                      $or: {
+                        conditions: [
+                          {
+                            equal: { ["productCat.name"]: "foo" },
+                            notEqual: { ["productCat.name"]: "foo" },
+                          },
+                        ],
+                      },
                     },
-                    notEqual: { ["productCat.name"]: "foo" },
-                  },
-                ],
-              },
-            }).toContainExactly([])
-          })
+                  ],
+                },
+              }).toContainExactly([
+                { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
+                { name: "baz", productCat: undefined },
+              ])
+            })
 
-          it("should allow nesting or under and with single conditions", async () => {
-            await expectQuery({
-              $and: {
-                conditions: [
-                  {
-                    $or: {
-                      conditions: [
-                        {
-                          equal: { ["productCat.name"]: "foo" },
-                        },
-                      ],
+            it("should allow nested ands with multiple conditions", async () => {
+              await expectQuery({
+                $or: {
+                  conditions: [
+                    {
+                      $or: {
+                        conditions: [
+                          {
+                            equal: { ["productCat.name"]: "foo" },
+                          },
+                        ],
+                      },
+                      notEqual: { ["productCat.name"]: "foo" },
                     },
-                  },
-                ],
-              },
-            }).toContainExactly([
-              { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
-            ])
+                  ],
+                },
+              }).toContainExactly([
+                { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
+                { name: "baz", productCat: undefined },
+              ])
+            })
           })
         })
       })
