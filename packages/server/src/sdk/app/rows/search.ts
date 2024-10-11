@@ -96,10 +96,10 @@ export async function search(
       // Enrich saved query with ephemeral query params.
       // We prevent searching on any fields that are saved as part of the query, as
       // that could let users find rows they should not be allowed to access.
-      let query = await enrichSearchContext(view.query || {}, context)
-      query = dataFilters.buildQueryLegacy(query) || {}
-      query = checkFilters(table, query)
-      delete query?.onEmptyFilter
+      let viewQuery = await enrichSearchContext(view.query || {}, context)
+      viewQuery = dataFilters.buildQueryLegacy(viewQuery) || {}
+      viewQuery = checkFilters(table, viewQuery)
+      delete viewQuery?.onEmptyFilter
 
       const sqsEnabled = await features.flags.isEnabled("SQS")
       const supportsLogicalOperators =
@@ -125,20 +125,20 @@ export async function search(
           const operator = key as Exclude<SearchFilterKey, LogicalOperator>
           Object.keys(options.query[operator] || {}).forEach(field => {
             if (!existingFields.includes(db.removeKeyNumbering(field))) {
-              query[operator]![field] = options.query[operator]![field]
+              viewQuery[operator]![field] = options.query[operator]![field]
             }
           })
         })
-        options.query = query
+        options.query = viewQuery
       } else {
-        const conditions = query ? [query] : []
+        const conditions = viewQuery ? [viewQuery] : []
         options.query = {
           $and: {
             conditions: [...conditions, options.query],
           },
         }
-        if (query.onEmptyFilter) {
-          options.query.onEmptyFilter = query.onEmptyFilter
+        if (viewQuery.onEmptyFilter) {
+          options.query.onEmptyFilter = viewQuery.onEmptyFilter
         }
       }
     }
