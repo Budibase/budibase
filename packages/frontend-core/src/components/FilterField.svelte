@@ -21,6 +21,7 @@
   export let allowBindings = false
   export let schemaFields
   export let panel
+  export let drawerTitle
   export let toReadable
   export let toRuntime
 
@@ -133,7 +134,7 @@
     on:drawerHide
     on:drawerShow
     bind:this={bindingDrawer}
-    title={filter.field}
+    title={drawerTitle || filter.field}
     forceModal
   >
     <Button
