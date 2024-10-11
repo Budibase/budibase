@@ -521,8 +521,11 @@ class InternalBuilder {
         const [filterTableName, ...otherProperties] = key.split(".")
         const property = otherProperties.join(".")
         const alias = getTableAlias(filterTableName)
-        return fn(q, alias ? `${alias}.${property}` : property, value)
+        return q.andWhere(subquery =>
+          fn(subquery, alias ? `${alias}.${property}` : property, value)
+        )
       }
+
       for (const key in structure) {
         const value = structure[key]
         const updatedKey = dbCore.removeKeyNumbering(key)
