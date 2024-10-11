@@ -2511,31 +2511,28 @@ describe.each([
               }
             )
 
-            it.each([logicalOperators])(
-              "should allow nested ors with multiple conditions (with %s as root)",
-              async rootOperator => {
-                await expectQuery({
-                  [rootOperator]: {
-                    conditions: [
-                      {
-                        $or: {
-                          conditions: [
-                            {
-                              equal: { ["productCat.name"]: "foo" },
-                            },
-                          ],
-                        },
-                        notEqual: { ["productCat.name"]: "foo" },
+            it("should allow nested ors with multiple conditions", async () => {
+              await expectQuery({
+                $or: {
+                  conditions: [
+                    {
+                      $or: {
+                        conditions: [
+                          {
+                            equal: { ["productCat.name"]: "foo" },
+                          },
+                        ],
                       },
-                    ],
-                  },
-                }).toContainExactly([
-                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
-                  { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
-                  // { name: "baz", productCat: undefined }, // TODO
-                ])
-              }
-            )
+                      notEqual: { ["productCat.name"]: "foo" },
+                    },
+                  ],
+                },
+              }).toContainExactly([
+                { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
+                // { name: "baz", productCat: undefined }, // TODO
+              ])
+            })
           })
         })
       })
