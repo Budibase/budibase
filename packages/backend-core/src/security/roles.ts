@@ -435,7 +435,9 @@ export function getExternalRoleID(roleId: string, version?: string) {
     roleId.startsWith(DocumentType.ROLE) &&
     (isBuiltin(roleId) || version === RoleIDVersion.NAME)
   ) {
-    return roleId.split(`${DocumentType.ROLE}${SEPARATOR}`)[1]
+    const parts = roleId.split(SEPARATOR)
+    parts.shift()
+    return parts.join(SEPARATOR)
   }
   return roleId
 }
