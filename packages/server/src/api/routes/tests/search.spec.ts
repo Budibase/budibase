@@ -2329,6 +2329,47 @@ describe.each([
             equal: { ["name"]: "baz" },
           }).toContainExactly([{ name: "baz", productCat: undefined }])
         })
+
+        describe("logical filters", () => {
+          it("should allow nested ands with single conditions", async () => {
+            await expectQuery({
+              $and: {
+                conditions: [
+                  {
+                    $and: {
+                      conditions: [
+                        {
+                          equal: { ["productCat.name"]: "foo" },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            }).toContainExactly([
+              { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+            ])
+          })
+
+          it("should allow nested ands with exclusive conditions", async () => {
+            await expectQuery({
+              $and: {
+                conditions: [
+                  {
+                    $and: {
+                      conditions: [
+                        {
+                          equal: { ["productCat.name"]: "foo" },
+                          notEqual: { ["productCat.name"]: "foo" },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            }).toContainExactly([])
+          })
+        })
       })
 
     isSql &&
