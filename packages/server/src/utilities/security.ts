@@ -1,5 +1,5 @@
-import { permissions, roles } from "@budibase/backend-core"
-import { DocumentType, VirtualDocumentType } from "../db/utils"
+import { DocumentType, permissions, roles } from "@budibase/backend-core"
+import { VirtualDocumentType } from "../db/utils"
 import { getDocumentType, getVirtualDocumentType } from "@budibase/types"
 
 export const CURRENTLY_SUPPORTED_LEVELS: string[] = [
@@ -19,6 +19,7 @@ export function getPermissionType(resourceId: string) {
   switch (docType) {
     case DocumentType.TABLE:
     case DocumentType.ROW:
+    case DocumentType.DATASOURCE_PLUS:
       return permissions.PermissionType.TABLE
     case DocumentType.AUTOMATION:
       return permissions.PermissionType.AUTOMATION
