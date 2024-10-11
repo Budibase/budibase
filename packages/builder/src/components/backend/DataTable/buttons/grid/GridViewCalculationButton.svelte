@@ -121,7 +121,7 @@
   }
 
   const addCalc = () => {
-    calculations = [...calculations, {}]
+    calculations = [...calculations, { type: CalculationType.AVG }]
   }
 
   const deleteCalc = idx => {
@@ -188,20 +188,14 @@
     size="M"
     onConfirm={save}
   >
-    {#if !calculations.length}
-      <div>
-        <ActionButton quiet icon="Add" on:click={addCalc}>
-          Add your first calculation
-        </ActionButton>
-      </div>
-    {:else}
+    {#if calculations.length}
       <div class="calculations">
         {#each calculations as calc, idx}
           <span>{idx === 0 ? "Calculate" : "and"} the</span>
           <Select
             options={getTypeOptions(calc, calculations)}
             bind:value={calc.type}
-            placeholder="Function"
+            placeholder={false}
           />
           <span>of</span>
           <Select
@@ -211,7 +205,7 @@
           />
           <Icon
             hoverable
-            name="Close"
+            name="Delete"
             size="S"
             on:click={() => deleteCalc(idx)}
             color="var(--spectrum-global-color-gray-700)"
@@ -226,22 +220,22 @@
           />
         </div>
       </div>
-      <div class="buttons">
-        <ActionButton
-          quiet
-          icon="Add"
-          on:click={addCalc}
-          disabled={calculations.length >= 5}
-        >
-          Add calculation
-        </ActionButton>
-      </div>
-      <InfoDisplay
-        icon="Help"
-        quiet
-        body="Calculations only work with numeric columns and a maximum of 5 calculations can be added at once."
-      />
     {/if}
+    <div class="buttons">
+      <ActionButton
+        quiet
+        icon="Add"
+        on:click={addCalc}
+        disabled={calculations.length >= 5}
+      >
+        Add calculation
+      </ActionButton>
+    </div>
+    <InfoDisplay
+      icon="Help"
+      quiet
+      body="Calculations only work with numeric columns and a maximum of 5 calculations can be added at once."
+    />
   </ModalContent>
 </Modal>
 
