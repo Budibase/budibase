@@ -758,7 +758,7 @@ describe.each([
         })
       })
 
-      describe.only("user column", () => {
+      describe("user column", () => {
         beforeAll(async () => {
           table = await config.api.table.save(
             saveTableRequest({
