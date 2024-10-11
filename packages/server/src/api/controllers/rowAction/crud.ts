@@ -21,14 +21,15 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
   const table = await getTable(ctx)
   const tableId = table._id!
 
-  if (!(await sdk.rowActions.docExists(tableId))) {
+  const rowActions = await sdk.rowActions.getAll(tableId)
+  if (!rowActions) {
     ctx.body = {
       actions: {},
     }
     return
   }
 
-  const { actions } = await sdk.rowActions.getAll(tableId)
+  const { actions } = rowActions
   const result: RowActionsResponse = {
     actions: Object.entries(actions).reduce<Record<string, RowActionResponse>>(
       (acc, [key, action]) => ({
