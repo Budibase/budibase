@@ -2369,6 +2369,45 @@ describe.each([
               },
             }).toContainExactly([])
           })
+
+          it("should allow nested ands with multiple conditions", async () => {
+            await expectQuery({
+              $and: {
+                conditions: [
+                  {
+                    $and: {
+                      conditions: [
+                        {
+                          equal: { ["productCat.name"]: "foo" },
+                        },
+                      ],
+                    },
+                    notEqual: { ["productCat.name"]: "foo" },
+                  },
+                ],
+              },
+            }).toContainExactly([])
+          })
+
+          it("should allow nesting or under and with single conditions", async () => {
+            await expectQuery({
+              $and: {
+                conditions: [
+                  {
+                    $or: {
+                      conditions: [
+                        {
+                          equal: { ["productCat.name"]: "foo" },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            }).toContainExactly([
+              { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+            ])
+          })
         })
       })
 
