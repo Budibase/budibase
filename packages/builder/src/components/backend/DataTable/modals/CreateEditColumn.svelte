@@ -49,13 +49,12 @@
   import OptionsEditor from "./OptionsEditor.svelte"
   import { isEnabled } from "helpers/featureFlags"
   import { getUserBindings } from "dataBinding"
-  import { makePropSafe as safe } from "@budibase/string-templates"
 
   export let field
 
   const dispatch = createEventDispatcher()
   const { dispatch: gridDispatch, rows } = getContext("grid")
-  const SafeID = `${safe("user")}.${safe("_id")}`
+  const SafeID = `${makePropSafe("user")}.${makePropSafe("_id")}`
   const SingleUserDefault = `{{ ${SafeID} }}`
   const MultiUserDefault = `{{ js "${btoa(`return [$("${SafeID}")]`)}" }}`
 
