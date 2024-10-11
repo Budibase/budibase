@@ -840,8 +840,8 @@
     {:else if editableColumn.subtype === BBReferenceFieldSubType.USER}
       {@const defaultValue =
         editableColumn.type === FieldType.BB_REFERENCE_SINGLE
-          ? SINGLE_USER_DEFAULT
-          : MULTI_USER_DEFAULT}
+          ? SingleUserDefault
+          : MultiUserDefault}
       <Toggle
         disabled={!canHaveDefault}
         text="Default to current user"
