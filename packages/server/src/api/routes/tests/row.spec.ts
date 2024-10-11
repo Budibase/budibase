@@ -14,6 +14,7 @@ import {
   InternalTable,
   tenancy,
   features,
+  utils,
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
@@ -754,6 +755,37 @@ describe.each([
             food: ["orange"],
           })
           expect(row.food).toEqual(["orange"])
+        })
+      })
+
+      describe("user column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                user: {
+                  name: "user",
+                  type: FieldType.BB_REFERENCE_SINGLE,
+                  subtype: BBReferenceFieldSubType.USER,
+                  default: "{{ [Current User]._id }}",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.user._id).toEqual(config.getUser()._id)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const id = `us_${utils.newid()}`
+          await config.createUser({ _id: id })
+          const row = await config.api.row.save(table._id!, {
+            user: id,
+          })
+          expect(row.user._id).toEqual(id)
         })
       })
 
