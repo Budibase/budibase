@@ -65,6 +65,7 @@
   export let testData
   export let schemaProperties
   export let isTestModal = false
+  export let bindings = []
 
   // Stop unnecessary rendering
   const memoBlock = memo(block)
@@ -102,14 +103,6 @@
 
   $: tempFilters = cloneDeep(filters)
   $: stepId = $memoBlock.stepId
-
-  $: automationBindings = automationStore.actions.getPathBindings(
-    $memoBlock.id,
-    automation
-  )
-  $: environmentBindings =
-    automationStore.actions.buildEnvironmentBindings($memoEnvVariables)
-  $: bindings = [...automationBindings, ...environmentBindings]
 
   $: getInputData(testData, $memoBlock.inputs)
   $: tableId = inputData ? inputData.tableId : null

@@ -115,7 +115,7 @@
     ? "var(--spectrum-global-color-gray-600)"
     : "var(--spectrum-global-color-gray-900)"}
   text={automation.displayName}
-  selected={automation._id === $selectedAutomation?._id}
+  selected={automation._id === $selectedAutomation?.data?._id}
   hovering={automation._id === $contextMenuStore.id}
   on:click={() => automationStore.actions.select(automation._id)}
   selectedBy={$userSelectedResourceMap[automation._id]}

@@ -1,8 +1,8 @@
 <script>
   import {
     automationStore,
-    selectedAutomation,
     automationHistoryStore,
+    selectedAutomation,
   } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import TestDataModal from "./TestDataModal.svelte"
@@ -12,8 +12,6 @@
   import StepNode from "./StepNode.svelte"
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
-  import { migrateReferencesInObject } from "dataBinding"
-  import { cloneDeep } from "lodash/fp"
   import { onMount } from "svelte"
 
   export let automation
@@ -26,7 +24,7 @@
   let blockRefs = {}
   let treeEle
 
-  // Memo auto
+  // Memo auto - selectedAutomation
   $: memoAutomation.set(automation)
 
   // Parse the automation tree state
@@ -37,49 +35,20 @@
   )
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
-  const refresh = auto => {
-    automationStore.update(state => {
-      return {
-        ...state,
-        blocks: {},
-      }
-    })
-
-    // Traverse the automation and build metadata
-    automationStore.actions.traverse(auto)
-
-    blockRefs = $automationStore.blocks
-
+  const refresh = () => {
     // Build global automation bindings.
     const environmentBindings =
       automationStore.actions.buildEnvironmentBindings()
 
-    // Push common bindings globally
-    automationStore.update(state => ({
-      ...state,
-      bindings: [...environmentBindings],
-    }))
+    // Get all processed block references
+    blockRefs = $selectedAutomation.blockRefs
 
-    // Parse the steps for references to sequential binding
-    const updatedAuto = cloneDeep(auto)
-
-    // Parse and migrate all bindings
-    Object.values(blockRefs)
-      .filter(blockRef => {
-        // Pulls out all distinct terminating nodes
-        return blockRef.terminating
-      })
-      .forEach(blockRef => {
-        automationStore.actions
-          .getPathSteps(blockRef.pathTo, updatedAuto)
-          .forEach((step, idx, steps) => {
-            migrateReferencesInObject({
-              obj: step,
-              originalIndex: idx,
-              steps,
-            })
-          })
-      })
+    automationStore.update(state => {
+      return {
+        ...state,
+        bindings: [...environmentBindings],
+      }
+    })
   }
 
   const getBlocks = automation => {
@@ -93,7 +62,7 @@
 
   const deleteAutomation = async () => {
     try {
-      await automationStore.actions.delete($selectedAutomation)
+      await automationStore.actions.delete(automation)
     } catch (error) {
       notifications.error("Error deleting automation")
     }
@@ -127,7 +96,7 @@
   </div>
   <div class="controls">
     <div
-      class:disabled={!$selectedAutomation?.definition?.trigger}
+      class:disabled={!automation?.definition?.trigger}
       on:click={() => {
         testDataModal.show()
       }}
@@ -155,7 +124,7 @@
             automation._id,
             automation.disabled
           )}
-          disabled={!$selectedAutomation?.definition?.trigger}
+          disabled={!automation?.definition?.trigger}
           value={!automation.disabled}
         />
       </div>

@@ -218,7 +218,7 @@
         targetGroup.filters.push({
           valueType: FilterValueType.VALUE,
           ...(builderType === "condition"
-            ? { operator: OperatorOptions.Equals.value }
+            ? { operator: OperatorOptions.Equals.value, type: FieldType.STRING }
             : {}),
         })
       } else if (group) {
@@ -240,6 +240,11 @@
         filters: [
           {
             valueType: FilterValueType.VALUE,
+            ...(builderType === "condition"
+              ? {
+                  operator: OperatorOptions.Equals.value,
+                }
+              : {}),
           },
         ],
       })
@@ -391,7 +396,12 @@
                         ? "Edit binding"
                         : null}
                       {allowBindings}
-                      {filter}
+                      filter={{
+                        ...filter,
+                        ...(builderType === "condition"
+                          ? { type: FieldType.STRING }
+                          : {}),
+                      }}
                       {schemaFields}
                       {bindings}
                       {panel}

@@ -1,9 +1,9 @@
 <script>
   import {
     automationStore,
-    selectedAutomation,
     permissions,
     selectedAutomationDisplayData,
+    selectedAutomation,
   } from "stores/builder"
   import {
     Icon,
@@ -86,7 +86,7 @@
   }
 
   async function removeLooping() {
-    let loopBlockRef = $automationStore.blocks[blockRef.looped]
+    let loopBlockRef = $selectedAutomation.blockRefs[blockRef.looped]
     await automationStore.actions.deleteAutomationBlock(loopBlockRef.pathTo)
   }
 
@@ -173,6 +173,7 @@
     {/if}
 
     <FlowItemHeader
+      {automation}
       {open}
       {block}
       {testDataModal}
@@ -224,8 +225,8 @@
       {block}
       on:branch={() => {
         automationStore.actions.branchAutomation(
-          $automationStore.blocks[block.id].pathTo,
-          $selectedAutomation
+          $selectedAutomation.blockRefs[block.id].pathTo,
+          automation
         )
       }}
     />

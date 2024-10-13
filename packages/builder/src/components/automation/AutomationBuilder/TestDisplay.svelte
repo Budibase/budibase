@@ -3,7 +3,7 @@
   import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
   import { ActionStepID } from "constants/backend/automations"
   import { JsonView } from "@zerodevx/svelte-json-view"
-  import { automationStore } from "stores/builder"
+  import { automationStore, selectedAutomation } from "stores/builder"
   import { AutomationActionStepId } from "@budibase/types"
 
   export let automation
@@ -45,7 +45,8 @@
         : []
     } else if (automation) {
       const terminatingStep = filteredResults.at(-1)
-      const terminatingBlockRef = $automationStore.blocks[terminatingStep.id]
+      const terminatingBlockRef =
+        $selectedAutomation.blockRefs[terminatingStep.id]
       const pathSteps = automationStore.actions.getPathSteps(
         terminatingBlockRef.pathTo,
         automation
@@ -67,6 +68,7 @@
     <div class="block" style={width ? `width: ${width}` : ""}>
       {#if block.stepId !== ActionStepID.LOOP}
         <FlowItemHeader
+          {automation}
           enableNaming={false}
           itemName={block.stepId === AutomationActionStepId.BRANCH
             ? getBranchName(block, filteredResults?.[idx].outputs?.branchId)
