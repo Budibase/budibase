@@ -192,7 +192,7 @@ const automationActions = store => ({
    * @returns {Array<Object>} - all bindings on the path to this step
    */
   getPathBindings: id => {
-    const block = get(store).blocks[id]
+    const block = get(selectedAutomation).blockRefs[id]
     const bindings = store.actions.getAvailableBindings(
       block,
       get(selectedAutomation).data
@@ -266,7 +266,7 @@ const automationActions = store => ({
     }
 
     // Registered blocks
-    const blocks = get(store).blocks
+    const blocks = get(selectedAutomation).blockRefs
 
     // Get all preceeding steps, including the trigger
     // Filter out the target step as we don't want to include itself
@@ -638,7 +638,7 @@ const automationActions = store => ({
       newAutomation = cloneDeep(automation)
       newAutomation.definition.trigger = block
     } else {
-      const pathToStep = get(automationStore).blocks[block.id].pathTo
+      const pathToStep = get(selectedAutomation).blockRefs[block.id].pathTo
       newAutomation = automationStore.actions.updateStep(
         pathToStep,
         automation,

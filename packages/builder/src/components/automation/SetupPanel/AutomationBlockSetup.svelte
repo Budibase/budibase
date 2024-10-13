@@ -69,7 +69,6 @@
 
   // Stop unnecessary rendering
   const memoBlock = memo(block)
-  const memoEnvVariables = memo($environment.variables)
 
   const rowTriggers = [
     TriggerStepID.ROW_UPDATED,
@@ -91,7 +90,6 @@
   let insertAtPos, getCaretPosition
   let stepLayouts = {}
 
-  $: memoEnvVariables.set($environment.variables)
   $: memoBlock.set(block)
 
   $: filters = lookForFilters(schemaProperties)
