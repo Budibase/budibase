@@ -14,14 +14,15 @@
   export let deleteStep
   export let enableNaming = true
   export let itemName
+  export let automation
 
   let validRegex = /^[A-Za-z0-9_\s]+$/
   let typing = false
   let editing = false
   const dispatch = createEventDispatcher()
 
-  $: stepNames = $selectedAutomation?.definition.stepNames
-  $: allSteps = $selectedAutomation?.definition.steps || []
+  $: stepNames = automation?.definition.stepNames
+  $: allSteps = automation?.definition.steps || []
   $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult)
@@ -36,7 +37,7 @@
     }
   }
 
-  $: blockRef = $automationStore.blocks[block.id]
+  $: blockRef = $selectedAutomation.blockRefs[block.id]
   $: isLooped = blockRef?.looped
 
   async function onSelect(block) {

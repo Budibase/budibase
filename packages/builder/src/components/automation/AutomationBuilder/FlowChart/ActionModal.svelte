@@ -27,10 +27,13 @@
     ActionStepID.TRIGGER_AUTOMATION_RUN,
   ]
 
-  $: blockRef = $automationStore.blocks?.[block.id]
+  $: blockRef = $selectedAutomation.blockRefs?.[block.id]
   $: lastStep = blockRef?.terminating
   $: pathSteps = block.id
-    ? automationStore.actions.getPathSteps(blockRef.pathTo, $selectedAutomation)
+    ? automationStore.actions.getPathSteps(
+        blockRef.pathTo,
+        $selectedAutomation?.data
+      )
     : []
 
   $: collectBlockExists = pathSteps?.some(
@@ -81,7 +84,7 @@
     // Filter out Collect block if not App Action or Webhook
     if (
       !collectBlockAllowedSteps.includes(
-        $selectedAutomation.definition.trigger.stepId
+        $selectedAutomation.data.definition.trigger.stepId
       )
     ) {
       delete acc.COLLECT

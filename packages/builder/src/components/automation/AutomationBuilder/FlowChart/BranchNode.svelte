@@ -28,6 +28,7 @@
   export let step
   export let isLast
   export let bindings
+  export let automation
 
   let drawer
   let condition
@@ -85,13 +86,14 @@
 <div class="flow-item">
   <div class={`block branch-node hoverable`} class:selected={false}>
     <FlowItemHeader
+      {automation}
       {open}
       itemName={branch.name}
       block={step}
       deleteStep={async () => {
         await automationStore.actions.deleteBranch(
           branchBlockRef.pathTo,
-          $selectedAutomation
+          $selectedAutomation.data
         )
       }}
       on:update={async e => {
@@ -103,7 +105,7 @@
 
         const updatedAuto = automationStore.actions.updateStep(
           pathTo,
-          $selectedAutomation,
+          $selectedAutomation.data,
           stepUpdate
         )
         await automationStore.actions.save(updatedAuto)
@@ -115,7 +117,7 @@
           on:click={() => {
             automationStore.actions.branchLeft(
               branchBlockRef.pathTo,
-              $selectedAutomation,
+              $selectedAutomation.data,
               step
             )
           }}
@@ -130,7 +132,7 @@
           on:click={() => {
             automationStore.actions.branchRight(
               branchBlockRef.pathTo,
-              $selectedAutomation,
+              $selectedAutomation.data,
               step
             )
           }}

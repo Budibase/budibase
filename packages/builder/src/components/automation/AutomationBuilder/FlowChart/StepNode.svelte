@@ -4,7 +4,9 @@
   import { AutomationActionStepId } from "@budibase/types"
   import { ActionButton } from "@budibase/bbui"
   import { automationStore } from "stores/builder"
+  import { environment } from "stores/portal"
   import { cloneDeep } from "lodash"
+  import { memo } from "@budibase/frontend-core"
 
   export let step = {}
   export let stepIdx
@@ -12,6 +14,9 @@
   export let blocks
   export let isLast = false
 
+  const memoEnvVariables = memo($environment.variables)
+
+  $: memoEnvVariables.set($environment.variables)
   $: blockRef = blocks?.[step.id]
   $: pathToCurrentNode = blockRef?.pathTo
   $: isBranch = step.stepId === AutomationActionStepId.BRANCH
@@ -23,8 +28,12 @@
     automation
   )
 
+  // Fetch the env bindings
+  $: environmentBindings =
+    automationStore.actions.buildEnvironmentBindings($memoEnvVariables)
+
   // Combine all bindings for the step
-  $: bindings = [...availableBindings, ...($automationStore.bindings || [])]
+  $: bindings = [...availableBindings, ...environmentBindings]
 </script>
 
 {#if isBranch}
@@ -51,6 +60,7 @@
         >
           <div class="branch-node">
             <BranchNode
+              {automation}
               {step}
               {bindings}
               pathTo={pathToCurrentNode}

@@ -13,7 +13,7 @@
     selectedAutomation,
   } from "stores/builder"
 
-  $: automationId = $selectedAutomation?._id
+  $: automationId = $selectedAutomation?.data?._id
   $: builderStore.selectResource(automationId)
 
   // Keep URL and state in sync for selected screen ID
@@ -68,7 +68,7 @@
 
   {#if $automationStore.showTestPanel}
     <div class="setup">
-      <TestPanel automation={$selectedAutomation} />
+      <TestPanel automation={$selectedAutomation.data} />
     </div>
   {/if}
   <Modal bind:this={modal}>
