@@ -9,7 +9,7 @@ import {
   AutoFieldSubType,
   FieldType,
   OperationFieldTypeEnum,
-  AIFieldMetadata,
+  AIOperationEnum,
 } from "@budibase/types"
 import { OperationFields } from "@budibase/shared-core"
 import tracer from "dd-trace"
@@ -122,10 +122,11 @@ export async function processAIColumns<T extends Row | Row[]>(
 
           // Check if the type is bindable and pass through HBS if so
           const operationField =
-            OperationFields[(schema as AIFieldMetadata).operation]
+            OperationFields[schema.operation as AIOperationEnum]
           for (const key in schema) {
-            const fieldType = operationField[key]
+            const fieldType = operationField[key as keyof typeof operationField]
             if (fieldType === OperationFieldTypeEnum.BINDABLE_TEXT) {
+              // @ts-ignore
               schema[key] = processStringSync(schema[key], contextRow)
             }
           }
@@ -134,7 +135,7 @@ export async function processAIColumns<T extends Row | Row[]>(
 
           return tracer.trace("processAIColumn", {}, async span => {
             span?.addTags({ table_id: table._id, column })
-            const llmResponse = await llm.run(prompt)
+            const llmResponse = await llm.run(prompt!)
             return {
               ...row,
               [column]: llmResponse,

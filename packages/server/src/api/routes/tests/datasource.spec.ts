@@ -343,12 +343,6 @@ describe("/datasources", () => {
             type: FieldType.FORMULA,
             formula: "any formula",
           },
-          [FieldType.AI]: {
-            name: "ai",
-            type: FieldType.AI,
-            operation: "PROMPT",
-            prompt: "test prompt",
-          },
           [FieldType.BARCODEQR]: {
             name: "barcodeqr",
             type: FieldType.BARCODEQR,
