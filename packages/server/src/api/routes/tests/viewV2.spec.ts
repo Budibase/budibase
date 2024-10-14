@@ -3381,6 +3381,124 @@ describe.each([
             expect(rows).toHaveLength(1)
             expect(rows[0].sum).toEqual(3)
           })
+
+          it("should be able to sort by group by field", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  quantity: {
+                    type: FieldType.NUMBER,
+                    name: "quantity",
+                  },
+                  price: {
+                    type: FieldType.NUMBER,
+                    name: "price",
+                  },
+                },
+              })
+            )
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
+              schema: {
+                quantity: { visible: true },
+                sum: {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "price",
+                },
+              },
+            })
+
+            await config.api.row.bulkImport(table._id!, {
+              rows: [
+                {
+                  quantity: 1,
+                  price: 1,
+                },
+                {
+                  quantity: 1,
+                  price: 2,
+                },
+                {
+                  quantity: 2,
+                  price: 10,
+                },
+              ],
+            })
+
+            const { rows } = await config.api.viewV2.search(view.id, {
+              query: {},
+              sort: "quantity",
+              sortOrder: SortOrder.DESCENDING,
+            })
+
+            expect(rows).toEqual([
+              expect.objectContaining({ quantity: 2, sum: 10 }),
+              expect.objectContaining({ quantity: 1, sum: 3 }),
+            ])
+          })
+
+          it("should be able to sort by a calculation", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  quantity: {
+                    type: FieldType.NUMBER,
+                    name: "quantity",
+                  },
+                  price: {
+                    type: FieldType.NUMBER,
+                    name: "price",
+                  },
+                },
+              })
+            )
+
+            await config.api.row.bulkImport(table._id!, {
+              rows: [
+                {
+                  quantity: 1,
+                  price: 1,
+                },
+                {
+                  quantity: 1,
+                  price: 2,
+                },
+                {
+                  quantity: 2,
+                  price: 10,
+                },
+              ],
+            })
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
+              schema: {
+                quantity: { visible: true },
+                sum: {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "price",
+                },
+              },
+            })
+
+            const { rows } = await config.api.viewV2.search(view.id, {
+              query: {},
+              sort: "sum",
+              sortOrder: SortOrder.DESCENDING,
+            })
+
+            expect(rows).toEqual([
+              expect.objectContaining({ quantity: 2, sum: 10 }),
+              expect.objectContaining({ quantity: 1, sum: 3 }),
+            ])
+          })
         })
 
       !isLucene &&
@@ -3428,6 +3546,50 @@ describe.each([
           expect(response.rows).toHaveLength(1)
           expect(response.rows[0].sum).toEqual(61)
         })
+
+      it("should be able to filter on a single user field in both the view query and search query", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              user: {
+                name: "user",
+                type: FieldType.BB_REFERENCE_SINGLE,
+                subtype: BBReferenceFieldSubType.USER,
+              },
+            },
+          })
+        )
+
+        await config.api.row.save(table._id!, {
+          user: config.getUser()._id,
+        })
+
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          query: {
+            equal: {
+              user: "{{ [user].[_id] }}",
+            },
+          },
+          schema: {
+            user: {
+              visible: true,
+            },
+          },
+        })
+
+        const { rows } = await config.api.viewV2.search(view.id, {
+          query: {
+            equal: {
+              user: "{{ [user].[_id] }}",
+            },
+          },
+        })
+
+        expect(rows).toHaveLength(1)
+        expect(rows[0].user._id).toEqual(config.getUser()._id)
+      })
     })
 
     describe("permissions", () => {
