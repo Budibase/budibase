@@ -30,7 +30,12 @@ import {
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
 import { context, logging } from "@budibase/backend-core"
-import { processObject, processStringSync } from "@budibase/string-templates"
+import {
+  findHBSBlocks,
+  isJSBinding,
+  processObject,
+  processStringSync,
+} from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
@@ -535,13 +540,21 @@ class Orchestrator {
       conditions,
       filter => {
         Object.entries(filter).forEach(([_, value]) => {
-          Object.entries(value).forEach(([field, _]) => {
-            const updatedField = field.replace("{{", "{{ literal ")
+          Object.entries(value).forEach(([field, val]) => {
             const fromContext = processStringSync(
-              updatedField,
+              field,
               this.processContext(this.context)
             )
             toFilter[field] = fromContext
+
+            if (typeof val === "string" && findHBSBlocks(val).length > 0) {
+              const processedVal = processStringSync(
+                val,
+                this.processContext(this.context)
+              )
+
+              value[field] = processedVal
+            }
           })
         })
         return filter
