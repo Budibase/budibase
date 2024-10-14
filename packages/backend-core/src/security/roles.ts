@@ -157,7 +157,7 @@ export function builtinRoleToNumber(id: string) {
       break
     }
     if (Array.isArray(role.inherits)) {
-      // TODO: role inheritance
+      throw new Error("Built-in roles don't support multi-inheritance")
     } else {
       role = builtins[role.inherits!]
     }
@@ -176,17 +176,36 @@ export async function roleToNumber(id: string) {
   const hierarchy = (await getUserRoleHierarchy(id, {
     defaultPublic: true,
   })) as RoleDoc[]
-  for (let role of hierarchy) {
+  const findNumber = (role: RoleDoc): number => {
     if (!role.inherits) {
-      continue
+      return 0
     }
     if (Array.isArray(role.inherits)) {
-      // TODO: role inheritance
+      // find the built-in roles, get their number, sort it, then get the last one
+      const highestBuiltin: number | undefined = role.inherits
+        .map(roleId => {
+          const foundRole = hierarchy.find(role => role._id === roleId)
+          if (foundRole) {
+            return findNumber(foundRole) + 1
+          }
+        })
+        .filter(number => !!number)
+        .sort()
+        .pop()
+      if (highestBuiltin != undefined) {
+        return highestBuiltin
+      }
     } else if (isBuiltin(role.inherits)) {
       return builtinRoleToNumber(role.inherits) + 1
     }
+    return 0
   }
-  return 0
+  let highest = 0
+  for (let role of hierarchy) {
+    const roleNumber = findNumber(role)
+    highest = Math.max(roleNumber, highest)
+  }
+  return highest
 }
 
 /**
