@@ -18,7 +18,7 @@
   export let schema
   export let aiField = {}
 
-  $: OperationField = OperationFields[aiField.operation] || null
+  $: OperationField = OperationFields[aiField.operation]
   $: schemaWithoutRelations = Object.keys(schema).filter(
     key => schema[key].type !== "link"
   )

@@ -1,6 +1,6 @@
 <script>
   import { viewsV2, rowActions } from "stores/builder"
-  import { admin, themeStore } from "stores/portal"
+  import { admin, themeStore, licensing } from "stores/portal"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
   import { notifications } from "@budibase/bbui"
@@ -49,6 +49,7 @@
   {buttons}
   allowAddRows
   allowDeleteRows
+  licensing={$licensing}
   showAvatars={false}
   on:updatedatasource={handleGridViewUpdate}
   isCloud={$admin.cloud}
