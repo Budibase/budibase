@@ -162,7 +162,11 @@ spec:
         - name: AUTOMATION_MAX_ITERATIONS
           value: {{ .Values.globals.automationMaxIterations | quote }}
         - name: TENANT_FEATURE_FLAGS
+        {{ if .Values.globals.sqs.enabled }}
+          value: "*:SQS,{{ .Values.globals.tenantFeatureFlags }}"
+        {{ else }}
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
+        {{ end }}
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:

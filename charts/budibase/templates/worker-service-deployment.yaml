@@ -168,7 +168,11 @@ spec:
         - name: GOOGLE_CLIENT_SECRET
           value: {{ .Values.globals.google.secret | quote }}
         - name: TENANT_FEATURE_FLAGS
+        {{ if .Values.globals.sqs.enabled }}
+          value: "*:SQS,{{ .Values.globals.tenantFeatureFlags }}"
+        {{ else }}
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
+        {{ end }}
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
