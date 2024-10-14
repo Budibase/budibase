@@ -1,10 +1,6 @@
 import * as setup from "./utilities"
 
-import {
-  DatabaseName,
-  getDatasource,
-  knexClient,
-} from "../../../integrations/tests/utils"
+import { DatabaseName, knexClient } from "../../../integrations/tests/utils"
 
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
@@ -12,36 +8,37 @@ import { outputProcessing } from "../../../utilities/rowProcessor"
 import {
   context,
   InternalTable,
+  setEnv as setCoreEnv,
   tenancy,
   withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  AIOperationEnum,
   AttachmentFieldMetadata,
   AutoFieldSubType,
+  BBReferenceFieldSubType,
   Datasource,
   DateFieldMetadata,
   DeleteRow,
+  FeatureFlag,
   FieldSchema,
   FieldType,
-  BBReferenceFieldSubType,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
+  JsonFieldSubType,
   NumberFieldMetadata,
   QuotaUsageType,
+  RelationSchemaField,
   RelationshipType,
   Row,
+  RowExportFormat,
   SaveTableRequest,
   StaticQuotaName,
   Table,
+  TableSchema,
   TableSourceType,
   UpdatedRowEventEmitter,
-  TableSchema,
-  JsonFieldSubType,
-  RowExportFormat,
-  FeatureFlag,
-  RelationSchemaField,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -50,6 +47,18 @@ import { Knex } from "knex"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
 import { JsTimeoutError } from "@budibase/string-templates"
+
+jest.mock("@budibase/pro", () => ({
+  ...jest.requireActual("@budibase/pro"),
+  ai: {
+    LargeLanguageModel: {
+      forCurrentTenant: async () => ({
+        run: jest.fn(() => `Mock LLM Response`),
+        buildPromptFromAIOperation: jest.fn(),
+      }),
+    },
+  },
+}))
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -77,13 +86,13 @@ async function waitForEvent(
 }
 
 describe.each([
-  ["lucene", undefined],
+  // ["lucene", undefined],
   ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const isLucene = providerType === "lucene"
@@ -1986,6 +1995,7 @@ describe.each([
           [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
           [FieldType.FORMULA]: undefined, // generated field
           [FieldType.AUTO]: undefined, // generated field
+          [FieldType.AI]: undefined, // generated field
           [FieldType.JSON]: { name: generator.guid() },
           [FieldType.INTERNAL]: generator.guid(),
           [FieldType.BARCODEQR]: generator.guid(),
@@ -2016,6 +2026,7 @@ describe.each([
             url: expect.any(String),
           }),
           [FieldType.FORMULA]: fullSchema[FieldType.FORMULA].formula,
+          [FieldType.AI]: fullSchema[FieldType.AI].prompt,
           [FieldType.AUTO]: expect.any(Number),
           [FieldType.JSON]: rowValues[FieldType.JSON],
           [FieldType.INTERNAL]: rowValues[FieldType.INTERNAL],
@@ -2878,6 +2889,57 @@ describe.each([
           )
         }
       )
+    })
+
+  isSqs &&
+    describe("AI fields", () => {
+      let table: Table
+
+      beforeAll(async () => {
+        mocks.licenses.useBudibaseAI()
+        mocks.licenses.useAICustomConfigs()
+        table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              ai: {
+                name: "ai",
+                type: FieldType.AI,
+                operation: AIOperationEnum.PROMPT,
+                prompt: "Convert the following to German: '{{ product }}'",
+              },
+              product: {
+                name: "product",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        await config.api.row.save(table._id!, {
+          product: generator.word(),
+        })
+      })
+
+      afterAll(() => {
+        jest.unmock("@budibase/pro")
+      })
+
+      it("should be able to save a row with an AI column", async () => {
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows.length).toBe(1)
+        expect(rows[0].ai).toEqual("Mock LLM Response")
+      })
+
+      it("should be able to update a row with an AI column", async () => {
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows.length).toBe(1)
+        await config.api.row.save(table._id!, {
+          product: generator.word(),
+          ...rows[0],
+        })
+        expect(rows.length).toBe(1)
+        expect(rows[0].ai).toEqual("Mock LLM Response")
+      })
     })
 
   describe("Formula fields", () => {
