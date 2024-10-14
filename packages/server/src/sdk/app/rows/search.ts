@@ -16,7 +16,7 @@ import * as external from "./search/external"
 import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
-import { searchInputMapping } from "./search/utils"
+import { checkFilters, searchInputMapping } from "./search/utils"
 import { db, features } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { getQueryableFields, removeInvalidFilters } from "./queryUtils"
@@ -81,6 +81,10 @@ export async function search(
       options.query = {}
     }
 
+    if (context) {
+      options.query = await enrichSearchContext(options.query, context)
+    }
+
     // need to make sure filters in correct shape before checking for view
     options = searchInputMapping(table, options)
 
@@ -92,12 +96,15 @@ export async function search(
       // Enrich saved query with ephemeral query params.
       // We prevent searching on any fields that are saved as part of the query, as
       // that could let users find rows they should not be allowed to access.
-      let viewQuery = dataFilters.buildQueryLegacy(view.query) || {}
+      let viewQuery = await enrichSearchContext(view.query || {}, context)
+      viewQuery = dataFilters.buildQueryLegacy(viewQuery) || {}
+      viewQuery = checkFilters(table, viewQuery)
       delete viewQuery?.onEmptyFilter
 
       const sqsEnabled = await features.flags.isEnabled("SQS")
       const supportsLogicalOperators =
         isExternalTableID(view.tableId) || sqsEnabled
+
       if (!supportsLogicalOperators) {
         // In the unlikely event that a Grouped Filter is in a non-SQS environment
         // It needs to be ignored entirely
@@ -113,13 +120,12 @@ export async function search(
             ?.filter(filter => filter.field)
             .map(filter => db.removeKeyNumbering(filter.field)) || []
 
-        viewQuery ??= {}
         // Carry over filters for unused fields
         Object.keys(options.query).forEach(key => {
           const operator = key as Exclude<SearchFilterKey, LogicalOperator>
           Object.keys(options.query[operator] || {}).forEach(field => {
             if (!existingFields.includes(db.removeKeyNumbering(field))) {
-              viewQuery![operator]![field] = options.query[operator]![field]
+              viewQuery[operator]![field] = options.query[operator]![field]
             }
           })
         })
@@ -135,10 +141,6 @@ export async function search(
           options.query.onEmptyFilter = viewQuery.onEmptyFilter
         }
       }
-    }
-
-    if (context) {
-      options.query = await enrichSearchContext(options.query, context)
     }
 
     options.query = dataFilters.cleanupQuery(options.query)

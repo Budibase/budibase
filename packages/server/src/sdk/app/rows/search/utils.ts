@@ -80,35 +80,41 @@ function userColumnMapping(column: string, filters: SearchFilters) {
   })
 }
 
+export function checkFilters(
+  table: Table,
+  filters: SearchFilters
+): SearchFilters {
+  for (let [key, column] of Object.entries(table.schema || {})) {
+    switch (column.type) {
+      case FieldType.BB_REFERENCE_SINGLE: {
+        const subtype = column.subtype
+        switch (subtype) {
+          case BBReferenceFieldSubType.USER:
+            userColumnMapping(key, filters)
+            break
+
+          default:
+            utils.unreachable(subtype)
+        }
+        break
+      }
+      case FieldType.BB_REFERENCE: {
+        userColumnMapping(key, filters)
+        break
+      }
+    }
+  }
+  return dataFilters.recurseLogicalOperators(filters, filters =>
+    checkFilters(table, filters)
+  )
+}
+
 // maps through the search parameters to check if any of the inputs are invalid
 // based on the table schema, converts them to something that is valid.
 export function searchInputMapping(table: Table, options: RowSearchParams) {
   // need an internal function to loop over filters, because this takes the full options
-  function checkFilters(filters: SearchFilters) {
-    for (let [key, column] of Object.entries(table.schema || {})) {
-      switch (column.type) {
-        case FieldType.BB_REFERENCE_SINGLE: {
-          const subtype = column.subtype
-          switch (subtype) {
-            case BBReferenceFieldSubType.USER:
-              userColumnMapping(key, filters)
-              break
-
-            default:
-              utils.unreachable(subtype)
-          }
-          break
-        }
-        case FieldType.BB_REFERENCE: {
-          userColumnMapping(key, filters)
-          break
-        }
-      }
-    }
-    return dataFilters.recurseLogicalOperators(filters, checkFilters)
-  }
   if (options.query) {
-    options.query = checkFilters(options.query)
+    options.query = checkFilters(table, options.query)
   }
   return options
 }
