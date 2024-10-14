@@ -140,6 +140,8 @@ globals:
 
   sqs:
     # @ignore
+    url: ""
+    # @ignore
     port: "4984"
 
 services:
