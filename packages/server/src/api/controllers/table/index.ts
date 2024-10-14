@@ -71,19 +71,20 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
 
   const datasources = await sdk.datasources.getExternalDatasources()
 
-  const external = datasources.flatMap(datasource => {
+  const external: Table[] = []
+  for (const datasource of datasources) {
     let entities = datasource.entities
     if (entities) {
-      return Object.values(entities).map<Table>((entity: Table) => ({
-        ...entity,
-        sourceType: TableSourceType.EXTERNAL,
-        sourceId: datasource._id!,
-        sql: isSQL(datasource),
-      }))
-    } else {
-      return []
+      for (const entity of Object.values(entities)) {
+        external.push({
+          ...(await processTable(entity)),
+          sourceType: TableSourceType.EXTERNAL,
+          sourceId: datasource._id!,
+          sql: isSQL(datasource),
+        })
+      }
     }
-  })
+  }
 
   const result: FetchTablesResponse = []
   for (const table of [...internal, ...external]) {
