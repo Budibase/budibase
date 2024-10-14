@@ -3,26 +3,37 @@
   import { Icon, ProgressCircle, notifications } from "@budibase/bbui"
   import { copyToClipboard } from "@budibase/bbui/helpers"
   import { fade } from "svelte/transition"
+  import { UserScriptError } from "@budibase/string-templates"
 
   export let expressionResult
+  export let expressionError
   export let evaluating = false
   export let expression = null
 
-  $: error = expressionResult === "Error while executing JS"
+  $: error = expressionError != null
   $: empty = expression == null || expression?.trim() === ""
   $: success = !error && !empty
   $: highlightedResult = highlight(expressionResult)
+
+  const formatError = err => {
+    if (err.code === UserScriptError.code) {
+      return err.userScriptError.toString()
+    }
+    return err.toString()
+  }
 
   const highlight = json => {
     if (json == null) {
       return ""
     }
-    // Attempt to parse and then stringify, in case this is valid JSON
+
+    // Attempt to parse and then stringify, in case this is valid result
     try {
       json = JSON.stringify(JSON.parse(json), null, 2)
     } catch (err) {
       // Ignore
     }
+
     return formatHighlight(json, {
       keyColor: "#e06c75",
       numberColor: "#e5c07b",
@@ -34,7 +45,7 @@
   }
 
   const copy = () => {
-    let clipboardVal = expressionResult
+    let clipboardVal = expressionResult.result
     if (typeof clipboardVal === "object") {
       clipboardVal = JSON.stringify(clipboardVal, null, 2)
     }
@@ -73,6 +84,8 @@
   <div class="body">
     {#if empty}
       Your expression will be evaluated here
+    {:else if error}
+      {formatError(expressionError)}
     {:else}
       <!-- eslint-disable-next-line svelte/no-at-html-tags-->
       {@html highlightedResult}

@@ -122,8 +122,10 @@
       label: name,
       schema: {
         type: column.type,
+        subtype: column.subtype,
         visible: column.visible,
         readonly: column.readonly,
+        icon: column.icon,
       },
     }
   })

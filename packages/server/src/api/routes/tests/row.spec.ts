@@ -13,8 +13,8 @@ import {
   context,
   InternalTable,
   tenancy,
-  withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
+  features,
+  utils,
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
@@ -40,7 +40,6 @@ import {
   TableSchema,
   JsonFieldSubType,
   RowExportFormat,
-  FeatureFlag,
   RelationSchemaField,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
@@ -49,6 +48,7 @@ import * as uuid from "uuid"
 import { Knex } from "knex"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
+import { JsTimeoutError } from "@budibase/string-templates"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -76,7 +76,7 @@ async function waitForEvent(
 }
 
 describe.each([
-  ["internal", undefined],
+  ["lucene", undefined],
   ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
@@ -97,12 +97,12 @@ describe.each([
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
-    if (isLucene) {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" })
-    } else if (isSqs) {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" })
-    }
+    await features.testutils.withFeatureFlags("*", { SQS: true }, () =>
+      config.init()
+    )
+    envCleanup = features.testutils.setFeatureFlags("*", {
+      SQS: isSqs,
+    })
 
     if (dsProvider) {
       const rawDatasource = await dsProvider
@@ -695,6 +695,133 @@ describe.each([
         })
       })
 
+      describe("options column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                status: {
+                  name: "status",
+                  type: FieldType.OPTIONS,
+                  default: "requested",
+                  constraints: {
+                    inclusion: ["requested", "approved"],
+                  },
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.status).toEqual("requested")
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            status: "approved",
+          })
+          expect(row.status).toEqual("approved")
+        })
+      })
+
+      describe("array column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                food: {
+                  name: "food",
+                  type: FieldType.ARRAY,
+                  default: ["apple", "orange"],
+                  constraints: {
+                    type: JsonFieldSubType.ARRAY,
+                    inclusion: ["apple", "orange", "banana"],
+                  },
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.food).toEqual(["apple", "orange"])
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            food: ["orange"],
+          })
+          expect(row.food).toEqual(["orange"])
+        })
+      })
+
+      describe("user column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                user: {
+                  name: "user",
+                  type: FieldType.BB_REFERENCE_SINGLE,
+                  subtype: BBReferenceFieldSubType.USER,
+                  default: "{{ [Current User]._id }}",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.user._id).toEqual(config.getUser()._id)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const id = `us_${utils.newid()}`
+          await config.createUser({ _id: id })
+          const row = await config.api.row.save(table._id!, {
+            user: id,
+          })
+          expect(row.user._id).toEqual(id)
+        })
+      })
+
+      describe("multi-user column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                users: {
+                  name: "users",
+                  type: FieldType.BB_REFERENCE,
+                  subtype: BBReferenceFieldSubType.USER,
+                  default: ["{{ [Current User]._id }}"],
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.users).toHaveLength(1)
+          expect(row.users[0]._id).toEqual(config.getUser()._id)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const id = `us_${utils.newid()}`
+          await config.createUser({ _id: id })
+          const row = await config.api.row.save(table._id!, {
+            users: [id],
+          })
+          expect(row.users).toHaveLength(1)
+          expect(row.users[0]._id).toEqual(id)
+        })
+      })
+
       describe("bindings", () => {
         describe("string column", () => {
           beforeAll(async () => {
@@ -1050,6 +1177,33 @@ describe.each([
       getResp = await config.api.row.get(table._id!, row._id!)
       expect(getResp.user1[0]._id).toEqual(user2._id)
       expect(getResp.user2[0]._id).toEqual(user2._id)
+    })
+
+    it("should be able to remove a relationship from many side", async () => {
+      const row = await config.api.row.save(otherTable._id!, {
+        name: "test",
+        description: "test",
+      })
+      const row2 = await config.api.row.save(otherTable._id!, {
+        name: "test",
+        description: "test",
+      })
+      const { _id } = await config.api.row.save(table._id!, {
+        relationship: [{ _id: row._id }, { _id: row2._id }],
+      })
+      const relatedRow = await config.api.row.get(table._id!, _id!, {
+        status: 200,
+      })
+      expect(relatedRow.relationship.length).toEqual(2)
+      await config.api.row.save(table._id!, {
+        ...relatedRow,
+        relationship: [{ _id: row._id }],
+      })
+      const afterRelatedRow = await config.api.row.get(table._id!, _id!, {
+        status: 200,
+      })
+      expect(afterRelatedRow.relationship.length).toEqual(1)
+      expect(afterRelatedRow.relationship[0]._id).toEqual(row._id)
     })
 
     it("should be able to update relationships when both columns are same name", async () => {
@@ -1784,7 +1938,7 @@ describe.each([
     })
 
   describe("exportRows", () => {
-    beforeAll(async () => {
+    beforeEach(async () => {
       table = await config.api.table.save(defaultTable())
     })
 
@@ -1820,6 +1974,16 @@ describe.each([
           expect(row[key]).toEqual(existing[key])
         })
       })
+
+    it("should allow exporting without filtering", async () => {
+      const existing = await config.api.row.save(table._id!, {})
+      const res = await config.api.row.exportRows(table._id!)
+      const results = JSON.parse(res)
+      expect(results.length).toEqual(1)
+      const row = results[0]
+
+      expect(row._id).toEqual(existing._id)
+    })
 
     it("should allow exporting only certain columns", async () => {
       const existing = await config.api.row.save(table._id!, {})
@@ -2453,8 +2617,8 @@ describe.each([
       let flagCleanup: (() => void) | undefined
 
       beforeAll(async () => {
-        flagCleanup = setCoreEnv({
-          TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
+        flagCleanup = features.testutils.setFeatureFlags("*", {
+          ENRICHED_RELATIONSHIPS: true,
         })
 
         const aux2Table = await config.api.table.save(saveTableRequest())
@@ -2682,9 +2846,10 @@ describe.each([
       it.each(testScenarios)(
         "does not enrich relationships when not enabled (via %s)",
         async (__, retrieveDelegate) => {
-          await withCoreEnv(
+          await features.testutils.withFeatureFlags(
+            "*",
             {
-              TENANT_FEATURE_FLAGS: ``,
+              ENRICHED_RELATIONSHIPS: false,
             },
             async () => {
               const otherRows = _.sampleSize(auxData, 5)
@@ -2944,7 +3109,7 @@ describe.each([
             let i = 0
             for (; i < 10; i++) {
               const row = rows[i]
-              if (row.formula !== "Timed out while executing JS") {
+              if (row.formula !== JsTimeoutError.message) {
                 break
               }
             }
@@ -2958,7 +3123,7 @@ describe.each([
             for (; i < 10; i++) {
               const row = rows[i]
               expect(row.text).toBe("foo")
-              expect(row.formula).toBe("Request JS execution limit hit")
+              expect(row.formula).toStartWith("CPU time limit exceeded ")
             }
           }
         }

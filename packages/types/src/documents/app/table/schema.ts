@@ -121,11 +121,13 @@ export interface BBReferenceFieldMetadata
   type: FieldType.BB_REFERENCE
   subtype: BBReferenceFieldSubType
   relationshipType?: RelationshipType
+  default?: string[]
 }
 export interface BBReferenceSingleFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE_SINGLE
   subtype: Exclude<BBReferenceFieldSubType, BBReferenceFieldSubType.USERS>
+  default?: string
 }
 
 export interface AttachmentFieldMetadata extends BaseFieldSchema {
@@ -161,6 +163,7 @@ export interface OptionsFieldMetadata extends BaseFieldSchema {
   constraints: FieldConstraints & {
     inclusion: string[]
   }
+  default?: string
 }
 
 export interface ArrayFieldMetadata extends BaseFieldSchema {
@@ -169,6 +172,7 @@ export interface ArrayFieldMetadata extends BaseFieldSchema {
     type: JsonFieldSubType.ARRAY
     inclusion: string[]
   }
+  default?: string[]
 }
 
 interface BaseFieldSchema extends UIFieldMetadata {
