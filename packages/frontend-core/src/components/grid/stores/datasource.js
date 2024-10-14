@@ -1,6 +1,6 @@
 import { derived, get } from "svelte/store"
 import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
-import { memo } from "../../../utils"
+import { enrichSchemaWithRelColumns, memo } from "../../../utils"
 
 export const createStores = () => {
   const definition = memo(null)
@@ -53,10 +53,13 @@ export const deriveStores = context => {
       if (!$schema) {
         return null
       }
-      let enrichedSchema = {}
-      Object.keys($schema).forEach(field => {
+
+      const schemaWithRelatedColumns = enrichSchemaWithRelColumns($schema)
+
+      const enrichedSchema = {}
+      Object.keys(schemaWithRelatedColumns).forEach(field => {
         enrichedSchema[field] = {
-          ...$schema[field],
+          ...schemaWithRelatedColumns[field],
           ...$schemaOverrides?.[field],
           ...$schemaMutations[field],
         }
@@ -202,24 +205,6 @@ export const createActions = context => {
     })
   }
 
-  // Adds schema mutations for multiple fields at once
-  const addSchemaMutations = mutations => {
-    const fields = Object.keys(mutations || {})
-    if (!fields.length) {
-      return
-    }
-    schemaMutations.update($schemaMutations => {
-      let newSchemaMutations = { ...$schemaMutations }
-      fields.forEach(field => {
-        newSchemaMutations[field] = {
-          ...newSchemaMutations[field],
-          ...mutations[field],
-        }
-      })
-      return newSchemaMutations
-    })
-  }
-
   // Saves schema changes to the server, if possible
   const saveSchemaMutations = async () => {
     // If we can't save schema changes then we just want to keep this in memory
@@ -309,7 +294,6 @@ export const createActions = context => {
         changePrimaryDisplay,
         addSchemaMutation,
         addSubSchemaMutation,
-        addSchemaMutations,
         saveSchemaMutations,
         resetSchemaMutations,
       },

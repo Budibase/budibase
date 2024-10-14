@@ -1,6 +1,7 @@
 import {
   AddPermissionRequest,
   AddPermissionResponse,
+  FetchResourcePermissionInfoResponse,
   GetResourcePermsResponse,
   RemovePermissionRequest,
   RemovePermissionResponse,
@@ -22,6 +23,15 @@ export class PermissionAPI extends TestAPI {
     const { roleId, resourceId, level } = request
     return await this._post<AddPermissionResponse>(
       `/api/permission/${roleId}/${resourceId}/${level}`,
+      { expectations }
+    )
+  }
+
+  fetch = async (
+    expectations?: Expectations
+  ): Promise<FetchResourcePermissionInfoResponse> => {
+    return await this._get<FetchResourcePermissionInfoResponse>(
+      `/api/permission`,
       { expectations }
     )
   }

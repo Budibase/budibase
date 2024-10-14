@@ -130,6 +130,26 @@ export function getUserContextBindings(user: ContextUser) {
     return {}
   }
   // Current user context for bindable search
-  const { _id, _rev, firstName, lastName, email, status, roleId } = user
-  return { _id, _rev, firstName, lastName, email, status, roleId }
+  const {
+    _id,
+    _rev,
+    firstName,
+    lastName,
+    email,
+    status,
+    roleId,
+    globalId,
+    userId,
+  } = user
+  return {
+    _id,
+    _rev,
+    firstName,
+    lastName,
+    email,
+    status,
+    roleId,
+    globalId,
+    userId,
+  }
 }

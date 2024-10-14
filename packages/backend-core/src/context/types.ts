@@ -1,4 +1,4 @@
-import { IdentityContext, Snippet, VM } from "@budibase/types"
+import { IdentityContext, Snippet, Table, VM } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { GoogleSpreadsheet } from "google-spreadsheet"
 
@@ -9,6 +9,7 @@ export type ContextMap = {
   identity?: IdentityContext
   environmentVariables?: Record<string, string>
   isScim?: boolean
+  ip?: string
   automationId?: string
   isMigrating?: boolean
   vm?: VM
@@ -21,4 +22,5 @@ export type ContextMap = {
   featureFlagCache?: {
     [key: string]: Record<string, any>
   }
+  viewToTableCache?: Record<string, Table>
 }

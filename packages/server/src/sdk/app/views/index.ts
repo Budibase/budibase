@@ -1,7 +1,14 @@
 import {
+  BBReferenceFieldSubType,
+  CalculationType,
+  canGroupBy,
+  FeatureFlag,
   FieldType,
+  isNumeric,
+  PermissionLevel,
   RelationSchemaField,
   RenameColumn,
+  RequiredKeys,
   Table,
   TableSchema,
   View,
@@ -9,7 +16,7 @@ import {
   ViewV2ColumnEnriched,
   ViewV2Enriched,
 } from "@budibase/types"
-import { HTTPError } from "@budibase/backend-core"
+import { context, docIds, features, HTTPError } from "@budibase/backend-core"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
@@ -40,16 +47,139 @@ export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
   return pickApi(tableId).getEnriched(viewId)
 }
 
+export async function getTable(view: string | ViewV2): Promise<Table> {
+  const viewId = typeof view === "string" ? view : view.id
+  const cached = context.getTableForView(viewId)
+  if (cached) {
+    return cached
+  }
+  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const table = await sdk.tables.getTable(tableId)
+  context.setTableForView(viewId, table)
+  return table
+}
+
+export function isView(view: any): view is ViewV2 {
+  return view.id && docIds.isViewId(view.id) && view.version === 2
+}
+
+async function guardCalculationViewSchema(
+  table: Table,
+  view: Omit<ViewV2, "id" | "version">
+) {
+  const calculationFields = helpers.views.calculationFields(view)
+
+  if (Object.keys(calculationFields).length > 5) {
+    throw new HTTPError(
+      "Calculation views can only have a maximum of 5 fields",
+      400
+    )
+  }
+
+  const seen: Record<string, Record<CalculationType, boolean>> = {}
+
+  for (const name of Object.keys(calculationFields)) {
+    const schema = calculationFields[name]
+    const isCount = schema.calculationType === CalculationType.COUNT
+    const isDistinct = isCount && "distinct" in schema && schema.distinct
+
+    const field = isCount && !isDistinct ? "*" : schema.field
+    if (seen[field]?.[schema.calculationType]) {
+      throw new HTTPError(
+        `Duplicate calculation on field "${field}", calculation type "${schema.calculationType}"`,
+        400
+      )
+    }
+    seen[field] ??= {} as Record<CalculationType, boolean>
+    seen[field][schema.calculationType] = true
+
+    // Count fields that aren't distinct don't need to reference another field,
+    // so we don't validate it.
+    if (isCount && !isDistinct) {
+      continue
+    }
+
+    if (!schema.field) {
+      throw new HTTPError(
+        `Calculation field "${name}" is missing a "field" property`,
+        400
+      )
+    }
+
+    const targetSchema = table.schema[schema.field]
+    if (!targetSchema) {
+      throw new HTTPError(
+        `Calculation field "${name}" references field "${schema.field}" which does not exist in the table schema`,
+        400
+      )
+    }
+
+    if (!isCount && !isNumeric(targetSchema.type)) {
+      throw new HTTPError(
+        `Calculation field "${name}" references field "${schema.field}" which is not a numeric field`,
+        400
+      )
+    }
+  }
+
+  const groupByFields = helpers.views.basicFields(view)
+  for (const groupByFieldName of Object.keys(groupByFields)) {
+    const targetSchema = table.schema[groupByFieldName]
+    if (!targetSchema) {
+      throw new HTTPError(
+        `Group by field "${groupByFieldName}" does not exist in the table schema`,
+        400
+      )
+    }
+
+    if (!canGroupBy(targetSchema.type)) {
+      throw new HTTPError(
+        `Grouping by fields of type "${targetSchema.type}" is not supported`,
+        400
+      )
+    }
+  }
+}
+
 async function guardViewSchema(
   tableId: string,
   view: Omit<ViewV2, "id" | "version">
 ) {
-  const viewSchema = view.schema || {}
   const table = await sdk.tables.getTable(tableId)
 
+  if (helpers.views.isCalculationView(view)) {
+    await guardCalculationViewSchema(table, view)
+  } else {
+    if (helpers.views.hasCalculationFields(view)) {
+      throw new HTTPError(
+        "Calculation fields are not allowed in non-calculation views",
+        400
+      )
+    }
+  }
+
+  await checkReadonlyFields(table, view)
+
+  if (!helpers.views.isCalculationView(view)) {
+    checkRequiredFields(table, view)
+  }
+
+  checkDisplayField(view)
+}
+
+async function checkReadonlyFields(
+  table: Table,
+  view: Omit<ViewV2, "id" | "version">
+) {
+  const viewSchema = view.schema || {}
   for (const field of Object.keys(viewSchema)) {
-    const tableSchemaField = table.schema[field]
-    if (!tableSchemaField) {
+    const viewFieldSchema = viewSchema[field]
+    if (helpers.views.isCalculationField(viewFieldSchema)) {
+      continue
+    }
+
+    const tableFieldSchema = table.schema[field]
+    if (!tableFieldSchema) {
       throw new HTTPError(
         `Field "${field}" is not valid for the requested table`,
         400
@@ -65,18 +195,33 @@ async function guardViewSchema(
       }
     }
   }
+}
 
-  const existingView =
-    table?.views && (table.views[view.name] as ViewV2 | undefined)
+function checkDisplayField(view: Omit<ViewV2, "id" | "version">) {
+  if (view.primaryDisplay) {
+    const viewSchemaField = view.schema?.[view.primaryDisplay]
 
+    if (!viewSchemaField?.visible) {
+      throw new HTTPError(
+        `You can't hide "${view.primaryDisplay}" because it is the display column.`,
+        400
+      )
+    }
+  }
+}
+
+function checkRequiredFields(
+  table: Table,
+  view: Omit<ViewV2, "id" | "version">
+) {
+  const existingView = table.views?.[view.name] as ViewV2 | undefined
   for (const field of Object.values(table.schema)) {
     if (!helpers.schema.isRequired(field.constraints)) {
       continue
     }
 
-    const viewSchemaField = viewSchema[field.name]
-    const existingViewSchema =
-      existingView?.schema && existingView.schema[field.name]
+    const viewSchemaField = view.schema?.[field.name]
+    const existingViewSchema = existingView?.schema?.[field.name]
     if (!viewSchemaField && !existingViewSchema?.visible) {
       // Supporting existing configs with required columns but hidden in views
       continue
@@ -89,20 +234,12 @@ async function guardViewSchema(
       )
     }
 
-    if (viewSchemaField.readonly) {
+    if (
+      helpers.views.isBasicViewField(viewSchemaField) &&
+      viewSchemaField.readonly
+    ) {
       throw new HTTPError(
         `You can't make "${field.name}" readonly because it is a required field.`,
-        400
-      )
-    }
-  }
-
-  if (view.primaryDisplay) {
-    const viewSchemaField = viewSchema[view.primaryDisplay]
-
-    if (!viewSchemaField?.visible) {
-      throw new HTTPError(
-        `You can't hide "${view.primaryDisplay}" because it is the display column.`,
         400
       )
     }
@@ -115,7 +252,21 @@ export async function create(
 ): Promise<ViewV2> {
   await guardViewSchema(tableId, viewRequest)
 
-  return pickApi(tableId).create(tableId, viewRequest)
+  const view = await pickApi(tableId).create(tableId, viewRequest)
+
+  const setExplicitPermission = await features.flags.isEnabled(
+    FeatureFlag.TABLES_DEFAULT_ADMIN
+  )
+  if (setExplicitPermission) {
+    // Set permissions to be the same as the table
+    const tablePerms = await sdk.permissions.getResourcePerms(tableId)
+    await sdk.permissions.setPermissions(view.id, {
+      writeRole: tablePerms[PermissionLevel.WRITE].role,
+      readRole: tablePerms[PermissionLevel.READ].role,
+    })
+  }
+
+  return view
 }
 
 export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
@@ -157,19 +308,12 @@ export async function enrichSchema(
   view: ViewV2,
   tableSchema: TableSchema
 ): Promise<ViewV2Enriched> {
-  const tableCache: Record<string, Table> = {}
-
   async function populateRelTableSchema(
     tableId: string,
     viewFields: Record<string, RelationSchemaField>
   ) {
-    if (!tableCache[tableId]) {
-      tableCache[tableId] = await sdk.tables.getTable(tableId)
-    }
-    const relTable = tableCache[tableId]
-
+    const relTable = await sdk.tables.getTable(tableId)
     const result: Record<string, ViewV2ColumnEnriched> = {}
-
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
       if ([FieldType.LINK, FieldType.FORMULA].includes(relTableField.type)) {
@@ -183,13 +327,26 @@ export async function enrichSchema(
       const viewFieldSchema = viewFields[relTableFieldName]
       const isVisible = !!viewFieldSchema?.visible
       const isReadonly = !!viewFieldSchema?.readonly
-      result[relTableFieldName] = {
-        ...relTableField,
-        ...viewFieldSchema,
-        name: relTableField.name,
+      const enrichedFieldSchema: RequiredKeys<ViewV2ColumnEnriched> = {
         visible: isVisible,
         readonly: isReadonly,
+        order: viewFieldSchema?.order,
+        width: viewFieldSchema?.width,
+
+        icon: relTableField.icon,
+        type: relTableField.type,
+        subtype: relTableField.subtype,
       }
+      if (
+        !enrichedFieldSchema.icon &&
+        relTableField.type === FieldType.BB_REFERENCE &&
+        relTableField.subtype === BBReferenceFieldSubType.USER &&
+        !helpers.schema.isDeprecatedSingleUserColumn(relTableField)
+      ) {
+        // Forcing the icon, otherwise we would need to pass the constraints to show the proper icon
+        enrichedFieldSchema.icon = "UserGroup"
+      }
+      result[relTableFieldName] = enrichedFieldSchema
     }
     return result
   }
@@ -198,15 +355,24 @@ export async function enrichSchema(
 
   const viewSchema = view.schema || {}
   const anyViewOrder = Object.values(viewSchema).some(ui => ui.order != null)
-  for (const key of Object.keys(tableSchema).filter(
-    k => tableSchema[k].visible !== false
-  )) {
+
+  const visibleSchemaFields = Object.keys(viewSchema).filter(key => {
+    if (helpers.views.isCalculationField(viewSchema[key])) {
+      return viewSchema[key].visible !== false
+    }
+    return key in tableSchema && tableSchema[key].visible !== false
+  })
+  const visibleTableFields = Object.keys(tableSchema).filter(
+    key => tableSchema[key].visible !== false
+  )
+  const visibleFields = new Set([...visibleSchemaFields, ...visibleTableFields])
+  for (const key of visibleFields) {
     // if nothing specified in view, then it is not visible
     const ui = viewSchema[key] || { visible: false }
     schema[key] = {
       ...tableSchema[key],
       ...ui,
-      order: anyViewOrder ? ui?.order ?? undefined : tableSchema[key].order,
+      order: anyViewOrder ? ui?.order ?? undefined : tableSchema[key]?.order,
       columns: undefined,
     }
 
@@ -218,10 +384,7 @@ export async function enrichSchema(
     }
   }
 
-  return {
-    ...view,
-    schema: schema,
-  }
+  return { ...view, schema }
 }
 
 export function syncSchema(
@@ -236,7 +399,8 @@ export function syncSchema(
 
   if (view.schema) {
     for (const fieldName of Object.keys(view.schema)) {
-      if (!schema[fieldName]) {
+      const viewSchema = view.schema[fieldName]
+      if (!helpers.views.isCalculationField(viewSchema) && !schema[fieldName]) {
         delete view.schema[fieldName]
       }
     }

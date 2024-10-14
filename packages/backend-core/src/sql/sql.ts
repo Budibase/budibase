@@ -11,10 +11,12 @@ import {
 } from "./utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
+  Aggregation,
   AnySearchFilter,
   ArrayOperator,
   BasicOperator,
   BBReferenceFieldMetadata,
+  CalculationType,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -40,6 +42,8 @@ import { dataFilters, helpers } from "@budibase/shared-core"
 import { cloneDeep } from "lodash"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
+
+export const COUNT_FIELD_NAME = "__bb_total"
 
 function getBaseLimit() {
   const envLimit = environment.SQL_MAX_ROWS
@@ -69,18 +73,6 @@ function prioritisedArraySort(toSort: string[], priorities: string[]) {
   })
 }
 
-function getTableName(table?: Table): string | undefined {
-  // SQS uses the table ID rather than the table name
-  if (
-    table?.sourceType === TableSourceType.INTERNAL ||
-    table?.sourceId === INTERNAL_TABLE_SOURCE_ID
-  ) {
-    return table?._id
-  } else {
-    return table?.name
-  }
-}
-
 function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
   if (Array.isArray(query)) {
     return query.map((q: SqlQuery) => convertBooleans(q) as SqlQuery)
@@ -95,6 +87,13 @@ function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
     }
   }
   return query
+}
+
+function isSqs(table: Table): boolean {
+  return (
+    table.sourceType === TableSourceType.INTERNAL ||
+    table.sourceId === INTERNAL_TABLE_SOURCE_ID
+  )
 }
 
 class InternalBuilder {
@@ -140,29 +139,61 @@ class InternalBuilder {
     return this.table.schema[column]
   }
 
-  // Takes a string like foo and returns a quoted string like [foo] for SQL Server
-  // and "foo" for Postgres.
-  private quote(str: string): string {
+  private quoteChars(): [string, string] {
     switch (this.client) {
-      case SqlClient.SQL_LITE:
       case SqlClient.ORACLE:
       case SqlClient.POSTGRES:
-        return `"${str}"`
+        return ['"', '"']
       case SqlClient.MS_SQL:
-        return `[${str}]`
+        return ["[", "]"]
       case SqlClient.MARIADB:
       case SqlClient.MY_SQL:
-        return `\`${str}\``
+      case SqlClient.SQL_LITE:
+        return ["`", "`"]
     }
   }
 
-  // Takes a string like a.b.c and returns a quoted identifier like [a].[b].[c]
-  // for SQL Server and `a`.`b`.`c` for MySQL.
-  private quotedIdentifier(key: string): string {
-    return key
-      .split(".")
-      .map(part => this.quote(part))
-      .join(".")
+  // Takes a string like foo and returns a quoted string like [foo] for SQL Server
+  // and "foo" for Postgres.
+  private quote(str: string): string {
+    const [start, end] = this.quoteChars()
+    return `${start}${str}${end}`
+  }
+
+  private isQuoted(key: string): boolean {
+    const [start, end] = this.quoteChars()
+    return key.startsWith(start) && key.endsWith(end)
+  }
+
+  // Takes a string like a.b.c or an array like ["a", "b", "c"] and returns a
+  // quoted identifier like [a].[b].[c] for SQL Server and `a`.`b`.`c` for
+  // MySQL.
+  private quotedIdentifier(key: string | string[]): string {
+    if (!Array.isArray(key)) {
+      key = this.splitIdentifier(key)
+    }
+    return key.map(part => this.quote(part)).join(".")
+  }
+
+  // Turns an identifier like a.b.c or `a`.`b`.`c` into ["a", "b", "c"]
+  private splitIdentifier(key: string): string[] {
+    const [start, end] = this.quoteChars()
+    if (this.isQuoted(key)) {
+      return key.slice(1, -1).split(`${end}.${start}`)
+    }
+    return key.split(".")
+  }
+
+  private qualifyIdentifier(key: string): string {
+    const tableName = this.getTableName()
+    const parts = this.splitIdentifier(key)
+    if (parts[0] !== tableName) {
+      parts.unshift(tableName)
+    }
+    if (this.isQuoted(key)) {
+      return this.quotedIdentifier(parts)
+    }
+    return parts.join(".")
   }
 
   private isFullSelectStatementRequired(): boolean {
@@ -178,15 +209,13 @@ class InternalBuilder {
   }
 
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
-    const { meta, endpoint, resource, tableAliases } = this.query
+    const { meta, endpoint, resource } = this.query
 
     if (!resource || !resource.fields || resource.fields.length === 0) {
       return "*"
     }
 
-    const alias = tableAliases?.[endpoint.entityId]
-      ? tableAliases?.[endpoint.entityId]
-      : endpoint.entityId
+    const alias = this.getTableName(endpoint.entityId)
     const schema = meta.table.schema
     if (!this.isFullSelectStatementRequired()) {
       return [this.knex.raw(`${this.quote(alias)}.*`)]
@@ -234,11 +263,17 @@ class InternalBuilder {
   // OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
   // so when we use them we need to wrap them in to_char(). This function
   // converts a field name to the appropriate identifier.
-  private convertClobs(field: string): string {
-    const parts = field.split(".")
+  private convertClobs(field: string, opts?: { forSelect?: boolean }): string {
+    if (this.client !== SqlClient.ORACLE) {
+      throw new Error(
+        "you've called convertClobs on a DB that's not Oracle, this is a mistake"
+      )
+    }
+    const parts = this.splitIdentifier(field)
     const col = parts.pop()!
     const schema = this.table.schema[col]
     let identifier = this.quotedIdentifier(field)
+
     if (
       schema.type === FieldType.STRING ||
       schema.type === FieldType.LONGFORM ||
@@ -247,7 +282,11 @@ class InternalBuilder {
       schema.type === FieldType.OPTIONS ||
       schema.type === FieldType.BARCODEQR
     ) {
-      identifier = `to_char(${identifier})`
+      if (opts?.forSelect) {
+        identifier = `to_char(${identifier}) as ${this.quotedIdentifier(col)}`
+      } else {
+        identifier = `to_char(${identifier})`
+      }
     }
     return identifier
   }
@@ -287,7 +326,7 @@ class InternalBuilder {
     return input
   }
 
-  private parseBody(body: any) {
+  private parseBody(body: Record<string, any>) {
     for (let [key, value] of Object.entries(body)) {
       const { column } = this.splitter.run(key)
       const schema = this.table.schema[column]
@@ -811,26 +850,125 @@ class InternalBuilder {
     return query
   }
 
+  isSqs(): boolean {
+    return isSqs(this.table)
+  }
+
+  getTableName(tableOrName?: Table | string): string {
+    let table: Table
+    if (typeof tableOrName === "string") {
+      const name = tableOrName
+      if (this.query.table?.name === name) {
+        table = this.query.table
+      } else if (this.query.meta.table?.name === name) {
+        table = this.query.meta.table
+      } else if (!this.query.meta.tables?.[name]) {
+        // This can legitimately happen in custom queries, where the user is
+        // querying against a table that may not have been imported into
+        // Budibase.
+        return name
+      } else {
+        table = this.query.meta.tables[name]
+      }
+    } else if (tableOrName) {
+      table = tableOrName
+    } else {
+      table = this.table
+    }
+
+    let name = table.name
+    if (isSqs(table) && table._id) {
+      // SQS uses the table ID rather than the table name
+      name = table._id
+    }
+    const aliases = this.query.tableAliases || {}
+    return aliases[name] ? aliases[name] : name
+  }
+
   addDistinctCount(query: Knex.QueryBuilder): Knex.QueryBuilder {
-    const primary = this.table.primary
-    const aliases = this.query.tableAliases
-    const aliased =
-      this.table.name && aliases?.[this.table.name]
-        ? aliases[this.table.name]
-        : this.table.name
-    if (!primary) {
+    if (!this.table.primary) {
       throw new Error("SQL counting requires primary key to be supplied")
     }
-    return query.countDistinct(`${aliased}.${primary[0]} as total`)
+    return query.countDistinct(
+      `${this.getTableName()}.${this.table.primary[0]} as ${COUNT_FIELD_NAME}`
+    )
+  }
+
+  addAggregations(
+    query: Knex.QueryBuilder,
+    aggregations: Aggregation[]
+  ): Knex.QueryBuilder {
+    const fields = this.query.resource?.fields || []
+    const tableName = this.getTableName()
+    if (fields.length > 0) {
+      const qualifiedFields = fields.map(field => this.qualifyIdentifier(field))
+      if (this.client === SqlClient.ORACLE) {
+        const groupByFields = qualifiedFields.map(field =>
+          this.convertClobs(field)
+        )
+        const selectFields = qualifiedFields.map(field =>
+          this.convertClobs(field, { forSelect: true })
+        )
+        query = query
+          .groupByRaw(groupByFields.join(", "))
+          .select(this.knex.raw(selectFields.join(", ")))
+      } else {
+        query = query.groupBy(qualifiedFields).select(qualifiedFields)
+      }
+    }
+    for (const aggregation of aggregations) {
+      const op = aggregation.calculationType
+      if (op === CalculationType.COUNT) {
+        if ("distinct" in aggregation && aggregation.distinct) {
+          if (this.client === SqlClient.ORACLE) {
+            const field = this.convertClobs(`${tableName}.${aggregation.field}`)
+            query = query.select(
+              this.knex.raw(
+                `COUNT(DISTINCT ${field}) as ${this.quotedIdentifier(
+                  aggregation.name
+                )}`
+              )
+            )
+          } else {
+            query = query.countDistinct(
+              `${tableName}.${aggregation.field} as ${aggregation.name}`
+            )
+          }
+        } else {
+          query = query.count(`* as ${aggregation.name}`)
+        }
+      } else {
+        const field = `${tableName}.${aggregation.field} as ${aggregation.name}`
+        switch (op) {
+          case CalculationType.SUM:
+            query = query.sum(field)
+            break
+          case CalculationType.AVG:
+            query = query.avg(field)
+            break
+          case CalculationType.MIN:
+            query = query.min(field)
+            break
+          case CalculationType.MAX:
+            query = query.max(field)
+            break
+        }
+      }
+    }
+    return query
+  }
+
+  isAggregateField(field: string): boolean {
+    const found = this.query.resource?.aggregations?.find(
+      aggregation => aggregation.name === field
+    )
+    return !!found
   }
 
   addSorting(query: Knex.QueryBuilder): Knex.QueryBuilder {
-    let { sort } = this.query
+    let { sort, resource } = this.query
     const primaryKey = this.table.primary
-    const tableName = getTableName(this.table)
-    const aliases = this.query.tableAliases
-    const aliased =
-      tableName && aliases?.[tableName] ? aliases[tableName] : this.table?.name
+    const aliased = this.getTableName()
     if (!Array.isArray(primaryKey)) {
       throw new Error("Sorting requires primary key to be specified for table")
     }
@@ -849,20 +987,25 @@ class InternalBuilder {
           nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
         }
 
-        let composite = `${aliased}.${key}`
-        if (this.client === SqlClient.ORACLE) {
-          query = query.orderByRaw(
-            `${this.convertClobs(composite)} ${direction} nulls ${nulls}`
-          )
+        if (this.isAggregateField(key)) {
+          query = query.orderBy(key, direction, nulls)
         } else {
-          query = query.orderBy(composite, direction, nulls)
+          let composite = `${aliased}.${key}`
+          if (this.client === SqlClient.ORACLE) {
+            query = query.orderByRaw(
+              `${this.convertClobs(composite)} ${direction} nulls ${nulls}`
+            )
+          } else {
+            query = query.orderBy(composite, direction, nulls)
+          }
         }
       }
     }
 
     // add sorting by the primary key if the result isn't already sorted by it,
     // to make sure result is deterministic
-    if (!sort || sort[primaryKey[0]] === undefined) {
+    const hasAggregations = (resource?.aggregations?.length ?? 0) > 0
+    if (!hasAggregations && (!sort || sort[primaryKey[0]] === undefined)) {
       query = query.orderBy(`${aliased}.${primaryKey[0]}`)
     }
     return query
@@ -1128,6 +1271,10 @@ class InternalBuilder {
 
   create(opts: QueryOptions): Knex.QueryBuilder {
     const { body } = this.query
+    if (!body) {
+      throw new Error("Cannot create without row body")
+    }
+
     let query = this.qualifiedKnex({ alias: false })
     const parsedBody = this.parseBody(body)
 
@@ -1246,10 +1393,15 @@ class InternalBuilder {
       }
     }
 
-    // if counting, use distinct count, else select
-    query = !counting
-      ? query.select(this.generateSelectStatement())
-      : this.addDistinctCount(query)
+    const aggregations = this.query.resource?.aggregations || []
+    if (counting) {
+      query = this.addDistinctCount(query)
+    } else if (aggregations.length > 0) {
+      query = this.addAggregations(query, aggregations)
+    } else {
+      query = query.select(this.generateSelectStatement())
+    }
+
     // have to add after as well (this breaks MS-SQL)
     if (!counting) {
       query = this.addSorting(query)
@@ -1281,6 +1433,9 @@ class InternalBuilder {
 
   update(opts: QueryOptions): Knex.QueryBuilder {
     const { body, filters } = this.query
+    if (!body) {
+      throw new Error("Cannot update without row body")
+    }
     let query = this.qualifiedKnex()
     const parsedBody = this.parseBody(body)
     query = this.addFilters(query, filters)
@@ -1468,23 +1623,40 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
 
+  private getTableName(
+    table: Table,
+    aliases?: Record<string, string>
+  ): string | undefined {
+    let name = table.name
+    if (
+      table.sourceType === TableSourceType.INTERNAL ||
+      table.sourceId === INTERNAL_TABLE_SOURCE_ID
+    ) {
+      if (!table._id) {
+        return
+      }
+      // SQS uses the table ID rather than the table name
+      name = table._id
+    }
+    return aliases?.[name] || name
+  }
+
   convertJsonStringColumns<T extends Record<string, any>>(
     table: Table,
     results: T[],
     aliases?: Record<string, string>
   ): T[] {
-    const tableName = getTableName(table)
+    const tableName = this.getTableName(table, aliases)
     for (const [name, field] of Object.entries(table.schema)) {
       if (!this._isJsonColumn(field)) {
         continue
       }
-      const aliasedTableName = (tableName && aliases?.[tableName]) || tableName
-      const fullName = `${aliasedTableName}.${name}`
+      const fullName = `${tableName}.${name}` as keyof T
       for (let row of results) {
-        if (typeof row[fullName as keyof T] === "string") {
-          row[fullName as keyof T] = JSON.parse(row[fullName])
+        if (typeof row[fullName] === "string") {
+          row[fullName] = JSON.parse(row[fullName])
         }
-        if (typeof row[name as keyof T] === "string") {
+        if (typeof row[name] === "string") {
           row[name as keyof T] = JSON.parse(row[name])
         }
       }

@@ -35,5 +35,9 @@ const TypeComponentMap = {
   [FieldType.BB_REFERENCE_SINGLE]: BBReferenceSingleCell,
 }
 export const getCellRenderer = column => {
-  return TypeComponentMap[column?.schema?.type] || TextCell
+  return (
+    TypeComponentMap[column?.schema?.cellRenderType] ||
+    TypeComponentMap[column?.schema?.type] ||
+    TextCell
+  )
 }
