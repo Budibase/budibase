@@ -139,10 +139,6 @@ globals:
     password: ""
 
   sqs:
-    # -- Whether to use the CouchDB "structured query service" or not.
-    enabled: true
-    # @ignore
-    url: ""
     # @ignore
     port: "4984"
 

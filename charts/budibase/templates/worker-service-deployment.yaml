@@ -56,14 +56,8 @@ spec:
           {{ else }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
           {{ end }}
-        {{ if .Values.globals.sqs.enabled }}
         - name: COUCH_DB_SQL_URL
-        {{ if .Values.globals.sqs.url }}
-          value: {{ .Values.globals.sqs.url }}
-        {{ else }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.globals.sqs.port }}
-        {{ end }}
-        {{ end }}
         - name: API_ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
@@ -168,11 +162,7 @@ spec:
         - name: GOOGLE_CLIENT_SECRET
           value: {{ .Values.globals.google.secret | quote }}
         - name: TENANT_FEATURE_FLAGS
-        {{ if .Values.globals.sqs.enabled }}
-          value: "*:SQS,{{ .Values.globals.tenantFeatureFlags }}"
-        {{ else }}
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
-        {{ end }}
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
