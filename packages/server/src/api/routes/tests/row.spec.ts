@@ -2203,7 +2203,7 @@ describe.each([
               expectedRowData["bb_reference_single"].sample,
               false
             ),
-            ai: null
+            ai: null,
           },
         ])
       })
