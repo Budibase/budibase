@@ -26,6 +26,7 @@
     licensing,
     environment,
     enrichedApps,
+    sortBy,
   } from "stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
@@ -247,7 +248,7 @@
             <div class="app-actions">
               <Select
                 autoWidth
-                value={$appsStore.sortBy}
+                value={$sortBy}
                 on:change={e => {
                   appsStore.updateSort(e.detail)
                 }}

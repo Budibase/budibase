@@ -1,11 +1,12 @@
-import { context, HTTPError, utils } from "@budibase/backend-core"
+import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import {
+  Automation,
   AutomationTriggerStepId,
   SEPARATOR,
   TableRowActions,
   VirtualDocumentType,
 } from "@budibase/types"
-import { generateRowActionsID, isViewID } from "../../db/utils"
+import { generateRowActionsID } from "../../db/utils"
 import automations from "./automations"
 import { definitions as TRIGGER_DEFINITIONS } from "../../automations/triggerInfo"
 import * as triggers from "../../automations/triggers"
@@ -75,7 +76,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
     name: action.name,
     automationId: automation._id!,
     permissions: {
-      table: { runAllowed: false },
+      table: { runAllowed: true },
       views: {},
     },
   }
@@ -102,7 +103,25 @@ export async function get(tableId: string, rowActionId: string) {
 export async function getAll(tableId: string) {
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
-  return await db.get<TableRowActions>(rowActionsId)
+  return await db.tryGet<TableRowActions>(rowActionsId)
+}
+
+export async function deleteAll(tableId: string) {
+  const db = context.getAppDB()
+
+  const doc = await getAll(tableId)
+  if (!doc) {
+    return
+  }
+
+  const automationIds = Object.values(doc.actions).map(a => a.automationId)
+  const automations = await db.getMultiple<Automation>(automationIds)
+
+  for (const automation of automations) {
+    await sdk.automations.remove(automation._id!, automation._rev!)
+  }
+
+  await db.remove(doc)
 }
 
 export async function docExists(tableId: string) {
@@ -155,12 +174,29 @@ export async function update(
 
 async function guardView(tableId: string, viewId: string) {
   let view
-  if (isViewID(viewId)) {
+  if (docIds.isViewId(viewId)) {
     view = await sdk.views.get(viewId)
   }
   if (!view || view.tableId !== tableId) {
     throw new HTTPError(`View '${viewId}' not found in '${tableId}'`, 400)
   }
+}
+
+export async function setTablePermission(tableId: string, rowActionId: string) {
+  return await updateDoc(tableId, rowActionId, async actionsDoc => {
+    actionsDoc.actions[rowActionId].permissions.table.runAllowed = true
+    return actionsDoc
+  })
+}
+
+export async function unsetTablePermission(
+  tableId: string,
+  rowActionId: string
+) {
+  return await updateDoc(tableId, rowActionId, async actionsDoc => {
+    actionsDoc.actions[rowActionId].permissions.table.runAllowed = false
+    return actionsDoc
+  })
 }
 
 export async function setViewPermission(
@@ -206,9 +242,8 @@ export async function run(tableId: any, rowActionId: any, rowId: string) {
     throw new HTTPError("Table not found", 404)
   }
 
-  const { actions } = await getAll(tableId)
-
-  const rowAction = actions[rowActionId]
+  const rowActions = await getAll(tableId)
+  const rowAction = rowActions?.actions[rowActionId]
   if (!rowAction) {
     throw new HTTPError("Row action not found", 404)
   }

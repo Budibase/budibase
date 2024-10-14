@@ -41,7 +41,7 @@ if (types) {
   types.setTypeParser(1184, (val: any) => val) // timestampz
 }
 
-const JSON_REGEX = /'{.*}'::json/s
+const JSON_REGEX = /'{\s*.*?\s*}'::json/gs
 const Sql = sql.Sql
 
 interface PostgresConfig {

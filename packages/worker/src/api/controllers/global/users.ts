@@ -37,7 +37,7 @@ import {
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
-import { BpmStatusKey, BpmStatusValue } from "@budibase/shared-core"
+import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -256,7 +256,7 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
       }
     }
     // Validate we aren't trying to search on any illegal fields
-    if (!userSdk.core.isSupportedUserSearch(body.query)) {
+    if (!utils.isSupportedUserSearch(body.query)) {
       ctx.throw(400, "Can only search by string.email, equal._id or oneOf._id")
     }
   }

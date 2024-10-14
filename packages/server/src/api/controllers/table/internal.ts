@@ -3,7 +3,6 @@ import { handleDataImport } from "./utils"
 import {
   BulkImportRequest,
   BulkImportResponse,
-  FieldType,
   RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
@@ -13,7 +12,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-export async function save(
+export async function updateTable(
   ctx: UserCtx<SaveTableRequest, SaveTableResponse>,
   renaming?: RenameColumn
 ) {
@@ -26,19 +25,16 @@ export async function save(
     sourceType: rest.sourceType || TableSourceType.INTERNAL,
   }
 
-  const isImport = !!rows
-
   if (!tableToSave.views) {
     tableToSave.views = {}
   }
 
   try {
     const { table } = await sdk.tables.internal.save(tableToSave, {
-      user: ctx.user,
+      userId: ctx.user._id,
       rowsToImport: rows,
       tableId: ctx.request.body._id,
       renaming,
-      isImport,
     })
 
     return table
@@ -70,22 +66,10 @@ export async function bulkImport(
 ) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows, identifierFields } = ctx.request.body
-  await handleDataImport(
-    {
-      ...table,
-      schema: {
-        _id: {
-          name: "_id",
-          type: FieldType.STRING,
-        },
-        ...table.schema,
-      },
-    },
-    {
-      importRows: rows,
-      identifierFields,
-      user: ctx.user,
-    }
-  )
+  await handleDataImport(table, {
+    importRows: rows,
+    identifierFields,
+    userId: ctx.user._id,
+  })
   return table
 }
