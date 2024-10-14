@@ -26,7 +26,9 @@
 
   $: style = makeStyle($menu)
   $: isNewRow = $focusedRowId === NewRowID
-  $: budibaseAIEnabled = $config.licensing?.budibaseAIEnabled || $config.licensing?.customAIConfigsEnabled
+  $: budibaseAIEnabled =
+    $config.licensing?.budibaseAIEnabled ||
+    $config.licensing?.customAIConfigsEnabled
 
   const makeStyle = menu => {
     return `left:${menu.left}px; top:${menu.top}px;`
