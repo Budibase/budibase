@@ -32,7 +32,6 @@ import { WorkerCallback } from "./definitions"
 import { context, logging } from "@budibase/backend-core"
 import {
   findHBSBlocks,
-  isJSBinding,
   processObject,
   processStringSync,
 } from "@budibase/string-templates"
