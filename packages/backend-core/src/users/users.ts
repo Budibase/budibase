@@ -24,6 +24,7 @@ import * as context from "../context"
 import { getGlobalDB } from "../context"
 import { isCreator } from "./utils"
 import { UserDB } from "./db"
+import { dataFilters } from "@budibase/shared-core"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -262,10 +263,17 @@ export async function paginatedUsers({
     userList = await bulkGetGlobalUsersById(query?.oneOf?._id, {
       cleanup: true,
     })
+  } else if (query) {
+    // TODO: this should use SQS search, but the logic is built in the 'server' package. Using the in-memory filtering to get this working meanwhile
+    const response = await db.allDocs<User>(
+      getGlobalUserParams(null, { ...opts, limit: undefined })
+    )
+    userList = response.rows.map(row => row.doc!)
+    userList = dataFilters.search(userList, { query, limit: opts.limit }).rows
   } else {
     // no search, query allDocs
-    const response = await db.allDocs(getGlobalUserParams(null, opts))
-    userList = response.rows.map((row: any) => row.doc)
+    const response = await db.allDocs<User>(getGlobalUserParams(null, opts))
+    userList = response.rows.map(row => row.doc!)
   }
   return pagination(userList, pageSize, {
     paginate: true,

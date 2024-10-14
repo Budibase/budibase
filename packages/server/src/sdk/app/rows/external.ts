@@ -15,6 +15,7 @@ import {
 } from "../../../utilities/rowProcessor"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { tryExtractingTableAndViewId } from "./utils"
+import { helpers } from "@budibase/shared-core"
 
 export async function getRow(
   sourceId: string | Table | ViewV2,
@@ -52,6 +53,10 @@ export async function save(
     source = await sdk.views.get(viewId)
   } else {
     source = await sdk.tables.getTable(tableId)
+  }
+
+  if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
+    throw new HTTPError("Cannot insert rows through a calculation view", 400)
   }
 
   const row = await inputProcessing(userId, cloneDeep(source), inputs)

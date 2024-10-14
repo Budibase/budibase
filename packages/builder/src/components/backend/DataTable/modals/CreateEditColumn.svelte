@@ -52,19 +52,13 @@
   import { isEnabled } from "helpers/featureFlags"
   import { getUserBindings } from "dataBinding"
 
-  const AUTO_TYPE = FieldType.AUTO
-  const FORMULA_TYPE = FieldType.FORMULA
-  const LINK_TYPE = FieldType.LINK
-  const STRING_TYPE = FieldType.STRING
-  const NUMBER_TYPE = FieldType.NUMBER
-  const JSON_TYPE = FieldType.JSON
-  const DATE_TYPE = FieldType.DATETIME
-  const AI_TYPE = FieldType.AI
+  export let field
 
   const dispatch = createEventDispatcher()
   const { dispatch: gridDispatch, rows } = getContext("grid")
-
-  export let field
+  const SafeID = `${makePropSafe("user")}.${makePropSafe("_id")}`
+  const SingleUserDefault = `{{ ${SafeID} }}`
+  const MultiUserDefault = `{{ js "${btoa(`return [$("${SafeID}")]`)}" }}`
 
   let mounted = false
   let originalName
@@ -115,7 +109,7 @@
   $: {
     // this parses any changes the user has made when creating a new internal relationship
     // into what we expect the schema to look like
-    if (editableColumn.type === LINK_TYPE) {
+    if (editableColumn.type === FieldType.LINK) {
       relationshipTableIdPrimary = table._id
       if (relationshipPart1 === PrettyRelationshipDefinitions.ONE) {
         relationshipOpts2 = relationshipOpts2.filter(
@@ -152,7 +146,7 @@
     UNEDITABLE_USER_FIELDS.includes(editableColumn.name)
   $: invalid =
     !editableColumn?.name ||
-    (editableColumn?.type === LINK_TYPE && !editableColumn?.tableId) ||
+    (editableColumn?.type === FieldType.LINK && !editableColumn?.tableId) ||
     Object.keys(errors).length !== 0 ||
     !optionsValid
   $: errors = checkErrors(editableColumn)
@@ -178,9 +172,9 @@
   $: defaultValuesEnabled = isEnabled("DEFAULT_VALUES")
   $: canHaveDefault = !required && canHaveDefaultColumn(editableColumn.type)
   $: canBeRequired =
-    editableColumn?.type !== LINK_TYPE &&
+    editableColumn?.type !== FieldType.LINK &&
     !uneditable &&
-    editableColumn?.type !== AUTO_TYPE &&
+    editableColumn?.type !== FieldType.AUTO &&
     !editableColumn.autocolumn
   $: hasDefault =
     editableColumn?.default != null && editableColumn?.default !== ""
@@ -229,7 +223,7 @@
 
   function makeFieldId(type, subtype, autocolumn) {
     // don't make field IDs for auto types
-    if (type === AUTO_TYPE || autocolumn) {
+    if (type === FieldType.AUTO || autocolumn) {
       return type.toUpperCase()
     } else if (
       type === FieldType.BB_REFERENCE ||
@@ -254,7 +248,7 @@
       // Here we are setting the relationship values based on the editableColumn
       // This part of the code is used when viewing an existing field hence the check
       // for the tableId
-      if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
+      if (editableColumn.type === FieldType.LINK && editableColumn.tableId) {
         relationshipTableIdPrimary = table._id
         relationshipTableIdSecondary = editableColumn.tableId
         if (editableColumn.relationshipType in relationshipMap) {
@@ -295,14 +289,14 @@
 
     delete saveColumn.fieldId
 
-    if (saveColumn.type === AUTO_TYPE) {
+    if (saveColumn.type === FieldType.AUTO) {
       saveColumn = buildAutoColumn(
         $tables.selected.name,
         saveColumn.name,
         saveColumn.subtype
       )
     }
-    if (saveColumn.type !== LINK_TYPE) {
+    if (saveColumn.type !== FieldType.LINK) {
       delete saveColumn.fieldName
     }
 
@@ -389,9 +383,9 @@
     editableColumn.subtype = definition.subtype
 
     // Default relationships many to many
-    if (editableColumn.type === LINK_TYPE) {
+    if (editableColumn.type === FieldType.LINK) {
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
-    } else if (editableColumn.type === FORMULA_TYPE) {
+    } else if (editableColumn.type === FieldType.FORMULA) {
       editableColumn.formulaType = "dynamic"
     }
   }
@@ -511,17 +505,23 @@
       fieldToCheck.constraints = {}
     }
     // some string types may have been built by server, may not always have constraints
-    if (fieldToCheck.type === STRING_TYPE && !fieldToCheck.constraints.length) {
+    if (
+      fieldToCheck.type === FieldType.STRING &&
+      !fieldToCheck.constraints.length
+    ) {
       fieldToCheck.constraints.length = {}
     }
     // some number types made server-side will be missing constraints
     if (
-      fieldToCheck.type === NUMBER_TYPE &&
+      fieldToCheck.type === FieldType.NUMBER &&
       !fieldToCheck.constraints.numericality
     ) {
       fieldToCheck.constraints.numericality = {}
     }
-    if (fieldToCheck.type === DATE_TYPE && !fieldToCheck.constraints.datetime) {
+    if (
+      fieldToCheck.type === FieldType.DATETIME &&
+      !fieldToCheck.constraints.datetime
+    ) {
       fieldToCheck.constraints.datetime = {}
     }
   }
@@ -596,13 +596,13 @@
       on:input={e => {
         if (
           !uneditable &&
-          !(linkEditDisabled && editableColumn.type === LINK_TYPE)
+          !(linkEditDisabled && editableColumn.type === FieldType.LINK)
         ) {
           editableColumn.name = e.target.value
         }
       }}
       disabled={uneditable ||
-        (linkEditDisabled && editableColumn.type === LINK_TYPE)}
+        (linkEditDisabled && editableColumn.type === FieldType.LINK)}
       error={errors?.name}
     />
   {/if}
@@ -616,7 +616,7 @@
     getOptionValue={field => field.fieldId}
     getOptionIcon={field => field.icon}
     isOptionEnabled={option => {
-      if (option.type === AUTO_TYPE) {
+      if (option.type === FieldType.AUTO) {
         return availableAutoColumnKeys?.length > 0
       }
       return true
@@ -659,7 +659,7 @@
       bind:optionColors={editableColumn.optionColors}
       bind:valid={optionsValid}
     />
-  {:else if editableColumn.type === DATE_TYPE && !editableColumn.autocolumn}
+  {:else if editableColumn.type === FieldType.DATETIME && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">
         <Label size="M">Earliest</Label>
@@ -746,7 +746,7 @@
       {tableOptions}
       {errors}
     />
-  {:else if editableColumn.type === FORMULA_TYPE}
+  {:else if editableColumn.type === FieldType.FORMULA}
     {#if !externalTable}
       <div class="split-label">
         <div class="label-length">
@@ -789,19 +789,19 @@
         />
       </div>
     </div>
-  {:else if editableColumn.type === AI_TYPE}
+  {:else if editableColumn.type === FieldType.AI}
     <AIFieldConfiguration
       aiField={editableColumn}
       context={rowGoldenSample}
       bindings={getBindings({ table })}
       schema={table.schema}
     />
-  {:else if editableColumn.type === JSON_TYPE}
+  {:else if editableColumn.type === FieldType.JSON}
     <Button primary text on:click={openJsonSchemaEditor}>
       Open schema editor
     </Button>
   {/if}
-  {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
+  {#if editableColumn.type === FieldType.AUTO || editableColumn.autocolumn}
     <Select
       label="Auto column type"
       value={editableColumn.subtype}
@@ -847,6 +847,18 @@
         on:change={e =>
           (editableColumn.default = e.detail?.length ? e.detail : undefined)}
         placeholder="None"
+      />
+    {:else if editableColumn.subtype === BBReferenceFieldSubType.USER}
+      {@const defaultValue =
+        editableColumn.type === FieldType.BB_REFERENCE_SINGLE
+          ? SingleUserDefault
+          : MultiUserDefault}
+      <Toggle
+        disabled={!canHaveDefault}
+        text="Default to current user"
+        value={editableColumn.default === defaultValue}
+        on:change={e =>
+          (editableColumn.default = e.detail ? defaultValue : undefined)}
       />
     {:else}
       <ModalBindableInput

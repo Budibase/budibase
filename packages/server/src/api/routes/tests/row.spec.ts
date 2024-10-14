@@ -1,6 +1,10 @@
 import * as setup from "./utilities"
 
-import { DatabaseName, knexClient } from "../../../integrations/tests/utils"
+import {
+  DatabaseName,
+  getDatasource,
+  knexClient,
+} from "../../../integrations/tests/utils"
 
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
@@ -8,37 +12,36 @@ import { outputProcessing } from "../../../utilities/rowProcessor"
 import {
   context,
   InternalTable,
-  setEnv as setCoreEnv,
   tenancy,
-  withEnv as withCoreEnv,
+  features,
+  utils,
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AIOperationEnum,
   AttachmentFieldMetadata,
   AutoFieldSubType,
-  BBReferenceFieldSubType,
   Datasource,
   DateFieldMetadata,
   DeleteRow,
-  FeatureFlag,
   FieldSchema,
   FieldType,
+  BBReferenceFieldSubType,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
-  JsonFieldSubType,
   NumberFieldMetadata,
   QuotaUsageType,
-  RelationSchemaField,
   RelationshipType,
   Row,
-  RowExportFormat,
   SaveTableRequest,
   StaticQuotaName,
   Table,
-  TableSchema,
   TableSourceType,
   UpdatedRowEventEmitter,
+  TableSchema,
+  JsonFieldSubType,
+  RowExportFormat,
+  RelationSchemaField,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -86,13 +89,13 @@ async function waitForEvent(
 }
 
 describe.each([
-  // ["lucene", undefined],
+  ["lucene", undefined],
   ["sqs", undefined],
-  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const isLucene = providerType === "lucene"
@@ -107,12 +110,12 @@ describe.each([
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    await withCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" }, () => config.init())
-    if (isLucene) {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:!SQS" })
-    } else if (isSqs) {
-      envCleanup = setCoreEnv({ TENANT_FEATURE_FLAGS: "*:SQS" })
-    }
+    await features.testutils.withFeatureFlags("*", { SQS: true }, () =>
+      config.init()
+    )
+    envCleanup = features.testutils.setFeatureFlags("*", {
+      SQS: isSqs,
+    })
 
     if (dsProvider) {
       const rawDatasource = await dsProvider
@@ -768,6 +771,70 @@ describe.each([
         })
       })
 
+      describe("user column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                user: {
+                  name: "user",
+                  type: FieldType.BB_REFERENCE_SINGLE,
+                  subtype: BBReferenceFieldSubType.USER,
+                  default: "{{ [Current User]._id }}",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.user._id).toEqual(config.getUser()._id)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const id = `us_${utils.newid()}`
+          await config.createUser({ _id: id })
+          const row = await config.api.row.save(table._id!, {
+            user: id,
+          })
+          expect(row.user._id).toEqual(id)
+        })
+      })
+
+      describe("multi-user column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                users: {
+                  name: "users",
+                  type: FieldType.BB_REFERENCE,
+                  subtype: BBReferenceFieldSubType.USER,
+                  default: ["{{ [Current User]._id }}"],
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.users).toHaveLength(1)
+          expect(row.users[0]._id).toEqual(config.getUser()._id)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const id = `us_${utils.newid()}`
+          await config.createUser({ _id: id })
+          const row = await config.api.row.save(table._id!, {
+            users: [id],
+          })
+          expect(row.users).toHaveLength(1)
+          expect(row.users[0]._id).toEqual(id)
+        })
+      })
+
       describe("bindings", () => {
         describe("string column", () => {
           beforeAll(async () => {
@@ -1123,6 +1190,33 @@ describe.each([
       getResp = await config.api.row.get(table._id!, row._id!)
       expect(getResp.user1[0]._id).toEqual(user2._id)
       expect(getResp.user2[0]._id).toEqual(user2._id)
+    })
+
+    it("should be able to remove a relationship from many side", async () => {
+      const row = await config.api.row.save(otherTable._id!, {
+        name: "test",
+        description: "test",
+      })
+      const row2 = await config.api.row.save(otherTable._id!, {
+        name: "test",
+        description: "test",
+      })
+      const { _id } = await config.api.row.save(table._id!, {
+        relationship: [{ _id: row._id }, { _id: row2._id }],
+      })
+      const relatedRow = await config.api.row.get(table._id!, _id!, {
+        status: 200,
+      })
+      expect(relatedRow.relationship.length).toEqual(2)
+      await config.api.row.save(table._id!, {
+        ...relatedRow,
+        relationship: [{ _id: row._id }],
+      })
+      const afterRelatedRow = await config.api.row.get(table._id!, _id!, {
+        status: 200,
+      })
+      expect(afterRelatedRow.relationship.length).toEqual(1)
+      expect(afterRelatedRow.relationship[0]._id).toEqual(row._id)
     })
 
     it("should be able to update relationships when both columns are same name", async () => {
@@ -1857,7 +1951,7 @@ describe.each([
     })
 
   describe("exportRows", () => {
-    beforeAll(async () => {
+    beforeEach(async () => {
       table = await config.api.table.save(defaultTable())
     })
 
@@ -1893,6 +1987,16 @@ describe.each([
           expect(row[key]).toEqual(existing[key])
         })
       })
+
+    it("should allow exporting without filtering", async () => {
+      const existing = await config.api.row.save(table._id!, {})
+      const res = await config.api.row.exportRows(table._id!)
+      const results = JSON.parse(res)
+      expect(results.length).toEqual(1)
+      const row = results[0]
+
+      expect(row._id).toEqual(existing._id)
+    })
 
     it("should allow exporting only certain columns", async () => {
       const existing = await config.api.row.save(table._id!, {})
@@ -2528,15 +2632,9 @@ describe.each([
       let flagCleanup: (() => void) | undefined
 
       beforeAll(async () => {
-        const env = {
-          TENANT_FEATURE_FLAGS: `*:${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
-        }
-        if (isSqs) {
-          env.TENANT_FEATURE_FLAGS = `${env.TENANT_FEATURE_FLAGS},*:SQS`
-        } else {
-          env.TENANT_FEATURE_FLAGS = `${env.TENANT_FEATURE_FLAGS},*:!SQS`
-        }
-        flagCleanup = setCoreEnv(env)
+        flagCleanup = features.testutils.setFeatureFlags("*", {
+          ENRICHED_RELATIONSHIPS: true,
+        })
 
         const aux2Table = await config.api.table.save(saveTableRequest())
         const aux2Data = await config.api.row.save(aux2Table._id!, {})
@@ -2763,9 +2861,10 @@ describe.each([
       it.each(testScenarios)(
         "does not enrich relationships when not enabled (via %s)",
         async (__, retrieveDelegate) => {
-          await withCoreEnv(
+          await features.testutils.withFeatureFlags(
+            "*",
             {
-              TENANT_FEATURE_FLAGS: `*:!${FeatureFlag.ENRICHED_RELATIONSHIPS}`,
+              ENRICHED_RELATIONSHIPS: false,
             },
             async () => {
               const otherRows = _.sampleSize(auxData, 5)

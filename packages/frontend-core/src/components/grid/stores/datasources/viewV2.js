@@ -3,9 +3,12 @@ import { dataFilters } from "@budibase/shared-core"
 
 function convertToSearchFilters(view) {
   // convert from SearchFilterGroup type
-  if (view.query) {
-    view.queryUI = view.query
-    view.query = dataFilters.buildQuery(view.query)
+  if (view?.query) {
+    return {
+      ...view,
+      queryUI: view.query,
+      query: dataFilters.buildQuery(view.query),
+    }
   }
   return view
 }
@@ -191,7 +194,7 @@ export const initialise = context => {
         if ($view?.id !== $datasource.id) {
           return
         }
-        if (JSON.stringify($filter) !== JSON.stringify($view.query)) {
+        if (JSON.stringify($filter) !== JSON.stringify($view.queryUI)) {
           await datasource.actions.saveDefinition({
             ...$view,
             query: $filter,
