@@ -428,6 +428,34 @@ export default class TestConfiguration {
 
   // HEADERS
 
+  // sets the role for the headers, for the period of a callback
+  async setRole(roleId: string, cb: () => Promise<unknown>) {
+    const roleUser = await this.createUser({
+      roles: {
+        [this.prodAppId!]: roleId,
+      },
+      builder: { global: false },
+      admin: { global: false },
+    })
+    await this.login({
+      roleId,
+      userId: roleUser._id!,
+      builder: false,
+      prodApp: true,
+    })
+    const temp = this.user
+    this.user = roleUser
+    await cb()
+    if (temp) {
+      this.user = temp
+      await this.login({
+        userId: temp._id!,
+        builder: true,
+        prodApp: false,
+      })
+    }
+  }
+
   defaultHeaders(extras = {}, prodApp = false) {
     const tenantId = this.getTenantId()
     const user = this.getUser()
