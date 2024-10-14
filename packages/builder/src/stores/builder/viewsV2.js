@@ -5,17 +5,23 @@ import { dataFilters } from "@budibase/shared-core"
 
 function convertToSearchFilters(view) {
   // convert from SearchFilterGroup type
-  if (view.query) {
-    view.queryUI = view.query
-    view.query = dataFilters.buildQuery(view.query)
+  if (view?.query) {
+    return {
+      ...view,
+      queryUI: view.query,
+      query: dataFilters.buildQuery(view.query),
+    }
   }
   return view
 }
 
 function convertToSearchFilterGroup(view) {
-  if (view.queryUI) {
-    view.query = view.queryUI
-    delete view.queryUI
+  if (view?.queryUI) {
+    return {
+      ...view,
+      query: view.queryUI,
+      queryUI: undefined,
+    }
   }
   return view
 }

@@ -1,4 +1,4 @@
-import { Context, createContext, runInNewContext } from "vm"
+import { createContext, runInNewContext } from "vm"
 import { create, TemplateDelegate } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
 import { postprocess, preprocess } from "./processors"
@@ -455,21 +455,14 @@ export function convertToJS(hbs: string) {
 
 export { JsTimeoutError, UserScriptError } from "./errors"
 
-export function defaultJSSetup() {
-  if (!isBackendService()) {
-    /**
-     * Use polyfilled vm to run JS scripts in a browser Env
-     */
-    setJSRunner((js: string, context: Context) => {
-      context = {
-        ...context,
-        alert: undefined,
-        setInterval: undefined,
-        setTimeout: undefined,
-      }
-      createContext(context)
+export function browserJSSetup() {
+  /**
+   * Use polyfilled vm to run JS scripts in a browser Env
+   */
+  setJSRunner((js: string, context: Record<string, any>) => {
+    createContext(context)
 
-      const wrappedJs = `
+    const wrappedJs = `
         result = {
           result: null,
           error: null,
@@ -484,12 +477,17 @@ export function defaultJSSetup() {
         result;
       `
 
-      const result = runInNewContext(wrappedJs, context, { timeout: 1000 })
-      if (result.error) {
-        throw new UserScriptError(result.error)
-      }
-      return result.result
-    })
+    const result = runInNewContext(wrappedJs, context, { timeout: 1000 })
+    if (result.error) {
+      throw new UserScriptError(result.error)
+    }
+    return result.result
+  })
+}
+
+export function defaultJSSetup() {
+  if (!isBackendService()) {
+    browserJSSetup()
   } else {
     removeJSRunner()
   }

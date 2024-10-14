@@ -273,6 +273,7 @@ class InternalBuilder {
     const col = parts.pop()!
     const schema = this.table.schema[col]
     let identifier = this.quotedIdentifier(field)
+
     if (
       schema.type === FieldType.STRING ||
       schema.type === FieldType.LONGFORM ||
@@ -325,7 +326,7 @@ class InternalBuilder {
     return input
   }
 
-  private parseBody(body: any) {
+  private parseBody(body: Record<string, any>) {
     for (let [key, value] of Object.entries(body)) {
       const { column } = this.splitter.run(key)
       const schema = this.table.schema[column]
@@ -957,6 +958,13 @@ class InternalBuilder {
     return query
   }
 
+  isAggregateField(field: string): boolean {
+    const found = this.query.resource?.aggregations?.find(
+      aggregation => aggregation.name === field
+    )
+    return !!found
+  }
+
   addSorting(query: Knex.QueryBuilder): Knex.QueryBuilder {
     let { sort, resource } = this.query
     const primaryKey = this.table.primary
@@ -979,13 +987,17 @@ class InternalBuilder {
           nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
         }
 
-        let composite = `${aliased}.${key}`
-        if (this.client === SqlClient.ORACLE) {
-          query = query.orderByRaw(
-            `${this.convertClobs(composite)} ${direction} nulls ${nulls}`
-          )
+        if (this.isAggregateField(key)) {
+          query = query.orderBy(key, direction, nulls)
         } else {
-          query = query.orderBy(composite, direction, nulls)
+          let composite = `${aliased}.${key}`
+          if (this.client === SqlClient.ORACLE) {
+            query = query.orderByRaw(
+              `${this.convertClobs(composite)} ${direction} nulls ${nulls}`
+            )
+          } else {
+            query = query.orderBy(composite, direction, nulls)
+          }
         }
       }
     }
@@ -1259,6 +1271,10 @@ class InternalBuilder {
 
   create(opts: QueryOptions): Knex.QueryBuilder {
     const { body } = this.query
+    if (!body) {
+      throw new Error("Cannot create without row body")
+    }
+
     let query = this.qualifiedKnex({ alias: false })
     const parsedBody = this.parseBody(body)
 
@@ -1418,6 +1434,9 @@ class InternalBuilder {
 
   update(opts: QueryOptions): Knex.QueryBuilder {
     const { body, filters } = this.query
+    if (!body) {
+      throw new Error("Cannot update without row body")
+    }
     let query = this.qualifiedKnex()
     const parsedBody = this.parseBody(body)
     query = this.addFilters(query, filters)

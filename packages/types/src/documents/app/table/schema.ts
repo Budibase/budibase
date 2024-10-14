@@ -132,11 +132,13 @@ export interface BBReferenceFieldMetadata
   type: FieldType.BB_REFERENCE
   subtype: BBReferenceFieldSubType
   relationshipType?: RelationshipType
+  default?: string[]
 }
 export interface BBReferenceSingleFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE_SINGLE
   subtype: Exclude<BBReferenceFieldSubType, BBReferenceFieldSubType.USERS>
+  default?: string
 }
 
 export interface AttachmentFieldMetadata extends BaseFieldSchema {

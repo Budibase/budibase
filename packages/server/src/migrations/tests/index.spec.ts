@@ -71,7 +71,7 @@ describe("migrations", () => {
         expect(events.datasource.created).toHaveBeenCalledTimes(2)
         expect(events.layout.created).toHaveBeenCalledTimes(1)
         expect(events.query.created).toHaveBeenCalledTimes(2)
-        expect(events.role.created).toHaveBeenCalledTimes(2)
+        expect(events.role.created).toHaveBeenCalledTimes(3) // created roles + admin (created on table creation)
         expect(events.table.created).toHaveBeenCalledTimes(3)
         expect(events.view.created).toHaveBeenCalledTimes(2)
         expect(events.view.calculationCreated).toHaveBeenCalledTimes(1)
@@ -82,7 +82,7 @@ describe("migrations", () => {
         // to make sure caching is working as expected
         expect(
           events.processors.analyticsProcessor.processEvent
-        ).toHaveBeenCalledTimes(23)
+        ).toHaveBeenCalledTimes(24) // Addtion of of the events above
       })
     })
   })

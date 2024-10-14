@@ -20,6 +20,7 @@
       }
       notifications.success("View deleted")
     } catch (error) {
+      console.error(error)
       notifications.error("Error deleting view")
     }
   }

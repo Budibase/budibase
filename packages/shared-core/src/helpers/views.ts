@@ -3,6 +3,7 @@ import {
   ViewCalculationFieldMetadata,
   ViewFieldMetadata,
   ViewV2,
+  ViewV2Type,
 } from "@budibase/types"
 import { pickBy } from "lodash"
 
@@ -21,6 +22,10 @@ export function isBasicViewField(
 type UnsavedViewV2 = Omit<ViewV2, "id" | "version">
 
 export function isCalculationView(view: UnsavedViewV2) {
+  return view.type === ViewV2Type.CALCULATION
+}
+
+export function hasCalculationFields(view: UnsavedViewV2) {
   return Object.values(view.schema || {}).some(isCalculationField)
 }
 
@@ -28,6 +33,13 @@ export function calculationFields(view: UnsavedViewV2) {
   return pickBy(view.schema || {}, isCalculationField)
 }
 
-export function basicFields(view: UnsavedViewV2) {
-  return pickBy(view.schema || {}, field => !isCalculationField(field))
+export function isVisible(field: ViewFieldMetadata) {
+  return field.visible !== false
+}
+
+export function basicFields(view: UnsavedViewV2, opts?: { visible?: boolean }) {
+  const { visible = true } = opts || {}
+  return pickBy(view.schema || {}, field => {
+    return !isCalculationField(field) && (!visible || isVisible(field))
+  })
 }

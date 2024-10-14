@@ -69,8 +69,8 @@ const allowDefaultColumnByType: Record<FieldType, boolean> = {
   [FieldType.ATTACHMENT_SINGLE]: false,
   [FieldType.SIGNATURE_SINGLE]: false,
   [FieldType.LINK]: false,
-  [FieldType.BB_REFERENCE]: false,
-  [FieldType.BB_REFERENCE_SINGLE]: false,
+  [FieldType.BB_REFERENCE]: true,
+  [FieldType.BB_REFERENCE_SINGLE]: true,
 }
 
 export function canBeDisplayColumn(type: FieldType): boolean {
