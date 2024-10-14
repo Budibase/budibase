@@ -92,6 +92,7 @@ class BaseStepBuilder {
       branchStepInputs.branches.push({
         name: key,
         condition: branch.condition,
+        id: uuidv4(),
       })
       branchStepInputs.children![key] = stepBuilder.build()
     })
