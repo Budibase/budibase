@@ -33,7 +33,7 @@ import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
-import { processString, processStringSync } from "@budibase/string-templates"
+import { processStringSync } from "@budibase/string-templates"
 import {
   getTableFromSource,
   isUserMetadataTable,
