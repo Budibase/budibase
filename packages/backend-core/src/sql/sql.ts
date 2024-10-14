@@ -406,7 +406,6 @@ class InternalBuilder {
   addRelationshipForFilter(
     query: Knex.QueryBuilder,
     filterKey: string,
-    isOr: boolean,
     whereCb: (query: Knex.QueryBuilder) => Knex.QueryBuilder
   ): Knex.QueryBuilder {
     const mainKnex = this.knex
@@ -471,12 +470,7 @@ class InternalBuilder {
             )
           )
         }
-
-        if (isOr) {
-          query = query.orWhereExists(whereCb(subQuery))
-        } else {
-          query = query.whereExists(whereCb(subQuery))
-        }
+        query = query.whereExists(whereCb(subQuery))
         break
       }
     }
@@ -561,14 +555,12 @@ class InternalBuilder {
             value
           )
         } else if (shouldProcessRelationship) {
-          query = builder.addRelationshipForFilter(
-            query,
-            updatedKey,
-            !!allOr,
-            q => {
-              return handleRelationship(q, updatedKey, value)
-            }
-          )
+          if (allOr) {
+            query = query.or
+          }
+          query = builder.addRelationshipForFilter(query, updatedKey, q => {
+            return handleRelationship(q, updatedKey, value)
+          })
         }
       }
     }
