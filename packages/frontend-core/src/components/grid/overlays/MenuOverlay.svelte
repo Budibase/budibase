@@ -26,6 +26,7 @@
 
   $: style = makeStyle($menu)
   $: isNewRow = $focusedRowId === NewRowID
+  $: budibaseAIEnabled = $config.licensing?.budibaseAIEnabled || $config.licensing?.customAIConfigsEnabled
 
   const makeStyle = menu => {
     return `left:${menu.left}px; top:${menu.top}px;`
@@ -168,15 +169,17 @@
           >
             Delete row
           </MenuItem>
-          <MenuItem
-            icon="MagicWand"
-            disabled={isNewRow ||
-              !$focusedRow?._rev ||
-              !$hasBudibaseIdentifiers}
-            on:click={generateAIColumns}
-          >
-            Generate AI Columns
-          </MenuItem>
+          {#if budibaseAIEnabled}
+            <MenuItem
+              icon="MagicWand"
+              disabled={isNewRow ||
+                !$focusedRow?._rev ||
+                !$hasBudibaseIdentifiers}
+              on:click={generateAIColumns}
+            >
+              Generate AI Columns
+            </MenuItem>
+          {/if}
         {/if}
       </Menu>
     </GridPopover>

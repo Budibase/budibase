@@ -119,7 +119,6 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
 
 export interface AIFieldMetadata extends BaseFieldSchema {
   type: FieldType.AI
-  // formula: string
   operation: AIOperationEnum
   columns?: string[]
   column?: string
