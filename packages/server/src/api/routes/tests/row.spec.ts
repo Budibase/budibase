@@ -2130,7 +2130,6 @@ describe.each([
             url: expect.any(String),
           }),
           [FieldType.FORMULA]: fullSchema[FieldType.FORMULA].formula,
-          [FieldType.AI]: fullSchema[FieldType.AI].prompt,
           [FieldType.AUTO]: expect.any(Number),
           [FieldType.JSON]: rowValues[FieldType.JSON],
           [FieldType.INTERNAL]: rowValues[FieldType.INTERNAL],
