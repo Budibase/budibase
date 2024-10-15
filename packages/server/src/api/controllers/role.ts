@@ -19,7 +19,7 @@ import {
   UserMetadata,
   DocumentType,
 } from "@budibase/types"
-import { RoleColor, sdk as sharedSdk } from "@budibase/shared-core"
+import { RoleColor, sdk as sharedSdk, helpers } from "@budibase/shared-core"
 import sdk from "../../sdk"
 
 const UpdateRolesOptions = {
@@ -81,9 +81,10 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     _id = dbCore.prefixRoleID(_id)
   }
 
+  const allRoles = await roles.getAllRoles()
   let dbRole: Role | undefined
   if (!isCreate && _id?.startsWith(DocumentType.ROLE)) {
-    dbRole = await db.get<Role>(_id)
+    dbRole = allRoles.find(role => role._id === _id)
   }
   if (dbRole && dbRole.name !== name && isNewVersion) {
     ctx.throw(400, "Cannot change custom role name")
@@ -97,6 +98,18 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   if (dbRole?.permissions && !role.permissions) {
     role.permissions = dbRole.permissions
   }
+
+  // add the new role to the list and check for loops
+  const index = allRoles.findIndex(r => r._id === role._id)
+  if (index === -1) {
+    allRoles.push(role)
+  } else {
+    allRoles[index] = role
+  }
+  if (helpers.roles.checkForRoleInheritanceLoops(allRoles)) {
+    ctx.throw(400, "Role inheritance contains a loop, this is not supported")
+  }
+
   const foundRev = ctx.request.body._rev || dbRole?._rev
   if (foundRev) {
     role._rev = foundRev
