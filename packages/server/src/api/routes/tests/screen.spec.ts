@@ -1,7 +1,7 @@
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
-import { events } from "@budibase/backend-core"
-import { Screen } from "@budibase/types"
+import { events, roles } from "@budibase/backend-core"
+import { Screen, PermissionLevel, Role } from "@budibase/types"
 
 const { basicScreen } = setup.structures
 
@@ -32,16 +32,89 @@ describe("/screens", () => {
     })
   })
 
-  describe("save", () => {
-    const saveScreen = async (screen: Screen) => {
-      return await config.api.screen.save(screen, { status: 200 })
+  describe("permissions", () => {
+    let screen1: Screen, screen2: Screen
+    let role1: Role, role2: Role, multiRole: Role
+
+    beforeAll(async () => {
+      role1 = await config.api.roles.save({
+        name: "role1",
+        inherits: roles.BUILTIN_ROLE_IDS.BASIC,
+        permissionId: PermissionLevel.WRITE,
+      })
+      role2 = await config.api.roles.save({
+        name: "role2",
+        inherits: roles.BUILTIN_ROLE_IDS.BASIC,
+        permissionId: PermissionLevel.WRITE,
+      })
+      multiRole = await config.api.roles.save({
+        name: "multiRole",
+        inherits: [role1._id!, role2._id!],
+        permissionId: PermissionLevel.WRITE,
+      })
+      screen1 = await config.api.screen.save(
+        {
+          ...basicScreen(),
+          routing: {
+            roleId: role1._id!,
+            route: "/foo",
+            homeScreen: false,
+          },
+        },
+        { status: 200 }
+      )
+      screen2 = await config.api.screen.save(
+        {
+          ...basicScreen(),
+          routing: {
+            roleId: role2._id!,
+            route: "/bar",
+            homeScreen: false,
+          },
+        },
+        { status: 200 }
+      )
+      // get into prod app
+      await config.publish()
+    })
+
+    async function checkScreens(roleId: string, screenIds: string[]) {
+      await config.setRole(roleId, async () => {
+        const res = await config.api.application.getDefinition(
+          config.prodAppId!,
+          {
+            status: 200,
+          }
+        )
+        // basic and role1 screen
+        expect(res.screens.length).toEqual(screenIds.length)
+        expect(res.screens.map(s => s._id).sort()).toEqual(screenIds.sort())
+      })
     }
 
-    it("should be able to create a screen", async () => {
-      jest.clearAllMocks()
+    it("should be able to fetch only screen1 with role1", async () => {
+      await checkScreens(role1._id!, [screen._id!, screen1._id!])
+    })
 
+    it("should be able to fetch only screen2 with role2", async () => {
+      await checkScreens(role2._id!, [screen._id!, screen2._id!])
+    })
+
+    it("should be able to fetch all three screens with multi-inheritance role", async () => {
+      await checkScreens(multiRole._id!, [
+        screen._id!,
+        screen1._id!,
+        screen2._id!,
+      ])
+    })
+  })
+
+  describe("save", () => {
+    it("should be able to create a screen", async () => {
       const screen = basicScreen()
-      const responseScreen = await saveScreen(screen)
+      const responseScreen = await config.api.screen.save(screen, {
+        status: 200,
+      })
 
       expect(responseScreen._rev).toBeDefined()
       expect(responseScreen.name).toEqual(screen.name)
@@ -50,13 +123,12 @@ describe("/screens", () => {
 
     it("should be able to update a screen", async () => {
       const screen = basicScreen()
-      let responseScreen = await saveScreen(screen)
+      let responseScreen = await config.api.screen.save(screen, { status: 200 })
       screen._id = responseScreen._id
       screen._rev = responseScreen._rev
       screen.name = "edit"
-      jest.clearAllMocks()
 
-      responseScreen = await saveScreen(screen)
+      responseScreen = await config.api.screen.save(screen, { status: 200 })
 
       expect(responseScreen._rev).toBeDefined()
       expect(responseScreen.name).toEqual(screen.name)
