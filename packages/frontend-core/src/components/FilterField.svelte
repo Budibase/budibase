@@ -35,6 +35,7 @@
   $: drawerValue = toDrawerValue(fieldValue)
   $: isJS = isJSBinding(fieldValue)
   $: fieldIsValid = isValid(fieldValue)
+  $: console.log(filter)
 
   const getFieldOptions = field => {
     const schema = schemaFields.find(x => x.name === field)
@@ -174,7 +175,7 @@
         />
       {:else}
         <div>
-          {#if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA].includes(filter.type)}
+          {#if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA, FieldType.AI].includes(filter.type)}
             <Input
               disabled={filter.noValue}
               value={readableValue}
