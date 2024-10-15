@@ -5,7 +5,7 @@ version: "3"
 services:
   app-service:
     restart: unless-stopped
-    image: budibase.docker.scarf.sh/budibase/apps
+    image: budibase/apps
     container_name: bbapps
     environment:
       SELF_HOSTED: 1
@@ -35,7 +35,7 @@ services:
 
   worker-service:
     restart: unless-stopped
-    image: budibase.docker.scarf.sh/budibase/worker
+    image: budibase/worker
     container_name: bbworker
     environment:
       SELF_HOSTED: 1
@@ -97,7 +97,7 @@ services:
 
   couchdb-service:
     restart: unless-stopped
-    image: budibase/couchdb
+    image: budibase/couchdb:v3.3.3-sqs-v2.1.1
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}

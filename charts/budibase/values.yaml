@@ -139,9 +139,6 @@ globals:
     password: ""
 
   sqs:
-    # -- Whether to use the CouchDB "structured query service" or not. This is disabled by
-    # default for now, but will become the default in a future release.
-    enabled: false
     # @ignore
     url: ""
     # @ignore
