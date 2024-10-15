@@ -92,15 +92,15 @@ describe("/screens", () => {
       })
     }
 
-    it("should be able to fetch only screen1 with role1", async () => {
+    it("should be able to fetch basic and screen1 with role1", async () => {
       await checkScreens(role1._id!, [screen._id!, screen1._id!])
     })
 
-    it("should be able to fetch only screen2 with role2", async () => {
+    it("should be able to fetch basic and screen2 with role2", async () => {
       await checkScreens(role2._id!, [screen._id!, screen2._id!])
     })
 
-    it("should be able to fetch all three screens with multi-inheritance role", async () => {
+    it("should be able to fetch basic, screen1 and screen2 with multi-inheritance role", async () => {
       await checkScreens(multiRole._id!, [
         screen._id!,
         screen1._id!,
