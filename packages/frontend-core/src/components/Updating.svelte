@@ -2,36 +2,31 @@
   export let isMigrationDone
   export let onMigrationDone
   export let timeoutSeconds = 60 // 1 minute
-  export let minTimeSeconds = 3
 
-  const loadTime = Date.now()
-  const intervalMs = 1000
   let timedOut = false
-  let secondsWaited = 0
 
   async function checkMigrationsFinished() {
-    setTimeout(async () => {
+    let totalWaitMs = 0
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const waitForMs = 5000 + Math.random() * 5000
+      await new Promise(resolve => setTimeout(resolve, waitForMs))
+      totalWaitMs += waitForMs
+
       const isMigrated = await isMigrationDone()
-
-      const timeoutMs = timeoutSeconds * 1000
-      if (!isMigrated || secondsWaited <= minTimeSeconds) {
-        if (loadTime + timeoutMs > Date.now()) {
-          secondsWaited += 1
-          return checkMigrationsFinished()
-        }
-
-        return migrationTimeout()
+      if (isMigrated) {
+        onMigrationDone()
+        return
       }
 
-      onMigrationDone()
-    }, intervalMs)
+      if (totalWaitMs > timeoutSeconds * 1000) {
+        timedOut = true
+        return
+      }
+    }
   }
 
   checkMigrationsFinished()
-
-  function migrationTimeout() {
-    timedOut = true
-  }
 </script>
 
 <div class="loading" class:timeout={timedOut}>
