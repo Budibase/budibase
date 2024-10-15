@@ -313,7 +313,11 @@ export async function enrichSchema(
     const result: Record<string, ViewV2ColumnEnriched> = {}
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
-      if ([FieldType.LINK, FieldType.FORMULA].includes(relTableField.type)) {
+      if (
+        [FieldType.LINK, FieldType.FORMULA, FieldType.AI].includes(
+          relTableField.type
+        )
+      ) {
         continue
       }
 

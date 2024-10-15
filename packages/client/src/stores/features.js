@@ -2,6 +2,7 @@ import { derived } from "svelte/store"
 import { appStore } from "./app"
 import { authStore } from "./auth"
 import { Constants } from "@budibase/frontend-core"
+import { Feature } from "@budibase/types"
 
 const createFeaturesStore = () => {
   return derived([authStore, appStore], ([$authStore, $appStore]) => {
@@ -33,8 +34,13 @@ const createFeaturesStore = () => {
       }
     }
 
+    const license = getUserLicense()
+
     return {
       logoEnabled: isFreePlan(),
+      aiEnabled:
+        license?.features?.includes(Feature.AI_CUSTOM_CONFIGS) ||
+        license?.features?.includes(Feature.BUDIBASE_AI),
     }
   })
 }
