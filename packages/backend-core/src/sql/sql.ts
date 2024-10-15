@@ -480,18 +480,20 @@ class InternalBuilder {
             subQuery = this.addJoinFieldCheck(subQuery, manyToMany)
           }
 
-          query = query.whereExists(whereCb(subQuery))
-          if (allowEmptyRelationships) {
-            query = query.orWhereNotExists(
-              joinTable.clone().innerJoin(throughTable, function () {
-                this.on(
-                  `${fromAlias}.${manyToMany.fromPrimary}`,
-                  "=",
-                  `${throughAlias}.${manyToMany.from}`
-                )
-              })
-            )
-          }
+          query = query.where(q => {
+            q.whereExists(whereCb(subQuery))
+            if (allowEmptyRelationships) {
+              q.orWhereNotExists(
+                joinTable.clone().innerJoin(throughTable, function () {
+                  this.on(
+                    `${fromAlias}.${manyToMany.fromPrimary}`,
+                    "=",
+                    `${throughAlias}.${manyToMany.from}`
+                  )
+                })
+              )
+            }
+          })
         } else {
           const foreignKey = `${fromAlias}.${relationship.from}`
           // "join" to the main table, making sure the ID matches that of the main
@@ -1265,12 +1267,10 @@ class InternalBuilder {
         })
       : undefined
     if (!throughTable) {
-      // @ts-ignore
       query = query.leftJoin(toTableWithSchema, function () {
         for (let relationship of columns) {
           const from = relationship.from,
             to = relationship.to
-          // @ts-ignore
           this.orOn(`${fromAlias}.${from}`, "=", `${toAlias}.${to}`)
         }
       })
@@ -1281,7 +1281,6 @@ class InternalBuilder {
           for (let relationship of columns) {
             const fromPrimary = relationship.fromPrimary
             const from = relationship.from
-            // @ts-ignore
             this.orOn(
               `${fromAlias}.${fromPrimary}`,
               "=",
@@ -1293,7 +1292,6 @@ class InternalBuilder {
           for (let relationship of columns) {
             const toPrimary = relationship.toPrimary
             const to = relationship.to
-            // @ts-ignore
             this.orOn(`${toAlias}.${toPrimary}`, `${throughAlias}.${to}`)
           }
         })
