@@ -833,7 +833,8 @@
                       "type": "string",
                       "enum": [
                         "static",
-                        "dynamic"
+                        "dynamic",
+                        "ai"
                       ],
                       "description": "Defines whether this is a static or dynamic formula."
                     }
@@ -857,6 +858,7 @@
                         "link",
                         "formula",
                         "auto",
+                        "ai",
                         "json",
                         "internal",
                         "barcodeqr",
@@ -1042,7 +1044,8 @@
                           "type": "string",
                           "enum": [
                             "static",
-                            "dynamic"
+                            "dynamic",
+                            "ai"
                           ],
                           "description": "Defines whether this is a static or dynamic formula."
                         }
@@ -1066,6 +1069,7 @@
                             "link",
                             "formula",
                             "auto",
+                            "ai",
                             "json",
                             "internal",
                             "barcodeqr",
@@ -1262,7 +1266,8 @@
                             "type": "string",
                             "enum": [
                               "static",
-                              "dynamic"
+                              "dynamic",
+                              "ai"
                             ],
                             "description": "Defines whether this is a static or dynamic formula."
                           }
@@ -1286,6 +1291,7 @@
                               "link",
                               "formula",
                               "auto",
+                              "ai",
                               "json",
                               "internal",
                               "barcodeqr",

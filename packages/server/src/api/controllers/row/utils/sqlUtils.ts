@@ -124,6 +124,7 @@ export async function buildSqlFieldList(
         ([columnName, column]) =>
           column.type !== FieldType.LINK &&
           column.type !== FieldType.FORMULA &&
+          column.type !== FieldType.AI &&
           !existing.find(
             (field: string) => field === `${table.name}.${columnName}`
           )

@@ -210,6 +210,10 @@ export async function inputProcessing(
     if (field.type === FieldType.FORMULA) {
       delete clonedRow[key]
     }
+    // remove any AI values, they are to be generated
+    if (field.type === FieldType.AI) {
+      delete clonedRow[key]
+    }
     // otherwise coerce what is there to correct types
     else {
       clonedRow[key] = coerce(value, field.type)

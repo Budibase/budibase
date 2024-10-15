@@ -7,6 +7,7 @@ import {
   TRIGGER_DEFINITIONS,
 } from "../../automations"
 import {
+  AIOperationEnum,
   Automation,
   AutomationActionStepId,
   AutomationResults,
@@ -665,6 +666,12 @@ export function fullSchemaWithoutLinks({
       constraints: {
         presence: allRequired,
       },
+    },
+    [FieldType.AI]: {
+      name: "ai",
+      type: FieldType.AI,
+      operation: AIOperationEnum.PROMPT,
+      prompt: "Translate this into German :'{{ product }}'",
     },
     [FieldType.BARCODEQR]: {
       name: "barcodeqr",
