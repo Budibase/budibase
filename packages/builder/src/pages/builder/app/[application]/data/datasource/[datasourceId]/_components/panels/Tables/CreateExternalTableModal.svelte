@@ -23,6 +23,7 @@
       sourceType: DB_TYPE_EXTERNAL,
       schema: {
         id: {
+          name: "id",
           autocolumn: true,
           type: "number",
         },

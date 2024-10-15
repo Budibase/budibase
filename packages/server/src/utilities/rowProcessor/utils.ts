@@ -8,9 +8,13 @@ import {
   FormulaType,
   AutoFieldSubType,
   FieldType,
+  OperationFieldTypeEnum,
+  AIOperationEnum,
 } from "@budibase/types"
+import { OperationFields } from "@budibase/shared-core"
 import tracer from "dd-trace"
 import { context } from "@budibase/backend-core"
+import * as pro from "@budibase/pro"
 
 interface FormulaOpts {
   dynamic?: boolean
@@ -85,6 +89,66 @@ export async function processFormulas<T extends Row | Row[]>(
             }),
           }
         }
+      }
+    }
+    return Array.isArray(inputRows) ? rows : rows[0]
+  })
+}
+
+/**
+ * Looks through the rows provided and finds AI columns - which it then processes.
+ */
+export async function processAIColumns<T extends Row | Row[]>(
+  table: Table,
+  inputRows: T,
+  { contextRows }: FormulaOpts
+): Promise<T> {
+  return tracer.trace("processAIColumns", {}, async span => {
+    const numRows = Array.isArray(inputRows) ? inputRows.length : 1
+    span?.addTags({ table_id: table._id, numRows })
+    const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
+    const llm = await pro.ai.LargeLanguageModel.forCurrentTenant("gpt-4o-mini")
+    if (rows) {
+      // Ensure we have snippet context
+      await context.ensureSnippetContext()
+
+      for (let [column, schema] of Object.entries(table.schema)) {
+        if (schema.type !== FieldType.AI) {
+          continue
+        }
+
+        const rowUpdates = rows.map((row, i) => {
+          const contextRow = contextRows ? contextRows[i] : row
+
+          // Check if the type is bindable and pass through HBS if so
+          const operationField =
+            OperationFields[schema.operation as AIOperationEnum]
+          for (const key in schema) {
+            const fieldType = operationField[key as keyof typeof operationField]
+            if (fieldType === OperationFieldTypeEnum.BINDABLE_TEXT) {
+              // @ts-ignore
+              schema[key] = processStringSync(schema[key], contextRow)
+            }
+          }
+
+          const prompt = llm.buildPromptFromAIOperation({ schema, row })
+
+          return tracer.trace("processAIColumn", {}, async span => {
+            span?.addTags({ table_id: table._id, column })
+            const llmResponse = await llm.run(prompt!)
+            return {
+              ...row,
+              [column]: llmResponse,
+            }
+          })
+        })
+
+        const processedRows = await Promise.all(rowUpdates)
+
+        // Promise.all is deterministic so can rely on the indexing here
+        processedRows.forEach(
+          (processedRow, index) => (rows[index] = processedRow)
+        )
       }
     }
     return Array.isArray(inputRows) ? rows : rows[0]

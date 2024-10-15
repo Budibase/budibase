@@ -71,19 +71,20 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
 
   const datasources = await sdk.datasources.getExternalDatasources()
 
-  const external = datasources.flatMap(datasource => {
+  const external: Table[] = []
+  for (const datasource of datasources) {
     let entities = datasource.entities
     if (entities) {
-      return Object.values(entities).map<Table>((entity: Table) => ({
-        ...entity,
-        sourceType: TableSourceType.EXTERNAL,
-        sourceId: datasource._id!,
-        sql: isSQL(datasource),
-      }))
-    } else {
-      return []
+      for (const entity of Object.values(entities)) {
+        external.push({
+          ...(await processTable(entity)),
+          sourceType: TableSourceType.EXTERNAL,
+          sourceId: datasource._id!,
+          sql: isSQL(datasource),
+        })
+      }
     }
-  })
+  }
 
   const result: FetchTablesResponse = []
   for (const table of [...internal, ...external]) {
@@ -139,6 +140,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 export async function destroy(ctx: UserCtx) {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
+  await sdk.rowActions.deleteAll(tableId)
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
   await events.table.deleted(deletedTable)
   ctx.eventEmitter &&

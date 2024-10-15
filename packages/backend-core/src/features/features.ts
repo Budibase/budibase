@@ -272,6 +272,7 @@ export const flags = new FlagSet({
   SQS: Flag.boolean(env.isDev()),
   [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(env.isDev()),
   [FeatureFlag.ENRICHED_RELATIONSHIPS]: Flag.boolean(env.isDev()),
+  [FeatureFlag.TABLES_DEFAULT_ADMIN]: Flag.boolean(env.isDev()),
 })
 
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : T
