@@ -2458,7 +2458,7 @@ describe.each([
               }).toContainExactly([
                 { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
                 { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
-                // { name: "baz", productCat: undefined }, // TODO
+                { name: "baz", productCat: undefined },
               ])
             })
 
@@ -2506,7 +2506,7 @@ describe.each([
                 }).toContainExactly([
                   { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
                   { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
-                  // { name: "baz", productCat: undefined }, // TODO
+                  { name: "baz", productCat: undefined },
                 ])
               }
             )
@@ -2530,7 +2530,7 @@ describe.each([
               }).toContainExactly([
                 { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
                 { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
-                // { name: "baz", productCat: undefined }, // TODO
+                { name: "baz", productCat: undefined },
               ])
             })
           })
