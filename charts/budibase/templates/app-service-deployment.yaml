@@ -42,14 +42,12 @@ spec:
           {{ else }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
           {{ end }}
-        {{ if .Values.globals.sqs.enabled }}
         - name: COUCH_DB_SQL_URL
-        {{ if .Values.globals.sqs.url }}
-          value: {{ .Values.globals.sqs.url }}
-        {{ else }}
+          {{ if .Values.globals.sqs.url }}
+          value: {{ .Values.globals.sqs.url | quote }}
+          {{ else }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.globals.sqs.port }}
-        {{ end }}
-        {{ end }}
+          {{ end }}
         {{ if .Values.services.couchdb.enabled }}
         - name: COUCH_DB_USER
           valueFrom:
