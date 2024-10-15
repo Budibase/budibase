@@ -44,10 +44,11 @@ export function updateFilterKeys(
     if (!isPlainObject(filter)) {
       continue
     }
-    for (let [key, keyFilter] of Object.entries(filter)) {
+    for (const [key, keyFilter] of Object.entries(filter)) {
       if (keyFilter === "") {
         delete filter[key]
       }
+
       const possibleKey = updates.find(({ original }) =>
         key.match(makeFilterKeyRegex(original))
       )
@@ -55,8 +56,8 @@ export function updateFilterKeys(
         // only replace the first, not replaceAll
         filter[
           key.replace(
-            new RegExp(`^${possibleKey.original}\\.`),
-            `${possibleKey.updated}.`
+            new RegExp(`^(\\d+:)?${possibleKey.original}\\.`),
+            `$1${possibleKey.updated}.`
           )
         ] = filter[key]
         delete filter[key]
