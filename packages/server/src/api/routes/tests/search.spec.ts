@@ -2278,12 +2278,16 @@ describe.each([
       // It also can't work for in-memory searching because the related table name
       // isn't available.
       !isInMemory &&
-      describe("relations", () => {
+      describe.each([
+        RelationshipType.ONE_TO_MANY,
+        RelationshipType.MANY_TO_ONE,
+        RelationshipType.MANY_TO_MANY,
+      ])("relations", relationshipType => {
         let productCategoryTable: Table, productCatRows: Row[]
 
         beforeAll(async () => {
           const { relatedTable, tableId } = await basicRelationshipTables(
-            RelationshipType.ONE_TO_MANY
+            relationshipType
           )
           tableOrViewId = tableId
           productCategoryTable = relatedTable
@@ -2380,7 +2384,10 @@ describe.each([
                     ],
                   },
                 }).toContainExactly([
-                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                  {
+                    name: "foo",
+                    productCat: [{ _id: productCatRows[0]._id }],
+                  },
                 ])
               }
             )
@@ -2480,7 +2487,10 @@ describe.each([
                     ],
                   },
                 }).toContainExactly([
-                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                  {
+                    name: "foo",
+                    productCat: [{ _id: productCatRows[0]._id }],
+                  },
                 ])
               }
             )
@@ -2504,8 +2514,14 @@ describe.each([
                     ],
                   },
                 }).toContainExactly([
-                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
-                  { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
+                  {
+                    name: "foo",
+                    productCat: [{ _id: productCatRows[0]._id }],
+                  },
+                  {
+                    name: "bar",
+                    productCat: [{ _id: productCatRows[1]._id }],
+                  },
                   { name: "baz", productCat: undefined },
                 ])
               }
