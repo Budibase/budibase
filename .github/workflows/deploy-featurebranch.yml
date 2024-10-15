@@ -2,13 +2,11 @@ name: deploy-featurebranch
 
 on:
   pull_request:
-    types: [
-      labeled,
-      # default types below (https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request)
-      opened,
-      synchronize,
-      reopened,
-    ]
+    types: 
+      - labeled
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   release:
@@ -22,31 +20,21 @@ jobs:
         contains(github.event.pull_request.labels.*.name, 'feature-branch-enterprise')
       )
     runs-on: ubuntu-latest
+    env:
+      PAYLOAD_BRANCH: ${{ github.head_ref }}
+      PAYLOAD_PR_NUMBER: ${{ github.event.pull_request.number }}
+      PAYLOAD_LICENSE_TYPE: |
+        ${{ 
+          contains(github.event.pull_request.labels.*.name, 'feature-branch') && 'free' ||
+          contains(github.event.pull_request.labels.*.name, 'feature-branch-pro') && 'pro' ||
+          contains(github.event.pull_request.labels.*.name, 'feature-branch-team') && 'team' ||
+          contains(github.event.pull_request.labels.*.name, 'feature-branch-business') && 'business' ||
+          contains(github.event.pull_request.labels.*.name, 'feature-branch-enterprise') && 'enterprise' || 'free'
+        }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set PAYLOAD_LICENSE_TYPE
-        id: set_license_type
-        run: |
-          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'feature-branch') }}" == "true" ]]; then
-            echo "PAYLOAD_LICENSE_TYPE=free" >> $GITHUB_ENV
-          elif [[ "${{ contains(github.event.pull_request.labels.*.name, 'feature-branch-pro') }}" == "true" ]]; then
-            echo "PAYLOAD_LICENSE_TYPE=pro" >> $GITHUB_ENV
-          elif [[ "${{ contains(github.event.pull_request.labels.*.name, 'feature-branch-team') }}" == "true" ]]; then
-            echo "PAYLOAD_LICENSE_TYPE=team" >> $GITHUB_ENV
-          elif [[ "${{ contains(github.event.pull_request.labels.*.name, 'feature-branch-business') }}" == "true" ]]; then
-            echo "PAYLOAD_LICENSE_TYPE=business" >> $GITHUB_ENV
-          elif [[ "${{ contains(github.event.pull_request.labels.*.name, 'feature-branch-enterprise') }}" == "true" ]]; then
-            echo "PAYLOAD_LICENSE_TYPE=enterprise" >> $GITHUB_ENV
-          else
-            echo "PAYLOAD_LICENSE_TYPE=free" >> $GITHUB_ENV
-          fi
-
       - uses: passeidireto/trigger-external-workflow-action@main
-        env:
-          PAYLOAD_BRANCH: ${{ github.head_ref }}
-          PAYLOAD_PR_NUMBER: ${{ github.event.pull_request.number }}
-          PAYLOAD_LICENSE_TYPE: ${{ env.PAYLOAD_LICENSE_TYPE }}
         with:
           repository: budibase/budibase-deploys
           event: featurebranch-qa-deploy
