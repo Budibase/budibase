@@ -124,6 +124,7 @@ export async function buildSqlFieldList(
         ([columnName, column]) =>
           column.type !== FieldType.LINK &&
           column.type !== FieldType.FORMULA &&
+          column.type !== FieldType.AI &&
           !existing.find(
             (field: string) => field === `${table.name}.${columnName}`
           )
@@ -133,9 +134,7 @@ export async function buildSqlFieldList(
 
   let fields: string[] = []
   if (sdk.views.isView(source)) {
-    fields = Object.keys(helpers.views.basicFields(source)).filter(
-      key => source.schema?.[key]?.visible !== false
-    )
+    fields = Object.keys(helpers.views.basicFields(source))
   } else {
     fields = extractRealFields(source)
   }

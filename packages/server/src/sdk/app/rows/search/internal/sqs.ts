@@ -68,9 +68,7 @@ async function buildInternalFieldList(
   const { relationships, allowedFields } = opts || {}
   let schemaFields: string[] = []
   if (sdk.views.isView(source)) {
-    schemaFields = Object.keys(helpers.views.basicFields(source)).filter(
-      key => source.schema?.[key]?.visible !== false
-    )
+    schemaFields = Object.keys(helpers.views.basicFields(source))
   } else {
     schemaFields = Object.keys(source.schema).filter(
       key => source.schema[key].visible !== false
@@ -420,13 +418,26 @@ export async function search(
 
   if (params.sort) {
     const sortField = table.schema[params.sort]
-    const sortType =
-      sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
-    request.sort = {
-      [mapToUserColumn(sortField.name)]: {
-        direction: params.sortOrder || SortOrder.ASCENDING,
-        type: sortType as SortType,
-      },
+    const isAggregateField = aggregations.some(agg => agg.name === params.sort)
+
+    if (isAggregateField) {
+      request.sort = {
+        [params.sort]: {
+          direction: params.sortOrder || SortOrder.ASCENDING,
+          type: SortType.NUMBER,
+        },
+      }
+    } else if (sortField) {
+      const sortType =
+        sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
+      request.sort = {
+        [mapToUserColumn(sortField.name)]: {
+          direction: params.sortOrder || SortOrder.ASCENDING,
+          type: sortType as SortType,
+        },
+      }
+    } else {
+      throw new Error(`Unable to sort by ${params.sort}`)
     }
   }
 

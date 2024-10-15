@@ -20,29 +20,28 @@ const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_BOOLEAN = Joi.boolean().optional().allow(null)
 const APP_NAME_REGEX = /^[\w\s]+$/
 
-const validateViewSchemas: CustomValidator<Table> = (table, helpers) => {
-  if (table.views && Object.entries(table.views).length) {
-    const requiredFields = Object.entries(table.schema)
-      .filter(([_, v]) => isRequired(v.constraints))
+const validateViewSchemas: CustomValidator<Table> = (table, joiHelpers) => {
+  if (!table.views || Object.keys(table.views).length === 0) {
+    return table
+  }
+  const required = Object.keys(table.schema).filter(key =>
+    isRequired(table.schema[key].constraints)
+  )
+  if (required.length === 0) {
+    return table
+  }
+  for (const view of Object.values(table.views)) {
+    if (!sdk.views.isV2(view) || helpers.views.isCalculationView(view)) {
+      continue
+    }
+    const editable = Object.entries(view.schema || {})
+      .filter(([_, f]) => f.visible && !f.readonly)
       .map(([key]) => key)
-    if (requiredFields.length) {
-      for (const view of Object.values(table.views)) {
-        if (!sdk.views.isV2(view)) {
-          continue
-        }
-
-        const editableViewFields = Object.entries(view.schema || {})
-          .filter(([_, f]) => f.visible && !f.readonly)
-          .map(([key]) => key)
-        const missingField = requiredFields.find(
-          f => !editableViewFields.includes(f)
-        )
-        if (missingField) {
-          return helpers.message({
-            custom: `To make field "${missingField}" required, this field must be present and writable in views: ${view.name}.`,
-          })
-        }
-      }
+    const missingField = required.find(f => !editable.includes(f))
+    if (missingField) {
+      return joiHelpers.message({
+        custom: `To make field "${missingField}" required, this field must be present and writable in views: ${view.name}.`,
+      })
     }
   }
   return table

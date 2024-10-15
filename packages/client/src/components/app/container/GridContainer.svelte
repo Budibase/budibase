@@ -4,6 +4,8 @@
   import { GridRowHeight, GridColumns } from "constants"
   import { memo } from "@budibase/frontend-core"
 
+  export let onClick
+
   const component = getContext("component")
   const { styleable, builderStore } = getContext("sdk")
   const context = getContext("context")
@@ -121,15 +123,19 @@
   })
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   bind:this={ref}
   class="grid"
   class:mobile
+  class:clickable={!!onClick}
   bind:clientWidth={width}
   bind:clientHeight={height}
   use:styleable={$styles}
   data-cols={GridColumns}
   data-col-size={colSize}
+  on:click={onClick}
 >
   {#if inBuilder}
     <div class="underlay">
@@ -175,6 +181,9 @@
   }
   .placeholder.first-col {
     border-left: 1px solid var(--spectrum-global-color-gray-900);
+  }
+  .clickable {
+    cursor: pointer;
   }
 
   /* Highlight grid lines when resizing children */

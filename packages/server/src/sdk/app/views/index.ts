@@ -1,11 +1,14 @@
 import {
+  BBReferenceFieldSubType,
   CalculationType,
   canGroupBy,
+  FeatureFlag,
   FieldType,
   isNumeric,
   PermissionLevel,
   RelationSchemaField,
   RenameColumn,
+  RequiredKeys,
   Table,
   TableSchema,
   View,
@@ -13,7 +16,7 @@ import {
   ViewV2ColumnEnriched,
   ViewV2Enriched,
 } from "@budibase/types"
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, docIds, features, HTTPError } from "@budibase/backend-core"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
@@ -92,6 +95,13 @@ async function guardCalculationViewSchema(
     // so we don't validate it.
     if (isCount && !isDistinct) {
       continue
+    }
+
+    if (!schema.field) {
+      throw new HTTPError(
+        `Calculation field "${name}" is missing a "field" property`,
+        400
+      )
     }
 
     const targetSchema = table.schema[schema.field]
@@ -241,12 +251,17 @@ export async function create(
   await guardViewSchema(tableId, viewRequest)
   const view = await pickApi(tableId).create(tableId, viewRequest)
 
-  // Set permissions to be the same as the table
-  const tablePerms = await sdk.permissions.getResourcePerms(tableId)
-  await sdk.permissions.setPermissions(view.id, {
-    writeRole: tablePerms[PermissionLevel.WRITE].role,
-    readRole: tablePerms[PermissionLevel.READ].role,
-  })
+  const setExplicitPermission = await features.flags.isEnabled(
+    FeatureFlag.TABLES_DEFAULT_ADMIN
+  )
+  if (setExplicitPermission) {
+    // Set permissions to be the same as the table
+    const tablePerms = await sdk.permissions.getResourcePerms(tableId)
+    await sdk.permissions.setPermissions(view.id, {
+      writeRole: tablePerms[PermissionLevel.WRITE].role,
+      readRole: tablePerms[PermissionLevel.READ].role,
+    })
+  }
 
   return view
 }
@@ -298,7 +313,11 @@ export async function enrichSchema(
     const result: Record<string, ViewV2ColumnEnriched> = {}
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
-      if ([FieldType.LINK, FieldType.FORMULA].includes(relTableField.type)) {
+      if (
+        [FieldType.LINK, FieldType.FORMULA, FieldType.AI].includes(
+          relTableField.type
+        )
+      ) {
         continue
       }
 
@@ -309,13 +328,26 @@ export async function enrichSchema(
       const viewFieldSchema = viewFields[relTableFieldName]
       const isVisible = !!viewFieldSchema?.visible
       const isReadonly = !!viewFieldSchema?.readonly
-      result[relTableFieldName] = {
-        ...relTableField,
-        ...viewFieldSchema,
-        name: relTableField.name,
+      const enrichedFieldSchema: RequiredKeys<ViewV2ColumnEnriched> = {
         visible: isVisible,
         readonly: isReadonly,
+        order: viewFieldSchema?.order,
+        width: viewFieldSchema?.width,
+
+        icon: relTableField.icon,
+        type: relTableField.type,
+        subtype: relTableField.subtype,
       }
+      if (
+        !enrichedFieldSchema.icon &&
+        relTableField.type === FieldType.BB_REFERENCE &&
+        relTableField.subtype === BBReferenceFieldSubType.USER &&
+        !helpers.schema.isDeprecatedSingleUserColumn(relTableField)
+      ) {
+        // Forcing the icon, otherwise we would need to pass the constraints to show the proper icon
+        enrichedFieldSchema.icon = "UserGroup"
+      }
+      result[relTableFieldName] = enrichedFieldSchema
     }
     return result
   }
@@ -368,7 +400,8 @@ export function syncSchema(
 
   if (view.schema) {
     for (const fieldName of Object.keys(view.schema)) {
-      if (!schema[fieldName]) {
+      const viewSchema = view.schema[fieldName]
+      if (!helpers.views.isCalculationField(viewSchema) && !schema[fieldName]) {
         delete view.schema[fieldName]
       }
     }
