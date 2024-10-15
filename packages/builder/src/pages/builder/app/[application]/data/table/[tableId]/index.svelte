@@ -125,7 +125,8 @@
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     isCloud={$admin.cloud}
-    licensing={$licensing}
+    aiEnabled={$licensing.budibaseAIEnabled ||
+      $licensing.customAIConfigsEnabled}
     {buttons}
     buttonsCollapsed
     on:updatedatasource={handleGridTableUpdate}

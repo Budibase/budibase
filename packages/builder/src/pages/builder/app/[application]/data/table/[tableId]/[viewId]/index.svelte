@@ -49,7 +49,7 @@
   {buttons}
   allowAddRows
   allowDeleteRows
-  licensing={$licensing}
+  aiEnabled={$licensing.budibaseAIEnabled || $licensing.customAIConfigsEnabled}
   showAvatars={false}
   on:updatedatasource={handleGridViewUpdate}
   isCloud={$admin.cloud}

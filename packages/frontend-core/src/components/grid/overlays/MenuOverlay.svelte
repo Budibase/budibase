@@ -1,5 +1,6 @@
 <script>
   import { Menu, MenuItem, Helpers } from "@budibase/bbui"
+  import { FieldType } from "@budibase/types"
   import { getContext } from "svelte"
   import { NewRowID } from "../lib/constants"
   import GridPopover from "./GridPopover.svelte"
@@ -26,9 +27,9 @@
 
   $: style = makeStyle($menu)
   $: isNewRow = $focusedRowId === NewRowID
-  $: budibaseAIEnabled =
-    $config.licensing?.budibaseAIEnabled ||
-    $config.licensing?.customAIConfigsEnabled
+  $: hasAIColumns = $visibleColumns.some(
+    col => col.schema.type === FieldType.AI
+  )
 
   const makeStyle = menu => {
     return `left:${menu.left}px; top:${menu.top}px;`
@@ -58,9 +59,8 @@
   }
 
   const generateAIColumns = async () => {
-    await rows.actions.saveRow({ rowId: $focusedRowId })
-    await rows.actions.refreshData()
     menu.actions.close()
+    await rows.actions.applyRowChanges({ rowId: $focusedRowId })
     $notifications.success("Generated AI columns")
   }
 </script>
@@ -171,12 +171,10 @@
           >
             Delete row
           </MenuItem>
-          {#if budibaseAIEnabled}
+          {#if $config.aiEnabled}
             <MenuItem
               icon="MagicWand"
-              disabled={isNewRow ||
-                !$focusedRow?._rev ||
-                !$hasBudibaseIdentifiers}
+              disabled={isNewRow || !hasAIColumns}
               on:click={generateAIColumns}
             >
               Generate AI Columns
