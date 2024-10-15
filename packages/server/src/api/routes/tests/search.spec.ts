@@ -2609,6 +2609,21 @@ describe.each([
               related1: [relatedRows[2]._id!],
               related2: [relatedRows[3]._id!],
             }),
+            config.api.row.save(tableOrViewId, {
+              name: "test3",
+              related1: [],
+              related2: [],
+            }),
+            config.api.row.save(tableOrViewId, {
+              name: "test4",
+              related1: [relatedRows[1]._id!],
+              related2: [],
+            }),
+            config.api.row.save(tableOrViewId, {
+              name: "test5",
+              related1: [],
+              related2: [relatedRows[1]._id!],
+            }),
           ])
         })
 
@@ -2625,6 +2640,17 @@ describe.each([
               name: "test2",
               related1: [{ _id: relatedRows[2]._id }],
               related2: [{ _id: relatedRows[3]._id }],
+            },
+            {
+              name: "test3",
+            },
+            {
+              name: "test4",
+              related1: [{ _id: relatedRows[1]._id }],
+            },
+            {
+              name: "test5",
+              related2: [{ _id: relatedRows[1]._id! }],
             },
           ])
         })
