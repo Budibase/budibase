@@ -10,6 +10,7 @@ const schema = {
   TEST_BOOLEAN: Flag.boolean(false),
   TEST_STRING: Flag.string("default value"),
   TEST_NUMBER: Flag.number(0),
+  TEST_BOOLEAN_DEFAULT_TRUE: Flag.boolean(true),
 }
 const flags = new FlagSet(schema)
 
@@ -122,6 +123,11 @@ describe("feature flags", () => {
         featureFlags: { UNDEFINED: true },
       },
       expected: flags.defaults(),
+    },
+    {
+      it: "should be possible to override a default true flag to false",
+      environmentFlags: "default:!TEST_BOOLEAN_DEFAULT_TRUE",
+      expected: { TEST_BOOLEAN_DEFAULT_TRUE: false },
     },
   ])(
     "$it",

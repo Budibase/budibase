@@ -142,7 +142,7 @@ describe("/roles", () => {
     })
 
     it("should not fetch higher level accessible roles when a custom role header is provided", async () => {
-      const customRoleName = "CUSTOM_ROLE"
+      const customRoleName = "custom_role_1"
       await config.api.roles.save({
         name: customRoleName,
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
@@ -155,10 +155,40 @@ describe("/roles", () => {
           status: 200,
         }
       )
-      expect(res.length).toBe(3)
-      expect(res[0]).toBe(customRoleName)
-      expect(res[1]).toBe("BASIC")
-      expect(res[2]).toBe("PUBLIC")
+      expect(res).toEqual([customRoleName, "BASIC", "PUBLIC"])
+    })
+  })
+
+  describe("accessible - multi-inheritance", () => {
+    it("should list access correctly for multi-inheritance role", async () => {
+      const role1 = "multi_role_1",
+        role2 = "multi_role_2",
+        role3 = "multi_role_3"
+      const { _id: roleId1 } = await config.api.roles.save({
+        name: role1,
+        inherits: roles.BUILTIN_ROLE_IDS.BASIC,
+        permissionId: permissions.BuiltinPermissionID.WRITE,
+        version: "name",
+      })
+      const { _id: roleId2 } = await config.api.roles.save({
+        name: role2,
+        inherits: roles.BUILTIN_ROLE_IDS.POWER,
+        permissionId: permissions.BuiltinPermissionID.POWER,
+        version: "name",
+      })
+      await config.api.roles.save({
+        name: role3,
+        inherits: [roleId1!, roleId2!],
+        permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+        version: "name",
+      })
+      const headers = await config.roleHeaders({
+        roleId: role3,
+      })
+      const res = await config.api.roles.accessible(headers, {
+        status: 200,
+      })
+      expect(res).toEqual([role3, role1, "BASIC", "PUBLIC", role2, "POWER"])
     })
   })
 })
