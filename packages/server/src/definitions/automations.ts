@@ -19,4 +19,9 @@ export interface AutomationContext extends AutomationResults {
   stepsByName: Record<string, any>
   env?: Record<string, string>
   trigger: any
+  settings?: {
+    url?: string
+    logo?: string
+    company?: string
+  }
 }
