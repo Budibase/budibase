@@ -75,13 +75,17 @@ fi
 for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
 ln -s ${DATA_DIR}/.env /app/.env
 ln -s ${DATA_DIR}/.env /worker/.env
+
 # make these directories in runner, incase of mount
 mkdir -p ${DATA_DIR}/minio
+mkdir -p ${DATA_DIR}/redis
 chown -R couchdb:couchdb ${DATA_DIR}/couch
+
+sed -i "s#DATA_DIR#${DATA_DIR}#g" /etc/redis/redis.conf
 if [[ -n "${REDIS_PASSWORD}" ]]; then
-  redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
+  redis-server /etc/redis/redis.conf --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
 else
-  redis-server > /dev/stdout 2>&1 &
+  redis-server /etc/redis/redis.conf > /dev/stdout 2>&1 &
 fi
 /bbcouch-runner.sh &
 
