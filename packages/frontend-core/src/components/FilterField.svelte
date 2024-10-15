@@ -35,7 +35,6 @@
   $: drawerValue = toDrawerValue(fieldValue)
   $: isJS = isJSBinding(fieldValue)
   $: fieldIsValid = isValid(fieldValue)
-  $: console.log(filter)
 
   const getFieldOptions = field => {
     const schema = schemaFields.find(x => x.name === field)
