@@ -121,6 +121,7 @@ export interface BBReferenceFieldMetadata
   type: FieldType.BB_REFERENCE
   subtype: BBReferenceFieldSubType
   relationshipType?: RelationshipType
+  default?: string[]
 }
 export interface BBReferenceSingleFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {

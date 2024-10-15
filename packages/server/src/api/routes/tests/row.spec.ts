@@ -789,6 +789,39 @@ describe.each([
         })
       })
 
+      describe("multi-user column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                users: {
+                  name: "users",
+                  type: FieldType.BB_REFERENCE,
+                  subtype: BBReferenceFieldSubType.USER,
+                  default: ["{{ [Current User]._id }}"],
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.users).toHaveLength(1)
+          expect(row.users[0]._id).toEqual(config.getUser()._id)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const id = `us_${utils.newid()}`
+          await config.createUser({ _id: id })
+          const row = await config.api.row.save(table._id!, {
+            users: [id],
+          })
+          expect(row.users).toHaveLength(1)
+          expect(row.users[0]._id).toEqual(id)
+        })
+      })
+
       describe("bindings", () => {
         describe("string column", () => {
           beforeAll(async () => {
