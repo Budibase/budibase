@@ -53,8 +53,12 @@ export function updateFilterKeys(
       )
       if (possibleKey && possibleKey.original !== possibleKey.updated) {
         // only replace the first, not replaceAll
-        filter[key.replace(possibleKey.original, possibleKey.updated)] =
-          filter[key]
+        filter[
+          key.replace(
+            new RegExp(`^${possibleKey.original}\\.`),
+            `${possibleKey.updated}.`
+          )
+        ] = filter[key]
         delete filter[key]
       }
     }
