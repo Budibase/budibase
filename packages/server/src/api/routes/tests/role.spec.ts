@@ -121,6 +121,34 @@ describe("/roles", () => {
         { status: 400, body: { message: LOOP_ERROR } }
       )
     })
+
+    it("frontend example - should deny", async () => {
+      const id1 = "cb27c4ec9415042f4800411adb346fb7c",
+        id2 = "cbc72a9d61ab64d49b31d90d1df4c1fdb"
+      const role1 = await config.api.roles.save({
+        _id: id1,
+        name: id1,
+        permissions: {},
+        permissionId: "write",
+        version: "name",
+        inherits: ["POWER"],
+      })
+      await config.api.roles.save({
+        _id: id2,
+        permissions: {},
+        name: id2,
+        permissionId: "write",
+        version: "name",
+        inherits: [id1],
+      })
+      await config.api.roles.save(
+        {
+          ...role1,
+          inherits: [BUILTIN_ROLE_IDS.POWER, id2],
+        },
+        { status: 400, body: { message: LOOP_ERROR } }
+      )
+    })
   })
 
   describe("fetch", () => {

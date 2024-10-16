@@ -1,4 +1,5 @@
 import { Role, RoleUIMetadata } from "../../documents"
+import { PermissionLevel } from "../../sdk"
 
 export interface SaveRoleRequest {
   _id?: string
@@ -6,6 +7,7 @@ export interface SaveRoleRequest {
   name: string
   inherits?: string | string[]
   permissionId: string
+  permissions?: Record<string, PermissionLevel[]>
   version?: string
   uiMetadata?: RoleUIMetadata
 }
