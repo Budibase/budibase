@@ -59,7 +59,6 @@
   bind:this={drawer}
   title="Filtering"
   on:drawerHide
-  on:drawerShow
   on:drawerShow={() => {
     // Reset to the currently available value.
     localFilters = Helpers.cloneDeep(value)
