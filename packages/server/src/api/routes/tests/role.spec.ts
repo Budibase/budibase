@@ -1,4 +1,9 @@
-import { roles, events, permissions } from "@budibase/backend-core"
+import {
+  roles,
+  events,
+  permissions,
+  db as dbCore,
+} from "@budibase/backend-core"
 import * as setup from "./utilities"
 import { PermissionLevel } from "@budibase/types"
 
@@ -28,7 +33,10 @@ describe("/roles", () => {
       expect(res._rev).toBeDefined()
       expect(events.role.updated).not.toHaveBeenCalled()
       expect(events.role.created).toHaveBeenCalledTimes(1)
-      expect(events.role.created).toHaveBeenCalledWith(res)
+      expect(events.role.created).toHaveBeenCalledWith({
+        ...res,
+        _id: dbCore.prefixRoleID(res._id!),
+      })
     })
   })
 
@@ -52,7 +60,10 @@ describe("/roles", () => {
       expect(res._rev).toBeDefined()
       expect(events.role.created).not.toHaveBeenCalled()
       expect(events.role.updated).toHaveBeenCalledTimes(1)
-      expect(events.role.updated).toHaveBeenCalledWith(res)
+      expect(events.role.updated).toHaveBeenCalledWith({
+        ...res,
+        _id: dbCore.prefixRoleID(res._id!),
+      })
     })
 
     it("disallow loops", async () => {
@@ -173,7 +184,10 @@ describe("/roles", () => {
         status: 404,
       })
       expect(events.role.deleted).toHaveBeenCalledTimes(1)
-      expect(events.role.deleted).toHaveBeenCalledWith(customRole)
+      expect(events.role.deleted).toHaveBeenCalledWith({
+        ...customRole,
+        _id: dbCore.prefixRoleID(customRole._id!),
+      })
     })
   })
 
