@@ -126,6 +126,9 @@
   }
 
   const extendQuery = (defaultQuery, extensions) => {
+    if (!Object.keys(extensions).length) {
+      return
+    }
     const extended = {
       [LogicalOperator.AND]: {
         conditions: [
