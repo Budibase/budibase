@@ -145,7 +145,7 @@ describe("Captures of real examples", () => {
         ],
         sql: expect.stringContaining(
           multiline(
-            `where exists (select 1 from "persons" as "c" where "c"."personid" = "a"."executorid" and ("c"."year" between $1 and $2)) and exists (select 1 from "persons" as "c" where "c"."personid" = "a"."qaid" and ("c"."year" between $3 and $4)) and (exists (select 1 from "products" as "b" inner join "products_tasks" as "d" on "b"."productid" = "d"."productid" where "d"."taskid" = "a"."taskid" and (COALESCE("b"."productname" = $5, FALSE)))`
+            `where (exists (select 1 from "persons" as "c" where "c"."personid" = "a"."executorid" and ("c"."year" between $1 and $2))) and (exists (select 1 from "persons" as "c" where "c"."personid" = "a"."qaid" and ("c"."year" between $3 and $4))) and (exists (select 1 from "products" as "b" inner join "products_tasks" as "d" on "b"."productid" = "d"."productid" where "d"."taskid" = "a"."taskid" and (COALESCE("b"."productname" = $5, FALSE))))`
           )
         ),
       })
