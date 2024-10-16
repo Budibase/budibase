@@ -47,6 +47,25 @@ describe("/roles", () => {
       expect(events.role.updated).toHaveBeenCalledTimes(1)
       expect(events.role.updated).toHaveBeenCalledWith(res)
     })
+
+    it("disallow loops", async () => {
+      let role1 = basicRole()
+      role1 = await config.api.roles.save(role1, {
+        status: 200,
+      })
+      let role2 = basicRole()
+      role2.inherits = [role1._id!]
+      role2 = await config.api.roles.save(role2, {
+        status: 200,
+      })
+      role1.inherits = [role2._id!]
+      await config.api.roles.save(role1, {
+        status: 400,
+        body: {
+          message: "Role inheritance contains a loop, this is not supported",
+        },
+      })
+    })
   })
 
   describe("fetch", () => {

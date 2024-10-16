@@ -82,7 +82,10 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     _id = dbCore.prefixRoleID(_id)
   }
 
-  const allRoles = await roles.getAllRoles()
+  const allRoles = (await roles.getAllRoles()).map(role => ({
+    ...role,
+    _id: dbCore.prefixRoleID(role._id!),
+  }))
   let dbRole: Role | undefined
   if (!isCreate && _id?.startsWith(DocumentType.ROLE)) {
     dbRole = allRoles.find(role => role._id === _id)
