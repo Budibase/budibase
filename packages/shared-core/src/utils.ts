@@ -137,12 +137,8 @@ export function isSupportedUserSearch(query: SearchFilters) {
  * @param {LegacyFilter[] | SearchFilterGroup} filters
  */
 export const processSearchFilters = (
-  filters: LegacyFilter[] | SearchFilterGroup | undefined
-): SearchFilterGroup | undefined => {
-  if (!filters) {
-    return
-  }
-
+  filters: LegacyFilter[]
+): SearchFilterGroup => {
   // Base search config.
   const defaultCfg: SearchFilterGroup = {
     logicalOperator: FilterGroupLogicalOperator.ALL,
@@ -160,65 +156,60 @@ export const processSearchFilters = (
     "formulaType",
   ]
 
-  if (Array.isArray(filters)) {
-    let baseGroup: SearchFilterGroup = {
-      filters: [],
-      logicalOperator: FilterGroupLogicalOperator.ALL,
-    }
+  let baseGroup: SearchFilterGroup = {
+    filters: [],
+    logicalOperator: FilterGroupLogicalOperator.ALL,
+  }
 
-    return filters.reduce((acc: SearchFilterGroup, filter: LegacyFilter) => {
-      // Sort the properties for easier debugging
-      const filterPropertyKeys = (Object.keys(filter) as (keyof LegacyFilter)[])
-        .sort((a, b) => {
-          return a.localeCompare(b)
-        })
-        .filter(key => filter[key])
+  return filters.reduce((acc: SearchFilterGroup, filter: LegacyFilter) => {
+    // Sort the properties for easier debugging
+    const filterPropertyKeys = (Object.keys(filter) as (keyof LegacyFilter)[])
+      .sort((a, b) => {
+        return a.localeCompare(b)
+      })
+      .filter(key => filter[key])
 
-      if (filterPropertyKeys.length == 1) {
-        const key = filterPropertyKeys[0],
-          value = filter[key]
-        // Global
-        if (key === "onEmptyFilter") {
-          // unset otherwise
-          acc.onEmptyFilter = value
-        } else if (key === "operator" && value === "allOr") {
-          // Group 1 logical operator
-          baseGroup.logicalOperator = FilterGroupLogicalOperator.ANY
-        }
-
-        return acc
-      }
-
-      const allowedFilterSettings: AllowedFilters = filterPropertyKeys.reduce(
-        (acc: AllowedFilters, key) => {
-          const value = filter[key]
-          if (filterAllowedKeys.includes(key)) {
-            if (key === "field") {
-              acc.push([key, removeKeyNumbering(value)])
-            } else {
-              acc.push([key, value])
-            }
-          }
-          return acc
-        },
-        []
-      )
-
-      const migratedFilter: LegacyFilter = Object.fromEntries(
-        allowedFilterSettings
-      ) as LegacyFilter
-
-      baseGroup.filters!.push(migratedFilter)
-
-      if (!acc.groups || !acc.groups.length) {
-        // init the base group
-        acc.groups = [baseGroup]
+    if (filterPropertyKeys.length == 1) {
+      const key = filterPropertyKeys[0],
+        value = filter[key]
+      // Global
+      if (key === "onEmptyFilter") {
+        // unset otherwise
+        acc.onEmptyFilter = value
+      } else if (key === "operator" && value === "allOr") {
+        // Group 1 logical operator
+        baseGroup.logicalOperator = FilterGroupLogicalOperator.ANY
       }
 
       return acc
-    }, defaultCfg)
-  } else if (!filters?.groups) {
-    return
-  }
-  return filters
+    }
+
+    const allowedFilterSettings: AllowedFilters = filterPropertyKeys.reduce(
+      (acc: AllowedFilters, key) => {
+        const value = filter[key]
+        if (filterAllowedKeys.includes(key)) {
+          if (key === "field") {
+            acc.push([key, removeKeyNumbering(value)])
+          } else {
+            acc.push([key, value])
+          }
+        }
+        return acc
+      },
+      []
+    )
+
+    const migratedFilter: LegacyFilter = Object.fromEntries(
+      allowedFilterSettings
+    ) as LegacyFilter
+
+    baseGroup.filters!.push(migratedFilter)
+
+    if (!acc.groups || !acc.groups.length) {
+      // init the base group
+      acc.groups = [baseGroup]
+    }
+
+    return acc
+  }, defaultCfg)
 }
