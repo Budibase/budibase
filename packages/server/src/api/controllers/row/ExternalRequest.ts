@@ -157,7 +157,8 @@ function isEditableColumn(column: FieldSchema) {
     column.autoReason !== AutoReason.FOREIGN_KEY &&
     column.subtype !== AutoFieldSubType.AUTO_ID
   const isFormula = column.type === FieldType.FORMULA
-  return !(isExternalAutoColumn || isFormula)
+  const isAIColumn = column.type === FieldType.AI
+  return !(isExternalAutoColumn || isFormula || isAIColumn)
 }
 
 export class ExternalRequest<T extends Operation> {
@@ -173,9 +174,9 @@ export class ExternalRequest<T extends Operation> {
     if (!opts.datasource) {
       if (sdk.views.isView(source)) {
         const table = await sdk.views.getTable(source.id)
-        opts.datasource = await sdk.datasources.get(table.sourceId!)
+        opts.datasource = await sdk.datasources.get(table.sourceId)
       } else {
-        opts.datasource = await sdk.datasources.get(source.sourceId!)
+        opts.datasource = await sdk.datasources.get(source.sourceId)
       }
     }
 

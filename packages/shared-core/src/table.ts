@@ -8,6 +8,7 @@ const allowDisplayColumnByType: Record<FieldType, boolean> = {
   [FieldType.NUMBER]: true,
   [FieldType.DATETIME]: true,
   [FieldType.FORMULA]: true,
+  [FieldType.AI]: true,
   [FieldType.AUTO]: true,
   [FieldType.INTERNAL]: true,
   [FieldType.BARCODEQR]: true,
@@ -38,6 +39,7 @@ const allowSortColumnByType: Record<FieldType, boolean> = {
   [FieldType.JSON]: true,
 
   [FieldType.FORMULA]: false,
+  [FieldType.AI]: false,
   [FieldType.ATTACHMENTS]: false,
   [FieldType.ATTACHMENT_SINGLE]: false,
   [FieldType.SIGNATURE_SINGLE]: false,
@@ -62,6 +64,7 @@ const allowDefaultColumnByType: Record<FieldType, boolean> = {
   [FieldType.BIGINT]: false,
   [FieldType.BOOLEAN]: false,
   [FieldType.FORMULA]: false,
+  [FieldType.AI]: false,
   [FieldType.ATTACHMENTS]: false,
   [FieldType.ATTACHMENT_SINGLE]: false,
   [FieldType.SIGNATURE_SINGLE]: false,

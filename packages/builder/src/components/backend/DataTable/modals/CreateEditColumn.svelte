@@ -26,6 +26,7 @@
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
+  import { licensing } from "stores/portal"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
@@ -35,6 +36,7 @@
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "helpers/utils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import AIFieldConfiguration from "components/common/AIFieldConfiguration.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
@@ -99,6 +101,8 @@
   let optionsValid = true
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
+  $: aiEnabled =
+    $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
@@ -447,6 +451,7 @@
         FIELDS.BOOLEAN,
         FIELDS.DATETIME,
         FIELDS.LINK,
+        ...(aiEnabled ? [FIELDS.AI] : []),
         FIELDS.LONGFORM,
         FIELDS.USER,
         FIELDS.USERS,
@@ -784,6 +789,13 @@
         />
       </div>
     </div>
+  {:else if editableColumn.type === FieldType.AI}
+    <AIFieldConfiguration
+      aiField={editableColumn}
+      context={rowGoldenSample}
+      bindings={getBindings({ table })}
+      schema={table.schema}
+    />
   {:else if editableColumn.type === FieldType.JSON}
     <Button primary text on:click={openJsonSchemaEditor}>
       Open schema editor

@@ -521,8 +521,11 @@ class InternalBuilder {
         const [filterTableName, ...otherProperties] = key.split(".")
         const property = otherProperties.join(".")
         const alias = getTableAlias(filterTableName)
-        return fn(q, alias ? `${alias}.${property}` : property, value)
+        return q.andWhere(subquery =>
+          fn(subquery, alias ? `${alias}.${property}` : property, value)
+        )
       }
+
       for (const key in structure) {
         const value = structure[key]
         const updatedKey = dbCore.removeKeyNumbering(key)
@@ -552,6 +555,9 @@ class InternalBuilder {
             value
           )
         } else if (shouldProcessRelationship) {
+          if (allOr) {
+            query = query.or
+          }
           query = builder.addRelationshipForFilter(query, updatedKey, q => {
             return handleRelationship(q, updatedKey, value)
           })
@@ -1288,7 +1294,8 @@ class InternalBuilder {
           schema.constraints?.presence === true ||
           schema.type === FieldType.FORMULA ||
           schema.type === FieldType.AUTO ||
-          schema.type === FieldType.LINK
+          schema.type === FieldType.LINK ||
+          schema.type === FieldType.AI
         ) {
           continue
         }
