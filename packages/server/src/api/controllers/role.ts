@@ -28,6 +28,18 @@ const UpdateRolesOptions = {
   REMOVED: "removed",
 }
 
+function externalRole(role: Role): Role {
+  let _id: string | undefined
+  if (role._id) {
+    _id = roles.getExternalRoleID(role._id)
+  }
+  return {
+    ...role,
+    _id,
+    inherits: roles.getExternalRoleIDs(role.inherits, role.version),
+  }
+}
+
 async function updateRolesOnUserTable(
   db: Database,
   roleId: string,
@@ -54,7 +66,7 @@ async function updateRolesOnUserTable(
 }
 
 export async function fetch(ctx: UserCtx<void, FetchRolesResponse>) {
-  ctx.body = await roles.getAllRoles()
+  ctx.body = (await roles.getAllRoles()).map(role => externalRole(role))
 }
 
 export async function find(ctx: UserCtx<void, FindRoleResponse>) {
@@ -62,7 +74,7 @@ export async function find(ctx: UserCtx<void, FindRoleResponse>) {
   if (!role) {
     ctx.throw(404, { message: "Role not found" })
   } else {
-    ctx.body = role
+    ctx.body = externalRole(role)
   }
 }
 
@@ -136,10 +148,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     role.version
   )
   role._rev = result.rev
-  ctx.body = {
-    ...role,
-    _id: roles.getExternalRoleID(role._id!, role.version),
-  }
+  ctx.body = externalRole(role)
 
   const devDb = context.getDevAppDB()
   const prodDb = context.getProdAppDB()
@@ -199,15 +208,14 @@ export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
   if (!roleId) {
     roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
   }
+  let roleIds: string[] = []
   if (ctx.user && sharedSdk.users.isAdminOrBuilder(ctx.user)) {
     const appId = context.getAppId()
-    if (!appId) {
-      ctx.body = []
-    } else {
-      ctx.body = await roles.getAllRoleIds(appId)
+    if (appId) {
+      roleIds = await roles.getAllRoleIds(appId)
     }
   } else {
-    ctx.body = await roles.getUserRoleIdHierarchy(roleId!)
+    roleIds = await roles.getUserRoleIdHierarchy(roleId!)
   }
 
   // If a custom role is provided in the header, filter out higher level roles
@@ -215,7 +223,7 @@ export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
   if (roleHeader && !Object.keys(roles.BUILTIN_ROLE_IDS).includes(roleHeader)) {
     const role = await roles.getRole(roleHeader)
     const inherits = role?.inherits
-    const orderedRoles = ctx.body.reverse()
+    const orderedRoles = roleIds.reverse()
     let filteredRoles = [roleHeader]
     for (let role of orderedRoles) {
       filteredRoles = [role, ...filteredRoles]
@@ -227,6 +235,8 @@ export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
       }
     }
     filteredRoles.pop()
-    ctx.body = [roleHeader, ...filteredRoles]
+    roleIds = [roleHeader, ...filteredRoles]
   }
+
+  ctx.body = roleIds.map(roleId => roles.getExternalRoleID(roleId))
 }

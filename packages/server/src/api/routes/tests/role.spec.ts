@@ -105,7 +105,7 @@ describe("/roles", () => {
         inherits: [BUILTIN_ROLE_IDS.POWER, role1._id!, role2._id!],
       })
       // go back to role1
-      role1 = await config.api.roles.save(
+      await config.api.roles.save(
         {
           ...role1,
           inherits: [BUILTIN_ROLE_IDS.POWER, role2._id!, role3._id!],
@@ -113,7 +113,7 @@ describe("/roles", () => {
         { status: 400, body: { message: LOOP_ERROR } }
       )
       // go back to role2
-      role2 = await config.api.roles.save(
+      await config.api.roles.save(
         {
           ...role2,
           inherits: [BUILTIN_ROLE_IDS.POWER, role1._id!, role3._id!],
