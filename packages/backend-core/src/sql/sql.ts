@@ -518,10 +518,12 @@ class InternalBuilder {
             mainKnex.raw(this.quotedIdentifier(foreignKey))
           )
 
-          query = query.whereExists(whereCb(updatedKey, subQuery))
-          if (allowEmptyRelationships) {
-            query = query.orWhereNull(foreignKey)
-          }
+          query = query.where(q => {
+            q.whereExists(whereCb(updatedKey, subQuery))
+            if (allowEmptyRelationships) {
+              q.orWhereNull(foreignKey)
+            }
+          })
         }
       }
     }
