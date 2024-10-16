@@ -210,7 +210,7 @@ const automationActions = store => ({
    */
   traverse: (blockRefs, automation) => {
     let blocks = []
-    if (automation.definition.trigger) {
+    if (automation.definition?.trigger) {
       blocks.push(automation.definition.trigger)
     }
     blocks = blocks.concat(automation.definition.steps || [])
@@ -689,7 +689,7 @@ const automationActions = store => ({
       type,
       id: generate(),
     }
-    newName = getNewStepName(get(selectedAutomation).data, newStep)
+    newName = getNewStepName(get(selectedAutomation)?.data, newStep)
     newStep.name = newName
     return newStep
   },
