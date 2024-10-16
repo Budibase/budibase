@@ -510,18 +510,19 @@ class InternalBuilder {
             }
           })
         } else {
+          const toKey = `${toAlias}.${relationship.to}`
           const foreignKey = `${fromAlias}.${relationship.from}`
           // "join" to the main table, making sure the ID matches that of the main
           subQuery = subQuery.where(
-            `${toAlias}.${relationship.to}`,
+            toKey,
             "=",
             mainKnex.raw(this.quotedIdentifier(foreignKey))
           )
 
           query = query.where(q => {
-            q.whereExists(whereCb(updatedKey, subQuery))
+            q.whereExists(whereCb(updatedKey, subQuery.clone()))
             if (allowEmptyRelationships) {
-              q.orWhereNull(foreignKey)
+              q.orWhereNotExists(subQuery)
             }
           })
         }
