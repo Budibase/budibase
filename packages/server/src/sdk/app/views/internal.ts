@@ -4,6 +4,19 @@ import { context, HTTPError } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 import { enrichSchema, isV2 } from "."
+import { utils as sharedUtils, dataFilters } from "@budibase/shared-core"
+
+function ensureQueryUISet(view: ViewV2) {
+  if (!view.queryUI && view.query) {
+    view.queryUI = sharedUtils.processSearchFilters(view.query)
+  }
+}
+
+function ensureQuerySet(view: ViewV2) {
+  if (!view.query && view.queryUI) {
+    view.query = dataFilters.buildQuery(view.queryUI)
+  }
+}
 
 export async function get(viewId: string): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
@@ -13,6 +26,7 @@ export async function get(viewId: string): Promise<ViewV2> {
   if (!found) {
     throw new Error("No view found")
   }
+  ensureQueryUISet(found)
   return found
 }
 
@@ -24,6 +38,7 @@ export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
   if (!found) {
     throw new Error("No view found")
   }
+  ensureQueryUISet(found)
   return await enrichSchema(found, table.schema)
 }
 

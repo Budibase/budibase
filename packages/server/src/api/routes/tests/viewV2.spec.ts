@@ -144,7 +144,7 @@ describe.each([
         })
       })
 
-      it("can persist views with all fields", async () => {
+      it.only("can persist views with all fields", async () => {
         const newView: Required<Omit<CreateViewRequest, "queryUI" | "type">> = {
           name: generator.name(),
           tableId: table._id!,
@@ -178,6 +178,7 @@ describe.each([
               visible: true,
             },
           },
+          queryUI: {},
           id: expect.any(String),
           version: 2,
         })

@@ -572,29 +572,34 @@ export const buildQueryLegacy = (
  *
  * @returns {SearchFilters}
  */
-
-export const buildQuery = (
+export function buildQuery(filter: undefined): undefined
+export function buildQuery(
+  filter: SearchFilterGroup | LegacyFilter[]
+): SearchFilters
+export function buildQuery(
   filter?: SearchFilterGroup | LegacyFilter[]
-): SearchFilters | undefined => {
-  const parsedFilter: SearchFilterGroup | undefined =
-    processSearchFilters(filter)
-
-  if (!parsedFilter) {
+): SearchFilters | undefined {
+  if (!filter) {
     return
   }
 
-  const operatorMap: { [key in FilterGroupLogicalOperator]: LogicalOperator } =
-    {
-      [FilterGroupLogicalOperator.ALL]: LogicalOperator.AND,
-      [FilterGroupLogicalOperator.ANY]: LogicalOperator.OR,
-    }
+  let parsedFilter: SearchFilterGroup
+  if (Array.isArray(filter)) {
+    parsedFilter = processSearchFilters(filter)
+  } else {
+    parsedFilter = filter
+  }
+
+  const operatorMap = {
+    [FilterGroupLogicalOperator.ALL]: LogicalOperator.AND,
+    [FilterGroupLogicalOperator.ANY]: LogicalOperator.OR,
+  }
 
   const globalOnEmpty = parsedFilter.onEmptyFilter
     ? parsedFilter.onEmptyFilter
     : null
 
-  const globalOperator: LogicalOperator =
-    operatorMap[parsedFilter.logicalOperator as FilterGroupLogicalOperator]
+  const globalOperator = operatorMap[parsedFilter.logicalOperator]
 
   return {
     ...(globalOnEmpty ? { onEmptyFilter: globalOnEmpty } : {}),
