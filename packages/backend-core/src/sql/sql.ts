@@ -425,23 +425,27 @@ class InternalBuilder {
     query: Knex.QueryBuilder,
     allowEmptyRelationships: boolean,
     filterKey: string,
-    whereCb: (query: Knex.QueryBuilder) => Knex.QueryBuilder
+    whereCb: (filterKey: string, query: Knex.QueryBuilder) => Knex.QueryBuilder
   ): Knex.QueryBuilder {
     const mainKnex = this.knex
     const { relationships, endpoint, tableAliases: aliases } = this.query
     const tableName = endpoint.entityId
     const fromAlias = aliases?.[tableName] || tableName
-    const matches = (possibleTable: string) =>
-      filterKey.startsWith(`${possibleTable}`)
+    const matches = (value: string) =>
+      filterKey.match(new RegExp(`^${value}\\.`))
     if (!relationships) {
       return query
     }
     for (const relationship of relationships) {
       const relatedTableName = relationship.tableName
       const toAlias = aliases?.[relatedTableName] || relatedTableName
+
+      const matchesTableName = matches(relatedTableName) || matches(toAlias)
+      const matchesRelationName = matches(relationship.column)
+
       // this is the relationship which is being filtered
       if (
-        (matches(relatedTableName) || matches(toAlias)) &&
+        (matchesTableName || matchesRelationName) &&
         relationship.to &&
         relationship.tableName
       ) {
@@ -450,6 +454,17 @@ class InternalBuilder {
           .from({ [toAlias]: relatedTableName })
         let subQuery = joinTable.clone()
         const manyToMany = validateManyToMany(relationship)
+        let updatedKey
+
+        if (!matchesTableName) {
+          updatedKey = filterKey.replace(
+            new RegExp(`^${relationship.column}.`),
+            `${aliases![relationship.tableName]}.`
+          )
+        } else {
+          updatedKey = filterKey
+        }
+
         if (manyToMany) {
           const throughAlias =
             aliases?.[manyToMany.through] || relationship.through
@@ -481,7 +496,7 @@ class InternalBuilder {
           }
 
           query = query.where(q => {
-            q.whereExists(whereCb(subQuery))
+            q.whereExists(whereCb(updatedKey, subQuery))
             if (allowEmptyRelationships) {
               q.orWhereNotExists(
                 joinTable.clone().innerJoin(throughTable, function () {
@@ -503,7 +518,7 @@ class InternalBuilder {
             mainKnex.raw(this.quotedIdentifier(foreignKey))
           )
 
-          query = query.whereExists(whereCb(subQuery))
+          query = query.whereExists(whereCb(updatedKey, subQuery))
           if (allowEmptyRelationships) {
             query = query.orWhereNull(foreignKey)
           }
@@ -599,7 +614,7 @@ class InternalBuilder {
             query,
             allowEmptyRelationships[operation],
             updatedKey,
-            q => {
+            (updatedKey, q) => {
               return handleRelationship(q, updatedKey, value)
             }
           )
