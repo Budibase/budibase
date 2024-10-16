@@ -216,15 +216,15 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
 
   await context.ensureSnippetContext(true)
 
-  let enrichedQuery: SearchFilters = await utils.enrichSearchContext(
-    { ...ctx.request.body.query },
-    {
-      user: sdk.users.getUserContextBindings(ctx.user),
-    }
-  )
+  let { query } = ctx.request.body
+  if (!isPlainObject(query)) {
+    const allTables = await sdk.tables.getAllTables()
+    query = replaceTableNamesInFilters(tableId, query, allTables)
+  }
 
-  const allTables = await sdk.tables.getAllTables()
-  enrichedQuery = replaceTableNamesInFilters(tableId, enrichedQuery, allTables)
+  let enrichedQuery: SearchFilters = await utils.enrichSearchContext(query, {
+    user: sdk.users.getUserContextBindings(ctx.user),
+  })
 
   const searchParams: RowSearchParams = {
     ...ctx.request.body,

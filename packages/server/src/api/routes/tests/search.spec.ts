@@ -2567,7 +2567,8 @@ describe.each([
           expect(response.rows[0].productCat).toBeArrayOfSize(11)
         })
       })
-    ;(isSqs || isLucene) &&
+
+    isSql &&
       describe("relations to same table", () => {
         let relatedTable: string, relatedRows: Row[]
 
@@ -2637,38 +2638,36 @@ describe.each([
           ])
         })
 
-        isSqs &&
-          it("should be able to filter via the first relation field with equal", async () => {
-            await expectSearch({
-              query: {
-                equal: {
-                  ["related1.name"]: "baz",
-                },
+        it("should be able to filter via the first relation field with equal", async () => {
+          await expectSearch({
+            query: {
+              equal: {
+                ["related1.name"]: "baz",
               },
-            }).toContainExactly([
-              {
-                name: "test2",
-                related1: [{ _id: relatedRows[2]._id }],
-              },
-            ])
-          })
+            },
+          }).toContainExactly([
+            {
+              name: "test2",
+              related1: [{ _id: relatedRows[2]._id }],
+            },
+          ])
+        })
 
-        isSqs &&
-          it("should be able to filter via the second relation field with not equal", async () => {
-            await expectSearch({
-              query: {
-                notEqual: {
-                  ["1:related2.name"]: "foo",
-                  ["2:related2.name"]: "baz",
-                  ["3:related2.name"]: "boo",
-                },
+        it("should be able to filter via the second relation field with not equal", async () => {
+          await expectSearch({
+            query: {
+              notEqual: {
+                ["1:related2.name"]: "foo",
+                ["2:related2.name"]: "baz",
+                ["3:related2.name"]: "boo",
               },
-            }).toContainExactly([
-              {
-                name: "test",
-              },
-            ])
-          })
+            },
+          }).toContainExactly([
+            {
+              name: "test",
+            },
+          ])
+        })
       })
 
     isInternal &&
