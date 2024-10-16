@@ -2278,12 +2278,16 @@ describe.each([
       // It also can't work for in-memory searching because the related table name
       // isn't available.
       !isInMemory &&
-      describe("relations", () => {
+      describe.each([
+        RelationshipType.ONE_TO_MANY,
+        RelationshipType.MANY_TO_ONE,
+        RelationshipType.MANY_TO_MANY,
+      ])("relations (%s)", relationshipType => {
         let productCategoryTable: Table, productCatRows: Row[]
 
         beforeAll(async () => {
           const { relatedTable, tableId } = await basicRelationshipTables(
-            RelationshipType.ONE_TO_MANY
+            relationshipType
           )
           tableOrViewId = tableId
           productCategoryTable = relatedTable
@@ -2538,10 +2542,13 @@ describe.each([
       })
 
     isSql &&
-      describe("big relations", () => {
+      describe.each([
+        RelationshipType.MANY_TO_ONE,
+        RelationshipType.MANY_TO_MANY,
+      ])("big relations (%s)", relationshipType => {
         beforeAll(async () => {
           const { relatedTable, tableId } = await basicRelationshipTables(
-            RelationshipType.MANY_TO_ONE
+            relationshipType
           )
           tableOrViewId = tableId
           const mainRow = await config.api.row.save(tableOrViewId, {
