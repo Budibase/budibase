@@ -37,7 +37,6 @@ import * as exporters from "../view/exporters"
 import { Format } from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import { dataFilters } from "@budibase/shared-core"
-import { isPlainObject } from "lodash"
 
 export * as views from "./views"
 
@@ -217,7 +216,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   await context.ensureSnippetContext(true)
 
   let { query } = ctx.request.body
-  if (query && !isPlainObject(query)) {
+  if (query) {
     const allTables = await sdk.tables.getAllTables()
     query = replaceTableNamesInFilters(tableId, query, allTables)
   }
@@ -243,9 +242,6 @@ function replaceTableNamesInFilters(
   allTables: Table[]
 ): SearchFilters {
   for (const filter of Object.values(filters)) {
-    if (!isPlainObject(filter)) {
-      continue
-    }
     for (const key of Object.keys(filter)) {
       const matches = key.match(`^(?<relation>.+)\\.(?<field>.+)`)
 
