@@ -63,6 +63,12 @@ export class Role implements RoleDoc {
   }
 
   addInheritance(inherits?: string | string[]) {
+    // make sure IDs are correct format
+    if (inherits && typeof inherits === "string") {
+      inherits = prefixRoleIDNoBuiltin(inherits)
+    } else if (inherits && Array.isArray(inherits)) {
+      inherits = inherits.map(inherit => prefixRoleIDNoBuiltin(inherit))
+    }
     if (inherits) {
       this.inherits = inherits
     }
@@ -128,7 +134,15 @@ export function getBuiltinRoles(): { [key: string]: RoleDoc } {
 }
 
 export function isBuiltin(role: string) {
-  return getBuiltinRole(role) !== undefined
+  return Object.values(BUILTIN_ROLE_IDS).includes(role)
+}
+
+export function prefixRoleIDNoBuiltin(roleId: string) {
+  if (isBuiltin(roleId)) {
+    return roleId
+  } else {
+    return prefixRoleID(roleId)
+  }
 }
 
 export function getBuiltinRole(roleId: string): Role | undefined {
@@ -535,4 +549,17 @@ export function getExternalRoleID(roleId: string, version?: string) {
     return parts.join(SEPARATOR)
   }
   return roleId
+}
+
+export function getExternalRoleIDs(
+  roleIds: string | string[] | undefined,
+  version?: string
+) {
+  if (!roleIds) {
+    return roleIds
+  } else if (typeof roleIds === "string") {
+    return getExternalRoleID(roleIds, version)
+  } else {
+    return roleIds.map(roleId => getExternalRoleID(roleId, version))
+  }
 }
