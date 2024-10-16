@@ -2282,7 +2282,7 @@ describe.each([
         RelationshipType.ONE_TO_MANY,
         RelationshipType.MANY_TO_ONE,
         RelationshipType.MANY_TO_MANY,
-      ])("relations", relationshipType => {
+      ])("relations (%s)", relationshipType => {
         let productCategoryTable: Table, productCatRows: Row[]
 
         beforeAll(async () => {
@@ -2554,10 +2554,13 @@ describe.each([
       })
 
     isSql &&
-      describe("big relations", () => {
+      describe.each([
+        RelationshipType.MANY_TO_ONE,
+        RelationshipType.MANY_TO_MANY,
+      ])("big relations (%s)", relationshipType => {
         beforeAll(async () => {
           const { relatedTable, tableId } = await basicRelationshipTables(
-            RelationshipType.MANY_TO_ONE
+            relationshipType
           )
           tableOrViewId = tableId
           const mainRow = await config.api.row.save(tableOrViewId, {
