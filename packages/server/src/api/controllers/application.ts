@@ -208,9 +208,8 @@ export async function fetchAppDefinition(
 export async function fetchAppPackage(
   ctx: UserCtx<void, FetchAppPackageResponse>
 ) {
-  const db = context.getAppDB()
   const appId = context.getAppId()
-  let application = await db.get<App>(DocumentType.APP_METADATA)
+  const application = await sdk.appMetadata.get()
   const layouts = await getLayouts()
   let screens = await getScreens()
   const license = await licensing.cache.getCachedLicense()
@@ -315,7 +314,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
     // If we used a template or imported an app there will be an existing doc.
     // Fetch and migrate some metadata from the existing app.
     try {
-      const existing: App = await db.get(DocumentType.APP_METADATA)
+      const existing = await sdk.appMetadata.get()
       const keys: (keyof App)[] = [
         "_rev",
         "navigation",
@@ -489,8 +488,7 @@ export async function update(
 
 export async function updateClient(ctx: UserCtx) {
   // Get current app version
-  const db = context.getAppDB()
-  const application = await db.get<App>(DocumentType.APP_METADATA)
+  const application = await sdk.appMetadata.get()
   const currentVersion = application.version
 
   let manifest
@@ -518,8 +516,7 @@ export async function updateClient(ctx: UserCtx) {
 
 export async function revertClient(ctx: UserCtx) {
   // Check app can be reverted
-  const db = context.getAppDB()
-  const application = await db.get<App>(DocumentType.APP_METADATA)
+  const application = await sdk.appMetadata.get()
   if (!application.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
   }
@@ -577,7 +574,7 @@ async function destroyApp(ctx: UserCtx) {
 
   const db = dbCore.getDB(devAppId)
   // standard app deletion flow
-  const app = await db.get<App>(DocumentType.APP_METADATA)
+  const app = await sdk.appMetadata.get()
   const result = await db.destroy()
   await quotas.removeApp()
   await events.app.deleted(app)
@@ -728,7 +725,7 @@ export async function updateAppPackage(
 ) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
-    const application = await db.get<App>(DocumentType.APP_METADATA)
+    const application = await sdk.appMetadata.get()
 
     const newAppPackage: App = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
@@ -754,7 +751,7 @@ export async function setRevertableVersion(
     return
   }
   const db = context.getAppDB()
-  const app = await db.get<App>(DocumentType.APP_METADATA)
+  const app = await sdk.appMetadata.get()
   app.revertableVersion = ctx.request.body.revertableVersion
   await db.put(app)
 
@@ -763,7 +760,7 @@ export async function setRevertableVersion(
 
 async function migrateAppNavigation() {
   const db = context.getAppDB()
-  const existing: App = await db.get(DocumentType.APP_METADATA)
+  const existing = await sdk.appMetadata.get()
   const layouts: Layout[] = await getLayouts()
   const screens: Screen[] = await getScreens()
 
