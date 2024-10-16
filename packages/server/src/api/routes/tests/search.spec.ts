@@ -17,12 +17,14 @@ import {
 
 import * as setup from "./utilities"
 import {
+  AIOperationEnum,
   AutoFieldSubType,
   BBReferenceFieldSubType,
   Datasource,
   EmptyFilterOption,
   FieldType,
   JsonFieldSubType,
+  LogicalOperator,
   RelationshipType,
   Row,
   RowSearchParams,
@@ -41,10 +43,22 @@ import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
 import { dataFilters } from "@budibase/shared-core"
 import { Knex } from "knex"
-import { generator, structures } from "@budibase/backend-core/tests"
+import { generator, structures, mocks } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
 import { cloneDeep } from "lodash/fp"
+
+jest.mock("@budibase/pro", () => ({
+  ...jest.requireActual("@budibase/pro"),
+  ai: {
+    LargeLanguageModel: {
+      forCurrentTenant: async () => ({
+        run: jest.fn(() => `Mock LLM Response`),
+        buildPromptFromAIOperation: jest.fn(),
+      }),
+    },
+  },
+}))
 
 describe.each([
   ["in-memory", undefined],
@@ -1601,6 +1615,79 @@ describe.each([
         })
       })
 
+    isSqs &&
+      describe("AI Column", () => {
+        const UNEXISTING_AI_COLUMN = "Real LLM Response"
+
+        beforeAll(async () => {
+          mocks.licenses.useBudibaseAI()
+          mocks.licenses.useAICustomConfigs()
+
+          tableOrViewId = await createTableOrView({
+            product: { name: "product", type: FieldType.STRING },
+            ai: {
+              name: "AI",
+              type: FieldType.AI,
+              operation: AIOperationEnum.PROMPT,
+              prompt: "Translate '{{ product }}' into German",
+            },
+          })
+
+          await createRows([{ product: "Big Mac" }, { product: "McCrispy" }])
+        })
+
+        describe("equal", () => {
+          it("successfully finds rows based on AI column", async () => {
+            await expectQuery({
+              equal: { ai: "Mock LLM Response" },
+            }).toContainExactly([
+              { product: "Big Mac" },
+              { product: "McCrispy" },
+            ])
+          })
+
+          it("fails to find nonexistent row", async () => {
+            await expectQuery({
+              equal: { ai: UNEXISTING_AI_COLUMN },
+            }).toFindNothing()
+          })
+        })
+
+        describe("notEqual", () => {
+          it("Returns nothing when searching notEqual on the mock AI response", async () => {
+            await expectQuery({
+              notEqual: { ai: "Mock LLM Response" },
+            }).toContainExactly([])
+          })
+
+          it("return all when requesting non-existing response", async () => {
+            await expectQuery({
+              notEqual: { ai: "Real LLM Response" },
+            }).toContainExactly([
+              { product: "Big Mac" },
+              { product: "McCrispy" },
+            ])
+          })
+        })
+
+        describe("oneOf", () => {
+          it("successfully finds a row", async () => {
+            await expectQuery({
+              oneOf: { ai: ["Mock LLM Response", "Other LLM Response"] },
+            }).toContainExactly([
+              { product: "Big Mac" },
+              { product: "McCrispy" },
+            ])
+          })
+
+          it("fails to find nonexistent row", async () => {
+            await expectQuery({
+              oneOf: { ai: ["Whopper"] },
+            }).toFindNothing()
+          })
+        })
+      })
+
     describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
       beforeAll(async () => {
         tableOrViewId = await createTableOrView({
@@ -2328,6 +2415,211 @@ describe.each([
           await expectQuery({
             equal: { ["name"]: "baz" },
           }).toContainExactly([{ name: "baz", productCat: undefined }])
+        })
+
+        describe("logical filters", () => {
+          const logicalOperators = [LogicalOperator.AND, LogicalOperator.OR]
+
+          describe("$and", () => {
+            it("should allow single conditions", async () => {
+              await expectQuery({
+                $and: {
+                  conditions: [
+                    {
+                      equal: { ["productCat.name"]: "foo" },
+                    },
+                  ],
+                },
+              }).toContainExactly([
+                { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+              ])
+            })
+
+            it("should allow exclusive conditions", async () => {
+              await expectQuery({
+                $and: {
+                  conditions: [
+                    {
+                      equal: { ["productCat.name"]: "foo" },
+                      notEqual: { ["productCat.name"]: "foo" },
+                    },
+                  ],
+                },
+              }).toContainExactly([])
+            })
+
+            it.each([logicalOperators])(
+              "should allow nested ands with single conditions (with %s as root)",
+              async rootOperator => {
+                await expectQuery({
+                  [rootOperator]: {
+                    conditions: [
+                      {
+                        $and: {
+                          conditions: [
+                            {
+                              equal: { ["productCat.name"]: "foo" },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                }).toContainExactly([
+                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                ])
+              }
+            )
+
+            it.each([logicalOperators])(
+              "should allow nested ands with exclusive conditions (with %s as root)",
+              async rootOperator => {
+                await expectQuery({
+                  [rootOperator]: {
+                    conditions: [
+                      {
+                        $and: {
+                          conditions: [
+                            {
+                              equal: { ["productCat.name"]: "foo" },
+                              notEqual: { ["productCat.name"]: "foo" },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                }).toContainExactly([])
+              }
+            )
+
+            it.each([logicalOperators])(
+              "should allow nested ands with multiple conditions (with %s as root)",
+              async rootOperator => {
+                await expectQuery({
+                  [rootOperator]: {
+                    conditions: [
+                      {
+                        $and: {
+                          conditions: [
+                            {
+                              equal: { ["productCat.name"]: "foo" },
+                            },
+                          ],
+                        },
+                        notEqual: { ["productCat.name"]: "foo" },
+                      },
+                    ],
+                  },
+                }).toContainExactly([])
+              }
+            )
+          })
+
+          describe("$ors", () => {
+            it("should allow single conditions", async () => {
+              await expectQuery({
+                $or: {
+                  conditions: [
+                    {
+                      equal: { ["productCat.name"]: "foo" },
+                    },
+                  ],
+                },
+              }).toContainExactly([
+                { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+              ])
+            })
+
+            it("should allow exclusive conditions", async () => {
+              await expectQuery({
+                $or: {
+                  conditions: [
+                    {
+                      equal: { ["productCat.name"]: "foo" },
+                      notEqual: { ["productCat.name"]: "foo" },
+                    },
+                  ],
+                },
+              }).toContainExactly([
+                { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
+                // { name: "baz", productCat: undefined }, // TODO
+              ])
+            })
+
+            it.each([logicalOperators])(
+              "should allow nested ors with single conditions (with %s as root)",
+              async rootOperator => {
+                await expectQuery({
+                  [rootOperator]: {
+                    conditions: [
+                      {
+                        $or: {
+                          conditions: [
+                            {
+                              equal: { ["productCat.name"]: "foo" },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                }).toContainExactly([
+                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                ])
+              }
+            )
+
+            it.each([logicalOperators])(
+              "should allow nested ors with exclusive conditions (with %s as root)",
+              async rootOperator => {
+                await expectQuery({
+                  [rootOperator]: {
+                    conditions: [
+                      {
+                        $or: {
+                          conditions: [
+                            {
+                              equal: { ["productCat.name"]: "foo" },
+                              notEqual: { ["productCat.name"]: "foo" },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                }).toContainExactly([
+                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                  { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
+                  // { name: "baz", productCat: undefined }, // TODO
+                ])
+              }
+            )
+
+            it("should allow nested ors with multiple conditions", async () => {
+              await expectQuery({
+                $or: {
+                  conditions: [
+                    {
+                      $or: {
+                        conditions: [
+                          {
+                            equal: { ["productCat.name"]: "foo" },
+                          },
+                        ],
+                      },
+                      notEqual: { ["productCat.name"]: "foo" },
+                    },
+                  ],
+                },
+              }).toContainExactly([
+                { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
+                // { name: "baz", productCat: undefined }, // TODO
+              ])
+            })
+          })
         })
       })
 
