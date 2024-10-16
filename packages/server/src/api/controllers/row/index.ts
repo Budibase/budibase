@@ -217,7 +217,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   await context.ensureSnippetContext(true)
 
   let { query } = ctx.request.body
-  if (!isPlainObject(query)) {
+  if (query && !isPlainObject(query)) {
     const allTables = await sdk.tables.getAllTables()
     query = replaceTableNamesInFilters(tableId, query, allTables)
   }
