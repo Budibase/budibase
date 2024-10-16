@@ -2612,8 +2612,8 @@ describe.each([
             }),
             config.api.row.save(tableOrViewId, {
               name: "test3",
-              related1: [],
-              related2: [],
+              related1: [relatedRows[1]._id],
+              related2: [relatedRows[2]._id!],
             }),
           ])
         })
@@ -2634,6 +2634,8 @@ describe.each([
             },
             {
               name: "test3",
+              related1: [{ _id: relatedRows[1]._id }],
+              related2: [{ _id: relatedRows[2]._id }],
             },
           ])
         })
@@ -2665,6 +2667,21 @@ describe.each([
           }).toContainExactly([
             {
               name: "test",
+            },
+          ])
+        })
+
+        it("should be able to filter on both fields", async () => {
+          await expectSearch({
+            query: {
+              notEqual: {
+                ["related1.name"]: "foo",
+                ["related2.name"]: "baz",
+              },
+            },
+          }).toContainExactly([
+            {
+              name: "test2",
             },
           ])
         })
