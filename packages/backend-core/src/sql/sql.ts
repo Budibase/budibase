@@ -412,7 +412,8 @@ class InternalBuilder {
     const { relationships, endpoint, tableAliases: aliases } = this.query
     const tableName = endpoint.entityId
     const fromAlias = aliases?.[tableName] || tableName
-    const matches = (value: string) => filterKey.startsWith(`${value}`)
+    const matches = (value: string) =>
+      filterKey.match(new RegExp(`^${value}\\.`))
     if (!relationships) {
       return query
     }
@@ -435,7 +436,7 @@ class InternalBuilder {
         const manyToMany = validateManyToMany(relationship)
         let updatedKey
 
-        if (matchesRelationName) {
+        if (!matchesTableName) {
           updatedKey = filterKey.replace(
             new RegExp(`^${relationship.column}.`),
             `${aliases![relationship.tableName]}.`
@@ -485,7 +486,6 @@ class InternalBuilder {
           )
         }
         query = query.whereExists(whereCb(updatedKey, subQuery))
-        break
       }
     }
     return query
