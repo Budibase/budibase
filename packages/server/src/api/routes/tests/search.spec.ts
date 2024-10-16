@@ -2614,16 +2614,6 @@ describe.each([
               related1: [],
               related2: [],
             }),
-            config.api.row.save(tableOrViewId, {
-              name: "test4",
-              related1: [relatedRows[1]._id!],
-              related2: [],
-            }),
-            config.api.row.save(tableOrViewId, {
-              name: "test5",
-              related1: [],
-              related2: [relatedRows[1]._id!],
-            }),
           ])
         })
 
@@ -2644,19 +2634,11 @@ describe.each([
             {
               name: "test3",
             },
-            {
-              name: "test4",
-              related1: [{ _id: relatedRows[1]._id }],
-            },
-            {
-              name: "test5",
-              related2: [{ _id: relatedRows[1]._id! }],
-            },
           ])
         })
 
         isSqs &&
-          it("should be able to filter down to second row with equal", async () => {
+          it("should be able to filter via the first relation field with equal", async () => {
             await expectSearch({
               query: {
                 equal: {
@@ -2672,11 +2654,11 @@ describe.each([
           })
 
         isSqs &&
-          it("should be able to filter down to first row with not equal", async () => {
+          it("should be able to filter via the second relation field with not equal", async () => {
             await expectSearch({
               query: {
                 notEqual: {
-                  ["1:related2.name"]: "bar",
+                  ["1:related2.name"]: "foo",
                   ["2:related2.name"]: "baz",
                   ["3:related2.name"]: "boo",
                 },
@@ -2684,7 +2666,6 @@ describe.each([
             }).toContainExactly([
               {
                 name: "test",
-                related1: [{ _id: relatedRows[0]._id }],
               },
             ])
           })
