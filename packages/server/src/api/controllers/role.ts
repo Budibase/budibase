@@ -135,7 +135,10 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     role.version
   )
   role._rev = result.rev
-  ctx.body = role
+  ctx.body = {
+    ...role,
+    _id: roles.getExternalRoleID(role._id!, role.version),
+  }
 
   const devDb = context.getDevAppDB()
   const prodDb = context.getProdAppDB()
