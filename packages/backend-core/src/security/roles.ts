@@ -235,7 +235,7 @@ export function findRole(
   roleId: string,
   roles: RoleDoc[],
   opts?: { defaultPublic?: boolean }
-): RoleDoc {
+): RoleDoc | undefined {
   // built in roles mostly come from the in-code implementation,
   // but can be extended by a doc stored about them (e.g. permissions)
   let role: RoleDoc | undefined = getBuiltinRole(roleId)
@@ -249,13 +249,13 @@ export function findRole(
   if (!dbRole && !isBuiltin(roleId) && opts?.defaultPublic) {
     return cloneDeep(BUILTIN_ROLES.PUBLIC)
   }
-  if (!dbRole && (!role || Object.keys(role).length === 0)) {
-    throw new Error("Role could not be found")
-  }
+  // combine the roles
   role = Object.assign(role || {}, dbRole)
   // finalise the ID
-  role._id = getExternalRoleID(role._id!, role.version)
-  return role
+  if (role?._id) {
+    role._id = getExternalRoleID(role._id, role.version)
+  }
+  return Object.keys(role).length === 0 ? undefined : role
 }
 
 /**
@@ -268,7 +268,7 @@ export function findRole(
 export async function getRole(
   roleId: string,
   opts?: { defaultPublic?: boolean }
-): Promise<RoleDoc> {
+): Promise<RoleDoc | undefined> {
   const db = getAppDB()
   const roleList = []
   if (!isBuiltin(roleId)) {
@@ -305,7 +305,7 @@ async function getAllUserRoles(
 
   const roleIds = [userRoleId]
   const roles: RoleDoc[] = []
-  const iterateInherited = (role: RoleDoc) => {
+  const iterateInherited = (role: RoleDoc | undefined) => {
     if (!role || !role._id) {
       return
     }
@@ -335,7 +335,10 @@ async function getAllUserRoles(
   }
 
   // get all the inherited roles
-  iterateInherited(findRole(userRoleId, allRoles, opts))
+  const foundRole = findRole(userRoleId, allRoles, opts)
+  if (foundRole) {
+    iterateInherited(foundRole)
+  }
   const foundRoleIds: string[] = []
   return roles.filter(role => {
     if (role._id && !foundRoleIds.includes(role._id)) {

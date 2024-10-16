@@ -6,6 +6,8 @@ const { basicRole } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
 const { BuiltinPermissionID } = permissions
 
+const LOOP_ERROR = "Role inheritance contains a loop, this is not supported"
+
 describe("/roles", () => {
   let config = setup.getConfig()
 
@@ -31,6 +33,11 @@ describe("/roles", () => {
   })
 
   describe("update", () => {
+    beforeEach(async () => {
+      // Recreate the app
+      await config.init()
+    })
+
     it("updates a role", async () => {
       const role = basicRole()
       let res = await config.api.roles.save(role, {
@@ -49,22 +56,59 @@ describe("/roles", () => {
     })
 
     it("disallow loops", async () => {
-      let role1 = basicRole()
-      role1 = await config.api.roles.save(role1, {
+      const role1 = await config.api.roles.save(basicRole(), {
         status: 200,
       })
-      let role2 = basicRole()
-      role2.inherits = [role1._id!]
-      role2 = await config.api.roles.save(role2, {
-        status: 200,
-      })
-      role1.inherits = [role2._id!]
-      await config.api.roles.save(role1, {
-        status: 400,
-        body: {
-          message: "Role inheritance contains a loop, this is not supported",
+      const role2 = await config.api.roles.save(
+        {
+          ...basicRole(),
+          inherits: [role1._id!],
         },
+        {
+          status: 200,
+        }
+      )
+      await config.api.roles.save(
+        {
+          ...role1,
+          inherits: [role2._id!],
+        },
+        { status: 400, body: { message: LOOP_ERROR } }
+      )
+    })
+
+    it("disallow more complex loops", async () => {
+      let role1 = await config.api.roles.save({
+        ...basicRole(),
+        name: "role1",
+        inherits: [BUILTIN_ROLE_IDS.POWER],
       })
+      let role2 = await config.api.roles.save({
+        ...basicRole(),
+        name: "role2",
+        inherits: [BUILTIN_ROLE_IDS.POWER, role1._id!],
+      })
+      let role3 = await config.api.roles.save({
+        ...basicRole(),
+        name: "role3",
+        inherits: [BUILTIN_ROLE_IDS.POWER, role1._id!, role2._id!],
+      })
+      // go back to role1
+      role1 = await config.api.roles.save(
+        {
+          ...role1,
+          inherits: [BUILTIN_ROLE_IDS.POWER, role2._id!, role3._id!],
+        },
+        { status: 400, body: { message: LOOP_ERROR } }
+      )
+      // go back to role2
+      role2 = await config.api.roles.save(
+        {
+          ...role2,
+          inherits: [BUILTIN_ROLE_IDS.POWER, role1._id!, role3._id!],
+        },
+        { status: 400, body: { message: LOOP_ERROR } }
+      )
     })
   })
 
@@ -134,6 +178,13 @@ describe("/roles", () => {
   })
 
   describe("accessible", () => {
+    beforeAll(async () => {
+      // new app, reset roles
+      await config.init()
+      // create one custom role
+      await config.createRole()
+    })
+
     it("should be able to fetch accessible roles (with builder)", async () => {
       const res = await config.api.roles.accessible(config.defaultHeaders(), {
         status: 200,
