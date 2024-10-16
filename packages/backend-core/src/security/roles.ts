@@ -223,6 +223,11 @@ export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
     : roleId1
 }
 
+function compareRoleIds(roleId1: string, roleId2: string) {
+  // make sure both role IDs are prefixed correctly
+  return prefixRoleID(roleId1) === prefixRoleID(roleId2)
+}
+
 /**
  * Given a list of roles, this will pick the role out, accounting for built ins.
  */
@@ -239,7 +244,7 @@ export function findRole(
     roleId = prefixRoleID(roleId)
   }
   const dbRole = roles.find(
-    role => role._id && role._id === getExternalRoleID(roleId, role.version)
+    role => role._id && compareRoleIds(role._id, roleId)
   )
   if (!dbRole && !isBuiltin(roleId) && opts?.defaultPublic) {
     return cloneDeep(BUILTIN_ROLES.PUBLIC)
@@ -474,7 +479,10 @@ export class AccessController {
       this.userHierarchies[userRoleId] = roleIds
     }
 
-    return roleIds?.indexOf(tryingRoleId) !== -1
+    return (
+      roleIds?.find(roleId => compareRoleIds(roleId, tryingRoleId)) !==
+      undefined
+    )
   }
 
   async checkScreensAccess(screens: Screen[], userRoleId: string) {
