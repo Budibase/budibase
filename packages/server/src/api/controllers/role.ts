@@ -57,7 +57,12 @@ export async function fetch(ctx: UserCtx<void, FetchRolesResponse>) {
 }
 
 export async function find(ctx: UserCtx<void, FindRoleResponse>) {
-  ctx.body = await roles.getRole(ctx.params.roleId)
+  const role = await roles.getRole(ctx.params.roleId)
+  if (!role) {
+    ctx.throw(404, { message: "Role not found" })
+  } else {
+    ctx.body = role
+  }
 }
 
 export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
@@ -202,7 +207,8 @@ export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
   // If a custom role is provided in the header, filter out higher level roles
   const roleHeader = ctx.header?.[Header.PREVIEW_ROLE] as string
   if (roleHeader && !Object.keys(roles.BUILTIN_ROLE_IDS).includes(roleHeader)) {
-    const inherits = (await roles.getRole(roleHeader))?.inherits
+    const role = await roles.getRole(roleHeader)
+    const inherits = role?.inherits
     const orderedRoles = ctx.body.reverse()
     let filteredRoles = [roleHeader]
     for (let role of orderedRoles) {
