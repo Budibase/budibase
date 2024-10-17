@@ -54,30 +54,46 @@ function getPackageJsonFields(): {
   VERSION: string
   SERVICE_NAME: string
 } {
-  function findFileInAncestors(
-    fileName: string,
-    currentDir: string
-  ): string | null {
-    const filePath = `${currentDir}/${fileName}`
-    if (existsSync(filePath)) {
-      return filePath
+  function getParentFile(file: string) {
+    function findFileInAncestors(
+      fileName: string,
+      currentDir: string
+    ): string | null {
+      const filePath = `${currentDir}/${fileName}`
+      if (existsSync(filePath)) {
+        return filePath
+      }
+
+      const parentDir = `${currentDir}/..`
+      if (parentDir === currentDir) {
+        // reached root directory
+        return null
+      }
+
+      return findFileInAncestors(fileName, parentDir)
     }
 
-    const parentDir = `${currentDir}/..`
-    if (parentDir === currentDir) {
-      // reached root directory
-      return null
-    }
+    const packageJsonFile = findFileInAncestors(file, process.cwd())
+    const content = readFileSync(packageJsonFile!, "utf-8")
+    const parsedContent = JSON.parse(content)
+    return parsedContent
+  }
 
-    return findFileInAncestors(fileName, parentDir)
+  let localVersion: string | undefined
+  if (isDev() && !isTest()) {
+    try {
+      const lerna = getParentFile("lerna.json")
+      localVersion = lerna.version
+    } catch {
+      //
+    }
   }
 
   try {
-    const packageJsonFile = findFileInAncestors("package.json", process.cwd())
-    const content = readFileSync(packageJsonFile!, "utf-8")
-    const parsedContent = JSON.parse(content)
+    const parsedContent = getParentFile("package.json")
     return {
-      VERSION: process.env.BUDIBASE_VERSION || parsedContent.version,
+      VERSION:
+        localVersion || process.env.BUDIBASE_VERSION || parsedContent.version,
       SERVICE_NAME: parsedContent.name,
     }
   } catch {
