@@ -72,9 +72,8 @@ export async function find(ctx: UserCtx<void, FindRoleResponse>) {
   const role = await roles.getRole(ctx.params.roleId)
   if (!role) {
     ctx.throw(404, { message: "Role not found" })
-  } else {
-    ctx.body = externalRole(role)
   }
+  ctx.body = externalRole(role)
 }
 
 export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
@@ -82,6 +81,9 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   let { _id, name, inherits, permissionId, version, uiMetadata } =
     ctx.request.body
   let isCreate = false
+  if (!ctx.request.body._rev && !version) {
+    version = roles.RoleIDVersion.NAME
+  }
   const isNewVersion = version === roles.RoleIDVersion.NAME
 
   if (_id && roles.isBuiltin(_id)) {
