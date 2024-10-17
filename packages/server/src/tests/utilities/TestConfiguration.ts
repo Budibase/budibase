@@ -110,6 +110,7 @@ export default class TestConfiguration {
   tenantId?: string
   api: API
   csrfToken?: string
+  temporaryHeaders?: Record<string, string | string[]>
 
   constructor(openServer = true) {
     if (openServer) {
@@ -448,6 +449,18 @@ export default class TestConfiguration {
     })
   }
 
+  async withHeaders(
+    headers: Record<string, string | string[]>,
+    cb: () => Promise<unknown>
+  ) {
+    this.temporaryHeaders = headers
+    try {
+      await cb()
+    } finally {
+      this.temporaryHeaders = undefined
+    }
+  }
+
   defaultHeaders(extras = {}, prodApp = false) {
     const tenantId = this.getTenantId()
     const user = this.getUser()
@@ -471,7 +484,10 @@ export default class TestConfiguration {
     } else if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
-    return headers
+    return {
+      ...headers,
+      ...this.temporaryHeaders,
+    }
   }
 
   publicHeaders({ prodApp = true } = {}) {
@@ -487,7 +503,10 @@ export default class TestConfiguration {
 
     headers[constants.Header.TENANT_ID] = this.getTenantId()
 
-    return headers
+    return {
+      ...headers,
+      ...this.temporaryHeaders,
+    }
   }
 
   async basicRoleHeaders() {

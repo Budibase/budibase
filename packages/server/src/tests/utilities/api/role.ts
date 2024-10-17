@@ -34,12 +34,8 @@ export class RoleAPI extends TestAPI {
     })
   }
 
-  accessible = async (
-    headers: Record<string, string | string[]>,
-    expectations?: Expectations
-  ) => {
+  accessible = async (expectations?: Expectations) => {
     return await this._get<AccessibleRolesResponse>(`/api/roles/accessible`, {
-      headers,
       expectations,
     })
   }
