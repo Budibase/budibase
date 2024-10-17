@@ -273,12 +273,7 @@ export async function roleToNumber(id: string) {
     }
     return 0
   }
-  let highest = 0
-  for (let role of hierarchy) {
-    const roleNumber = findNumber(role)
-    highest = Math.max(roleNumber, highest)
-  }
-  return highest
+  return Math.max(...hierarchy.map(findNumber))
 }
 
 /**
