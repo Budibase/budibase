@@ -76,9 +76,7 @@
     const params = new URLSearchParams({
       open: "error",
     })
-    $goto(
-      `/builder/app/${appId}/settings/automation-history?${params.toString()}`
-    )
+    $goto(`/builder/app/${appId}/settings/automations?${params.toString()}`)
   }
 
   const errorCount = errors => {
