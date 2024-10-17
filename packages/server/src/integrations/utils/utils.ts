@@ -242,6 +242,7 @@ function copyExistingPropsOver(
       let shouldKeepSchema = false
       switch (existingColumnType) {
         case FieldType.FORMULA:
+        case FieldType.AI:
         case FieldType.AUTO:
         case FieldType.INTERNAL:
           shouldKeepSchema = true

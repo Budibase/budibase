@@ -22,10 +22,8 @@ import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
-
 import * as utils from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
-
 import * as internal from "./internal"
 import * as external from "./external"
 import sdk from "../../../sdk"
@@ -251,7 +249,6 @@ export async function create(
   viewRequest: Omit<ViewV2, "id" | "version">
 ): Promise<ViewV2> {
   await guardViewSchema(tableId, viewRequest)
-
   const view = await pickApi(tableId).create(tableId, viewRequest)
 
   const setExplicitPermission = await features.flags.isEnabled(
@@ -316,7 +313,11 @@ export async function enrichSchema(
     const result: Record<string, ViewV2ColumnEnriched> = {}
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
-      if ([FieldType.LINK, FieldType.FORMULA].includes(relTableField.type)) {
+      if (
+        [FieldType.LINK, FieldType.FORMULA, FieldType.AI].includes(
+          relTableField.type
+        )
+      ) {
         continue
       }
 

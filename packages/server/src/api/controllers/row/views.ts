@@ -14,7 +14,7 @@ export async function searchView(
 ) {
   const { viewId } = ctx.params
 
-  const view = await sdk.views.get(viewId)
+  const view: ViewV2 = await sdk.views.get(viewId)
   if (!view) {
     ctx.throw(404, `View ${viewId} not found`)
   }

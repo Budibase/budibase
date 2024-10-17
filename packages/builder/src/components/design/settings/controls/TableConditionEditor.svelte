@@ -243,11 +243,14 @@
                   {/if}
                 {:else if (type === FieldType.BB_REFERENCE || type === FieldType.BB_REFERENCE_SINGLE) && condition.valueType === type}
                   <FilterUsers
-                    bind:value={condition.referenceValue}
+                    value={condition.referenceValue}
                     multiselect={[
                       Constants.OperatorOptions.In.value,
                       Constants.OperatorOptions.ContainsAny.value,
                     ].includes(condition.operator)}
+                    on:change={e => {
+                      condition.referenceValue = e.detail
+                    }}
                     disabled={condition.noValue}
                     type={condition.valueType}
                   />
