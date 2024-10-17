@@ -271,6 +271,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
       path: ctx.request.body.file?.path,
     }
   }
+
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const appId = generateDevAppID(generateAppID(tenantId))
 
@@ -278,7 +279,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
     const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
 
-    let newApplication: App = {
+    const newApplication: App = {
       _id: DocumentType.APP_METADATA,
       _rev: undefined,
       appId,
@@ -309,12 +310,18 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
         disableUserMetadata: true,
         skeletonLoader: true,
       },
+      creationVersion: undefined,
     }
 
+    const isImport = !!instanceConfig.file
+    if (!isImport) {
+      newApplication.creationVersion = envCore.VERSION
+    }
+
+    const existing = await sdk.appMetadata.tryGet()
     // If we used a template or imported an app there will be an existing doc.
     // Fetch and migrate some metadata from the existing app.
-    try {
-      const existing = await sdk.appMetadata.get()
+    if (existing) {
       const keys: (keyof App)[] = [
         "_rev",
         "navigation",
@@ -322,6 +329,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
         "customTheme",
         "icon",
         "snippets",
+        "creationVersion",
       ]
       keys.forEach(key => {
         if (existing[key]) {
@@ -339,14 +347,10 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
       }
 
       // Migrate navigation settings and screens if required
-      if (existing) {
-        const navigation = await migrateAppNavigation()
-        if (navigation) {
-          newApplication.navigation = navigation
-        }
+      const navigation = await migrateAppNavigation()
+      if (navigation) {
+        newApplication.navigation = navigation
       }
-    } catch (err) {
-      // Nothing to do
     }
 
     const response = await db.put(newApplication, { force: true })
