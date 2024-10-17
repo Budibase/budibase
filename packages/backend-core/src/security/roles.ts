@@ -98,7 +98,7 @@ export class RoleHierarchyTraversal {
     const opts = this.opts,
       allRoles = this.allRoles
     // this will be a full walked list of roles - which may contain duplicates
-    const roleList: RoleDoc[] = []
+    let roleList: RoleDoc[] = []
     if (!role || !role._id) {
       return roleList
     }
@@ -107,7 +107,7 @@ export class RoleHierarchyTraversal {
       for (let roleId of role.inherits) {
         const foundRole = findRole(roleId, allRoles, opts)
         if (foundRole) {
-          return this.walk(foundRole)
+          roleList = roleList.concat(this.walk(foundRole))
         }
       }
     } else {
@@ -119,13 +119,17 @@ export class RoleHierarchyTraversal {
         !rolesInList(foundRoleIds, currentRole.inherits)
       ) {
         if (Array.isArray(currentRole.inherits)) {
-          return this.walk(currentRole)
+          return roleList.concat(this.walk(currentRole))
         } else {
           foundRoleIds.push(currentRole.inherits)
           currentRole = findRole(currentRole.inherits, allRoles, opts)
-          if (role) {
-            roleList.push(role)
+          if (currentRole) {
+            roleList.push(currentRole)
           }
+        }
+        // loop now found - stop iterating
+        if (helpers.roles.checkForRoleInheritanceLoops(roleList)) {
+          break
         }
       }
     }
@@ -359,9 +363,6 @@ async function getAllUserRoles(
   opts?: { defaultPublic?: boolean }
 ): Promise<RoleDoc[]> {
   const allRoles = await getAllRoles()
-  if (helpers.roles.checkForRoleInheritanceLoops(allRoles)) {
-    throw new Error("Loop detected in roles - cannot list roles")
-  }
   // admins have access to all roles
   if (userRoleId === BUILTIN_IDS.ADMIN) {
     return allRoles
