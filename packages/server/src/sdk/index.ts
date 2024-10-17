@@ -11,7 +11,6 @@ import { default as plugins } from "./plugins"
 import * as views from "./app/views"
 import * as permissions from "./app/permissions"
 import * as rowActions from "./app/rowActions"
-import { default as appMetadata } from "./app/appMetadata"
 
 const sdk = {
   backups,
@@ -27,7 +26,6 @@ const sdk = {
   permissions,
   links,
   rowActions,
-  appMetadata,
 }
 
 // default export for TS
