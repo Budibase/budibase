@@ -10,7 +10,9 @@ import { Expectations, TestAPI } from "./base"
 
 export class ViewV2API extends TestAPI {
   create = async (
-    view: CreateViewRequest,
+    // The frontend changed in v3 from sending query to sending only queryUI,
+    // making sure tests reflect that.
+    view: Omit<CreateViewRequest, "query">,
     expectations?: Expectations
   ): Promise<ViewV2> => {
     const exp: Expectations = {

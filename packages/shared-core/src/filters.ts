@@ -21,6 +21,9 @@ import {
   isLogicalSearchOperator,
   SearchFilterGroup,
   FilterGroupLogicalOperator,
+  isBasicSearchOperator,
+  isArraySearchOperator,
+  isRangeSearchOperator,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -307,36 +310,20 @@ export class ColumnSplitter {
  * Builds a JSON query from the filter a SearchFilter definition
  * @param filter the builder filter structure
  */
-
 const buildCondition = (expression: LegacyFilter) => {
-  // Filter body
-  let query: SearchFilters = {
-    string: {},
-    fuzzy: {},
-    range: {},
-    equal: {},
-    notEqual: {},
-    empty: {},
-    notEmpty: {},
-    contains: {},
-    notContains: {},
-    oneOf: {},
-    containsAny: {},
-  }
-  let { operator, field, type, value, externalType, onEmptyFilter } = expression
+  const query: SearchFilters = {}
+  const { operator, field, type, externalType, onEmptyFilter } = expression
+  let { value } = expression
 
   if (!operator || !field) {
     return
   }
 
-  const queryOperator = operator as SearchFilterOperator
-  const isHbs =
-    typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
-  // Parse all values into correct types
   if (operator === "allOr") {
     query.allOr = true
     return
   }
+
   if (onEmptyFilter) {
     query.onEmptyFilter = onEmptyFilter
     return
@@ -344,90 +331,102 @@ const buildCondition = (expression: LegacyFilter) => {
 
   // Default the value for noValue fields to ensure they are correctly added
   // to the final query
-  if (queryOperator === "empty" || queryOperator === "notEmpty") {
+  if (operator === "empty" || operator === "notEmpty") {
     value = null
   }
 
-  if (
-    type === "datetime" &&
-    !isHbs &&
-    queryOperator !== "empty" &&
-    queryOperator !== "notEmpty"
+  const isHbs =
+    typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
+
+  // Parsing value depending on what the type is.
+  switch (type) {
+    case FieldType.DATETIME:
+      if (!isHbs && operator !== "empty" && operator !== "notEmpty") {
+        if (!value) {
+          return
+        }
+        try {
+          value = new Date(value).toISOString()
+        } catch (error) {
+          return
+        }
+      }
+      break
+    case FieldType.NUMBER:
+      if (typeof value === "string" && !isHbs) {
+        if (operator === "oneOf") {
+          value = value.split(",").map(parseFloat)
+        } else {
+          value = parseFloat(value)
+        }
+      }
+      break
+    case FieldType.BOOLEAN:
+      value = `${value}`.toLowerCase() === "true"
+      break
+    case FieldType.ARRAY:
+      if (
+        ["contains", "notContains", "containsAny"].includes(
+          operator.toLocaleString()
+        ) &&
+        typeof value === "string"
+      ) {
+        value = value.split(",")
+      }
+      break
+  }
+
+  if (isRangeSearchOperator(operator)) {
+    const key = externalType as keyof typeof SqlNumberTypeRangeMap
+    const limits = SqlNumberTypeRangeMap[key] || {
+      min: Number.MIN_SAFE_INTEGER,
+      max: Number.MAX_SAFE_INTEGER,
+    }
+
+    query[operator] ??= {}
+    query[operator][field] = {
+      low: type === "number" ? limits.min : "0000-00-00T00:00:00.000Z",
+      high: type === "number" ? limits.max : "9999-00-00T00:00:00.000Z",
+    }
+  } else if (operator === "rangeHigh" && value != null && value !== "") {
+    query.range ??= {}
+    query.range[field] = {
+      ...query.range[field],
+      high: value,
+    }
+  } else if (operator === "rangeLow" && value != null && value !== "") {
+    query.range ??= {}
+    query.range[field] = {
+      ...query.range[field],
+      low: value,
+    }
+  } else if (
+    isBasicSearchOperator(operator) ||
+    isArraySearchOperator(operator) ||
+    isRangeSearchOperator(operator)
   ) {
-    // Ensure date value is a valid date and parse into correct format
-    if (!value) {
-      return
-    }
-    try {
-      value = new Date(value).toISOString()
-    } catch (error) {
-      return
-    }
-  }
-  if (type === "number" && typeof value === "string" && !isHbs) {
-    if (queryOperator === "oneOf") {
-      value = value.split(",").map(item => parseFloat(item))
-    } else {
-      value = parseFloat(value)
-    }
-  }
-  if (type === "boolean") {
-    value = `${value}`?.toLowerCase() === "true"
-  }
-  if (
-    ["contains", "notContains", "containsAny"].includes(
-      operator.toLocaleString()
-    ) &&
-    type === "array" &&
-    typeof value === "string"
-  ) {
-    value = value.split(",")
-  }
-  if (operator.toLocaleString().startsWith("range") && query.range) {
-    const minint =
-      SqlNumberTypeRangeMap[externalType as keyof typeof SqlNumberTypeRangeMap]
-        ?.min || Number.MIN_SAFE_INTEGER
-    const maxint =
-      SqlNumberTypeRangeMap[externalType as keyof typeof SqlNumberTypeRangeMap]
-        ?.max || Number.MAX_SAFE_INTEGER
-    if (!query.range[field]) {
-      query.range[field] = {
-        low: type === "number" ? minint : "0000-00-00T00:00:00.000Z",
-        high: type === "number" ? maxint : "9999-00-00T00:00:00.000Z",
-      }
-    }
-    if (operator === "rangeLow" && value != null && value !== "") {
-      query.range[field] = {
-        ...query.range[field],
-        low: value,
-      }
-    } else if (operator === "rangeHigh" && value != null && value !== "") {
-      query.range[field] = {
-        ...query.range[field],
-        high: value,
-      }
-    }
-  } else if (isLogicalSearchOperator(queryOperator)) {
-    // TODO
-  } else if (query[queryOperator] && operator !== "onEmptyFilter") {
     if (type === "boolean") {
-      // Transform boolean filters to cope with null.
-      // "equals false" needs to be "not equals true"
-      // "not equals false" needs to be "equals true"
-      if (queryOperator === "equal" && value === false) {
+      // TODO(samwho): I suspect this boolean transformation isn't needed anymore,
+      // write some tests to confirm.
+
+      // Transform boolean filters to cope with null.  "equals false" needs to
+      // be "not equals true" "not equals false" needs to be "equals true"
+      if (operator === "equal" && value === false) {
         query.notEqual = query.notEqual || {}
         query.notEqual[field] = true
-      } else if (queryOperator === "notEqual" && value === false) {
+      } else if (operator === "notEqual" && value === false) {
         query.equal = query.equal || {}
         query.equal[field] = true
       } else {
-        query[queryOperator] ??= {}
-        query[queryOperator]![field] = value
+        query[operator] ??= {}
+        query[operator][field] = value
       }
     } else {
-      query[queryOperator] ??= {}
-      query[queryOperator]![field] = value
+      query[operator] ??= {}
+      query[operator][field] = value
     }
+  } else {
+    throw new Error(`Unsupported operator: ${operator}`)
   }
 
   return query
@@ -572,34 +571,39 @@ export const buildQueryLegacy = (
  *
  * @returns {SearchFilters}
  */
-
-export const buildQuery = (
+export function buildQuery(filter: undefined): undefined
+export function buildQuery(
+  filter: SearchFilterGroup | LegacyFilter[]
+): SearchFilters
+export function buildQuery(
   filter?: SearchFilterGroup | LegacyFilter[]
-): SearchFilters | undefined => {
-  const parsedFilter: SearchFilterGroup | undefined =
-    processSearchFilters(filter)
-
-  if (!parsedFilter) {
+): SearchFilters | undefined {
+  if (!filter) {
     return
   }
 
-  const operatorMap: { [key in FilterGroupLogicalOperator]: LogicalOperator } =
-    {
-      [FilterGroupLogicalOperator.ALL]: LogicalOperator.AND,
-      [FilterGroupLogicalOperator.ANY]: LogicalOperator.OR,
-    }
+  let parsedFilter: SearchFilterGroup
+  if (Array.isArray(filter)) {
+    parsedFilter = processSearchFilters(filter)
+  } else {
+    parsedFilter = filter
+  }
+
+  const operatorMap = {
+    [FilterGroupLogicalOperator.ALL]: LogicalOperator.AND,
+    [FilterGroupLogicalOperator.ANY]: LogicalOperator.OR,
+  }
 
   const globalOnEmpty = parsedFilter.onEmptyFilter
     ? parsedFilter.onEmptyFilter
     : null
 
-  const globalOperator: LogicalOperator =
-    operatorMap[parsedFilter.logicalOperator as FilterGroupLogicalOperator]
+  const globalOperator = operatorMap[parsedFilter.logicalOperator]
 
-  return {
+  const ret = {
     ...(globalOnEmpty ? { onEmptyFilter: globalOnEmpty } : {}),
     [globalOperator]: {
-      conditions: parsedFilter.groups?.map((group: SearchFilterGroup) => {
+      conditions: parsedFilter.groups?.map(group => {
         return {
           [operatorMap[group.logicalOperator]]: {
             conditions: group.filters
@@ -610,6 +614,8 @@ export const buildQuery = (
       }),
     },
   }
+
+  return ret
 }
 
 // The frontend can send single values for array fields sometimes, so to handle
