@@ -89,9 +89,6 @@ export async function search(
     options = searchInputMapping(table, options)
 
     if (options.viewId) {
-      // Delete extraneous search params that cannot be overridden
-      delete options.query.onEmptyFilter
-
       const view = source as ViewV2
       // Enrich saved query with ephemeral query params.
       // We prevent searching on any fields that are saved as part of the query, as
@@ -99,7 +96,6 @@ export async function search(
       let viewQuery = await enrichSearchContext(view.query || {}, context)
       viewQuery = dataFilters.buildQueryLegacy(viewQuery) || {}
       viewQuery = checkFilters(table, viewQuery)
-      delete viewQuery?.onEmptyFilter
 
       const sqsEnabled = await features.flags.isEnabled("SQS")
       const supportsLogicalOperators =
@@ -111,8 +107,6 @@ export async function search(
         let queryFilters: LegacyFilter[] = Array.isArray(view.query)
           ? view.query
           : []
-
-        delete options.query.onEmptyFilter
 
         // Extract existing fields
         const existingFields =

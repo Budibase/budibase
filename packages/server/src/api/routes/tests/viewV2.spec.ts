@@ -29,12 +29,18 @@ import {
   JsonTypes,
   FilterGroupLogicalOperator,
   EmptyFilterOption,
+  JsonFieldSubType,
+  SearchFilterGroup,
+  LegacyFilter,
+  SearchViewRowRequest,
+  SearchFilterChild,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { db, roles, features } from "@budibase/backend-core"
+import { single } from "validate.js"
 
 describe.each([
   ["lucene", undefined],
@@ -3656,6 +3662,148 @@ describe.each([
 
           expect(rows).toHaveLength(1)
           expect(rows[0].user._id).toEqual(config.getUser()._id)
+        })
+
+        describe("search operators", () => {
+          let table: Table
+          beforeEach(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  string: { name: "string", type: FieldType.STRING },
+                  longform: { name: "longform", type: FieldType.LONGFORM },
+                  options: {
+                    name: "options",
+                    type: FieldType.OPTIONS,
+                    constraints: { inclusion: ["a", "b", "c"] },
+                  },
+                  array: {
+                    name: "array",
+                    type: FieldType.ARRAY,
+                    constraints: {
+                      type: JsonFieldSubType.ARRAY,
+                      inclusion: ["a", "b", "c"],
+                    },
+                  },
+                  number: { name: "number", type: FieldType.NUMBER },
+                  bigint: { name: "bigint", type: FieldType.BIGINT },
+                  datetime: { name: "datetime", type: FieldType.DATETIME },
+                  timeOnly: {
+                    name: "timeOnly",
+                    type: FieldType.DATETIME,
+                    timeOnly: true,
+                  },
+                  boolean: { name: "boolean", type: FieldType.BOOLEAN },
+                  user: {
+                    name: "user",
+                    type: FieldType.BB_REFERENCE_SINGLE,
+                    subtype: BBReferenceFieldSubType.USER,
+                  },
+                  users: {
+                    name: "users",
+                    type: FieldType.BB_REFERENCE,
+                    subtype: BBReferenceFieldSubType.USER,
+                  },
+                },
+              })
+            )
+          })
+
+          interface TestCase {
+            name: string
+            query: SearchFilterGroup
+            insert: Row[]
+            expected: Row[]
+            searchOpts?: SearchViewRowRequest
+          }
+
+          function defaultQuery(
+            query: Partial<SearchFilterGroup>
+          ): SearchFilterGroup {
+            return {
+              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              logicalOperator: FilterGroupLogicalOperator.ALL,
+              groups: [],
+              ...query,
+            }
+          }
+
+          function defaultGroup(
+            group: Partial<SearchFilterChild>
+          ): SearchFilterChild {
+            return {
+              logicalOperator: FilterGroupLogicalOperator.ALL,
+              filters: [],
+              ...group,
+            }
+          }
+
+          function simpleQuery(...filters: LegacyFilter[]): SearchFilterGroup {
+            return defaultQuery({ groups: [defaultGroup({ filters })] })
+          }
+
+          const testCases: TestCase[] = [
+            {
+              name: "empty query return all",
+              insert: [{ string: "foo" }],
+              query: defaultQuery({
+                onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              }),
+              expected: [{ string: "foo" }],
+            },
+            {
+              name: "empty query return none",
+              insert: [{ string: "foo" }],
+              query: defaultQuery({
+                onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+              }),
+              expected: [],
+            },
+            {
+              name: "simple string search",
+              insert: [{ string: "foo" }],
+              query: simpleQuery({
+                operator: BasicOperator.EQUAL,
+                field: "string",
+                value: "foo",
+              }),
+              expected: [{ string: "foo" }],
+            },
+            {
+              name: "non matching string search",
+              insert: [{ string: "foo" }],
+              query: simpleQuery({
+                operator: BasicOperator.EQUAL,
+                field: "string",
+                value: "bar",
+              }),
+              expected: [],
+            },
+          ]
+
+          it.only.each(testCases)(
+            "$name",
+            async ({ query, insert, expected, searchOpts }) => {
+              await config.api.row.bulkImport(table._id!, { rows: insert })
+
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                queryUI: query,
+                schema: {
+                  string: { visible: true },
+                },
+              })
+
+              const { rows } = await config.api.viewV2.search(
+                view.id,
+                searchOpts
+              )
+              expect(rows).toEqual(
+                expected.map(r => expect.objectContaining(r))
+              )
+            }
+          )
         })
       })
 

@@ -600,7 +600,7 @@ export function buildQuery(
 
   const globalOperator = operatorMap[parsedFilter.logicalOperator]
 
-  return {
+  const ret = {
     ...(globalOnEmpty ? { onEmptyFilter: globalOnEmpty } : {}),
     [globalOperator]: {
       conditions: parsedFilter.groups?.map(group => {
@@ -614,6 +614,8 @@ export function buildQuery(
       }),
     },
   }
+
+  return ret
 }
 
 // The frontend can send single values for array fields sometimes, so to handle
