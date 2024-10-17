@@ -1,4 +1,4 @@
-import { Role, SEPARATOR, DocumentType } from "@budibase/types"
+import { Role } from "@budibase/types"
 
 // Function to detect loops in roles
 export function checkForRoleInheritanceLoops(roles: Role[]): boolean {
