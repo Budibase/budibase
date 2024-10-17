@@ -27,15 +27,27 @@ const UpdateRolesOptions = {
   REMOVED: "removed",
 }
 
-function externalRole(role: Role): Role {
-  let _id: string | undefined
-  if (role._id) {
-    _id = roles.getExternalRoleID(role._id)
+async function removeRoleFromOthers(roleId: string) {
+  const allOtherRoles = await roles.getAllRoles()
+  const updated: Role[] = []
+  for (let role of allOtherRoles) {
+    let changed = false
+    if (Array.isArray(role.inherits)) {
+      const newInherits = role.inherits.filter(
+        id => !roles.compareRoleIds(id, roleId)
+      )
+      changed = role.inherits.length !== newInherits.length
+      role.inherits = newInherits
+    } else if (role.inherits && roles.compareRoleIds(role.inherits, roleId)) {
+      role.inherits = roles.BUILTIN_ROLE_IDS.PUBLIC
+      changed = true
+    }
+    if (changed) {
+      updated.push(role)
+    }
   }
-  return {
-    ...role,
-    _id,
-    inherits: roles.getExternalRoleIDs(role.inherits, role.version),
+  if (updated.length) {
+    await roles.saveRoles(updated)
   }
 }
 
@@ -65,7 +77,7 @@ async function updateRolesOnUserTable(
 }
 
 export async function fetch(ctx: UserCtx<void, FetchRolesResponse>) {
-  ctx.body = (await roles.getAllRoles()).map(role => externalRole(role))
+  ctx.body = (await roles.getAllRoles()).map(role => roles.externalRole(role))
 }
 
 export async function find(ctx: UserCtx<void, FindRoleResponse>) {
@@ -73,7 +85,7 @@ export async function find(ctx: UserCtx<void, FindRoleResponse>) {
   if (!role) {
     ctx.throw(404, { message: "Role not found" })
   }
-  ctx.body = externalRole(role)
+  ctx.body = roles.externalRole(role)
 }
 
 export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
@@ -149,7 +161,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     role.version
   )
   role._rev = result.rev
-  ctx.body = externalRole(role)
+  ctx.body = roles.externalRole(role)
 
   const devDb = context.getDevAppDB()
   const prodDb = context.getProdAppDB()
@@ -198,6 +210,10 @@ export async function destroy(ctx: UserCtx<void, DestroyRoleResponse>) {
     UpdateRolesOptions.REMOVED,
     role.version
   )
+
+  // clean up inherits
+  await removeRoleFromOthers(roleId)
+
   ctx.message = `Role ${ctx.params.roleId} deleted successfully`
   ctx.status = 200
 }
