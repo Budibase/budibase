@@ -217,6 +217,27 @@ describe("/roles", () => {
         _id: dbCore.prefixRoleID(customRole._id!),
       })
     })
+
+    it("should disconnection roles when deleted", async () => {
+      const role1 = await config.api.roles.save({
+        name: "role1",
+        permissionId: BuiltinPermissionID.WRITE,
+        inherits: [BUILTIN_ROLE_IDS.BASIC],
+      })
+      const role2 = await config.api.roles.save({
+        name: "role2",
+        permissionId: BuiltinPermissionID.WRITE,
+        inherits: [BUILTIN_ROLE_IDS.BASIC, role1._id!],
+      })
+      const role3 = await config.api.roles.save({
+        name: "role3",
+        permissionId: BuiltinPermissionID.WRITE,
+        inherits: [BUILTIN_ROLE_IDS.BASIC, role2._id!],
+      })
+      await config.api.roles.destroy(role2, { status: 200 })
+      const found = await config.api.roles.find(role3._id!, { status: 200 })
+      expect(found.inherits).toEqual([BUILTIN_ROLE_IDS.BASIC])
+    })
   })
 
   describe("accessible", () => {

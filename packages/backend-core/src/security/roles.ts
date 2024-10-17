@@ -290,9 +290,21 @@ export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
     : roleId1
 }
 
-function compareRoleIds(roleId1: string, roleId2: string) {
+export function compareRoleIds(roleId1: string, roleId2: string) {
   // make sure both role IDs are prefixed correctly
   return prefixRoleID(roleId1) === prefixRoleID(roleId2)
+}
+
+export function externalRole(role: RoleDoc): RoleDoc {
+  let _id: string | undefined
+  if (role._id) {
+    _id = getExternalRoleID(role._id)
+  }
+  return {
+    ...role,
+    _id,
+    inherits: getExternalRoleIDs(role.inherits, role.version),
+  }
 }
 
 /**
@@ -345,6 +357,18 @@ export async function getRole(
     }
   }
   return findRole(roleId, roleList, opts)
+}
+
+export async function saveRoles(roles: RoleDoc[]) {
+  const db = getAppDB()
+  await db.bulkDocs(
+    roles
+      .filter(role => role._id)
+      .map(role => ({
+        ...role,
+        _id: prefixRoleID(role._id!),
+      }))
+  )
 }
 
 /**
