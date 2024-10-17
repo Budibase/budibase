@@ -432,7 +432,7 @@ export default class TestConfiguration {
   async loginAsRole(roleId: string, cb: () => Promise<unknown>) {
     const roleUser = await this.createUser({
       roles: {
-        [this.prodAppId!]: roleId,
+        [this.getProdAppId()]: roleId,
       },
       builder: { global: false },
       admin: { global: false },
@@ -443,17 +443,9 @@ export default class TestConfiguration {
       builder: false,
       prodApp: true,
     })
-    const temp = this.user
-    this.user = roleUser
-    await cb()
-    if (temp) {
-      this.user = temp
-      await this.login({
-        userId: temp._id!,
-        builder: true,
-        prodApp: false,
-      })
-    }
+    await this.withUser(roleUser, async () => {
+      await cb()
+    })
   }
 
   defaultHeaders(extras = {}, prodApp = false) {
