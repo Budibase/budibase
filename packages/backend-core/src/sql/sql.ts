@@ -23,12 +23,14 @@ import {
   InternalSearchFilterOperator,
   JsonFieldMetadata,
   JsonTypes,
+  LogicalOperator,
   Operation,
   prefixed,
   QueryJson,
   QueryOptions,
   RangeOperator,
   RelationshipsJson,
+  SearchFilterKey,
   SearchFilters,
   SortOrder,
   SqlClient,
@@ -94,6 +96,22 @@ function isSqs(table: Table): boolean {
     table.sourceType === TableSourceType.INTERNAL ||
     table.sourceId === INTERNAL_TABLE_SOURCE_ID
   )
+}
+
+const allowEmptyRelationships: Record<SearchFilterKey, boolean> = {
+  [BasicOperator.EQUAL]: false,
+  [BasicOperator.NOT_EQUAL]: true,
+  [BasicOperator.EMPTY]: false,
+  [BasicOperator.NOT_EMPTY]: true,
+  [BasicOperator.FUZZY]: false,
+  [BasicOperator.STRING]: false,
+  [RangeOperator.RANGE]: false,
+  [ArrayOperator.CONTAINS]: false,
+  [ArrayOperator.NOT_CONTAINS]: true,
+  [ArrayOperator.CONTAINS_ANY]: false,
+  [ArrayOperator.ONE_OF]: false,
+  [LogicalOperator.AND]: false,
+  [LogicalOperator.OR]: false,
 }
 
 class InternalBuilder {
@@ -405,6 +423,7 @@ class InternalBuilder {
 
   addRelationshipForFilter(
     query: Knex.QueryBuilder,
+    allowEmptyRelationships: boolean,
     filterKey: string,
     whereCb: (filterKey: string, query: Knex.QueryBuilder) => Knex.QueryBuilder
   ): Knex.QueryBuilder {
@@ -430,9 +449,10 @@ class InternalBuilder {
         relationship.to &&
         relationship.tableName
       ) {
-        let subQuery = mainKnex
+        const joinTable = mainKnex
           .select(mainKnex.raw(1))
           .from({ [toAlias]: relatedTableName })
+        let subQuery = joinTable.clone()
         const manyToMany = validateManyToMany(relationship)
         let updatedKey
 
@@ -455,7 +475,6 @@ class InternalBuilder {
           subQuery = subQuery
             // add a join through the junction table
             .innerJoin(throughTable, function () {
-              // @ts-ignore
               this.on(
                 `${toAlias}.${manyToMany.toPrimary}`,
                 "=",
@@ -475,17 +494,38 @@ class InternalBuilder {
           if (this.client === SqlClient.SQL_LITE) {
             subQuery = this.addJoinFieldCheck(subQuery, manyToMany)
           }
+
+          query = query.where(q => {
+            q.whereExists(whereCb(updatedKey, subQuery))
+            if (allowEmptyRelationships) {
+              q.orWhereNotExists(
+                joinTable.clone().innerJoin(throughTable, function () {
+                  this.on(
+                    `${fromAlias}.${manyToMany.fromPrimary}`,
+                    "=",
+                    `${throughAlias}.${manyToMany.from}`
+                  )
+                })
+              )
+            }
+          })
         } else {
+          const toKey = `${toAlias}.${relationship.to}`
+          const foreignKey = `${fromAlias}.${relationship.from}`
           // "join" to the main table, making sure the ID matches that of the main
           subQuery = subQuery.where(
-            `${toAlias}.${relationship.to}`,
+            toKey,
             "=",
-            mainKnex.raw(
-              this.quotedIdentifier(`${fromAlias}.${relationship.from}`)
-            )
+            mainKnex.raw(this.quotedIdentifier(foreignKey))
           )
+
+          query = query.where(q => {
+            q.whereExists(whereCb(updatedKey, subQuery.clone()))
+            if (allowEmptyRelationships) {
+              q.orWhereNotExists(subQuery)
+            }
+          })
         }
-        query = query.whereExists(whereCb(updatedKey, subQuery))
       }
     }
     return query
@@ -516,6 +556,7 @@ class InternalBuilder {
     }
     function iterate(
       structure: AnySearchFilter,
+      operation: SearchFilterKey,
       fn: (
         query: Knex.QueryBuilder,
         key: string,
@@ -574,6 +615,7 @@ class InternalBuilder {
           }
           query = builder.addRelationshipForFilter(
             query,
+            allowEmptyRelationships[operation],
             updatedKey,
             (updatedKey, q) => {
               return handleRelationship(q, updatedKey, value)
@@ -610,7 +652,7 @@ class InternalBuilder {
         return `[${value.join(",")}]`
       }
       if (this.client === SqlClient.POSTGRES) {
-        iterate(mode, (q, key, value) => {
+        iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
           const wrap = any ? "" : "'"
           const op = any ? "\\?| array" : "@>"
           const fieldNames = key.split(/\./g)
@@ -628,7 +670,7 @@ class InternalBuilder {
         this.client === SqlClient.MARIADB
       ) {
         const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
-        iterate(mode, (q, key, value) => {
+        iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
           return q[rawFnc](
             `${not}COALESCE(${jsonFnc}(${key}, '${stringifyArray(
               value
@@ -637,7 +679,7 @@ class InternalBuilder {
         })
       } else {
         const andOr = mode === filters?.containsAny ? " OR " : " AND "
-        iterate(mode, (q, key, value) => {
+        iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
           let statement = ""
           const identifier = this.quotedIdentifier(key)
           for (let i in value) {
@@ -691,6 +733,7 @@ class InternalBuilder {
       const fnc = allOr ? "orWhereIn" : "whereIn"
       iterate(
         filters.oneOf,
+        ArrayOperator.ONE_OF,
         (q, key: string, array) => {
           if (this.client === SqlClient.ORACLE) {
             key = this.convertClobs(key)
@@ -715,7 +758,7 @@ class InternalBuilder {
       )
     }
     if (filters.string) {
-      iterate(filters.string, (q, key, value) => {
+      iterate(filters.string, BasicOperator.STRING, (q, key, value) => {
         const fnc = allOr ? "orWhere" : "where"
         // postgres supports ilike, nothing else does
         if (this.client === SqlClient.POSTGRES) {
@@ -730,10 +773,10 @@ class InternalBuilder {
       })
     }
     if (filters.fuzzy) {
-      iterate(filters.fuzzy, like)
+      iterate(filters.fuzzy, BasicOperator.FUZZY, like)
     }
     if (filters.range) {
-      iterate(filters.range, (q, key, value) => {
+      iterate(filters.range, RangeOperator.RANGE, (q, key, value) => {
         const isEmptyObject = (val: any) => {
           return (
             val &&
@@ -799,7 +842,7 @@ class InternalBuilder {
       })
     }
     if (filters.equal) {
-      iterate(filters.equal, (q, key, value) => {
+      iterate(filters.equal, BasicOperator.EQUAL, (q, key, value) => {
         const fnc = allOr ? "orWhereRaw" : "whereRaw"
         if (this.client === SqlClient.MS_SQL) {
           return q[fnc](
@@ -819,7 +862,7 @@ class InternalBuilder {
       })
     }
     if (filters.notEqual) {
-      iterate(filters.notEqual, (q, key, value) => {
+      iterate(filters.notEqual, BasicOperator.NOT_EQUAL, (q, key, value) => {
         const fnc = allOr ? "orWhereRaw" : "whereRaw"
         if (this.client === SqlClient.MS_SQL) {
           return q[fnc](
@@ -840,13 +883,13 @@ class InternalBuilder {
       })
     }
     if (filters.empty) {
-      iterate(filters.empty, (q, key) => {
+      iterate(filters.empty, BasicOperator.EMPTY, (q, key) => {
         const fnc = allOr ? "orWhereNull" : "whereNull"
         return q[fnc](key)
       })
     }
     if (filters.notEmpty) {
-      iterate(filters.notEmpty, (q, key) => {
+      iterate(filters.notEmpty, BasicOperator.NOT_EMPTY, (q, key) => {
         const fnc = allOr ? "orWhereNotNull" : "whereNotNull"
         return q[fnc](key)
       })
@@ -1242,12 +1285,10 @@ class InternalBuilder {
         })
       : undefined
     if (!throughTable) {
-      // @ts-ignore
       query = query.leftJoin(toTableWithSchema, function () {
         for (let relationship of columns) {
           const from = relationship.from,
             to = relationship.to
-          // @ts-ignore
           this.orOn(`${fromAlias}.${from}`, "=", `${toAlias}.${to}`)
         }
       })
@@ -1258,7 +1299,6 @@ class InternalBuilder {
           for (let relationship of columns) {
             const fromPrimary = relationship.fromPrimary
             const from = relationship.from
-            // @ts-ignore
             this.orOn(
               `${fromAlias}.${fromPrimary}`,
               "=",
@@ -1270,7 +1310,6 @@ class InternalBuilder {
           for (let relationship of columns) {
             const toPrimary = relationship.toPrimary
             const to = relationship.to
-            // @ts-ignore
             this.orOn(`${toAlias}.${toPrimary}`, `${throughAlias}.${to}`)
           }
         })
