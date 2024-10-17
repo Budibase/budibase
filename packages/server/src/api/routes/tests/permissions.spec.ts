@@ -328,7 +328,7 @@ describe("/permission", () => {
     })
 
     it("should be unable to search for table 2 using role 1", async () => {
-      await config.setRole(role1._id!, async () => {
+      await config.loginAsRole(role1._id!, async () => {
         const response2 = await config.api.row.search(
           table2._id!,
           {
@@ -347,7 +347,7 @@ describe("/permission", () => {
         inherits: [role1._id!, role2._id!],
       })
 
-      await config.setRole(role3._id!, async () => {
+      await config.loginAsRole(role3._id!, async () => {
         const response1 = await config.api.row.search(
           table1._id!,
           {

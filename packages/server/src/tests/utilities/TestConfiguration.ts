@@ -429,7 +429,7 @@ export default class TestConfiguration {
   // HEADERS
 
   // sets the role for the headers, for the period of a callback
-  async setRole(roleId: string, cb: () => Promise<unknown>) {
+  async loginAsRole(roleId: string, cb: () => Promise<unknown>) {
     const roleUser = await this.createUser({
       roles: {
         [this.prodAppId!]: roleId,

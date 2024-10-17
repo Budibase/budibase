@@ -79,7 +79,7 @@ describe("/screens", () => {
     })
 
     async function checkScreens(roleId: string, screenIds: string[]) {
-      await config.setRole(roleId, async () => {
+      await config.loginAsRole(roleId, async () => {
         const res = await config.api.application.getDefinition(
           config.prodAppId!,
           {
