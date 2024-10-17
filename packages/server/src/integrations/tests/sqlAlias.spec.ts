@@ -78,8 +78,7 @@ describe("Captures of real examples", () => {
         bindings: ["assembling", primaryLimit, relationshipLimit],
         sql: expect.stringContaining(
           multiline(
-            `where exists (select 1 from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" 
-                 and (COALESCE("b"."taskname" = $1, FALSE))`
+            `where (exists (select 1 from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" and (COALESCE("b"."taskname" = $1, FALSE)))`
           )
         ),
       })
@@ -135,6 +134,8 @@ describe("Captures of real examples", () => {
         bindings: [
           rangeValue.low,
           rangeValue.high,
+          rangeValue.low,
+          rangeValue.high,
           equalValue,
           notEqualsValue,
           primaryLimit,
@@ -144,7 +145,7 @@ describe("Captures of real examples", () => {
         ],
         sql: expect.stringContaining(
           multiline(
-            `where exists (select 1 from "persons" as "c" where "c"."personid" = "a"."executorid" and ("c"."year" between $1 and $2))`
+            `where (exists (select 1 from "persons" as "c" where "c"."personid" = "a"."executorid" and ("c"."year" between $1 and $2))) and (exists (select 1 from "persons" as "c" where "c"."personid" = "a"."qaid" and ("c"."year" between $3 and $4))) and (exists (select 1 from "products" as "b" inner join "products_tasks" as "d" on "b"."productid" = "d"."productid" where "d"."taskid" = "a"."taskid" and (COALESCE("b"."productname" = $5, FALSE))))`
           )
         ),
       })
