@@ -116,6 +116,7 @@ export type BranchStepInputs = {
 }
 
 export type Branch = {
+  id: any
   name: string
   condition: SearchFilters
 }

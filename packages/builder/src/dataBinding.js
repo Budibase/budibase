@@ -1469,3 +1469,31 @@ export const updateReferencesInObject = ({
     }
   }
 }
+
+// Migrate references
+// Switch all bindings to reference their ids
+export const migrateReferencesInObject = ({ obj, label = "steps", steps }) => {
+  const stepIndexRegex = new RegExp(`{{\\s*${label}\\.(\\d+)\\.`, "g")
+  const updateActionStep = (str, index, replaceWith) =>
+    str.replace(`{{ ${label}.${index}.`, `{{ ${label}.${replaceWith}.`)
+
+  for (const key in obj) {
+    if (typeof obj[key] === "string") {
+      let matches
+      while ((matches = stepIndexRegex.exec(obj[key])) !== null) {
+        const referencedStep = parseInt(matches[1])
+
+        obj[key] = updateActionStep(
+          obj[key],
+          referencedStep,
+          steps[referencedStep]?.id
+        )
+      }
+    } else if (typeof obj[key] === "object" && obj[key] !== null) {
+      migrateReferencesInObject({
+        obj: obj[key],
+        steps,
+      })
+    }
+  }
+}

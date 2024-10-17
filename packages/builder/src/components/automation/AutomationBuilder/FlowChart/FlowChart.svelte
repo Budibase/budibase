@@ -1,27 +1,55 @@
 <script>
   import {
     automationStore,
-    selectedAutomation,
     automationHistoryStore,
+    selectedAutomation,
   } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import FlowItem from "./FlowItem.svelte"
   import TestDataModal from "./TestDataModal.svelte"
-  import { flip } from "svelte/animate"
-  import { fly } from "svelte/transition"
   import { Icon, notifications, Modal, Toggle } from "@budibase/bbui"
   import { ActionStepID } from "constants/backend/automations"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+  import StepNode from "./StepNode.svelte"
+  import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
+  import { onMount } from "svelte"
 
   export let automation
+
+  const memoAutomation = memo(automation)
 
   let testDataModal
   let confirmDeleteDialog
   let scrolling = false
+  let blockRefs = {}
+  let treeEle
 
-  $: blocks = getBlocks(automation).filter(x => x.stepId !== ActionStepID.LOOP)
-  $: isRowAction = sdk.automations.isRowAction(automation)
+  // Memo auto - selectedAutomation
+  $: memoAutomation.set(automation)
+
+  // Parse the automation tree state
+  $: refresh($memoAutomation)
+
+  $: blocks = getBlocks($memoAutomation).filter(
+    x => x.stepId !== ActionStepID.LOOP
+  )
+  $: isRowAction = sdk.automations.isRowAction($memoAutomation)
+
+  const refresh = () => {
+    // Build global automation bindings.
+    const environmentBindings =
+      automationStore.actions.buildEnvironmentBindings()
+
+    // Get all processed block references
+    blockRefs = $selectedAutomation.blockRefs
+
+    automationStore.update(state => {
+      return {
+        ...state,
+        bindings: [...environmentBindings],
+      }
+    })
+  }
 
   const getBlocks = automation => {
     let blocks = []
@@ -34,7 +62,7 @@
 
   const deleteAutomation = async () => {
     try {
-      await automationStore.actions.delete($selectedAutomation)
+      await automationStore.actions.delete(automation)
     } catch (error) {
       notifications.error("Error deleting automation")
     }
@@ -48,6 +76,16 @@
       scrolling = false
     }
   }
+
+  onMount(() => {
+    // Ensure the trigger element is centered in the view on load.
+    const triggerBlock = treeEle?.querySelector(".block.TRIGGER")
+    triggerBlock?.scrollIntoView({
+      behavior: "instant",
+      block: "nearest",
+      inline: "center",
+    })
+  })
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -58,7 +96,7 @@
   </div>
   <div class="controls">
     <div
-      class:disabled={!$selectedAutomation?.definition?.trigger}
+      class:disabled={!automation?.definition?.trigger}
       on:click={() => {
         testDataModal.show()
       }}
@@ -86,7 +124,7 @@
             automation._id,
             automation.disabled
           )}
-          disabled={!$selectedAutomation?.definition?.trigger}
+          disabled={!automation?.definition?.trigger}
           value={!automation.disabled}
         />
       </div>
@@ -95,18 +133,21 @@
 </div>
 <div class="canvas" on:scroll={handleScroll}>
   <div class="content">
-    {#each blocks as block, idx (block.id)}
-      <div
-        class="block"
-        animate:flip={{ duration: 500 }}
-        in:fly={{ x: 500, duration: 500 }}
-        out:fly|local={{ x: 500, duration: 500 }}
-      >
-        {#if block.stepId !== ActionStepID.LOOP}
-          <FlowItem {testDataModal} {block} {idx} />
+    <div class="tree">
+      <div class="root" bind:this={treeEle}>
+        {#if Object.keys(blockRefs).length}
+          {#each blocks as block, idx (block.id)}
+            <StepNode
+              step={blocks[idx]}
+              stepIdx={idx}
+              isLast={blocks?.length - 1 === idx}
+              automation={$memoAutomation}
+              blocks={blockRefs}
+            />
+          {/each}
         {/if}
       </div>
-    {/each}
+    </div>
   </div>
 </div>
 <ConfirmDialog
@@ -139,18 +180,28 @@
     padding-bottom: 40px;
   }
 
-  .block {
+  .root {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .root :global(.block) {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
   }
 
+  .root :global(.blockSection) {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .content {
-    flex-grow: 1;
     padding: 23px 23px 80px;
     box-sizing: border-box;
-    overflow-x: hidden;
+    /* overflow-x: hidden; */
   }
 
   .header.scrolling {
@@ -158,7 +209,11 @@
     border-bottom: var(--border-light);
     z-index: 1;
   }
-
+  .tree {
+    justify-content: center;
+    display: inline-flex;
+    min-width: 100%;
+  }
   .header {
     z-index: 1;
     display: flex;
@@ -169,10 +224,12 @@
     flex: 0 0 48px;
     padding-right: var(--spacing-xl);
   }
+
   .controls {
     display: flex;
     gap: var(--spacing-xl);
   }
+
   .buttons {
     display: flex;
     justify-content: flex-end;
