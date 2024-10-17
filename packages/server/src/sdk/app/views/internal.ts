@@ -4,19 +4,7 @@ import { context, HTTPError } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 import { enrichSchema, isV2 } from "."
-import { utils as sharedUtils, dataFilters } from "@budibase/shared-core"
-
-function ensureQueryUISet(view: ViewV2) {
-  if (!view.queryUI && view.query) {
-    view.queryUI = sharedUtils.processSearchFilters(view.query)
-  }
-}
-
-function ensureQuerySet(view: ViewV2) {
-  if (!view.query && view.queryUI) {
-    view.query = dataFilters.buildQuery(view.queryUI)
-  }
-}
+import { ensureQuerySet, ensureQueryUISet } from "./utils"
 
 export async function get(viewId: string): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
@@ -52,6 +40,8 @@ export async function create(
     version: 2,
   }
 
+  ensureQuerySet(view)
+
   const db = context.getAppDB()
 
   const table = await sdk.tables.getTable(tableId)
@@ -77,6 +67,8 @@ export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
   if (isV2(existingView) && existingView.type !== view.type) {
     throw new HTTPError(`Cannot update view type after creation`, 400)
   }
+
+  ensureQuerySet(view)
 
   delete table.views[existingView.name]
   table.views[view.name] = view

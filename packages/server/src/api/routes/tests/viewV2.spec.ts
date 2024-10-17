@@ -27,6 +27,8 @@ import {
   ViewV2Schema,
   ViewV2Type,
   JsonTypes,
+  FilterGroupLogicalOperator,
+  EmptyFilterOption,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -145,17 +147,26 @@ describe.each([
       })
 
       it.only("can persist views with all fields", async () => {
-        const newView: Required<Omit<CreateViewRequest, "queryUI" | "type">> = {
+        const newView: Required<Omit<CreateViewRequest, "query" | "type">> = {
           name: generator.name(),
           tableId: table._id!,
           primaryDisplay: "id",
-          query: [
-            {
-              operator: BasicOperator.EQUAL,
-              field: "field",
-              value: "value",
-            },
-          ],
+          queryUI: {
+            logicalOperator: FilterGroupLogicalOperator.ALL,
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            groups: [
+              {
+                logicalOperator: FilterGroupLogicalOperator.ALL,
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "field",
+                    value: "value",
+                  },
+                ],
+              },
+            ],
+          },
           sort: {
             field: "fieldToSort",
             order: SortOrder.DESCENDING,
@@ -170,7 +181,7 @@ describe.each([
         }
         const res = await config.api.viewV2.create(newView)
 
-        expect(res).toEqual({
+        const expected: ViewV2 = {
           ...newView,
           schema: {
             id: { visible: true },
@@ -178,10 +189,29 @@ describe.each([
               visible: true,
             },
           },
-          queryUI: {},
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            $and: {
+              conditions: [
+                {
+                  $and: {
+                    conditions: [
+                      {
+                        equal: {
+                          field: "value",
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
           id: expect.any(String),
           version: 2,
-        })
+        }
+
+        expect(res).toEqual(expected)
       })
 
       it("persist only UI schema overrides", async () => {
