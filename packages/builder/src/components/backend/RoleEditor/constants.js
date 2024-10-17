@@ -6,3 +6,4 @@ export const NodeWidth = GridResolution * 12
 export const NodeHSpacing = GridResolution * 6
 export const NodeVSpacing = GridResolution * 2
 export const MinHeight = GridResolution * 10
+export const EmptyStateID = "empty"

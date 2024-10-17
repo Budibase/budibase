@@ -6,6 +6,7 @@ import {
   NodeHSpacing,
   NodeVSpacing,
   MinHeight,
+  EmptyStateID,
 } from "./constants"
 import { getNodesBounds, Position } from "@xyflow/svelte"
 import { Roles } from "constants/backend"
@@ -50,7 +51,7 @@ export const getAdminPosition = bounds => ({
 
 // Filters out invalid nodes and edges
 const preProcessLayout = ({ nodes, edges }) => {
-  const ignoredIds = [Roles.PUBLIC, Roles.BASIC, Roles.ADMIN, "empty"]
+  const ignoredIds = [Roles.PUBLIC, Roles.BASIC, Roles.ADMIN, EmptyStateID]
   const targetlessIds = [Roles.POWER]
   return {
     nodes: nodes.filter(node => {
@@ -139,7 +140,7 @@ const postProcessLayout = ({ nodes, edges }) => {
   // Add empty state node if required
   if (!nodes.some(node => node.data.interactive)) {
     nodes.push({
-      id: "empty",
+      id: EmptyStateID,
       type: "empty",
       position: {
         x: bounds.x + bounds.width / 2 - NodeWidth / 2,
@@ -167,7 +168,13 @@ export const autoLayout = ({ nodes, edges }) => {
 
 // Converts a role doc into a node structure
 export const roleToNode = role => {
-  const custom = !role._id.match(/[A-Z]+/)
+  const custom = ![
+    Roles.PUBLIC,
+    Roles.BASIC,
+    Roles.POWER,
+    Roles.ADMIN,
+    Roles.BUILDER,
+  ].includes(role._id)
   const interactive = custom || role._id === Roles.POWER
   return {
     id: role._id,
