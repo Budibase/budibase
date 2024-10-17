@@ -78,7 +78,7 @@ describe("/api/global/roles", () => {
       expect(res.body[appId].roles.map((r: any) => r._id)).toContain(ROLE_NAME)
     })
 
-    it.each(["3.0.0", "3.0.1", "3.1.0"])(
+    it.each(["3.0.0", "3.0.1", "3.1.0", "3.0.0+2146.b125a7c"])(
       "exclude POWER roles after v3 (%s)",
       async creationVersion => {
         await updateAppMetadata({ creationVersion })
@@ -93,7 +93,7 @@ describe("/api/global/roles", () => {
       }
     )
 
-    it.each(["2.9.0", "1.0.0"])(
+    it.each(["2.9.0", "1.0.0", "0.0.0", "2.32.17+2146.b125a7c"])(
       "include POWER roles before v3 (%s)",
       async creationVersion => {
         await updateAppMetadata({ creationVersion })
