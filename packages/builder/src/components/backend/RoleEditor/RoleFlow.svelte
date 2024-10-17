@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Helpers } from "@budibase/bbui"
+  import { Heading, Helpers, notifications } from "@budibase/bbui"
   import { writable, derived } from "svelte/store"
   import {
     SvelteFlow,
@@ -118,7 +118,13 @@
     if (metadata) {
       flow.updateNodeData(roleId, metadata)
     }
-    await roles.save(nodeToRole({ node, edges: $edges }))
+    try {
+      await roles.save(nodeToRole({ node, edges: $edges }))
+      layoutAndFit()
+    } catch (error) {
+      notifications.error(error?.message || error || "Failed to update role")
+      handleExternalRoleChanges($roles)
+    }
   }
 
   const deleteRole = async roleId => {
@@ -133,12 +139,10 @@
   const deleteEdge = async edgeId => {
     const edge = $edges.find(edge => edge.id === edgeId)
     edges.set($edges.filter(edge => edge.id !== edgeId))
-    layoutAndFit()
     await updateRole(edge.target)
   }
 
   const onConnect = async connection => {
-    layoutAndFit()
     await updateRole(connection.target)
   }
 
