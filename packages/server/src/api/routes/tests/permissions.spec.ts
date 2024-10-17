@@ -1,5 +1,5 @@
 import { roles } from "@budibase/backend-core"
-import { Document, PermissionLevel, Row } from "@budibase/types"
+import { Document, PermissionLevel, Role, Row, Table } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator, mocks } from "@budibase/backend-core/tests"
 
@@ -284,6 +284,88 @@ describe("/permission", () => {
           role: HIGHER_ROLE_ID,
           inheritablePermission: DEFAULT_TABLE_ROLE_ID,
         },
+      })
+    })
+  })
+
+  describe("multi-inheritance permissions", () => {
+    let table1: Table, table2: Table, role1: Role, role2: Role
+    beforeEach(async () => {
+      // create new app
+      await config.init()
+      table1 = await config.createTable()
+      table2 = await config.createTable()
+      await config.api.row.save(table1._id!, {
+        name: "a",
+      })
+      await config.api.row.save(table2._id!, {
+        name: "b",
+      })
+      role1 = await config.api.roles.save(
+        {
+          name: "test_1",
+          permissionId: PermissionLevel.WRITE,
+          inherits: BUILTIN_ROLE_IDS.BASIC,
+        },
+        { status: 200 }
+      )
+      role2 = await config.api.roles.save(
+        {
+          name: "test_2",
+          permissionId: PermissionLevel.WRITE,
+          inherits: BUILTIN_ROLE_IDS.BASIC,
+        },
+        { status: 200 }
+      )
+      await config.api.permission.add({
+        roleId: role1._id!,
+        level: PermissionLevel.READ,
+        resourceId: table1._id!,
+      })
+      await config.api.permission.add({
+        roleId: role2._id!,
+        level: PermissionLevel.READ,
+        resourceId: table2._id!,
+      })
+    })
+
+    it("should be unable to search for table 2 using role 1", async () => {
+      await config.loginAsRole(role1._id!, async () => {
+        const response2 = await config.api.row.search(
+          table2._id!,
+          {
+            query: {},
+          },
+          { status: 403 }
+        )
+        expect(response2.rows).toBeUndefined()
+      })
+    })
+
+    it("should be able to fetch two tables, with different roles, using multi-inheritance", async () => {
+      const role3 = await config.api.roles.save({
+        name: "role3",
+        permissionId: PermissionLevel.WRITE,
+        inherits: [role1._id!, role2._id!],
+      })
+
+      await config.loginAsRole(role3._id!, async () => {
+        const response1 = await config.api.row.search(
+          table1._id!,
+          {
+            query: {},
+          },
+          { status: 200 }
+        )
+        const response2 = await config.api.row.search(
+          table2._id!,
+          {
+            query: {},
+          },
+          { status: 200 }
+        )
+        expect(response1.rows[0].name).toEqual("a")
+        expect(response2.rows[0].name).toEqual("b")
       })
     })
   })

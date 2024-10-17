@@ -59,11 +59,15 @@ export default async (ctx: UserCtx, next: any) => {
       // Ensure the role is valid by ensuring a definition exists
       try {
         if (roleHeader) {
-          await roles.getRole(roleHeader)
-          roleId = roleHeader
+          const role = await roles.getRole(roleHeader)
+          if (role) {
+            roleId = roleHeader
 
-          // Delete admin and builder flags so that the specified role is honoured
-          ctx.user = users.removePortalUserPermissions(ctx.user) as ContextUser
+            // Delete admin and builder flags so that the specified role is honoured
+            ctx.user = users.removePortalUserPermissions(
+              ctx.user
+            ) as ContextUser
+          }
         }
       } catch (error) {
         // Swallow error and do nothing
