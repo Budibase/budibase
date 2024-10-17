@@ -1,3 +1,4 @@
+import semver from "semver"
 import { BuiltinPermissionID, PermissionLevel } from "./permissions"
 import {
   prefixRoleID,
@@ -7,7 +8,13 @@ import {
   doWithDB,
 } from "../db"
 import { getAppDB } from "../context"
-import { Screen, Role as RoleDoc, RoleUIMetadata } from "@budibase/types"
+import {
+  Screen,
+  Role as RoleDoc,
+  RoleUIMetadata,
+  Database,
+  App,
+} from "@budibase/types"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { RoleColor } from "@budibase/shared-core"
 
@@ -22,14 +29,6 @@ const BUILTIN_IDS = {
   ...BUILTIN_ROLE_IDS,
   BUILDER: "BUILDER",
 }
-
-// exclude internal roles like builder
-const EXTERNAL_BUILTIN_ROLE_IDS = [
-  BUILTIN_IDS.ADMIN,
-  BUILTIN_IDS.POWER,
-  BUILTIN_IDS.BASIC,
-  BUILTIN_IDS.PUBLIC,
-]
 
 export const RoleIDVersion = {
   // original version, with a UUID based ID
@@ -319,7 +318,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
     }
     return internal(appDB)
   }
-  async function internal(db: any) {
+  async function internal(db: Database | undefined) {
     let roles: RoleDoc[] = []
     if (db) {
       const body = await db.allDocs(
@@ -334,8 +333,26 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
     }
     const builtinRoles = getBuiltinRoles()
 
+    // exclude internal roles like builder
+    let externalBuiltinRoles = []
+
+    if (!db || (await shouldIncludePowerRole(db))) {
+      externalBuiltinRoles = [
+        BUILTIN_IDS.ADMIN,
+        BUILTIN_IDS.POWER,
+        BUILTIN_IDS.BASIC,
+        BUILTIN_IDS.PUBLIC,
+      ]
+    } else {
+      externalBuiltinRoles = [
+        BUILTIN_IDS.ADMIN,
+        BUILTIN_IDS.BASIC,
+        BUILTIN_IDS.PUBLIC,
+      ]
+    }
+
     // need to combine builtin with any DB record of them (for sake of permissions)
-    for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
+    for (let builtinRoleId of externalBuiltinRoles) {
       const builtinRole = builtinRoles[builtinRoleId]
       const dbBuiltin = roles.filter(
         dbRole =>
@@ -364,6 +381,18 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
     }
     return roles
   }
+}
+
+async function shouldIncludePowerRole(db: Database) {
+  const app = await db.tryGet<App>(DocumentType.APP_METADATA)
+  const creationVersion = app?.creationVersion
+  if (!creationVersion || !semver.valid(creationVersion)) {
+    // Old apps don't have creationVersion, so we should include it for backward compatibility
+    return true
+  }
+
+  const isGreaterThan3x = semver.gte(creationVersion, "3.0.0")
+  return !isGreaterThan3x
 }
 
 export class AccessController {
