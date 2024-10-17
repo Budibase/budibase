@@ -336,7 +336,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
     // exclude internal roles like builder
     let externalBuiltinRoles = []
 
-    if (db && !(await shouldIncludePowerRole(db))) {
+    if (!db || (await shouldIncludePowerRole(db))) {
       externalBuiltinRoles = [
         BUILTIN_IDS.ADMIN,
         BUILTIN_IDS.POWER,
@@ -386,11 +386,13 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
 async function shouldIncludePowerRole(db: Database) {
   const app = await db.get<App>(DocumentType.APP_METADATA)
   const { creationVersion } = app
-  if (semver.gte(creationVersion || "", "3.0.0")) {
+  if (!creationVersion) {
+    // Old apps don't have creationVersion, so we should include it for backward compatibility
     return true
   }
 
-  return false
+  const isGreaterThan3x = semver.gte(creationVersion, "3.0.0")
+  return !isGreaterThan3x
 }
 
 export class AccessController {
