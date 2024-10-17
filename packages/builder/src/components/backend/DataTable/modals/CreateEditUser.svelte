@@ -125,7 +125,7 @@
     label="Role"
     bind:value={row.roleId}
     options={$roles}
-    getOptionLabel={role => role.name}
+    getOptionLabel={role => role.uiMetadata.displayName}
     getOptionValue={role => role._id}
     disabled={!creating}
   />

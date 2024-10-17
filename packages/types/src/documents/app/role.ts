@@ -9,7 +9,7 @@ export interface RoleUIMetadata {
 
 export interface Role extends Document {
   permissionId: string
-  inherits?: string
+  inherits?: string | string[]
   permissions: Record<string, PermissionLevel[]>
   version?: string
   name: string

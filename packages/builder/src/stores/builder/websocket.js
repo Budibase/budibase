@@ -9,6 +9,7 @@ import {
   snippets,
   datasources,
   tables,
+  roles,
 } from "stores/builder"
 import { get } from "svelte/store"
 import { auth, appsStore } from "stores/portal"
@@ -56,12 +57,18 @@ export const createBuilderWebsocket = appId => {
     datasources.replaceDatasource(id, datasource)
   })
 
+  // Role events
+  socket.onOther(BuilderSocketEvent.RoleChange, ({ id, role }) => {
+    roles.replace(id, role)
+  })
+
   // Design section events
   socket.onOther(BuilderSocketEvent.ScreenChange, ({ id, screen }) => {
     screenStore.replace(id, screen)
   })
+
+  // App events
   socket.onOther(BuilderSocketEvent.AppMetadataChange, ({ metadata }) => {
-    //Sync app metadata across the stores
     appStore.syncMetadata(metadata)
     themeStore.syncMetadata(metadata)
     navigationStore.syncMetadata(metadata)
@@ -79,7 +86,7 @@ export const createBuilderWebsocket = appId => {
     }
   )
 
-  // Automations
+  // Automation events
   socket.onOther(BuilderSocketEvent.AutomationChange, ({ id, automation }) => {
     automationStore.actions.replace(id, automation)
   })

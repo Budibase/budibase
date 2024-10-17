@@ -11,6 +11,7 @@ import {
   Screen,
   App,
   Automation,
+  Role,
 } from "@budibase/types"
 import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
@@ -97,6 +98,20 @@ export default class BuilderSocket extends BaseSocket {
         ...socket.data.builderMetadata,
         ...patch,
       },
+    })
+  }
+
+  emitRoleUpdate(ctx: any, role: Role) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.RoleChange, {
+      id: role._id,
+      role,
+    })
+  }
+
+  emitRoleDeletion(ctx: any, role: Role) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.RoleChange, {
+      id: role._id,
+      role: null,
     })
   }
 

@@ -225,7 +225,10 @@ export function roleValidator() {
           )
         )
         .optional(),
-      inherits: OPTIONAL_STRING,
+      inherits: Joi.alternatives().try(
+        OPTIONAL_STRING,
+        Joi.array().items(OPTIONAL_STRING)
+      ),
     }).unknown(true)
   )
 }
