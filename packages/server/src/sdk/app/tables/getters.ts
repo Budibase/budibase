@@ -90,7 +90,11 @@ export async function getExternalTable(
   if (!entities[tableName]) {
     throw new Error(`Unable to find table named "${tableName}"`)
   }
-  return processTable(entities[tableName])
+  const table = await processTable(entities[tableName])
+  if (!table.sourceId) {
+    table.sourceId = datasourceId
+  }
+  return table
 }
 
 export async function getTable(tableId: string): Promise<Table> {
