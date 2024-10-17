@@ -146,7 +146,7 @@ describe.each([
         })
       })
 
-      it.only("can persist views with all fields", async () => {
+      it("can persist views with all fields", async () => {
         const newView: Required<Omit<CreateViewRequest, "query" | "type">> = {
           name: generator.name(),
           tableId: table._id!,
@@ -2332,548 +2332,391 @@ describe.each([
       })
     })
 
-    describe("search", () => {
-      it("returns empty rows from view when no schema is passed", async () => {
-        const rows = await Promise.all(
-          Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
-        )
-        const response = await config.api.viewV2.search(view.id)
-        expect(response.rows).toHaveLength(10)
-        expect(response).toEqual({
-          rows: expect.arrayContaining(
-            rows.map(r => ({
-              _viewId: view.id,
-              tableId: table._id,
-              id: r.id,
-              _id: r._id,
-              _rev: r._rev,
-              ...(isInternal
-                ? {
-                    type: "row",
-                    updatedAt: expect.any(String),
-                    createdAt: expect.any(String),
-                  }
-                : {}),
-            }))
-          ),
-          ...(isInternal
-            ? {}
-            : {
-                hasNextPage: false,
-              }),
-        })
-      })
-
-      it("searching respects the view filters", async () => {
-        await config.api.row.save(table._id!, {
-          one: "foo",
-          two: "bar",
-        })
-        const two = await config.api.row.save(table._id!, {
-          one: "foo2",
-          two: "bar2",
-        })
-
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-          query: [
-            {
-              operator: BasicOperator.EQUAL,
-              field: "two",
-              value: "bar2",
-            },
-          ],
-          schema: {
-            id: { visible: true },
-            one: { visible: false },
-            two: { visible: true },
-          },
-        })
-
-        const response = await config.api.viewV2.search(view.id)
-        expect(response.rows).toHaveLength(1)
-        expect(response).toEqual({
-          rows: expect.arrayContaining([
-            {
-              _viewId: view.id,
-              tableId: table._id,
-              id: two.id,
-              two: two.two,
-              _id: two._id,
-              _rev: two._rev,
-              ...(isInternal
-                ? {
-                    type: "row",
-                    createdAt: expect.any(String),
-                    updatedAt: expect.any(String),
-                  }
-                : {}),
-            },
-          ]),
-          ...(isInternal
-            ? {}
-            : {
-                hasNextPage: false,
-              }),
-        })
-      })
-
-      it("views filters are respected even if the column is hidden", async () => {
-        await config.api.row.save(table._id!, {
-          one: "foo",
-          two: "bar",
-        })
-        const two = await config.api.row.save(table._id!, {
-          one: "foo2",
-          two: "bar2",
-        })
-
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-          query: [
-            {
-              operator: BasicOperator.EQUAL,
-              field: "two",
-              value: "bar2",
-            },
-          ],
-          schema: {
-            id: { visible: true },
-            one: { visible: false },
-            two: { visible: false },
-          },
-        })
-
-        const response = await config.api.viewV2.search(view.id)
-        expect(response.rows).toHaveLength(1)
-        expect(response.rows).toEqual([
-          expect.objectContaining({ _id: two._id }),
-        ])
-      })
-
-      it("views without data can be returned", async () => {
-        const response = await config.api.viewV2.search(view.id)
-        expect(response.rows).toHaveLength(0)
-      })
-
-      it("respects the limit parameter", async () => {
-        await Promise.all(
-          Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
-        )
-        const limit = generator.integer({ min: 1, max: 8 })
-        const response = await config.api.viewV2.search(view.id, {
-          limit,
-          query: {},
-        })
-        expect(response.rows).toHaveLength(limit)
-      })
-
-      it("can handle pagination", async () => {
-        await Promise.all(
-          Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
-        )
-        const rows = (await config.api.viewV2.search(view.id)).rows
-
-        const page1 = await config.api.viewV2.search(view.id, {
-          paginate: true,
-          limit: 4,
-          query: {},
-          countRows: true,
-        })
-        expect(page1).toEqual({
-          rows: expect.arrayContaining(rows.slice(0, 4)),
-          hasNextPage: true,
-          bookmark: expect.anything(),
-          totalRows: 10,
-        })
-
-        const page2 = await config.api.viewV2.search(view.id, {
-          paginate: true,
-          limit: 4,
-          bookmark: page1.bookmark,
-          query: {},
-          countRows: true,
-        })
-        expect(page2).toEqual({
-          rows: expect.arrayContaining(rows.slice(4, 8)),
-          hasNextPage: true,
-          bookmark: expect.anything(),
-          totalRows: 10,
-        })
-
-        const page3 = await config.api.viewV2.search(view.id, {
-          paginate: true,
-          limit: 4,
-          bookmark: page2.bookmark,
-          query: {},
-          countRows: true,
-        })
-        const expectation: SearchResponse<Row> = {
-          rows: expect.arrayContaining(rows.slice(8)),
-          hasNextPage: false,
-          totalRows: 10,
-        }
-        if (isLucene) {
-          expectation.bookmark = expect.anything()
-        }
-        expect(page3).toEqual(expectation)
-      })
-
-      const sortTestOptions: [
-        {
-          field: string
-          order?: SortOrder
-          type?: SortType
-        },
-        string[]
-      ][] = [
-        [
-          {
-            field: "name",
-            order: SortOrder.ASCENDING,
-            type: SortType.STRING,
-          },
-          ["Alice", "Bob", "Charly", "Danny"],
-        ],
-        [
-          {
-            field: "name",
-          },
-          ["Alice", "Bob", "Charly", "Danny"],
-        ],
-        [
-          {
-            field: "name",
-            order: SortOrder.DESCENDING,
-          },
-          ["Danny", "Charly", "Bob", "Alice"],
-        ],
-        [
-          {
-            field: "name",
-            order: SortOrder.DESCENDING,
-            type: SortType.STRING,
-          },
-          ["Danny", "Charly", "Bob", "Alice"],
-        ],
-        [
-          {
-            field: "age",
-            order: SortOrder.ASCENDING,
-            type: SortType.NUMBER,
-          },
-          ["Danny", "Alice", "Charly", "Bob"],
-        ],
-        [
-          {
-            field: "age",
-            order: SortOrder.ASCENDING,
-          },
-          ["Danny", "Alice", "Charly", "Bob"],
-        ],
-        [
-          {
-            field: "age",
-            order: SortOrder.DESCENDING,
-          },
-          ["Bob", "Charly", "Alice", "Danny"],
-        ],
-        [
-          {
-            field: "age",
-            order: SortOrder.DESCENDING,
-            type: SortType.NUMBER,
-          },
-          ["Bob", "Charly", "Alice", "Danny"],
-        ],
-      ]
-
-      describe("sorting", () => {
-        let table: Table
-        const viewSchema = {
-          id: { visible: true },
-          age: { visible: true },
-          name: { visible: true },
-        }
-
-        beforeAll(async () => {
-          table = await config.api.table.save(
-            saveTableRequest({
-              type: "table",
-              schema: {
-                name: {
-                  type: FieldType.STRING,
-                  name: "name",
-                },
-                surname: {
-                  type: FieldType.STRING,
-                  name: "surname",
-                },
-                age: {
-                  type: FieldType.NUMBER,
-                  name: "age",
-                },
-                address: {
-                  type: FieldType.STRING,
-                  name: "address",
-                },
-                jobTitle: {
-                  type: FieldType.STRING,
-                  name: "jobTitle",
-                },
-              },
-            })
+    !isLucene &&
+      describe("search", () => {
+        it("returns empty rows from view when no schema is passed", async () => {
+          const rows = await Promise.all(
+            Array.from({ length: 10 }, () =>
+              config.api.row.save(table._id!, {})
+            )
           )
-
-          const users = [
-            { name: "Alice", age: 25 },
-            { name: "Bob", age: 30 },
-            { name: "Charly", age: 27 },
-            { name: "Danny", age: 15 },
-          ]
-          await Promise.all(
-            users.map(u =>
-              config.api.row.save(table._id!, {
+          const response = await config.api.viewV2.search(view.id)
+          expect(response.rows).toHaveLength(10)
+          expect(response).toEqual({
+            rows: expect.arrayContaining(
+              rows.map(r => ({
+                _viewId: view.id,
                 tableId: table._id,
-                ...u,
-              })
-            )
-          )
+                id: r.id,
+                _id: r._id,
+                _rev: r._rev,
+                ...(isInternal
+                  ? {
+                      type: "row",
+                      updatedAt: expect.any(String),
+                      createdAt: expect.any(String),
+                    }
+                  : {}),
+              }))
+            ),
+            ...(isInternal
+              ? {}
+              : {
+                  hasNextPage: false,
+                }),
+          })
         })
 
-        it.each(sortTestOptions)(
-          "allow sorting (%s)",
-          async (sortParams, expected) => {
-            const view = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              sort: sortParams,
-              schema: viewSchema,
-            })
+        it("searching respects the view filters", async () => {
+          await config.api.row.save(table._id!, {
+            one: "foo",
+            two: "bar",
+          })
+          const two = await config.api.row.save(table._id!, {
+            one: "foo2",
+            two: "bar2",
+          })
 
-            const response = await config.api.viewV2.search(view.id)
-
-            expect(response.rows).toHaveLength(4)
-            expect(response.rows).toEqual(
-              expected.map(name => expect.objectContaining({ name }))
-            )
-          }
-        )
-
-        it.each(sortTestOptions)(
-          "allow override the default view sorting (%s)",
-          async (sortParams, expected) => {
-            const view = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              sort: {
-                field: "name",
-                order: SortOrder.ASCENDING,
-                type: SortType.STRING,
-              },
-              schema: viewSchema,
-            })
-
-            const response = await config.api.viewV2.search(view.id, {
-              sort: sortParams.field,
-              sortOrder: sortParams.order,
-              sortType: sortParams.type,
-              query: {},
-            })
-
-            expect(response.rows).toHaveLength(4)
-            expect(response.rows).toEqual(
-              expected.map(name => expect.objectContaining({ name }))
-            )
-          }
-        )
-      })
-
-      it("can query on top of the view filters", async () => {
-        await config.api.row.save(table._id!, {
-          one: "foo",
-          two: "bar",
-        })
-        await config.api.row.save(table._id!, {
-          one: "foo2",
-          two: "bar2",
-        })
-        const three = await config.api.row.save(table._id!, {
-          one: "foo3",
-          two: "bar3",
-        })
-
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-          query: [
-            {
-              operator: BasicOperator.NOT_EQUAL,
-              field: "one",
-              value: "foo2",
-            },
-          ],
-          schema: {
-            id: { visible: true },
-            one: { visible: true },
-            two: { visible: true },
-          },
-        })
-
-        const response = await config.api.viewV2.search(view.id, {
-          query: {
-            [BasicOperator.EQUAL]: {
-              two: "bar3",
-            },
-            [BasicOperator.NOT_EMPTY]: {
-              two: null,
-            },
-          },
-        })
-        expect(response.rows).toHaveLength(1)
-        expect(response.rows).toEqual(
-          expect.arrayContaining([expect.objectContaining({ _id: three._id })])
-        )
-      })
-
-      it("can query on top of the view filters (using or filters)", async () => {
-        const one = await config.api.row.save(table._id!, {
-          one: "foo",
-          two: "bar",
-        })
-        await config.api.row.save(table._id!, {
-          one: "foo2",
-          two: "bar2",
-        })
-        const three = await config.api.row.save(table._id!, {
-          one: "foo3",
-          two: "bar3",
-        })
-
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-          query: [
-            {
-              operator: BasicOperator.NOT_EQUAL,
-              field: "two",
-              value: "bar2",
-            },
-          ],
-          schema: {
-            id: { visible: true },
-            one: { visible: false },
-            two: { visible: true },
-          },
-        })
-
-        const response = await config.api.viewV2.search(view.id, {
-          query: {
-            allOr: true,
-            [BasicOperator.NOT_EQUAL]: {
-              two: "bar",
-            },
-            [BasicOperator.NOT_EMPTY]: {
-              two: null,
-            },
-          },
-        })
-        expect(response.rows).toHaveLength(2)
-        expect(response.rows).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({ _id: one._id }),
-            expect.objectContaining({ _id: three._id }),
-          ])
-        )
-      })
-
-      isLucene &&
-        it.each([true, false])(
-          "in lucene, cannot override a view filter",
-          async allOr => {
-            await config.api.row.save(table._id!, {
-              one: "foo",
-              two: "bar",
-            })
-            const two = await config.api.row.save(table._id!, {
-              one: "foo2",
-              two: "bar2",
-            })
-
-            const view = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              query: [
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            queryUI: {
+              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              logicalOperator: FilterGroupLogicalOperator.ALL,
+              groups: [
                 {
-                  operator: BasicOperator.EQUAL,
-                  field: "two",
-                  value: "bar2",
+                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  filters: [
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "two",
+                      value: "bar2",
+                    },
+                  ],
                 },
               ],
-              schema: {
-                id: { visible: true },
-                one: { visible: false },
-                two: { visible: true },
-              },
-            })
+            },
+            schema: {
+              id: { visible: true },
+              one: { visible: false },
+              two: { visible: true },
+            },
+          })
 
-            const response = await config.api.viewV2.search(view.id, {
-              query: {
-                allOr,
-                equal: {
-                  two: "bar",
+          const response = await config.api.viewV2.search(view.id)
+          expect(response.rows).toHaveLength(1)
+          expect(response).toEqual({
+            rows: expect.arrayContaining([
+              {
+                _viewId: view.id,
+                tableId: table._id,
+                id: two.id,
+                two: two.two,
+                _id: two._id,
+                _rev: two._rev,
+                ...(isInternal
+                  ? {
+                      type: "row",
+                      createdAt: expect.any(String),
+                      updatedAt: expect.any(String),
+                    }
+                  : {}),
+              },
+            ]),
+            ...(isInternal
+              ? {}
+              : {
+                  hasNextPage: false,
+                }),
+          })
+        })
+
+        it("views filters are respected even if the column is hidden", async () => {
+          await config.api.row.save(table._id!, {
+            one: "foo",
+            two: "bar",
+          })
+          const two = await config.api.row.save(table._id!, {
+            one: "foo2",
+            two: "bar2",
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            queryUI: {
+              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              logicalOperator: FilterGroupLogicalOperator.ALL,
+              groups: [
+                {
+                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  filters: [
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "two",
+                      value: "bar2",
+                    },
+                  ],
                 },
-              },
-            })
-            expect(response.rows).toHaveLength(1)
-            expect(response.rows).toEqual([
-              expect.objectContaining({ _id: two._id }),
-            ])
+              ],
+            },
+            schema: {
+              id: { visible: true },
+              one: { visible: false },
+              two: { visible: false },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id)
+          expect(response.rows).toHaveLength(1)
+          expect(response.rows).toEqual([
+            expect.objectContaining({ _id: two._id }),
+          ])
+        })
+
+        it("views without data can be returned", async () => {
+          const response = await config.api.viewV2.search(view.id)
+          expect(response.rows).toHaveLength(0)
+        })
+
+        it("respects the limit parameter", async () => {
+          await Promise.all(
+            Array.from({ length: 10 }, () =>
+              config.api.row.save(table._id!, {})
+            )
+          )
+          const limit = generator.integer({ min: 1, max: 8 })
+          const response = await config.api.viewV2.search(view.id, {
+            limit,
+            query: {},
+          })
+          expect(response.rows).toHaveLength(limit)
+        })
+
+        it("can handle pagination", async () => {
+          await Promise.all(
+            Array.from({ length: 10 }, () =>
+              config.api.row.save(table._id!, {})
+            )
+          )
+          const rows = (await config.api.viewV2.search(view.id)).rows
+
+          const page1 = await config.api.viewV2.search(view.id, {
+            paginate: true,
+            limit: 4,
+            query: {},
+            countRows: true,
+          })
+          expect(page1).toEqual({
+            rows: expect.arrayContaining(rows.slice(0, 4)),
+            hasNextPage: true,
+            bookmark: expect.anything(),
+            totalRows: 10,
+          })
+
+          const page2 = await config.api.viewV2.search(view.id, {
+            paginate: true,
+            limit: 4,
+            bookmark: page1.bookmark,
+            query: {},
+            countRows: true,
+          })
+          expect(page2).toEqual({
+            rows: expect.arrayContaining(rows.slice(4, 8)),
+            hasNextPage: true,
+            bookmark: expect.anything(),
+            totalRows: 10,
+          })
+
+          const page3 = await config.api.viewV2.search(view.id, {
+            paginate: true,
+            limit: 4,
+            bookmark: page2.bookmark,
+            query: {},
+            countRows: true,
+          })
+          const expectation: SearchResponse<Row> = {
+            rows: expect.arrayContaining(rows.slice(8)),
+            hasNextPage: false,
+            totalRows: 10,
           }
-        )
+          if (isLucene) {
+            expectation.bookmark = expect.anything()
+          }
+          expect(page3).toEqual(expectation)
+        })
 
-      !isLucene &&
-        it.each([true, false])(
-          "can filter a view without a view filter",
-          async allOr => {
-            const one = await config.api.row.save(table._id!, {
-              one: "foo",
-              two: "bar",
-            })
-            await config.api.row.save(table._id!, {
-              one: "foo2",
-              two: "bar2",
-            })
+        const sortTestOptions: [
+          {
+            field: string
+            order?: SortOrder
+            type?: SortType
+          },
+          string[]
+        ][] = [
+          [
+            {
+              field: "name",
+              order: SortOrder.ASCENDING,
+              type: SortType.STRING,
+            },
+            ["Alice", "Bob", "Charly", "Danny"],
+          ],
+          [
+            {
+              field: "name",
+            },
+            ["Alice", "Bob", "Charly", "Danny"],
+          ],
+          [
+            {
+              field: "name",
+              order: SortOrder.DESCENDING,
+            },
+            ["Danny", "Charly", "Bob", "Alice"],
+          ],
+          [
+            {
+              field: "name",
+              order: SortOrder.DESCENDING,
+              type: SortType.STRING,
+            },
+            ["Danny", "Charly", "Bob", "Alice"],
+          ],
+          [
+            {
+              field: "age",
+              order: SortOrder.ASCENDING,
+              type: SortType.NUMBER,
+            },
+            ["Danny", "Alice", "Charly", "Bob"],
+          ],
+          [
+            {
+              field: "age",
+              order: SortOrder.ASCENDING,
+            },
+            ["Danny", "Alice", "Charly", "Bob"],
+          ],
+          [
+            {
+              field: "age",
+              order: SortOrder.DESCENDING,
+            },
+            ["Bob", "Charly", "Alice", "Danny"],
+          ],
+          [
+            {
+              field: "age",
+              order: SortOrder.DESCENDING,
+              type: SortType.NUMBER,
+            },
+            ["Bob", "Charly", "Alice", "Danny"],
+          ],
+        ]
 
-            const view = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              schema: {
-                id: { visible: true },
-                one: { visible: false },
-                two: { visible: true },
-              },
-            })
+        describe("sorting", () => {
+          let table: Table
+          const viewSchema = {
+            id: { visible: true },
+            age: { visible: true },
+            name: { visible: true },
+          }
 
-            const response = await config.api.viewV2.search(view.id, {
-              query: {
-                allOr,
-                equal: {
-                  two: "bar",
+          beforeAll(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                type: "table",
+                schema: {
+                  name: {
+                    type: FieldType.STRING,
+                    name: "name",
+                  },
+                  surname: {
+                    type: FieldType.STRING,
+                    name: "surname",
+                  },
+                  age: {
+                    type: FieldType.NUMBER,
+                    name: "age",
+                  },
+                  address: {
+                    type: FieldType.STRING,
+                    name: "address",
+                  },
+                  jobTitle: {
+                    type: FieldType.STRING,
+                    name: "jobTitle",
+                  },
                 },
-              },
-            })
-            expect(response.rows).toHaveLength(1)
-            expect(response.rows).toEqual([
-              expect.objectContaining({ _id: one._id }),
-            ])
-          }
-        )
+              })
+            )
 
-      !isLucene &&
-        it.each([true, false])("cannot bypass a view filter", async allOr => {
+            const users = [
+              { name: "Alice", age: 25 },
+              { name: "Bob", age: 30 },
+              { name: "Charly", age: 27 },
+              { name: "Danny", age: 15 },
+            ]
+            await Promise.all(
+              users.map(u =>
+                config.api.row.save(table._id!, {
+                  tableId: table._id,
+                  ...u,
+                })
+              )
+            )
+          })
+
+          it.each(sortTestOptions)(
+            "allow sorting (%s)",
+            async (sortParams, expected) => {
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                sort: sortParams,
+                schema: viewSchema,
+              })
+
+              const response = await config.api.viewV2.search(view.id)
+
+              expect(response.rows).toHaveLength(4)
+              expect(response.rows).toEqual(
+                expected.map(name => expect.objectContaining({ name }))
+              )
+            }
+          )
+
+          it.each(sortTestOptions)(
+            "allow override the default view sorting (%s)",
+            async (sortParams, expected) => {
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                sort: {
+                  field: "name",
+                  order: SortOrder.ASCENDING,
+                  type: SortType.STRING,
+                },
+                schema: viewSchema,
+              })
+
+              const response = await config.api.viewV2.search(view.id, {
+                sort: sortParams.field,
+                sortOrder: sortParams.order,
+                sortType: sortParams.type,
+                query: {},
+              })
+
+              expect(response.rows).toHaveLength(4)
+              expect(response.rows).toEqual(
+                expected.map(name => expect.objectContaining({ name }))
+              )
+            }
+          )
+        })
+
+        it("can query on top of the view filters", async () => {
           await config.api.row.save(table._id!, {
             one: "foo",
             two: "bar",
@@ -2882,17 +2725,88 @@ describe.each([
             one: "foo2",
             two: "bar2",
           })
+          const three = await config.api.row.save(table._id!, {
+            one: "foo3",
+            two: "bar3",
+          })
 
           const view = await config.api.viewV2.create({
             tableId: table._id!,
             name: generator.guid(),
-            query: [
-              {
-                operator: BasicOperator.EQUAL,
-                field: "two",
-                value: "bar2",
+            queryUI: {
+              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              logicalOperator: FilterGroupLogicalOperator.ALL,
+              groups: [
+                {
+                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  filters: [
+                    {
+                      operator: BasicOperator.NOT_EQUAL,
+                      field: "one",
+                      value: "foo2",
+                    },
+                  ],
+                },
+              ],
+            },
+            schema: {
+              id: { visible: true },
+              one: { visible: true },
+              two: { visible: true },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id, {
+            query: {
+              [BasicOperator.EQUAL]: {
+                two: "bar3",
               },
-            ],
+              [BasicOperator.NOT_EMPTY]: {
+                two: null,
+              },
+            },
+          })
+          expect(response.rows).toHaveLength(1)
+          expect(response.rows).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({ _id: three._id }),
+            ])
+          )
+        })
+
+        it("can query on top of the view filters (using or filters)", async () => {
+          const one = await config.api.row.save(table._id!, {
+            one: "foo",
+            two: "bar",
+          })
+          await config.api.row.save(table._id!, {
+            one: "foo2",
+            two: "bar2",
+          })
+          const three = await config.api.row.save(table._id!, {
+            one: "foo3",
+            two: "bar3",
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            queryUI: {
+              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              logicalOperator: FilterGroupLogicalOperator.ALL,
+              groups: [
+                {
+                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  filters: [
+                    {
+                      operator: BasicOperator.NOT_EQUAL,
+                      field: "one",
+                      value: "foo2",
+                    },
+                  ],
+                },
+              ],
+            },
             schema: {
               id: { visible: true },
               one: { visible: false },
@@ -2902,217 +2816,781 @@ describe.each([
 
           const response = await config.api.viewV2.search(view.id, {
             query: {
-              allOr,
-              equal: {
+              allOr: true,
+              [BasicOperator.NOT_EQUAL]: {
                 two: "bar",
               },
+              [BasicOperator.NOT_EMPTY]: {
+                two: null,
+              },
             },
           })
-          expect(response.rows).toHaveLength(0)
-        })
-
-      describe("foreign relationship columns", () => {
-        let envCleanup: () => void
-        beforeAll(() => {
-          envCleanup = features.testutils.setFeatureFlags("*", {
-            ENRICHED_RELATIONSHIPS: true,
-          })
-        })
-
-        afterAll(() => {
-          envCleanup?.()
-        })
-
-        const createMainTable = async (
-          links: {
-            name: string
-            tableId: string
-            fk: string
-          }[]
-        ) => {
-          const table = await config.api.table.save(
-            saveTableRequest({
-              schema: { title: { name: "title", type: FieldType.STRING } },
-            })
+          expect(response.rows).toHaveLength(2)
+          expect(response.rows).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({ _id: one._id }),
+              expect.objectContaining({ _id: three._id }),
+            ])
           )
-          await config.api.table.save({
-            ...table,
-            schema: {
-              ...table.schema,
-              ...links.reduce<TableSchema>((acc, c) => {
-                acc[c.name] = {
-                  name: c.name,
-                  relationshipType: RelationshipType.ONE_TO_MANY,
-                  type: FieldType.LINK,
-                  tableId: c.tableId,
-                  fieldName: c.fk,
-                  constraints: { type: "array" },
-                }
-                return acc
-              }, {}),
-            },
-          })
-          return table
-        }
-        const createAuxTable = (schema: TableSchema) =>
-          config.api.table.save(
-            saveTableRequest({
-              primaryDisplay: "name",
-              schema: {
-                ...schema,
-                name: { name: "name", type: FieldType.STRING },
-              },
-            })
-          )
-
-        it("returns squashed fields respecting the view config", async () => {
-          const auxTable = await createAuxTable({
-            age: { name: "age", type: FieldType.NUMBER },
-          })
-          const auxRow = await config.api.row.save(auxTable._id!, {
-            name: generator.name(),
-            age: generator.age(),
-          })
-
-          const table = await createMainTable([
-            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
-          ])
-          await config.api.row.save(table._id!, {
-            title: generator.word(),
-            aux: [auxRow],
-          })
-
-          const view = await config.api.viewV2.create({
-            tableId: table._id!,
-            name: generator.guid(),
-            schema: {
-              title: { visible: true },
-              aux: {
-                visible: true,
-                columns: {
-                  name: { visible: false, readonly: false },
-                  age: { visible: true, readonly: true },
-                },
-              },
-            },
-          })
-
-          const response = await config.api.viewV2.search(view.id)
-          expect(response.rows).toEqual([
-            expect.objectContaining({
-              aux: [
-                {
-                  _id: auxRow._id,
-                  primaryDisplay: auxRow.name,
-                  age: auxRow.age,
-                },
-              ],
-            }),
-          ])
         })
 
-        it("enriches squashed fields", async () => {
-          const auxTable = await createAuxTable({
-            user: {
-              name: "user",
-              type: FieldType.BB_REFERENCE_SINGLE,
-              subtype: BBReferenceFieldSubType.USER,
-              constraints: { presence: true },
-            },
-          })
-          const table = await createMainTable([
-            { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
-          ])
+        !isLucene &&
+          it.each([true, false])(
+            "can filter a view without a view filter",
+            async allOr => {
+              const one = await config.api.row.save(table._id!, {
+                one: "foo",
+                two: "bar",
+              })
+              await config.api.row.save(table._id!, {
+                one: "foo2",
+                two: "bar2",
+              })
 
-          const user = config.getUser()
-          const auxRow = await config.api.row.save(auxTable._id!, {
-            name: generator.name(),
-            user: user._id,
-          })
-          await config.api.row.save(table._id!, {
-            title: generator.word(),
-            aux: [auxRow],
-          })
-
-          const view = await config.api.viewV2.create({
-            tableId: table._id!,
-            name: generator.guid(),
-            schema: {
-              title: { visible: true },
-              aux: {
-                visible: true,
-                columns: {
-                  name: { visible: true, readonly: true },
-                  user: { visible: true, readonly: true },
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                schema: {
+                  id: { visible: true },
+                  one: { visible: false },
+                  two: { visible: true },
                 },
-              },
-            },
-          })
+              })
 
-          const response = await config.api.viewV2.search(view.id)
-
-          expect(response.rows).toEqual([
-            expect.objectContaining({
-              aux: [
-                {
-                  _id: auxRow._id,
-                  primaryDisplay: auxRow.name,
-                  name: auxRow.name,
-                  user: {
-                    _id: user._id,
-                    email: user.email,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    primaryDisplay: user.email,
+              const response = await config.api.viewV2.search(view.id, {
+                query: {
+                  allOr,
+                  equal: {
+                    two: "bar",
                   },
                 },
-              ],
-            }),
-          ])
-        })
-      })
+              })
+              expect(response.rows).toHaveLength(1)
+              expect(response.rows).toEqual([
+                expect.objectContaining({ _id: one._id }),
+              ])
+            }
+          )
 
-      !isLucene &&
-        describe("calculations", () => {
-          let table: Table
-          let rows: Row[]
+        !isLucene &&
+          it.each([true, false])("cannot bypass a view filter", async allOr => {
+            await config.api.row.save(table._id!, {
+              one: "foo",
+              two: "bar",
+            })
+            await config.api.row.save(table._id!, {
+              one: "foo2",
+              two: "bar2",
+            })
 
-          beforeAll(async () => {
-            table = await config.api.table.save(
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              queryUI: {
+                onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+                logicalOperator: FilterGroupLogicalOperator.ALL,
+                groups: [
+                  {
+                    logicalOperator: FilterGroupLogicalOperator.ALL,
+                    filters: [
+                      {
+                        operator: BasicOperator.EQUAL,
+                        field: "two",
+                        value: "bar2",
+                      },
+                    ],
+                  },
+                ],
+              },
+              schema: {
+                id: { visible: true },
+                one: { visible: false },
+                two: { visible: true },
+              },
+            })
+
+            const response = await config.api.viewV2.search(view.id, {
+              query: {
+                allOr,
+                equal: {
+                  two: "bar",
+                },
+              },
+            })
+            expect(response.rows).toHaveLength(0)
+          })
+
+        describe("foreign relationship columns", () => {
+          let envCleanup: () => void
+          beforeAll(() => {
+            envCleanup = features.testutils.setFeatureFlags("*", {
+              ENRICHED_RELATIONSHIPS: true,
+            })
+          })
+
+          afterAll(() => {
+            envCleanup?.()
+          })
+
+          const createMainTable = async (
+            links: {
+              name: string
+              tableId: string
+              fk: string
+            }[]
+          ) => {
+            const table = await config.api.table.save(
               saveTableRequest({
+                schema: { title: { name: "title", type: FieldType.STRING } },
+              })
+            )
+            await config.api.table.save({
+              ...table,
+              schema: {
+                ...table.schema,
+                ...links.reduce<TableSchema>((acc, c) => {
+                  acc[c.name] = {
+                    name: c.name,
+                    relationshipType: RelationshipType.ONE_TO_MANY,
+                    type: FieldType.LINK,
+                    tableId: c.tableId,
+                    fieldName: c.fk,
+                    constraints: { type: "array" },
+                  }
+                  return acc
+                }, {}),
+              },
+            })
+            return table
+          }
+          const createAuxTable = (schema: TableSchema) =>
+            config.api.table.save(
+              saveTableRequest({
+                primaryDisplay: "name",
+                schema: {
+                  ...schema,
+                  name: { name: "name", type: FieldType.STRING },
+                },
+              })
+            )
+
+          it("returns squashed fields respecting the view config", async () => {
+            const auxTable = await createAuxTable({
+              age: { name: "age", type: FieldType.NUMBER },
+            })
+            const auxRow = await config.api.row.save(auxTable._id!, {
+              name: generator.name(),
+              age: generator.age(),
+            })
+
+            const table = await createMainTable([
+              { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+            ])
+            await config.api.row.save(table._id!, {
+              title: generator.word(),
+              aux: [auxRow],
+            })
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                title: { visible: true },
+                aux: {
+                  visible: true,
+                  columns: {
+                    name: { visible: false, readonly: false },
+                    age: { visible: true, readonly: true },
+                  },
+                },
+              },
+            })
+
+            const response = await config.api.viewV2.search(view.id)
+            expect(response.rows).toEqual([
+              expect.objectContaining({
+                aux: [
+                  {
+                    _id: auxRow._id,
+                    primaryDisplay: auxRow.name,
+                    age: auxRow.age,
+                  },
+                ],
+              }),
+            ])
+          })
+
+          it("enriches squashed fields", async () => {
+            const auxTable = await createAuxTable({
+              user: {
+                name: "user",
+                type: FieldType.BB_REFERENCE_SINGLE,
+                subtype: BBReferenceFieldSubType.USER,
+                constraints: { presence: true },
+              },
+            })
+            const table = await createMainTable([
+              { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+            ])
+
+            const user = config.getUser()
+            const auxRow = await config.api.row.save(auxTable._id!, {
+              name: generator.name(),
+              user: user._id,
+            })
+            await config.api.row.save(table._id!, {
+              title: generator.word(),
+              aux: [auxRow],
+            })
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                title: { visible: true },
+                aux: {
+                  visible: true,
+                  columns: {
+                    name: { visible: true, readonly: true },
+                    user: { visible: true, readonly: true },
+                  },
+                },
+              },
+            })
+
+            const response = await config.api.viewV2.search(view.id)
+
+            expect(response.rows).toEqual([
+              expect.objectContaining({
+                aux: [
+                  {
+                    _id: auxRow._id,
+                    primaryDisplay: auxRow.name,
+                    name: auxRow.name,
+                    user: {
+                      _id: user._id,
+                      email: user.email,
+                      firstName: user.firstName,
+                      lastName: user.lastName,
+                      primaryDisplay: user.email,
+                    },
+                  },
+                ],
+              }),
+            ])
+          })
+        })
+
+        !isLucene &&
+          describe("calculations", () => {
+            let table: Table
+            let rows: Row[]
+
+            beforeAll(async () => {
+              table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    quantity: {
+                      type: FieldType.NUMBER,
+                      name: "quantity",
+                    },
+                    price: {
+                      type: FieldType.NUMBER,
+                      name: "price",
+                    },
+                  },
+                })
+              )
+
+              rows = await Promise.all(
+                Array.from({ length: 10 }, () =>
+                  config.api.row.save(table._id!, {
+                    quantity: generator.natural({ min: 1, max: 10 }),
+                    price: generator.natural({ min: 1, max: 10 }),
+                  })
+                )
+              )
+            })
+
+            it("should be able to search by calculations", async () => {
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                type: ViewV2Type.CALCULATION,
+                name: generator.guid(),
+                schema: {
+                  "Quantity Sum": {
+                    visible: true,
+                    calculationType: CalculationType.SUM,
+                    field: "quantity",
+                  },
+                },
+              })
+
+              const response = await config.api.viewV2.search(view.id, {
+                query: {},
+              })
+
+              expect(response.rows).toHaveLength(1)
+              expect(response.rows).toEqual(
+                expect.arrayContaining([
+                  expect.objectContaining({
+                    "Quantity Sum": rows.reduce(
+                      (acc, r) => acc + r.quantity,
+                      0
+                    ),
+                  }),
+                ])
+              )
+
+              // Calculation views do not return rows that can be linked back to
+              // the source table, and so should not have an _id field.
+              for (const row of response.rows) {
+                expect("_id" in row).toBe(false)
+              }
+            })
+
+            it("should be able to group by a basic field", async () => {
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
                 schema: {
                   quantity: {
-                    type: FieldType.NUMBER,
-                    name: "quantity",
+                    visible: true,
+                    field: "quantity",
                   },
-                  price: {
+                  "Total Price": {
+                    visible: true,
+                    calculationType: CalculationType.SUM,
+                    field: "price",
+                  },
+                },
+              })
+
+              const response = await config.api.viewV2.search(view.id, {
+                query: {},
+              })
+
+              const priceByQuantity: Record<number, number> = {}
+              for (const row of rows) {
+                priceByQuantity[row.quantity] ??= 0
+                priceByQuantity[row.quantity] += row.price
+              }
+
+              for (const row of response.rows) {
+                expect(row["Total Price"]).toEqual(
+                  priceByQuantity[row.quantity]
+                )
+              }
+            })
+
+            it.each([
+              CalculationType.COUNT,
+              CalculationType.SUM,
+              CalculationType.AVG,
+              CalculationType.MIN,
+              CalculationType.MAX,
+            ])("should be able to calculate $type", async type => {
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                schema: {
+                  aggregate: {
+                    visible: true,
+                    calculationType: type,
+                    field: "price",
+                  },
+                },
+              })
+
+              const response = await config.api.viewV2.search(view.id, {
+                query: {},
+              })
+
+              function calculate(
+                type: CalculationType,
+                numbers: number[]
+              ): number {
+                switch (type) {
+                  case CalculationType.COUNT:
+                    return numbers.length
+                  case CalculationType.SUM:
+                    return numbers.reduce((a, b) => a + b, 0)
+                  case CalculationType.AVG:
+                    return numbers.reduce((a, b) => a + b, 0) / numbers.length
+                  case CalculationType.MIN:
+                    return Math.min(...numbers)
+                  case CalculationType.MAX:
+                    return Math.max(...numbers)
+                }
+              }
+
+              const prices = rows.map(row => row.price)
+              const expected = calculate(type, prices)
+              const actual = response.rows[0].aggregate
+
+              if (type === CalculationType.AVG) {
+                // The average calculation can introduce floating point rounding
+                // errors, so we need to compare to within a small margin of
+                // error.
+                expect(actual).toBeCloseTo(expected)
+              } else {
+                expect(actual).toEqual(expected)
+              }
+            })
+
+            it("should be able to do a COUNT(DISTINCT)", async () => {
+              const table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    name: {
+                      name: "name",
+                      type: FieldType.STRING,
+                    },
+                  },
+                })
+              )
+
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                schema: {
+                  count: {
+                    visible: true,
+                    calculationType: CalculationType.COUNT,
+                    distinct: true,
+                    field: "name",
+                  },
+                },
+              })
+
+              await config.api.row.bulkImport(table._id!, {
+                rows: [
+                  {
+                    name: "John",
+                  },
+                  {
+                    name: "John",
+                  },
+                  {
+                    name: "Sue",
+                  },
+                ],
+              })
+
+              const { rows } = await config.api.row.search(view.id)
+              expect(rows).toHaveLength(1)
+              expect(rows[0].count).toEqual(2)
+            })
+
+            it("should not be able to COUNT(DISTINCT ...) against a non-existent field", async () => {
+              await config.api.viewV2.create(
+                {
+                  tableId: table._id!,
+                  name: generator.guid(),
+                  type: ViewV2Type.CALCULATION,
+                  schema: {
+                    count: {
+                      visible: true,
+                      calculationType: CalculationType.COUNT,
+                      distinct: true,
+                      field: "does not exist oh no",
+                    },
+                  },
+                },
+                {
+                  status: 400,
+                  body: {
+                    message:
+                      'Calculation field "count" references field "does not exist oh no" which does not exist in the table schema',
+                  },
+                }
+              )
+            })
+
+            it("should be able to filter rows on the view itself", async () => {
+              const table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    quantity: {
+                      type: FieldType.NUMBER,
+                      name: "quantity",
+                    },
+                    price: {
+                      type: FieldType.NUMBER,
+                      name: "price",
+                    },
+                  },
+                })
+              )
+
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                queryUI: {
+                  onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  groups: [
+                    {
+                      logicalOperator: FilterGroupLogicalOperator.ALL,
+                      filters: [
+                        {
+                          operator: BasicOperator.EQUAL,
+                          field: "quantity",
+                          value: 1,
+                        },
+                      ],
+                    },
+                  ],
+                },
+                schema: {
+                  sum: {
+                    visible: true,
+                    calculationType: CalculationType.SUM,
+                    field: "price",
+                  },
+                },
+              })
+
+              await config.api.row.bulkImport(table._id!, {
+                rows: [
+                  {
+                    quantity: 1,
+                    price: 1,
+                  },
+                  {
+                    quantity: 1,
+                    price: 2,
+                  },
+                  {
+                    quantity: 2,
+                    price: 10,
+                  },
+                ],
+              })
+
+              const { rows } = await config.api.viewV2.search(view.id, {
+                query: {},
+              })
+              expect(rows).toHaveLength(1)
+              expect(rows[0].sum).toEqual(3)
+            })
+
+            it("should be able to filter on group by fields", async () => {
+              const table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    quantity: {
+                      type: FieldType.NUMBER,
+                      name: "quantity",
+                    },
+                    price: {
+                      type: FieldType.NUMBER,
+                      name: "price",
+                    },
+                  },
+                })
+              )
+
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                schema: {
+                  quantity: { visible: true },
+                  sum: {
+                    visible: true,
+                    calculationType: CalculationType.SUM,
+                    field: "price",
+                  },
+                },
+              })
+
+              await config.api.row.bulkImport(table._id!, {
+                rows: [
+                  {
+                    quantity: 1,
+                    price: 1,
+                  },
+                  {
+                    quantity: 1,
+                    price: 2,
+                  },
+                  {
+                    quantity: 2,
+                    price: 10,
+                  },
+                ],
+              })
+
+              const { rows } = await config.api.viewV2.search(view.id, {
+                query: {
+                  equal: {
+                    quantity: 1,
+                  },
+                },
+              })
+
+              expect(rows).toHaveLength(1)
+              expect(rows[0].sum).toEqual(3)
+            })
+
+            it("should be able to sort by group by field", async () => {
+              const table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    quantity: {
+                      type: FieldType.NUMBER,
+                      name: "quantity",
+                    },
+                    price: {
+                      type: FieldType.NUMBER,
+                      name: "price",
+                    },
+                  },
+                })
+              )
+
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                schema: {
+                  quantity: { visible: true },
+                  sum: {
+                    visible: true,
+                    calculationType: CalculationType.SUM,
+                    field: "price",
+                  },
+                },
+              })
+
+              await config.api.row.bulkImport(table._id!, {
+                rows: [
+                  {
+                    quantity: 1,
+                    price: 1,
+                  },
+                  {
+                    quantity: 1,
+                    price: 2,
+                  },
+                  {
+                    quantity: 2,
+                    price: 10,
+                  },
+                ],
+              })
+
+              const { rows } = await config.api.viewV2.search(view.id, {
+                query: {},
+                sort: "quantity",
+                sortOrder: SortOrder.DESCENDING,
+              })
+
+              expect(rows).toEqual([
+                expect.objectContaining({ quantity: 2, sum: 10 }),
+                expect.objectContaining({ quantity: 1, sum: 3 }),
+              ])
+            })
+
+            it("should be able to sort by a calculation", async () => {
+              const table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    quantity: {
+                      type: FieldType.NUMBER,
+                      name: "quantity",
+                    },
+                    price: {
+                      type: FieldType.NUMBER,
+                      name: "price",
+                    },
+                  },
+                })
+              )
+
+              await config.api.row.bulkImport(table._id!, {
+                rows: [
+                  {
+                    quantity: 1,
+                    price: 1,
+                  },
+                  {
+                    quantity: 1,
+                    price: 2,
+                  },
+                  {
+                    quantity: 2,
+                    price: 10,
+                  },
+                ],
+              })
+
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                schema: {
+                  quantity: { visible: true },
+                  sum: {
+                    visible: true,
+                    calculationType: CalculationType.SUM,
+                    field: "price",
+                  },
+                },
+              })
+
+              const { rows } = await config.api.viewV2.search(view.id, {
+                query: {},
+                sort: "sum",
+                sortOrder: SortOrder.DESCENDING,
+              })
+
+              expect(rows).toEqual([
+                expect.objectContaining({ quantity: 2, sum: 10 }),
+                expect.objectContaining({ quantity: 1, sum: 3 }),
+              ])
+            })
+          })
+
+        !isLucene &&
+          it("should not need required fields to be present", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  name: {
+                    name: "name",
+                    type: FieldType.STRING,
+                    constraints: {
+                      presence: true,
+                    },
+                  },
+                  age: {
+                    name: "age",
                     type: FieldType.NUMBER,
-                    name: "price",
                   },
                 },
               })
             )
 
-            rows = await Promise.all(
-              Array.from({ length: 10 }, () =>
-                config.api.row.save(table._id!, {
-                  quantity: generator.natural({ min: 1, max: 10 }),
-                  price: generator.natural({ min: 1, max: 10 }),
-                })
-              )
-            )
-          })
+            await Promise.all([
+              config.api.row.save(table._id!, { name: "Steve", age: 30 }),
+              config.api.row.save(table._id!, { name: "Jane", age: 31 }),
+            ])
 
-          it("should be able to search by calculations", async () => {
             const view = await config.api.viewV2.create({
               tableId: table._id!,
-              type: ViewV2Type.CALCULATION,
               name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
               schema: {
-                "Quantity Sum": {
+                sum: {
                   visible: true,
                   calculationType: CalculationType.SUM,
-                  field: "quantity",
+                  field: "age",
                 },
               },
             })
@@ -3122,506 +3600,64 @@ describe.each([
             })
 
             expect(response.rows).toHaveLength(1)
-            expect(response.rows).toEqual(
-              expect.arrayContaining([
-                expect.objectContaining({
-                  "Quantity Sum": rows.reduce((acc, r) => acc + r.quantity, 0),
-                }),
-              ])
-            )
-
-            // Calculation views do not return rows that can be linked back to
-            // the source table, and so should not have an _id field.
-            for (const row of response.rows) {
-              expect("_id" in row).toBe(false)
-            }
+            expect(response.rows[0].sum).toEqual(61)
           })
 
-          it("should be able to group by a basic field", async () => {
-            const view = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              type: ViewV2Type.CALCULATION,
-              schema: {
-                quantity: {
-                  visible: true,
-                  field: "quantity",
-                },
-                "Total Price": {
-                  visible: true,
-                  calculationType: CalculationType.SUM,
-                  field: "price",
-                },
-              },
-            })
-
-            const response = await config.api.viewV2.search(view.id, {
-              query: {},
-            })
-
-            const priceByQuantity: Record<number, number> = {}
-            for (const row of rows) {
-              priceByQuantity[row.quantity] ??= 0
-              priceByQuantity[row.quantity] += row.price
-            }
-
-            for (const row of response.rows) {
-              expect(row["Total Price"]).toEqual(priceByQuantity[row.quantity])
-            }
-          })
-
-          it.each([
-            CalculationType.COUNT,
-            CalculationType.SUM,
-            CalculationType.AVG,
-            CalculationType.MIN,
-            CalculationType.MAX,
-          ])("should be able to calculate $type", async type => {
-            const view = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              type: ViewV2Type.CALCULATION,
-              schema: {
-                aggregate: {
-                  visible: true,
-                  calculationType: type,
-                  field: "price",
-                },
-              },
-            })
-
-            const response = await config.api.viewV2.search(view.id, {
-              query: {},
-            })
-
-            function calculate(
-              type: CalculationType,
-              numbers: number[]
-            ): number {
-              switch (type) {
-                case CalculationType.COUNT:
-                  return numbers.length
-                case CalculationType.SUM:
-                  return numbers.reduce((a, b) => a + b, 0)
-                case CalculationType.AVG:
-                  return numbers.reduce((a, b) => a + b, 0) / numbers.length
-                case CalculationType.MIN:
-                  return Math.min(...numbers)
-                case CalculationType.MAX:
-                  return Math.max(...numbers)
-              }
-            }
-
-            const prices = rows.map(row => row.price)
-            const expected = calculate(type, prices)
-            const actual = response.rows[0].aggregate
-
-            if (type === CalculationType.AVG) {
-              // The average calculation can introduce floating point rounding
-              // errors, so we need to compare to within a small margin of
-              // error.
-              expect(actual).toBeCloseTo(expected)
-            } else {
-              expect(actual).toEqual(expected)
-            }
-          })
-
-          it("should be able to do a COUNT(DISTINCT)", async () => {
-            const table = await config.api.table.save(
-              saveTableRequest({
-                schema: {
-                  name: {
-                    name: "name",
-                    type: FieldType.STRING,
-                  },
-                },
-              })
-            )
-
-            const view = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              type: ViewV2Type.CALCULATION,
-              schema: {
-                count: {
-                  visible: true,
-                  calculationType: CalculationType.COUNT,
-                  distinct: true,
-                  field: "name",
-                },
-              },
-            })
-
-            await config.api.row.bulkImport(table._id!, {
-              rows: [
-                {
-                  name: "John",
-                },
-                {
-                  name: "John",
-                },
-                {
-                  name: "Sue",
-                },
-              ],
-            })
-
-            const { rows } = await config.api.row.search(view.id)
-            expect(rows).toHaveLength(1)
-            expect(rows[0].count).toEqual(2)
-          })
-
-          it("should not be able to COUNT(DISTINCT ...) against a non-existent field", async () => {
-            await config.api.viewV2.create(
-              {
-                tableId: table._id!,
-                name: generator.guid(),
-                type: ViewV2Type.CALCULATION,
-                schema: {
-                  count: {
-                    visible: true,
-                    calculationType: CalculationType.COUNT,
-                    distinct: true,
-                    field: "does not exist oh no",
-                  },
-                },
-              },
-              {
-                status: 400,
-                body: {
-                  message:
-                    'Calculation field "count" references field "does not exist oh no" which does not exist in the table schema',
-                },
-              }
-            )
-          })
-
-          it("should be able to filter rows on the view itself", async () => {
-            const table = await config.api.table.save(
-              saveTableRequest({
-                schema: {
-                  quantity: {
-                    type: FieldType.NUMBER,
-                    name: "quantity",
-                  },
-                  price: {
-                    type: FieldType.NUMBER,
-                    name: "price",
-                  },
-                },
-              })
-            )
-
-            const view = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              type: ViewV2Type.CALCULATION,
-              query: {
-                equal: {
-                  quantity: 1,
-                },
-              },
-              schema: {
-                sum: {
-                  visible: true,
-                  calculationType: CalculationType.SUM,
-                  field: "price",
-                },
-              },
-            })
-
-            await config.api.row.bulkImport(table._id!, {
-              rows: [
-                {
-                  quantity: 1,
-                  price: 1,
-                },
-                {
-                  quantity: 1,
-                  price: 2,
-                },
-                {
-                  quantity: 2,
-                  price: 10,
-                },
-              ],
-            })
-
-            const { rows } = await config.api.viewV2.search(view.id, {
-              query: {},
-            })
-            expect(rows).toHaveLength(1)
-            expect(rows[0].sum).toEqual(3)
-          })
-
-          it("should be able to filter on group by fields", async () => {
-            const table = await config.api.table.save(
-              saveTableRequest({
-                schema: {
-                  quantity: {
-                    type: FieldType.NUMBER,
-                    name: "quantity",
-                  },
-                  price: {
-                    type: FieldType.NUMBER,
-                    name: "price",
-                  },
-                },
-              })
-            )
-
-            const view = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              type: ViewV2Type.CALCULATION,
-              schema: {
-                quantity: { visible: true },
-                sum: {
-                  visible: true,
-                  calculationType: CalculationType.SUM,
-                  field: "price",
-                },
-              },
-            })
-
-            await config.api.row.bulkImport(table._id!, {
-              rows: [
-                {
-                  quantity: 1,
-                  price: 1,
-                },
-                {
-                  quantity: 1,
-                  price: 2,
-                },
-                {
-                  quantity: 2,
-                  price: 10,
-                },
-              ],
-            })
-
-            const { rows } = await config.api.viewV2.search(view.id, {
-              query: {
-                equal: {
-                  quantity: 1,
-                },
-              },
-            })
-
-            expect(rows).toHaveLength(1)
-            expect(rows[0].sum).toEqual(3)
-          })
-
-          it("should be able to sort by group by field", async () => {
-            const table = await config.api.table.save(
-              saveTableRequest({
-                schema: {
-                  quantity: {
-                    type: FieldType.NUMBER,
-                    name: "quantity",
-                  },
-                  price: {
-                    type: FieldType.NUMBER,
-                    name: "price",
-                  },
-                },
-              })
-            )
-
-            const view = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              type: ViewV2Type.CALCULATION,
-              schema: {
-                quantity: { visible: true },
-                sum: {
-                  visible: true,
-                  calculationType: CalculationType.SUM,
-                  field: "price",
-                },
-              },
-            })
-
-            await config.api.row.bulkImport(table._id!, {
-              rows: [
-                {
-                  quantity: 1,
-                  price: 1,
-                },
-                {
-                  quantity: 1,
-                  price: 2,
-                },
-                {
-                  quantity: 2,
-                  price: 10,
-                },
-              ],
-            })
-
-            const { rows } = await config.api.viewV2.search(view.id, {
-              query: {},
-              sort: "quantity",
-              sortOrder: SortOrder.DESCENDING,
-            })
-
-            expect(rows).toEqual([
-              expect.objectContaining({ quantity: 2, sum: 10 }),
-              expect.objectContaining({ quantity: 1, sum: 3 }),
-            ])
-          })
-
-          it("should be able to sort by a calculation", async () => {
-            const table = await config.api.table.save(
-              saveTableRequest({
-                schema: {
-                  quantity: {
-                    type: FieldType.NUMBER,
-                    name: "quantity",
-                  },
-                  price: {
-                    type: FieldType.NUMBER,
-                    name: "price",
-                  },
-                },
-              })
-            )
-
-            await config.api.row.bulkImport(table._id!, {
-              rows: [
-                {
-                  quantity: 1,
-                  price: 1,
-                },
-                {
-                  quantity: 1,
-                  price: 2,
-                },
-                {
-                  quantity: 2,
-                  price: 10,
-                },
-              ],
-            })
-
-            const view = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              type: ViewV2Type.CALCULATION,
-              schema: {
-                quantity: { visible: true },
-                sum: {
-                  visible: true,
-                  calculationType: CalculationType.SUM,
-                  field: "price",
-                },
-              },
-            })
-
-            const { rows } = await config.api.viewV2.search(view.id, {
-              query: {},
-              sort: "sum",
-              sortOrder: SortOrder.DESCENDING,
-            })
-
-            expect(rows).toEqual([
-              expect.objectContaining({ quantity: 2, sum: 10 }),
-              expect.objectContaining({ quantity: 1, sum: 3 }),
-            ])
-          })
-        })
-
-      !isLucene &&
-        it("should not need required fields to be present", async () => {
+        it("should be able to filter on a single user field in both the view query and search query", async () => {
           const table = await config.api.table.save(
             saveTableRequest({
               schema: {
-                name: {
-                  name: "name",
-                  type: FieldType.STRING,
-                  constraints: {
-                    presence: true,
-                  },
-                },
-                age: {
-                  name: "age",
-                  type: FieldType.NUMBER,
+                user: {
+                  name: "user",
+                  type: FieldType.BB_REFERENCE_SINGLE,
+                  subtype: BBReferenceFieldSubType.USER,
                 },
               },
             })
           )
 
-          await Promise.all([
-            config.api.row.save(table._id!, { name: "Steve", age: 30 }),
-            config.api.row.save(table._id!, { name: "Jane", age: 31 }),
-          ])
+          await config.api.row.save(table._id!, {
+            user: config.getUser()._id,
+          })
 
           const view = await config.api.viewV2.create({
             tableId: table._id!,
             name: generator.guid(),
-            type: ViewV2Type.CALCULATION,
-            schema: {
-              sum: {
-                visible: true,
-                calculationType: CalculationType.SUM,
-                field: "age",
-              },
+            queryUI: {
+              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              logicalOperator: FilterGroupLogicalOperator.ALL,
+              groups: [
+                {
+                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  filters: [
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "user",
+                      value: "{{ [user].[_id] }}",
+                    },
+                  ],
+                },
+              ],
             },
-          })
-
-          const response = await config.api.viewV2.search(view.id, {
-            query: {},
-          })
-
-          expect(response.rows).toHaveLength(1)
-          expect(response.rows[0].sum).toEqual(61)
-        })
-
-      it("should be able to filter on a single user field in both the view query and search query", async () => {
-        const table = await config.api.table.save(
-          saveTableRequest({
             schema: {
               user: {
-                name: "user",
-                type: FieldType.BB_REFERENCE_SINGLE,
-                subtype: BBReferenceFieldSubType.USER,
+                visible: true,
               },
             },
           })
-        )
 
-        await config.api.row.save(table._id!, {
-          user: config.getUser()._id,
-        })
-
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-          query: {
-            equal: {
-              user: "{{ [user].[_id] }}",
+          const { rows } = await config.api.viewV2.search(view.id, {
+            query: {
+              equal: {
+                user: "{{ [user].[_id] }}",
+              },
             },
-          },
-          schema: {
-            user: {
-              visible: true,
-            },
-          },
-        })
+          })
 
-        const { rows } = await config.api.viewV2.search(view.id, {
-          query: {
-            equal: {
-              user: "{{ [user].[_id] }}",
-            },
-          },
+          expect(rows).toHaveLength(1)
+          expect(rows[0].user._id).toEqual(config.getUser()._id)
         })
-
-        expect(rows).toHaveLength(1)
-        expect(rows[0].user._id).toEqual(config.getUser()._id)
       })
-    })
 
     describe("permissions", () => {
       beforeEach(async () => {

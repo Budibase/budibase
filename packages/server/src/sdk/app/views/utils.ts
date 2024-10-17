@@ -1,8 +1,13 @@
 import { ViewV2 } from "@budibase/types"
 import { utils, dataFilters } from "@budibase/shared-core"
+import { isPlainObject } from "lodash"
+
+function isEmptyObject(obj: any) {
+  return obj && isPlainObject(obj) && Object.keys(obj).length === 0
+}
 
 export function ensureQueryUISet(view: ViewV2) {
-  if (!view.queryUI && view.query) {
+  if (!view.queryUI && view.query && !isEmptyObject(view.query)) {
     if (!Array.isArray(view.query)) {
       // In practice this should not happen. `view.query`, at the time this code
       // goes into the codebase, only contains LegacyFilter[] in production.
@@ -24,7 +29,7 @@ export function ensureQueryUISet(view: ViewV2) {
 }
 
 export function ensureQuerySet(view: ViewV2) {
-  if (!view.query && view.queryUI) {
+  if (!view.query && view.queryUI && !isEmptyObject(view.queryUI)) {
     view.query = dataFilters.buildQuery(view.queryUI)
   }
 }

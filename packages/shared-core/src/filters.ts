@@ -319,9 +319,6 @@ const buildCondition = (expression: LegacyFilter) => {
     return
   }
 
-  const isHbs =
-    typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
-
   if (operator === "allOr") {
     query.allOr = true
     return
@@ -338,40 +335,45 @@ const buildCondition = (expression: LegacyFilter) => {
     value = null
   }
 
-  if (
-    type === "datetime" &&
-    !isHbs &&
-    operator !== "empty" &&
-    operator !== "notEmpty"
-  ) {
-    // Ensure date value is a valid date and parse into correct format
-    if (!value) {
-      return
-    }
-    try {
-      value = new Date(value).toISOString()
-    } catch (error) {
-      return
-    }
-  }
-  if (type === "number" && typeof value === "string" && !isHbs) {
-    if (operator === "oneOf") {
-      value = value.split(",").map(item => parseFloat(item))
-    } else {
-      value = parseFloat(value)
-    }
-  }
-  if (type === "boolean") {
-    value = `${value}`?.toLowerCase() === "true"
-  }
-  if (
-    ["contains", "notContains", "containsAny"].includes(
-      operator.toLocaleString()
-    ) &&
-    type === "array" &&
-    typeof value === "string"
-  ) {
-    value = value.split(",")
+  const isHbs =
+    typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
+
+  // Parsing value depending on what the type is.
+  switch (type) {
+    case FieldType.DATETIME:
+      if (!isHbs && operator !== "empty" && operator !== "notEmpty") {
+        if (!value) {
+          return
+        }
+        try {
+          value = new Date(value).toISOString()
+        } catch (error) {
+          return
+        }
+      }
+      break
+    case FieldType.NUMBER:
+      if (typeof value === "string" && !isHbs) {
+        if (operator === "oneOf") {
+          value = value.split(",").map(parseFloat)
+        } else {
+          value = parseFloat(value)
+        }
+      }
+      break
+    case FieldType.BOOLEAN:
+      value = `${value}`.toLowerCase() === "true"
+      break
+    case FieldType.ARRAY:
+      if (
+        ["contains", "notContains", "containsAny"].includes(
+          operator.toLocaleString()
+        ) &&
+        typeof value === "string"
+      ) {
+        value = value.split(",")
+      }
+      break
   }
 
   if (isRangeSearchOperator(operator)) {
@@ -398,17 +400,17 @@ const buildCondition = (expression: LegacyFilter) => {
       ...query.range[field],
       low: value,
     }
-  } else if (isLogicalSearchOperator(operator)) {
-    // TODO
   } else if (
     isBasicSearchOperator(operator) ||
     isArraySearchOperator(operator) ||
     isRangeSearchOperator(operator)
   ) {
     if (type === "boolean") {
-      // Transform boolean filters to cope with null.
-      // "equals false" needs to be "not equals true"
-      // "not equals false" needs to be "equals true"
+      // TODO(samwho): I suspect this boolean transformation isn't needed anymore,
+      // write some tests to confirm.
+
+      // Transform boolean filters to cope with null.  "equals false" needs to
+      // be "not equals true" "not equals false" needs to be "equals true"
       if (operator === "equal" && value === false) {
         query.notEqual = query.notEqual || {}
         query.notEqual[field] = true
@@ -423,6 +425,8 @@ const buildCondition = (expression: LegacyFilter) => {
       query[operator] ??= {}
       query[operator][field] = value
     }
+  } else {
+    throw new Error(`Unsupported operator: ${operator}`)
   }
 
   return query
