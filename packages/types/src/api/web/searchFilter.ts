@@ -14,10 +14,15 @@ export type LegacyFilter = {
   externalType?: string
 }
 
+export type SearchFilterChild = {
+  logicalOperator: FilterGroupLogicalOperator
+  groups?: SearchFilterChild[]
+  filters?: LegacyFilter[]
+}
+
 // this is a type purely used by the UI
 export type SearchFilterGroup = {
   logicalOperator: FilterGroupLogicalOperator
-  onEmptyFilter?: EmptyFilterOption
-  groups?: SearchFilterGroup[]
-  filters?: LegacyFilter[]
+  onEmptyFilter: EmptyFilterOption
+  groups: SearchFilterChild[]
 }

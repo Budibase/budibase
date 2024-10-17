@@ -6,6 +6,8 @@ import {
   BasicOperator,
   ArrayOperator,
   isLogicalSearchOperator,
+  EmptyFilterOption,
+  SearchFilterChild,
 } from "@budibase/types"
 import * as Constants from "./constants"
 import { removeKeyNumbering } from "./filters"
@@ -142,6 +144,7 @@ export const processSearchFilters = (
   // Base search config.
   const defaultCfg: SearchFilterGroup = {
     logicalOperator: FilterGroupLogicalOperator.ALL,
+    onEmptyFilter: EmptyFilterOption.RETURN_ALL,
     groups: [],
   }
 
@@ -156,8 +159,7 @@ export const processSearchFilters = (
     "formulaType",
   ]
 
-  let baseGroup: SearchFilterGroup = {
-    filters: [],
+  let baseGroup: SearchFilterChild = {
     logicalOperator: FilterGroupLogicalOperator.ALL,
   }
 
