@@ -384,8 +384,8 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
 }
 
 async function shouldIncludePowerRole(db: Database) {
-  const app = await db.get<App>(DocumentType.APP_METADATA)
-  const { creationVersion } = app
+  const app = await db.tryGet<App>(DocumentType.APP_METADATA)
+  const creationVersion = app?.creationVersion
   if (!creationVersion) {
     // Old apps don't have creationVersion, so we should include it for backward compatibility
     return true
