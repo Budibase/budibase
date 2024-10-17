@@ -78,10 +78,10 @@ export async function find(ctx: UserCtx<void, FindRoleResponse>) {
 
 export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   const db = context.getAppDB()
-  let { _id, name, inherits, permissionId, version, uiMetadata } =
+  let { _id, _rev, name, inherits, permissionId, version, uiMetadata } =
     ctx.request.body
   let isCreate = false
-  if (!ctx.request.body._rev && !version) {
+  if (!_rev && !version) {
     version = roles.RoleIDVersion.NAME
   }
   const isNewVersion = version === roles.RoleIDVersion.NAME
@@ -132,7 +132,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     ctx.throw(400, "Role inheritance contains a loop, this is not supported")
   }
 
-  const foundRev = ctx.request.body._rev || dbRole?._rev
+  const foundRev = _rev || dbRole?._rev
   if (foundRev) {
     role._rev = foundRev
   }

@@ -76,11 +76,9 @@ export class Role implements RoleDoc {
     if (inherits && typeof inherits === "string") {
       inherits = prefixRoleIDNoBuiltin(inherits)
     } else if (inherits && Array.isArray(inherits)) {
-      inherits = inherits.map(inherit => prefixRoleIDNoBuiltin(inherit))
+      inherits = inherits.map(prefixRoleIDNoBuiltin)
     }
-    if (inherits) {
-      this.inherits = inherits
-    }
+    this.inherits = inherits
     return this
   }
 }
@@ -264,7 +262,7 @@ export async function roleToNumber(id: string) {
             return findNumber(foundRole) + 1
           }
         })
-        .filter(number => !!number)
+        .filter(number => number)
         .sort()
         .pop()
       if (highestBuiltin != undefined) {

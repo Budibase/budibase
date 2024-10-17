@@ -64,5 +64,10 @@ describe("role utilities", () => {
       role1.inherits = "role_2"
       check(true)
     })
+
+    it("self reference contains loop", () => {
+      role("role1", "role1")
+      check(true)
+    })
   })
 })
