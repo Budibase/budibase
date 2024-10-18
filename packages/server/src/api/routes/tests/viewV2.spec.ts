@@ -3780,6 +3780,81 @@ describe.each([
               },
               expected: [{ string: "bar" }, { string: "foo" }],
             },
+            {
+              name: "can find rows with fuzzy search",
+              insert: [{ string: "foo" }, { string: "bar" }],
+              query: simpleQuery({
+                operator: BasicOperator.FUZZY,
+                field: "string",
+                value: "fo",
+              }),
+              expected: [{ string: "foo" }],
+            },
+            {
+              name: "can find nothing with fuzzy search",
+              insert: [{ string: "foo" }, { string: "bar" }],
+              query: simpleQuery({
+                operator: BasicOperator.FUZZY,
+                field: "string",
+                value: "baz",
+              }),
+              expected: [],
+            },
+            {
+              name: "can find numeric rows",
+              insert: [{ number: 1 }, { number: 2 }],
+              query: simpleQuery({
+                operator: BasicOperator.EQUAL,
+                field: "number",
+                value: 1,
+              }),
+              expected: [{ number: 1 }],
+            },
+            {
+              name: "can find numeric values with rangeHigh",
+              insert: [{ number: 1 }, { number: 2 }, { number: 3 }],
+              query: simpleQuery({
+                operator: "rangeHigh",
+                field: "number",
+                value: 2,
+              }),
+              searchOpts: {
+                sort: "number",
+                sortOrder: SortOrder.ASCENDING,
+              },
+              expected: [{ number: 1 }, { number: 2 }],
+            },
+            {
+              name: "can find numeric values with rangeLow",
+              insert: [{ number: 1 }, { number: 2 }, { number: 3 }],
+              query: simpleQuery({
+                operator: "rangeLow",
+                field: "number",
+                value: 2,
+              }),
+              searchOpts: {
+                sort: "number",
+                sortOrder: SortOrder.ASCENDING,
+              },
+              expected: [{ number: 2 }, { number: 3 }],
+            },
+            {
+              name: "can find numeric values with full range",
+              insert: [{ number: 1 }, { number: 2 }, { number: 3 }],
+              query: simpleQuery(
+                {
+                  operator: "rangeHigh",
+                  field: "number",
+                  value: 2,
+                },
+                {
+                  operator: "rangeLow",
+                  field: "number",
+                  value: 2,
+                }
+              ),
+              expected: [{ number: 2 }],
+            },
           ]
 
           it.only.each(testCases)(
@@ -3793,6 +3868,16 @@ describe.each([
                 queryUI: query,
                 schema: {
                   string: { visible: true },
+                  longform: { visible: true },
+                  options: { visible: true },
+                  array: { visible: true },
+                  number: { visible: true },
+                  bigint: { visible: true },
+                  datetime: { visible: true },
+                  timeOnly: { visible: true },
+                  boolean: { visible: true },
+                  user: { visible: true },
+                  users: { visible: true },
                 },
               })
 
