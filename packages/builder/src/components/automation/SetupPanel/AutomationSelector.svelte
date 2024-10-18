@@ -29,7 +29,7 @@
   $: filteredAutomations = $automationStore.automations.filter(
     automation =>
       automation.definition.trigger.stepId === TriggerStepID.APP &&
-      automation._id !== $selectedAutomation._id
+      automation._id !== $selectedAutomation.data._id
   )
 </script>
 
