@@ -52,7 +52,11 @@
 {:else}
   <div class="text-cell" class:number={type === "number"}>
     <div class="value">
-      {value ?? ""}
+      {#if type === "number"}
+        {(value ?? "").toLocaleString()}
+      {:else}
+        {value ?? ""}
+      {/if}
     </div>
   </div>
 {/if}
