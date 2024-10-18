@@ -33,6 +33,7 @@ import {
   UISearchFilter,
   LegacyFilter,
   SearchViewRowRequest,
+  ArrayOperator,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -3686,11 +3687,6 @@ describe.each([
                   number: { name: "number", type: FieldType.NUMBER },
                   bigint: { name: "bigint", type: FieldType.BIGINT },
                   datetime: { name: "datetime", type: FieldType.DATETIME },
-                  timeOnly: {
-                    name: "timeOnly",
-                    type: FieldType.DATETIME,
-                    timeOnly: true,
-                  },
                   boolean: { name: "boolean", type: FieldType.BOOLEAN },
                   user: {
                     name: "user",
@@ -3701,6 +3697,9 @@ describe.each([
                     name: "users",
                     type: FieldType.BB_REFERENCE,
                     subtype: BBReferenceFieldSubType.USER,
+                    constraints: {
+                      type: JsonFieldSubType.ARRAY,
+                    },
                   },
                 },
               })
@@ -3709,9 +3708,9 @@ describe.each([
 
           interface TestCase {
             name: string
-            query: UISearchFilter
-            insert: Row[]
-            expected: Row[]
+            query: UISearchFilter | (() => UISearchFilter)
+            insert: Row[] | (() => Row[])
+            expected: Row[] | (() => Row[])
             searchOpts?: Partial<SearchViewRowRequest>
           }
 
@@ -3855,11 +3854,130 @@ describe.each([
               ),
               expected: [{ number: 2 }],
             },
+            {
+              name: "can find longform values",
+              insert: [{ longform: "foo" }, { longform: "bar" }],
+              query: simpleQuery({
+                operator: BasicOperator.EQUAL,
+                field: "longform",
+                value: "foo",
+              }),
+              expected: [{ longform: "foo" }],
+            },
+            {
+              name: "can find options values",
+              insert: [{ options: "a" }, { options: "b" }],
+              query: simpleQuery({
+                operator: BasicOperator.EQUAL,
+                field: "options",
+                value: "a",
+              }),
+              expected: [{ options: "a" }],
+            },
+            {
+              name: "can find array values",
+              insert: [
+                // Number field here is just to guarantee order.
+                { number: 1, array: ["a"] },
+                { number: 2, array: ["b"] },
+                { number: 3, array: ["a", "c"] },
+              ],
+              query: simpleQuery({
+                operator: ArrayOperator.CONTAINS,
+                field: "array",
+                value: "a",
+              }),
+              searchOpts: {
+                sort: "number",
+                sortOrder: SortOrder.ASCENDING,
+              },
+              expected: [{ array: ["a"] }, { array: ["a", "c"] }],
+            },
+            {
+              name: "can find bigint values",
+              insert: [{ bigint: "1" }, { bigint: "2" }],
+              query: simpleQuery({
+                operator: BasicOperator.EQUAL,
+                field: "bigint",
+                type: FieldType.BIGINT,
+                value: "1",
+              }),
+              expected: [{ bigint: "1" }],
+            },
+            {
+              name: "can find datetime values",
+              insert: [
+                { datetime: "2021-01-01T00:00:00.000Z" },
+                { datetime: "2021-01-02T00:00:00.000Z" },
+              ],
+              query: simpleQuery({
+                operator: BasicOperator.EQUAL,
+                field: "datetime",
+                type: FieldType.DATETIME,
+                value: "2021-01-01",
+              }),
+              expected: [{ datetime: "2021-01-01T00:00:00.000Z" }],
+            },
+            {
+              name: "can find boolean values",
+              insert: [{ boolean: true }, { boolean: false }],
+              query: simpleQuery({
+                operator: BasicOperator.EQUAL,
+                field: "boolean",
+                value: true,
+              }),
+              expected: [{ boolean: true }],
+            },
+            {
+              name: "can find user values",
+              insert: () => [{ user: config.getUser() }],
+              query: () =>
+                simpleQuery({
+                  operator: BasicOperator.EQUAL,
+                  field: "user",
+                  value: config.getUser()._id,
+                }),
+              expected: () => [
+                {
+                  user: expect.objectContaining({ _id: config.getUser()._id }),
+                },
+              ],
+            },
+            {
+              name: "can find users values",
+              insert: () => [{ users: [config.getUser()] }],
+              query: () =>
+                simpleQuery({
+                  operator: ArrayOperator.CONTAINS,
+                  field: "users",
+                  value: [config.getUser()._id],
+                }),
+              expected: () => [
+                {
+                  users: [
+                    expect.objectContaining({ _id: config.getUser()._id }),
+                  ],
+                },
+              ],
+            },
           ]
 
-          it.only.each(testCases)(
+          it.each(testCases)(
             "$name",
             async ({ query, insert, expected, searchOpts }) => {
+              // Some values can't be specified outside of a test (e.g. getting
+              // config.getUser(), it won't be initialised), so we use functions
+              // in those cases.
+              if (typeof insert === "function") {
+                insert = insert()
+              }
+              if (typeof expected === "function") {
+                expected = expected()
+              }
+              if (typeof query === "function") {
+                query = query()
+              }
+
               await config.api.row.bulkImport(table._id!, { rows: insert })
 
               const view = await config.api.viewV2.create({
@@ -3874,7 +3992,6 @@ describe.each([
                   number: { visible: true },
                   bigint: { visible: true },
                   datetime: { visible: true },
-                  timeOnly: { visible: true },
                   boolean: { visible: true },
                   user: { visible: true },
                   users: { visible: true },
