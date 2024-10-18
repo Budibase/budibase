@@ -19,8 +19,8 @@ import {
   RangeOperator,
   LogicalOperator,
   isLogicalSearchOperator,
-  SearchFilterGroup,
-  FilterGroupLogicalOperator,
+  UISearchFilter,
+  UILogicalOperator,
   isBasicSearchOperator,
   isArraySearchOperator,
   isRangeSearchOperator,
@@ -561,7 +561,7 @@ export const buildQueryLegacy = (
 }
 
 /**
- * Converts a **SearchFilterGroup** filter definition into a grouped
+ * Converts a **UISearchFilter** filter definition into a grouped
  * search query of type **SearchFilters**
  *
  * Legacy support remains for the old **SearchFilter[]** format.
@@ -573,49 +573,41 @@ export const buildQueryLegacy = (
  */
 export function buildQuery(filter: undefined): undefined
 export function buildQuery(
-  filter: SearchFilterGroup | LegacyFilter[]
+  filter: UISearchFilter | LegacyFilter[]
 ): SearchFilters
 export function buildQuery(
-  filter?: SearchFilterGroup | LegacyFilter[]
+  filter?: UISearchFilter | LegacyFilter[]
 ): SearchFilters | undefined {
   if (!filter) {
     return
   }
 
-  let parsedFilter: SearchFilterGroup
+  let parsedFilter: UISearchFilter
   if (Array.isArray(filter)) {
     parsedFilter = processSearchFilters(filter)
   } else {
     parsedFilter = filter
   }
 
-  const operatorMap = {
-    [FilterGroupLogicalOperator.ALL]: LogicalOperator.AND,
-    [FilterGroupLogicalOperator.ANY]: LogicalOperator.OR,
+  const operator = logicalOperatorFromUI(
+    parsedFilter.logicalOperator || UILogicalOperator.ALL
+  )
+  const groups = parsedFilter.groups || []
+  const conditions: SearchFilters[] = groups.map(group => {
+    const filters = group.filters || []
+    return { [operator]: { conditions: filters.map(x => buildCondition(x)) } }
+  })
+
+  return {
+    onEmptyFilter: parsedFilter.onEmptyFilter,
+    [operator]: { conditions },
   }
+}
 
-  const globalOnEmpty = parsedFilter.onEmptyFilter
-    ? parsedFilter.onEmptyFilter
-    : null
-
-  const globalOperator = operatorMap[parsedFilter.logicalOperator]
-
-  const ret = {
-    ...(globalOnEmpty ? { onEmptyFilter: globalOnEmpty } : {}),
-    [globalOperator]: {
-      conditions: parsedFilter.groups?.map(group => {
-        return {
-          [operatorMap[group.logicalOperator]]: {
-            conditions: group.filters
-              ?.map(x => buildCondition(x))
-              .filter(filter => filter),
-          },
-        }
-      }),
-    },
-  }
-
-  return ret
+function logicalOperatorFromUI(operator: UILogicalOperator): LogicalOperator {
+  return operator === UILogicalOperator.ALL
+    ? LogicalOperator.AND
+    : LogicalOperator.OR
 }
 
 // The frontend can send single values for array fields sometimes, so to handle

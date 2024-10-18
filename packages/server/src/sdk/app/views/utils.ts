@@ -14,8 +14,8 @@ export function ensureQueryUISet(view: ViewV2) {
       // We're changing it in the change that this comment is part of to also
       // include SearchFilters objects. These are created when we receive an
       // update to a ViewV2 that contains a queryUI and not a query field. We
-      // can convert SearchFilterGroup (the type of queryUI) to SearchFilters,
-      // but not LegacyFilter[], they are incompatible due to SearchFilterGroup
+      // can convert UISearchFilter (the type of queryUI) to SearchFilters,
+      // but not LegacyFilter[], they are incompatible due to UISearchFilter
       // and SearchFilters being recursive types.
       //
       // So despite the type saying that `view.query` is a LegacyFilter[] |

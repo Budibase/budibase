@@ -27,20 +27,18 @@ import {
   ViewV2Schema,
   ViewV2Type,
   JsonTypes,
-  FilterGroupLogicalOperator,
+  UILogicalOperator,
   EmptyFilterOption,
   JsonFieldSubType,
-  SearchFilterGroup,
+  UISearchFilter,
   LegacyFilter,
   SearchViewRowRequest,
-  SearchFilterChild,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { db, roles, features } from "@budibase/backend-core"
-import { single } from "validate.js"
 
 describe.each([
   ["lucene", undefined],
@@ -158,11 +156,11 @@ describe.each([
           tableId: table._id!,
           primaryDisplay: "id",
           queryUI: {
-            logicalOperator: FilterGroupLogicalOperator.ALL,
+            logicalOperator: UILogicalOperator.ALL,
             onEmptyFilter: EmptyFilterOption.RETURN_ALL,
             groups: [
               {
-                logicalOperator: FilterGroupLogicalOperator.ALL,
+                logicalOperator: UILogicalOperator.ALL,
                 filters: [
                   {
                     operator: BasicOperator.EQUAL,
@@ -2388,10 +2386,10 @@ describe.each([
             name: generator.guid(),
             queryUI: {
               onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              logicalOperator: FilterGroupLogicalOperator.ALL,
+              logicalOperator: UILogicalOperator.ALL,
               groups: [
                 {
-                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  logicalOperator: UILogicalOperator.ALL,
                   filters: [
                     {
                       operator: BasicOperator.EQUAL,
@@ -2452,10 +2450,10 @@ describe.each([
             name: generator.guid(),
             queryUI: {
               onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              logicalOperator: FilterGroupLogicalOperator.ALL,
+              logicalOperator: UILogicalOperator.ALL,
               groups: [
                 {
-                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  logicalOperator: UILogicalOperator.ALL,
                   filters: [
                     {
                       operator: BasicOperator.EQUAL,
@@ -2741,10 +2739,10 @@ describe.each([
             name: generator.guid(),
             queryUI: {
               onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              logicalOperator: FilterGroupLogicalOperator.ALL,
+              logicalOperator: UILogicalOperator.ALL,
               groups: [
                 {
-                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  logicalOperator: UILogicalOperator.ALL,
                   filters: [
                     {
                       operator: BasicOperator.NOT_EQUAL,
@@ -2799,10 +2797,10 @@ describe.each([
             name: generator.guid(),
             queryUI: {
               onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              logicalOperator: FilterGroupLogicalOperator.ALL,
+              logicalOperator: UILogicalOperator.ALL,
               groups: [
                 {
-                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  logicalOperator: UILogicalOperator.ALL,
                   filters: [
                     {
                       operator: BasicOperator.NOT_EQUAL,
@@ -2894,10 +2892,10 @@ describe.each([
               name: generator.guid(),
               queryUI: {
                 onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-                logicalOperator: FilterGroupLogicalOperator.ALL,
+                logicalOperator: UILogicalOperator.ALL,
                 groups: [
                   {
-                    logicalOperator: FilterGroupLogicalOperator.ALL,
+                    logicalOperator: UILogicalOperator.ALL,
                     filters: [
                       {
                         operator: BasicOperator.EQUAL,
@@ -3338,10 +3336,10 @@ describe.each([
                 type: ViewV2Type.CALCULATION,
                 queryUI: {
                   onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  logicalOperator: UILogicalOperator.ALL,
                   groups: [
                     {
-                      logicalOperator: FilterGroupLogicalOperator.ALL,
+                      logicalOperator: UILogicalOperator.ALL,
                       filters: [
                         {
                           operator: BasicOperator.EQUAL,
@@ -3631,10 +3629,10 @@ describe.each([
             name: generator.guid(),
             queryUI: {
               onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              logicalOperator: FilterGroupLogicalOperator.ALL,
+              logicalOperator: UILogicalOperator.ALL,
               groups: [
                 {
-                  logicalOperator: FilterGroupLogicalOperator.ALL,
+                  logicalOperator: UILogicalOperator.ALL,
                   filters: [
                     {
                       operator: BasicOperator.EQUAL,
@@ -3711,52 +3709,31 @@ describe.each([
 
           interface TestCase {
             name: string
-            query: SearchFilterGroup
+            query: UISearchFilter
             insert: Row[]
             expected: Row[]
             searchOpts?: SearchViewRowRequest
           }
 
-          function defaultQuery(
-            query: Partial<SearchFilterGroup>
-          ): SearchFilterGroup {
-            return {
-              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              logicalOperator: FilterGroupLogicalOperator.ALL,
-              groups: [],
-              ...query,
-            }
-          }
-
-          function defaultGroup(
-            group: Partial<SearchFilterChild>
-          ): SearchFilterChild {
-            return {
-              logicalOperator: FilterGroupLogicalOperator.ALL,
-              filters: [],
-              ...group,
-            }
-          }
-
-          function simpleQuery(...filters: LegacyFilter[]): SearchFilterGroup {
-            return defaultQuery({ groups: [defaultGroup({ filters })] })
+          function simpleQuery(...filters: LegacyFilter[]): UISearchFilter {
+            return { groups: [{ filters }] }
           }
 
           const testCases: TestCase[] = [
             {
               name: "empty query return all",
               insert: [{ string: "foo" }],
-              query: defaultQuery({
+              query: {
                 onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              }),
+              },
               expected: [{ string: "foo" }],
             },
             {
               name: "empty query return none",
               insert: [{ string: "foo" }],
-              query: defaultQuery({
+              query: {
                 onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-              }),
+              },
               expected: [],
             },
             {

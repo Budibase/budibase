@@ -203,7 +203,7 @@ export enum EmptyFilterOption {
   RETURN_NONE = "none",
 }
 
-export enum FilterGroupLogicalOperator {
+export enum UILogicalOperator {
   ALL = "all",
   ANY = "any",
 }
