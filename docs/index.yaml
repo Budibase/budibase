@@ -7931,7 +7931,7 @@ entries:
     version: 0.0.0-master
   - apiVersion: v2
     appVersion: develop
-    created: "2024-10-18T14:56:26.220200109Z"
+    created: "2024-10-18T15:08:25.715338192Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -7939,7 +7939,7 @@ entries:
       version: 4.5.6
     description: Budibase is an open source low-code platform, helping thousands of
       teams build apps for their workplace in minutes.
-    digest: 7d53de76948d137801332da8af5b2914b2d2e415968fbb1213a90ef2c2e3d10a
+    digest: 4100df60bfdafe40116a0dd5007cee0212bf4efd6f5f77ad9a057709cac62f08
     keywords:
     - low-code
     - database
@@ -7952,4 +7952,4 @@ entries:
     urls:
     - budibase-0.0.0-develop.tgz
     version: 0.0.0-develop
-generated: "2024-10-18T14:56:26.216348267Z"
+generated: "2024-10-18T15:08:25.71208035Z"
