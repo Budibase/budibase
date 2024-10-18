@@ -160,7 +160,6 @@ export const initialise = context => {
             readonly: fieldSchema.readonly,
             order: fieldSchema.order ?? oldColumn?.order,
             conditions: fieldSchema.conditions,
-            enrichValue: fieldSchema.enrichValue,
             related: fieldSchema.related,
           }
           // Override a few properties for primary display
