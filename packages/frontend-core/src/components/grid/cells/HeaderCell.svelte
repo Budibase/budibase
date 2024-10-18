@@ -52,7 +52,7 @@
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
   $: canMoveRight = orderable && idx < $scrollableColumns.length - 1
-  $: sortingLabels = getSortingLabels(column.schema?.type)
+  $: sortingLabels = getSortingLabels(column)
   $: searchable = isColumnSearchable(column)
   $: resetSearchValue(column.name)
   $: searching = searchValue != null
@@ -66,8 +66,14 @@
     editIsOpen = false
   }
 
-  const getSortingLabels = type => {
-    switch (type) {
+  const getSortingLabels = column => {
+    if (column.calculationType) {
+      return {
+        ascending: "low-high",
+        descending: "high-low",
+      }
+    }
+    switch (column?.schema?.type) {
       case FieldType.NUMBER:
       case FieldType.BIGINT:
         return {
