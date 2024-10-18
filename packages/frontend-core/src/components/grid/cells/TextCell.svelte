@@ -1,7 +1,3 @@
-<script context="module">
-  const NumberFormatter = Intl.NumberFormat()
-</script>
-
 <script>
   import { onMount } from "svelte"
 
@@ -11,11 +7,13 @@
   export let type = "text"
   export let readonly = false
   export let api
+  export let format = null
 
   let input
   let active = false
 
   $: editable = focused && !readonly
+  $: displayValue = format?.(value) ?? value ?? ""
 
   const handleChange = e => {
     onChange(e.target.value)
@@ -56,11 +54,7 @@
 {:else}
   <div class="text-cell" class:number={type === "number"}>
     <div class="value">
-      {#if type === "number"}
-        {NumberFormatter.format(value ?? "")}
-      {:else}
-        {value ?? ""}
-      {/if}
+      {displayValue}
     </div>
   </div>
 {/if}
