@@ -110,6 +110,7 @@ export default class TestConfiguration {
   tenantId?: string
   api: API
   csrfToken?: string
+  temporaryHeaders?: Record<string, string | string[]>
 
   constructor(openServer = true) {
     if (openServer) {
@@ -429,10 +430,10 @@ export default class TestConfiguration {
   // HEADERS
 
   // sets the role for the headers, for the period of a callback
-  async setRole(roleId: string, cb: () => Promise<unknown>) {
+  async loginAsRole(roleId: string, cb: () => Promise<unknown>) {
     const roleUser = await this.createUser({
       roles: {
-        [this.prodAppId!]: roleId,
+        [this.getProdAppId()]: roleId,
       },
       builder: { global: false },
       admin: { global: false },
@@ -443,16 +444,20 @@ export default class TestConfiguration {
       builder: false,
       prodApp: true,
     })
-    const temp = this.user
-    this.user = roleUser
-    await cb()
-    if (temp) {
-      this.user = temp
-      await this.login({
-        userId: temp._id!,
-        builder: true,
-        prodApp: false,
-      })
+    await this.withUser(roleUser, async () => {
+      await cb()
+    })
+  }
+
+  async withHeaders(
+    headers: Record<string, string | string[]>,
+    cb: () => Promise<unknown>
+  ) {
+    this.temporaryHeaders = headers
+    try {
+      await cb()
+    } finally {
+      this.temporaryHeaders = undefined
     }
   }
 
@@ -479,7 +484,10 @@ export default class TestConfiguration {
     } else if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
-    return headers
+    return {
+      ...headers,
+      ...this.temporaryHeaders,
+    }
   }
 
   publicHeaders({ prodApp = true } = {}) {
@@ -495,7 +503,10 @@ export default class TestConfiguration {
 
     headers[constants.Header.TENANT_ID] = this.getTenantId()
 
-    return headers
+    return {
+      ...headers,
+      ...this.temporaryHeaders,
+    }
   }
 
   async basicRoleHeaders() {

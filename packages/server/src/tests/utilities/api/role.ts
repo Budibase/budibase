@@ -22,10 +22,6 @@ export class RoleAPI extends TestAPI {
   }
 
   save = async (body: SaveRoleRequest, expectations?: Expectations) => {
-    // the tests should always be creating the "new" version of roles
-    if (body.version === undefined) {
-      body.version = "name"
-    }
     return await this._post<SaveRoleResponse>(`/api/roles`, {
       body,
       expectations,
@@ -38,12 +34,8 @@ export class RoleAPI extends TestAPI {
     })
   }
 
-  accessible = async (
-    headers: Record<string, string | string[]>,
-    expectations?: Expectations
-  ) => {
+  accessible = async (expectations?: Expectations) => {
     return await this._get<AccessibleRolesResponse>(`/api/roles/accessible`, {
-      headers,
       expectations,
     })
   }
