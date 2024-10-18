@@ -47,28 +47,14 @@ export function createRolesStore() {
         roleId: role?._id,
         roleRev: role?._rev,
       })
-      store.update(state => state.filter(existing => existing._id !== role._id))
+      await actions.fetch()
     },
     save: async role => {
       const savedRole = await API.saveRole(role)
       await actions.fetch()
-
-      // When saving a role we get back an _id prefixed by role_, but the API does not want this
-      // in future requests
-      return {
-        ...savedRole,
-        _id: savedRole._id.replace("role_", ""),
-      }
+      return savedRole
     },
     replace: (roleId, role) => {
-      // Remove role_ prefix
-      if (roleId?.startsWith("role_")) {
-        roleId = roleId.replace("role_", "")
-      }
-      if (role?._id.startsWith("role_")) {
-        role._id = role._id.replace("role_", "")
-      }
-
       // Handles external updates of roles
       if (!roleId) {
         return
