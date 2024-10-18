@@ -1,9 +1,5 @@
 import { FieldType } from "../../documents"
-import {
-  EmptyFilterOption,
-  FilterGroupLogicalOperator,
-  SearchFilters,
-} from "../../sdk"
+import { EmptyFilterOption, UILogicalOperator, SearchFilters } from "../../sdk"
 
 export type LegacyFilter = {
   operator: keyof SearchFilters | "rangeLow" | "rangeHigh"
@@ -14,15 +10,15 @@ export type LegacyFilter = {
   externalType?: string
 }
 
-export type SearchFilterChild = {
-  logicalOperator: FilterGroupLogicalOperator
-  groups?: SearchFilterChild[]
+export type SearchFilterGroup = {
+  logicalOperator?: UILogicalOperator
+  groups?: SearchFilterGroup[]
   filters?: LegacyFilter[]
 }
 
 // this is a type purely used by the UI
-export type SearchFilterGroup = {
-  logicalOperator: FilterGroupLogicalOperator
-  onEmptyFilter: EmptyFilterOption
-  groups: SearchFilterChild[]
+export type UISearchFilter = {
+  logicalOperator?: UILogicalOperator
+  onEmptyFilter?: EmptyFilterOption
+  groups?: SearchFilterGroup[]
 }

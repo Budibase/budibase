@@ -1,13 +1,13 @@
 import {
   LegacyFilter,
-  SearchFilterGroup,
-  FilterGroupLogicalOperator,
+  UISearchFilter,
+  UILogicalOperator,
   SearchFilters,
   BasicOperator,
   ArrayOperator,
   isLogicalSearchOperator,
   EmptyFilterOption,
-  SearchFilterChild,
+  SearchFilterGroup,
 } from "@budibase/types"
 import * as Constants from "./constants"
 import { removeKeyNumbering } from "./filters"
@@ -132,18 +132,18 @@ export function isSupportedUserSearch(query: SearchFilters) {
 
 /**
  * Processes the filter config. Filters are migrated from
- * SearchFilter[] to SearchFilterGroup
+ * SearchFilter[] to UISearchFilter
  *
  * If filters is not an array, the migration is skipped
  *
- * @param {LegacyFilter[] | SearchFilterGroup} filters
+ * @param {LegacyFilter[] | UISearchFilter} filters
  */
 export const processSearchFilters = (
   filters: LegacyFilter[]
-): SearchFilterGroup => {
+): UISearchFilter => {
   // Base search config.
-  const defaultCfg: SearchFilterGroup = {
-    logicalOperator: FilterGroupLogicalOperator.ALL,
+  const defaultCfg: UISearchFilter = {
+    logicalOperator: UILogicalOperator.ALL,
     onEmptyFilter: EmptyFilterOption.RETURN_ALL,
     groups: [],
   }
@@ -159,11 +159,11 @@ export const processSearchFilters = (
     "formulaType",
   ]
 
-  let baseGroup: SearchFilterChild = {
-    logicalOperator: FilterGroupLogicalOperator.ALL,
+  let baseGroup: SearchFilterGroup = {
+    logicalOperator: UILogicalOperator.ALL,
   }
 
-  return filters.reduce((acc: SearchFilterGroup, filter: LegacyFilter) => {
+  return filters.reduce((acc: UISearchFilter, filter: LegacyFilter) => {
     // Sort the properties for easier debugging
     const filterPropertyKeys = (Object.keys(filter) as (keyof LegacyFilter)[])
       .sort((a, b) => {
@@ -180,7 +180,7 @@ export const processSearchFilters = (
         acc.onEmptyFilter = value
       } else if (key === "operator" && value === "allOr") {
         // Group 1 logical operator
-        baseGroup.logicalOperator = FilterGroupLogicalOperator.ANY
+        baseGroup.logicalOperator = UILogicalOperator.ANY
       }
 
       return acc
