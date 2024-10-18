@@ -4,9 +4,10 @@
   export let title
   export let body
   export let icon = "HelpOutline"
+  export let quiet = false
 </script>
 
-<div class="info" class:noTitle={!title}>
+<div class="info" class:noTitle={!title} class:quiet>
   {#if title}
     <div class="title">
       <Icon name={icon} />
@@ -40,15 +41,20 @@
     color: var(--spectrum-global-color-gray-600);
   }
   .info {
-    padding: var(--spacing-m) var(--spacing-l) var(--spacing-l) var(--spacing-l);
     background-color: var(--background-alt);
+    padding: var(--spacing-m) var(--spacing-l) var(--spacing-m) var(--spacing-l);
     border-radius: var(--border-radius-s);
     font-size: 13px;
+  }
+  .quiet {
+    background: none;
+    color: var(--spectrum-global-color-gray-700);
+    padding: 0;
   }
   .noTitle {
     display: flex;
     align-items: center;
-    gap: var(--spacing-m);
+    gap: var(--spacing-l);
   }
   .info :global(a) {
     color: inherit;

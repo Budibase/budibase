@@ -9,13 +9,11 @@
   let anchor
 
   $: columnOptions = $columns
+    .filter(col => canBeSortColumn(col.schema))
     .map(col => ({
       label: col.label || col.name,
       value: col.name,
-      type: col.schema?.type,
-      related: col.related,
     }))
-    .filter(col => canBeSortColumn(col))
   $: orderOptions = getOrderOptions($sort.column, columnOptions)
 
   const getOrderOptions = (column, columnOptions) => {
