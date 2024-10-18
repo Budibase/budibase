@@ -339,11 +339,7 @@ function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
         if (!value) {
           return
         }
-        try {
-          value = new Date(value).toISOString()
-        } catch (error) {
-          return
-        }
+        value = new Date(value).toISOString()
       }
       break
     case FieldType.NUMBER:
@@ -490,7 +486,9 @@ export function buildQuery(
         query.onEmptyFilter = onEmptyFilter
       }
       const operator = allOr ? LogicalOperator.OR : LogicalOperator.AND
-      return { [operator]: { conditions: filters.map(buildCondition) } }
+      return {
+        [operator]: { conditions: filters.map(buildCondition).filter(f => f) },
+      }
     }),
   }
 
