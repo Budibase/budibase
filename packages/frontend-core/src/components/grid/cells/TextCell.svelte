@@ -1,3 +1,7 @@
+<script context="module">
+  const NumberFormatter = Intl.NumberFormat()
+</script>
+
 <script>
   import { onMount } from "svelte"
 
@@ -53,7 +57,7 @@
   <div class="text-cell" class:number={type === "number"}>
     <div class="value">
       {#if type === "number"}
-        {(value ?? "").toLocaleString()}
+        {NumberFormatter.format(value ?? "")}
       {:else}
         {value ?? ""}
       {/if}
