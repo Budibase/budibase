@@ -79,7 +79,7 @@ describe("/screens", () => {
     })
 
     async function checkScreens(roleId: string, screenIds: string[]) {
-      await config.setRole(roleId, async () => {
+      await config.loginAsRole(roleId, async () => {
         const res = await config.api.application.getDefinition(
           config.prodAppId!,
           {
@@ -110,6 +110,10 @@ describe("/screens", () => {
   })
 
   describe("save", () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
     it("should be able to create a screen", async () => {
       const screen = basicScreen()
       const responseScreen = await config.api.screen.save(screen, {
@@ -127,6 +131,7 @@ describe("/screens", () => {
       screen._id = responseScreen._id
       screen._rev = responseScreen._rev
       screen.name = "edit"
+      jest.clearAllMocks()
 
       responseScreen = await config.api.screen.save(screen, { status: 200 })
 

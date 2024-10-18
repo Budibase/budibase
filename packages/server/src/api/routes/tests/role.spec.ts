@@ -121,6 +121,34 @@ describe("/roles", () => {
         { status: 400, body: { message: LOOP_ERROR } }
       )
     })
+
+    it("frontend example - should deny", async () => {
+      const id1 = "cb27c4ec9415042f4800411adb346fb7c",
+        id2 = "cbc72a9d61ab64d49b31d90d1df4c1fdb"
+      const role1 = await config.api.roles.save({
+        _id: id1,
+        name: id1,
+        permissions: {},
+        permissionId: "write",
+        version: "name",
+        inherits: ["POWER"],
+      })
+      await config.api.roles.save({
+        _id: id2,
+        permissions: {},
+        name: id2,
+        permissionId: "write",
+        version: "name",
+        inherits: [id1],
+      })
+      await config.api.roles.save(
+        {
+          ...role1,
+          inherits: [BUILTIN_ROLE_IDS.POWER, id2],
+        },
+        { status: 400, body: { message: LOOP_ERROR } }
+      )
+    })
   })
 
   describe("fetch", () => {
@@ -189,6 +217,27 @@ describe("/roles", () => {
         _id: dbCore.prefixRoleID(customRole._id!),
       })
     })
+
+    it("should disconnection roles when deleted", async () => {
+      const role1 = await config.api.roles.save({
+        name: "role1",
+        permissionId: BuiltinPermissionID.WRITE,
+        inherits: [BUILTIN_ROLE_IDS.BASIC],
+      })
+      const role2 = await config.api.roles.save({
+        name: "role2",
+        permissionId: BuiltinPermissionID.WRITE,
+        inherits: [BUILTIN_ROLE_IDS.BASIC, role1._id!],
+      })
+      const role3 = await config.api.roles.save({
+        name: "role3",
+        permissionId: BuiltinPermissionID.WRITE,
+        inherits: [BUILTIN_ROLE_IDS.BASIC, role2._id!],
+      })
+      await config.api.roles.destroy(role2, { status: 200 })
+      const found = await config.api.roles.find(role3._id!, { status: 200 })
+      expect(found.inherits).toEqual([BUILTIN_ROLE_IDS.BASIC])
+    })
   })
 
   describe("accessible", () => {
@@ -200,29 +249,35 @@ describe("/roles", () => {
     })
 
     it("should be able to fetch accessible roles (with builder)", async () => {
-      const res = await config.api.roles.accessible(config.defaultHeaders(), {
-        status: 200,
+      await config.withHeaders(config.defaultHeaders(), async () => {
+        const res = await config.api.roles.accessible({
+          status: 200,
+        })
+        expect(res.length).toBe(5)
+        expect(typeof res[0]).toBe("string")
       })
-      expect(res.length).toBe(5)
-      expect(typeof res[0]).toBe("string")
     })
 
     it("should be able to fetch accessible roles (basic user)", async () => {
       const headers = await config.basicRoleHeaders()
-      const res = await config.api.roles.accessible(headers, {
-        status: 200,
+      await config.withHeaders(headers, async () => {
+        const res = await config.api.roles.accessible({
+          status: 200,
+        })
+        expect(res.length).toBe(2)
+        expect(res[0]).toBe("BASIC")
+        expect(res[1]).toBe("PUBLIC")
       })
-      expect(res.length).toBe(2)
-      expect(res[0]).toBe("BASIC")
-      expect(res[1]).toBe("PUBLIC")
     })
 
     it("should be able to fetch accessible roles (no user)", async () => {
-      const res = await config.api.roles.accessible(config.publicHeaders(), {
-        status: 200,
+      await config.withHeaders(config.publicHeaders(), async () => {
+        const res = await config.api.roles.accessible({
+          status: 200,
+        })
+        expect(res.length).toBe(1)
+        expect(res[0]).toBe("PUBLIC")
       })
-      expect(res.length).toBe(1)
-      expect(res[0]).toBe("PUBLIC")
     })
 
     it("should not fetch higher level accessible roles when a custom role header is provided", async () => {
@@ -233,13 +288,15 @@ describe("/roles", () => {
         permissionId: permissions.BuiltinPermissionID.READ_ONLY,
         version: "name",
       })
-      const res = await config.api.roles.accessible(
+      await config.withHeaders(
         { "x-budibase-role": customRoleName },
-        {
-          status: 200,
+        async () => {
+          const res = await config.api.roles.accessible({
+            status: 200,
+          })
+          expect(res).toEqual([customRoleName, "BASIC", "PUBLIC"])
         }
       )
-      expect(res).toEqual([customRoleName, "BASIC", "PUBLIC"])
     })
   })
 
@@ -269,10 +326,12 @@ describe("/roles", () => {
       const headers = await config.roleHeaders({
         roleId: role3,
       })
-      const res = await config.api.roles.accessible(headers, {
-        status: 200,
+      await config.withHeaders(headers, async () => {
+        const res = await config.api.roles.accessible({
+          status: 200,
+        })
+        expect(res).toEqual([role3, role1, "BASIC", "PUBLIC", role2, "POWER"])
       })
-      expect(res).toEqual([role3, role1, "BASIC", "PUBLIC", role2, "POWER"])
     })
   })
 })

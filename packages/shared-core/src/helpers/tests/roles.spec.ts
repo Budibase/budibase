@@ -57,5 +57,17 @@ describe("role utilities", () => {
       ]
       check(true)
     })
+
+    it("should handle new and old inherits structure", () => {
+      const role1 = role("role_role_1", "role_1")
+      role("role_role_2", ["role_1"])
+      role1.inherits = "role_2"
+      check(true)
+    })
+
+    it("self reference contains loop", () => {
+      role("role1", "role1")
+      check(true)
+    })
   })
 })

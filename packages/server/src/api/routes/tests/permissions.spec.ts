@@ -291,6 +291,8 @@ describe("/permission", () => {
   describe("multi-inheritance permissions", () => {
     let table1: Table, table2: Table, role1: Role, role2: Role
     beforeEach(async () => {
+      // create new app
+      await config.init()
       table1 = await config.createTable()
       table2 = await config.createTable()
       await config.api.row.save(table1._id!, {
@@ -301,7 +303,7 @@ describe("/permission", () => {
       })
       role1 = await config.api.roles.save(
         {
-          name: "role1",
+          name: "test_1",
           permissionId: PermissionLevel.WRITE,
           inherits: BUILTIN_ROLE_IDS.BASIC,
         },
@@ -309,7 +311,7 @@ describe("/permission", () => {
       )
       role2 = await config.api.roles.save(
         {
-          name: "role2",
+          name: "test_2",
           permissionId: PermissionLevel.WRITE,
           inherits: BUILTIN_ROLE_IDS.BASIC,
         },
@@ -328,7 +330,7 @@ describe("/permission", () => {
     })
 
     it("should be unable to search for table 2 using role 1", async () => {
-      await config.setRole(role1._id!, async () => {
+      await config.loginAsRole(role1._id!, async () => {
         const response2 = await config.api.row.search(
           table2._id!,
           {
@@ -347,7 +349,7 @@ describe("/permission", () => {
         inherits: [role1._id!, role2._id!],
       })
 
-      await config.setRole(role3._id!, async () => {
+      await config.loginAsRole(role3._id!, async () => {
         const response1 = await config.api.row.search(
           table1._id!,
           {

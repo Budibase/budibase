@@ -17,6 +17,7 @@ import {
 } from "@budibase/types"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { RoleColor, helpers } from "@budibase/shared-core"
+import { uniqBy } from "lodash"
 
 export const BUILTIN_ROLE_IDS = {
   ADMIN: "ADMIN",
@@ -35,6 +36,14 @@ export const RoleIDVersion = {
   UUID: undefined,
   // new version - with name based ID
   NAME: "name",
+}
+
+function rolesInList(roleIds: string[], ids: string | string[]) {
+  if (Array.isArray(ids)) {
+    return ids.filter(id => roleIds.includes(id)).length === ids.length
+  } else {
+    return roleIds.includes(ids)
+  }
 }
 
 export class Role implements RoleDoc {
@@ -66,12 +75,62 @@ export class Role implements RoleDoc {
     if (inherits && typeof inherits === "string") {
       inherits = prefixRoleIDNoBuiltin(inherits)
     } else if (inherits && Array.isArray(inherits)) {
-      inherits = inherits.map(inherit => prefixRoleIDNoBuiltin(inherit))
+      inherits = inherits.map(prefixRoleIDNoBuiltin)
     }
-    if (inherits) {
-      this.inherits = inherits
-    }
+    this.inherits = inherits
     return this
+  }
+}
+
+export class RoleHierarchyTraversal {
+  allRoles: RoleDoc[]
+  opts?: { defaultPublic?: boolean }
+
+  constructor(allRoles: RoleDoc[], opts?: { defaultPublic?: boolean }) {
+    this.allRoles = allRoles
+    this.opts = opts
+  }
+
+  walk(role: RoleDoc): RoleDoc[] {
+    const opts = this.opts,
+      allRoles = this.allRoles
+    // this will be a full walked list of roles - which may contain duplicates
+    let roleList: RoleDoc[] = []
+    if (!role || !role._id) {
+      return roleList
+    }
+    roleList.push(role)
+    if (Array.isArray(role.inherits)) {
+      for (let roleId of role.inherits) {
+        const foundRole = findRole(roleId, allRoles, opts)
+        if (foundRole) {
+          roleList = roleList.concat(this.walk(foundRole))
+        }
+      }
+    } else {
+      const foundRoleIds: string[] = []
+      let currentRole: RoleDoc | undefined = role
+      while (
+        currentRole &&
+        currentRole.inherits &&
+        !rolesInList(foundRoleIds, currentRole.inherits)
+      ) {
+        if (Array.isArray(currentRole.inherits)) {
+          return roleList.concat(this.walk(currentRole))
+        } else {
+          foundRoleIds.push(currentRole.inherits)
+          currentRole = findRole(currentRole.inherits, allRoles, opts)
+          if (currentRole) {
+            roleList.push(currentRole)
+          }
+        }
+        // loop now found - stop iterating
+        if (helpers.roles.checkForRoleInheritanceLoops(roleList)) {
+          break
+        }
+      }
+    }
+    return uniqBy(roleList, role => role._id)
   }
 }
 
@@ -202,7 +261,7 @@ export async function roleToNumber(id: string) {
             return findNumber(foundRole) + 1
           }
         })
-        .filter(number => !!number)
+        .filter(number => number)
         .sort()
         .pop()
       if (highestBuiltin != undefined) {
@@ -213,12 +272,7 @@ export async function roleToNumber(id: string) {
     }
     return 0
   }
-  let highest = 0
-  for (let role of hierarchy) {
-    const roleNumber = findNumber(role)
-    highest = Math.max(roleNumber, highest)
-  }
-  return highest
+  return Math.max(...hierarchy.map(findNumber))
 }
 
 /**
@@ -236,9 +290,21 @@ export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
     : roleId1
 }
 
-function compareRoleIds(roleId1: string, roleId2: string) {
+export function compareRoleIds(roleId1: string, roleId2: string) {
   // make sure both role IDs are prefixed correctly
   return prefixRoleID(roleId1) === prefixRoleID(roleId2)
+}
+
+export function externalRole(role: RoleDoc): RoleDoc {
+  let _id: string | undefined
+  if (role._id) {
+    _id = getExternalRoleID(role._id)
+  }
+  return {
+    ...role,
+    _id,
+    inherits: getExternalRoleIDs(role.inherits, role.version),
+  }
 }
 
 /**
@@ -293,6 +359,18 @@ export async function getRole(
   return findRole(roleId, roleList, opts)
 }
 
+export async function saveRoles(roles: RoleDoc[]) {
+  const db = getAppDB()
+  await db.bulkDocs(
+    roles
+      .filter(role => role._id)
+      .map(role => ({
+        ...role,
+        _id: prefixRoleID(role._id!),
+      }))
+  )
+}
+
 /**
  * Simple function to get all the roles based on the top level user role ID.
  */
@@ -301,66 +379,19 @@ async function getAllUserRoles(
   opts?: { defaultPublic?: boolean }
 ): Promise<RoleDoc[]> {
   const allRoles = await getAllRoles()
-  if (helpers.roles.checkForRoleInheritanceLoops(allRoles)) {
-    throw new Error("Loop detected in roles - cannot list roles")
-  }
   // admins have access to all roles
   if (userRoleId === BUILTIN_IDS.ADMIN) {
     return allRoles
   }
-  const rolesFound = (ids: string | string[]) => {
-    if (Array.isArray(ids)) {
-      return ids.filter(id => roleIds.includes(id)).length === ids.length
-    } else {
-      return roleIds.includes(ids)
-    }
-  }
-
-  const roleIds = [userRoleId]
-  const roles: RoleDoc[] = []
-  const iterateInherited = (role: RoleDoc | undefined) => {
-    if (!role || !role._id) {
-      return
-    }
-    roleIds.push(role._id)
-    roles.push(role)
-    if (Array.isArray(role.inherits)) {
-      role.inherits.forEach(roleId => {
-        const foundRole = findRole(roleId, allRoles, opts)
-        if (foundRole) {
-          iterateInherited(foundRole)
-        }
-      })
-    } else {
-      while (role && role.inherits && !rolesFound(role.inherits)) {
-        if (Array.isArray(role.inherits)) {
-          iterateInherited(role)
-          break
-        } else {
-          roleIds.push(role.inherits)
-          role = findRole(role.inherits, allRoles, opts)
-          if (role) {
-            roles.push(role)
-          }
-        }
-      }
-    }
-  }
 
   // get all the inherited roles
   const foundRole = findRole(userRoleId, allRoles, opts)
+  let roles: RoleDoc[] = []
   if (foundRole) {
-    iterateInherited(foundRole)
+    const traversal = new RoleHierarchyTraversal(allRoles, opts)
+    roles = traversal.walk(foundRole)
   }
-  const foundRoleIds: string[] = []
-  return roles.filter(role => {
-    if (role._id && !foundRoleIds.includes(role._id)) {
-      foundRoleIds.push(role._id)
-      return true
-    } else {
-      return false
-    }
-  })
+  return roles
 }
 
 export async function getUserRoleIdHierarchy(
