@@ -3756,6 +3756,26 @@ describe.each([
               }),
               expected: [],
             },
+            {
+              name: "allOr",
+              insert: [{ string: "foo" }, { string: "bar" }],
+              query: simpleQuery(
+                {
+                  operator: BasicOperator.EQUAL,
+                  field: "string",
+                  value: "foo",
+                },
+                {
+                  operator: BasicOperator.EQUAL,
+                  field: "string",
+                  value: "bar",
+                },
+                {
+                  operator: "allOr",
+                }
+              ),
+              expected: [{ string: "foo" }, { string: "bar" }],
+            },
           ]
 
           it.only.each(testCases)(

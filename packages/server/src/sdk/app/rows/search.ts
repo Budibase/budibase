@@ -114,11 +114,12 @@ export async function search(
           ? view.query
           : []
 
+        const { filters } = dataFilters.splitFiltersArray(queryFilters)
+
         // Extract existing fields
-        const existingFields =
-          queryFilters
-            ?.filter(filter => filter.field)
-            .map(filter => db.removeKeyNumbering(filter.field)) || []
+        const existingFields = filters.map(filter =>
+          db.removeKeyNumbering(filter.field)
+        )
 
         // Carry over filters for unused fields
         Object.keys(options.query).forEach(key => {

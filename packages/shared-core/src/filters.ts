@@ -24,6 +24,7 @@ import {
   isBasicSearchOperator,
   isArraySearchOperator,
   isRangeSearchOperator,
+  SearchFilter,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -310,24 +311,17 @@ export class ColumnSplitter {
  * Builds a JSON query from the filter a SearchFilter definition
  * @param filter the builder filter structure
  */
-const buildCondition = (expression: LegacyFilter) => {
+
+function buildCondition(filter: undefined): undefined
+function buildCondition(filter: SearchFilter): SearchFilters
+function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
+  if (!filter) {
+    return
+  }
+
   const query: SearchFilters = {}
-  const { operator, field, type, externalType, onEmptyFilter } = expression
-  let { value } = expression
-
-  if (!operator || !field) {
-    return
-  }
-
-  if (operator === "allOr") {
-    query.allOr = true
-    return
-  }
-
-  if (onEmptyFilter) {
-    query.onEmptyFilter = onEmptyFilter
-    return
-  }
+  const { operator, field, type, externalType } = filter
+  let { value } = filter
 
   // Default the value for noValue fields to ensure they are correctly added
   // to the final query
@@ -432,16 +426,36 @@ const buildCondition = (expression: LegacyFilter) => {
   return query
 }
 
+export interface LegacyFilterSplit {
+  allOr?: boolean
+  onEmptyFilter?: EmptyFilterOption
+  filters: SearchFilter[]
+}
+
+export function splitFiltersArray(filters: LegacyFilter[]) {
+  const split: LegacyFilterSplit = {
+    filters: [],
+  }
+
+  for (const filter of filters) {
+    if ("operator" in filter && filter.operator === "allOr") {
+      split.allOr = true
+    } else if ("onEmptyFilter" in filter) {
+      split.onEmptyFilter = filter.onEmptyFilter
+    } else {
+      split.filters.push(filter)
+    }
+  }
+
+  return split
+}
+
 /**
  * Converts a **UISearchFilter** filter definition into a grouped
  * search query of type **SearchFilters**
  *
  * Legacy support remains for the old **SearchFilter[]** format.
  * These will be migrated to an appropriate **SearchFilters** object, if encountered
- *
- * @param filter
- *
- * @returns {SearchFilters}
  */
 export function buildQuery(filter: undefined): undefined
 export function buildQuery(
@@ -454,26 +468,33 @@ export function buildQuery(
     return
   }
 
-  let parsedFilter: UISearchFilter
   if (Array.isArray(filter)) {
-    parsedFilter = processSearchFilters(filter)
-  } else {
-    parsedFilter = filter
+    filter = processSearchFilters(filter)
   }
 
   const operator = logicalOperatorFromUI(
-    parsedFilter.logicalOperator || UILogicalOperator.ALL
+    filter.logicalOperator || UILogicalOperator.ALL
   )
-  const groups = parsedFilter.groups || []
-  const conditions: SearchFilters[] = groups.map(group => {
-    const filters = group.filters || []
-    return { [operator]: { conditions: filters.map(x => buildCondition(x)) } }
-  })
 
-  return {
-    onEmptyFilter: parsedFilter.onEmptyFilter,
-    [operator]: { conditions },
+  const query: SearchFilters = {}
+  if (filter.onEmptyFilter) {
+    query.onEmptyFilter = filter.onEmptyFilter
   }
+
+  query[operator] = {
+    conditions: (filter.groups || []).map(group => {
+      const { allOr, onEmptyFilter, filters } = splitFiltersArray(
+        group.filters || []
+      )
+      if (onEmptyFilter) {
+        query.onEmptyFilter = onEmptyFilter
+      }
+      const operator = allOr ? LogicalOperator.OR : LogicalOperator.AND
+      return { [operator]: { conditions: filters.map(buildCondition) } }
+    }),
+  }
+
+  return query
 }
 
 function logicalOperatorFromUI(operator: UILogicalOperator): LogicalOperator {
