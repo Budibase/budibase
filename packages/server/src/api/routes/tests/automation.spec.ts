@@ -9,9 +9,15 @@ import {
   TRIGGER_DEFINITIONS,
   BUILTIN_ACTION_DEFINITIONS,
 } from "../../../automations"
-import { events } from "@budibase/backend-core"
+import { configs, context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
-import { Automation, FieldType, Table } from "@budibase/types"
+import {
+  Automation,
+  ConfigType,
+  FieldType,
+  SettingsConfig,
+  Table,
+} from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { FilterConditions } from "../../../automations/steps/filter"
 import { removeDeprecated } from "../../../automations/utils"
@@ -39,8 +45,7 @@ describe("/automations", () => {
   })
 
   beforeEach(() => {
-    // @ts-ignore
-    events.automation.deleted.mockClear()
+    jest.clearAllMocks()
   })
 
   describe("get definitions", () => {
@@ -241,6 +246,59 @@ describe("/automations", () => {
         .expect(200)
       expect(res.body._id).toEqual(automation._id)
       expect(res.body._rev).toEqual(automation._rev)
+    })
+  })
+
+  describe("run", () => {
+    let oldConfig: SettingsConfig
+    beforeAll(async () => {
+      await context.doInTenant(config.getTenantId(), async () => {
+        oldConfig = await configs.getSettingsConfigDoc()
+
+        const settings: SettingsConfig = {
+          _id: oldConfig._id,
+          _rev: oldConfig._rev,
+          type: ConfigType.SETTINGS,
+          config: {
+            platformUrl: "https://example.com",
+            logoUrl: "https://example.com/logo.png",
+            company: "Test Company",
+          },
+        }
+        const saved = await configs.save(settings)
+        oldConfig._rev = saved.rev
+      })
+    })
+
+    afterAll(async () => {
+      await context.doInTenant(config.getTenantId(), async () => {
+        await configs.save(oldConfig)
+      })
+    })
+
+    it("should be able to access platformUrl, logoUrl and company in the automation", async () => {
+      const result = await createAutomationBuilder({
+        name: "Test Automation",
+        appId: config.getAppId(),
+        config,
+      })
+        .appAction({ fields: {} })
+        .serverLog({
+          text: "{{ settings.url }}",
+        })
+        .serverLog({
+          text: "{{ settings.logo }}",
+        })
+        .serverLog({
+          text: "{{ settings.company }}",
+        })
+        .run()
+
+      expect(result.steps[0].outputs.message).toEndWith("https://example.com")
+      expect(result.steps[1].outputs.message).toEndWith(
+        "https://example.com/logo.png"
+      )
+      expect(result.steps[2].outputs.message).toEndWith("Test Company")
     })
   })
 
