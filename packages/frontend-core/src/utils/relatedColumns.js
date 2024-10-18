@@ -24,9 +24,9 @@ const columnTypeManyParser = {
       return parsed
     }
 
-    return value?.map(v => parseDate(v))
+    return value.map(v => parseDate(v))
   },
-  [FieldType.BOOLEAN]: value => value?.map(v => !!v),
+  [FieldType.BOOLEAN]: value => value.map(v => !!v),
   [FieldType.BB_REFERENCE_SINGLE]: value => [
     ...new Map(value.map(i => [i._id, i])).values(),
   ],
@@ -80,14 +80,10 @@ export function getRelatedTableValues(row, field, fromField) {
     result = row[field.related.field]?.[0]?.[field.related.subField]
   } else {
     const parser = columnTypeManyParser[field.type] || (value => value)
-
-    result = parser(
-      row[field.related.field]
-        ?.flatMap(r => r[field.related.subField])
-        ?.filter(i => i !== undefined && i !== null),
-      field
-    )
-
+    const value = row[field.related.field]
+      ?.flatMap(r => r[field.related.subField])
+      ?.filter(i => i !== undefined && i !== null)
+    result = parser(value || [], field)
     if (
       [
         FieldType.STRING,

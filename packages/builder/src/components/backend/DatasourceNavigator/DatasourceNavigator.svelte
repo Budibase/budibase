@@ -39,9 +39,7 @@
 
   const selectTable = tableId => {
     tables.select(tableId)
-    if (!$isActive("./table/:tableId")) {
-      $goto(`./table/${tableId}`)
-    }
+    $goto(`./table/${tableId}`)
   }
 
   function openNode(datasource) {

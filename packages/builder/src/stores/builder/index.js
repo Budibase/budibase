@@ -29,6 +29,7 @@ import { integrations } from "./integrations"
 import { sortedIntegrations } from "./sortedIntegrations"
 import { queries } from "./queries"
 import { flags } from "./flags"
+import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
 
 export {
@@ -65,6 +66,7 @@ export {
   flags,
   hoverStore,
   snippets,
+  rowActions,
 }
 
 export const reset = () => {
@@ -74,6 +76,7 @@ export const reset = () => {
   componentStore.reset()
   layoutStore.reset()
   navigationStore.reset()
+  rowActions.reset()
 }
 
 const refreshBuilderData = async () => {

@@ -33,7 +33,7 @@
 
   const getSchemaFields = resourceId => {
     const { schema } = getSchemaForDatasourcePlus(resourceId)
-    return Object.values(schema || {})
+    return Object.values(schema || {}).filter(field => !field.readonly)
   }
 
   const onFieldsChanged = e => {

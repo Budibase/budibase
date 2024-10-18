@@ -19,6 +19,7 @@
     {disabled}
     on:change={onChange}
     on:click
+    on:click|stopPropagation
     {id}
     type="checkbox"
     class="spectrum-Switch-input"

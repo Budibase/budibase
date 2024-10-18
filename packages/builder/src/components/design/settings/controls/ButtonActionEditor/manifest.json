@@ -178,6 +178,11 @@
       "name": "Download File",
       "type": "data",
       "component": "DownloadFile"
+    },
+    {
+      "name": "Row Action",
+      "type": "data",
+      "component": "RowAction"
     }
   ]
 }

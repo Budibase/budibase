@@ -1,7 +1,7 @@
 <script>
   import "@spectrum-css/popover/dist/index-vars.css"
   import Portal from "svelte-portal"
-  import { createEventDispatcher, getContext } from "svelte"
+  import { createEventDispatcher, getContext, onDestroy } from "svelte"
   import positionDropdown from "../Actions/position_dropdown"
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
@@ -28,7 +28,24 @@
   export let resizable = true
   export let wrap = false
 
+  const animationDuration = 260
+
+  let timeout
+  let blockPointerEvents = false
+
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
+  $: {
+    // Disable pointer events for the initial part of the animation, because we
+    // fly from top to bottom and initially can be positioned under the cursor,
+    // causing a flashing hover state in the content
+    if (open && animate) {
+      blockPointerEvents = true
+      clearTimeout(timeout)
+      timeout = setTimeout(() => {
+        blockPointerEvents = false
+      }, animationDuration / 2)
+    }
+  }
 
   export const show = () => {
     dispatch("open")
@@ -77,6 +94,10 @@
       hide()
     }
   }
+
+  onDestroy(() => {
+    clearTimeout(timeout)
+  })
 </script>
 
 {#if open}
@@ -104,9 +125,13 @@
       class="spectrum-Popover is-open"
       class:customZindex
       class:hidden={!showPopover}
+      class:blockPointerEvents
       role="presentation"
       style="height: {customHeight}; --customZindex: {customZindex};"
-      transition:fly|local={{ y: -20, duration: animate ? 260 : 0 }}
+      transition:fly|local={{
+        y: -20,
+        duration: animate ? animationDuration : 0,
+      }}
       on:mouseenter
       on:mouseleave
     >
@@ -121,6 +146,12 @@
     border-color: var(--spectrum-global-color-gray-300);
     overflow: auto;
     transition: opacity 260ms ease-out;
+    filter: none;
+    -webkit-filter: none;
+    box-shadow: 0 1px 4px var(--drop-shadow);
+  }
+  .blockPointerEvents {
+    pointer-events: none;
   }
   .hidden {
     opacity: 0;
