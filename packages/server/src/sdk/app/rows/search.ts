@@ -5,6 +5,7 @@ import {
   Row,
   RowSearchParams,
   SearchFilterKey,
+  SearchFilters,
   SearchResponse,
   SortOrder,
   Table,
@@ -90,11 +91,16 @@ export async function search(
 
     if (options.viewId) {
       const view = source as ViewV2
+
       // Enrich saved query with ephemeral query params.
       // We prevent searching on any fields that are saved as part of the query, as
       // that could let users find rows they should not be allowed to access.
-      let viewQuery = await enrichSearchContext(view.query || {}, context)
-      viewQuery = dataFilters.buildQueryLegacy(viewQuery) || {}
+      let viewQuery = (await enrichSearchContext(view.query || {}, context)) as
+        | SearchFilters
+        | LegacyFilter[]
+      if (Array.isArray(viewQuery)) {
+        viewQuery = dataFilters.buildQuery(viewQuery)
+      }
       viewQuery = checkFilters(table, viewQuery)
 
       const sqsEnabled = await features.flags.isEnabled("SQS")
