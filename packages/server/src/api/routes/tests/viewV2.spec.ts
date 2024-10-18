@@ -3712,7 +3712,7 @@ describe.each([
             query: UISearchFilter
             insert: Row[]
             expected: Row[]
-            searchOpts?: SearchViewRowRequest
+            searchOpts?: Partial<SearchViewRowRequest>
           }
 
           function simpleQuery(...filters: LegacyFilter[]): UISearchFilter {
@@ -3758,7 +3758,7 @@ describe.each([
             },
             {
               name: "allOr",
-              insert: [{ string: "foo" }, { string: "bar" }],
+              insert: [{ string: "bar" }, { string: "foo" }],
               query: simpleQuery(
                 {
                   operator: BasicOperator.EQUAL,
@@ -3774,7 +3774,11 @@ describe.each([
                   operator: "allOr",
                 }
               ),
-              expected: [{ string: "foo" }, { string: "bar" }],
+              searchOpts: {
+                sort: "string",
+                sortOrder: SortOrder.ASCENDING,
+              },
+              expected: [{ string: "bar" }, { string: "foo" }],
             },
           ]
 
@@ -3792,10 +3796,10 @@ describe.each([
                 },
               })
 
-              const { rows } = await config.api.viewV2.search(
-                view.id,
-                searchOpts
-              )
+              const { rows } = await config.api.viewV2.search(view.id, {
+                query: {},
+                ...searchOpts,
+              })
               expect(rows).toEqual(
                 expected.map(r => expect.objectContaining(r))
               )
