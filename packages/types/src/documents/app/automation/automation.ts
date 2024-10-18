@@ -261,6 +261,7 @@ export type UpdatedRowEventEmitter = {
   oldRow: Row
   table: Table
   appId: string
+  user: User
 }
 
 export enum LoopStepType {

@@ -1,6 +1,6 @@
 import { EventEmitter } from "events"
 import { rowEmission, tableEmission } from "./utils"
-import { Table, Row } from "@budibase/types"
+import { Table, Row, User } from "@budibase/types"
 
 /**
  * keeping event emitter in one central location as it might be used for things other than
@@ -18,9 +18,10 @@ class BudibaseEmitter extends EventEmitter {
     appId: string,
     row: Row,
     table?: Table,
-    oldRow?: Row
+    oldRow?: Row,
+    user?: User
   ) {
-    rowEmission({ emitter: this, eventName, appId, row, table, oldRow })
+    rowEmission({ emitter: this, eventName, appId, row, table, oldRow, user })
   }
 
   emitTable(eventName: string, appId: string, table?: Table) {

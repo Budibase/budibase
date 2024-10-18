@@ -783,6 +783,7 @@ describe("/rowsActions", () => {
                 ...(await config.api.table.get(tableId)),
                 views: expect.anything(),
               },
+              user: expect.anything(),
               automation: expect.objectContaining({
                 _id: rowAction.automationId,
               }),

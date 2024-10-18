@@ -4,6 +4,7 @@ import {
   AutomationTriggerStepId,
   SEPARATOR,
   TableRowActions,
+  User,
   VirtualDocumentType,
 } from "@budibase/types"
 import { generateRowActionsID } from "../../db/utils"
@@ -236,7 +237,12 @@ export async function remove(tableId: string, rowActionId: string) {
   })
 }
 
-export async function run(tableId: any, rowActionId: any, rowId: string) {
+export async function run(
+  tableId: any,
+  rowActionId: any,
+  rowId: string,
+  user: User
+) {
   const table = await sdk.tables.getTable(tableId)
   if (!table) {
     throw new HTTPError("Table not found", 404)
@@ -258,6 +264,7 @@ export async function run(tableId: any, rowActionId: any, rowId: string) {
         row,
         table,
       },
+      user,
       appId: context.getAppId(),
     },
     { getResponses: true }

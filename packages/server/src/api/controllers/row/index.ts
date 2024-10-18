@@ -65,7 +65,14 @@ export async function patch(
     }
     ctx.status = 200
     ctx.eventEmitter &&
-      ctx.eventEmitter.emitRow(`row:update`, appId, row, table, oldRow)
+      ctx.eventEmitter.emitRow(
+        `row:update`,
+        appId,
+        row,
+        table,
+        oldRow,
+        ctx.user
+      )
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
@@ -96,7 +103,8 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
         sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
       )
   ctx.status = 200
-  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emitRow(`row:save`, appId, row, table, null, ctx.user)
   ctx.message = `${table.name} saved successfully`
   // prefer squashed for response
   ctx.body = row || squashed
@@ -168,7 +176,8 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   }
 
   for (let row of rows) {
-    ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
+    ctx.eventEmitter &&
+      ctx.eventEmitter.emitRow(`row:delete`, appId, row, null, null, ctx.user)
     gridSocket?.emitRowDeletion(ctx, row)
   }
 
@@ -184,7 +193,15 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
     await quotas.removeRow()
   }
 
-  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emitRow(
+      `row:delete`,
+      appId,
+      resp.row,
+      null,
+      null,
+      ctx.user
+    )
   gridSocket?.emitRowDeletion(ctx, resp.row)
 
   return resp
