@@ -19,6 +19,7 @@
     AutomationEventType.ROW_DELETE,
     AutomationEventType.ROW_UPDATE,
     AutomationEventType.ROW_SAVE,
+    AutomationEventType.ROW_ACTION,
   ]
 
   /**
