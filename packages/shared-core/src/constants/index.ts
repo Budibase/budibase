@@ -97,6 +97,7 @@ export enum BuilderSocketEvent {
   SelectResource = "SelectResource",
   AppPublishChange = "AppPublishChange",
   AutomationChange = "AutomationChange",
+  RoleChange = "RoleChange",
 }
 
 export const SocketSessionTTL = 60

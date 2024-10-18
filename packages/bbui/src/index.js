@@ -21,6 +21,7 @@ export { default as EnvDropdown } from "./Form/EnvDropdown.svelte"
 export { default as Multiselect } from "./Form/Multiselect.svelte"
 export { default as Search } from "./Form/Search.svelte"
 export { default as RichTextField } from "./Form/RichTextField.svelte"
+export { default as FieldLabel } from "./Form/FieldLabel.svelte"
 export { default as Slider } from "./Form/Slider.svelte"
 export { default as File } from "./Form/File.svelte"
 

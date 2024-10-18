@@ -76,6 +76,13 @@
       selectedBy={$userSelectedResourceMap[TableNames.USERS]}
     />
   {/if}
+  <NavItem
+    icon="UserAdmin"
+    text="Manage roles"
+    selected={$isActive("./roles")}
+    on:click={() => $goto("./roles")}
+    selectedBy={$userSelectedResourceMap.roles}
+  />
   {#each enrichedDataSources.filter(ds => ds.show) as datasource}
     <DatasourceNavItem
       {datasource}

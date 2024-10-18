@@ -4,9 +4,11 @@
   export let title
   export let body
   export let icon = "HelpOutline"
+  export let warning = false
+  export let error = false
 </script>
 
-<div class="info" class:noTitle={!title}>
+<div class="info" class:noTitle={!title} class:warning class:error>
   {#if title}
     <div class="title">
       <Icon name={icon} />
@@ -16,7 +18,7 @@
     {@html body}
   {:else}
     <span class="icon">
-      <Icon name={icon} />
+      <Icon size="S" name={icon} />
     </span>
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     {@html body}
@@ -24,6 +26,23 @@
 </div>
 
 <style>
+  .info {
+    padding: var(--spacing-m) var(--spacing-l);
+    background-color: var(--spectrum-global-color-gray-200);
+    border-radius: var(--border-radius-s);
+    font-size: 13px;
+  }
+  .warning {
+    background: rgba(255, 200, 0, 0.2);
+  }
+  .error {
+    background: rgba(255, 0, 0, 0.2);
+  }
+  .noTitle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
   .title {
     font-size: 12px;
     font-weight: 600;
@@ -39,17 +58,7 @@
   .icon {
     color: var(--spectrum-global-color-gray-600);
   }
-  .info {
-    padding: var(--spacing-m) var(--spacing-l) var(--spacing-l) var(--spacing-l);
-    background-color: var(--background-alt);
-    border-radius: var(--border-radius-s);
-    font-size: 13px;
-  }
-  .noTitle {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-m);
-  }
+
   .info :global(a) {
     color: inherit;
     transition: color 130ms ease-out;

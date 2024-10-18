@@ -228,7 +228,7 @@
   .top-nav {
     flex: 0 0 60px;
     background: var(--background);
-    padding-left: var(--spacing-xl);
+    padding: 0 var(--spacing-xl);
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     flex-direction: row;
@@ -269,6 +269,7 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
+    margin-right: calc(-1 * var(--spacing-xl));
   }
 
   .toprightnav :global(.avatars) {
