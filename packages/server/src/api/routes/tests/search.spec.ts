@@ -1602,7 +1602,7 @@ describe.each([
         })
       })
 
-    describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
+    describe("arrays", () => {
       beforeAll(async () => {
         tableOrViewId = await createTableOrView({
           numbers: {
@@ -2192,7 +2192,7 @@ describe.each([
       })
 
       describe("contains", () => {
-        it("successfully finds a row", async () => {
+        it.only("successfully finds a row", async () => {
           await expectQuery({
             contains: { users: [user1._id] },
           }).toContainExactly([

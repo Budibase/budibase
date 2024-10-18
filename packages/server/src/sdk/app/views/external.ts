@@ -5,6 +5,7 @@ import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 import { enrichSchema, isV2 } from "."
 import { breakExternalTableId } from "../../../integrations/utils"
+import { ensureQuerySet, ensureQueryUISet } from "./utils"
 
 export async function get(viewId: string): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
@@ -18,6 +19,7 @@ export async function get(viewId: string): Promise<ViewV2> {
   if (!found) {
     throw new Error("No view found")
   }
+  ensureQueryUISet(found)
   return found
 }
 
@@ -33,6 +35,7 @@ export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
   if (!found) {
     throw new Error("No view found")
   }
+  ensureQueryUISet(found)
   return await enrichSchema(found, table.schema)
 }
 
@@ -45,6 +48,8 @@ export async function create(
     id: utils.generateViewID(tableId),
     version: 2,
   }
+
+  ensureQuerySet(view)
 
   const db = context.getAppDB()
 
@@ -73,6 +78,8 @@ export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
   if (isV2(existingView) && existingView.type !== view.type) {
     throw new HTTPError(`Cannot update view type after creation`, 400)
   }
+
+  ensureQuerySet(view)
 
   delete views[existingView.name]
   views[view.name] = view
