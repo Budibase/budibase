@@ -26,6 +26,7 @@ import {
   Hosting,
   ActionImplementation,
   AutomationStepDefinition,
+  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
@@ -100,7 +101,7 @@ if (env.SELF_HOSTED) {
 }
 
 export async function getActionDefinitions() {
-  if (await features.flags.isEnabled("AUTOMATION_BRANCHING")) {
+  if (await features.flags.isEnabled(FeatureFlag.AUTOMATION_BRANCHING)) {
     BUILTIN_ACTION_DEFINITIONS["BRANCH"] = branch.definition
   }
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS

@@ -19,6 +19,7 @@ import {
   Table,
   User,
   ViewV2,
+  FeatureFlag,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -417,7 +418,7 @@ export async function coreOutputProcessing(
 
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
-  if (isExternal || (await features.flags.isEnabled("SQS"))) {
+  if (isExternal || (await features.flags.isEnabled(FeatureFlag.SQS))) {
     for (const row of rows) {
       for (const key of Object.keys(row)) {
         if (row[key] === null) {

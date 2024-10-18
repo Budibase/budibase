@@ -10,6 +10,7 @@ import {
   DatabaseQueryOpts,
   DBError,
   Document,
+  FeatureFlag,
   isDocument,
   RowResponse,
   RowValue,
@@ -456,7 +457,7 @@ export class DatabaseImpl implements Database {
 
   async destroy() {
     if (
-      (await flags.isEnabled("SQS")) &&
+      (await flags.isEnabled(FeatureFlag.SQS)) &&
       (await this.exists(SQLITE_DESIGN_DOC_ID))
     ) {
       // delete the design document, then run the cleanup operation
