@@ -126,40 +126,13 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <ModalContent
   title="Add automation step"
-  size="L"
+  size="XL"
   showConfirmButton={false}
   showCancelButton={false}
   disabled={!selectedAction}
 >
   <Layout noPadding gap="XS">
-    <Detail size="S">Apps</Detail>
-    <div class="item-list">
-      {#each Object.entries(external) as [idx, action]}
-        <div
-          class="item"
-          class:selected={selectedAction === action.name}
-          on:click={() => selectAction(action)}
-        >
-          <div class="item-body">
-            <img
-              width={20}
-              height={20}
-              src={externalActions[action.stepId].icon}
-              alt={externalActions[action.stepId].name}
-            />
-            <span class="icon-spacing">
-              <Body size="XS">
-                {action.stepTitle || idx.charAt(0).toUpperCase() + idx.slice(1)}
-              </Body>
-            </span>
-          </div>
-        </div>
-      {/each}
-    </div>
-  </Layout>
-
-  <Layout noPadding gap="XS">
-    <Detail size="S">Actions</Detail>
+    <Detail size="L">Actions</Detail>
     <div class="item-list">
       {#each Object.entries(internal) as [idx, action]}
         {@const isDisabled = disabled()[idx] && disabled()[idx].disabled}
@@ -170,8 +143,12 @@
           on:click={isDisabled ? null : () => selectAction(action)}
         >
           <div class="item-body">
-            <Icon name={action.icon} />
-            <Body size="XS">{action.name}</Body>
+            <div class="icon-background">
+              <Icon size="M" name={action.icon} />
+            </div>
+            <p>
+              {action.name}
+            </p>
             {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
               <div class="tag-color">
                 <Tags>
@@ -189,7 +166,7 @@
 
   {#if Object.keys(plugins).length}
     <Layout noPadding gap="XS">
-      <Detail size="S">Plugins</Detail>
+      <Detail size="L">Plugins</Detail>
       <div class="item-list">
         {#each Object.entries(plugins) as [_, action]}
           <div
@@ -198,14 +175,42 @@
             on:click={() => selectAction(action)}
           >
             <div class="item-body">
-              <Icon name={action.icon} />
-              <Body size="XS">{action.name}</Body>
+              <div class="icon-background">
+                <Icon size="M" name={action.icon} />
+              </div>
+              <p>
+                {action.name}
+              </p>
             </div>
           </div>
         {/each}
       </div>
     </Layout>
   {/if}
+  <Layout noPadding gap="XS">
+    <Detail size="L">Apps</Detail>
+    <div class="item-list">
+      {#each Object.entries(external) as [idx, action]}
+        <div
+          class="item"
+          class:selected={selectedAction === action.name}
+          on:click={() => selectAction(action)}
+        >
+          <div class="item-body">
+            <img
+              width={24}
+              height={24}
+              src={externalActions[action.stepId].icon}
+              alt={externalActions[action.stepId].name}
+            />
+            <p>
+              {action.stepTitle || idx.charAt(0).toUpperCase() + idx.slice(1)}
+            </p>
+          </div>
+        </div>
+      {/each}
+    </div>
+  </Layout>
 </ModalContent>
 
 <style>
@@ -217,8 +222,8 @@
   }
   .item-list {
     display: grid;
-    grid-template-columns: repeat(2, minmax(150px, 1fr));
-    grid-gap: var(--spectrum-alias-grid-baseline);
+    grid-template-columns: repeat(3, minmax(200px, 1fr));
+    grid-gap: 10px;
   }
 
   .item {
@@ -227,18 +232,24 @@
     padding: var(--spectrum-alias-item-padding-s);
     background: var(--spectrum-alias-background-color-secondary);
     transition: 0.3s all;
-    border: solid var(--spectrum-alias-border-color);
-    border-radius: 5px;
+    border: solid var(--spectrum-global-color-gray-200);
+    border-radius: 6px;
     box-sizing: border-box;
-    border-width: 2px;
+    border-width: 1px;
   }
+  .item p {
+    font-size: 16px !important;
+    margin: 0;
+    color: var(--spectrum-global-color-gray-900);
+  }
+
   .item:not(.disabled):hover,
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);
   }
   .disabled {
     background: var(--spectrum-global-color-gray-200);
-    color: var(--spectrum-global-color-gray-500);
+    opacity: 0.5;
   }
   .disabled :global(.spectrum-Body) {
     color: var(--spectrum-global-color-gray-600);
@@ -246,5 +257,22 @@
 
   .tag-color :global(.spectrum-Tags-item) {
     background: var(--spectrum-global-color-gray-200);
+  }
+  .icon-background {
+    background-color: var(--spectrum-global-color-indigo-400);
+    padding: 0;
+    border-radius: 6px;
+    min-height: 28px;
+    min-width: 28px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
+  div:has(svg) {
+    color: var(--spectrum-global-color-gray-900);
+  }
+  img {
+    border-radius: 6px;
+    padding: 2px;
   }
 </style>
