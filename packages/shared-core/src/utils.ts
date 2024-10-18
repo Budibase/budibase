@@ -6,15 +6,22 @@ import {
   BasicOperator,
   ArrayOperator,
   isLogicalSearchOperator,
-  EmptyFilterOption,
-  SearchFilterGroup,
+  SearchFilter,
 } from "@budibase/types"
 import * as Constants from "./constants"
-import { removeKeyNumbering } from "./filters"
+import { removeKeyNumbering, splitFiltersArray } from "./filters"
+import _ from "lodash"
 
-// an array of keys from filter type to properties that are in the type
-// this can then be converted using .fromEntries to an object
-type AllowedFilters = [keyof LegacyFilter, LegacyFilter[keyof LegacyFilter]][]
+const FILTER_ALLOWED_KEYS = [
+  "field",
+  "operator",
+  "value",
+  "type",
+  "externalType",
+  "valueType",
+  "noValue",
+  "formulaType",
+]
 
 export function unreachable(
   value: never,
@@ -130,88 +137,20 @@ export function isSupportedUserSearch(query: SearchFilters) {
   return true
 }
 
-/**
- * Processes the filter config. Filters are migrated from
- * SearchFilter[] to UISearchFilter
- *
- * If filters is not an array, the migration is skipped
- *
- * @param {LegacyFilter[] | UISearchFilter} filters
- */
 export const processSearchFilters = (
-  filters: LegacyFilter[]
+  filterArray: LegacyFilter[]
 ): UISearchFilter => {
-  // Base search config.
-  const defaultCfg: UISearchFilter = {
-    logicalOperator: UILogicalOperator.ALL,
-    onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-    groups: [],
-  }
-
-  const filterAllowedKeys = [
-    "field",
-    "operator",
-    "value",
-    "type",
-    "externalType",
-    "valueType",
-    "noValue",
-    "formulaType",
-  ]
-
-  let baseGroup: SearchFilterGroup = {
-    logicalOperator: UILogicalOperator.ALL,
-  }
-
-  return filters.reduce((acc: UISearchFilter, filter: LegacyFilter) => {
-    // Sort the properties for easier debugging
-    const filterPropertyKeys = (Object.keys(filter) as (keyof LegacyFilter)[])
-      .sort((a, b) => {
-        return a.localeCompare(b)
-      })
-      .filter(key => filter[key])
-
-    if (filterPropertyKeys.length == 1) {
-      const key = filterPropertyKeys[0],
-        value = filter[key]
-      // Global
-      if (key === "onEmptyFilter") {
-        // unset otherwise
-        acc.onEmptyFilter = value
-      } else if (key === "operator" && value === "allOr") {
-        // Group 1 logical operator
-        baseGroup.logicalOperator = UILogicalOperator.ANY
-      }
-
-      return acc
-    }
-
-    const allowedFilterSettings: AllowedFilters = filterPropertyKeys.reduce(
-      (acc: AllowedFilters, key) => {
-        const value = filter[key]
-        if (filterAllowedKeys.includes(key)) {
-          if (key === "field") {
-            acc.push([key, removeKeyNumbering(value)])
-          } else {
-            acc.push([key, value])
-          }
-        }
-        return acc
+  const { allOr, onEmptyFilter, filters } = splitFiltersArray(filterArray)
+  return {
+    onEmptyFilter,
+    groups: [
+      {
+        logicalOperator: allOr ? UILogicalOperator.ANY : UILogicalOperator.ALL,
+        filters: filters.map(filter => {
+          filter.field = removeKeyNumbering(filter.field)
+          return _.pick(filter, FILTER_ALLOWED_KEYS) as SearchFilter
+        }),
       },
-      []
-    )
-
-    const migratedFilter: LegacyFilter = Object.fromEntries(
-      allowedFilterSettings
-    ) as LegacyFilter
-
-    baseGroup.filters!.push(migratedFilter)
-
-    if (!acc.groups || !acc.groups.length) {
-      // init the base group
-      acc.groups = [baseGroup]
-    }
-
-    return acc
-  }, defaultCfg)
+    ],
+  }
 }

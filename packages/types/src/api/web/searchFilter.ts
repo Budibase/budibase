@@ -1,16 +1,40 @@
 import { FieldType } from "../../documents"
-import { EmptyFilterOption, UILogicalOperator, SearchFilters } from "../../sdk"
+import {
+  EmptyFilterOption,
+  UILogicalOperator,
+  BasicOperator,
+  RangeOperator,
+  ArrayOperator,
+} from "../../sdk"
+
+type AllOr = {
+  operator: "allOr"
+}
+
+type OnEmptyFilter = {
+  onEmptyFilter: EmptyFilterOption
+}
+
+// TODO(samwho): this could be broken down further
+export type SearchFilter = {
+  operator:
+    | BasicOperator
+    | RangeOperator
+    | ArrayOperator
+    | "rangeLow"
+    | "rangeHigh"
+  // Field name will often have a numerical prefix when coming from the frontend,
+  // use the ColumnSplitter class to remove it.
+  field: string
+  value: any
+  type?: FieldType
+  externalType?: string
+  noValue?: boolean
+}
 
 // Prior to v2, this is the type the frontend sent us when filters were
 // involved. We convert this to a SearchFilters before use with the search SDK.
-export type LegacyFilter = {
-  operator: keyof SearchFilters | "rangeLow" | "rangeHigh"
-  onEmptyFilter?: EmptyFilterOption
-  field: string
-  type?: FieldType
-  value: any
-  externalType?: string
-}
+export type LegacyFilter = AllOr | OnEmptyFilter | SearchFilter
 
 export type SearchFilterGroup = {
   logicalOperator?: UILogicalOperator
