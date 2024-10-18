@@ -605,6 +605,7 @@ export function fullSchemaWithoutLinks({
 }): {
   [type in Exclude<FieldType, FieldType.LINK>]: FieldSchema & { type: type }
 } {
+  // @ts-ignore - until AI implemented
   return {
     [FieldType.STRING]: {
       name: "string",
