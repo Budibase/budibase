@@ -3,6 +3,7 @@
   // because it functions similarly to one
   import { getContext, onMount } from "svelte"
   import { get, derived, readable } from "svelte/store"
+  import { featuresStore } from "stores"
   import { Grid } from "@budibase/frontend-core"
 
   // table is actually any datasource, but called table for legacy compatibility
@@ -186,6 +187,7 @@
     {buttonsCollapsed}
     {buttonsCollapsedText}
     isCloud={$environmentStore.cloud}
+    aiEnabled={$featuresStore.aiEnabled}
     on:rowclick={e => onRowClick?.({ row: e.detail })}
   />
 </div>
