@@ -9,7 +9,7 @@ on:
   # but only for the master branch
   push:
     branches:
-      - v3-ui
+      - master
   pull_request:
   workflow_dispatch:
   workflow_call:
