@@ -18,6 +18,7 @@ import {
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  AIOperationEnum,
   AttachmentFieldMetadata,
   AutoFieldSubType,
   Datasource,
@@ -49,6 +50,18 @@ import { Knex } from "knex"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
 import { JsTimeoutError } from "@budibase/string-templates"
+
+jest.mock("@budibase/pro", () => ({
+  ...jest.requireActual("@budibase/pro"),
+  ai: {
+    LargeLanguageModel: {
+      forCurrentTenant: async () => ({
+        run: jest.fn(() => `Mock LLM Response`),
+        buildPromptFromAIOperation: jest.fn(),
+      }),
+    },
+  },
+}))
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -786,6 +799,39 @@ describe.each([
             user: id,
           })
           expect(row.user._id).toEqual(id)
+        })
+      })
+
+      describe("multi-user column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                users: {
+                  name: "users",
+                  type: FieldType.BB_REFERENCE,
+                  subtype: BBReferenceFieldSubType.USER,
+                  default: ["{{ [Current User]._id }}"],
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.users).toHaveLength(1)
+          expect(row.users[0]._id).toEqual(config.getUser()._id)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const id = `us_${utils.newid()}`
+          await config.createUser({ _id: id })
+          const row = await config.api.row.save(table._id!, {
+            users: [id],
+          })
+          expect(row.users).toHaveLength(1)
+          expect(row.users[0]._id).toEqual(id)
         })
       })
 
@@ -2053,6 +2099,7 @@ describe.each([
           [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
           [FieldType.FORMULA]: undefined, // generated field
           [FieldType.AUTO]: undefined, // generated field
+          [FieldType.AI]: undefined, // generated field
           [FieldType.JSON]: { name: generator.guid() },
           [FieldType.INTERNAL]: generator.guid(),
           [FieldType.BARCODEQR]: generator.guid(),
@@ -2156,6 +2203,7 @@ describe.each([
               expectedRowData["bb_reference_single"].sample,
               false
             ),
+            ai: null,
           },
         ])
       })
@@ -2940,6 +2988,57 @@ describe.each([
           )
         }
       )
+    })
+
+  isSqs &&
+    describe("AI fields", () => {
+      let table: Table
+
+      beforeAll(async () => {
+        mocks.licenses.useBudibaseAI()
+        mocks.licenses.useAICustomConfigs()
+        table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              ai: {
+                name: "ai",
+                type: FieldType.AI,
+                operation: AIOperationEnum.PROMPT,
+                prompt: "Convert the following to German: '{{ product }}'",
+              },
+              product: {
+                name: "product",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        await config.api.row.save(table._id!, {
+          product: generator.word(),
+        })
+      })
+
+      afterAll(() => {
+        jest.unmock("@budibase/pro")
+      })
+
+      it("should be able to save a row with an AI column", async () => {
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows.length).toBe(1)
+        expect(rows[0].ai).toEqual("Mock LLM Response")
+      })
+
+      it("should be able to update a row with an AI column", async () => {
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows.length).toBe(1)
+        await config.api.row.save(table._id!, {
+          product: generator.word(),
+          ...rows[0],
+        })
+        expect(rows.length).toBe(1)
+        expect(rows[0].ai).toEqual("Mock LLM Response")
+      })
     })
 
   describe("Formula fields", () => {

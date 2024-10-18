@@ -157,7 +157,8 @@ function isEditableColumn(column: FieldSchema) {
     column.autoReason !== AutoReason.FOREIGN_KEY &&
     column.subtype !== AutoFieldSubType.AUTO_ID
   const isFormula = column.type === FieldType.FORMULA
-  return !(isExternalAutoColumn || isFormula)
+  const isAIColumn = column.type === FieldType.AI
+  return !(isExternalAutoColumn || isFormula || isAIColumn)
 }
 
 export class ExternalRequest<T extends Operation> {
@@ -173,9 +174,9 @@ export class ExternalRequest<T extends Operation> {
     if (!opts.datasource) {
       if (sdk.views.isView(source)) {
         const table = await sdk.views.getTable(source.id)
-        opts.datasource = await sdk.datasources.get(table.sourceId!)
+        opts.datasource = await sdk.datasources.get(table.sourceId)
       } else {
-        opts.datasource = await sdk.datasources.get(source.sourceId!)
+        opts.datasource = await sdk.datasources.get(source.sourceId)
       }
     }
 
@@ -204,18 +205,6 @@ export class ExternalRequest<T extends Operation> {
     filters: SearchFilters,
     table: Table
   ): SearchFilters {
-    // replace any relationship columns initially, table names and relationship column names are acceptable
-    const relationshipColumns = sdk.rows.filters.getRelationshipColumns(table)
-    filters = sdk.rows.filters.updateFilterKeys(
-      filters,
-      relationshipColumns.map(({ name, definition }) => {
-        const { tableName } = breakExternalTableId(definition.tableId)
-        return {
-          original: name,
-          updated: tableName,
-        }
-      })
-    )
     const primary = table.primary
     // if passed in array need to copy for shifting etc
     let idCopy: undefined | string | any[] = cloneDeep(id)
