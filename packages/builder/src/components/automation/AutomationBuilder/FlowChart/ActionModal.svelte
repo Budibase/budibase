@@ -259,7 +259,7 @@
     background: var(--spectrum-global-color-gray-200);
   }
   .icon-background {
-    background-color: var(--spectrum-global-color-indigo-400);
+    background-color: var(--spectrum-global-color-indigo-500);
     padding: 0;
     border-radius: 6px;
     min-height: 28px;

@@ -13,7 +13,7 @@
   style={`--comp-width: ${componentWidth}px;`}
 >
   <div class="prop-label" title={label}>
-    <Label tooltip={labelTooltip}>{label}</Label>
+    <Label size="L" tooltip={labelTooltip}>{label}</Label>
   </div>
   <div class="prop-control">
     <slot />

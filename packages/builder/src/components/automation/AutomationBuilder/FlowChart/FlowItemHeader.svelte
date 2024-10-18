@@ -115,20 +115,34 @@
       {#if externalActions[block.stepId]}
         <img
           alt={externalActions[block.stepId].name}
-          width="28px"
-          height="28px"
+          width="32px"
+          height="32px"
           src={externalActions[block.stepId].icon}
         />
+      {:else if isHeaderTrigger}
+        <div class="icon-background-trigger">
+          <svg
+            width="24px"
+            height="24px"
+            class="spectrum-Icon"
+            style="color:var(--spectrum-global-color-gray-900);"
+            focusable="false"
+          >
+            <use xlink:href="#spectrum-icon-18-{block.icon}" />
+          </svg>
+        </div>
       {:else}
-        <svg
-          width="28px"
-          height="28px"
-          class="spectrum-Icon"
-          style="color:var(--spectrum-global-color-gray-700);"
-          focusable="false"
-        >
-          <use xlink:href="#spectrum-icon-18-{block.icon}" />
-        </svg>
+        <div class="icon-background">
+          <svg
+            width="24px"
+            height="24px"
+            class="spectrum-Icon"
+            style="color:var(--spectrum-global-color-gray-900);"
+            focusable="false"
+          >
+            <use xlink:href="#spectrum-icon-18-{block.icon}" />
+          </svg>
+        </div>
       {/if}
       <div class="iconAlign">
         {#if isHeaderTrigger}
@@ -257,6 +271,27 @@
     display: flex;
     align-items: center;
   }
+  .icon-background-trigger {
+    background-color: var(--spectrum-global-color-static-orange-400);
+    padding: 0;
+    border-radius: 7px;
+    min-height: 32px;
+    min-width: 32px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .icon-background {
+    background-color: var(--spectrum-global-color-indigo-500);
+    padding: 0;
+    border-radius: 7px;
+    min-height: 32px;
+    min-width: 32px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
+
   .splitHeader {
     display: flex;
     justify-content: space-between;
