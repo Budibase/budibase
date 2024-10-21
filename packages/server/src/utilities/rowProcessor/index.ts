@@ -3,7 +3,6 @@ import { fixAutoColumnSubType, processFormulas } from "./utils"
 import {
   cache,
   context,
-  features,
   HTTPError,
   objectStore,
   utils,
@@ -19,7 +18,6 @@ import {
   Table,
   User,
   ViewV2,
-  FeatureFlag,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -417,44 +415,42 @@ export async function coreOutputProcessing(
   rows = await processFormulas(table, rows, { dynamic: true })
 
   // remove null properties to match internal API
-  const isExternal = isExternalTableID(table._id!)
-  if (isExternal || (await features.flags.isEnabled(FeatureFlag.SQS))) {
-    for (const row of rows) {
-      for (const key of Object.keys(row)) {
-        if (row[key] === null) {
-          delete row[key]
-        } else if (row[key] && table.schema[key]?.type === FieldType.LINK) {
-          for (const link of row[key] || []) {
-            for (const linkKey of Object.keys(link)) {
-              if (link[linkKey] === null) {
-                delete link[linkKey]
-              }
+  for (const row of rows) {
+    for (const key of Object.keys(row)) {
+      if (row[key] === null) {
+        delete row[key]
+      } else if (row[key] && table.schema[key]?.type === FieldType.LINK) {
+        for (const link of row[key] || []) {
+          for (const linkKey of Object.keys(link)) {
+            if (link[linkKey] === null) {
+              delete link[linkKey]
             }
-          }
-        }
-      }
-    }
-
-    if (sdk.views.isView(source)) {
-      const calculationFields = Object.keys(
-        helpers.views.calculationFields(source)
-      )
-
-      // We ensure all calculation fields are returned as numbers.  During the
-      // testing of this feature it was discovered that the COUNT operation
-      // returns a string for MySQL, MariaDB, and Postgres. But given that all
-      // calculation fields should be numbers, we blanket make sure of that
-      // here.
-      for (const key of calculationFields) {
-        for (const row of rows) {
-          if (typeof row[key] === "string") {
-            row[key] = parseFloat(row[key])
           }
         }
       }
     }
   }
 
+  if (sdk.views.isView(source)) {
+    const calculationFields = Object.keys(
+      helpers.views.calculationFields(source)
+    )
+
+    // We ensure all calculation fields are returned as numbers.  During the
+    // testing of this feature it was discovered that the COUNT operation
+    // returns a string for MySQL, MariaDB, and Postgres. But given that all
+    // calculation fields should be numbers, we blanket make sure of that
+    // here.
+    for (const key of calculationFields) {
+      for (const row of rows) {
+        if (typeof row[key] === "string") {
+          row[key] = parseFloat(row[key])
+        }
+      }
+    }
+  }
+
+  const isExternal = isExternalTableID(table._id!)
   if (!isUserMetadataTable(table._id!)) {
     const protectedColumns = isExternal
       ? PROTECTED_EXTERNAL_COLUMNS
