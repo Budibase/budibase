@@ -169,12 +169,9 @@ export async function search(
     if (isExternalTable) {
       span?.addTags({ searchType: "external" })
       result = await external.search(options, source)
-    } else if (await features.flags.isEnabled(FeatureFlag.SQS)) {
+    } else {
       span?.addTags({ searchType: "sqs" })
       result = await internal.sqs.search(options, source)
-    } else {
-      span?.addTags({ searchType: "lucene" })
-      result = await internal.lucene.search(options, source)
     }
 
     span.addTags({
