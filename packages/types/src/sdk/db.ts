@@ -12,7 +12,6 @@ import type PouchDB from "pouchdb-find"
 
 export enum SearchIndex {
   ROWS = "rows",
-  AUDIT = "audit",
   USER = "user",
 }
 
