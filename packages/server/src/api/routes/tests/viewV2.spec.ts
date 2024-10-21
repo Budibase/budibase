@@ -219,7 +219,7 @@ describe.each([
         expect(res).toEqual(expected)
       })
 
-      it.only("can create a view with just a query field, no queryUI, for backwards compatibility", async () => {
+      it("can create a view with just a query field, no queryUI, for backwards compatibility", async () => {
         const newView: Required<Omit<CreateViewRequest, "queryUI" | "type">> = {
           name: generator.name(),
           tableId: table._id!,
