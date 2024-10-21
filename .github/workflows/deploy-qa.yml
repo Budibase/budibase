@@ -3,7 +3,7 @@ name: Deploy QA
 on:
   push:
     branches:
-      - master
+      - v3-ui
   workflow_dispatch:
 
 jobs:
