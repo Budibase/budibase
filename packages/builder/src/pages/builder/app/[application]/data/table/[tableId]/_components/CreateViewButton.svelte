@@ -3,7 +3,7 @@
   import { Input, notifications, Button, Icon, ListItem } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { viewsV2 } from "stores/builder"
-  import { CalculationType, ViewV2Type } from "@budibase/types"
+  import { ViewV2Type } from "@budibase/types"
 
   export let table
   export let firstView = false

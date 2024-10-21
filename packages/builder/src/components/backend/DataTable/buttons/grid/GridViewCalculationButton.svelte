@@ -109,7 +109,7 @@
   // Gets the available fields to group by
   const getGroupByOptions = schema => {
     return Object.entries(schema)
-      .filter(([field, fieldSchema]) => {
+      .filter(([_, fieldSchema]) => {
         // Don't allow grouping by calculations
         if (fieldSchema.calculationType) {
           return false
