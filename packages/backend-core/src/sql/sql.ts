@@ -236,7 +236,7 @@ class InternalBuilder {
     const alias = this.getTableName(endpoint.entityId)
     const schema = meta.table.schema
     if (!this.isFullSelectStatementRequired()) {
-      return [this.knex.raw(`${this.quote(alias)}.*`)]
+      return [this.knex.raw("??", [`${alias}.*`])]
     }
     // get just the fields for this table
     return resource.fields
