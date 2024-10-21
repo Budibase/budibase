@@ -1,4 +1,4 @@
-import { Ctx, MaintenanceType } from "@budibase/types"
+import { Ctx, MaintenanceType, FeatureFlag } from "@budibase/types"
 import env from "../../../environment"
 import { env as coreEnv, db as dbCore, features } from "@budibase/backend-core"
 import nodeFetch from "node-fetch"
@@ -29,7 +29,10 @@ async function isSqsAvailable() {
 }
 
 async function isSqsMissing() {
-  return (await features.flags.isEnabled("SQS")) && !(await isSqsAvailable())
+  return (
+    (await features.flags.isEnabled(FeatureFlag.SQS)) &&
+    !(await isSqsAvailable())
+  )
 }
 
 export const fetch = async (ctx: Ctx) => {
