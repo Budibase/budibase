@@ -1,3 +1,4 @@
+import { SortOrder } from "@budibase/types"
 import { get } from "svelte/store"
 
 export const createActions = context => {
@@ -84,7 +85,7 @@ export const initialise = context => {
     inlineFilters.set([])
     sort.set({
       column: get(initialSortColumn),
-      order: get(initialSortOrder) || "ascending",
+      order: get(initialSortOrder) || SortOrder.ASCENDING,
     })
 
     // Update fetch when filter changes
@@ -110,7 +111,7 @@ export const initialise = context => {
           return
         }
         $fetch.update({
-          sortOrder: $sort.order || "ascending",
+          sortOrder: $sort.order || SortOrder.ASCENDING,
           sortColumn: $sort.column,
         })
       })
