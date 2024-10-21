@@ -147,8 +147,12 @@ export const processSearchFilters = (
       {
         logicalOperator: allOr ? UILogicalOperator.ANY : UILogicalOperator.ALL,
         filters: filters.map(filter => {
-          filter.field = removeKeyNumbering(filter.field)
-          return _.pick(filter, FILTER_ALLOWED_KEYS) as SearchFilter
+          const trimmedFilter = _.pick(
+            filter,
+            FILTER_ALLOWED_KEYS
+          ) as SearchFilter
+          trimmedFilter.field = removeKeyNumbering(trimmedFilter.field)
+          return trimmedFilter
         }),
       },
     ],
