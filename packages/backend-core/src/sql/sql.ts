@@ -258,30 +258,38 @@ class InternalBuilder {
         const columnSchema = schema[column]
 
         if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(columnSchema)) {
-          return this.knex.raw(
-            `${this.quotedIdentifier(
-              [table, column].join(".")
-            )}::money::numeric as ${this.quote(field)}`
-          )
+          return this.knex.raw("??::money::numeric as ??", [
+            [table, column].join("."),
+            field,
+          ])
         }
 
         if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(columnSchema)) {
           // Time gets returned as timestamp from mssql, not matching the expected
           // HH:mm format
-          return this.knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
+
+          // TODO: figure out how to express this safely without string
+          // interpolation.
+          return this.knex.raw(`CONVERT(varchar, ??, 108) as "${field}"`, [
+            field,
+          ])
         }
 
-        const quoted = table
-          ? `${this.quote(table)}.${this.quote(column)}`
-          : this.quote(field)
-        return this.knex.raw(quoted)
+        if (table) {
+          return this.knex.raw("??", [`${table}.${column}`])
+        } else {
+          return this.knex.raw("??", [field])
+        }
       })
   }
 
   // OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
   // so when we use them we need to wrap them in to_char(). This function
   // converts a field name to the appropriate identifier.
-  private convertClobs(field: string, opts?: { forSelect?: boolean }): string {
+  private convertClobs(
+    field: string,
+    opts?: { forSelect?: boolean }
+  ): Knex.Raw {
     if (this.client !== SqlClient.ORACLE) {
       throw new Error(
         "you've called convertClobs on a DB that's not Oracle, this is a mistake"
@@ -290,7 +298,7 @@ class InternalBuilder {
     const parts = this.splitIdentifier(field)
     const col = parts.pop()!
     const schema = this.table.schema[col]
-    let identifier = this.quotedIdentifier(field)
+    let identifier = this.knex.raw("??", [field])
 
     if (
       schema.type === FieldType.STRING ||
@@ -301,9 +309,9 @@ class InternalBuilder {
       schema.type === FieldType.BARCODEQR
     ) {
       if (opts?.forSelect) {
-        identifier = `to_char(${identifier}) as ${this.quotedIdentifier(col)}`
+        identifier = this.knex.raw("to_char(??) as ??", [identifier, col])
       } else {
-        identifier = `to_char(${identifier})`
+        identifier = this.knex.raw("to_char(??)", [identifier])
       }
     }
     return identifier
@@ -485,9 +493,7 @@ class InternalBuilder {
             .where(
               `${throughAlias}.${manyToMany.from}`,
               "=",
-              mainKnex.raw(
-                this.quotedIdentifier(`${fromAlias}.${manyToMany.fromPrimary}`)
-              )
+              mainKnex.raw(`??`, [`${fromAlias}.${manyToMany.fromPrimary}`])
             )
           // in SQS the same junction table is used for different many-to-many relationships between the
           // two same tables, this is needed to avoid rows ending up in all columns
@@ -516,7 +522,7 @@ class InternalBuilder {
           subQuery = subQuery.where(
             toKey,
             "=",
-            mainKnex.raw(this.quotedIdentifier(foreignKey))
+            mainKnex.raw("??", [foreignKey])
           )
 
           query = query.where(q => {
@@ -736,39 +742,29 @@ class InternalBuilder {
         ArrayOperator.ONE_OF,
         (q, key: string, array) => {
           if (this.client === SqlClient.ORACLE) {
+            // @ts-ignore
             key = this.convertClobs(key)
-            array = Array.isArray(array) ? array : [array]
-            const binding = new Array(array.length).fill("?").join(",")
-            return q.whereRaw(`${key} IN (${binding})`, array)
-          } else {
-            return q[fnc](key, Array.isArray(array) ? array : [array])
           }
+          return q[fnc](key, Array.isArray(array) ? array : [array])
         },
         (q, key: string[], array) => {
           if (this.client === SqlClient.ORACLE) {
-            const keyStr = `(${key.map(k => this.convertClobs(k)).join(",")})`
-            const binding = `(${array
-              .map((a: any) => `(${new Array(a.length).fill("?").join(",")})`)
-              .join(",")})`
-            return q.whereRaw(`${keyStr} IN ${binding}`, array.flat())
-          } else {
-            return q[fnc](key, Array.isArray(array) ? array : [array])
+            // @ts-ignore
+            key = key.map(k => this.convertClobs(k))
           }
+          return q[fnc](key, Array.isArray(array) ? array : [array])
         }
       )
     }
     if (filters.string) {
       iterate(filters.string, BasicOperator.STRING, (q, key, value) => {
-        const fnc = allOr ? "orWhere" : "where"
         // postgres supports ilike, nothing else does
         if (this.client === SqlClient.POSTGRES) {
+          const fnc = allOr ? "orWhere" : "where"
           return q[fnc](key, "ilike", `${value}%`)
         } else {
-          const rawFnc = `${fnc}Raw`
-          // @ts-ignore
-          return q[rawFnc](`LOWER(${this.quotedIdentifier(key)}) LIKE ?`, [
-            `${value.toLowerCase()}%`,
-          ])
+          const fnc = allOr ? "orWhereRaw" : "whereRaw"
+          return q[fnc](`LOWER(??) LIKE ?`, [key, `${value.toLowerCase()}%`])
         }
       })
     }
@@ -795,48 +791,33 @@ class InternalBuilder {
 
         const schema = this.getFieldSchema(key)
 
+        let rawKey: string | Knex.Raw = key
+        let high = value.high
+        let low = value.low
+
         if (this.client === SqlClient.ORACLE) {
-          // @ts-ignore
-          key = this.knex.raw(this.convertClobs(key))
+          rawKey = this.convertClobs(key)
+        } else if (
+          this.client === SqlClient.SQL_LITE &&
+          schema?.type === FieldType.BIGINT
+        ) {
+          rawKey = this.knex.raw("CAST(?? AS INTEGER)", [key])
+          high = this.knex.raw("CAST(? AS INTEGER)", [value.high])
+          low = this.knex.raw("CAST(? AS INTEGER)", [value.low])
         }
 
         if (lowValid && highValid) {
-          if (
-            schema?.type === FieldType.BIGINT &&
-            this.client === SqlClient.SQL_LITE
-          ) {
-            return q.whereRaw(
-              `CAST(${key} AS INTEGER) BETWEEN CAST(? AS INTEGER) AND CAST(? AS INTEGER)`,
-              [value.low, value.high]
-            )
-          } else {
-            const fnc = allOr ? "orWhereBetween" : "whereBetween"
-            return q[fnc](key, [value.low, value.high])
-          }
+          const fnc = allOr ? "orWhereBetween" : "whereBetween"
+          // @ts-ignore
+          return q[fnc](rawKey, [low, high])
         } else if (lowValid) {
-          if (
-            schema?.type === FieldType.BIGINT &&
-            this.client === SqlClient.SQL_LITE
-          ) {
-            return q.whereRaw(`CAST(${key} AS INTEGER) >= CAST(? AS INTEGER)`, [
-              value.low,
-            ])
-          } else {
-            const fnc = allOr ? "orWhere" : "where"
-            return q[fnc](key, ">=", value.low)
-          }
+          const fnc = allOr ? "orWhere" : "where"
+          // @ts-ignore
+          return q[fnc](rawKey, ">=", low)
         } else if (highValid) {
-          if (
-            schema?.type === FieldType.BIGINT &&
-            this.client === SqlClient.SQL_LITE
-          ) {
-            return q.whereRaw(`CAST(${key} AS INTEGER) <= CAST(? AS INTEGER)`, [
-              value.high,
-            ])
-          } else {
-            const fnc = allOr ? "orWhere" : "where"
-            return q[fnc](key, "<=", value.high)
-          }
+          const fnc = allOr ? "orWhere" : "where"
+          // @ts-ignore
+          return q[fnc](rawKey, "<=", high)
         }
         return q
       })
@@ -976,9 +957,7 @@ class InternalBuilder {
         const selectFields = qualifiedFields.map(field =>
           this.convertClobs(field, { forSelect: true })
         )
-        query = query
-          .groupByRaw(groupByFields.join(", "))
-          .select(this.knex.raw(selectFields.join(", ")))
+        query = query.groupBy(groupByFields).select(selectFields)
       } else {
         query = query.groupBy(qualifiedFields).select(qualifiedFields)
       }
@@ -990,11 +969,10 @@ class InternalBuilder {
           if (this.client === SqlClient.ORACLE) {
             const field = this.convertClobs(`${tableName}.${aggregation.field}`)
             query = query.select(
-              this.knex.raw(
-                `COUNT(DISTINCT ${field}) as ${this.quotedIdentifier(
-                  aggregation.name
-                )}`
-              )
+              this.knex.raw(`COUNT(DISTINCT ??) as ??`, [
+                field,
+                aggregation.name,
+              ])
             )
           } else {
             query = query.countDistinct(
