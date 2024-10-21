@@ -219,6 +219,47 @@ describe.each([
         expect(res).toEqual(expected)
       })
 
+      it.only("can create a view with just a query field, no queryUI, for backwards compatibility", async () => {
+        const newView: Required<Omit<CreateViewRequest, "queryUI" | "type">> = {
+          name: generator.name(),
+          tableId: table._id!,
+          primaryDisplay: "id",
+          query: [
+            {
+              operator: BasicOperator.EQUAL,
+              field: "field",
+              value: "value",
+            },
+          ],
+          sort: {
+            field: "fieldToSort",
+            order: SortOrder.DESCENDING,
+            type: SortType.STRING,
+          },
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
+            },
+          },
+        }
+        const res = await config.api.viewV2.create(newView)
+
+        const expected: ViewV2 = {
+          ...newView,
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
+            },
+          },
+          id: expect.any(String),
+          version: 2,
+        }
+
+        expect(res).toEqual(expected)
+      })
+
       it("persist only UI schema overrides", async () => {
         const newView: CreateViewRequest = {
           name: generator.name(),
