@@ -76,6 +76,7 @@
     TriggerStepID.ROW_UPDATED,
     TriggerStepID.ROW_SAVED,
     TriggerStepID.ROW_DELETED,
+    TriggerStepID.ROW_ACTION,
   ]
 
   const rowEvents = [
