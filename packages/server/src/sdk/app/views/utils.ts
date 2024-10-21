@@ -1,6 +1,7 @@
 import { ViewV2 } from "@budibase/types"
 import { utils, dataFilters } from "@budibase/shared-core"
 import { isPlainObject } from "lodash"
+import { HTTPError } from "@budibase/backend-core"
 
 function isEmptyObject(obj: any) {
   return obj && isPlainObject(obj) && Object.keys(obj).length === 0
@@ -21,7 +22,7 @@ export function ensureQueryUISet(view: ViewV2) {
       // So despite the type saying that `view.query` is a LegacyFilter[] |
       // SearchFilters, it will never be a SearchFilters when a `view.queryUI`
       // is specified, making it "safe" to throw an error here.
-      throw new Error("view is missing queryUI field")
+      throw new HTTPError("view is missing queryUI field", 400)
     }
 
     view.queryUI = utils.processSearchFilters(view.query)
@@ -29,7 +30,10 @@ export function ensureQueryUISet(view: ViewV2) {
 }
 
 export function ensureQuerySet(view: ViewV2) {
-  if (!view.query && view.queryUI && !isEmptyObject(view.queryUI)) {
+  // We consider queryUI to be the source of truth, so we don't check for the
+  // presence of query here. We will overwrite it regardless of whether it is
+  // present or not.
+  if (view.queryUI && !isEmptyObject(view.queryUI)) {
     view.query = dataFilters.buildQuery(view.queryUI)
   }
 }

@@ -39,7 +39,7 @@ import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { db, roles, features } from "@budibase/backend-core"
+import { db, roles, features, context } from "@budibase/backend-core"
 
 describe.each([
   ["lucene", undefined],
@@ -56,7 +56,8 @@ describe.each([
   const isInternal = isSqs || isLucene
 
   let table: Table
-  let datasource: Datasource
+  let rawDatasource: Datasource | undefined
+  let datasource: Datasource | undefined
   let envCleanup: (() => void) | undefined
 
   function saveTableRequest(
@@ -113,8 +114,9 @@ describe.each([
     })
 
     if (dsProvider) {
+      rawDatasource = await dsProvider
       datasource = await config.createDatasource({
-        datasource: await dsProvider,
+        datasource: rawDatasource,
       })
     }
     table = await config.api.table.save(priceTable())
@@ -923,6 +925,7 @@ describe.each([
 
     describe("update", () => {
       let view: ViewV2
+      let table: Table
 
       beforeEach(async () => {
         table = await config.api.table.save(priceTable())
@@ -955,6 +958,21 @@ describe.each([
             query: [
               { operator: "equal", field: "newField", value: "thatValue" },
             ],
+            // Should also update queryUI because query was not previously set.
+            queryUI: {
+              groups: [
+                {
+                  logicalOperator: "all",
+                  filters: [
+                    {
+                      operator: "equal",
+                      field: "newField",
+                      value: "thatValue",
+                    },
+                  ],
+                },
+              ],
+            },
             schema: expect.anything(),
           },
         })
@@ -974,8 +992,8 @@ describe.each([
           query: [
             {
               operator: BasicOperator.EQUAL,
-              field: generator.word(),
-              value: generator.word(),
+              field: "newField",
+              value: "newValue",
             },
           ],
           sort: {
@@ -999,6 +1017,21 @@ describe.each([
         expect((await config.api.table.get(tableId)).views).toEqual({
           [view.name]: {
             ...updatedData,
+            // queryUI gets generated from query
+            queryUI: {
+              groups: [
+                {
+                  logicalOperator: "all",
+                  filters: [
+                    {
+                      operator: "equal",
+                      field: "newField",
+                      value: "newValue",
+                    },
+                  ],
+                },
+              ],
+            },
             schema: {
               ...table.schema,
               id: expect.objectContaining({
@@ -1243,6 +1276,145 @@ describe.each([
             }
           )
         })
+
+      it("can update queryUI field and query gets regenerated", async () => {
+        await config.api.viewV2.update({
+          ...view,
+          queryUI: {
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ALL,
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "field",
+                    value: "value",
+                  },
+                ],
+              },
+            ],
+          },
+        })
+
+        let updatedView = await config.api.viewV2.get(view.id)
+        expect(updatedView.query).toEqual({
+          $and: {
+            conditions: [
+              {
+                $and: {
+                  conditions: [
+                    {
+                      equal: { field: "value" },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        })
+
+        await config.api.viewV2.update({
+          ...updatedView,
+          queryUI: {
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ALL,
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "newField",
+                    value: "newValue",
+                  },
+                ],
+              },
+            ],
+          },
+        })
+
+        updatedView = await config.api.viewV2.get(view.id)
+        expect(updatedView.query).toEqual({
+          $and: {
+            conditions: [
+              {
+                $and: {
+                  conditions: [
+                    {
+                      equal: { newField: "newValue" },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        })
+      })
+
+      it("can delete either query and it will get regenerated from queryUI", async () => {
+        await config.api.viewV2.update({
+          ...view,
+          query: [
+            {
+              operator: BasicOperator.EQUAL,
+              field: "field",
+              value: "value",
+            },
+          ],
+        })
+
+        let updatedView = await config.api.viewV2.get(view.id)
+        expect(updatedView.queryUI).toBeDefined()
+
+        await config.api.viewV2.update({
+          ...updatedView,
+          query: undefined,
+        })
+
+        updatedView = await config.api.viewV2.get(view.id)
+        expect(updatedView.query).toBeDefined()
+      })
+
+      // This is because the conversion from queryUI -> query loses data, so you
+      // can't accurately reproduce the original queryUI from the query. If
+      // query is a LegacyFilter[] we allow it, because for Budibase v3
+      // everything in the db had query set to a LegacyFilter[], and there's no
+      // loss of information converting from a LegacyFilter[] to a
+      // UISearchFilter. But we convert to a SearchFilters and that can't be
+      // accurately converted to a UISearchFilter.
+      it("can't regenerate queryUI from a query once it has been generated from a queryUI", async () => {
+        await config.api.viewV2.update({
+          ...view,
+          queryUI: {
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ALL,
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "field",
+                    value: "value",
+                  },
+                ],
+              },
+            ],
+          },
+        })
+
+        let updatedView = await config.api.viewV2.get(view.id)
+        expect(updatedView.query).toBeDefined()
+
+        await config.api.viewV2.update(
+          {
+            ...updatedView,
+            queryUI: undefined,
+          },
+          {
+            status: 400,
+            body: {
+              message: "view is missing queryUI field",
+            },
+          }
+        )
+      })
 
       !isLucene &&
         describe("calculation views", () => {
@@ -1596,6 +1768,62 @@ describe.each([
         expect(view.schema?.one).toEqual(
           expect.objectContaining({ visible: true, readonly: true })
         )
+      })
+
+      it("should fill in the queryUI field if it's missing", async () => {
+        const res = await config.api.viewV2.create({
+          name: generator.name(),
+          tableId: tableId,
+          query: [
+            {
+              operator: BasicOperator.EQUAL,
+              field: "one",
+              value: "1",
+            },
+          ],
+          schema: {
+            id: { visible: true },
+            one: { visible: true },
+          },
+        })
+
+        const table = await config.api.table.get(tableId)
+        const rawView = table.views![res.name] as ViewV2
+        delete rawView.queryUI
+
+        await context.doInAppContext(config.getAppId(), async () => {
+          const db = context.getAppDB()
+
+          if (!rawDatasource) {
+            await db.put(table)
+          } else {
+            const ds = await config.api.datasource.get(datasource!._id!)
+            ds.entities![table.name] = table
+            const updatedDs = {
+              ...rawDatasource,
+              _id: ds._id,
+              _rev: ds._rev,
+              entities: ds.entities,
+            }
+            await db.put(updatedDs)
+          }
+        })
+
+        const view = await getDelegate(res)
+        expect(view.queryUI).toEqual({
+          groups: [
+            {
+              logicalOperator: UILogicalOperator.ALL,
+              filters: [
+                {
+                  operator: BasicOperator.EQUAL,
+                  field: "one",
+                  value: "1",
+                },
+              ],
+            },
+          ],
+        })
       })
     })
 

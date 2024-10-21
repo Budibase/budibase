@@ -81,6 +81,7 @@ export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
   }
 
   ensureQuerySet(view)
+  ensureQueryUISet(view)
 
   delete views[existingView.name]
   views[view.name] = view

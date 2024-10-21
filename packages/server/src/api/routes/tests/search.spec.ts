@@ -2192,7 +2192,7 @@ describe.each([
       })
 
       describe("contains", () => {
-        it.only("successfully finds a row", async () => {
+        it("successfully finds a row", async () => {
           await expectQuery({
             contains: { users: [user1._id] },
           }).toContainExactly([

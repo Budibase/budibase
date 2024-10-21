@@ -12,9 +12,26 @@ import {
   TableResponse,
   TableSourceType,
   TableViewsResponse,
+  View,
+  ViewV2,
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
+import { ensureQueryUISet } from "../views/utils"
+import { isV2 } from "../views"
+
+function processView(view: ViewV2 | View) {
+  if (!isV2(view)) {
+    return
+  }
+  ensureQueryUISet(view)
+}
+
+function processViews(views: (ViewV2 | View)[]) {
+  for (const view of views) {
+    processView(view)
+  }
+}
 
 export async function processTable(table: Table): Promise<Table> {
   if (!table) {
@@ -22,6 +39,9 @@ export async function processTable(table: Table): Promise<Table> {
   }
 
   table = { ...table }
+  if (table.views) {
+    processViews(Object.values(table.views))
+  }
   if (table._id && isExternalTableID(table._id)) {
     // Old created external tables via Budibase might have a missing field name breaking some UI such as filters
     if (table.schema["id"] && !table.schema["id"].name) {
