@@ -16,7 +16,6 @@
     DrawerContent,
     Helpers,
     Toggle,
-    Divider,
     Icon,
   } from "@budibase/bbui"
 
@@ -359,12 +358,6 @@
             ...getIdConfig(),
             ...getRevConfig(),
             ...getRowTypeConfig(),
-            {
-              type: Divider,
-              props: {
-                noMargin: true,
-              },
-            },
             ...getRowSelector(),
           ],
         },
