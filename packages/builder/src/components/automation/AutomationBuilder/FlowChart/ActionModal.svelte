@@ -197,12 +197,14 @@
           on:click={() => selectAction(action)}
         >
           <div class="item-body">
-            <img
-              width={24}
-              height={24}
-              src={externalActions[action.stepId].icon}
-              alt={externalActions[action.stepId].name}
-            />
+            <div class="icon-background-external">
+              <img
+                width={20}
+                height={20}
+                src={externalActions[action.stepId].icon}
+                alt={externalActions[action.stepId].name}
+              />
+            </div>
             <p>
               {action.stepTitle || idx.charAt(0).toUpperCase() + idx.slice(1)}
             </p>
@@ -259,7 +261,17 @@
     background: var(--spectrum-global-color-gray-200);
   }
   .icon-background {
-    background-color: var(--spectrum-global-color-indigo-500);
+    background-color: #5e12f7;
+    padding: 0;
+    border-radius: 6px;
+    min-height: 28px;
+    min-width: 28px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .icon-background-external {
+    background-color: var(--spectrum-global-color-gray-200);
     padding: 0;
     border-radius: 6px;
     min-height: 28px;
@@ -269,8 +281,9 @@
     align-items: center;
   }
   div:has(svg) {
-    color: var(--spectrum-global-color-gray-900);
+    color: white;
   }
+
   img {
     border-radius: 6px;
     padding: 2px;

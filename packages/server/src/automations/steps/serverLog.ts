@@ -17,7 +17,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "Backend log",
   tagline: "Console log a value in the backend",
-  icon: "Monitoring",
+  icon: "FileCode",
   description: "Logs the given text to the server (using console.log)",
   type: AutomationStepType.ACTION,
   internal: true,

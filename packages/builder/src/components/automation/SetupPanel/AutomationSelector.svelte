@@ -73,8 +73,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 10px;
     flex: 1;
     margin-bottom: 10px;

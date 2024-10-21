@@ -1000,9 +1000,9 @@
   .block-field {
     display: flex;
     justify-content: space-between;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
     flex: 1;
   }
 

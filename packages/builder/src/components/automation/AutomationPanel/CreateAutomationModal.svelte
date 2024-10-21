@@ -57,23 +57,15 @@
   onConfirm={createAutomation}
   disabled={!selectedTrigger || !name}
 >
-  <InlineAlert
-    header="You must publish your app to activate your automations."
-    message="To test your automation before publishing, you can use the 'Run Test' functionality on the next screen."
-  />
-  <Body size="S">
-    Please name your automation, then select a trigger.<br />
-    Every automation must start with a trigger.
-  </Body>
   <Input
     bind:value={name}
     on:input={() => (nameTouched = true)}
     bind:error={nameError}
-    label="Name"
+    placeholder="Name your automation"
   />
 
   <Layout noPadding gap="XS">
-    <Label size="S">Trigger</Label>
+    <Label size="L">Trigger</Label>
     <div class="item-list">
       {#each triggers as [_, trigger]}
         <div
@@ -82,10 +74,10 @@
           on:click={() => selectTrigger(trigger)}
         >
           <div class="item-body">
-            <Icon name={trigger.icon} />
-            <span class="icon-spacing">
-              <Body size="S">{trigger.name}</Body></span
-            >
+            <div class="icon-background-trigger">
+              <Icon name={trigger.icon} />
+            </div>
+            <Body size="S">{trigger.name}</Body>
           </div>
         </div>
       {/each}
@@ -94,35 +86,65 @@
 </ModalContent>
 
 <style>
-  .icon-spacing {
-    margin-left: var(--spacing-m);
-  }
   .item-body {
     display: flex;
     margin-left: var(--spacing-m);
+    gap: var(--spacing-m);
+    align-items: center;
   }
   .item-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    grid-gap: var(--spectrum-alias-grid-baseline);
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+    grid-gap: 10px;
   }
-
   .item {
     cursor: pointer;
-    display: grid;
     grid-gap: var(--spectrum-alias-grid-margin-xsmall);
     padding: var(--spectrum-alias-item-padding-s);
     background: var(--spectrum-alias-background-color-secondary);
     transition: 0.3s all;
-    border-radius: 5px;
+    border: solid var(--spectrum-global-color-gray-200);
+    border-radius: 6px;
     box-sizing: border-box;
-    border-width: 2px;
+    border-width: 1px;
+  }
+  .item p {
+    font-size: 16px !important;
+    margin: 0;
+    color: var(--spectrum-global-color-gray-900);
   }
 
-  .item:hover {
-    background: var(--spectrum-alias-background-color-tertiary);
-  }
+  .item:not(.disabled):hover,
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);
+  }
+  .disabled {
+    background: var(--spectrum-global-color-gray-200);
+    opacity: 0.5;
+  }
+  .disabled :global(.spectrum-Body) {
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .tag-color :global(.spectrum-Tags-item) {
+    background: var(--spectrum-global-color-gray-200);
+  }
+  .icon-background-trigger {
+    background-color: #6afdef;
+    padding: 0;
+    border-radius: 6px;
+    min-height: 28px;
+    min-width: 28px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
+  div:has(svg) {
+    color: black;
+  }
+
+  img {
+    border-radius: 6px;
+    padding: 2px;
   }
 </style>
