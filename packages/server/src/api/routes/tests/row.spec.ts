@@ -18,17 +18,14 @@ import {
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
-  AttachmentFieldMetadata,
   AutoFieldSubType,
   Datasource,
-  DateFieldMetadata,
   DeleteRow,
   FieldSchema,
   FieldType,
   BBReferenceFieldSubType,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
-  NumberFieldMetadata,
   QuotaUsageType,
   RelationshipType,
   Row,
@@ -76,8 +73,7 @@ async function waitForEvent(
 }
 
 describe.each([
-  ["lucene", undefined],
-  ["sqs", undefined],
+  ["internal", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
@@ -85,8 +81,6 @@ describe.each([
   [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
-  const isLucene = providerType === "lucene"
-  const isSqs = providerType === "sqs"
   const isMSSQL = providerType === DatabaseName.SQL_SERVER
   const isOracle = providerType === DatabaseName.ORACLE
   const config = setup.getConfig()
@@ -94,15 +88,11 @@ describe.each([
   let table: Table
   let datasource: Datasource | undefined
   let client: Knex | undefined
-  let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
     await features.testutils.withFeatureFlags("*", { SQS: true }, () =>
       config.init()
     )
-    envCleanup = features.testutils.setFeatureFlags("*", {
-      SQS: isSqs,
-    })
 
     if (dsProvider) {
       const rawDatasource = await dsProvider
@@ -115,9 +105,6 @@ describe.each([
 
   afterAll(async () => {
     setup.afterAll()
-    if (envCleanup) {
-      envCleanup()
-    }
   })
 
   function saveTableRequest(
@@ -365,185 +352,6 @@ describe.each([
         // monotonically increasing unique integers no matter what.
         const ids = rows.map(r => r["Row ID"])
         expect(ids).toEqual(expect.arrayContaining(sequence))
-      })
-
-    isLucene &&
-      it("row values are coerced", async () => {
-        const str: FieldSchema = {
-          type: FieldType.STRING,
-          name: "str",
-          constraints: { type: "string", presence: false },
-        }
-        const singleAttachment: FieldSchema = {
-          type: FieldType.ATTACHMENT_SINGLE,
-          name: "single attachment",
-          constraints: { presence: false },
-        }
-        const attachmentList: AttachmentFieldMetadata = {
-          type: FieldType.ATTACHMENTS,
-          name: "attachments",
-          constraints: { type: "array", presence: false },
-        }
-        const signature: FieldSchema = {
-          type: FieldType.SIGNATURE_SINGLE,
-          name: "signature",
-          constraints: { presence: false },
-        }
-        const bool: FieldSchema = {
-          type: FieldType.BOOLEAN,
-          name: "boolean",
-          constraints: { type: "boolean", presence: false },
-        }
-        const number: NumberFieldMetadata = {
-          type: FieldType.NUMBER,
-          name: "str",
-          constraints: { type: "number", presence: false },
-        }
-        const datetime: DateFieldMetadata = {
-          type: FieldType.DATETIME,
-          name: "datetime",
-          constraints: {
-            type: "string",
-            presence: false,
-            datetime: { earliest: "", latest: "" },
-          },
-        }
-        const arrayField: FieldSchema = {
-          type: FieldType.ARRAY,
-          constraints: {
-            type: JsonFieldSubType.ARRAY,
-            presence: false,
-            inclusion: ["One", "Two", "Three"],
-          },
-          name: "Sample Tags",
-          sortable: false,
-        }
-        const optsField: FieldSchema = {
-          name: "Sample Opts",
-          type: FieldType.OPTIONS,
-          constraints: {
-            type: "string",
-            presence: false,
-            inclusion: ["Alpha", "Beta", "Gamma"],
-          },
-        }
-        const table = await config.api.table.save(
-          saveTableRequest({
-            schema: {
-              name: str,
-              stringUndefined: str,
-              stringNull: str,
-              stringString: str,
-              numberEmptyString: number,
-              numberNull: number,
-              numberUndefined: number,
-              numberString: number,
-              numberNumber: number,
-              datetimeEmptyString: datetime,
-              datetimeNull: datetime,
-              datetimeUndefined: datetime,
-              datetimeString: datetime,
-              datetimeDate: datetime,
-              boolNull: bool,
-              boolEmpty: bool,
-              boolUndefined: bool,
-              boolString: bool,
-              boolBool: bool,
-              singleAttachmentNull: singleAttachment,
-              singleAttachmentUndefined: singleAttachment,
-              attachmentListNull: attachmentList,
-              attachmentListUndefined: attachmentList,
-              attachmentListEmpty: attachmentList,
-              attachmentListEmptyArrayStr: attachmentList,
-              signatureNull: signature,
-              signatureUndefined: signature,
-              arrayFieldEmptyArrayStr: arrayField,
-              arrayFieldArrayStrKnown: arrayField,
-              arrayFieldNull: arrayField,
-              arrayFieldUndefined: arrayField,
-              optsFieldEmptyStr: optsField,
-              optsFieldUndefined: optsField,
-              optsFieldNull: optsField,
-              optsFieldStrKnown: optsField,
-            },
-          })
-        )
-
-        const datetimeStr = "1984-04-20T00:00:00.000Z"
-
-        const row = await config.api.row.save(table._id!, {
-          name: "Test Row",
-          stringUndefined: undefined,
-          stringNull: null,
-          stringString: "i am a string",
-          numberEmptyString: "",
-          numberNull: null,
-          numberUndefined: undefined,
-          numberString: "123",
-          numberNumber: 123,
-          datetimeEmptyString: "",
-          datetimeNull: null,
-          datetimeUndefined: undefined,
-          datetimeString: datetimeStr,
-          datetimeDate: new Date(datetimeStr),
-          boolNull: null,
-          boolEmpty: "",
-          boolUndefined: undefined,
-          boolString: "true",
-          boolBool: true,
-          tableId: table._id,
-          singleAttachmentNull: null,
-          singleAttachmentUndefined: undefined,
-          attachmentListNull: null,
-          attachmentListUndefined: undefined,
-          attachmentListEmpty: "",
-          attachmentListEmptyArrayStr: "[]",
-          signatureNull: null,
-          signatureUndefined: undefined,
-          arrayFieldEmptyArrayStr: "[]",
-          arrayFieldUndefined: undefined,
-          arrayFieldNull: null,
-          arrayFieldArrayStrKnown: "['One']",
-          optsFieldEmptyStr: "",
-          optsFieldUndefined: undefined,
-          optsFieldNull: null,
-          optsFieldStrKnown: "Alpha",
-        })
-
-        expect(row.stringUndefined).toBe(undefined)
-        expect(row.stringNull).toBe(null)
-        expect(row.stringString).toBe("i am a string")
-        expect(row.numberEmptyString).toBe(null)
-        expect(row.numberNull).toBe(null)
-        expect(row.numberUndefined).toBe(undefined)
-        expect(row.numberString).toBe(123)
-        expect(row.numberNumber).toBe(123)
-        expect(row.datetimeEmptyString).toBe(null)
-        expect(row.datetimeNull).toBe(null)
-        expect(row.datetimeUndefined).toBe(undefined)
-        expect(row.datetimeString).toBe(new Date(datetimeStr).toISOString())
-        expect(row.datetimeDate).toBe(new Date(datetimeStr).toISOString())
-        expect(row.boolNull).toBe(null)
-        expect(row.boolEmpty).toBe(null)
-        expect(row.boolUndefined).toBe(undefined)
-        expect(row.boolString).toBe(true)
-        expect(row.boolBool).toBe(true)
-        expect(row.singleAttachmentNull).toEqual(null)
-        expect(row.singleAttachmentUndefined).toBe(undefined)
-        expect(row.attachmentListNull).toEqual([])
-        expect(row.attachmentListUndefined).toBe(undefined)
-        expect(row.attachmentListEmpty).toEqual([])
-        expect(row.attachmentListEmptyArrayStr).toEqual([])
-        expect(row.signatureNull).toEqual(null)
-        expect(row.signatureUndefined).toBe(undefined)
-        expect(row.arrayFieldEmptyArrayStr).toEqual([])
-        expect(row.arrayFieldNull).toEqual([])
-        expect(row.arrayFieldUndefined).toEqual(undefined)
-        expect(row.optsFieldEmptyStr).toEqual(null)
-        expect(row.optsFieldUndefined).toEqual(undefined)
-        expect(row.optsFieldNull).toEqual(null)
-        expect(row.arrayFieldArrayStrKnown).toEqual(["One"])
-        expect(row.optsFieldStrKnown).toEqual("Alpha")
       })
 
     isInternal &&
