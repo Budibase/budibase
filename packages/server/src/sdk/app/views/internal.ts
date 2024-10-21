@@ -5,6 +5,7 @@ import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 import { enrichSchema, isV2 } from "."
 import { ensureQuerySet, ensureQueryUISet } from "./utils"
+import { processTable } from "../tables/getters"
 
 export async function get(viewId: string): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
@@ -70,6 +71,7 @@ export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
   }
 
   ensureQuerySet(view)
+  ensureQueryUISet(view)
 
   delete table.views[existingView.name]
   table.views[view.name] = view
