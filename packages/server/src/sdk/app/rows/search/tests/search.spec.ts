@@ -10,7 +10,7 @@ import {
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
 import { search } from "../../../../../sdk/app/rows/search"
 import { generator } from "@budibase/backend-core/tests"
-import { features } from "@budibase/backend-core"
+
 import {
   DatabaseName,
   getDatasource,
@@ -21,30 +21,20 @@ import { tableForDatasource } from "../../../../../tests/utilities/structures"
 // (e.g. limiting searches to returning specific fields). If it's possible to
 // test through the API, it should be done there instead.
 describe.each([
-  ["lucene", undefined],
-  ["sqs", undefined],
+  ["internal", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("search sdk (%s)", (name, dsProvider) => {
-  const isSqs = name === "sqs"
-  const isLucene = name === "lucene"
-  const isInternal = isLucene || isSqs
+  const isInternal = name === "internal"
   const config = new TestConfiguration()
 
-  let envCleanup: (() => void) | undefined
   let datasource: Datasource | undefined
   let table: Table
 
   beforeAll(async () => {
-    await features.testutils.withFeatureFlags("*", { SQS: isSqs }, () =>
-      config.init()
-    )
-
-    envCleanup = features.testutils.setFeatureFlags("*", {
-      SQS: isSqs,
-    })
+    await config.init()
 
     if (dsProvider) {
       datasource = await config.createDatasource({
@@ -105,9 +95,6 @@ describe.each([
 
   afterAll(async () => {
     config.end()
-    if (envCleanup) {
-      envCleanup()
-    }
   })
 
   it("querying by fields will always return data attribute columns", async () => {
@@ -211,36 +198,35 @@ describe.each([
     })
   })
 
-  !isLucene &&
-    it.each([
-      [["id", "name", "age"], 3],
-      [["name", "age"], 10],
-    ])(
-      "cannot query by non search fields (fields: %s)",
-      async (queryFields, expectedRows) => {
-        await config.doInContext(config.appId, async () => {
-          const { rows } = await search({
-            tableId: table._id!,
-            query: {
-              $or: {
-                conditions: [
-                  {
-                    $and: {
-                      conditions: [
-                        { range: { id: { low: 2, high: 4 } } },
-                        { range: { id: { low: 3, high: 5 } } },
-                      ],
-                    },
+  it.each([
+    [["id", "name", "age"], 3],
+    [["name", "age"], 10],
+  ])(
+    "cannot query by non search fields (fields: %s)",
+    async (queryFields, expectedRows) => {
+      await config.doInContext(config.appId, async () => {
+        const { rows } = await search({
+          tableId: table._id!,
+          query: {
+            $or: {
+              conditions: [
+                {
+                  $and: {
+                    conditions: [
+                      { range: { id: { low: 2, high: 4 } } },
+                      { range: { id: { low: 3, high: 5 } } },
+                    ],
                   },
-                  { equal: { id: 7 } },
-                ],
-              },
+                },
+                { equal: { id: 7 } },
+              ],
             },
-            fields: queryFields,
-          })
-
-          expect(rows).toHaveLength(expectedRows)
+          },
+          fields: queryFields,
         })
-      }
-    )
+
+        expect(rows).toHaveLength(expectedRows)
+      })
+    }
+  )
 })
