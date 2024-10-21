@@ -253,6 +253,20 @@ describe.each([
               visible: true,
             },
           },
+          queryUI: {
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ALL,
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "field",
+                    value: "value",
+                  },
+                ],
+              },
+            ],
+          },
           id: expect.any(String),
           version: 2,
         }

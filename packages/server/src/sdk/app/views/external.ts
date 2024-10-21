@@ -50,6 +50,7 @@ export async function create(
   }
 
   ensureQuerySet(view)
+  ensureQueryUISet(view)
 
   const db = context.getAppDB()
 
