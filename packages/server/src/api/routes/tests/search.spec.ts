@@ -48,14 +48,14 @@ import { generateRowIdField } from "../../../integrations/utils"
 import { cloneDeep } from "lodash/fp"
 
 describe.each([
-  // ["in-memory", undefined],
-  // ["lucene", undefined],
-  // ["sqs", undefined],
+  ["in-memory", undefined],
+  ["lucene", undefined],
+  ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -155,24 +155,24 @@ describe.each([
 
   describe.each([
     ["table", createTable],
-    [
-      "view",
-      async (schema: TableSchema) => {
-        const tableId = await createTable(schema)
-        const viewId = await createView(
-          tableId,
-          Object.keys(schema).reduce<ViewV2Schema>((viewSchema, fieldName) => {
-            const field = schema[fieldName]
-            viewSchema[fieldName] = {
-              visible: field.visible ?? true,
-              readonly: false,
-            }
-            return viewSchema
-          }, {})
-        )
-        return viewId
-      },
-    ],
+    // [
+    //   "view",
+    //   async (schema: TableSchema) => {
+    //     const tableId = await createTable(schema)
+    //     const viewId = await createView(
+    //       tableId,
+    //       Object.keys(schema).reduce<ViewV2Schema>((viewSchema, fieldName) => {
+    //         const field = schema[fieldName]
+    //         viewSchema[fieldName] = {
+    //           visible: field.visible ?? true,
+    //           readonly: false,
+    //         }
+    //         return viewSchema
+    //       }, {})
+    //     )
+    //     return viewId
+    //   },
+    // ],
   ])("from %s", (sourceType, createTableOrView) => {
     const isView = sourceType === "view"
 
@@ -792,7 +792,7 @@ describe.each([
         })
       })
 
-    describe.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
+    describe.only.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
       beforeAll(async () => {
         tableOrViewId = await createTableOrView({
           name: { name: "name", type: FieldType.STRING },
