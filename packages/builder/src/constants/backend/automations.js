@@ -6,7 +6,6 @@ export const TriggerStepID = {
   WEBHOOK: "WEBHOOK",
   APP: "APP",
   CRON: "CRON",
-  ROW_ACTION: "ROW_ACTION",
 }
 
 export const ActionStepID = {
