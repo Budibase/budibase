@@ -283,7 +283,7 @@ describe.each([
               visible: false,
               icon: "ic",
             },
-          } as Record<string, FieldSchema>,
+          } as ViewV2Schema,
         }
 
         const createdView = await config.api.viewV2.create(newView)
@@ -327,7 +327,7 @@ describe.each([
               name: "Category",
               type: FieldType.STRING,
             },
-          } as Record<string, FieldSchema>,
+          } as ViewV2Schema,
         }
 
         await config.api.viewV2.create(newView, {
@@ -1121,7 +1121,7 @@ describe.each([
               visible: false,
               icon: "ic",
             },
-          } as Record<string, FieldSchema>,
+          } as ViewV2Schema,
         })
 
         expect(updatedView).toEqual({
@@ -1155,7 +1155,7 @@ describe.each([
                 name: "Category",
                 type: FieldType.STRING,
               },
-            } as Record<string, FieldSchema>,
+            } as ViewV2Schema,
           },
           {
             status: 200,

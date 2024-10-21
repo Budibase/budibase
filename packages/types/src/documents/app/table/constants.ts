@@ -30,6 +30,7 @@ export enum JsonFieldSubType {
 export enum FormulaType {
   STATIC = "static",
   DYNAMIC = "dynamic",
+  AI = "ai",
 }
 
 export enum BBReferenceFieldSubType {
