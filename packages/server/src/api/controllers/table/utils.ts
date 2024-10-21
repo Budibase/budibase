@@ -1,34 +1,35 @@
-import { parse, isSchema, isRows } from "../../../utilities/schema"
-import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
+import { isRows, isSchema, parse } from "../../../utilities/schema"
+import { generateRowID, getRowParams, InternalTables } from "../../../db/utils"
 import isEqual from "lodash/isEqual"
 import {
-  GOOGLE_SHEETS_PRIMARY_KEY,
-  USERS_TABLE_SCHEMA,
-  SwitchableTypes,
   CanSwitchTypes,
+  GOOGLE_SHEETS_PRIMARY_KEY,
+  SwitchableTypes,
+  USERS_TABLE_SCHEMA,
 } from "../../../constants"
 import {
-  inputProcessing,
   AttachmentCleanup,
+  inputProcessing,
 } from "../../../utilities/rowProcessor"
 import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { events, context, features } from "@budibase/backend-core"
+import { context, events, features } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
+  Database,
   Datasource,
+  FeatureFlag,
+  FieldSchema,
+  FieldType,
+  NumberFieldMetadata,
+  RelationshipFieldMetadata,
+  RenameColumn,
   Row,
   SourceName,
   Table,
-  Database,
-  RenameColumn,
-  NumberFieldMetadata,
-  FieldSchema,
   View,
-  RelationshipFieldMetadata,
-  FieldType,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import env from "../../../environment"
@@ -329,7 +330,7 @@ class TableSaveFunctions {
       importRows: this.importRows,
       userId: this.userId,
     })
-    if (await features.flags.isEnabled("SQS")) {
+    if (await features.flags.isEnabled(FeatureFlag.SQS)) {
       await sdk.tables.sqs.addTable(table)
     }
     return table
@@ -523,7 +524,7 @@ export async function internalTableCleanup(table: Table, rows?: Row[]) {
   if (rows) {
     await AttachmentCleanup.tableDelete(table, rows)
   }
-  if (await features.flags.isEnabled("SQS")) {
+  if (await features.flags.isEnabled(FeatureFlag.SQS)) {
     await sdk.tables.sqs.removeTable(table)
   }
 }
