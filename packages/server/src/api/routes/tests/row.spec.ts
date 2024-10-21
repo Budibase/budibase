@@ -90,9 +90,7 @@ describe.each([
   let client: Knex | undefined
 
   beforeAll(async () => {
-    await features.testutils.withFeatureFlags("*", { SQS: true }, () =>
-      config.init()
-    )
+    await config.init()
 
     if (dsProvider) {
       const rawDatasource = await dsProvider

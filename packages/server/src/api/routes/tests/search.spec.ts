@@ -7,7 +7,6 @@ import {
 import {
   context,
   db as dbCore,
-  features,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
   SQLITE_DESIGN_DOC_ID,
@@ -91,9 +90,7 @@ describe.each([
   }
 
   beforeAll(async () => {
-    await features.testutils.withFeatureFlags("*", { SQS: true }, () =>
-      config.init()
-    )
+    await config.init()
 
     if (config.app?.appId) {
       config.app = await config.api.application.update(config.app?.appId, {
