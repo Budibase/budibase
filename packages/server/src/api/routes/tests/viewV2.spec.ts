@@ -93,6 +93,7 @@ describe.each([
   }
 
   beforeAll(async () => {
+    await config.init()
     if (dsProvider) {
       datasource = await config.createDatasource({
         datasource: await dsProvider,
