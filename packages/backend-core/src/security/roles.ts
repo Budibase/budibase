@@ -220,7 +220,7 @@ export function validInherits(
   if (!inherits) {
     return false
   }
-  const find = (id: string) => allRoles.find(r => compareRoleIds(r._id!, id))
+  const find = (id: string) => allRoles.find(r => roleIDsAreEqual(r._id!, id))
   if (Array.isArray(inherits)) {
     const filtered = inherits.filter(roleId => find(roleId))
     return inherits.length !== 0 && filtered.length === inherits.length
@@ -306,7 +306,7 @@ export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
     : roleId1
 }
 
-export function compareRoleIds(roleId1: string, roleId2: string) {
+export function roleIDsAreEqual(roleId1: string, roleId2: string) {
   // make sure both role IDs are prefixed correctly
   return prefixRoleID(roleId1) === prefixRoleID(roleId2)
 }
@@ -339,7 +339,7 @@ export function findRole(
     roleId = prefixRoleID(roleId)
   }
   const dbRole = roles.find(
-    role => role._id && compareRoleIds(role._id, roleId)
+    role => role._id && roleIDsAreEqual(role._id, roleId)
   )
   if (!dbRole && !isBuiltin(roleId) && opts?.defaultPublic) {
     return cloneDeep(BUILTIN_ROLES.PUBLIC)
@@ -573,7 +573,7 @@ export class AccessController {
     }
 
     return (
-      roleIds?.find(roleId => compareRoleIds(roleId, tryingRoleId)) !==
+      roleIds?.find(roleId => roleIDsAreEqual(roleId, tryingRoleId)) !==
       undefined
     )
   }
