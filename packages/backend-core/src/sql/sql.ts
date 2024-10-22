@@ -258,7 +258,9 @@ class InternalBuilder {
         const columnSchema = schema[column]
 
         if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(columnSchema)) {
-          return this.knex.raw("??::money::numeric as ??", [
+          // TODO: figure out how to express this safely without string
+          // interpolation.
+          return this.knex.raw(`??::money::numeric as "${field}"`, [
             [table, column].join("."),
             field,
           ])
@@ -632,18 +634,16 @@ class InternalBuilder {
     }
 
     const like = (q: Knex.QueryBuilder, key: string, value: any) => {
-      const fuzzyOr = filters?.fuzzyOr
-      const fnc = fuzzyOr || allOr ? "orWhere" : "where"
-      // postgres supports ilike, nothing else does
-      if (this.client === SqlClient.POSTGRES) {
-        return q[fnc](key, "ilike", `%${value}%`)
-      } else {
-        const rawFnc = `${fnc}Raw`
-        // @ts-ignore
-        return q[rawFnc](`LOWER(${this.quotedIdentifier(key)}) LIKE ?`, [
-          `%${value.toLowerCase()}%`,
-        ])
+      if (filters?.fuzzyOr || allOr) {
+        q = q.or
       }
+      if (
+        this.client === SqlClient.ORACLE ||
+        this.client === SqlClient.SQL_LITE
+      ) {
+        return q.whereRaw(`LOWER(??) LIKE ?`, [key, `%${value.toLowerCase()}%`])
+      }
+      return q.whereILike(key, this.knex.raw("?", [`%${value}%`]))
     }
 
     const contains = (mode: AnySearchFilter, any: boolean = false) => {
@@ -1069,17 +1069,20 @@ class InternalBuilder {
 
   private buildJsonField(field: string): string {
     const parts = field.split(".")
-    let tableField: string, unaliased: string
+    let unaliased: string
+
+    let tableField: string
     if (parts.length > 1) {
       const alias = parts.shift()!
       unaliased = parts.join(".")
-      tableField = `${this.quote(alias)}.${this.quote(unaliased)}`
+      tableField = `${alias}.${unaliased}`
     } else {
       unaliased = parts.join(".")
-      tableField = this.quote(unaliased)
+      tableField = unaliased
     }
+
     const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
-    return `'${unaliased}'${separator}${tableField}`
+    return this.knex.raw(`?${separator}??`, [unaliased, tableField]).toString()
   }
 
   maxFunctionParameters() {
@@ -1175,13 +1178,13 @@ class InternalBuilder {
       subQuery = subQuery.where(
         correlatedTo,
         "=",
-        knex.raw(this.quotedIdentifier(correlatedFrom))
+        knex.raw("??", [correlatedFrom])
       )
 
-      const standardWrap = (select: string): Knex.QueryBuilder => {
+      const standardWrap = (select: Knex.Raw): Knex.QueryBuilder => {
         subQuery = subQuery.select(`${toAlias}.*`).limit(getRelationshipLimit())
         // @ts-ignore - the from alias syntax isn't in Knex typing
-        return knex.select(knex.raw(select)).from({
+        return knex.select(select).from({
           [toAlias]: subQuery,
         })
       }
@@ -1191,12 +1194,12 @@ class InternalBuilder {
           // need to check the junction table document is to the right column, this is just for SQS
           subQuery = this.addJoinFieldCheck(subQuery, relationship)
           wrapperQuery = standardWrap(
-            `json_group_array(json_object(${fieldList}))`
+            this.knex.raw(`json_group_array(json_object(${fieldList}))`)
           )
           break
         case SqlClient.POSTGRES:
           wrapperQuery = standardWrap(
-            `json_agg(json_build_object(${fieldList}))`
+            this.knex.raw(`json_agg(json_build_object(${fieldList}))`)
           )
           break
         case SqlClient.MARIADB:
@@ -1210,21 +1213,25 @@ class InternalBuilder {
         case SqlClient.MY_SQL:
         case SqlClient.ORACLE:
           wrapperQuery = standardWrap(
-            `json_arrayagg(json_object(${fieldList}))`
+            this.knex.raw(`json_arrayagg(json_object(${fieldList}))`)
           )
           break
-        case SqlClient.MS_SQL:
+        case SqlClient.MS_SQL: {
+          const comparatorQuery = knex
+            .select(`${fromAlias}.*`)
+            // @ts-ignore - from alias syntax not TS supported
+            .from({
+              [fromAlias]: subQuery
+                .select(`${toAlias}.*`)
+                .limit(getRelationshipLimit()),
+            })
+
           wrapperQuery = knex.raw(
-            `(SELECT ${this.quote(toAlias)} = (${knex
-              .select(`${fromAlias}.*`)
-              // @ts-ignore - from alias syntax not TS supported
-              .from({
-                [fromAlias]: subQuery
-                  .select(`${toAlias}.*`)
-                  .limit(getRelationshipLimit()),
-              })} FOR JSON PATH))`
+            `(SELECT ?? = (${comparatorQuery} FOR JSON PATH))`,
+            [toAlias]
           )
           break
+        }
         default:
           throw new Error(`JSON relationships not implement for ${sqlClient}`)
       }
