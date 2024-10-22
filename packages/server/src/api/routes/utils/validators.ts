@@ -355,9 +355,7 @@ export function applicationValidator(opts = { isCreate: true }) {
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
     url: OPTIONAL_STRING,
-    template: Joi.object({
-      templateString: OPTIONAL_STRING,
-    }),
+    template: Joi.object({}),
   }
 
   const appNameValidator = Joi.string()
@@ -390,9 +388,7 @@ export function applicationValidator(opts = { isCreate: true }) {
       _rev: OPTIONAL_STRING,
       name: appNameValidator,
       url: OPTIONAL_STRING,
-      template: Joi.object({
-        templateString: OPTIONAL_STRING,
-      }).unknown(true),
+      template: Joi.object({}).unknown(true),
       snippets: snippetValidator,
     }).unknown(true)
   )
