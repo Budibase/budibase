@@ -250,9 +250,9 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
     useTemplate,
     key: templateKey,
   }
-  if (ctx.request.files && ctx.request.files.templateFile) {
+  if (ctx.request.files && ctx.request.files.fileToImport) {
     instanceConfig.file = {
-      ...(ctx.request.files.templateFile as any),
+      ...(ctx.request.files.fileToImport as any),
       password: encryptionPassword,
     }
   } else if (typeof ctx.request.body.file?.path === "string") {
