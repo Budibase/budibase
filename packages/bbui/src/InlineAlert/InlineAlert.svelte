@@ -63,4 +63,7 @@
     margin: 0;
     border-width: 1px;
   }
+  .spectrum-InLineAlert-header {
+    line-height: 1.2;
+  }
 </style>

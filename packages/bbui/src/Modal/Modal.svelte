@@ -182,6 +182,7 @@
       --spectrum-global-dimension-size-100
     );
     max-width: 100%;
+    background-color: var(--background);
   }
   :global(.spectrum--lightest .spectrum-Modal.inline) {
     border: var(--border-light);

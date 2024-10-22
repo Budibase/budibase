@@ -267,7 +267,8 @@
     align-items: center;
   }
   .icon-background-trigger {
-    background-color: #6afdef;
+    background-color: #ffd230;
+    /*background-color: #6afdef;*/
     padding: 0;
     border-radius: 8px;
     min-height: 32px;

@@ -57,6 +57,7 @@
   onConfirm={createAutomation}
   disabled={!selectedTrigger || !name}
 >
+  <InlineAlert header="Click Publish to activate your automation." />
   <Input
     bind:value={name}
     on:input={() => (nameTouched = true)}
@@ -130,7 +131,8 @@
     background: var(--spectrum-global-color-gray-200);
   }
   .icon-background-trigger {
-    background-color: #6afdef;
+    background-color: #ffd230;
+    /*background-color: #6afdef;*/
     padding: 0;
     border-radius: 6px;
     min-height: 28px;
