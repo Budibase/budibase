@@ -8,6 +8,7 @@ import {
 import { generateTableID } from "../../../../db/utils"
 import { validate } from "../utils"
 import { generator } from "@budibase/backend-core/tests"
+import { withEnv } from "../../../../environment"
 
 describe("validate", () => {
   const hour = () => generator.hour().toString().padStart(2, "0")
@@ -328,6 +329,48 @@ describe("validate", () => {
           expect(output.errors).toEqual({
             time: ["must be no later than 15:00"],
           })
+        })
+      })
+    })
+  })
+
+  describe("XSS Safe mode", () => {
+    const getTable = (): Table => ({
+      type: "table",
+      _id: generateTableID(),
+      name: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
+      schema: {
+        text: {
+          name: "sometext",
+          type: FieldType.STRING,
+        },
+      },
+    })
+    it.each([
+      "SELECT * FROM users WHERE username = 'admin' --",
+      "SELECT * FROM users WHERE id = 1; DROP TABLE users;",
+      "1' OR '1' = '1",
+      "' OR 'a' = 'a",
+      "<script>alert('XSS');</script>",
+      '"><img src=x onerror=alert(1)>',
+      "</script><script>alert('test')</script>",
+      "<div onmouseover=\"alert('XSS')\">Hover over me!</div>",
+      "'; EXEC sp_msforeachtable 'DROP TABLE ?'; --",
+      "{alert('Injected')}",
+      "UNION SELECT * FROM users",
+      "INSERT INTO users (username, password) VALUES ('admin', 'password')",
+      "/* This is a comment */ SELECT * FROM users",
+      '<iframe src="http://malicious-site.com"></iframe>',
+    ])("test potentially unsafe input: %s", async input => {
+      await withEnv({ XSS_SAFE_MODE: "1" }, async () => {
+        const table = getTable()
+        const row = { text: input }
+        const output = await validate({ source: table, row })
+        expect(output.valid).toBe(false)
+        expect(output.errors).toStrictEqual({
+          text: ["Input not sanitised - potentially vulnerable to XSS"],
         })
       })
     })

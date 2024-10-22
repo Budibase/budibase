@@ -73,8 +73,7 @@ export async function getResourcePerms(
     p[level] = { role, type: PermissionSource.BASE }
     return p
   }, {})
-  const result = Object.assign(basePermissions, permissions)
-  return result
+  return Object.assign(basePermissions, permissions)
 }
 
 export async function getDependantResources(
@@ -183,6 +182,26 @@ export async function updatePermissionOnRole(
       reason: resp.reason,
     }
   })
+}
+
+export async function setPermissions(
+  resourceId: string,
+  {
+    writeRole,
+    readRole,
+  }: {
+    writeRole: string
+    readRole: string
+  }
+) {
+  await updatePermissionOnRole(
+    { roleId: writeRole, resourceId, level: PermissionLevel.WRITE },
+    PermissionUpdateType.ADD
+  )
+  await updatePermissionOnRole(
+    { roleId: readRole, resourceId, level: PermissionLevel.READ },
+    PermissionUpdateType.ADD
+  )
 }
 
 // utility function to stop this repetition - permissions always stored under roles

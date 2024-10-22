@@ -1,5 +1,6 @@
 import {
   Aggregation,
+  CalculationType,
   Datasource,
   DocumentType,
   FieldType,
@@ -39,11 +40,6 @@ import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
 import { processRowCountResponse } from "../../utils"
 import {
-  getRelationshipColumns,
-  getTableIDList,
-  updateFilterKeys,
-} from "../filters"
-import {
   dataFilters,
   helpers,
   isInternalColumnName,
@@ -67,9 +63,7 @@ async function buildInternalFieldList(
   const { relationships, allowedFields } = opts || {}
   let schemaFields: string[] = []
   if (sdk.views.isView(source)) {
-    schemaFields = Object.keys(helpers.views.basicFields(source)).filter(
-      key => source.schema?.[key]?.visible !== false
-    )
+    schemaFields = Object.keys(helpers.views.basicFields(source))
   } else {
     schemaFields = Object.keys(source.schema).filter(
       key => source.schema[key].visible !== false
@@ -134,31 +128,7 @@ async function buildInternalFieldList(
   return [...new Set(fieldList)]
 }
 
-function cleanupFilters(
-  filters: SearchFilters,
-  table: Table,
-  allTables: Table[]
-) {
-  // get a list of all relationship columns in the table for updating
-  const relationshipColumns = getRelationshipColumns(table)
-  // get table names to ID map for relationships
-  const tableNameToID = getTableIDList(allTables)
-  // all should be applied at once
-  filters = updateFilterKeys(
-    filters,
-    relationshipColumns
-      .map(({ name, definition }) => ({
-        original: name,
-        updated: definition.tableId,
-      }))
-      .concat(
-        tableNameToID.map(({ name, id }) => ({
-          original: name,
-          updated: id,
-        }))
-      )
-  )
-
+function cleanupFilters(filters: SearchFilters, allTables: Table[]) {
   // generate a map of all possible column names (these can be duplicated across tables
   // the map of them will always be the same
   const userColumnMap: Record<string, string> = {}
@@ -357,7 +327,7 @@ export async function search(
   const relationships = buildInternalRelationships(table, allTables)
 
   const searchFilters: SearchFilters = {
-    ...cleanupFilters(query, table, allTables),
+    ...cleanupFilters(query, allTables),
     documentType: DocumentType.ROW,
   }
 
@@ -369,11 +339,27 @@ export async function search(
         continue
       }
 
-      aggregations.push({
-        name: key,
-        field: mapToUserColumn(field.field),
-        calculationType: field.calculationType,
-      })
+      if (field.calculationType === CalculationType.COUNT) {
+        if ("distinct" in field && field.distinct) {
+          aggregations.push({
+            name: key,
+            distinct: true,
+            field: mapToUserColumn(field.field),
+            calculationType: field.calculationType,
+          })
+        } else {
+          aggregations.push({
+            name: key,
+            calculationType: field.calculationType,
+          })
+        }
+      } else {
+        aggregations.push({
+          name: key,
+          field: mapToUserColumn(field.field),
+          calculationType: field.calculationType,
+        })
+      }
     }
   }
 
@@ -403,13 +389,26 @@ export async function search(
 
   if (params.sort) {
     const sortField = table.schema[params.sort]
-    const sortType =
-      sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
-    request.sort = {
-      [mapToUserColumn(sortField.name)]: {
-        direction: params.sortOrder || SortOrder.ASCENDING,
-        type: sortType as SortType,
-      },
+    const isAggregateField = aggregations.some(agg => agg.name === params.sort)
+
+    if (isAggregateField) {
+      request.sort = {
+        [params.sort]: {
+          direction: params.sortOrder || SortOrder.ASCENDING,
+          type: SortType.NUMBER,
+        },
+      }
+    } else if (sortField) {
+      const sortType =
+        sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
+      request.sort = {
+        [mapToUserColumn(sortField.name)]: {
+          direction: params.sortOrder || SortOrder.ASCENDING,
+          type: sortType as SortType,
+        },
+      }
+    } else {
+      throw new Error(`Unable to sort by ${params.sort}`)
     }
   }
 

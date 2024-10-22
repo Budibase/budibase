@@ -28,6 +28,7 @@ describe.each(
   const config = setup.getConfig()
   const isOracle = dbName === DatabaseName.ORACLE
   const isMsSQL = dbName === DatabaseName.SQL_SERVER
+  const isPostgres = dbName === DatabaseName.POSTGRES
 
   let rawDatasource: Datasource
   let datasource: Datasource
@@ -46,6 +47,9 @@ describe.each(
       queryVerb: "read",
       transformer: "return data",
       readable: true,
+    }
+    if (query.fields?.sql && typeof query.fields.sql !== "string") {
+      throw new Error("Unable to create with knex structure in 'sql' field")
     }
     return await config.api.query.save(
       { ...defaultQuery, ...query },
@@ -207,6 +211,31 @@ describe.each(
         expect(prodQuery.parameters).toBeUndefined()
         expect(prodQuery.schema).toBeDefined()
       })
+
+      isPostgres &&
+        it("should be able to handle a JSON aggregate with newlines", async () => {
+          const jsonStatement = `COALESCE(json_build_object('name', name),'{"name":{}}'::json)`
+          const query = await createQuery({
+            fields: {
+              sql: client("test_table")
+                .select([
+                  "*",
+                  client.raw(
+                    `${jsonStatement} as json,\n${jsonStatement} as json2`
+                  ),
+                ])
+                .toString(),
+            },
+          })
+          const res = await config.api.query.execute(
+            query._id!,
+            {},
+            {
+              status: 200,
+            }
+          )
+          expect(res).toBeDefined()
+        })
     })
   })
 

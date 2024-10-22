@@ -12,6 +12,7 @@ import {
   TableResponse,
   TableSourceType,
   TableViewsResponse,
+  FeatureFlag,
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
@@ -20,7 +21,13 @@ export async function processTable(table: Table): Promise<Table> {
   if (!table) {
     return table
   }
+
+  table = { ...table }
   if (table._id && isExternalTableID(table._id)) {
+    // Old created external tables via Budibase might have a missing field name breaking some UI such as filters
+    if (table.schema["id"] && !table.schema["id"].name) {
+      table.schema["id"].name = "id"
+    }
     return {
       ...table,
       type: "table",
@@ -33,7 +40,7 @@ export async function processTable(table: Table): Promise<Table> {
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
     }
-    const sqsEnabled = await features.flags.isEnabled("SQS")
+    const sqsEnabled = await features.flags.isEnabled(FeatureFlag.SQS)
     if (sqsEnabled) {
       processed.sql = true
     }
@@ -84,7 +91,11 @@ export async function getExternalTable(
   if (!entities[tableName]) {
     throw new Error(`Unable to find table named "${tableName}"`)
   }
-  return processTable(entities[tableName])
+  const table = await processTable(entities[tableName])
+  if (!table.sourceId) {
+    table.sourceId = datasourceId
+  }
+  return table
 }
 
 export async function getTable(tableId: string): Promise<Table> {

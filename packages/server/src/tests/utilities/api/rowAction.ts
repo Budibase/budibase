@@ -72,6 +72,42 @@ export class RowActionAPI extends TestAPI {
     )
   }
 
+  setTablePermission = async (
+    tableId: string,
+    rowActionId: string,
+    expectations?: Expectations,
+    config?: { publicUser?: boolean }
+  ) => {
+    return await this._post<RowActionResponse>(
+      `/api/tables/${tableId}/actions/${rowActionId}/permissions`,
+      {
+        expectations: {
+          status: 200,
+          ...expectations,
+        },
+        ...config,
+      }
+    )
+  }
+
+  unsetTablePermission = async (
+    tableId: string,
+    rowActionId: string,
+    expectations?: Expectations,
+    config?: { publicUser?: boolean }
+  ) => {
+    return await this._delete<RowActionResponse>(
+      `/api/tables/${tableId}/actions/${rowActionId}/permissions`,
+      {
+        expectations: {
+          status: 200,
+          ...expectations,
+        },
+        ...config,
+      }
+    )
+  }
+
   setViewPermission = async (
     tableId: string,
     viewId: string,

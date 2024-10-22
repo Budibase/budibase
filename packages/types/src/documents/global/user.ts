@@ -21,7 +21,6 @@ export interface UserSSO {
   provider: string // the individual provider e.g. Okta, Auth0, Google
   providerType: SSOProviderType
   oauth2?: OAuth2
-  thirdPartyProfile?: SSOProfileJson
   profile?: {
     displayName?: string
     name?: {
@@ -45,7 +44,6 @@ export interface User extends Document {
   userId?: string
   firstName?: string
   lastName?: string
-  pictureUrl?: string
   forceResetPassword?: boolean
   roles: UserRoles
   builder?: {
@@ -67,6 +65,17 @@ export interface User extends Document {
   scimInfo?: { isSync: true } & Record<string, any>
   appFavourites?: string[]
   ssoId?: string
+  appSort?: string
+}
+
+export interface UserBindings extends Document {
+  firstName?: string
+  lastName?: string
+  email?: string
+  status?: string
+  roleId?: string | null
+  globalId?: string
+  userId?: string
 }
 
 export enum UserStatus {

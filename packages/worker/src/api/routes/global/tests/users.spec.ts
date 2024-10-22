@@ -741,6 +741,25 @@ describe("/api/global/users", () => {
     it("should throw an error if public query performed", async () => {
       await config.api.users.searchUsers({}, { status: 403, noHeaders: true })
     })
+
+    it("should be able to search using logical conditions", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: {
+          $and: {
+            conditions: [
+              {
+                $and: {
+                  conditions: [{ string: { email: user.email } }],
+                },
+              },
+            ],
+          },
+        },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(user.email)
+    })
   })
 
   describe("DELETE /api/global/users/:userId", () => {

@@ -4,6 +4,7 @@ import {
   AutoFieldSubType,
   AutoReason,
   Datasource,
+  DatasourcePlusQueryResponse,
   FieldSchema,
   FieldType,
   FilterType,
@@ -172,9 +173,9 @@ export class ExternalRequest<T extends Operation> {
     if (!opts.datasource) {
       if (sdk.views.isView(source)) {
         const table = await sdk.views.getTable(source.id)
-        opts.datasource = await sdk.datasources.get(table.sourceId!)
+        opts.datasource = await sdk.datasources.get(table.sourceId)
       } else {
-        opts.datasource = await sdk.datasources.get(source.sourceId!)
+        opts.datasource = await sdk.datasources.get(source.sourceId)
       }
     }
 
@@ -203,18 +204,6 @@ export class ExternalRequest<T extends Operation> {
     filters: SearchFilters,
     table: Table
   ): SearchFilters {
-    // replace any relationship columns initially, table names and relationship column names are acceptable
-    const relationshipColumns = sdk.rows.filters.getRelationshipColumns(table)
-    filters = sdk.rows.filters.updateFilterKeys(
-      filters,
-      relationshipColumns.map(({ name, definition }) => {
-        const { tableName } = breakExternalTableId(definition.tableId)
-        return {
-          original: name,
-          updated: tableName,
-        }
-      })
-    )
     const primary = table.primary
     // if passed in array need to copy for shifting etc
     let idCopy: undefined | string | any[] = cloneDeep(id)
@@ -269,18 +258,13 @@ export class ExternalRequest<T extends Operation> {
     }
   }
 
-  private async removeManyToManyRelationships(
-    rowId: string,
-    table: Table,
-    colName: string
-  ) {
+  private async removeManyToManyRelationships(rowId: string, table: Table) {
     const tableId = table._id!
     const filters = this.prepareFilters(rowId, {}, table)
     // safety check, if there are no filters on deletion bad things happen
     if (Object.keys(filters).length !== 0) {
       return getDatasourceAndQuery({
         endpoint: getEndpoint(tableId, Operation.DELETE),
-        body: { [colName]: null },
         filters,
         meta: {
           table,
@@ -291,13 +275,18 @@ export class ExternalRequest<T extends Operation> {
     }
   }
 
-  private async removeOneToManyRelationships(rowId: string, table: Table) {
+  private async removeOneToManyRelationships(
+    rowId: string,
+    table: Table,
+    colName: string
+  ) {
     const tableId = table._id!
     const filters = this.prepareFilters(rowId, {}, table)
     // safety check, if there are no filters on deletion bad things happen
     if (Object.keys(filters).length !== 0) {
       return getDatasourceAndQuery({
         endpoint: getEndpoint(tableId, Operation.UPDATE),
+        body: { [colName]: null },
         filters,
         meta: {
           table,
@@ -557,8 +546,9 @@ export class ExternalRequest<T extends Operation> {
           return matchesPrimaryLink
         }
 
-        const matchesSecondayLink = row[linkSecondary] === body?.[linkSecondary]
-        return matchesPrimaryLink && matchesSecondayLink
+        const matchesSecondaryLink =
+          row[linkSecondary] === body?.[linkSecondary]
+        return matchesPrimaryLink && matchesSecondaryLink
       }
 
       const existingRelationship = rows.find((row: { [key: string]: any }) =>
@@ -595,8 +585,8 @@ export class ExternalRequest<T extends Operation> {
       for (let row of rows) {
         const rowId = generateIdForRow(row, table)
         const promise: Promise<any> = isMany
-          ? this.removeManyToManyRelationships(rowId, table, colName)
-          : this.removeOneToManyRelationships(rowId, table)
+          ? this.removeManyToManyRelationships(rowId, table)
+          : this.removeOneToManyRelationships(rowId, table, colName)
         if (promise) {
           promises.push(promise)
         }
@@ -619,12 +609,12 @@ export class ExternalRequest<T extends Operation> {
         rows.map(row => {
           const rowId = generateIdForRow(row, table)
           return isMany
-            ? this.removeManyToManyRelationships(
+            ? this.removeManyToManyRelationships(rowId, table)
+            : this.removeOneToManyRelationships(
                 rowId,
                 table,
                 relationshipColumn.fieldName
               )
-            : this.removeOneToManyRelationships(rowId, table)
         })
       )
     }
@@ -669,6 +659,7 @@ export class ExternalRequest<T extends Operation> {
       config.includeSqlRelationships === IncludeRelationship.INCLUDE
 
     // clean up row on ingress using schema
+    const unprocessedRow = config.row
     const processed = this.inputProcessing(row, table)
     row = processed.row
     let manyRelationships = processed.manyRelationships
@@ -696,9 +687,8 @@ export class ExternalRequest<T extends Operation> {
       const calculationFields = helpers.views.calculationFields(this.source)
       for (const [key, field] of Object.entries(calculationFields)) {
         aggregations.push({
+          ...field,
           name: key,
-          field: field.field,
-          calculationType: field.calculationType,
         })
       }
     }
@@ -744,9 +734,20 @@ export class ExternalRequest<T extends Operation> {
 
     // aliasing can be disabled fully if desired
     const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
-    let response = env.SQL_ALIASING_DISABLE
-      ? await getDatasourceAndQuery(json)
-      : await aliasing.queryWithAliasing(json, makeExternalQuery)
+    let response: DatasourcePlusQueryResponse
+    // there's a chance after input processing nothing needs updated, so pass over the call
+    // we might still need to perform other operations like updating the foreign keys on other rows
+    if (
+      this.operation === Operation.UPDATE &&
+      Object.keys(row || {}).length === 0 &&
+      unprocessedRow
+    ) {
+      response = [unprocessedRow]
+    } else {
+      response = env.SQL_ALIASING_DISABLE
+        ? await getDatasourceAndQuery(json)
+        : await aliasing.queryWithAliasing(json, makeExternalQuery)
+    }
 
     // if it's a counting operation there will be no more processing, just return the number
     if (this.operation === Operation.COUNT) {

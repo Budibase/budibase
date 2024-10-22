@@ -1,7 +1,6 @@
 import { permissions, roles, context } from "@budibase/backend-core"
 import {
   UserCtx,
-  Role,
   GetResourcePermsResponse,
   ResourcePermissionInfo,
   GetDependantResourcesResponse,
@@ -9,6 +8,7 @@ import {
   AddPermissionRequest,
   RemovePermissionRequest,
   RemovePermissionResponse,
+  FetchResourcePermissionInfoResponse,
 } from "@budibase/types"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
@@ -28,10 +28,12 @@ export function fetchLevels(ctx: UserCtx) {
   ctx.body = SUPPORTED_LEVELS
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(
+  ctx: UserCtx<void, FetchResourcePermissionInfoResponse>
+) {
   const db = context.getAppDB()
-  const dbRoles: Role[] = await sdk.permissions.getAllDBRoles(db)
-  let permissions: any = {}
+  const dbRoles = await sdk.permissions.getAllDBRoles(db)
+  let permissions: Record<string, Record<string, string>> = {}
   // create an object with structure role ID -> resource ID -> level
   for (let role of dbRoles) {
     if (!role.permissions) {
@@ -43,13 +45,13 @@ export async function fetch(ctx: UserCtx) {
     }
     for (let [resource, levelArr] of Object.entries(role.permissions)) {
       const levels: string[] = Array.isArray(levelArr) ? levelArr : [levelArr]
-      const perms: Record<string, string> = {}
+      const perms: Record<string, string> = permissions[resource] || {}
       levels.forEach(level => (perms[level] = roleId!))
       permissions[resource] = perms
     }
   }
   // apply the base permissions
-  const finalPermissions: Record<string, Record<string, string>> = {}
+  const finalPermissions: FetchResourcePermissionInfoResponse = {}
   for (let [resource, permission] of Object.entries(permissions)) {
     const basePerms = getBasePermissions(resource)
     finalPermissions[resource] = Object.assign(basePerms, permission)
@@ -92,18 +94,17 @@ export async function getDependantResources(
 
 export async function addPermission(ctx: UserCtx<void, AddPermissionResponse>) {
   const params: AddPermissionRequest = ctx.params
-  ctx.body = await sdk.permissions.updatePermissionOnRole(
-    params,
-    PermissionUpdateType.ADD
-  )
+  await sdk.permissions.updatePermissionOnRole(params, PermissionUpdateType.ADD)
+  ctx.status = 200
 }
 
 export async function removePermission(
   ctx: UserCtx<void, RemovePermissionResponse>
 ) {
   const params: RemovePermissionRequest = ctx.params
-  ctx.body = await sdk.permissions.updatePermissionOnRole(
+  await sdk.permissions.updatePermissionOnRole(
     params,
     PermissionUpdateType.REMOVE
   )
+  ctx.status = 200
 }

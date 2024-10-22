@@ -8,7 +8,7 @@ export interface RowActionResponse extends RowActionData {
   id: string
   tableId: string
   automationId: string
-  allowedViews: string[] | undefined
+  allowedSources: string[] | undefined
 }
 
 export interface RowActionsResponse {

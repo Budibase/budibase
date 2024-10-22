@@ -69,6 +69,9 @@ WORKDIR /minio
 COPY scripts/install-minio.sh ./install.sh
 RUN chmod +x install.sh && ./install.sh
 
+# setup redis
+COPY hosting/single/redis.conf /etc/redis/redis.conf
+
 # setup runner file
 WORKDIR /
 COPY hosting/single/runner.sh .

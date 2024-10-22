@@ -105,7 +105,7 @@ export class RowAPI extends TestAPI {
 
   exportRows = async (
     tableId: string,
-    body: ExportRowsRequest,
+    body?: ExportRowsRequest,
     format: RowExportFormat = RowExportFormat.JSON,
     expectations?: Expectations
   ) => {

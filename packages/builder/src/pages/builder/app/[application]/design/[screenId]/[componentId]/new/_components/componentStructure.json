@@ -14,7 +14,7 @@
   {
     "name": "Layout",
     "icon": "ClassicGridView",
-    "children": ["container", "section", "sidepanel", "modal"]
+    "children": ["container", "sidepanel", "modal"]
   },
   {
     "name": "Data",

@@ -3,11 +3,32 @@ import { SearchFilters } from "./search"
 import { CalculationType, Row } from "../documents"
 import { WithRequired } from "../shared"
 
-export interface Aggregation {
+export interface BaseAggregation {
   name: string
-  calculationType: CalculationType
+}
+
+export interface NumericAggregation extends BaseAggregation {
+  calculationType:
+    | CalculationType.AVG
+    | CalculationType.MAX
+    | CalculationType.MIN
+    | CalculationType.SUM
   field: string
 }
+
+export interface CountAggregation extends BaseAggregation {
+  calculationType: CalculationType.COUNT
+}
+
+export interface CountDistinctAggregation extends CountAggregation {
+  distinct: true
+  field: string
+}
+
+export type Aggregation =
+  | NumericAggregation
+  | CountAggregation
+  | CountDistinctAggregation
 
 export interface SearchParams {
   tableId?: string

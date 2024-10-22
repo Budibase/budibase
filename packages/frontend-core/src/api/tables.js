@@ -40,7 +40,7 @@ export const buildTableEndpoints = API => ({
     sortType,
     paginate,
   }) => {
-    if (!tableId || !query) {
+    if (!tableId) {
       return {
         rows: [],
       }

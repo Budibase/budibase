@@ -23,12 +23,14 @@ import {
   InternalSearchFilterOperator,
   JsonFieldMetadata,
   JsonTypes,
+  LogicalOperator,
   Operation,
   prefixed,
   QueryJson,
   QueryOptions,
   RangeOperator,
   RelationshipsJson,
+  SearchFilterKey,
   SearchFilters,
   SortOrder,
   SqlClient,
@@ -96,6 +98,22 @@ function isSqs(table: Table): boolean {
   )
 }
 
+const allowEmptyRelationships: Record<SearchFilterKey, boolean> = {
+  [BasicOperator.EQUAL]: false,
+  [BasicOperator.NOT_EQUAL]: true,
+  [BasicOperator.EMPTY]: false,
+  [BasicOperator.NOT_EMPTY]: true,
+  [BasicOperator.FUZZY]: false,
+  [BasicOperator.STRING]: false,
+  [RangeOperator.RANGE]: false,
+  [ArrayOperator.CONTAINS]: false,
+  [ArrayOperator.NOT_CONTAINS]: true,
+  [ArrayOperator.CONTAINS_ANY]: false,
+  [ArrayOperator.ONE_OF]: false,
+  [LogicalOperator.AND]: false,
+  [LogicalOperator.OR]: false,
+}
+
 class InternalBuilder {
   private readonly client: SqlClient
   private readonly query: QueryJson
@@ -139,29 +157,61 @@ class InternalBuilder {
     return this.table.schema[column]
   }
 
-  // Takes a string like foo and returns a quoted string like [foo] for SQL Server
-  // and "foo" for Postgres.
-  private quote(str: string): string {
+  private quoteChars(): [string, string] {
     switch (this.client) {
-      case SqlClient.SQL_LITE:
       case SqlClient.ORACLE:
       case SqlClient.POSTGRES:
-        return `"${str}"`
+        return ['"', '"']
       case SqlClient.MS_SQL:
-        return `[${str}]`
+        return ["[", "]"]
       case SqlClient.MARIADB:
       case SqlClient.MY_SQL:
-        return `\`${str}\``
+      case SqlClient.SQL_LITE:
+        return ["`", "`"]
     }
   }
 
-  // Takes a string like a.b.c and returns a quoted identifier like [a].[b].[c]
-  // for SQL Server and `a`.`b`.`c` for MySQL.
-  private quotedIdentifier(key: string): string {
-    return key
-      .split(".")
-      .map(part => this.quote(part))
-      .join(".")
+  // Takes a string like foo and returns a quoted string like [foo] for SQL Server
+  // and "foo" for Postgres.
+  private quote(str: string): string {
+    const [start, end] = this.quoteChars()
+    return `${start}${str}${end}`
+  }
+
+  private isQuoted(key: string): boolean {
+    const [start, end] = this.quoteChars()
+    return key.startsWith(start) && key.endsWith(end)
+  }
+
+  // Takes a string like a.b.c or an array like ["a", "b", "c"] and returns a
+  // quoted identifier like [a].[b].[c] for SQL Server and `a`.`b`.`c` for
+  // MySQL.
+  private quotedIdentifier(key: string | string[]): string {
+    if (!Array.isArray(key)) {
+      key = this.splitIdentifier(key)
+    }
+    return key.map(part => this.quote(part)).join(".")
+  }
+
+  // Turns an identifier like a.b.c or `a`.`b`.`c` into ["a", "b", "c"]
+  private splitIdentifier(key: string): string[] {
+    const [start, end] = this.quoteChars()
+    if (this.isQuoted(key)) {
+      return key.slice(1, -1).split(`${end}.${start}`)
+    }
+    return key.split(".")
+  }
+
+  private qualifyIdentifier(key: string): string {
+    const tableName = this.getTableName()
+    const parts = this.splitIdentifier(key)
+    if (parts[0] !== tableName) {
+      parts.unshift(tableName)
+    }
+    if (this.isQuoted(key)) {
+      return this.quotedIdentifier(parts)
+    }
+    return parts.join(".")
   }
 
   private isFullSelectStatementRequired(): boolean {
@@ -231,11 +281,17 @@ class InternalBuilder {
   // OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
   // so when we use them we need to wrap them in to_char(). This function
   // converts a field name to the appropriate identifier.
-  private convertClobs(field: string): string {
-    const parts = field.split(".")
+  private convertClobs(field: string, opts?: { forSelect?: boolean }): string {
+    if (this.client !== SqlClient.ORACLE) {
+      throw new Error(
+        "you've called convertClobs on a DB that's not Oracle, this is a mistake"
+      )
+    }
+    const parts = this.splitIdentifier(field)
     const col = parts.pop()!
     const schema = this.table.schema[col]
     let identifier = this.quotedIdentifier(field)
+
     if (
       schema.type === FieldType.STRING ||
       schema.type === FieldType.LONGFORM ||
@@ -244,7 +300,11 @@ class InternalBuilder {
       schema.type === FieldType.OPTIONS ||
       schema.type === FieldType.BARCODEQR
     ) {
-      identifier = `to_char(${identifier})`
+      if (opts?.forSelect) {
+        identifier = `to_char(${identifier}) as ${this.quotedIdentifier(col)}`
+      } else {
+        identifier = `to_char(${identifier})`
+      }
     }
     return identifier
   }
@@ -284,7 +344,7 @@ class InternalBuilder {
     return input
   }
 
-  private parseBody(body: any) {
+  private parseBody(body: Record<string, any>) {
     for (let [key, value] of Object.entries(body)) {
       const { column } = this.splitter.run(key)
       const schema = this.table.schema[column]
@@ -363,31 +423,48 @@ class InternalBuilder {
 
   addRelationshipForFilter(
     query: Knex.QueryBuilder,
+    allowEmptyRelationships: boolean,
     filterKey: string,
-    whereCb: (query: Knex.QueryBuilder) => Knex.QueryBuilder
+    whereCb: (filterKey: string, query: Knex.QueryBuilder) => Knex.QueryBuilder
   ): Knex.QueryBuilder {
     const mainKnex = this.knex
     const { relationships, endpoint, tableAliases: aliases } = this.query
     const tableName = endpoint.entityId
     const fromAlias = aliases?.[tableName] || tableName
-    const matches = (possibleTable: string) =>
-      filterKey.startsWith(`${possibleTable}`)
+    const matches = (value: string) =>
+      filterKey.match(new RegExp(`^${value}\\.`))
     if (!relationships) {
       return query
     }
     for (const relationship of relationships) {
       const relatedTableName = relationship.tableName
       const toAlias = aliases?.[relatedTableName] || relatedTableName
+
+      const matchesTableName = matches(relatedTableName) || matches(toAlias)
+      const matchesRelationName = matches(relationship.column)
+
       // this is the relationship which is being filtered
       if (
-        (matches(relatedTableName) || matches(toAlias)) &&
+        (matchesTableName || matchesRelationName) &&
         relationship.to &&
         relationship.tableName
       ) {
-        let subQuery = mainKnex
+        const joinTable = mainKnex
           .select(mainKnex.raw(1))
           .from({ [toAlias]: relatedTableName })
+        let subQuery = joinTable.clone()
         const manyToMany = validateManyToMany(relationship)
+        let updatedKey
+
+        if (!matchesTableName) {
+          updatedKey = filterKey.replace(
+            new RegExp(`^${relationship.column}.`),
+            `${aliases![relationship.tableName]}.`
+          )
+        } else {
+          updatedKey = filterKey
+        }
+
         if (manyToMany) {
           const throughAlias =
             aliases?.[manyToMany.through] || relationship.through
@@ -398,7 +475,6 @@ class InternalBuilder {
           subQuery = subQuery
             // add a join through the junction table
             .innerJoin(throughTable, function () {
-              // @ts-ignore
               this.on(
                 `${toAlias}.${manyToMany.toPrimary}`,
                 "=",
@@ -418,18 +494,38 @@ class InternalBuilder {
           if (this.client === SqlClient.SQL_LITE) {
             subQuery = this.addJoinFieldCheck(subQuery, manyToMany)
           }
+
+          query = query.where(q => {
+            q.whereExists(whereCb(updatedKey, subQuery))
+            if (allowEmptyRelationships) {
+              q.orWhereNotExists(
+                joinTable.clone().innerJoin(throughTable, function () {
+                  this.on(
+                    `${fromAlias}.${manyToMany.fromPrimary}`,
+                    "=",
+                    `${throughAlias}.${manyToMany.from}`
+                  )
+                })
+              )
+            }
+          })
         } else {
+          const toKey = `${toAlias}.${relationship.to}`
+          const foreignKey = `${fromAlias}.${relationship.from}`
           // "join" to the main table, making sure the ID matches that of the main
           subQuery = subQuery.where(
-            `${toAlias}.${relationship.to}`,
+            toKey,
             "=",
-            mainKnex.raw(
-              this.quotedIdentifier(`${fromAlias}.${relationship.from}`)
-            )
+            mainKnex.raw(this.quotedIdentifier(foreignKey))
           )
+
+          query = query.where(q => {
+            q.whereExists(whereCb(updatedKey, subQuery.clone()))
+            if (allowEmptyRelationships) {
+              q.orWhereNotExists(subQuery)
+            }
+          })
         }
-        query = query.whereExists(whereCb(subQuery))
-        break
       }
     }
     return query
@@ -460,6 +556,7 @@ class InternalBuilder {
     }
     function iterate(
       structure: AnySearchFilter,
+      operation: SearchFilterKey,
       fn: (
         query: Knex.QueryBuilder,
         key: string,
@@ -479,8 +576,11 @@ class InternalBuilder {
         const [filterTableName, ...otherProperties] = key.split(".")
         const property = otherProperties.join(".")
         const alias = getTableAlias(filterTableName)
-        return fn(q, alias ? `${alias}.${property}` : property, value)
+        return q.andWhere(subquery =>
+          fn(subquery, alias ? `${alias}.${property}` : property, value)
+        )
       }
+
       for (const key in structure) {
         const value = structure[key]
         const updatedKey = dbCore.removeKeyNumbering(key)
@@ -510,9 +610,17 @@ class InternalBuilder {
             value
           )
         } else if (shouldProcessRelationship) {
-          query = builder.addRelationshipForFilter(query, updatedKey, q => {
-            return handleRelationship(q, updatedKey, value)
-          })
+          if (allOr) {
+            query = query.or
+          }
+          query = builder.addRelationshipForFilter(
+            query,
+            allowEmptyRelationships[operation],
+            updatedKey,
+            (updatedKey, q) => {
+              return handleRelationship(q, updatedKey, value)
+            }
+          )
         }
       }
     }
@@ -544,7 +652,7 @@ class InternalBuilder {
         return `[${value.join(",")}]`
       }
       if (this.client === SqlClient.POSTGRES) {
-        iterate(mode, (q, key, value) => {
+        iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
           const wrap = any ? "" : "'"
           const op = any ? "\\?| array" : "@>"
           const fieldNames = key.split(/\./g)
@@ -562,7 +670,7 @@ class InternalBuilder {
         this.client === SqlClient.MARIADB
       ) {
         const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
-        iterate(mode, (q, key, value) => {
+        iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
           return q[rawFnc](
             `${not}COALESCE(${jsonFnc}(${key}, '${stringifyArray(
               value
@@ -571,7 +679,7 @@ class InternalBuilder {
         })
       } else {
         const andOr = mode === filters?.containsAny ? " OR " : " AND "
-        iterate(mode, (q, key, value) => {
+        iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
           let statement = ""
           const identifier = this.quotedIdentifier(key)
           for (let i in value) {
@@ -625,6 +733,7 @@ class InternalBuilder {
       const fnc = allOr ? "orWhereIn" : "whereIn"
       iterate(
         filters.oneOf,
+        ArrayOperator.ONE_OF,
         (q, key: string, array) => {
           if (this.client === SqlClient.ORACLE) {
             key = this.convertClobs(key)
@@ -649,7 +758,7 @@ class InternalBuilder {
       )
     }
     if (filters.string) {
-      iterate(filters.string, (q, key, value) => {
+      iterate(filters.string, BasicOperator.STRING, (q, key, value) => {
         const fnc = allOr ? "orWhere" : "where"
         // postgres supports ilike, nothing else does
         if (this.client === SqlClient.POSTGRES) {
@@ -664,10 +773,10 @@ class InternalBuilder {
       })
     }
     if (filters.fuzzy) {
-      iterate(filters.fuzzy, like)
+      iterate(filters.fuzzy, BasicOperator.FUZZY, like)
     }
     if (filters.range) {
-      iterate(filters.range, (q, key, value) => {
+      iterate(filters.range, RangeOperator.RANGE, (q, key, value) => {
         const isEmptyObject = (val: any) => {
           return (
             val &&
@@ -733,7 +842,7 @@ class InternalBuilder {
       })
     }
     if (filters.equal) {
-      iterate(filters.equal, (q, key, value) => {
+      iterate(filters.equal, BasicOperator.EQUAL, (q, key, value) => {
         const fnc = allOr ? "orWhereRaw" : "whereRaw"
         if (this.client === SqlClient.MS_SQL) {
           return q[fnc](
@@ -753,7 +862,7 @@ class InternalBuilder {
       })
     }
     if (filters.notEqual) {
-      iterate(filters.notEqual, (q, key, value) => {
+      iterate(filters.notEqual, BasicOperator.NOT_EQUAL, (q, key, value) => {
         const fnc = allOr ? "orWhereRaw" : "whereRaw"
         if (this.client === SqlClient.MS_SQL) {
           return q[fnc](
@@ -774,13 +883,13 @@ class InternalBuilder {
       })
     }
     if (filters.empty) {
-      iterate(filters.empty, (q, key) => {
+      iterate(filters.empty, BasicOperator.EMPTY, (q, key) => {
         const fnc = allOr ? "orWhereNull" : "whereNull"
         return q[fnc](key)
       })
     }
     if (filters.notEmpty) {
-      iterate(filters.notEmpty, (q, key) => {
+      iterate(filters.notEmpty, BasicOperator.NOT_EMPTY, (q, key) => {
         const fnc = allOr ? "orWhereNotNull" : "whereNotNull"
         return q[fnc](key)
       })
@@ -859,31 +968,68 @@ class InternalBuilder {
     const fields = this.query.resource?.fields || []
     const tableName = this.getTableName()
     if (fields.length > 0) {
-      query = query.groupBy(fields.map(field => `${tableName}.${field}`))
-      query = query.select(fields.map(field => `${tableName}.${field}`))
+      const qualifiedFields = fields.map(field => this.qualifyIdentifier(field))
+      if (this.client === SqlClient.ORACLE) {
+        const groupByFields = qualifiedFields.map(field =>
+          this.convertClobs(field)
+        )
+        const selectFields = qualifiedFields.map(field =>
+          this.convertClobs(field, { forSelect: true })
+        )
+        query = query
+          .groupByRaw(groupByFields.join(", "))
+          .select(this.knex.raw(selectFields.join(", ")))
+      } else {
+        query = query.groupBy(qualifiedFields).select(qualifiedFields)
+      }
     }
     for (const aggregation of aggregations) {
       const op = aggregation.calculationType
-      const field = `${tableName}.${aggregation.field} as ${aggregation.name}`
-      switch (op) {
-        case CalculationType.COUNT:
-          query = query.count(field)
-          break
-        case CalculationType.SUM:
-          query = query.sum(field)
-          break
-        case CalculationType.AVG:
-          query = query.avg(field)
-          break
-        case CalculationType.MIN:
-          query = query.min(field)
-          break
-        case CalculationType.MAX:
-          query = query.max(field)
-          break
+      if (op === CalculationType.COUNT) {
+        if ("distinct" in aggregation && aggregation.distinct) {
+          if (this.client === SqlClient.ORACLE) {
+            const field = this.convertClobs(`${tableName}.${aggregation.field}`)
+            query = query.select(
+              this.knex.raw(
+                `COUNT(DISTINCT ${field}) as ${this.quotedIdentifier(
+                  aggregation.name
+                )}`
+              )
+            )
+          } else {
+            query = query.countDistinct(
+              `${tableName}.${aggregation.field} as ${aggregation.name}`
+            )
+          }
+        } else {
+          query = query.count(`* as ${aggregation.name}`)
+        }
+      } else {
+        const field = `${tableName}.${aggregation.field} as ${aggregation.name}`
+        switch (op) {
+          case CalculationType.SUM:
+            query = query.sum(field)
+            break
+          case CalculationType.AVG:
+            query = query.avg(field)
+            break
+          case CalculationType.MIN:
+            query = query.min(field)
+            break
+          case CalculationType.MAX:
+            query = query.max(field)
+            break
+        }
       }
     }
     return query
+  }
+
+  isAggregateField(field: string): boolean {
+    const found = this.query.resource?.aggregations?.find(
+      aggregation => aggregation.name === field
+    )
+    return !!found
   }
 
   addSorting(query: Knex.QueryBuilder): Knex.QueryBuilder {
@@ -908,13 +1054,17 @@ class InternalBuilder {
           nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
         }
 
-        let composite = `${aliased}.${key}`
-        if (this.client === SqlClient.ORACLE) {
-          query = query.orderByRaw(
-            `${this.convertClobs(composite)} ${direction} nulls ${nulls}`
-          )
+        if (this.isAggregateField(key)) {
+          query = query.orderBy(key, direction, nulls)
         } else {
-          query = query.orderBy(composite, direction, nulls)
+          let composite = `${aliased}.${key}`
+          if (this.client === SqlClient.ORACLE) {
+            query = query.orderByRaw(
+              `${this.convertClobs(composite)} ${direction} nulls ${nulls}`
+            )
+          } else {
+            query = query.orderBy(composite, direction, nulls)
+          }
         }
       }
     }
@@ -1135,12 +1285,10 @@ class InternalBuilder {
         })
       : undefined
     if (!throughTable) {
-      // @ts-ignore
       query = query.leftJoin(toTableWithSchema, function () {
         for (let relationship of columns) {
           const from = relationship.from,
             to = relationship.to
-          // @ts-ignore
           this.orOn(`${fromAlias}.${from}`, "=", `${toAlias}.${to}`)
         }
       })
@@ -1151,7 +1299,6 @@ class InternalBuilder {
           for (let relationship of columns) {
             const fromPrimary = relationship.fromPrimary
             const from = relationship.from
-            // @ts-ignore
             this.orOn(
               `${fromAlias}.${fromPrimary}`,
               "=",
@@ -1163,7 +1310,6 @@ class InternalBuilder {
           for (let relationship of columns) {
             const toPrimary = relationship.toPrimary
             const to = relationship.to
-            // @ts-ignore
             this.orOn(`${toAlias}.${toPrimary}`, `${throughAlias}.${to}`)
           }
         })
@@ -1188,6 +1334,10 @@ class InternalBuilder {
 
   create(opts: QueryOptions): Knex.QueryBuilder {
     const { body } = this.query
+    if (!body) {
+      throw new Error("Cannot create without row body")
+    }
+
     let query = this.qualifiedKnex({ alias: false })
     const parsedBody = this.parseBody(body)
 
@@ -1346,6 +1496,9 @@ class InternalBuilder {
 
   update(opts: QueryOptions): Knex.QueryBuilder {
     const { body, filters } = this.query
+    if (!body) {
+      throw new Error("Cannot update without row body")
+    }
     let query = this.qualifiedKnex()
     const parsedBody = this.parseBody(body)
     query = this.addFilters(query, filters)

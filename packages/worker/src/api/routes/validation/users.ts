@@ -29,6 +29,7 @@ export const buildSelfSaveValidation = () => {
     freeTrialConfirmedAt: Joi.string().optional(),
     appFavourites: Joi.array().optional(),
     tours: Joi.object().optional(),
+    appSort: Joi.string().optional(),
   }
   return auth.joiValidator.body(Joi.object(schema).required().unknown(false))
 }

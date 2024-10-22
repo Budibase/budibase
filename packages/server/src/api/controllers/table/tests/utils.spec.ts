@@ -41,7 +41,7 @@ describe("utils", () => {
 
         const data = [{ name: "Alice" }, { name: "Bob" }, { name: "Claire" }]
 
-        const result = await importToRows(data, table, config.user)
+        const result = await importToRows(data, table, config.user?._id)
         expect(result).toEqual([
           expect.objectContaining({
             autoId: 1,

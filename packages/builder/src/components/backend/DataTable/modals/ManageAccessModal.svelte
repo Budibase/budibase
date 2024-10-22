@@ -94,7 +94,7 @@
   loadDependantInfo()
 </script>
 
-<ModalContent showCancelButton={false} confirmText="Done">
+<ModalContent showCancelButton={false} showConfirmButton={false}>
   <span slot="header">
     Manage Access
     {#if requiresPlanToModify}

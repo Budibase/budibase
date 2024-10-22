@@ -1,35 +1,35 @@
-import { parse, isSchema, isRows } from "../../../utilities/schema"
-import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
+import { isRows, isSchema, parse } from "../../../utilities/schema"
+import { generateRowID, getRowParams, InternalTables } from "../../../db/utils"
 import isEqual from "lodash/isEqual"
 import {
-  GOOGLE_SHEETS_PRIMARY_KEY,
-  USERS_TABLE_SCHEMA,
-  SwitchableTypes,
   CanSwitchTypes,
+  GOOGLE_SHEETS_PRIMARY_KEY,
+  SwitchableTypes,
+  USERS_TABLE_SCHEMA,
 } from "../../../constants"
 import {
-  inputProcessing,
   AttachmentCleanup,
+  inputProcessing,
 } from "../../../utilities/rowProcessor"
 import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { events, context, features } from "@budibase/backend-core"
+import { context, events, features } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
-  ContextUser,
+  Database,
   Datasource,
+  FeatureFlag,
+  FieldSchema,
+  FieldType,
+  NumberFieldMetadata,
+  RelationshipFieldMetadata,
+  RenameColumn,
   Row,
   SourceName,
   Table,
-  Database,
-  RenameColumn,
-  NumberFieldMetadata,
-  FieldSchema,
   View,
-  RelationshipFieldMetadata,
-  FieldType,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import env from "../../../environment"
@@ -122,7 +122,7 @@ export function makeSureTableUpToDate(table: Table, tableToSave: Table) {
 export async function importToRows(
   data: Row[],
   table: Table,
-  user?: ContextUser,
+  userId?: string,
   opts?: { keepCouchId: boolean }
 ) {
   const originalTable = table
@@ -136,7 +136,7 @@ export async function importToRows(
 
     // We use a reference to table here and update it after input processing,
     // so that we can auto increment auto IDs in imported data properly
-    const processed = await inputProcessing(user?._id, table, row, {
+    const processed = await inputProcessing(userId, table, row, {
       noAutoRelationships: true,
     })
     row = processed
@@ -167,11 +167,10 @@ export async function importToRows(
 
 export async function handleDataImport(
   table: Table,
-  opts?: { identifierFields?: string[]; user?: ContextUser; importRows?: Row[] }
+  opts?: { identifierFields?: string[]; userId?: string; importRows?: Row[] }
 ) {
   const schema = table.schema
   const identifierFields = opts?.identifierFields || []
-  const user = opts?.user
   const importRows = opts?.importRows
 
   if (!importRows || !isRows(importRows) || !isSchema(schema)) {
@@ -181,7 +180,7 @@ export async function handleDataImport(
   const db = context.getAppDB()
   const data = parse(importRows, table)
 
-  const finalData = await importToRows(data, table, user, {
+  const finalData = await importToRows(data, table, opts?.userId, {
     keepCouchId: identifierFields.includes("_id"),
   })
 
@@ -282,22 +281,22 @@ export function checkStaticTables(table: Table) {
 
 class TableSaveFunctions {
   db: Database
-  user?: ContextUser
+  userId?: string
   oldTable?: Table
   importRows?: Row[]
   rows: Row[]
 
   constructor({
-    user,
+    userId,
     oldTable,
     importRows,
   }: {
-    user?: ContextUser
+    userId?: string
     oldTable?: Table
     importRows?: Row[]
   }) {
     this.db = context.getAppDB()
-    this.user = user
+    this.userId = userId
     this.oldTable = oldTable
     this.importRows = importRows
     // any rows that need updated
@@ -329,9 +328,9 @@ class TableSaveFunctions {
     table = await handleSearchIndexes(table)
     table = await handleDataImport(table, {
       importRows: this.importRows,
-      user: this.user,
+      userId: this.userId,
     })
-    if (await features.flags.isEnabled("SQS")) {
+    if (await features.flags.isEnabled(FeatureFlag.SQS)) {
       await sdk.tables.sqs.addTable(table)
     }
     return table
@@ -525,7 +524,7 @@ export async function internalTableCleanup(table: Table, rows?: Row[]) {
   if (rows) {
     await AttachmentCleanup.tableDelete(table, rows)
   }
-  if (await features.flags.isEnabled("SQS")) {
+  if (await features.flags.isEnabled(FeatureFlag.SQS)) {
     await sdk.tables.sqs.removeTable(table)
   }
 }

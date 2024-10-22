@@ -22,6 +22,7 @@ import { extractViewInfoFromID, isRelationshipColumn } from "../../../db/utils"
 import { isSQL } from "../../../integrations/utils"
 import { docIds, sql } from "@budibase/backend-core"
 import { getTableFromSource } from "../../../api/controllers/row/utils"
+import env from "../../../environment"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.POSTGRES]: SqlClient.POSTGRES,
@@ -42,6 +43,9 @@ const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.SNOWFLAKE]: undefined,
   [SourceName.BUDIBASE]: undefined,
 }
+
+const XSS_INPUT_REGEX =
+  /[<>;"'(){}]|--|\/\*|\*\/|union|select|insert|drop|delete|update|exec|script/i
 
 export function getSQLClient(datasource: Datasource): SqlClient {
   if (!isSQL(datasource)) {
@@ -222,6 +226,15 @@ export async function validate({
     } else {
       res = validateJs.single(row[fieldName], constraints)
     }
+
+    if (env.XSS_SAFE_MODE && typeof row[fieldName] === "string") {
+      if (XSS_INPUT_REGEX.test(row[fieldName])) {
+        errors[fieldName] = [
+          "Input not sanitised - potentially vulnerable to XSS",
+        ]
+      }
+    }
+
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }

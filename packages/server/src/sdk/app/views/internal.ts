@@ -59,6 +59,10 @@ export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
     throw new HTTPError(`View ${view.id} not found in table ${tableId}`, 404)
   }
 
+  if (isV2(existingView) && existingView.type !== view.type) {
+    throw new HTTPError(`Cannot update view type after creation`, 400)
+  }
+
   delete table.views[existingView.name]
   table.views[view.name] = view
   await db.put(table)

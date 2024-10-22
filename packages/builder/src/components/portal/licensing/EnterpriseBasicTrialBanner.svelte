@@ -14,7 +14,13 @@
   function daysUntilCancel() {
     const cancelAt = license?.billing?.subscription?.cancelAt
     const diffTime = Math.abs(cancelAt - new Date().getTime()) / 1000
-    return Math.floor(diffTime / oneDayInSeconds)
+    const days = Math.floor(diffTime / oneDayInSeconds)
+    if (days === 1) {
+      return "tomorrow."
+    } else if (days === 0) {
+      return "today."
+    }
+    return `in ${days} days.`
   }
 </script>
 
@@ -28,7 +34,7 @@
           extraLinkAction={$licensing.goToUpgradePage}
           showCloseButton={false}
         >
-          Your free trial will end in {daysUntilCancel()} days.
+          Your free trial will end {daysUntilCancel()}
         </Banner>
       </div>
     {/if}

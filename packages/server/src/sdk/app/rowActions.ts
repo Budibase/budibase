@@ -1,8 +1,10 @@
 import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import {
+  Automation,
   AutomationTriggerStepId,
   SEPARATOR,
   TableRowActions,
+  User,
   VirtualDocumentType,
 } from "@budibase/types"
 import { generateRowActionsID } from "../../db/utils"
@@ -75,7 +77,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
     name: action.name,
     automationId: automation._id!,
     permissions: {
-      table: { runAllowed: false },
+      table: { runAllowed: true },
       views: {},
     },
   }
@@ -102,7 +104,25 @@ export async function get(tableId: string, rowActionId: string) {
 export async function getAll(tableId: string) {
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
-  return await db.get<TableRowActions>(rowActionsId)
+  return await db.tryGet<TableRowActions>(rowActionsId)
+}
+
+export async function deleteAll(tableId: string) {
+  const db = context.getAppDB()
+
+  const doc = await getAll(tableId)
+  if (!doc) {
+    return
+  }
+
+  const automationIds = Object.values(doc.actions).map(a => a.automationId)
+  const automations = await db.getMultiple<Automation>(automationIds)
+
+  for (const automation of automations) {
+    await sdk.automations.remove(automation._id!, automation._rev!)
+  }
+
+  await db.remove(doc)
 }
 
 export async function docExists(tableId: string) {
@@ -163,6 +183,23 @@ async function guardView(tableId: string, viewId: string) {
   }
 }
 
+export async function setTablePermission(tableId: string, rowActionId: string) {
+  return await updateDoc(tableId, rowActionId, async actionsDoc => {
+    actionsDoc.actions[rowActionId].permissions.table.runAllowed = true
+    return actionsDoc
+  })
+}
+
+export async function unsetTablePermission(
+  tableId: string,
+  rowActionId: string
+) {
+  return await updateDoc(tableId, rowActionId, async actionsDoc => {
+    actionsDoc.actions[rowActionId].permissions.table.runAllowed = false
+    return actionsDoc
+  })
+}
+
 export async function setViewPermission(
   tableId: string,
   rowActionId: string,
@@ -200,15 +237,19 @@ export async function remove(tableId: string, rowActionId: string) {
   })
 }
 
-export async function run(tableId: any, rowActionId: any, rowId: string) {
+export async function run(
+  tableId: any,
+  rowActionId: any,
+  rowId: string,
+  user: User
+) {
   const table = await sdk.tables.getTable(tableId)
   if (!table) {
     throw new HTTPError("Table not found", 404)
   }
 
-  const { actions } = await getAll(tableId)
-
-  const rowAction = actions[rowActionId]
+  const rowActions = await getAll(tableId)
+  const rowAction = rowActions?.actions[rowActionId]
   if (!rowAction) {
     throw new HTTPError("Row action not found", 404)
   }
@@ -223,6 +264,7 @@ export async function run(tableId: any, rowActionId: any, rowId: string) {
         row,
         table,
       },
+      user,
       appId: context.getAppId(),
     },
     { getResponses: true }

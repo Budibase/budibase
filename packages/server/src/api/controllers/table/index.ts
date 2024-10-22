@@ -71,19 +71,20 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
 
   const datasources = await sdk.datasources.getExternalDatasources()
 
-  const external = datasources.flatMap(datasource => {
+  const external: Table[] = []
+  for (const datasource of datasources) {
     let entities = datasource.entities
     if (entities) {
-      return Object.values(entities).map<Table>((entity: Table) => ({
-        ...entity,
-        sourceType: TableSourceType.EXTERNAL,
-        sourceId: datasource._id!,
-        sql: isSQL(datasource),
-      }))
-    } else {
-      return []
+      for (const entity of Object.values(entities)) {
+        external.push({
+          ...(await processTable(entity)),
+          sourceType: TableSourceType.EXTERNAL,
+          sourceId: datasource._id!,
+          sql: isSQL(datasource),
+        })
+      }
     }
-  })
+  }
 
   const result: FetchTablesResponse = []
   for (const table of [...internal, ...external]) {
@@ -102,18 +103,22 @@ export async function find(ctx: UserCtx<void, TableResponse>) {
 
 export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const appId = ctx.appId
-  const table = ctx.request.body
-  const isImport = table.rows
+  const { rows, ...table } = ctx.request.body
+  const isImport = rows
   const renaming = ctx.request.body._rename
+
+  const isCreate = !table._id
 
   checkDefaultFields(table)
 
-  const api = pickApi({ table })
-  let savedTable = await api.save(ctx, renaming)
-  if (!table._id) {
+  let savedTable: Table
+  if (isCreate) {
+    savedTable = await sdk.tables.create(table, rows, ctx.user._id)
     savedTable = await sdk.tables.enrichViewSchemas(savedTable)
     await events.table.created(savedTable)
   } else {
+    const api = pickApi({ table })
+    savedTable = await api.updateTable(ctx, renaming)
     await events.table.updated(savedTable)
   }
   if (renaming) {
@@ -135,6 +140,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 export async function destroy(ctx: UserCtx) {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
+  await sdk.rowActions.deleteAll(tableId)
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
   await events.table.deleted(deletedTable)
   ctx.eventEmitter &&

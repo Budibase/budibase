@@ -19,6 +19,7 @@ import {
   Table,
   User,
   ViewV2,
+  FeatureFlag,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -33,7 +34,7 @@ import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
-import { processString } from "@budibase/string-templates"
+import { processStringSync } from "@budibase/string-templates"
 import {
   getTableFromSource,
   isUserMetadataTable,
@@ -134,10 +135,15 @@ async function processDefaultValues(table: Table, row: Row) {
 
   for (const [key, schema] of Object.entries(table.schema)) {
     if ("default" in schema && schema.default != null && row[key] == null) {
-      const processed =
-        typeof schema.default === "string"
-          ? await processString(schema.default, ctx)
-          : schema.default
+      let processed: string | string[]
+      if (Array.isArray(schema.default)) {
+        processed = schema.default.map(val => processStringSync(val, ctx))
+      } else if (typeof schema.default === "string") {
+        processed = processStringSync(schema.default, ctx)
+      } else {
+        processed = schema.default
+      }
+
       try {
         row[key] = coerce(processed, schema.type)
       } catch (err: any) {
@@ -412,7 +418,7 @@ export async function coreOutputProcessing(
 
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
-  if (isExternal || (await features.flags.isEnabled("SQS"))) {
+  if (isExternal || (await features.flags.isEnabled(FeatureFlag.SQS))) {
     for (const row of rows) {
       for (const key of Object.keys(row)) {
         if (row[key] === null) {

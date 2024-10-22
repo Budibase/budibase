@@ -1,7 +1,7 @@
-import { SearchFilter, SortOrder, SortType } from "../../api"
+import { LegacyFilter, SearchFilterGroup, SortOrder, SortType } from "../../api"
 import { UIFieldMetadata } from "./table"
 import { Document } from "../document"
-import { DBView } from "../../sdk"
+import { DBView, SearchFilters } from "../../sdk"
 
 export type ViewTemplateOpts = {
   field: string
@@ -42,10 +42,30 @@ export interface RelationSchemaField extends UIFieldMetadata {
   readonly?: boolean
 }
 
-export interface ViewCalculationFieldMetadata extends BasicViewFieldMetadata {
-  calculationType: CalculationType
+export interface NumericCalculationFieldMetadata
+  extends BasicViewFieldMetadata {
+  calculationType:
+    | CalculationType.MIN
+    | CalculationType.MAX
+    | CalculationType.SUM
+    | CalculationType.AVG
   field: string
 }
+
+export interface CountCalculationFieldMetadata extends BasicViewFieldMetadata {
+  calculationType: CalculationType.COUNT
+}
+
+export interface CountDistinctCalculationFieldMetadata
+  extends CountCalculationFieldMetadata {
+  distinct: true
+  field: string
+}
+
+export type ViewCalculationFieldMetadata =
+  | NumericCalculationFieldMetadata
+  | CountCalculationFieldMetadata
+  | CountDistinctCalculationFieldMetadata
 
 export type ViewFieldMetadata =
   | BasicViewFieldMetadata
@@ -59,13 +79,20 @@ export enum CalculationType {
   MAX = "max",
 }
 
+export enum ViewV2Type {
+  CALCULATION = "calculation",
+}
+
 export interface ViewV2 {
   version: 2
   id: string
   name: string
+  type?: ViewV2Type
   primaryDisplay?: string
   tableId: string
-  query?: SearchFilter[]
+  query?: LegacyFilter[] | SearchFilters
+  // duplicate to store UI information about filters
+  queryUI?: SearchFilterGroup
   sort?: {
     field: string
     order?: SortOrder

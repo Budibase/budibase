@@ -26,6 +26,7 @@
     licensing,
     environment,
     enrichedApps,
+    sortBy,
   } from "stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
@@ -75,9 +76,7 @@
     const params = new URLSearchParams({
       open: "error",
     })
-    $goto(
-      `/builder/app/${appId}/settings/automation-history?${params.toString()}`
-    )
+    $goto(`/builder/app/${appId}/settings/automations?${params.toString()}`)
   }
 
   const errorCount = errors => {
@@ -247,7 +246,7 @@
             <div class="app-actions">
               <Select
                 autoWidth
-                value={$appsStore.sortBy}
+                value={$sortBy}
                 on:change={e => {
                   appsStore.updateSort(e.detail)
                 }}

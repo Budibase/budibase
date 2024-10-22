@@ -2051,7 +2051,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.32.10":
+"@budibase/backend-core@2.32.11":
   version "0.0.0"
   dependencies:
     "@budibase/nano" "10.1.5"
@@ -2132,15 +2132,15 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "2.32.10"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.32.10.tgz#19fcbb3ced74791a7e96dfdc5a1270165792eea5"
-  integrity sha512-TbVp2bjmA0rHK+TKi9NVW06+O23fhDm7IJ/FlpWPHIBIZW7xDkCYu6LUOhSwSWMbOTcWzaJFuMbpN1HoTc/YjQ==
+  version "2.32.11"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.32.11.tgz#c94d534f829ca0ef252677757e157a7e58b87b4d"
+  integrity sha512-mOkqJpqHKWsfTWZwWcvBCYFUIluSUHltQNinc1ZRsg9rC3OKoHSDop6gzm744++H/GzGRN8V86kLhCgtNIlkpA==
   dependencies:
     "@anthropic-ai/sdk" "^0.27.3"
-    "@budibase/backend-core" "2.32.10"
-    "@budibase/shared-core" "2.32.10"
-    "@budibase/string-templates" "2.32.10"
-    "@budibase/types" "2.32.10"
+    "@budibase/backend-core" "2.32.11"
+    "@budibase/shared-core" "2.32.11"
+    "@budibase/string-templates" "2.32.11"
+    "@budibase/types" "2.32.11"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     dd-trace "5.2.0"
@@ -2153,13 +2153,13 @@
     scim-patch "^0.8.1"
     scim2-parse-filter "^0.2.8"
 
-"@budibase/shared-core@2.32.10":
+"@budibase/shared-core@2.32.11":
   version "0.0.0"
   dependencies:
     "@budibase/types" "0.0.0"
     cron-validate "1.4.5"
 
-"@budibase/string-templates@2.32.10":
+"@budibase/string-templates@2.32.11":
   version "0.0.0"
   dependencies:
     "@budibase/handlebars-helpers" "^0.13.2"
@@ -2167,7 +2167,7 @@
     handlebars "^4.7.8"
     lodash.clonedeep "^4.5.0"
 
-"@budibase/types@2.32.10":
+"@budibase/types@2.32.11":
   version "0.0.0"
   dependencies:
     scim-patch "^0.8.1"

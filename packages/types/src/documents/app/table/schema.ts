@@ -9,6 +9,7 @@ import {
   JsonFieldSubType,
   RelationshipType,
 } from "./constants"
+import { AIOperationEnum } from "../../../sdk/ai"
 
 export interface UIFieldMetadata {
   order?: number
@@ -116,16 +117,28 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
   formulaType?: FormulaType
 }
 
+export interface AIFieldMetadata extends BaseFieldSchema {
+  type: FieldType.AI
+  operation: AIOperationEnum
+  columns?: string[]
+  column?: string
+  categories?: string[]
+  prompt?: string
+  language?: string
+}
+
 export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE
   subtype: BBReferenceFieldSubType
   relationshipType?: RelationshipType
+  default?: string[]
 }
 export interface BBReferenceSingleFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE_SINGLE
   subtype: Exclude<BBReferenceFieldSubType, BBReferenceFieldSubType.USERS>
+  default?: string
 }
 
 export interface AttachmentFieldMetadata extends BaseFieldSchema {
@@ -192,6 +205,7 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.LINK
     | FieldType.AUTO
     | FieldType.FORMULA
+    | FieldType.AI
     | FieldType.NUMBER
     | FieldType.LONGFORM
     | FieldType.BB_REFERENCE
@@ -209,6 +223,7 @@ export type FieldSchema =
   | RelationshipFieldMetadata
   | AutoColumnFieldMetadata
   | FormulaFieldMetadata
+  | AIFieldMetadata
   | NumberFieldMetadata
   | LongFormFieldMetadata
   | StringFieldMetadata
