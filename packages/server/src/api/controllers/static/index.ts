@@ -2,11 +2,12 @@ import { InvalidFileExtensions } from "@budibase/shared-core"
 import AppComponent from "./templates/BudibaseApp.svelte"
 import { join } from "../../../utilities/centralPath"
 import * as uuid from "uuid"
-import { devClientVersion, ObjectStoreBuckets } from "../../../constants"
+import { ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
   loadHandlebarsFile,
   NODE_MODULES_PATH,
+  shouldServeLocally,
   TOP_LEVEL_PATH,
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
@@ -257,25 +258,29 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
 export const serveClientLibrary = async function (ctx: Ctx) {
   const version = ctx.request.query.version
 
+  if (Array.isArray(version)) {
+    ctx.throw(400)
+  }
+
   const appId = context.getAppId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
-  if (env.isProd() || (env.isDev() && version !== devClientVersion)) {
+
+  const serveLocally = shouldServeLocally(version || "")
+  if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       objectStore.clientLibraryPath(appId!)
     )
     ctx.set("Content-Type", "application/javascript")
-  } else if (env.isDev() && version === devClientVersion) {
+  } else {
     // incase running from TS directly
     const tsPath = join(require.resolve("@budibase/client"), "..")
     return send(ctx, "budibase-client.js", {
       root: !fs.existsSync(rootPath) ? tsPath : rootPath,
     })
-  } else {
-    ctx.throw(500, "Unable to retrieve client library.")
   }
 }
 
