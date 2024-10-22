@@ -165,11 +165,9 @@ describe("/roles", () => {
         ...basicRole(),
         inherits: [BUILTIN_ROLE_IDS.ADMIN],
       })
-      // save again
-      const updatedRes = await config.api.roles.save({
-        ...res,
-        inherits: undefined,
-      })
+      // remove the roles so that it will default back to DB roles, then save again
+      delete res.inherits
+      const updatedRes = await config.api.roles.save(res)
       expect(updatedRes.inherits).toEqual([BUILTIN_ROLE_IDS.ADMIN])
     })
   })
