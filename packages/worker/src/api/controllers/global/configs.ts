@@ -44,7 +44,7 @@ const getEventFns = async (config: Config, existing?: Config) => {
       fns.push(events.email.SMTPCreated)
     } else if (isAIConfig(config)) {
       fns.push(() => events.ai.AIConfigCreated)
-      fns.push(() => pro.quotas.addCustomAIConfig)
+      fns.push(() => pro.quotas.addCustomAIConfig())
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
       if (config.config.activated) {
