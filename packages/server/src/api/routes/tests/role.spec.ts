@@ -38,6 +38,26 @@ describe("/roles", () => {
         _id: dbCore.prefixRoleID(res._id!),
       })
     })
+
+    it("handle a role with invalid inherits", async () => {
+      const role = basicRole()
+      role.inherits = ["not_real", "some_other_not_real"]
+
+      const res = await config.api.roles.save(role, {
+        status: 200,
+      })
+      expect(res.inherits).toEqual([BUILTIN_ROLE_IDS.BASIC])
+    })
+
+    it("handle a role with no inherits", async () => {
+      const role = basicRole()
+      role.inherits = []
+
+      const res = await config.api.roles.save(role, {
+        status: 200,
+      })
+      expect(res.inherits).toEqual([BUILTIN_ROLE_IDS.BASIC])
+    })
   })
 
   describe("update", () => {
@@ -148,6 +168,17 @@ describe("/roles", () => {
         },
         { status: 400, body: { message: LOOP_ERROR } }
       )
+    })
+
+    it("handle updating a role, without its inherits", async () => {
+      const res = await config.api.roles.save({
+        ...basicRole(),
+        inherits: [BUILTIN_ROLE_IDS.ADMIN],
+      })
+      // remove the roles so that it will default back to DB roles, then save again
+      delete res.inherits
+      const updatedRes = await config.api.roles.save(res)
+      expect(updatedRes.inherits).toEqual([BUILTIN_ROLE_IDS.ADMIN])
     })
   })
 
@@ -297,6 +328,23 @@ describe("/roles", () => {
           expect(res).toEqual([customRoleName, "BASIC", "PUBLIC"])
         }
       )
+    })
+
+    it("should fetch preview role correctly even without basic specified", async () => {
+      const role = await config.api.roles.save(basicRole())
+      // have to forcefully delete the inherits from DB - technically can't
+      // happen anymore - but good test case
+      await dbCore.getDB(config.appId!).put({
+        ...role,
+        _id: dbCore.prefixRoleID(role._id!),
+        inherits: [],
+      })
+      await config.withHeaders({ "x-budibase-role": role.name }, async () => {
+        const res = await config.api.roles.accessible({
+          status: 200,
+        })
+        expect(res).toEqual([role.name])
+      })
     })
   })
 
