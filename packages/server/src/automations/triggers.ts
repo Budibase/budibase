@@ -145,7 +145,7 @@ export async function externalTrigger(
     fields: Record<string, any>
     timeout?: number
     appId?: string
-    user?: UserBindings | undefined
+    user?: UserBindings
   },
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<any> {
