@@ -38,6 +38,16 @@ describe("/roles", () => {
         _id: dbCore.prefixRoleID(res._id!),
       })
     })
+
+    it("handle a role with no inherits", async () => {
+      const role = basicRole()
+      role.inherits = []
+
+      const res = await config.api.roles.save(role, {
+        status: 200,
+      })
+      expect(res.inherits).toEqual([BUILTIN_ROLE_IDS.BASIC])
+    })
   })
 
   describe("update", () => {
@@ -148,6 +158,19 @@ describe("/roles", () => {
         },
         { status: 400, body: { message: LOOP_ERROR } }
       )
+    })
+
+    it("handle updating a role, without its inherits", async () => {
+      const res = await config.api.roles.save({
+        ...basicRole(),
+        inherits: [BUILTIN_ROLE_IDS.ADMIN],
+      })
+      // save again
+      const updatedRes = await config.api.roles.save({
+        ...res,
+        inherits: undefined,
+      })
+      expect(updatedRes.inherits).toEqual([BUILTIN_ROLE_IDS.ADMIN])
     })
   })
 

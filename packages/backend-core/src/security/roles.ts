@@ -213,6 +213,22 @@ export function getBuiltinRole(roleId: string): Role | undefined {
   return cloneDeep(role)
 }
 
+export function validInherits(
+  allRoles: RoleDoc[],
+  inherits?: string | string[]
+): boolean {
+  if (!inherits) {
+    return false
+  }
+  const find = (id: string) => allRoles.find(r => compareRoleIds(r._id!, id))
+  if (Array.isArray(inherits)) {
+    const filtered = inherits.filter(roleId => find(roleId))
+    return inherits.length !== 0 && filtered.length === inherits.length
+  } else {
+    return !!find(inherits)
+  }
+}
+
 /**
  * Works through the inheritance ranks to see how far up the builtin stack this ID is.
  */
