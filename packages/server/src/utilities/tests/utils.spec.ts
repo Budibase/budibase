@@ -21,6 +21,10 @@ describe("isDate", () => {
     expect(isDate("2001-01-01T12:30:45")).toEqual(true)
   })
 
+  it("should handle complete ISO format", () => {
+    expect(isDate("2001-01-01T12:30:00.000Z")).toEqual(true)
+  })
+
   it("should return false for invalid formats", () => {
     expect(isDate("")).toEqual(false)
     expect(isDate("1/10")).toEqual(false)
