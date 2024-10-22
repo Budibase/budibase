@@ -18,10 +18,12 @@ import {
   UserCtx,
   UserMetadata,
   DocumentType,
+  PermissionLevel,
 } from "@budibase/types"
 import { RoleColor, sdk as sharedSdk, helpers } from "@budibase/shared-core"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
+import { validInherits } from "@budibase/backend-core/src/security/roles"
 
 const UpdateRolesOptions = {
   CREATED: "created",
@@ -123,6 +125,17 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   }
   if (dbRole && dbRole.name !== name && isNewVersion) {
     ctx.throw(400, "Cannot change custom role name")
+  }
+
+  // custom roles should always inherit basic - if they don't inherit anything else
+  if (!inherits && roles.validInherits(allRoles, dbRole?.inherits)) {
+    inherits = dbRole?.inherits
+  } else if (!roles.validInherits(allRoles, inherits)) {
+    inherits = [roles.BUILTIN_ROLE_IDS.BASIC]
+  }
+  // assume write permission level for newly created roles
+  if (isCreate && !permissionId) {
+    permissionId = PermissionLevel.WRITE
   }
 
   const role = new roles.Role(_id, name, permissionId, {
