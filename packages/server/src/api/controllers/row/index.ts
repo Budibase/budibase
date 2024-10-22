@@ -65,7 +65,14 @@ export async function patch(
     }
     ctx.status = 200
     ctx.eventEmitter &&
-      ctx.eventEmitter.emitRow(`row:update`, appId, row, table, oldRow)
+      ctx.eventEmitter.emitRow({
+        eventName: `row:update`,
+        appId,
+        row,
+        table,
+        oldRow,
+        user: sdk.users.getUserContextBindings(ctx.user),
+      })
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
@@ -96,7 +103,14 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
         sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
       )
   ctx.status = 200
-  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emitRow({
+      eventName: `row:save`,
+      appId,
+      row,
+      table,
+      user: sdk.users.getUserContextBindings(ctx.user),
+    })
   ctx.message = `${table.name} saved successfully`
   // prefer squashed for response
   ctx.body = row || squashed
@@ -168,10 +182,15 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   }
 
   for (let row of rows) {
-    ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
+    ctx.eventEmitter &&
+      ctx.eventEmitter.emitRow({
+        eventName: `row:delete`,
+        appId,
+        row,
+        user: sdk.users.getUserContextBindings(ctx.user),
+      })
     gridSocket?.emitRowDeletion(ctx, row)
   }
-
   return rows
 }
 
@@ -184,7 +203,13 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
     await quotas.removeRow()
   }
 
-  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emitRow({
+      eventName: `row:delete`,
+      appId,
+      row: resp.row,
+      user: sdk.users.getUserContextBindings(ctx.user),
+    })
   gridSocket?.emitRowDeletion(ctx, resp.row)
 
   return resp
