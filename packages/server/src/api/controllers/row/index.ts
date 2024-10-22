@@ -65,14 +65,14 @@ export async function patch(
     }
     ctx.status = 200
     ctx.eventEmitter &&
-      ctx.eventEmitter.emitRow(
-        `row:update`,
+      ctx.eventEmitter.emitRow({
+        eventName: `row:update`,
         appId,
         row,
         table,
         oldRow,
-        sdk.users.getUserContextBindings(ctx.user)
-      )
+        user: sdk.users.getUserContextBindings(ctx.user),
+      })
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
@@ -104,14 +104,13 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
       )
   ctx.status = 200
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitRow(
-      `row:save`,
+    ctx.eventEmitter.emitRow({
+      eventName: `row:save`,
       appId,
       row,
       table,
-      null,
-      sdk.users.getUserContextBindings(ctx.user)
-    )
+      user: sdk.users.getUserContextBindings(ctx.user),
+    })
   ctx.message = `${table.name} saved successfully`
   // prefer squashed for response
   ctx.body = row || squashed
@@ -184,17 +183,14 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
 
   for (let row of rows) {
     ctx.eventEmitter &&
-      ctx.eventEmitter.emitRow(
-        `row:delete`,
+      ctx.eventEmitter.emitRow({
+        eventName: `row:delete`,
         appId,
         row,
-        null,
-        null,
-        sdk.users.getUserContextBindings(ctx.user)
-      )
+        user: sdk.users.getUserContextBindings(ctx.user),
+      })
     gridSocket?.emitRowDeletion(ctx, row)
   }
-
   return rows
 }
 
@@ -208,14 +204,12 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   }
 
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitRow(
-      `row:delete`,
+    ctx.eventEmitter.emitRow({
+      eventName: `row:delete`,
       appId,
-      resp.row,
-      null,
-      null,
-      sdk.users.getUserContextBindings(ctx.user)
-    )
+      row: resp.row,
+      user: sdk.users.getUserContextBindings(ctx.user),
+    })
   gridSocket?.emitRowDeletion(ctx, resp.row)
 
   return resp

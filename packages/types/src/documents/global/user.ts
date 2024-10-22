@@ -73,7 +73,7 @@ export interface UserBindings extends Document {
   lastName?: string
   email?: string
   status?: string
-  roleId?: string | undefined | null
+  roleId?: string | null
   globalId?: string
   userId?: string
 }
