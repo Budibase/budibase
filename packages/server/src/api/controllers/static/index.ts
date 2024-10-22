@@ -268,8 +268,8 @@ export const serveClientLibrary = async function (ctx: Ctx) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
 
-  const serverLocally = shouldServeLocally(version || "")
-  if (!serverLocally) {
+  const serveLocally = shouldServeLocally(version || "")
+  if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       objectStore.clientLibraryPath(appId!)
