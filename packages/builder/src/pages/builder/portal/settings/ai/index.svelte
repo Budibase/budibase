@@ -31,8 +31,7 @@
 
   async function fetchAIConfig() {
     try {
-      const aiDoc = await API.getConfig(ConfigTypes.AI)
-      fullAIConfig = aiDoc
+      fullAIConfig = await API.getConfig(ConfigTypes.AI)
     } catch (error) {
       notifications.error("Error fetching AI config")
     }
