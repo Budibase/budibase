@@ -15,6 +15,7 @@ export interface ContextUser extends Omit<User, "roles"> {
   accountPortalAccess?: boolean
   providerType?: ConfigType
   account?: Account
+  budibaseAccess?: boolean
 }
 
 /**

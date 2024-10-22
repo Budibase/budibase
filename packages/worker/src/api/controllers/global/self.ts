@@ -100,7 +100,18 @@ export async function getSelf(ctx: any) {
   await groups.adjustGroupCreatorsQuotas()
 
   // get the main body of the user
-  const user = await userSdk.db.getUser(userId)
+  let user
+  if (ctx.user._id.startsWith("us_")) {
+    user = await userSdk.db.getUser(userId)
+  } else {
+    // If the _id is not a Budibase User ID, then get the user by email
+    // If the account email address is changed, the email address of the cloud email would need to change in a transaction ?
+    user = await userSdk.db.getUserByEmail(ctx.user.email)
+  }
+  if (!user) {
+    ctx.throw(403, "User not logged in")
+    return
+  }
   ctx.body = await groups.enrichUserRolesFromGroups(user)
 
   // add the feature flags for this tenant
