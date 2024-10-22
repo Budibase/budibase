@@ -440,13 +440,13 @@ async function creationEvents(request: BBRequest<CreateAppRequest>, app: App) {
   let creationFns: ((app: App) => Promise<void>)[] = []
 
   const { useTemplate, templateKey, file } = request.body
-  if (useTemplate) {
+  if (useTemplate === "true") {
     // from template
     if (templateKey && templateKey !== "undefined") {
       creationFns.push(a => events.app.templateImported(a, templateKey))
     }
     // from file
-    else if (request.files?.templateFile) {
+    else if (request.files?.fileToImport) {
       creationFns.push(a => events.app.fileImported(a))
     }
     // from server file path
