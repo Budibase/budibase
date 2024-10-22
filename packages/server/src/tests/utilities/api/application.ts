@@ -17,8 +17,8 @@ export class ApplicationAPI extends TestAPI {
     app: CreateAppRequest,
     expectations?: Expectations
   ): Promise<App> => {
-    const files = app.templateFile ? { templateFile: app.templateFile } : {}
-    delete app.templateFile
+    const files = app.fileToImport ? { fileToImport: app.fileToImport } : {}
+    delete app.fileToImport
     return await this._post<App>("/api/applications", {
       fields: app,
       files,
