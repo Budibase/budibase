@@ -13,7 +13,6 @@ import {
   UserCtx,
   DeleteAutomationResponse,
   FetchAutomationResponse,
-  User,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
@@ -160,7 +159,7 @@ export async function trigger(ctx: UserCtx) {
         automation,
         {
           fields: ctx.request.body.fields,
-          user: ctx.user as User,
+          user: sdk.users.getUserContextBindings(ctx.user),
           timeout:
             ctx.request.body.timeout * 1000 || env.AUTOMATION_THREAD_TIMEOUT,
         },
@@ -185,7 +184,7 @@ export async function trigger(ctx: UserCtx) {
     await triggers.externalTrigger(automation, {
       ...ctx.request.body,
       appId: ctx.appId,
-      user: ctx.user as User,
+      user: sdk.users.getUserContextBindings(ctx.user),
     })
     ctx.body = {
       message: `Automation ${automation._id} has been triggered.`,
@@ -215,7 +214,7 @@ export async function test(ctx: UserCtx) {
     {
       ...testInput,
       appId: ctx.appId,
-      user: ctx.user,
+      user: sdk.users.getUserContextBindings(ctx.user),
     },
     { getResponses: true }
   )

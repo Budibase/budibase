@@ -26,7 +26,7 @@ import {
   BranchStep,
   LoopStep,
   SearchFilters,
-  User,
+  UserBindings,
 } from "@budibase/types"
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
@@ -76,7 +76,7 @@ class Orchestrator {
   private loopStepOutputs: LoopStep[]
   private stopped: boolean
   private executionOutput: Omit<AutomationContext, "stepsByName" | "stepsById">
-  private currentUser: User | undefined
+  private currentUser: UserBindings | undefined
 
   constructor(job: AutomationJob) {
     let automation = job.data.automation
