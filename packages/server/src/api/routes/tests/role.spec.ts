@@ -39,6 +39,16 @@ describe("/roles", () => {
       })
     })
 
+    it("handle a role with invalid inherits", async () => {
+      const role = basicRole()
+      role.inherits = ["not_real", "some_other_not_real"]
+
+      const res = await config.api.roles.save(role, {
+        status: 200,
+      })
+      expect(res.inherits).toEqual([BUILTIN_ROLE_IDS.BASIC])
+    })
+
     it("handle a role with no inherits", async () => {
       const role = basicRole()
       role.inherits = []
