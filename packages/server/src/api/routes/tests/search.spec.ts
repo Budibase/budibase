@@ -691,7 +691,7 @@ describe.each([
           ])
         })
 
-        it("should not match the session user id in a multi user field", async () => {
+        it.only("should not match the session user id in a multi user field", async () => {
           await expectQuery({
             notContains: { multi_user: ["{{ [user]._id }}"] },
             notEmpty: { multi_user: true },
@@ -793,7 +793,7 @@ describe.each([
       })
 
     const stringTypes = [FieldType.STRING, FieldType.LONGFORM] as const
-    describe.only.each(stringTypes)("%s", type => {
+    describe.each(stringTypes)("%s", type => {
       beforeAll(async () => {
         tableOrViewId = await createTableOrView({
           name: { name: "name", type },
