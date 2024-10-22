@@ -141,7 +141,6 @@ describe("/applications", () => {
         name: utils.newid(),
         useTemplate: "true",
         templateKey: "test",
-        templateString: "{}",
       })
       expect(app._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)

@@ -36,7 +36,6 @@ import {
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import { stringToReadStream } from "../../utilities"
 import { doesUserHaveLock } from "../../utilities/redis"
 import { cleanupAutomations } from "../../automations/utils"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
@@ -128,7 +127,6 @@ function checkAppName(
 }
 
 interface AppTemplate {
-  templateString?: string
   useTemplate?: string
   file?: {
     type?: string
@@ -153,14 +151,7 @@ async function createInstance(appId: string, template: AppTemplate) {
   await createRoutingView()
   await createAllSearchIndex()
 
-  // replicate the template data to the instance DB
-  // this is currently very hard to test, downloading and importing template files
-  if (template && template.templateString) {
-    const { ok } = await db.load(stringToReadStream(template.templateString))
-    if (!ok) {
-      throw "Error loading database dump from memory."
-    }
-  } else if (template && template.useTemplate === "true") {
+  if (template && template.useTemplate === "true") {
     await sdk.backups.importApp(appId, db, template)
   } else {
     // create the users table
@@ -248,14 +239,8 @@ export async function fetchAppPackage(
 
 async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
-  const {
-    name,
-    url,
-    encryptionPassword,
-    useTemplate,
-    templateKey,
-    templateString,
-  } = ctx.request.body
+  const { name, url, encryptionPassword, useTemplate, templateKey } =
+    ctx.request.body
 
   checkAppName(ctx, apps, name)
   const appUrl = sdk.applications.getAppUrl({ name, url })
@@ -264,7 +249,6 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
   const instanceConfig: AppTemplate = {
     useTemplate,
     key: templateKey,
-    templateString,
   }
   if (ctx.request.files && ctx.request.files.templateFile) {
     instanceConfig.file = {
