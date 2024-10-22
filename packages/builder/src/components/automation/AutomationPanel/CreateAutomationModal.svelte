@@ -1,4 +1,5 @@
 <script>
+  import { goto } from "@roxi/routify"
   import { automationStore } from "stores/builder"
   import {
     notifications,
@@ -32,11 +33,12 @@
         triggerVal.stepId,
         triggerVal
       )
-      await automationStore.actions.create(name, trigger)
+      const automation = await automationStore.actions.create(name, trigger)
       if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
         webhookModal.show()
       }
       notifications.success(`Automation ${name} created`)
+      $goto(`../automation/${automation._id}`)
     } catch (error) {
       notifications.error("Error creating automation")
     }

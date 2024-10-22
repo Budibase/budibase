@@ -482,4 +482,38 @@ describe("Automation Scenarios", () => {
       }
     )
   })
+
+  it("Check user is passed through from row trigger", async () => {
+    const table = await config.createTable()
+
+    const builder = createAutomationBuilder({
+      name: "Test a user is successfully passed from the trigger",
+    })
+
+    const results = await builder
+      .rowUpdated(
+        { tableId: table._id! },
+        {
+          row: { name: "Test", description: "TEST" },
+          id: "1234",
+        }
+      )
+      .serverLog({ text: "{{ [user].[email] }}" })
+      .run()
+
+    expect(results.steps[0].outputs.message).toContain("example.com")
+  })
+
+  it("Check user is passed through from app trigger", async () => {
+    const builder = createAutomationBuilder({
+      name: "Test a user is successfully passed from the trigger",
+    })
+
+    const results = await builder
+      .appAction({ fields: {} })
+      .serverLog({ text: "{{ [user].[email] }}" })
+      .run()
+
+    expect(results.steps[0].outputs.message).toContain("example.com")
+  })
 })
