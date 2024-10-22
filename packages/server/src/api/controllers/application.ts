@@ -284,8 +284,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
     const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
 
-    const isTemplate = instanceConfig.templateString
-    if (!isTemplate) {
+    if (instanceConfig.useTemplate) {
       await updateUserColumns(appId, db, ctx.user._id!)
     }
 
