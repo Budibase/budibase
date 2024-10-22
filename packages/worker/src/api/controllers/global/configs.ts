@@ -35,7 +35,6 @@ import {
   AIInnerConfig,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
-import { generateConfigID } from "@budibase/backend-core/src/configs"
 
 const getEventFns = async (config: Config, existing?: Config) => {
   const fns = []
@@ -518,7 +517,7 @@ export async function destroy(ctx: UserCtx) {
   try {
     await db.remove(id, rev)
     await cache.destroy(cache.CacheKey.CHECKLIST)
-    if (id === generateConfigID(ConfigType.AI)) {
+    if (id === configs.generateConfigID(ConfigType.AI)) {
       await pro.quotas.removeCustomAIConfig()
     }
     ctx.body = { message: "Config deleted successfully" }
