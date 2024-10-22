@@ -4,7 +4,7 @@ import type { Layout, App, Screen } from "../../documents"
 export interface CreateAppRequest {
   name: string
   url?: string
-  useTemplate?: string
+  useTemplate?: boolean
   templateName?: string
   templateKey?: string
   fileToImport?: string

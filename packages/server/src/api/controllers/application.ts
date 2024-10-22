@@ -58,6 +58,7 @@ import {
   FieldType,
   BBReferenceFieldSubType,
   Row,
+  BBRequest,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -127,7 +128,7 @@ function checkAppName(
 }
 
 interface AppTemplate {
-  useTemplate?: string
+  useTemplate?: boolean
   file?: {
     type?: string
     path: string
@@ -151,7 +152,7 @@ async function createInstance(appId: string, template: AppTemplate) {
   await createRoutingView()
   await createAllSearchIndex()
 
-  if (template && template.useTemplate === "true") {
+  if (template && template.useTemplate) {
     await sdk.backups.importApp(appId, db, template)
   } else {
     // create the users table
@@ -428,21 +429,21 @@ async function updateUserColumns(
   })
 }
 
-async function creationEvents(request: any, app: App) {
+async function creationEvents(request: BBRequest<CreateAppRequest>, app: App) {
   let creationFns: ((app: App) => Promise<void>)[] = []
 
-  const body = request.body
-  if (body.useTemplate === "true") {
+  const { useTemplate, templateKey, file } = request.body
+  if (useTemplate) {
     // from template
-    if (body.templateKey && body.templateKey !== "undefined") {
-      creationFns.push(a => events.app.templateImported(a, body.templateKey))
+    if (templateKey && templateKey !== "undefined") {
+      creationFns.push(a => events.app.templateImported(a, templateKey))
     }
     // from file
     else if (request.files?.templateFile) {
       creationFns.push(a => events.app.fileImported(a))
     }
     // from server file path
-    else if (request.body.file) {
+    else if (file) {
       // explicitly pass in the newly created app id
       creationFns.push(a => events.app.duplicated(a, app.appId))
     }
@@ -452,16 +453,14 @@ async function creationEvents(request: any, app: App) {
     }
   }
 
-  if (!request.duplicate) {
-    creationFns.push(a => events.app.created(a))
-  }
+  creationFns.push(a => events.app.created(a))
 
   for (let fn of creationFns) {
     await fn(app)
   }
 }
 
-async function appPostCreate(ctx: UserCtx, app: App) {
+async function appPostCreate(ctx: UserCtx<CreateAppRequest, App>, app: App) {
   const tenantId = tenancy.getTenantId()
   await migrations.backPopulateMigrations({
     type: MigrationType.APP,
@@ -472,7 +471,7 @@ async function appPostCreate(ctx: UserCtx, app: App) {
   await creationEvents(ctx.request, app)
 
   // app import, template creation and duplication
-  if (ctx.request.body.useTemplate === "true") {
+  if (ctx.request.body.useTemplate) {
     const { rows } = await getUniqueRows([app.appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
@@ -742,7 +741,7 @@ export async function duplicateApp(
   const createRequestBody: CreateAppRequest = {
     name: appName,
     url: possibleUrl,
-    useTemplate: "true",
+    useTemplate: true,
     // The app export path
     file: {
       path: tmpPath,
