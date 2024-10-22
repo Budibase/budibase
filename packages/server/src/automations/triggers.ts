@@ -19,7 +19,7 @@ import {
   AutomationStoppedReason,
   AutomationStatus,
   AutomationRowEvent,
-  User,
+  UserBindings,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"
@@ -145,11 +145,10 @@ export async function externalTrigger(
     fields: Record<string, any>
     timeout?: number
     appId?: string
-    user?: User
+    user?: UserBindings | undefined
   },
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<any> {
-  console.log("user: " + params.user)
   if (automation.disabled) {
     throw new Error("Automation is disabled")
   }
@@ -196,7 +195,6 @@ export async function externalTrigger(
       appId: context.getAppId(),
       automation,
     }
-    console.log(data)
     return executeInThread({ data } as AutomationJob)
   } else {
     return automationQueue.add(data, JOB_OPTS)
