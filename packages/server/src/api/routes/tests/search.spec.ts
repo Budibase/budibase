@@ -792,10 +792,11 @@ describe.each([
         })
       })
 
-    describe.only.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
+    const stringTypes = [FieldType.STRING, FieldType.LONGFORM] as const
+    describe.only.each(stringTypes)("%s", type => {
       beforeAll(async () => {
         tableOrViewId = await createTableOrView({
-          name: { name: "name", type: FieldType.STRING },
+          name: { name: "name", type },
         })
         await createRows([{ name: "foo" }, { name: "bar" }])
       })
@@ -1602,7 +1603,7 @@ describe.each([
         })
       })
 
-    describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
+    describe("arrays", () => {
       beforeAll(async () => {
         tableOrViewId = await createTableOrView({
           numbers: {
