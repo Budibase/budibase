@@ -23,6 +23,7 @@ import {
   cache,
   context,
   db as dbCore,
+  docIds,
   env as envCore,
   ErrorCode,
   events,
@@ -54,6 +55,10 @@ import {
   DuplicateAppResponse,
   UpdateAppRequest,
   UpdateAppResponse,
+  Database,
+  FieldType,
+  BBReferenceFieldSubType,
+  Row,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -279,6 +284,11 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
     const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
 
+    const isTemplate = instanceConfig.templateString
+    if (!isTemplate) {
+      await updateUserColumns(appId, db, ctx.user._id!)
+    }
+
     const newApplication: App = {
       _id: DocumentType.APP_METADATA,
       _rev: undefined,
@@ -372,6 +382,66 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
+  })
+}
+
+async function updateUserColumns(
+  appId: string,
+  db: Database,
+  toUserId: string
+) {
+  await context.doInAppContext(appId, async () => {
+    const allTables = await sdk.tables.getAllTables()
+    const tablesWithUserColumns = []
+    for (const table of allTables) {
+      const userColumns = Object.values(table.schema).filter(
+        f =>
+          (f.type === FieldType.BB_REFERENCE ||
+            f.type === FieldType.BB_REFERENCE_SINGLE) &&
+          f.subtype === BBReferenceFieldSubType.USER
+      )
+      if (!userColumns.length) {
+        continue
+      }
+
+      tablesWithUserColumns.push({
+        tableId: table._id!,
+        columns: userColumns.map(c => c.name),
+      })
+    }
+
+    const docsToUpdate = []
+
+    for (const { tableId, columns } of tablesWithUserColumns) {
+      const docs = await db.allDocs<Row>(
+        docIds.getRowParams(tableId, null, { include_docs: true })
+      )
+      const rows = docs.rows.map(d => d.doc!)
+
+      for (const row of rows) {
+        let shouldUpdate = false
+        const updatedColumns = columns.reduce<Row>((newColumns, column) => {
+          if (row[column]) {
+            shouldUpdate = true
+            if (Array.isArray(row[column])) {
+              newColumns[column] = row[column]?.map(() => toUserId)
+            } else if (row[column]) {
+              newColumns[column] = toUserId
+            }
+          }
+          return newColumns
+        }, {})
+
+        if (shouldUpdate) {
+          docsToUpdate.push({
+            ...row,
+            ...updatedColumns,
+          })
+        }
+      }
+    }
+
+    await db.bulkDocs(docsToUpdate)
   })
 }
 
