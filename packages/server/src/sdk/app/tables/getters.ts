@@ -12,6 +12,7 @@ import {
   TableResponse,
   TableSourceType,
   TableViewsResponse,
+  FeatureFlag,
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
@@ -39,7 +40,7 @@ export async function processTable(table: Table): Promise<Table> {
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
     }
-    const sqsEnabled = await features.flags.isEnabled("SQS")
+    const sqsEnabled = await features.flags.isEnabled(FeatureFlag.SQS)
     if (sqsEnabled) {
       processed.sql = true
     }

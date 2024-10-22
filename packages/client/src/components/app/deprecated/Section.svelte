@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import Placeholder from "./Placeholder.svelte"
+  import Placeholder from "../Placeholder.svelte"
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
