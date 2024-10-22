@@ -95,7 +95,7 @@ describe("/templates", () => {
             const app = await config.api.application.create({
               name,
               url,
-              useTemplate: true,
+              useTemplate: "true",
               templateName: "Agency Client Portal",
               templateKey: "app/agency-client-portal",
             })

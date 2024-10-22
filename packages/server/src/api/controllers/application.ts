@@ -748,7 +748,7 @@ export async function duplicateApp(
   const createRequestBody: CreateAppRequest = {
     name: appName,
     url: possibleUrl,
-    useTemplate: true,
+    useTemplate: "true",
     // The app export path
     file: {
       path: tmpPath,
