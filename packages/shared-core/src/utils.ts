@@ -12,7 +12,7 @@ import * as Constants from "./constants"
 import { removeKeyNumbering, splitFiltersArray } from "./filters"
 import _ from "lodash"
 
-const FILTER_ALLOWED_KEYS = [
+const FILTER_ALLOWED_KEYS: (keyof SearchFilter)[] = [
   "field",
   "operator",
   "value",
