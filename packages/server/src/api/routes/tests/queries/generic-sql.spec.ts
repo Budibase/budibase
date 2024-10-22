@@ -18,11 +18,11 @@ import { Knex } from "knex"
 
 describe.each(
   [
-    // DatabaseName.POSTGRES,
+    DatabaseName.POSTGRES,
     DatabaseName.MYSQL,
-    // DatabaseName.SQL_SERVER,
-    // DatabaseName.MARIADB,
-    // DatabaseName.ORACLE,
+    DatabaseName.SQL_SERVER,
+    DatabaseName.MARIADB,
+    DatabaseName.ORACLE,
   ].map(name => [name, getDatasource(name)])
 )("queries (%s)", (dbName, dsProvider) => {
   const config = setup.getConfig()
