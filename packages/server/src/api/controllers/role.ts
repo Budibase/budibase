@@ -226,34 +226,19 @@ export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
   if (!roleId) {
     roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
   }
+  // If a custom role is provided in the header, filter out higher level roles
+  const roleHeader = ctx.header?.[Header.PREVIEW_ROLE] as string
+  const isBuilder = ctx.user && sharedSdk.users.isAdminOrBuilder(ctx.user)
   let roleIds: string[] = []
-  if (ctx.user && sharedSdk.users.isAdminOrBuilder(ctx.user)) {
+  if (!roleHeader && isBuilder) {
     const appId = context.getAppId()
     if (appId) {
       roleIds = await roles.getAllRoleIds(appId)
     }
+  } else if (isBuilder && roleHeader) {
+    roleIds = await roles.getUserRoleIdHierarchy(roleHeader)
   } else {
     roleIds = await roles.getUserRoleIdHierarchy(roleId!)
-  }
-
-  // If a custom role is provided in the header, filter out higher level roles
-  const roleHeader = ctx.header?.[Header.PREVIEW_ROLE] as string
-  if (roleHeader && !Object.keys(roles.BUILTIN_ROLE_IDS).includes(roleHeader)) {
-    const role = await roles.getRole(roleHeader)
-    const inherits = role?.inherits
-    const orderedRoles = roleIds.reverse()
-    let filteredRoles = [roleHeader]
-    for (let role of orderedRoles) {
-      filteredRoles = [role, ...filteredRoles]
-      if (
-        (Array.isArray(inherits) && inherits.includes(role)) ||
-        role === inherits
-      ) {
-        break
-      }
-    }
-    filteredRoles.pop()
-    roleIds = [roleHeader, ...filteredRoles]
   }
 
   ctx.body = roleIds.map(roleId => roles.getExternalRoleID(roleId))
