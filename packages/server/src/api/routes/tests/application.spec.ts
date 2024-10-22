@@ -139,7 +139,7 @@ describe("/applications", () => {
     it("creates app from template", async () => {
       const app = await config.api.application.create({
         name: utils.newid(),
-        useTemplate: true,
+        useTemplate: "true",
         templateKey: "test",
       })
       expect(app._id).toBeDefined()
@@ -150,7 +150,7 @@ describe("/applications", () => {
     it("creates app from file", async () => {
       const app = await config.api.application.create({
         name: utils.newid(),
-        useTemplate: true,
+        useTemplate: "true",
         fileToImport: "src/api/routes/tests/data/export.txt",
       })
       expect(app._id).toBeDefined()
@@ -170,7 +170,7 @@ describe("/applications", () => {
     it("migrates navigation settings from old apps", async () => {
       const app = await config.api.application.create({
         name: utils.newid(),
-        useTemplate: true,
+        useTemplate: "true",
         fileToImport: "src/api/routes/tests/data/old-app.txt",
       })
       expect(app._id).toBeDefined()
