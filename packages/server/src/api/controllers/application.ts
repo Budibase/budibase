@@ -240,8 +240,15 @@ export async function fetchAppPackage(
 
 async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
-  const { name, url, encryptionPassword, useTemplate, templateKey } =
-    ctx.request.body
+  const { body } = ctx.request
+  const { name, url, encryptionPassword, templateKey } = body
+
+  let useTemplate
+  if (typeof body.useTemplate === "string") {
+    useTemplate = body.useTemplate === "true"
+  } else if (typeof body.useTemplate === "boolean") {
+    useTemplate = body.useTemplate
+  }
 
   checkAppName(ctx, apps, name)
   const appUrl = sdk.applications.getAppUrl({ name, url })
@@ -256,9 +263,9 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
       ...(ctx.request.files.fileToImport as any),
       password: encryptionPassword,
     }
-  } else if (typeof ctx.request.body.file?.path === "string") {
+  } else if (typeof body.file?.path === "string") {
     instanceConfig.file = {
-      path: ctx.request.body.file?.path,
+      path: body.file?.path,
     }
   }
 
