@@ -18,6 +18,7 @@ import * as loop from "./steps/loop"
 import * as collect from "./steps/collect"
 import * as branch from "./steps/branch"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
+import * as openai from "./steps/openai"
 import env from "../environment"
 import {
   PluginType,
@@ -89,21 +90,27 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
 // ran at all
 if (env.SELF_HOSTED) {
   const bash = require("./steps/bash")
-  const openai = require("./steps/openai")
 
   // @ts-ignore
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
   // @ts-ignore
   BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
-  // @ts-ignore
-  ACTION_IMPLS.OPENAI = openai.run
-  BUILTIN_ACTION_DEFINITIONS.OPENAI = openai.definition
 }
 
 export async function getActionDefinitions() {
   if (await features.flags.isEnabled(FeatureFlag.AUTOMATION_BRANCHING)) {
     BUILTIN_ACTION_DEFINITIONS["BRANCH"] = branch.definition
   }
+  if (
+    env.SELF_HOSTED ||
+    (await features.flags.isEnabled(FeatureFlag.BUDIBASE_AI)) ||
+    (await features.flags.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS))
+  ) {
+    BUILTIN_ACTION_DEFINITIONS["OPENAI"] = openai.definition
+    // @ts-ignore
+    ACTION_IMPLS["OPENAI"] = openai.run
+  }
+
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.AUTOMATION)
