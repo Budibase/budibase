@@ -321,6 +321,23 @@ describe("/roles", () => {
         }
       )
     })
+
+    it("should fetch preview role correctly even without basic specified", async () => {
+      const role = await config.api.roles.save(basicRole())
+      // have to forcefully delete the inherits from DB - technically can't
+      // happen anymore - but good test case
+      await dbCore.getDB(config.appId!).put({
+        ...role,
+        _id: dbCore.prefixRoleID(role._id!),
+        inherits: [],
+      })
+      await config.withHeaders({ "x-budibase-role": role.name }, async () => {
+        const res = await config.api.roles.accessible({
+          status: 200,
+        })
+        expect(res).toEqual([role.name])
+      })
+    })
   })
 
   describe("accessible - multi-inheritance", () => {
