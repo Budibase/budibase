@@ -201,7 +201,10 @@ export const roleToNode = role => {
 // Converts a node structure back into a role doc
 export const nodeToRole = ({ node, edges }) => ({
   ...get(roles).find(role => role._id === node.id),
-  inherits: edges.filter(x => x.target === node.id).map(x => x.source),
+  inherits: edges
+    .filter(x => x.target === node.id)
+    .map(x => x.source)
+    .concat(Roles.BASIC),
   uiMetadata: {
     displayName: node.data.displayName,
     color: node.data.color,

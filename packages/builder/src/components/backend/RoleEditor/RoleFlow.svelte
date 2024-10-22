@@ -95,7 +95,7 @@
         color: "var(--spectrum-global-color-gray-700)",
         description: "Custom role",
       },
-      permissionId: "write",
+      inherits: [Roles.BASIC],
     })
     await tick()
     layoutAndFit()
