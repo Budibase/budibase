@@ -5,6 +5,7 @@
   export let value
   export let error
   export let placeholder = null
+  export let autoWidth = false
 </script>
 
 <Select
@@ -16,4 +17,5 @@
   getOptionColour={role => role.uiMetadata.color}
   {placeholder}
   {error}
+  {autoWidth}
 />
