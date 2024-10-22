@@ -151,7 +151,7 @@ describe("/applications", () => {
       const app = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        templateFile: "src/api/routes/tests/data/export.txt",
+        fileToImport: "src/api/routes/tests/data/export.txt",
       })
       expect(app._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
@@ -171,7 +171,7 @@ describe("/applications", () => {
       const app = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        templateFile: "src/api/routes/tests/data/old-app.txt",
+        fileToImport: "src/api/routes/tests/data/old-app.txt",
       })
       expect(app._id).toBeDefined()
       expect(app.navigation).toBeDefined()
