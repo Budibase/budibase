@@ -86,7 +86,6 @@ describe("/screens", () => {
             status: 200,
           }
         )
-        // basic and role1 screen
         expect(res.screens.length).toEqual(screenIds.length)
         expect(res.screens.map(s => s._id).sort()).toEqual(screenIds.sort())
       })
@@ -106,6 +105,25 @@ describe("/screens", () => {
         screen1._id!,
         screen2._id!,
       ])
+    })
+
+    it("should be able to fetch basic and screen 1 with role1 in role header", async () => {
+      await config.withHeaders(
+        {
+          "x-budibase-role": role1._id!,
+        },
+        async () => {
+          const res = await config.api.application.getDefinition(
+            config.prodAppId!,
+            {
+              status: 200,
+            }
+          )
+          const screenIds = [screen._id!, screen1._id!]
+          expect(res.screens.length).toEqual(screenIds.length)
+          expect(res.screens.map(s => s._id).sort()).toEqual(screenIds.sort())
+        }
+      )
     })
   })
 
