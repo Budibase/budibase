@@ -21,6 +21,7 @@ import tk from "timekeeper"
 import * as uuid from "uuid"
 import { structures } from "@budibase/backend-core/tests"
 import nock from "nock"
+import path from "path"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -137,11 +138,17 @@ describe("/applications", () => {
     })
 
     it("creates app from template", async () => {
+      nock("https://prod-budi-templates.s3-eu-west-1.amazonaws.com")
+        .get(`/templates/app/agency-client-portal.tar.gz`)
+        .replyWithFile(
+          200,
+          path.resolve(__dirname, "data", "agency-client-portal.tar.gz")
+        )
+
       const app = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        templateKey: "test",
-        templateString: "{}",
+        templateKey: "app/agency-client-portal",
       })
       expect(app._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
@@ -152,7 +159,7 @@ describe("/applications", () => {
       const app = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        templateFile: "src/api/routes/tests/data/export.txt",
+        fileToImport: "src/api/routes/tests/data/export.txt",
       })
       expect(app._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
@@ -172,7 +179,7 @@ describe("/applications", () => {
       const app = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        templateFile: "src/api/routes/tests/data/old-app.txt",
+        fileToImport: "src/api/routes/tests/data/old-app.txt",
       })
       expect(app._id).toBeDefined()
       expect(app.navigation).toBeDefined()
