@@ -181,6 +181,7 @@
 
 <div class="nav">
   <a
+    class="nav-icon"
     href={`/builder/app/${$appStore.appId}/data/datasource/${datasource?._id}`}
   >
     <IntegrationIcon
@@ -334,6 +335,9 @@
     padding: 0 var(--spacing-xl);
     gap: 8px;
     background: var(--background);
+  }
+  .nav-icon {
+    display: flex;
   }
   .nav__views {
     flex: 0 1 auto;
