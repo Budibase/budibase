@@ -23,6 +23,7 @@ import {
 import { RoleColor, sdk as sharedSdk, helpers } from "@budibase/shared-core"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
+import { roleIDsAreEqual } from "@budibase/backend-core/src/security/roles"
 
 const UpdateRolesOptions = {
   CREATED: "created",
@@ -36,11 +37,11 @@ async function removeRoleFromOthers(roleId: string) {
     let changed = false
     if (Array.isArray(role.inherits)) {
       const newInherits = role.inherits.filter(
-        id => !roles.compareRoleIds(id, roleId)
+        id => !roles.roleIDsAreEqual(id, roleId)
       )
       changed = role.inherits.length !== newInherits.length
       role.inherits = newInherits
-    } else if (role.inherits && roles.compareRoleIds(role.inherits, roleId)) {
+    } else if (role.inherits && roles.roleIDsAreEqual(role.inherits, roleId)) {
       role.inherits = roles.BUILTIN_ROLE_IDS.PUBLIC
       changed = true
     }
@@ -239,7 +240,10 @@ export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
     roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
   }
   // If a custom role is provided in the header, filter out higher level roles
-  const roleHeader = ctx.header?.[Header.PREVIEW_ROLE] as string
+  const roleHeader = ctx.header[Header.PREVIEW_ROLE]
+  if (Array.isArray(roleHeader)) {
+    ctx.throw(400, `Too many roles specified in ${Header.PREVIEW_ROLE} header`)
+  }
   const isBuilder = ctx.user && sharedSdk.users.isAdminOrBuilder(ctx.user)
   let roleIds: string[] = []
   if (!roleHeader && isBuilder) {
