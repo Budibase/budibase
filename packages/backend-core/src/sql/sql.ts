@@ -13,6 +13,7 @@ import SqlTableQueryBuilder from "./sqlTable"
 import {
   Aggregation,
   AnySearchFilter,
+  ArrayFilter,
   ArrayOperator,
   BasicOperator,
   BBReferenceFieldMetadata,
@@ -152,30 +153,24 @@ class InternalBuilder {
     return this.query.meta.table
   }
 
+  get knexClient(): Knex.Client {
+    return this.knex.client as Knex.Client
+  }
+
   getFieldSchema(key: string): FieldSchema | undefined {
     const { column } = this.splitter.run(key)
     return this.table.schema[column]
   }
 
   private quoteChars(): [string, string] {
-    switch (this.client) {
-      case SqlClient.ORACLE:
-      case SqlClient.POSTGRES:
-        return ['"', '"']
-      case SqlClient.MS_SQL:
-        return ["[", "]"]
-      case SqlClient.MARIADB:
-      case SqlClient.MY_SQL:
-      case SqlClient.SQL_LITE:
-        return ["`", "`"]
-    }
+    const wrapped = this.knexClient.wrapIdentifier("foo", {})
+    return [wrapped[0], wrapped[wrapped.length - 1]]
   }
 
-  // Takes a string like foo and returns a quoted string like [foo] for SQL Server
-  // and "foo" for Postgres.
+  // Takes a string like foo and returns a quoted string like [foo] for SQL
+  // Server and "foo" for Postgres.
   private quote(str: string): string {
-    const [start, end] = this.quoteChars()
-    return `${start}${str}${end}`
+    return this.knexClient.wrapIdentifier(str, {})
   }
 
   private isQuoted(key: string): boolean {
@@ -191,6 +186,21 @@ class InternalBuilder {
       key = this.splitIdentifier(key)
     }
     return key.map(part => this.quote(part)).join(".")
+  }
+
+  // Unfortuantely we cannot rely on knex's identifier escaping because it trims
+  // the identifier string before escaping it, which breaks cases for us where
+  // columns that start or end with a space aren't referenced correctly anymore.
+  //
+  // So whenever you're using an identifier binding in knex, e.g. knex.raw("??
+  // as ?", ["foo", "bar"]), you need to make sure you call this:
+  //
+  //   knex.raw("?? as ?", [this.quotedIdentifier("foo"), "bar"])
+  //
+  // Issue we filed against knex about this:
+  //   https://github.com/knex/knex/issues/6143
+  private rawQuotedIdentifier(key: string): Knex.Raw {
+    return this.knex.raw(this.quotedIdentifier(key))
   }
 
   // Turns an identifier like a.b.c or `a`.`b`.`c` into ["a", "b", "c"]
@@ -261,7 +271,7 @@ class InternalBuilder {
           // TODO: figure out how to express this safely without string
           // interpolation.
           return this.knex.raw(`??::money::numeric as "${field}"`, [
-            [table, column].join("."),
+            this.rawQuotedIdentifier([table, column].join(".")),
             field,
           ])
         }
@@ -273,14 +283,14 @@ class InternalBuilder {
           // TODO: figure out how to express this safely without string
           // interpolation.
           return this.knex.raw(`CONVERT(varchar, ??, 108) as "${field}"`, [
-            field,
+            this.rawQuotedIdentifier(field),
           ])
         }
 
         if (table) {
-          return this.knex.raw("??", [`${table}.${column}`])
+          return this.rawQuotedIdentifier(`${table}.${column}`)
         } else {
-          return this.knex.raw("??", [field])
+          return this.rawQuotedIdentifier(field)
         }
       })
   }
@@ -300,7 +310,7 @@ class InternalBuilder {
     const parts = this.splitIdentifier(field)
     const col = parts.pop()!
     const schema = this.table.schema[col]
-    let identifier = this.knex.raw("??", [field])
+    let identifier = this.rawQuotedIdentifier(field)
 
     if (
       schema.type === FieldType.STRING ||
@@ -311,7 +321,10 @@ class InternalBuilder {
       schema.type === FieldType.BARCODEQR
     ) {
       if (opts?.forSelect) {
-        identifier = this.knex.raw("to_char(??) as ??", [identifier, col])
+        identifier = this.knex.raw("to_char(??) as ??", [
+          identifier,
+          this.rawQuotedIdentifier(col),
+        ])
       } else {
         identifier = this.knex.raw("to_char(??)", [identifier])
       }
@@ -437,7 +450,6 @@ class InternalBuilder {
     filterKey: string,
     whereCb: (filterKey: string, query: Knex.QueryBuilder) => Knex.QueryBuilder
   ): Knex.QueryBuilder {
-    const mainKnex = this.knex
     const { relationships, endpoint, tableAliases: aliases } = this.query
     const tableName = endpoint.entityId
     const fromAlias = aliases?.[tableName] || tableName
@@ -459,8 +471,8 @@ class InternalBuilder {
         relationship.to &&
         relationship.tableName
       ) {
-        const joinTable = mainKnex
-          .select(mainKnex.raw(1))
+        const joinTable = this.knex
+          .select(this.knex.raw(1))
           .from({ [toAlias]: relatedTableName })
         let subQuery = joinTable.clone()
         const manyToMany = validateManyToMany(relationship)
@@ -495,7 +507,7 @@ class InternalBuilder {
             .where(
               `${throughAlias}.${manyToMany.from}`,
               "=",
-              mainKnex.raw(`??`, [`${fromAlias}.${manyToMany.fromPrimary}`])
+              this.rawQuotedIdentifier(`${fromAlias}.${manyToMany.fromPrimary}`)
             )
           // in SQS the same junction table is used for different many-to-many relationships between the
           // two same tables, this is needed to avoid rows ending up in all columns
@@ -524,7 +536,7 @@ class InternalBuilder {
           subQuery = subQuery.where(
             toKey,
             "=",
-            mainKnex.raw("??", [foreignKey])
+            this.rawQuotedIdentifier(foreignKey)
           )
 
           query = query.where(q => {
@@ -641,15 +653,30 @@ class InternalBuilder {
         this.client === SqlClient.ORACLE ||
         this.client === SqlClient.SQL_LITE
       ) {
-        return q.whereRaw(`LOWER(??) LIKE ?`, [key, `%${value.toLowerCase()}%`])
+        return q.whereRaw(`LOWER(??) LIKE ?`, [
+          this.rawQuotedIdentifier(key),
+          `%${value.toLowerCase()}%`,
+        ])
       }
-      return q.whereILike(key, this.knex.raw("?", [`%${value}%`]))
+      return q.whereILike(
+        // @ts-expect-error knex types are wrong, raw is fine here
+        this.rawQuotedIdentifier(key),
+        this.knex.raw("?", [`%${value}%`])
+      )
     }
 
-    const contains = (mode: AnySearchFilter, any: boolean = false) => {
-      const rawFnc = allOr ? "orWhereRaw" : "whereRaw"
-      const not = mode === filters?.notContains ? "NOT " : ""
-      function stringifyArray(value: Array<any>, quoteStyle = '"'): string {
+    const contains = (mode: ArrayFilter, any = false) => {
+      function addModifiers<T extends {}, Q>(q: Knex.QueryBuilder<T, Q>) {
+        if (allOr || mode === filters?.containsAny) {
+          q = q.or
+        }
+        if (mode === filters?.notContains) {
+          q = q.not
+        }
+        return q
+      }
+
+      function stringifyArray(value: any[], quoteStyle = '"'): string {
         for (let i in value) {
           if (typeof value[i] === "string") {
             value[i] = `${quoteStyle}${value[i]}${quoteStyle}`
@@ -657,60 +684,64 @@ class InternalBuilder {
         }
         return `[${value.join(",")}]`
       }
+
       if (this.client === SqlClient.POSTGRES) {
         iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
           const wrap = any ? "" : "'"
           const op = any ? "\\?| array" : "@>"
-          const fieldNames = key.split(/\./g)
-          const table = fieldNames[0]
-          const col = fieldNames[1]
-          return q[rawFnc](
-            `${not}COALESCE("${table}"."${col}"::jsonb ${op} ${wrap}${stringifyArray(
-              value,
-              any ? "'" : '"'
-            )}${wrap}, FALSE)`
+
+          const stringifiedArray = stringifyArray(value, any ? "'" : '"')
+          return addModifiers(q).whereRaw(
+            `COALESCE(??::jsonb ${op} ${wrap}${stringifiedArray}${wrap}, FALSE)`,
+            [this.rawQuotedIdentifier(key)]
           )
         })
       } else if (
         this.client === SqlClient.MY_SQL ||
         this.client === SqlClient.MARIADB
       ) {
-        const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
         iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
-          return q[rawFnc](
-            `${not}COALESCE(${jsonFnc}(${key}, '${stringifyArray(
-              value
-            )}'), FALSE)`
-          )
+          return addModifiers(q).whereRaw(`COALESCE(?(??, ?), FALSE)`, [
+            this.knex.raw(any ? "JSON_OVERLAPS" : "JSON_CONTAINS"),
+            this.rawQuotedIdentifier(key),
+            stringifyArray(value),
+          ])
         })
       } else {
-        const andOr = mode === filters?.containsAny ? " OR " : " AND "
         iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
-          let statement = ""
-          const identifier = this.quotedIdentifier(key)
-          for (let i in value) {
-            if (typeof value[i] === "string") {
-              value[i] = `%"${value[i].toLowerCase()}"%`
-            } else {
-              value[i] = `%${value[i]}%`
-            }
-            statement += `${
-              statement ? andOr : ""
-            }COALESCE(LOWER(${identifier}), '') LIKE ?`
-          }
-
-          if (statement === "") {
+          if (value.length === 0) {
             return q
           }
 
-          if (not) {
-            return q[rawFnc](
-              `(NOT (${statement}) OR ${identifier} IS NULL)`,
-              value
-            )
-          } else {
-            return q[rawFnc](statement, value)
+          q = addModifiers(q).where(subQuery => {
+            subQuery.where(subSubQuery => {
+              for (const elem of value) {
+                if (mode === filters?.containsAny) {
+                  subSubQuery = subSubQuery.or
+                } else {
+                  subSubQuery = subSubQuery.and
+                }
+
+                const lower =
+                  typeof elem === "string" ? `"${elem.toLowerCase()}"` : elem
+
+                subSubQuery = subSubQuery.whereLike(
+                  // @ts-expect-error knex types are wrong, raw is fine here
+                  this.knex.raw(`COALESCE(LOWER(??), '')`, [
+                    this.rawQuotedIdentifier(key),
+                  ]),
+                  `%${lower}%`
+                )
+              }
+            })
+          })
+
+          if (mode === filters?.notContains) {
+            // @ts-expect-error knex types are wrong, raw is fine here
+            q.or.whereNull(this.rawQuotedIdentifier(key))
           }
+
+          return q
         })
       }
     }
@@ -764,7 +795,10 @@ class InternalBuilder {
           return q[fnc](key, "ilike", `${value}%`)
         } else {
           const fnc = allOr ? "orWhereRaw" : "whereRaw"
-          return q[fnc](`LOWER(??) LIKE ?`, [key, `${value.toLowerCase()}%`])
+          return q[fnc](`LOWER(??) LIKE ?`, [
+            this.rawQuotedIdentifier(key),
+            `${value.toLowerCase()}%`,
+          ])
         }
       })
     }
@@ -801,7 +835,9 @@ class InternalBuilder {
           this.client === SqlClient.SQL_LITE &&
           schema?.type === FieldType.BIGINT
         ) {
-          rawKey = this.knex.raw("CAST(?? AS INTEGER)", [key])
+          rawKey = this.knex.raw("CAST(?? AS INTEGER)", [
+            this.rawQuotedIdentifier(key),
+          ])
           high = this.knex.raw("CAST(? AS INTEGER)", [value.high])
           low = this.knex.raw("CAST(? AS INTEGER)", [value.low])
         }
@@ -1082,7 +1118,9 @@ class InternalBuilder {
     }
 
     const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
-    return this.knex.raw(`?${separator}??`, [unaliased, tableField]).toString()
+    return this.knex
+      .raw(`?${separator}??`, [unaliased, this.rawQuotedIdentifier(tableField)])
+      .toString()
   }
 
   maxFunctionParameters() {
@@ -1178,7 +1216,7 @@ class InternalBuilder {
       subQuery = subQuery.where(
         correlatedTo,
         "=",
-        knex.raw("??", [correlatedFrom])
+        this.rawQuotedIdentifier(correlatedFrom)
       )
 
       const standardWrap = (select: Knex.Raw): Knex.QueryBuilder => {
@@ -1228,7 +1266,7 @@ class InternalBuilder {
 
           wrapperQuery = knex.raw(
             `(SELECT ?? = (${comparatorQuery} FOR JSON PATH))`,
-            [toAlias]
+            [this.rawQuotedIdentifier(toAlias)]
           )
           break
         }
