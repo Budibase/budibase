@@ -20,7 +20,8 @@
 {:else}
   <StatusLight
     square
-    color={role?.color || "var(--spectrum-global-color-static-magenta-400)"}
+    color={role?.uiMetadata.color ||
+      "var(--spectrum-global-color-static-magenta-400)"}
   >
     Can use as {getRoleLabel(value)}
   </StatusLight>
