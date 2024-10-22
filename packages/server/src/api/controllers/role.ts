@@ -23,7 +23,6 @@ import {
 import { RoleColor, sdk as sharedSdk, helpers } from "@budibase/shared-core"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
-import { roleIDsAreEqual } from "@budibase/backend-core/src/security/roles"
 
 const UpdateRolesOptions = {
   CREATED: "created",
