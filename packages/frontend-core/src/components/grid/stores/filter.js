@@ -1,5 +1,5 @@
 import { get, derived } from "svelte/store"
-import { FieldType, FilterGroupLogicalOperator } from "@budibase/types"
+import { FieldType, UILogicalOperator } from "@budibase/types"
 import { memo } from "../../../utils/memo"
 
 export const createStores = context => {
@@ -25,10 +25,10 @@ export const deriveStores = context => {
         return $filter
       }
       let allFilters = {
-        logicalOperator: FilterGroupLogicalOperator.ALL,
+        logicalOperator: UILogicalOperator.ALL,
         groups: [
           {
-            logicalOperator: FilterGroupLogicalOperator.ALL,
+            logicalOperator: UILogicalOperator.ALL,
             filters: $inlineFilters,
           },
         ],
