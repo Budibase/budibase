@@ -13,16 +13,19 @@ import { definitions as TRIGGER_DEFINITIONS } from "../../automations/triggerInf
 import * as triggers from "../../automations/triggers"
 import sdk from ".."
 
-function ensureUniqueAndThrow(
+async function ensureUniqueAndThrow(
   doc: TableRowActions,
   name: string,
   existingRowActionId?: string
 ) {
+  const names = await getNames(doc)
+  name = name.toLowerCase().trim()
+
   if (
-    Object.entries(doc.actions).find(
-      ([id, a]) =>
-        a.name.toLowerCase() === name.toLowerCase() &&
-        id !== existingRowActionId
+    Object.entries(names).find(
+      ([automationId, automationName]) =>
+        automationName.toLowerCase().trim() === name &&
+        automationId !== existingRowActionId
     )
   ) {
     throw new HTTPError("A row action with the same name already exists.", 409)
@@ -34,18 +37,12 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
-  let doc: TableRowActions
-  try {
-    doc = await db.get<TableRowActions>(rowActionsId)
-  } catch (e: any) {
-    if (e.status !== 404) {
-      throw e
-    }
-
+  let doc = await db.tryGet<TableRowActions>(rowActionsId)
+  if (!doc) {
     doc = { _id: rowActionsId, actions: {} }
   }
 
-  ensureUniqueAndThrow(doc, action.name)
+  await ensureUniqueAndThrow(doc, action.name)
 
   const appId = context.getAppId()
   if (!appId) {
@@ -74,7 +71,6 @@ export async function create(tableId: string, rowAction: { name: string }) {
   })
 
   doc.actions[newRowActionId] = {
-    name: action.name,
     automationId: automation._id!,
     permissions: {
       table: { runAllowed: true },
@@ -85,6 +81,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
   return {
     id: newRowActionId,
+    name: automation.name,
     ...doc.actions[newRowActionId],
   }
 }
@@ -157,20 +154,6 @@ async function updateDoc(
     id: rowActionId,
     ...updated.actions[rowActionId],
   }
-}
-
-export async function update(
-  tableId: string,
-  rowActionId: string,
-  rowActionData: { name: string }
-) {
-  const newName = rowActionData.name.trim()
-
-  return await updateDoc(tableId, rowActionId, actionsDoc => {
-    ensureUniqueAndThrow(actionsDoc, newName, rowActionId)
-    actionsDoc.actions[rowActionId].name = newName
-    return actionsDoc
-  })
 }
 
 async function guardView(tableId: string, viewId: string) {
@@ -248,13 +231,8 @@ export async function run(
     throw new HTTPError("Table not found", 404)
   }
 
-  const rowActions = await getAll(tableId)
-  const rowAction = rowActions?.actions[rowActionId]
-  if (!rowAction) {
-    throw new HTTPError("Row action not found", 404)
-  }
-
-  const automation = await sdk.automations.get(rowAction.automationId)
+  const { automationId } = await get(tableId, rowActionId)
+  const automation = await sdk.automations.get(automationId)
 
   const row = await sdk.rows.find(tableId, rowId)
   await triggers.externalTrigger(
@@ -271,4 +249,18 @@ export async function run(
     },
     { getResponses: true }
   )
+}
+
+export async function getNames({ actions }: TableRowActions) {
+  const automations = await sdk.automations.find(
+    Object.values(actions).map(({ automationId }) => automationId)
+  )
+  const automationNames = automations.reduce<Record<string, string>>(
+    (names, a) => {
+      names[a._id] = a.name
+      return names
+    },
+    {}
+  )
+  return automationNames
 }

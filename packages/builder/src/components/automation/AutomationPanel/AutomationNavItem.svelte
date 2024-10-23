@@ -9,7 +9,6 @@
   import { sdk } from "@budibase/shared-core"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import UpdateAutomationModal from "components/automation/AutomationPanel/UpdateAutomationModal.svelte"
-  import UpdateRowActionModal from "components/automation/AutomationPanel/UpdateRowActionModal.svelte"
   import NavItem from "components/common/NavItem.svelte"
 
   export let automation
@@ -17,7 +16,6 @@
 
   let confirmDeleteDialog
   let updateAutomationDialog
-  let updateRowActionDialog
 
   $: isRowAction = sdk.automations.isRowAction(automation)
 
@@ -92,7 +90,7 @@
           name: "Edit",
           keyBind: null,
           visible: true,
-          callback: updateRowActionDialog.show,
+          callback: updateAutomationDialog.show,
         },
         del,
       ]
@@ -135,8 +133,4 @@
   This action cannot be undone.
 </ConfirmDialog>
 
-{#if isRowAction}
-  <UpdateRowActionModal {automation} bind:this={updateRowActionDialog} />
-{:else}
-  <UpdateAutomationModal {automation} bind:this={updateAutomationDialog} />
-{/if}
+<UpdateAutomationModal {automation} bind:this={updateAutomationDialog} />
