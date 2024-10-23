@@ -99,6 +99,12 @@ export async function get(automationId: string) {
   return trimUnexpectedObjectFields(result)
 }
 
+export async function find(ids: string[]) {
+  const db = getDb()
+  const result = await db.getMultiple<PersistedAutomation>(ids)
+  return result.map(trimUnexpectedObjectFields)
+}
+
 export async function create(automation: Automation) {
   automation = trimUnexpectedObjectFields(automation)
   const db = getDb()
