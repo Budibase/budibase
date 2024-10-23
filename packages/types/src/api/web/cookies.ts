@@ -6,4 +6,5 @@ export interface DatasourceAuthCookie {
 export interface SessionCookie {
   sessionId: string
   userId: string
+  tenantId: string
 }

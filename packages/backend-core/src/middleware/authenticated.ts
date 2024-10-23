@@ -130,6 +130,7 @@ export default function (
         try {
           // getting session handles error checking (if session exists etc)
           session = await getSession(userId, sessionId)
+          session.tenantId = authCookie.tenantId || session.tenantId
           if (opts && opts.populateUser) {
             user = await getUser({
               userId,

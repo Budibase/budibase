@@ -17,6 +17,7 @@ function buildAdminInitValidation() {
       ssoId: Joi.string(),
       familyName: OPTIONAL_STRING,
       givenName: OPTIONAL_STRING,
+      budibaseUserId: OPTIONAL_STRING,
     })
       .required()
       .unknown(false)

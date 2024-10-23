@@ -263,7 +263,11 @@ export class UserDB {
     const creatorsChange =
       (await isCreator(dbUser)) !== (await isCreator(user)) ? 1 : 0
     return UserDB.quotas.addUsers(change, creatorsChange, async () => {
-      await validateUniqueUser(email, tenantId)
+      // Only validate uniqueness for non-account users
+      // Allow account holder to use multiple tenants
+      if (user._id?.startsWith("us_")) {
+        await validateUniqueUser(email, tenantId)
+      }
 
       let builtUser = await UserDB.buildUser(user, opts, tenantId, dbUser)
       // don't allow a user to update its own roles/perms
