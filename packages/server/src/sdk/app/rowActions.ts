@@ -159,20 +159,6 @@ async function updateDoc(
   }
 }
 
-export async function update(
-  tableId: string,
-  rowActionId: string,
-  rowActionData: { name: string }
-) {
-  const newName = rowActionData.name.trim()
-
-  return await updateDoc(tableId, rowActionId, actionsDoc => {
-    ensureUniqueAndThrow(actionsDoc, newName, rowActionId)
-    actionsDoc.actions[rowActionId].name = newName
-    return actionsDoc
-  })
-}
-
 async function guardView(tableId: string, viewId: string) {
   let view
   if (docIds.isViewId(viewId)) {

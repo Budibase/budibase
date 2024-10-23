@@ -68,26 +68,6 @@ export async function create(
   ctx.status = 201
 }
 
-export async function update(
-  ctx: Ctx<UpdateRowActionRequest, RowActionResponse>
-) {
-  const table = await getTable(ctx)
-  const tableId = table._id!
-  const { actionId } = ctx.params
-
-  const action = await sdk.rowActions.update(tableId, actionId, {
-    name: ctx.request.body.name,
-  })
-
-  ctx.body = {
-    tableId,
-    id: action.id,
-    name: action.name,
-    automationId: action.automationId,
-    allowedSources: flattenAllowedSources(tableId, action.permissions),
-  }
-}
-
 export async function remove(ctx: Ctx<void, void>) {
   const table = await getTable(ctx)
   const { actionId } = ctx.params
