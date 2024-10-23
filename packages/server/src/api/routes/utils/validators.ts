@@ -8,6 +8,7 @@ import {
   SearchFilters,
   Table,
   WebhookActionType,
+  BuiltinPermissionID,
 } from "@budibase/types"
 import Joi, { CustomValidator } from "joi"
 import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
@@ -214,7 +215,7 @@ export function roleValidator() {
       }).optional(),
       // this is the base permission ID (for now a built in)
       permissionId: Joi.string()
-        .valid(...Object.values(permissions.BuiltinPermissionID))
+        .valid(...Object.values(BuiltinPermissionID))
         .optional(),
       permissions: Joi.object()
         .pattern(

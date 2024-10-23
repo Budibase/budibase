@@ -1,15 +1,9 @@
-import {
-  roles,
-  events,
-  permissions,
-  db as dbCore,
-} from "@budibase/backend-core"
+import { roles, events, db as dbCore } from "@budibase/backend-core"
 import * as setup from "./utilities"
-import { PermissionLevel } from "@budibase/types"
+import { PermissionLevel, BuiltinPermissionID } from "@budibase/types"
 
 const { basicRole } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
-const { BuiltinPermissionID } = permissions
 
 const LOOP_ERROR = "Role inheritance contains a loop, this is not supported"
 
@@ -162,7 +156,7 @@ describe("/roles", () => {
         _id: id1,
         name: id1,
         permissions: {},
-        permissionId: "write",
+        permissionId: BuiltinPermissionID.WRITE,
         version: "name",
         inherits: ["POWER"],
       })
@@ -170,7 +164,7 @@ describe("/roles", () => {
         _id: id2,
         permissions: {},
         name: id2,
-        permissionId: "write",
+        permissionId: BuiltinPermissionID.WRITE,
         version: "name",
         inherits: [id1],
       })
@@ -189,9 +183,24 @@ describe("/roles", () => {
         inherits: [BUILTIN_ROLE_IDS.ADMIN],
       })
       // remove the roles so that it will default back to DB roles, then save again
-      delete res.inherits
-      const updatedRes = await config.api.roles.save(res)
+      const updatedRes = await config.api.roles.save({
+        ...res,
+        inherits: undefined,
+      })
       expect(updatedRes.inherits).toEqual([BUILTIN_ROLE_IDS.ADMIN])
+    })
+
+    it("handle updating a role, without its permissionId", async () => {
+      const res = await config.api.roles.save({
+        ...basicRole(),
+        permissionId: BuiltinPermissionID.READ_ONLY,
+      })
+      // permission ID can be removed during update
+      const updatedRes = await config.api.roles.save({
+        ...res,
+        permissionId: undefined,
+      })
+      expect(updatedRes.permissionId).toEqual(PermissionLevel.READ)
     })
   })
 
@@ -329,7 +338,7 @@ describe("/roles", () => {
       await config.api.roles.save({
         name: customRoleName,
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
-        permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+        permissionId: BuiltinPermissionID.READ_ONLY,
         version: "name",
       })
       await config.withHeaders(
@@ -369,19 +378,19 @@ describe("/roles", () => {
       const { _id: roleId1 } = await config.api.roles.save({
         name: role1,
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
-        permissionId: permissions.BuiltinPermissionID.WRITE,
+        permissionId: BuiltinPermissionID.WRITE,
         version: "name",
       })
       const { _id: roleId2 } = await config.api.roles.save({
         name: role2,
         inherits: roles.BUILTIN_ROLE_IDS.POWER,
-        permissionId: permissions.BuiltinPermissionID.POWER,
+        permissionId: BuiltinPermissionID.POWER,
         version: "name",
       })
       await config.api.roles.save({
         name: role3,
         inherits: [roleId1!, roleId2!],
-        permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+        permissionId: BuiltinPermissionID.READ_ONLY,
         version: "name",
       })
       const headers = await config.roleHeaders({
