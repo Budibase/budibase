@@ -1,13 +1,15 @@
 <script>
-  import { ActionButton, Modal } from "@budibase/bbui"
+  import { Button, Modal } from "@budibase/bbui"
   import EditRolesModal from "../modals/EditRoles.svelte"
 
   let modal
 </script>
 
-<ActionButton icon="UsersLock" quiet on:click={modal.show}>
-  Edit roles
-</ActionButton>
-<Modal bind:this={modal}>
+<div>
+  <Button secondary icon="UsersLock" on:click on:click={modal.show}>
+    Edit roles
+  </Button>
+</div>
+<Modal bind:this={modal} on:show on:hide>
   <EditRolesModal />
 </Modal>

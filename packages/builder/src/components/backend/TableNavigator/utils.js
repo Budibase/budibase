@@ -66,3 +66,7 @@ export const parseFile = e => {
     reader.readAsText(file)
   })
 }
+
+export const alphabetical = (a, b) => {
+  return a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
+}
