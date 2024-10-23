@@ -725,10 +725,10 @@ const getRoleBindings = () => {
     return {
       type: "context",
       runtimeBinding: `'${role._id}'`,
-      readableBinding: `Role.${role.name}`,
+      readableBinding: `Role.${role.uiMetadata.displayName}`,
       category: "Role",
       icon: "UserGroup",
-      display: { type: "string", name: role.name },
+      display: { type: "string", name: role.uiMetadata.displayName },
     }
   })
 }

@@ -1,7 +1,8 @@
 <script>
-  import { Label, notifications, Select } from "@budibase/bbui"
-  import { permissions, roles } from "stores/builder"
+  import { Label, notifications } from "@budibase/bbui"
+  import { permissions } from "stores/builder"
   import { Constants } from "@budibase/frontend-core"
+  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
 
   export let query
   export let label
@@ -52,12 +53,5 @@
   {#if label}
     <Label>{label}</Label>
   {/if}
-  <Select
-    value={roleId}
-    on:change={e => updateRole(e.detail)}
-    options={$roles}
-    getOptionLabel={x => x.name}
-    getOptionValue={x => x._id}
-    autoWidth
-  />
+  <RoleSelect value={roleId} on:change={e => updateRole(e.detail)} autoWidth />
 {/if}

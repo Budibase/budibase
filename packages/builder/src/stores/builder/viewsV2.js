@@ -4,7 +4,7 @@ import { API } from "api"
 import { dataFilters } from "@budibase/shared-core"
 
 function convertToSearchFilters(view) {
-  // convert from SearchFilterGroup type
+  // convert from UISearchFilter type
   if (view?.query) {
     return {
       ...view,
@@ -15,7 +15,7 @@ function convertToSearchFilters(view) {
   return view
 }
 
-function convertToSearchFilterGroup(view) {
+function convertToUISearchFilter(view) {
   if (view?.queryUI) {
     return {
       ...view,
@@ -36,7 +36,7 @@ export function createViewsV2Store() {
       const views = Object.values(table?.views || {}).filter(view => {
         return view.version === 2
       })
-      list = list.concat(views.map(view => convertToSearchFilterGroup(view)))
+      list = list.concat(views.map(view => convertToUISearchFilter(view)))
     })
     return {
       ...$store,
@@ -77,7 +77,7 @@ export function createViewsV2Store() {
     if (!viewId) {
       return
     }
-    view = convertToSearchFilterGroup(view)
+    view = convertToUISearchFilter(view)
     const existingView = get(derivedStore).list.find(view => view.id === viewId)
     const tableIndex = get(tables).list.findIndex(table => {
       return table._id === view?.tableId || table._id === existingView?.tableId
