@@ -455,19 +455,18 @@ export function splitFiltersArray(filters: LegacyFilter[]) {
  * Legacy support remains for the old **SearchFilter[]** format.
  * These will be migrated to an appropriate **SearchFilters** object, if encountered
  */
-export function buildQuery(filter: undefined): undefined
-export function buildQuery(
-  filter: UISearchFilter | LegacyFilter[]
-): SearchFilters
 export function buildQuery(
   filter?: UISearchFilter | LegacyFilter[]
-): SearchFilters | undefined {
+): SearchFilters {
   if (!filter) {
-    return
+    return {}
   }
 
   if (Array.isArray(filter)) {
     filter = processSearchFilters(filter)
+    if (!filter) {
+      return {}
+    }
   }
 
   const operator = logicalOperatorFromUI(

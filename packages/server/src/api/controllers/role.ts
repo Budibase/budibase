@@ -18,7 +18,7 @@ import {
   UserCtx,
   UserMetadata,
   DocumentType,
-  PermissionLevel,
+  BuiltinPermissionID,
 } from "@budibase/types"
 import { RoleColor, sdk as sharedSdk, helpers } from "@budibase/shared-core"
 import sdk from "../../sdk"
@@ -134,7 +134,13 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   }
   // assume write permission level for newly created roles
   if (isCreate && !permissionId) {
-    permissionId = PermissionLevel.WRITE
+    permissionId = BuiltinPermissionID.WRITE
+  } else if (!permissionId && dbRole?.permissionId) {
+    permissionId = dbRole.permissionId
+  }
+
+  if (!permissionId) {
+    ctx.throw(400, "Role requires permissionId to be specified.")
   }
 
   const role = new roles.Role(_id, name, permissionId, {
