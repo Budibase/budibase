@@ -18,7 +18,6 @@ import {
   UserCtx,
   UserMetadata,
   DocumentType,
-  PermissionLevel,
   BuiltinPermissionID,
 } from "@budibase/types"
 import { RoleColor, sdk as sharedSdk, helpers } from "@budibase/shared-core"
