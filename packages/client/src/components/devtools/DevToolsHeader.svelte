@@ -37,7 +37,7 @@
 </script>
 
 <div class="dev-preview-header" class:mobile={$context.device.mobile}>
-  <Heading size="XS">Previ werewr eww</Heading>
+  <Heading size="XS">Preview</Heading>
   <Select
     quiet
     options={previewOptions}
