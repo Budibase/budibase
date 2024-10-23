@@ -19,6 +19,7 @@ import {
   AutomationStoppedReason,
   AutomationStatus,
   AutomationRowEvent,
+  UserBindings,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"
@@ -140,7 +141,12 @@ function rowPassesFilters(row: Row, filters: SearchFilters) {
 
 export async function externalTrigger(
   automation: Automation,
-  params: { fields: Record<string, any>; timeout?: number; appId?: string },
+  params: {
+    fields: Record<string, any>
+    timeout?: number
+    appId?: string
+    user?: UserBindings
+  },
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<any> {
   if (automation.disabled) {
