@@ -767,7 +767,6 @@ describe("/rowsActions", () => {
     it("can trigger an automation given valid data", async () => {
       expect(await getAutomationLogs()).toBeEmpty()
       await config.api.rowAction.trigger(viewId, rowAction.id, { rowId })
-
       const automationLogs = await getAutomationLogs()
       expect(automationLogs).toEqual([
         expect.objectContaining({
@@ -783,6 +782,10 @@ describe("/rowsActions", () => {
                 ...(await config.api.table.get(tableId)),
                 views: expect.anything(),
               },
+              user: expect.objectContaining({
+                _id: "ro_ta_users_" + config.getUser()._id,
+              }),
+
               automation: expect.objectContaining({
                 _id: rowAction.automationId,
               }),

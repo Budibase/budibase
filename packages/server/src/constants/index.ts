@@ -152,8 +152,6 @@ export enum AutomationErrors {
   FAILURE_CONDITION = "FAILURE_CONDITION_MET",
 }
 
-export const devClientVersion = "0.0.0"
-
 // pass through the list from the auth/core lib
 export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
 export const MAX_AUTOMATION_RECURRING_ERRORS = 5
