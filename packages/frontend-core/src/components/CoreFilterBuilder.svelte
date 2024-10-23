@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import {
     FieldType,
-    FilterGroupLogicalOperator,
+    UILogicalOperator,
     EmptyFilterOption,
   } from "@budibase/types"
   import { QueryUtils, Constants } from "@budibase/frontend-core"
@@ -220,7 +220,7 @@
     } else if (addGroup) {
       if (!editable?.groups?.length) {
         editable = {
-          logicalOperator: FilterGroupLogicalOperator.ALL,
+          logicalOperator: UILogicalOperator.ALL,
           onEmptyFilter: EmptyFilterOption.RETURN_NONE,
           groups: [],
         }
