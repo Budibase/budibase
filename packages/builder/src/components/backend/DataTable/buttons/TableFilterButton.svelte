@@ -5,7 +5,6 @@
   import { getUserBindings } from "dataBinding"
   import { makePropSafe } from "@budibase/string-templates"
   import { search } from "@budibase/frontend-core"
-  import { utils } from "@budibase/shared-core"
   import { tables } from "stores/builder"
 
   export let schema
@@ -17,7 +16,7 @@
 
   let drawer
 
-  $: localFilters = utils.processSearchFilters(filters)
+  $: localFilters = filters
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
@@ -53,15 +52,7 @@
   {filterCount ? `Filter: ${filterCount}` : "Filter"}
 </ActionButton>
 
-<Drawer
-  bind:this={drawer}
-  title="Filtering"
-  on:drawerHide
-  on:drawerShow={() => {
-    localFilters = utils.processSearchFilters(filters)
-  }}
-  forceModal
->
+<Drawer bind:this={drawer} title="Filtering" on:drawerHide forceModal>
   <Button
     cta
     slot="buttons"
