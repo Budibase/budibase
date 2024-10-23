@@ -9,7 +9,6 @@
   import { sdk } from "@budibase/shared-core"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import UpdateAutomationModal from "components/automation/AutomationPanel/UpdateAutomationModal.svelte"
-  import UpdateRowActionModal from "components/automation/AutomationPanel/UpdateRowActionModal.svelte"
   import NavItem from "components/common/NavItem.svelte"
 
   export let automation
