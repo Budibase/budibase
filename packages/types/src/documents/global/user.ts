@@ -68,6 +68,16 @@ export interface User extends Document {
   appSort?: string
 }
 
+export interface UserBindings extends Document {
+  firstName?: string
+  lastName?: string
+  email?: string
+  status?: string
+  roleId?: string | null
+  globalId?: string
+  userId?: string
+}
+
 export enum UserStatus {
   ACTIVE = "active",
   INACTIVE = "inactive",
