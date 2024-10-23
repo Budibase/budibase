@@ -159,6 +159,7 @@ export async function trigger(ctx: UserCtx) {
         automation,
         {
           fields: ctx.request.body.fields,
+          user: sdk.users.getUserContextBindings(ctx.user),
           timeout:
             ctx.request.body.timeout * 1000 || env.AUTOMATION_THREAD_TIMEOUT,
         },
@@ -183,6 +184,7 @@ export async function trigger(ctx: UserCtx) {
     await triggers.externalTrigger(automation, {
       ...ctx.request.body,
       appId: ctx.appId,
+      user: sdk.users.getUserContextBindings(ctx.user),
     })
     ctx.body = {
       message: `Automation ${automation._id} has been triggered.`,
@@ -212,6 +214,7 @@ export async function test(ctx: UserCtx) {
     {
       ...testInput,
       appId: ctx.appId,
+      user: sdk.users.getUserContextBindings(ctx.user),
     },
     { getResponses: true }
   )
