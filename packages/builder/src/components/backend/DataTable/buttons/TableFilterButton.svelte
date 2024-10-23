@@ -18,18 +18,15 @@
   let drawer
 
   $: localFilters = utils.processSearchFilters(filters || [])
-
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
     { allowLinks: true }
   )
-
   $: filterCount =
     localFilters?.groups?.reduce((acc, group) => {
       return (acc += group.filters.filter(filter => filter.field).length)
     }, 0) || 0
-
   $: bindings = [
     {
       type: "context",

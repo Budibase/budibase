@@ -7,8 +7,6 @@
   const onFilter = e => {
     filter.set(e.detail || [])
   }
-
-  $: console.log($filter)
 </script>
 
 {#key $datasource}
