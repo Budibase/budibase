@@ -19,12 +19,13 @@ async function ensureUniqueAndThrow(
   existingRowActionId?: string
 ) {
   const names = await getNames(doc)
-  name = name.toLowerCase()
+  name = name.toLowerCase().trim()
 
   if (
     Object.entries(names).find(
       ([automationId, automationName]) =>
-        automationName === name && automationId !== existingRowActionId
+        automationName.toLowerCase().trim() === name &&
+        automationId !== existingRowActionId
     )
   ) {
     throw new HTTPError("A row action with the same name already exists.", 409)
