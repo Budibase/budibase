@@ -3,29 +3,6 @@ import { tables } from "./tables"
 import { API } from "api"
 import { dataFilters } from "@budibase/shared-core"
 
-function convertToSearchFilters(view) {
-  // convert from UISearchFilter type
-  if (view?.query) {
-    return {
-      ...view,
-      queryUI: view.query,
-      query: dataFilters.buildQuery(view.query),
-    }
-  }
-  return view
-}
-
-function convertToUISearchFilter(view) {
-  if (view?.queryUI) {
-    return {
-      ...view,
-      query: view.queryUI,
-      queryUI: undefined,
-    }
-  }
-  return view
-}
-
 export function createViewsV2Store() {
   const store = writable({
     selectedViewId: null,
@@ -36,7 +13,7 @@ export function createViewsV2Store() {
       const views = Object.values(table?.views || {}).filter(view => {
         return view.version === 2
       })
-      list = list.concat(views.map(view => convertToUISearchFilter(view)))
+      list = list.concat(views)
     })
     return {
       ...$store,
@@ -58,7 +35,6 @@ export function createViewsV2Store() {
   }
 
   const create = async view => {
-    view = convertToSearchFilters(view)
     const savedViewResponse = await API.viewV2.create(view)
     const savedView = savedViewResponse.data
     replaceView(savedView.id, savedView)
@@ -66,7 +42,6 @@ export function createViewsV2Store() {
   }
 
   const save = async view => {
-    view = convertToSearchFilters(view)
     const res = await API.viewV2.update(view)
     const savedView = res?.data
     replaceView(view.id, savedView)

@@ -210,7 +210,7 @@ export class ComponentStore extends BudiStore {
 
       if (isLegacy) {
         const processedSetting = utils.processSearchFilters(
-          enrichedComponent[setting.key]
+          enrichedComponent[setting.key] || []
         )
         enrichedComponent[setting.key] = processedSetting
         migrated = true
