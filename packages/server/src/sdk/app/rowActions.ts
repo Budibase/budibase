@@ -23,7 +23,8 @@ async function ensureUniqueAndThrow(
 
   if (
     Object.entries(names).find(
-      ([id, name]) => name === name && id !== existingRowActionId
+      ([automationId, automationName]) =>
+        automationName === name && automationId !== existingRowActionId
     )
   ) {
     throw new HTTPError("A row action with the same name already exists.", 409)
