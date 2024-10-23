@@ -2,9 +2,9 @@ import {
   CreateRowActionRequest,
   Ctx,
   RowActionPermissions,
+  RowActionPermissionsResponse,
   RowActionResponse,
   RowActionsResponse,
-  UpdateRowActionRequest,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -76,22 +76,22 @@ export async function remove(ctx: Ctx<void, void>) {
   ctx.status = 204
 }
 
-export async function setTablePermission(ctx: Ctx<void, RowActionResponse>) {
+export async function setTablePermission(
+  ctx: Ctx<void, RowActionPermissionsResponse>
+) {
   const table = await getTable(ctx)
   const tableId = table._id!
   const { actionId } = ctx.params
 
   const action = await sdk.rowActions.setTablePermission(tableId, actionId)
   ctx.body = {
-    tableId,
-    id: action.id,
-    name: action.name,
-    automationId: action.automationId,
     allowedSources: flattenAllowedSources(tableId, action.permissions),
   }
 }
 
-export async function unsetTablePermission(ctx: Ctx<void, RowActionResponse>) {
+export async function unsetTablePermission(
+  ctx: Ctx<void, RowActionPermissionsResponse>
+) {
   const table = await getTable(ctx)
   const tableId = table._id!
   const { actionId } = ctx.params
@@ -99,15 +99,13 @@ export async function unsetTablePermission(ctx: Ctx<void, RowActionResponse>) {
   const action = await sdk.rowActions.unsetTablePermission(tableId, actionId)
 
   ctx.body = {
-    tableId,
-    id: action.id,
-    name: action.name,
-    automationId: action.automationId,
     allowedSources: flattenAllowedSources(tableId, action.permissions),
   }
 }
 
-export async function setViewPermission(ctx: Ctx<void, RowActionResponse>) {
+export async function setViewPermission(
+  ctx: Ctx<void, RowActionPermissionsResponse>
+) {
   const table = await getTable(ctx)
   const tableId = table._id!
   const { actionId, viewId } = ctx.params
@@ -118,15 +116,13 @@ export async function setViewPermission(ctx: Ctx<void, RowActionResponse>) {
     viewId
   )
   ctx.body = {
-    tableId,
-    id: action.id,
-    name: action.name,
-    automationId: action.automationId,
     allowedSources: flattenAllowedSources(tableId, action.permissions),
   }
 }
 
-export async function unsetViewPermission(ctx: Ctx<void, RowActionResponse>) {
+export async function unsetViewPermission(
+  ctx: Ctx<void, RowActionPermissionsResponse>
+) {
   const table = await getTable(ctx)
   const tableId = table._id!
   const { actionId, viewId } = ctx.params
@@ -138,10 +134,6 @@ export async function unsetViewPermission(ctx: Ctx<void, RowActionResponse>) {
   )
 
   ctx.body = {
-    tableId,
-    id: action.id,
-    name: action.name,
-    automationId: action.automationId,
     allowedSources: flattenAllowedSources(tableId, action.permissions),
   }
 }
