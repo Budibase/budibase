@@ -232,9 +232,7 @@ describe("/roles", () => {
       const customRoleFetched = res.find(r => r._id === customRole.name)
       expect(customRoleFetched).toBeDefined()
       expect(customRoleFetched!.inherits).toEqual(BUILTIN_ROLE_IDS.BASIC)
-      expect(customRoleFetched!.permissionId).toEqual(
-        BuiltinPermissionID.READ_ONLY
-      )
+      expect(customRoleFetched!.permissionId).toEqual(BuiltinPermissionID.WRITE)
     })
 
     it("should be able to get the role with a permission added", async () => {
