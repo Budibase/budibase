@@ -17,7 +17,6 @@
 
   let confirmDeleteDialog
   let updateAutomationDialog
-  let updateRowActionDialog
 
   $: isRowAction = sdk.automations.isRowAction(automation)
 
@@ -92,7 +91,7 @@
           name: "Edit",
           keyBind: null,
           visible: true,
-          callback: updateRowActionDialog.show,
+          callback: updateAutomationDialog.show,
         },
         del,
       ]
@@ -135,8 +134,4 @@
   This action cannot be undone.
 </ConfirmDialog>
 
-{#if isRowAction}
-  <UpdateRowActionModal {automation} bind:this={updateRowActionDialog} />
-{:else}
-  <UpdateAutomationModal {automation} bind:this={updateAutomationDialog} />
-{/if}
+<UpdateAutomationModal {automation} bind:this={updateAutomationDialog} />
