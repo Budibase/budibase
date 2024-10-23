@@ -467,7 +467,7 @@ export function buildQuery(
   }
 
   if (Array.isArray(filter)) {
-    filter = processSearchFilters(filter)
+    filter = processSearchFilters(filter) ?? []
   }
 
   const operator = logicalOperatorFromUI(
