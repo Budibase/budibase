@@ -713,7 +713,11 @@ class InternalBuilder {
             return q
           }
 
-          q = addModifiers(q).where(subQuery => {
+          q = q.where(subQuery => {
+            if (mode === filters?.notContains) {
+              subQuery = subQuery.not
+            }
+
             subQuery.where(subSubQuery => {
               for (const elem of value) {
                 if (mode === filters?.containsAny) {
@@ -733,13 +737,19 @@ class InternalBuilder {
                   `%${lower}%`
                 )
               }
-            })
-          })
 
-          if (mode === filters?.notContains) {
-            // @ts-expect-error knex types are wrong, raw is fine here
-            q.or.whereNull(this.rawQuotedIdentifier(key))
-          }
+              return subSubQuery
+            })
+
+            if (mode === filters?.notContains) {
+              subQuery = subQuery.or.whereNull(
+                // @ts-expect-error knex types are wrong, raw is fine here
+                this.rawQuotedIdentifier(key)
+              )
+            }
+
+            return subQuery
+          })
 
           return q
         })
