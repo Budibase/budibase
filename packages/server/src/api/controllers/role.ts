@@ -137,6 +137,10 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     permissionId = PermissionLevel.WRITE
   }
 
+  if (!permissionId) {
+    ctx.throw(400, "Role requires permissionId to be specified.")
+  }
+
   const role = new roles.Role(_id, name, permissionId, {
     displayName: uiMetadata?.displayName || name,
     description: uiMetadata?.description || "Custom role",
