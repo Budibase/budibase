@@ -139,11 +139,6 @@ export function isSupportedUserSearch(query: SearchFilters) {
   return true
 }
 
-export function processSearchFilters(filterArray: undefined): undefined
-export function processSearchFilters(filterArray: []): undefined
-export function processSearchFilters(
-  filterArray: LegacyFilter[]
-): Required<UISearchFilter>
 export function processSearchFilters(
   filterArray?: LegacyFilter[]
 ): Required<UISearchFilter> | undefined {
