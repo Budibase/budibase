@@ -138,9 +138,16 @@ export function isSupportedUserSearch(query: SearchFilters) {
   return true
 }
 
-export const processSearchFilters = (
+export function processSearchFilters(filterArray: undefined): undefined
+export function processSearchFilters(
   filterArray: LegacyFilter[]
-): Required<UISearchFilter> => {
+): Required<UISearchFilter>
+export function processSearchFilters(
+  filterArray?: LegacyFilter[]
+): Required<UISearchFilter> | undefined {
+  if (!filterArray) {
+    return undefined
+  }
   const { allOr, onEmptyFilter, filters } = splitFiltersArray(filterArray)
   return {
     logicalOperator: UILogicalOperator.ALL,
