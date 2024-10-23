@@ -12,13 +12,17 @@
   import { Icon, notifications, Modal, Toggle } from "@budibase/bbui"
   import { ActionStepID } from "constants/backend/automations"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+  import { sdk } from "@budibase/shared-core"
 
   export let automation
 
   let testDataModal
   let confirmDeleteDialog
   let scrolling = false
+
   $: blocks = getBlocks(automation).filter(x => x.stepId !== ActionStepID.LOOP)
+  $: isRowAction = sdk.automations.isRowAction(automation)
+
   const getBlocks = automation => {
     let blocks = []
     if (automation.definition.trigger) {
@@ -74,17 +78,19 @@
         Test details
       </div>
     </div>
-    <div class="setting-spacing">
-      <Toggle
-        text={automation.disabled ? "Paused" : "Activated"}
-        on:change={automationStore.actions.toggleDisabled(
-          automation._id,
-          automation.disabled
-        )}
-        disabled={!$selectedAutomation?.definition?.trigger}
-        value={!automation.disabled}
-      />
-    </div>
+    {#if !isRowAction}
+      <div class="setting-spacing">
+        <Toggle
+          text={automation.disabled ? "Paused" : "Activated"}
+          on:change={automationStore.actions.toggleDisabled(
+            automation._id,
+            automation.disabled
+          )}
+          disabled={!$selectedAutomation?.definition?.trigger}
+          value={!automation.disabled}
+        />
+      </div>
+    {/if}
   </div>
 </div>
 <div class="canvas" on:scroll={handleScroll}>

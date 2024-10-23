@@ -261,6 +261,8 @@ export async function run(
     automation,
     {
       fields: {
+        id: row._id,
+        revision: row._rev,
         row,
         table,
       },

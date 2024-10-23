@@ -60,10 +60,11 @@
   .newStyles {
     color: var(--spectrum-global-color-gray-700);
   }
-
+  svg {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+  }
   svg.hoverable {
     pointer-events: all;
-    transition: color var(--spectrum-global-animation-duration-100, 130ms);
   }
   svg.hoverable:hover {
     color: var(--hover-color) !important;
