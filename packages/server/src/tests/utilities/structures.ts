@@ -8,31 +8,31 @@ import {
 } from "../../automations"
 import {
   AIOperationEnum,
+  AutoFieldSubType,
   Automation,
   AutomationActionStepId,
+  AutomationEventType,
   AutomationResults,
   AutomationStatus,
   AutomationStep,
   AutomationStepType,
   AutomationTrigger,
   AutomationTriggerStepId,
+  BBReferenceFieldSubType,
+  CreateViewRequest,
   Datasource,
+  FieldSchema,
   FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  JsonFieldSubType,
+  LoopStepType,
+  Query,
+  Role,
   SourceName,
   Table,
-  INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
-  Query,
   Webhook,
   WebhookActionType,
-  AutomationEventType,
-  LoopStepType,
-  FieldSchema,
-  BBReferenceFieldSubType,
-  JsonFieldSubType,
-  AutoFieldSubType,
-  Role,
-  CreateViewRequest,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -439,7 +439,7 @@ export function updateRowAutomationWithFilters(
   appId: string,
   tableId: string
 ): Automation {
-  const automation: Automation = {
+  return {
     name: "updateRowWithFilters",
     type: "automation",
     appId,
@@ -472,7 +472,6 @@ export function updateRowAutomationWithFilters(
       },
     },
   }
-  return automation
 }
 
 export function basicAutomationResults(
@@ -606,7 +605,6 @@ export function fullSchemaWithoutLinks({
 }): {
   [type in Exclude<FieldType, FieldType.LINK>]: FieldSchema & { type: type }
 } {
-  // @ts-ignore - until AI implemented
   return {
     [FieldType.STRING]: {
       name: "string",
