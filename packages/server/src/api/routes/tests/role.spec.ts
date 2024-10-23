@@ -200,7 +200,7 @@ describe("/roles", () => {
         ...res,
         permissionId: undefined,
       })
-      expect(updatedRes.permissionId).toEqual(PermissionLevel.READ)
+      expect(updatedRes.permissionId).toEqual(BuiltinPermissionID.READ_ONLY)
     })
   })
 
