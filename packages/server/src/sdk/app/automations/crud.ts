@@ -1,4 +1,3 @@
-import { sdk } from "@budibase/shared-core"
 import {
   Automation,
   RequiredKeys,
@@ -97,6 +96,12 @@ export async function get(automationId: string) {
   const db = getDb()
   const result = await db.get<PersistedAutomation>(automationId)
   return trimUnexpectedObjectFields(result)
+}
+
+export async function find(ids: string[]) {
+  const db = getDb()
+  const result = await db.getMultiple<PersistedAutomation>(ids)
+  return result.map(trimUnexpectedObjectFields)
 }
 
 export async function create(automation: Automation) {
@@ -288,13 +293,6 @@ function guardInvalidUpdatesAndThrow(
         )
       }
     })
-  }
-
-  if (
-    sdk.automations.isRowAction(automation) &&
-    automation.name !== oldAutomation.name
-  ) {
-    throw new Error("Row actions cannot be renamed")
   }
 }
 

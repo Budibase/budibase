@@ -1688,7 +1688,7 @@ describe.each([
         })
       })
 
-    describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
+    describe("arrays", () => {
       beforeAll(async () => {
         tableOrViewId = await createTableOrView({
           numbers: {
