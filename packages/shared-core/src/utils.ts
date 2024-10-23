@@ -135,17 +135,19 @@ export function isSupportedUserSearch(query: SearchFilters) {
       return false
     }
   }
+
   return true
 }
 
 export function processSearchFilters(filterArray: undefined): undefined
+export function processSearchFilters(filterArray: []): undefined
 export function processSearchFilters(
   filterArray: LegacyFilter[]
 ): Required<UISearchFilter>
 export function processSearchFilters(
   filterArray?: LegacyFilter[]
 ): Required<UISearchFilter> | undefined {
-  if (!filterArray) {
+  if (!filterArray || filterArray.length === 0) {
     return undefined
   }
   const { allOr, onEmptyFilter, filters } = splitFiltersArray(filterArray)
