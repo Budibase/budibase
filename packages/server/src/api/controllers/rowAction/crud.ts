@@ -30,6 +30,16 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
   }
 
   const { actions } = rowActions
+  const automations = await sdk.automations.find(
+    Object.values(actions).map(({ automationId }) => automationId)
+  )
+  const automationNames = automations.reduce<Record<string, string>>(
+    (names, a) => {
+      names[a._id] = a.name
+      return names
+    },
+    {}
+  )
   const result: RowActionsResponse = {
     actions: Object.entries(actions).reduce<Record<string, RowActionResponse>>(
       (acc, [key, action]) => ({
@@ -37,7 +47,7 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
         [key]: {
           id: key,
           tableId,
-          name: action.name,
+          name: automationNames[action.automationId],
           automationId: action.automationId,
           allowedSources: flattenAllowedSources(tableId, action.permissions),
         },
