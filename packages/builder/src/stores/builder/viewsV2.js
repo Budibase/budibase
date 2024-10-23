@@ -52,7 +52,6 @@ export function createViewsV2Store() {
     if (!viewId) {
       return
     }
-    view = convertToUISearchFilter(view)
     const existingView = get(derivedStore).list.find(view => view.id === viewId)
     const tableIndex = get(tables).list.findIndex(table => {
       return table._id === view?.tableId || table._id === existingView?.tableId
