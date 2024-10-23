@@ -34,7 +34,7 @@
 
   const generateAutomation = () => {
     popover?.hide()
-    dispatch("request-generate")
+    dispatch("generate")
   }
 </script>
 

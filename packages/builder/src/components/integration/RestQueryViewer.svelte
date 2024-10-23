@@ -503,7 +503,7 @@
             on:save={saveQuery}
           />
           <div class="access">
-            <Label>Access level</Label>
+            <Label>Access</Label>
             <AccessLevelSelect {query} {saveId} />
           </div>
         </div>
