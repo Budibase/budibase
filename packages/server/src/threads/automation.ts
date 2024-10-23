@@ -26,6 +26,7 @@ import {
   BranchStep,
   LoopStep,
   SearchFilters,
+  UserBindings,
 } from "@budibase/types"
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
@@ -75,6 +76,7 @@ class Orchestrator {
   private loopStepOutputs: LoopStep[]
   private stopped: boolean
   private executionOutput: Omit<AutomationContext, "stepsByName" | "stepsById">
+  private currentUser: UserBindings | undefined
 
   constructor(job: AutomationJob) {
     let automation = job.data.automation
@@ -106,6 +108,7 @@ class Orchestrator {
     this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
     this.loopStepOutputs = []
     this.stopped = false
+    this.currentUser = triggerOutput.user
   }
 
   cleanupTriggerOutputs(stepId: string, triggerOutput: TriggerOutput) {
@@ -258,6 +261,7 @@ class Orchestrator {
           automationId: this.automation._id,
         })
         this.context.env = await sdkUtils.getEnvironmentVariables()
+        this.context.user = this.currentUser
 
         let metadata
 
@@ -572,7 +576,6 @@ class Orchestrator {
           originalStepInput,
           this.processContext(this.context)
         )
-
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
 
         const outputs = await stepFn({
