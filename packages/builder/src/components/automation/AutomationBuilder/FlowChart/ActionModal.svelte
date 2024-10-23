@@ -150,11 +150,9 @@
               {action.name}
             </p>
             {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
-              <div class="tag-color">
-                <Tags>
-                  <Tag icon="LockClosed">Premium</Tag>
-                </Tags>
-              </div>
+              <Tags>
+                <Tag icon="LockClosed">Premium</Tag>
+              </Tags>
             {:else if isDisabled}
               <Icon name="Help" tooltip={disabled()[idx].message} />
             {/if}
@@ -244,6 +242,9 @@
     margin: 0;
     color: var(--spectrum-global-color-gray-900);
   }
+  :is(.disabled) p {
+    color: var(--spectrum-global-color-gray-600);
+  }
 
   .item:not(.disabled):hover,
   .selected {
@@ -251,14 +252,8 @@
   }
   .disabled {
     background: var(--spectrum-global-color-gray-200);
-    opacity: 0.5;
-  }
-  .disabled :global(.spectrum-Body) {
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .tag-color :global(.spectrum-Tags-item) {
-    background: var(--spectrum-global-color-gray-200);
+    cursor: auto;
+    color: var(--spectrum-global-color-gray-300) !important;
   }
   .icon-background {
     background-color: #5e12f7;
@@ -269,6 +264,7 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
+    color: white;
   }
   .icon-background-external {
     background-color: var(--spectrum-global-color-gray-200);
@@ -280,10 +276,6 @@
     justify-content: center;
     align-items: center;
   }
-  div:has(svg) {
-    color: white;
-  }
-
   img {
     border-radius: 6px;
     padding: 2px;
