@@ -1,7 +1,7 @@
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { events, roles } from "@budibase/backend-core"
-import { Screen, PermissionLevel, Role } from "@budibase/types"
+import { Screen, Role, BuiltinPermissionID } from "@budibase/types"
 
 const { basicScreen } = setup.structures
 
@@ -40,17 +40,17 @@ describe("/screens", () => {
       role1 = await config.api.roles.save({
         name: "role1",
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
-        permissionId: PermissionLevel.WRITE,
+        permissionId: BuiltinPermissionID.WRITE,
       })
       role2 = await config.api.roles.save({
         name: "role2",
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
-        permissionId: PermissionLevel.WRITE,
+        permissionId: BuiltinPermissionID.WRITE,
       })
       multiRole = await config.api.roles.save({
         name: "multiRole",
         inherits: [role1._id!, role2._id!],
-        permissionId: PermissionLevel.WRITE,
+        permissionId: BuiltinPermissionID.WRITE,
       })
       screen1 = await config.api.screen.save(
         {
