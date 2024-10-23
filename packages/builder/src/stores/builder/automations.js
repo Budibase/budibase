@@ -23,7 +23,6 @@ const initialAutomationState = {
     ACTION: {},
   },
   selectedAutomationId: null,
-  automationDisplayData: {},
 }
 
 // If this functions, remove the actions elements
@@ -91,7 +90,6 @@ const automationActions = store => ({
       state.automations.sort((a, b) => {
         return a.name < b.name ? -1 : 1
       })
-      state.automationDisplayData = automationResponse.builderData
       state.blockDefinitions = getFinalDefinitions(
         definitions.trigger,
         definitions.action
@@ -153,8 +151,6 @@ const automationActions = store => ({
         state.selectedAutomationId = state.automations[0]?._id || null
       }
 
-      // Clear out automationDisplayData for the automation
-      delete state.automationDisplayData[automation._id]
       return state
     })
   },
@@ -432,13 +428,3 @@ export const selectedAutomation = derived(automationStore, $automationStore => {
     x => x._id === $automationStore.selectedAutomationId
   )
 })
-
-export const selectedAutomationDisplayData = derived(
-  [automationStore, selectedAutomation],
-  ([$automationStore, $selectedAutomation]) => {
-    if (!$selectedAutomation?._id) {
-      return null
-    }
-    return $automationStore.automationDisplayData[$selectedAutomation._id]
-  }
-)

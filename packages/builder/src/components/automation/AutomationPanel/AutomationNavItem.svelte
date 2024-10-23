@@ -112,7 +112,7 @@
   iconColor={automation.disabled
     ? "var(--spectrum-global-color-gray-600)"
     : "var(--spectrum-global-color-gray-900)"}
-  text={automation.displayName}
+  text={automation.name}
   selected={automation._id === $selectedAutomation?._id}
   hovering={automation._id === $contextMenuStore.id}
   on:click={() => automationStore.actions.select(automation._id)}
