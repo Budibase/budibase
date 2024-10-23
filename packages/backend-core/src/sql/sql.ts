@@ -162,6 +162,12 @@ class InternalBuilder {
     return this.table.schema[column]
   }
 
+  private supportsILike(): boolean {
+    return !(
+      this.client === SqlClient.ORACLE || this.client === SqlClient.SQL_LITE
+    )
+  }
+
   private quoteChars(): [string, string] {
     const wrapped = this.knexClient.wrapIdentifier("foo", {})
     return [wrapped[0], wrapped[wrapped.length - 1]]
@@ -566,7 +572,7 @@ class InternalBuilder {
     filters = this.parseFilters({ ...filters })
     const aliases = this.query.tableAliases
     // if all or specified in filters, then everything is an or
-    const allOr = filters.allOr
+    const shouldOr = filters.allOr
     const isSqlite = this.client === SqlClient.SQL_LITE
     const tableName = isSqlite ? this.table._id! : this.table.name
 
@@ -630,7 +636,7 @@ class InternalBuilder {
             value
           )
         } else if (shouldProcessRelationship) {
-          if (allOr) {
+          if (shouldOr) {
             query = query.or
           }
           query = builder.addRelationshipForFilter(
@@ -646,7 +652,7 @@ class InternalBuilder {
     }
 
     const like = (q: Knex.QueryBuilder, key: string, value: any) => {
-      if (filters?.fuzzyOr || allOr) {
+      if (filters?.fuzzyOr || shouldOr) {
         q = q.or
       }
       if (
@@ -667,7 +673,7 @@ class InternalBuilder {
 
     const contains = (mode: ArrayFilter, any = false) => {
       function addModifiers<T extends {}, Q>(q: Knex.QueryBuilder<T, Q>) {
-        if (allOr || mode === filters?.containsAny) {
+        if (shouldOr || mode === filters?.containsAny) {
           q = q.or
         }
         if (mode === filters?.notContains) {
@@ -777,38 +783,46 @@ class InternalBuilder {
     }
 
     if (filters.oneOf) {
-      const fnc = allOr ? "orWhereIn" : "whereIn"
       iterate(
         filters.oneOf,
         ArrayOperator.ONE_OF,
         (q, key: string, array) => {
+          if (shouldOr) {
+            q = q.or
+          }
           if (this.client === SqlClient.ORACLE) {
             // @ts-ignore
             key = this.convertClobs(key)
           }
-          return q[fnc](key, Array.isArray(array) ? array : [array])
+          return q.whereIn(key, Array.isArray(array) ? array : [array])
         },
         (q, key: string[], array) => {
+          if (shouldOr) {
+            q = q.or
+          }
           if (this.client === SqlClient.ORACLE) {
             // @ts-ignore
             key = key.map(k => this.convertClobs(k))
           }
-          return q[fnc](key, Array.isArray(array) ? array : [array])
+          return q.whereIn(key, Array.isArray(array) ? array : [array])
         }
       )
     }
     if (filters.string) {
       iterate(filters.string, BasicOperator.STRING, (q, key, value) => {
-        // postgres supports ilike, nothing else does
-        if (this.client === SqlClient.POSTGRES) {
-          const fnc = allOr ? "orWhere" : "where"
-          return q[fnc](key, "ilike", `${value}%`)
-        } else {
-          const fnc = allOr ? "orWhereRaw" : "whereRaw"
-          return q[fnc](`LOWER(??) LIKE ?`, [
+        if (shouldOr) {
+          q = q.or
+        }
+        if (
+          this.client === SqlClient.ORACLE ||
+          this.client === SqlClient.SQL_LITE
+        ) {
+          return q.whereRaw(`LOWER(??) LIKE ?`, [
             this.rawQuotedIdentifier(key),
             `${value.toLowerCase()}%`,
           ])
+        } else {
+          return q.whereILike(key, `${value}%`)
         }
       })
     }
@@ -852,37 +866,42 @@ class InternalBuilder {
           low = this.knex.raw("CAST(? AS INTEGER)", [value.low])
         }
 
+        if (shouldOr) {
+          q = q.or
+        }
+
         if (lowValid && highValid) {
-          const fnc = allOr ? "orWhereBetween" : "whereBetween"
           // @ts-ignore
-          return q[fnc](rawKey, [low, high])
+          return q.whereBetween(rawKey, [low, high])
         } else if (lowValid) {
-          const fnc = allOr ? "orWhere" : "where"
           // @ts-ignore
-          return q[fnc](rawKey, ">=", low)
+          return q.where(rawKey, ">=", low)
         } else if (highValid) {
-          const fnc = allOr ? "orWhere" : "where"
           // @ts-ignore
-          return q[fnc](rawKey, "<=", high)
+          return q.where(rawKey, "<=", high)
         }
         return q
       })
     }
     if (filters.equal) {
       iterate(filters.equal, BasicOperator.EQUAL, (q, key, value) => {
-        const fnc = allOr ? "orWhereRaw" : "whereRaw"
+        if (shouldOr) {
+          q = q.or
+        }
         if (this.client === SqlClient.MS_SQL) {
-          return q[fnc](
-            `CASE WHEN ${this.quotedIdentifier(key)} = ? THEN 1 ELSE 0 END = 1`,
-            [value]
-          )
-        } else if (this.client === SqlClient.ORACLE) {
-          const identifier = this.convertClobs(key)
-          return q[fnc](`(${identifier} IS NOT NULL AND ${identifier} = ?)`, [
+          return q.whereRaw(`CASE WHEN ?? = ? THEN 1 ELSE 0 END = 1`, [
+            this.quotedIdentifier(key),
             value,
           ])
+        } else if (this.client === SqlClient.ORACLE) {
+          const identifier = this.convertClobs(key)
+          return q.where(subq =>
+            // @ts-expect-error knex types are wrong, raw is fine here
+            subq.whereNotNull(identifier).andWhere(identifier, value)
+          )
         } else {
-          return q[fnc](`COALESCE(${this.quotedIdentifier(key)} = ?, FALSE)`, [
+          return q.whereRaw(`COALESCE(?? = ?, FALSE)`, [
+            this.rawQuotedIdentifier(key),
             value,
           ])
         }
@@ -890,7 +909,7 @@ class InternalBuilder {
     }
     if (filters.notEqual) {
       iterate(filters.notEqual, BasicOperator.NOT_EQUAL, (q, key, value) => {
-        const fnc = allOr ? "orWhereRaw" : "whereRaw"
+        const fnc = shouldOr ? "orWhereRaw" : "whereRaw"
         if (this.client === SqlClient.MS_SQL) {
           return q[fnc](
             `CASE WHEN ${this.quotedIdentifier(key)} = ? THEN 1 ELSE 0 END = 0`,
@@ -911,13 +930,13 @@ class InternalBuilder {
     }
     if (filters.empty) {
       iterate(filters.empty, BasicOperator.EMPTY, (q, key) => {
-        const fnc = allOr ? "orWhereNull" : "whereNull"
+        const fnc = shouldOr ? "orWhereNull" : "whereNull"
         return q[fnc](key)
       })
     }
     if (filters.notEmpty) {
       iterate(filters.notEmpty, BasicOperator.NOT_EMPTY, (q, key) => {
-        const fnc = allOr ? "orWhereNotNull" : "whereNotNull"
+        const fnc = shouldOr ? "orWhereNotNull" : "whereNotNull"
         return q[fnc](key)
       })
     }
