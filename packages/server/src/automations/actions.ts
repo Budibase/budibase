@@ -51,6 +51,7 @@ const ACTION_IMPLS: ActionImplType = {
   QUERY_ROWS: queryRow.run,
   COLLECT: collect.run,
   TRIGGER_AUTOMATION_RUN: triggerAutomationRun.run,
+  OPENAI: openai.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -107,8 +108,6 @@ export async function getActionDefinitions() {
     (await features.flags.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS))
   ) {
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = openai.definition
-    // @ts-ignore
-    ACTION_IMPLS["OPENAI"] = openai.run
   }
 
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS

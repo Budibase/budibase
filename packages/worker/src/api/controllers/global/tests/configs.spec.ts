@@ -13,10 +13,6 @@ describe("Global configs controller", () => {
     await config.afterAll()
   })
 
-  afterEach(() => {
-    jest.resetAllMocks()
-  })
-
   it("Should strip secrets when pulling AI config", async () => {
     const data = structures.configs.ai()
     await config.api.configs.saveConfig(data)
