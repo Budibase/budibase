@@ -1,3 +1,5 @@
+// used in resource permissions - permissions can be at one of these levels
+// endpoints will set what type of permission they require (e.g. searching requires READ)
 export enum PermissionLevel {
   READ = "read",
   WRITE = "write",
