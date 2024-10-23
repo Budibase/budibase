@@ -17,7 +17,7 @@
 
   let drawer
 
-  $: localFilters = utils.processSearchFilters(filters)
+  $: localFilters = utils.processSearchFilters(filters || [])
 
   $: schemaFields = search.getFields(
     $tables.list,
@@ -61,7 +61,7 @@
   title="Filtering"
   on:drawerHide
   on:drawerShow={() => {
-    localFilters = utils.processSearchFilters(filters)
+    localFilters = utils.processSearchFilters(filters || [])
   }}
   forceModal
 >
