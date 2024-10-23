@@ -2074,6 +2074,7 @@ describe.each([
         )
         tableId = table._id!
 
+        // @ts-ignore - until AI implemented
         const rowValues: Record<keyof typeof fullSchema, any> = {
           [FieldType.STRING]: generator.guid(),
           [FieldType.LONGFORM]: generator.paragraph(),
