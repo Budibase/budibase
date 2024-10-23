@@ -13,16 +13,17 @@ import { definitions as TRIGGER_DEFINITIONS } from "../../automations/triggerInf
 import * as triggers from "../../automations/triggers"
 import sdk from ".."
 
-function ensureUniqueAndThrow(
+async function ensureUniqueAndThrow(
   doc: TableRowActions,
   name: string,
   existingRowActionId?: string
 ) {
+  const names = await getNames(doc)
+  name = name.toLowerCase()
+
   if (
-    Object.entries(doc.actions).find(
-      ([id, a]) =>
-        a.name.toLowerCase() === name.toLowerCase() &&
-        id !== existingRowActionId
+    Object.entries(names).find(
+      ([id, name]) => name === name && id !== existingRowActionId
     )
   ) {
     throw new HTTPError("A row action with the same name already exists.", 409)
@@ -34,18 +35,12 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
-  let doc: TableRowActions
-  try {
-    doc = await db.get<TableRowActions>(rowActionsId)
-  } catch (e: any) {
-    if (e.status !== 404) {
-      throw e
-    }
-
+  let doc = await db.tryGet<TableRowActions>(rowActionsId)
+  if (!doc) {
     doc = { _id: rowActionsId, actions: {} }
   }
 
-  ensureUniqueAndThrow(doc, action.name)
+  await ensureUniqueAndThrow(doc, action.name)
 
   const appId = context.getAppId()
   if (!appId) {
@@ -74,7 +69,6 @@ export async function create(tableId: string, rowAction: { name: string }) {
   })
 
   doc.actions[newRowActionId] = {
-    name: action.name,
     automationId: automation._id!,
     permissions: {
       table: { runAllowed: true },
@@ -85,6 +79,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
   return {
     id: newRowActionId,
+    name: automation.name,
     ...doc.actions[newRowActionId],
   }
 }
@@ -252,4 +247,18 @@ export async function run(
     },
     { getResponses: true }
   )
+}
+
+export async function getNames(actions: TableRowActions) {
+  const automations = await sdk.automations.find(
+    Object.values(actions).map(({ automationId }) => automationId)
+  )
+  const automationNames = automations.reduce<Record<string, string>>(
+    (names, a) => {
+      names[a._id] = a.name
+      return names
+    },
+    {}
+  )
+  return automationNames
 }

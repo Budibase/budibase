@@ -2,7 +2,6 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationBuilderData,
-  TableRowActions,
 } from "@budibase/types"
 import { sdk as coreSdk } from "@budibase/shared-core"
 import sdk from "../../../sdk"
@@ -26,15 +25,6 @@ export async function getBuilderData(
     return tableNameCache[tableId]
   }
 
-  const rowActionNameCache: Record<string, TableRowActions | undefined> = {}
-  async function getRowActionName(tableId: string, rowActionId: string) {
-    if (!rowActionNameCache[tableId]) {
-      rowActionNameCache[tableId] = await sdk.rowActions.getAll(tableId)
-    }
-
-    return rowActionNameCache[tableId]?.actions[rowActionId]?.name
-  }
-
   const result: Record<string, AutomationBuilderData> = {}
   for (const automation of automations) {
     const isRowAction = coreSdk.automations.isRowAction(automation)
@@ -49,12 +39,7 @@ export async function getBuilderData(
     }
 
     const tableName = await getTableName(tableId)
-    const rowActionName = await getRowActionName(tableId, rowActionId)
-
-    if (!rowActionName) {
-      throw new Error(`Row action not found: ${rowActionId}`)
-    }
-
+    const rowActionName = automation.name
     result[automation._id!] = {
       displayName: rowActionName,
       triggerInfo: {
