@@ -1,4 +1,3 @@
-import { sdk } from "@budibase/shared-core"
 import {
   Automation,
   RequiredKeys,
@@ -294,13 +293,6 @@ function guardInvalidUpdatesAndThrow(
         )
       }
     })
-  }
-
-  if (
-    sdk.automations.isRowAction(automation) &&
-    automation.name !== oldAutomation.name
-  ) {
-    throw new Error("Row actions cannot be renamed")
   }
 }
 
