@@ -27,13 +27,14 @@ import {
   ViewV2Schema,
   ViewV2Type,
   JsonTypes,
-  UILogicalOperator,
   EmptyFilterOption,
   JsonFieldSubType,
   UISearchFilter,
   LegacyFilter,
   SearchViewRowRequest,
   ArrayOperator,
+  UILogicalOperator,
+  SearchFilters,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -159,11 +160,8 @@ describe.each([
           tableId: table._id!,
           primaryDisplay: "id",
           queryUI: {
-            logicalOperator: UILogicalOperator.ALL,
-            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
             groups: [
               {
-                logicalOperator: UILogicalOperator.ALL,
                 filters: [
                   {
                     operator: BasicOperator.EQUAL,
@@ -256,6 +254,8 @@ describe.each([
             },
           },
           queryUI: {
+            logicalOperator: UILogicalOperator.ALL,
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
             groups: [
               {
                 logicalOperator: UILogicalOperator.ALL,
@@ -952,29 +952,37 @@ describe.each([
           ],
         })
 
-        expect((await config.api.table.get(tableId)).views).toEqual({
-          [view.name]: {
-            ...view,
-            query: [
-              { operator: "equal", field: "newField", value: "thatValue" },
-            ],
-            // Should also update queryUI because query was not previously set.
-            queryUI: {
-              groups: [
-                {
-                  logicalOperator: "all",
-                  filters: [
-                    {
-                      operator: "equal",
-                      field: "newField",
-                      value: "thatValue",
-                    },
-                  ],
-                },
-              ],
+        const expected: ViewV2 = {
+          ...view,
+          query: [
+            {
+              operator: BasicOperator.EQUAL,
+              field: "newField",
+              value: "thatValue",
             },
-            schema: expect.anything(),
+          ],
+          // Should also update queryUI because query was not previously set.
+          queryUI: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            logicalOperator: UILogicalOperator.ALL,
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ALL,
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "newField",
+                    value: "thatValue",
+                  },
+                ],
+              },
+            ],
           },
+          schema: expect.anything(),
+        }
+
+        expect((await config.api.table.get(tableId)).views).toEqual({
+          [view.name]: expected,
         })
       })
 
@@ -1014,38 +1022,42 @@ describe.each([
         }
         await config.api.viewV2.update(updatedData)
 
-        expect((await config.api.table.get(tableId)).views).toEqual({
-          [view.name]: {
-            ...updatedData,
-            // queryUI gets generated from query
-            queryUI: {
-              groups: [
-                {
-                  logicalOperator: "all",
-                  filters: [
-                    {
-                      operator: "equal",
-                      field: "newField",
-                      value: "newValue",
-                    },
-                  ],
-                },
-              ],
-            },
-            schema: {
-              ...table.schema,
-              id: expect.objectContaining({
-                visible: true,
-              }),
-              Category: expect.objectContaining({
-                visible: false,
-              }),
-              Price: expect.objectContaining({
-                visible: true,
-                readonly: true,
-              }),
-            },
+        const expected: ViewV2 = {
+          ...updatedData,
+          // queryUI gets generated from query
+          queryUI: {
+            logicalOperator: UILogicalOperator.ALL,
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ALL,
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "newField",
+                    value: "newValue",
+                  },
+                ],
+              },
+            ],
           },
+          schema: {
+            ...table.schema,
+            id: expect.objectContaining({
+              visible: true,
+            }),
+            Category: expect.objectContaining({
+              visible: false,
+            }),
+            Price: expect.objectContaining({
+              visible: true,
+              readonly: true,
+            }),
+          },
+        }
+
+        expect((await config.api.table.get(tableId)).views).toEqual({
+          [view.name]: expected,
         })
       })
 
@@ -1283,7 +1295,6 @@ describe.each([
           queryUI: {
             groups: [
               {
-                logicalOperator: UILogicalOperator.ALL,
                 filters: [
                   {
                     operator: BasicOperator.EQUAL,
@@ -1297,7 +1308,8 @@ describe.each([
         })
 
         let updatedView = await config.api.viewV2.get(view.id)
-        expect(updatedView.query).toEqual({
+        let expected: SearchFilters = {
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
           $and: {
             conditions: [
               {
@@ -1311,14 +1323,14 @@ describe.each([
               },
             ],
           },
-        })
+        }
+        expect(updatedView.query).toEqual(expected)
 
         await config.api.viewV2.update({
           ...updatedView,
           queryUI: {
             groups: [
               {
-                logicalOperator: UILogicalOperator.ALL,
                 filters: [
                   {
                     operator: BasicOperator.EQUAL,
@@ -1332,7 +1344,8 @@ describe.each([
         })
 
         updatedView = await config.api.viewV2.get(view.id)
-        expect(updatedView.query).toEqual({
+        expected = {
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
           $and: {
             conditions: [
               {
@@ -1346,7 +1359,8 @@ describe.each([
               },
             ],
           },
-        })
+        }
+        expect(updatedView.query).toEqual(expected)
       })
 
       it("can delete either query and it will get regenerated from queryUI", async () => {
@@ -1386,7 +1400,6 @@ describe.each([
           queryUI: {
             groups: [
               {
-                logicalOperator: UILogicalOperator.ALL,
                 filters: [
                   {
                     operator: BasicOperator.EQUAL,
@@ -1810,7 +1823,9 @@ describe.each([
         })
 
         const view = await getDelegate(res)
-        expect(view.queryUI).toEqual({
+        const expected: UISearchFilter = {
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+          logicalOperator: UILogicalOperator.ALL,
           groups: [
             {
               logicalOperator: UILogicalOperator.ALL,
@@ -1823,7 +1838,8 @@ describe.each([
               ],
             },
           ],
-        })
+        }
+        expect(view.queryUI).toEqual(expected)
       })
     })
 
@@ -2669,11 +2685,8 @@ describe.each([
             tableId: table._id!,
             name: generator.guid(),
             queryUI: {
-              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              logicalOperator: UILogicalOperator.ALL,
               groups: [
                 {
-                  logicalOperator: UILogicalOperator.ALL,
                   filters: [
                     {
                       operator: BasicOperator.EQUAL,
@@ -2733,11 +2746,8 @@ describe.each([
             tableId: table._id!,
             name: generator.guid(),
             queryUI: {
-              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              logicalOperator: UILogicalOperator.ALL,
               groups: [
                 {
-                  logicalOperator: UILogicalOperator.ALL,
                   filters: [
                     {
                       operator: BasicOperator.EQUAL,
@@ -3022,11 +3032,8 @@ describe.each([
             tableId: table._id!,
             name: generator.guid(),
             queryUI: {
-              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              logicalOperator: UILogicalOperator.ALL,
               groups: [
                 {
-                  logicalOperator: UILogicalOperator.ALL,
                   filters: [
                     {
                       operator: BasicOperator.NOT_EQUAL,
@@ -3080,11 +3087,8 @@ describe.each([
             tableId: table._id!,
             name: generator.guid(),
             queryUI: {
-              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              logicalOperator: UILogicalOperator.ALL,
               groups: [
                 {
-                  logicalOperator: UILogicalOperator.ALL,
                   filters: [
                     {
                       operator: BasicOperator.NOT_EQUAL,
@@ -3175,11 +3179,8 @@ describe.each([
               tableId: table._id!,
               name: generator.guid(),
               queryUI: {
-                onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-                logicalOperator: UILogicalOperator.ALL,
                 groups: [
                   {
-                    logicalOperator: UILogicalOperator.ALL,
                     filters: [
                       {
                         operator: BasicOperator.EQUAL,
@@ -3619,11 +3620,8 @@ describe.each([
                 name: generator.guid(),
                 type: ViewV2Type.CALCULATION,
                 queryUI: {
-                  onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-                  logicalOperator: UILogicalOperator.ALL,
                   groups: [
                     {
-                      logicalOperator: UILogicalOperator.ALL,
                       filters: [
                         {
                           operator: BasicOperator.EQUAL,
@@ -3912,11 +3910,8 @@ describe.each([
             tableId: table._id!,
             name: generator.guid(),
             queryUI: {
-              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-              logicalOperator: UILogicalOperator.ALL,
               groups: [
                 {
-                  logicalOperator: UILogicalOperator.ALL,
                   filters: [
                     {
                       operator: BasicOperator.EQUAL,
