@@ -12,6 +12,7 @@ import {
   UserMetadata,
   Database,
   ContextUserMetadata,
+  UserBindings,
 } from "@budibase/types"
 
 export function combineMetadataAndUser(
@@ -125,7 +126,7 @@ export async function syncGlobalUsers() {
   }
 }
 
-export function getUserContextBindings(user: ContextUser) {
+export function getUserContextBindings(user: ContextUser): UserBindings {
   if (!user) {
     return {}
   }

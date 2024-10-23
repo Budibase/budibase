@@ -1,4 +1,4 @@
-import { AutomationResults, LoopStepType } from "@budibase/types"
+import { AutomationResults, LoopStepType, UserBindings } from "@budibase/types"
 
 export interface LoopInput {
   option: LoopStepType
@@ -18,5 +18,6 @@ export interface AutomationContext extends AutomationResults {
   stepsById: Record<string, any>
   stepsByName: Record<string, any>
   env?: Record<string, string>
+  user?: UserBindings
   trigger: any
 }
