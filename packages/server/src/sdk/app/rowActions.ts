@@ -248,13 +248,8 @@ export async function run(
     throw new HTTPError("Table not found", 404)
   }
 
-  const rowActions = await getAll(tableId)
-  const rowAction = rowActions?.actions[rowActionId]
-  if (!rowAction) {
-    throw new HTTPError("Row action not found", 404)
-  }
-
-  const automation = await sdk.automations.get(rowAction.automationId)
+  const { automationId } = await get(tableId, rowActionId)
+  const automation = await sdk.automations.get(automationId)
 
   const row = await sdk.rows.find(tableId, rowId)
   await triggers.externalTrigger(
