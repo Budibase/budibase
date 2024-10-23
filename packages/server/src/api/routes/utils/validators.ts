@@ -215,7 +215,7 @@ export function roleValidator() {
       // this is the base permission ID (for now a built in)
       permissionId: Joi.string()
         .valid(...Object.values(permissions.BuiltinPermissionID))
-        .required(),
+        .optional(),
       permissions: Joi.object()
         .pattern(
           /.*/,

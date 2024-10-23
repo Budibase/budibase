@@ -58,6 +58,19 @@ describe("/roles", () => {
       })
       expect(res.inherits).toEqual([BUILTIN_ROLE_IDS.BASIC])
     })
+
+    it("save role without permissionId", async () => {
+      const res = await config.api.roles.save(
+        {
+          ...basicRole(),
+          permissionId: undefined,
+        },
+        {
+          status: 200,
+        }
+      )
+      expect(res.permissionId).toEqual(PermissionLevel.WRITE)
+    })
   })
 
   describe("update", () => {
