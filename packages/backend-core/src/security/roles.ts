@@ -1,5 +1,4 @@
 import semver from "semver"
-import { BuiltinPermissionID, PermissionLevel } from "./permissions"
 import {
   prefixRoleID,
   getRoleParams,
@@ -14,6 +13,8 @@ import {
   RoleUIMetadata,
   Database,
   App,
+  BuiltinPermissionID,
+  PermissionLevel,
 } from "@budibase/types"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { RoleColor, helpers } from "@budibase/shared-core"
@@ -50,7 +51,7 @@ export class Role implements RoleDoc {
   _id: string
   _rev?: string
   name: string
-  permissionId: string
+  permissionId: BuiltinPermissionID
   inherits?: string | string[]
   version?: string
   permissions: Record<string, PermissionLevel[]> = {}
@@ -59,7 +60,7 @@ export class Role implements RoleDoc {
   constructor(
     id: string,
     name: string,
-    permissionId: string,
+    permissionId: BuiltinPermissionID,
     uiMetadata?: RoleUIMetadata
   ) {
     this._id = id

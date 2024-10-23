@@ -1,4 +1,8 @@
-import { PermissionLevel, PermissionType } from "@budibase/types"
+import {
+  PermissionLevel,
+  PermissionType,
+  BuiltinPermissionID,
+} from "@budibase/types"
 import flatten from "lodash/flatten"
 import cloneDeep from "lodash/fp/cloneDeep"
 
@@ -55,14 +59,6 @@ export function getAllowedLevels(userPermLevel: PermissionLevel): string[] {
     default:
       return []
   }
-}
-
-export enum BuiltinPermissionID {
-  PUBLIC = "public",
-  READ_ONLY = "read_only",
-  WRITE = "write",
-  ADMIN = "admin",
-  POWER = "power",
 }
 
 export const BUILTIN_PERMISSIONS: {
