@@ -1,13 +1,14 @@
 import { ViewV2 } from "@budibase/types"
 import { utils, dataFilters } from "@budibase/shared-core"
-import { isPlainObject } from "lodash"
+import { cloneDeep, isPlainObject } from "lodash"
 import { HTTPError } from "@budibase/backend-core"
 
 function isEmptyObject(obj: any) {
   return obj && isPlainObject(obj) && Object.keys(obj).length === 0
 }
 
-export function ensureQueryUISet(view: ViewV2) {
+export function ensureQueryUISet(viewArg: Readonly<ViewV2>): ViewV2 {
+  const view = cloneDeep<ViewV2>(viewArg)
   if (!view.queryUI && view.query && !isEmptyObject(view.query)) {
     if (!Array.isArray(view.query)) {
       // In practice this should not happen. `view.query`, at the time this code
@@ -27,13 +28,16 @@ export function ensureQueryUISet(view: ViewV2) {
 
     view.queryUI = utils.processSearchFilters(view.query)
   }
+  return view
 }
 
-export function ensureQuerySet(view: ViewV2) {
+export function ensureQuerySet(viewArg: Readonly<ViewV2>): ViewV2 {
+  const view = cloneDeep<ViewV2>(viewArg)
   // We consider queryUI to be the source of truth, so we don't check for the
   // presence of query here. We will overwrite it regardless of whether it is
   // present or not.
   if (view.queryUI && !isEmptyObject(view.queryUI)) {
     view.query = dataFilters.buildQuery(view.queryUI)
   }
+  return view
 }

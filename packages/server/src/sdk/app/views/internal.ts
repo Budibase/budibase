@@ -14,8 +14,7 @@ export async function get(viewId: string): Promise<ViewV2> {
   if (!found) {
     throw new Error("No view found")
   }
-  ensureQueryUISet(found)
-  return found
+  return ensureQueryUISet(found)
 }
 
 export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
@@ -26,22 +25,21 @@ export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
   if (!found) {
     throw new Error("No view found")
   }
-  ensureQueryUISet(found)
-  return await enrichSchema(found, table.schema)
+  return await enrichSchema(ensureQueryUISet(found), table.schema)
 }
 
 export async function create(
   tableId: string,
   viewRequest: Omit<ViewV2, "id" | "version">
 ): Promise<ViewV2> {
-  const view: ViewV2 = {
+  let view: ViewV2 = {
     ...viewRequest,
     id: utils.generateViewID(tableId),
     version: 2,
   }
 
-  ensureQuerySet(view)
-  ensureQueryUISet(view)
+  view = ensureQuerySet(view)
+  view = ensureQueryUISet(view)
 
   const db = context.getAppDB()
 
@@ -53,7 +51,10 @@ export async function create(
   return view
 }
 
-export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
+export async function update(
+  tableId: string,
+  view: Readonly<ViewV2>
+): Promise<ViewV2> {
   const db = context.getAppDB()
   const table = await sdk.tables.getTable(tableId)
   table.views ??= {}
@@ -69,8 +70,8 @@ export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
     throw new HTTPError(`Cannot update view type after creation`, 400)
   }
 
-  ensureQuerySet(view)
-  ensureQueryUISet(view)
+  view = ensureQuerySet(view)
+  view = ensureQueryUISet(view)
 
   delete table.views[existingView.name]
   table.views[view.name] = view

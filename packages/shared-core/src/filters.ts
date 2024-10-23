@@ -475,6 +475,8 @@ export function buildQuery(
   const query: SearchFilters = {}
   if (filter.onEmptyFilter) {
     query.onEmptyFilter = filter.onEmptyFilter
+  } else {
+    query.onEmptyFilter = EmptyFilterOption.RETURN_ALL
   }
 
   query[operator] = {

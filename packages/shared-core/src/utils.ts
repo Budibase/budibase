@@ -7,6 +7,7 @@ import {
   ArrayOperator,
   isLogicalSearchOperator,
   SearchFilter,
+  EmptyFilterOption,
 } from "@budibase/types"
 import * as Constants from "./constants"
 import { removeKeyNumbering, splitFiltersArray } from "./filters"
@@ -139,10 +140,11 @@ export function isSupportedUserSearch(query: SearchFilters) {
 
 export const processSearchFilters = (
   filterArray: LegacyFilter[]
-): UISearchFilter => {
+): Required<UISearchFilter> => {
   const { allOr, onEmptyFilter, filters } = splitFiltersArray(filterArray)
   return {
-    onEmptyFilter,
+    logicalOperator: UILogicalOperator.ALL,
+    onEmptyFilter: onEmptyFilter || EmptyFilterOption.RETURN_ALL,
     groups: [
       {
         logicalOperator: allOr ? UILogicalOperator.ANY : UILogicalOperator.ALL,
