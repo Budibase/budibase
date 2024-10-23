@@ -91,7 +91,7 @@
 
 <DetailPopover title="Generate" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
-    <ActionButton selected={open}>
+    <ActionButton quiet selected={open}>
       <div class="center">
         <img height={16} alt="magic wand" src={MagicWand} />
         Generate
