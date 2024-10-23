@@ -249,7 +249,7 @@ export async function run(
   )
 }
 
-export async function getNames(actions: TableRowActions) {
+export async function getNames({ actions }: TableRowActions) {
   const automations = await sdk.automations.find(
     Object.values(actions).map(({ automationId }) => automationId)
   )
