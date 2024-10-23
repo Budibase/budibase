@@ -31,10 +31,7 @@
 
   async function fetchAIConfig() {
     try {
-      const aiDoc = await API.getConfig(ConfigTypes.AI)
-      if (aiDoc._id) {
-        fullAIConfig = aiDoc
-      }
+      fullAIConfig = await API.getConfig(ConfigTypes.AI)
     } catch (error) {
       notifications.error("Error fetching AI config")
     }
@@ -66,6 +63,7 @@
       }
       // Add new or update existing custom AI Config
       fullAIConfig.config[id] = editingAIConfig
+      fullAIConfig.type = ConfigTypes.AI
     }
 
     try {

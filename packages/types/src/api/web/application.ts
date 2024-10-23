@@ -7,10 +7,8 @@ export interface CreateAppRequest {
   useTemplate?: string
   templateName?: string
   templateKey?: string
-  templateFile?: string
-  includeSampleData?: boolean
+  fileToImport?: string
   encryptionPassword?: string
-  templateString?: string
   file?: { path: string }
 }
 
