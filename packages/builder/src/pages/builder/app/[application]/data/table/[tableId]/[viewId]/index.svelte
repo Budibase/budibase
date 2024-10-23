@@ -63,17 +63,15 @@
     {#if calculation}
       <GridViewCalculationButton />
     {/if}
+    <GridManageAccessButton />
     <GridFilterButton />
     <GridSortButton />
     <GridSizeButton />
-    <GridManageAccessButton />
     {#if !calculation}
       <GridColumnsSettingButton />
       <GridRowActionsButton />
-      <GridScreensButton on:request-generate={() => generateButton?.show()} />
+      <GridScreensButton on:generate={() => generateButton?.show()} />
     {/if}
-  </svelte:fragment>
-  <svelte:fragment slot="controls-right">
     <GridGenerateButton bind:this={generateButton} />
   </svelte:fragment>
   <GridCreateEditRowModal />

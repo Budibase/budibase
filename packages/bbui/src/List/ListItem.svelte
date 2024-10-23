@@ -1,5 +1,6 @@
 <script>
   import Icon from "../Icon/Icon.svelte"
+  import StatusLight from "../StatusLight/StatusLight.svelte"
 
   export let icon = null
   export let iconColor = null
@@ -15,12 +16,14 @@
   href={url}
   class="list-item"
   class:hoverable={hoverable || url != null}
-  class:selected
   class:large={!!subtitle}
   on:click
+  class:selected
 >
   <div class="list-item__left">
-    {#if icon}
+    {#if icon === "StatusLight"}
+      <StatusLight square size="L" color={iconColor} />
+    {:else if icon}
       <div class="list-item__icon">
         <Icon name={icon} color={iconColor} size={subtitle ? "XL" : "M"} />
       </div>
@@ -48,7 +51,7 @@
 
 <style>
   .list-item {
-    padding: var(--spacing-m);
+    padding: var(--spacing-m) var(--spacing-l);
     background: var(--spectrum-global-color-gray-75);
     display: flex;
     flex-direction: row;
@@ -72,9 +75,15 @@
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
   }
-  .list-item.hoverable:not(.selected):hover {
+  .hoverable:hover {
+    cursor: pointer;
+  }
+  .hoverable:not(.selected):hover {
     background: var(--spectrum-global-color-gray-200);
     border-color: var(--spectrum-global-color-gray-400);
+  }
+  .selected {
+    background: var(--spectrum-global-color-blue-100);
   }
 
   /* Selection is only meant for standalone list items (non stacked) so we just set a fixed border radius */
@@ -121,7 +130,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
   }
   .list-item.large .list-item__left,
   .list-item.large .list-item__right {

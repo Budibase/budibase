@@ -44,9 +44,7 @@ const getEventFns = async (config: Config, existing?: Config) => {
       fns.push(events.email.SMTPCreated)
     } else if (isAIConfig(config)) {
       fns.push(() => events.ai.AIConfigCreated)
-      fns.push(() =>
-        pro.quotas.updateCustomAIConfigCount(Object.keys(config.config).length)
-      )
+      fns.push(() => pro.quotas.addCustomAIConfig())
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
       if (config.config.activated) {
@@ -85,9 +83,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
       fns.push(events.email.SMTPUpdated)
     } else if (isAIConfig(config)) {
       fns.push(() => events.ai.AIConfigUpdated)
-      fns.push(() =>
-        pro.quotas.updateCustomAIConfigCount(Object.keys(config.config).length)
-      )
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOUpdated(ConfigType.GOOGLE))
       if (!existing.config.activated && config.config.activated) {
@@ -253,7 +248,7 @@ export async function save(ctx: UserCtx<Config>) {
         if (existingConfig) {
           await verifyAIConfig(config, existingConfig)
         }
-        await pro.quotas.updateCustomAIConfigCount(Object.keys(config).length)
+        await pro.quotas.addCustomAIConfig()
         break
     }
   } catch (err: any) {
@@ -342,26 +337,40 @@ export async function find(ctx: UserCtx) {
     let scopedConfig = await configs.getConfig(type)
 
     if (scopedConfig) {
-      if (type === ConfigType.OIDC_LOGOS) {
-        enrichOIDCLogos(scopedConfig)
-      }
-
-      if (type === ConfigType.AI) {
-        await pro.sdk.ai.enrichAIConfig(scopedConfig)
-        // Strip out the API Keys from the response so they don't show in the UI
-        for (const key in scopedConfig.config) {
-          if (scopedConfig.config[key].apiKey) {
-            scopedConfig.config[key].apiKey = PASSWORD_REPLACEMENT
-          }
-        }
-      }
-      ctx.body = scopedConfig
+      await handleConfigType(type, scopedConfig)
+    } else if (type === ConfigType.AI) {
+      scopedConfig = { config: {} } as AIConfig
+      await handleAIConfig(scopedConfig)
     } else {
-      // don't throw an error, there simply is nothing to return
+      // If no config found and not AI type, just return an empty body
       ctx.body = {}
+      return
     }
+
+    ctx.body = scopedConfig
   } catch (err: any) {
     ctx.throw(err?.status || 400, err)
+  }
+}
+
+async function handleConfigType(type: ConfigType, config: Config) {
+  if (type === ConfigType.OIDC_LOGOS) {
+    enrichOIDCLogos(config)
+  } else if (type === ConfigType.AI) {
+    await handleAIConfig(config)
+  }
+}
+
+async function handleAIConfig(config: AIConfig) {
+  await pro.sdk.ai.enrichAIConfig(config)
+  stripApiKeys(config)
+}
+
+function stripApiKeys(config: AIConfig) {
+  for (const key in config?.config) {
+    if (config.config[key].apiKey) {
+      config.config[key].apiKey = PASSWORD_REPLACEMENT
+    }
   }
 }
 
@@ -508,6 +517,9 @@ export async function destroy(ctx: UserCtx) {
   try {
     await db.remove(id, rev)
     await cache.destroy(cache.CacheKey.CHECKLIST)
+    if (id === configs.generateConfigID(ConfigType.AI)) {
+      await pro.quotas.removeCustomAIConfig()
+    }
     ctx.body = { message: "Config deleted successfully" }
   } catch (err: any) {
     ctx.throw(err.status, err)
