@@ -798,7 +798,7 @@
         break
       }
     }
-    return utils.processSearchFilters(filters || [])
+    return utils.processSearchFilters(filters)
   }
 
   function saveFilters(key) {
