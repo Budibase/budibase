@@ -719,12 +719,12 @@ class InternalBuilder {
             return q
           }
 
-          q = q.where(subQuery => {
+          return q.where(subQuery => {
             if (mode === filters?.notContains) {
               subQuery = subQuery.not
             }
 
-            subQuery.where(subSubQuery => {
+            return subQuery.where(subSubQuery => {
               for (const elem of value) {
                 if (mode === filters?.containsAny) {
                   subSubQuery = subSubQuery.or
@@ -743,21 +743,8 @@ class InternalBuilder {
                   `%${lower}%`
                 )
               }
-
-              return subSubQuery
             })
-
-            if (mode === filters?.notContains) {
-              subQuery = subQuery.or.whereNull(
-                // @ts-expect-error knex types are wrong, raw is fine here
-                this.rawQuotedIdentifier(key)
-              )
-            }
-
-            return subQuery
           })
-
-          return q
         })
       }
     }
@@ -890,7 +877,7 @@ class InternalBuilder {
         }
         if (this.client === SqlClient.MS_SQL) {
           return q.whereRaw(`CASE WHEN ?? = ? THEN 1 ELSE 0 END = 1`, [
-            this.quotedIdentifier(key),
+            this.rawQuotedIdentifier(key),
             value,
           ])
         } else if (this.client === SqlClient.ORACLE) {
@@ -909,20 +896,30 @@ class InternalBuilder {
     }
     if (filters.notEqual) {
       iterate(filters.notEqual, BasicOperator.NOT_EQUAL, (q, key, value) => {
-        const fnc = shouldOr ? "orWhereRaw" : "whereRaw"
+        if (shouldOr) {
+          q = q.or
+        }
         if (this.client === SqlClient.MS_SQL) {
-          return q[fnc](
-            `CASE WHEN ${this.quotedIdentifier(key)} = ? THEN 1 ELSE 0 END = 0`,
-            [value]
-          )
+          return q.whereRaw(`CASE WHEN ?? = ? THEN 1 ELSE 0 END = 0`, [
+            this.rawQuotedIdentifier(key),
+            value,
+          ])
         } else if (this.client === SqlClient.ORACLE) {
           const identifier = this.convertClobs(key)
-          return q[fnc](
-            `(${identifier} IS NOT NULL AND ${identifier} != ?) OR ${identifier} IS NULL`,
-            [value]
+          return (
+            q
+              .where(subq =>
+                subq.not
+                  // @ts-expect-error knex types are wrong, raw is fine here
+                  .whereNull(identifier)
+                  .and.where(identifier, "!=", value)
+              )
+              // @ts-expect-error knex types are wrong, raw is fine here
+              .or.whereNull(identifier)
           )
         } else {
-          return q[fnc](`COALESCE(${this.quotedIdentifier(key)} != ?, TRUE)`, [
+          return q.whereRaw(`COALESCE(?? != ?, TRUE)`, [
+            this.rawQuotedIdentifier(key),
             value,
           ])
         }
@@ -930,14 +927,18 @@ class InternalBuilder {
     }
     if (filters.empty) {
       iterate(filters.empty, BasicOperator.EMPTY, (q, key) => {
-        const fnc = shouldOr ? "orWhereNull" : "whereNull"
-        return q[fnc](key)
+        if (shouldOr) {
+          q = q.or
+        }
+        return q.whereNull(key)
       })
     }
     if (filters.notEmpty) {
       iterate(filters.notEmpty, BasicOperator.NOT_EMPTY, (q, key) => {
-        const fnc = shouldOr ? "orWhereNotNull" : "whereNotNull"
-        return q[fnc](key)
+        if (shouldOr) {
+          q = q.or
+        }
+        return q.whereNotNull(key)
       })
     }
     if (filters.contains) {

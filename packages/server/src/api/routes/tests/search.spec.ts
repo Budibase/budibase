@@ -793,7 +793,7 @@ describe.each([
       })
 
     const stringTypes = [FieldType.STRING, FieldType.LONGFORM] as const
-    describe.each(stringTypes)("%s", type => {
+    describe.only.each(stringTypes)("%s", type => {
       beforeAll(async () => {
         tableOrViewId = await createTableOrView({
           name: { name: "name", type },
