@@ -19,7 +19,7 @@
   import { findComponent, findComponentPath } from "helpers/components"
   import { isActive, goto } from "@roxi/routify"
   import { ClientAppSkeleton } from "@budibase/frontend-core"
-  import { getThemeClassNames } from "@budibase/shared-core"
+  import { getThemeClassNames, ThemeClassPrefix } from "@budibase/shared-core"
 
   let iframe
   let layout
@@ -48,7 +48,9 @@
     layout,
     screen,
     selectedComponentId,
-    theme: $themeStore.theme,
+    theme: $appStore.clientFeatures.unifiedThemes
+      ? $themeStore.theme
+      : `${ThemeClassPrefix}${$themeStore.theme}`,
     customTheme: $themeStore.customTheme,
     previewDevice: $previewStore.previewDevice,
     messagePassing: $appStore.clientFeatures.messagePassing,
