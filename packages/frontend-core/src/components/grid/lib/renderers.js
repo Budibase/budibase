@@ -41,6 +41,9 @@ const TypeComponentMap = {
   role: RoleCell,
 }
 export const getCellRenderer = column => {
+  if (column.calculationType) {
+    return NumberCell
+  }
   return (
     TypeComponentMap[column?.schema?.cellRenderType] ||
     TypeComponentMap[column?.schema?.type] ||
