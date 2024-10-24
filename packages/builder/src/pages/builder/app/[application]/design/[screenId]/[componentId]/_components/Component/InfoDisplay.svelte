@@ -7,9 +7,17 @@
   export let quiet = false
   export let warning = false
   export let error = false
+  export let info = false
 </script>
 
-<div class="info" class:noTitle={!title} class:warning class:error class:quiet>
+<div
+  class="container"
+  class:info
+  class:noTitle={!title}
+  class:warning
+  class:error
+  class:quiet
+>
   {#if title}
     <div class="title">
       <Icon name={icon} />
@@ -27,7 +35,7 @@
 </div>
 
 <style>
-  .info {
+  .container {
     padding: var(--spacing-m) var(--spacing-l);
     background-color: var(--spectrum-global-color-gray-200);
     border-radius: var(--border-radius-s);
@@ -38,6 +46,9 @@
   }
   .error {
     background: rgba(255, 0, 0, 0.2);
+  }
+  .info {
+    background: var(--spectrum-global-color-blue-100);
   }
   .noTitle {
     display: flex;
@@ -57,13 +68,7 @@
   }
   .title,
   .icon {
-    color: var(--spectrum-global-color-gray-600);
-  }
-  .info {
-    background-color: var(--background-alt);
-    padding: var(--spacing-m) var(--spacing-l) var(--spacing-m) var(--spacing-l);
-    border-radius: var(--border-radius-s);
-    font-size: 13px;
+    color: var(--spectrum-global-color-gray-700);
   }
   .quiet {
     background: none;
