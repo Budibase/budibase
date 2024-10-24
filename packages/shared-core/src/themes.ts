@@ -17,7 +17,7 @@ export const getThemeClassNames = (theme: Theme): string => {
 
 // Ensures a theme value is a valid option
 export const ensureValidTheme = (
-  theme: Theme,
+  theme?: Theme,
   fallback: Theme = Theme.DARKEST
 ): Theme => {
   if (!theme) {
