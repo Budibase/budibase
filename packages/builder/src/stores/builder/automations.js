@@ -29,7 +29,6 @@ const initialAutomationState = {
     ACTION: {},
   },
   selectedAutomationId: null,
-  automationDisplayData: {},
 }
 
 // If this functions, remove the actions elements
@@ -623,7 +622,7 @@ const automationActions = store => ({
   },
   fetch: async () => {
     const [automationResponse, definitions] = await Promise.all([
-      API.getAutomations({ enrich: true }),
+      API.getAutomations(),
       API.getAutomationDefinitions(),
     ])
     store.update(state => {
@@ -631,7 +630,6 @@ const automationActions = store => ({
       state.automations.sort((a, b) => {
         return a.name < b.name ? -1 : 1
       })
-      state.automationDisplayData = automationResponse.builderData
       state.blockDefinitions = getFinalDefinitions(
         definitions.trigger,
         definitions.action
@@ -693,8 +691,6 @@ const automationActions = store => ({
         state.selectedAutomationId = state.automations[0]?._id || null
       }
 
-      // Clear out automationDisplayData for the automation
-      delete state.automationDisplayData[automation._id]
       return state
     })
   },
@@ -1298,15 +1294,3 @@ export const selectedAutomation = derived(automationStore, $automationStore => {
     blockRefs,
   }
 })
-
-export const selectedAutomationDisplayData = derived(
-  [automationStore, selectedAutomation],
-  ([$automationStore, $selectedAutomation]) => {
-    if (!$selectedAutomation?.data?._id) {
-      return null
-    }
-    return $automationStore.automationDisplayData[
-      $selectedAutomation?.data?._id
-    ]
-  }
-)

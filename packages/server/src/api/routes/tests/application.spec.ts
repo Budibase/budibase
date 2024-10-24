@@ -16,7 +16,7 @@ import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
 import { events, utils, context, features } from "@budibase/backend-core"
 import env from "../../../environment"
-import { type App } from "@budibase/types"
+import { type App, BuiltinPermissionID } from "@budibase/types"
 import tk from "timekeeper"
 import * as uuid from "uuid"
 import { structures } from "@budibase/backend-core/tests"
@@ -80,7 +80,7 @@ describe("/applications", () => {
       const role = await config.api.roles.save({
         name: "Test",
         inherits: "PUBLIC",
-        permissionId: "read_only",
+        permissionId: BuiltinPermissionID.READ_ONLY,
         version: "name",
       })
 
@@ -112,7 +112,7 @@ describe("/applications", () => {
       const role = await config.api.roles.save({
         name: roleName,
         inherits: "PUBLIC",
-        permissionId: "read_only",
+        permissionId: BuiltinPermissionID.READ_ONLY,
         version: "name",
       })
 
