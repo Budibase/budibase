@@ -257,7 +257,7 @@ export interface components {
                * @description Defines whether this is a static or dynamic formula.
                * @enum {string}
                */
-              formulaType?: "static" | "dynamic";
+              formulaType?: "static" | "dynamic" | "ai";
             }
           | {
               /**
@@ -277,11 +277,14 @@ export interface components {
                 | "link"
                 | "formula"
                 | "auto"
+                | "ai"
                 | "json"
                 | "internal"
                 | "barcodeqr"
+                | "signature_single"
                 | "bigint"
-                | "bb_reference";
+                | "bb_reference"
+                | "bb_reference_single";
               /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
               constraints?: {
                 /** @enum {string} */
@@ -366,7 +369,7 @@ export interface components {
                  * @description Defines whether this is a static or dynamic formula.
                  * @enum {string}
                  */
-                formulaType?: "static" | "dynamic";
+                formulaType?: "static" | "dynamic" | "ai";
               }
             | {
                 /**
@@ -386,11 +389,14 @@ export interface components {
                   | "link"
                   | "formula"
                   | "auto"
+                  | "ai"
                   | "json"
                   | "internal"
                   | "barcodeqr"
+                  | "signature_single"
                   | "bigint"
-                  | "bb_reference";
+                  | "bb_reference"
+                  | "bb_reference_single";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
                   /** @enum {string} */
@@ -477,7 +483,7 @@ export interface components {
                  * @description Defines whether this is a static or dynamic formula.
                  * @enum {string}
                  */
-                formulaType?: "static" | "dynamic";
+                formulaType?: "static" | "dynamic" | "ai";
               }
             | {
                 /**
@@ -497,11 +503,14 @@ export interface components {
                   | "link"
                   | "formula"
                   | "auto"
+                  | "ai"
                   | "json"
                   | "internal"
                   | "barcodeqr"
+                  | "signature_single"
                   | "bigint"
-                  | "bb_reference";
+                  | "bb_reference"
+                  | "bb_reference_single";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
                   /** @enum {string} */
