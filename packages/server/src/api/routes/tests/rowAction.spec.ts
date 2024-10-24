@@ -958,7 +958,7 @@ describe("/rowsActions", () => {
       // document was not being cleaned up. This meant there existed code paths
       // that would find it and try to reference the tables within it, resulting
       // in errors.
-      await config.api.automation.fetchEnriched({
+      await config.api.automation.fetch({
         status: 200,
       })
     })
