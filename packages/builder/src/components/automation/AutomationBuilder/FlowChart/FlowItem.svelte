@@ -37,7 +37,6 @@
 
   const view = getContext("view")
   const pos = getContext("viewPos")
-  const contentPos = getContext("contentPos")
 
   let webhookModal
   let open = true
