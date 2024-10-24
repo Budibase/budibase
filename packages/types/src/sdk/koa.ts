@@ -7,10 +7,11 @@ import {
   ConfigType,
   Row,
   Table,
-  AutomationEventType,
+  UserBindings,
 } from "../documents"
 import { FeatureFlag, License } from "../sdk"
 import { Files } from "formidable"
+import { EventType } from "../core"
 
 export interface ContextUser extends Omit<User, "roles"> {
   globalId?: string
@@ -61,10 +62,25 @@ export interface BBContext extends Ctx {
 }
 
 export interface ContextEmitter {
-  emitRow: (params: {
-    eventName: AutomationEventType
+  emitRow(values: {
+    eventName: EventType.ROW_SAVE
     appId: string
     row: Row
-    table?: Table
-  }) => Promise<void>
+    table: Table
+    user: UserBindings
+  }): void
+  emitRow(values: {
+    eventName: EventType.ROW_UPDATE
+    appId: string
+    row: Row
+    table: Table
+    oldRow: Row
+    user: UserBindings
+  }): void
+  emitRow(values: {
+    eventName: EventType.ROW_DELETE
+    appId: string
+    row: Row
+    user: UserBindings
+  }): void
 }
