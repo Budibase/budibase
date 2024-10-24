@@ -690,7 +690,7 @@
               {/if}
             </div>
           {/if}
-          <div class:field-width={shouldRenderField(value)}>
+          <div>
             {#if value.type === "string" && value.enum && canShowField(key, value)}
               <Select
                 on:change={e => onChange({ [key]: e.detail })}
@@ -986,6 +986,11 @@
     align-items: center;
     gap: var(--spacing-s);
   }
+
+  .label-container :global(label) {
+    white-space: unset;
+  }
+
   .field-width {
     width: 320px;
   }
@@ -999,12 +1004,9 @@
   }
 
   .block-field {
-    display: flex;
     justify-content: space-between;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 320px;
   }
 
   .attachment-field-width {

@@ -24,6 +24,7 @@
       tooltipType={TooltipType.Info}
       tooltipPosition={TooltipPosition.Left}
       tooltip={"Create branch"}
+      size={"S"}
     />
   {/if}
   <Icon
@@ -35,6 +36,7 @@
     tooltipType={TooltipType.Info}
     tooltipPosition={TooltipPosition.Right}
     tooltip={"Add a step"}
+    size={"S"}
   />
 </div>
 
@@ -44,6 +46,6 @@
     border-radius: 4px 4px 4px 4px;
     display: flex;
     gap: var(--spacing-m);
-    padding: var(--spacing-m);
+    padding: 8px 12px;
   }
 </style>

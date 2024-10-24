@@ -8,7 +8,6 @@
 
   export let automation
   export let testResults
-  export let width = "400px"
 
   let openBlocks = {}
   let blocks
@@ -65,7 +64,7 @@
 
 <div class="container">
   {#each blocks as block, idx}
-    <div class="block" style={width ? `width: ${width}` : ""}>
+    <div class="block">
       {#if block.stepId !== ActionStepID.LOOP}
         <FlowItemHeader
           {automation}
@@ -146,7 +145,10 @@
   .container {
     padding: 0 30px 30px 30px;
     height: 100%;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .wrap {
@@ -188,17 +190,17 @@
 
   .block {
     display: inline-block;
-    width: 400px;
-    height: auto;
+    height: fit-content;
     font-size: 16px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px 4px 4px 4px;
+    min-width: 425px;
   }
 
   .separator {
     width: 1px;
-    height: 40px;
+    flex: 0 0 40px;
     border-left: 1px dashed var(--grey-4);
     color: var(--grey-4);
     /* center horizontally */

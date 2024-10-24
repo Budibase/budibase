@@ -19,7 +19,8 @@
   import { automationStore, selectedAutomation } from "stores/builder"
   import { QueryUtils } from "@budibase/frontend-core"
   import { cloneDeep } from "lodash/fp"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
+  import DragZone from "./DragZone.svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -29,6 +30,8 @@
   export let isLast
   export let bindings
   export let automation
+
+  const view = getContext("view")
 
   let drawer
   let condition
@@ -48,7 +51,7 @@
   })
   $: branchBlockRef = {
     branchNode: true,
-    pathTo: (pathTo || []).concat({ branchIdx }),
+    pathTo: (pathTo || []).concat({ branchIdx, branchStepId: step.id }),
   }
 </script>
 
@@ -170,7 +173,11 @@
 
   <div class="separator" />
 
-  <FlowItemActions block={branchBlockRef} />
+  {#if $view.dragging}
+    <DragZone path={branchBlockRef.pathTo} />
+  {:else}
+    <FlowItemActions block={branchBlockRef} />
+  {/if}
 
   {#if step.inputs.children[branch.id]?.length}
     <div class="separator" />
