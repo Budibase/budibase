@@ -11,5 +11,6 @@ export interface TenantInfo extends Document {
     budibaseUserId?: string
   }
   tenantId: string
+  accountId: string
   hosting: Hosting
 }
