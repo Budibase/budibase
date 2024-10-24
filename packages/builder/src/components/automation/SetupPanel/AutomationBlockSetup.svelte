@@ -16,7 +16,6 @@
     DrawerContent,
     Helpers,
     Toggle,
-    Divider,
     Icon,
   } from "@budibase/bbui"
 
@@ -359,12 +358,6 @@
             ...getIdConfig(),
             ...getRevConfig(),
             ...getRowTypeConfig(),
-            {
-              type: Divider,
-              props: {
-                noMargin: true,
-              },
-            },
             ...getRowSelector(),
           ],
         },
@@ -672,7 +665,7 @@
         <div class:block-field={shouldRenderField(value)}>
           {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
             <div class="label-container">
-              <Label>
+              <Label size="L">
                 {label}
               </Label>
               {#if value.customType === AutomationCustomIOType.TRIGGER_FILTER}
@@ -746,7 +739,7 @@
             {:else if value.type === "attachment" || value.type === "signature_single"}
               <div class="attachment-field-wrapper">
                 <div class="label-wrapper">
-                  <Label>{label}</Label>
+                  <Label size="L">{label}</Label>
                 </div>
                 <div class="toggle-container">
                   <Toggle
@@ -1000,9 +993,9 @@
   .block-field {
     display: flex;
     justify-content: space-between;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
     flex: 1;
   }
 

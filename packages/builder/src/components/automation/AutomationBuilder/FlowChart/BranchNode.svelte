@@ -111,40 +111,7 @@
         await automationStore.actions.save(updatedAuto)
       }}
       on:toggle={() => (open = !open)}
-    >
-      <div slot="custom-actions" class="branch-actions">
-        <Icon
-          on:click={() => {
-            automationStore.actions.branchLeft(
-              branchBlockRef.pathTo,
-              $selectedAutomation.data,
-              step
-            )
-          }}
-          tooltip={"Move left"}
-          tooltipType={TooltipType.Info}
-          tooltipPosition={TooltipPosition.Top}
-          hoverable
-          disabled={branchIdx == 0}
-          name="ArrowLeft"
-        />
-        <Icon
-          on:click={() => {
-            automationStore.actions.branchRight(
-              branchBlockRef.pathTo,
-              $selectedAutomation.data,
-              step
-            )
-          }}
-          tooltip={"Move right"}
-          tooltipType={TooltipType.Info}
-          tooltipPosition={TooltipPosition.Top}
-          hoverable
-          disabled={isLast}
-          name="ArrowRight"
-        />
-      </div>
-    </FlowItemHeader>
+    />
     {#if open}
       <Divider noMargin />
       <div class="blockSection">
@@ -214,11 +181,11 @@
     display: inline-block;
   }
   .block {
-    width: 480px;
+    width: 360px;
     font-size: 16px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 4px 4px 4px 4px;
+    border-radius: 12px;
   }
 
   .blockSection {
