@@ -99,6 +99,23 @@ function isSqs(table: Table): boolean {
   )
 }
 
+function escapeQuotes(value: string, quoteChar = '"'): string {
+  return value.replace(new RegExp(quoteChar, "g"), `${quoteChar}${quoteChar}`)
+}
+
+function wrap(value: string, quoteChar = '"'): string {
+  return `${quoteChar}${escapeQuotes(value, quoteChar)}${quoteChar}`
+}
+
+function stringifyArray(value: any[], quoteStyle = '"'): string {
+  for (let i in value) {
+    if (typeof value[i] === "string") {
+      value[i] = wrap(value[i], quoteStyle)
+    }
+  }
+  return `[${value.join(",")}]`
+}
+
 const allowEmptyRelationships: Record<SearchFilterKey, boolean> = {
   [BasicOperator.EQUAL]: false,
   [BasicOperator.NOT_EQUAL]: true,
@@ -192,6 +209,15 @@ class InternalBuilder {
       key = this.splitIdentifier(key)
     }
     return key.map(part => this.quote(part)).join(".")
+  }
+
+  private quotedValue(value: string): string {
+    const formatter = this.knexClient.formatter(this.knexClient.queryBuilder())
+    return formatter.wrap(value, false)
+  }
+
+  private rawQuotedValue(value: string): Knex.Raw {
+    return this.knex.raw(this.quotedValue(value))
   }
 
   // Unfortuantely we cannot rely on knex's identifier escaping because it trims
@@ -682,25 +708,20 @@ class InternalBuilder {
         return q
       }
 
-      function stringifyArray(value: any[], quoteStyle = '"'): string {
-        for (let i in value) {
-          if (typeof value[i] === "string") {
-            value[i] = `${quoteStyle}${value[i]}${quoteStyle}`
-          }
-        }
-        return `[${value.join(",")}]`
-      }
-
       if (this.client === SqlClient.POSTGRES) {
         iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
-          const wrap = any ? "" : "'"
-          const op = any ? "\\?| array" : "@>"
-
-          const stringifiedArray = stringifyArray(value, any ? "'" : '"')
-          return addModifiers(q).whereRaw(
-            `COALESCE(??::jsonb ${op} ${wrap}${stringifiedArray}${wrap}, FALSE)`,
-            [this.rawQuotedIdentifier(key)]
-          )
+          q = addModifiers(q)
+          if (any) {
+            return q.whereRaw(`COALESCE(??::jsonb \\?| array??, FALSE)`, [
+              this.rawQuotedIdentifier(key),
+              this.knex.raw(stringifyArray(value, "'")),
+            ])
+          } else {
+            return q.whereRaw(`COALESCE(??::jsonb @> '??', FALSE)`, [
+              this.rawQuotedIdentifier(key),
+              this.knex.raw(stringifyArray(value)),
+            ])
+          }
         })
       } else if (
         this.client === SqlClient.MY_SQL ||
@@ -710,7 +731,7 @@ class InternalBuilder {
           return addModifiers(q).whereRaw(`COALESCE(?(??, ?), FALSE)`, [
             this.knex.raw(any ? "JSON_OVERLAPS" : "JSON_CONTAINS"),
             this.rawQuotedIdentifier(key),
-            stringifyArray(value),
+            this.knex.raw(wrap(stringifyArray(value))),
           ])
         })
       } else {

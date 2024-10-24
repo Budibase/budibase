@@ -793,7 +793,7 @@ describe.each([
       })
 
     const stringTypes = [FieldType.STRING, FieldType.LONGFORM] as const
-    describe.only.each(stringTypes)("%s", type => {
+    describe.each(stringTypes)("%s", type => {
       beforeAll(async () => {
         tableOrViewId = await createTableOrView({
           name: { name: "name", type },
@@ -2163,7 +2163,7 @@ describe.each([
       })
     })
 
-    describe("multi user", () => {
+    describe.only("multi user", () => {
       let user1: User
       let user2: User
 
