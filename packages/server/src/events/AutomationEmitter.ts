@@ -1,12 +1,20 @@
 import { rowEmission, tableEmission } from "./utils"
 import mainEmitter from "./index"
 import env from "../environment"
-import { Table, Row, DocumentType, App } from "@budibase/types"
+import {
+  Table,
+  Row,
+  DocumentType,
+  App,
+  ContextEmitter,
+  EventType,
+  UserBindings,
+} from "@budibase/types"
 import { context } from "@budibase/backend-core"
 
 const MAX_AUTOMATIONS_ALLOWED = 5
 
-class AutomationEmitter {
+class AutomationEmitter implements ContextEmitter {
   chainCount: number
   metadata: { automationChainCount: number }
 
@@ -36,11 +44,15 @@ class AutomationEmitter {
     appId,
     row,
     table,
+    oldRow,
+    user,
   }: {
-    eventName: string
+    eventName: EventType.ROW_SAVE | EventType.ROW_DELETE | EventType.ROW_UPDATE
     appId: string
     row: Row
     table?: Table
+    oldRow?: Row
+    user: UserBindings
   }) {
     let MAX_AUTOMATION_CHAIN = await this.getMaxAutomationChain()
 
@@ -54,7 +66,9 @@ class AutomationEmitter {
       appId,
       row,
       table,
+      oldRow,
       metadata: this.metadata,
+      user,
     })
   }
 

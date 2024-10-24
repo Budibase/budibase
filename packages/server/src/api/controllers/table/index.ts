@@ -16,6 +16,7 @@ import {
   BulkImportResponse,
   CsvToJsonRequest,
   CsvToJsonResponse,
+  EventType,
   FetchTablesResponse,
   FieldType,
   MigrateRequest,
@@ -129,8 +130,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   }
   ctx.status = 200
   ctx.message = `Table ${table.name} saved successfully.`
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emitTable(`table:save`, appId, { ...savedTable })
+  ctx.eventEmitter?.emitTable(EventType.TABLE_SAVE, appId, { ...savedTable })
   ctx.body = savedTable
 
   savedTable = await processTable(savedTable)
@@ -143,8 +143,8 @@ export async function destroy(ctx: UserCtx) {
   await sdk.rowActions.deleteAll(tableId)
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
   await events.table.deleted(deletedTable)
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emitTable(`table:delete`, appId, deletedTable)
+
+  ctx.eventEmitter?.emitTable(EventType.TABLE_DELETE, appId, deletedTable)
   ctx.status = 200
   ctx.table = deletedTable
   ctx.body = { message: `Table ${tableId} deleted.` }
