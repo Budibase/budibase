@@ -2,8 +2,8 @@
   import {
     automationStore,
     permissions,
-    selectedAutomationDisplayData,
     selectedAutomation,
+    tables,
   } from "stores/builder"
   import {
     Icon,
@@ -16,6 +16,7 @@
     InlineAlert,
     Helpers,
   } from "@budibase/bbui"
+  import { sdk } from "@budibase/shared-core"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
@@ -64,7 +65,14 @@
   $: isAppAction = block?.stepId === TriggerStepID.APP
   $: isAppAction && setPermissions(role)
   $: isAppAction && getPermissions(automationId)
-  $: triggerInfo = $selectedAutomationDisplayData?.triggerInfo
+
+  $: triggerInfo = sdk.automations.isRowAction($selectedAutomation?.data) && {
+    title: "Automation trigger",
+    tableName: $tables.list.find(
+      x =>
+        x._id === $selectedAutomation.data?.definition?.trigger?.inputs?.tableId
+    )?.name,
+  }
 
   $: selected = $view?.moveStep && $view?.moveStep?.id === block.id
   $: blockDims = blockEle?.getBoundingClientRect()
@@ -293,8 +301,8 @@
                 />
                 {#if isTrigger && triggerInfo}
                   <InlineAlert
-                    header={triggerInfo.type}
-                    message={`This trigger is tied to the "${triggerInfo.rowAction.name}" row action in your ${triggerInfo.table.name} table`}
+                    header={triggerInfo.title}
+                    message={`This trigger is tied to your "${triggerInfo.tableName}" table`}
                   />
                 {/if}
               </Layout>
