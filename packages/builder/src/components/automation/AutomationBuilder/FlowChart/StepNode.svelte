@@ -44,7 +44,7 @@
         automationStore.actions.branchAutomation(pathToCurrentNode, automation)
       }}
     >
-      Add additional branch
+      Add branch
     </ActionButton>
   </div>
   <div class="branched">
@@ -105,7 +105,6 @@
     {/each}
   </div>
 {:else}
-  <!--Drop Zone-->
   <div class="block">
     <FlowItem
       block={step}
@@ -114,9 +113,9 @@
       {isLast}
       {automation}
       {bindings}
+      draggable={step.type !== "TRIGGER"}
     />
   </div>
-  <!--Drop Zone-->
 {/if}
 
 <style>
