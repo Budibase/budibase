@@ -302,7 +302,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
         navBackground: "var(--spectrum-global-color-gray-100)",
         links: [],
       },
-      theme: "spectrum--light",
+      theme: "light",
       customTheme: {
         buttonBorderRadius: "16px",
       },

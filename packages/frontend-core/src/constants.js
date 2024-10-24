@@ -108,37 +108,6 @@ export const Roles = {
   CREATOR: "CREATOR",
 }
 
-// Theming
-export const ThemeClassPrefix = "spectrum--"
-export const Themes = {
-  Lightest: "lightest",
-  Light: "light",
-  Dark: "dark",
-  Darkest: "darkest",
-  Nord: "nord",
-  Midnight: "midnight",
-}
-export const ThemeOptions = [
-  {
-    id: Themes.Light,
-    name: "Light",
-  },
-  {
-    id: Themes.Darkest,
-    name: "Dark",
-  },
-  {
-    id: Themes.Nord,
-    name: "Nord",
-    base: Themes.Darkest,
-  },
-  {
-    id: Themes.Midnight,
-    name: "Midnight",
-    base: Themes.Darkest,
-  },
-]
-
 export const EventPublishType = {
   ENV_VAR_UPGRADE_PANEL_OPENED: "environment_variable_upgrade_panel_opened",
 }
