@@ -740,12 +740,12 @@ class InternalBuilder {
             return q
           }
 
-          return q.where(subQuery => {
+          q = q.where(subQuery => {
             if (mode === filters?.notContains) {
               subQuery = subQuery.not
             }
 
-            return subQuery.where(subSubQuery => {
+            subQuery = subQuery.where(subSubQuery => {
               for (const elem of value) {
                 if (mode === filters?.containsAny) {
                   subSubQuery = subSubQuery.or
@@ -765,7 +765,15 @@ class InternalBuilder {
                 )
               }
             })
+            if (mode === filters?.notContains) {
+              subQuery = subQuery.or.whereNull(
+                // @ts-expect-error knex types are wrong, raw is fine here
+                this.rawQuotedIdentifier(key)
+              )
+            }
+            return subQuery
           })
+          return q
         })
       }
     }
