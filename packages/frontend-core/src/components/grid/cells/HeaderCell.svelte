@@ -6,7 +6,7 @@
   import { getColumnIcon } from "../../../utils/schema"
   import MigrationModal from "../controls/MigrationModal.svelte"
   import { debounce } from "../../../utils/utils"
-  import { FieldType, FormulaType } from "@budibase/types"
+  import { FieldType, FormulaType, SortOrder } from "@budibase/types"
   import { TableNames } from "../../../constants"
   import GridPopover from "../overlays/GridPopover.svelte"
 
@@ -52,7 +52,7 @@
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
   $: canMoveRight = orderable && idx < $scrollableColumns.length - 1
-  $: sortingLabels = getSortingLabels(column.schema?.type)
+  $: sortingLabels = getSortingLabels(column)
   $: searchable = isColumnSearchable(column)
   $: resetSearchValue(column.name)
   $: searching = searchValue != null
@@ -66,8 +66,14 @@
     editIsOpen = false
   }
 
-  const getSortingLabels = type => {
-    switch (type) {
+  const getSortingLabels = column => {
+    if (column.calculationType) {
+      return {
+        ascending: "low-high",
+        descending: "high-low",
+      }
+    }
+    switch (column?.schema?.type) {
       case FieldType.NUMBER:
       case FieldType.BIGINT:
         return {
@@ -137,7 +143,7 @@
   const sortAscending = () => {
     sort.set({
       column: column.name,
-      order: "ascending",
+      order: SortOrder.ASCENDING,
     })
     open = false
   }
@@ -145,7 +151,7 @@
   const sortDescending = () => {
     sort.set({
       column: column.name,
-      order: "descending",
+      order: SortOrder.DESCENDING,
     })
     open = false
   }
@@ -318,7 +324,7 @@
           <Icon
             hoverable
             size="S"
-            name={$sort.order === "descending"
+            name={$sort.order === SortOrder.DESCENDING
               ? "SortOrderDown"
               : "SortOrderUp"}
           />
@@ -366,7 +372,8 @@
           icon="SortOrderUp"
           on:click={sortAscending}
           disabled={!canBeSortColumn(column.schema) ||
-            (column.name === $sort.column && $sort.order === "ascending")}
+            (column.name === $sort.column &&
+              $sort.order === SortOrder.ASCENDING)}
         >
           Sort {sortingLabels.ascending}
         </MenuItem>
@@ -374,7 +381,8 @@
           icon="SortOrderDown"
           on:click={sortDescending}
           disabled={!canBeSortColumn(column.schema) ||
-            (column.name === $sort.column && $sort.order === "descending")}
+            (column.name === $sort.column &&
+              $sort.order === SortOrder.DESCENDING)}
         >
           Sort {sortingLabels.descending}
         </MenuItem>

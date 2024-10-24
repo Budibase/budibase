@@ -578,7 +578,9 @@
         break
       }
     }
-    return utils.processSearchFilters(filters)
+    return Array.isArray(filters)
+      ? utils.processSearchFilters(filters)
+      : filters
   }
 
   function saveFilters(key) {

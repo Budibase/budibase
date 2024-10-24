@@ -147,6 +147,9 @@
   .spectrum-Dialog--extraLarge {
     width: 1000px;
   }
+  .spectrum-Dialog--medium {
+    width: 540px;
+  }
 
   .content-grid {
     display: grid;

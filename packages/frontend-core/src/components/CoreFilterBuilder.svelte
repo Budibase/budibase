@@ -17,6 +17,7 @@
   import { getContext, createEventDispatcher } from "svelte"
   import FilterField from "./FilterField.svelte"
   import ConditionField from "./ConditionField.svelte"
+  import { utils } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
   const {
@@ -42,8 +43,7 @@
   export let toReadable
   export let toRuntime
 
-  $: editableFilters = filters ? Helpers.cloneDeep(filters) : null
-
+  $: editableFilters = migrateFilters(filters)
   $: {
     if (
       tables.find(
@@ -55,6 +55,16 @@
     ) {
       schemaFields = [...schemaFields, { name: "_id", type: "string" }]
     }
+  }
+
+  // We still may need to migrate this even though the backend does it automatically now
+  // for query definitions. This is because we might be editing saved filter definitions
+  // from old screens, which will still be of type LegacyFilter[].
+  const migrateFilters = filters => {
+    if (Array.isArray(filters)) {
+      return utils.processSearchFilters(filters)
+    }
+    return Helpers.cloneDeep(filters)
   }
 
   const filterOperatorOptions = Object.values(FilterOperator).map(entry => {
@@ -72,10 +82,12 @@
 
   const context = getContext("context")
 
-  $: fieldOptions = (schemaFields || []).map(field => ({
-    label: field.displayName || field.name,
-    value: field.name,
-  }))
+  $: fieldOptions = (schemaFields || [])
+    .filter(field => !field.calculationType)
+    .map(field => ({
+      label: field.displayName || field.name,
+      value: field.name,
+    }))
 
   const onFieldChange = filter => {
     const previousType = filter.type
