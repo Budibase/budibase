@@ -2163,7 +2163,7 @@ describe.each([
       })
     })
 
-    describe.only("multi user", () => {
+    describe("multi user", () => {
       let user1: User
       let user2: User
 
