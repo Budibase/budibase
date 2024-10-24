@@ -1,7 +1,7 @@
 <script>
   import { notifications } from "@budibase/bbui"
   import { themeStore, appStore } from "stores/builder"
-  import { Constants, getThemeClassNames } from "@budibase/frontend-core"
+  import { ThemeOptions, getThemeClassNames } from "@budibase/shared-core"
 
   const onChangeTheme = async theme => {
     try {
@@ -15,14 +15,14 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="container">
-  {#each Constants.ThemeOptions as theme}
+  {#each ThemeOptions as themeMeta}
     <div
       class="theme"
-      class:selected={theme.id === $themeStore.theme}
-      on:click={() => onChangeTheme(theme.id)}
+      class:selected={themeMeta.id === $themeStore.theme}
+      on:click={() => onChangeTheme(themeMeta.id)}
     >
-      <div class="color {getThemeClassNames(theme.id)}" />
-      {theme.name}
+      <div class="color {getThemeClassNames(themeMeta.id)}" />
+      {themeMeta.name}
     </div>
   {/each}
 </div>

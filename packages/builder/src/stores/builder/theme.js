@@ -1,16 +1,11 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
-import { Constants, ensureValidTheme } from "@budibase/frontend-core"
-
-const DefaultAppTheme = Constants.Themes.Light
-const INITIAL_THEMES_STATE = {
-  theme: DefaultAppTheme,
-  customTheme: {},
-}
+import { ensureValidTheme, DefaultAppTheme } from "@budibase/shared-core"
 
 export const createThemeStore = () => {
   const store = writable({
-    ...INITIAL_THEMES_STATE,
+    theme: DefaultAppTheme,
+    customTheme: {},
   })
 
   const syncAppTheme = app => {
