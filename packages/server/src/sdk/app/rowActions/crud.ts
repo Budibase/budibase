@@ -7,11 +7,11 @@ import {
   User,
   VirtualDocumentType,
 } from "@budibase/types"
-import { generateRowActionsID } from "../../db/utils"
-import automations from "./automations"
-import { definitions as TRIGGER_DEFINITIONS } from "../../automations/triggerInfo"
-import * as triggers from "../../automations/triggers"
-import sdk from ".."
+import { generateRowActionsID } from "../../../db/utils"
+import automations from "../automations"
+import { definitions as TRIGGER_DEFINITIONS } from "../../../automations/triggerInfo"
+import * as triggers from "../../../automations/triggers"
+import sdk from "../.."
 
 async function ensureUniqueAndThrow(
   doc: TableRowActions,
