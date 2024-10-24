@@ -7,11 +7,11 @@ import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTableID } from "../../../integrations/utils"
 import {
-  AutomationEventType,
   Ctx,
   DeleteRow,
   DeleteRowRequest,
   DeleteRows,
+  EventType,
   ExportRowsRequest,
   ExportRowsResponse,
   FieldType,
@@ -67,7 +67,7 @@ export async function patch(
     ctx.status = 200
 
     ctx.eventEmitter?.emitRow({
-      eventName: AutomationEventType.ROW_UPDATE,
+      eventName: EventType.ROW_UPDATE,
       appId,
       row,
       table,
@@ -104,14 +104,14 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
         sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
       )
   ctx.status = 200
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emitRow({
-      eventName: `row:save`,
-      appId,
-      row,
-      table,
-      user: sdk.users.getUserContextBindings(ctx.user),
-    })
+
+  ctx.eventEmitter?.emitRow({
+    eventName: EventType.ROW_SAVE,
+    appId,
+    row,
+    table,
+    user: sdk.users.getUserContextBindings(ctx.user),
+  })
   ctx.message = `${table.name} saved successfully`
   // prefer squashed for response
   ctx.body = row || squashed
@@ -183,13 +183,12 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   }
 
   for (let row of rows) {
-    ctx.eventEmitter &&
-      ctx.eventEmitter.emitRow({
-        eventName: `row:delete`,
-        appId,
-        row,
-        user: sdk.users.getUserContextBindings(ctx.user),
-      })
+    ctx.eventEmitter?.emitRow({
+      eventName: EventType.ROW_DELETE,
+      appId,
+      row,
+      user: sdk.users.getUserContextBindings(ctx.user),
+    })
     gridSocket?.emitRowDeletion(ctx, row)
   }
   return rows
@@ -204,13 +203,12 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
     await quotas.removeRow()
   }
 
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emitRow({
-      eventName: `row:delete`,
-      appId,
-      row: resp.row,
-      user: sdk.users.getUserContextBindings(ctx.user),
-    })
+  ctx.eventEmitter?.emitRow({
+    eventName: EventType.ROW_DELETE,
+    appId,
+    row: resp.row,
+    user: sdk.users.getUserContextBindings(ctx.user),
+  })
   gridSocket?.emitRowDeletion(ctx, resp.row)
 
   return resp
