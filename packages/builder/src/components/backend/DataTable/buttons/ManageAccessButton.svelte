@@ -34,7 +34,9 @@
   $: buttonLabel = readableRole ? `Access: ${readableRole}` : "Access"
   $: highlight = roleMismatch || selectedRole === Roles.PUBLIC
 
-  $: builtInRoles = builtins.map(roleId => $roles.find(x => x._id === roleId))
+  $: builtInRoles = builtins
+    .map(roleId => $roles.find(x => x._id === roleId))
+    .filter(r => !!r)
   $: customRoles = $roles
     .filter(x => !builtins.includes(x._id))
     .slice()
