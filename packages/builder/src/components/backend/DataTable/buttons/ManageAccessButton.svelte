@@ -102,6 +102,9 @@
   }
 
   const changePermission = async role => {
+    if (role === selectedRole) {
+      return
+    }
     try {
       await permissionsStore.save({
         level: "read",
