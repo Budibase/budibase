@@ -207,7 +207,6 @@ export class ComponentStore extends BudiStore {
     )
     for (let setting of filterableTypes || []) {
       const isLegacy = Array.isArray(enrichedComponent[setting.key])
-
       if (isLegacy) {
         const processedSetting = utils.processSearchFilters(
           enrichedComponent[setting.key]
