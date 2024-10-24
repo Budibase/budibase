@@ -63,7 +63,7 @@ import {
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
-import { sdk as sharedCoreSDK } from "@budibase/shared-core"
+import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
 
 // utility function, need to do away with this
@@ -302,7 +302,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
         navBackground: "var(--spectrum-global-color-gray-100)",
         links: [],
       },
-      theme: "light",
+      theme: DefaultAppTheme,
       customTheme: {
         buttonBorderRadius: "16px",
       },
