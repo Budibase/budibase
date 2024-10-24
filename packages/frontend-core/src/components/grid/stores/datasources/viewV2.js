@@ -1,17 +1,4 @@
 import { get } from "svelte/store"
-import { dataFilters } from "@budibase/shared-core"
-
-function convertToSearchFilters(view) {
-  // convert from SearchFilterGroup type
-  if (view?.query) {
-    return {
-      ...view,
-      queryUI: view.query,
-      query: dataFilters.buildQuery(view.query),
-    }
-  }
-  return view
-}
 
 const SuppressErrors = true
 
@@ -19,7 +6,7 @@ export const createActions = context => {
   const { API, datasource, columns } = context
 
   const saveDefinition = async newDefinition => {
-    await API.viewV2.update(convertToSearchFilters(newDefinition))
+    await API.viewV2.update(newDefinition)
   }
 
   const saveRow = async row => {
@@ -138,7 +125,7 @@ export const initialise = context => {
         }
         // Only override filter state if we don't have an initial filter
         if (!get(initialFilter)) {
-          filter.set($definition.queryUI || $definition.query)
+          filter.set($definition.queryUI)
         }
       })
     )
@@ -197,7 +184,7 @@ export const initialise = context => {
         if (JSON.stringify($filter) !== JSON.stringify($view.queryUI)) {
           await datasource.actions.saveDefinition({
             ...$view,
-            query: $filter,
+            queryUI: $filter,
           })
 
           // Refresh data since view definition changed
