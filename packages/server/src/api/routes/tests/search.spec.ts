@@ -164,6 +164,14 @@ describe.each([
     }
   }
 
+  async function assertTableExists(name: string) {
+    expect(await client!.schema.hasTable(name)).toBeTrue()
+  }
+
+  async function assertTableNumRows(name: string, numRows: number) {
+    expect(await client!.from(name).count()).toEqual([{ count: `${numRows}` }])
+  }
+
   describe.each([
     ["table", createTable],
     [
@@ -3526,9 +3534,10 @@ describe.each([
                 },
               })
 
-              expect(await client!.schema.hasTable(table.name)).toBeTrue()
-
               await config.api.row.save(tableOrViewId, { [badString]: "foo" })
+
+              await assertTableExists(table.name)
+              await assertTableNumRows(table.name, 1)
 
               const { rows } = await config.api.row.search(
                 tableOrViewId,
@@ -3537,7 +3546,9 @@ describe.each([
               )
 
               expect(rows).toHaveLength(1)
-              expect(await client!.schema.hasTable(table.name)).toBeTrue()
+
+              await assertTableExists(table.name)
+              await assertTableNumRows(table.name, 1)
             })
 
           it("should not allow SQL injection as a field value", async () => {
@@ -3553,7 +3564,8 @@ describe.each([
               table.name
             )
 
-            expect(await client!.schema.hasTable(table.name)).toBeTrue()
+            await assertTableExists(table.name)
+            await assertTableNumRows(table.name, 1)
 
             await config.api.row.save(tableOrViewId, { foo: "foo" })
 
@@ -3564,7 +3576,8 @@ describe.each([
             )
 
             expect(rows).toBeEmpty()
-            expect(await client!.schema.hasTable(table.name)).toBeTrue()
+            await assertTableExists(table.name)
+            await assertTableNumRows(table.name, 1)
           })
         })
       })
