@@ -8,6 +8,7 @@ import { sdk } from "@budibase/shared-core"
 import { getAccountByTenantId } from "../accounts"
 import { BUILTIN_ROLE_IDS } from "../security/roles"
 import * as context from "../context"
+import { getTenantInfo } from "../tenancy"
 
 // extract from shared-core to make easily accessible from backend-core
 export const isBuilder = sdk.users.isBuilder
@@ -74,11 +75,10 @@ export async function getAccountHolderFromUserIds(
 ): Promise<CloudAccount | undefined> {
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const tenantId = getTenantId()
-    const account = await getAccountByTenantId(tenantId)
-    if (!account) {
-      throw new Error(`Account not found for tenantId=${tenantId}`)
+    const tenantInfo = await getTenantInfo(tenantId)
+    // If there is no TenantInfo, then search the user docs by email address for backwards compatibility
+    if (!tenantInfo) {
     }
-
     const budibaseUserId = account.budibaseUserId
     if (userIds.includes(budibaseUserId)) {
       return account
