@@ -54,9 +54,9 @@
     }
   }
 
-  // We still may need to migrate this even though the backend does it automatically nmow
+  // We still may need to migrate this even though the backend does it automatically now
   // for query definitions. This is because we might be editing saved filter definitions
-  // from old screens, which will still be of type LegacyFilter[]
+  // from old screens, which will still be of type LegacyFilter[].
   const migrateFilters = filters => {
     if (Array.isArray(filters)) {
       return utils.processSearchFilters(filters)
