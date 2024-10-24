@@ -1,12 +1,12 @@
 import { rowEmission, tableEmission } from "./utils"
 import mainEmitter from "./index"
 import env from "../environment"
-import { Table, Row, DocumentType, App } from "@budibase/types"
+import { Table, Row, DocumentType, App, ContextEmitter } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 
 const MAX_AUTOMATIONS_ALLOWED = 5
 
-class AutomationEmitter {
+class AutomationEmitter implements ContextEmitter {
   chainCount: number
   metadata: { automationChainCount: number }
 

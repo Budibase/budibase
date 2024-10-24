@@ -7,6 +7,7 @@ import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTableID } from "../../../integrations/utils"
 import {
+  AutomationEventType,
   Ctx,
   DeleteRow,
   DeleteRowRequest,
@@ -64,15 +65,15 @@ export async function patch(
       ctx.throw(404, "Row not found")
     }
     ctx.status = 200
-    ctx.eventEmitter &&
-      ctx.eventEmitter.emitRow({
-        eventName: `row:update`,
-        appId,
-        row,
-        table,
-        oldRow,
-        user: sdk.users.getUserContextBindings(ctx.user),
-      })
+
+    ctx.eventEmitter?.emitRow({
+      eventName: AutomationEventType.ROW_UPDATE,
+      appId,
+      row,
+      table,
+      oldRow,
+      user: sdk.users.getUserContextBindings(ctx.user),
+    })
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
