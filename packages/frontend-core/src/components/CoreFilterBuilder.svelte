@@ -79,10 +79,12 @@
 
   const context = getContext("context")
 
-  $: fieldOptions = (schemaFields || []).map(field => ({
-    label: field.displayName || field.name,
-    value: field.name,
-  }))
+  $: fieldOptions = (schemaFields || [])
+    .filter(field => !field.calculationType)
+    .map(field => ({
+      label: field.displayName || field.name,
+      value: field.name,
+    }))
 
   const onFieldChange = filter => {
     const previousType = filter.type
