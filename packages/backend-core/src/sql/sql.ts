@@ -1134,8 +1134,8 @@ class InternalBuilder {
           if (this.client === SqlClient.ORACLE) {
             query = query.orderByRaw(`?? ?? nulls ??`, [
               this.convertClobs(composite),
-              direction,
-              nulls,
+              this.knex.raw(direction),
+              this.knex.raw(nulls as string),
             ])
           } else {
             query = query.orderBy(composite, direction, nulls)

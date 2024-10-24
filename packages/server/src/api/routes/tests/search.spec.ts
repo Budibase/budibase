@@ -61,6 +61,7 @@ describe.each([
   const isLucene = name === "lucene"
   const isInMemory = name === "in-memory"
   const isInternal = isSqs || isLucene || isInMemory
+  const isOracle = name === DatabaseName.ORACLE
   const isSql = !isInMemory && !isLucene
   const config = setup.getConfig()
 
@@ -155,24 +156,24 @@ describe.each([
 
   describe.each([
     ["table", createTable],
-    // [
-    //   "view",
-    //   async (schema: TableSchema) => {
-    //     const tableId = await createTable(schema)
-    //     const viewId = await createView(
-    //       tableId,
-    //       Object.keys(schema).reduce<ViewV2Schema>((viewSchema, fieldName) => {
-    //         const field = schema[fieldName]
-    //         viewSchema[fieldName] = {
-    //           visible: field.visible ?? true,
-    //           readonly: false,
-    //         }
-    //         return viewSchema
-    //       }, {})
-    //     )
-    //     return viewId
-    //   },
-    // ],
+    [
+      "view",
+      async (schema: TableSchema) => {
+        const tableId = await createTable(schema)
+        const viewId = await createView(
+          tableId,
+          Object.keys(schema).reduce<ViewV2Schema>((viewSchema, fieldName) => {
+            const field = schema[fieldName]
+            viewSchema[fieldName] = {
+              visible: field.visible ?? true,
+              readonly: false,
+            }
+            return viewSchema
+          }, {})
+        )
+        return viewId
+      },
+    ],
   ])("from %s", (sourceType, createTableOrView) => {
     const isView = sourceType === "view"
 
@@ -3472,54 +3473,69 @@ describe.each([
         })
       })
 
-    describe("SQL injection", () => {
-      const badStrings = [
-        "1; DROP TABLE test;",
-        "1; DELETE FROM test;",
-        "1; UPDATE test SET name = 'foo';",
-        "1; INSERT INTO test (name) VALUES ('foo');",
-        "' OR '1'='1' --",
-        "'; DROP TABLE users; --",
-        "' OR 1=1 --",
-        "' UNION SELECT null, null, null; --",
-        "' AND (SELECT COUNT(*) FROM users) > 0 --",
-        "\"; EXEC xp_cmdshell('dir'); --",
-        "\"' OR 'a'='a",
-        "OR 1=1;",
-        "'; SHUTDOWN --",
-      ]
+    isSql &&
+      describe("SQL injection", () => {
+        const badStrings = [
+          "1; DROP TABLE test;",
+          "1; DELETE FROM test;",
+          "1; UPDATE test SET name = 'foo';",
+          "1; INSERT INTO test (name) VALUES ('foo');",
+          "' OR '1'='1' --",
+          "'; DROP TABLE users; --",
+          "' OR 1=1 --",
+          "' UNION SELECT null, null, null; --",
+          "' AND (SELECT COUNT(*) FROM users) > 0 --",
+          "\"; EXEC xp_cmdshell('dir'); --",
+          "\"' OR 'a'='a",
+          "OR 1=1;",
+          "'; SHUTDOWN --",
+        ]
 
-      describe.only.each(badStrings)("bad string: %s", badString => {
-        it("should not allow SQL injection as a field name", async () => {
-          const tableOrViewId = await createTableOrView({
-            [badString]: {
-              name: badString,
-              type: FieldType.STRING,
-            },
+        describe.each(badStrings)("bad string: %s", badString => {
+          // The SQL that knex generates when you try to use a double quote in a
+          // field name is always invalid and never works, so we skip it for these
+          // tests.
+          const skipFieldNameCheck = isOracle && badString.includes('"')
+
+          !skipFieldNameCheck &&
+            it("should not allow SQL injection as a field name", async () => {
+              const tableOrViewId = await createTableOrView({
+                [badString]: {
+                  name: badString,
+                  type: FieldType.STRING,
+                },
+              })
+
+              await config.api.row.save(tableOrViewId, { [badString]: "foo" })
+
+              const { rows } = await config.api.row.search(
+                tableOrViewId,
+                { query: {} },
+                { status: 200 }
+              )
+
+              expect(rows).toHaveLength(1)
+            })
+
+          it("should not allow SQL injection as a field value", async () => {
+            const tableOrViewId = await createTableOrView({
+              foo: {
+                name: "foo",
+                type: FieldType.STRING,
+              },
+            })
+
+            await config.api.row.save(tableOrViewId, { foo: "foo" })
+
+            const { rows } = await config.api.row.search(
+              tableOrViewId,
+              { query: { equal: { foo: badString } } },
+              { status: 200 }
+            )
+
+            expect(rows).toBeEmpty()
           })
-
-          await config.api.row.search(
-            tableOrViewId,
-            { query: {} },
-            { status: 200 }
-          )
-        })
-
-        it("should not allow SQL injection as a field value", async () => {
-          const tableOrViewId = await createTableOrView({
-            foo: {
-              name: "foo",
-              type: FieldType.STRING,
-            },
-          })
-
-          await config.api.row.search(
-            tableOrViewId,
-            { query: { equal: { foo: badString } } },
-            { status: 200 }
-          )
         })
       })
-    })
   })
 })
