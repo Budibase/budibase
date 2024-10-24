@@ -19,7 +19,8 @@
     "@types/koa": "2.13.4",
     "@types/redlock": "4.0.7",
     "rimraf": "3.0.2",
-    "typescript": "5.5.2"
+    "typescript": "5.5.2",
+    "koa-useragent": "^4.1.0"
   },
   "dependencies": {
     "scim-patch": "^0.8.1"

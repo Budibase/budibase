@@ -27,7 +27,7 @@ export function doInUserContext(user: User, ctx: Ctx, task: any) {
     hostInfo: {
       ipAddress: ctx.request.ip,
       // filled in by koa-useragent package
-      userAgent: ctx.userAgent._agent.source,
+      userAgent: ctx.userAgent.source,
     },
   }
   return doInIdentityContext(userContext, task)

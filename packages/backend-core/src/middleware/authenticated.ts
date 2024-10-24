@@ -1,20 +1,26 @@
 import { Cookie, Header } from "../constants"
 import {
-  getCookie,
   clearCookie,
-  openJwt,
+  getCookie,
   isValidInternalAPIKey,
+  openJwt,
 } from "../utils"
 import { getUser } from "../cache/user"
 import { getSession, updateSessionTTL } from "../security/sessions"
 import { buildMatcherRegex, matches } from "./matchers"
-import { SEPARATOR, queryGlobalView, ViewName } from "../db"
-import { getGlobalDB, doInTenant } from "../context"
+import { queryGlobalView, SEPARATOR, ViewName } from "../db"
+import { doInTenant, getGlobalDB } from "../context"
 import { decrypt } from "../security/encryption"
 import * as identity from "../context/identity"
 import env from "../environment"
-import { Ctx, EndpointMatcher, SessionCookie, User } from "@budibase/types"
-import { InvalidAPIKeyError, ErrorCode } from "../errors"
+import {
+  Ctx,
+  EndpointMatcher,
+  LoginMethod,
+  SessionCookie,
+  User,
+} from "@budibase/types"
+import { ErrorCode, InvalidAPIKeyError } from "../errors"
 import tracer from "dd-trace"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
@@ -26,16 +32,18 @@ interface FinaliseOpts {
   internal?: boolean
   publicEndpoint?: boolean
   version?: string
-  user?: any
+  user?: User | { tenantId: string }
+  loginMethod?: LoginMethod
 }
 
 function timeMinusOneMinute() {
   return new Date(Date.now() - ONE_MINUTE).toISOString()
 }
 
-function finalise(ctx: any, opts: FinaliseOpts = {}) {
+function finalise(ctx: Ctx, opts: FinaliseOpts = {}) {
   ctx.publicEndpoint = opts.publicEndpoint || false
   ctx.isAuthenticated = opts.authenticated || false
+  ctx.loginMethod = opts.loginMethod
   ctx.user = opts.user
   ctx.internal = opts.internal || false
   ctx.version = opts.version
@@ -120,9 +128,10 @@ export default function (
       }
 
       const tenantId = ctx.request.headers[Header.TENANT_ID]
-      let authenticated = false,
-        user = null,
-        internal = false
+      let authenticated: boolean = false,
+        user: User | { tenantId: string } | undefined = undefined,
+        internal: boolean = false,
+        loginMethod: LoginMethod | undefined = undefined
       if (authCookie && !apiKey) {
         const sessionId = authCookie.sessionId
         const userId = authCookie.userId
@@ -146,6 +155,7 @@ export default function (
           }
           // @ts-ignore
           user.csrfToken = session.csrfToken
+          loginMethod = LoginMethod.COOKIE
 
           if (session?.lastAccessedAt < timeMinusOneMinute()) {
             // make sure we denote that the session is still in use
@@ -170,17 +180,16 @@ export default function (
           apiKey,
           populateUser
         )
-        if (valid && foundUser) {
+        if (valid) {
           authenticated = true
+          loginMethod = LoginMethod.API_KEY
           user = foundUser
-        } else if (valid) {
-          authenticated = true
-          internal = true
+          internal = !foundUser
         }
       }
       if (!user && tenantId) {
         user = { tenantId }
-      } else if (user) {
+      } else if (user && "password" in user) {
         delete user.password
       }
       // be explicit
@@ -204,7 +213,14 @@ export default function (
       }
 
       // isAuthenticated is a function, so use a variable to be able to check authed state
-      finalise(ctx, { authenticated, user, internal, version, publicEndpoint })
+      finalise(ctx, {
+        authenticated,
+        user,
+        internal,
+        version,
+        publicEndpoint,
+        loginMethod,
+      })
 
       if (isUser(user)) {
         return identity.doInUserContext(user, ctx, next)

@@ -10,7 +10,7 @@ import {
 import { generateUserMetadataID, isDevAppID } from "../db/utils"
 import { getCachedSelf } from "../utilities/global"
 import env from "../environment"
-import { isWebhookEndpoint } from "./utils"
+import { isWebhookEndpoint, isBrowser, isApiKey } from "./utils"
 import { UserCtx, ContextUser } from "@budibase/types"
 import tracer from "dd-trace"
 
@@ -27,7 +27,7 @@ export default async (ctx: UserCtx, next: any) => {
   }
 
   // deny access to application preview
-  if (!env.isTest()) {
+  if (isBrowser(ctx) && !isApiKey(ctx)) {
     if (
       isDevAppID(requestAppId) &&
       !isWebhookEndpoint(ctx) &&

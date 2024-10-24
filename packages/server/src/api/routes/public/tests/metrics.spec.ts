@@ -1,4 +1,4 @@
-const setup = require("../../tests/utilities")
+import * as setup from "../../tests/utilities"
 
 describe("/metrics", () => {
   let request = setup.getRequest()
