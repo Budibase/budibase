@@ -23,7 +23,7 @@ export function ensureQueryUISet(viewArg: Readonly<ViewV2>): ViewV2 {
       // So despite the type saying that `view.query` is a LegacyFilter[] |
       // SearchFilters, it will never be a SearchFilters when a `view.queryUI`
       // is specified, making it "safe" to throw an error here.
-      throw new HTTPError(`View ${view.name} is missing queryUI field`, 400)
+      throw new HTTPError("view is missing queryUI field", 400)
     }
 
     view.queryUI = utils.processSearchFilters(view.query)
