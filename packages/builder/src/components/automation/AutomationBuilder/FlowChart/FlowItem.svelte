@@ -14,7 +14,6 @@
     Label,
     AbsTooltip,
     InlineAlert,
-    Helpers,
   } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
