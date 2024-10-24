@@ -1,4 +1,4 @@
-import { permissions, roles, utils } from "@budibase/backend-core"
+import { roles, utils } from "@budibase/backend-core"
 import { createHomeScreen } from "../../constants/screens"
 import { EMPTY_LAYOUT } from "../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
@@ -33,6 +33,7 @@ import {
   TableSourceType,
   Webhook,
   WebhookActionType,
+  BuiltinPermissionID,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -515,7 +516,7 @@ export function basicRole(): Role {
   return {
     name: `NewRole_${utils.newid()}`,
     inherits: roles.BUILTIN_ROLE_IDS.BASIC,
-    permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+    permissionId: BuiltinPermissionID.WRITE,
     permissions: {},
     version: "name",
   }

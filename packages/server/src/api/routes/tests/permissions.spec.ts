@@ -1,5 +1,12 @@
 import { roles } from "@budibase/backend-core"
-import { Document, PermissionLevel, Role, Row, Table } from "@budibase/types"
+import {
+  BuiltinPermissionID,
+  Document,
+  PermissionLevel,
+  Role,
+  Row,
+  Table,
+} from "@budibase/types"
 import * as setup from "./utilities"
 import { generator, mocks } from "@budibase/backend-core/tests"
 
@@ -304,7 +311,7 @@ describe("/permission", () => {
       role1 = await config.api.roles.save(
         {
           name: "test_1",
-          permissionId: PermissionLevel.WRITE,
+          permissionId: BuiltinPermissionID.WRITE,
           inherits: BUILTIN_ROLE_IDS.BASIC,
         },
         { status: 200 }
@@ -312,7 +319,7 @@ describe("/permission", () => {
       role2 = await config.api.roles.save(
         {
           name: "test_2",
-          permissionId: PermissionLevel.WRITE,
+          permissionId: BuiltinPermissionID.WRITE,
           inherits: BUILTIN_ROLE_IDS.BASIC,
         },
         { status: 200 }
@@ -345,7 +352,7 @@ describe("/permission", () => {
     it("should be able to fetch two tables, with different roles, using multi-inheritance", async () => {
       const role3 = await config.api.roles.save({
         name: "role3",
-        permissionId: PermissionLevel.WRITE,
+        permissionId: BuiltinPermissionID.WRITE,
         inherits: [role1._id!, role2._id!],
       })
 

@@ -10,12 +10,13 @@
   } from "@budibase/bbui"
   import {
     FieldType,
-    FilterGroupLogicalOperator,
+    UILogicalOperator,
     EmptyFilterOption,
   } from "@budibase/types"
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { getContext, createEventDispatcher } from "svelte"
   import FilterField from "./FilterField.svelte"
+  import { utils } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
   const {
@@ -39,8 +40,7 @@
   export let toReadable
   export let toRuntime
 
-  $: editableFilters = filters ? Helpers.cloneDeep(filters) : null
-
+  $: editableFilters = migrateFilters(filters)
   $: {
     if (
       tables.find(
@@ -52,6 +52,16 @@
     ) {
       schemaFields = [...schemaFields, { name: "_id", type: "string" }]
     }
+  }
+
+  // We still may need to migrate this even though the backend does it automatically now
+  // for query definitions. This is because we might be editing saved filter definitions
+  // from old screens, which will still be of type LegacyFilter[].
+  const migrateFilters = filters => {
+    if (Array.isArray(filters)) {
+      return utils.processSearchFilters(filters)
+    }
+    return Helpers.cloneDeep(filters)
   }
 
   const filterOperatorOptions = Object.values(FilterOperator).map(entry => {
@@ -222,7 +232,7 @@
     } else if (addGroup) {
       if (!editable?.groups?.length) {
         editable = {
-          logicalOperator: FilterGroupLogicalOperator.ALL,
+          logicalOperator: UILogicalOperator.ALL,
           onEmptyFilter: EmptyFilterOption.RETURN_NONE,
           groups: [],
         }

@@ -5,7 +5,6 @@
   import { getUserBindings } from "dataBinding"
   import { makePropSafe } from "@budibase/string-templates"
   import { search } from "@budibase/frontend-core"
-  import { utils } from "@budibase/shared-core"
   import { tables } from "stores/builder"
 
   export let schema
@@ -17,19 +16,16 @@
 
   let drawer
 
-  $: localFilters = utils.processSearchFilters(filters)
-
+  $: localFilters = filters
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
     { allowLinks: true }
   )
-
   $: filterCount =
     localFilters?.groups?.reduce((acc, group) => {
       return (acc += group.filters.filter(filter => filter.field).length)
     }, 0) || 0
-
   $: bindings = [
     {
       type: "context",
@@ -61,7 +57,7 @@
   title="Filtering"
   on:drawerHide
   on:drawerShow={() => {
-    localFilters = utils.processSearchFilters(filters)
+    localFilters = filters
   }}
   forceModal
 >
