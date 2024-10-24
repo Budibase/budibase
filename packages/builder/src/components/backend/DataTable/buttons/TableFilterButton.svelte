@@ -52,7 +52,15 @@
   {filterCount ? `Filter: ${filterCount}` : "Filter"}
 </ActionButton>
 
-<Drawer bind:this={drawer} title="Filtering" on:drawerHide forceModal>
+<Drawer
+  bind:this={drawer}
+  title="Filtering"
+  on:drawerHide
+  on:drawerShow={() => {
+    localFilters = filters
+  }}
+  forceModal
+>
   <Button
     cta
     slot="buttons"
