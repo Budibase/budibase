@@ -30,7 +30,7 @@ import {
 } from "@budibase/types"
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
-import { context, logging } from "@budibase/backend-core"
+import { context, logging, configs } from "@budibase/backend-core"
 import { processObject, processStringSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { performance } from "perf_hooks"
@@ -262,6 +262,13 @@ class Orchestrator {
         })
         this.context.env = await sdkUtils.getEnvironmentVariables()
         this.context.user = this.currentUser
+
+        const { config } = await configs.getSettingsConfigDoc()
+        this.context.settings = {
+          url: config.platformUrl,
+          logo: config.logoUrl,
+          company: config.company,
+        }
 
         let metadata
 
