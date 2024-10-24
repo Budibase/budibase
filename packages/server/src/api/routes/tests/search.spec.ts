@@ -3471,5 +3471,55 @@ describe.each([
           ])
         })
       })
+
+    describe("SQL injection", () => {
+      const badStrings = [
+        "1; DROP TABLE test;",
+        "1; DELETE FROM test;",
+        "1; UPDATE test SET name = 'foo';",
+        "1; INSERT INTO test (name) VALUES ('foo');",
+        "' OR '1'='1' --",
+        "'; DROP TABLE users; --",
+        "' OR 1=1 --",
+        "' UNION SELECT null, null, null; --",
+        "' AND (SELECT COUNT(*) FROM users) > 0 --",
+        "\"; EXEC xp_cmdshell('dir'); --",
+        "\"' OR 'a'='a",
+        "OR 1=1;",
+        "'; SHUTDOWN --",
+      ]
+
+      describe.only.each(badStrings)("bad string: %s", badString => {
+        it("should not allow SQL injection as a field name", async () => {
+          const tableOrViewId = await createTableOrView({
+            [badString]: {
+              name: badString,
+              type: FieldType.STRING,
+            },
+          })
+
+          await config.api.row.search(
+            tableOrViewId,
+            { query: {} },
+            { status: 200 }
+          )
+        })
+
+        it("should not allow SQL injection as a field value", async () => {
+          const tableOrViewId = await createTableOrView({
+            foo: {
+              name: "foo",
+              type: FieldType.STRING,
+            },
+          })
+
+          await config.api.row.search(
+            tableOrViewId,
+            { query: { equal: { foo: badString } } },
+            { status: 200 }
+          )
+        })
+      })
+    })
   })
 })
