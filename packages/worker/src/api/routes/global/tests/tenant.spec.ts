@@ -35,6 +35,7 @@ describe("/api/global/tenant", () => {
           familyName: "Doe",
           budibaseUserId: "USER_ID",
         },
+        accountId: "account_id",
         tenantId: "tenant123",
         hosting: Hosting.CLOUD,
       }
