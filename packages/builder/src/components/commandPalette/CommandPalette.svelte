@@ -23,6 +23,7 @@
   import { themeStore } from "stores/portal"
   import { getContext } from "svelte"
   import { Constants } from "@budibase/frontend-core"
+  import { ThemeOptions } from "@budibase/shared-core"
 
   const modalContext = getContext(Context.Modal)
   const commands = [
@@ -141,13 +142,13 @@
       icon: "ShareAndroid",
       action: () => $goto(`./automation/${automation._id}`),
     })) ?? []),
-    ...Constants.ThemeOptions.map(theme => ({
+    ...ThemeOptions.map(themeMeta => ({
       type: "Change Builder Theme",
-      name: theme.name,
+      name: themeMeta.name,
       icon: "ColorPalette",
       action: () =>
         themeStore.update(state => {
-          state.theme = theme.id
+          state.theme = themeMeta.id
           return state
         }),
     })),

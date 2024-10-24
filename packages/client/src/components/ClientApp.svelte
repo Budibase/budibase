@@ -3,11 +3,8 @@
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
-  import {
-    Constants,
-    CookieUtils,
-    getThemeClassNames,
-  } from "@budibase/frontend-core"
+  import { Constants, CookieUtils } from "@budibase/frontend-core"
+  import { getThemeClassNames } from "@budibase/shared-core"
   import Component from "./Component.svelte"
   import SDK from "sdk"
   import {

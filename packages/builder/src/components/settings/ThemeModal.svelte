@@ -1,12 +1,12 @@
 <script>
   import { ModalContent, Select } from "@budibase/bbui"
   import { themeStore } from "stores/portal"
-  import { Constants } from "@budibase/frontend-core"
+  import { ThemeOptions } from "@budibase/shared-core"
 </script>
 
 <ModalContent title="Theme">
   <Select
-    options={Constants.ThemeOptions}
+    options={ThemeOptions}
     bind:value={$themeStore.theme}
     placeholder={null}
     getOptionLabel={x => x.name}

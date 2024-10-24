@@ -18,13 +18,10 @@
     TooltipPosition,
     TooltipType,
   } from "@budibase/bbui"
-  import { sdk } from "@budibase/shared-core"
+  import { sdk, getThemeClassNames } from "@budibase/shared-core"
   import { API } from "api"
   import ErrorSVG from "./ErrorSVG.svelte"
-  import {
-    ClientAppSkeleton,
-    getThemeClassNames,
-  } from "@budibase/frontend-core"
+  import { ClientAppSkeleton } from "@budibase/frontend-core"
   import { contextMenuStore } from "stores/builder"
 
   $: app = $enrichedApps.find(app => app.appId === $params.appId)
