@@ -36,6 +36,7 @@ components:
       required: true
       description: The ID of the app which this request is targeting.
       schema:
+        default: "{{ appId }}"
         type: string
     appIdUrl:
       in: path
@@ -43,6 +44,7 @@ components:
       required: true
       description: The ID of the app which this request is targeting.
       schema:
+        default: "{{ appId }}"
         type: string
     queryId:
       in: path

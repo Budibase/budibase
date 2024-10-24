@@ -47,6 +47,7 @@
         "required": true,
         "description": "The ID of the app which this request is targeting.",
         "schema": {
+          "default": "{{ appId }}",
           "type": "string"
         }
       },
@@ -56,6 +57,7 @@
         "required": true,
         "description": "The ID of the app which this request is targeting.",
         "schema": {
+          "default": "{{ appId }}",
           "type": "string"
         }
       },
