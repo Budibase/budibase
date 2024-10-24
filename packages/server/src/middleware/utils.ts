@@ -9,8 +9,8 @@ export function isWebhookEndpoint(ctx: UserCtx) {
 }
 
 export function isBrowser(ctx: UserCtx) {
-  const browser = ctx.userAgent.browser
-  return browser !== "unknown"
+  const browser = ctx.userAgent?.browser
+  return browser && browser !== "unknown"
 }
 
 export function isApiKey(ctx: UserCtx) {
