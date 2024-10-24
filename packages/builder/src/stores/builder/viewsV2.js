@@ -1,7 +1,6 @@
 import { writable, derived, get } from "svelte/store"
 import { tables } from "./tables"
 import { API } from "api"
-import { dataFilters } from "@budibase/shared-core"
 
 export function createViewsV2Store() {
   const store = writable({
