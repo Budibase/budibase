@@ -21,7 +21,10 @@
   import { sdk } from "@budibase/shared-core"
   import { API } from "api"
   import ErrorSVG from "./ErrorSVG.svelte"
-  import { getBaseTheme, ClientAppSkeleton } from "@budibase/frontend-core"
+  import {
+    ClientAppSkeleton,
+    getThemeClassNames,
+  } from "@budibase/frontend-core"
   import { contextMenuStore } from "stores/builder"
 
   $: app = $enrichedApps.find(app => app.appId === $params.appId)
@@ -163,9 +166,7 @@
       class:hide={!loading || !app?.features?.skeletonLoader}
       class="loading"
     >
-      <div
-        class={`loadingThemeWrapper ${getBaseTheme(app.theme)} ${app.theme}`}
-      >
+      <div class="loadingThemeWrapper {getThemeClassNames(app.theme)}">
         <ClientAppSkeleton
           noAnimation
           hideDevTools={app?.status === "published"}

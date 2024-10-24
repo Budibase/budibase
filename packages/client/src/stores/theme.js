@@ -1,12 +1,12 @@
 import { derived } from "svelte/store"
 import { appStore } from "./app"
 import { builderStore } from "./builder"
-import { getBaseTheme } from "@budibase/frontend-core"
+import { Constants, ensureValidTheme } from "@budibase/frontend-core"
 
 // This is the good old acorn bug where having the word "g l o b a l" makes it
 // think that this is not ES6 compatible and starts throwing errors when using
 // optional chaining. Piss off acorn.
-const defaultTheme = "spectrum--light"
+const defaultTheme = Constants.Themes.Light
 const defaultCustomTheme = {
   primaryColor: "var(--spectrum-glo" + "bal-color-blue-600)",
   primaryColorHover: "var(--spectrum-glo" + "bal-color-blue-500)",
@@ -27,7 +27,7 @@ const createThemeStore = () => {
       }
 
       // Ensure theme is set
-      theme = theme || defaultTheme
+      theme = ensureValidTheme(theme, defaultTheme)
 
       // Delete and nullish keys from the custom theme
       if (customTheme) {
@@ -52,7 +52,6 @@ const createThemeStore = () => {
 
       return {
         theme,
-        baseTheme: getBaseTheme(theme),
         customTheme,
         customThemeCss,
       }

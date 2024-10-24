@@ -3,7 +3,11 @@
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
-  import { Constants, CookieUtils } from "@budibase/frontend-core"
+  import {
+    Constants,
+    CookieUtils,
+    getThemeClassNames,
+  } from "@budibase/frontend-core"
   import Component from "./Component.svelte"
   import SDK from "sdk"
   import {
@@ -154,7 +158,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
+    class="spectrum spectrum--medium {getThemeClassNames($themeStore.theme)}"
     class:builder={$builderStore.inBuilder}
     class:show={fontsLoaded && dataLoaded}
   >

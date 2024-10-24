@@ -6,10 +6,10 @@
 
 <ModalContent title="Theme">
   <Select
-    options={Constants.Themes}
+    options={Constants.ThemeOptions}
     bind:value={$themeStore.theme}
     placeholder={null}
     getOptionLabel={x => x.name}
-    getOptionValue={x => x.class}
+    getOptionValue={x => x.id}
   />
 </ModalContent>

@@ -108,32 +108,34 @@ export const Roles = {
   CREATOR: "CREATOR",
 }
 
-export const Themes = [
+// Theming
+export const ThemeClassPrefix = "spectrum--"
+export const Themes = {
+  Lightest: "lightest",
+  Light: "light",
+  Dark: "dark",
+  Darkest: "darkest",
+  Nord: "nord",
+  Midnight: "midnight",
+}
+export const ThemeOptions = [
   {
-    class: "lightest",
-    name: "Lightest",
-  },
-  {
-    class: "light",
+    id: Themes.Light,
     name: "Light",
   },
   {
-    class: "dark",
+    id: Themes.Darkest,
     name: "Dark",
   },
   {
-    class: "darkest",
-    name: "Darkest",
-  },
-  {
-    class: "nord",
+    id: Themes.Nord,
     name: "Nord",
-    base: "darkest",
+    base: Themes.Darkest,
   },
   {
-    class: "midnight",
+    id: Themes.Midnight,
     name: "Midnight",
-    base: "darkest",
+    base: Themes.Darkest,
   },
 ]
 

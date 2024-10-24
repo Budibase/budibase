@@ -1,38 +1,36 @@
-import { Constants, createLocalStorageStore } from "@budibase/frontend-core"
+import {
+  Constants,
+  createLocalStorageStore,
+  ensureValidTheme,
+  getThemeClassNames,
+} from "@budibase/frontend-core"
+import { derived } from "svelte/store"
 
 export const getThemeStore = () => {
+  const defaultBuilderTheme = Constants.Themes.Darkest
   const themeElement = document.documentElement
-
   const initialValue = {
-    theme: "darkest",
+    theme: defaultBuilderTheme,
   }
   const store = createLocalStorageStore("bb-theme", initialValue)
+  const derivedStore = derived(store, $store => ({
+    ...$store,
+    theme: ensureValidTheme($store.theme, defaultBuilderTheme),
+  }))
 
   // Update theme class when store changes
-  store.subscribe(state => {
-    // Handle any old local storage values - this can be removed after the update
-    if (state.darkMode !== undefined) {
-      store.set(initialValue)
-      return
-    }
-
-    // Update global class names to use the new theme and remove others
-    Constants.Themes.forEach(option => {
-      themeElement.classList.toggle(
-        `spectrum--${option.class}`,
-        option.class === state.theme
-      )
+  derivedStore.subscribe(({ theme }) => {
+    const classNames = getThemeClassNames(theme).split(" ")
+    Constants.ThemeOptions.forEach(option => {
+      const className = `${Constants.ThemeClassPrefix}${option.id}`
+      themeElement.classList.toggle(className, classNames.includes(className))
     })
-
-    // Add base theme if required
-    const selectedTheme = Constants.Themes.find(x => x.class === state.theme)
-    if (selectedTheme?.base) {
-      themeElement.classList.add(`spectrum--${selectedTheme.base}`)
-    }
   })
 
-  return store
+  return {
+    ...store,
+    subscribe: derivedStore.subscribe,
+  }
 }
 
-// ?? confusion
 export const themeStore = getThemeStore()
