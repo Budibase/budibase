@@ -145,7 +145,7 @@
             <div style="margin-left: 10px;" on:click={() => {}}>
               <Icon
                 hoverable
-                name={showLooping ? "ChevronDown" : "ChevronUp"}
+                name={showLooping ? "ChevronDown" : "ChevronRight"}
               />
             </div>
           </div>
