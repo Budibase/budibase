@@ -1,7 +1,12 @@
 <script>
-  import { onDestroy, tick } from "svelte"
   import { writable } from "svelte/store"
-  import { setContext, onMount, createEventDispatcher } from "svelte"
+  import {
+    setContext,
+    onMount,
+    createEventDispatcher,
+    onDestroy,
+    tick,
+  } from "svelte"
   import { Utils } from "@budibase/frontend-core"
   import { selectedAutomation, automationStore } from "stores/builder"
 
@@ -72,7 +77,6 @@
     dragging: false,
     moveStep: null,
     dragSpot: null,
-    dragging: false,
     scale: 1,
     dropzones: {},
     //focus - node to center on?
@@ -220,7 +224,7 @@
     }
   }
 
-  const onViewDragEnd = e => {
+  const onViewDragEnd = () => {
     down = false
     dragOffset = []
   }
@@ -356,7 +360,7 @@
   on:mousemove={Utils.domDebounce(onMouseMove)}
 >
   <div
-    class="view"
+    class="draggable-view"
     bind:this={viewPort}
     on:wheel={Utils.domDebounce(onViewScroll)}
     on:mousemove={Utils.domDebounce(onViewMouseMove)}
@@ -390,7 +394,6 @@
             dragging: false,
             moveStep: null,
             dragSpot: null,
-            dragging: false,
             dropzones: {},
           }))
         }}
@@ -406,7 +409,7 @@
     width: 100%;
     height: 100%;
   }
-  .view {
+  .draggable-view {
     width: 100%;
     height: 100%;
     overflow: hidden;

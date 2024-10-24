@@ -991,10 +991,6 @@
     white-space: unset;
   }
 
-  .field-width {
-    width: 320px;
-  }
-
   .step-fields {
     display: flex;
     flex-direction: column;
