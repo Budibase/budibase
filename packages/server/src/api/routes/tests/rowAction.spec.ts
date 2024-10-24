@@ -1,7 +1,11 @@
 import _ from "lodash"
 import tk from "timekeeper"
 
-import { context, roles } from "@budibase/backend-core"
+import {
+  context,
+  DEFAULT_BB_DATASOURCE_ID,
+  roles,
+} from "@budibase/backend-core"
 import { automations } from "@budibase/pro"
 import {
   CreateRowActionRequest,
@@ -967,6 +971,17 @@ describe("/rowsActions", () => {
     })
 
     it.each([
+      [
+        "internal",
+        async () => {
+          await config.api.application.addSampleData(config.getAppId())
+          const tables = await config.api.table.fetch()
+          const table = tables.find(
+            t => t.sourceId === DEFAULT_BB_DATASOURCE_ID
+          )!
+          return table
+        },
+      ],
       [
         "external",
         async () => {
