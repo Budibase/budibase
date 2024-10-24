@@ -7,6 +7,7 @@ import {
 import {
   context,
   db as dbCore,
+  docIds,
   features,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
@@ -130,14 +131,14 @@ describe.each([
     }
   })
 
-  async function createTable(schema: TableSchema) {
+  async function createTable(schema?: TableSchema) {
     const table = await config.api.table.save(
       tableForDatasource(datasource, { schema })
     )
     return table._id!
   }
 
-  async function createView(tableId: string, schema: ViewV2Schema) {
+  async function createView(tableId: string, schema?: ViewV2Schema) {
     const view = await config.api.viewV2.create({
       tableId: tableId,
       name: generator.guid(),
@@ -154,22 +155,34 @@ describe.each([
     rows = await config.api.row.fetch(tableOrViewId)
   }
 
+  async function getTable(tableOrViewId: string): Promise<Table> {
+    if (docIds.isViewId(tableOrViewId)) {
+      const view = await config.api.viewV2.get(tableOrViewId)
+      return await config.api.table.get(view.tableId)
+    } else {
+      return await config.api.table.get(tableOrViewId)
+    }
+  }
+
   describe.each([
     ["table", createTable],
     [
       "view",
-      async (schema: TableSchema) => {
+      async (schema?: TableSchema) => {
         const tableId = await createTable(schema)
         const viewId = await createView(
           tableId,
-          Object.keys(schema).reduce<ViewV2Schema>((viewSchema, fieldName) => {
-            const field = schema[fieldName]
-            viewSchema[fieldName] = {
-              visible: field.visible ?? true,
-              readonly: false,
-            }
-            return viewSchema
-          }, {})
+          Object.keys(schema || {}).reduce<ViewV2Schema>(
+            (viewSchema, fieldName) => {
+              const field = schema![fieldName]
+              viewSchema[fieldName] = {
+                visible: field.visible ?? true,
+                readonly: false,
+              }
+              return viewSchema
+            },
+            {}
+          )
         )
         return viewId
       },
@@ -3476,35 +3489,44 @@ describe.each([
     isSql &&
       describe("SQL injection", () => {
         const badStrings = [
-          "1; DROP TABLE test;",
-          "1; DELETE FROM test;",
-          "1; UPDATE test SET name = 'foo';",
-          "1; INSERT INTO test (name) VALUES ('foo');",
+          "1; DROP TABLE %table_name%;",
+          "1; DELETE FROM %table_name%;",
+          "1; UPDATE %table_name% SET name = 'foo';",
+          "1; INSERT INTO %table_name% (name) VALUES ('foo');",
           "' OR '1'='1' --",
-          "'; DROP TABLE users; --",
+          "'; DROP TABLE %table_name%; --",
           "' OR 1=1 --",
           "' UNION SELECT null, null, null; --",
-          "' AND (SELECT COUNT(*) FROM users) > 0 --",
+          "' AND (SELECT COUNT(*) FROM %table_name%) > 0 --",
           "\"; EXEC xp_cmdshell('dir'); --",
           "\"' OR 'a'='a",
           "OR 1=1;",
           "'; SHUTDOWN --",
         ]
 
-        describe.each(badStrings)("bad string: %s", badString => {
+        describe.each(badStrings)("bad string: %s", badStringTemplate => {
           // The SQL that knex generates when you try to use a double quote in a
           // field name is always invalid and never works, so we skip it for these
           // tests.
-          const skipFieldNameCheck = isOracle && badString.includes('"')
+          const skipFieldNameCheck = isOracle && badStringTemplate.includes('"')
 
           !skipFieldNameCheck &&
             it("should not allow SQL injection as a field name", async () => {
-              const tableOrViewId = await createTableOrView({
-                [badString]: {
-                  name: badString,
-                  type: FieldType.STRING,
+              const tableOrViewId = await createTableOrView()
+              const table = await getTable(tableOrViewId)
+              const badString = badStringTemplate.replace(
+                /%table_name%/g,
+                table.name
+              )
+
+              await config.api.table.save({
+                ...table,
+                schema: {
+                  [badString]: { name: badString, type: FieldType.STRING },
                 },
               })
+
+              expect(await client!.schema.hasTable(table.name)).toBeTrue()
 
               await config.api.row.save(tableOrViewId, { [badString]: "foo" })
 
@@ -3515,6 +3537,7 @@ describe.each([
               )
 
               expect(rows).toHaveLength(1)
+              expect(await client!.schema.hasTable(table.name)).toBeTrue()
             })
 
           it("should not allow SQL injection as a field value", async () => {
@@ -3524,6 +3547,13 @@ describe.each([
                 type: FieldType.STRING,
               },
             })
+            const table = await getTable(tableOrViewId)
+            const badString = badStringTemplate.replace(
+              /%table_name%/g,
+              table.name
+            )
+
+            expect(await client!.schema.hasTable(table.name)).toBeTrue()
 
             await config.api.row.save(tableOrViewId, { foo: "foo" })
 
@@ -3534,6 +3564,7 @@ describe.each([
             )
 
             expect(rows).toBeEmpty()
+            expect(await client!.schema.hasTable(table.name)).toBeTrue()
           })
         })
       })
