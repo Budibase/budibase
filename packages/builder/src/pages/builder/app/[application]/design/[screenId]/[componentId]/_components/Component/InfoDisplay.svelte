@@ -57,13 +57,7 @@
   }
   .title,
   .icon {
-    color: var(--spectrum-global-color-gray-600);
-  }
-  .info {
-    background-color: var(--background-alt);
-    padding: var(--spacing-m) var(--spacing-l) var(--spacing-m) var(--spacing-l);
-    border-radius: var(--border-radius-s);
-    font-size: 13px;
+    color: var(--spectrum-global-color-gray-700);
   }
   .quiet {
     background: none;
