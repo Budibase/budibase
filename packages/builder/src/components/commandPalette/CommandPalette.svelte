@@ -141,13 +141,13 @@
       icon: "ShareAndroid",
       action: () => $goto(`./automation/${automation._id}`),
     })) ?? []),
-    ...Constants.Themes.map(theme => ({
+    ...Constants.ThemeOptions.map(theme => ({
       type: "Change Builder Theme",
       name: theme.name,
       icon: "ColorPalette",
       action: () =>
         themeStore.update(state => {
-          state.theme = theme.class
+          state.theme = theme.id
           return state
         }),
     })),
