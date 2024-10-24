@@ -31,7 +31,11 @@ import {
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
 import { context, logging } from "@budibase/backend-core"
-import { processObject, processStringSync } from "@budibase/string-templates"
+import {
+  findHBSBlocks,
+  processObject,
+  processStringSync,
+} from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
@@ -312,7 +316,10 @@ class Orchestrator {
     )
   }
 
-  private async executeSteps(steps: AutomationStep[]): Promise<void> {
+  private async executeSteps(
+    steps: AutomationStep[],
+    pathIdx?: number
+  ): Promise<void> {
     return tracer.trace(
       "Orchestrator.executeSteps",
       { resource: "automation" },
@@ -328,10 +335,17 @@ class Orchestrator {
               while (stepIndex < steps.length) {
                 const step = steps[stepIndex]
                 if (step.stepId === AutomationActionStepId.BRANCH) {
-                  await this.executeBranchStep(step)
+                  // stepIndex for current step context offset
+                  // pathIdx relating to the full list of steps in the run
+                  await this.executeBranchStep(step, stepIndex + (pathIdx || 0))
                   stepIndex++
                 } else if (step.stepId === AutomationActionStepId.LOOP) {
-                  stepIndex = await this.executeLoopStep(step, steps, stepIndex)
+                  stepIndex = await this.executeLoopStep(
+                    step,
+                    steps,
+                    stepIndex,
+                    pathIdx
+                  )
                 } else {
                   if (!this.stopped) {
                     await this.executeStep(step)
@@ -354,11 +368,14 @@ class Orchestrator {
   private async executeLoopStep(
     loopStep: LoopStep,
     steps: AutomationStep[],
-    currentIndex: number
+    stepIdx: number,
+    pathIdx?: number
   ): Promise<number> {
     await processObject(loopStep.inputs, this.context)
     const iterations = getLoopIterations(loopStep)
-    let stepToLoopIndex = currentIndex + 1
+    let stepToLoopIndex = stepIdx + 1
+    let pathStepIdx = (pathIdx || stepIdx) + 1
+
     let iterationCount = 0
     let shouldCleanup = true
 
@@ -369,7 +386,7 @@ class Orchestrator {
         )
       } catch (err) {
         this.updateContextAndOutput(
-          stepToLoopIndex,
+          pathStepIdx,
           steps[stepToLoopIndex],
           {},
           {
@@ -389,7 +406,7 @@ class Orchestrator {
         (loopStep.inputs.iterations && loopStepIndex === maxIterations)
       ) {
         this.updateContextAndOutput(
-          stepToLoopIndex,
+          pathStepIdx,
           steps[stepToLoopIndex],
           {
             items: this.loopStepOutputs,
@@ -416,7 +433,7 @@ class Orchestrator {
 
       if (isFailure) {
         this.updateContextAndOutput(
-          loopStepIndex,
+          pathStepIdx,
           steps[stepToLoopIndex],
           {
             items: this.loopStepOutputs,
@@ -431,11 +448,11 @@ class Orchestrator {
         break
       }
 
-      this.context.steps[currentIndex + 1] = {
+      this.context.steps[pathStepIdx] = {
         currentItem: this.getCurrentLoopItem(loopStep, loopStepIndex),
       }
 
-      stepToLoopIndex = currentIndex + 1
+      stepToLoopIndex = stepIdx + 1
 
       await this.executeStep(steps[stepToLoopIndex], stepToLoopIndex)
       iterationCount++
@@ -455,7 +472,7 @@ class Orchestrator {
             }
 
       // Loop Step clean up
-      this.executionOutput.steps.splice(currentIndex + 1, 0, {
+      this.executionOutput.steps.splice(pathStepIdx, 0, {
         id: steps[stepToLoopIndex].id,
         stepId: steps[stepToLoopIndex].stepId,
         outputs: tempOutput,
@@ -475,7 +492,10 @@ class Orchestrator {
 
     return stepToLoopIndex + 1
   }
-  private async executeBranchStep(branchStep: BranchStep): Promise<void> {
+  private async executeBranchStep(
+    branchStep: BranchStep,
+    pathIdx?: number
+  ): Promise<void> {
     const { branches, children } = branchStep.inputs
 
     for (const branch of branches) {
@@ -483,6 +503,7 @@ class Orchestrator {
       if (condition) {
         const branchStatus = {
           status: `${branch.name} branch taken`,
+          branchId: `${branch.id}`,
           success: true,
         }
 
@@ -494,8 +515,9 @@ class Orchestrator {
         )
         this.context.steps[this.context.steps.length] = branchStatus
 
-        const branchSteps = children?.[branch.name] || []
-        await this.executeSteps(branchSteps)
+        const branchSteps = children?.[branch.id] || []
+        // A final +1 to accomodate the branch step itself
+        await this.executeSteps(branchSteps, (pathIdx || 0) + 1)
         return
       }
     }
@@ -521,13 +543,21 @@ class Orchestrator {
       conditions,
       filter => {
         Object.entries(filter).forEach(([_, value]) => {
-          Object.entries(value).forEach(([field, _]) => {
-            const updatedField = field.replace("{{", "{{ literal ")
+          Object.entries(value).forEach(([field, val]) => {
             const fromContext = processStringSync(
-              updatedField,
+              field,
               this.processContext(this.context)
             )
             toFilter[field] = fromContext
+
+            if (typeof val === "string" && findHBSBlocks(val).length > 0) {
+              const processedVal = processStringSync(
+                val,
+                this.processContext(this.context)
+              )
+
+              value[field] = processedVal
+            }
           })
         })
         return filter

@@ -13,10 +13,8 @@
   import { admin, licensing } from "stores/portal"
   import { externalActions } from "./ExternalActions"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
-  import { checkForCollectStep } from "helpers/utils"
 
-  export let blockIdx
-  export let lastStep
+  export let block
   export let modal
 
   let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
@@ -29,7 +27,18 @@
     ActionStepID.TRIGGER_AUTOMATION_RUN,
   ]
 
-  $: collectBlockExists = checkForCollectStep($selectedAutomation)
+  $: blockRef = $selectedAutomation.blockRefs?.[block.id]
+  $: lastStep = blockRef?.terminating
+  $: pathSteps = block.id
+    ? automationStore.actions.getPathSteps(
+        blockRef.pathTo,
+        $selectedAutomation?.data
+      )
+    : []
+
+  $: collectBlockExists = pathSteps?.some(
+    step => step.stepId === ActionStepID.COLLECT
+  )
 
   const disabled = () => {
     return {
@@ -75,7 +84,7 @@
     // Filter out Collect block if not App Action or Webhook
     if (
       !collectBlockAllowedSteps.includes(
-        $selectedAutomation.definition.trigger.stepId
+        $selectedAutomation.data.definition.trigger.stepId
       )
     ) {
       delete acc.COLLECT
@@ -100,9 +109,14 @@
         action.stepId,
         action
       )
-      await automationStore.actions.addBlockToAutomation(newBlock, blockIdx + 1)
+
+      await automationStore.actions.addBlockToAutomation(
+        newBlock,
+        blockRef ? blockRef.pathTo : block.pathTo
+      )
       modal.hide()
     } catch (error) {
+      console.error(error)
       notifications.error("Error saving automation")
     }
   }
