@@ -22,7 +22,6 @@
   } from "stores/builder"
   import { themeStore } from "stores/portal"
   import { getContext } from "svelte"
-  import { Constants } from "@budibase/frontend-core"
   import { ThemeOptions } from "@budibase/shared-core"
 
   const modalContext = getContext(Context.Modal)
