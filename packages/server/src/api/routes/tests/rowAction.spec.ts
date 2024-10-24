@@ -974,6 +974,7 @@ describe("/rowsActions", () => {
       [
         "internal",
         async () => {
+          await config.newTenant()
           await config.api.application.addSampleData(config.getAppId())
           const tables = await config.api.table.fetch()
           const table = tables.find(
@@ -985,6 +986,7 @@ describe("/rowsActions", () => {
       [
         "external",
         async () => {
+          await config.newTenant()
           const ds = await config.createDatasource({
             datasource: await getDatasource(DatabaseName.POSTGRES),
           })
