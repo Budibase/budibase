@@ -1,5 +1,4 @@
 import { get } from "svelte/store"
-import { dataFilters } from "@budibase/shared-core"
 
 const SuppressErrors = true
 
