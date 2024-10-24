@@ -2,12 +2,10 @@ import env from "../environment"
 import { context } from "@budibase/backend-core"
 import { generateMetadataID } from "../db/utils"
 import { Document } from "@budibase/types"
-import stream from "stream"
 import dayjs from "dayjs"
 import customParseFormat from "dayjs/plugin/customParseFormat"
 
 dayjs.extend(customParseFormat)
-const Readable = stream.Readable
 
 export function wait(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -121,15 +119,6 @@ export function escapeDangerousCharacters(string: string) {
     .replace(/[\n]/g, "\\n")
     .replace(/[\r]/g, "\\r")
     .replace(/[\t]/g, "\\t")
-}
-
-export function stringToReadStream(string: string) {
-  return new Readable({
-    read() {
-      this.push(string)
-      this.push(null)
-    },
-  })
 }
 
 export function formatBytes(bytes: string) {

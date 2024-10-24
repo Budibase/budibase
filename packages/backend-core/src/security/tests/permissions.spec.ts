@@ -1,6 +1,7 @@
 import cloneDeep from "lodash/cloneDeep"
 import * as permissions from "../permissions"
 import { BUILTIN_ROLE_IDS } from "../roles"
+import { BuiltinPermissionID } from "@budibase/types"
 
 describe("levelToNumber", () => {
   it("should return 0 for EXECUTE", () => {
@@ -77,7 +78,7 @@ describe("doesHaveBasePermission", () => {
     const rolesHierarchy = [
       {
         roleId: BUILTIN_ROLE_IDS.ADMIN,
-        permissionId: permissions.BuiltinPermissionID.ADMIN,
+        permissionId: BuiltinPermissionID.ADMIN,
       },
     ]
     expect(
@@ -91,7 +92,7 @@ describe("doesHaveBasePermission", () => {
     const rolesHierarchy = [
       {
         roleId: BUILTIN_ROLE_IDS.PUBLIC,
-        permissionId: permissions.BuiltinPermissionID.PUBLIC,
+        permissionId: BuiltinPermissionID.PUBLIC,
       },
     ]
     expect(
@@ -129,7 +130,7 @@ describe("getBuiltinPermissions", () => {
 describe("getBuiltinPermissionByID", () => {
   it("returns correct permission object for valid ID", () => {
     const expectedPermission = {
-      _id: permissions.BuiltinPermissionID.PUBLIC,
+      _id: BuiltinPermissionID.PUBLIC,
       name: "Public",
       permissions: [
         new permissions.Permission(

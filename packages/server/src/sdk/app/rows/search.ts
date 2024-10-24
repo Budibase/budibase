@@ -6,6 +6,7 @@ import {
   Row,
   RowSearchParams,
   SearchFilterKey,
+  SearchFilters,
   SearchResponse,
   SortOrder,
   Table,
@@ -90,17 +91,18 @@ export async function search(
     options = searchInputMapping(table, options)
 
     if (options.viewId) {
-      // Delete extraneous search params that cannot be overridden
-      delete options.query.onEmptyFilter
-
       const view = source as ViewV2
+
       // Enrich saved query with ephemeral query params.
       // We prevent searching on any fields that are saved as part of the query, as
       // that could let users find rows they should not be allowed to access.
-      let viewQuery = await enrichSearchContext(view.query || {}, context)
-      viewQuery = dataFilters.buildQueryLegacy(viewQuery) || {}
+      let viewQuery = (await enrichSearchContext(view.query || {}, context)) as
+        | SearchFilters
+        | LegacyFilter[]
+      if (Array.isArray(viewQuery)) {
+        viewQuery = dataFilters.buildQuery(viewQuery)
+      }
       viewQuery = checkFilters(table, viewQuery)
-      delete viewQuery?.onEmptyFilter
 
       const sqsEnabled = await features.flags.isEnabled(FeatureFlag.SQS)
       const supportsLogicalOperators =
@@ -113,13 +115,12 @@ export async function search(
           ? view.query
           : []
 
-        delete options.query.onEmptyFilter
+        const { filters } = dataFilters.splitFiltersArray(queryFilters)
 
         // Extract existing fields
-        const existingFields =
-          queryFilters
-            ?.filter(filter => filter.field)
-            .map(filter => db.removeKeyNumbering(filter.field)) || []
+        const existingFields = filters.map(filter =>
+          db.removeKeyNumbering(filter.field)
+        )
 
         // Carry over filters for unused fields
         Object.keys(options.query).forEach(key => {

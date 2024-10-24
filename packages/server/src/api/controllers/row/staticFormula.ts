@@ -1,6 +1,7 @@
 import { getRowParams } from "../../../db/utils"
 import {
   outputProcessing,
+  processAIColumns,
   processFormulas,
 } from "../../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
@@ -9,6 +10,7 @@ import * as linkRows from "../../../db/linkedRows"
 import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
 import sdk from "../../../sdk"
+import * as pro from "@budibase/pro"
 
 /**
  * This function runs through a list of enriched rows, looks at the rows which
@@ -102,7 +104,7 @@ export async function updateAllFormulasInTable(table: Table) {
       (enriched: Row) => enriched._id === row._id
     )
     if (enrichedRow) {
-      const processed = await processFormulas(table, cloneDeep(row), {
+      let processed = await processFormulas(table, cloneDeep(row), {
         dynamic: false,
         contextRows: [enrichedRow],
       })
@@ -142,12 +144,27 @@ export async function finaliseRow(
     dynamic: false,
     contextRows: [enrichedRow],
   })
+  const aiEnabled =
+    (await pro.features.isBudibaseAIEnabled()) ||
+    (await pro.features.isAICustomConfigsEnabled())
+  if (aiEnabled) {
+    row = await processAIColumns(table, row, {
+      contextRows: [enrichedRow],
+    })
+  }
+
   const response = await db.put(row)
   // for response, calculate the formulas for the enriched row
   enrichedRow._rev = response.rev
   enrichedRow = await processFormulas(table, enrichedRow, {
     dynamic: false,
   })
+  if (aiEnabled) {
+    enrichedRow = await processAIColumns(table, row, {
+      contextRows: [enrichedRow],
+    })
+  }
+
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
     await updateRelatedFormula(table, enrichedRow)

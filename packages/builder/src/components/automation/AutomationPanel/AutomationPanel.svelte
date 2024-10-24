@@ -3,12 +3,20 @@
   import { Modal, notifications, Layout } from "@budibase/bbui"
   import NavHeader from "components/common/NavHeader.svelte"
   import { onMount } from "svelte"
-  import { automationStore } from "stores/builder"
+  import { automationStore, tables } from "stores/builder"
   import AutomationNavItem from "./AutomationNavItem.svelte"
+  import { TriggerStepID } from "constants/backend/automations"
 
   export let modal
   export let webhookModal
   let searchString
+
+  const dsTriggers = [
+    TriggerStepID.ROW_SAVED,
+    TriggerStepID.ROW_UPDATED,
+    TriggerStepID.ROW_DELETED,
+    TriggerStepID.ROW_ACTION,
+  ]
 
   $: filteredAutomations = $automationStore.automations
     .filter(automation => {
@@ -17,30 +25,52 @@
         automation.name.toLowerCase().includes(searchString.toLowerCase())
       )
     })
-    .map(automation => ({
-      ...automation,
-      displayName:
-        $automationStore.automationDisplayData[automation._id]?.displayName ||
-        automation.name,
-    }))
     .sort((a, b) => {
-      const lowerA = a.displayName.toLowerCase()
-      const lowerB = b.displayName.toLowerCase()
+      const lowerA = a.name.toLowerCase()
+      const lowerB = b.name.toLowerCase()
       return lowerA > lowerB ? 1 : -1
     })
 
-  $: groupedAutomations = filteredAutomations.reduce((acc, auto) => {
-    const catName = auto.definition?.trigger?.event || "No Trigger"
-    acc[catName] ??= {
-      icon: auto.definition?.trigger?.icon || "AlertCircle",
-      name: (auto.definition?.trigger?.name || "No Trigger").toUpperCase(),
-      entries: [],
-    }
-    acc[catName].entries.push(auto)
-    return acc
-  }, {})
+  $: groupedAutomations = groupAutomations(filteredAutomations)
 
   $: showNoResults = searchString && !filteredAutomations.length
+
+  const groupAutomations = automations => {
+    let groups = {}
+
+    for (let auto of automations) {
+      let category = null
+      let dataTrigger = false
+
+      // Group by datasource if possible
+      if (dsTriggers.includes(auto.definition?.trigger?.stepId)) {
+        if (auto.definition.trigger.inputs?.tableId) {
+          const tableId = auto.definition.trigger.inputs?.tableId
+          category = $tables.list.find(x => x._id === tableId)?.name
+        }
+      }
+      // Otherwise group by trigger
+      if (!category) {
+        category = auto.definition?.trigger?.name || "No Trigger"
+      } else {
+        dataTrigger = true
+      }
+      groups[category] ??= {
+        icon: auto.definition?.trigger?.icon || "AlertCircle",
+        name: category.toUpperCase(),
+        entries: [],
+        dataTrigger,
+      }
+      groups[category].entries.push(auto)
+    }
+
+    return Object.values(groups).sort((a, b) => {
+      if (a.dataTrigger === b.dataTrigger) {
+        return a.name < b.name ? -1 : 1
+      }
+      return a.dataTrigger ? -1 : 1
+    })
+  }
 
   onMount(async () => {
     try {
@@ -88,16 +118,22 @@
 
 <style>
   .nav-group {
-    padding-top: var(--spacing-l);
+    padding-top: 24px;
+  }
+  .nav-group:first-child {
+    padding-top: var(--spacing-s);
   }
   .nav-group-header {
     color: var(--spectrum-global-color-gray-600);
     padding: 0px calc(var(--spacing-l) + 4px);
-    padding-bottom: var(--spacing-l);
+    padding-bottom: var(--spacing-m);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-size: 12px;
+    font-weight: 600;
   }
+
   .side-bar {
     flex: 0 0 260px;
     display: flex;

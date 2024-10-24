@@ -27,7 +27,7 @@
 
   const onClick = () => {
     if (actionMenu && !noClose) {
-      actionMenu.hide()
+      actionMenu.hideAll()
     }
     dispatch("click")
   }
@@ -35,7 +35,7 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <li
-  on:click|preventDefault={disabled ? null : onClick}
+  on:click={disabled ? null : onClick}
   class="spectrum-Menu-item"
   class:is-disabled={disabled}
   role="menuitem"
@@ -47,8 +47,9 @@
     </div>
   {/if}
   <span class="spectrum-Menu-itemLabel"><slot /></span>
-  {#if keys?.length}
+  {#if keys?.length || $$slots.right}
     <div class="keys">
+      <slot name="right" />
       {#each keys as key}
         <div class="key">
           {#if key.startsWith("!")}

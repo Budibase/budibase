@@ -267,6 +267,8 @@ export async function destroy(ctx: UserCtx) {
   const datasource = await sdk.datasources.get(datasourceId)
   // Delete all queries for the datasource
 
+  await sdk.rowActions.deleteAllForDatasource(datasourceId)
+
   if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
     await destroyInternalTablesBySourceId(datasourceId)
   } else {

@@ -26,14 +26,9 @@ export const buildAutomationEndpoints = API => ({
   /**
    * Gets a list of all automations.
    */
-  getAutomations: async ({ enrich }) => {
-    const params = new URLSearchParams()
-    if (enrich) {
-      params.set("enrich", true)
-    }
-
+  getAutomations: async () => {
     return await API.get({
-      url: `/api/automations?${params.toString()}`,
+      url: "/api/automations",
     })
   },
 

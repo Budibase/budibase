@@ -1,6 +1,6 @@
 import { structures, TestConfiguration } from "../../../../tests"
-import { context, db, permissions, roles } from "@budibase/backend-core"
-import { App, Database } from "@budibase/types"
+import { context, db, roles } from "@budibase/backend-core"
+import { App, Database, BuiltinPermissionID } from "@budibase/types"
 
 jest.mock("@budibase/backend-core", () => {
   const core = jest.requireActual("@budibase/backend-core")
@@ -44,7 +44,7 @@ describe("/api/global/roles", () => {
   const role = new roles.Role(
     db.generateRoleID(ROLE_NAME),
     ROLE_NAME,
-    permissions.BuiltinPermissionID.READ_ONLY,
+    BuiltinPermissionID.READ_ONLY,
     { displayName: roles.BUILTIN_ROLE_IDS.BASIC }
   )
 

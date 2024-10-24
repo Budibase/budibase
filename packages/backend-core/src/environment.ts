@@ -223,6 +223,8 @@ const environment = {
   BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  MIN_VERSION_WITHOUT_POWER_ROLE:
+    process.env.MIN_VERSION_WITHOUT_POWER_ROLE || "3.0.0",
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {

@@ -1,5 +1,5 @@
 import { sample } from "lodash/fp"
-import { Automation, AutomationTriggerStepId } from "@budibase/types"
+import { Automation } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import automationSdk from "../"
@@ -23,25 +23,6 @@ describe("automation sdk", () => {
         const update = { ...response, name: newName }
         const result = await automationSdk.update(update)
         expect(result.name).toEqual(newName)
-      })
-    })
-
-    it("cannot rename row action automations", async () => {
-      await config.doInContext(config.getAppId(), async () => {
-        const automation = structures.newAutomation({
-          trigger: {
-            ...structures.automationTrigger(),
-            stepId: AutomationTriggerStepId.ROW_ACTION,
-          },
-        })
-
-        const response = await automationSdk.create(automation)
-
-        const newName = generator.guid()
-        const update = { ...response, name: newName }
-        await expect(automationSdk.update(update)).rejects.toThrow(
-          "Row actions cannot be renamed"
-        )
       })
     })
 

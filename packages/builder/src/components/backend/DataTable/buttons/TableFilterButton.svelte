@@ -16,15 +16,16 @@
 
   let drawer
 
-  $: tempValue = filters || []
+  $: localFilters = filters
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
     { allowLinks: true }
   )
-
-  $: text = getText(filters)
-  $: selected = tempValue.filter(x => !x.onEmptyFilter)?.length > 0
+  $: filterCount =
+    localFilters?.groups?.reduce((acc, group) => {
+      return (acc += group.filters.filter(filter => filter.field).length)
+    }, 0) || 0
   $: bindings = [
     {
       type: "context",
@@ -38,28 +39,33 @@
     },
     ...getUserBindings(),
   ]
-  const getText = filters => {
-    const count = filters?.filter(filter => filter.field)?.length
-    return count ? `Filter (${count})` : "Filter"
-  }
 </script>
 
-<ActionButton icon="Filter" quiet {disabled} on:click={drawer.show} {selected}>
-  {text}
+<ActionButton
+  icon="Filter"
+  quiet
+  {disabled}
+  on:click={drawer.show}
+  selected={filterCount > 0}
+  accentColor="#004EA6"
+>
+  {filterCount ? `Filter: ${filterCount}` : "Filter"}
 </ActionButton>
 
 <Drawer
   bind:this={drawer}
   title="Filtering"
   on:drawerHide
-  on:drawerShow
+  on:drawerShow={() => {
+    localFilters = filters
+  }}
   forceModal
 >
   <Button
     cta
     slot="buttons"
     on:click={() => {
-      dispatch("change", tempValue)
+      dispatch("change", localFilters)
       drawer.hide()
     }}
   >
@@ -67,10 +73,10 @@
   </Button>
   <DrawerContent slot="body">
     <FilterBuilder
-      {filters}
+      filters={localFilters}
       {schemaFields}
       datasource={{ type: "table", tableId }}
-      on:change={e => (tempValue = e.detail)}
+      on:change={e => (localFilters = e.detail)}
       {bindings}
     />
   </DrawerContent>

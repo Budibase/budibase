@@ -1,5 +1,6 @@
 import { get } from "svelte/store"
 import DataFetch from "./DataFetch.js"
+import { SortOrder } from "@budibase/types"
 
 export default class TableFetch extends DataFetch {
   determineFeatureFlags() {
@@ -23,7 +24,7 @@ export default class TableFetch extends DataFetch {
         query,
         limit,
         sort: sortColumn,
-        sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+        sortOrder: sortOrder?.toLowerCase() ?? SortOrder.ASCENDING,
         sortType,
         paginate,
         bookmark: cursor,

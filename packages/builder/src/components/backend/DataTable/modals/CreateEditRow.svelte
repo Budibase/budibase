@@ -7,6 +7,7 @@
   import { FIELDS } from "constants/backend"
 
   const FORMULA_TYPE = FIELDS.FORMULA.type
+  const AI_TYPE = FIELDS.AI.type
 
   export let row = {}
 
@@ -60,7 +61,7 @@
     }}
   >
     {#each tableSchema as [key, meta]}
-      {#if !meta.autocolumn && meta.type !== FORMULA_TYPE}
+      {#if !meta.autocolumn && meta.type !== FORMULA_TYPE && meta.type !== AI_TYPE}
         <div>
           <RowFieldControl error={errors[key]} {meta} bind:value={row[key]} />
         </div>

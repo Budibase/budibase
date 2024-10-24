@@ -79,6 +79,8 @@ describe("Export Modal", () => {
       props: propsCfg,
     })
 
+    expect(propsCfg.filters[0].field).toBe("1:Cost")
+
     expect(screen.getByTestId("filters-applied")).toBeVisible()
     expect(screen.getByTestId("filters-applied").textContent).toBe(
       "Filters applied"

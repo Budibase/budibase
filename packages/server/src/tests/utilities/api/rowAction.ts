@@ -1,5 +1,6 @@
 import {
   CreateRowActionRequest,
+  RowActionPermissionsResponse,
   RowActionResponse,
   RowActionsResponse,
   RowActionTriggerRequest,
@@ -40,23 +41,6 @@ export class RowActionAPI extends TestAPI {
     )
   }
 
-  update = async (
-    tableId: string,
-    rowActionId: string,
-    rowAction: CreateRowActionRequest,
-    expectations?: Expectations,
-    config?: { publicUser?: boolean }
-  ) => {
-    return await this._put<RowActionResponse>(
-      `/api/tables/${tableId}/actions/${rowActionId}`,
-      {
-        body: rowAction,
-        expectations,
-        ...config,
-      }
-    )
-  }
-
   delete = async (
     tableId: string,
     rowActionId: string,
@@ -78,7 +62,7 @@ export class RowActionAPI extends TestAPI {
     expectations?: Expectations,
     config?: { publicUser?: boolean }
   ) => {
-    return await this._post<RowActionResponse>(
+    return await this._post<RowActionPermissionsResponse>(
       `/api/tables/${tableId}/actions/${rowActionId}/permissions`,
       {
         expectations: {
@@ -96,7 +80,7 @@ export class RowActionAPI extends TestAPI {
     expectations?: Expectations,
     config?: { publicUser?: boolean }
   ) => {
-    return await this._delete<RowActionResponse>(
+    return await this._delete<RowActionPermissionsResponse>(
       `/api/tables/${tableId}/actions/${rowActionId}/permissions`,
       {
         expectations: {
@@ -115,7 +99,7 @@ export class RowActionAPI extends TestAPI {
     expectations?: Expectations,
     config?: { publicUser?: boolean }
   ) => {
-    return await this._post<RowActionResponse>(
+    return await this._post<RowActionPermissionsResponse>(
       `/api/tables/${tableId}/actions/${rowActionId}/permissions/${viewId}`,
       {
         expectations: {
@@ -134,7 +118,7 @@ export class RowActionAPI extends TestAPI {
     expectations?: Expectations,
     config?: { publicUser?: boolean }
   ) => {
-    return await this._delete<RowActionResponse>(
+    return await this._delete<RowActionPermissionsResponse>(
       `/api/tables/${tableId}/actions/${rowActionId}/permissions/${viewId}`,
       {
         expectations: {

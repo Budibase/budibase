@@ -1,4 +1,4 @@
-import { Table, Row, User } from "@budibase/types"
+import { Table, Row, UserBindings } from "@budibase/types"
 import BudibaseEmitter from "./BudibaseEmitter"
 
 type BBEventOpts = {
@@ -9,7 +9,7 @@ type BBEventOpts = {
   row?: Row
   oldRow?: Row
   metadata?: any
-  user?: User
+  user?: UserBindings
 }
 
 interface BBEventTable extends Table {
@@ -25,7 +25,7 @@ type BBEvent = {
   id?: string
   revision?: string
   metadata?: any
-  user?: User
+  user?: UserBindings
 }
 
 export function rowEmission({

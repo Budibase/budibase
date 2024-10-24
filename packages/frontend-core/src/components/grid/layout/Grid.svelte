@@ -19,20 +19,9 @@
   import StickyColumn from "./StickyColumn.svelte"
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
-  import SortButton from "../controls/SortButton.svelte"
-  import ColumnsSettingButton from "../controls/ColumnsSettingButton.svelte"
-  import SizeButton from "../controls/SizeButton.svelte"
   import NewRow from "./NewRow.svelte"
   import { createGridWebsocket } from "../lib/websocket"
-  import {
-    MaxCellRenderOverflow,
-    GutterWidth,
-    DefaultRowHeight,
-    VPadding,
-    SmallRowHeight,
-    ControlsHeight,
-    ScrollBarSize,
-  } from "../lib/constants"
+  import * as Constants from "../lib/constants"
 
   export let API = null
   export let datasource = null
@@ -43,12 +32,10 @@
   export let canDeleteRows = true
   export let canEditColumns = true
   export let canSaveSchema = true
-  export let canSetRelationshipSchemas = false
   export let stripeRows = false
   export let quiet = false
   export let collaboration = true
   export let showAvatars = true
-  export let showControls = true
   export let initialFilter = null
   export let initialSortColumn = null
   export let initialSortOrder = null
@@ -56,9 +43,12 @@
   export let notifySuccess = null
   export let notifyError = null
   export let buttons = null
-  export let darkMode
+  export let buttonsCollapsed = false
+  export let buttonsCollapsedText = null
+  export let darkMode = false
   export let isCloud = null
   export let rowConditions = null
+  export let aiEnabled = false
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -69,6 +59,7 @@
   // Build up context
   let context = {
     API: API || createAPIClient(),
+    Constants,
     gridID,
     props,
   }
@@ -99,12 +90,10 @@
     canDeleteRows,
     canEditColumns,
     canSaveSchema,
-    canSetRelationshipSchemas,
     stripeRows,
     quiet,
     collaboration,
     showAvatars,
-    showControls,
     initialFilter,
     initialSortColumn,
     initialSortOrder,
@@ -112,15 +101,23 @@
     notifySuccess,
     notifyError,
     buttons,
+    buttonsCollapsed,
+    buttonsCollapsedText,
     darkMode,
     isCloud,
+    aiEnabled,
     rowConditions,
   })
 
   // Derive min height and make available in context
   const minHeight = derived(rowHeight, $height => {
-    const heightForControls = showControls ? ControlsHeight : 0
-    return VPadding + SmallRowHeight + $height + heightForControls
+    const heightForControls = $$slots.controls ? Constants.ControlsHeight : 0
+    return (
+      Constants.VPadding +
+      Constants.SmallRowHeight +
+      $height +
+      heightForControls
+    )
   })
   context = { ...context, minHeight }
 
@@ -148,18 +145,15 @@
   class:quiet
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{$minHeight}px; --controls-height:{ControlsHeight}px; --scroll-bar-size:{ScrollBarSize}px;"
+  style="--row-height:{$rowHeight}px; --default-row-height:{Constants.DefaultRowHeight}px; --gutter-width:{Constants.GutterWidth}px; --max-cell-render-overflow:{Constants.MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{$minHeight}px; --controls-height:{Constants.ControlsHeight}px; --scroll-bar-size:{Constants.ScrollBarSize}px;"
 >
-  {#if showControls}
+  {#if $$slots.controls}
     <div class="controls">
       <div class="controls-left">
-        <slot name="filter" />
-        <SortButton />
-        <ColumnsSettingButton />
-        <SizeButton />
         <slot name="controls" />
       </div>
       <div class="controls-right">
+        <slot name="controls-right" />
         {#if showAvatars}
           <UserAvatars />
         {/if}
@@ -216,6 +210,7 @@
   <BulkDeleteHandler />
   <ClipboardHandler />
   <KeyboardManager />
+  <slot />
 </div>
 
 <style>
@@ -288,7 +283,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    border-bottom: var(--cell-border);
+    border-bottom: var(--border-light);
     padding: var(--cell-padding);
     gap: var(--cell-spacing);
     background: var(--grid-background-alt);
@@ -328,7 +323,7 @@
     width: 100%;
     height: 100%;
     background: var(--grid-background-alt);
-    opacity: 0.6;
+    opacity: 0.3;
   }
 
   /* Error */

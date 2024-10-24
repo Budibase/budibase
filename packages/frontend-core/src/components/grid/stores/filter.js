@@ -1,12 +1,13 @@
-import { writable, get, derived } from "svelte/store"
-import { FieldType } from "@budibase/types"
+import { get, derived } from "svelte/store"
+import { FieldType, UILogicalOperator } from "@budibase/types"
+import { memo } from "../../../utils/memo"
 
 export const createStores = context => {
   const { props } = context
 
   // Initialise to default props
-  const filter = writable(get(props).initialFilter)
-  const inlineFilters = writable([])
+  const filter = memo(get(props).initialFilter)
+  const inlineFilters = memo([])
 
   return {
     filter,
@@ -16,11 +17,29 @@ export const createStores = context => {
 
 export const deriveStores = context => {
   const { filter, inlineFilters } = context
-
   const allFilters = derived(
     [filter, inlineFilters],
     ([$filter, $inlineFilters]) => {
-      return [...($filter || []), ...$inlineFilters]
+      // Just use filter prop if no inline filters
+      if (!$inlineFilters?.length) {
+        return $filter
+      }
+      let allFilters = {
+        logicalOperator: UILogicalOperator.ALL,
+        groups: [
+          {
+            logicalOperator: UILogicalOperator.ALL,
+            filters: $inlineFilters,
+          },
+        ],
+      }
+      // Just use inline if no filter
+      if (!$filter?.groups?.length) {
+        return allFilters
+      }
+      // Join them together if both
+      allFilters.groups = [...allFilters.groups, ...$filter.groups]
+      return allFilters
     }
   )
 
@@ -54,7 +73,6 @@ export const createActions = context => {
       inlineFilter.operator = "contains"
     }
 
-    // Add this filter
     inlineFilters.update($inlineFilters => {
       // Remove any existing inline filter for this column
       $inlineFilters = $inlineFilters?.filter(x => x.id !== filterId)

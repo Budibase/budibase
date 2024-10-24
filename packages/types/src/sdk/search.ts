@@ -32,7 +32,19 @@ export enum LogicalOperator {
 export function isLogicalSearchOperator(
   value: string
 ): value is LogicalOperator {
-  return value === LogicalOperator.AND || value === LogicalOperator.OR
+  return Object.values(LogicalOperator).includes(value as LogicalOperator)
+}
+
+export function isBasicSearchOperator(value: string): value is BasicOperator {
+  return Object.values(BasicOperator).includes(value as BasicOperator)
+}
+
+export function isArraySearchOperator(value: string): value is ArrayOperator {
+  return Object.values(ArrayOperator).includes(value as ArrayOperator)
+}
+
+export function isRangeSearchOperator(value: string): value is RangeOperator {
+  return Object.values(RangeOperator).includes(value as RangeOperator)
 }
 
 export type SearchFilterOperator =
@@ -191,7 +203,7 @@ export enum EmptyFilterOption {
   RETURN_NONE = "none",
 }
 
-export enum FilterGroupLogicalOperator {
+export enum UILogicalOperator {
   ALL = "all",
   ANY = "any",
 }

@@ -40,12 +40,6 @@ router
     rowActionValidator(),
     rowActionController.create
   )
-  .put(
-    "/api/tables/:tableId/actions/:actionId",
-    authorized(BUILDER),
-    rowActionValidator(),
-    rowActionController.update
-  )
   .delete(
     "/api/tables/:tableId/actions/:actionId",
     authorized(BUILDER),

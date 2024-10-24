@@ -1,5 +1,6 @@
 import { derived, get } from "svelte/store"
 import { memo } from "../../../utils"
+import { SortOrder } from "@budibase/types"
 
 export const createStores = context => {
   const { props } = context
@@ -8,7 +9,7 @@ export const createStores = context => {
   // Initialise to default props
   const sort = memo({
     column: $props.initialSortColumn,
-    order: $props.initialSortOrder || "ascending",
+    order: $props.initialSortOrder || SortOrder.ASCENDING,
   })
 
   return {
@@ -24,7 +25,10 @@ export const initialise = context => {
     sort.update(state => ({ ...state, column: newSortColumn }))
   })
   initialSortOrder.subscribe(newSortOrder => {
-    sort.update(state => ({ ...state, order: newSortOrder || "ascending" }))
+    sort.update(state => ({
+      ...state,
+      order: newSortOrder || SortOrder.ASCENDING,
+    }))
   })
 
   // Derive if the current sort column exists in the schema
@@ -40,7 +44,7 @@ export const initialise = context => {
     if (!exists) {
       sort.set({
         column: null,
-        order: "ascending",
+        order: SortOrder.ASCENDING,
       })
     }
   })

@@ -6,6 +6,8 @@ import { createHistoryStore } from "stores/builder/history"
 import { notifications } from "@budibase/bbui"
 import { updateReferencesInObject } from "dataBinding"
 import { AutomationTriggerStepId } from "@budibase/types"
+import { sdk } from "@budibase/shared-core"
+import { rowActions } from "./rowActions"
 import {
   updateBindingsInSteps,
   getNewStepName,
@@ -21,7 +23,6 @@ const initialAutomationState = {
     ACTION: {},
   },
   selectedAutomationId: null,
-  automationDisplayData: {},
 }
 
 // If this functions, remove the actions elements
@@ -81,7 +82,7 @@ const automationActions = store => ({
   },
   fetch: async () => {
     const [automationResponse, definitions] = await Promise.all([
-      API.getAutomations({ enrich: true }),
+      API.getAutomations(),
       API.getAutomationDefinitions(),
     ])
     store.update(state => {
@@ -89,7 +90,6 @@ const automationActions = store => ({
       state.automations.sort((a, b) => {
         return a.name < b.name ? -1 : 1
       })
-      state.automationDisplayData = automationResponse.builderData
       state.blockDefinitions = getFinalDefinitions(
         definitions.trigger,
         definitions.action
@@ -127,10 +127,18 @@ const automationActions = store => ({
     return response.automation
   },
   delete: async automation => {
-    await API.deleteAutomation({
-      automationId: automation?._id,
-      automationRev: automation?._rev,
-    })
+    const isRowAction = sdk.automations.isRowAction(automation)
+    if (isRowAction) {
+      await rowActions.delete(
+        automation.definition.trigger.inputs.tableId,
+        automation.definition.trigger.inputs.rowActionId
+      )
+    } else {
+      await API.deleteAutomation({
+        automationId: automation?._id,
+        automationRev: automation?._rev,
+      })
+    }
 
     store.update(state => {
       // Remove the automation
@@ -143,8 +151,6 @@ const automationActions = store => ({
         state.selectedAutomationId = state.automations[0]?._id || null
       }
 
-      // Clear out automationDisplayData for the automation
-      delete state.automationDisplayData[automation._id]
       return state
     })
   },
@@ -422,13 +428,3 @@ export const selectedAutomation = derived(automationStore, $automationStore => {
     x => x._id === $automationStore.selectedAutomationId
   )
 })
-
-export const selectedAutomationDisplayData = derived(
-  [automationStore, selectedAutomation],
-  ([$automationStore, $selectedAutomation]) => {
-    if (!$selectedAutomation?._id) {
-      return null
-    }
-    return $automationStore.automationDisplayData[$selectedAutomation._id]
-  }
-)

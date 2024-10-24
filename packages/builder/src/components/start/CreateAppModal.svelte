@@ -118,14 +118,17 @@
       if ($values.url) {
         data.append("url", $values.url.trim())
       }
-      data.append("useTemplate", template != null)
-      if (template) {
-        data.append("templateName", template.name)
-        data.append("templateKey", template.key)
-        data.append("templateFile", $values.file)
+
+      if (template?.fromFile) {
+        data.append("useTemplate", true)
+        data.append("fileToImport", $values.file)
         if ($values.encryptionPassword?.trim()) {
           data.append("encryptionPassword", $values.encryptionPassword.trim())
         }
+      } else if (template) {
+        data.append("useTemplate", true)
+        data.append("templateName", template.name)
+        data.append("templateKey", template.key)
       }
 
       // Create App

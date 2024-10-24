@@ -1,7 +1,7 @@
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { events, roles } from "@budibase/backend-core"
-import { Screen, PermissionLevel, Role } from "@budibase/types"
+import { Screen, Role, BuiltinPermissionID } from "@budibase/types"
 
 const { basicScreen } = setup.structures
 
@@ -40,17 +40,17 @@ describe("/screens", () => {
       role1 = await config.api.roles.save({
         name: "role1",
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
-        permissionId: PermissionLevel.WRITE,
+        permissionId: BuiltinPermissionID.WRITE,
       })
       role2 = await config.api.roles.save({
         name: "role2",
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
-        permissionId: PermissionLevel.WRITE,
+        permissionId: BuiltinPermissionID.WRITE,
       })
       multiRole = await config.api.roles.save({
         name: "multiRole",
         inherits: [role1._id!, role2._id!],
-        permissionId: PermissionLevel.WRITE,
+        permissionId: BuiltinPermissionID.WRITE,
       })
       screen1 = await config.api.screen.save(
         {
@@ -86,7 +86,6 @@ describe("/screens", () => {
             status: 200,
           }
         )
-        // basic and role1 screen
         expect(res.screens.length).toEqual(screenIds.length)
         expect(res.screens.map(s => s._id).sort()).toEqual(screenIds.sort())
       })
@@ -106,6 +105,25 @@ describe("/screens", () => {
         screen1._id!,
         screen2._id!,
       ])
+    })
+
+    it("should be able to fetch basic and screen 1 with role1 in role header", async () => {
+      await config.withHeaders(
+        {
+          "x-budibase-role": role1._id!,
+        },
+        async () => {
+          const res = await config.api.application.getDefinition(
+            config.prodAppId!,
+            {
+              status: 200,
+            }
+          )
+          const screenIds = [screen._id!, screen1._id!]
+          expect(res.screens.length).toEqual(screenIds.length)
+          expect(res.screens.map(s => s._id).sort()).toEqual(screenIds.sort())
+        }
+      )
     })
   })
 

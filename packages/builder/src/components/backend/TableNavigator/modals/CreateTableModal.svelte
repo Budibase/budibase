@@ -92,6 +92,7 @@
   disabled={error ||
     !name ||
     (rows.length && (!allValid || displayColumn == null))}
+  size="M"
 >
   <Input
     thin
