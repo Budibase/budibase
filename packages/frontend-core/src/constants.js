@@ -108,35 +108,6 @@ export const Roles = {
   CREATOR: "CREATOR",
 }
 
-export const Themes = [
-  {
-    class: "lightest",
-    name: "Lightest",
-  },
-  {
-    class: "light",
-    name: "Light",
-  },
-  {
-    class: "dark",
-    name: "Dark",
-  },
-  {
-    class: "darkest",
-    name: "Darkest",
-  },
-  {
-    class: "nord",
-    name: "Nord",
-    base: "darkest",
-  },
-  {
-    class: "midnight",
-    name: "Midnight",
-    base: "darkest",
-  },
-]
-
 export const EventPublishType = {
   ENV_VAR_UPGRADE_PANEL_OPENED: "environment_variable_upgrade_panel_opened",
 }

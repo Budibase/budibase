@@ -3,6 +3,7 @@
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { themeStore } from "stores/portal"
+  import { Theme } from "@budibase/types"
 
   const dispatch = createEventDispatcher()
 
@@ -116,7 +117,7 @@
       readOnly,
       autoCloseBrackets: true,
       autoCloseTags: true,
-      theme: $themeStore.theme.includes("light") ? THEMES.LIGHT : THEMES.DARK,
+      theme: $themeStore.theme === Theme.LIGHT ? THEMES.LIGHT : THEMES.DARK,
     }
 
     if (!tab)

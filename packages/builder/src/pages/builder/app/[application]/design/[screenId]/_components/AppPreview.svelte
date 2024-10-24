@@ -19,6 +19,7 @@
   import { findComponent, findComponentPath } from "helpers/components"
   import { isActive, goto } from "@roxi/routify"
   import { ClientAppSkeleton } from "@budibase/frontend-core"
+  import { getThemeClassNames, ThemeClassPrefix } from "@budibase/shared-core"
 
   let iframe
   let layout
@@ -47,7 +48,9 @@
     layout,
     screen,
     selectedComponentId,
-    theme: $themeStore.theme,
+    theme: $appStore.clientFeatures.unifiedThemes
+      ? $themeStore.theme
+      : `${ThemeClassPrefix}${$themeStore.theme}`,
     customTheme: $themeStore.customTheme,
     previewDevice: $previewStore.previewDevice,
     messagePassing: $appStore.clientFeatures.messagePassing,
@@ -257,7 +260,7 @@
   class:mobile={$previewStore.previewDevice === "mobile"}
 >
   {#if loading}
-    <div class={`loading ${$themeStore.baseTheme} ${$themeStore.theme}`}>
+    <div class={`loading ${getThemeClassNames($themeStore.theme)}`}>
       <ClientAppSkeleton
         sideNav={$navigationStore?.navigation === "Left"}
         hideFooter

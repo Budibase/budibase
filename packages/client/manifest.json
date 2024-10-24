@@ -1,6 +1,7 @@
 {
   "features": {
     "spectrumThemes": true,
+    "unifiedTheme": true,
     "intelligentLoading": true,
     "deviceAwareness": true,
     "state": true,
