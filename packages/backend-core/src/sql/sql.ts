@@ -887,13 +887,13 @@ class InternalBuilder {
         }
 
         if (lowValid && highValid) {
-          // @ts-ignore
+          // @ts-expect-error knex types are wrong, raw is fine here
           return q.whereBetween(rawKey, [low, high])
         } else if (lowValid) {
-          // @ts-ignore
+          // @ts-expect-error knex types are wrong, raw is fine here
           return q.where(rawKey, ">=", low)
         } else if (highValid) {
-          // @ts-ignore
+          // @ts-expect-error knex types are wrong, raw is fine here
           return q.where(rawKey, "<=", high)
         }
         return q
@@ -1132,9 +1132,11 @@ class InternalBuilder {
         } else {
           let composite = `${aliased}.${key}`
           if (this.client === SqlClient.ORACLE) {
-            query = query.orderByRaw(
-              `${this.convertClobs(composite)} ${direction} nulls ${nulls}`
-            )
+            query = query.orderByRaw(`?? ?? nulls ??`, [
+              this.convertClobs(composite),
+              direction,
+              nulls,
+            ])
           } else {
             query = query.orderBy(composite, direction, nulls)
           }
