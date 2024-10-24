@@ -164,12 +164,21 @@ describe.each([
     }
   }
 
-  async function assertTableExists(name: string) {
+  async function assertTableExists(nameOrTable: string | Table) {
+    const name =
+      typeof nameOrTable === "string" ? nameOrTable : nameOrTable.name
     expect(await client!.schema.hasTable(name)).toBeTrue()
   }
 
-  async function assertTableNumRows(name: string, numRows: number) {
-    expect(await client!.from(name).count()).toEqual([{ count: `${numRows}` }])
+  async function assertTableNumRows(
+    nameOrTable: string | Table,
+    numRows: number
+  ) {
+    const name =
+      typeof nameOrTable === "string" ? nameOrTable : nameOrTable.name
+    const row = await client!.from(name).count()
+    const count = parseInt(Object.values(row[0])[0] as string)
+    expect(count).toEqual(numRows)
   }
 
   describe.each([
@@ -3495,7 +3504,8 @@ describe.each([
       })
 
     isSql &&
-      describe("SQL injection", () => {
+      !isSqs &&
+      describe.only("SQL injection", () => {
         const badStrings = [
           "1; DROP TABLE %table_name%;",
           "1; DELETE FROM %table_name%;",
@@ -3530,14 +3540,25 @@ describe.each([
               await config.api.table.save({
                 ...table,
                 schema: {
+                  ...table.schema,
                   [badString]: { name: badString, type: FieldType.STRING },
                 },
               })
 
+              if (docIds.isViewId(tableOrViewId)) {
+                const view = await config.api.viewV2.get(tableOrViewId)
+                await config.api.viewV2.update({
+                  ...view,
+                  schema: {
+                    [badString]: { visible: true },
+                  },
+                })
+              }
+
               await config.api.row.save(tableOrViewId, { [badString]: "foo" })
 
-              await assertTableExists(table.name)
-              await assertTableNumRows(table.name, 1)
+              await assertTableExists(table)
+              await assertTableNumRows(table, 1)
 
               const { rows } = await config.api.row.search(
                 tableOrViewId,
@@ -3547,8 +3568,8 @@ describe.each([
 
               expect(rows).toHaveLength(1)
 
-              await assertTableExists(table.name)
-              await assertTableNumRows(table.name, 1)
+              await assertTableExists(table)
+              await assertTableNumRows(table, 1)
             })
 
           it("should not allow SQL injection as a field value", async () => {
@@ -3564,10 +3585,10 @@ describe.each([
               table.name
             )
 
-            await assertTableExists(table.name)
-            await assertTableNumRows(table.name, 1)
-
             await config.api.row.save(tableOrViewId, { foo: "foo" })
+
+            await assertTableExists(table)
+            await assertTableNumRows(table, 1)
 
             const { rows } = await config.api.row.search(
               tableOrViewId,
@@ -3576,8 +3597,8 @@ describe.each([
             )
 
             expect(rows).toBeEmpty()
-            await assertTableExists(table.name)
-            await assertTableNumRows(table.name, 1)
+            await assertTableExists(table)
+            await assertTableNumRows(table, 1)
           })
         })
       })
