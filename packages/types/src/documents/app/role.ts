@@ -1,5 +1,5 @@
 import { Document } from "../document"
-import { PermissionLevel } from "../../sdk"
+import { PermissionLevel, BuiltinPermissionID } from "../../sdk"
 
 export interface RoleUIMetadata {
   displayName?: string
@@ -8,7 +8,7 @@ export interface RoleUIMetadata {
 }
 
 export interface Role extends Document {
-  permissionId: string
+  permissionId: BuiltinPermissionID
   inherits?: string | string[]
   permissions: Record<string, PermissionLevel[]>
   version?: string
