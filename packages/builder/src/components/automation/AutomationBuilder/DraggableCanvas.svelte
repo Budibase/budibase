@@ -1,21 +1,23 @@
 <script>
   import { onDestroy, tick } from "svelte"
   import { writable } from "svelte/store"
-  import { setContext, onMount } from "svelte"
+  import { setContext, onMount, createEventDispatcher } from "svelte"
   import { Utils } from "@budibase/frontend-core"
   import { selectedAutomation, automationStore } from "stores/builder"
 
   export function zoomIn() {
+    const scale = Number(Math.min($view.scale + 0.1, 1).toFixed(2))
     view.update(state => ({
       ...state,
-      scale: Math.min(state.scale + 0.1, 1),
+      scale,
     }))
   }
 
   export function zoomOut() {
+    const scale = Number(Math.max($view.scale - 0.1, 0).toFixed(2))
     view.update(state => ({
       ...state,
-      scale: Math.max(state.scale - 0.1, 0),
+      scale,
     }))
   }
 
@@ -63,6 +65,8 @@
     }))
   }
 
+  const dispatch = createEventDispatcher()
+
   // View State
   const view = writable({
     dragging: false,
@@ -108,6 +112,7 @@
   let scrollInterval
 
   const onScale = async () => {
+    dispatch("zoom", $view.scale)
     await getDims()
   }
 
@@ -170,7 +175,7 @@
 
       view.update(state => ({
         ...state,
-        scale: updatedScale,
+        scale: Number(updatedScale.toFixed(2)),
       }))
     } else {
       yBump = scrollIncrement * (e.deltaY < 0 ? -1 : 1)
@@ -358,19 +363,6 @@
     on:mouseup={onViewDragEnd}
     on:mouseleave={onViewDragEnd}
   >
-    <div class="actions">
-      <!-- debug -->
-      <!-- <span>
-        View Pos [{viewPos.x}, {viewPos.y}]
-      </span>
-      <span>Down {down}</span>
-      <span>Drag {$view.dragging}</span>
-      <span>DragOffset {JSON.stringify(dragOffset)}</span>
-      <span>Dragging {$view?.moveStep?.id || " [no]"}</span>
-      <span>Scale {$view.scale}</span>
-      <span>Content {JSON.stringify(contentPos)}</span> -->
-    </div>
-
     <div
       class="content-wrap"
       style={wrapStyles}
@@ -410,14 +402,6 @@
 </div>
 
 <style>
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    position: fixed;
-    padding: 8px;
-    z-index: 2;
-  }
   .draggable-canvas {
     width: 100%;
     height: 100%;
