@@ -280,7 +280,12 @@
       }
 
       if (ids.length > 0) {
-        await users.bulkDelete(ids)
+        await users.bulkDelete(
+          selectedRows.map(user => ({
+            userId: user._id,
+            email: user.email,
+          }))
+        )
       }
 
       if (selectedInvites.length > 0) {

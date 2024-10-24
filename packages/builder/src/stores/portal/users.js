@@ -112,8 +112,8 @@ export function createUsersStore() {
     return await API.getUserCountByApp({ appId })
   }
 
-  async function bulkDelete(userIds) {
-    return API.deleteUsers(userIds)
+  async function bulkDelete(users) {
+    return API.deleteUsers(users)
   }
 
   async function save(user) {
@@ -128,9 +128,9 @@ export function createUsersStore() {
     return await API.removeAppBuilder({ userId, appId })
   }
 
-  async function getTenantOwner(tenantId) {
-    const tenantInfo = await API.getTenantInfo({ tenantId })
-    return tenantInfo?.owner
+  async function getAccountHolder(email) {
+    const holder = await API.getAccountHolder({ email })
+    return holder?.email
   }
 
   const getUserRole = user => {

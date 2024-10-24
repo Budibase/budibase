@@ -417,11 +417,6 @@ describe("/api/global/users", () => {
         structures.users.adminUser()
       )
       jest.clearAllMocks()
-      tenancy.getTenantInfo = jest.fn().mockImplementation(() => ({
-        owner: {
-          email: accountHolderUser.email,
-        },
-      }))
 
       accountHolderUser.admin!.global = false
       accountHolderUser.builder!.global = false
@@ -594,7 +589,15 @@ describe("/api/global/users", () => {
     it("should not be able to bulk delete current user", async () => {
       const user = await config.user!
 
-      const response = await config.api.users.bulkDeleteUsers([user._id!], 400)
+      const response = await config.api.users.bulkDeleteUsers(
+        [
+          {
+            userId: user._id!,
+            email: "test@example.com",
+          },
+        ],
+        400
+      )
 
       expect(response.message).toBe("Unable to delete self.")
       expect(events.user.deleted).not.toHaveBeenCalled()
@@ -606,7 +609,12 @@ describe("/api/global/users", () => {
       account.budibaseUserId = user._id!
       accounts.getAccountByTenantId.mockReturnValue(Promise.resolve(account))
 
-      const response = await config.api.users.bulkDeleteUsers([user._id!])
+      const response = await config.api.users.bulkDeleteUsers([
+        {
+          userId: user._id!,
+          email: "test@example.com",
+        },
+      ])
 
       expect(response.deleted?.successful.length).toBe(0)
       expect(response.deleted?.unsuccessful.length).toBe(1)
@@ -630,10 +638,11 @@ describe("/api/global/users", () => {
         user,
       ])
 
-      const toDelete = createdUsers.created?.successful.map(
-        u => u._id!
-      ) as string[]
-      const response = await config.api.users.bulkDeleteUsers(toDelete)
+      const toDelete = createdUsers.created?.successful.map(u => ({
+        userId: u._id!,
+        email: "test@example.com",
+      }))
+      const response = await config.api.users.bulkDeleteUsers(toDelete!)
 
       expect(response.deleted?.successful.length).toBe(3)
       expect(response.deleted?.unsuccessful.length).toBe(0)
