@@ -83,4 +83,9 @@ export interface ContextEmitter {
     row: Row
     user: UserBindings
   }): void
+  emitTable(
+    eventName: EventType.TABLE_SAVE | EventType.TABLE_DELETE,
+    appId: string,
+    table?: Table
+  ): void
 }
