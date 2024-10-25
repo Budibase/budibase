@@ -83,7 +83,7 @@
     <div class="field">
       <Input
         disabled={filter.noValue}
-        readonly={true}
+        readonly={isJS}
         value={isJS ? "(JavaScript function)" : readableValue}
         on:change={onChange}
       />
