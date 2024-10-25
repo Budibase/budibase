@@ -501,12 +501,12 @@
     cursor: grabbing;
   }
 
-  .debug {
+  /* .debug {
     display: flex;
     align-items: center;
     gap: 8px;
     position: fixed;
     padding: 8px;
     z-index: 2;
-  }
+  } */
 </style>
