@@ -66,6 +66,10 @@ export function tableValidator() {
   )
 }
 
+export function viewValidator() {
+  return auth.joiValidator.body(Joi.object())
+}
+
 export function nameValidator() {
   return auth.joiValidator.body(
     Joi.object({
