@@ -56,6 +56,10 @@
       schemaFields = [...schemaFields, { name: "_id", type: "string" }]
     }
   }
+  $: prefix =
+    builderType === "filter"
+      ? "Show data which matches"
+      : "Run branch when matching"
 
   // We still may need to migrate this even though the backend does it automatically now
   // for query definitions. This is because we might be editing saved filter definitions
@@ -286,7 +290,7 @@
 
       {#if editableFilters?.groups?.length}
         <div class="global-filter-header">
-          <span>Show data which matches</span>
+          <span>{prefix}</span>
           <span class="operator-picker">
             <Select
               value={editableFilters?.logicalOperator}
