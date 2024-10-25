@@ -161,9 +161,13 @@
             </ActionButton>
           </PropField>
           <div class="footer">
-            <Icon name="Info" />
-            <Body size="S">
-              Only the first branch which matches it's condition will run
+            <Icon
+              name="InfoOutline"
+              size="S"
+              color="var(--spectrum-global-color-gray-700)"
+            />
+            <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+              Only the first branch which matches its condition will run
             </Body>
           </div>
         </Layout>
