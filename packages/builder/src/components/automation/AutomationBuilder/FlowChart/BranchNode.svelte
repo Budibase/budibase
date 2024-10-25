@@ -31,7 +31,7 @@
   export let bindings
   export let automation
 
-  const view = getContext("view")
+  const view = getContext("draggableView")
 
   let drawer
   let condition
@@ -87,7 +87,14 @@
 </Drawer>
 
 <div class="flow-item">
-  <div class={`block branch-node hoverable`} class:selected={false}>
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div
+    class={`block branch-node hoverable`}
+    class:selected={false}
+    on:mousedown={e => {
+      e.stopPropagation()
+    }}
+  >
     <FlowItemHeader
       {automation}
       {open}

@@ -82,14 +82,14 @@
     //focus - node to center on?
   })
 
-  setContext("view", view)
+  setContext("draggableView", view)
 
   // View internal pos tracking
   const internalPos = writable({ x: 0, y: 0 })
   setContext("viewPos", internalPos)
 
   // Content pos tracking
-  const contentPos = writable({ x: 0, y: 0 })
+  const contentPos = writable({ x: 0, y: 0, scrollX: 0, scrollY: 0 })
   setContext("contentPos", contentPos)
 
   // Elements
@@ -112,8 +112,14 @@
   // When dragging the content, maintain the drag start offset
   let dragOffset
 
+  // Used when focusing the UI on trigger
+  let loaded = false
+
+  // Edge around the draggable content
+  let contentDragPadding = 200
+
   // Auto scroll
-  let scrollInterval
+  // let scrollInterval
 
   const onScale = async () => {
     dispatch("zoom", $view.scale)
@@ -167,9 +173,15 @@
         ...state,
         x: state.x - xBump,
         y: state.y,
+        // If scrolling *and* dragging, maintain a record of the scroll offset
+        ...($view.dragging
+          ? {
+              scrollX: state.scrollX - xBump,
+            }
+          : {}),
       }))
     } else if (e.ctrlKey || e.metaKey) {
-      // Scale
+      // Scale the content on scrolling
       let updatedScale
       if (e.deltaY < 0) {
         updatedScale = Math.min(1, currentScale + 0.05)
@@ -187,6 +199,12 @@
         ...state,
         x: state.x,
         y: state.y - yBump,
+        // If scrolling *and* dragging, maintain a record of the scroll offset
+        ...($view.dragging
+          ? {
+              scrollY: state.scrollY - yBump,
+            }
+          : {}),
       }))
     }
   }
@@ -211,22 +229,26 @@
     // Needs to handle when the mouse leaves the screen
     // Needs to know the direction of movement and accelerate/decelerate
     if (y < (viewDims.height / 100) * 20 && $view.dragging) {
-      if (!scrollInterval) {
-        // scrollInterval = setInterval(() => {
-        //   contentPos = { x: contentPos.x, y: contentPos.y + 35 }
-        // }, 100)
-      }
-    } else {
-      if (scrollInterval) {
-        clearInterval(scrollInterval)
-        scrollInterval = undefined
-      }
+      //   if (!scrollInterval) {
+      //     scrollInterval = setInterval(() => {
+      //       contentPos.update(state => ({
+      //         ...state,
+      //         x: contentPos.x,
+      //         y: contentPos.y + 35,
+      //       }))
+      //     }, 100)
+      //   }
+      // } else {
+      //   if (scrollInterval) {
+      //     clearInterval(scrollInterval)
+      //     scrollInterval = undefined
+      //   }
     }
   }
 
   const onViewDragEnd = () => {
     down = false
-    dragOffset = []
+    dragOffset = [0, 0]
   }
 
   const handleDragDrop = () => {
@@ -256,6 +278,13 @@
       dropzones: {},
       droptarget: null,
     }))
+
+    // Clear the scroll offset for dragging
+    contentPos.update(state => ({
+      ...state,
+      scrollY: 0,
+      scrollX: 0,
+    }))
   }
 
   const onMouseMove = async e => {
@@ -279,7 +308,6 @@
     }
 
     if ($view.dragging) {
-      // TODO - Need to adjust content pos
       const adjustedX =
         (e.clientX - viewDims.left - $view.moveStep.offsetX) / $view.scale
       const adjustedY =
@@ -325,10 +353,41 @@
     dragOffset = [Math.abs(x - $contentPos.x), Math.abs(y - $contentPos.y)]
   }
 
+  const focusOnLoad = () => {
+    if ($view.focusEle && !loaded) {
+      const focusEleDims = $view.focusEle
+      const viewWidth = viewDims.width
+
+      // The amount to shift the content in order to center the trigger on load.
+      // The content is also padded with `contentDragPadding`
+      // The sidebar offset factors into the left positioning of the content here.
+      const targetX =
+        contentWrap.getBoundingClientRect().x -
+        focusEleDims.x +
+        (viewWidth / 2 - focusEleDims.width / 2)
+
+      // Update the content position state
+      // Shift the content up slightly to accommodate the padding
+      contentPos.update(state => ({
+        ...state,
+        x: targetX,
+        y: -(contentDragPadding / 2),
+      }))
+
+      loaded = true
+    }
+  }
+
   // Update dims after scaling
   $: {
     $view.scale
     onScale()
+  }
+
+  // Focus on a registered element
+  $: {
+    $view.focusEle
+    focusOnLoad()
   }
 
   // Content mouse pos and scale to css variables.
@@ -336,12 +395,7 @@
   $: wrapStyles = buildWrapStyles($contentPos, $view.scale, contentDims)
 
   onMount(() => {
-    observer = new ResizeObserver(entries => {
-      if (!entries?.[0]) {
-        return
-      }
-      getDims()
-    })
+    observer = new ResizeObserver(getDims)
     observer.observe(viewPort)
   })
 
@@ -358,6 +412,7 @@
   aria-label="Viewport for building automations"
   on:mouseup={onMouseUp}
   on:mousemove={Utils.domDebounce(onMouseMove)}
+  style={`--dragPadding: ${contentDragPadding}px;`}
 >
   <div
     class="draggable-view"
@@ -367,6 +422,17 @@
     on:mouseup={onViewDragEnd}
     on:mouseleave={onViewDragEnd}
   >
+    <!-- <div class="debug">
+      <span>
+        View Pos [{$internalPos.x}, {$internalPos.y}]
+      </span>
+      <span>View Dims [{viewDims.width}, {viewDims.height}]</span>
+      <span>Mouse Down [{down}]</span>
+      <span>Drag [{$view.dragging}]</span>
+      <span>Dragging [{$view?.moveStep?.id || "no"}]</span>
+      <span>Scale [{$view.scale}]</span>
+      <span>Content [{JSON.stringify($contentPos)}]</span>
+    </div> -->
     <div
       class="content-wrap"
       style={wrapStyles}
@@ -423,16 +489,24 @@
     width: var(--wrapW);
     height: var(--wrapH);
     cursor: grab;
+    transform: translate(var(--posX), var(--posY));
   }
   .content {
-    /* transition: all 0.1s ease-out; */
-    transform: translate(var(--posX), var(--posY)) scale(var(--scale));
+    transform: scale(var(--scale));
     user-select: none;
-    padding: 200px;
-    padding-top: 200px;
+    padding: var(--dragPadding);
   }
 
   .content-wrap.dragging {
     cursor: grabbing;
+  }
+
+  .debug {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: fixed;
+    padding: 8px;
+    z-index: 2;
   }
 </style>

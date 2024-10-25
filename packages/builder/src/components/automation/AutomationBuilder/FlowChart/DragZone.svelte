@@ -7,7 +7,7 @@
   let dropEle
   let dzid = generate()
 
-  const view = getContext("view")
+  const view = getContext("draggableView")
 
   onMount(() => {
     // Always return up-to-date values
