@@ -1,154 +1,72 @@
-import { FieldType, FormulaType, RelationshipType } from "@budibase/types"
 import { object } from "./utils"
 import Resource from "./utils/Resource"
 
 const view = {
-  _id: "ta_5b1649e42a5b41dea4ef7742a36a7a70",
-  name: "People",
+  name: "peopleView",
+  tableId: "ta_896a325f7e8147d2a2cda93c5d236511",
   schema: {
     name: {
-      type: "string",
-      name: "name",
+      visible: true,
+      readonly: false,
+      order: 1,
+      width: 300,
     },
     age: {
-      type: "number",
-      name: "age",
+      visible: true,
+      readonly: true,
+      order: 2,
+      width: 200,
     },
-    relationship: {
-      type: "link",
-      name: "relationship",
-      tableId: "ta_...",
-      fieldName: "relatedColumn",
-      relationshipType: "many-to-many",
+    salary: {
+      visible: false,
+      readonly: false,
     },
   },
+  primaryDisplay: "name",
 }
 
 const baseColumnDef = {
-  type: {
-    type: "string",
-    enum: Object.values(FieldType),
-    description:
-      "Defines the type of the column, most explain themselves, a link column is a relationship.",
-  },
-  constraints: {
-    type: "object",
-    description:
-      "A constraint can be applied to the column which will be validated against when a row is saved.",
-    properties: {
-      type: {
-        type: "string",
-        enum: ["string", "number", "object", "boolean"],
-      },
-      presence: {
-        type: "boolean",
-        description: "Defines whether the column is required or not.",
-      },
-    },
-  },
-  name: {
-    type: "string",
-    description: "The name of the column.",
-  },
-  autocolumn: {
+  visible: {
     type: "boolean",
-    description: "Defines whether the column is automatically generated.",
+    description:
+      "Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it.",
+  },
+  readonly: {
+    type: "boolean",
+    description:
+      "When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated.",
+  },
+  order: {
+    type: "integer",
+    description:
+      "A number defining where the column shows up in tables, lowest being first.",
+  },
+  width: {
+    type: "integer",
+    description:
+      "A width for the column, defined in pixels - this affects rendering in tables.",
   },
 }
 
 const viewSchema = {
-  description: "The table to be created/updated.",
+  description: "The view to be created/updated.",
   type: "object",
   required: ["name", "schema"],
   properties: {
     name: {
-      description: "The name of the table.",
+      description: "The name of the view.",
       type: "string",
     },
     primaryDisplay: {
       type: "string",
       description:
-        "The name of the column which should be used in relationship tags when relating to this table.",
+        "A column used to display rows from this view - usually used when rendered in tables.",
     },
     schema: {
       type: "object",
       additionalProperties: {
-        oneOf: [
-          // relationship
-          {
-            type: "object",
-            properties: {
-              ...baseColumnDef,
-              type: {
-                type: "string",
-                enum: [FieldType.LINK],
-                description: "A relationship column.",
-              },
-              fieldName: {
-                type: "string",
-                description:
-                  "The name of the column which a relationship column is related to in another table.",
-              },
-              tableId: {
-                type: "string",
-                description:
-                  "The ID of the table which a relationship column is related to.",
-              },
-              relationshipType: {
-                type: "string",
-                enum: Object.values(RelationshipType),
-                description:
-                  "Defines the type of relationship that this column will be used for.",
-              },
-              through: {
-                type: "string",
-                description:
-                  "When using a SQL table that contains many to many relationships this defines the table the relationships are linked through.",
-              },
-              foreignKey: {
-                type: "string",
-                description:
-                  "When using a SQL table that contains a one to many relationship this defines the foreign key.",
-              },
-              throughFrom: {
-                type: "string",
-                description:
-                  "When using a SQL table that utilises a through table, this defines the primary key in the through table for this table.",
-              },
-              throughTo: {
-                type: "string",
-                description:
-                  "When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table.",
-              },
-            },
-          },
-          {
-            type: "object",
-            properties: {
-              ...baseColumnDef,
-              type: {
-                type: "string",
-                enum: [FieldType.FORMULA],
-                description: "A formula column.",
-              },
-              formula: {
-                type: "string",
-                description:
-                  "Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format.",
-              },
-              formulaType: {
-                type: "string",
-                enum: Object.values(FormulaType),
-                description:
-                  "Defines whether this is a static or dynamic formula.",
-              },
-            },
-          },
-          {
-            type: "object",
-            properties: baseColumnDef,
-          },
-        ],
+        type: "object",
+        properties: baseColumnDef,
       },
     },
   },
@@ -158,12 +76,12 @@ const viewOutputSchema = {
   ...viewSchema,
   properties: {
     ...viewSchema.properties,
-    _id: {
+    id: {
       description: "The ID of the view.",
       type: "string",
     },
   },
-  required: [...viewSchema.required, "_id"],
+  required: [...viewSchema.required, "id"],
 }
 
 export default new Resource()
