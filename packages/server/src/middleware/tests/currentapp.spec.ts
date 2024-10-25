@@ -1,4 +1,6 @@
-require("../../db").init()
+import * as db from "../../db"
+
+db.init()
 mockAuthWithNoCookie()
 mockWorker()
 mockUserGroups()
@@ -45,7 +47,7 @@ function mockAuthWithNoCookie() {
       },
       cache: {
         user: {
-          getUser: async id => {
+          getUser: async () => {
             return {
               _id: "us_uuid1",
             }
@@ -82,7 +84,7 @@ function mockAuthWithCookie() {
       },
       cache: {
         user: {
-          getUser: async id => {
+          getUser: async () => {
             return {
               _id: "us_uuid1",
             }
@@ -94,6 +96,10 @@ function mockAuthWithCookie() {
 }
 
 class TestConfiguration {
+  next: jest.MockedFunction<any>
+  throw: jest.MockedFunction<any>
+  ctx: any
+
   constructor() {
     this.next = jest.fn()
     this.throw = jest.fn()
@@ -130,7 +136,7 @@ class TestConfiguration {
 }
 
 describe("Current app middleware", () => {
-  let config
+  let config: TestConfiguration
 
   beforeEach(() => {
     config = new TestConfiguration()
@@ -192,7 +198,7 @@ describe("Current app middleware", () => {
           },
           cache: {
             user: {
-              getUser: async id => {
+              getUser: async () => {
                 return {
                   _id: "us_uuid1",
                 }
