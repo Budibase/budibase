@@ -7,12 +7,7 @@
     Icon,
     Multiselect,
   } from "@budibase/bbui"
-  import {
-    CalculationType,
-    canGroupBy,
-    FieldType,
-    isNumeric,
-  } from "@budibase/types"
+  import { CalculationType, canGroupBy, isNumeric } from "@budibase/types"
   import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { getContext } from "svelte"
 
