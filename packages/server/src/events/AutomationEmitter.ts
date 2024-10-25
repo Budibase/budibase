@@ -31,7 +31,17 @@ class AutomationEmitter {
     }
   }
 
-  async emitRow(eventName: string, appId: string, row: Row, table?: Table) {
+  async emitRow({
+    eventName,
+    appId,
+    row,
+    table,
+  }: {
+    eventName: string
+    appId: string
+    row: Row
+    table?: Table
+  }) {
     let MAX_AUTOMATION_CHAIN = await this.getMaxAutomationChain()
 
     // don't emit even if we've reached max automation chain

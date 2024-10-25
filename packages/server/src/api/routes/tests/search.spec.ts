@@ -2278,12 +2278,16 @@ describe.each([
       // It also can't work for in-memory searching because the related table name
       // isn't available.
       !isInMemory &&
-      describe("relations", () => {
+      describe.each([
+        RelationshipType.ONE_TO_MANY,
+        RelationshipType.MANY_TO_ONE,
+        RelationshipType.MANY_TO_MANY,
+      ])("relations (%s)", relationshipType => {
         let productCategoryTable: Table, productCatRows: Row[]
 
         beforeAll(async () => {
           const { relatedTable, tableId } = await basicRelationshipTables(
-            RelationshipType.ONE_TO_MANY
+            relationshipType
           )
           tableOrViewId = tableId
           productCategoryTable = relatedTable
@@ -2380,7 +2384,10 @@ describe.each([
                     ],
                   },
                 }).toContainExactly([
-                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                  {
+                    name: "foo",
+                    productCat: [{ _id: productCatRows[0]._id }],
+                  },
                 ])
               }
             )
@@ -2458,7 +2465,7 @@ describe.each([
               }).toContainExactly([
                 { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
                 { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
-                // { name: "baz", productCat: undefined }, // TODO
+                { name: "baz", productCat: undefined },
               ])
             })
 
@@ -2480,7 +2487,10 @@ describe.each([
                     ],
                   },
                 }).toContainExactly([
-                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                  {
+                    name: "foo",
+                    productCat: [{ _id: productCatRows[0]._id }],
+                  },
                 ])
               }
             )
@@ -2504,9 +2514,15 @@ describe.each([
                     ],
                   },
                 }).toContainExactly([
-                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
-                  { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
-                  // { name: "baz", productCat: undefined }, // TODO
+                  {
+                    name: "foo",
+                    productCat: [{ _id: productCatRows[0]._id }],
+                  },
+                  {
+                    name: "bar",
+                    productCat: [{ _id: productCatRows[1]._id }],
+                  },
+                  { name: "baz", productCat: undefined },
                 ])
               }
             )
@@ -2530,7 +2546,7 @@ describe.each([
               }).toContainExactly([
                 { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
                 { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
-                // { name: "baz", productCat: undefined }, // TODO
+                { name: "baz", productCat: undefined },
               ])
             })
           })
@@ -2538,10 +2554,13 @@ describe.each([
       })
 
     isSql &&
-      describe("big relations", () => {
+      describe.each([
+        RelationshipType.MANY_TO_ONE,
+        RelationshipType.MANY_TO_MANY,
+      ])("big relations (%s)", relationshipType => {
         beforeAll(async () => {
           const { relatedTable, tableId } = await basicRelationshipTables(
-            RelationshipType.MANY_TO_ONE
+            relationshipType
           )
           tableOrViewId = tableId
           const mainRow = await config.api.row.save(tableOrViewId, {
@@ -2567,7 +2586,8 @@ describe.each([
           expect(response.rows[0].productCat).toBeArrayOfSize(11)
         })
       })
-    ;(isSqs || isLucene) &&
+
+    isSql &&
       describe("relations to same table", () => {
         let relatedTable: string, relatedRows: Row[]
 
@@ -2609,6 +2629,11 @@ describe.each([
               related1: [relatedRows[2]._id!],
               related2: [relatedRows[3]._id!],
             }),
+            config.api.row.save(tableOrViewId, {
+              name: "test3",
+              related1: [relatedRows[1]._id],
+              related2: [relatedRows[2]._id!],
+            }),
           ])
         })
 
@@ -2626,42 +2651,59 @@ describe.each([
               related1: [{ _id: relatedRows[2]._id }],
               related2: [{ _id: relatedRows[3]._id }],
             },
+            {
+              name: "test3",
+              related1: [{ _id: relatedRows[1]._id }],
+              related2: [{ _id: relatedRows[2]._id }],
+            },
           ])
         })
 
-        isSqs &&
-          it("should be able to filter down to second row with equal", async () => {
-            await expectSearch({
-              query: {
-                equal: {
-                  ["related1.name"]: "baz",
-                },
+        it("should be able to filter via the first relation field with equal", async () => {
+          await expectSearch({
+            query: {
+              equal: {
+                ["related1.name"]: "baz",
               },
-            }).toContainExactly([
-              {
-                name: "test2",
-                related1: [{ _id: relatedRows[2]._id }],
-              },
-            ])
-          })
+            },
+          }).toContainExactly([
+            {
+              name: "test2",
+              related1: [{ _id: relatedRows[2]._id }],
+            },
+          ])
+        })
 
-        isSqs &&
-          it("should be able to filter down to first row with not equal", async () => {
-            await expectSearch({
-              query: {
-                notEqual: {
-                  ["1:related2.name"]: "bar",
-                  ["2:related2.name"]: "baz",
-                  ["3:related2.name"]: "boo",
-                },
+        it("should be able to filter via the second relation field with not equal", async () => {
+          await expectSearch({
+            query: {
+              notEqual: {
+                ["1:related2.name"]: "foo",
+                ["2:related2.name"]: "baz",
+                ["3:related2.name"]: "boo",
               },
-            }).toContainExactly([
-              {
-                name: "test",
-                related1: [{ _id: relatedRows[0]._id }],
+            },
+          }).toContainExactly([
+            {
+              name: "test",
+            },
+          ])
+        })
+
+        it("should be able to filter on both fields", async () => {
+          await expectSearch({
+            query: {
+              notEqual: {
+                ["related1.name"]: "foo",
+                ["related2.name"]: "baz",
               },
-            ])
-          })
+            },
+          }).toContainExactly([
+            {
+              name: "test2",
+            },
+          ])
+        })
       })
 
     isInternal &&

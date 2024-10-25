@@ -17,7 +17,7 @@ import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
 
 function isIgnoredType(type: FieldType) {
-  const ignored = [FieldType.LINK, FieldType.FORMULA]
+  const ignored = [FieldType.LINK, FieldType.FORMULA, FieldType.AI]
   return ignored.indexOf(type) !== -1
 }
 
@@ -142,6 +142,9 @@ function generateSchema(
         }
         break
       case FieldType.FORMULA:
+        // This is allowed, but nothing to do on the external datasource
+        break
+      case FieldType.AI:
         // This is allowed, but nothing to do on the external datasource
         break
       case FieldType.ATTACHMENTS:

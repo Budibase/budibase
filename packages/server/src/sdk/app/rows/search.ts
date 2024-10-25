@@ -1,5 +1,6 @@
 import {
   EmptyFilterOption,
+  FeatureFlag,
   LegacyFilter,
   LogicalOperator,
   Row,
@@ -101,7 +102,7 @@ export async function search(
       viewQuery = checkFilters(table, viewQuery)
       delete viewQuery?.onEmptyFilter
 
-      const sqsEnabled = await features.flags.isEnabled("SQS")
+      const sqsEnabled = await features.flags.isEnabled(FeatureFlag.SQS)
       const supportsLogicalOperators =
         isExternalTableID(view.tableId) || sqsEnabled
 
@@ -168,7 +169,7 @@ export async function search(
     if (isExternalTable) {
       span?.addTags({ searchType: "external" })
       result = await external.search(options, source)
-    } else if (await features.flags.isEnabled("SQS")) {
+    } else if (await features.flags.isEnabled(FeatureFlag.SQS)) {
       span?.addTags({ searchType: "sqs" })
       result = await internal.sqs.search(options, source)
     } else {
