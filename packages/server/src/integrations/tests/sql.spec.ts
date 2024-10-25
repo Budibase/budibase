@@ -212,7 +212,7 @@ describe("SQL query builder", () => {
     const filterSet = [`%20%`, `%25%`, `%"john"%`, `%"mary"%`]
     expect(query).toEqual({
       bindings: [...filterSet, limit],
-      sql: `select * from (select * from "test" where COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2 and COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4 order by "test"."id" asc) where rownum <= :5`,
+      sql: `select * from (select * from "test" where ((COALESCE(LOWER("test"."age"), '') like :1 and COALESCE(LOWER("test"."age"), '') like :2)) and ((COALESCE(LOWER("test"."name"), '') like :3 and COALESCE(LOWER("test"."name"), '') like :4)) order by "test"."id" asc) where rownum <= :5`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -244,7 +244,7 @@ describe("SQL query builder", () => {
 
     expect(query).toEqual({
       bindings: ["John", limit],
-      sql: `select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") = :1) order by "test"."id" asc) where rownum <= :2`,
+      sql: `select * from (select * from "test" where (to_char("test"."name") is not null and to_char("test"."name") = :1) order by "test"."id" asc) where rownum <= :2`,
     })
   })
 
@@ -262,7 +262,7 @@ describe("SQL query builder", () => {
 
     expect(query).toEqual({
       bindings: ["John", limit],
-      sql: `select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") != :1) OR to_char("test"."name") IS NULL order by "test"."id" asc) where rownum <= :2`,
+      sql: `select * from (select * from "test" where (to_char("test"."name") is not null and to_char("test"."name") != :1) or to_char("test"."name") is null order by "test"."id" asc) where rownum <= :2`,
     })
   })
 })
