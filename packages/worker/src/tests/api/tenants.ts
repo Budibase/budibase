@@ -15,12 +15,4 @@ export class TenantAPI extends TestAPI {
       .set(opts?.headers)
       .expect(opts?.status ? opts.status : 204)
   }
-
-  saveTenantInfo = (tenantInfo: TenantInfo) => {
-    return this.request
-      .post("/api/global/tenant")
-      .set(this.config.internalAPIHeaders())
-      .send(tenantInfo)
-      .expect(200)
-  }
 }
