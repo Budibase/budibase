@@ -761,7 +761,6 @@ components:
                     enum:
                       - static
                       - dynamic
-                      - ai
                     description: Defines whether this is a static or dynamic formula.
               - type: object
                 properties:
@@ -931,7 +930,6 @@ components:
                         enum:
                           - static
                           - dynamic
-                          - ai
                         description: Defines whether this is a static or dynamic formula.
                   - type: object
                     properties:
@@ -1108,7 +1106,6 @@ components:
                           enum:
                             - static
                             - dynamic
-                            - ai
                           description: Defines whether this is a static or dynamic formula.
                     - type: object
                       properties:
