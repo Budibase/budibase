@@ -29,6 +29,7 @@ describe.each(
   const isOracle = dbName === DatabaseName.ORACLE
   const isMsSQL = dbName === DatabaseName.SQL_SERVER
   const isPostgres = dbName === DatabaseName.POSTGRES
+  const mainTableName = "test_table"
 
   let rawDatasource: Datasource
   let datasource: Datasource
@@ -71,15 +72,15 @@ describe.each(
 
     client = await knexClient(rawDatasource)
 
-    await client.schema.dropTableIfExists("test_table")
-    await client.schema.createTable("test_table", table => {
+    await client.schema.dropTableIfExists(mainTableName)
+    await client.schema.createTable(mainTableName, table => {
       table.increments("id").primary()
       table.string("name")
       table.timestamp("birthday")
       table.integer("number")
     })
 
-    await client("test_table").insert([
+    await client(mainTableName).insert([
       { name: "one" },
       { name: "two" },
       { name: "three" },
@@ -105,7 +106,7 @@ describe.each(
         const query = await createQuery({
           name: "New Query",
           fields: {
-            sql: client("test_table").select("*").toString(),
+            sql: client(mainTableName).select("*").toString(),
           },
         })
 
@@ -114,7 +115,7 @@ describe.each(
           name: "New Query",
           parameters: [],
           fields: {
-            sql: client("test_table").select("*").toString(),
+            sql: client(mainTableName).select("*").toString(),
           },
           schema: {},
           queryVerb: "read",
@@ -133,7 +134,7 @@ describe.each(
       it("should be able to update a query", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table").select("*").toString(),
+            sql: client(mainTableName).select("*").toString(),
           },
         })
 
@@ -143,7 +144,7 @@ describe.each(
           ...query,
           name: "Updated Query",
           fields: {
-            sql: client("test_table").where({ id: 1 }).toString(),
+            sql: client(mainTableName).where({ id: 1 }).toString(),
           },
         })
 
@@ -152,7 +153,7 @@ describe.each(
           name: "Updated Query",
           parameters: [],
           fields: {
-            sql: client("test_table").where({ id: 1 }).toString(),
+            sql: client(mainTableName).where({ id: 1 }).toString(),
           },
           schema: {},
           queryVerb: "read",
@@ -169,7 +170,7 @@ describe.each(
       it("should be able to delete a query", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table").select("*").toString(),
+            sql: client(mainTableName).select("*").toString(),
           },
         })
 
@@ -188,7 +189,7 @@ describe.each(
       it("should be able to list queries", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table").select("*").toString(),
+            sql: client(mainTableName).select("*").toString(),
           },
         })
 
@@ -199,7 +200,7 @@ describe.each(
       it("should strip sensitive fields for prod apps", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table").select("*").toString(),
+            sql: client(mainTableName).select("*").toString(),
           },
         })
 
@@ -217,7 +218,7 @@ describe.each(
           const jsonStatement = `COALESCE(json_build_object('name', name),'{"name":{}}'::json)`
           const query = await createQuery({
             fields: {
-              sql: client("test_table")
+              sql: client(mainTableName)
                 .select([
                   "*",
                   client.raw(
@@ -245,7 +246,7 @@ describe.each(
         datasourceId: datasource._id!,
         queryVerb: "read",
         fields: {
-          sql: client("test_table").where({ id: 1 }).toString(),
+          sql: client(mainTableName).where({ id: 1 }).toString(),
         },
         parameters: [],
         transformer: "return data",
@@ -391,7 +392,7 @@ describe.each(
     it("should work with dynamic variables", async () => {
       const basedOnQuery = await createQuery({
         fields: {
-          sql: client("test_table").select("name").where({ id: 1 }).toString(),
+          sql: client(mainTableName).select("name").where({ id: 1 }).toString(),
         },
       })
 
@@ -440,7 +441,7 @@ describe.each(
     it("should handle the dynamic base query being deleted", async () => {
       const basedOnQuery = await createQuery({
         fields: {
-          sql: client("test_table").select("name").where({ id: 1 }).toString(),
+          sql: client(mainTableName).select("name").where({ id: 1 }).toString(),
         },
       })
 
@@ -494,7 +495,7 @@ describe.each(
       it("should be able to insert with bindings", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table").insert({ name: "{{ foo }}" }).toString(),
+            sql: client(mainTableName).insert({ name: "{{ foo }}" }).toString(),
           },
           parameters: [
             {
@@ -517,7 +518,7 @@ describe.each(
           },
         ])
 
-        const rows = await client("test_table").where({ name: "baz" }).select()
+        const rows = await client(mainTableName).where({ name: "baz" }).select()
         expect(rows).toHaveLength(1)
         for (const row of rows) {
           expect(row).toMatchObject({ name: "baz" })
@@ -527,7 +528,7 @@ describe.each(
       it("should not allow handlebars as parameters", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table").insert({ name: "{{ foo }}" }).toString(),
+            sql: client(mainTableName).insert({ name: "{{ foo }}" }).toString(),
           },
           parameters: [
             {
@@ -563,7 +564,7 @@ describe.each(
             const date = new Date(datetimeStr)
             const query = await createQuery({
               fields: {
-                sql: client("test_table")
+                sql: client(mainTableName)
                   .insert({
                     name: "foo",
                     birthday: client.raw("{{ birthday }}"),
@@ -585,7 +586,7 @@ describe.each(
 
             expect(result.data).toEqual([{ created: true }])
 
-            const rows = await client("test_table")
+            const rows = await client(mainTableName)
               .where({ birthday: datetimeStr })
               .select()
             expect(rows).toHaveLength(1)
@@ -601,7 +602,7 @@ describe.each(
         async notDateStr => {
           const query = await createQuery({
             fields: {
-              sql: client("test_table")
+              sql: client(mainTableName)
                 .insert({ name: client.raw("{{ name }}") })
                 .toString(),
             },
@@ -622,7 +623,7 @@ describe.each(
 
           expect(result.data).toEqual([{ created: true }])
 
-          const rows = await client("test_table")
+          const rows = await client(mainTableName)
             .where({ name: notDateStr })
             .select()
           expect(rows).toHaveLength(1)
@@ -634,7 +635,7 @@ describe.each(
       it("should execute a query", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table").select("*").orderBy("id").toString(),
+            sql: client(mainTableName).select("*").orderBy("id").toString(),
           },
         })
 
@@ -677,7 +678,7 @@ describe.each(
       it("should be able to transform a query", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table").where({ id: 1 }).select("*").toString(),
+            sql: client(mainTableName).where({ id: 1 }).select("*").toString(),
           },
           transformer: `
             data[0].id = data[0].id + 1;
@@ -700,7 +701,7 @@ describe.each(
       it("should coerce numeric bindings", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table")
+            sql: client(mainTableName)
               .where({ id: client.raw("{{ id }}") })
               .select("*")
               .toString(),
@@ -734,7 +735,7 @@ describe.each(
       it("should be able to update rows", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table")
+            sql: client(mainTableName)
               .update({ name: client.raw("{{ name }}") })
               .where({ id: client.raw("{{ id }}") })
               .toString(),
@@ -759,7 +760,7 @@ describe.each(
           },
         })
 
-        const rows = await client("test_table").where({ id: 1 }).select()
+        const rows = await client(mainTableName).where({ id: 1 }).select()
         expect(rows).toEqual([
           { id: 1, name: "foo", birthday: null, number: null },
         ])
@@ -768,7 +769,7 @@ describe.each(
       it("should be able to execute an update that updates no rows", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table")
+            sql: client(mainTableName)
               .update({ name: "updated" })
               .where({ id: 100 })
               .toString(),
@@ -778,7 +779,7 @@ describe.each(
 
         await config.api.query.execute(query._id!)
 
-        const rows = await client("test_table").select()
+        const rows = await client(mainTableName).select()
         for (const row of rows) {
           expect(row.name).not.toEqual("updated")
         }
@@ -787,14 +788,14 @@ describe.each(
       it("should be able to execute a delete that deletes no rows", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table").where({ id: 100 }).delete().toString(),
+            sql: client(mainTableName).where({ id: 100 }).delete().toString(),
           },
           queryVerb: "delete",
         })
 
         await config.api.query.execute(query._id!)
 
-        const rows = await client("test_table").select()
+        const rows = await client(mainTableName).select()
         expect(rows).toHaveLength(5)
       })
     })
@@ -803,7 +804,7 @@ describe.each(
       it("should be able to delete rows", async () => {
         const query = await createQuery({
           fields: {
-            sql: client("test_table")
+            sql: client(mainTableName)
               .where({ id: client.raw("{{ id }}") })
               .delete()
               .toString(),
@@ -823,7 +824,7 @@ describe.each(
           },
         })
 
-        const rows = await client("test_table").where({ id: 1 }).select()
+        const rows = await client(mainTableName).where({ id: 1 }).select()
         expect(rows).toHaveLength(0)
       })
     })
@@ -831,7 +832,7 @@ describe.each(
 
   describe("query through datasource", () => {
     it("should be able to query the datasource", async () => {
-      const entityId = "test_table"
+      const entityId = mainTableName
       await config.api.datasource.update({
         ...datasource,
         entities: {
@@ -876,7 +877,7 @@ describe.each(
       beforeAll(async () => {
         queryParams = {
           fields: {
-            sql: client("test_table")
+            sql: client(mainTableName)
               .insert({
                 name: client.raw("{{ bindingName }}"),
                 number: client.raw("{{ bindingNumber }}"),
@@ -927,6 +928,36 @@ describe.each(
         })
         expect(results).toEqual({ data: [{ created: true }] })
       })
+    })
+  })
+
+  describe("edge cases", () => {
+    it("should find rows with a binding containing a slash", async () => {
+      const slashValue = "1/10"
+      await client(mainTableName).insert([{ name: slashValue }])
+
+      const query = await createQuery({
+        fields: {
+          sql: client(mainTableName)
+            .select("*")
+            .where("name", "=", client.raw("{{ bindingName }}"))
+            .toString(),
+        },
+        parameters: [
+          {
+            name: "bindingName",
+            default: "",
+          },
+        ],
+        queryVerb: "read",
+      })
+      const results = await config.api.query.execute(query._id!, {
+        parameters: {
+          bindingName: slashValue,
+        },
+      })
+      expect(results).toBeDefined()
+      expect(results.data.length).toEqual(1)
     })
   })
 })

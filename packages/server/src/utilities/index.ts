@@ -3,7 +3,10 @@ import { context } from "@budibase/backend-core"
 import { generateMetadataID } from "../db/utils"
 import { Document } from "@budibase/types"
 import stream from "stream"
+import dayjs from "dayjs"
+import customParseFormat from "dayjs/plugin/customParseFormat"
 
+dayjs.extend(customParseFormat)
 const Readable = stream.Readable
 
 export function wait(ms: number) {
@@ -13,6 +16,28 @@ export function wait(ms: number) {
 export const isDev = env.isDev
 
 export const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+$/g
+const ACCEPTED_DATE_FORMATS = [
+  "MM/DD/YYYY",
+  "MM/DD/YY",
+  "DD/MM/YYYY",
+  "DD/MM/YY",
+  "YYYY/MM/DD",
+  "YYYY-MM-DD",
+  "YYYY-MM-DDTHH:mm",
+  "YYYY-MM-DDTHH:mm:ss",
+  "YYYY-MM-DDTHH:mm:ss[Z]",
+  "YYYY-MM-DDTHH:mm:ss.SSS[Z]",
+]
+
+export function isDate(str: string) {
+  // checks for xx/xx/xx or ISO date timestamp formats
+  for (const format of ACCEPTED_DATE_FORMATS) {
+    if (dayjs(str, format, true).isValid()) {
+      return true
+    }
+  }
+  return false
+}
 
 export function removeFromArray(array: any[], element: any) {
   const index = array.indexOf(element)

@@ -15,13 +15,16 @@ import {
   ExportRowsResponse,
   FieldType,
   GetRowResponse,
+  isRelationshipField,
   PatchRowRequest,
   PatchRowResponse,
   Row,
   RowAttachment,
   RowSearchParams,
+  SearchFilters,
   SearchRowRequest,
   SearchRowResponse,
+  Table,
   UserCtx,
   ValidateResponse,
 } from "@budibase/types"
@@ -33,6 +36,7 @@ import sdk from "../../../sdk"
 import * as exporters from "../view/exporters"
 import { Format } from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
+import { dataFilters } from "@budibase/shared-core"
 
 export * as views from "./views"
 
@@ -61,7 +65,14 @@ export async function patch(
     }
     ctx.status = 200
     ctx.eventEmitter &&
-      ctx.eventEmitter.emitRow(`row:update`, appId, row, table, oldRow)
+      ctx.eventEmitter.emitRow({
+        eventName: `row:update`,
+        appId,
+        row,
+        table,
+        oldRow,
+        user: sdk.users.getUserContextBindings(ctx.user),
+      })
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
@@ -92,7 +103,14 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
         sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
       )
   ctx.status = 200
-  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emitRow({
+      eventName: `row:save`,
+      appId,
+      row,
+      table,
+      user: sdk.users.getUserContextBindings(ctx.user),
+    })
   ctx.message = `${table.name} saved successfully`
   // prefer squashed for response
   ctx.body = row || squashed
@@ -164,10 +182,15 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   }
 
   for (let row of rows) {
-    ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
+    ctx.eventEmitter &&
+      ctx.eventEmitter.emitRow({
+        eventName: `row:delete`,
+        appId,
+        row,
+        user: sdk.users.getUserContextBindings(ctx.user),
+      })
     gridSocket?.emitRowDeletion(ctx, row)
   }
-
   return rows
 }
 
@@ -180,7 +203,13 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
     await quotas.removeRow()
   }
 
-  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emitRow({
+      eventName: `row:delete`,
+      appId,
+      row: resp.row,
+      user: sdk.users.getUserContextBindings(ctx.user),
+    })
   gridSocket?.emitRowDeletion(ctx, resp.row)
 
   return resp
@@ -211,12 +240,15 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
 
   await context.ensureSnippetContext(true)
 
-  const enrichedQuery = await utils.enrichSearchContext(
-    { ...ctx.request.body.query },
-    {
-      user: sdk.users.getUserContextBindings(ctx.user),
-    }
-  )
+  let { query } = ctx.request.body
+  if (query) {
+    const allTables = await sdk.tables.getAllTables()
+    query = replaceTableNamesInFilters(tableId, query, allTables)
+  }
+
+  let enrichedQuery: SearchFilters = await utils.enrichSearchContext(query, {
+    user: sdk.users.getUserContextBindings(ctx.user),
+  })
 
   const searchParams: RowSearchParams = {
     ...ctx.request.body,
@@ -227,6 +259,47 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
 
   ctx.status = 200
   ctx.body = await sdk.rows.search(searchParams)
+}
+
+function replaceTableNamesInFilters(
+  tableId: string,
+  filters: SearchFilters,
+  allTables: Table[]
+): SearchFilters {
+  for (const filter of Object.values(filters)) {
+    for (const key of Object.keys(filter)) {
+      const matches = key.match(`^(?<relation>.+)\\.(?<field>.+)`)
+
+      const relation = matches?.groups?.["relation"]
+      const field = matches?.groups?.["field"]
+
+      if (!relation || !field) {
+        continue
+      }
+
+      const table = allTables.find(r => r._id === tableId)!
+      if (Object.values(table.schema).some(f => f.name === relation)) {
+        continue
+      }
+
+      const matchedTable = allTables.find(t => t.name === relation)
+      const relationship = Object.values(table.schema).find(
+        f => isRelationshipField(f) && f.tableId === matchedTable?._id
+      )
+      if (!relationship) {
+        continue
+      }
+
+      const updatedField = `${relationship.name}.${field}`
+      if (updatedField && updatedField !== key) {
+        filter[updatedField] = filter[key]
+        delete filter[key]
+      }
+    }
+  }
+  return dataFilters.recurseLogicalOperators(filters, (f: SearchFilters) => {
+    return replaceTableNamesInFilters(tableId, f, allTables)
+  })
 }
 
 export async function validate(ctx: Ctx<Row, ValidateResponse>) {
