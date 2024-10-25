@@ -37,6 +37,7 @@
       tooltipType={TooltipType.Info}
       tooltipPosition={TooltipPosition.Left}
       tooltip={"Create branch"}
+      size={"S"}
     />
   {/if}
   <Icon
@@ -53,6 +54,7 @@
     tooltip={canAddMoreSteps
       ? "Add a step"
       : `Maximum of ${automationStepLimit} action steps reached`}
+    size={"S"}
   />
 </div>
 
@@ -62,6 +64,6 @@
     border-radius: 4px 4px 4px 4px;
     display: flex;
     gap: var(--spacing-m);
-    padding: var(--spacing-m);
+    padding: 8px 12px;
   }
 </style>

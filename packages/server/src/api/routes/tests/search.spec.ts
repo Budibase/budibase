@@ -7,6 +7,7 @@ import {
 import {
   context,
   db as dbCore,
+  docIds,
   features,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
@@ -74,6 +75,7 @@ describe.each([
   const isLucene = name === "lucene"
   const isInMemory = name === "in-memory"
   const isInternal = isSqs || isLucene || isInMemory
+  const isOracle = name === DatabaseName.ORACLE
   const isSql = !isInMemory && !isLucene
   const config = setup.getConfig()
 
@@ -142,14 +144,14 @@ describe.each([
     }
   })
 
-  async function createTable(schema: TableSchema) {
+  async function createTable(schema?: TableSchema) {
     const table = await config.api.table.save(
       tableForDatasource(datasource, { schema })
     )
     return table._id!
   }
 
-  async function createView(tableId: string, schema: ViewV2Schema) {
+  async function createView(tableId: string, schema?: ViewV2Schema) {
     const view = await config.api.viewV2.create({
       tableId: tableId,
       name: generator.guid(),
@@ -166,22 +168,51 @@ describe.each([
     rows = await config.api.row.fetch(tableOrViewId)
   }
 
+  async function getTable(tableOrViewId: string): Promise<Table> {
+    if (docIds.isViewId(tableOrViewId)) {
+      const view = await config.api.viewV2.get(tableOrViewId)
+      return await config.api.table.get(view.tableId)
+    } else {
+      return await config.api.table.get(tableOrViewId)
+    }
+  }
+
+  async function assertTableExists(nameOrTable: string | Table) {
+    const name =
+      typeof nameOrTable === "string" ? nameOrTable : nameOrTable.name
+    expect(await client!.schema.hasTable(name)).toBeTrue()
+  }
+
+  async function assertTableNumRows(
+    nameOrTable: string | Table,
+    numRows: number
+  ) {
+    const name =
+      typeof nameOrTable === "string" ? nameOrTable : nameOrTable.name
+    const row = await client!.from(name).count()
+    const count = parseInt(Object.values(row[0])[0] as string)
+    expect(count).toEqual(numRows)
+  }
+
   describe.each([
     ["table", createTable],
     [
       "view",
-      async (schema: TableSchema) => {
+      async (schema?: TableSchema) => {
         const tableId = await createTable(schema)
         const viewId = await createView(
           tableId,
-          Object.keys(schema).reduce<ViewV2Schema>((viewSchema, fieldName) => {
-            const field = schema[fieldName]
-            viewSchema[fieldName] = {
-              visible: field.visible ?? true,
-              readonly: false,
-            }
-            return viewSchema
-          }, {})
+          Object.keys(schema || {}).reduce<ViewV2Schema>(
+            (viewSchema, fieldName) => {
+              const field = schema![fieldName]
+              viewSchema[fieldName] = {
+                visible: field.visible ?? true,
+                readonly: false,
+              }
+              return viewSchema
+            },
+            {}
+          )
         )
         return viewId
       },
@@ -805,10 +836,11 @@ describe.each([
         })
       })
 
-    describe.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
+    const stringTypes = [FieldType.STRING, FieldType.LONGFORM] as const
+    describe.each(stringTypes)("%s", type => {
       beforeAll(async () => {
         tableOrViewId = await createTableOrView({
-          name: { name: "name", type: FieldType.STRING },
+          name: { name: "name", type },
         })
         await createRows([{ name: "foo" }, { name: "bar" }])
       })
@@ -1688,7 +1720,7 @@ describe.each([
         })
       })
 
-    describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
+    describe("arrays", () => {
       beforeAll(async () => {
         tableOrViewId = await createTableOrView({
           numbers: {
@@ -2364,12 +2396,16 @@ describe.each([
       // It also can't work for in-memory searching because the related table name
       // isn't available.
       !isInMemory &&
-      describe("relations", () => {
+      describe.each([
+        RelationshipType.ONE_TO_MANY,
+        RelationshipType.MANY_TO_ONE,
+        RelationshipType.MANY_TO_MANY,
+      ])("relations (%s)", relationshipType => {
         let productCategoryTable: Table, productCatRows: Row[]
 
         beforeAll(async () => {
           const { relatedTable, tableId } = await basicRelationshipTables(
-            RelationshipType.ONE_TO_MANY
+            relationshipType
           )
           tableOrViewId = tableId
           productCategoryTable = relatedTable
@@ -2466,7 +2502,10 @@ describe.each([
                     ],
                   },
                 }).toContainExactly([
-                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                  {
+                    name: "foo",
+                    productCat: [{ _id: productCatRows[0]._id }],
+                  },
                 ])
               }
             )
@@ -2544,7 +2583,7 @@ describe.each([
               }).toContainExactly([
                 { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
                 { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
-                // { name: "baz", productCat: undefined }, // TODO
+                { name: "baz", productCat: undefined },
               ])
             })
 
@@ -2566,7 +2605,10 @@ describe.each([
                     ],
                   },
                 }).toContainExactly([
-                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+                  {
+                    name: "foo",
+                    productCat: [{ _id: productCatRows[0]._id }],
+                  },
                 ])
               }
             )
@@ -2590,9 +2632,15 @@ describe.each([
                     ],
                   },
                 }).toContainExactly([
-                  { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
-                  { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
-                  // { name: "baz", productCat: undefined }, // TODO
+                  {
+                    name: "foo",
+                    productCat: [{ _id: productCatRows[0]._id }],
+                  },
+                  {
+                    name: "bar",
+                    productCat: [{ _id: productCatRows[1]._id }],
+                  },
+                  { name: "baz", productCat: undefined },
                 ])
               }
             )
@@ -2616,7 +2664,7 @@ describe.each([
               }).toContainExactly([
                 { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
                 { name: "bar", productCat: [{ _id: productCatRows[1]._id }] },
-                // { name: "baz", productCat: undefined }, // TODO
+                { name: "baz", productCat: undefined },
               ])
             })
           })
@@ -2624,10 +2672,13 @@ describe.each([
       })
 
     isSql &&
-      describe("big relations", () => {
+      describe.each([
+        RelationshipType.MANY_TO_ONE,
+        RelationshipType.MANY_TO_MANY,
+      ])("big relations (%s)", relationshipType => {
         beforeAll(async () => {
           const { relatedTable, tableId } = await basicRelationshipTables(
-            RelationshipType.MANY_TO_ONE
+            relationshipType
           )
           tableOrViewId = tableId
           const mainRow = await config.api.row.save(tableOrViewId, {
@@ -2653,7 +2704,8 @@ describe.each([
           expect(response.rows[0].productCat).toBeArrayOfSize(11)
         })
       })
-    ;(isSqs || isLucene) &&
+
+    isSql &&
       describe("relations to same table", () => {
         let relatedTable: string, relatedRows: Row[]
 
@@ -2695,6 +2747,11 @@ describe.each([
               related1: [relatedRows[2]._id!],
               related2: [relatedRows[3]._id!],
             }),
+            config.api.row.save(tableOrViewId, {
+              name: "test3",
+              related1: [relatedRows[1]._id],
+              related2: [relatedRows[2]._id!],
+            }),
           ])
         })
 
@@ -2712,42 +2769,59 @@ describe.each([
               related1: [{ _id: relatedRows[2]._id }],
               related2: [{ _id: relatedRows[3]._id }],
             },
+            {
+              name: "test3",
+              related1: [{ _id: relatedRows[1]._id }],
+              related2: [{ _id: relatedRows[2]._id }],
+            },
           ])
         })
 
-        isSqs &&
-          it("should be able to filter down to second row with equal", async () => {
-            await expectSearch({
-              query: {
-                equal: {
-                  ["related1.name"]: "baz",
-                },
+        it("should be able to filter via the first relation field with equal", async () => {
+          await expectSearch({
+            query: {
+              equal: {
+                ["related1.name"]: "baz",
               },
-            }).toContainExactly([
-              {
-                name: "test2",
-                related1: [{ _id: relatedRows[2]._id }],
-              },
-            ])
-          })
+            },
+          }).toContainExactly([
+            {
+              name: "test2",
+              related1: [{ _id: relatedRows[2]._id }],
+            },
+          ])
+        })
 
-        isSqs &&
-          it("should be able to filter down to first row with not equal", async () => {
-            await expectSearch({
-              query: {
-                notEqual: {
-                  ["1:related2.name"]: "bar",
-                  ["2:related2.name"]: "baz",
-                  ["3:related2.name"]: "boo",
-                },
+        it("should be able to filter via the second relation field with not equal", async () => {
+          await expectSearch({
+            query: {
+              notEqual: {
+                ["1:related2.name"]: "foo",
+                ["2:related2.name"]: "baz",
+                ["3:related2.name"]: "boo",
               },
-            }).toContainExactly([
-              {
-                name: "test",
-                related1: [{ _id: relatedRows[0]._id }],
+            },
+          }).toContainExactly([
+            {
+              name: "test",
+            },
+          ])
+        })
+
+        it("should be able to filter on both fields", async () => {
+          await expectSearch({
+            query: {
+              notEqual: {
+                ["related1.name"]: "foo",
+                ["related2.name"]: "baz",
               },
-            ])
-          })
+            },
+          }).toContainExactly([
+            {
+              name: "test2",
+            },
+          ])
+        })
       })
 
     isInternal &&
@@ -3512,6 +3586,106 @@ describe.each([
               related1: [{ _id: relatedRows[0]._id }],
             },
           ])
+        })
+      })
+
+    isSql &&
+      !isSqs &&
+      describe("SQL injection", () => {
+        const badStrings = [
+          "1; DROP TABLE %table_name%;",
+          "1; DELETE FROM %table_name%;",
+          "1; UPDATE %table_name% SET name = 'foo';",
+          "1; INSERT INTO %table_name% (name) VALUES ('foo');",
+          "' OR '1'='1' --",
+          "'; DROP TABLE %table_name%; --",
+          "' OR 1=1 --",
+          "' UNION SELECT null, null, null; --",
+          "' AND (SELECT COUNT(*) FROM %table_name%) > 0 --",
+          "\"; EXEC xp_cmdshell('dir'); --",
+          "\"' OR 'a'='a",
+          "OR 1=1;",
+          "'; SHUTDOWN --",
+        ]
+
+        describe.each(badStrings)("bad string: %s", badStringTemplate => {
+          // The SQL that knex generates when you try to use a double quote in a
+          // field name is always invalid and never works, so we skip it for these
+          // tests.
+          const skipFieldNameCheck = isOracle && badStringTemplate.includes('"')
+
+          !skipFieldNameCheck &&
+            it("should not allow SQL injection as a field name", async () => {
+              const tableOrViewId = await createTableOrView()
+              const table = await getTable(tableOrViewId)
+              const badString = badStringTemplate.replace(
+                /%table_name%/g,
+                table.name
+              )
+
+              await config.api.table.save({
+                ...table,
+                schema: {
+                  ...table.schema,
+                  [badString]: { name: badString, type: FieldType.STRING },
+                },
+              })
+
+              if (docIds.isViewId(tableOrViewId)) {
+                const view = await config.api.viewV2.get(tableOrViewId)
+                await config.api.viewV2.update({
+                  ...view,
+                  schema: {
+                    [badString]: { visible: true },
+                  },
+                })
+              }
+
+              await config.api.row.save(tableOrViewId, { [badString]: "foo" })
+
+              await assertTableExists(table)
+              await assertTableNumRows(table, 1)
+
+              const { rows } = await config.api.row.search(
+                tableOrViewId,
+                { query: {} },
+                { status: 200 }
+              )
+
+              expect(rows).toHaveLength(1)
+
+              await assertTableExists(table)
+              await assertTableNumRows(table, 1)
+            })
+
+          it("should not allow SQL injection as a field value", async () => {
+            const tableOrViewId = await createTableOrView({
+              foo: {
+                name: "foo",
+                type: FieldType.STRING,
+              },
+            })
+            const table = await getTable(tableOrViewId)
+            const badString = badStringTemplate.replace(
+              /%table_name%/g,
+              table.name
+            )
+
+            await config.api.row.save(tableOrViewId, { foo: "foo" })
+
+            await assertTableExists(table)
+            await assertTableNumRows(table, 1)
+
+            const { rows } = await config.api.row.search(
+              tableOrViewId,
+              { query: { equal: { foo: badString } } },
+              { status: 200 }
+            )
+
+            expect(rows).toBeEmpty()
+            await assertTableExists(table)
+            await assertTableNumRows(table, 1)
+          })
         })
       })
   })

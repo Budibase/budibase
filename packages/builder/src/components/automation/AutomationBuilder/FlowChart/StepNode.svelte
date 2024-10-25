@@ -7,6 +7,7 @@
   import { environment } from "stores/portal"
   import { cloneDeep } from "lodash"
   import { memo } from "@budibase/frontend-core"
+  import { getContext, onMount } from "svelte"
 
   export let step = {}
   export let stepIdx
@@ -15,6 +16,9 @@
   export let isLast = false
 
   const memoEnvVariables = memo($environment.variables)
+  const view = getContext("draggableView")
+
+  let stepEle
 
   $: memoEnvVariables.set($environment.variables)
   $: blockRef = blocks?.[step.id]
@@ -34,6 +38,17 @@
 
   // Combine all bindings for the step
   $: bindings = [...availableBindings, ...environmentBindings]
+
+  onMount(() => {
+    // Register the trigger as the focus element for the automation
+    // Onload, the canvas will use the dimensions to center the step
+    if (stepEle && step.type === "TRIGGER" && !$view.focusEle) {
+      view.update(state => ({
+        ...state,
+        focusEle: stepEle.getBoundingClientRect(),
+      }))
+    }
+  })
 </script>
 
 {#if isBranch}
@@ -44,7 +59,7 @@
         automationStore.actions.branchAutomation(pathToCurrentNode, automation)
       }}
     >
-      Add additional branch
+      Add branch
     </ActionButton>
   </div>
   <div class="branched">
@@ -105,8 +120,7 @@
     {/each}
   </div>
 {:else}
-  <!--Drop Zone-->
-  <div class="block">
+  <div class="block" bind:this={stepEle}>
     <FlowItem
       block={step}
       idx={stepIdx}
@@ -114,9 +128,9 @@
       {isLast}
       {automation}
       {bindings}
+      draggable={step.type !== "TRIGGER"}
     />
   </div>
-  <!--Drop Zone-->
 {/if}
 
 <style>

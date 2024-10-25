@@ -8,6 +8,7 @@ import {
   SearchFilters,
   Table,
   WebhookActionType,
+  BuiltinPermissionID,
 } from "@budibase/types"
 import Joi, { CustomValidator } from "joi"
 import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
@@ -214,8 +215,8 @@ export function roleValidator() {
       }).optional(),
       // this is the base permission ID (for now a built in)
       permissionId: Joi.string()
-        .valid(...Object.values(permissions.BuiltinPermissionID))
-        .required(),
+        .valid(...Object.values(BuiltinPermissionID))
+        .optional(),
       permissions: Joi.object()
         .pattern(
           /.*/,
@@ -225,7 +226,10 @@ export function roleValidator() {
           )
         )
         .optional(),
-      inherits: OPTIONAL_STRING,
+      inherits: Joi.alternatives().try(
+        OPTIONAL_STRING,
+        Joi.array().items(OPTIONAL_STRING)
+      ),
     }).unknown(true)
   )
 }
@@ -354,9 +358,7 @@ export function applicationValidator(opts = { isCreate: true }) {
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
     url: OPTIONAL_STRING,
-    template: Joi.object({
-      templateString: OPTIONAL_STRING,
-    }),
+    template: Joi.object({}),
   }
 
   const appNameValidator = Joi.string()
@@ -389,9 +391,7 @@ export function applicationValidator(opts = { isCreate: true }) {
       _rev: OPTIONAL_STRING,
       name: appNameValidator,
       url: OPTIONAL_STRING,
-      template: Joi.object({
-        templateString: OPTIONAL_STRING,
-      }).unknown(true),
+      template: Joi.object({}).unknown(true),
       snippets: snippetValidator,
     }).unknown(true)
   )

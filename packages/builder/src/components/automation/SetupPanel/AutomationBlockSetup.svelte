@@ -74,6 +74,7 @@
     TriggerStepID.ROW_UPDATED,
     TriggerStepID.ROW_SAVED,
     TriggerStepID.ROW_DELETED,
+    TriggerStepID.ROW_ACTION,
   ]
 
   const rowEvents = [
@@ -577,7 +578,9 @@
         break
       }
     }
-    return utils.processSearchFilters(filters)
+    return Array.isArray(filters)
+      ? utils.processSearchFilters(filters)
+      : filters
   }
 
   function saveFilters(key) {
@@ -689,7 +692,7 @@
               {/if}
             </div>
           {/if}
-          <div class:field-width={shouldRenderField(value)}>
+          <div>
             {#if value.type === "string" && value.enum && canShowField(key, value)}
               <Select
                 on:change={e => onChange({ [key]: e.detail })}
@@ -985,8 +988,9 @@
     align-items: center;
     gap: var(--spacing-s);
   }
-  .field-width {
-    width: 320px;
+
+  .label-container :global(label) {
+    white-space: unset;
   }
 
   .step-fields {
@@ -998,12 +1002,9 @@
   }
 
   .block-field {
-    display: flex;
     justify-content: space-between;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 320px;
   }
 
   .attachment-field-width {

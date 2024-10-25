@@ -40,11 +40,6 @@ import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
 import { processRowCountResponse } from "../../utils"
 import {
-  getRelationshipColumns,
-  getTableIDList,
-  updateFilterKeys,
-} from "../filters"
-import {
   dataFilters,
   helpers,
   isInternalColumnName,
@@ -133,31 +128,7 @@ async function buildInternalFieldList(
   return [...new Set(fieldList)]
 }
 
-function cleanupFilters(
-  filters: SearchFilters,
-  table: Table,
-  allTables: Table[]
-) {
-  // get a list of all relationship columns in the table for updating
-  const relationshipColumns = getRelationshipColumns(table)
-  // get table names to ID map for relationships
-  const tableNameToID = getTableIDList(allTables)
-  // all should be applied at once
-  filters = updateFilterKeys(
-    filters,
-    relationshipColumns
-      .map(({ name, definition }) => ({
-        original: name,
-        updated: definition.tableId,
-      }))
-      .concat(
-        tableNameToID.map(({ name, id }) => ({
-          original: name,
-          updated: id,
-        }))
-      )
-  )
-
+function cleanupFilters(filters: SearchFilters, allTables: Table[]) {
   // generate a map of all possible column names (these can be duplicated across tables
   // the map of them will always be the same
   const userColumnMap: Record<string, string> = {}
@@ -356,7 +327,7 @@ export async function search(
   const relationships = buildInternalRelationships(table, allTables)
 
   const searchFilters: SearchFilters = {
-    ...cleanupFilters(query, table, allTables),
+    ...cleanupFilters(query, allTables),
     documentType: DocumentType.ROW,
   }
 

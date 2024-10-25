@@ -1,5 +1,6 @@
 import { derivedMemo } from "../../../utils"
 import { derived } from "svelte/store"
+import { ViewV2Type } from "@budibase/types"
 
 export const createStores = context => {
   const { props } = context
@@ -30,18 +31,26 @@ export const createStores = context => {
 }
 
 export const deriveStores = context => {
-  const { props, hasNonAutoColumn } = context
+  const { props, definition, hasNonAutoColumn } = context
 
   // Derive features
   const config = derived(
-    [props, hasNonAutoColumn],
-    ([$props, $hasNonAutoColumn]) => {
+    [props, definition, hasNonAutoColumn],
+    ([$props, $definition, $hasNonAutoColumn]) => {
       let config = { ...$props }
       const type = $props.datasource?.type
 
       // Disable some features if we're editing a view
       if (type === "viewV2") {
         config.canEditColumns = false
+
+        // Disable features for calculation views
+        if ($definition?.type === ViewV2Type.CALCULATION) {
+          config.canAddRows = false
+          config.canEditRows = false
+          config.canDeleteRows = false
+          config.canExpandRows = false
+        }
       }
 
       // Disable adding rows if we don't have any valid columns

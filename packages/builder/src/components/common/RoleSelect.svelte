@@ -3,7 +3,7 @@
   import { roles } from "stores/builder"
   import { licensing } from "stores/portal"
 
-  import { Constants, RoleUtils } from "@budibase/frontend-core"
+  import { Constants } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
   import { capitalise } from "helpers"
 
@@ -49,7 +49,8 @@
       let options = roles
         .filter(role => allowedRoles.includes(role._id))
         .map(role => ({
-          name: enrichLabel(role.name),
+          color: role.uiMetadata.color,
+          name: enrichLabel(role.uiMetadata.displayName),
           _id: role._id,
         }))
       if (allowedRoles.includes(Constants.Roles.CREATOR)) {
@@ -64,7 +65,8 @@
 
     // Allow all core roles
     let options = roles.map(role => ({
-      name: enrichLabel(role.name),
+      color: role.uiMetadata.color,
+      name: enrichLabel(role.uiMetadata.displayName),
       _id: role._id,
     }))
 
@@ -100,7 +102,7 @@
     if (role._id === Constants.Roles.CREATOR || role._id === RemoveID) {
       return null
     }
-    return RoleUtils.getRoleColour(role._id)
+    return role.color || "var(--spectrum-global-color-static-magenta-400)"
   }
 
   const getIcon = role => {

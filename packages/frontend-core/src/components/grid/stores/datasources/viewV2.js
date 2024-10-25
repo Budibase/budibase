@@ -1,17 +1,5 @@
 import { get } from "svelte/store"
-import { dataFilters } from "@budibase/shared-core"
-
-function convertToSearchFilters(view) {
-  // convert from SearchFilterGroup type
-  if (view?.query) {
-    return {
-      ...view,
-      queryUI: view.query,
-      query: dataFilters.buildQuery(view.query),
-    }
-  }
-  return view
-}
+import { SortOrder } from "@budibase/types"
 
 const SuppressErrors = true
 
@@ -19,7 +7,7 @@ export const createActions = context => {
   const { API, datasource, columns } = context
 
   const saveDefinition = async newDefinition => {
-    await API.viewV2.update(convertToSearchFilters(newDefinition))
+    await API.viewV2.update(newDefinition)
   }
 
   const saveRow = async row => {
@@ -117,7 +105,7 @@ export const initialise = context => {
     inlineFilters.set([])
     sort.set({
       column: get(initialSortColumn),
-      order: get(initialSortOrder) || "ascending",
+      order: get(initialSortOrder) || SortOrder.ASCENDING,
     })
 
     // Keep sort and filter state in line with the view definition when in builder
@@ -133,12 +121,12 @@ export const initialise = context => {
         if (!get(initialSortColumn)) {
           sort.set({
             column: $definition.sort?.field,
-            order: $definition.sort?.order || "ascending",
+            order: $definition.sort?.order || SortOrder.ASCENDING,
           })
         }
         // Only override filter state if we don't have an initial filter
         if (!get(initialFilter)) {
-          filter.set($definition.queryUI || $definition.query)
+          filter.set($definition.queryUI)
         }
       })
     )
@@ -166,7 +154,7 @@ export const initialise = context => {
             ...$view,
             sort: {
               field: $sort.column,
-              order: $sort.order || "ascending",
+              order: $sort.order || SortOrder.ASCENDING,
             },
           })
         }
@@ -197,7 +185,7 @@ export const initialise = context => {
         if (JSON.stringify($filter) !== JSON.stringify($view.queryUI)) {
           await datasource.actions.saveDefinition({
             ...$view,
-            query: $filter,
+            queryUI: $filter,
           })
 
           // Refresh data since view definition changed

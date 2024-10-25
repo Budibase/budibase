@@ -169,7 +169,7 @@
       {#if filter.valueType === FilterValueType.BINDING}
         <Input
           disabled={filter.noValue}
-          readonly={true}
+          readonly={isJS}
           value={isJS ? "(JavaScript function)" : readableValue}
           on:change={onChange}
         />

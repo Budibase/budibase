@@ -14,7 +14,7 @@
     Button,
     FancySelect,
   } from "@budibase/bbui"
-  import { builderStore, appStore, roles } from "stores/builder"
+  import { builderStore, appStore, roles, appPublished } from "stores/builder"
   import {
     groups,
     licensing,
@@ -36,6 +36,7 @@
   import UpgradeModal from "components/common/users/UpgradeModal.svelte"
   import { emailValidator } from "helpers/validation"
   import { fly } from "svelte/transition"
+  import InfoDisplay from "../design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   let query = null
   let loaded = false
@@ -608,6 +609,17 @@
     </div>
 
     <div class="body">
+      {#if !$appPublished}
+        <div class="alert">
+          <InfoDisplay
+            icon="AlertCircleFilled"
+            warning
+            title="App unpublished"
+            body="Users won't be able to access your app until you've published it"
+          />
+        </div>
+      {/if}
+
       {#if promptInvite && !userOnboardResponse}
         <Layout gap="S" paddingX="XL">
           <div class="invite-header">
@@ -623,7 +635,7 @@
       {/if}
 
       {#if !promptInvite}
-        <Layout gap="L" noPadding>
+        <Layout gap="M" noPadding>
           {#if filteredInvites?.length}
             <Layout noPadding gap="XS">
               <div class="auth-entity-header">
@@ -926,7 +938,7 @@
   .auth-entity,
   .auth-entity-header {
     display: grid;
-    grid-template-columns: 1fr 180px;
+    grid-template-columns: 1fr 220px;
     align-items: center;
     gap: var(--spacing-xl);
   }
@@ -957,7 +969,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     position: absolute;
-    width: 440px;
+    width: 480px;
     right: 0;
     height: 100%;
     box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
@@ -1033,5 +1045,8 @@
     flex-direction: column;
     gap: var(--spacing-xl);
     padding: var(--spacing-xl) 0;
+  }
+  .alert {
+    padding: 0 var(--spacing-xl);
   }
 </style>
