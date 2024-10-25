@@ -21,17 +21,19 @@ export type MakeRequestWithFormDataResponse = (
 function base(
   apiKey: string,
   endpoint: string,
-  intAppId: string | null,
-  isInternal: boolean
+  opts?: {
+    intAppId?: string
+    internal?: boolean
+  }
 ) {
   const extraHeaders: any = {
     "x-budibase-api-key": apiKey,
   }
-  if (intAppId) {
-    extraHeaders["x-budibase-app-id"] = intAppId
+  if (opts?.intAppId) {
+    extraHeaders["x-budibase-app-id"] = opts.intAppId
   }
 
-  const url = isInternal
+  const url = opts?.internal
     ? endpoint
     : checkSlashesInUrl(`/api/public/v1/${endpoint}`)
   return { headers: extraHeaders, url }
@@ -39,7 +41,7 @@ function base(
 
 export function generateMakeRequest(
   apiKey: string,
-  isInternal = false
+  opts?: { internal?: boolean }
 ): MakeRequestResponse {
   const request = setup.getRequest()!
   const config = setup.getConfig()!
@@ -47,9 +49,12 @@ export function generateMakeRequest(
     method: HttpMethod,
     endpoint: string,
     body?: any,
-    intAppId: string | null = config.getAppId()
+    intAppId: string | undefined = config.getAppId()
   ) => {
-    const { headers, url } = base(apiKey, endpoint, intAppId, isInternal)
+    const { headers, url } = base(apiKey, endpoint, { ...opts, intAppId })
+    if (body && typeof body !== "string") {
+      headers["Content-Type"] = "application/json"
+    }
     const req = request[method](url).set(config.defaultHeaders(headers))
     if (body) {
       req.send(body)
@@ -62,7 +67,7 @@ export function generateMakeRequest(
 
 export function generateMakeRequestWithFormData(
   apiKey: string,
-  isInternal = false
+  opts?: { internal?: boolean; browser?: boolean }
 ): MakeRequestWithFormDataResponse {
   const request = setup.getRequest()!
   const config = setup.getConfig()!
@@ -70,9 +75,9 @@ export function generateMakeRequestWithFormData(
     method: HttpMethod,
     endpoint: string,
     fields: Record<string, string | { path: string }>,
-    intAppId: string | null = config.getAppId()
+    intAppId: string | undefined = config.getAppId()
   ) => {
-    const { headers, url } = base(apiKey, endpoint, intAppId, isInternal)
+    const { headers, url } = base(apiKey, endpoint, { ...opts, intAppId })
     const req = request[method](url).set(config.defaultHeaders(headers))
     for (let [field, value] of Object.entries(fields)) {
       if (typeof value === "string") {
