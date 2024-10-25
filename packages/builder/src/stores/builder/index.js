@@ -30,6 +30,7 @@ import { queries } from "./queries"
 import { flags } from "./flags"
 import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
+import { appPublished } from "./published"
 
 export {
   componentTreeNodesStore,
@@ -65,6 +66,7 @@ export {
   hoverStore,
   snippets,
   rowActions,
+  appPublished,
 }
 
 export const reset = () => {

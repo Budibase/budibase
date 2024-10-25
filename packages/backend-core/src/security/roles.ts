@@ -19,6 +19,7 @@ import {
 import cloneDeep from "lodash/fp/cloneDeep"
 import { RoleColor, helpers } from "@budibase/shared-core"
 import { uniqBy } from "lodash"
+import { default as env } from "../environment"
 
 export const BUILTIN_ROLE_IDS = {
   ADMIN: "ADMIN",
@@ -545,7 +546,10 @@ async function shouldIncludePowerRole(db: Database) {
     return true
   }
 
-  const isGreaterThan3x = semver.gte(creationVersion, "3.0.0")
+  const isGreaterThan3x = semver.gte(
+    creationVersion,
+    env.MIN_VERSION_WITHOUT_POWER_ROLE
+  )
   return !isGreaterThan3x
 }
 
