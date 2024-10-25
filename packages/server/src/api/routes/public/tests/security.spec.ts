@@ -20,8 +20,8 @@ describe("check public API security", () => {
         [config.getProdAppId()]: roles.BUILTIN_ROLE_IDS.BASIC,
       },
     })
-    builderRequest = await new PublicAPIRequest().init(config, builderUser)
-    appUserRequest = await new PublicAPIRequest().init(config, appUser)
+    builderRequest = await PublicAPIRequest.init(config, builderUser)
+    appUserRequest = await PublicAPIRequest.init(config, appUser)
     table = (await builderRequest.tables.create(basicTable())).data
   })
 
