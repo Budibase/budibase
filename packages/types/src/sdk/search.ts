@@ -49,7 +49,7 @@ type BasicFilter<T = any> = Record<string, T> & {
   [InternalSearchFilterOperator.COMPLEX_ID_OPERATOR]?: never
 }
 
-type ArrayFilter = Record<string, any[]> & {
+export type ArrayFilter = Record<string, any[]> & {
   [InternalSearchFilterOperator.COMPLEX_ID_OPERATOR]?: {
     id: string[]
     values: string[]

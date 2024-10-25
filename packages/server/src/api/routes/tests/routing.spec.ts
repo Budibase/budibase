@@ -1,9 +1,10 @@
-const setup = require("./utilities")
-const { basicScreen, powerScreen } = setup.structures
-const { checkBuilderEndpoint, runInProd } = require("./utilities/TestFunctions")
-const { roles } = require("@budibase/backend-core")
-const { BUILTIN_ROLE_IDS } = roles
+import * as setup from "./utilities"
+import { checkBuilderEndpoint, runInProd } from "./utilities/TestFunctions"
+import { roles } from "@budibase/backend-core"
+import { Screen } from "@budibase/types"
 
+const { BUILTIN_ROLE_IDS } = roles
+const { basicScreen, powerScreen } = setup.structures
 const route = "/test"
 
 // there are checks which are disabled in test env,
@@ -12,7 +13,7 @@ const route = "/test"
 describe("/routing", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let basic, power
+  let basic: Screen, power: Screen
 
   afterAll(setup.afterAll)
 
@@ -25,26 +26,40 @@ describe("/routing", () => {
 
   describe("fetch", () => {
     it("prevents a public user from accessing development app", async () => {
-      await runInProd(() => {
-        return request
-          .get(`/api/routing/client`)
-          .set(config.publicHeaders({ prodApp: false }))
-          .expect(302)
-      })
+      await config.withHeaders(
+        {
+          "User-Agent": config.browserUserAgent(),
+        },
+        async () => {
+          await runInProd(() => {
+            return request
+              .get(`/api/routing/client`)
+              .set(config.publicHeaders({ prodApp: false }))
+              .expect(302)
+          })
+        }
+      )
     })
 
     it("prevents a non builder from accessing development app", async () => {
-      await runInProd(async () => {
-        return request
-          .get(`/api/routing/client`)
-          .set(
-            await config.roleHeaders({
-              roleId: BUILTIN_ROLE_IDS.BASIC,
-              prodApp: false,
-            })
-          )
-          .expect(302)
-      })
+      await config.withHeaders(
+        {
+          "User-Agent": config.browserUserAgent(),
+        },
+        async () => {
+          await runInProd(async () => {
+            return request
+              .get(`/api/routing/client`)
+              .set(
+                await config.roleHeaders({
+                  roleId: BUILTIN_ROLE_IDS.BASIC,
+                  prodApp: false,
+                })
+              )
+              .expect(302)
+          })
+        }
+      )
     })
     it("returns the correct routing for basic user", async () => {
       const res = await request
