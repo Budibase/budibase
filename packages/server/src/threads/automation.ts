@@ -263,11 +263,16 @@ class Orchestrator {
         this.context.env = await sdkUtils.getEnvironmentVariables()
         this.context.user = this.currentUser
 
-        const { config } = await configs.getSettingsConfigDoc()
-        this.context.settings = {
-          url: config.platformUrl,
-          logo: config.logoUrl,
-          company: config.company,
+        try {
+          const { config } = await configs.getSettingsConfigDoc()
+          this.context.settings = {
+            url: config.platformUrl,
+            logo: config.logoUrl,
+            company: config.company,
+          }
+        } catch (e) {
+          // if settings doc doesn't exist, make the settings blank
+          this.context.settings = {}
         }
 
         let metadata
