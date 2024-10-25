@@ -176,7 +176,7 @@ export function createUsersStore() {
     save: refreshUsage(save),
     bulkDelete: refreshUsage(bulkDelete),
     delete: refreshUsage(del),
-    tenantOwner: getTenantOwner,
+    getAccountHolder,
   }
 }
 

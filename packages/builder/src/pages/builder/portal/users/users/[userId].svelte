@@ -206,7 +206,7 @@
     if (!user?._id) {
       $goto("./")
     }
-    tenantOwner = await users.tenantOwner($auth.tenantId)
+    tenantOwner = await users.getAccountHolder($auth.tenantId)
   }
 
   async function toggleFlags(detail) {
