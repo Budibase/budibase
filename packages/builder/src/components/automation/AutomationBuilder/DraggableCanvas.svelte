@@ -11,7 +11,7 @@
   import { selectedAutomation, automationStore } from "stores/builder"
 
   export function zoomIn() {
-    const scale = Number(Math.min($view.scale + 0.1, 1).toFixed(2))
+    const scale = Number(Math.min($view.scale + 0.1, 1.5).toFixed(2))
     view.update(state => ({
       ...state,
       scale,
