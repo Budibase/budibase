@@ -3,12 +3,15 @@ import * as controller from "../view"
 import { ViewV2, UserCtx } from "@budibase/types"
 import { Next } from "koa"
 
-function fixView(view: ViewV2, params: any) {
+function fixView(view: ViewV2, params?: { viewId: string }) {
   if (!params || !view) {
     return view
   }
-  if (params.viewId) {
+  if (params?.viewId) {
     view.id = params.viewId
+  }
+  if (!view.version) {
+    view.version = 2
   }
   return view
 }
@@ -22,6 +25,7 @@ export async function search(ctx: UserCtx, next: Next) {
 }
 
 export async function create(ctx: UserCtx, next: Next) {
+  ctx.body = fixView(ctx.body)
   await controller.v2.create(ctx)
   await next()
 }
