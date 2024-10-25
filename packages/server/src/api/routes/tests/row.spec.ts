@@ -1542,6 +1542,72 @@ describe.each([
       )
       expect(res.length).toEqual(2)
     })
+
+    describe("relations to same table", () => {
+      let relatedRows: Row[]
+
+      beforeAll(async () => {
+        const relatedTable = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+            },
+          })
+        )
+        const relatedTableId = relatedTable._id!
+        table = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+              related1: {
+                type: FieldType.LINK,
+                name: "related1",
+                fieldName: "main1",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+              related2: {
+                type: FieldType.LINK,
+                name: "related2",
+                fieldName: "main2",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+            },
+          })
+        )
+        relatedRows = await Promise.all([
+          config.api.row.save(relatedTableId, { name: "foo" }),
+          config.api.row.save(relatedTableId, { name: "bar" }),
+          config.api.row.save(relatedTableId, { name: "baz" }),
+          config.api.row.save(relatedTableId, { name: "boo" }),
+        ])
+      })
+
+      it("can delete rows with both relationships", async () => {
+        const row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [relatedRows[0]._id!],
+          related2: [relatedRows[1]._id!],
+        })
+
+        await config.api.row.delete(table._id!, { _id: row._id! })
+
+        await config.api.row.get(table._id!, row._id!, { status: 404 })
+      })
+
+      it("can delete rows with empty relationships", async () => {
+        const row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [],
+          related2: [],
+        })
+
+        await config.api.row.delete(table._id!, { _id: row._id! })
+
+        await config.api.row.get(table._id!, row._id!, { status: 404 })
+      })
+    })
   })
 
   describe("validate", () => {

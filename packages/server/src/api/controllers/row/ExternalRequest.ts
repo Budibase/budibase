@@ -11,6 +11,7 @@ import {
   IncludeRelationship,
   InternalSearchFilterOperator,
   isManyToOne,
+  isOneToMany,
   OneToManyRelationshipFieldMetadata,
   Operation,
   PaginationJson,
@@ -50,6 +51,7 @@ import sdk from "../../../sdk"
 import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { dataFilters, helpers } from "@budibase/shared-core"
+import { isRelationshipColumn } from "../../../db/utils"
 
 export interface ManyRelationship {
   tableId?: string
@@ -606,25 +608,28 @@ export class ExternalRequest<T extends Operation> {
   async removeRelationshipsToRow(table: Table, rowId: string) {
     const row = await this.getRow(table, rowId)
     const related = await this.lookupRelations(table._id!, row)
-    for (let column of Object.values(table.schema)) {
-      const relationshipColumn = column as RelationshipFieldMetadata
-      if (!isManyToOne(relationshipColumn)) {
+    for (const column of Object.values(table.schema)) {
+      if (!isRelationshipColumn(column) || isOneToMany(column)) {
         continue
       }
-      const { rows, isMany, tableId } = related.find(
-        r => r.field === relationshipColumn.fieldName
-      )!
+
+      const relatedByTable = isManyToMany(column)
+        ? related.find(
+            r => r.tableId === column.through && r.field === column.fieldName
+          )
+        : related.find(r => r.field === column.fieldName)
+      if (!relatedByTable) {
+        continue
+      }
+
+      const { rows, isMany, tableId } = relatedByTable
       const table = this.getTable(tableId)!
       await Promise.all(
         rows.map(row => {
           const rowId = generateIdForRow(row, table)
           return isMany
             ? this.removeManyToManyRelationships(rowId, table)
-            : this.removeOneToManyRelationships(
-                rowId,
-                table,
-                relationshipColumn.fieldName
-              )
+            : this.removeOneToManyRelationships(rowId, table, column.fieldName)
         })
       )
     }
