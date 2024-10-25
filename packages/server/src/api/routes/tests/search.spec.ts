@@ -3505,7 +3505,7 @@ describe.each([
 
     isSql &&
       !isSqs &&
-      describe.only("SQL injection", () => {
+      describe("SQL injection", () => {
         const badStrings = [
           "1; DROP TABLE %table_name%;",
           "1; DELETE FROM %table_name%;",
