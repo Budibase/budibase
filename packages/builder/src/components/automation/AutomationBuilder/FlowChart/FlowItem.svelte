@@ -35,22 +35,23 @@
   export let bindings
   export let draggable = true
 
-  const view = getContext("view")
+  const view = getContext("draggableView")
   const pos = getContext("viewPos")
+  const contentPos = getContext("contentPos")
 
   let webhookModal
   let open = true
   let showLooping = false
   let role
   let blockEle
-
-  $: pathSteps = loadSteps(blockRef)
+  let positionStyles
 
   const loadSteps = blockRef => {
     return blockRef
       ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
       : []
   }
+  $: pathSteps = loadSteps(blockRef)
 
   $: collectBlockExists = pathSteps.some(
     step => step.stepId === ActionStepID.COLLECT
@@ -76,18 +77,23 @@
   $: blockDims = blockEle?.getBoundingClientRect()
   $: placeholderDims = buildPlaceholderStyles(blockDims)
 
-  let positionStyles
-
   // Move the selected item
-  $: move(blockEle, $view?.dragSpot, selected)
+  // Listen for scrolling in the content. As its scrolled this will be updated
+  $: move(
+    blockEle,
+    $view?.dragSpot,
+    selected,
+    $contentPos?.scrollX,
+    $contentPos?.scrollY
+  )
 
-  const move = (block, dragPos, selected) => {
+  const move = (block, dragPos, selected, scrollX, scrollY) => {
     if ((!block && !selected) || !dragPos) {
       return
     }
     positionStyles = `
-      --blockPosX: ${Math.round(dragPos.x)}px;
-      --blockPosY: ${Math.round(dragPos.y)}px;
+      --blockPosX: ${Math.round(dragPos.x - scrollX / $view.scale)}px;
+      --blockPosY: ${Math.round(dragPos.y - scrollY / $view.scale)}px;
     `
   }
 
@@ -184,6 +190,9 @@
         class="block-content"
         class:dragging={$view.dragging && selected}
         style={positionStyles}
+        on:mousedown={e => {
+          e.stopPropagation()
+        }}
       >
         {#if draggable}
           <div

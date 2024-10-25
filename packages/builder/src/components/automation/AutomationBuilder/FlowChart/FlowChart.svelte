@@ -31,7 +31,6 @@
   let blockRefs = {}
   let treeEle
   let draggable
-  let zoom = 100
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set(automation)
@@ -89,7 +88,6 @@
         <ActionButton icon="Add" quiet on:click={draggable.zoomIn} />
         <ActionButton icon="Remove" quiet on:click={draggable.zoomOut} />
       </div>
-      <div class="zoom-display">{`${zoom}%`}</div>
     </div>
 
     <Button
@@ -140,17 +138,7 @@
 </div>
 
 <div class="root" bind:this={treeEle}>
-  <DraggableCanvas
-    bind:this={draggable}
-    on:zoom={e => {
-      const baseZoom = Math.round(e.detail * 100)
-
-      // Fit to zoom shifts the zoom to explicit values
-      // The interval is in 5 or 10 so rounding to the closest 5 should flatten this out
-      const roundedZoom = 5 * Math.floor((baseZoom + 2) / 5)
-      zoom = roundedZoom
-    }}
-  >
+  <DraggableCanvas bind:this={draggable}>
     <span class="main-content" slot="content">
       {#if Object.keys(blockRefs).length}
         {#each blocks as block, idx (block.id)}
@@ -183,12 +171,6 @@
 </Modal>
 
 <style>
-  .zoom {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-  }
-
   .toggle-active :global(.spectrum-Switch) {
     margin: 0px;
   }
