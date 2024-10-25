@@ -20,6 +20,7 @@
     licensing,
     organisation,
     admin,
+    appsStore,
   } from "stores/portal"
   import { onMount } from "svelte"
   import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
@@ -324,7 +325,9 @@
       groupsLoaded = true
       pendingInvites = await users.getInvites()
       invitesLoaded = true
-      tenantOwner = await users.tenantOwner($auth.tenantId)
+      // Get the first app because the account holder will belong to all apps
+      const appId = $appsStore.apps[0].appId
+      tenantOwner = await users.getAccountHolder(appId)
       tenantOwnerLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")

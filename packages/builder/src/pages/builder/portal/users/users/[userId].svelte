@@ -206,7 +206,9 @@
     if (!user?._id) {
       $goto("./")
     }
-    tenantOwner = await users.getAccountHolder($auth.tenantId)
+    // Just take the first app because the account holder will belong to all apps.
+    const appId = availableApps[0].devId
+    tenantOwner = await users.getAccountHolder(appId)
   }
 
   async function toggleFlags(detail) {

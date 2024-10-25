@@ -309,9 +309,18 @@ export const tenantUserLookup = async (ctx: any) => {
   }
 }
 
+/**
+ * This will be paginated to a default of the first 50 users,
+ * So the account holder may not be found until further pagination has occurred
+ */
 export const accountHolderLookup = async (ctx: any) => {
-  const email = ctx.params.email
-  return await userSdk.core.getExistingAccounts([email])
+  const appId = ctx.params.appId
+  ctx.body = {
+    appId,
+  }
+  await getAppUsers(ctx)
+  const users = ctx.body.data as Array<{ email: string }>
+  return await userSdk.core.getExistingAccounts(users.map(u => u.email))
 }
 
 /* 
