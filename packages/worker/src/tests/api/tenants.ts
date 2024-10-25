@@ -1,4 +1,3 @@
-import { TenantInfo } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI, TestAPIOpts } from "./base"
 
