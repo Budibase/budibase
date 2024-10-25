@@ -116,6 +116,10 @@ const NO_TENANCY_ENDPOINTS = [
     route: "/api/global/users/invite/:code",
     method: "GET",
   },
+  {
+    route: "/api/global/users/holder/:email",
+    method: "GET",
+  },
 ]
 
 // most public endpoints are gets, but some are posts
