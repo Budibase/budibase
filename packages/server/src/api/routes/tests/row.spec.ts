@@ -1139,6 +1139,133 @@ describe.each([
         const rows = await config.api.row.fetch(table._id!)
         expect(rows).toHaveLength(1)
       })
+
+    describe("relations to same table", () => {
+      let relatedRows: Row[]
+
+      beforeAll(async () => {
+        const relatedTable = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+            },
+          })
+        )
+        const relatedTableId = relatedTable._id!
+        table = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+              related1: {
+                type: FieldType.LINK,
+                name: "related1",
+                fieldName: "main1",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+              related2: {
+                type: FieldType.LINK,
+                name: "related2",
+                fieldName: "main2",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+            },
+          })
+        )
+        relatedRows = await Promise.all([
+          config.api.row.save(relatedTableId, { name: "foo" }),
+          config.api.row.save(relatedTableId, { name: "bar" }),
+          config.api.row.save(relatedTableId, { name: "baz" }),
+          config.api.row.save(relatedTableId, { name: "boo" }),
+        ])
+      })
+
+      it("can edit rows with both relationships", async () => {
+        let row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [relatedRows[0]._id!],
+          related2: [relatedRows[1]._id!],
+        })
+
+        row = await config.api.row.save(table._id!, {
+          ...row,
+          related1: [relatedRows[0]._id!, relatedRows[1]._id!],
+          related2: [relatedRows[2]._id!],
+        })
+
+        expect(row).toEqual(
+          expect.objectContaining({
+            name: "test",
+            related1: [
+              {
+                _id: relatedRows[1]._id,
+                primaryDisplay: relatedRows[1].name,
+              },
+              {
+                _id: relatedRows[0]._id,
+                primaryDisplay: relatedRows[0].name,
+              },
+            ],
+            related2: [
+              {
+                _id: relatedRows[2]._id,
+                primaryDisplay: relatedRows[2].name,
+              },
+            ],
+          })
+        )
+      })
+
+      it("can drop existing relationship", async () => {
+        let row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [relatedRows[0]._id!],
+          related2: [relatedRows[1]._id!],
+        })
+
+        row = await config.api.row.save(table._id!, {
+          ...row,
+          related1: [],
+          related2: [relatedRows[2]._id!],
+        })
+
+        expect(row).toEqual(
+          expect.objectContaining({
+            name: "test",
+            related2: [
+              {
+                _id: relatedRows[2]._id,
+                primaryDisplay: relatedRows[2].name,
+              },
+            ],
+          })
+        )
+        expect(row.related1).toBeUndefined()
+      })
+
+      it("can drop both relationships", async () => {
+        let row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [relatedRows[0]._id!],
+          related2: [relatedRows[1]._id!],
+        })
+
+        row = await config.api.row.save(table._id!, {
+          ...row,
+          related1: [],
+          related2: [],
+        })
+
+        expect(row).toEqual(
+          expect.objectContaining({
+            name: "test",
+          })
+        )
+        expect(row.related1).toBeUndefined()
+        expect(row.related2).toBeUndefined()
+      })
+    })
   })
 
   describe("patch", () => {
