@@ -5,22 +5,35 @@ import { Expectations } from "../../../../tests/utilities/api/base"
 
 type RequestOpts = { internal?: boolean; appId?: string }
 
-type PublicAPIExpectations = Omit<Expectations, "headers" | "headersNotPresent">
+export interface PublicAPIExpectations {
+  status?: number
+  body?: Record<string, any>
+}
 
 export class PublicAPIRequest {
-  private makeRequest: MakeRequestResponse | undefined
+  private makeRequest: MakeRequestResponse
   private appId: string | undefined
-  private _tables: PublicTableAPI | undefined
-  private _rows: PublicRowAPI | undefined
-  private _apiKey: string | undefined
 
-  async init(config: TestConfiguration, user: User, opts?: RequestOpts) {
-    this._apiKey = await config.generateApiKey(user._id)
-    this.makeRequest = generateMakeRequest(this.apiKey, opts)
-    this.appId = opts?.appId
-    this._tables = new PublicTableAPI(this)
-    this._rows = new PublicRowAPI(this)
-    return this
+  tables: PublicTableAPI
+  rows: PublicRowAPI
+  apiKey: string
+
+  private constructor(
+    apiKey: string,
+    makeRequest: MakeRequestResponse,
+    appId?: string
+  ) {
+    this.apiKey = apiKey
+    this.makeRequest = makeRequest
+    this.appId = appId
+    this.tables = new PublicTableAPI(this)
+    this.rows = new PublicRowAPI(this)
+  }
+
+  static async init(config: TestConfiguration, user: User, opts?: RequestOpts) {
+    const apiKey = await config.generateApiKey(user._id)
+    const makeRequest = generateMakeRequest(apiKey, opts)
+    return new this(apiKey, makeRequest, opts?.appId)
   }
 
   opts(opts: RequestOpts) {
@@ -47,27 +60,6 @@ export class PublicAPIRequest {
       expect(res.body).toEqual(expectations?.body)
     }
     return res.body
-  }
-
-  get apiKey(): string {
-    if (!this._apiKey) {
-      throw new Error("Init has not been called")
-    }
-    return this._apiKey
-  }
-
-  get tables(): PublicTableAPI {
-    if (!this._tables) {
-      throw new Error("Init has not been called")
-    }
-    return this._tables
-  }
-
-  get rows(): PublicRowAPI {
-    if (!this._rows) {
-      throw new Error("Init has not been called")
-    }
-    return this._rows
   }
 }
 
