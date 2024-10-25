@@ -3,7 +3,7 @@
   import { createEventDispatcher } from "svelte"
   import { licensing } from "stores/portal"
   import { selectedAutomation } from "stores/builder"
-  import { isStepLimitExceeded } from "@budibase/shared-core"
+  import { sdk } from "@budibase/shared-core"
 
   import ActionModal from "./ActionModal.svelte"
 
@@ -12,12 +12,14 @@
   const dispatch = createEventDispatcher()
   const automationStepLimit =
     $licensing.license.quotas.usage.static.automationStepCount.value
-
   let actionModal
 
   $: canAddMoreSteps =
-    automationStepLimit === -1 &&
-    !isStepLimitExceeded($selectedAutomation.data, automationStepLimit)
+    automationStepLimit === -1 ||
+    !sdk.automations.isStepLimitExceeded(
+      $selectedAutomation.data,
+      automationStepLimit - 1 // add this because we are essentially checking if we can add one more step
+    )
 </script>
 
 <Modal bind:this={actionModal} width="30%">
