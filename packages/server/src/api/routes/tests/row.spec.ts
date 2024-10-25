@@ -939,6 +939,74 @@ describe.each([
         })
       })
     })
+
+    describe("relations to same table", () => {
+      let relatedRows: Row[]
+
+      beforeAll(async () => {
+        const relatedTable = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+            },
+          })
+        )
+        const relatedTableId = relatedTable._id!
+        table = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+              related1: {
+                type: FieldType.LINK,
+                name: "related1",
+                fieldName: "main1",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+              related2: {
+                type: FieldType.LINK,
+                name: "related2",
+                fieldName: "main2",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+            },
+          })
+        )
+        relatedRows = await Promise.all([
+          config.api.row.save(relatedTableId, { name: "foo" }),
+          config.api.row.save(relatedTableId, { name: "bar" }),
+          config.api.row.save(relatedTableId, { name: "baz" }),
+          config.api.row.save(relatedTableId, { name: "boo" }),
+        ])
+      })
+
+      it("can create rows with both relationships", async () => {
+        const row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [relatedRows[0]._id!],
+          related2: [relatedRows[1]._id!],
+        })
+
+        expect(row).toEqual(
+          expect.objectContaining({
+            name: "test",
+            related1: [
+              {
+                _id: relatedRows[0]._id,
+                primaryDisplay: relatedRows[0].name,
+              },
+            ],
+            related2: [
+              {
+                _id: relatedRows[1]._id,
+                primaryDisplay: relatedRows[1].name,
+              },
+            ],
+          })
+        )
+      })
+    })
   })
 
   describe("get", () => {
