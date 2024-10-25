@@ -455,6 +455,32 @@ describe("/automations", () => {
       expect(events.automation.triggerUpdated).not.toHaveBeenCalled()
     })
 
+    it("tries to add an automation step when the limit has been exceeded", async () => {
+      let stepLimit = 5
+      mocks.licenses.setAutomationStepLimit(stepLimit)
+      let automation = newAutomation()
+      automation = await config.createAutomation(automation)
+      automation.definition.steps.push(automationStep())
+      automation.definition.steps.push(automationStep())
+      automation.definition.steps.push(automationStep())
+      automation.definition.steps.push(automationStep())
+      automation.definition.steps.push(automationStep())
+
+      let resp = await request
+        .put(`/api/automations`)
+        .set(config.defaultHeaders())
+        .send(automation)
+        .expect("Content-Type", /json/)
+        .expect(500)
+
+      expect(resp.body.message).toEqual(
+        `Automation update failed: Maximum limit of ${stepLimit} action steps exceeded. Please remove some steps before updating.`
+      )
+      mocks.licenses.setAutomationStepLimit(30)
+
+      jest.clearAllMocks()
+    })
+
     it("removes automation steps", async () => {
       let automation = newAutomation()
       automation.definition.steps.push(automationStep())

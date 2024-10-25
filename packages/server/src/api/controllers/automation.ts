@@ -4,7 +4,7 @@ import { DocumentType } from "../../db/utils"
 import { updateTestHistory, removeDeprecated } from "../../automations/utils"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
 import { context, cache, events, db as dbCore } from "@budibase/backend-core"
-import { automations, features } from "@budibase/pro"
+import { automations, features, licensing } from "@budibase/pro"
 import {
   App,
   Automation,
@@ -58,6 +58,20 @@ export async function create(
 export async function update(ctx: UserCtx) {
   let automation = ctx.request.body
   automation.appId = ctx.appId
+
+  const license = await licensing.cache.getCachedLicense()
+  const automationStepLimit =
+    license.quotas.usage.static.automationStepCount.value
+
+  if (
+    automationStepLimit !== licensing.quotas.UNLIMITED &&
+    coreSdk.automations.isStepLimitExceeded(automation, automationStepLimit)
+  ) {
+    ctx.status = 400
+    throw new Error(
+      `Automation update failed: Maximum limit of ${automationStepLimit} action steps exceeded. Please remove some steps before updating.`
+    )
+  }
 
   // Call through to create if it doesn't exist
   if (!automation._id || !automation._rev) {

@@ -97,6 +97,11 @@ export function quotas(): Quotas {
           value: 1,
           triggers: [],
         },
+        automationStepCount: {
+          name: "Automation step count",
+          value: 1,
+          triggers: [],
+        },
       },
     },
     constant: {

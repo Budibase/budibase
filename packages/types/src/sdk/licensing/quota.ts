@@ -18,6 +18,7 @@ export enum StaticQuotaName {
   USER_GROUPS = "userGroups",
   PLUGINS = "plugins",
   AI_CUSTOM_CONFIGS = "aiCustomConfigs",
+  AUTOMATION_STEP_COUNT = "automationStepCount",
 }
 
 export enum MonthlyQuotaName {
@@ -75,6 +76,7 @@ export type StaticQuotas = {
   [StaticQuotaName.USER_GROUPS]: Quota
   [StaticQuotaName.PLUGINS]: Quota
   [StaticQuotaName.AI_CUSTOM_CONFIGS]: Quota
+  [StaticQuotaName.AUTOMATION_STEP_COUNT]: Quota
 }
 
 export type ConstantQuotas = {

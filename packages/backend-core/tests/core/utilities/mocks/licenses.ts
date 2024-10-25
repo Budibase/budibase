@@ -117,3 +117,9 @@ export const setAutomationLogsQuota = (value: number) => {
   license.quotas.constant.automationLogRetentionDays.value = value
   return useLicense(license)
 }
+
+export const setAutomationStepLimit = (value: number) => {
+  const license = cloneDeep(CLOUD_FREE_LICENSE)
+  license.quotas.usage.static.automationStepCount.value = value
+  return useLicense(license)
+}
