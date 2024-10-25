@@ -425,8 +425,12 @@ export class ExternalRequest<T extends Operation> {
    */
   async lookupRelations(tableId: string, row: Row) {
     const related: {
-      [key: string]: { rows: Row[]; isMany: boolean; tableId: string }
-    } = {}
+      rows: Row[]
+      isMany: boolean
+      tableId: string
+      field: string
+    }[] = []
+
     const { tableName } = breakExternalTableId(tableId)
     const table = this.tables[tableName]
     // @ts-ignore
@@ -489,11 +493,13 @@ export class ExternalRequest<T extends Operation> {
       const storeTo = isManyToMany(field)
         ? field.throughFrom || linkPrimaryKey
         : fieldName
-      related[storeTo] = {
+
+      related.push({
         rows,
         isMany: isManyToMany(field),
         tableId: relatedTableId,
-      }
+        field: storeTo,
+      })
     }
     return related
   }
@@ -528,7 +534,9 @@ export class ExternalRequest<T extends Operation> {
 
       const linkSecondary = relationshipPrimary[1]
 
-      const rows = related[key]?.rows || []
+      const rows =
+        related.find(r => r.tableId === relationship.tableId && r.field === key)
+          ?.rows || []
 
       const relationshipMatchPredicate = ({
         row,
@@ -573,12 +581,12 @@ export class ExternalRequest<T extends Operation> {
       }
     }
     // finally cleanup anything that needs to be removed
-    for (let [colName, { isMany, rows, tableId }] of Object.entries(related)) {
+    for (let { isMany, rows, tableId, field } of related) {
       const table: Table | undefined = this.getTable(tableId)
       // if it's not the foreign key skip it, nothing to do
       if (
         !table ||
-        (!isMany && table.primary && table.primary.indexOf(colName) !== -1)
+        (!isMany && table.primary && table.primary.indexOf(field) !== -1)
       ) {
         continue
       }
@@ -586,7 +594,7 @@ export class ExternalRequest<T extends Operation> {
         const rowId = generateIdForRow(row, table)
         const promise: Promise<any> = isMany
           ? this.removeManyToManyRelationships(rowId, table)
-          : this.removeOneToManyRelationships(rowId, table, colName)
+          : this.removeOneToManyRelationships(rowId, table, field)
         if (promise) {
           promises.push(promise)
         }
@@ -603,7 +611,9 @@ export class ExternalRequest<T extends Operation> {
       if (!isManyToOne(relationshipColumn)) {
         continue
       }
-      const { rows, isMany, tableId } = related[relationshipColumn.fieldName]
+      const { rows, isMany, tableId } = related.find(
+        r => r.field === relationshipColumn.fieldName
+      )!
       const table = this.getTable(tableId)!
       await Promise.all(
         rows.map(row => {
