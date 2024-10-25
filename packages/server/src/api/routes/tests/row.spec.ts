@@ -1006,6 +1006,36 @@ describe.each([
           })
         )
       })
+
+      it("can create rows with no relationships", async () => {
+        const row = await config.api.row.save(table._id!, {
+          name: "test",
+        })
+
+        expect(row.related1).toBeUndefined()
+        expect(row.related2).toBeUndefined()
+      })
+
+      it("can create rows with only one relationships field", async () => {
+        const row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [],
+          related2: [relatedRows[1]._id!],
+        })
+
+        expect(row).toEqual(
+          expect.objectContaining({
+            name: "test",
+            related2: [
+              {
+                _id: relatedRows[1]._id,
+                primaryDisplay: relatedRows[1].name,
+              },
+            ],
+          })
+        )
+        expect(row.related1).toBeUndefined()
+      })
     })
   })
 
