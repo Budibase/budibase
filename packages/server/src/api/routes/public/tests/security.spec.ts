@@ -4,9 +4,6 @@ import { basicTable } from "../../../../tests/utilities/structures"
 import { Table, User } from "@budibase/types"
 import { PublicAPIRequest } from "./Request"
 
-const BROWSER_USER_AGENT =
-  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
-
 describe("check public API security", () => {
   const config = setup.getConfig()
   let builderRequest: PublicAPIRequest,
@@ -58,7 +55,7 @@ describe("check public API security", () => {
     await config.withHeaders(
       {
         ...headers,
-        "User-Agent": BROWSER_USER_AGENT,
+        "User-Agent": config.browserUserAgent(),
       },
       async () => {
         await config.api.row.search(
