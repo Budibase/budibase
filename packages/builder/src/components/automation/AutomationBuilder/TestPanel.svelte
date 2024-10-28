@@ -1,7 +1,7 @@
 <script>
   import { Icon, Divider } from "@budibase/bbui"
   import TestDisplay from "./TestDisplay.svelte"
-  import { automationStore } from "stores/builder"
+  import { automationStore, selectedAutomation } from "stores/builder"
 
   export let automation
 </script>
@@ -24,7 +24,11 @@
 
 <Divider />
 
-<TestDisplay {automation} testResults={$automationStore.testResults} />
+<TestDisplay
+  {automation}
+  testResults={$automationStore.testResults}
+  automationBlockRefs={$selectedAutomation.blockRefs}
+/>
 
 <style>
   .title {

@@ -559,13 +559,6 @@ const automationActions = store => ({
         : pathBlock.icon
 
       if (blockIdx === 0 && isTrigger) {
-        schema = Object.fromEntries(
-          Object.keys(pathBlock.inputs.fields || []).map(key => [
-            key,
-            { type: pathBlock.inputs.fields[key] },
-          ])
-        )
-
         if (
           pathBlock.event === AutomationEventType.ROW_UPDATE ||
           pathBlock.event === AutomationEventType.ROW_SAVE
@@ -582,6 +575,13 @@ const automationActions = store => ({
           }
           // remove the original binding
           delete schema.row
+        } else if (pathBlock.event === AutomationEventType.APP_TRIGGER) {
+          schema = Object.fromEntries(
+            Object.keys(pathBlock.inputs.fields || []).map(key => [
+              key,
+              { type: pathBlock.inputs.fields[key] },
+            ])
+          )
         }
       }
 
