@@ -1,4 +1,4 @@
-import { ContextUser, User, UserGroup } from "@budibase/types"
+import { ContextUser, User, UserGroup, UserIdentifier } from "@budibase/types"
 import * as accountSdk from "../accounts"
 import env from "../environment"
 import { getExistingAccounts, getFirstPlatformUser } from "./lookup"
@@ -68,17 +68,8 @@ export async function validateUniqueUser(email: string, tenantId: string) {
  * For a list of users, return the account holder if there is an email match.
  */
 export async function getAccountHolderFromUsers(
-  users: Array<{
-    userId: string
-    email: string
-  }>
-): Promise<
-  | {
-      userId: string
-      email: string
-    }
-  | undefined
-> {
+  users: Array<UserIdentifier>
+): Promise<UserIdentifier | undefined> {
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const accountMetadata = await getExistingAccounts(
       users.map(user => user.email)

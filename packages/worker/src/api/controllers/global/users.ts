@@ -23,6 +23,7 @@ import {
   SearchUsersRequest,
   User,
   UserCtx,
+  UserIdentifier,
 } from "@budibase/types"
 import {
   accounts,
@@ -105,10 +106,7 @@ export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
 }
 
 const bulkDelete = async (
-  users: Array<{
-    userId: string
-    email: string
-  }>,
+  users: Array<UserIdentifier>,
   currentUserId: string
 ) => {
   if (users.find(u => u.userId === currentUserId)) {
@@ -313,13 +311,11 @@ export const tenantUserLookup = async (ctx: any) => {
  * This will be paginated to a default of the first 50 users,
  * So the account holder may not be found until further pagination has occurred
  */
-export const accountHolderLookup = async (ctx: any) => {
+export const accountHolderLookup = async (ctx: Ctx) => {
   const appId = ctx.params.appId
-  ctx.body = {
+  const users = await userSdk.db.getUsersByAppAccess({
     appId,
-  }
-  await getAppUsers(ctx)
-  const users = ctx.body.data as Array<{ email: string }>
+  })
   return await userSdk.core.getExistingAccounts(users.map(u => u.email))
 }
 
