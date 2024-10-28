@@ -66,7 +66,14 @@ export const buildUserBulkUserValidation = (isSelf = false) => {
       users: Joi.array().items(Joi.object(schema).required().unknown(true)),
     }),
     delete: Joi.object({
-      userIds: Joi.array().items(Joi.string()),
+      users: Joi.array().items(
+        Joi.object({
+          email: Joi.string(),
+          userId: Joi.string(),
+        })
+          .required()
+          .unknown(true)
+      ),
     }),
   }
 
