@@ -20,7 +20,6 @@
     licensing,
     organisation,
     admin,
-    appsStore,
   } from "stores/portal"
   import { onMount } from "svelte"
   import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
