@@ -614,9 +614,6 @@ const getDeviceBindings = () => {
   return bindings
 }
 
-/**
- * Gets all device bindings that are globally available.
- */
 export const getSettingBindings = () => {
   let bindings = []
   const safeSetting = makePropSafe("settings")

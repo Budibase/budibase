@@ -359,9 +359,9 @@ const automationActions = store => ({
   },
 
   /**
-   * Get user bindings
+   * Get settings bindings
    *
-   * @returns {Array<Object>} all available user bindings
+   * @returns {Array<Object>} all available settings bindings
    */
   buildSettingBindings: () => {
     return getSettingBindings().map(binding => {
