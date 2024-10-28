@@ -7,7 +7,7 @@
     Icon,
     Multiselect,
   } from "@budibase/bbui"
-  import { CalculationType, canGroupBy, FieldType } from "@budibase/types"
+  import { CalculationType, canGroupBy, isNumeric } from "@budibase/types"
   import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { getContext } from "svelte"
 
@@ -90,10 +90,7 @@
     return Object.entries(schema)
       .filter(([field, fieldSchema]) => {
         // Only allow numeric fields that are not calculations themselves
-        if (
-          fieldSchema.calculationType ||
-          fieldSchema.type !== FieldType.NUMBER
-        ) {
+        if (fieldSchema.calculationType || !isNumeric(fieldSchema.type)) {
           return false
         }
         // Don't allow duplicates
