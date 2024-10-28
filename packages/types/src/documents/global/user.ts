@@ -38,6 +38,11 @@ export function isSSOUser(user: User): user is SSOUser {
 
 // USER
 
+export interface UserIdentifier {
+  userId: string
+  email: string
+}
+
 export interface User extends Document {
   tenantId: string
   email: string
