@@ -70,6 +70,17 @@ export async function getAllUserIds() {
   return response.rows.map(row => row.id)
 }
 
+export async function getAllUsers(): Promise<User[]> {
+  const db = getGlobalDB()
+  const startKey = `${DocumentType.USER}${SEPARATOR}`
+  const response = await db.allDocs({
+    startkey: startKey,
+    endkey: `${startKey}${UNICODE_MAX}`,
+    include_docs: true,
+  })
+  return response.rows.map(row => row.doc) as User[]
+}
+
 export async function bulkUpdateGlobalUsers(users: User[]) {
   const db = getGlobalDB()
   return (await db.bulkDocs(users)) as BulkDocsResponse
