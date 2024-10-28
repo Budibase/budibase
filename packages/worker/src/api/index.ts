@@ -117,7 +117,7 @@ const NO_TENANCY_ENDPOINTS = [
     method: "GET",
   },
   {
-    route: "/api/global/users/holder/:appId",
+    route: "/api/global/users/accountholder/:appId",
     method: "GET",
   },
 ]
