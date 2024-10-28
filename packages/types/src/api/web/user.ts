@@ -15,7 +15,10 @@ export interface UserDetails {
 
 export interface BulkUserRequest {
   delete?: {
-    userIds: string[]
+    users: Array<{
+      userId: string
+      email: string
+    }>
   }
   create?: {
     roles?: any[]
