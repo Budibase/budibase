@@ -17,6 +17,7 @@ import {
   PaginationJson,
   QueryJson,
   RelationshipFieldMetadata,
+  RelationshipType,
   Row,
   SearchFilters,
   SortJson,
@@ -421,17 +422,30 @@ export class ExternalRequest<T extends Operation> {
     return { row: newRow as T, manyRelationships }
   }
 
+  private getLookupRelationsKey(relationship: {
+    relationshipType: RelationshipType
+    fieldName: string
+    through?: string
+  }) {
+    if (relationship.relationshipType === RelationshipType.MANY_TO_MANY) {
+      return `${relationship.through}_${relationship.fieldName}`
+    }
+    return relationship.fieldName
+  }
   /**
    * This is a cached lookup, of relationship records, this is mainly for creating/deleting junction
    * information.
    */
-  async lookupRelations(tableId: string, row: Row) {
-    const related: {
-      rows: Row[]
-      isMany: boolean
-      tableId: string
-      field: string
-    }[] = []
+  private async lookupRelations(tableId: string, row: Row) {
+    const related: Record<
+      string,
+      {
+        rows: Row[]
+        isMany: boolean
+        tableId: string
+        field: string
+      }
+    > = {}
 
     const { tableName } = breakExternalTableId(tableId)
     const table = this.tables[tableName]
@@ -496,12 +510,12 @@ export class ExternalRequest<T extends Operation> {
         ? field.throughFrom || linkPrimaryKey
         : fieldName
 
-      related.push({
+      related[this.getLookupRelationsKey(field)] = {
         rows,
         isMany: isManyToMany(field),
         tableId: relatedTableId,
         field: storeTo,
-      })
+      }
     }
     return related
   }
@@ -537,8 +551,13 @@ export class ExternalRequest<T extends Operation> {
       const linkSecondary = relationshipPrimary[1]
 
       const rows =
-        related.find(r => r.tableId === relationship.tableId && r.field === key)
-          ?.rows || []
+        related[
+          this.getLookupRelationsKey({
+            relationshipType: RelationshipType.MANY_TO_MANY,
+            fieldName: key,
+            through: relationship.tableId,
+          })
+        ]?.rows || []
 
       const relationshipMatchPredicate = ({
         row,
@@ -583,7 +602,7 @@ export class ExternalRequest<T extends Operation> {
       }
     }
     // finally cleanup anything that needs to be removed
-    for (let { isMany, rows, tableId, field } of related) {
+    for (let { isMany, rows, tableId, field } of Object.values(related)) {
       const table: Table | undefined = this.getTable(tableId)
       // if it's not the foreign key skip it, nothing to do
       if (
@@ -613,11 +632,7 @@ export class ExternalRequest<T extends Operation> {
         continue
       }
 
-      const relatedByTable = isManyToMany(column)
-        ? related.find(
-            r => r.tableId === column.through && r.field === column.fieldName
-          )
-        : related.find(r => r.field === column.fieldName)
+      const relatedByTable = related[this.getLookupRelationsKey(column)]
       if (!relatedByTable) {
         continue
       }
