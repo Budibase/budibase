@@ -45,12 +45,18 @@
   let role
   let blockEle
   let positionStyles
+  let blockDims
+
+  const updateBlockDims = () => {
+    blockDims = blockEle?.getBoundingClientRect()
+  }
 
   const loadSteps = blockRef => {
     return blockRef
       ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
       : []
   }
+
   $: pathSteps = loadSteps(blockRef)
 
   $: collectBlockExists = pathSteps.some(
@@ -74,8 +80,12 @@
   }
 
   $: selected = $view?.moveStep && $view?.moveStep?.id === block.id
-  $: blockDims = blockEle?.getBoundingClientRect()
-  $: placeholderDims = buildPlaceholderStyles(blockDims)
+
+  $: {
+    selected, updateBlockDims()
+  }
+
+  $: placeholderDims = buildPlaceholderStyles(blockDims, selected)
 
   // Move the selected item
   // Listen for scrolling in the content. As its scrolled this will be updated

@@ -3,10 +3,11 @@
   import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
   import { ActionStepID } from "constants/backend/automations"
   import { JsonView } from "@zerodevx/svelte-json-view"
-  import { automationStore, selectedAutomation } from "stores/builder"
+  import { automationStore } from "stores/builder"
   import { AutomationActionStepId } from "@budibase/types"
 
   export let automation
+  export let automationBlockRefs = {}
   export let testResults
 
   let openBlocks = {}
@@ -39,18 +40,18 @@
   $: filteredResults = prepTestResults(testResults)
   $: {
     if (testResults.message) {
-      blocks = automation?.definition?.trigger
-        ? [automation.definition.trigger]
-        : []
+      const trigger = automation?.definition?.trigger
+      blocks = trigger ? [trigger] : []
     } else if (automation) {
       const terminatingStep = filteredResults.at(-1)
-      const terminatingBlockRef =
-        $selectedAutomation.blockRefs[terminatingStep.id]
-      const pathSteps = automationStore.actions.getPathSteps(
-        terminatingBlockRef.pathTo,
-        automation
-      )
-      blocks = [...pathSteps].filter(x => x.stepId !== ActionStepID.LOOP)
+      const terminatingBlockRef = automationBlockRefs[terminatingStep.id]
+      if (terminatingBlockRef) {
+        const pathSteps = automationStore.actions.getPathSteps(
+          terminatingBlockRef.pathTo,
+          automation
+        )
+        blocks = [...pathSteps].filter(x => x.stepId !== ActionStepID.LOOP)
+      }
     } else if (filteredResults) {
       blocks = filteredResults || []
       // make sure there is an ID for each block being displayed
