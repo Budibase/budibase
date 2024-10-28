@@ -312,11 +312,16 @@ export const tenantUserLookup = async (ctx: any) => {
  * So the account holder may not be found until further pagination has occurred
  */
 export const accountHolderLookup = async (ctx: Ctx) => {
-  const appId = ctx.params.appId
-  const users = await userSdk.db.getUsersByAppAccess({
-    appId,
-  })
-  return await userSdk.core.getExistingAccounts(users.map(u => u.email))
+  const users = await userSdk.core.getAllUsers()
+  const response = await userSdk.core.getExistingAccounts(
+    users.map(u => u.email)
+  )
+  const holder = response[0]
+  if (!holder) {
+    return
+  }
+  holder._id = users.find(u => u.email === holder.email)?._id
+  ctx.body = holder
 }
 
 /* 

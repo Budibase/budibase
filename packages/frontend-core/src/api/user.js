@@ -296,9 +296,9 @@ export const buildUserEndpoints = API => ({
     })
   },
 
-  getAccountHolder: async ({ appId }) => {
+  getAccountHolder: async () => {
     return await API.get({
-      url: `/api/global/users/accountholder/${appId}`,
+      url: `/api/global/users/accountholder`,
     })
   },
 })

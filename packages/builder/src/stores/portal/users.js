@@ -128,9 +128,8 @@ export function createUsersStore() {
     return await API.removeAppBuilder({ userId, appId })
   }
 
-  async function getAccountHolder(appId) {
-    const accountHolder = await API.getAccountHolder({ appId })
-    return accountHolder?.data?.[0]
+  async function getAccountHolder() {
+    return await API.getAccountHolder()
   }
 
   const getUserRole = user => {
