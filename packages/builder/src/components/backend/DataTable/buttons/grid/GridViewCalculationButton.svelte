@@ -1,15 +1,15 @@
 <script>
   import {
     ActionButton,
-    Modal,
-    ModalContent,
     Select,
     Icon,
     Multiselect,
+    Button,
   } from "@budibase/bbui"
   import { CalculationType, canGroupBy, FieldType } from "@budibase/types"
   import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { getContext } from "svelte"
+  import DetailPopover from "components/common/DetailPopover.svelte"
 
   const { definition, datasource, rows } = getContext("grid")
   const calculationTypeOptions = [
@@ -35,19 +35,20 @@
     },
   ]
 
-  let modal
+  let popover
   let calculations = []
   let groupBy = []
   let schema = {}
+  let loading = false
 
   $: schema = $definition?.schema || {}
   $: count = extractCalculations($definition?.schema || {}).length
   $: groupByOptions = getGroupByOptions(schema)
 
-  const open = () => {
+  const openPopover = () => {
     calculations = extractCalculations(schema)
     groupBy = calculations.length ? extractGroupBy(schema) : []
-    modal?.show()
+    popover?.show()
   }
 
   const extractCalculations = schema => {
@@ -135,6 +136,7 @@
 
   const save = async () => {
     let newSchema = {}
+    loading = true
 
     // Add calculations
     for (let calc of calculations) {
@@ -168,76 +170,80 @@
     }
 
     // Save changes
-    await datasource.actions.saveDefinition({
-      ...$definition,
-      primaryDisplay,
-      schema: newSchema,
-    })
-    await rows.actions.refreshData()
+    try {
+      await datasource.actions.saveDefinition({
+        ...$definition,
+        primaryDisplay,
+        schema: newSchema,
+      })
+      await rows.actions.refreshData()
+    } finally {
+      loading = false
+      popover.hide()
+    }
   }
 </script>
 
-<ActionButton icon="WebPage" quiet on:click={open}>
-  Configure calculations{count ? `: ${count}` : ""}
-</ActionButton>
+<DetailPopover bind:this={popover} title="Calculations" width={480}>
+  <svelte:fragment slot="anchor" let:open>
+    <ActionButton icon="WebPage" quiet on:click={openPopover} selected={open}>
+      Configure calculations{count ? `: ${count}` : ""}
+    </ActionButton>
+  </svelte:fragment>
 
-<Modal bind:this={modal}>
-  <ModalContent
-    title="Calculations"
-    confirmText="Save"
-    size="M"
-    onConfirm={save}
-  >
-    {#if calculations.length}
-      <div class="calculations">
-        {#each calculations as calc, idx}
-          <span>{idx === 0 ? "Calculate" : "and"} the</span>
-          <Select
-            options={getTypeOptions(calc, calculations)}
-            bind:value={calc.type}
-            placeholder={false}
-          />
-          <span>of</span>
-          <Select
-            options={getFieldOptions(calc, calculations, schema)}
-            bind:value={calc.field}
-            placeholder="Column"
-          />
-          <Icon
-            hoverable
-            name="Delete"
-            size="S"
-            on:click={() => deleteCalc(idx)}
-            color="var(--spectrum-global-color-gray-700)"
-          />
-        {/each}
-        <span>Group by</span>
-        <div class="group-by">
-          <Multiselect
-            options={groupByOptions}
-            bind:value={groupBy}
-            placeholder="None"
-          />
-        </div>
+  {#if calculations.length}
+    <div class="calculations">
+      {#each calculations as calc, idx}
+        <span>{idx === 0 ? "Calculate" : "and"} the</span>
+        <Select
+          options={getTypeOptions(calc, calculations)}
+          bind:value={calc.type}
+          placeholder={false}
+        />
+        <span>of</span>
+        <Select
+          options={getFieldOptions(calc, calculations, schema)}
+          bind:value={calc.field}
+          placeholder="Column"
+        />
+        <Icon
+          hoverable
+          name="Delete"
+          size="S"
+          on:click={() => deleteCalc(idx)}
+          color="var(--spectrum-global-color-gray-700)"
+        />
+      {/each}
+      <span>Group by</span>
+      <div class="group-by">
+        <Multiselect
+          options={groupByOptions}
+          bind:value={groupBy}
+          placeholder="None"
+        />
       </div>
-    {/if}
-    <div class="buttons">
-      <ActionButton
-        quiet
-        icon="Add"
-        on:click={addCalc}
-        disabled={calculations.length >= 5}
-      >
-        Add calculation
-      </ActionButton>
     </div>
-    <InfoDisplay
-      icon="Help"
+  {/if}
+  <div class="buttons">
+    <ActionButton
       quiet
-      body="Calculations only work with numeric columns and a maximum of 5 calculations can be added at once."
-    />
-  </ModalContent>
-</Modal>
+      icon="Add"
+      on:click={addCalc}
+      disabled={calculations.length >= 5}
+    >
+      Add calculation
+    </ActionButton>
+  </div>
+  <InfoDisplay
+    icon="Help"
+    quiet
+    body="Calculations only work with numeric columns and a maximum of 5 calculations can be added at once."
+  />
+
+  <div>
+    <Button cta on:click={save} disabled={loading}>Save</Button>
+  </div>
+</DetailPopover>
 
 <style>
   .calculations {
