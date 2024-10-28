@@ -6,7 +6,12 @@ import { createHistoryStore } from "stores/builder/history"
 import { licensing } from "stores/portal"
 import { tables } from "stores/builder"
 import { notifications } from "@budibase/bbui"
-import { getEnvironmentBindings, migrateReferencesInObject } from "dataBinding"
+import {
+  getEnvironmentBindings,
+  migrateReferencesInObject,
+  getUserBindings,
+  getSettingBindings,
+} from "dataBinding"
 import {
   AutomationTriggerStepId,
   AutomationEventType,
@@ -334,6 +339,42 @@ const automationActions = store => ({
     }
     return []
   },
+
+  /**
+   * Get user bindings
+   *
+   * @returns {Array<Object>} all available user bindings
+   */
+  buildUserBindings: () => {
+    return getUserBindings().map(binding => {
+      return {
+        ...binding,
+        category: "User",
+        display: {
+          ...binding.display,
+          rank: 98,
+        },
+      }
+    })
+  },
+
+  /**
+   * Get user bindings
+   *
+   * @returns {Array<Object>} all available user bindings
+   */
+  buildSettingBindings: () => {
+    return getSettingBindings().map(binding => {
+      return {
+        ...binding,
+        display: {
+          ...binding.display,
+          rank: 98,
+        },
+      }
+    })
+  },
+
   /**
    * Take the supplied step id and aggregate all bindings for every
    * step preceding it.

@@ -615,6 +615,43 @@ const getDeviceBindings = () => {
 }
 
 /**
+ * Gets all device bindings that are globally available.
+ */
+export const getSettingBindings = () => {
+  let bindings = []
+  const safeSetting = makePropSafe("settings")
+
+  bindings = [
+    {
+      type: "context",
+      runtimeBinding: `${safeSetting}.${makePropSafe("url")}`,
+      readableBinding: `Settings.url`,
+      category: "Settings",
+      icon: "Settings",
+      display: { type: "string", name: "url" },
+    },
+    {
+      type: "context",
+      runtimeBinding: `${safeSetting}.${makePropSafe("logo")}`,
+      readableBinding: `Settings.logo`,
+      category: "Settings",
+      icon: "Settings",
+      display: { type: "string", name: "logo" },
+    },
+    {
+      type: "context",
+      runtimeBinding: `${safeSetting}.${makePropSafe("company")}`,
+      readableBinding: `Settings.company`,
+      category: "Settings",
+      icon: "Settings",
+      display: { type: "string", name: "company" },
+    },
+  ]
+
+  return bindings
+}
+
+/**
  * Gets all selected rows bindings for tables in the current asset.
  * TODO: remove in future because we don't need a separate store for this
  * DEPRECATED
