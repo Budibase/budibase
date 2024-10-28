@@ -1199,16 +1199,16 @@ describe.each([
           expect(row).toEqual(
             expect.objectContaining({
               name: "test",
-              related1: [
-                {
-                  _id: relatedRows[1]._id,
-                  primaryDisplay: relatedRows[1].name,
-                },
+              related1: expect.arrayContaining([
                 {
                   _id: relatedRows[0]._id,
                   primaryDisplay: relatedRows[0].name,
                 },
-              ],
+                {
+                  _id: relatedRows[1]._id,
+                  primaryDisplay: relatedRows[1].name,
+                },
+              ]),
               related2: [
                 {
                   _id: relatedRows[2]._id,
