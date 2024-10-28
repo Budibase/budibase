@@ -2268,58 +2268,118 @@ describe.each([
       })
     })
 
-    describe("calculation views", () => {
-      it("should not remove calculation columns when modifying table schema", async () => {
-        let table = await config.api.table.save(
-          saveTableRequest({
-            schema: {
-              name: {
-                name: "name",
-                type: FieldType.STRING,
+    !isLucene &&
+      describe("calculation views", () => {
+        it("should not remove calculation columns when modifying table schema", async () => {
+          let table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                },
+                age: {
+                  name: "age",
+                  type: FieldType.NUMBER,
+                },
               },
-              age: {
-                name: "age",
-                type: FieldType.NUMBER,
+            })
+          )
+
+          let view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
+            schema: {
+              sum: {
+                visible: true,
+                calculationType: CalculationType.SUM,
+                field: "age",
               },
             },
           })
-        )
 
-        let view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-          type: ViewV2Type.CALCULATION,
-          schema: {
-            sum: {
-              visible: true,
-              calculationType: CalculationType.SUM,
-              field: "age",
+          table = await config.api.table.get(table._id!)
+          await config.api.table.save({
+            ...table,
+            schema: {
+              ...table.schema,
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
             },
-          },
+          })
+
+          view = await config.api.viewV2.get(view.id)
+          expect(Object.keys(view.schema!).sort()).toEqual([
+            "age",
+            "id",
+            "name",
+            "sum",
+          ])
         })
 
-        table = await config.api.table.get(table._id!)
-        await config.api.table.save({
-          ...table,
-          schema: {
-            ...table.schema,
-            name: {
-              name: "name",
-              type: FieldType.STRING,
-              constraints: { presence: true },
-            },
-          },
-        })
+        describe("bigints", () => {
+          let table: Table
+          let view: ViewV2
 
-        view = await config.api.viewV2.get(view.id)
-        expect(Object.keys(view.schema!).sort()).toEqual([
-          "age",
-          "id",
-          "name",
-          "sum",
-        ])
+          beforeEach(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  bigint: {
+                    name: "bigint",
+                    type: FieldType.BIGINT,
+                  },
+                },
+              })
+            )
+
+            view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              type: ViewV2Type.CALCULATION,
+              schema: {
+                sum: {
+                  visible: true,
+                  calculationType: CalculationType.SUM,
+                  field: "bigint",
+                },
+              },
+            })
+          })
+
+          it("should not lose precision handling ints larger than JSs int53", async () => {
+            // The sum of the following 3 numbers cannot be represented by
+            // JavaScripts default int53 datatype for numbers, so this is a test
+            // that makes sure we aren't losing precision between the DB and the
+            // user.
+            await config.api.row.bulkImport(table._id!, {
+              rows: [
+                { bigint: "1000000000000000000" },
+                { bigint: "123" },
+                { bigint: "321" },
+              ],
+            })
+
+            const { rows } = await config.api.row.search(view.id)
+            expect(rows).toHaveLength(1)
+            expect(rows[0].sum).toEqual("1000000000000000444")
+          })
+
+          it("should be able to handle up to 2**63 - 1 bigints", async () => {
+            await config.api.row.bulkImport(table._id!, {
+              rows: [{ bigint: "9223372036854775806" }, { bigint: "1" }],
+            })
+
+            const { rows } = await config.api.row.search(view.id)
+            expect(rows).toHaveLength(1)
+            expect(rows[0].sum).toEqual("9223372036854775807")
+          })
+        })
       })
-    })
   })
 
   describe("row operations", () => {
