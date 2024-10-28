@@ -184,7 +184,7 @@
   }
 </script>
 
-<DetailPopover bind:this={popover} title="Calculations" width={480}>
+<DetailPopover bind:this={popover} title="Configure calculations" width={480}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton icon="WebPage" quiet on:click={openPopover} selected={open}>
       Configure calculations{count ? `: ${count}` : ""}
