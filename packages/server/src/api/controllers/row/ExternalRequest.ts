@@ -478,7 +478,7 @@ export class ExternalRequest<T extends Operation> {
         )
       }
 
-      if (!lookupField || !row?.[lookupField] == null) {
+      if (!lookupField || !row?.[lookupField]) {
         continue
       }
       const endpoint = getEndpoint(relatedTableId, Operation.READ)
