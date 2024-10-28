@@ -226,7 +226,9 @@ class AutomationBuilder extends BaseStepBuilder {
   private triggerOutputs: any
   private triggerSet: boolean = false
 
-  constructor(options: { name?: string; appId?: string } = {}) {
+  constructor(
+    options: { name?: string; appId?: string; config?: TestConfiguration } = {}
+  ) {
     super()
     this.automationConfig = {
       name: options.name || `Test Automation ${uuidv4()}`,
@@ -238,7 +240,7 @@ class AutomationBuilder extends BaseStepBuilder {
       type: "automation",
       appId: options.appId ?? setup.getConfig().getAppId(),
     }
-    this.config = setup.getConfig()
+    this.config = options.config || setup.getConfig()
   }
 
   // TRIGGERS
@@ -348,6 +350,7 @@ class AutomationBuilder extends BaseStepBuilder {
 export function createAutomationBuilder(options?: {
   name?: string
   appId?: string
+  config?: TestConfiguration
 }) {
   return new AutomationBuilder(options)
 }
