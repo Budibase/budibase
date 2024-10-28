@@ -54,12 +54,13 @@ import { makeExternalQuery } from "../../../integrations/base/query"
 import { dataFilters, helpers } from "@budibase/shared-core"
 import { isRelationshipColumn } from "../../../db/utils"
 
-export interface ManyRelationship {
+interface ManyRelationship {
   tableId?: string
   id?: string
   isUpdate?: boolean
   key: string
   [key: string]: any
+  relationshipType: RelationshipType
 }
 
 export interface RunConfig {
@@ -386,6 +387,7 @@ export class ExternalRequest<T extends Operation> {
               [otherKey]: breakRowIdField(relationship)[0],
               // leave the ID for enrichment later
               [thisKey]: `{{ literal ${tablePrimary} }}`,
+              relationshipType: RelationshipType.MANY_TO_MANY,
             })
           }
         }
@@ -402,6 +404,7 @@ export class ExternalRequest<T extends Operation> {
               [thisKey]: breakRowIdField(relationship)[0],
               // leave the ID for enrichment later
               [otherKey]: `{{ literal ${tablePrimary} }}`,
+              relationshipType: RelationshipType.MANY_TO_ONE,
             })
           }
         }
@@ -531,7 +534,8 @@ export class ExternalRequest<T extends Operation> {
     const promises = []
     const related = await this.lookupRelations(mainTableId, row)
     for (let relationship of relationships) {
-      const { key, tableId, isUpdate, id, ...rest } = relationship
+      const { key, tableId, isUpdate, id, relationshipType, ...rest } =
+        relationship
       const body: { [key: string]: any } = processObjectSync(rest, row, {})
       const linkTable = this.getTable(tableId)
       const relationshipPrimary = linkTable?.primary || []
@@ -545,7 +549,7 @@ export class ExternalRequest<T extends Operation> {
       const rows =
         related[
           this.getLookupRelationsKey({
-            relationshipType: RelationshipType.MANY_TO_MANY,
+            relationshipType,
             fieldName: key,
             through: relationship.tableId,
           })
