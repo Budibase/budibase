@@ -257,7 +257,7 @@ export interface components {
                * @description Defines whether this is a static or dynamic formula.
                * @enum {string}
                */
-              formulaType?: "static" | "dynamic" | "ai";
+              formulaType?: "static" | "dynamic";
             }
           | {
               /**
@@ -369,7 +369,7 @@ export interface components {
                  * @description Defines whether this is a static or dynamic formula.
                  * @enum {string}
                  */
-                formulaType?: "static" | "dynamic" | "ai";
+                formulaType?: "static" | "dynamic";
               }
             | {
                 /**
@@ -483,7 +483,7 @@ export interface components {
                  * @description Defines whether this is a static or dynamic formula.
                  * @enum {string}
                  */
-                formulaType?: "static" | "dynamic" | "ai";
+                formulaType?: "static" | "dynamic";
               }
             | {
                 /**
