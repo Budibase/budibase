@@ -210,16 +210,18 @@
     anchor={relationshipPanelAnchor}
     align="left"
   >
-    {#if relationshipPanelColumns.length}
-      <div class="relationship-header">
-        {relationshipFieldName} columns
-      </div>
-    {/if}
-    <svelte:self
-      columns={relationshipPanelColumns}
-      permissions={[FieldPermissions.READONLY, FieldPermissions.HIDDEN]}
-      fromRelationshipField={relationshipField}
-    />
+    <div class="nested">
+      {#if relationshipPanelColumns.length}
+        <div class="relationship-header">
+          {relationshipFieldName} columns
+        </div>
+      {/if}
+      <svelte:self
+        columns={relationshipPanelColumns}
+        permissions={[FieldPermissions.READONLY, FieldPermissions.HIDDEN]}
+        fromRelationshipField={relationshipField}
+      />
+    </div>
   </Popover>
 {/if}
 
@@ -230,10 +232,12 @@
   }
 
   .content {
-    padding: 12px 12px;
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+  .nested {
+    padding: 12px;
   }
   .columns {
     display: grid;
@@ -262,6 +266,6 @@
   }
   .relationship-header {
     color: var(--spectrum-global-color-gray-600);
-    padding: 12px 12px 0 12px;
+    margin-bottom: 12px;
   }
 </style>
