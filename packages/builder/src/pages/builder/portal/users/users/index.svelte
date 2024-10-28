@@ -325,9 +325,7 @@
       groupsLoaded = true
       pendingInvites = await users.getInvites()
       invitesLoaded = true
-      // Get the first app because the account holder will belong to all apps
-      const appId = $appsStore.apps[0].appId
-      tenantOwner = await users.getAccountHolder(appId)
+      tenantOwner = await users.getAccountHolder()
       tenantOwnerLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
