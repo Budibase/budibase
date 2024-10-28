@@ -173,7 +173,7 @@ const identifyUser = async (
   }
   const accountHolder = await users.getExistingAccounts([user.email])
   const isAccountHolder = accountHolder.length > 0
-  const verified = account && isAccountHolder && account.verified
+  const verified = !!account && isAccountHolder && account.verified
   const installationId = await getInstallationId()
   const hosting = account ? account.hosting : getHostingFromEnv()
   const environment = getDeploymentEnvironment()
