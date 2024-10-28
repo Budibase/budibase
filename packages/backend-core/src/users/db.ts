@@ -16,8 +16,9 @@ import {
   isSSOUser,
   SaveUserOpts,
   User,
-  UserStatus,
   UserGroup,
+  UserIdentifier,
+  UserStatus,
   PlatformUserBySsoId,
   PlatformUserById,
   AnyDocument,
@@ -413,10 +414,7 @@ export class UserDB {
   }
 
   static async bulkDelete(
-    users: Array<{
-      userId: string
-      email: string
-    }>
+    users: Array<UserIdentifier>
   ): Promise<BulkUserDeleted> {
     const db = getGlobalDB()
 
