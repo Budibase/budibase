@@ -443,7 +443,6 @@ export class ExternalRequest<T extends Operation> {
         rows: Row[]
         isMany: boolean
         tableId: string
-        field: string
       }
     > = {}
 
@@ -478,10 +477,7 @@ export class ExternalRequest<T extends Operation> {
           "Unable to lookup relationships - undefined column properties."
         )
       }
-      const { tableName: relatedTableName } =
-        breakExternalTableId(relatedTableId)
-      // @ts-ignore
-      const linkPrimaryKey = this.tables[relatedTableName].primary[0]
+
       if (!lookupField || !row?.[lookupField] == null) {
         continue
       }
@@ -506,15 +502,11 @@ export class ExternalRequest<T extends Operation> {
         !Array.isArray(response) || isKnexEmptyReadResponse(response)
           ? []
           : response
-      const storeTo = isManyToMany(field)
-        ? field.throughFrom || linkPrimaryKey
-        : fieldName
 
       related[this.getLookupRelationsKey(field)] = {
         rows,
         isMany: isManyToMany(field),
         tableId: relatedTableId,
-        field: storeTo,
       }
     }
     return related
@@ -602,7 +594,7 @@ export class ExternalRequest<T extends Operation> {
       }
     }
     // finally cleanup anything that needs to be removed
-    for (let { isMany, rows, tableId, field } of Object.values(related)) {
+    for (const [field, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
       // if it's not the foreign key skip it, nothing to do
       if (
