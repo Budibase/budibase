@@ -114,12 +114,6 @@
 </DetailPopover>
 
 <style>
-  .content {
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
   .size {
     display: flex;
     flex-direction: column;
