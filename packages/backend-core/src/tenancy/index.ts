@@ -1,2 +1,2 @@
-export * from "./tenancy"
 export * from "./db"
+export * from "./tenancy"
