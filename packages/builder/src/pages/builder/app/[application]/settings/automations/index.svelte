@@ -38,6 +38,10 @@
   let loaded = false
   $: app = $appsStore.apps.find(app => $appStore.appId?.includes(app.appId))
   $: licensePlan = $auth.user?.license?.plan
+
+  // Reset the page every time that a filter gets updated
+  $: pageInfo.reset(), automationId, status, timeRange
+
   $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)
   $: isCloud = $admin.cloud
