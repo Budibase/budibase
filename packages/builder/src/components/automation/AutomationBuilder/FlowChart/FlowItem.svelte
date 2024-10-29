@@ -123,17 +123,19 @@
           class="splitHeader"
         >
           <div class="center-items">
-            <svg
-              width="28px"
-              height="28px"
-              class="spectrum-Icon"
-              style="color:var(--spectrum-global-color-gray-700);"
-              focusable="false"
-            >
-              <use xlink:href="#spectrum-icon-18-Reuse" />
-            </svg>
+            <div class="icon-background-loop">
+              <svg
+                width="20px"
+                height="20px"
+                class="spectrum-Icon"
+                style="color:#000000;"
+                focusable="false"
+              >
+                <use xlink:href="#spectrum-icon-18-Reuse" />
+              </svg>
+            </div>
             <div class="iconAlign">
-              <Detail size="S">Looping</Detail>
+              <p class="label">Looping</p>
             </div>
           </div>
 
@@ -145,7 +147,7 @@
             <div style="margin-left: 10px;" on:click={() => {}}>
               <Icon
                 hoverable
-                name={showLooping ? "ChevronDown" : "ChevronRight"}
+                name={showLooping ? "ChevronRight" : "ChevronDown"}
               />
             </div>
           </div>
@@ -254,6 +256,9 @@
     display: flex;
     align-items: center;
   }
+  .label {
+    margin: 0;
+  }
   .splitHeader {
     display: flex;
     justify-content: space-between;
@@ -274,7 +279,16 @@
   .blockSection {
     padding: var(--spacing-xl);
   }
-
+  .icon-background-loop {
+    background-color: #6afdef;
+    padding: 0;
+    border-radius: 8px;
+    min-height: 32px;
+    min-width: 32px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
   .separator {
     width: 1px;
     height: 25px;
