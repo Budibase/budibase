@@ -71,6 +71,7 @@
   ]
   let userData = []
   let invitesLoaded = false
+  let tenantOwnerLoaded = false
   let pendingInvites = []
   let parsedInvites = []
 
@@ -99,9 +100,13 @@
   $: pendingSchema = getPendingSchema(schema)
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
-  $: setEnrichedUsers($fetch.rows, tenantOwner)
+  $: setEnrichedUsers($fetch.rows, tenantOwnerLoaded)
 
-  const setEnrichedUsers = async (rows, owner) => {
+  const setEnrichedUsers = async rows => {
+    if (!tenantOwnerLoaded) {
+      enrichedUsers = []
+      return
+    }
     enrichedUsers = rows?.map(user => {
       let userGroups = []
       $groups.forEach(group => {
@@ -113,9 +118,7 @@
           })
         }
       })
-      if (owner) {
-        user.tenantOwnerEmail = owner.email
-      }
+      user.tenantOwnerEmail = tenantOwner?.email
       const role = Constants.ExtendedBudibaseRoleOptions.find(
         x => x.value === users.getUserRole(user)
       )
@@ -319,21 +322,12 @@
     try {
       await groups.actions.init()
       groupsLoaded = true
-    } catch (error) {
-      notifications.error("Error fetching user group data")
-    }
-    try {
       pendingInvites = await users.getInvites()
       invitesLoaded = true
-    } catch (err) {
-      notifications.error("Error fetching user invitations")
-    }
-    try {
       tenantOwner = await users.getAccountHolder()
-    } catch (err) {
-      if (err.status !== 404) {
-        notifications.error("Error fetching account holder")
-      }
+      tenantOwnerLoaded = true
+    } catch (error) {
+      notifications.error("Error fetching user group data")
     }
   })
 </script>
