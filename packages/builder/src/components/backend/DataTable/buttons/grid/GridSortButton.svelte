@@ -45,7 +45,7 @@
   }
 </script>
 
-<DetailPopover bind:this={popover} title="Sorting">
+<DetailPopover bind:this={popover} title="Sorting" width={300}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
       icon="SortOrderDown"
