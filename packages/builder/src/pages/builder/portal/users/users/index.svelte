@@ -280,7 +280,12 @@
       }
 
       if (ids.length > 0) {
-        await users.bulkDelete(ids)
+        await users.bulkDelete(
+          selectedRows.map(user => ({
+            userId: user._id,
+            email: user.email,
+          }))
+        )
       }
 
       if (selectedInvites.length > 0) {
@@ -319,7 +324,7 @@
       groupsLoaded = true
       pendingInvites = await users.getInvites()
       invitesLoaded = true
-      tenantOwner = await users.tenantOwner($auth.tenantId)
+      tenantOwner = await users.getAccountHolder()
       tenantOwnerLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")

@@ -12,6 +12,12 @@ import {
 import { FeatureFlag, License } from "../sdk"
 import { Files } from "formidable"
 import { EventType } from "../core"
+import { UserAgentContext } from "koa-useragent"
+
+export enum LoginMethod {
+  API_KEY = "api_key",
+  COOKIE = "cookie",
+}
 
 export interface ContextUser extends Omit<User, "roles"> {
   globalId?: string
@@ -41,6 +47,7 @@ export interface BBRequest<RequestBody> extends Request {
 export interface Ctx<RequestBody = any, ResponseBody = any> extends Context {
   request: BBRequest<RequestBody>
   body: ResponseBody
+  userAgent: UserAgentContext["userAgent"]
 }
 
 /**
@@ -51,6 +58,7 @@ export interface UserCtx<RequestBody = any, ResponseBody = any>
   user: ContextUser
   roleId?: string
   eventEmitter?: ContextEmitter
+  loginMethod?: LoginMethod
 }
 
 /**
