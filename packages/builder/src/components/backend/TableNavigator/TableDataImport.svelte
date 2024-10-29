@@ -1,5 +1,5 @@
 <script>
-  import { Select, Icon, Layout } from "@budibase/bbui"
+  import { Select, Icon, Layout, Label } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import { utils } from "@budibase/shared-core"
   import { canBeDisplayColumn } from "@budibase/frontend-core"
@@ -185,25 +185,30 @@
 </script>
 
 <Layout noPadding gap="S">
-  <div class="dropzone">
-    <input
-      bind:this={fileInput}
-      disabled={loading}
-      id="file-upload"
-      accept="text/csv,application/json"
-      type="file"
-      on:change={handleFile}
-    />
-    <label for="file-upload" class:uploaded={rawRows.length > 0}>
-      {#if error}
-        Error: {error}
-      {:else if fileName}
-        {fileName}
-      {:else}
-        Upload
-      {/if}
-    </label>
-  </div>
+  <Layout gap="XS" noPadding>
+    <Label grey extraSmall>
+      Create a Table from a CSV or JSON file (Optional)
+    </Label>
+    <div class="dropzone">
+      <input
+        bind:this={fileInput}
+        disabled={loading}
+        id="file-upload"
+        accept="text/csv,application/json"
+        type="file"
+        on:change={handleFile}
+      />
+      <label for="file-upload" class:uploaded={rawRows.length > 0}>
+        {#if error}
+          Error: {error}
+        {:else if fileName}
+          {fileName}
+        {:else}
+          Upload
+        {/if}
+      </label>
+    </div>
+  </Layout>
 
   {#if rawRows.length > 0 && !error}
     <div>

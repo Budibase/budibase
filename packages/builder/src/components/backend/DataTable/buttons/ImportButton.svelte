@@ -1,14 +1,7 @@
 <script>
-  import {
-    ActionButton,
-    Label,
-    Button,
-    Body,
-    Layout,
-    notifications,
-  } from "@budibase/bbui"
+  import { ActionButton, Button, Body, notifications } from "@budibase/bbui"
   import DetailPopover from "components/common/DetailPopover.svelte"
-  import TableDataImport from "components/backend/TableNavigator/TableDataImport.svelte"
+  import ExistingTableDataImport from "components/backend/TableNavigator/ExistingTableDataImport.svelte"
   import { createEventDispatcher } from "svelte"
   import { API } from "api"
 
@@ -72,17 +65,14 @@
     Import rows to an existing table from a CSV or JSON file. Only columns from
     the file which exist in the table will be imported.
   </Body>
-  <Layout gap="XS" noPadding>
-    <Label grey extraSmall>CSV or JSON file to import</Label>
-    <TableDataImport
-      {tableId}
-      {tableType}
-      bind:rows
-      bind:allValid
-      bind:displayColumn
-      bind:identifierFields
-    />
-  </Layout>
+  <ExistingTableDataImport
+    {tableId}
+    {tableType}
+    bind:rows
+    bind:allValid
+    bind:displayColumn
+    bind:identifierFields
+  />
   <div>
     <Button cta disabled={loading || !allValid} on:click={importData}>
       Import
