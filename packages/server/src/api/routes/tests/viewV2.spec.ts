@@ -4329,8 +4329,8 @@ describe.each([
             {
               name: "can handle logical operator all",
               insert: [
-                { string: "bar", num: 1 },
-                { string: "foo", num: 2 },
+                { string: "bar", number: 1 },
+                { string: "foo", number: 2 },
               ],
               query: {
                 groups: [
@@ -4344,7 +4344,7 @@ describe.each([
                       },
                       {
                         operator: BasicOperator.EQUAL,
-                        field: "num",
+                        field: "number",
                         value: 2,
                       },
                     ],
@@ -4355,13 +4355,13 @@ describe.each([
                 sort: "string",
                 sortOrder: SortOrder.ASCENDING,
               },
-              expected: [{ string: "foo", num: 2 }],
+              expected: [{ string: "foo", number: 2 }],
             },
             {
               name: "overrides allOr with logical operators",
               insert: [
-                { string: "bar", num: 1 },
-                { string: "foo", num: 1 },
+                { string: "bar", number: 1 },
+                { string: "foo", number: 1 },
               ],
               query: {
                 groups: [
@@ -4376,7 +4376,7 @@ describe.each([
                       },
                       {
                         operator: BasicOperator.EQUAL,
-                        field: "num",
+                        field: "number",
                         value: 1,
                       },
                     ],
@@ -4387,7 +4387,7 @@ describe.each([
                 sort: "string",
                 sortOrder: SortOrder.ASCENDING,
               },
-              expected: [{ string: "foo", num: 1 }],
+              expected: [{ string: "foo", number: 1 }],
             },
           ]
 
