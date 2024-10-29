@@ -11,11 +11,13 @@ import {
   IncludeRelationship,
   InternalSearchFilterOperator,
   isManyToOne,
+  isOneToMany,
   OneToManyRelationshipFieldMetadata,
   Operation,
   PaginationJson,
   QueryJson,
   RelationshipFieldMetadata,
+  RelationshipType,
   Row,
   SearchFilters,
   SortJson,
@@ -50,13 +52,15 @@ import sdk from "../../../sdk"
 import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { dataFilters, helpers } from "@budibase/shared-core"
+import { isRelationshipColumn } from "../../../db/utils"
 
-export interface ManyRelationship {
+interface ManyRelationship {
   tableId?: string
   id?: string
   isUpdate?: boolean
   key: string
   [key: string]: any
+  relationshipType: RelationshipType
 }
 
 export interface RunConfig {
@@ -383,6 +387,7 @@ export class ExternalRequest<T extends Operation> {
               [otherKey]: breakRowIdField(relationship)[0],
               // leave the ID for enrichment later
               [thisKey]: `{{ literal ${tablePrimary} }}`,
+              relationshipType: RelationshipType.MANY_TO_MANY,
             })
           }
         }
@@ -399,6 +404,7 @@ export class ExternalRequest<T extends Operation> {
               [thisKey]: breakRowIdField(relationship)[0],
               // leave the ID for enrichment later
               [otherKey]: `{{ literal ${tablePrimary} }}`,
+              relationshipType: RelationshipType.MANY_TO_ONE,
             })
           }
         }
@@ -419,14 +425,30 @@ export class ExternalRequest<T extends Operation> {
     return { row: newRow as T, manyRelationships }
   }
 
+  private getLookupRelationsKey(relationship: {
+    relationshipType: RelationshipType
+    fieldName: string
+    through?: string
+  }) {
+    if (relationship.relationshipType === RelationshipType.MANY_TO_MANY) {
+      return `${relationship.through}_${relationship.fieldName}`
+    }
+    return relationship.fieldName
+  }
   /**
    * This is a cached lookup, of relationship records, this is mainly for creating/deleting junction
    * information.
    */
-  async lookupRelations(tableId: string, row: Row) {
-    const related: {
-      [key: string]: { rows: Row[]; isMany: boolean; tableId: string }
-    } = {}
+  private async lookupRelations(tableId: string, row: Row) {
+    const related: Record<
+      string,
+      {
+        rows: Row[]
+        isMany: boolean
+        tableId: string
+      }
+    > = {}
+
     const { tableName } = breakExternalTableId(tableId)
     const table = this.tables[tableName]
     // @ts-ignore
@@ -458,11 +480,8 @@ export class ExternalRequest<T extends Operation> {
           "Unable to lookup relationships - undefined column properties."
         )
       }
-      const { tableName: relatedTableName } =
-        breakExternalTableId(relatedTableId)
-      // @ts-ignore
-      const linkPrimaryKey = this.tables[relatedTableName].primary[0]
-      if (!lookupField || !row?.[lookupField] == null) {
+
+      if (!lookupField || !row?.[lookupField]) {
         continue
       }
       const endpoint = getEndpoint(relatedTableId, Operation.READ)
@@ -486,10 +505,8 @@ export class ExternalRequest<T extends Operation> {
         !Array.isArray(response) || isKnexEmptyReadResponse(response)
           ? []
           : response
-      const storeTo = isManyToMany(field)
-        ? field.throughFrom || linkPrimaryKey
-        : fieldName
-      related[storeTo] = {
+
+      related[this.getLookupRelationsKey(field)] = {
         rows,
         isMany: isManyToMany(field),
         tableId: relatedTableId,
@@ -517,7 +534,8 @@ export class ExternalRequest<T extends Operation> {
     const promises = []
     const related = await this.lookupRelations(mainTableId, row)
     for (let relationship of relationships) {
-      const { key, tableId, isUpdate, id, ...rest } = relationship
+      const { key, tableId, isUpdate, id, relationshipType, ...rest } =
+        relationship
       const body: { [key: string]: any } = processObjectSync(rest, row, {})
       const linkTable = this.getTable(tableId)
       const relationshipPrimary = linkTable?.primary || []
@@ -528,7 +546,14 @@ export class ExternalRequest<T extends Operation> {
 
       const linkSecondary = relationshipPrimary[1]
 
-      const rows = related[key]?.rows || []
+      const rows =
+        related[
+          this.getLookupRelationsKey({
+            relationshipType,
+            fieldName: key,
+            through: relationship.tableId,
+          })
+        ]?.rows || []
 
       const relationshipMatchPredicate = ({
         row,
@@ -573,12 +598,12 @@ export class ExternalRequest<T extends Operation> {
       }
     }
     // finally cleanup anything that needs to be removed
-    for (let [colName, { isMany, rows, tableId }] of Object.entries(related)) {
+    for (const [field, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
       // if it's not the foreign key skip it, nothing to do
       if (
         !table ||
-        (!isMany && table.primary && table.primary.indexOf(colName) !== -1)
+        (!isMany && table.primary && table.primary.indexOf(field) !== -1)
       ) {
         continue
       }
@@ -586,7 +611,7 @@ export class ExternalRequest<T extends Operation> {
         const rowId = generateIdForRow(row, table)
         const promise: Promise<any> = isMany
           ? this.removeManyToManyRelationships(rowId, table)
-          : this.removeOneToManyRelationships(rowId, table, colName)
+          : this.removeOneToManyRelationships(rowId, table, field)
         if (promise) {
           promises.push(promise)
         }
@@ -598,23 +623,24 @@ export class ExternalRequest<T extends Operation> {
   async removeRelationshipsToRow(table: Table, rowId: string) {
     const row = await this.getRow(table, rowId)
     const related = await this.lookupRelations(table._id!, row)
-    for (let column of Object.values(table.schema)) {
-      const relationshipColumn = column as RelationshipFieldMetadata
-      if (!isManyToOne(relationshipColumn)) {
+    for (const column of Object.values(table.schema)) {
+      if (!isRelationshipColumn(column) || isOneToMany(column)) {
         continue
       }
-      const { rows, isMany, tableId } = related[relationshipColumn.fieldName]
+
+      const relatedByTable = related[this.getLookupRelationsKey(column)]
+      if (!relatedByTable) {
+        continue
+      }
+
+      const { rows, isMany, tableId } = relatedByTable
       const table = this.getTable(tableId)!
       await Promise.all(
         rows.map(row => {
           const rowId = generateIdForRow(row, table)
           return isMany
             ? this.removeManyToManyRelationships(rowId, table)
-            : this.removeOneToManyRelationships(
-                rowId,
-                table,
-                relationshipColumn.fieldName
-              )
+            : this.removeOneToManyRelationships(rowId, table, column.fieldName)
         })
       )
     }
