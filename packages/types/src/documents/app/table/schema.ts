@@ -186,6 +186,16 @@ export interface ArrayFieldMetadata extends BaseFieldSchema {
   default?: string[]
 }
 
+export interface BooleanFieldMetadata extends BaseFieldSchema {
+  type: FieldType.BOOLEAN
+  default?: string
+}
+
+export interface BigIntFieldMetadata extends BaseFieldSchema {
+  type: FieldType.BIGINT
+  default?: string
+}
+
 interface BaseFieldSchema extends UIFieldMetadata {
   type: FieldType
   name: string
@@ -196,16 +206,6 @@ interface BaseFieldSchema extends UIFieldMetadata {
   autocolumn?: boolean
   autoReason?: AutoReason.FOREIGN_KEY
   subtype?: never
-}
-
-interface BooleanFieldMetadata extends BaseFieldSchema {
-  type: FieldType.BOOLEAN
-  default?: string
-}
-
-interface BigIntFieldMetadata extends BaseFieldSchema {
-  type: FieldType.BIGINT
-  default?: string
 }
 
 interface OtherFieldMetadata extends BaseFieldSchema {
