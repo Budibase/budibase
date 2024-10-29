@@ -60,10 +60,10 @@
   buttonsCollapsed
 >
   <svelte:fragment slot="controls">
+    <GridManageAccessButton />
     {#if calculation}
       <GridViewCalculationButton />
     {/if}
-    <GridManageAccessButton />
     <GridFilterButton />
     <GridSortButton />
     <GridSizeButton />
