@@ -763,11 +763,24 @@ describe.each([
           expect(row.food).toEqual(["apple", "orange"])
         })
 
+        it("creates a new row with a default value when given an empty list", async () => {
+          const row = await config.api.row.save(table._id!, { food: [] })
+          expect(row.food).toEqual(["apple", "orange"])
+        })
+
         it("does not use default value if value specified", async () => {
           const row = await config.api.row.save(table._id!, {
             food: ["orange"],
           })
           expect(row.food).toEqual(["orange"])
+        })
+
+        it("resets back to its default value when empty", async () => {
+          let row = await config.api.row.save(table._id!, {
+            food: ["orange"],
+          })
+          row = await config.api.row.save(table._id!, { ...row, food: [] })
+          expect(row.food).toEqual(["apple", "orange"])
         })
       })
 
