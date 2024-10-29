@@ -36,9 +36,16 @@
   $: environmentBindings =
     automationStore.actions.buildEnvironmentBindings($memoEnvVariables)
 
-  // Combine all bindings for the step
-  $: bindings = [...availableBindings, ...environmentBindings]
+  $: userBindings = automationStore.actions.buildUserBindings()
+  $: settingBindings = automationStore.actions.buildSettingBindings()
 
+  // Combine all bindings for the step
+  $: bindings = [
+    ...availableBindings,
+    ...environmentBindings,
+    ...userBindings,
+    ...settingBindings,
+  ]
   onMount(() => {
     // Register the trigger as the focus element for the automation
     // Onload, the canvas will use the dimensions to center the step
