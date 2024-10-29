@@ -186,6 +186,16 @@ export interface ArrayFieldMetadata extends BaseFieldSchema {
   default?: string[]
 }
 
+export interface BooleanFieldMetadata extends BaseFieldSchema {
+  type: FieldType.BOOLEAN
+  default?: string
+}
+
+export interface BigIntFieldMetadata extends BaseFieldSchema {
+  type: FieldType.BIGINT
+  default?: string
+}
+
 interface BaseFieldSchema extends UIFieldMetadata {
   type: FieldType
   name: string
@@ -214,6 +224,8 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.STRING
     | FieldType.ARRAY
     | FieldType.OPTIONS
+    | FieldType.BOOLEAN
+    | FieldType.BIGINT
   >
 }
 
@@ -233,6 +245,8 @@ export type FieldSchema =
   | BBReferenceSingleFieldMetadata
   | ArrayFieldMetadata
   | OptionsFieldMetadata
+  | BooleanFieldMetadata
+  | BigIntFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema
