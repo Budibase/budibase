@@ -20,4 +20,9 @@ export interface AutomationContext extends AutomationResults {
   env?: Record<string, string>
   user?: UserBindings
   trigger: any
+  settings?: {
+    url?: string
+    logo?: string
+    company?: string
+  }
 }

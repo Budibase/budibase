@@ -423,6 +423,7 @@ export default class TestConfiguration {
         Accept: "application/json",
         Cookie: [`${constants.Cookie.Auth}=${authToken}`],
         [constants.Header.APP_ID]: appId,
+        ...this.temporaryHeaders,
       }
     })
   }
@@ -525,6 +526,10 @@ export default class TestConfiguration {
     prodApp = true,
   } = {}) {
     return this.login({ userId: email, roleId, builder, prodApp })
+  }
+
+  browserUserAgent() {
+    return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
   }
 
   // TENANCY
