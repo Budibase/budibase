@@ -20,7 +20,6 @@ import {
   User,
   ViewV2,
   FeatureFlag,
-  Document,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
