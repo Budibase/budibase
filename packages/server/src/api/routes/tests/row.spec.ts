@@ -835,6 +835,62 @@ describe.each([
         })
       })
 
+      describe("boolean column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                active: {
+                  name: "active",
+                  type: FieldType.BOOLEAN,
+                  default: "true",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.active).toEqual(true)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            active: false,
+          })
+          expect(row.active).toEqual(false)
+        })
+      })
+
+      describe("bigint column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                bigNumber: {
+                  name: "bigNumber",
+                  type: FieldType.BIGINT,
+                  default: "1234567890",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.bigNumber).toEqual("1234567890")
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            bigNumber: "9876543210",
+          })
+          expect(row.bigNumber).toEqual("9876543210")
+        })
+      })
+
       describe("bindings", () => {
         describe("string column", () => {
           beforeAll(async () => {
