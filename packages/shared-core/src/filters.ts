@@ -488,7 +488,13 @@ export function buildQuery(
       if (onEmptyFilter) {
         query.onEmptyFilter = onEmptyFilter
       }
-      const operator = allOr ? LogicalOperator.OR : LogicalOperator.AND
+
+      // logicalOperator takes precendence over allOr
+      let operator = allOr ? LogicalOperator.OR : LogicalOperator.AND
+      if (group.logicalOperator) {
+        operator = logicalOperatorFromUI(group.logicalOperator)
+      }
+
       return {
         [operator]: { conditions: filters.map(buildCondition).filter(f => f) },
       }
