@@ -238,8 +238,8 @@ export function builtinRoleToNumber(id: string) {
   const builtins = getBuiltinRoles()
   const MAX = Object.values(builtins).length + 1
   if (
-    compareRoleIds(id, BUILTIN_IDS.ADMIN) ||
-    compareRoleIds(id, BUILTIN_IDS.BUILDER)
+    roleIDsAreEqual(id, BUILTIN_IDS.ADMIN) ||
+    roleIDsAreEqual(id, BUILTIN_IDS.BUILDER)
   ) {
     return MAX
   }
@@ -278,7 +278,7 @@ export async function roleToNumber(id: string) {
       const highestBuiltin: number | undefined = role.inherits
         .map(roleId => {
           const foundRole = hierarchy.find(role =>
-            compareRoleIds(role._id!, roleId)
+            roleIDsAreEqual(role._id!, roleId)
           )
           if (foundRole) {
             return findNumber(foundRole) + 1
@@ -403,7 +403,7 @@ async function getAllUserRoles(
 ): Promise<RoleDoc[]> {
   const allRoles = await getAllRoles()
   // admins have access to all roles
-  if (compareRoleIds(userRoleId, BUILTIN_IDS.ADMIN)) {
+  if (roleIDsAreEqual(userRoleId, BUILTIN_IDS.ADMIN)) {
     return allRoles
   }
 
@@ -515,7 +515,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
     for (let builtinRoleId of externalBuiltinRoles) {
       const builtinRole = builtinRoles[builtinRoleId]
       const dbBuiltin = roles.filter(dbRole =>
-        compareRoleIds(dbRole._id!, builtinRoleId)
+        roleIDsAreEqual(dbRole._id!, builtinRoleId)
       )[0]
       if (dbBuiltin == null) {
         roles.push(builtinRole || builtinRoles.BASIC)
@@ -574,9 +574,9 @@ export class AccessController {
     if (
       tryingRoleId == null ||
       tryingRoleId === "" ||
-      compareRoleIds(tryingRoleId, BUILTIN_IDS.BUILDER) ||
-      compareRoleIds(userRoleId!, tryingRoleId) ||
-      compareRoleIds(userRoleId!, BUILTIN_IDS.BUILDER)
+      roleIDsAreEqual(tryingRoleId, BUILTIN_IDS.BUILDER) ||
+      roleIDsAreEqual(userRoleId!, tryingRoleId) ||
+      roleIDsAreEqual(userRoleId!, BUILTIN_IDS.BUILDER)
     ) {
       return true
     }
