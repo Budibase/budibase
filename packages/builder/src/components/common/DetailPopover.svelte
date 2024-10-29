@@ -30,6 +30,7 @@
   {showPopover}
   on:open
   on:close
+  customZindex={100}
 >
   <div class="detail-popover">
     <div class="detail-popover__header">
