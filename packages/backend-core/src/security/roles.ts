@@ -219,7 +219,10 @@ export function getBuiltinRole(roleId: string): Role | undefined {
 export function builtinRoleToNumber(id: string) {
   const builtins = getBuiltinRoles()
   const MAX = Object.values(builtins).length + 1
-  if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
+  if (
+    compareRoleIds(id, BUILTIN_IDS.ADMIN) ||
+    compareRoleIds(id, BUILTIN_IDS.BUILDER)
+  ) {
     return MAX
   }
   let role = builtins[id],
@@ -256,7 +259,9 @@ export async function roleToNumber(id: string) {
       // find the built-in roles, get their number, sort it, then get the last one
       const highestBuiltin: number | undefined = role.inherits
         .map(roleId => {
-          const foundRole = hierarchy.find(role => role._id === roleId)
+          const foundRole = hierarchy.find(role =>
+            compareRoleIds(role._id!, roleId)
+          )
           if (foundRole) {
             return findNumber(foundRole) + 1
           }
@@ -380,7 +385,7 @@ async function getAllUserRoles(
 ): Promise<RoleDoc[]> {
   const allRoles = await getAllRoles()
   // admins have access to all roles
-  if (userRoleId === BUILTIN_IDS.ADMIN) {
+  if (compareRoleIds(userRoleId, BUILTIN_IDS.ADMIN)) {
     return allRoles
   }
 
@@ -491,17 +496,21 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
     // need to combine builtin with any DB record of them (for sake of permissions)
     for (let builtinRoleId of externalBuiltinRoles) {
       const builtinRole = builtinRoles[builtinRoleId]
-      const dbBuiltin = roles.filter(
-        dbRole =>
-          getExternalRoleID(dbRole._id!, dbRole.version) === builtinRoleId
+      const dbBuiltin = roles.filter(dbRole =>
+        compareRoleIds(dbRole._id!, builtinRoleId)
       )[0]
       if (dbBuiltin == null) {
         roles.push(builtinRole || builtinRoles.BASIC)
       } else {
         // remove role and all back after combining with the builtin
         roles = roles.filter(role => role._id !== dbBuiltin._id)
-        dbBuiltin._id = getExternalRoleID(dbBuiltin._id!, dbBuiltin.version)
-        roles.push(Object.assign(builtinRole, dbBuiltin))
+        dbBuiltin._id = getExternalRoleID(builtinRole._id!, dbBuiltin.version)
+        roles.push({
+          ...builtinRole,
+          ...dbBuiltin,
+          name: builtinRole.name,
+          _id: getExternalRoleID(builtinRole._id!, builtinRole.version),
+        })
       }
     }
     // check permissions
@@ -544,9 +553,9 @@ export class AccessController {
     if (
       tryingRoleId == null ||
       tryingRoleId === "" ||
-      tryingRoleId === userRoleId ||
-      tryingRoleId === BUILTIN_IDS.BUILDER ||
-      userRoleId === BUILTIN_IDS.BUILDER
+      compareRoleIds(tryingRoleId, BUILTIN_IDS.BUILDER) ||
+      compareRoleIds(userRoleId!, tryingRoleId) ||
+      compareRoleIds(userRoleId!, BUILTIN_IDS.BUILDER)
     ) {
       return true
     }
