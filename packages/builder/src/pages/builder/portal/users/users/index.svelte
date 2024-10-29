@@ -400,7 +400,7 @@
     allowSelectRows={!readonly}
     {customRenderers}
     loading={!$fetch.loaded || !groupsLoaded}
-    defaultSortColumn={"__selectable"}
+    defaultSortColumn={"access"}
   />
 
   <div class="pagination">
