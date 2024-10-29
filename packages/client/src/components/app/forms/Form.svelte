@@ -22,8 +22,7 @@
 
   const context = getContext("context")
   const component = getContext("component")
-  const { API, fetchDatasourceSchema, detchDatasourceDefinition } =
-    getContext("sdk")
+  const { fetchDatasourceSchema, fetchDatasourceDefinition } = getContext("sdk")
 
   const getInitialFormStep = () => {
     const parsedFormStep = parseInt(initialFormStep)
