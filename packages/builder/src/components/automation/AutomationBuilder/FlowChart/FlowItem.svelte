@@ -144,7 +144,7 @@
               <Icon on:click={removeLooping} hoverable name="DeleteOutline" />
             </AbsTooltip>
 
-            <div style="margin-left: 10px;" on:click={() => {}}>
+            <div on:click={() => {}}>
               <Icon
                 hoverable
                 name={showLooping ? "ChevronRight" : "ChevronDown"}
@@ -301,6 +301,6 @@
   .blockTitle {
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: var(--spacing-l);
   }
 </style>
