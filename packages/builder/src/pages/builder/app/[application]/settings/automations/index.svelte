@@ -38,8 +38,11 @@
   let loaded = false
   $: app = $appsStore.apps.find(app => $appStore.appId?.includes(app.appId))
   $: licensePlan = $auth.user?.license?.plan
-  $: page = $pageInfo.page
-  $: fetchLogs(automationId, status, page, timeRange)
+
+  // Reset the page every time that a filter gets updated
+  $: pageInfo.reset(), automationId, status, timeRange
+
+  $: fetchLogs(automationId, status, $pageInfo.page, timeRange)
   $: isCloud = $admin.cloud
   $: chainAutomations = app?.automations?.chainAutomations ?? !isCloud
   const timeOptions = [
