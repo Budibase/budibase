@@ -4298,6 +4298,97 @@ describe.each([
                 },
               ],
             },
+            {
+              name: "can handle logical operator any",
+              insert: [{ string: "bar" }, { string: "foo" }],
+              query: {
+                groups: [
+                  {
+                    logicalOperator: UILogicalOperator.ANY,
+                    filters: [
+                      {
+                        operator: BasicOperator.EQUAL,
+                        field: "string",
+                        value: "foo",
+                      },
+                      {
+                        operator: BasicOperator.EQUAL,
+                        field: "string",
+                        value: "bar",
+                      },
+                    ],
+                  },
+                ],
+              },
+              searchOpts: {
+                sort: "string",
+                sortOrder: SortOrder.ASCENDING,
+              },
+              expected: [{ string: "bar" }, { string: "foo" }],
+            },
+            {
+              name: "can handle logical operator all",
+              insert: [
+                { string: "bar", num: 1 },
+                { string: "foo", num: 2 },
+              ],
+              query: {
+                groups: [
+                  {
+                    logicalOperator: UILogicalOperator.ALL,
+                    filters: [
+                      {
+                        operator: BasicOperator.EQUAL,
+                        field: "string",
+                        value: "foo",
+                      },
+                      {
+                        operator: BasicOperator.EQUAL,
+                        field: "num",
+                        value: 2,
+                      },
+                    ],
+                  },
+                ],
+              },
+              searchOpts: {
+                sort: "string",
+                sortOrder: SortOrder.ASCENDING,
+              },
+              expected: [{ string: "foo", num: 2 }],
+            },
+            {
+              name: "overrides allOr with logical operators",
+              insert: [
+                { string: "bar", num: 1 },
+                { string: "foo", num: 1 },
+              ],
+              query: {
+                groups: [
+                  {
+                    logicalOperator: UILogicalOperator.ALL,
+                    filters: [
+                      { operator: "allOr" },
+                      {
+                        operator: BasicOperator.EQUAL,
+                        field: "string",
+                        value: "foo",
+                      },
+                      {
+                        operator: BasicOperator.EQUAL,
+                        field: "num",
+                        value: 1,
+                      },
+                    ],
+                  },
+                ],
+              },
+              searchOpts: {
+                sort: "string",
+                sortOrder: SortOrder.ASCENDING,
+              },
+              expected: [{ string: "foo", num: 1 }],
+            },
           ]
 
           it.each(testCases)(
