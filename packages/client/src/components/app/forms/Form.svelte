@@ -3,7 +3,6 @@
   import InnerForm from "./InnerForm.svelte"
   import { Helpers } from "@budibase/bbui"
   import { writable } from "svelte/store"
-  import { fetchDatasourceDefinition } from "utils/schema"
 
   export let dataSource
   export let theme
@@ -23,7 +22,8 @@
 
   const context = getContext("context")
   const component = getContext("component")
-  const { API, fetchDatasourceSchema } = getContext("sdk")
+  const { API, fetchDatasourceSchema, detchDatasourceDefinition } =
+    getContext("sdk")
 
   const getInitialFormStep = () => {
     const parsedFormStep = parseInt(initialFormStep)
