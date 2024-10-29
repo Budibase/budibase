@@ -1,5 +1,9 @@
 import { SortOrder } from "../../../api"
-import { SearchFilters, EmptyFilterOption } from "../../../sdk"
+import {
+  SearchFilters,
+  EmptyFilterOption,
+  BaseSearchFilters,
+} from "../../../sdk"
 import { HttpMethod } from "../query"
 import { Row } from "../row"
 import { LoopStepType, EmailAttachment, AutomationResults } from "./automation"
@@ -118,8 +122,10 @@ export type BranchStepInputs = {
 export type Branch = {
   id: any
   name: string
-  condition: SearchFilters
+  condition: AutomationFilter
 }
+
+export interface AutomationFilter extends BaseSearchFilters {}
 
 export type MakeIntegrationInputs = {
   url: string
