@@ -84,12 +84,7 @@ type LogicalFilter = { conditions: SearchFilters[] }
 
 export type AnySearchFilter = BasicFilter | ArrayFilter | RangeFilter
 
-export interface SearchFilters {
-  allOr?: boolean
-  // TODO: this is just around for now - we need a better way to do or/and
-  // allows just fuzzy to be or - all the fuzzy/like parameters
-  fuzzyOr?: boolean
-  onEmptyFilter?: EmptyFilterOption
+export interface BaseSearchFilters {
   [BasicOperator.STRING]?: BasicFilter<string>
   [BasicOperator.FUZZY]?: BasicFilter<string>
   [RangeOperator.RANGE]?: RangeFilter
@@ -101,13 +96,20 @@ export interface SearchFilters {
   [ArrayOperator.CONTAINS]?: ArrayFilter
   [ArrayOperator.NOT_CONTAINS]?: ArrayFilter
   [ArrayOperator.CONTAINS_ANY]?: ArrayFilter
+  [LogicalOperator.AND]?: LogicalFilter
+  [LogicalOperator.OR]?: LogicalFilter
+}
+
+export interface SearchFilters extends BaseSearchFilters {
+  allOr?: boolean
+  // TODO: this is just around for now - we need a better way to do or/and
+  // allows just fuzzy to be or - all the fuzzy/like parameters
+  fuzzyOr?: boolean
+  onEmptyFilter?: EmptyFilterOption
   // specific to SQS/SQLite search on internal tables this can be used
   // to make sure the documents returned are always filtered down to a
   // specific document type (such as just rows)
   documentType?: DocumentType
-
-  [LogicalOperator.AND]?: LogicalFilter
-  [LogicalOperator.OR]?: LogicalFilter
 }
 
 export type SearchFilterKey = keyof Omit<
