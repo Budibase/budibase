@@ -554,7 +554,12 @@
       cachedSettings = { ...allSettings }
       initialSettings = cachedSettings
     } else {
-      Object.keys(allSettings).forEach(key => {
+      // We need to compare all keys from both the current and previous settings, as
+      // keys may have disappeared in the current set which would otherwise be ignored
+      // if we only checked the current set keys
+      const keys = new Set(Object.keys(allSettings))
+      Object.keys(cachedSettings).forEach(key => keys.add(key))
+      keys.forEach(key => {
         const same = propsAreSame(allSettings[key], cachedSettings[key])
         if (!same) {
           // Updated cachedSettings (which is assigned by reference to
