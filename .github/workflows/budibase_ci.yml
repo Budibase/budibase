@@ -324,5 +324,12 @@ jobs:
         with:
           node-version: 20.x
           cache: yarn
-      - run: yarn --frozen-lockfile
-      - run: yarn --production --frozen-lockfile --ignore-scripts
+      - run: yarn install
+      - name: Check for yarn.lock changes
+        run: |
+          if [[ $(git status --porcelain) == *"yarn.lock"* ]]; then
+            echo "yarn.lock file needs to be modified. Please update it locally and commit the changes."
+            exit 1
+          else
+            echo "yarn.lock file is unchanged."
+          fi
