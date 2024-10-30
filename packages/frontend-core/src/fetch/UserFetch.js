@@ -30,11 +30,10 @@ export default class UserFetch extends DataFetch {
   async getData() {
     const { limit, paginate } = this.options
     const { cursor, query } = get(this.store)
-    let finalQuery
-    // convert old format to new one - we now allow use of the lucene format
-    const { appId, paginated, ...rest } = query || {}
 
-    finalQuery = utils.isSupportedUserSearch(rest)
+    // Convert old format to new one - we now allow use of the lucene format
+    const { appId, paginated, ...rest } = query || {}
+    const finalQuery = utils.isSupportedUserSearch(rest)
       ? query
       : { string: { email: null } }
 

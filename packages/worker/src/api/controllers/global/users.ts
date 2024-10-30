@@ -23,9 +23,11 @@ import {
   SearchUsersRequest,
   User,
   UserCtx,
+  UserIdentifier,
 } from "@budibase/types"
 import {
   accounts,
+  users,
   cache,
   ErrorCode,
   events,
@@ -55,8 +57,8 @@ export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
     const requestUser = ctx.request.body
 
     // Do not allow the account holder role to be changed
-    const tenantInfo = await tenancy.getTenantInfo(requestUser.tenantId)
-    if (tenantInfo?.owner.email === requestUser.email) {
+    const accountMetadata = await users.getExistingAccounts([requestUser.email])
+    if (accountMetadata?.length > 0) {
       if (
         requestUser.admin?.global !== true ||
         requestUser.builder?.global !== true
@@ -103,11 +105,14 @@ export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
   }
 }
 
-const bulkDelete = async (userIds: string[], currentUserId: string) => {
-  if (userIds?.indexOf(currentUserId) !== -1) {
+const bulkDelete = async (
+  users: Array<UserIdentifier>,
+  currentUserId: string
+) => {
+  if (users.find(u => u.userId === currentUserId)) {
     throw new Error("Unable to delete self.")
   }
-  return await userSdk.db.bulkDelete(userIds)
+  return await userSdk.db.bulkDelete(users)
 }
 
 const bulkCreate = async (users: User[], groupIds: string[]) => {
@@ -130,7 +135,7 @@ export const bulkUpdate = async (
       created = await bulkCreate(input.create.users, input.create.groups)
     }
     if (input.delete) {
-      deleted = await bulkDelete(input.delete.userIds, currentUserId)
+      deleted = await bulkDelete(input.delete.users, currentUserId)
     }
   } catch (err: any) {
     ctx.throw(err.status || 400, err?.message || err)
@@ -300,6 +305,23 @@ export const tenantUserLookup = async (ctx: any) => {
   } else {
     ctx.throw(400, "No tenant user found.")
   }
+}
+
+/**
+ * This will be paginated to a default of the first 50 users,
+ * So the account holder may not be found until further pagination has occurred
+ */
+export const accountHolderLookup = async (ctx: Ctx) => {
+  const users = await userSdk.core.getAllUsers()
+  const response = await userSdk.core.getExistingAccounts(
+    users.map(u => u.email)
+  )
+  const holder = response[0]
+  if (!holder) {
+    return
+  }
+  holder._id = users.find(u => u.email === holder.email)?._id
+  ctx.body = holder
 }
 
 /* 

@@ -122,14 +122,14 @@ export const buildUserEndpoints = API => ({
 
   /**
    * Deletes multiple users
-   * @param userIds the ID of the user to delete
+   * @param users the ID/email pair of the user to delete
    */
-  deleteUsers: async userIds => {
+  deleteUsers: async users => {
     const res = await API.post({
       url: `/api/global/users/bulk`,
       body: {
         delete: {
-          userIds,
+          users,
         },
       },
     })
@@ -296,9 +296,9 @@ export const buildUserEndpoints = API => ({
     })
   },
 
-  getTenantInfo: async ({ tenantId }) => {
+  getAccountHolder: async () => {
     return await API.get({
-      url: `/api/global/tenant/${tenantId}`,
+      url: `/api/global/users/accountholder`,
     })
   },
 })
