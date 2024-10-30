@@ -22,7 +22,8 @@ RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
 
 RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
 RUN ./scripts/removeWorkspaceDependencies.sh package.json
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production --frozen-lockfile --network-concurrency 1
+ARG TARGETPLATFORM
+RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} yarn install --production --frozen-lockfile
 
 # copy the actual code
 COPY packages/server/dist packages/server/dist
