@@ -8,7 +8,7 @@
     rowActions,
     roles,
   } from "stores/builder"
-  import { themeStore, admin, licensing, featureFlags } from "stores/portal"
+  import { themeStore, admin, featureFlags } from "stores/portal"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
