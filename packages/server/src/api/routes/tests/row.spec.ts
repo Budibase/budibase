@@ -2462,7 +2462,6 @@ describe.each([
           [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
           [FieldType.FORMULA]: undefined, // generated field
           [FieldType.AUTO]: undefined, // generated field
-          [FieldType.AI]: undefined, // generated field
           [FieldType.JSON]: { name: generator.guid() },
           [FieldType.INTERNAL]: generator.guid(),
           [FieldType.BARCODEQR]: generator.guid(),
@@ -2625,6 +2624,7 @@ describe.each([
           tableId: tableId,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          ai: null,
         }
         expect(allRows).toEqual([expectedRow, expectedRow, expectedRow])
       })
