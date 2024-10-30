@@ -23,9 +23,10 @@ import {
   AutomationStatus,
   AutomationStep,
   AutomationStepStatus,
+  BranchSearchFilters,
   BranchStep,
+  LogicalOperator,
   LoopStep,
-  SearchFilters,
   UserBindings,
 } from "@budibase/types"
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
@@ -546,12 +547,31 @@ class Orchestrator {
     )
   }
 
+  private recurseSearchFilters(
+    filters: BranchSearchFilters,
+    processFn: (filter: BranchSearchFilters) => BranchSearchFilters
+  ): BranchSearchFilters {
+    // Process the current level
+    filters = processFn(filters)
+
+    // Recurse through logical operators
+    for (const logical of Object.values(LogicalOperator)) {
+      if (filters[logical]) {
+        filters[logical]!.conditions = filters[logical]!.conditions.map(
+          condition => this.recurseSearchFilters(condition, processFn)
+        )
+      }
+    }
+
+    return filters
+  }
+
   private async evaluateBranchCondition(
-    conditions: SearchFilters
+    conditions: BranchSearchFilters
   ): Promise<boolean> {
     const toFilter: Record<string, any> = {}
 
-    const processedConditions = dataFilters.recurseSearchFilters(
+    const processedConditions = this.recurseSearchFilters(
       conditions,
       filter => {
         Object.entries(filter).forEach(([_, value]) => {
