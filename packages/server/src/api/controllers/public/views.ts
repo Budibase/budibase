@@ -18,8 +18,7 @@ function fixView(view: ViewV2, params?: { viewId: string }) {
 
 export async function search(ctx: UserCtx, next: Next) {
   const { name } = ctx.request.body
-  // TODO: need a view search endpoint
-  // await controller.v2.fetch(ctx)
+  await controller.v2.fetch(ctx)
   ctx.body = stringSearch(ctx.body, name)
   await next()
 }
