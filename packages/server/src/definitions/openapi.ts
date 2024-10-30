@@ -897,6 +897,8 @@ export interface components {
   parameters: {
     /** @description The ID of the table which this request is targeting. */
     tableId: string;
+    /** @description The ID of the view which this request is targeting. */
+    viewId: string;
     /** @description The ID of the row which this request is targeting. */
     rowId: string;
     /** @description The ID of the app which this request is targeting. */
@@ -1514,6 +1516,10 @@ export interface operations {
   /** Lookup a view, this could be internal or external. */
   viewGetById: {
     parameters: {
+      path: {
+        /** The ID of the view which this request is targeting. */
+        viewId: components["parameters"]["viewId"];
+      };
       header: {
         /** The ID of the app which this request is targeting. */
         "x-budibase-app-id": components["parameters"]["appId"];
@@ -1531,6 +1537,10 @@ export interface operations {
   /** Update a view, this can be against an internal or external table. */
   viewUpdate: {
     parameters: {
+      path: {
+        /** The ID of the view which this request is targeting. */
+        viewId: components["parameters"]["viewId"];
+      };
       header: {
         /** The ID of the app which this request is targeting. */
         "x-budibase-app-id": components["parameters"]["appId"];
@@ -1553,6 +1563,10 @@ export interface operations {
   /** Delete a view, this can be against an internal or external table. */
   viewDestroy: {
     parameters: {
+      path: {
+        /** The ID of the view which this request is targeting. */
+        viewId: components["parameters"]["viewId"];
+      };
       header: {
         /** The ID of the app which this request is targeting. */
         "x-budibase-app-id": components["parameters"]["appId"];

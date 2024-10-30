@@ -23,6 +23,13 @@ components:
       description: The ID of the table which this request is targeting.
       schema:
         type: string
+    viewId:
+      in: path
+      name: viewId
+      required: true
+      description: The ID of the view which this request is targeting.
+      schema:
+        type: string
     rowId:
       in: path
       name: rowId
