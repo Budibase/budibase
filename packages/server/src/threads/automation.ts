@@ -25,7 +25,7 @@ import {
   AutomationStepStatus,
   BranchSearchFilters,
   BranchStep,
-  LogicalOperator,
+  isLogicalSearchOperator,
   LoopStep,
   UserBindings,
 } from "@budibase/types"
@@ -547,54 +547,49 @@ class Orchestrator {
     )
   }
 
-  private recurseSearchFilters(
-    filters: BranchSearchFilters,
-    processFn: (filter: BranchSearchFilters) => BranchSearchFilters
-  ): BranchSearchFilters {
-    // Process the current level
-    filters = processFn(filters)
-
-    // Recurse through logical operators
-    for (const logical of Object.values(LogicalOperator)) {
-      if (filters[logical]) {
-        filters[logical]!.conditions = filters[logical]!.conditions.map(
-          condition => this.recurseSearchFilters(condition, processFn)
-        )
-      }
-    }
-
-    return filters
-  }
-
   private async evaluateBranchCondition(
     conditions: BranchSearchFilters
   ): Promise<boolean> {
     const toFilter: Record<string, any> = {}
 
-    const processedConditions = this.recurseSearchFilters(
-      conditions,
-      filter => {
-        Object.entries(filter).forEach(([_, value]) => {
-          Object.entries(value).forEach(([field, val]) => {
+    const recurseSearchFilters = (
+      filters: BranchSearchFilters
+    ): BranchSearchFilters => {
+      for (const filterKey of Object.keys(
+        filters
+      ) as (keyof typeof filters)[]) {
+        if (!filters[filterKey]) {
+          continue
+        }
+
+        if (isLogicalSearchOperator(filterKey)) {
+          filters[filterKey].conditions = filters[filterKey].conditions.map(
+            condition => recurseSearchFilters(condition)
+          )
+        } else {
+          for (const [field, value] of Object.entries(filters[filterKey])) {
             const fromContext = processStringSync(
               field,
               this.processContext(this.context)
             )
             toFilter[field] = fromContext
 
-            if (typeof val === "string" && findHBSBlocks(val).length > 0) {
+            if (typeof value === "string" && findHBSBlocks(value).length > 0) {
               const processedVal = processStringSync(
-                val,
+                value,
                 this.processContext(this.context)
               )
 
-              value[field] = processedVal
+              filters[filterKey][field] = processedVal
             }
-          })
-        })
-        return filter
+          }
+        }
       }
-    )
+
+      return filters
+    }
+
+    const processedConditions = recurseSearchFilters(conditions)
 
     const result = dataFilters.runQuery([toFilter], processedConditions)
     return result.length > 0
