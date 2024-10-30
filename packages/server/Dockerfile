@@ -41,7 +41,7 @@ RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
 RUN ./scripts/removeWorkspaceDependencies.sh package.json
 
 # Install yarn packages with caching
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true --network-timeout 1000000 \
+RUN yarn install --production=true --network-timeout 1000000 \
     && yarn cache clean \
     && apk del g++ make python3 jq \
     && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
