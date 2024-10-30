@@ -8,7 +8,7 @@ import {
 import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
 import { replaceFakeBindings } from "../automations/loopUtils"
-import { dataFilters, helpers } from "@budibase/shared-core"
+import { dataFilters, helpers, utils } from "@budibase/shared-core"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { definitions as triggerDefs } from "../automations/triggerInfo"
@@ -28,6 +28,7 @@ import {
   isLogicalSearchOperator,
   LoopStep,
   UserBindings,
+  isBasicSearchOperator,
 } from "@budibase/types"
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
@@ -566,7 +567,7 @@ class Orchestrator {
           filters[filterKey].conditions = filters[filterKey].conditions.map(
             condition => recurseSearchFilters(condition)
           )
-        } else {
+        } else if (isBasicSearchOperator(filterKey)) {
           for (const [field, value] of Object.entries(filters[filterKey])) {
             const fromContext = processStringSync(
               field,
@@ -583,6 +584,9 @@ class Orchestrator {
               filters[filterKey][field] = processedVal
             }
           }
+        } else {
+          // We want to types to complain if we extend BranchSearchFilters, but not to throw if the request comes with some extra data. It will just be ignored
+          utils.unreachable(filterKey, { doNotThrow: true })
         }
       }
 
