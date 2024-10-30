@@ -121,7 +121,7 @@ describe("utils", () => {
               name: "aicol",
               type: FieldType.AI,
               operation: AIOperationEnum.PROMPT,
-              prompt: "Test prompt"
+              prompt: "Test prompt",
             },
           },
         })
@@ -129,7 +129,7 @@ describe("utils", () => {
         const data = [
           { name: "Alice", aicol: "test" },
           { name: "Bob", aicol: "test" },
-          { name: "Claire", aicol: "test" }
+          { name: "Claire", aicol: "test" },
         ]
 
         const result = await importToRows(data, table, config.user?._id)
