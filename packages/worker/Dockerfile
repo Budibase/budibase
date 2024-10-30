@@ -24,7 +24,8 @@ COPY packages/worker/dist/yarn.lock .
 
 RUN ../scripts/removeWorkspaceDependencies.sh package.json
 
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production --check-files
+ARG TARGETPLATFORM
+RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} yarn install --production --check-files
 # Remove unneeded data from file system to reduce image size
 RUN apk del .gyp \
     && yarn cache clean
