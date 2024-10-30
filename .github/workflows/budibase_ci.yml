@@ -309,3 +309,27 @@ jobs:
             } else {
               console.log('All good, the submodule had been merged and setup correctly!')
             }
+
+  check-lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: yarn
+      - run: yarn install
+      - name: Check for yarn.lock changes
+        run: |
+          if [[ $(git status --porcelain) == *"yarn.lock"* ]]; then
+            echo "yarn.lock file needs to be modified. Please update it locally and commit the changes."
+            exit 1
+          else
+            echo "yarn.lock file is unchanged."
+          fi
