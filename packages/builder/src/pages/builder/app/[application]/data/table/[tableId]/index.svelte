@@ -8,7 +8,7 @@
     rowActions,
     roles,
   } from "stores/builder"
-  import { themeStore, admin, licensing } from "stores/portal"
+  import { themeStore, admin, licensing, featureFlags } from "stores/portal"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
@@ -130,8 +130,7 @@
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     isCloud={$admin.cloud}
-    aiEnabled={$licensing.budibaseAIEnabled ||
-      $licensing.customAIConfigsEnabled}
+    aiEnabled={$featureFlags.BUDIBASE_AI || $featureFlags.AI_CUSTOM_CONFIGS}
     {buttons}
     buttonsCollapsed
     on:updatedatasource={handleGridTableUpdate}
