@@ -763,11 +763,24 @@ describe.each([
           expect(row.food).toEqual(["apple", "orange"])
         })
 
+        it("creates a new row with a default value when given an empty list", async () => {
+          const row = await config.api.row.save(table._id!, { food: [] })
+          expect(row.food).toEqual(["apple", "orange"])
+        })
+
         it("does not use default value if value specified", async () => {
           const row = await config.api.row.save(table._id!, {
             food: ["orange"],
           })
           expect(row.food).toEqual(["orange"])
+        })
+
+        it("resets back to its default value when empty", async () => {
+          let row = await config.api.row.save(table._id!, {
+            food: ["orange"],
+          })
+          row = await config.api.row.save(table._id!, { ...row, food: [] })
+          expect(row.food).toEqual(["apple", "orange"])
         })
       })
 
@@ -832,6 +845,62 @@ describe.each([
           })
           expect(row.users).toHaveLength(1)
           expect(row.users[0]._id).toEqual(id)
+        })
+      })
+
+      describe("boolean column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                active: {
+                  name: "active",
+                  type: FieldType.BOOLEAN,
+                  default: "true",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.active).toEqual(true)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            active: false,
+          })
+          expect(row.active).toEqual(false)
+        })
+      })
+
+      describe("bigint column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                bigNumber: {
+                  name: "bigNumber",
+                  type: FieldType.BIGINT,
+                  default: "1234567890",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.bigNumber).toEqual("1234567890")
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            bigNumber: "9876543210",
+          })
+          expect(row.bigNumber).toEqual("9876543210")
         })
       })
 

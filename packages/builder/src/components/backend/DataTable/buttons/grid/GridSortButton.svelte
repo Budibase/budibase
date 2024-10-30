@@ -1,12 +1,12 @@
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Popover, Select } from "@budibase/bbui"
+  import { ActionButton, Select } from "@budibase/bbui"
   import { canBeSortColumn } from "@budibase/frontend-core"
+  import DetailPopover from "components/common/DetailPopover.svelte"
 
   const { sort, columns } = getContext("grid")
 
-  let open = false
-  let anchor
+  let popover
 
   $: columnOptions = $columns
     .filter(col => canBeSortColumn(col.schema))
@@ -45,50 +45,35 @@
   }
 </script>
 
-<div bind:this={anchor}>
-  <ActionButton
-    icon="SortOrderDown"
-    quiet
-    size="M"
-    on:click={() => (open = !open)}
-    selected={open}
-    disabled={!columnOptions.length}
-  >
-    Sort
-  </ActionButton>
-</div>
-
-<Popover bind:open {anchor} align="left">
-  <div class="content">
+<DetailPopover bind:this={popover} title="Sorting" width={300}>
+  <svelte:fragment slot="anchor" let:open>
+    <ActionButton
+      icon="SortOrderDown"
+      quiet
+      size="M"
+      on:click={popover?.open}
+      selected={open}
+      disabled={!columnOptions.length}
+    >
+      Sort
+    </ActionButton>
+  </svelte:fragment>
+  <Select
+    placeholder="Default"
+    value={$sort.column}
+    options={columnOptions}
+    autoWidth
+    on:change={updateSortColumn}
+    label="Column"
+  />
+  {#if $sort.column}
     <Select
-      placeholder="Default"
-      value={$sort.column}
-      options={columnOptions}
+      placeholder={null}
+      value={$sort.order || "ascending"}
+      options={orderOptions}
       autoWidth
-      on:change={updateSortColumn}
-      label="Column"
+      on:change={updateSortOrder}
+      label="Order"
     />
-    {#if $sort.column}
-      <Select
-        placeholder={null}
-        value={$sort.order || "ascending"}
-        options={orderOptions}
-        autoWidth
-        on:change={updateSortOrder}
-        label="Order"
-      />
-    {/if}
-  </div>
-</Popover>
-
-<style>
-  .content {
-    padding: 6px 12px 12px 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .content :global(.spectrum-Picker) {
-    width: 140px;
-  }
-</style>
+  {/if}
+</DetailPopover>

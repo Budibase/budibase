@@ -134,7 +134,12 @@ async function processDefaultValues(table: Table, row: Row) {
   }
 
   for (const [key, schema] of Object.entries(table.schema)) {
-    if ("default" in schema && schema.default != null && row[key] == null) {
+    const isEmpty =
+      row[key] == null ||
+      row[key] === "" ||
+      (Array.isArray(row[key]) && row[key].length === 0)
+
+    if ("default" in schema && schema.default != null && isEmpty) {
       let processed: string | string[]
       if (Array.isArray(schema.default)) {
         processed = schema.default.map(val => processStringSync(val, ctx))

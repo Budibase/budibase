@@ -1,5 +1,5 @@
 <script>
-  import { Select, Icon } from "@budibase/bbui"
+  import { Select, Icon, Layout, Label } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import { utils } from "@budibase/shared-core"
   import { canBeDisplayColumn } from "@budibase/frontend-core"
@@ -184,70 +184,76 @@
   }
 </script>
 
-<div class="dropzone">
-  <input
-    bind:this={fileInput}
-    disabled={loading}
-    id="file-upload"
-    accept="text/csv,application/json"
-    type="file"
-    on:change={handleFile}
-  />
-  <label for="file-upload" class:uploaded={rawRows.length > 0}>
-    {#if error}
-      Error: {error}
-    {:else if fileName}
-      {fileName}
-    {:else}
-      Upload
-    {/if}
-  </label>
-</div>
-{#if rawRows.length > 0 && !error}
-  <div class="schema-fields">
-    {#each Object.entries(schema) as [name, column]}
-      <div class="field">
-        <span>{column.name}</span>
-        <Select
-          bind:value={selectedColumnTypes[column.name]}
-          on:change={e => handleChange(name, e)}
-          options={Object.values(typeOptions)}
-          placeholder={null}
-          getOptionLabel={option => option.label}
-          getOptionValue={option => option.value}
-        />
-        <span
-          class={validation[column.name]
-            ? "fieldStatusSuccess"
-            : "fieldStatusFailure"}
-        >
-          {#if validation[column.name]}
-            Success
-          {:else}
-            Failure
-            {#if errors[column.name]}
-              <Icon name="Help" tooltip={errors[column.name]} />
+<Layout noPadding gap="S">
+  <Layout gap="XS" noPadding>
+    <Label grey extraSmall>
+      Create a Table from a CSV or JSON file (Optional)
+    </Label>
+    <div class="dropzone">
+      <input
+        bind:this={fileInput}
+        disabled={loading}
+        id="file-upload"
+        accept="text/csv,application/json"
+        type="file"
+        on:change={handleFile}
+      />
+      <label for="file-upload" class:uploaded={rawRows.length > 0}>
+        {#if error}
+          Error: {error}
+        {:else if fileName}
+          {fileName}
+        {:else}
+          Upload
+        {/if}
+      </label>
+    </div>
+  </Layout>
+
+  {#if rawRows.length > 0 && !error}
+    <div>
+      {#each Object.entries(schema) as [name, column]}
+        <div class="field">
+          <span>{column.name}</span>
+          <Select
+            bind:value={selectedColumnTypes[column.name]}
+            on:change={e => handleChange(name, e)}
+            options={Object.values(typeOptions)}
+            placeholder={null}
+            getOptionLabel={option => option.label}
+            getOptionValue={option => option.value}
+          />
+          <span
+            class={validation[column.name]
+              ? "fieldStatusSuccess"
+              : "fieldStatusFailure"}
+          >
+            {#if validation[column.name]}
+              Success
+            {:else}
+              Failure
+              {#if errors[column.name]}
+                <Icon name="Help" tooltip={errors[column.name]} />
+              {/if}
             {/if}
-          {/if}
-        </span>
-        <Icon
-          size="S"
-          name="Close"
-          hoverable
-          on:click={() => deleteColumn(column.name)}
-        />
-      </div>
-    {/each}
-  </div>
-  <div class="display-column">
+          </span>
+          <Icon
+            size="S"
+            name="Close"
+            hoverable
+            on:click={() => deleteColumn(column.name)}
+          />
+        </div>
+      {/each}
+    </div>
     <Select
       label="Display Column"
       bind:value={displayColumn}
       options={displayColumnOptions}
       sort
     />
-  </div>
-{/if}
+  {/if}
+</Layout>
 
 <style>
   .dropzone {
@@ -269,7 +275,6 @@
     box-sizing: border-box;
     overflow: hidden;
     border-radius: var(--border-radius-s);
-    color: var(--ink);
     padding: var(--spacing-m) var(--spacing-l);
     transition: all 0.2s ease 0s;
     display: inline-flex;
@@ -283,20 +288,14 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    background-color: var(--grey-2);
-    font-size: var(--font-size-xs);
+    background-color: var(--spectrum-global-color-gray-300);
+    font-size: var(--font-size-s);
     line-height: normal;
     border: var(--border-transparent);
   }
-
   .uploaded {
-    color: var(--blue);
+    color: var(--spectrum-global-color-blue-600);
   }
-
-  .schema-fields {
-    margin-top: var(--spacing-xl);
-  }
-
   .field {
     display: grid;
     grid-template-columns: 2fr 2fr 1fr auto;
@@ -321,9 +320,5 @@
   }
   .fieldStatusFailure :global(.spectrum-Icon) {
     width: 12px;
-  }
-
-  .display-column {
-    margin-top: var(--spacing-xl);
   }
 </style>
