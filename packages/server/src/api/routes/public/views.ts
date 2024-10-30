@@ -144,7 +144,7 @@ read.push(new Endpoint("get", "/views/:viewId", controller.read))
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/viewSearch'
+ *             $ref: '#/components/schemas/nameSearch'
  *     responses:
  *       200:
  *         description: Returns the found views, based on the search parameters.

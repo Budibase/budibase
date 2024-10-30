@@ -1599,7 +1599,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["viewSearch"];
+        "application/json": components["schemas"]["nameSearch"];
       };
     };
   };

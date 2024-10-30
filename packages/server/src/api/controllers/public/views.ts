@@ -19,7 +19,7 @@ function fixView(view: ViewV2, params?: { viewId: string }) {
 export async function search(ctx: UserCtx, next: Next) {
   const { name } = ctx.request.body
   await controller.v2.fetch(ctx)
-  ctx.body = stringSearch(ctx.body, name)
+  ctx.body = stringSearch(ctx.body.data, name)
   await next()
 }
 
@@ -30,7 +30,12 @@ export async function create(ctx: UserCtx, next: Next) {
 }
 
 export async function read(ctx: UserCtx, next: Next) {
-  await controller.v2.get(ctx)
+  await controller.v2.get({
+    ...ctx,
+    params: {
+      viewId: ctx.params.viewId,
+    },
+  })
   await next()
 }
 

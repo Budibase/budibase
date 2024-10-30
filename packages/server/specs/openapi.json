@@ -56,7 +56,7 @@
         "required": true,
         "description": "The ID of the app which this request is targeting.",
         "schema": {
-          "default": "{{ appId }}",
+          "default": "{{appId}}",
           "type": "string"
         }
       },
@@ -66,7 +66,7 @@
         "required": true,
         "description": "The ID of the app which this request is targeting.",
         "schema": {
-          "default": "{{ appId }}",
+          "default": "{{appId}}",
           "type": "string"
         }
       },
@@ -3512,7 +3512,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/viewSearch"
+                "$ref": "#/components/schemas/nameSearch"
               }
             }
           }

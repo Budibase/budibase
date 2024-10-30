@@ -34,7 +34,7 @@ export const appId = {
   required: true,
   description: "The ID of the app which this request is targeting.",
   schema: {
-    default: "{{ appId }}",
+    default: "{{appId}}",
     type: "string",
   },
 }
@@ -45,7 +45,7 @@ export const appIdUrl = {
   required: true,
   description: "The ID of the app which this request is targeting.",
   schema: {
-    default: "{{ appId }}",
+    default: "{{appId}}",
     type: "string",
   },
 }
