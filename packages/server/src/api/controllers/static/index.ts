@@ -6,6 +6,7 @@ import { ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
   loadHandlebarsFile,
+  streamFile,
   NODE_MODULES_PATH,
   shouldServeLocally,
   TOP_LEVEL_PATH,
@@ -145,6 +146,16 @@ const requiresMigration = async (ctx: Ctx) => {
 }
 
 export const serveApp = async function (ctx: UserCtx) {
+  if (ctx.url.includes("apple-touch-icon")) {
+    ctx.redirect("/builder/bblogo.png")
+    return
+  }
+  // no app ID found, cannot serve - return message instead
+  if (!context.getAppId()) {
+    ctx.body = "No content found - requires app ID"
+    return
+  }
+
   const needMigrations = await requiresMigration(ctx)
 
   const bbHeaderEmbed =
