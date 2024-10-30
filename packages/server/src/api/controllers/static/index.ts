@@ -6,7 +6,6 @@ import { ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
   loadHandlebarsFile,
-  streamFile,
   NODE_MODULES_PATH,
   shouldServeLocally,
   TOP_LEVEL_PATH,
@@ -146,7 +145,7 @@ const requiresMigration = async (ctx: Ctx) => {
 }
 
 export const serveApp = async function (ctx: UserCtx) {
-  if (ctx.url.includes("apple-touch-icon")) {
+  if (ctx.url.includes("apple-touch-icon.png")) {
     ctx.redirect("/builder/bblogo.png")
     return
   }
