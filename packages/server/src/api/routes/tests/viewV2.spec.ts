@@ -3730,29 +3730,28 @@ describe.each([
                 name: "Black Mesa",
               })
 
-              await config.api.row.save(employees._id!, {
-                name: "Alice",
-                age: 25,
-                company: apertureScience._id,
-              })
-
-              await config.api.row.save(employees._id!, {
-                name: "Bob",
-                age: 30,
-                company: apertureScience._id,
-              })
-
-              await config.api.row.save(employees._id!, {
-                name: "Charly",
-                age: 27,
-                company: blackMesa._id,
-              })
-
-              await config.api.row.save(employees._id!, {
-                name: "Danny",
-                age: 15,
-                company: blackMesa._id,
-              })
+              await Promise.all([
+                config.api.row.save(employees._id!, {
+                  name: "Alice",
+                  age: 25,
+                  company: apertureScience._id,
+                }),
+                config.api.row.save(employees._id!, {
+                  name: "Bob",
+                  age: 30,
+                  company: apertureScience._id,
+                }),
+                config.api.row.save(employees._id!, {
+                  name: "Charly",
+                  age: 27,
+                  company: blackMesa._id,
+                }),
+                config.api.row.save(employees._id!, {
+                  name: "Danny",
+                  age: 15,
+                  company: blackMesa._id,
+                }),
+              ])
 
               const { rows } = await config.api.viewV2.search(view.id, {
                 query: {},
