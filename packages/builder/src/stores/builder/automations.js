@@ -963,6 +963,24 @@ const automationActions = store => ({
   },
 
   /**
+   * Generate empty condition config
+   * Used on initialisation and reset of a condition.
+   *
+   * @returns {Object} contains a condition and conditionUI entry.
+   */
+  generateDefaultConditions: () => {
+    const baseConditionUI = {
+      logicalOperator: "all",
+      onEmptyFilter: "none",
+      groups: [],
+    }
+    return {
+      condition: QueryUtils.buildQuery(baseConditionUI),
+      conditionUI: baseConditionUI,
+    }
+  },
+
+  /**
    * Generates a new branch in the tree at the given location.
    * All steps below the path, if any, are added to a new default branch
    * 2 branch nodes are created by default.
@@ -978,15 +996,9 @@ const automationActions = store => ({
 
     // Generate a default empty branch
     const createBranch = name => {
-      const baseConditionUI = {
-        logicalOperator: "all",
-        onEmptyFilter: "none",
-        groups: [],
-      }
       return {
         name: name,
-        condition: QueryUtils.buildQuery(baseConditionUI),
-        conditionUI: baseConditionUI,
+        ...generateDefaultConditions(),
         id: generate(),
       }
     }

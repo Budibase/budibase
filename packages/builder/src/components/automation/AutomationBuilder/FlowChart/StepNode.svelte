@@ -2,7 +2,7 @@
   import FlowItem from "./FlowItem.svelte"
   import BranchNode from "./BranchNode.svelte"
   import { AutomationActionStepId } from "@budibase/types"
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, notifications } from "@budibase/bbui"
   import { automationStore } from "stores/builder"
   import { environment } from "stores/portal"
   import { cloneDeep } from "lodash"
@@ -88,7 +88,7 @@
               pathTo={pathToCurrentNode}
               branchIdx={bIdx}
               isLast={rightMost}
-              on:change={e => {
+              on:change={async e => {
                 const updatedBranch = { ...branch, ...e.detail }
 
                 if (!step?.inputs?.branches?.[bIdx]) {
@@ -99,12 +99,31 @@
                 let branchStepUpdate = cloneDeep(step)
                 branchStepUpdate.inputs.branches[bIdx] = updatedBranch
 
+                // Ensure valid base configuration for all branches
+                // Reinitialise empty branch conditions on update
+                branchStepUpdate.inputs.branches.forEach(
+                  (branch, i, branchArray) => {
+                    if (!Object.keys(branch.condition).length) {
+                      branchArray[i] = {
+                        ...branch,
+                        ...automationStore.actions.generateDefaultConditions(),
+                      }
+                    }
+                  }
+                )
+
                 const updated = automationStore.actions.updateStep(
                   blockRef?.pathTo,
                   automation,
                   branchStepUpdate
                 )
-                automationStore.actions.save(updated)
+
+                try {
+                  await automationStore.actions.save(updated)
+                } catch (e) {
+                  notifications.error("Error saving branch update")
+                  console.error("Error saving automation branch", e)
+                }
               }}
             />
           </div>
