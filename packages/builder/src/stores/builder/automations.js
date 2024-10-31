@@ -998,7 +998,7 @@ const automationActions = store => ({
     const createBranch = name => {
       return {
         name: name,
-        ...generateDefaultConditions(),
+        ...store.actions.generateDefaultConditions(),
         id: generate(),
       }
     }
