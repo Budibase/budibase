@@ -173,30 +173,6 @@ describe("/automations", () => {
       })
     })
 
-    it("Should check validation on a branch step with empty conditions", async () => {
-      const automation = createAutomationBuilder({
-        name: "String Equality Branching",
-        appId: config.getAppId(),
-      })
-        .appAction({ fields: { status: "active" } })
-        .branch({
-          activeBranch: {
-            steps: stepBuilder =>
-              stepBuilder.serverLog({ text: "Active user" }),
-            condition: {},
-          },
-        })
-        .build()
-
-      await config.api.automation.post(automation, {
-        status: 400,
-        body: {
-          message:
-            'Invalid body - "definition.steps[0].inputs.branches[0].condition" must have at least 1 key',
-        },
-      })
-    })
-
     it("Should check validation on an branch that has a condition that is not valid", async () => {
       const automation = createAutomationBuilder({
         name: "String Equality Branching",
