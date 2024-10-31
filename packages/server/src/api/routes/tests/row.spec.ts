@@ -1823,6 +1823,39 @@ describe.each([
         expect(row.autoId).toEqual(3)
       })
 
+    isInternal &&
+      it("should reject bulkImporting relationship fields", async () => {
+        const table1 = await config.api.table.save(saveTableRequest())
+        const table2 = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              relationship: {
+                name: "relationship",
+                type: FieldType.LINK,
+                tableId: table1._id!,
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                fieldName: "relationship",
+              },
+            },
+          })
+        )
+
+        const table1Row1 = await config.api.row.save(table1._id!, {})
+        await config.api.row.bulkImport(
+          table2._id!,
+          {
+            rows: [{ relationship: [table1Row1._id!] }],
+          },
+          {
+            status: 400,
+            body: {
+              message:
+                'Can\'t bulk import relationship fields for internal databases, found value in field "relationship"',
+            },
+          }
+        )
+      })
+
     it("should be able to bulkImport rows", async () => {
       const table = await config.api.table.save(
         saveTableRequest({
@@ -2462,7 +2495,7 @@ describe.each([
           [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
           [FieldType.FORMULA]: undefined, // generated field
           [FieldType.AUTO]: undefined, // generated field
-          [FieldType.AI]: undefined, // generated field
+          [FieldType.AI]: "LLM Output",
           [FieldType.JSON]: { name: generator.guid() },
           [FieldType.INTERNAL]: generator.guid(),
           [FieldType.BARCODEQR]: generator.guid(),
@@ -2494,6 +2527,7 @@ describe.each([
           }),
           [FieldType.FORMULA]: fullSchema[FieldType.FORMULA].formula,
           [FieldType.AUTO]: expect.any(Number),
+          [FieldType.AI]: expect.any(String),
           [FieldType.JSON]: rowValues[FieldType.JSON],
           [FieldType.INTERNAL]: rowValues[FieldType.INTERNAL],
           [FieldType.BARCODEQR]: rowValues[FieldType.BARCODEQR],
@@ -2566,7 +2600,7 @@ describe.each([
               expectedRowData["bb_reference_single"].sample,
               false
             ),
-            ai: null,
+            ai: "LLM Output",
           },
         ])
       })

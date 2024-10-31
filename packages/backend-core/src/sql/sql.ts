@@ -1091,7 +1091,14 @@ class InternalBuilder {
             )
           }
         } else {
-          query = query.count(`* as ${aggregation.name}`)
+          if (this.client === SqlClient.ORACLE) {
+            const field = this.convertClobs(`${tableName}.${aggregation.field}`)
+            query = query.select(
+              this.knex.raw(`COUNT(??) as ??`, [field, aggregation.name])
+            )
+          } else {
+            query = query.count(`${aggregation.field} as ${aggregation.name}`)
+          }
         }
       } else {
         const fieldSchema = this.getFieldSchema(aggregation.field)
