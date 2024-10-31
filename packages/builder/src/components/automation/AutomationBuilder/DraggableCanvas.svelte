@@ -211,6 +211,10 @@
 
   // Optimization options
   const onViewMouseMove = async e => {
+    if (!viewPort) {
+      return
+    }
+
     const { x, y } = eleXY(e, viewPort)
 
     internalPos.update(() => ({
@@ -224,25 +228,6 @@
         x: x - dragOffset[0],
         y: y - dragOffset[1],
       }))
-    }
-
-    // Needs to handle when the mouse leaves the screen
-    // Needs to know the direction of movement and accelerate/decelerate
-    if (y < (viewDims.height / 100) * 20 && $view.dragging) {
-      //   if (!scrollInterval) {
-      //     scrollInterval = setInterval(() => {
-      //       contentPos.update(state => ({
-      //         ...state,
-      //         x: contentPos.x,
-      //         y: contentPos.y + 35,
-      //       }))
-      //     }, 100)
-      //   }
-      // } else {
-      //   if (scrollInterval) {
-      //     clearInterval(scrollInterval)
-      //     scrollInterval = undefined
-      //   }
     }
   }
 
@@ -288,6 +273,9 @@
   }
 
   const onMouseMove = async e => {
+    if (!viewPort) {
+      return
+    }
     // Update viewDims to get the latest viewport dimensions
     viewDims = viewPort.getBoundingClientRect()
 
@@ -345,7 +333,7 @@
   }
 
   const onMoveContent = e => {
-    if (down) {
+    if (down || !viewPort) {
       return
     }
     const { x, y } = eleXY(e, viewPort)
