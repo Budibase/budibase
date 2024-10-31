@@ -168,4 +168,40 @@ read.push(
   ).addMiddleware(externalSearchValidator())
 )
 
+/**
+ * @openapi
+ * /views/{viewId}/rows/search:
+ *   post:
+ *     operationId: rowViewSearch
+ *     summary: Search for rows in a view
+ *     tags:
+ *       - rows
+ *     parameters:
+ *       - $ref: '#/components/parameters/viewId'
+ *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/rowSearch'
+ *     responses:
+ *       200:
+ *         description: The response will contain an array of rows that match the search parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/searchOutput'
+ *             examples:
+ *               search:
+ *                 $ref: '#/components/examples/rows'
+ */
+read.push(
+  new Endpoint(
+    "post",
+    "/views/:viewId/rows/search",
+    controller.search
+  ).addMiddleware(externalSearchValidator())
+)
+
 export default { read, write }

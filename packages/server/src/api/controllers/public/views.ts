@@ -40,12 +40,16 @@ export async function read(ctx: UserCtx, next: Next) {
 }
 
 export async function update(ctx: UserCtx, next: Next) {
-  // TODO: this is more complex - no rev on views
-  // ctx.request.body = await addRev(
-  //   fixView(ctx.request.body, ctx.params),
-  //   ctx.params.tableId
-  // )
-  await controller.v2.update(ctx)
+  const viewId = ctx.params.viewId
+  await controller.v2.update({
+    ...ctx,
+    body: {
+      data: fixView(ctx.body, { viewId }),
+    },
+    params: {
+      viewId,
+    },
+  })
   await next()
 }
 
