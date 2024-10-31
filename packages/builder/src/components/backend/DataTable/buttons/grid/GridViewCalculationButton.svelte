@@ -241,7 +241,7 @@
   <InfoDisplay
     icon="Help"
     quiet
-    body="Calculations only work with numeric columns and a maximum of 5 calculations can be added at once."
+    body="Most calculations only work with numeric columns and a maximum of 5 calculations can be added at once."
   />
 
   <div>
