@@ -222,7 +222,7 @@
       y,
     }))
 
-    if (down && !$view.dragging) {
+    if (down && !$view.dragging && dragOffset) {
       contentPos.update(state => ({
         ...state,
         x: x - dragOffset[0],
