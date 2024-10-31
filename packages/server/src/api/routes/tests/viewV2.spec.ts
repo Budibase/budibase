@@ -3691,6 +3691,108 @@ describe.each([
               )
             })
 
+            it("should be able to filter on relationships", async () => {
+              const companies = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    name: {
+                      name: "name",
+                      type: FieldType.STRING,
+                    },
+                  },
+                })
+              )
+
+              const employees = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    age: {
+                      type: FieldType.NUMBER,
+                      name: "age",
+                    },
+                    name: {
+                      type: FieldType.STRING,
+                      name: "name",
+                    },
+                    company: {
+                      type: FieldType.LINK,
+                      name: "company",
+                      tableId: companies._id!,
+                      relationshipType: RelationshipType.ONE_TO_MANY,
+                      fieldName: "company",
+                    },
+                  },
+                })
+              )
+
+              const view = await config.api.viewV2.create({
+                tableId: employees._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                queryUI: {
+                  groups: [
+                    {
+                      filters: [
+                        {
+                          operator: BasicOperator.EQUAL,
+                          field: "company.name",
+                          value: "Aperture Science Laboratories",
+                        },
+                      ],
+                    },
+                  ],
+                },
+                schema: {
+                  sum: {
+                    visible: true,
+                    calculationType: CalculationType.SUM,
+                    field: "age",
+                  },
+                },
+              })
+
+              const apertureScience = await config.api.row.save(
+                companies._id!,
+                {
+                  name: "Aperture Science Laboratories",
+                }
+              )
+
+              const blackMesa = await config.api.row.save(companies._id!, {
+                name: "Black Mesa",
+              })
+
+              await Promise.all([
+                config.api.row.save(employees._id!, {
+                  name: "Alice",
+                  age: 25,
+                  company: apertureScience._id,
+                }),
+                config.api.row.save(employees._id!, {
+                  name: "Bob",
+                  age: 30,
+                  company: apertureScience._id,
+                }),
+                config.api.row.save(employees._id!, {
+                  name: "Charly",
+                  age: 27,
+                  company: blackMesa._id,
+                }),
+                config.api.row.save(employees._id!, {
+                  name: "Danny",
+                  age: 15,
+                  company: blackMesa._id,
+                }),
+              ])
+
+              const { rows } = await config.api.viewV2.search(view.id, {
+                query: {},
+              })
+
+              expect(rows).toHaveLength(1)
+              expect(rows[0].sum).toEqual(55)
+            })
+
             it("should be able to filter rows on the view itself", async () => {
               const table = await config.api.table.save(
                 saveTableRequest({
