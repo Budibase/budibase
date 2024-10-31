@@ -1,24 +1,24 @@
 import {
-  Datasource,
+  ArrayOperator,
+  BasicOperator,
   BBReferenceFieldSubType,
+  Datasource,
+  EmptyFilterOption,
+  FieldConstraints,
   FieldType,
   FormulaType,
+  isLogicalSearchOperator,
   LegacyFilter,
+  LogicalOperator,
+  RangeOperator,
+  RowSearchParams,
+  SearchFilterOperator,
   SearchFilters,
   SearchQueryFields,
-  ArrayOperator,
-  SearchFilterOperator,
-  SortType,
-  FieldConstraints,
-  SortOrder,
-  RowSearchParams,
-  EmptyFilterOption,
   SearchResponse,
+  SortOrder,
+  SortType,
   Table,
-  BasicOperator,
-  RangeOperator,
-  LogicalOperator,
-  isLogicalSearchOperator,
   SearchFilterGroup,
   FilterGroupLogicalOperator,
 } from "@budibase/types"
@@ -26,7 +26,7 @@ import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { processSearchFilters } from "./utils"
 import { deepGet, schema } from "./helpers"
-import { isPlainObject, isEmpty } from "lodash"
+import { isEmpty, isPlainObject } from "lodash"
 import { decodeNonAscii } from "./helpers/schema"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
@@ -1065,4 +1065,66 @@ export const hasFilters = (query?: SearchFilters) => {
     return false
   }
   return check(query)
+}
+
+export function readableFilters(filters: SearchFilters): string {
+  function checkJS(value: any) {
+    if (typeof value === "string" && /\{\{\s*js\s+.*\s*}}/g.test(value)) {
+      return "JS function"
+    } else {
+      return value
+    }
+  }
+  function recurse(filters: SearchFilters) {
+    let strings: string[] = []
+    for (const logical of LOGICAL_OPERATORS) {
+      if (filters[logical]) {
+        const filterStrings = filters[logical]!.conditions.map(condition =>
+          recurse(condition)
+        )
+        strings.push(
+          filterStrings.join(logical === LogicalOperator.AND ? " and " : " or ")
+        )
+      }
+    }
+    const otherFilterStrings = Object.entries(filters)
+      .filter(entry => !LOGICAL_OPERATORS.includes(entry[0] as LogicalOperator))
+      .map(entry => {
+        const [operator, fields] = entry
+        const readableOperator = Object.values(OperatorOptions).find(
+          op => op.value === operator
+        )
+        const operatorLabel = readableOperator?.label.toLowerCase()
+        return Object.entries(fields)
+          .map(filter => {
+            const [field, value] = filter
+            if (
+              value &&
+              typeof value === "object" &&
+              ("low" in value || "high" in value)
+            ) {
+              const { low, high } = value as { low?: number; high?: number }
+              if (low && high)
+                return `${field} is between ${checkJS(low)} and ${checkJS(
+                  high
+                )}`
+              if (low)
+                return `${field} is greater than or equal to ${checkJS(low)}`
+              if (high)
+                return `${field} is less than or equal to ${checkJS(high)}`
+            } else if (Array.isArray(value) && operatorLabel) {
+              return `${field} ${operatorLabel} ${value.map(checkJS).join(",")}`
+            } else if (operatorLabel) {
+              return `${field} ${operatorLabel} ${checkJS(value)}`
+            } else {
+              return ""
+            }
+          })
+          .filter(str => str)
+          .join(" and ")
+      })
+    return strings.concat(otherFilterStrings)
+  }
+  const stringParts = recurse(filters)
+  return stringParts.filter(str => str).join(" and ")
 }
