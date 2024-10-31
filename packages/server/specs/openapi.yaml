@@ -1758,6 +1758,11 @@ components:
         name:
           description: The name of the view.
           type: string
+        type:
+          description: The type of view - standard (empty value) or calculation.
+          type: string
+          enum:
+            - calculation
         primaryDisplay:
           type: string
           description: A column used to display rows from this view - usually used when
@@ -1765,47 +1770,8 @@ components:
         schema:
           type: object
           additionalProperties:
-            type: object
-            properties:
-              visible:
-                type: boolean
-                description: Defines whether the column is visible or not - rows
-                  retrieved/updated through this view will not be able to access
-                  it.
-              readonly:
-                type: boolean
-                description: "When used in combination with 'visible: true' the column will be
-                  visible in row responses but cannot be updated."
-              order:
-                type: integer
-                description: A number defining where the column shows up in tables, lowest being
-                  first.
-              width:
-                type: integer
-                description: A width for the column, defined in pixels - this affects rendering
-                  in tables.
-    viewOutput:
-      type: object
-      properties:
-        data:
-          description: The view to be created/updated.
-          type: object
-          required:
-            - name
-            - schema
-            - id
-          properties:
-            name:
-              description: The name of the view.
-              type: string
-            primaryDisplay:
-              type: string
-              description: A column used to display rows from this view - usually used when
-                rendered in tables.
-            schema:
-              type: object
-              additionalProperties:
-                type: object
+            oneOf:
+              - type: object
                 properties:
                   visible:
                     type: boolean
@@ -1824,6 +1790,112 @@ components:
                     type: integer
                     description: A width for the column, defined in pixels - this affects rendering
                       in tables.
+                  column:
+                    type: array
+                    description: If this is a relationship column, we can set the columns we wish to
+                      include
+                    items:
+                      type: object
+                      properties:
+                        readonly:
+                          type: boolean
+              - type: object
+                properties:
+                  calculationType:
+                    type: string
+                    description: This column should be built from a calculation, specifying a type
+                      and field. It is important to note when a calculation is
+                      configured all non-calculation columns will be used for
+                      grouping.
+                    enum:
+                      - sum
+                      - avg
+                      - count
+                      - min
+                      - max
+                  field:
+                    type: string
+                    description: The field from the table to perform the calculation on.
+                  distinct:
+                    type: boolean
+                    description: Can be used in tandem with the count calculation type, to count
+                      unique entries.
+    viewOutput:
+      type: object
+      properties:
+        data:
+          description: The view to be created/updated.
+          type: object
+          required:
+            - name
+            - schema
+            - id
+          properties:
+            name:
+              description: The name of the view.
+              type: string
+            type:
+              description: The type of view - standard (empty value) or calculation.
+              type: string
+              enum:
+                - calculation
+            primaryDisplay:
+              type: string
+              description: A column used to display rows from this view - usually used when
+                rendered in tables.
+            schema:
+              type: object
+              additionalProperties:
+                oneOf:
+                  - type: object
+                    properties:
+                      visible:
+                        type: boolean
+                        description: Defines whether the column is visible or not - rows
+                          retrieved/updated through this view will not be able
+                          to access it.
+                      readonly:
+                        type: boolean
+                        description: "When used in combination with 'visible: true' the column will be
+                          visible in row responses but cannot be updated."
+                      order:
+                        type: integer
+                        description: A number defining where the column shows up in tables, lowest being
+                          first.
+                      width:
+                        type: integer
+                        description: A width for the column, defined in pixels - this affects rendering
+                          in tables.
+                      column:
+                        type: array
+                        description: If this is a relationship column, we can set the columns we wish to
+                          include
+                        items:
+                          type: object
+                          properties:
+                            readonly:
+                              type: boolean
+                  - type: object
+                    properties:
+                      calculationType:
+                        type: string
+                        description: This column should be built from a calculation, specifying a type
+                          and field. It is important to note when a calculation
+                          is configured all non-calculation columns will be used
+                          for grouping.
+                        enum:
+                          - sum
+                          - avg
+                          - count
+                          - min
+                          - max
+                      field:
+                        type: string
+                        description: The field from the table to perform the calculation on.
+                      distinct:
+                        type: boolean
+                        description: Can be used in tandem with the count calculation type, to count
+                          unique entries.
             id:
               description: The ID of the view.
               type: string
@@ -1845,6 +1917,11 @@ components:
               name:
                 description: The name of the view.
                 type: string
+              type:
+                description: The type of view - standard (empty value) or calculation.
+                type: string
+                enum:
+                  - calculation
               primaryDisplay:
                 type: string
                 description: A column used to display rows from this view - usually used when
@@ -1852,25 +1929,56 @@ components:
               schema:
                 type: object
                 additionalProperties:
-                  type: object
-                  properties:
-                    visible:
-                      type: boolean
-                      description: Defines whether the column is visible or not - rows
-                        retrieved/updated through this view will not be able to
-                        access it.
-                    readonly:
-                      type: boolean
-                      description: "When used in combination with 'visible: true' the column will be
-                        visible in row responses but cannot be updated."
-                    order:
-                      type: integer
-                      description: A number defining where the column shows up in tables, lowest being
-                        first.
-                    width:
-                      type: integer
-                      description: A width for the column, defined in pixels - this affects rendering
-                        in tables.
+                  oneOf:
+                    - type: object
+                      properties:
+                        visible:
+                          type: boolean
+                          description: Defines whether the column is visible or not - rows
+                            retrieved/updated through this view will not be able
+                            to access it.
+                        readonly:
+                          type: boolean
+                          description: "When used in combination with 'visible: true' the column will be
+                            visible in row responses but cannot be updated."
+                        order:
+                          type: integer
+                          description: A number defining where the column shows up in tables, lowest being
+                            first.
+                        width:
+                          type: integer
+                          description: A width for the column, defined in pixels - this affects rendering
+                            in tables.
+                        column:
+                          type: array
+                          description: If this is a relationship column, we can set the columns we wish to
+                            include
+                          items:
+                            type: object
+                            properties:
+                              readonly:
+                                type: boolean
+                    - type: object
+                      properties:
+                        calculationType:
+                          type: string
+                          description: This column should be built from a calculation, specifying a type
+                            and field. It is important to note when a
+                            calculation is configured all non-calculation
+                            columns will be used for grouping.
+                          enum:
+                            - sum
+                            - avg
+                            - count
+                            - min
+                            - max
+                        field:
+                          type: string
+                          description: The field from the table to perform the calculation on.
+                        distinct:
+                          type: boolean
+                          description: Can be used in tandem with the count calculation type, to count
+                            unique entries.
               id:
                 description: The ID of the view.
                 type: string
@@ -2290,6 +2398,32 @@ paths:
         - rows
       parameters:
         - $ref: "#/components/parameters/tableId"
+        - $ref: "#/components/parameters/appId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/rowSearch"
+      responses:
+        "200":
+          description: The response will contain an array of rows that match the search
+            parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/searchOutput"
+              examples:
+                search:
+                  $ref: "#/components/examples/rows"
+  "/views/{viewId}/rows/search":
+    post:
+      operationId: rowViewSearch
+      summary: Search for rows in a view
+      tags:
+        - rows
+      parameters:
+        - $ref: "#/components/parameters/viewId"
         - $ref: "#/components/parameters/appId"
       requestBody:
         required: true

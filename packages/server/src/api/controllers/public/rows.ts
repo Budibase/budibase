@@ -22,13 +22,13 @@ export function fixRow(row: Row, params: any) {
   return row
 }
 
-export async function search(ctx: UserCtx, next: Next) {
+function getSearchParameters(ctx: UserCtx) {
   let { sort, paginate, bookmark, limit, query } = ctx.request.body
   // update the body to the correct format of the internal search
   if (!sort) {
     sort = {}
   }
-  ctx.request.body = {
+  return {
     sort: sort.column,
     sortType: sort.type,
     sortOrder: sort.order,
@@ -37,7 +37,22 @@ export async function search(ctx: UserCtx, next: Next) {
     limit,
     query,
   }
+}
+
+export async function search(ctx: UserCtx, next: Next) {
+  ctx.request.body = getSearchParameters(ctx)
   await rowController.search(ctx)
+  await next()
+}
+
+export async function viewSearch(ctx: UserCtx, next: Next) {
+  ctx.request.body = getSearchParameters(ctx)
+  await rowController.views.searchView({
+    ...ctx,
+    params: {
+      viewId: ctx.params.viewId,
+    },
+  })
   await next()
 }
 
@@ -79,4 +94,5 @@ export default {
   update,
   destroy,
   search,
+  viewSearch,
 }

@@ -1,5 +1,6 @@
 import { object } from "./utils"
 import Resource from "./utils/Resource"
+import { CalculationType } from "@budibase/types"
 
 const view = {
   name: "peopleView",
@@ -46,6 +47,19 @@ const baseColumnDef = {
     description:
       "A width for the column, defined in pixels - this affects rendering in tables.",
   },
+  column: {
+    type: "array",
+    description:
+      "If this is a relationship column, we can set the columns we wish to include",
+    items: {
+      type: "object",
+      properties: {
+        readonly: {
+          type: "boolean",
+        },
+      },
+    },
+  },
 }
 
 const viewSchema = {
@@ -57,6 +71,11 @@ const viewSchema = {
       description: "The name of the view.",
       type: "string",
     },
+    type: {
+      description: "The type of view - standard (empty value) or calculation.",
+      type: "string",
+      enum: ["calculation"],
+    },
     primaryDisplay: {
       type: "string",
       description:
@@ -65,8 +84,33 @@ const viewSchema = {
     schema: {
       type: "object",
       additionalProperties: {
-        type: "object",
-        properties: baseColumnDef,
+        oneOf: [
+          {
+            type: "object",
+            properties: baseColumnDef,
+          },
+          {
+            type: "object",
+            properties: {
+              calculationType: {
+                type: "string",
+                description:
+                  "This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.",
+                enum: Object.values(CalculationType),
+              },
+              field: {
+                type: "string",
+                description:
+                  "The field from the table to perform the calculation on.",
+              },
+              distinct: {
+                type: "boolean",
+                description:
+                  "Can be used in tandem with the count calculation type, to count unique entries.",
+              },
+            },
+          },
+        ],
       },
     },
   },

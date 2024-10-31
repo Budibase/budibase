@@ -65,6 +65,9 @@ export interface paths {
   "/tables/{tableId}/rows/search": {
     post: operations["rowSearch"];
   };
+  "/views/{viewId}/rows/search": {
+    post: operations["rowViewSearch"];
+  };
   "/tables": {
     /** Create a table, this could be internal or external. */
     post: operations["tableCreate"];
@@ -833,19 +836,40 @@ export interface components {
     view: {
       /** @description The name of the view. */
       name: string;
+      /**
+       * @description The type of view - standard (empty value) or calculation.
+       * @enum {string}
+       */
+      type?: "calculation";
       /** @description A column used to display rows from this view - usually used when rendered in tables. */
       primaryDisplay?: string;
       schema: {
-        [key: string]: {
-          /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
-          visible?: boolean;
-          /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
-          readonly?: boolean;
-          /** @description A number defining where the column shows up in tables, lowest being first. */
-          order?: number;
-          /** @description A width for the column, defined in pixels - this affects rendering in tables. */
-          width?: number;
-        };
+        [key: string]:
+          | {
+              /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
+              visible?: boolean;
+              /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
+              readonly?: boolean;
+              /** @description A number defining where the column shows up in tables, lowest being first. */
+              order?: number;
+              /** @description A width for the column, defined in pixels - this affects rendering in tables. */
+              width?: number;
+              /** @description If this is a relationship column, we can set the columns we wish to include */
+              column?: {
+                readonly?: boolean;
+              }[];
+            }
+          | {
+              /**
+               * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
+               * @enum {string}
+               */
+              calculationType?: "sum" | "avg" | "count" | "min" | "max";
+              /** @description The field from the table to perform the calculation on. */
+              field?: string;
+              /** @description Can be used in tandem with the count calculation type, to count unique entries. */
+              distinct?: boolean;
+            };
       };
     };
     viewOutput: {
@@ -853,19 +877,40 @@ export interface components {
       data: {
         /** @description The name of the view. */
         name: string;
+        /**
+         * @description The type of view - standard (empty value) or calculation.
+         * @enum {string}
+         */
+        type?: "calculation";
         /** @description A column used to display rows from this view - usually used when rendered in tables. */
         primaryDisplay?: string;
         schema: {
-          [key: string]: {
-            /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
-            visible?: boolean;
-            /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
-            readonly?: boolean;
-            /** @description A number defining where the column shows up in tables, lowest being first. */
-            order?: number;
-            /** @description A width for the column, defined in pixels - this affects rendering in tables. */
-            width?: number;
-          };
+          [key: string]:
+            | {
+                /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
+                visible?: boolean;
+                /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
+                readonly?: boolean;
+                /** @description A number defining where the column shows up in tables, lowest being first. */
+                order?: number;
+                /** @description A width for the column, defined in pixels - this affects rendering in tables. */
+                width?: number;
+                /** @description If this is a relationship column, we can set the columns we wish to include */
+                column?: {
+                  readonly?: boolean;
+                }[];
+              }
+            | {
+                /**
+                 * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
+                 * @enum {string}
+                 */
+                calculationType?: "sum" | "avg" | "count" | "min" | "max";
+                /** @description The field from the table to perform the calculation on. */
+                field?: string;
+                /** @description Can be used in tandem with the count calculation type, to count unique entries. */
+                distinct?: boolean;
+              };
         };
         /** @description The ID of the view. */
         id: string;
@@ -875,19 +920,40 @@ export interface components {
       data: {
         /** @description The name of the view. */
         name: string;
+        /**
+         * @description The type of view - standard (empty value) or calculation.
+         * @enum {string}
+         */
+        type?: "calculation";
         /** @description A column used to display rows from this view - usually used when rendered in tables. */
         primaryDisplay?: string;
         schema: {
-          [key: string]: {
-            /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
-            visible?: boolean;
-            /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
-            readonly?: boolean;
-            /** @description A number defining where the column shows up in tables, lowest being first. */
-            order?: number;
-            /** @description A width for the column, defined in pixels - this affects rendering in tables. */
-            width?: number;
-          };
+          [key: string]:
+            | {
+                /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
+                visible?: boolean;
+                /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
+                readonly?: boolean;
+                /** @description A number defining where the column shows up in tables, lowest being first. */
+                order?: number;
+                /** @description A width for the column, defined in pixels - this affects rendering in tables. */
+                width?: number;
+                /** @description If this is a relationship column, we can set the columns we wish to include */
+                column?: {
+                  readonly?: boolean;
+                }[];
+              }
+            | {
+                /**
+                 * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
+                 * @enum {string}
+                 */
+                calculationType?: "sum" | "avg" | "count" | "min" | "max";
+                /** @description The field from the table to perform the calculation on. */
+                field?: string;
+                /** @description Can be used in tandem with the count calculation type, to count unique entries. */
+                distinct?: boolean;
+              };
         };
         /** @description The ID of the view. */
         id: string;
@@ -1275,6 +1341,31 @@ export interface operations {
       path: {
         /** The ID of the table which this request is targeting. */
         tableId: components["parameters"]["tableId"];
+      };
+      header: {
+        /** The ID of the app which this request is targeting. */
+        "x-budibase-app-id": components["parameters"]["appId"];
+      };
+    };
+    responses: {
+      /** The response will contain an array of rows that match the search parameters. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["searchOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["rowSearch"];
+      };
+    };
+  };
+  rowViewSearch: {
+    parameters: {
+      path: {
+        /** The ID of the view which this request is targeting. */
+        viewId: components["parameters"]["viewId"];
       };
       header: {
         /** The ID of the app which this request is targeting. */
