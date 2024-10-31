@@ -80,6 +80,9 @@
     if (columnType === FieldType.FORMULA) {
       return "https://docs.budibase.com/docs/formula"
     }
+    if (columnType === FieldType.AI) {
+      return "https://docs.budibase.com/docs/ai"
+    }
     if (columnType === FieldType.OPTIONS) {
       return "https://docs.budibase.com/docs/options"
     }

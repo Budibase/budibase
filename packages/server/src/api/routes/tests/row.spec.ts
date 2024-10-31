@@ -2462,7 +2462,7 @@ describe.each([
           [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
           [FieldType.FORMULA]: undefined, // generated field
           [FieldType.AUTO]: undefined, // generated field
-          [FieldType.AI]: undefined, // generated field
+          [FieldType.AI]: "LLM Output",
           [FieldType.JSON]: { name: generator.guid() },
           [FieldType.INTERNAL]: generator.guid(),
           [FieldType.BARCODEQR]: generator.guid(),
@@ -2494,6 +2494,7 @@ describe.each([
           }),
           [FieldType.FORMULA]: fullSchema[FieldType.FORMULA].formula,
           [FieldType.AUTO]: expect.any(Number),
+          [FieldType.AI]: expect.any(String),
           [FieldType.JSON]: rowValues[FieldType.JSON],
           [FieldType.INTERNAL]: rowValues[FieldType.INTERNAL],
           [FieldType.BARCODEQR]: rowValues[FieldType.BARCODEQR],
@@ -2566,7 +2567,7 @@ describe.each([
               expectedRowData["bb_reference_single"].sample,
               false
             ),
-            ai: null,
+            ai: "LLM Output",
           },
         ])
       })
