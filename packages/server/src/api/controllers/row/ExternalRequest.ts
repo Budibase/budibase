@@ -682,7 +682,19 @@ export class ExternalRequest<T extends Operation> {
     filters = this.prepareFilters(id, filters || {}, table)
     const relationships = buildExternalRelationships(table, this.tables)
 
+    let aggregations: Aggregation[] = []
+    if (sdk.views.isView(this.source)) {
+      const calculationFields = helpers.views.calculationFields(this.source)
+      for (const [key, field] of Object.entries(calculationFields)) {
+        aggregations.push({
+          ...field,
+          name: key,
+        })
+      }
+    }
+
     const incRelationships =
+      aggregations.length === 0 &&
       config.includeSqlRelationships === IncludeRelationship.INCLUDE
 
     // clean up row on ingress using schema
@@ -707,17 +719,6 @@ export class ExternalRequest<T extends Operation> {
       (filters == null || Object.keys(filters).length === 0)
     ) {
       throw "Deletion must be filtered"
-    }
-
-    let aggregations: Aggregation[] = []
-    if (sdk.views.isView(this.source)) {
-      const calculationFields = helpers.views.calculationFields(this.source)
-      for (const [key, field] of Object.entries(calculationFields)) {
-        aggregations.push({
-          ...field,
-          name: key,
-        })
-      }
     }
 
     let json: QueryJson = {
