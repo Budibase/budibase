@@ -390,7 +390,6 @@
                             ...filter,
                             field: e.detail.field,
                           }
-                          delete updated.valueType
                           onFilterFieldUpdate(updated, groupIdx, filterIdx)
                         }}
                       />

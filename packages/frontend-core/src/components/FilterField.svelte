@@ -29,7 +29,6 @@
   const { OperatorOptions, FilterValueType } = Constants
 
   let bindingDrawer
-  let fieldValue
 
   $: fieldValue = filter?.value
   $: readableValue = toReadable ? toReadable(bindings, fieldValue) : fieldValue
