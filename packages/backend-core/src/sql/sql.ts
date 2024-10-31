@@ -316,11 +316,9 @@ class InternalBuilder {
         const columnSchema = schema[column]
 
         if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(columnSchema)) {
-          // TODO: figure out how to express this safely without string
-          // interpolation.
-          return this.knex.raw(`??::money::numeric as "${field}"`, [
+          return this.knex.raw(`??::money::numeric as ??`, [
             this.rawQuotedIdentifier([table, column].join(".")),
-            field,
+            this.knex.raw(this.quote(field)),
           ])
         }
 
@@ -330,8 +328,9 @@ class InternalBuilder {
 
           // TODO: figure out how to express this safely without string
           // interpolation.
-          return this.knex.raw(`CONVERT(varchar, ??, 108) as "${field}"`, [
+          return this.knex.raw(`CONVERT(varchar, ??, 108) as ??`, [
             this.rawQuotedIdentifier(field),
+            this.knex.raw(this.quote(field)),
           ])
         }
 
