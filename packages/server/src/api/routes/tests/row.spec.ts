@@ -2597,6 +2597,40 @@ describe.each([
         })
       })
 
+      it("can handle csv-special characters in strings", async () => {
+        const badString = 'test":, wow", "test": "wow"'
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              string: {
+                type: FieldType.STRING,
+                name: "string",
+              },
+            },
+          })
+        )
+
+        await config.api.row.save(table._id!, { string: badString })
+
+        const exportedValue = await config.api.row.exportRows(
+          table._id!,
+          { query: {} },
+          RowExportFormat.CSV
+        )
+
+        const json = await config.api.table.csvToJson(
+          {
+            csvString: exportedValue,
+          },
+          {
+            status: 200,
+          }
+        )
+
+        expect(json).toHaveLength(1)
+        expect(json[0].string).toEqual(badString)
+      })
+
       it("exported data can be re-imported", async () => {
         // export all
         const exportedValue = await config.api.row.exportRows(
