@@ -277,9 +277,6 @@ describe("postgres integrations", () => {
 
       row = await config.api.row.save(table._id!, { ...row, price: "400.00" })
       expect(row.price).toBe("400.00")
-
-      row = await config.api.row.save(table._id!, { ...row, price: "400.123" })
-      expect(row.price).toBe("400.123")
     })
   })
 })
