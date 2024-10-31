@@ -286,6 +286,10 @@
 
   // Optimization options
   const onViewMouseMove = async e => {
+    if (!viewPort) {
+      return
+    }
+
     const { x, y } = eleXY(e, viewPort)
 
     internalPos.update(() => ({
@@ -427,6 +431,9 @@
   }
 
   const onMouseMove = async e => {
+    if (!viewPort) {
+      return
+    }
     // Update viewDims to get the latest viewport dimensions
     viewDims = viewPort.getBoundingClientRect()
 
@@ -484,7 +491,7 @@
   }
 
   const onMoveContent = e => {
-    if (down) {
+    if (down || !viewPort) {
       return
     }
     const { x, y } = eleXY(e, viewPort)

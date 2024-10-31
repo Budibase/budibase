@@ -26,7 +26,7 @@
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
-  import { licensing } from "stores/portal"
+  import { featureFlags } from "stores/portal"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
@@ -101,8 +101,7 @@
   let optionsValid = true
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
-  $: aiEnabled =
-    $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
+  $: aiEnabled = $featureFlags.BUDIBASE_AI || $featureFlags.AI_CUSTOM_CONFIGS
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
