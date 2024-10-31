@@ -13,7 +13,6 @@
     Modal,
     Label,
     AbsTooltip,
-    InlineAlert,
   } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
@@ -26,6 +25,7 @@
   import DragHandle from "components/design/settings/controls/DraggableList/drag-handle.svelte"
   import { getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
+  import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let block
   export let blockRef
@@ -321,9 +321,10 @@
                   {bindings}
                 />
                 {#if isTrigger && triggerInfo}
-                  <InlineAlert
-                    header={triggerInfo.title}
-                    message={`This trigger is tied to your "${triggerInfo.tableName}" table`}
+                  <InfoDisplay
+                    title={triggerInfo.title}
+                    body="This trigger is tied to your '{triggerInfo.tableName}' table"
+                    icon="InfoOutline"
                   />
                 {/if}
               </Layout>
