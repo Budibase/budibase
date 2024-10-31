@@ -351,6 +351,7 @@ export async function search(
           aggregations.push({
             name: key,
             calculationType: field.calculationType,
+            field: mapToUserColumn(field.field),
           })
         }
       } else {
