@@ -60,8 +60,10 @@
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
-    const rows = get(grid?.getContext()?.rows)
-    const goldenRow = generateGoldenSample(rows)
+    const gridContext = grid?.getContext()
+    const rows = get(gridContext?.rows) || []
+    const cleaned = rows.map(gridContext?.rows.actions.cleanRow || (x => x))
+    const goldenRow = generateGoldenSample(cleaned)
     const id = get(component).id
     return {
       // Not sure what this one is for...
