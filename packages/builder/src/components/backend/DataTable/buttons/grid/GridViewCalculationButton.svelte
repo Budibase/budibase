@@ -90,8 +90,15 @@
   const getFieldOptions = (self, calculations, schema) => {
     return Object.entries(schema)
       .filter(([field, fieldSchema]) => {
-        // Only allow numeric fields that are not calculations themselves
-        if (fieldSchema.calculationType || !isNumeric(fieldSchema.type)) {
+        // Don't allow other calculation columns
+        if (fieldSchema.calculationType) {
+          return false
+        }
+        // Only allow numeric columns for most calculation types
+        if (
+          self.type !== CalculationType.COUNT &&
+          !isNumeric(fieldSchema.type)
+        ) {
           return false
         }
         // Don't allow duplicates
@@ -234,7 +241,7 @@
   <InfoDisplay
     icon="Help"
     quiet
-    body="Calculations only work with numeric columns and a maximum of 5 calculations can be added at once."
+    body="Most calculations only work with numeric columns and a maximum of 5 calculations can be added at once."
   />
 
   <div>
@@ -256,7 +263,5 @@
   }
   .group-by {
     grid-column: 2 / 5;
-  }
-  span {
   }
 </style>

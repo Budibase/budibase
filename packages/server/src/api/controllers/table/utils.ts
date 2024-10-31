@@ -15,7 +15,7 @@ import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { context, events, features } from "@budibase/backend-core"
+import { context, events, features, HTTPError } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   Database,
@@ -145,14 +145,21 @@ export async function importToRows(
     // the real schema of the table passed in, not the clone used for
     // incrementing auto IDs
     for (const [fieldName, schema] of Object.entries(originalTable.schema)) {
-      const rowVal = Array.isArray(row[fieldName])
-        ? row[fieldName]
-        : [row[fieldName]]
+      if (schema.type === FieldType.LINK) {
+        throw new HTTPError(
+          `Can't bulk import relationship fields for internal databases, found value in field "${fieldName}"`,
+          400
+        )
+      }
+
       if (
         (schema.type === FieldType.OPTIONS ||
           schema.type === FieldType.ARRAY) &&
         row[fieldName]
       ) {
+        const rowVal = Array.isArray(row[fieldName])
+          ? row[fieldName]
+          : [row[fieldName]]
         let merged = [...schema.constraints!.inclusion!, ...rowVal]
         let superSet = new Set(merged)
         schema.constraints!.inclusion = Array.from(superSet)
