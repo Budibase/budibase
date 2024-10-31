@@ -529,7 +529,7 @@ class InternalBuilder {
         if (!matchesTableName) {
           updatedKey = filterKey.replace(
             new RegExp(`^${relationship.column}.`),
-            `${aliases![relationship.tableName]}.`
+            `${aliases?.[relationship.tableName] || relationship.tableName}.`
           )
         } else {
           updatedKey = filterKey
@@ -1091,7 +1091,14 @@ class InternalBuilder {
             )
           }
         } else {
-          query = query.count(`* as ${aggregation.name}`)
+          if (this.client === SqlClient.ORACLE) {
+            const field = this.convertClobs(`${tableName}.${aggregation.field}`)
+            query = query.select(
+              this.knex.raw(`COUNT(??) as ??`, [field, aggregation.name])
+            )
+          } else {
+            query = query.count(`${aggregation.field} as ${aggregation.name}`)
+          }
         }
       } else {
         const fieldSchema = this.getFieldSchema(aggregation.field)
@@ -1579,7 +1586,7 @@ class InternalBuilder {
     query = this.addFilters(query, filters, { relationship: true })
 
     // handle relationships with a CTE for all others
-    if (relationships?.length) {
+    if (relationships?.length && aggregations.length === 0) {
       const mainTable =
         this.query.tableAliases?.[this.query.endpoint.entityId] ||
         this.query.endpoint.entityId
@@ -1594,10 +1601,8 @@ class InternalBuilder {
       // add JSON aggregations attached to the CTE
       return this.addJsonRelationships(cte, tableName, relationships)
     }
-    // no relationships found - return query
-    else {
-      return query
-    }
+
+    return query
   }
 
   update(opts: QueryOptions): Knex.QueryBuilder {
