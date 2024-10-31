@@ -62,7 +62,8 @@
   export const getAdditionalDataContext = () => {
     const gridContext = grid?.getContext()
     const rows = get(gridContext?.rows) || []
-    const cleaned = rows.map(gridContext?.rows.actions.cleanRow || (x => x))
+    const clean = gridContext?.rows.actions.cleanRow || (x => x)
+    const cleaned = rows.map(clean)
     const goldenRow = generateGoldenSample(cleaned)
     const id = get(component).id
     return {
