@@ -11,6 +11,8 @@
     TooltipPosition,
     TooltipType,
     Button,
+    Modal,
+    ModalContent,
   } from "@budibase/bbui"
   import PropField from "components/automation/SetupPanel/PropField.svelte"
   import AutomationBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
@@ -36,6 +38,7 @@
   let drawer
   let condition
   let open = true
+  let confirmDeleteModal
 
   $: branch = step.inputs?.branches?.[branchIdx]
   $: editableConditionUI = cloneDeep(branch.conditionUI || {})
@@ -54,6 +57,22 @@
     pathTo: (pathTo || []).concat({ branchIdx, branchStepId: step.id }),
   }
 </script>
+
+<Modal bind:this={confirmDeleteModal}>
+  <ModalContent
+    size="M"
+    title={"Are you sure you want to delete?"}
+    confirmText="Delete"
+    onConfirm={async () => {
+      await automationStore.actions.deleteBranch(
+        branchBlockRef.pathTo,
+        $selectedAutomation.data
+      )
+    }}
+  >
+    <Body>By deleting this branch, you will delete all of its contents.</Body>
+  </ModalContent>
+</Modal>
 
 <Drawer bind:this={drawer} title="Branch condition" forceModal>
   <Button
@@ -101,10 +120,15 @@
       itemName={branch.name}
       block={step}
       deleteStep={async () => {
-        await automationStore.actions.deleteBranch(
-          branchBlockRef.pathTo,
-          $selectedAutomation.data
-        )
+        const branchSteps = step.inputs?.children[branch.id]
+        if (branchSteps.length) {
+          confirmDeleteModal.show()
+        } else {
+          await automationStore.actions.deleteBranch(
+            branchBlockRef.pathTo,
+            $selectedAutomation.data
+          )
+        }
       }}
       on:update={async e => {
         let stepUpdate = cloneDeep(step)
