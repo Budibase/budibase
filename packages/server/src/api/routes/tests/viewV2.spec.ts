@@ -693,6 +693,12 @@ describe.each([
                 calculationType: CalculationType.COUNT,
                 field: "Price",
               },
+              countDistinct: {
+                visible: true,
+                calculationType: CalculationType.COUNT,
+                distinct: true,
+                field: "Price",
+              },
               min: {
                 visible: true,
                 calculationType: CalculationType.MIN,
@@ -706,11 +712,6 @@ describe.each([
               avg: {
                 visible: true,
                 calculationType: CalculationType.AVG,
-                field: "Price",
-              },
-              sum2: {
-                visible: true,
-                calculationType: CalculationType.SUM,
                 field: "Price",
               },
             },
@@ -763,10 +764,12 @@ describe.each([
               count: {
                 visible: true,
                 calculationType: CalculationType.COUNT,
+                field: "Price",
               },
               count2: {
                 visible: true,
                 calculationType: CalculationType.COUNT,
+                field: "Price",
               },
             },
           },
@@ -774,7 +777,7 @@ describe.each([
             status: 400,
             body: {
               message:
-                'Duplicate calculation on field "*", calculation type "count"',
+                'Duplicate calculation on field "Price", calculation type "count"',
             },
           }
         )
@@ -805,7 +808,7 @@ describe.each([
             status: 400,
             body: {
               message:
-                'Duplicate calculation on field "Price", calculation type "count"',
+                'Duplicate calculation on field "Price", calculation type "count distinct"',
             },
           }
         )
@@ -820,12 +823,33 @@ describe.each([
             count: {
               visible: true,
               calculationType: CalculationType.COUNT,
+              field: "Price",
             },
             count2: {
               visible: true,
               calculationType: CalculationType.COUNT,
               distinct: true,
               field: "Price",
+            },
+          },
+        })
+      })
+
+      it("does not confuse counts on different fields in the duplicate check", async () => {
+        await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
+          schema: {
+            count: {
+              visible: true,
+              calculationType: CalculationType.COUNT,
+              field: "Price",
+            },
+            count2: {
+              visible: true,
+              calculationType: CalculationType.COUNT,
+              field: "Category",
             },
           },
         })
@@ -1607,6 +1631,7 @@ describe.each([
             view.schema!.count = {
               visible: true,
               calculationType: CalculationType.COUNT,
+              field: "age",
             }
             await config.api.viewV2.update(view)
 
@@ -3657,6 +3682,153 @@ describe.each([
                   },
                 }
               )
+            })
+
+            it("should be able to filter on relationships", async () => {
+              const companies = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    name: {
+                      name: "name",
+                      type: FieldType.STRING,
+                    },
+                  },
+                })
+              )
+
+              const employees = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    age: {
+                      type: FieldType.NUMBER,
+                      name: "age",
+                    },
+                    name: {
+                      type: FieldType.STRING,
+                      name: "name",
+                    },
+                    company: {
+                      type: FieldType.LINK,
+                      name: "company",
+                      tableId: companies._id!,
+                      relationshipType: RelationshipType.ONE_TO_MANY,
+                      fieldName: "company",
+                    },
+                  },
+                })
+              )
+
+              const view = await config.api.viewV2.create({
+                tableId: employees._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                queryUI: {
+                  groups: [
+                    {
+                      filters: [
+                        {
+                          operator: BasicOperator.EQUAL,
+                          field: "company.name",
+                          value: "Aperture Science Laboratories",
+                        },
+                      ],
+                    },
+                  ],
+                },
+                schema: {
+                  sum: {
+                    visible: true,
+                    calculationType: CalculationType.SUM,
+                    field: "age",
+                  },
+                },
+              })
+
+              const apertureScience = await config.api.row.save(
+                companies._id!,
+                {
+                  name: "Aperture Science Laboratories",
+                }
+              )
+
+              const blackMesa = await config.api.row.save(companies._id!, {
+                name: "Black Mesa",
+              })
+
+              await Promise.all([
+                config.api.row.save(employees._id!, {
+                  name: "Alice",
+                  age: 25,
+                  company: apertureScience._id,
+                }),
+                config.api.row.save(employees._id!, {
+                  name: "Bob",
+                  age: 30,
+                  company: apertureScience._id,
+                }),
+                config.api.row.save(employees._id!, {
+                  name: "Charly",
+                  age: 27,
+                  company: blackMesa._id,
+                }),
+                config.api.row.save(employees._id!, {
+                  name: "Danny",
+                  age: 15,
+                  company: blackMesa._id,
+                }),
+              ])
+
+              const { rows } = await config.api.viewV2.search(view.id, {
+                query: {},
+              })
+
+              expect(rows).toHaveLength(1)
+              expect(rows[0].sum).toEqual(55)
+            })
+
+            it("should be able to count non-numeric fields", async () => {
+              const table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    firstName: {
+                      type: FieldType.STRING,
+                      name: "firstName",
+                    },
+                    lastName: {
+                      type: FieldType.STRING,
+                      name: "lastName",
+                    },
+                  },
+                })
+              )
+
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                type: ViewV2Type.CALCULATION,
+                schema: {
+                  count: {
+                    visible: true,
+                    calculationType: CalculationType.COUNT,
+                    field: "firstName",
+                  },
+                },
+              })
+
+              await config.api.row.bulkImport(table._id!, {
+                rows: [
+                  { firstName: "Jane", lastName: "Smith" },
+                  { firstName: "Jane", lastName: "Doe" },
+                  { firstName: "Alice", lastName: "Smith" },
+                ],
+              })
+
+              const { rows } = await config.api.viewV2.search(view.id, {
+                query: {},
+              })
+
+              expect(rows).toHaveLength(1)
+              expect(rows[0].count).toEqual(3)
             })
 
             it("should be able to filter rows on the view itself", async () => {
