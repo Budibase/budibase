@@ -48,7 +48,10 @@
   let blockDims
 
   const updateBlockDims = () => {
-    const { width, height } = blockEle?.getBoundingClientRect()
+    if (!blockEle) {
+      return
+    }
+    const { width, height } = blockEle.getBoundingClientRect()
     blockDims = { width: width / $view.scale, height: height / $view.scale }
   }
 
