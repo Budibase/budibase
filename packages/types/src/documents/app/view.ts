@@ -54,12 +54,12 @@ export interface NumericCalculationFieldMetadata
 
 export interface CountCalculationFieldMetadata extends BasicViewFieldMetadata {
   calculationType: CalculationType.COUNT
+  field: string
 }
 
 export interface CountDistinctCalculationFieldMetadata
   extends CountCalculationFieldMetadata {
   distinct: true
-  field: string
 }
 
 export type ViewCalculationFieldMetadata =
