@@ -48,7 +48,8 @@
   let blockDims
 
   const updateBlockDims = () => {
-    blockDims = blockEle?.getBoundingClientRect()
+    const { width, height } = blockEle?.getBoundingClientRect()
+    blockDims = { width: width / $view.scale, height: height / $view.scale }
   }
 
   const loadSteps = blockRef => {
@@ -81,11 +82,11 @@
 
   $: selected = $view?.moveStep && $view?.moveStep?.id === block.id
 
-  $: {
-    selected, updateBlockDims()
+  $: if (selected && blockEle) {
+    updateBlockDims()
   }
 
-  $: placeholderDims = buildPlaceholderStyles(blockDims, selected)
+  $: placeholderDims = buildPlaceholderStyles(blockDims)
 
   // Move the selected item
   // Listen for scrolling in the content. As its scrolled this will be updated
