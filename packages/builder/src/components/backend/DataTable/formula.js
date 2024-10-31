@@ -8,6 +8,7 @@ const MAX_DEPTH = 1
 
 const TYPES_TO_SKIP = [
   FieldType.FORMULA,
+  FieldType.AI,
   FieldType.LONGFORM,
   FieldType.SIGNATURE_SINGLE,
   FieldType.ATTACHMENTS,
