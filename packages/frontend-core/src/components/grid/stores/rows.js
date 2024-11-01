@@ -1,7 +1,12 @@
 import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
-import { getCellID, parseCellID } from "../lib/utils"
+import {
+  generateRowID,
+  getCellID,
+  isGeneratedRowID,
+  parseCellID,
+} from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
@@ -634,10 +639,10 @@ export const createActions = context => {
       newRow = newRows[i]
 
       // Ensure we have a unique _id.
-      // This means generating one for non DS+, overwriting any that may already
-      // exist as we cannot allow duplicates.
-      if (!$hasBudibaseIdentifiers) {
-        newRow._id = Helpers.uuid()
+      // We generate one for non DS+ where required, but trust that any existing
+      // _id values are unique (e.g. Mongo)
+      if (!$hasBudibaseIdentifiers && !newRow._id?.length) {
+        newRow._id = generateRowID()
       }
 
       if (!rowCacheMap[newRow._id]) {
@@ -674,7 +679,7 @@ export const createActions = context => {
     let clone = { ...row }
     delete clone.__idx
     delete clone.__metadata
-    if (!get(hasBudibaseIdentifiers)) {
+    if (!get(hasBudibaseIdentifiers) && isGeneratedRowID(clone._id)) {
       delete clone._id
     }
     return clone
