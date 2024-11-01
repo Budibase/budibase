@@ -185,6 +185,9 @@
 
   let zoomOrigin = []
 
+  // Used to track where the draggable item is scrolling into
+  let scrollZones
+
   // Focus element details. Used to move the viewport
   let focusElement = memo()
 
@@ -196,8 +199,11 @@
     await getDims()
   }
 
-  const getDims = async () => {
-    if (!contentDims.original) {
+  const getDims = async (forceRefresh = false) => {
+    if (!mainContent || !viewPort) {
+      return
+    }
+    if (!contentDims.original || (contentDims.original && forceRefresh)) {
       contentDims.original = {
         w: parseInt(mainContent.getBoundingClientRect().width),
         h: parseInt(mainContent.getBoundingClientRect().height),
@@ -314,7 +320,7 @@
 
     if ($view.dragging) {
       // Need to know the internal offset as well.
-      const scrollZones = {
+      scrollZones = {
         top: y < viewDims.height * 0.05,
         bottom:
           y > viewDims.height - ($view.moveStep.h - $view.moveStep.mouse.y),
@@ -325,8 +331,6 @@
       // Determine which zones are currently in play
       const dragOutEntries = Object.entries(scrollZones).filter(e => e[1])
       if (dragOutEntries.length) {
-        const dragOut = Object.fromEntries(dragOutEntries)
-
         if (!scrollInterval) {
           const autoScroll = () => {
             // Some internal tracking for implying direction
@@ -334,12 +338,17 @@
             // const lastX = $contentPos.x
             const bump = 30
 
-            // Depending on the zone, you want to move the content
-            // in the opposite direction
-            const xInterval = dragOut.right ? -bump : dragOut.left ? bump : 0
-            const yInterval = dragOut.bottom ? -bump : dragOut.top ? bump : 0
-
             return () => {
+              const dragOutEntries = Object.entries(scrollZones).filter(
+                e => e[1]
+              )
+              const dragOut = Object.fromEntries(dragOutEntries)
+
+              // Depending on the zone, you want to move the content
+              // in the opposite direction
+              const xInterval = dragOut.right ? -bump : dragOut.left ? bump : 0
+              const yInterval = dragOut.bottom ? -bump : dragOut.top ? bump : 0
+
               contentPos.update(state => ({
                 ...state,
                 x: (state.x || 0) + xInterval,
@@ -397,6 +406,7 @@
       if (scrollInterval) {
         clearInterval(scrollInterval)
         scrollInterval = undefined
+        scrollZones = {}
       }
 
       // Clear the scroll offset for dragging
@@ -543,11 +553,13 @@
   )
 
   onMount(() => {
-    viewObserver = new ResizeObserver(getDims)
+    // As the view/browser resizes, ensure the stored view is up to date
+    viewObserver = new ResizeObserver(
+      Utils.domDebounce(e => {
+        getDims()
+      })
+    )
     viewObserver.observe(viewPort)
-
-    contentObserver = new ResizeObserver(getDims)
-    contentObserver.observe(mainContent)
 
     // Global mouse observer
     document.addEventListener("mouseup", globalMouseUp)
@@ -555,7 +567,6 @@
 
   onDestroy(() => {
     viewObserver.disconnect()
-    contentObserver.disconnect()
     document.removeEventListener("mouseup", globalMouseUp)
   })
 </script>
