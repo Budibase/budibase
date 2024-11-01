@@ -1,3 +1,5 @@
+import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
+
 jest.mock("../../../utilities/redis", () => ({
   init: jest.fn(),
   getLocksById: () => {
@@ -445,6 +447,20 @@ describe("/applications", () => {
       // doesn't exist in dev
       const devLogs = await config.getAutomationLogs()
       expect(devLogs.data.length).toBe(0)
+    })
+  })
+
+  describe("POST /api/applications/:appId/sample", () => {
+    it("should be able to add sample data", async () => {
+      await config.api.application.addSampleData(config.getAppId())
+      for (let table of DEFAULT_TABLES) {
+        const res = await config.api.row.search(
+          table._id!,
+          { query: {} },
+          { status: 200 }
+        )
+        expect(res.rows.length).not.toEqual(0)
+      }
     })
   })
 })
