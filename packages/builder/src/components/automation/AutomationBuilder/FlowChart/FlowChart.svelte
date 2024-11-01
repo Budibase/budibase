@@ -44,19 +44,8 @@
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
   const refresh = () => {
-    // Build global automation bindings.
-    const environmentBindings =
-      automationStore.actions.buildEnvironmentBindings()
-
     // Get all processed block references
     blockRefs = $selectedAutomation.blockRefs
-
-    automationStore.update(state => {
-      return {
-        ...state,
-        bindings: [...environmentBindings],
-      }
-    })
   }
 
   const getBlocks = automation => {
