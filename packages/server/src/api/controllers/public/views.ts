@@ -13,6 +13,9 @@ function fixView(view: ViewV2, params?: { viewId: string }) {
   if (!view.version) {
     view.version = 2
   }
+  if (!view.query) {
+    view.query = {}
+  }
   return view
 }
 
