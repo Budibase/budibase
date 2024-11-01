@@ -1,6 +1,7 @@
 import { object } from "./utils"
 import Resource from "./utils/Resource"
-import { CalculationType } from "@budibase/types"
+import { CalculationType, SortOrder, SortType } from "@budibase/types"
+import { searchSchema } from "./misc"
 
 const view = {
   name: "peopleView",
@@ -80,6 +81,28 @@ const viewSchema = {
       type: "string",
       description:
         "A column used to display rows from this view - usually used when rendered in tables.",
+    },
+    query: searchSchema,
+    sort: {
+      type: "object",
+      required: ["field"],
+      properties: {
+        field: {
+          type: "string",
+          description: "The field from the table/view schema to sort on.",
+        },
+        order: {
+          type: "string",
+          description: "The order in which to sort.",
+          enum: Object.values(SortOrder),
+        },
+        type: {
+          type: "string",
+          description:
+            "The type of sort to perform (by number, or by alphabetically).",
+          enum: Object.values(SortType),
+        },
+      },
     },
     schema: {
       type: "object",
