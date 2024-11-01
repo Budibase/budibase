@@ -123,7 +123,7 @@ export async function importToRows(
   data: Row[],
   table: Table,
   userId?: string,
-  opts?: { keepCouchId?: boolean; allowRelationships?: boolean }
+  opts?: { keepCouchId: boolean }
 ) {
   const originalTable = table
   const finalData: Row[] = []
