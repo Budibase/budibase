@@ -9,29 +9,33 @@ function getHeaders(
   return headers.map(header => `"${customHeaders[header] || header}"`)
 }
 
+function escapeCsvString(str: string) {
+  return str.replace(/"/g, '""')
+}
+
 export function csv(
   headers: string[],
   rows: Row[],
   delimiter: string = ",",
   customHeaders: { [key: string]: string } = {}
 ) {
-  let csv = getHeaders(headers, customHeaders).join(delimiter)
+  let csvRows = [getHeaders(headers, customHeaders)]
 
   for (let row of rows) {
-    csv = `${csv}\n${headers
-      .map(header => {
-        let val = row[header]
-        val =
-          typeof val === "object" && !(val instanceof Date)
-            ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
-            : val !== undefined
-            ? `"${val}"`
-            : ""
-        return val.trim()
+    csvRows.push(
+      headers.map(header => {
+        const val = row[header]
+        if (typeof val === "object" && !(val instanceof Date)) {
+          return `"${JSON.stringify(val).replace(/"/g, "'")}"`
+        }
+        if (val !== undefined) {
+          return `"${escapeCsvString(val.toString())}"`
+        }
+        return ""
       })
-      .join(delimiter)}`
+    )
   }
-  return csv
+  return csvRows.map(row => row.join(delimiter)).join("\n")
 }
 
 export function json(rows: Row[]) {
