@@ -123,7 +123,7 @@ export async function importToRows(
   data: Row[],
   table: Table,
   userId?: string,
-  opts?: { keepCouchId: boolean }
+  opts?: { keepCouchId?: boolean; allowRelationships?: boolean }
 ) {
   const originalTable = table
   const finalData: Row[] = []
@@ -136,16 +136,15 @@ export async function importToRows(
 
     // We use a reference to table here and update it after input processing,
     // so that we can auto increment auto IDs in imported data properly
-    const processed = await inputProcessing(userId, table, row, {
+    row = await inputProcessing(userId, table, row, {
       noAutoRelationships: true,
     })
-    row = processed
 
     // However here we must reference the original table, as we want to mutate
     // the real schema of the table passed in, not the clone used for
     // incrementing auto IDs
     for (const [fieldName, schema] of Object.entries(originalTable.schema)) {
-      if (schema.type === FieldType.LINK) {
+      if (schema.type === FieldType.LINK && data.find(row => row[fieldName])) {
         throw new HTTPError(
           `Can't bulk import relationship fields for internal databases, found value in field "${fieldName}"`,
           400
