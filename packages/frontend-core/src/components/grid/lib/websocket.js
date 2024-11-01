@@ -61,6 +61,15 @@ export const createGridWebsocket = context => {
       }
     }
   )
+  socket.on(
+    GridSocketEvent.DatasourceChange,
+    ({ datasource: newDatasource }) => {
+      // Listen builder renames, as these aren't handled otherwise
+      if (newDatasource?.name !== get(definition).name) {
+        definition.set(newDatasource)
+      }
+    }
+  )
 
   // Change websocket connection when table changes
   datasource.subscribe(connectToDatasource)
