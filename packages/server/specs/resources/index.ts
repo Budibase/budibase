@@ -15,6 +15,7 @@ export const examples = {
   ...user.getExamples(),
   ...misc.getExamples(),
   ...metrics.getExamples(),
+  ...roles.getExamples(),
 }
 
 export const schemas = {

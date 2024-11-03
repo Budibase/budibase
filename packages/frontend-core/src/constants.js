@@ -108,35 +108,6 @@ export const Roles = {
   CREATOR: "CREATOR",
 }
 
-export const Themes = [
-  {
-    class: "lightest",
-    name: "Lightest",
-  },
-  {
-    class: "light",
-    name: "Light",
-  },
-  {
-    class: "dark",
-    name: "Dark",
-  },
-  {
-    class: "darkest",
-    name: "Darkest",
-  },
-  {
-    class: "nord",
-    name: "Nord",
-    base: "darkest",
-  },
-  {
-    class: "midnight",
-    name: "Midnight",
-    base: "darkest",
-  },
-]
-
 export const EventPublishType = {
   ENV_VAR_UPGRADE_PANEL_OPENED: "environment_variable_upgrade_panel_opened",
 }
@@ -160,9 +131,10 @@ export const TypeIconMap = {
   [FieldType.ATTACHMENT_SINGLE]: "DocumentFragment",
   [FieldType.LINK]: "DataCorrelated",
   [FieldType.FORMULA]: "Calculator",
+  [FieldType.AI]: "MagicWand",
   [FieldType.JSON]: "Brackets",
   [FieldType.BIGINT]: "TagBold",
-  [FieldType.AUTO]: "MagicWand",
+  [FieldType.AUTO]: "Shapes",
   [FieldType.BB_REFERENCE]: {
     [BBReferenceFieldSubType.USER]: "UserGroup",
     [BBReferenceFieldSubType.USERS]: "UserGroup",
@@ -175,6 +147,21 @@ export const TypeIconMap = {
 export const OptionColours = [...new Array(12).keys()].map(idx => {
   return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, 0.3)`
 })
+
+export const FilterOperator = {
+  ANY: "any",
+  ALL: "all",
+}
+
+export const OnEmptyFilter = {
+  RETURN_ALL: "all",
+  RETURN_NONE: "none",
+}
+
+export const FilterValueType = {
+  BINDING: "Binding",
+  VALUE: "Value",
+}
 
 export const FieldPermissions = {
   WRITABLE: "writable",

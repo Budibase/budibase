@@ -4,6 +4,7 @@
     Button,
     Label,
     Select,
+    Multiselect,
     Toggle,
     Icon,
     DatePicker,
@@ -25,6 +26,7 @@
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
+  import { featureFlags } from "stores/portal"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
@@ -34,6 +36,7 @@
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "helpers/utils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import AIFieldConfiguration from "components/common/AIFieldConfiguration.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
@@ -49,18 +52,13 @@
   import { isEnabled } from "helpers/featureFlags"
   import { getUserBindings } from "dataBinding"
 
-  const AUTO_TYPE = FieldType.AUTO
-  const FORMULA_TYPE = FieldType.FORMULA
-  const LINK_TYPE = FieldType.LINK
-  const STRING_TYPE = FieldType.STRING
-  const NUMBER_TYPE = FieldType.NUMBER
-  const JSON_TYPE = FieldType.JSON
-  const DATE_TYPE = FieldType.DATETIME
+  export let field
 
   const dispatch = createEventDispatcher()
   const { dispatch: gridDispatch, rows } = getContext("grid")
-
-  export let field
+  const SafeID = `${makePropSafe("user")}.${makePropSafe("_id")}`
+  const SingleUserDefault = `{{ ${SafeID} }}`
+  const MultiUserDefault = `{{ js "${btoa(`return [$("${SafeID}")]`)}" }}`
 
   let mounted = false
   let originalName
@@ -103,13 +101,14 @@
   let optionsValid = true
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
+  $: aiEnabled = $featureFlags.BUDIBASE_AI || $featureFlags.AI_CUSTOM_CONFIGS
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
   $: {
     // this parses any changes the user has made when creating a new internal relationship
     // into what we expect the schema to look like
-    if (editableColumn.type === LINK_TYPE) {
+    if (editableColumn.type === FieldType.LINK) {
       relationshipTableIdPrimary = table._id
       if (relationshipPart1 === PrettyRelationshipDefinitions.ONE) {
         relationshipOpts2 = relationshipOpts2.filter(
@@ -137,15 +136,16 @@
   }
   $: initialiseField(field, savingColumn)
   $: checkConstraints(editableColumn)
-  $: required = hasDefault
-    ? false
-    : !!editableColumn?.constraints?.presence || primaryDisplay
+  $: required =
+    primaryDisplay ||
+    editableColumn?.constraints?.presence === true ||
+    editableColumn?.constraints?.presence?.allowEmpty === false
   $: uneditable =
     $tables.selected?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(editableColumn.name)
   $: invalid =
     !editableColumn?.name ||
-    (editableColumn?.type === LINK_TYPE && !editableColumn?.tableId) ||
+    (editableColumn?.type === FieldType.LINK && !editableColumn?.tableId) ||
     Object.keys(errors).length !== 0 ||
     !optionsValid
   $: errors = checkErrors(editableColumn)
@@ -168,12 +168,12 @@
   // used to select what different options can be displayed for column type
   $: canBeDisplay =
     canBeDisplayColumn(editableColumn) && !editableColumn.autocolumn
-  $: canHaveDefault =
-    isEnabled("DEFAULT_VALUES") && canHaveDefaultColumn(editableColumn.type)
+  $: defaultValuesEnabled = isEnabled("DEFAULT_VALUES")
+  $: canHaveDefault = !required && canHaveDefaultColumn(editableColumn.type)
   $: canBeRequired =
-    editableColumn?.type !== LINK_TYPE &&
+    editableColumn?.type !== FieldType.LINK &&
     !uneditable &&
-    editableColumn?.type !== AUTO_TYPE &&
+    editableColumn?.type !== FieldType.AUTO &&
     !editableColumn.autocolumn
   $: hasDefault =
     editableColumn?.default != null && editableColumn?.default !== ""
@@ -188,7 +188,6 @@
     (originalName &&
       SWITCHABLE_TYPES[field.type] &&
       !editableColumn?.autocolumn)
-
   $: allowedTypes = getAllowedTypes(datasource).map(t => ({
     fieldId: makeFieldId(t.type, t.subtype),
     ...t,
@@ -206,6 +205,11 @@
     },
     ...getUserBindings(),
   ]
+  $: sanitiseDefaultValue(
+    editableColumn.type,
+    editableColumn.constraints?.inclusion || [],
+    editableColumn.default
+  )
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
     // Storing the fields by complex field id
@@ -218,7 +222,7 @@
 
   function makeFieldId(type, subtype, autocolumn) {
     // don't make field IDs for auto types
-    if (type === AUTO_TYPE || autocolumn) {
+    if (type === FieldType.AUTO || autocolumn) {
       return type.toUpperCase()
     } else if (
       type === FieldType.BB_REFERENCE ||
@@ -243,7 +247,7 @@
       // Here we are setting the relationship values based on the editableColumn
       // This part of the code is used when viewing an existing field hence the check
       // for the tableId
-      if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
+      if (editableColumn.type === FieldType.LINK && editableColumn.tableId) {
         relationshipTableIdPrimary = table._id
         relationshipTableIdSecondary = editableColumn.tableId
         if (editableColumn.relationshipType in relationshipMap) {
@@ -284,15 +288,31 @@
 
     delete saveColumn.fieldId
 
-    if (saveColumn.type === AUTO_TYPE) {
+    if (saveColumn.type === FieldType.AUTO) {
       saveColumn = buildAutoColumn(
         $tables.selected.name,
         saveColumn.name,
         saveColumn.subtype
       )
     }
-    if (saveColumn.type !== LINK_TYPE) {
+    if (saveColumn.type !== FieldType.LINK) {
       delete saveColumn.fieldName
+    }
+
+    // Ensure we don't have a default value if we can't have one
+    if (!canHaveDefault || !defaultValuesEnabled) {
+      delete saveColumn.default
+    }
+
+    // Ensure primary display columns are always required and don't have default values
+    if (primaryDisplay) {
+      saveColumn.constraints.presence = { allowEmpty: false }
+      delete saveColumn.default
+    }
+
+    // Ensure the field is not required if we have a default value
+    if (saveColumn.default) {
+      saveColumn.constraints.presence = false
     }
 
     try {
@@ -362,9 +382,9 @@
     editableColumn.subtype = definition.subtype
 
     // Default relationships many to many
-    if (editableColumn.type === LINK_TYPE) {
+    if (editableColumn.type === FieldType.LINK) {
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
-    } else if (editableColumn.type === FORMULA_TYPE) {
+    } else if (editableColumn.type === FieldType.FORMULA) {
       editableColumn.formulaType = "dynamic"
     }
   }
@@ -430,6 +450,7 @@
         FIELDS.BOOLEAN,
         FIELDS.DATETIME,
         FIELDS.LINK,
+        ...(aiEnabled ? [FIELDS.AI] : []),
         FIELDS.LONGFORM,
         FIELDS.USER,
         FIELDS.USERS,
@@ -483,17 +504,23 @@
       fieldToCheck.constraints = {}
     }
     // some string types may have been built by server, may not always have constraints
-    if (fieldToCheck.type === STRING_TYPE && !fieldToCheck.constraints.length) {
+    if (
+      fieldToCheck.type === FieldType.STRING &&
+      !fieldToCheck.constraints.length
+    ) {
       fieldToCheck.constraints.length = {}
     }
     // some number types made server-side will be missing constraints
     if (
-      fieldToCheck.type === NUMBER_TYPE &&
+      fieldToCheck.type === FieldType.NUMBER &&
       !fieldToCheck.constraints.numericality
     ) {
       fieldToCheck.constraints.numericality = {}
     }
-    if (fieldToCheck.type === DATE_TYPE && !fieldToCheck.constraints.datetime) {
+    if (
+      fieldToCheck.type === FieldType.DATETIME &&
+      !fieldToCheck.constraints.datetime
+    ) {
       fieldToCheck.constraints.datetime = {}
     }
   }
@@ -541,6 +568,20 @@
     return newError
   }
 
+  const sanitiseDefaultValue = (type, options, defaultValue) => {
+    if (!defaultValue?.length) {
+      return
+    }
+    // Delete default value for options fields if the option is no longer available
+    if (type === FieldType.OPTIONS && !options.includes(defaultValue)) {
+      delete editableColumn.default
+    }
+    // Filter array default values to only valid options
+    if (type === FieldType.ARRAY) {
+      editableColumn.default = defaultValue.filter(x => options.includes(x))
+    }
+  }
+
   onMount(() => {
     mounted = true
   })
@@ -554,13 +595,13 @@
       on:input={e => {
         if (
           !uneditable &&
-          !(linkEditDisabled && editableColumn.type === LINK_TYPE)
+          !(linkEditDisabled && editableColumn.type === FieldType.LINK)
         ) {
           editableColumn.name = e.target.value
         }
       }}
       disabled={uneditable ||
-        (linkEditDisabled && editableColumn.type === LINK_TYPE)}
+        (linkEditDisabled && editableColumn.type === FieldType.LINK)}
       error={errors?.name}
     />
   {/if}
@@ -574,7 +615,7 @@
     getOptionValue={field => field.fieldId}
     getOptionIcon={field => field.icon}
     isOptionEnabled={option => {
-      if (option.type === AUTO_TYPE) {
+      if (option.type === FieldType.AUTO) {
         return availableAutoColumnKeys?.length > 0
       }
       return true
@@ -617,7 +658,7 @@
       bind:optionColors={editableColumn.optionColors}
       bind:valid={optionsValid}
     />
-  {:else if editableColumn.type === DATE_TYPE && !editableColumn.autocolumn}
+  {:else if editableColumn.type === FieldType.DATETIME && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">
         <Label size="M">Earliest</Label>
@@ -704,7 +745,7 @@
       {tableOptions}
       {errors}
     />
-  {:else if editableColumn.type === FORMULA_TYPE}
+  {:else if editableColumn.type === FieldType.FORMULA}
     {#if !externalTable}
       <div class="split-label">
         <div class="label-length">
@@ -747,12 +788,19 @@
         />
       </div>
     </div>
-  {:else if editableColumn.type === JSON_TYPE}
-    <Button primary text on:click={openJsonSchemaEditor}
-      >Open schema editor</Button
-    >
+  {:else if editableColumn.type === FieldType.AI}
+    <AIFieldConfiguration
+      aiField={editableColumn}
+      context={rowGoldenSample}
+      bindings={getBindings({ table })}
+      schema={table.schema}
+    />
+  {:else if editableColumn.type === FieldType.JSON}
+    <Button primary text on:click={openJsonSchemaEditor}>
+      Open schema editor
+    </Button>
   {/if}
-  {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
+  {#if editableColumn.type === FieldType.AUTO || editableColumn.autocolumn}
     <Select
       label="Auto column type"
       value={editableColumn.subtype}
@@ -779,27 +827,51 @@
     </div>
   {/if}
 
-  {#if canHaveDefault}
-    <div>
-      <ModalBindableInput
-        panel={ServerBindingPanel}
-        title="Default"
-        label="Default"
+  {#if defaultValuesEnabled}
+    {#if editableColumn.type === FieldType.OPTIONS}
+      <Select
+        disabled={!canHaveDefault}
+        options={editableColumn.constraints?.inclusion || []}
+        label="Default value"
         value={editableColumn.default}
-        on:change={e => {
-          editableColumn = {
-            ...editableColumn,
-            default: e.detail,
-          }
-
-          if (e.detail) {
-            setRequired(false)
-          }
-        }}
+        on:change={e => (editableColumn.default = e.detail)}
+        placeholder="None"
+      />
+    {:else if editableColumn.type === FieldType.ARRAY}
+      <Multiselect
+        disabled={!canHaveDefault}
+        options={editableColumn.constraints?.inclusion || []}
+        label="Default value"
+        value={editableColumn.default}
+        on:change={e =>
+          (editableColumn.default = e.detail?.length ? e.detail : undefined)}
+        placeholder="None"
+      />
+    {:else if editableColumn.subtype === BBReferenceFieldSubType.USER}
+      {@const defaultValue =
+        editableColumn.type === FieldType.BB_REFERENCE_SINGLE
+          ? SingleUserDefault
+          : MultiUserDefault}
+      <Toggle
+        disabled={!canHaveDefault}
+        text="Default to current user"
+        value={editableColumn.default === defaultValue}
+        on:change={e =>
+          (editableColumn.default = e.detail ? defaultValue : undefined)}
+      />
+    {:else}
+      <ModalBindableInput
+        disabled={!canHaveDefault}
+        panel={ServerBindingPanel}
+        title="Default value"
+        label="Default value"
+        placeholder="None"
+        value={editableColumn.default}
+        on:change={e => (editableColumn.default = e.detail)}
         bindings={defaultValueBindings}
         allowJS
       />
-    </div>
+    {/if}
   {/if}
 </Layout>
 

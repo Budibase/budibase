@@ -126,15 +126,15 @@ export type ActionImplementations<T extends Hosting> = {
     n8nStepInputs,
     ExternalAppStepOutputs
   >
+  [AutomationActionStepId.OPENAI]: ActionImplementation<
+    OpenAIStepInputs,
+    OpenAIStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
         BashStepInputs,
         BashStepOutputs
-      >
-      [AutomationActionStepId.OPENAI]: ActionImplementation<
-        OpenAIStepInputs,
-        OpenAIStepOutputs
       >
     }
   : {})

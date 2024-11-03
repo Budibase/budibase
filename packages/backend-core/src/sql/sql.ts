@@ -179,12 +179,6 @@ class InternalBuilder {
     return this.table.schema[column]
   }
 
-  private supportsILike(): boolean {
-    return !(
-      this.client === SqlClient.ORACLE || this.client === SqlClient.SQL_LITE
-    )
-  }
-
   private quoteChars(): [string, string] {
     const wrapped = this.knexClient.wrapIdentifier("foo", {})
     return [wrapped[0], wrapped[wrapped.length - 1]]
@@ -216,8 +210,30 @@ class InternalBuilder {
     return formatter.wrap(value, false)
   }
 
-  private rawQuotedValue(value: string): Knex.Raw {
-    return this.knex.raw(this.quotedValue(value))
+  private castIntToString(identifier: string | Knex.Raw): Knex.Raw {
+    switch (this.client) {
+      case SqlClient.ORACLE: {
+        return this.knex.raw("to_char(??)", [identifier])
+      }
+      case SqlClient.POSTGRES: {
+        return this.knex.raw("??::TEXT", [identifier])
+      }
+      case SqlClient.MY_SQL:
+      case SqlClient.MARIADB: {
+        return this.knex.raw("CAST(?? AS CHAR)", [identifier])
+      }
+      case SqlClient.SQL_LITE: {
+        // Technically sqlite can actually represent numbers larger than a 64bit
+        // int as a string, but it does it using scientific notation (e.g.
+        // "1e+20") which is not what we want. Given that the external SQL
+        // databases are limited to supporting only 64bit ints, we settle for
+        // that here.
+        return this.knex.raw("printf('%d', ??)", [identifier])
+      }
+      case SqlClient.MS_SQL: {
+        return this.knex.raw("CONVERT(NVARCHAR, ??)", [identifier])
+      }
+    }
   }
 
   // Unfortuantely we cannot rely on knex's identifier escaping because it trims
@@ -512,7 +528,7 @@ class InternalBuilder {
         if (!matchesTableName) {
           updatedKey = filterKey.replace(
             new RegExp(`^${relationship.column}.`),
-            `${aliases![relationship.tableName]}.`
+            `${aliases?.[relationship.tableName] || relationship.tableName}.`
           )
         } else {
           updatedKey = filterKey
@@ -1074,24 +1090,36 @@ class InternalBuilder {
             )
           }
         } else {
-          query = query.count(`* as ${aggregation.name}`)
+          if (this.client === SqlClient.ORACLE) {
+            const field = this.convertClobs(`${tableName}.${aggregation.field}`)
+            query = query.select(
+              this.knex.raw(`COUNT(??) as ??`, [field, aggregation.name])
+            )
+          } else {
+            query = query.count(`${aggregation.field} as ${aggregation.name}`)
+          }
         }
       } else {
-        const field = `${tableName}.${aggregation.field} as ${aggregation.name}`
-        switch (op) {
-          case CalculationType.SUM:
-            query = query.sum(field)
-            break
-          case CalculationType.AVG:
-            query = query.avg(field)
-            break
-          case CalculationType.MIN:
-            query = query.min(field)
-            break
-          case CalculationType.MAX:
-            query = query.max(field)
-            break
+        const fieldSchema = this.getFieldSchema(aggregation.field)
+        if (!fieldSchema) {
+          // This should not happen in practice.
+          throw new Error(
+            `field schema missing for aggregation target: ${aggregation.field}`
+          )
         }
+
+        let aggregate = this.knex.raw("??(??)", [
+          this.knex.raw(op),
+          this.rawQuotedIdentifier(`${tableName}.${aggregation.field}`),
+        ])
+
+        if (fieldSchema.type === FieldType.BIGINT) {
+          aggregate = this.castIntToString(aggregate)
+        }
+
+        query = query.select(
+          this.knex.raw("?? as ??", [aggregate, aggregation.name])
+        )
       }
     }
     return query
@@ -1434,7 +1462,8 @@ class InternalBuilder {
           schema.constraints?.presence === true ||
           schema.type === FieldType.FORMULA ||
           schema.type === FieldType.AUTO ||
-          schema.type === FieldType.LINK
+          schema.type === FieldType.LINK ||
+          schema.type === FieldType.AI
         ) {
           continue
         }
@@ -1556,7 +1585,7 @@ class InternalBuilder {
     query = this.addFilters(query, filters, { relationship: true })
 
     // handle relationships with a CTE for all others
-    if (relationships?.length) {
+    if (relationships?.length && aggregations.length === 0) {
       const mainTable =
         this.query.tableAliases?.[this.query.endpoint.entityId] ||
         this.query.endpoint.entityId
@@ -1571,10 +1600,8 @@ class InternalBuilder {
       // add JSON aggregations attached to the CTE
       return this.addJsonRelationships(cte, tableName, relationships)
     }
-    // no relationships found - return query
-    else {
-      return query
-    }
+
+    return query
   }
 
   update(opts: QueryOptions): Knex.QueryBuilder {

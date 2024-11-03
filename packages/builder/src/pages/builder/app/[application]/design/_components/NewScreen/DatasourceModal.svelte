@@ -1,11 +1,11 @@
 <script>
-  import { Body, ModalContent, Layout, notifications } from "@budibase/bbui"
+  import { Body, ModalContent, Layout } from "@budibase/bbui"
   import { datasources as datasourcesStore } from "stores/builder"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "constants"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import TableOrViewOption from "./TableOrViewOption.svelte"
-  import * as format from "helpers/data/format"
+  import { makeTableOption, makeViewOption } from "./utils"
 
   export let onConfirm
   export let selectedTablesAndViews
@@ -16,17 +16,10 @@
     const views = Object.values(table.views || {}).filter(
       view => view.version === 2
     )
-
-    return views.map(view => ({
-      icon: "Remove",
-      name: view.name,
-      id: view.id,
-      tableSelectFormat: format.tableSelect.viewV2(view),
-      datasourceSelectFormat: format.datasourceSelect.viewV2(view),
-    }))
+    return views.map(makeViewOption)
   }
 
-  const getTablesAndViews = datasource => {
+  const getTablesAndViews = (datasource, datasources) => {
     let tablesAndViews = []
     const tables = Array.isArray(datasource.entities)
       ? datasource.entities
@@ -37,16 +30,7 @@
         continue
       }
 
-      const formattedTable = {
-        icon: "Table",
-        name: table.name,
-        id: table._id,
-        tableSelectFormat: format.tableSelect.table(table),
-        datasourceSelectFormat: format.datasourceSelect.table(
-          table,
-          $datasourcesStore.list
-        ),
-      }
+      const formattedTable = makeTableOption(table, datasources)
 
       tablesAndViews = tablesAndViews.concat([
         formattedTable,
@@ -71,7 +55,7 @@
       const datasource = {
         name: rawDatasource.name,
         iconComponent: ICONS[rawDatasource.source],
-        tablesAndViews: getTablesAndViews(rawDatasource),
+        tablesAndViews: getTablesAndViews(rawDatasource, rawDatasources),
       }
 
       datasources.push(datasource)
@@ -85,14 +69,6 @@
   const toggleSelection = tableOrView => {
     dispatch("toggle", tableOrView)
   }
-
-  onMount(async () => {
-    try {
-      await datasourcesStore.fetch()
-    } catch (error) {
-      notifications.error("Error fetching datasources")
-    }
-  })
 </script>
 
 <ModalContent

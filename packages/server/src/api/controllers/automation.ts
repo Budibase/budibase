@@ -76,16 +76,8 @@ export async function update(ctx: UserCtx) {
 }
 
 export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {
-  const query: { enrich?: string } = ctx.request.query || {}
-  const enrich = query.enrich === "true"
-
   const automations = await sdk.automations.fetch()
   ctx.body = { automations }
-  if (enrich) {
-    ctx.body.builderData = await sdk.automations.utils.getBuilderData(
-      automations
-    )
-  }
 }
 
 export async function find(ctx: UserCtx) {
