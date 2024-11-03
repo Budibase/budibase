@@ -1,5 +1,4 @@
 import semver from "semver"
-import { BuiltinPermissionID, PermissionLevel } from "./permissions"
 import {
   prefixRoleID,
   getRoleParams,
@@ -14,10 +13,13 @@ import {
   RoleUIMetadata,
   Database,
   App,
+  BuiltinPermissionID,
+  PermissionLevel,
 } from "@budibase/types"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { RoleColor, helpers } from "@budibase/shared-core"
 import { uniqBy } from "lodash"
+import { default as env } from "../environment"
 
 export const BUILTIN_ROLE_IDS = {
   ADMIN: "ADMIN",
@@ -50,7 +52,7 @@ export class Role implements RoleDoc {
   _id: string
   _rev?: string
   name: string
-  permissionId: string
+  permissionId: BuiltinPermissionID
   inherits?: string | string[]
   version?: string
   permissions: Record<string, PermissionLevel[]> = {}
@@ -59,7 +61,7 @@ export class Role implements RoleDoc {
   constructor(
     id: string,
     name: string,
-    permissionId: string,
+    permissionId: BuiltinPermissionID,
     uiMetadata?: RoleUIMetadata
   ) {
     this._id = id
@@ -213,6 +215,22 @@ export function getBuiltinRole(roleId: string): Role | undefined {
   return cloneDeep(role)
 }
 
+export function validInherits(
+  allRoles: RoleDoc[],
+  inherits?: string | string[]
+): boolean {
+  if (!inherits) {
+    return false
+  }
+  const find = (id: string) => allRoles.find(r => roleIDsAreEqual(r._id!, id))
+  if (Array.isArray(inherits)) {
+    const filtered = inherits.filter(roleId => find(roleId))
+    return inherits.length !== 0 && filtered.length === inherits.length
+  } else {
+    return !!find(inherits)
+  }
+}
+
 /**
  * Works through the inheritance ranks to see how far up the builtin stack this ID is.
  */
@@ -220,8 +238,8 @@ export function builtinRoleToNumber(id: string) {
   const builtins = getBuiltinRoles()
   const MAX = Object.values(builtins).length + 1
   if (
-    compareRoleIds(id, BUILTIN_IDS.ADMIN) ||
-    compareRoleIds(id, BUILTIN_IDS.BUILDER)
+    roleIDsAreEqual(id, BUILTIN_IDS.ADMIN) ||
+    roleIDsAreEqual(id, BUILTIN_IDS.BUILDER)
   ) {
     return MAX
   }
@@ -260,7 +278,7 @@ export async function roleToNumber(id: string) {
       const highestBuiltin: number | undefined = role.inherits
         .map(roleId => {
           const foundRole = hierarchy.find(role =>
-            compareRoleIds(role._id!, roleId)
+            roleIDsAreEqual(role._id!, roleId)
           )
           if (foundRole) {
             return findNumber(foundRole) + 1
@@ -295,7 +313,7 @@ export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
     : roleId1
 }
 
-export function compareRoleIds(roleId1: string, roleId2: string) {
+export function roleIDsAreEqual(roleId1: string, roleId2: string) {
   // make sure both role IDs are prefixed correctly
   return prefixRoleID(roleId1) === prefixRoleID(roleId2)
 }
@@ -328,7 +346,7 @@ export function findRole(
     roleId = prefixRoleID(roleId)
   }
   const dbRole = roles.find(
-    role => role._id && compareRoleIds(role._id, roleId)
+    role => role._id && roleIDsAreEqual(role._id, roleId)
   )
   if (!dbRole && !isBuiltin(roleId) && opts?.defaultPublic) {
     return cloneDeep(BUILTIN_ROLES.PUBLIC)
@@ -385,7 +403,7 @@ async function getAllUserRoles(
 ): Promise<RoleDoc[]> {
   const allRoles = await getAllRoles()
   // admins have access to all roles
-  if (compareRoleIds(userRoleId, BUILTIN_IDS.ADMIN)) {
+  if (roleIDsAreEqual(userRoleId, BUILTIN_IDS.ADMIN)) {
     return allRoles
   }
 
@@ -497,7 +515,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
     for (let builtinRoleId of externalBuiltinRoles) {
       const builtinRole = builtinRoles[builtinRoleId]
       const dbBuiltin = roles.filter(dbRole =>
-        compareRoleIds(dbRole._id!, builtinRoleId)
+        roleIDsAreEqual(dbRole._id!, builtinRoleId)
       )[0]
       if (dbBuiltin == null) {
         roles.push(builtinRole || builtinRoles.BASIC)
@@ -537,7 +555,10 @@ async function shouldIncludePowerRole(db: Database) {
     return true
   }
 
-  const isGreaterThan3x = semver.gte(creationVersion, "3.0.0")
+  const isGreaterThan3x = semver.gte(
+    creationVersion,
+    env.MIN_VERSION_WITHOUT_POWER_ROLE
+  )
   return !isGreaterThan3x
 }
 
@@ -553,9 +574,9 @@ export class AccessController {
     if (
       tryingRoleId == null ||
       tryingRoleId === "" ||
-      compareRoleIds(tryingRoleId, BUILTIN_IDS.BUILDER) ||
-      compareRoleIds(userRoleId!, tryingRoleId) ||
-      compareRoleIds(userRoleId!, BUILTIN_IDS.BUILDER)
+      roleIDsAreEqual(tryingRoleId, BUILTIN_IDS.BUILDER) ||
+      roleIDsAreEqual(userRoleId!, tryingRoleId) ||
+      roleIDsAreEqual(userRoleId!, BUILTIN_IDS.BUILDER)
     ) {
       return true
     }
@@ -566,7 +587,7 @@ export class AccessController {
     }
 
     return (
-      roleIds?.find(roleId => compareRoleIds(roleId, tryingRoleId)) !==
+      roleIds?.find(roleId => roleIDsAreEqual(roleId, tryingRoleId)) !==
       undefined
     )
   }

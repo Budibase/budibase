@@ -2,16 +2,23 @@ import _ from "lodash"
 import tk from "timekeeper"
 
 import {
+  context,
+  DEFAULT_BB_DATASOURCE_ID,
+  roles,
+} from "@budibase/backend-core"
+import { automations } from "@budibase/pro"
+import {
   CreateRowActionRequest,
   DocumentType,
   PermissionLevel,
   RowActionResponse,
+  TableRowActions,
 } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { Expectations } from "../../../tests/utilities/api/base"
-import { roles } from "@budibase/backend-core"
-import { automations } from "@budibase/pro"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import { generateRowActionsID } from "../../../db/utils"
 
 const expectAutomationId = () =>
   expect.stringMatching(`^${DocumentType.AUTOMATION}_.+`)
@@ -324,129 +331,6 @@ describe("/rowsActions", () => {
       const response = await config.api.rowAction.find(tableId)
       expect(response).toEqual({
         actions: {},
-      })
-    })
-  })
-
-  describe("update", () => {
-    unauthorisedTests((expectations, testConfig) =>
-      config.api.rowAction.update(
-        tableId,
-        generator.guid(),
-        createRowActionRequest(),
-        expectations,
-        testConfig
-      )
-    )
-
-    it("can update existing actions", async () => {
-      for (const rowAction of createRowActionRequests(3)) {
-        await createRowAction(tableId, rowAction)
-      }
-
-      const persisted = await config.api.rowAction.find(tableId)
-
-      const [actionId, actionData] = _.sample(
-        Object.entries(persisted.actions)
-      )!
-
-      const updatedName = generator.string()
-
-      const res = await config.api.rowAction.update(tableId, actionId, {
-        name: updatedName,
-      })
-
-      expect(res).toEqual({
-        id: actionId,
-        tableId,
-        name: updatedName,
-        automationId: actionData.automationId,
-        allowedSources: [tableId],
-      })
-
-      expect(await config.api.rowAction.find(tableId)).toEqual(
-        expect.objectContaining({
-          actions: expect.objectContaining({
-            [actionId]: {
-              name: updatedName,
-              id: actionData.id,
-              tableId: actionData.tableId,
-              automationId: actionData.automationId,
-              allowedSources: [tableId],
-            },
-          }),
-        })
-      )
-    })
-
-    it("trims row action names", async () => {
-      const rowAction = await createRowAction(tableId, createRowActionRequest())
-
-      const res = await config.api.rowAction.update(tableId, rowAction.id, {
-        name: "   action  name  ",
-      })
-
-      expect(res).toEqual(expect.objectContaining({ name: "action  name" }))
-
-      expect(await config.api.rowAction.find(tableId)).toEqual(
-        expect.objectContaining({
-          actions: expect.objectContaining({
-            [rowAction.id]: expect.objectContaining({
-              name: "action  name",
-            }),
-          }),
-        })
-      )
-    })
-
-    it("throws Bad Request when trying to update by a non-existing id", async () => {
-      await createRowAction(tableId, createRowActionRequest())
-
-      await config.api.rowAction.update(
-        tableId,
-        generator.guid(),
-        createRowActionRequest(),
-        { status: 400 }
-      )
-    })
-
-    it("throws Bad Request when trying to update by a via another table id", async () => {
-      const otherTable = await config.api.table.save(
-        setup.structures.basicTable()
-      )
-      await createRowAction(otherTable._id!, createRowActionRequest())
-
-      const action = await createRowAction(tableId, createRowActionRequest())
-      await config.api.rowAction.update(
-        otherTable._id!,
-        action.id,
-        createRowActionRequest(),
-        { status: 400 }
-      )
-    })
-
-    it("can not use existing row action names (for the same table)", async () => {
-      const action1 = await createRowAction(tableId, createRowActionRequest())
-      const action2 = await createRowAction(tableId, createRowActionRequest())
-
-      await config.api.rowAction.update(
-        tableId,
-        action1.id,
-        { name: action2.name },
-        {
-          status: 409,
-          body: {
-            message: "A row action with the same name already exists.",
-          },
-        }
-      )
-    })
-
-    it("does not throw with name conflicts for the same row action", async () => {
-      const action1 = await createRowAction(tableId, createRowActionRequest())
-
-      await config.api.rowAction.update(tableId, action1.id, {
-        name: action1.name,
       })
     })
   })
@@ -777,6 +661,8 @@ describe("/rowsActions", () => {
             inputs: null,
             outputs: {
               fields: {},
+              id: rowId,
+              revision: (await config.api.row.get(tableId, rowId))._rev,
               row: await config.api.row.get(tableId, rowId),
               table: {
                 ...(await config.api.table.get(tableId)),
@@ -1079,9 +965,74 @@ describe("/rowsActions", () => {
       // document was not being cleaned up. This meant there existed code paths
       // that would find it and try to reference the tables within it, resulting
       // in errors.
-      await config.api.automation.fetchEnriched({
+      await config.api.automation.fetch({
         status: 200,
       })
     })
+
+    it.each([
+      [
+        "internal",
+        async () => {
+          await config.newTenant()
+          await config.api.application.addSampleData(config.getAppId())
+          const tables = await config.api.table.fetch()
+          const table = tables.find(
+            t => t.sourceId === DEFAULT_BB_DATASOURCE_ID
+          )!
+          return table
+        },
+      ],
+      [
+        "external",
+        async () => {
+          await config.newTenant()
+          const ds = await config.createDatasource({
+            datasource: await getDatasource(DatabaseName.POSTGRES),
+          })
+          const table = await config.api.table.save(
+            setup.structures.tableForDatasource(ds)
+          )
+          return table
+        },
+      ],
+    ])(
+      "should delete all the row actions (and automations) for its tables when a datasource is deleted",
+      async (_, getTable) => {
+        async function getRowActionsFromDb(tableId: string) {
+          return await context.doInAppContext(config.getAppId(), async () => {
+            const db = context.getAppDB()
+            const tableDoc = await db.tryGet<TableRowActions>(
+              generateRowActionsID(tableId)
+            )
+            return tableDoc
+          })
+        }
+
+        const table = await getTable()
+        const tableId = table._id!
+
+        await config.api.rowAction.save(tableId, {
+          name: generator.guid(),
+        })
+        await config.api.rowAction.save(tableId, {
+          name: generator.guid(),
+        })
+
+        const { actions } = (await getRowActionsFromDb(tableId))!
+        expect(Object.entries(actions)).toHaveLength(2)
+
+        const { automations } = await config.api.automation.fetch()
+        expect(automations).toHaveLength(2)
+
+        const datasource = await config.api.datasource.get(table.sourceId)
+        await config.api.datasource.delete(datasource)
+
+        const automationsResp = await config.api.automation.fetch()
+        expect(automationsResp.automations).toHaveLength(0)
+
+        expect(await getRowActionsFromDb(tableId)).toBeUndefined()
+      }
+    )
   })
 })

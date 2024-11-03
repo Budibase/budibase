@@ -18,6 +18,7 @@ import {
 
 import * as setup from "./utilities"
 import {
+  AIOperationEnum,
   AutoFieldSubType,
   BBReferenceFieldSubType,
   Datasource,
@@ -43,10 +44,22 @@ import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
 import { dataFilters } from "@budibase/shared-core"
 import { Knex } from "knex"
-import { generator, structures } from "@budibase/backend-core/tests"
+import { generator, structures, mocks } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
 import { cloneDeep } from "lodash/fp"
+
+jest.mock("@budibase/pro", () => ({
+  ...jest.requireActual("@budibase/pro"),
+  ai: {
+    LargeLanguageModel: {
+      forCurrentTenant: async () => ({
+        run: jest.fn(() => `Mock LLM Response`),
+        buildPromptFromAIOperation: jest.fn(),
+      }),
+    },
+  },
+}))
 
 describe.each([
   ["in-memory", undefined],
@@ -1630,6 +1643,79 @@ describe.each([
                 { timeid: NULL_TIME__ID },
               ])
             })
+          })
+        })
+      })
+
+    isSqs &&
+      describe("AI Column", () => {
+        const UNEXISTING_AI_COLUMN = "Real LLM Response"
+
+        beforeAll(async () => {
+          mocks.licenses.useBudibaseAI()
+          mocks.licenses.useAICustomConfigs()
+
+          tableOrViewId = await createTableOrView({
+            product: { name: "product", type: FieldType.STRING },
+            ai: {
+              name: "AI",
+              type: FieldType.AI,
+              operation: AIOperationEnum.PROMPT,
+              prompt: "Translate '{{ product }}' into German",
+            },
+          })
+
+          await createRows([{ product: "Big Mac" }, { product: "McCrispy" }])
+        })
+
+        describe("equal", () => {
+          it("successfully finds rows based on AI column", async () => {
+            await expectQuery({
+              equal: { ai: "Mock LLM Response" },
+            }).toContainExactly([
+              { product: "Big Mac" },
+              { product: "McCrispy" },
+            ])
+          })
+
+          it("fails to find nonexistent row", async () => {
+            await expectQuery({
+              equal: { ai: UNEXISTING_AI_COLUMN },
+            }).toFindNothing()
+          })
+        })
+
+        describe("notEqual", () => {
+          it("Returns nothing when searching notEqual on the mock AI response", async () => {
+            await expectQuery({
+              notEqual: { ai: "Mock LLM Response" },
+            }).toContainExactly([])
+          })
+
+          it("return all when requesting non-existing response", async () => {
+            await expectQuery({
+              notEqual: { ai: "Real LLM Response" },
+            }).toContainExactly([
+              { product: "Big Mac" },
+              { product: "McCrispy" },
+            ])
+          })
+        })
+
+        describe("oneOf", () => {
+          it("successfully finds a row", async () => {
+            await expectQuery({
+              oneOf: { ai: ["Mock LLM Response", "Other LLM Response"] },
+            }).toContainExactly([
+              { product: "Big Mac" },
+              { product: "McCrispy" },
+            ])
+          })
+
+          it("fails to find nonexistent row", async () => {
+            await expectQuery({
+              oneOf: { ai: ["Whopper"] },
+            }).toFindNothing()
           })
         })
       })

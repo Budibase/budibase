@@ -233,6 +233,14 @@
     )
     dispatch("change", result)
   }
+
+  /**
+   * Converts arrays into strings. The CodeEditor expects a string or encoded JS
+   * @param{object} fieldValue
+   */
+  const drawerValue = fieldValue => {
+    return Array.isArray(fieldValue) ? fieldValue.join(",") : fieldValue
+  }
 </script>
 
 {#each schemaFields || [] as [field, schema]}
@@ -257,7 +265,7 @@
             panel={AutomationBindingPanel}
             type={schema.type}
             {schema}
-            value={editableRow[field]}
+            value={drawerValue(editableRow[field])}
             on:change={e =>
               onChange({
                 row: {

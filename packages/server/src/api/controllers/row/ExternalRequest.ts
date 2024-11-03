@@ -161,7 +161,8 @@ function isEditableColumn(column: FieldSchema) {
     column.autoReason !== AutoReason.FOREIGN_KEY &&
     column.subtype !== AutoFieldSubType.AUTO_ID
   const isFormula = column.type === FieldType.FORMULA
-  return !(isExternalAutoColumn || isFormula)
+  const isAIColumn = column.type === FieldType.AI
+  return !(isExternalAutoColumn || isFormula || isAIColumn)
 }
 
 export class ExternalRequest<T extends Operation> {
@@ -681,7 +682,19 @@ export class ExternalRequest<T extends Operation> {
     filters = this.prepareFilters(id, filters || {}, table)
     const relationships = buildExternalRelationships(table, this.tables)
 
+    let aggregations: Aggregation[] = []
+    if (sdk.views.isView(this.source)) {
+      const calculationFields = helpers.views.calculationFields(this.source)
+      for (const [key, field] of Object.entries(calculationFields)) {
+        aggregations.push({
+          ...field,
+          name: key,
+        })
+      }
+    }
+
     const incRelationships =
+      aggregations.length === 0 &&
       config.includeSqlRelationships === IncludeRelationship.INCLUDE
 
     // clean up row on ingress using schema
@@ -706,17 +719,6 @@ export class ExternalRequest<T extends Operation> {
       (filters == null || Object.keys(filters).length === 0)
     ) {
       throw "Deletion must be filtered"
-    }
-
-    let aggregations: Aggregation[] = []
-    if (sdk.views.isView(this.source)) {
-      const calculationFields = helpers.views.calculationFields(this.source)
-      for (const [key, field] of Object.entries(calculationFields)) {
-        aggregations.push({
-          ...field,
-          name: key,
-        })
-      }
     }
 
     let json: QueryJson = {

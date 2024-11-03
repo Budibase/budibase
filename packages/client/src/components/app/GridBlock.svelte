@@ -3,6 +3,7 @@
   // because it functions similarly to one
   import { getContext, onMount } from "svelte"
   import { get, derived, readable } from "svelte/store"
+  import { featuresStore } from "stores"
   import { Grid } from "@budibase/frontend-core"
 
   // table is actually any datasource, but called table for legacy compatibility
@@ -19,6 +20,8 @@
   export let columns = null
   export let onRowClick = null
   export let buttons = null
+  export let buttonsCollapsed = false
+  export let buttonsCollapsedText = null
 
   const context = getContext("context")
   const component = getContext("component")
@@ -57,8 +60,11 @@
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
-    const rows = get(grid?.getContext()?.rows)
-    const goldenRow = generateGoldenSample(rows)
+    const gridContext = grid?.getContext()
+    const rows = get(gridContext?.rows) || []
+    const clean = gridContext?.rows.actions.cleanRow || (x => x)
+    const cleaned = rows.map(clean)
+    const goldenRow = generateGoldenSample(cleaned)
     const id = get(component).id
     return {
       // Not sure what this one is for...
@@ -181,7 +187,10 @@
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
     buttons={enrichedButtons}
+    {buttonsCollapsed}
+    {buttonsCollapsedText}
     isCloud={$environmentStore.cloud}
+    aiEnabled={$featuresStore.aiEnabled}
     on:rowclick={e => onRowClick?.({ row: e.detail })}
   />
 </div>

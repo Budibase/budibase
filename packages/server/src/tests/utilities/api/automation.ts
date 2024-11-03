@@ -23,17 +23,6 @@ export class AutomationAPI extends TestAPI {
     })
   }
 
-  fetchEnriched = async (
-    expectations?: Expectations
-  ): Promise<FetchAutomationResponse> => {
-    return await this._get<FetchAutomationResponse>(
-      `/api/automations?enrich=true`,
-      {
-        expectations,
-      }
-    )
-  }
-
   post = async (
     body: Automation,
     expectations?: Expectations

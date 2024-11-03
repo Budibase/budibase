@@ -1,43 +1,17 @@
-import { helpers } from "@budibase/shared-core"
-import { TypeIconMap } from "../../../constants"
-
-// We can't use "-" as a separator as this can be present in the ID
-// or column name, so we use something very unusual to avoid this problem
-const JOINING_CHARACTER = "‽‽"
+import { GeneratedIDPrefix, CellIDSeparator } from "./constants"
+import { Helpers } from "@budibase/bbui"
 
 export const parseCellID = cellId => {
   if (!cellId) {
     return { rowId: undefined, field: undefined }
   }
-  const parts = cellId.split(JOINING_CHARACTER)
+  const parts = cellId.split(CellIDSeparator)
   const field = parts.pop()
-  return { rowId: parts.join(JOINING_CHARACTER), field }
+  return { rowId: parts.join(CellIDSeparator), field }
 }
 
 export const getCellID = (rowId, fieldName) => {
-  return `${rowId}${JOINING_CHARACTER}${fieldName}`
-}
-
-export const getColumnIcon = column => {
-  if (column.schema.icon) {
-    return column.schema.icon
-  }
-
-  if (column.schema.autocolumn) {
-    return "MagicWand"
-  }
-
-  if (helpers.schema.isDeprecatedSingleUserColumn(column.schema)) {
-    return "User"
-  }
-
-  const { type, subtype } = column.schema
-  const result =
-    typeof TypeIconMap[type] === "object" && subtype
-      ? TypeIconMap[type][subtype]
-      : TypeIconMap[type]
-
-  return result || "Text"
+  return `${rowId}${CellIDSeparator}${fieldName}`
 }
 
 export const parseEventLocation = e => {
@@ -45,4 +19,12 @@ export const parseEventLocation = e => {
     x: e.clientX ?? e.touches?.[0]?.clientX,
     y: e.clientY ?? e.touches?.[0]?.clientY,
   }
+}
+
+export const generateRowID = () => {
+  return `${GeneratedIDPrefix}${Helpers.uuid()}`
+}
+
+export const isGeneratedRowID = id => {
+  return id?.startsWith(GeneratedIDPrefix)
 }
