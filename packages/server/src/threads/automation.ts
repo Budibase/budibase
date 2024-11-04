@@ -516,6 +516,7 @@ class Orchestrator {
       const condition = await this.evaluateBranchCondition(branch.condition)
       if (condition) {
         const branchStatus = {
+          branchName: branch.name,
           status: `${branch.name} branch taken`,
           branchId: `${branch.id}`,
           success: true,
@@ -528,6 +529,7 @@ class Orchestrator {
           branchStatus
         )
         this.context.steps[this.context.steps.length] = branchStatus
+        this.context.stepsById[branchStep.id] = branchStatus
 
         const branchSteps = children?.[branch.id] || []
         // A final +1 to accomodate the branch step itself
