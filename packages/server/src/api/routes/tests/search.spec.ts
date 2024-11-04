@@ -71,8 +71,8 @@ describe.each([
 ])("search (%s)", (name, dsProvider) => {
   const isInMemory = name === "in-memory"
   const isInternal = !dsProvider
-  const isSql = !isInMemory
   const isOracle = name === DatabaseName.ORACLE
+  const isSql = !isInMemory
   const config = setup.getConfig()
 
   let datasource: Datasource | undefined
@@ -1619,6 +1619,7 @@ describe.each([
       })
 
     isInternal &&
+      !isInMemory &&
       describe("AI Column", () => {
         const UNEXISTING_AI_COLUMN = "Real LLM Response"
 
@@ -3545,7 +3546,6 @@ describe.each([
       })
 
     !isInternal &&
-      !isInMemory &&
       describe("SQL injection", () => {
         const badStrings = [
           "1; DROP TABLE %table_name%;",
