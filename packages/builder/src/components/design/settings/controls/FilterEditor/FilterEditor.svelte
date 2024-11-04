@@ -5,7 +5,6 @@
     Button,
     Drawer,
     DrawerContent,
-    Helpers,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
