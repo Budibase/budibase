@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { flags } from "stores/builder"
-  import { licensing } from "stores/portal"
+  import { featureFlags } from "stores/portal"
   import { API } from "api"
   import MagicWand from "../../../../assets/MagicWand.svelte"
 
@@ -26,8 +26,7 @@
   let aiCronPrompt = ""
   let loadingAICronExpression = false
 
-  $: aiEnabled =
-    $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
+  $: aiEnabled = $featureFlags.AI_CUSTOM_CONFIGS || $featureFlags.BUDIBASE_AI
   $: {
     if (cronExpression) {
       try {

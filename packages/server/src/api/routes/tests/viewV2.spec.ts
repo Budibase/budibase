@@ -27,15 +27,23 @@ import {
   ViewV2Schema,
   ViewV2Type,
   JsonTypes,
+  EmptyFilterOption,
+  JsonFieldSubType,
+  UISearchFilter,
+  LegacyFilter,
+  SearchViewRowRequest,
+  ArrayOperator,
+  UILogicalOperator,
+  SearchFilters,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { db, roles, features } from "@budibase/backend-core"
+import { db, roles, features, context } from "@budibase/backend-core"
 
 describe.each([
-  ["internal", undefined],
+  ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
@@ -43,10 +51,11 @@ describe.each([
   [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/v2/views (%s)", (name, dsProvider) => {
   const config = setup.getConfig()
-  const isInternal = name === "internal"
+  const isInternal = name === "sqs"
 
   let table: Table
-  let datasource: Datasource
+  let rawDatasource: Datasource | undefined
+  let datasource: Datasource | undefined
 
   function saveTableRequest(
     ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
@@ -94,9 +103,11 @@ describe.each([
 
   beforeAll(async () => {
     await config.init()
+
     if (dsProvider) {
+      rawDatasource = await dsProvider
       datasource = await config.createDatasource({
-        datasource: await dsProvider,
+        datasource: rawDatasource,
       })
     }
     table = await config.api.table.save(priceTable())
@@ -131,6 +142,71 @@ describe.each([
       })
 
       it("can persist views with all fields", async () => {
+        const newView: Required<Omit<CreateViewRequest, "query" | "type">> = {
+          name: generator.name(),
+          tableId: table._id!,
+          primaryDisplay: "id",
+          queryUI: {
+            groups: [
+              {
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "field",
+                    value: "value",
+                  },
+                ],
+              },
+            ],
+          },
+          sort: {
+            field: "fieldToSort",
+            order: SortOrder.DESCENDING,
+            type: SortType.STRING,
+          },
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
+            },
+          },
+        }
+        const res = await config.api.viewV2.create(newView)
+
+        const expected: ViewV2 = {
+          ...newView,
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
+            },
+          },
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            $and: {
+              conditions: [
+                {
+                  $and: {
+                    conditions: [
+                      {
+                        equal: {
+                          field: "value",
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          id: expect.any(String),
+          version: 2,
+        }
+
+        expect(res).toEqual(expected)
+      })
+
+      it("can create a view with just a query field, no queryUI, for backwards compatibility", async () => {
         const newView: Required<Omit<CreateViewRequest, "queryUI" | "type">> = {
           name: generator.name(),
           tableId: table._id!,
@@ -156,7 +232,7 @@ describe.each([
         }
         const res = await config.api.viewV2.create(newView)
 
-        expect(res).toEqual({
+        const expected: ViewV2 = {
           ...newView,
           schema: {
             id: { visible: true },
@@ -164,9 +240,27 @@ describe.each([
               visible: true,
             },
           },
+          queryUI: {
+            logicalOperator: UILogicalOperator.ALL,
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ALL,
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "field",
+                    value: "value",
+                  },
+                ],
+              },
+            ],
+          },
           id: expect.any(String),
           version: 2,
-        })
+        }
+
+        expect(res).toEqual(expected)
       })
 
       it("persist only UI schema overrides", async () => {
@@ -586,6 +680,12 @@ describe.each([
                 calculationType: CalculationType.COUNT,
                 field: "Price",
               },
+              countDistinct: {
+                visible: true,
+                calculationType: CalculationType.COUNT,
+                distinct: true,
+                field: "Price",
+              },
               min: {
                 visible: true,
                 calculationType: CalculationType.MIN,
@@ -599,11 +699,6 @@ describe.each([
               avg: {
                 visible: true,
                 calculationType: CalculationType.AVG,
-                field: "Price",
-              },
-              sum2: {
-                visible: true,
-                calculationType: CalculationType.SUM,
                 field: "Price",
               },
             },
@@ -656,10 +751,12 @@ describe.each([
               count: {
                 visible: true,
                 calculationType: CalculationType.COUNT,
+                field: "Price",
               },
               count2: {
                 visible: true,
                 calculationType: CalculationType.COUNT,
+                field: "Price",
               },
             },
           },
@@ -667,7 +764,7 @@ describe.each([
             status: 400,
             body: {
               message:
-                'Duplicate calculation on field "*", calculation type "count"',
+                'Duplicate calculation on field "Price", calculation type "count"',
             },
           }
         )
@@ -698,7 +795,7 @@ describe.each([
             status: 400,
             body: {
               message:
-                'Duplicate calculation on field "Price", calculation type "count"',
+                'Duplicate calculation on field "Price", calculation type "count distinct"',
             },
           }
         )
@@ -713,12 +810,33 @@ describe.each([
             count: {
               visible: true,
               calculationType: CalculationType.COUNT,
+              field: "Price",
             },
             count2: {
               visible: true,
               calculationType: CalculationType.COUNT,
               distinct: true,
               field: "Price",
+            },
+          },
+        })
+      })
+
+      it("does not confuse counts on different fields in the duplicate check", async () => {
+        await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          type: ViewV2Type.CALCULATION,
+          schema: {
+            count: {
+              visible: true,
+              calculationType: CalculationType.COUNT,
+              field: "Price",
+            },
+            count2: {
+              visible: true,
+              calculationType: CalculationType.COUNT,
+              field: "Category",
             },
           },
         })
@@ -817,6 +935,7 @@ describe.each([
 
     describe("update", () => {
       let view: ViewV2
+      let table: Table
 
       beforeEach(async () => {
         table = await config.api.table.save(priceTable())
@@ -843,14 +962,37 @@ describe.each([
           ],
         })
 
-        expect((await config.api.table.get(tableId)).views).toEqual({
-          [view.name]: {
-            ...view,
-            query: [
-              { operator: "equal", field: "newField", value: "thatValue" },
+        const expected: ViewV2 = {
+          ...view,
+          query: [
+            {
+              operator: BasicOperator.EQUAL,
+              field: "newField",
+              value: "thatValue",
+            },
+          ],
+          // Should also update queryUI because query was not previously set.
+          queryUI: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            logicalOperator: UILogicalOperator.ALL,
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ALL,
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "newField",
+                    value: "thatValue",
+                  },
+                ],
+              },
             ],
-            schema: expect.anything(),
           },
+          schema: expect.anything(),
+        }
+
+        expect((await config.api.table.get(tableId)).views).toEqual({
+          [view.name]: expected,
         })
       })
 
@@ -868,8 +1010,8 @@ describe.each([
           query: [
             {
               operator: BasicOperator.EQUAL,
-              field: generator.word(),
-              value: generator.word(),
+              field: "newField",
+              value: "newValue",
             },
           ],
           sort: {
@@ -890,23 +1032,42 @@ describe.each([
         }
         await config.api.viewV2.update(updatedData)
 
-        expect((await config.api.table.get(tableId)).views).toEqual({
-          [view.name]: {
-            ...updatedData,
-            schema: {
-              ...table.schema,
-              id: expect.objectContaining({
-                visible: true,
-              }),
-              Category: expect.objectContaining({
-                visible: false,
-              }),
-              Price: expect.objectContaining({
-                visible: true,
-                readonly: true,
-              }),
-            },
+        const expected: ViewV2 = {
+          ...updatedData,
+          // queryUI gets generated from query
+          queryUI: {
+            logicalOperator: UILogicalOperator.ALL,
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            groups: [
+              {
+                logicalOperator: UILogicalOperator.ALL,
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "newField",
+                    value: "newValue",
+                  },
+                ],
+              },
+            ],
           },
+          schema: {
+            ...table.schema,
+            id: expect.objectContaining({
+              visible: true,
+            }),
+            Category: expect.objectContaining({
+              visible: false,
+            }),
+            Price: expect.objectContaining({
+              visible: true,
+              readonly: true,
+            }),
+          },
+        }
+
+        expect((await config.api.table.get(tableId)).views).toEqual({
+          [view.name]: expected,
         })
       })
 
@@ -1138,6 +1299,146 @@ describe.each([
           )
         })
 
+      it("can update queryUI field and query gets regenerated", async () => {
+        await config.api.viewV2.update({
+          ...view,
+          queryUI: {
+            groups: [
+              {
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "field",
+                    value: "value",
+                  },
+                ],
+              },
+            ],
+          },
+        })
+
+        let updatedView = await config.api.viewV2.get(view.id)
+        let expected: SearchFilters = {
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+          $and: {
+            conditions: [
+              {
+                $and: {
+                  conditions: [
+                    {
+                      equal: { field: "value" },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        }
+        expect(updatedView.query).toEqual(expected)
+
+        await config.api.viewV2.update({
+          ...updatedView,
+          queryUI: {
+            groups: [
+              {
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "newField",
+                    value: "newValue",
+                  },
+                ],
+              },
+            ],
+          },
+        })
+
+        updatedView = await config.api.viewV2.get(view.id)
+        expected = {
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+          $and: {
+            conditions: [
+              {
+                $and: {
+                  conditions: [
+                    {
+                      equal: { newField: "newValue" },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        }
+        expect(updatedView.query).toEqual(expected)
+      })
+
+      it("can delete either query and it will get regenerated from queryUI", async () => {
+        await config.api.viewV2.update({
+          ...view,
+          query: [
+            {
+              operator: BasicOperator.EQUAL,
+              field: "field",
+              value: "value",
+            },
+          ],
+        })
+
+        let updatedView = await config.api.viewV2.get(view.id)
+        expect(updatedView.queryUI).toBeDefined()
+
+        await config.api.viewV2.update({
+          ...updatedView,
+          query: undefined,
+        })
+
+        updatedView = await config.api.viewV2.get(view.id)
+        expect(updatedView.query).toBeDefined()
+      })
+
+      // This is because the conversion from queryUI -> query loses data, so you
+      // can't accurately reproduce the original queryUI from the query. If
+      // query is a LegacyFilter[] we allow it, because for Budibase v3
+      // everything in the db had query set to a LegacyFilter[], and there's no
+      // loss of information converting from a LegacyFilter[] to a
+      // UISearchFilter. But we convert to a SearchFilters and that can't be
+      // accurately converted to a UISearchFilter.
+      it("can't regenerate queryUI from a query once it has been generated from a queryUI", async () => {
+        await config.api.viewV2.update({
+          ...view,
+          queryUI: {
+            groups: [
+              {
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "field",
+                    value: "value",
+                  },
+                ],
+              },
+            ],
+          },
+        })
+
+        let updatedView = await config.api.viewV2.get(view.id)
+        expect(updatedView.query).toBeDefined()
+
+        await config.api.viewV2.update(
+          {
+            ...updatedView,
+            queryUI: undefined,
+          },
+          {
+            status: 400,
+            body: {
+              message: "view is missing queryUI field",
+            },
+          }
+        )
+      })
+
       describe("calculation views", () => {
         let table: Table
         let view: ViewV2
@@ -1315,6 +1616,7 @@ describe.each([
           view.schema!.count = {
             visible: true,
             calculationType: CalculationType.COUNT,
+            field: "age",
           }
           await config.api.viewV2.update(view)
 
@@ -1489,6 +1791,65 @@ describe.each([
         expect(view.schema?.one).toEqual(
           expect.objectContaining({ visible: true, readonly: true })
         )
+      })
+
+      it("should fill in the queryUI field if it's missing", async () => {
+        const res = await config.api.viewV2.create({
+          name: generator.name(),
+          tableId: tableId,
+          query: [
+            {
+              operator: BasicOperator.EQUAL,
+              field: "one",
+              value: "1",
+            },
+          ],
+          schema: {
+            id: { visible: true },
+            one: { visible: true },
+          },
+        })
+
+        const table = await config.api.table.get(tableId)
+        const rawView = table.views![res.name] as ViewV2
+        delete rawView.queryUI
+
+        await context.doInAppContext(config.getAppId(), async () => {
+          const db = context.getAppDB()
+
+          if (!rawDatasource) {
+            await db.put(table)
+          } else {
+            const ds = await config.api.datasource.get(datasource!._id!)
+            ds.entities![table.name] = table
+            const updatedDs = {
+              ...rawDatasource,
+              _id: ds._id,
+              _rev: ds._rev,
+              entities: ds.entities,
+            }
+            await db.put(updatedDs)
+          }
+        })
+
+        const view = await getDelegate(res)
+        const expected: UISearchFilter = {
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+          logicalOperator: UILogicalOperator.ALL,
+          groups: [
+            {
+              logicalOperator: UILogicalOperator.ALL,
+              filters: [
+                {
+                  operator: BasicOperator.EQUAL,
+                  field: "one",
+                  value: "1",
+                },
+              ],
+            },
+          ],
+        }
+        expect(view.queryUI).toEqual(expected)
       })
     })
 
@@ -1968,6 +2329,65 @@ describe.each([
           "sum",
         ])
       })
+
+      describe("bigints", () => {
+        let table: Table
+        let view: ViewV2
+
+        beforeEach(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                bigint: {
+                  name: "bigint",
+                  type: FieldType.BIGINT,
+                },
+              },
+            })
+          )
+
+          view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
+            schema: {
+              sum: {
+                visible: true,
+                calculationType: CalculationType.SUM,
+                field: "bigint",
+              },
+            },
+          })
+        })
+
+        it("should not lose precision handling ints larger than JSs int53", async () => {
+          // The sum of the following 3 numbers cannot be represented by
+          // JavaScripts default int53 datatype for numbers, so this is a test
+          // that makes sure we aren't losing precision between the DB and the
+          // user.
+          await config.api.row.bulkImport(table._id!, {
+            rows: [
+              { bigint: "1000000000000000000" },
+              { bigint: "123" },
+              { bigint: "321" },
+            ],
+          })
+
+          const { rows } = await config.api.row.search(view.id)
+          expect(rows).toHaveLength(1)
+          expect(rows[0].sum).toEqual("1000000000000000444")
+        })
+
+        it("should be able to handle up to 2**63 - 1 bigints", async () => {
+          await config.api.row.bulkImport(table._id!, {
+            rows: [{ bigint: "9223372036854775806" }, { bigint: "1" }],
+          })
+
+          const { rows } = await config.api.row.search(view.id)
+          expect(rows).toHaveLength(1)
+          expect(rows[0].sum).toEqual("9223372036854775807")
+        })
+      })
     })
   })
 
@@ -2330,13 +2750,19 @@ describe.each([
         const view = await config.api.viewV2.create({
           tableId: table._id!,
           name: generator.guid(),
-          query: [
-            {
-              operator: BasicOperator.EQUAL,
-              field: "two",
-              value: "bar2",
-            },
-          ],
+          queryUI: {
+            groups: [
+              {
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "two",
+                    value: "bar2",
+                  },
+                ],
+              },
+            ],
+          },
           schema: {
             id: { visible: true },
             one: { visible: false },
@@ -2385,13 +2811,19 @@ describe.each([
         const view = await config.api.viewV2.create({
           tableId: table._id!,
           name: generator.guid(),
-          query: [
-            {
-              operator: BasicOperator.EQUAL,
-              field: "two",
-              value: "bar2",
-            },
-          ],
+          queryUI: {
+            groups: [
+              {
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "two",
+                    value: "bar2",
+                  },
+                ],
+              },
+            ],
+          },
           schema: {
             id: { visible: true },
             one: { visible: false },
@@ -2658,13 +3090,19 @@ describe.each([
         const view = await config.api.viewV2.create({
           tableId: table._id!,
           name: generator.guid(),
-          query: [
-            {
-              operator: BasicOperator.NOT_EQUAL,
-              field: "one",
-              value: "foo2",
-            },
-          ],
+          queryUI: {
+            groups: [
+              {
+                filters: [
+                  {
+                    operator: BasicOperator.NOT_EQUAL,
+                    field: "one",
+                    value: "foo2",
+                  },
+                ],
+              },
+            ],
+          },
           schema: {
             id: { visible: true },
             one: { visible: true },
@@ -2705,13 +3143,19 @@ describe.each([
         const view = await config.api.viewV2.create({
           tableId: table._id!,
           name: generator.guid(),
-          query: [
-            {
-              operator: BasicOperator.NOT_EQUAL,
-              field: "two",
-              value: "bar2",
-            },
-          ],
+          queryUI: {
+            groups: [
+              {
+                filters: [
+                  {
+                    operator: BasicOperator.NOT_EQUAL,
+                    field: "one",
+                    value: "foo2",
+                  },
+                ],
+              },
+            ],
+          },
           schema: {
             id: { visible: true },
             one: { visible: false },
@@ -2789,13 +3233,19 @@ describe.each([
         const view = await config.api.viewV2.create({
           tableId: table._id!,
           name: generator.guid(),
-          query: [
-            {
-              operator: BasicOperator.EQUAL,
-              field: "two",
-              value: "bar2",
-            },
-          ],
+          queryUI: {
+            groups: [
+              {
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "two",
+                    value: "bar2",
+                  },
+                ],
+              },
+            ],
+          },
           schema: {
             id: { visible: true },
             one: { visible: false },
@@ -3195,6 +3645,150 @@ describe.each([
           )
         })
 
+        it("should be able to filter on relationships", async () => {
+          const companies = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                name: {
+                  name: "name",
+                  type: FieldType.STRING,
+                },
+              },
+            })
+          )
+
+          const employees = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                age: {
+                  type: FieldType.NUMBER,
+                  name: "age",
+                },
+                name: {
+                  type: FieldType.STRING,
+                  name: "name",
+                },
+                company: {
+                  type: FieldType.LINK,
+                  name: "company",
+                  tableId: companies._id!,
+                  relationshipType: RelationshipType.ONE_TO_MANY,
+                  fieldName: "company",
+                },
+              },
+            })
+          )
+
+          const view = await config.api.viewV2.create({
+            tableId: employees._id!,
+            name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
+            queryUI: {
+              groups: [
+                {
+                  filters: [
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "company.name",
+                      value: "Aperture Science Laboratories",
+                    },
+                  ],
+                },
+              ],
+            },
+            schema: {
+              sum: {
+                visible: true,
+                calculationType: CalculationType.SUM,
+                field: "age",
+              },
+            },
+          })
+
+          const apertureScience = await config.api.row.save(companies._id!, {
+            name: "Aperture Science Laboratories",
+          })
+
+          const blackMesa = await config.api.row.save(companies._id!, {
+            name: "Black Mesa",
+          })
+
+          await Promise.all([
+            config.api.row.save(employees._id!, {
+              name: "Alice",
+              age: 25,
+              company: apertureScience._id,
+            }),
+            config.api.row.save(employees._id!, {
+              name: "Bob",
+              age: 30,
+              company: apertureScience._id,
+            }),
+            config.api.row.save(employees._id!, {
+              name: "Charly",
+              age: 27,
+              company: blackMesa._id,
+            }),
+            config.api.row.save(employees._id!, {
+              name: "Danny",
+              age: 15,
+              company: blackMesa._id,
+            }),
+          ])
+
+          const { rows } = await config.api.viewV2.search(view.id, {
+            query: {},
+          })
+
+          expect(rows).toHaveLength(1)
+          expect(rows[0].sum).toEqual(55)
+        })
+
+        it("should be able to count non-numeric fields", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                firstName: {
+                  type: FieldType.STRING,
+                  name: "firstName",
+                },
+                lastName: {
+                  type: FieldType.STRING,
+                  name: "lastName",
+                },
+              },
+            })
+          )
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            type: ViewV2Type.CALCULATION,
+            schema: {
+              count: {
+                visible: true,
+                calculationType: CalculationType.COUNT,
+                field: "firstName",
+              },
+            },
+          })
+
+          await config.api.row.bulkImport(table._id!, {
+            rows: [
+              { firstName: "Jane", lastName: "Smith" },
+              { firstName: "Jane", lastName: "Doe" },
+              { firstName: "Alice", lastName: "Smith" },
+            ],
+          })
+
+          const { rows } = await config.api.viewV2.search(view.id, {
+            query: {},
+          })
+
+          expect(rows).toHaveLength(1)
+          expect(rows[0].count).toEqual(3)
+        })
+
         it("should be able to filter rows on the view itself", async () => {
           const table = await config.api.table.save(
             saveTableRequest({
@@ -3215,10 +3809,18 @@ describe.each([
             tableId: table._id!,
             name: generator.guid(),
             type: ViewV2Type.CALCULATION,
-            query: {
-              equal: {
-                quantity: 1,
-              },
+            queryUI: {
+              groups: [
+                {
+                  filters: [
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "quantity",
+                      value: 1,
+                    },
+                  ],
+                },
+              ],
             },
             schema: {
               sum: {
@@ -3496,10 +4098,18 @@ describe.each([
         const view = await config.api.viewV2.create({
           tableId: table._id!,
           name: generator.guid(),
-          query: {
-            equal: {
-              user: "{{ [user].[_id] }}",
-            },
+          queryUI: {
+            groups: [
+              {
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "user",
+                    value: "{{ [user].[_id] }}",
+                  },
+                ],
+              },
+            ],
           },
           schema: {
             user: {
@@ -3518,6 +4128,439 @@ describe.each([
 
         expect(rows).toHaveLength(1)
         expect(rows[0].user._id).toEqual(config.getUser()._id)
+      })
+
+      describe("search operators", () => {
+        let table: Table
+        beforeEach(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                string: { name: "string", type: FieldType.STRING },
+                longform: { name: "longform", type: FieldType.LONGFORM },
+                options: {
+                  name: "options",
+                  type: FieldType.OPTIONS,
+                  constraints: { inclusion: ["a", "b", "c"] },
+                },
+                array: {
+                  name: "array",
+                  type: FieldType.ARRAY,
+                  constraints: {
+                    type: JsonFieldSubType.ARRAY,
+                    inclusion: ["a", "b", "c"],
+                  },
+                },
+                number: { name: "number", type: FieldType.NUMBER },
+                bigint: { name: "bigint", type: FieldType.BIGINT },
+                datetime: { name: "datetime", type: FieldType.DATETIME },
+                boolean: { name: "boolean", type: FieldType.BOOLEAN },
+                user: {
+                  name: "user",
+                  type: FieldType.BB_REFERENCE_SINGLE,
+                  subtype: BBReferenceFieldSubType.USER,
+                },
+                users: {
+                  name: "users",
+                  type: FieldType.BB_REFERENCE,
+                  subtype: BBReferenceFieldSubType.USER,
+                  constraints: {
+                    type: JsonFieldSubType.ARRAY,
+                  },
+                },
+              },
+            })
+          )
+        })
+
+        interface TestCase {
+          name: string
+          query: UISearchFilter | (() => UISearchFilter)
+          insert: Row[] | (() => Row[])
+          expected: Row[] | (() => Row[])
+          searchOpts?: Partial<SearchViewRowRequest>
+        }
+
+        function simpleQuery(...filters: LegacyFilter[]): UISearchFilter {
+          return { groups: [{ filters }] }
+        }
+
+        const testCases: TestCase[] = [
+          {
+            name: "empty query return all",
+            insert: [{ string: "foo" }],
+            query: {
+              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            },
+            expected: [{ string: "foo" }],
+          },
+          {
+            name: "empty query return none",
+            insert: [{ string: "foo" }],
+            query: {
+              onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+            },
+            expected: [],
+          },
+          {
+            name: "simple string search",
+            insert: [{ string: "foo" }],
+            query: simpleQuery({
+              operator: BasicOperator.EQUAL,
+              field: "string",
+              value: "foo",
+            }),
+            expected: [{ string: "foo" }],
+          },
+          {
+            name: "non matching string search",
+            insert: [{ string: "foo" }],
+            query: simpleQuery({
+              operator: BasicOperator.EQUAL,
+              field: "string",
+              value: "bar",
+            }),
+            expected: [],
+          },
+          {
+            name: "allOr",
+            insert: [{ string: "bar" }, { string: "foo" }],
+            query: simpleQuery(
+              {
+                operator: BasicOperator.EQUAL,
+                field: "string",
+                value: "foo",
+              },
+              {
+                operator: BasicOperator.EQUAL,
+                field: "string",
+                value: "bar",
+              },
+              {
+                operator: "allOr",
+              }
+            ),
+            searchOpts: {
+              sort: "string",
+              sortOrder: SortOrder.ASCENDING,
+            },
+            expected: [{ string: "bar" }, { string: "foo" }],
+          },
+          {
+            name: "can find rows with fuzzy search",
+            insert: [{ string: "foo" }, { string: "bar" }],
+            query: simpleQuery({
+              operator: BasicOperator.FUZZY,
+              field: "string",
+              value: "fo",
+            }),
+            expected: [{ string: "foo" }],
+          },
+          {
+            name: "can find nothing with fuzzy search",
+            insert: [{ string: "foo" }, { string: "bar" }],
+            query: simpleQuery({
+              operator: BasicOperator.FUZZY,
+              field: "string",
+              value: "baz",
+            }),
+            expected: [],
+          },
+          {
+            name: "can find numeric rows",
+            insert: [{ number: 1 }, { number: 2 }],
+            query: simpleQuery({
+              operator: BasicOperator.EQUAL,
+              field: "number",
+              value: 1,
+            }),
+            expected: [{ number: 1 }],
+          },
+          {
+            name: "can find numeric values with rangeHigh",
+            insert: [{ number: 1 }, { number: 2 }, { number: 3 }],
+            query: simpleQuery({
+              operator: "rangeHigh",
+              field: "number",
+              value: 2,
+            }),
+            searchOpts: {
+              sort: "number",
+              sortOrder: SortOrder.ASCENDING,
+            },
+            expected: [{ number: 1 }, { number: 2 }],
+          },
+          {
+            name: "can find numeric values with rangeLow",
+            insert: [{ number: 1 }, { number: 2 }, { number: 3 }],
+            query: simpleQuery({
+              operator: "rangeLow",
+              field: "number",
+              value: 2,
+            }),
+            searchOpts: {
+              sort: "number",
+              sortOrder: SortOrder.ASCENDING,
+            },
+            expected: [{ number: 2 }, { number: 3 }],
+          },
+          {
+            name: "can find numeric values with full range",
+            insert: [{ number: 1 }, { number: 2 }, { number: 3 }],
+            query: simpleQuery(
+              {
+                operator: "rangeHigh",
+                field: "number",
+                value: 2,
+              },
+              {
+                operator: "rangeLow",
+                field: "number",
+                value: 2,
+              }
+            ),
+            expected: [{ number: 2 }],
+          },
+          {
+            name: "can find longform values",
+            insert: [{ longform: "foo" }, { longform: "bar" }],
+            query: simpleQuery({
+              operator: BasicOperator.EQUAL,
+              field: "longform",
+              value: "foo",
+            }),
+            expected: [{ longform: "foo" }],
+          },
+          {
+            name: "can find options values",
+            insert: [{ options: "a" }, { options: "b" }],
+            query: simpleQuery({
+              operator: BasicOperator.EQUAL,
+              field: "options",
+              value: "a",
+            }),
+            expected: [{ options: "a" }],
+          },
+          {
+            name: "can find array values",
+            insert: [
+              // Number field here is just to guarantee order.
+              { number: 1, array: ["a"] },
+              { number: 2, array: ["b"] },
+              { number: 3, array: ["a", "c"] },
+            ],
+            query: simpleQuery({
+              operator: ArrayOperator.CONTAINS,
+              field: "array",
+              value: "a",
+            }),
+            searchOpts: {
+              sort: "number",
+              sortOrder: SortOrder.ASCENDING,
+            },
+            expected: [{ array: ["a"] }, { array: ["a", "c"] }],
+          },
+          {
+            name: "can find bigint values",
+            insert: [{ bigint: "1" }, { bigint: "2" }],
+            query: simpleQuery({
+              operator: BasicOperator.EQUAL,
+              field: "bigint",
+              type: FieldType.BIGINT,
+              value: "1",
+            }),
+            expected: [{ bigint: "1" }],
+          },
+          {
+            name: "can find datetime values",
+            insert: [
+              { datetime: "2021-01-01T00:00:00.000Z" },
+              { datetime: "2021-01-02T00:00:00.000Z" },
+            ],
+            query: simpleQuery({
+              operator: BasicOperator.EQUAL,
+              field: "datetime",
+              type: FieldType.DATETIME,
+              value: "2021-01-01",
+            }),
+            expected: [{ datetime: "2021-01-01T00:00:00.000Z" }],
+          },
+          {
+            name: "can find boolean values",
+            insert: [{ boolean: true }, { boolean: false }],
+            query: simpleQuery({
+              operator: BasicOperator.EQUAL,
+              field: "boolean",
+              value: true,
+            }),
+            expected: [{ boolean: true }],
+          },
+          {
+            name: "can find user values",
+            insert: () => [{ user: config.getUser() }],
+            query: () =>
+              simpleQuery({
+                operator: BasicOperator.EQUAL,
+                field: "user",
+                value: config.getUser()._id,
+              }),
+            expected: () => [
+              {
+                user: expect.objectContaining({ _id: config.getUser()._id }),
+              },
+            ],
+          },
+          {
+            name: "can find users values",
+            insert: () => [{ users: [config.getUser()] }],
+            query: () =>
+              simpleQuery({
+                operator: ArrayOperator.CONTAINS,
+                field: "users",
+                value: [config.getUser()._id],
+              }),
+            expected: () => [
+              {
+                users: [expect.objectContaining({ _id: config.getUser()._id })],
+              },
+            ],
+          },
+          {
+            name: "can handle logical operator any",
+            insert: [{ string: "bar" }, { string: "foo" }],
+            query: {
+              groups: [
+                {
+                  logicalOperator: UILogicalOperator.ANY,
+                  filters: [
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "string",
+                      value: "foo",
+                    },
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "string",
+                      value: "bar",
+                    },
+                  ],
+                },
+              ],
+            },
+            searchOpts: {
+              sort: "string",
+              sortOrder: SortOrder.ASCENDING,
+            },
+            expected: [{ string: "bar" }, { string: "foo" }],
+          },
+          {
+            name: "can handle logical operator all",
+            insert: [
+              { string: "bar", number: 1 },
+              { string: "foo", number: 2 },
+            ],
+            query: {
+              groups: [
+                {
+                  logicalOperator: UILogicalOperator.ALL,
+                  filters: [
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "string",
+                      value: "foo",
+                    },
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "number",
+                      value: 2,
+                    },
+                  ],
+                },
+              ],
+            },
+            searchOpts: {
+              sort: "string",
+              sortOrder: SortOrder.ASCENDING,
+            },
+            expected: [{ string: "foo", number: 2 }],
+          },
+          {
+            name: "overrides allOr with logical operators",
+            insert: [
+              { string: "bar", number: 1 },
+              { string: "foo", number: 1 },
+            ],
+            query: {
+              groups: [
+                {
+                  logicalOperator: UILogicalOperator.ALL,
+                  filters: [
+                    { operator: "allOr" },
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "string",
+                      value: "foo",
+                    },
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "number",
+                      value: 1,
+                    },
+                  ],
+                },
+              ],
+            },
+            searchOpts: {
+              sort: "string",
+              sortOrder: SortOrder.ASCENDING,
+            },
+            expected: [{ string: "foo", number: 1 }],
+          },
+        ]
+
+        it.each(testCases)(
+          "$name",
+          async ({ query, insert, expected, searchOpts }) => {
+            // Some values can't be specified outside of a test (e.g. getting
+            // config.getUser(), it won't be initialised), so we use functions
+            // in those cases.
+            if (typeof insert === "function") {
+              insert = insert()
+            }
+            if (typeof expected === "function") {
+              expected = expected()
+            }
+            if (typeof query === "function") {
+              query = query()
+            }
+
+            await config.api.row.bulkImport(table._id!, { rows: insert })
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              queryUI: query,
+              schema: {
+                string: { visible: true },
+                longform: { visible: true },
+                options: { visible: true },
+                array: { visible: true },
+                number: { visible: true },
+                bigint: { visible: true },
+                datetime: { visible: true },
+                boolean: { visible: true },
+                user: { visible: true },
+                users: { visible: true },
+              },
+            })
+
+            const { rows } = await config.api.viewV2.search(view.id, {
+              query: {},
+              ...searchOpts,
+            })
+            expect(rows).toEqual(expected.map(r => expect.objectContaining(r)))
+          }
+        )
       })
     })
 

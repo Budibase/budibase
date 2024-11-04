@@ -18,6 +18,8 @@
   export let actionUrl
   export let noRowsMessage
   export let notificationOverride
+  export let buttonsCollapsed
+  export let buttonsCollapsedText
 
   // Legacy
   export let showDeleteButton
@@ -118,5 +120,7 @@
     {notificationOverride}
     buttons={buttonsOrDefault}
     buttonPosition={buttons ? buttonPosition : "top"}
+    {buttonsCollapsed}
+    {buttonsCollapsedText}
   />
 </FormBlockWrapper>

@@ -62,6 +62,7 @@
   } from "@budibase/types"
   import { FIELDS } from "constants/backend"
   import PropField from "./PropField.svelte"
+  import { utils } from "@budibase/shared-core"
 
   export let block
   export let testData
@@ -96,8 +97,14 @@
   $: memoEnvVariables.set($environment.variables)
   $: memoBlock.set(block)
 
-  $: filters = lookForFilters(schemaProperties) || []
-  $: tempFilters = filters
+  $: filters = lookForFilters(schemaProperties)
+  $: filterCount =
+    filters?.groups?.reduce((acc, group) => {
+      acc = acc += group?.filters?.length || 0
+      return acc
+    }, 0) || 0
+
+  $: tempFilters = cloneDeep(filters)
   $: stepId = $memoBlock.stepId
 
   $: automationBindings = getAvailableBindings(
@@ -791,14 +798,15 @@
         break
       }
     }
-    return filters || []
+    return Array.isArray(filters)
+      ? utils.processSearchFilters(filters)
+      : filters
   }
 
   function saveFilters(key) {
-    const filters = QueryUtils.buildQuery(tempFilters)
-
+    const query = QueryUtils.buildQuery(tempFilters)
     onChange({
-      [key]: filters,
+      [key]: query,
       [`${key}-def`]: tempFilters, // need to store the builder definition in the automation
     })
 
@@ -1027,18 +1035,24 @@
                 </div>
               </div>
             {:else if value.customType === AutomationCustomIOType.FILTERS || value.customType === AutomationCustomIOType.TRIGGER_FILTER}
-              <ActionButton fullWidth on:click={drawer.show}
-                >{filters.length > 0
-                  ? "Update Filter"
-                  : "No Filter set"}</ActionButton
+              <ActionButton fullWidth on:click={drawer.show}>
+                {filterCount > 0 ? "Update Filter" : "No Filter set"}
+              </ActionButton>
+              <Drawer
+                bind:this={drawer}
+                title="Filtering"
+                forceModal
+                on:drawerShow={() => {
+                  tempFilters = filters
+                }}
               >
-              <Drawer bind:this={drawer} title="Filtering">
                 <Button cta slot="buttons" on:click={() => saveFilters(key)}>
                   Save
                 </Button>
+
                 <DrawerContent slot="body">
                   <FilterBuilder
-                    {filters}
+                    filters={tempFilters}
                     {bindings}
                     {schemaFields}
                     datasource={{ type: "table", tableId }}

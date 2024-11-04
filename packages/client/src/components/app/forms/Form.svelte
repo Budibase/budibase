@@ -22,7 +22,7 @@
 
   const context = getContext("context")
   const component = getContext("component")
-  const { API, fetchDatasourceSchema } = getContext("sdk")
+  const { fetchDatasourceSchema, fetchDatasourceDefinition } = getContext("sdk")
 
   const getInitialFormStep = () => {
     const parsedFormStep = parseInt(initialFormStep)
@@ -32,9 +32,9 @@
     return parsedFormStep
   }
 
-  let loaded = false
+  let definition
   let schema
-  let table
+  let loaded = false
   let currentStep = getContext("current-step") || writable(getInitialFormStep())
 
   $: fetchSchema(dataSource)
@@ -84,12 +84,10 @@
 
   // Fetches the form schema from this form's dataSource
   const fetchSchema = async dataSource => {
-    if (dataSource?.tableId && !dataSource?.type?.startsWith("query")) {
-      try {
-        table = await API.fetchTableDefinition(dataSource.tableId)
-      } catch (error) {
-        table = null
-      }
+    try {
+      definition = await fetchDatasourceDefinition(dataSource)
+    } catch (error) {
+      definition = null
     }
     const res = await fetchDatasourceSchema(dataSource)
     schema = res || {}
@@ -121,7 +119,7 @@
       {readonly}
       {actionType}
       {schema}
-      {table}
+      {definition}
       {initialValues}
       {disableSchemaValidation}
       {editAutoColumns}

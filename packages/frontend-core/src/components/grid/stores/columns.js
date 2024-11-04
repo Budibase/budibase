@@ -109,6 +109,7 @@ export const createActions = context => {
       column.schema.autocolumn ||
       column.schema.disabled ||
       column.schema.type === "formula" ||
+      column.schema.type === "ai" ||
       column.schema.readonly
     )
   }
@@ -160,10 +161,10 @@ export const initialise = context => {
             order: fieldSchema.order ?? oldColumn?.order,
             conditions: fieldSchema.conditions,
             related: fieldSchema.related,
+            calculationType: fieldSchema.calculationType,
           }
           // Override a few properties for primary display
           if (field === primaryDisplay) {
-            column.visible = true
             column.order = 0
             column.primaryDisplay = true
           }

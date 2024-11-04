@@ -26,10 +26,11 @@ import {
   BranchStep,
   LoopStep,
   SearchFilters,
+  UserBindings,
 } from "@budibase/types"
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
-import { context, logging } from "@budibase/backend-core"
+import { context, logging, configs } from "@budibase/backend-core"
 import { processObject, processStringSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { performance } from "perf_hooks"
@@ -75,6 +76,7 @@ class Orchestrator {
   private loopStepOutputs: LoopStep[]
   private stopped: boolean
   private executionOutput: Omit<AutomationContext, "stepsByName" | "stepsById">
+  private currentUser: UserBindings | undefined
 
   constructor(job: AutomationJob) {
     let automation = job.data.automation
@@ -106,6 +108,7 @@ class Orchestrator {
     this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
     this.loopStepOutputs = []
     this.stopped = false
+    this.currentUser = triggerOutput.user
   }
 
   cleanupTriggerOutputs(stepId: string, triggerOutput: TriggerOutput) {
@@ -258,6 +261,19 @@ class Orchestrator {
           automationId: this.automation._id,
         })
         this.context.env = await sdkUtils.getEnvironmentVariables()
+        this.context.user = this.currentUser
+
+        try {
+          const { config } = await configs.getSettingsConfigDoc()
+          this.context.settings = {
+            url: config.platformUrl,
+            logo: config.logoUrl,
+            company: config.company,
+          }
+        } catch (e) {
+          // if settings doc doesn't exist, make the settings blank
+          this.context.settings = {}
+        }
 
         let metadata
 
@@ -572,7 +588,6 @@ class Orchestrator {
           originalStepInput,
           this.processContext(this.context)
         )
-
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
 
         const outputs = await stepFn({

@@ -1,6 +1,8 @@
 import { derived, get } from "svelte/store"
 import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
 import { enrichSchemaWithRelColumns, memo } from "../../../utils"
+import { cloneDeep } from "lodash"
+import { ViewV2Type } from "@budibase/types"
 
 export const createStores = () => {
   const definition = memo(null)
@@ -80,13 +82,20 @@ export const deriveStores = context => {
     }
   )
 
-  const hasBudibaseIdentifiers = derived(datasource, $datasource => {
-    let type = $datasource?.type
-    if (type === "provider") {
-      type = $datasource.value?.datasource?.type
+  const hasBudibaseIdentifiers = derived(
+    [datasource, definition],
+    ([$datasource, $definition]) => {
+      let type = $datasource?.type
+      if (type === "provider") {
+        type = $datasource.value?.datasource?.type
+      }
+      // Handle calculation views
+      if (type === "viewV2" && $definition?.type === ViewV2Type.CALCULATION) {
+        return false
+      }
+      return ["table", "viewV2", "link"].includes(type)
     }
-    return ["table", "viewV2", "link"].includes(type)
-  })
+  )
 
   return {
     schema,
@@ -164,10 +173,18 @@ export const createActions = context => {
 
   // Updates the datasources primary display column
   const changePrimaryDisplay = async column => {
-    return await saveDefinition({
-      ...get(definition),
-      primaryDisplay: column,
-    })
+    let newDefinition = cloneDeep(get(definition))
+
+    // Update primary display
+    newDefinition.primaryDisplay = column
+
+    // Sanitise schema to ensure field is required and has no default value
+    if (!newDefinition.schema[column].constraints) {
+      newDefinition.schema[column].constraints = {}
+    }
+    newDefinition.schema[column].constraints.presence = { allowEmpty: false }
+    delete newDefinition.schema[column].default
+    return await saveDefinition(newDefinition)
   }
 
   // Adds a schema mutation for a single field

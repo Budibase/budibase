@@ -4,6 +4,7 @@ import queryEndpoints from "./queries"
 import tableEndpoints from "./tables"
 import rowEndpoints from "./rows"
 import userEndpoints from "./users"
+import roleEndpoints from "./roles"
 import authorized from "../../../middleware/authorized"
 import publicApi from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
@@ -145,6 +146,7 @@ function applyRoutes(
 }
 
 applyAdminRoutes(metricEndpoints)
+applyAdminRoutes(roleEndpoints)
 applyRoutes(appEndpoints, PermissionType.APP, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
 applyRoutes(userEndpoints, PermissionType.USER, "userId")

@@ -1,5 +1,5 @@
 import * as setup from "../api/routes/tests/utilities"
-import { Datasource, FieldType } from "@budibase/types"
+import { Datasource, FieldType, Table } from "@budibase/types"
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import {
@@ -227,6 +227,56 @@ describe("postgres integrations", () => {
       expect(
         nullableTableAfter?.schema["order_number"].constraints?.presence
       ).toBeUndefined()
+    })
+  })
+
+  describe("money field 💰", () => {
+    const tableName = "moneytable"
+    let table: Table
+
+    beforeAll(async () => {
+      await client.raw(`
+        CREATE TABLE ${tableName} (
+          id serial PRIMARY KEY,
+          price money
+        )   
+      `)
+      const response = await config.api.datasource.fetchSchema({
+        datasourceId: datasource._id!,
+      })
+      table = response.datasource.entities![tableName]
+    })
+
+    it("should be able to import a money field", async () => {
+      expect(table).toBeDefined()
+      expect(table?.schema.price.type).toBe(FieldType.NUMBER)
+    })
+
+    it("should be able to search a money field", async () => {
+      await config.api.row.bulkImport(table._id!, {
+        rows: [{ price: 200 }, { price: 300 }],
+      })
+
+      const { rows } = await config.api.row.search(table._id!, {
+        query: {
+          equal: {
+            price: 200,
+          },
+        },
+      })
+      expect(rows).toHaveLength(1)
+      expect(rows[0].price).toBe("200.00")
+    })
+
+    it("should be able to update a money field", async () => {
+      let row = await config.api.row.save(table._id!, { price: 200 })
+      expect(row.price).toBe("200.00")
+
+      row = await config.api.row.save(table._id!, { ...row, price: 300 })
+      expect(row.price).toBe("300.00")
+
+      row = await config.api.row.save(table._id!, { ...row, price: "400.00" })
+      expect(row.price).toBe("400.00")
     })
   })
 })

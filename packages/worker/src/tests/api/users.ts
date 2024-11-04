@@ -81,8 +81,14 @@ export class UserAPI extends TestAPI {
     return res.body as BulkUserResponse
   }
 
-  bulkDeleteUsers = async (userIds: string[], status?: number) => {
-    const body: BulkUserRequest = { delete: { userIds } }
+  bulkDeleteUsers = async (
+    users: Array<{
+      userId: string
+      email: string
+    }>,
+    status?: number
+  ) => {
+    const body: BulkUserRequest = { delete: { users } }
     const res = await this.request
       .post(`/api/global/users/bulk`)
       .send(body)
