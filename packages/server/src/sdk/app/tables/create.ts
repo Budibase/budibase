@@ -1,4 +1,4 @@
-import { FeatureFlag, Row, Table } from "@budibase/types"
+import { Row, Table } from "@budibase/types"
 
 import * as external from "./external"
 import * as internal from "./internal"
