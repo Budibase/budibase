@@ -3,7 +3,7 @@
     automationStore,
     selectedAutomation,
     permissions,
-    selectedAutomationDisplayData,
+    tables,
   } from "stores/builder"
   import {
     Icon,
@@ -17,6 +17,7 @@
     AbsTooltip,
     InlineAlert,
   } from "@budibase/bbui"
+  import { sdk } from "@budibase/shared-core"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import ActionModal from "./ActionModal.svelte"
@@ -51,7 +52,12 @@
   $: isAppAction && setPermissions(role)
   $: isAppAction && getPermissions(automationId)
 
-  $: triggerInfo = $selectedAutomationDisplayData?.triggerInfo
+  $: triggerInfo = sdk.automations.isRowAction($selectedAutomation) && {
+    title: "Automation trigger",
+    tableName: $tables.list.find(
+      x => x._id === $selectedAutomation.definition.trigger.inputs?.tableId
+    )?.name,
+  }
 
   async function setPermissions(role) {
     if (!role || !automationId) {
@@ -187,10 +193,10 @@
           {block}
           {webhookModal}
         />
-        {#if isTrigger && triggerInfo}
+        {#if triggerInfo}
           <InlineAlert
-            header={triggerInfo.type}
-            message={`This trigger is tied to the row action ${triggerInfo.rowAction.name} on your ${triggerInfo.table.name} table`}
+            header={triggerInfo.title}
+            message={`This trigger is tied to your "${triggerInfo.tableName}" table`}
           />
         {/if}
         {#if lastStep}

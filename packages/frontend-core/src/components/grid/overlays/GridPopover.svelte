@@ -15,6 +15,8 @@
   export let open = true
   export let resizable = false
   export let wrap = true
+  export let offset = 0
+  export let clickOutsideOverride
 
   const { gridID } = getContext("grid")
   const dispatch = createEventDispatcher()
@@ -42,9 +44,9 @@
   {align}
   {resizable}
   {wrap}
+  {offset}
+  {clickOutsideOverride}
   portalTarget="#{gridID} .grid-popover-container"
-  offset={0}
-  clickOutsideOverride
 >
   <div
     class="grid-popover-contents"

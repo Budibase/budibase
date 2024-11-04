@@ -9,12 +9,14 @@ import TextCell from "../cells/TextCell.svelte"
 import LongFormCell from "../cells/LongFormCell.svelte"
 import BooleanCell from "../cells/BooleanCell.svelte"
 import FormulaCell from "../cells/FormulaCell.svelte"
+import AICell from "../cells/AICell.svelte"
 import JSONCell from "../cells/JSONCell.svelte"
 import AttachmentCell from "../cells/AttachmentCell.svelte"
 import AttachmentSingleCell from "../cells/AttachmentSingleCell.svelte"
 import BBReferenceCell from "../cells/BBReferenceCell.svelte"
 import SignatureCell from "../cells/SignatureCell.svelte"
 import BBReferenceSingleCell from "../cells/BBReferenceSingleCell.svelte"
+import RoleCell from "../cells/RoleCell.svelte"
 
 const TypeComponentMap = {
   [FieldType.STRING]: TextCell,
@@ -30,11 +32,18 @@ const TypeComponentMap = {
   [FieldType.ATTACHMENT_SINGLE]: AttachmentSingleCell,
   [FieldType.LINK]: RelationshipCell,
   [FieldType.FORMULA]: FormulaCell,
+  [FieldType.AI]: AICell,
   [FieldType.JSON]: JSONCell,
   [FieldType.BB_REFERENCE]: BBReferenceCell,
   [FieldType.BB_REFERENCE_SINGLE]: BBReferenceSingleCell,
+
+  // Custom types for UI only
+  role: RoleCell,
 }
 export const getCellRenderer = column => {
+  if (column.calculationType) {
+    return NumberCell
+  }
   return (
     TypeComponentMap[column?.schema?.cellRenderType] ||
     TypeComponentMap[column?.schema?.type] ||

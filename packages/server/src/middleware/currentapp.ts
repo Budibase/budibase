@@ -56,22 +56,9 @@ export default async (ctx: UserCtx, next: any) => {
       ctx.request &&
       (ctx.request.headers[constants.Header.PREVIEW_ROLE] as string)
     if (isBuilder && isDevApp && roleHeader) {
-      // Ensure the role is valid by ensuring a definition exists
-      try {
-        if (roleHeader) {
-          const role = await roles.getRole(roleHeader)
-          if (role) {
-            roleId = roleHeader
-
-            // Delete admin and builder flags so that the specified role is honoured
-            ctx.user = users.removePortalUserPermissions(
-              ctx.user
-            ) as ContextUser
-          }
-        }
-      } catch (error) {
-        // Swallow error and do nothing
-      }
+      roleId = roleHeader
+      // Delete admin and builder flags so that the specified role is honoured
+      ctx.user = users.removePortalUserPermissions(ctx.user) as ContextUser
     }
   }
 

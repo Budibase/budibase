@@ -102,6 +102,14 @@ export const useAppBuilders = () => {
   return useFeature(Feature.APP_BUILDERS)
 }
 
+export const useBudibaseAI = () => {
+  return useFeature(Feature.BUDIBASE_AI)
+}
+
+export const useAICustomConfigs = () => {
+  return useFeature(Feature.AI_CUSTOM_CONFIGS)
+}
+
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {

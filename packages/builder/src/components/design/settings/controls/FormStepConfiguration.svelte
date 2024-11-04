@@ -54,6 +54,8 @@
     _instanceName: `Step ${currentStep + 1}`,
     title: savedInstance.title ?? defaults?.title,
     buttons: savedInstance.buttons || defaults?.buttons,
+    buttonsCollapsed: savedInstance.buttonsCollapsed,
+    buttonsCollapsedText: savedInstance.buttonsCollapsedText,
     fields: savedInstance.fields,
     desc: savedInstance.desc,
 

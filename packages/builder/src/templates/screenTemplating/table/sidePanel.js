@@ -5,8 +5,9 @@ import { makePropSafe as safe } from "@budibase/string-templates"
 import { Utils } from "@budibase/frontend-core"
 import { capitalise } from "helpers"
 import getValidRoute from "../getValidRoute"
+import { getRowActionButtonTemplates } from "templates/rowActions"
 
-const sidePanel = ({ tableOrView, permissions, screens }) => {
+const sidePanel = async ({ tableOrView, permissions, screens }) => {
   /*
     Create Row
    */
@@ -54,7 +55,7 @@ const sidePanel = ({ tableOrView, permissions, screens }) => {
   createFormBlock.instanceName("Create row form block").customProps({
     dataSource: tableOrView.tableSelectFormat,
     labelPosition: "left",
-    buttonPosition: "top",
+    buttonPosition: "bottom",
     actionType: "Create",
     title: "Create row",
     buttons: Utils.buildFormBlockButtonConfig({
@@ -77,23 +78,33 @@ const sidePanel = ({ tableOrView, permissions, screens }) => {
     "@budibase/standard-components/sidepanel"
   ).instanceName("Edit row side panel")
 
-  const editFormBlock = new Component("@budibase/standard-components/formblock")
+  let editFormBlock = new Component("@budibase/standard-components/formblock")
   editFormBlock.instanceName("Edit row form block").customProps({
     dataSource: tableOrView.tableSelectFormat,
     labelPosition: "left",
-    buttonPosition: "top",
+    buttonPosition: "bottom",
     actionType: "Update",
     title: "Edit",
     rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
-    buttons: Utils.buildFormBlockButtonConfig({
-      _id: editFormBlock._json._id,
-      showDeleteButton: true,
-      showSaveButton: true,
-      saveButtonLabel: "Save",
-      deleteButtonLabel: "Delete",
-      actionType: "Update",
-      dataSource: tableOrView.tableSelectFormat,
-    }),
+  })
+
+  // Generate button config including row actions
+  let buttons = Utils.buildFormBlockButtonConfig({
+    _id: editFormBlock._json._id,
+    showDeleteButton: true,
+    showSaveButton: true,
+    saveButtonLabel: "Save",
+    deleteButtonLabel: "Delete",
+    actionType: "Update",
+    dataSource: tableOrView.tableSelectFormat,
+  })
+  const rowActionButtons = await getRowActionButtonTemplates({
+    instance: editFormBlock.json(),
+  })
+  buttons = [...(buttons || []), ...rowActionButtons]
+  editFormBlock = editFormBlock.customProps({
+    buttons,
+    buttonsCollapsed: buttons.length > 5,
   })
 
   detailsSidePanel.addChild(editFormBlock)

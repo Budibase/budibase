@@ -1,7 +1,17 @@
 import { Context, Request } from "koa"
-import { User, Role, UserRoles, Account, ConfigType } from "../documents"
+import {
+  User,
+  Role,
+  UserRoles,
+  Account,
+  ConfigType,
+  Row,
+  Table,
+  UserBindings,
+} from "../documents"
 import { FeatureFlag, License } from "../sdk"
 import { Files } from "formidable"
+import { EventType } from "../core"
 import { UserAgentContext } from "koa-useragent"
 
 export enum LoginMethod {
@@ -47,6 +57,7 @@ export interface UserCtx<RequestBody = any, ResponseBody = any>
   extends Ctx<RequestBody, ResponseBody> {
   user: ContextUser
   roleId?: string
+  eventEmitter?: ContextEmitter
   loginMethod?: LoginMethod
 }
 
@@ -56,4 +67,33 @@ export interface UserCtx<RequestBody = any, ResponseBody = any>
  */
 export interface BBContext extends Ctx {
   user?: ContextUser
+}
+
+export interface ContextEmitter {
+  emitRow(values: {
+    eventName: EventType.ROW_SAVE
+    appId: string
+    row: Row
+    table: Table
+    user: UserBindings
+  }): void
+  emitRow(values: {
+    eventName: EventType.ROW_UPDATE
+    appId: string
+    row: Row
+    table: Table
+    oldRow: Row
+    user: UserBindings
+  }): void
+  emitRow(values: {
+    eventName: EventType.ROW_DELETE
+    appId: string
+    row: Row
+    user: UserBindings
+  }): void
+  emitTable(
+    eventName: EventType.TABLE_SAVE | EventType.TABLE_DELETE,
+    appId: string,
+    table?: Table
+  ): void
 }

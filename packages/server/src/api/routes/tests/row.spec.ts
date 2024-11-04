@@ -18,6 +18,7 @@ import {
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  AIOperationEnum,
   AttachmentFieldMetadata,
   AutoFieldSubType,
   Datasource,
@@ -49,6 +50,18 @@ import { Knex } from "knex"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
 import { JsTimeoutError } from "@budibase/string-templates"
+
+jest.mock("@budibase/pro", () => ({
+  ...jest.requireActual("@budibase/pro"),
+  ai: {
+    LargeLanguageModel: {
+      forCurrentTenant: async () => ({
+        run: jest.fn(() => `Mock LLM Response`),
+        buildPromptFromAIOperation: jest.fn(),
+      }),
+    },
+  },
+}))
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -750,11 +763,24 @@ describe.each([
           expect(row.food).toEqual(["apple", "orange"])
         })
 
+        it("creates a new row with a default value when given an empty list", async () => {
+          const row = await config.api.row.save(table._id!, { food: [] })
+          expect(row.food).toEqual(["apple", "orange"])
+        })
+
         it("does not use default value if value specified", async () => {
           const row = await config.api.row.save(table._id!, {
             food: ["orange"],
           })
           expect(row.food).toEqual(["orange"])
+        })
+
+        it("resets back to its default value when empty", async () => {
+          let row = await config.api.row.save(table._id!, {
+            food: ["orange"],
+          })
+          row = await config.api.row.save(table._id!, { ...row, food: [] })
+          expect(row.food).toEqual(["apple", "orange"])
         })
       })
 
@@ -819,6 +845,62 @@ describe.each([
           })
           expect(row.users).toHaveLength(1)
           expect(row.users[0]._id).toEqual(id)
+        })
+      })
+
+      describe("boolean column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                active: {
+                  name: "active",
+                  type: FieldType.BOOLEAN,
+                  default: "true",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.active).toEqual(true)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            active: false,
+          })
+          expect(row.active).toEqual(false)
+        })
+      })
+
+      describe("bigint column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                bigNumber: {
+                  name: "bigNumber",
+                  type: FieldType.BIGINT,
+                  default: "1234567890",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.bigNumber).toEqual("1234567890")
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            bigNumber: "9876543210",
+          })
+          expect(row.bigNumber).toEqual("9876543210")
         })
       })
 
@@ -1741,6 +1823,39 @@ describe.each([
         expect(row.autoId).toEqual(3)
       })
 
+    isInternal &&
+      it("should reject bulkImporting relationship fields", async () => {
+        const table1 = await config.api.table.save(saveTableRequest())
+        const table2 = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              relationship: {
+                name: "relationship",
+                type: FieldType.LINK,
+                tableId: table1._id!,
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                fieldName: "relationship",
+              },
+            },
+          })
+        )
+
+        const table1Row1 = await config.api.row.save(table1._id!, {})
+        await config.api.row.bulkImport(
+          table2._id!,
+          {
+            rows: [{ relationship: [table1Row1._id!] }],
+          },
+          {
+            status: 400,
+            body: {
+              message:
+                'Can\'t bulk import relationship fields for internal databases, found value in field "relationship"',
+            },
+          }
+        )
+      })
+
     it("should be able to bulkImport rows", async () => {
       const table = await config.api.table.save(
         saveTableRequest({
@@ -2368,7 +2483,6 @@ describe.each([
         )
         tableId = table._id!
 
-        // @ts-ignore - until AI implemented
         const rowValues: Record<keyof typeof fullSchema, any> = {
           [FieldType.STRING]: generator.guid(),
           [FieldType.LONGFORM]: generator.paragraph(),
@@ -2381,6 +2495,7 @@ describe.each([
           [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
           [FieldType.FORMULA]: undefined, // generated field
           [FieldType.AUTO]: undefined, // generated field
+          [FieldType.AI]: "LLM Output",
           [FieldType.JSON]: { name: generator.guid() },
           [FieldType.INTERNAL]: generator.guid(),
           [FieldType.BARCODEQR]: generator.guid(),
@@ -2412,6 +2527,7 @@ describe.each([
           }),
           [FieldType.FORMULA]: fullSchema[FieldType.FORMULA].formula,
           [FieldType.AUTO]: expect.any(Number),
+          [FieldType.AI]: expect.any(String),
           [FieldType.JSON]: rowValues[FieldType.JSON],
           [FieldType.INTERNAL]: rowValues[FieldType.INTERNAL],
           [FieldType.BARCODEQR]: rowValues[FieldType.BARCODEQR],
@@ -2484,6 +2600,7 @@ describe.each([
               expectedRowData["bb_reference_single"].sample,
               false
             ),
+            ai: "LLM Output",
           },
         ])
       })
@@ -2511,6 +2628,40 @@ describe.each([
           schema: expect.any(Object),
           rows: [expectedRowData],
         })
+      })
+
+      it("can handle csv-special characters in strings", async () => {
+        const badString = 'test":, wow", "test": "wow"'
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              string: {
+                type: FieldType.STRING,
+                name: "string",
+              },
+            },
+          })
+        )
+
+        await config.api.row.save(table._id!, { string: badString })
+
+        const exportedValue = await config.api.row.exportRows(
+          table._id!,
+          { query: {} },
+          RowExportFormat.CSV
+        )
+
+        const json = await config.api.table.csvToJson(
+          {
+            csvString: exportedValue,
+          },
+          {
+            status: 200,
+          }
+        )
+
+        expect(json).toHaveLength(1)
+        expect(json[0].string).toEqual(badString)
       })
 
       it("exported data can be re-imported", async () => {
@@ -3268,6 +3419,57 @@ describe.each([
           )
         }
       )
+    })
+
+  isSqs &&
+    describe("AI fields", () => {
+      let table: Table
+
+      beforeAll(async () => {
+        mocks.licenses.useBudibaseAI()
+        mocks.licenses.useAICustomConfigs()
+        table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              ai: {
+                name: "ai",
+                type: FieldType.AI,
+                operation: AIOperationEnum.PROMPT,
+                prompt: "Convert the following to German: '{{ product }}'",
+              },
+              product: {
+                name: "product",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        await config.api.row.save(table._id!, {
+          product: generator.word(),
+        })
+      })
+
+      afterAll(() => {
+        jest.unmock("@budibase/pro")
+      })
+
+      it("should be able to save a row with an AI column", async () => {
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows.length).toBe(1)
+        expect(rows[0].ai).toEqual("Mock LLM Response")
+      })
+
+      it("should be able to update a row with an AI column", async () => {
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows.length).toBe(1)
+        await config.api.row.save(table._id!, {
+          product: generator.word(),
+          ...rows[0],
+        })
+        expect(rows.length).toBe(1)
+        expect(rows[0].ai).toEqual("Mock LLM Response")
+      })
     })
 
   describe("Formula fields", () => {

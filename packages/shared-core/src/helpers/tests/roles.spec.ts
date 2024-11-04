@@ -1,5 +1,5 @@
 import { checkForRoleInheritanceLoops } from "../roles"
-import { Role } from "@budibase/types"
+import { BuiltinPermissionID, Role } from "@budibase/types"
 
 /**
  * This unit test exists as this utility will be used in the frontend and backend, confirmation
@@ -19,7 +19,7 @@ function role(id: string, inherits: string | string[]): TestRole {
     _id: id,
     inherits: inherits,
     name: "ROLE",
-    permissionId: "PERMISSION",
+    permissionId: BuiltinPermissionID.WRITE,
     permissions: {}, // not needed for this test
   }
   allRoles.push(role)

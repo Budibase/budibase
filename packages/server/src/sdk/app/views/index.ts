@@ -22,10 +22,8 @@ import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
-
 import * as utils from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
-
 import * as internal from "./internal"
 import * as external from "./external"
 import sdk from "../../../sdk"
@@ -63,11 +61,67 @@ export function isView(view: any): view is ViewV2 {
   return view.id && docIds.isViewId(view.id) && view.version === 2
 }
 
+function guardDuplicateCalculationFields(view: Omit<ViewV2, "id" | "version">) {
+  const seen: Record<string, Record<CalculationType, boolean>> = {}
+  const calculationFields = helpers.views.calculationFields(view)
+  for (const name of Object.keys(calculationFields)) {
+    const schema = calculationFields[name]
+    const isCount = schema.calculationType === CalculationType.COUNT
+    const isDistinct = "distinct" in schema
+
+    if (isCount && isDistinct) {
+      // We do these separately.
+      continue
+    }
+
+    if (seen[schema.field]?.[schema.calculationType]) {
+      throw new HTTPError(
+        `Duplicate calculation on field "${schema.field}", calculation type "${schema.calculationType}"`,
+        400
+      )
+    }
+    seen[schema.field] ??= {} as Record<CalculationType, boolean>
+    seen[schema.field][schema.calculationType] = true
+  }
+}
+
+function guardDuplicateCountDistinctFields(
+  view: Omit<ViewV2, "id" | "version">
+) {
+  const seen: Record<string, Record<CalculationType, boolean>> = {}
+  const calculationFields = helpers.views.calculationFields(view)
+  for (const name of Object.keys(calculationFields)) {
+    const schema = calculationFields[name]
+    const isCount = schema.calculationType === CalculationType.COUNT
+    if (!isCount) {
+      continue
+    }
+
+    const isDistinct = "distinct" in schema
+    if (!isDistinct) {
+      // We do these separately.
+      continue
+    }
+
+    if (seen[schema.field]?.[schema.calculationType]) {
+      throw new HTTPError(
+        `Duplicate calculation on field "${schema.field}", calculation type "${schema.calculationType} distinct"`,
+        400
+      )
+    }
+    seen[schema.field] ??= {} as Record<CalculationType, boolean>
+    seen[schema.field][schema.calculationType] = true
+  }
+}
+
 async function guardCalculationViewSchema(
   table: Table,
   view: Omit<ViewV2, "id" | "version">
 ) {
   const calculationFields = helpers.views.calculationFields(view)
+
+  guardDuplicateCalculationFields(view)
+  guardDuplicateCountDistinctFields(view)
 
   if (Object.keys(calculationFields).length > 5) {
     throw new HTTPError(
@@ -76,29 +130,8 @@ async function guardCalculationViewSchema(
     )
   }
 
-  const seen: Record<string, Record<CalculationType, boolean>> = {}
-
   for (const name of Object.keys(calculationFields)) {
     const schema = calculationFields[name]
-    const isCount = schema.calculationType === CalculationType.COUNT
-    const isDistinct = isCount && "distinct" in schema && schema.distinct
-
-    const field = isCount && !isDistinct ? "*" : schema.field
-    if (seen[field]?.[schema.calculationType]) {
-      throw new HTTPError(
-        `Duplicate calculation on field "${field}", calculation type "${schema.calculationType}"`,
-        400
-      )
-    }
-    seen[field] ??= {} as Record<CalculationType, boolean>
-    seen[field][schema.calculationType] = true
-
-    // Count fields that aren't distinct don't need to reference another field,
-    // so we don't validate it.
-    if (isCount && !isDistinct) {
-      continue
-    }
-
     if (!schema.field) {
       throw new HTTPError(
         `Calculation field "${name}" is missing a "field" property`,
@@ -114,6 +147,7 @@ async function guardCalculationViewSchema(
       )
     }
 
+    const isCount = schema.calculationType === CalculationType.COUNT
     if (!isCount && !isNumeric(targetSchema.type)) {
       throw new HTTPError(
         `Calculation field "${name}" references field "${schema.field}" which is not a numeric field`,
@@ -251,7 +285,6 @@ export async function create(
   viewRequest: Omit<ViewV2, "id" | "version">
 ): Promise<ViewV2> {
   await guardViewSchema(tableId, viewRequest)
-
   const view = await pickApi(tableId).create(tableId, viewRequest)
 
   const setExplicitPermission = await features.flags.isEnabled(
@@ -316,7 +349,11 @@ export async function enrichSchema(
     const result: Record<string, ViewV2ColumnEnriched> = {}
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
-      if ([FieldType.LINK, FieldType.FORMULA].includes(relTableField.type)) {
+      if (
+        [FieldType.LINK, FieldType.FORMULA, FieldType.AI].includes(
+          relTableField.type
+        )
+      ) {
         continue
       }
 

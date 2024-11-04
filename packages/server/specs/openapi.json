@@ -831,7 +831,8 @@
                       "type": "string",
                       "enum": [
                         "static",
-                        "dynamic"
+                        "dynamic",
+                        "ai"
                       ],
                       "description": "Defines whether this is a static or dynamic formula."
                     }
@@ -1041,7 +1042,8 @@
                           "type": "string",
                           "enum": [
                             "static",
-                            "dynamic"
+                            "dynamic",
+                            "ai"
                           ],
                           "description": "Defines whether this is a static or dynamic formula."
                         }
@@ -1262,7 +1264,8 @@
                             "type": "string",
                             "enum": [
                               "static",
-                              "dynamic"
+                              "dynamic",
+                              "ai"
                             ],
                             "description": "Defines whether this is a static or dynamic formula."
                           }

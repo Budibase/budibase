@@ -1,15 +1,9 @@
-import {
-  roles,
-  events,
-  permissions,
-  db as dbCore,
-} from "@budibase/backend-core"
+import { roles, events, db as dbCore } from "@budibase/backend-core"
 import * as setup from "./utilities"
-import { PermissionLevel } from "@budibase/types"
+import { PermissionLevel, BuiltinPermissionID } from "@budibase/types"
 
 const { basicRole } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
-const { BuiltinPermissionID } = permissions
 
 const LOOP_ERROR = "Role inheritance contains a loop, this is not supported"
 
@@ -37,6 +31,39 @@ describe("/roles", () => {
         ...res,
         _id: dbCore.prefixRoleID(res._id!),
       })
+    })
+
+    it("handle a role with invalid inherits", async () => {
+      const role = basicRole()
+      role.inherits = ["not_real", "some_other_not_real"]
+
+      const res = await config.api.roles.save(role, {
+        status: 200,
+      })
+      expect(res.inherits).toEqual([BUILTIN_ROLE_IDS.BASIC])
+    })
+
+    it("handle a role with no inherits", async () => {
+      const role = basicRole()
+      role.inherits = []
+
+      const res = await config.api.roles.save(role, {
+        status: 200,
+      })
+      expect(res.inherits).toEqual([BUILTIN_ROLE_IDS.BASIC])
+    })
+
+    it("save role without permissionId", async () => {
+      const res = await config.api.roles.save(
+        {
+          ...basicRole(),
+          permissionId: undefined,
+        },
+        {
+          status: 200,
+        }
+      )
+      expect(res.permissionId).toEqual(PermissionLevel.WRITE)
     })
   })
 
@@ -129,7 +156,7 @@ describe("/roles", () => {
         _id: id1,
         name: id1,
         permissions: {},
-        permissionId: "write",
+        permissionId: BuiltinPermissionID.WRITE,
         version: "name",
         inherits: ["POWER"],
       })
@@ -137,7 +164,7 @@ describe("/roles", () => {
         _id: id2,
         permissions: {},
         name: id2,
-        permissionId: "write",
+        permissionId: BuiltinPermissionID.WRITE,
         version: "name",
         inherits: [id1],
       })
@@ -148,6 +175,32 @@ describe("/roles", () => {
         },
         { status: 400, body: { message: LOOP_ERROR } }
       )
+    })
+
+    it("handle updating a role, without its inherits", async () => {
+      const res = await config.api.roles.save({
+        ...basicRole(),
+        inherits: [BUILTIN_ROLE_IDS.ADMIN],
+      })
+      // remove the roles so that it will default back to DB roles, then save again
+      const updatedRes = await config.api.roles.save({
+        ...res,
+        inherits: undefined,
+      })
+      expect(updatedRes.inherits).toEqual([BUILTIN_ROLE_IDS.ADMIN])
+    })
+
+    it("handle updating a role, without its permissionId", async () => {
+      const res = await config.api.roles.save({
+        ...basicRole(),
+        permissionId: BuiltinPermissionID.READ_ONLY,
+      })
+      // permission ID can be removed during update
+      const updatedRes = await config.api.roles.save({
+        ...res,
+        permissionId: undefined,
+      })
+      expect(updatedRes.permissionId).toEqual(BuiltinPermissionID.READ_ONLY)
     })
   })
 
@@ -179,9 +232,7 @@ describe("/roles", () => {
       const customRoleFetched = res.find(r => r._id === customRole.name)
       expect(customRoleFetched).toBeDefined()
       expect(customRoleFetched!.inherits).toEqual(BUILTIN_ROLE_IDS.BASIC)
-      expect(customRoleFetched!.permissionId).toEqual(
-        BuiltinPermissionID.READ_ONLY
-      )
+      expect(customRoleFetched!.permissionId).toEqual(BuiltinPermissionID.WRITE)
     })
 
     it("should be able to get the role with a permission added", async () => {
@@ -285,7 +336,7 @@ describe("/roles", () => {
       await config.api.roles.save({
         name: customRoleName,
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
-        permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+        permissionId: BuiltinPermissionID.READ_ONLY,
         version: "name",
       })
       await config.withHeaders(
@@ -298,6 +349,23 @@ describe("/roles", () => {
         }
       )
     })
+
+    it("should fetch preview role correctly even without basic specified", async () => {
+      const role = await config.api.roles.save(basicRole())
+      // have to forcefully delete the inherits from DB - technically can't
+      // happen anymore - but good test case
+      await dbCore.getDB(config.appId!).put({
+        ...role,
+        _id: dbCore.prefixRoleID(role._id!),
+        inherits: [],
+      })
+      await config.withHeaders({ "x-budibase-role": role.name }, async () => {
+        const res = await config.api.roles.accessible({
+          status: 200,
+        })
+        expect(res).toEqual([role.name])
+      })
+    })
   })
 
   describe("accessible - multi-inheritance", () => {
@@ -308,19 +376,19 @@ describe("/roles", () => {
       const { _id: roleId1 } = await config.api.roles.save({
         name: role1,
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
-        permissionId: permissions.BuiltinPermissionID.WRITE,
+        permissionId: BuiltinPermissionID.WRITE,
         version: "name",
       })
       const { _id: roleId2 } = await config.api.roles.save({
         name: role2,
         inherits: roles.BUILTIN_ROLE_IDS.POWER,
-        permissionId: permissions.BuiltinPermissionID.POWER,
+        permissionId: BuiltinPermissionID.POWER,
         version: "name",
       })
       await config.api.roles.save({
         name: role3,
         inherits: [roleId1!, roleId2!],
-        permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+        permissionId: BuiltinPermissionID.READ_ONLY,
         version: "name",
       })
       const headers = await config.roleHeaders({

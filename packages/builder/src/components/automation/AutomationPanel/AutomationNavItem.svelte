@@ -17,11 +17,14 @@
   let confirmDeleteDialog
   let updateAutomationDialog
 
+  $: isRowAction = sdk.automations.isRowAction(automation)
+
   async function deleteAutomation() {
     try {
       await automationStore.actions.delete(automation)
       notifications.success("Automation deleted successfully")
     } catch (error) {
+      console.error(error)
       notifications.error("Error deleting automation")
     }
   }
@@ -36,42 +39,7 @@
   }
 
   const getContextMenuItems = () => {
-    const isRowAction = sdk.automations.isRowAction(automation)
-    const result = []
-    if (!isRowAction) {
-      result.push(
-        ...[
-          {
-            icon: "Delete",
-            name: "Delete",
-            keyBind: null,
-            visible: true,
-            disabled: false,
-            callback: confirmDeleteDialog.show,
-          },
-          {
-            icon: "Edit",
-            name: "Edit",
-            keyBind: null,
-            visible: true,
-            disabled: !automation.definition.trigger,
-            callback: updateAutomationDialog.show,
-          },
-          {
-            icon: "Duplicate",
-            name: "Duplicate",
-            keyBind: null,
-            visible: true,
-            disabled:
-              !automation.definition.trigger ||
-              automation.definition.trigger?.name === "Webhook",
-            callback: duplicateAutomation,
-          },
-        ]
-      )
-    }
-
-    result.push({
+    const pause = {
       icon: automation.disabled ? "CheckmarkCircle" : "Cancel",
       name: automation.disabled ? "Activate" : "Pause",
       keyBind: null,
@@ -83,8 +51,50 @@
           automation.disabled
         )
       },
-    })
-    return result
+    }
+    const del = {
+      icon: "Delete",
+      name: "Delete",
+      keyBind: null,
+      visible: true,
+      disabled: false,
+      callback: confirmDeleteDialog.show,
+    }
+    if (!isRowAction) {
+      return [
+        {
+          icon: "Edit",
+          name: "Edit",
+          keyBind: null,
+          visible: true,
+          disabled: !automation.definition.trigger,
+          callback: updateAutomationDialog.show,
+        },
+        {
+          icon: "Duplicate",
+          name: "Duplicate",
+          keyBind: null,
+          visible: true,
+          disabled:
+            !automation.definition.trigger ||
+            automation.definition.trigger?.name === "Webhook",
+          callback: duplicateAutomation,
+        },
+        pause,
+        del,
+      ]
+    } else {
+      return [
+        {
+          icon: "Edit",
+          name: "Edit",
+          keyBind: null,
+          visible: true,
+          callback: updateAutomationDialog.show,
+        },
+        del,
+      ]
+    }
   }
 
   const openContextMenu = e => {
@@ -99,17 +109,17 @@
 <NavItem
   on:contextmenu={openContextMenu}
   {icon}
-  iconColor={"var(--spectrum-global-color-gray-900)"}
-  text={automation.displayName}
+  iconColor={automation.disabled
+    ? "var(--spectrum-global-color-gray-600)"
+    : "var(--spectrum-global-color-gray-900)"}
+  text={automation.name}
   selected={automation._id === $selectedAutomation?._id}
   hovering={automation._id === $contextMenuStore.id}
   on:click={() => automationStore.actions.select(automation._id)}
   selectedBy={$userSelectedResourceMap[automation._id]}
   disabled={automation.disabled}
 >
-  <div class="icon">
-    <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
-  </div>
+  <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
 </NavItem>
 
 <ConfirmDialog
@@ -122,13 +132,5 @@
   <i>{automation.name}?</i>
   This action cannot be undone.
 </ConfirmDialog>
-<UpdateAutomationModal {automation} bind:this={updateAutomationDialog} />
 
-<style>
-  div.icon {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-  }
-</style>
+<UpdateAutomationModal {automation} bind:this={updateAutomationDialog} />
