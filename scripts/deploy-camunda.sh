@@ -17,15 +17,12 @@ echo "waiting for Camunda to be ready..."
 
 while is_camunda_ready -eq 0; do sleep 1; done
 
-cd src/main/resources/models
-
 echo "deploy processes..."
-zbctl deploy resource offboarding.bpmn --insecure
-zbctl deploy resource onboarding.bpmn --insecure
-zbctl deploy resource free_trial.bpmn --insecure
-zbctl deploy resource verify_sso_login.bpmn --insecure
+for file in src/main/resources/models/*; do
+    zbctl deploy resource $file --insecure
+done
 
-cd ../../../../../budibase/packages/pro
+cd ../budibase/packages/pro
 yarn && yarn build
 
 cd ../account-portal/packages/server 
