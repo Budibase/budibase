@@ -160,7 +160,7 @@ export async function finaliseRow(
     dynamic: false,
   })
   if (aiEnabled) {
-    enrichedRow = await processAIColumns(table, row, {
+    enrichedRow = await processAIColumns(table, enrichedRow, {
       contextRows: [enrichedRow],
     })
   }
