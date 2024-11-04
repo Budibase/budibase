@@ -12,6 +12,7 @@
   import FilterBuilder from "./FilterBuilder.svelte"
   import { tables, selectedScreen } from "stores/builder"
   import { search } from "@budibase/frontend-core"
+  import { utils } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
 
@@ -22,7 +23,7 @@
 
   let drawer
 
-  $: localFilters = Helpers.cloneDeep(value)
+  $: localFilters = value
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
   $: dsSchema = getSchemaForDatasource($selectedScreen, datasource)?.schema
   $: schemaFields = search.getFields(
@@ -30,8 +31,7 @@
     Object.values(schema || dsSchema || {}),
     { allowLinks: true }
   )
-
-  $: text = getText(value?.groups)
+  $: text = getText(value)
 
   async function saveFilter() {
     dispatch("change", localFilters)
@@ -39,11 +39,14 @@
     drawer.hide()
   }
 
-  const getText = (filterGroups = []) => {
-    const allFilters = filterGroups.reduce((acc, group) => {
+  const getText = filters => {
+    if (Array.isArray(filters)) {
+      filters = utils.processSearchFilters(filters)
+    }
+    const groups = filters?.groups || []
+    const allFilters = groups.reduce((acc, group) => {
       return (acc += group.filters.filter(filter => filter.field).length)
     }, 0)
-
     if (allFilters === 0) {
       return "No filters set"
     } else {
@@ -62,7 +65,7 @@
   on:drawerShow
   on:drawerShow={() => {
     // Reset to the currently available value.
-    localFilters = Helpers.cloneDeep(value)
+    localFilters = value
   }}
 >
   <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
