@@ -37,9 +37,10 @@ import {
   db,
   locks,
 } from "@budibase/backend-core"
-import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
 import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
+import tracer from "dd-trace"
+import { trace } from "console"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -152,59 +153,85 @@ export const adminUser = async (
 ) => {
   const { email, password, tenantId, ssoId, givenName, familyName } =
     ctx.request.body
+  await tracer.trace("adminUser", async span => {
+    span.addTags({ tenantId, ssoId })
 
-  if (await platform.tenants.exists(tenantId)) {
-    ctx.throw(403, "Organisation already exists.")
-  }
+    await tracer.trace("addTenant", async span => {
+      const alreadyExists = await platform.tenants.exists(tenantId)
+      const multiTenancyDisabled = !env.MULTI_TENANCY
+      span.addTags({ alreadyExists, multiTenancyDisabled })
 
-  if (env.MULTI_TENANCY) {
-    // store the new tenant record in the platform db
-    await platform.tenants.addTenant(tenantId)
-    await migrations.backPopulateMigrations({
-      type: MigrationType.GLOBAL,
-      tenantId,
+      if (alreadyExists || multiTenancyDisabled) {
+        return
+      }
+
+      // store the new tenant record in the platform db
+      await platform.tenants.addTenant(tenantId)
+      await migrations.backPopulateMigrations({
+        type: MigrationType.GLOBAL,
+        tenantId,
+      })
     })
-  }
 
-  await tenancy.doInTenant(tenantId, async () => {
-    // account portal sends a pre-hashed password - honour param to prevent double hashing
-    const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
-    // account portal sends no password for SSO users
-    const requirePassword = parseBooleanParam(ctx.request.query.requirePassword)
+    let adminUser: User
+    await tracer.trace("createAdminUser", async span => {
+      await tenancy.doInTenant(tenantId, async () => {
+        // account portal sends a pre-hashed password - honour param to prevent double hashing
+        const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
+        // account portal sends no password for SSO users
+        const requirePassword = parseBooleanParam(
+          ctx.request.query.requirePassword
+        )
 
-    const userExists = await checkAnyUserExists()
-    if (userExists) {
-      ctx.throw(
-        403,
-        "You cannot initialise once an global user has been created."
-      )
-    }
+        span.addTags({ hashPassword, requirePassword })
 
-    try {
-      const finalUser = await userSdk.db.createAdminUser(email, tenantId, {
-        password,
-        ssoId,
-        hashPassword,
-        requirePassword,
-        firstName: givenName,
-        lastName: familyName,
+        const users = await userSdk.db.allUsers()
+        const admins = users.filter(u => u.admin?.global)
+        span.addTags({
+          numUsers: users.length,
+          numAdmins: admins.length,
+          adminIds: admins.map(u => u._id),
+        })
+
+        if (admins.length > 0) {
+          ctx.throw(403, "You cannot initialise a tenant more than once")
+        }
+
+        try {
+          adminUser = await userSdk.db.createAdminUser(email, tenantId, {
+            password,
+            ssoId,
+            hashPassword,
+            requirePassword,
+            firstName: givenName,
+            lastName: familyName,
+          })
+        } catch (err: any) {
+          ctx.throw(err.status || 400, err)
+        }
       })
 
-      // events
-      let account: CloudAccount | undefined
-      if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-        account = await accounts.getAccountByTenantId(tenantId)
+      span.addTags({ "adminUser._id": adminUser._id })
+
+      try {
+        await tracer.trace("identifyTenantGroup", async () => {
+          let account: CloudAccount | undefined
+          if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+            account = await accounts.getAccountByTenantId(tenantId)
+          }
+          await events.identification.identifyTenantGroup(tenantId, account)
+        })
+      } catch (err: any) {
+        // It's not the end of the world if this section fails, the span will
+        // make sure the error gets to DataDog.
       }
-      await events.identification.identifyTenantGroup(tenantId, account)
 
       ctx.body = {
-        _id: finalUser._id!,
-        _rev: finalUser._rev!,
-        email: finalUser.email,
+        _id: adminUser._id!,
+        _rev: adminUser._rev!,
+        email: adminUser.email,
       }
-    } catch (err: any) {
-      ctx.throw(err.status || 400, err)
-    }
+    })
   })
 }
 
