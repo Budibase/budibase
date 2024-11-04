@@ -159,6 +159,12 @@ export const FIELDS = {
     icon: TypeIconMap[FieldType.FORMULA],
     constraints: {},
   },
+  AI: {
+    name: "AI",
+    type: FieldType.AI,
+    icon: TypeIconMap[FieldType.AI],
+    constraints: {},
+  },
   JSON: {
     name: "JSON",
     type: FieldType.JSON,

@@ -1,6 +1,7 @@
 {
   "features": {
     "spectrumThemes": true,
+    "unifiedTheme": true,
     "intelligentLoading": true,
     "deviceAwareness": true,
     "state": true,
@@ -448,6 +449,18 @@
         "name": "Layout",
         "settings": [
           {
+            "type": "boolean",
+            "label": "Collapse",
+            "key": "collapsed"
+          },
+          {
+            "type": "text",
+            "label": "Collapsed text",
+            "key": "collapsedText",
+            "dependsOn": "collapsed",
+            "placeholder": "Action"
+          },
+          {
             "type": "select",
             "label": "Direction",
             "key": "direction",
@@ -467,7 +480,11 @@
                 "barTitle": "Row layout"
               }
             ],
-            "defaultValue": "row"
+            "defaultValue": "row",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            }
           },
           {
             "type": "select",
@@ -557,7 +574,11 @@
                 "barTitle": "Grow container"
               }
             ],
-            "defaultValue": "shrink"
+            "defaultValue": "shrink",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            }
           },
           {
             "type": "select",
@@ -583,7 +604,11 @@
                 "value": "L"
               }
             ],
-            "defaultValue": "M"
+            "defaultValue": "M",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            }
           },
           {
             "type": "boolean",
@@ -591,7 +616,11 @@
             "key": "wrap",
             "showInBar": true,
             "barIcon": "ModernGridView",
-            "barTitle": "Wrap"
+            "barTitle": "Wrap",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            }
           }
         ]
       }
@@ -5101,7 +5130,8 @@
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "resetOn": "dataSource"
       },
       {
         "type": "field/sortable",
@@ -6970,6 +7000,10 @@
       {
         "type": "ChangeFormStep",
         "suffix": "form"
+      },
+      {
+        "type": "RefreshDatasource",
+        "suffix": "provider"
       }
     ],
     "context": [
@@ -7040,6 +7074,18 @@
         "key": "buttons",
         "wide": true,
         "nested": true
+      },
+      {
+        "type": "boolean",
+        "label": "Collapse",
+        "key": "buttonsCollapsed"
+      },
+      {
+        "type": "text",
+        "label": "Collapsed text",
+        "key": "buttonsCollapsedText",
+        "dependsOn": "buttonsCollapsed",
+        "placeholder": "Action"
       }
     ]
   },
@@ -7152,6 +7198,18 @@
             "key": "buttons",
             "nested": true,
             "resetOn": ["actionType", "dataSource"]
+          },
+          {
+            "type": "boolean",
+            "label": "Collapse",
+            "key": "buttonsCollapsed"
+          },
+          {
+            "type": "text",
+            "label": "Collapsed text",
+            "key": "buttonsCollapsedText",
+            "dependsOn": "buttonsCollapsed",
+            "placeholder": "Action"
           }
         ]
       },
@@ -7189,6 +7247,10 @@
       {
         "type": "ScrollTo",
         "suffix": "form"
+      },
+      {
+        "type": "RefreshDatasource",
+        "suffix": "provider"
       }
     ],
     "context": [
@@ -7536,13 +7598,24 @@
             "type": "buttonConfiguration",
             "key": "buttons",
             "nested": true,
-            "max": 3,
             "context": [
               {
                 "label": "Clicked row",
                 "key": "row"
               }
             ]
+          },
+          {
+            "type": "boolean",
+            "label": "Collapse",
+            "key": "buttonsCollapsed"
+          },
+          {
+            "type": "text",
+            "label": "Collapsed text",
+            "key": "buttonsCollapsedText",
+            "dependsOn": "buttonsCollapsed",
+            "placeholder": "Action"
           }
         ]
       }

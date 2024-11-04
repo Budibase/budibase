@@ -31,6 +31,7 @@ import {
 import BudiStore from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
 import { FieldType } from "@budibase/types"
+import { utils } from "@budibase/shared-core"
 
 export const INITIAL_COMPONENTS_STATE = {
   components: {},
@@ -196,6 +197,24 @@ export class ComponentStore extends BudiStore {
       }
     }
 
+    if (!enrichedComponent?._component) {
+      return migrated
+    }
+
+    const def = this.getDefinition(enrichedComponent?._component)
+    const filterableTypes = def?.settings?.filter(setting =>
+      setting?.type?.startsWith("filter")
+    )
+    for (let setting of filterableTypes || []) {
+      const isLegacy = Array.isArray(enrichedComponent[setting.key])
+      if (isLegacy) {
+        const processedSetting = utils.processSearchFilters(
+          enrichedComponent[setting.key]
+        )
+        enrichedComponent[setting.key] = processedSetting
+        migrated = true
+      }
+    }
     return migrated
   }
 
@@ -405,7 +424,13 @@ export class ComponentStore extends BudiStore {
       screen: get(selectedScreen),
       useDefaultValues: true,
     })
-    this.migrateSettings(instance)
+
+    try {
+      this.migrateSettings(instance)
+    } catch (e) {
+      console.error(e)
+      throw e
+    }
 
     // Custom post processing for creation only
     let extras = {}

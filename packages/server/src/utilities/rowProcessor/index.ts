@@ -132,7 +132,12 @@ async function processDefaultValues(table: Table, row: Row) {
   }
 
   for (const [key, schema] of Object.entries(table.schema)) {
-    if ("default" in schema && schema.default != null && row[key] == null) {
+    const isEmpty =
+      row[key] == null ||
+      row[key] === "" ||
+      (Array.isArray(row[key]) && row[key].length === 0)
+
+    if ("default" in schema && schema.default != null && isEmpty) {
       let processed: string | string[]
       if (Array.isArray(schema.default)) {
         processed = schema.default.map(val => processStringSync(val, ctx))
@@ -425,6 +430,32 @@ export async function coreOutputProcessing(
             if (link[linkKey] === null) {
               delete link[linkKey]
             }
+          }
+        }
+      }
+    }
+
+    if (sdk.views.isView(source)) {
+      // We ensure calculation fields are returned as numbers.  During the
+      // testing of this feature it was discovered that the COUNT operation
+      // returns a string for MySQL, MariaDB, and Postgres. But given that all
+      // calculation fields (except ones operating on BIGINTs) should be
+      // numbers, we blanket make sure of that here.
+      for (const [name, field] of Object.entries(
+        helpers.views.calculationFields(source)
+      )) {
+        if ("field" in field) {
+          const targetSchema = table.schema[field.field]
+          // We don't convert BIGINT fields to floats because we could lose
+          // precision.
+          if (targetSchema.type === FieldType.BIGINT) {
+            continue
+          }
+        }
+
+        for (const row of rows) {
+          if (typeof row[name] === "string") {
+            row[name] = parseFloat(row[name])
           }
         }
       }

@@ -138,7 +138,7 @@ const tableSchema = {
               },
               formulaType: {
                 type: "string",
-                enum: Object.values(FormulaType),
+                enum: [FormulaType.STATIC, FormulaType.DYNAMIC],
                 description:
                   "Defines whether this is a static or dynamic formula.",
               },

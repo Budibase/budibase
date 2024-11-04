@@ -18,6 +18,7 @@ import {
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  AIOperationEnum,
   AutoFieldSubType,
   Datasource,
   DeleteRow,
@@ -46,6 +47,18 @@ import { Knex } from "knex"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
 import { JsTimeoutError } from "@budibase/string-templates"
+
+jest.mock("@budibase/pro", () => ({
+  ...jest.requireActual("@budibase/pro"),
+  ai: {
+    LargeLanguageModel: {
+      forCurrentTenant: async () => ({
+        run: jest.fn(() => `Mock LLM Response`),
+        buildPromptFromAIOperation: jest.fn(),
+      }),
+    },
+  },
+}))
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -556,11 +569,24 @@ describe.each([
           expect(row.food).toEqual(["apple", "orange"])
         })
 
+        it("creates a new row with a default value when given an empty list", async () => {
+          const row = await config.api.row.save(table._id!, { food: [] })
+          expect(row.food).toEqual(["apple", "orange"])
+        })
+
         it("does not use default value if value specified", async () => {
           const row = await config.api.row.save(table._id!, {
             food: ["orange"],
           })
           expect(row.food).toEqual(["orange"])
+        })
+
+        it("resets back to its default value when empty", async () => {
+          let row = await config.api.row.save(table._id!, {
+            food: ["orange"],
+          })
+          row = await config.api.row.save(table._id!, { ...row, food: [] })
+          expect(row.food).toEqual(["apple", "orange"])
         })
       })
 
@@ -625,6 +651,62 @@ describe.each([
           })
           expect(row.users).toHaveLength(1)
           expect(row.users[0]._id).toEqual(id)
+        })
+      })
+
+      describe("boolean column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                active: {
+                  name: "active",
+                  type: FieldType.BOOLEAN,
+                  default: "true",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.active).toEqual(true)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            active: false,
+          })
+          expect(row.active).toEqual(false)
+        })
+      })
+
+      describe("bigint column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                bigNumber: {
+                  name: "bigNumber",
+                  type: FieldType.BIGINT,
+                  default: "1234567890",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.bigNumber).toEqual("1234567890")
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            bigNumber: "9876543210",
+          })
+          expect(row.bigNumber).toEqual("9876543210")
         })
       })
 
@@ -745,6 +827,104 @@ describe.each([
         })
       })
     })
+
+    describe("relations to same table", () => {
+      let relatedRows: Row[]
+
+      beforeAll(async () => {
+        const relatedTable = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+            },
+          })
+        )
+        const relatedTableId = relatedTable._id!
+        table = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+              related1: {
+                type: FieldType.LINK,
+                name: "related1",
+                fieldName: "main1",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+              related2: {
+                type: FieldType.LINK,
+                name: "related2",
+                fieldName: "main2",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+            },
+          })
+        )
+        relatedRows = await Promise.all([
+          config.api.row.save(relatedTableId, { name: "foo" }),
+          config.api.row.save(relatedTableId, { name: "bar" }),
+          config.api.row.save(relatedTableId, { name: "baz" }),
+          config.api.row.save(relatedTableId, { name: "boo" }),
+        ])
+      })
+
+      it("can create rows with both relationships", async () => {
+        const row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [relatedRows[0]._id!],
+          related2: [relatedRows[1]._id!],
+        })
+
+        expect(row).toEqual(
+          expect.objectContaining({
+            name: "test",
+            related1: [
+              {
+                _id: relatedRows[0]._id,
+                primaryDisplay: relatedRows[0].name,
+              },
+            ],
+            related2: [
+              {
+                _id: relatedRows[1]._id,
+                primaryDisplay: relatedRows[1].name,
+              },
+            ],
+          })
+        )
+      })
+
+      it("can create rows with no relationships", async () => {
+        const row = await config.api.row.save(table._id!, {
+          name: "test",
+        })
+
+        expect(row.related1).toBeUndefined()
+        expect(row.related2).toBeUndefined()
+      })
+
+      it("can create rows with only one relationships field", async () => {
+        const row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [],
+          related2: [relatedRows[1]._id!],
+        })
+
+        expect(row).toEqual(
+          expect.objectContaining({
+            name: "test",
+            related2: [
+              {
+                _id: relatedRows[1]._id,
+                primaryDisplay: relatedRows[1].name,
+              },
+            ],
+          })
+        )
+        expect(row.related1).toBeUndefined()
+      })
+    })
   })
 
   describe("get", () => {
@@ -847,6 +1027,133 @@ describe.each([
         const rows = await config.api.row.fetch(table._id!)
         expect(rows).toHaveLength(1)
       })
+
+    describe("relations to same table", () => {
+      let relatedRows: Row[]
+
+      beforeAll(async () => {
+        const relatedTable = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+            },
+          })
+        )
+        const relatedTableId = relatedTable._id!
+        table = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+              related1: {
+                type: FieldType.LINK,
+                name: "related1",
+                fieldName: "main1",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+              related2: {
+                type: FieldType.LINK,
+                name: "related2",
+                fieldName: "main2",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+            },
+          })
+        )
+        relatedRows = await Promise.all([
+          config.api.row.save(relatedTableId, { name: "foo" }),
+          config.api.row.save(relatedTableId, { name: "bar" }),
+          config.api.row.save(relatedTableId, { name: "baz" }),
+          config.api.row.save(relatedTableId, { name: "boo" }),
+        ])
+      })
+
+      it("can edit rows with both relationships", async () => {
+        let row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [relatedRows[0]._id!],
+          related2: [relatedRows[1]._id!],
+        })
+
+        row = await config.api.row.save(table._id!, {
+          ...row,
+          related1: [relatedRows[0]._id!, relatedRows[1]._id!],
+          related2: [relatedRows[2]._id!],
+        })
+
+        expect(row).toEqual(
+          expect.objectContaining({
+            name: "test",
+            related1: expect.arrayContaining([
+              {
+                _id: relatedRows[0]._id,
+                primaryDisplay: relatedRows[0].name,
+              },
+              {
+                _id: relatedRows[1]._id,
+                primaryDisplay: relatedRows[1].name,
+              },
+            ]),
+            related2: [
+              {
+                _id: relatedRows[2]._id,
+                primaryDisplay: relatedRows[2].name,
+              },
+            ],
+          })
+        )
+      })
+
+      it("can drop existing relationship", async () => {
+        let row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [relatedRows[0]._id!],
+          related2: [relatedRows[1]._id!],
+        })
+
+        row = await config.api.row.save(table._id!, {
+          ...row,
+          related1: [],
+          related2: [relatedRows[2]._id!],
+        })
+
+        expect(row).toEqual(
+          expect.objectContaining({
+            name: "test",
+            related2: [
+              {
+                _id: relatedRows[2]._id,
+                primaryDisplay: relatedRows[2].name,
+              },
+            ],
+          })
+        )
+        expect(row.related1).toBeUndefined()
+      })
+
+      it("can drop both relationships", async () => {
+        let row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [relatedRows[0]._id!],
+          related2: [relatedRows[1]._id!],
+        })
+
+        row = await config.api.row.save(table._id!, {
+          ...row,
+          related1: [],
+          related2: [],
+        })
+
+        expect(row).toEqual(
+          expect.objectContaining({
+            name: "test",
+          })
+        )
+        expect(row.related1).toBeUndefined()
+        expect(row.related2).toBeUndefined()
+      })
+    })
   })
 
   describe("patch", () => {
@@ -1123,6 +1430,72 @@ describe.each([
       )
       expect(res.length).toEqual(2)
     })
+
+    describe("relations to same table", () => {
+      let relatedRows: Row[]
+
+      beforeAll(async () => {
+        const relatedTable = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+            },
+          })
+        )
+        const relatedTableId = relatedTable._id!
+        table = await config.api.table.save(
+          defaultTable({
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+              related1: {
+                type: FieldType.LINK,
+                name: "related1",
+                fieldName: "main1",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+              related2: {
+                type: FieldType.LINK,
+                name: "related2",
+                fieldName: "main2",
+                tableId: relatedTableId,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+              },
+            },
+          })
+        )
+        relatedRows = await Promise.all([
+          config.api.row.save(relatedTableId, { name: "foo" }),
+          config.api.row.save(relatedTableId, { name: "bar" }),
+          config.api.row.save(relatedTableId, { name: "baz" }),
+          config.api.row.save(relatedTableId, { name: "boo" }),
+        ])
+      })
+
+      it("can delete rows with both relationships", async () => {
+        const row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [relatedRows[0]._id!],
+          related2: [relatedRows[1]._id!],
+        })
+
+        await config.api.row.delete(table._id!, { _id: row._id! })
+
+        await config.api.row.get(table._id!, row._id!, { status: 404 })
+      })
+
+      it("can delete rows with empty relationships", async () => {
+        const row = await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [],
+          related2: [],
+        })
+
+        await config.api.row.delete(table._id!, { _id: row._id! })
+
+        await config.api.row.get(table._id!, row._id!, { status: 404 })
+      })
+    })
   })
 
   describe("validate", () => {
@@ -1251,6 +1624,39 @@ describe.each([
 
         row = await config.api.row.save(table._id!, {})
         expect(row.autoId).toEqual(3)
+      })
+
+    isInternal &&
+      it("should reject bulkImporting relationship fields", async () => {
+        const table1 = await config.api.table.save(saveTableRequest())
+        const table2 = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              relationship: {
+                name: "relationship",
+                type: FieldType.LINK,
+                tableId: table1._id!,
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                fieldName: "relationship",
+              },
+            },
+          })
+        )
+
+        const table1Row1 = await config.api.row.save(table1._id!, {})
+        await config.api.row.bulkImport(
+          table2._id!,
+          {
+            rows: [{ relationship: [table1Row1._id!] }],
+          },
+          {
+            status: 400,
+            body: {
+              message:
+                'Can\'t bulk import relationship fields for internal databases, found value in field "relationship"',
+            },
+          }
+        )
       })
 
     it("should be able to bulkImport rows", async () => {
@@ -1880,7 +2286,6 @@ describe.each([
         )
         tableId = table._id!
 
-        // @ts-ignore - until AI implemented
         const rowValues: Record<keyof typeof fullSchema, any> = {
           [FieldType.STRING]: generator.guid(),
           [FieldType.LONGFORM]: generator.paragraph(),
@@ -1893,6 +2298,7 @@ describe.each([
           [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
           [FieldType.FORMULA]: undefined, // generated field
           [FieldType.AUTO]: undefined, // generated field
+          [FieldType.AI]: "LLM Output",
           [FieldType.JSON]: { name: generator.guid() },
           [FieldType.INTERNAL]: generator.guid(),
           [FieldType.BARCODEQR]: generator.guid(),
@@ -1924,6 +2330,7 @@ describe.each([
           }),
           [FieldType.FORMULA]: fullSchema[FieldType.FORMULA].formula,
           [FieldType.AUTO]: expect.any(Number),
+          [FieldType.AI]: expect.any(String),
           [FieldType.JSON]: rowValues[FieldType.JSON],
           [FieldType.INTERNAL]: rowValues[FieldType.INTERNAL],
           [FieldType.BARCODEQR]: rowValues[FieldType.BARCODEQR],
@@ -1996,6 +2403,7 @@ describe.each([
               expectedRowData["bb_reference_single"].sample,
               false
             ),
+            ai: "LLM Output",
           },
         ])
       })
@@ -2023,6 +2431,40 @@ describe.each([
           schema: expect.any(Object),
           rows: [expectedRowData],
         })
+      })
+
+      it("can handle csv-special characters in strings", async () => {
+        const badString = 'test":, wow", "test": "wow"'
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              string: {
+                type: FieldType.STRING,
+                name: "string",
+              },
+            },
+          })
+        )
+
+        await config.api.row.save(table._id!, { string: badString })
+
+        const exportedValue = await config.api.row.exportRows(
+          table._id!,
+          { query: {} },
+          RowExportFormat.CSV
+        )
+
+        const json = await config.api.table.csvToJson(
+          {
+            csvString: exportedValue,
+          },
+          {
+            status: 200,
+          }
+        )
+
+        expect(json).toHaveLength(1)
+        expect(json[0].string).toEqual(badString)
       })
 
       it("exported data can be re-imported", async () => {
@@ -2588,7 +3030,7 @@ describe.each([
           },
         ],
         ["from original saved row", (row: Row) => row],
-        ["from updated  row", (row: Row) => config.api.row.save(viewId, row)],
+        ["from updated row", (row: Row) => config.api.row.save(viewId, row)],
       ]
 
       it.each(testScenarios)(
@@ -2780,6 +3222,57 @@ describe.each([
           )
         }
       )
+    })
+
+  isInternal &&
+    describe("AI fields", () => {
+      let table: Table
+
+      beforeAll(async () => {
+        mocks.licenses.useBudibaseAI()
+        mocks.licenses.useAICustomConfigs()
+        table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              ai: {
+                name: "ai",
+                type: FieldType.AI,
+                operation: AIOperationEnum.PROMPT,
+                prompt: "Convert the following to German: '{{ product }}'",
+              },
+              product: {
+                name: "product",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        await config.api.row.save(table._id!, {
+          product: generator.word(),
+        })
+      })
+
+      afterAll(() => {
+        jest.unmock("@budibase/pro")
+      })
+
+      it("should be able to save a row with an AI column", async () => {
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows.length).toBe(1)
+        expect(rows[0].ai).toEqual("Mock LLM Response")
+      })
+
+      it("should be able to update a row with an AI column", async () => {
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows.length).toBe(1)
+        await config.api.row.save(table._id!, {
+          product: generator.word(),
+          ...rows[0],
+        })
+        expect(rows.length).toBe(1)
+        expect(rows[0].ai).toEqual("Mock LLM Response")
+      })
     })
 
   describe("Formula fields", () => {

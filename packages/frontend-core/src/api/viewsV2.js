@@ -6,6 +6,7 @@ export const buildViewV2Endpoints = API => ({
   fetchDefinition: async viewId => {
     return await API.get({
       url: `/api/v2/views/${encodeURIComponent(viewId)}`,
+      cache: true,
     })
   },
   /**

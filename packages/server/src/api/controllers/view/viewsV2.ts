@@ -12,6 +12,8 @@ import {
   RelationSchemaField,
   ViewFieldMetadata,
   CalculationType,
+  CountDistinctCalculationFieldMetadata,
+  CountCalculationFieldMetadata,
 } from "@budibase/types"
 import { builderSocket, gridSocket } from "../../../websockets"
 import { helpers } from "@budibase/shared-core"
@@ -22,27 +24,31 @@ function stripUnknownFields(
   if (helpers.views.isCalculationField(field)) {
     if (field.calculationType === CalculationType.COUNT) {
       if ("distinct" in field && field.distinct) {
-        return {
+        const strippedField: RequiredKeys<CountDistinctCalculationFieldMetadata> =
+          {
+            order: field.order,
+            width: field.width,
+            visible: field.visible,
+            readonly: field.readonly,
+            icon: field.icon,
+            distinct: field.distinct,
+            calculationType: field.calculationType,
+            field: field.field,
+            columns: field.columns,
+          }
+        return strippedField
+      } else {
+        const strippedField: RequiredKeys<CountCalculationFieldMetadata> = {
           order: field.order,
           width: field.width,
           visible: field.visible,
           readonly: field.readonly,
           icon: field.icon,
-          distinct: field.distinct,
           calculationType: field.calculationType,
           field: field.field,
           columns: field.columns,
         }
-      } else {
-        return {
-          order: field.order,
-          width: field.width,
-          visible: field.visible,
-          readonly: field.readonly,
-          icon: field.icon,
-          calculationType: field.calculationType,
-          columns: field.columns,
-        }
+        return strippedField
       }
     }
     const strippedField: RequiredKeys<ViewCalculationFieldMetadata> = {
