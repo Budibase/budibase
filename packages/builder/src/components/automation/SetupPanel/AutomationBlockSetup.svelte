@@ -865,7 +865,7 @@
   <!-- Custom Layouts -->
   {#if stepLayouts[block.stepId]}
     {#each Object.keys(stepLayouts[block.stepId] || {}) as key}
-      {#if canShowField(key, stepLayouts[block.stepId].schema)}
+      {#if canShowField(stepLayouts[block.stepId].schema)}
         {#each stepLayouts[block.stepId][key].content as config}
           {#if config.title}
             <PropField label={config.title} labelTooltip={config.tooltip}>
@@ -890,7 +890,7 @@
   {:else}
     <!-- Default Schema Property Layout -->
     {#each schemaProperties as [key, value]}
-      {#if canShowField(key, value)}
+      {#if canShowField(value)}
         {@const label = getFieldLabel(key, value)}
         <div class:block-field={shouldRenderField(value)}>
           {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
@@ -913,7 +913,7 @@
             </div>
           {/if}
           <div class:field-width={shouldRenderField(value)}>
-            {#if value.type === "string" && value.enum && canShowField(key, value)}
+            {#if value.type === "string" && value.enum && canShowField(value)}
               <Select
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
