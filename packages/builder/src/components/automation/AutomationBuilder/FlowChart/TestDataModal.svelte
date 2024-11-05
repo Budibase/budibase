@@ -111,7 +111,7 @@
   }
 
   const testAutomation = async () => {
-    // Ensure $memoTestData rectiveness is processed
+    // Ensure $memoTestData reactiveness is processed
     await tick()
     try {
       await automationStore.actions.test($selectedAutomation, $memoTestData)
