@@ -64,8 +64,7 @@
     return true
   }
 
-  const memoTestData = memo(parseTestData($selectedAutomation.testData))
-  $: memoTestData.set(parseTestData($selectedAutomation.testData))
+  $: testData = testData || parseTestData($selectedAutomation.testData)
 
   $: {
     // clone the trigger so we're not mutating the reference
@@ -84,7 +83,7 @@
   $: isError =
     !isTriggerValid(trigger) ||
     !(trigger.schema.outputs.required || []).every(
-      required => $memoTestData?.[required] || required !== "row"
+      required => testData?.[required] || required !== "row"
     )
 
   function parseTestJSON(e) {
@@ -111,10 +110,10 @@
   }
 
   const testAutomation = async () => {
-    // Ensure $memoTestData reactiveness is processed
+    // Ensure testData reactiveness is processed
     await tick()
     try {
-      await automationStore.actions.test($selectedAutomation, $memoTestData)
+      await automationStore.actions.test($selectedAutomation, testData)
       $automationStore.showTestPanel = true
     } catch (error) {
       notifications.error(error)
@@ -152,7 +151,7 @@
   {#if selectedValues}
     <div class="tab-content-padding">
       <AutomationBlockSetup
-        testData={$memoTestData}
+        bind:testData
         {schemaProperties}
         isTestModal
         block={trigger}
