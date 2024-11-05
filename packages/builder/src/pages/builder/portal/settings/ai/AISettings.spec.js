@@ -1,7 +1,7 @@
 import { it, expect, describe, vi } from "vitest"
 import AISettings from "./index.svelte"
 import { render, fireEvent } from "@testing-library/svelte"
-import { admin, licensing } from "stores/portal"
+import { admin, licensing, featureFlags } from "stores/portal"
 import { notifications } from "@budibase/bbui"
 
 vi.spyOn(notifications, "error").mockImplementation(vi.fn)
@@ -12,11 +12,16 @@ const Hosting = {
   Self: "self",
 }
 
-function setupEnv(hosting, features = {}) {
+function setupEnv(hosting, features = {}, flags = {}) {
   const defaultFeatures = {
     budibaseAIEnabled: false,
     customAIConfigsEnabled: false,
     ...features,
+  }
+  const defaultFlags = {
+    BUDIBASE_AI: false,
+    AI_CUSTOM_CONFIGS: false,
+    ...flags,
   }
   admin.subscribe = vi.fn().mockImplementation(callback => {
     callback({ cloud: hosting === Hosting.Cloud })
@@ -24,6 +29,10 @@ function setupEnv(hosting, features = {}) {
   })
   licensing.subscribe = vi.fn().mockImplementation(callback => {
     callback(defaultFeatures)
+    return () => {}
+  })
+  featureFlags.subscribe = vi.fn().mockImplementation(callback => {
+    callback(defaultFlags)
     return () => {}
   })
 }
@@ -72,7 +81,11 @@ describe("AISettings", () => {
       let addConfigurationButton
       let configModal
 
-      setupEnv(Hosting.Cloud, { customAIConfigsEnabled: true })
+      setupEnv(
+        Hosting.Cloud,
+        { customAIConfigsEnabled: true },
+        { AI_CUSTOM_CONFIGS: true }
+      )
       instance = render(AISettings)
       addConfigurationButton = instance.queryByText("Add configuration")
       expect(addConfigurationButton).toBeInTheDocument()
@@ -85,7 +98,11 @@ describe("AISettings", () => {
       let addConfigurationButton
       let configModal
 
-      setupEnv(Hosting.Self, { customAIConfigsEnabled: true })
+      setupEnv(
+        Hosting.Self,
+        { customAIConfigsEnabled: true },
+        { AI_CUSTOM_CONFIGS: true }
+      )
       instance = render(AISettings)
       addConfigurationButton = instance.queryByText("Add configuration")
       expect(addConfigurationButton).toBeInTheDocument()
