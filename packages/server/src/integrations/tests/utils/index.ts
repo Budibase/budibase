@@ -9,8 +9,10 @@ import * as oracle from "./oracle"
 import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import cloneDeep from "lodash/cloneDeep"
+import { Knex } from "knex"
+import TestConfiguration from "src/tests/utilities/TestConfiguration"
 
-export type DatasourceProvider = () => Promise<Datasource>
+export type DatasourceProvider = () => Promise<Datasource | undefined>
 
 export enum DatabaseName {
   POSTGRES = "postgres",
@@ -19,6 +21,7 @@ export enum DatabaseName {
   SQL_SERVER = "mssql",
   MARIADB = "mariadb",
   ORACLE = "oracle",
+  SQS = "sqs",
 }
 
 const providers: Record<DatabaseName, DatasourceProvider> = {
@@ -28,28 +31,111 @@ const providers: Record<DatabaseName, DatasourceProvider> = {
   [DatabaseName.SQL_SERVER]: mssql.getDatasource,
   [DatabaseName.MARIADB]: mariadb.getDatasource,
   [DatabaseName.ORACLE]: oracle.getDatasource,
+  [DatabaseName.SQS]: async () => undefined,
 }
 
-export function getDatasourceProviders(
-  ...sourceNames: DatabaseName[]
-): Promise<Datasource>[] {
-  return sourceNames.map(sourceName => providers[sourceName]())
+export interface DatasourceDescribeOpts {
+  name: string
+  only?: DatabaseName[]
+  exclude?: DatabaseName[]
 }
 
-export function getDatasourceProvider(
+export interface DatasourceDescribeReturnPromise {
+  rawDatasource: Datasource | undefined
+  datasource: Datasource | undefined
+  client: Knex | undefined
+}
+
+export interface DatasourceDescribeReturn {
+  name: DatabaseName
+  config: TestConfiguration
+  dsProvider: Promise<DatasourceDescribeReturnPromise>
+  isInternal: boolean
+  isExternal: boolean
+  isMySQL: boolean
+  isPostgres: boolean
+  isMongodb: boolean
+  isMSSQL: boolean
+  isOracle: boolean
+}
+
+async function createDatasources(
+  config: TestConfiguration,
+  name: DatabaseName
+): Promise<DatasourceDescribeReturnPromise> {
+  const rawDatasource = await getDatasource(name)
+
+  let datasource: Datasource | undefined
+  if (rawDatasource) {
+    datasource = await config.api.datasource.create(rawDatasource)
+  }
+
+  let client: Knex | undefined
+  if (rawDatasource) {
+    try {
+      client = await knexClient(rawDatasource)
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  return {
+    rawDatasource,
+    datasource,
+    client,
+  }
+}
+
+export function datasourceDescribe(
+  opts: DatasourceDescribeOpts,
+  cb: (args: DatasourceDescribeReturn) => void
+) {
+  const { name, only, exclude } = opts
+
+  if (only && exclude) {
+    throw new Error("you can only supply one of 'only' or 'exclude'")
+  }
+
+  let databases = Object.values(DatabaseName)
+  if (only) {
+    databases = only
+  } else if (exclude) {
+    databases = databases.filter(db => !exclude.includes(db))
+  }
+
+  const config = new TestConfiguration()
+  const prepped = databases.map(name => {
+    return {
+      name,
+      config,
+      dsProvider: createDatasources(config, name),
+      isInternal: name === DatabaseName.SQS,
+      isExternal: name !== DatabaseName.SQS,
+      isMySQL: name === DatabaseName.MYSQL,
+      isPostgres: name === DatabaseName.POSTGRES,
+      isMongodb: name === DatabaseName.MONGODB,
+      isMSSQL: name === DatabaseName.SQL_SERVER,
+      isOracle: name === DatabaseName.ORACLE,
+    }
+  })
+
+  describe.each(prepped)(name, args => {
+    beforeAll(async () => {
+      await args.config.init()
+    })
+
+    afterAll(() => {
+      args.config.end()
+    })
+
+    cb(args)
+  })
+}
+
+export function getDatasource(
   sourceName: DatabaseName
-): DatasourceProvider {
-  return providers[sourceName]
-}
-
-export function getDatasource(sourceName: DatabaseName): Promise<Datasource> {
+): Promise<Datasource | undefined> {
   return providers[sourceName]()
-}
-
-export async function getDatasources(
-  ...sourceNames: DatabaseName[]
-): Promise<Datasource[]> {
-  return Promise.all(sourceNames.map(sourceName => providers[sourceName]()))
 }
 
 export async function knexClient(ds: Datasource) {
