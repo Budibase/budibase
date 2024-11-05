@@ -65,7 +65,7 @@
   let tableOptions
   let errorChecker = new RelationshipErrorChecker(
     invalidThroughTable,
-    relationshipExists
+    manyToManyRelationshipExistsFn
   )
   let errors = {}
   let fromPrimary, fromForeign, fromColumn, toColumn
@@ -125,7 +125,7 @@
     }
     return false
   }
-  function relationshipExists() {
+  function manyToManyRelationshipExistsFn() {
     if (
       originalFromTable &&
       originalToTable &&
@@ -141,16 +141,14 @@
       datasource.entities[getTable(toId).name].schema
     ).filter(value => value.through)
 
-    const matchAgainstUserInput = (fromTableId, toTableId) =>
-      (fromTableId === fromId && toTableId === toId) ||
-      (fromTableId === toId && toTableId === fromId)
+    const matchAgainstUserInput = link =>
+      (link.throughTo === throughToKey &&
+        link.throughFrom === throughFromKey) ||
+      (link.throughTo === throughFromKey && link.throughFrom === throughToKey)
 
-    return !!fromThroughLinks.find(from =>
-      toThroughLinks.find(
-        to =>
-          from.through === to.through &&
-          matchAgainstUserInput(from.tableId, to.tableId)
-      )
+    const allLinks = [...fromThroughLinks, ...toThroughLinks]
+    return !!allLinks.find(
+      link => link.through === throughId && matchAgainstUserInput(link)
     )
   }
 
@@ -181,16 +179,15 @@
       relationshipType: errorChecker.relationshipTypeSet(relationshipType),
       fromTable:
         errorChecker.tableSet(fromTable) ||
-        errorChecker.doesRelationshipExists() ||
         errorChecker.differentTables(fromId, toId, throughId),
       toTable:
         errorChecker.tableSet(toTable) ||
-        errorChecker.doesRelationshipExists() ||
         errorChecker.differentTables(toId, fromId, throughId),
       throughTable:
         errorChecker.throughTableSet(throughTable) ||
         errorChecker.throughIsNullable() ||
-        errorChecker.differentTables(throughId, fromId, toId),
+        errorChecker.differentTables(throughId, fromId, toId) ||
+        errorChecker.doesRelationshipExists(),
       throughFromKey:
         errorChecker.manyForeignKeySet(throughFromKey) ||
         errorChecker.manyTypeMismatch(
@@ -198,7 +195,8 @@
           throughTable,
           fromTable.primary[0],
           throughToKey
-        ),
+        ) ||
+        errorChecker.differentColumns(throughFromKey, throughToKey),
       throughToKey:
         errorChecker.manyForeignKeySet(throughToKey) ||
         errorChecker.manyTypeMismatch(
@@ -371,6 +369,16 @@
       fromId = selectedFromTable._id
       fromColumn = selectedFromTable.name
       fromPrimary = selectedFromTable?.primary[0] || null
+    }
+    if (relationshipType === RelationshipType.MANY_TO_MANY) {
+      relationshipPart1 = PrettyRelationshipDefinitions.MANY
+      relationshipPart2 = PrettyRelationshipDefinitions.MANY
+    } else if (relationshipType === RelationshipType.MANY_TO_ONE) {
+      relationshipPart1 = PrettyRelationshipDefinitions.ONE
+      relationshipPart2 = PrettyRelationshipDefinitions.MANY
+    } else {
+      relationshipPart1 = PrettyRelationshipDefinitions.MANY
+      relationshipPart2 = PrettyRelationshipDefinitions.ONE
     }
   })
 </script>
