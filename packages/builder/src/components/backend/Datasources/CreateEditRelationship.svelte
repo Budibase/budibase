@@ -370,6 +370,16 @@
       fromColumn = selectedFromTable.name
       fromPrimary = selectedFromTable?.primary[0] || null
     }
+    if (relationshipType === RelationshipType.MANY_TO_MANY) {
+      relationshipPart1 = PrettyRelationshipDefinitions.MANY
+      relationshipPart2 = PrettyRelationshipDefinitions.MANY
+    } else if (relationshipType === RelationshipType.MANY_TO_ONE) {
+      relationshipPart1 = PrettyRelationshipDefinitions.ONE
+      relationshipPart2 = PrettyRelationshipDefinitions.MANY
+    } else {
+      relationshipPart1 = PrettyRelationshipDefinitions.MANY
+      relationshipPart2 = PrettyRelationshipDefinitions.ONE
+    }
   })
 </script>
 
