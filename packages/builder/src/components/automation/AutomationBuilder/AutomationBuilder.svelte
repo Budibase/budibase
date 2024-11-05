@@ -3,8 +3,8 @@
   import Flowchart from "./FlowChart/FlowChart.svelte"
 </script>
 
-{#if $selectedAutomation}
-  {#key $selectedAutomation._id}
-    <Flowchart automation={$selectedAutomation} />
+{#if $selectedAutomation?.data}
+  {#key $selectedAutomation.data._id}
+    <Flowchart automation={$selectedAutomation.data} />
   {/key}
 {/if}
