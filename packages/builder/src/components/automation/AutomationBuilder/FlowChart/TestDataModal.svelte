@@ -1,4 +1,5 @@
 <script>
+  import { tick } from "svelte"
   import {
     ModalContent,
     TextArea,
@@ -110,6 +111,8 @@
   }
 
   const testAutomation = async () => {
+    // Ensure $memoTestData rectiveness is processed
+    await tick()
     try {
       await automationStore.actions.test($selectedAutomation, $memoTestData)
       $automationStore.showTestPanel = true
