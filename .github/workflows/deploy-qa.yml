@@ -3,7 +3,7 @@ name: Deploy QA
 on:
   push:
     branches:
-      - master
+      - feature/automation-branching-ux
   workflow_dispatch:
 
 jobs:
