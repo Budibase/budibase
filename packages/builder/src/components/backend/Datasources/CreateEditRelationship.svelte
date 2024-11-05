@@ -195,7 +195,8 @@
           throughTable,
           fromTable.primary[0],
           throughToKey
-        ),
+        ) ||
+        errorChecker.differentColumns(throughFromKey, throughToKey),
       throughToKey:
         errorChecker.manyForeignKeySet(throughToKey) ||
         errorChecker.manyTypeMismatch(
