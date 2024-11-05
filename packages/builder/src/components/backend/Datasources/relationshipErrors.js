@@ -30,9 +30,9 @@ function typeMismatchCheck(fromTable, toTable, primary, foreign) {
 }
 
 export class RelationshipErrorChecker {
-  constructor(invalidThroughTableFn, relationshipExistsFn) {
+  constructor(invalidThroughTableFn, manyToManyRelationshipExistsFn) {
     this.invalidThroughTable = invalidThroughTableFn
-    this.relationshipExists = relationshipExistsFn
+    this.manyToManyRelationshipExists = manyToManyRelationshipExistsFn
   }
 
   setType(type) {
@@ -72,7 +72,7 @@ export class RelationshipErrorChecker {
   }
 
   doesRelationshipExists() {
-    return this.isMany() && this.relationshipExists()
+    return this.isMany() && this.manyToManyRelationshipExists()
       ? relationshipAlreadyExists
       : null
   }
