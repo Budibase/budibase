@@ -118,9 +118,6 @@
   // Edge around the draggable content
   let contentDragPadding = 200
 
-  // Auto scroll
-  // let scrollInterval
-
   const onScale = async () => {
     dispatch("zoom", $view.scale)
     await getDims()
