@@ -402,7 +402,6 @@ const automationActions = store => ({
   traverse: (blockRefs, automation) => {
     let blocks = []
     if (!automation || !blockRefs) {
-      console.error("Need a valid automation")
       return
     }
     if (automation.definition?.trigger) {
