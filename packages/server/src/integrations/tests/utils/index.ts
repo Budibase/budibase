@@ -10,7 +10,7 @@ import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import cloneDeep from "lodash/cloneDeep"
 import { Knex } from "knex"
-import TestConfiguration from "src/tests/utilities/TestConfiguration"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 export type DatasourceProvider = () => Promise<Datasource | undefined>
 
@@ -63,6 +63,8 @@ async function createDatasources(
   config: TestConfiguration,
   name: DatabaseName
 ): Promise<DatasourceDescribeReturnPromise> {
+  await config.init()
+
   const rawDatasource = await getDatasource(name)
 
   let datasource: Datasource | undefined
@@ -103,9 +105,14 @@ export function datasourceDescribe(
     databases = databases.filter(db => !exclude.includes(db))
   }
 
-  const config = new TestConfiguration()
-  const prepped = databases.map(name => {
-    return {
+  describe.each(databases)(name, name => {
+    const config = new TestConfiguration()
+
+    afterAll(() => {
+      config.end()
+    })
+
+    cb({
       name,
       config,
       dsProvider: createDatasources(config, name),
@@ -116,19 +123,7 @@ export function datasourceDescribe(
       isMongodb: name === DatabaseName.MONGODB,
       isMSSQL: name === DatabaseName.SQL_SERVER,
       isOracle: name === DatabaseName.ORACLE,
-    }
-  })
-
-  describe.each(prepped)(name, args => {
-    beforeAll(async () => {
-      await args.config.init()
     })
-
-    afterAll(() => {
-      args.config.end()
-    })
-
-    cb(args)
   })
 }
 

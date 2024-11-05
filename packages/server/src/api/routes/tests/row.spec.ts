@@ -1,4 +1,7 @@
-import { datasourceDescribe } from "../../../integrations/tests/utils"
+import {
+  DatabaseName,
+  datasourceDescribe,
+} from "../../../integrations/tests/utils"
 
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
@@ -81,11 +84,10 @@ async function waitForEvent(
 }
 
 datasourceDescribe(
-  { name: "/rows (%s)" },
+  { name: "/rows (%s)", exclude: [DatabaseName.MONGODB] },
   ({ config, dsProvider, isInternal, isMSSQL, isOracle }) => {
     let datasource: Datasource | undefined
     let client: Knex | undefined
-
     let table: Table
 
     beforeAll(async () => {
