@@ -9,7 +9,6 @@
   import { automationStore, selectedAutomation } from "stores/builder"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
-  import { memo } from "@budibase/frontend-core"
   import { AutomationEventType } from "@budibase/types"
 
   let failedParse = null
