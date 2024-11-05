@@ -1,8 +1,6 @@
 import { getConfig, runStep, afterAll as _afterAll } from "./utilities"
 import { OpenAI } from "openai"
-import {
-  setEnv as setCoreEnv,
-} from "@budibase/backend-core"
+import { setEnv as setCoreEnv } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
 
 jest.mock("openai", () => ({
