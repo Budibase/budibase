@@ -249,7 +249,7 @@
           id={fieldId}
           {disabled}
           type="file"
-          multiple
+          multiple={maximum !== 1}
           accept={extensions}
           bind:this={fileInput}
           on:change={handleFile}
