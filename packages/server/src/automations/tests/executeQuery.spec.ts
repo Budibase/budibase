@@ -8,7 +8,10 @@ import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 
 datasourceDescribe(
-  { name: "execute query action", exclude: [DatabaseName.MONGODB] },
+  {
+    name: "execute query action",
+    exclude: [DatabaseName.MONGODB, DatabaseName.SQS],
+  },
   ({ config, dsProvider }) => {
     let tableName: string
     let client: Knex
@@ -35,28 +38,38 @@ datasourceDescribe(
       await client.schema.dropTable(tableName)
     })
 
-    afterAll(setup.afterAll)
-
     it("should be able to execute a query", async () => {
-      let res = await setup.runStep(setup.actions.EXECUTE_QUERY.stepId, {
-        query: { queryId: query._id },
-      })
+      let res = await setup.runStep(
+        config,
+        setup.actions.EXECUTE_QUERY.stepId,
+        {
+          query: { queryId: query._id },
+        }
+      )
       expect(res.response).toEqual([{ a: "string", b: 1 }])
       expect(res.success).toEqual(true)
     })
 
     it("should handle a null query value", async () => {
-      let res = await setup.runStep(setup.actions.EXECUTE_QUERY.stepId, {
-        query: null,
-      })
+      let res = await setup.runStep(
+        config,
+        setup.actions.EXECUTE_QUERY.stepId,
+        {
+          query: null,
+        }
+      )
       expect(res.response.message).toEqual("Invalid inputs")
       expect(res.success).toEqual(false)
     })
 
     it("should handle an error executing a query", async () => {
-      let res = await setup.runStep(setup.actions.EXECUTE_QUERY.stepId, {
-        query: { queryId: "wrong_id" },
-      })
+      let res = await setup.runStep(
+        config,
+        setup.actions.EXECUTE_QUERY.stepId,
+        {
+          query: { queryId: "wrong_id" },
+        }
+      )
       expect(res.response).toBeDefined()
       expect(res.success).toEqual(false)
     })
