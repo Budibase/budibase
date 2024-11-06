@@ -62,8 +62,7 @@ jest.mock("@budibase/pro", () => ({
 datasourceDescribe(
   {
     name: "search (%s)",
-    // exclude: [DatabaseName.MONGODB],
-    only: [DatabaseName.SQS],
+    exclude: [DatabaseName.MONGODB],
   },
   ({ config, dsProvider, isInternal, isOracle, isSql }) => {
     let datasource: Datasource | undefined
@@ -96,20 +95,24 @@ datasourceDescribe(
     }
 
     beforeAll(async () => {
-      if (config.app?.appId) {
-        config.app = await config.api.application.update(config.app?.appId, {
-          snippets: [
-            {
-              name: "WeeksAgo",
-              code: `return function (weeks) {\n  const currentTime = new Date(${Date.now()});\n  currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));\n  return currentTime.toISOString();\n}`,
-            },
-          ],
-        })
-      }
-
       const ds = await dsProvider
       datasource = ds.datasource
       client = ds.client
+
+      config.app = await config.api.application.update(config.getAppId(), {
+        snippets: [
+          {
+            name: "WeeksAgo",
+            code: `
+              return function (weeks) {
+                const currentTime = new Date(${Date.now()});
+                currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));
+                return currentTime.toISOString();
+              }
+            `,
+          },
+        ],
+      })
     })
 
     async function createTable(schema?: TableSchema) {
