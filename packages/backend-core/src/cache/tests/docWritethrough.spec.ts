@@ -13,21 +13,16 @@ import {
 const initialTime = Date.now()
 
 async function waitForQueueCompletion() {
-  await DocWritethroughProcessor.queue.resume()
   do {
     await DocWritethroughProcessor.queue.whenCurrentJobsFinished()
   } while (await DocWritethroughProcessor.queue.count())
 
   await DocWritethroughProcessor.queue.whenCurrentJobsFinished()
-
-  await DocWritethroughProcessor.queue.pause()
 }
 
 describe("docWritethrough", () => {
   beforeAll(async () => {
     init()
-    await DocWritethroughProcessor.queue.isReady()
-    await DocWritethroughProcessor.queue.pause()
   })
 
   const config = new DBTestConfiguration()
