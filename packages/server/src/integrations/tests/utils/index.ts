@@ -49,7 +49,7 @@ export interface DatasourceDescribeReturnPromise {
 export interface DatasourceDescribeReturn {
   name: DatabaseName
   config: TestConfiguration
-  dsProvider: Promise<DatasourceDescribeReturnPromise>
+  dsProvider: () => Promise<DatasourceDescribeReturnPromise>
   isInternal: boolean
   isExternal: boolean
   isSql: boolean
@@ -116,7 +116,7 @@ export function datasourceDescribe(
     cb({
       name,
       config,
-      dsProvider: createDatasources(config, name),
+      dsProvider: () => createDatasources(config, name),
       isInternal: name === DatabaseName.SQS,
       isExternal: name !== DatabaseName.SQS,
       isSql: [

@@ -46,7 +46,7 @@ datasourceDescribe(
     }
 
     beforeAll(async () => {
-      const ds = await dsProvider
+      const ds = await dsProvider()
       rawDatasource = ds.rawDatasource!
       datasource = ds.datasource!
       client = ds.client!
