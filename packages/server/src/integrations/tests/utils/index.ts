@@ -52,6 +52,7 @@ export interface DatasourceDescribeReturn {
   dsProvider: Promise<DatasourceDescribeReturnPromise>
   isInternal: boolean
   isExternal: boolean
+  isSql: boolean
   isMySQL: boolean
   isPostgres: boolean
   isMongodb: boolean
@@ -118,6 +119,13 @@ export function datasourceDescribe(
       dsProvider: createDatasources(config, name),
       isInternal: name === DatabaseName.SQS,
       isExternal: name !== DatabaseName.SQS,
+      isSql: [
+        DatabaseName.MARIADB,
+        DatabaseName.MYSQL,
+        DatabaseName.POSTGRES,
+        DatabaseName.SQL_SERVER,
+        DatabaseName.ORACLE,
+      ].includes(name),
       isMySQL: name === DatabaseName.MYSQL,
       isPostgres: name === DatabaseName.POSTGRES,
       isMongodb: name === DatabaseName.MONGODB,
