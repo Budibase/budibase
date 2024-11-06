@@ -237,11 +237,12 @@ export default class TestConfiguration {
     if (!this) {
       return
     }
-    if (this.server) {
-      this.server.close()
-    } else {
-      require("../../app").getServer().close()
-    }
+
+    // if (this.server) {
+    //   this.server.close()
+    // } else {
+    //   require("../../app").getServer().close()
+    // }
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
     }
