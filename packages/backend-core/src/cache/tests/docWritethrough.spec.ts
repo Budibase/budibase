@@ -1,7 +1,12 @@
 import tk from "timekeeper"
 
 import _ from "lodash"
-import { DBTestConfiguration, generator, structures } from "../../../tests"
+import {
+  DBTestConfiguration,
+  generator,
+  structures,
+  utils,
+} from "../../../tests"
 import { getDB } from "../../db"
 
 import {
@@ -13,11 +18,7 @@ import {
 const initialTime = Date.now()
 
 async function waitForQueueCompletion() {
-  do {
-    await DocWritethroughProcessor.queue.whenCurrentJobsFinished()
-  } while (await DocWritethroughProcessor.queue.count())
-
-  await DocWritethroughProcessor.queue.whenCurrentJobsFinished()
+  await utils.queue.processMessages(DocWritethroughProcessor.queue)
 }
 
 describe("docWritethrough", () => {
