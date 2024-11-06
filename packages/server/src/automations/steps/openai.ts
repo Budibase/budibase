@@ -106,20 +106,14 @@ export async function run({
       (await features.flags.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
       (await pro.features.isBudibaseAIEnabled())
 
+    let llm
     if (budibaseAIEnabled || customConfigsEnabled) {
-      const llm = await pro.ai.LargeLanguageModel.forCurrentTenant(inputs.model)
-      response = await llm.run(inputs.prompt)
-    } else {
-      // fallback to the default that uses the environment variable for backwards compat
-      if (!env.OPENAI_API_KEY) {
-        return {
-          success: false,
-          response:
-            "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable.",
-        }
-      }
-      response = await legacyOpenAIPrompt(inputs)
+      llm = await pro.ai.LargeLanguageModel.forCurrentTenant(inputs.model)
     }
+
+    response = llm?.initialised
+      ? await llm.run(inputs.prompt)
+      : await legacyOpenAIPrompt(inputs)
 
     return {
       response,

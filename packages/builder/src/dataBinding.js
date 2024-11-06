@@ -614,6 +614,40 @@ const getDeviceBindings = () => {
   return bindings
 }
 
+export const getSettingBindings = () => {
+  let bindings = []
+  const safeSetting = makePropSafe("settings")
+
+  bindings = [
+    {
+      type: "context",
+      runtimeBinding: `${safeSetting}.${makePropSafe("url")}`,
+      readableBinding: `Settings.url`,
+      category: "Settings",
+      icon: "Settings",
+      display: { type: "string", name: "url" },
+    },
+    {
+      type: "context",
+      runtimeBinding: `${safeSetting}.${makePropSafe("logo")}`,
+      readableBinding: `Settings.logo`,
+      category: "Settings",
+      icon: "Settings",
+      display: { type: "string", name: "logo" },
+    },
+    {
+      type: "context",
+      runtimeBinding: `${safeSetting}.${makePropSafe("company")}`,
+      readableBinding: `Settings.company`,
+      category: "Settings",
+      icon: "Settings",
+      display: { type: "string", name: "company" },
+    },
+  ]
+
+  return bindings
+}
+
 /**
  * Gets all selected rows bindings for tables in the current asset.
  * TODO: remove in future because we don't need a separate store for this
@@ -1465,6 +1499,34 @@ export const updateReferencesInObject = ({
         action,
         label,
         originalIndex,
+      })
+    }
+  }
+}
+
+// Migrate references
+// Switch all bindings to reference their ids
+export const migrateReferencesInObject = ({ obj, label = "steps", steps }) => {
+  const stepIndexRegex = new RegExp(`{{\\s*${label}\\.(\\d+)\\.`, "g")
+  const updateActionStep = (str, index, replaceWith) =>
+    str.replace(`{{ ${label}.${index}.`, `{{ ${label}.${replaceWith}.`)
+
+  for (const key in obj) {
+    if (typeof obj[key] === "string") {
+      let matches
+      while ((matches = stepIndexRegex.exec(obj[key])) !== null) {
+        const referencedStep = parseInt(matches[1])
+
+        obj[key] = updateActionStep(
+          obj[key],
+          referencedStep,
+          steps[referencedStep]?.id
+        )
+      }
+    } else if (typeof obj[key] === "object" && obj[key] !== null) {
+      migrateReferencesInObject({
+        obj: obj[key],
+        steps,
       })
     }
   }
