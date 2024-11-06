@@ -400,7 +400,7 @@ class Orchestrator {
         )
       } catch (err) {
         this.updateContextAndOutput(
-          pathStepIdx,
+          pathStepIdx + 1,
           steps[stepToLoopIndex],
           {},
           {
@@ -420,7 +420,7 @@ class Orchestrator {
         (loopStep.inputs.iterations && loopStepIndex === maxIterations)
       ) {
         this.updateContextAndOutput(
-          pathStepIdx,
+          pathStepIdx + 1,
           steps[stepToLoopIndex],
           {
             items: this.loopStepOutputs,
@@ -447,7 +447,7 @@ class Orchestrator {
 
       if (isFailure) {
         this.updateContextAndOutput(
-          pathStepIdx,
+          pathStepIdx + 1,
           steps[stepToLoopIndex],
           {
             items: this.loopStepOutputs,

@@ -21,7 +21,7 @@
   let editing = false
   const dispatch = createEventDispatcher()
 
-  $: blockRefs = $selectedAutomation.blockRefs || {}
+  $: blockRefs = $selectedAutomation?.blockRefs || {}
   $: stepNames = automation?.definition.stepNames
   $: allSteps = automation?.definition.steps || []
   $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
