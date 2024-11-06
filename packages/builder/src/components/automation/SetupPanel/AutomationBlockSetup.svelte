@@ -21,8 +21,8 @@
   } from "@budibase/bbui"
 
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, selectedAutomation, tables } from "stores/builder"
-  import { environment, licensing } from "stores/portal"
+  import { automationStore, tables } from "stores/builder"
+  import { environment } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import {
     BindingSidePanel,
@@ -46,10 +46,7 @@
   } from "components/common/CodeEditor"
   import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { QueryUtils, Utils, search, memo } from "@budibase/frontend-core"
-  import {
-    getSchemaForDatasourcePlus,
-    getEnvironmentBindings,
-  } from "dataBinding"
+  import { getSchemaForDatasourcePlus } from "dataBinding"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { writable } from "svelte/store"
@@ -60,18 +57,18 @@
     AutomationActionStepId,
     AutomationCustomIOType,
   } from "@budibase/types"
-  import { FIELDS } from "constants/backend"
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
 
+  export let automation
   export let block
   export let testData
   export let schemaProperties
   export let isTestModal = false
+  export let bindings = []
 
   // Stop unnecessary rendering
   const memoBlock = memo(block)
-  const memoEnvVariables = memo($environment.variables)
 
   const rowTriggers = [
     TriggerStepID.ROW_UPDATED,
@@ -94,7 +91,6 @@
   let insertAtPos, getCaretPosition
   let stepLayouts = {}
 
-  $: memoEnvVariables.set($environment.variables)
   $: memoBlock.set(block)
 
   $: filters = lookForFilters(schemaProperties)
@@ -106,13 +102,6 @@
 
   $: tempFilters = cloneDeep(filters)
   $: stepId = $memoBlock.stepId
-
-  $: automationBindings = getAvailableBindings(
-    $memoBlock,
-    $selectedAutomation?.definition
-  )
-  $: environmentBindings = buildEnvironmentBindings($memoEnvVariables)
-  $: bindings = [...automationBindings, ...environmentBindings]
 
   $: getInputData(testData, $memoBlock.inputs)
   $: tableId = inputData ? inputData.tableId : null
@@ -145,21 +134,6 @@
     codeMode === EditorModes.Handlebars
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
-
-  const buildEnvironmentBindings = () => {
-    if ($licensing.environmentVariablesEnabled) {
-      return getEnvironmentBindings().map(binding => {
-        return {
-          ...binding,
-          display: {
-            ...binding.display,
-            rank: 98,
-          },
-        }
-      })
-    }
-    return []
-  }
 
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
@@ -437,7 +411,7 @@
 
         if (
           Object.hasOwn(update, "tableId") &&
-          $selectedAutomation.testData?.row?.tableId !== update.tableId
+          automation.testData?.row?.tableId !== update.tableId
         ) {
           const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
             searchableSchema: true,
@@ -566,7 +540,7 @@
             ...newTestData,
             body: {
               ...update,
-              ...$selectedAutomation.testData?.body,
+              ...automation.testData?.body,
             },
           }
         }
@@ -574,6 +548,7 @@
           ...newTestData,
           ...request,
         }
+
         await automationStore.actions.addTestDataToAutomation(newTestData)
       } else {
         const data = { schema, ...request }
@@ -584,201 +559,6 @@
       notifications.error("Error saving automation")
     }
   })
-
-  function getAvailableBindings(block, automation) {
-    if (!block || !automation) {
-      return []
-    }
-
-    // Find previous steps to the selected one
-    let allSteps = [...automation.steps]
-
-    if (automation.trigger) {
-      allSteps = [automation.trigger, ...allSteps]
-    }
-    let blockIdx = allSteps.findIndex(step => step.id === block.id)
-
-    // Extract all outputs from all previous steps as available bindingsx§x
-    let bindings = []
-    let loopBlockCount = 0
-    const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
-      if (!name) return
-      const runtimeBinding = determineRuntimeBinding(
-        name,
-        idx,
-        isLoopBlock,
-        bindingName
-      )
-      const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
-      bindings.push(
-        createBindingObject(
-          name,
-          value,
-          icon,
-          idx,
-          loopBlockCount,
-          isLoopBlock,
-          runtimeBinding,
-          categoryName,
-          bindingName
-        )
-      )
-    }
-
-    const determineRuntimeBinding = (name, idx, isLoopBlock, bindingName) => {
-      let runtimeName
-
-      /* Begin special cases for generating custom schemas based on triggers */
-      if (
-        idx === 0 &&
-        automation.trigger?.event === AutomationEventType.APP_TRIGGER
-      ) {
-        return `trigger.fields.${name}`
-      }
-
-      if (
-        idx === 0 &&
-        (automation.trigger?.event === AutomationEventType.ROW_UPDATE ||
-          automation.trigger?.event === AutomationEventType.ROW_SAVE)
-      ) {
-        let noRowKeywordBindings = ["id", "revision", "oldRow"]
-        if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
-      }
-      /* End special cases for generating custom schemas based on triggers */
-
-      let hasUserDefinedName = automation.stepNames?.[allSteps[idx]?.id]
-      if (isLoopBlock) {
-        runtimeName = `loop.${name}`
-      } else if (idx === 0) {
-        runtimeName = `trigger.${name}`
-      } else if (block.name.startsWith("JS")) {
-        runtimeName = hasUserDefinedName
-          ? `stepsByName["${bindingName}"].${name}`
-          : `steps["${idx - loopBlockCount}"].${name}`
-      } else {
-        runtimeName = hasUserDefinedName
-          ? `stepsByName.${bindingName}.${name}`
-          : `steps.${idx - loopBlockCount}.${name}`
-      }
-      return runtimeName
-    }
-
-    const determineCategoryName = (idx, isLoopBlock, bindingName) => {
-      if (idx === 0) return "Trigger outputs"
-      if (isLoopBlock) return "Loop Outputs"
-      return bindingName
-        ? `${bindingName} outputs`
-        : `Step ${idx - loopBlockCount} outputs`
-    }
-
-    const createBindingObject = (
-      name,
-      value,
-      icon,
-      idx,
-      loopBlockCount,
-      isLoopBlock,
-      runtimeBinding,
-      categoryName,
-      bindingName
-    ) => {
-      const field = Object.values(FIELDS).find(
-        field => field.type === value.type && field.subtype === value.subtype
-      )
-      return {
-        readableBinding:
-          bindingName && !isLoopBlock && idx !== 0
-            ? `steps.${bindingName}.${name}`
-            : runtimeBinding,
-        runtimeBinding,
-        type: value.type,
-        description: value.description,
-        icon,
-        category: categoryName,
-        display: {
-          type: field?.name || value.type,
-          name,
-          rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
-        },
-      }
-    }
-
-    for (let idx = 0; idx < blockIdx; idx++) {
-      let wasLoopBlock = allSteps[idx - 1]?.stepId === ActionStepID.LOOP
-      let isLoopBlock =
-        allSteps[idx]?.stepId === ActionStepID.LOOP &&
-        allSteps.some(x => x.blockToLoop === block.id)
-      let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
-      if (allSteps[idx]?.name.includes("Looping")) {
-        isLoopBlock = true
-        loopBlockCount++
-      }
-      let bindingName =
-        automation.stepNames?.[allSteps[idx].id] || allSteps[idx].name
-
-      if (isLoopBlock) {
-        schema = {
-          currentItem: {
-            type: "string",
-            description: "the item currently being executed",
-          },
-        }
-      }
-
-      if (
-        idx === 0 &&
-        automation.trigger?.event === AutomationEventType.APP_TRIGGER
-      ) {
-        schema = Object.fromEntries(
-          Object.keys(automation.trigger.inputs.fields || []).map(key => [
-            key,
-            { type: automation.trigger.inputs.fields[key] },
-          ])
-        )
-      }
-      if (
-        (idx === 0 &&
-          automation.trigger.event === AutomationEventType.ROW_UPDATE) ||
-        (idx === 0 && automation.trigger.event === AutomationEventType.ROW_SAVE)
-      ) {
-        let table = $tables.list.find(
-          table => table._id === automation.trigger.inputs.tableId
-        )
-        // We want to generate our own schema for the bindings from the table schema itself
-        for (const key in table?.schema) {
-          schema[key] = {
-            type: table.schema[key].type,
-            subtype: table.schema[key].subtype,
-          }
-        }
-        // remove the original binding
-        delete schema.row
-      }
-      let icon =
-        idx === 0
-          ? automation.trigger.icon
-          : isLoopBlock
-          ? "Reuse"
-          : allSteps[idx].icon
-
-      if (wasLoopBlock) {
-        schema = cloneDeep(allSteps[idx - 1]?.schema?.outputs?.properties)
-      }
-      Object.entries(schema).forEach(([name, value]) => {
-        addBinding(name, value, icon, idx, isLoopBlock, bindingName)
-      })
-    }
-
-    if (
-      allSteps[blockIdx - 1]?.stepId !== ActionStepID.LOOP &&
-      allSteps
-        .slice(0, blockIdx)
-        .some(step => step.stepId === ActionStepID.LOOP)
-    ) {
-      bindings = bindings.filter(x => !x.readableBinding.includes("loop"))
-    }
-    return bindings
-  }
 
   function lookForFilters(properties) {
     if (!properties) {
@@ -865,7 +645,7 @@
   <!-- Custom Layouts -->
   {#if stepLayouts[block.stepId]}
     {#each Object.keys(stepLayouts[block.stepId] || {}) as key}
-      {#if canShowField(key, stepLayouts[block.stepId].schema)}
+      {#if canShowField(stepLayouts[block.stepId].schema)}
         {#each stepLayouts[block.stepId][key].content as config}
           {#if config.title}
             <PropField label={config.title} labelTooltip={config.tooltip}>
@@ -890,7 +670,7 @@
   {:else}
     <!-- Default Schema Property Layout -->
     {#each schemaProperties as [key, value]}
-      {#if canShowField(key, value)}
+      {#if canShowField(value)}
         {@const label = getFieldLabel(key, value)}
         <div class:block-field={shouldRenderField(value)}>
           {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
@@ -912,8 +692,8 @@
               {/if}
             </div>
           {/if}
-          <div class:field-width={shouldRenderField(value)}>
-            {#if value.type === "string" && value.enum && canShowField(key, value)}
+          <div>
+            {#if value.type === "string" && value.enum && canShowField(value)}
               <Select
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
@@ -1208,8 +988,9 @@
     align-items: center;
     gap: var(--spacing-s);
   }
-  .field-width {
-    width: 320px;
+
+  .label-container :global(label) {
+    white-space: unset;
   }
 
   .step-fields {
@@ -1221,12 +1002,9 @@
   }
 
   .block-field {
-    display: flex;
     justify-content: space-between;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 320px;
   }
 
   .attachment-field-width {

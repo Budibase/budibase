@@ -1,5 +1,10 @@
 import { SortOrder } from "../../../api"
-import { SearchFilters, EmptyFilterOption } from "../../../sdk"
+import {
+  SearchFilters,
+  EmptyFilterOption,
+  BasicOperator,
+  LogicalOperator,
+} from "../../../sdk"
 import { HttpMethod } from "../query"
 import { Row } from "../row"
 import { LoopStepType, EmailAttachment, AutomationResults } from "./automation"
@@ -116,9 +121,18 @@ export type BranchStepInputs = {
 }
 
 export type Branch = {
+  id: any
   name: string
-  condition: SearchFilters
+  condition: BranchSearchFilters
 }
+
+export type BranchSearchFilters = Pick<
+  SearchFilters,
+  | BasicOperator.EQUAL
+  | BasicOperator.NOT_EQUAL
+  | LogicalOperator.AND
+  | LogicalOperator.OR
+>
 
 export type MakeIntegrationInputs = {
   url: string
