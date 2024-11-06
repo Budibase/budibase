@@ -1,8 +1,8 @@
 <script>
   import {
     automationStore,
-    selectedAutomation,
     permissions,
+    selectedAutomation,
     tables,
   } from "stores/builder"
   import {
@@ -11,52 +11,113 @@
     Layout,
     Detail,
     Modal,
-    Button,
-    notifications,
     Label,
     AbsTooltip,
-    InlineAlert,
   } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import ActionModal from "./ActionModal.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+  import { AutomationStepType } from "@budibase/types"
+  import FlowItemActions from "./FlowItemActions.svelte"
+  import DragHandle from "components/design/settings/controls/DraggableList/drag-handle.svelte"
+  import { getContext } from "svelte"
+  import DragZone from "./DragZone.svelte"
+  import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let block
+  export let blockRef
   export let testDataModal
   export let idx
+  export let automation
+  export let bindings
+  export let draggable = true
 
-  let selected
+  const view = getContext("draggableView")
+  const pos = getContext("viewPos")
+  const contentPos = getContext("contentPos")
+
   let webhookModal
-  let actionModal
   let open = true
   let showLooping = false
   let role
+  let blockEle
+  let positionStyles
+  let blockDims
 
-  $: collectBlockExists = $selectedAutomation.definition.steps.some(
+  const updateBlockDims = () => {
+    if (!blockEle) {
+      return
+    }
+    const { width, height } = blockEle.getBoundingClientRect()
+    blockDims = { width: width / $view.scale, height: height / $view.scale }
+  }
+
+  const loadSteps = blockRef => {
+    return blockRef
+      ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
+      : []
+  }
+
+  $: pathSteps = loadSteps(blockRef)
+
+  $: collectBlockExists = pathSteps.some(
     step => step.stepId === ActionStepID.COLLECT
   )
-  $: automationId = $selectedAutomation?._id
-  $: isTrigger = block.type === "TRIGGER"
-  $: steps = $selectedAutomation?.definition?.steps ?? []
-  $: blockIdx = steps.findIndex(step => step.id === block.id)
-  $: lastStep = !isTrigger && blockIdx + 1 === steps.length
-  $: totalBlocks = $selectedAutomation?.definition?.steps.length + 1
-  $: loopBlock = $selectedAutomation?.definition.steps.find(
-    x => x.blockToLoop === block.id
-  )
+  $: automationId = automation?._id
+  $: isTrigger = block.type === AutomationStepType.TRIGGER
+  $: lastStep = blockRef?.terminating
+
+  $: loopBlock = pathSteps.find(x => x.blockToLoop === block.id)
   $: isAppAction = block?.stepId === TriggerStepID.APP
   $: isAppAction && setPermissions(role)
   $: isAppAction && getPermissions(automationId)
 
-  $: triggerInfo = sdk.automations.isRowAction($selectedAutomation) && {
+  $: triggerInfo = sdk.automations.isRowAction($selectedAutomation?.data) && {
     title: "Automation trigger",
     tableName: $tables.list.find(
-      x => x._id === $selectedAutomation.definition.trigger.inputs?.tableId
+      x =>
+        x._id === $selectedAutomation.data?.definition?.trigger?.inputs?.tableId
     )?.name,
+  }
+
+  $: selected = $view?.moveStep && $view?.moveStep?.id === block.id
+
+  $: if (selected && blockEle) {
+    updateBlockDims()
+  }
+
+  $: placeholderDims = buildPlaceholderStyles(blockDims)
+
+  // Move the selected item
+  // Listen for scrolling in the content. As its scrolled this will be updated
+  $: move(
+    blockEle,
+    $view?.dragSpot,
+    selected,
+    $contentPos?.scrollX,
+    $contentPos?.scrollY
+  )
+
+  const move = (block, dragPos, selected, scrollX, scrollY) => {
+    if ((!block && !selected) || !dragPos) {
+      return
+    }
+    positionStyles = `
+      --blockPosX: ${Math.round(dragPos.x - scrollX / $view.scale)}px;
+      --blockPosY: ${Math.round(dragPos.y - scrollY / $view.scale)}px;
+    `
+  }
+
+  const buildPlaceholderStyles = dims => {
+    if (!dims) {
+      return ""
+    }
+    const { width, height } = dims
+    return `--pswidth: ${Math.round(width)}px;
+            --psheight: ${Math.round(height)}px;`
   }
 
   async function setPermissions(role) {
@@ -82,23 +143,13 @@
     }
   }
 
-  async function removeLooping() {
-    try {
-      await automationStore.actions.deleteAutomationBlock(loopBlock)
-    } catch (error) {
-      notifications.error("Error saving automation")
-    }
+  async function deleteStep() {
+    await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
   }
 
-  async function deleteStep() {
-    try {
-      if (loopBlock) {
-        await automationStore.actions.deleteAutomationBlock(loopBlock)
-      }
-      await automationStore.actions.deleteAutomationBlock(block, blockIdx)
-    } catch (error) {
-      notifications.error("Error saving automation")
-    }
+  async function removeLooping() {
+    let loopBlockRef = $selectedAutomation.blockRefs[blockRef.looped]
+    await automationStore.actions.deleteAutomationBlock(loopBlockRef.pathTo)
   }
 
   async function addLooping() {
@@ -109,121 +160,200 @@
       loopDefinition
     )
     loopBlock.blockToLoop = block.id
-    await automationStore.actions.addBlockToAutomation(loopBlock, blockIdx)
+    await automationStore.actions.addBlockToAutomation(
+      loopBlock,
+      blockRef.pathTo
+    )
+  }
+
+  const onHandleMouseDown = e => {
+    if (isTrigger) {
+      e.preventDefault()
+      return
+    }
+
+    e.stopPropagation()
+
+    view.update(state => ({
+      ...state,
+      moveStep: {
+        id: block.id,
+        offsetX: $pos.x,
+        offsetY: $pos.y,
+      },
+    }))
   }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class={`block ${block.type} hoverable`} class:selected on:click={() => {}}>
-  {#if loopBlock}
-    <div class="blockSection">
+{#if block.stepId !== "LOOP"}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div
+    id={`block-${block.id}`}
+    class={`block ${block.type} hoverable`}
+    class:selected
+    class:draggable
+  >
+    <div class="wrap">
+      {#if $view.dragging && selected}
+        <div class="drag-placeholder" style={placeholderDims} />
+      {/if}
+
       <div
-        on:click={() => {
-          showLooping = !showLooping
+        bind:this={blockEle}
+        class="block-content"
+        class:dragging={$view.dragging && selected}
+        style={positionStyles}
+        on:mousedown={e => {
+          e.stopPropagation()
         }}
-        class="splitHeader"
       >
-        <div class="center-items">
-          <svg
-            width="28px"
-            height="28px"
-            class="spectrum-Icon"
-            style="color:var(--spectrum-global-color-gray-700);"
-            focusable="false"
+        {#if draggable}
+          <div
+            class="handle"
+            class:grabbing={selected}
+            on:mousedown={onHandleMouseDown}
           >
-            <use xlink:href="#spectrum-icon-18-Reuse" />
-          </svg>
-          <div class="iconAlign">
-            <Detail size="S">Looping</Detail>
+            <DragHandle />
           </div>
-        </div>
+        {/if}
+        <div class="block-core">
+          {#if loopBlock}
+            <div class="blockSection">
+              <div
+                on:click={() => {
+                  showLooping = !showLooping
+                }}
+                class="splitHeader"
+              >
+                <div class="center-items">
+                  <svg
+                    width="28px"
+                    height="28px"
+                    class="spectrum-Icon"
+                    style="color:var(--spectrum-global-color-gray-700);"
+                    focusable="false"
+                  >
+                    <use xlink:href="#spectrum-icon-18-Reuse" />
+                  </svg>
+                  <div class="iconAlign">
+                    <Detail size="S">Looping</Detail>
+                  </div>
+                </div>
 
-        <div class="blockTitle">
-          <AbsTooltip type="negative" text="Remove looping">
-            <Icon on:click={removeLooping} hoverable name="DeleteOutline" />
-          </AbsTooltip>
+                <div class="blockTitle">
+                  <AbsTooltip type="negative" text="Remove looping">
+                    <Icon
+                      on:click={removeLooping}
+                      hoverable
+                      name="DeleteOutline"
+                    />
+                  </AbsTooltip>
 
-          <div style="margin-left: 10px;" on:click={() => {}}>
-            <Icon hoverable name={showLooping ? "ChevronDown" : "ChevronUp"} />
-          </div>
+                  <div style="margin-left: 10px;" on:click={() => {}}>
+                    <Icon
+                      hoverable
+                      name={showLooping ? "ChevronDown" : "ChevronUp"}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Divider noMargin />
+            {#if !showLooping}
+              <div class="blockSection">
+                <Layout noPadding gap="S">
+                  <AutomationBlockSetup
+                    schemaProperties={Object.entries(
+                      $automationStore.blockDefinitions.ACTION.LOOP.schema
+                        .inputs.properties
+                    )}
+                    {webhookModal}
+                    block={loopBlock}
+                    {automation}
+                    {bindings}
+                  />
+                </Layout>
+              </div>
+              <Divider noMargin />
+            {/if}
+          {/if}
+
+          <FlowItemHeader
+            {automation}
+            {open}
+            {block}
+            {testDataModal}
+            {idx}
+            {addLooping}
+            {deleteStep}
+            on:toggle={() => (open = !open)}
+            on:update={async e => {
+              const newName = e.detail
+              if (newName.length === 0) {
+                await automationStore.actions.deleteAutomationName(block.id)
+              } else {
+                await automationStore.actions.saveAutomationName(
+                  block.id,
+                  newName
+                )
+              }
+            }}
+          />
+          {#if open}
+            <Divider noMargin />
+            <div class="blockSection">
+              <Layout noPadding gap="S">
+                {#if isAppAction}
+                  <div>
+                    <Label>Role</Label>
+                    <RoleSelect bind:value={role} />
+                  </div>
+                {/if}
+                <AutomationBlockSetup
+                  schemaProperties={Object.entries(
+                    block?.schema?.inputs?.properties || {}
+                  )}
+                  {block}
+                  {webhookModal}
+                  {automation}
+                  {bindings}
+                />
+                {#if isTrigger && triggerInfo}
+                  <InfoDisplay
+                    title={triggerInfo.title}
+                    body="This trigger is tied to your '{triggerInfo.tableName}' table"
+                    icon="InfoOutline"
+                  />
+                {/if}
+              </Layout>
+            </div>
+          {/if}
         </div>
       </div>
     </div>
-
-    <Divider noMargin />
-    {#if !showLooping}
-      <div class="blockSection">
-        <Layout noPadding gap="S">
-          <AutomationBlockSetup
-            schemaProperties={Object.entries(
-              $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
-                .properties
-            )}
-            {webhookModal}
-            block={loopBlock}
-          />
-        </Layout>
-      </div>
-      <Divider noMargin />
+  </div>
+  {#if !collectBlockExists || !lastStep}
+    <div class="separator" />
+    {#if $view.dragging}
+      <DragZone path={blockRef?.pathTo} />
+    {:else}
+      <FlowItemActions
+        {block}
+        on:branch={() => {
+          automationStore.actions.branchAutomation(
+            $selectedAutomation.blockRefs[block.id].pathTo,
+            automation
+          )
+        }}
+      />
+    {/if}
+    {#if !lastStep}
+      <div class="separator" />
     {/if}
   {/if}
-
-  <FlowItemHeader
-    {open}
-    {block}
-    {testDataModal}
-    {idx}
-    {addLooping}
-    {deleteStep}
-    on:toggle={() => (open = !open)}
-  />
-  {#if open}
-    <Divider noMargin />
-    <div class="blockSection">
-      <Layout noPadding gap="S">
-        {#if isAppAction}
-          <div>
-            <Label>Role</Label>
-            <RoleSelect bind:value={role} />
-          </div>
-        {/if}
-        <AutomationBlockSetup
-          schemaProperties={Object.entries(block.schema.inputs.properties)}
-          {block}
-          {webhookModal}
-        />
-        {#if triggerInfo}
-          <InlineAlert
-            header={triggerInfo.title}
-            message={`This trigger is tied to your "${triggerInfo.tableName}" table`}
-          />
-        {/if}
-        {#if lastStep}
-          <Button on:click={() => testDataModal.show()} cta>
-            Finish and test automation
-          </Button>
-        {/if}
-      </Layout>
-    </div>
-  {/if}
-</div>
-{#if !collectBlockExists || !lastStep}
-  <div class="separator" />
-  <Icon
-    on:click={() => actionModal.show()}
-    hoverable
-    name="AddCircle"
-    size="S"
-  />
-  {#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
-    <div class="separator" />
-  {/if}
 {/if}
-
-<Modal bind:this={actionModal} width="30%">
-  <ActionModal modal={actionModal} {lastStep} {blockIdx} />
-</Modal>
 
 <Modal bind:this={webhookModal} width="30%">
   <CreateWebhookModal />
@@ -255,27 +385,73 @@
   .block {
     width: 480px;
     font-size: 16px;
-    background-color: var(--background);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 4px 4px 4px 4px;
+    border-radius: 4px;
   }
-
+  .block .wrap {
+    width: 100%;
+    position: relative;
+  }
+  .block.draggable .wrap {
+    display: flex;
+    flex-direction: row;
+  }
+  .block.draggable .wrap .handle {
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--grey-3);
+    padding: 6px;
+    color: var(--grey-6);
+    cursor: grab;
+  }
+  .block.draggable .wrap .handle.grabbing {
+    cursor: grabbing;
+  }
+  .block.draggable .wrap .handle :global(.drag-handle) {
+    width: 6px;
+  }
+  .block .wrap .block-content {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    background-color: var(--background);
+    border: 1px solid var(--grey-3);
+    border-radius: 4px;
+  }
   .blockSection {
     padding: var(--spacing-xl);
   }
-
   .separator {
     width: 1px;
     height: 25px;
     border-left: 1px dashed var(--grey-4);
     color: var(--grey-4);
-    /* center horizontally */
     align-self: center;
   }
-
   .blockTitle {
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+  .drag-placeholder {
+    height: calc(var(--psheight) - 2px);
+    width: var(--pswidth);
+    background-color: rgba(92, 92, 92, 0.1);
+    border: 1px dashed #5c5c5c;
+    border-radius: 4px;
+    display: block;
+  }
+  .block-core {
+    flex: 1;
+  }
+  .block-core.dragging {
+    pointer-events: none;
+  }
+  .block-content.dragging {
+    position: absolute;
+    z-index: 3;
+    top: var(--blockPosY);
+    left: var(--blockPosX);
   }
 </style>
