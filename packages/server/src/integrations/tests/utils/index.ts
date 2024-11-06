@@ -135,7 +135,7 @@ export function datasourceDescribe(
   })
 }
 
-export function getDatasource(
+function getDatasource(
   sourceName: DatabaseName
 ): Promise<Datasource | undefined> {
   return providers[sourceName]()

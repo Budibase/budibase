@@ -5,12 +5,6 @@ import emitter from "../../../events/index"
 import env from "../../../environment"
 import { AutomationActionStepId, Datasource } from "@budibase/types"
 import { Knex } from "knex"
-import { generator } from "@budibase/backend-core/tests"
-import {
-  getDatasource,
-  knexClient,
-  DatabaseName,
-} from "../../../integrations/tests/utils"
 
 let config: TestConfig
 
@@ -64,29 +58,6 @@ export async function runStep(stepId: string, inputs: any, stepContext?: any) {
   }
 }
 
-export async function createTestTable(client: Knex, schema: any) {
-  const tableName = generator.guid()
-  await client.schema.createTable(tableName, table => {
-    for (const fieldName in schema) {
-      const field = schema[fieldName]
-      if (field.type === "string") {
-        table.string(fieldName)
-      } else if (field.type === "number") {
-        table.integer(fieldName)
-      }
-    }
-  })
-  return tableName
-}
-
-export async function insertTestData(
-  client: Knex,
-  tableName: string,
-  rows: any[]
-) {
-  await client(tableName).insert(rows)
-}
-
 export async function saveTestQuery(
   config: TestConfig,
   client: Knex,
@@ -105,16 +76,6 @@ export async function saveTestQuery(
     readable: true,
     queryVerb: "read",
   })
-}
-
-export async function setupTestDatasource(
-  config: TestConfig,
-  dbName: DatabaseName
-) {
-  const db = await getDatasource(dbName)
-  const datasource = await config.api.datasource.create(db)
-  const client = await knexClient(db)
-  return { datasource, client }
 }
 
 export const apiKey = "test"
