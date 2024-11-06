@@ -10,21 +10,25 @@
   export let showTestStatus = false
   export let testResult
   export let isTrigger
-  export let idx
   export let addLooping
   export let deleteStep
   export let enableNaming = true
+  export let itemName
+  export let automation
+
   let validRegex = /^[A-Za-z0-9_\s]+$/
   let typing = false
   let editing = false
   const dispatch = createEventDispatcher()
 
-  $: stepNames = $selectedAutomation?.definition.stepNames
-  $: allSteps = $selectedAutomation?.definition.steps || []
-  $: automationName = stepNames?.[block.id] || block?.name || ""
+  $: blockRefs = $selectedAutomation?.blockRefs || {}
+  $: stepNames = automation?.definition.stepNames
+  $: allSteps = automation?.definition.steps || []
+  $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult)
   $: isHeaderTrigger = isTrigger || block.type === "TRIGGER"
+  $: isBranch = block.stepId === "BRANCH"
 
   $: {
     if (!testResult) {
@@ -33,12 +37,12 @@
       )?.[0]
     }
   }
-  $: loopBlock = $selectedAutomation?.definition.steps.find(
-    x => x.blockToLoop === block?.id
-  )
+
+  $: blockRef = blockRefs[block.id]
+  $: isLooped = blockRef?.looped
 
   async function onSelect(block) {
-    await automationStore.update(state => {
+    automationStore.update(state => {
       state.selectedBlock = block
       return state
     })
@@ -84,30 +88,18 @@
     return null
   }
 
-  const saveName = async () => {
-    if (automationNameError || block.name === automationName) {
-      return
-    }
-
-    if (automationName.length === 0) {
-      await automationStore.actions.deleteAutomationName(block.id)
-    } else {
-      await automationStore.actions.saveAutomationName(block.id, automationName)
-    }
-  }
-
   const startEditing = () => {
     editing = true
     typing = true
   }
 
-  const stopEditing = async () => {
+  const stopEditing = () => {
     editing = false
     typing = false
     if (automationNameError) {
       automationName = stepNames[block.id] || block?.name
     } else {
-      await saveName()
+      dispatch("update", automationName)
     }
   }
 </script>
@@ -118,7 +110,6 @@
   class:typing={typing && !automationNameError && editing}
   class:typing-error={automationNameError && editing}
   class="blockSection"
-  on:click={() => dispatch("toggle")}
 >
   <div class="splitHeader">
     <div class="center-items">
@@ -144,16 +135,14 @@
         {#if isHeaderTrigger}
           <Body size="XS"><b>Trigger</b></Body>
         {:else}
-          <div style="margin-left: 2px;">
-            <Body size="XS"><b>Step {idx}</b></Body>
-          </div>
+          <Body size="XS"><b>{isBranch ? "Branch" : "Step"}</b></Body>
         {/if}
 
         {#if enableNaming}
           <input
             class="input-text"
             disabled={!enableNaming}
-            placeholder="Enter step name"
+            placeholder={`Enter ${isBranch ? "branch" : "step"} name`}
             name="name"
             autocomplete="off"
             value={automationName}
@@ -208,8 +197,9 @@
           onSelect(block)
         }}
       >
+        <slot name="custom-actions" />
         {#if !showTestStatus}
-          {#if !isHeaderTrigger && !loopBlock && (block?.features?.[Features.LOOPING] || !block.features)}
+          {#if !isHeaderTrigger && !isLooped && !isBranch && (block?.features?.[Features.LOOPING] || !block.features)}
             <AbsTooltip type="info" text="Add looping">
               <Icon on:click={addLooping} hoverable name="RotateCW" />
             </AbsTooltip>
@@ -219,6 +209,9 @@
               <Icon on:click={deleteStep} hoverable name="DeleteOutline" />
             </AbsTooltip>
           {/if}
+        {/if}
+        {#if !showTestStatus && !isHeaderTrigger}
+          <span class="action-spacer" />
         {/if}
         {#if !showTestStatus}
           <Icon
@@ -245,6 +238,9 @@
 </div>
 
 <style>
+  .action-spacer {
+    border-left: 1px solid var(--spectrum-global-color-gray-300);
+  }
   .status-container {
     display: flex;
     align-items: center;
@@ -298,6 +294,8 @@
     font-size: var(--spectrum-alias-font-size-default);
     font-family: var(--font-sans);
     text-overflow: ellipsis;
+    padding-left: 0px;
+    border: 0px;
   }
 
   input:focus {
