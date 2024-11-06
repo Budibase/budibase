@@ -12,21 +12,28 @@ const BASE_IDENTITY = {
 const USER_AUDIT_LOG_COUNT = 3
 const APP_ID = "app_1"
 
+const config = new TestConfiguration()
+
+beforeAll(async () => {
+  await config.beforeAll()
+})
+afterAll(async () => {
+  await config.afterAll()
+})
+
 describe.each(["lucene", "sql"])("/api/global/auditlogs (%s)", method => {
-  const config = new TestConfiguration()
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
     envCleanup = features.testutils.setFeatureFlags("*", {
       SQS: method === "sql",
     })
-    await config.beforeAll()
+
     await config.useNewTenant()
   })
 
-  afterAll(async () => {
+  afterAll(() => {
     envCleanup?.()
-    await config.afterAll()
   })
 
   describe("POST /api/global/auditlogs/search", () => {
