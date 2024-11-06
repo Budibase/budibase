@@ -17,6 +17,10 @@ export default class AuditLogsProcessor implements EventProcessor {
   static auditLogsEnabled = false
   static auditLogQueue: BullQueue.Queue<AuditLogQueueEvent>
 
+  get queue() {
+    return AuditLogsProcessor.auditLogQueue
+  }
+
   // can't use constructor as need to return promise
   static init(fn: AuditLogFn) {
     AuditLogsProcessor.auditLogsEnabled = true

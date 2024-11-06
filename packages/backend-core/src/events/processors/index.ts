@@ -5,8 +5,8 @@ import Processors from "./Processors"
 import { AuditLogFn } from "@budibase/types"
 
 export const analyticsProcessor = new AnalyticsProcessor()
-const loggingProcessor = new LoggingProcessor()
-const auditLogsProcessor = new AuditLogsProcessor()
+export const loggingProcessor = new LoggingProcessor()
+export const auditLogsProcessor = new AuditLogsProcessor()
 
 export function init(auditingFn: AuditLogFn) {
   return AuditLogsProcessor.init(auditingFn)
