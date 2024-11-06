@@ -355,6 +355,93 @@ describe("Loop automations", () => {
     expect(results.steps[2].outputs.rows).toHaveLength(expectedRows.length)
   })
 
+  it("should run an automation with a loop and update row step using stepIds", async () => {
+    const table = await config.createTable({
+      name: "TestTable",
+      type: "table",
+      schema: {
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+          constraints: {
+            presence: true,
+          },
+        },
+        value: {
+          name: "value",
+          type: FieldType.NUMBER,
+          constraints: {
+            presence: true,
+          },
+        },
+      },
+    })
+
+    const rows = [
+      { name: "Row 1", value: 1, tableId: table._id },
+      { name: "Row 2", value: 2, tableId: table._id },
+      { name: "Row 3", value: 3, tableId: table._id },
+    ]
+
+    await config.api.row.bulkImport(table._id!, { rows })
+
+    const builder = createAutomationBuilder({
+      name: "Test Loop and Update Row",
+    })
+
+    const results = await builder
+      .appAction({ fields: {} })
+      .queryRows(
+        {
+          tableId: table._id!,
+        },
+        { stepId: "abc123" }
+      )
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: "{{ steps.abc123.rows }}",
+      })
+      .updateRow({
+        rowId: "{{ loop.currentItem._id }}",
+        row: {
+          name: "Updated {{ loop.currentItem.name }}",
+          value: "{{ loop.currentItem.value }}",
+          tableId: table._id,
+        },
+        meta: {},
+      })
+      .queryRows({
+        tableId: table._id!,
+      })
+      .run()
+
+    const expectedRows = [
+      { name: "Updated Row 1", value: 1 },
+      { name: "Updated Row 2", value: 2 },
+      { name: "Updated Row 3", value: 3 },
+    ]
+
+    expect(results.steps[1].outputs.items).toEqual(
+      expect.arrayContaining(
+        expectedRows.map(row =>
+          expect.objectContaining({
+            success: true,
+            row: expect.objectContaining(row),
+          })
+        )
+      )
+    )
+
+    expect(results.steps[2].outputs.rows).toEqual(
+      expect.arrayContaining(
+        expectedRows.map(row => expect.objectContaining(row))
+      )
+    )
+
+    expect(results.steps[1].outputs.items).toHaveLength(expectedRows.length)
+    expect(results.steps[2].outputs.rows).toHaveLength(expectedRows.length)
+  })
+
   it("should run an automation with a loop and delete row step", async () => {
     const table = await config.createTable({
       name: "TestTable",
