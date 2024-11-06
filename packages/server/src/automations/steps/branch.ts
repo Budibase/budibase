@@ -39,9 +39,17 @@ export const definition: AutomationStepDefinition = {
         branchName: {
           type: AutomationIOType.STRING,
         },
-        result: {
+        status: {
+          type: AutomationIOType.STRING,
+          description: "Branch result",
+        },
+        branchId: {
+          type: AutomationIOType.STRING,
+          description: "Branch ID",
+        },
+        success: {
           type: AutomationIOType.BOOLEAN,
-          description: "Whether the condition was met",
+          description: "Branch success",
         },
       },
       required: ["output"],

@@ -88,12 +88,13 @@ class BaseStepBuilder {
     Object.entries(branchConfig).forEach(([key, branch]) => {
       const stepBuilder = new StepBuilder()
       branch.steps(stepBuilder)
-
+      let branchId = uuidv4()
       branchStepInputs.branches.push({
         name: key,
         condition: branch.condition,
+        id: branchId,
       })
-      branchStepInputs.children![key] = stepBuilder.build()
+      branchStepInputs.children![branchId] = stepBuilder.build()
     })
     const branchStep: AutomationStep = {
       ...definition,
