@@ -12,7 +12,7 @@ dbConfig.init()
 import env from "../environment"
 import * as controllers from "./controllers"
 
-const supertest = require("supertest")
+import supertest from "supertest"
 
 import { Config } from "../constants"
 import {
@@ -123,11 +123,11 @@ class TestConfiguration {
   }
 
   async afterAll() {
-    // if (this.server) {
-    //   await this.server.close()
-    // } else {
-    //   await require("../index").default.close()
-    // }
+    if (this.server) {
+      await this.server.close()
+    } else {
+      await require("../index").default.close()
+    }
   }
 
   // TENANCY
