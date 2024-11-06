@@ -123,11 +123,11 @@ class TestConfiguration {
   }
 
   async afterAll() {
-    if (this.server) {
-      await this.server.close()
-    } else {
-      await require("../index").default.close()
-    }
+    // if (this.server) {
+    //   await this.server.close()
+    // } else {
+    //   await require("../index").default.close()
+    // }
   }
 
   // TENANCY
