@@ -1,4 +1,4 @@
-import { mocks, structures } from "@budibase/backend-core/tests"
+import { mocks, structures, queue } from "@budibase/backend-core/tests"
 import { context, events, features } from "@budibase/backend-core"
 import { Event, IdentityType } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
@@ -54,6 +54,11 @@ describe("/api/global/auditlogs (%s)", () => {
             await context.doInAppContext(APP_ID, async () => {
               await events.app.created(structures.apps.app(APP_ID))
             })
+
+            await queue.processMessages(
+              events.processors.auditLogsProcessor.queue
+            )
+
             // fetch the user created events
             const response = await config.api.auditLogs.search({
               events: [Event.USER_CREATED],
