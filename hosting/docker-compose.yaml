@@ -112,19 +112,6 @@ services:
     volumes:
       - redis_data:/data
 
-  watchtower-service:
-    restart: always
-    image: containrrr/watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --debug --http-api-update bbapps bbworker bbproxy
-    environment:
-      - WATCHTOWER_HTTP_API=true
-      - WATCHTOWER_HTTP_API_TOKEN=budibase
-      - WATCHTOWER_CLEANUP=true
-    labels:
-      - "com.centurylinklabs.watchtower.enable=false"
-
 volumes:
   couchdb3_data:
     driver: local
