@@ -12,8 +12,10 @@
   export let bindings = []
   export let panel = ClientBindingPanel
   export let allowBindings = true
+  export let allowOnEmpty
   export let datasource
-  export let showFilterEmptyDropdown
+  export let builderType
+  export let docsURL
 </script>
 
 <CoreFilterBuilder
@@ -26,7 +28,9 @@
   {schemaFields}
   {datasource}
   {allowBindings}
-  {showFilterEmptyDropdown}
   {bindings}
+  {allowOnEmpty}
+  {builderType}
+  {docsURL}
   on:change
 />
