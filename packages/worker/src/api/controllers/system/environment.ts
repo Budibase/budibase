@@ -2,7 +2,7 @@ import { Ctx, MaintenanceType, FeatureFlag } from "@budibase/types"
 import env from "../../../environment"
 import { env as coreEnv, db as dbCore, features } from "@budibase/backend-core"
 import nodeFetch from "node-fetch"
-import { retry } from "../../../../../shared-core/src/helpers"
+import { helpers } from "@budibase/shared-core"
 
 let sqsAvailable: boolean
 async function isSqsAvailable() {
@@ -18,7 +18,7 @@ async function isSqsAvailable() {
       sqsAvailable = false
       return false
     }
-    await retry(
+    await helpers.retry(
       async () => {
         await nodeFetch(url, { timeout: 2000 })
       },
