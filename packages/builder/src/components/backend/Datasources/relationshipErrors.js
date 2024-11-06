@@ -3,6 +3,7 @@ import { RelationshipType } from "@budibase/types"
 const typeMismatch = "Column type of the foreign key must match the primary key"
 const columnBeingUsed = "Column name cannot be an existing column"
 const mustBeDifferentTables = "From/to/through tables must be different"
+const mustBeDifferentColumns = "Foreign keys must be different"
 const primaryKeyNotSet = "Please pick the primary key"
 const throughNotNullable =
   "Ensure non-key columns are nullable or auto-generated"
@@ -30,9 +31,9 @@ function typeMismatchCheck(fromTable, toTable, primary, foreign) {
 }
 
 export class RelationshipErrorChecker {
-  constructor(invalidThroughTableFn, relationshipExistsFn) {
+  constructor(invalidThroughTableFn, manyToManyRelationshipExistsFn) {
     this.invalidThroughTable = invalidThroughTableFn
-    this.relationshipExists = relationshipExistsFn
+    this.manyToManyRelationshipExists = manyToManyRelationshipExistsFn
   }
 
   setType(type) {
@@ -72,7 +73,7 @@ export class RelationshipErrorChecker {
   }
 
   doesRelationshipExists() {
-    return this.isMany() && this.relationshipExists()
+    return this.isMany() && this.manyToManyRelationshipExists()
       ? relationshipAlreadyExists
       : null
   }
@@ -81,6 +82,11 @@ export class RelationshipErrorChecker {
     // currently don't support relationships back onto the table itself, needs to relate out
     const error = table1 && (table1 === table2 || (table3 && table1 === table3))
     return error ? mustBeDifferentTables : null
+  }
+
+  differentColumns(columnA, columnB) {
+    const error = columnA && columnB && columnA === columnB
+    return error ? mustBeDifferentColumns : null
   }
 
   columnBeingUsed(table, column, ogName) {

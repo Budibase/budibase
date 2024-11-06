@@ -272,7 +272,6 @@ export const flags = new FlagSet({
   [FeatureFlag.SQS]: Flag.boolean(true),
   [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(env.isDev()),
   [FeatureFlag.ENRICHED_RELATIONSHIPS]: Flag.boolean(env.isDev()),
-  [FeatureFlag.TABLES_DEFAULT_ADMIN]: Flag.boolean(env.isDev()),
   [FeatureFlag.BUDIBASE_AI]: Flag.boolean(env.isDev()),
 })
 
