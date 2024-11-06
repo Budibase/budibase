@@ -1,8 +1,8 @@
 <script>
   import { redirect } from "@roxi/routify"
-  import { licensing, featureFlags } from "stores/portal"
+  import { featureFlags } from "stores/portal"
 
-  if ($featureFlags.AI_CUSTOM_CONFIGS && $licensing.customAIConfigsEnabled) {
+  if ($featureFlags.AI_CUSTOM_CONFIGS) {
     $redirect("./ai")
   } else {
     $redirect("./auth")

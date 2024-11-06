@@ -26,9 +26,16 @@ const FILTER_ALLOWED_KEYS: (keyof SearchFilter)[] = [
 
 export function unreachable(
   value: never,
-  message = `No such case in exhaustive switch: ${value}`
+  opts?: {
+    message?: string
+    doNotThrow?: boolean
+  }
 ) {
-  throw new Error(message)
+  const message = opts?.message || `No such case in exhaustive switch: ${value}`
+  const doNotThrow = !!opts?.doNotThrow
+  if (!doNotThrow) {
+    throw new Error(message)
+  }
 }
 
 export async function parallelForeach<T>(
