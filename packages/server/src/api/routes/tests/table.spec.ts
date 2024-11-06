@@ -44,7 +44,7 @@ datasourceDescribe(
     let datasource: Datasource | undefined
 
     beforeAll(async () => {
-      const ds = await dsProvider
+      const ds = await dsProvider()
       datasource = ds.datasource
     })
 

@@ -15,7 +15,7 @@ datasourceDescribe(
     let client: Knex
 
     beforeAll(async () => {
-      const ds = await dsProvider
+      const ds = await dsProvider()
       datasource = ds.datasource!
       client = ds.client!
     })
@@ -218,7 +218,7 @@ datasourceDescribe(
     let schema2: string
 
     beforeEach(async () => {
-      const ds = await dsProvider
+      const ds = await dsProvider()
       datasource = ds.datasource!
       const rawDatasource = ds.rawDatasource!
 
