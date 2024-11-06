@@ -49,9 +49,7 @@ const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
 function getLoopIterations(loopStep: LoopStep) {
-  console.log(loopStep)
   const binding = loopStep.inputs.binding
-  console.log(binding)
   if (!binding) {
     return 0
   }
@@ -387,7 +385,7 @@ class Orchestrator {
     stepIdx: number,
     pathIdx?: number
   ): Promise<number> {
-    await processObject(loopStep.inputs, this.processContext(this.context))
+    await processObject(loopStep.inputs, this.context)
     const iterations = getLoopIterations(loopStep)
     let stepToLoopIndex = stepIdx + 1
     let pathStepIdx = (pathIdx || stepIdx) + 1
