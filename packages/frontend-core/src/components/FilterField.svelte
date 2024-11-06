@@ -21,6 +21,7 @@
   export let allowBindings = false
   export let schemaFields
   export let panel
+  export let drawerTitle
   export let toReadable
   export let toRuntime
 
@@ -28,7 +29,6 @@
   const { OperatorOptions, FilterValueType } = Constants
 
   let bindingDrawer
-  let fieldValue
 
   $: fieldValue = filter?.value
   $: readableValue = toReadable ? toReadable(bindings, fieldValue) : fieldValue
@@ -133,7 +133,7 @@
     on:drawerHide
     on:drawerShow
     bind:this={bindingDrawer}
-    title={filter.field}
+    title={drawerTitle || filter.field}
     forceModal
   >
     <Button
@@ -168,7 +168,7 @@
       {#if filter.valueType === FilterValueType.BINDING}
         <Input
           disabled={filter.noValue}
-          readonly={true}
+          readonly={isJS}
           value={isJS ? "(JavaScript function)" : readableValue}
           on:change={onChange}
         />
@@ -231,7 +231,7 @@
 
     <div class="binding-control">
       <!-- needs field, operator -->
-      {#if !disabled && allowBindings && filter.field && !filter.noValue}
+      {#if !disabled && allowBindings && !filter.noValue}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div

@@ -56,7 +56,7 @@
     {/if}
     {#key history}
       <div class="history">
-        <TestDisplay testResults={history} width="320px" />
+        <TestDisplay testResults={history} />
       </div>
     {/key}
   </Layout>
@@ -65,6 +65,14 @@
 {/if}
 
 <style>
+  .history :global(.block) {
+    min-width: unset;
+  }
+  .history :global(> .container) {
+    max-width: 320px;
+    width: 320px;
+    padding: 0px;
+  }
   .controls {
     display: flex;
     gap: var(--spacing-s);
@@ -75,8 +83,5 @@
     display: flex;
     width: 100%;
     justify-content: center;
-  }
-  .history {
-    margin: 0 -30px;
   }
 </style>

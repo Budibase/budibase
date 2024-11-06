@@ -11,7 +11,7 @@
   let schemaURL
   let propCount = 0
 
-  $: automation = $selectedAutomation
+  $: automation = $selectedAutomation?.data
 
   onMount(async () => {
     if (!automation?.definition?.trigger?.inputs.schemaUrl) {
