@@ -93,6 +93,10 @@ export function datasourceDescribe(
   opts: DatasourceDescribeOpts,
   cb: (args: DatasourceDescribeReturn) => void
 ) {
+  if (process.env.DATASOURCE === "none") {
+    return
+  }
+
   const { name, only, exclude } = opts
 
   if (only && exclude) {
@@ -104,6 +108,10 @@ export function datasourceDescribe(
     databases = only
   } else if (exclude) {
     databases = databases.filter(db => !exclude.includes(db))
+  }
+
+  if (process.env.DATASOURCE) {
+    databases = databases.filter(db => db === process.env.DATASOURCE)
   }
 
   describe.each(databases)(name, name => {
