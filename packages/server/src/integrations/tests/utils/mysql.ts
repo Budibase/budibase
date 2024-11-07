@@ -34,6 +34,7 @@ export async function getDatasource(): Promise<Datasource> {
       new GenericContainer(MYSQL_IMAGE)
         .withExposedPorts(3306)
         .withEnvironment({ MYSQL_ROOT_PASSWORD: "password" })
+        .withTmpFs({ "/var/lib/mysql": "rw" })
         .withWaitStrategy(new MySQLWaitStrategy().withStartupTimeout(10000))
     )
   }
