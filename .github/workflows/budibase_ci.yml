@@ -197,7 +197,7 @@ jobs:
 
       - name: Test server
         env:
-          DEBUG: testcontainers
+          DEBUG: testcontainers*
           DATASOURCE: ${{ matrix.datasource }}
         run: |
           AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
