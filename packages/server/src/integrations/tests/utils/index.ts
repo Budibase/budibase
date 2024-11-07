@@ -114,6 +114,10 @@ export function datasourceDescribe(
     databases = databases.filter(db => db === process.env.DATASOURCE)
   }
 
+  if (databases.length === 0) {
+    return
+  }
+
   describe.each(databases)(name, name => {
     const config = new TestConfiguration()
 
