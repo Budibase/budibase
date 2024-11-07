@@ -146,11 +146,11 @@ jobs:
             yarn test --scope=@budibase/worker
           fi
 
-  test-server-with-datasource:
+  test-server:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        datasource: [mssql, mysql, postgres, mongodb, mariadb, oracle]
+        datasource: [mssql, mysql, postgres, mongodb, mariadb, oracle, none]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -179,7 +179,7 @@ jobs:
             docker pull mysql@${{ steps.dotenv.outputs.MYSQL_SHA }}
           elif [ "${{ matrix.datasource }}" == "postgres" ]; then
             docker pull postgres@${{ steps.dotenv.outputs.POSTGRES_SHA }}
-          elif [ "${{ matrix.datasource }}" == "mongo" ]; then
+          elif [ "${{ matrix.datasource }}" == "mongodb" ]; then
             docker pull mongo@${{ steps.dotenv.outputs.MONGODB_SHA }}
           elif [ "${{ matrix.datasource }}" == "mariadb" ]; then
             docker pull mariadb@${{ steps.dotenv.outputs.MARIADB_SHA }}
@@ -202,46 +202,11 @@ jobs:
           AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
           if [ -n "$AFFECTED" ]; then
             cd packages/server
-            yarn test --filter ./src/tests/filters/datasource-tests.js --passWithNoTests
-          else
-            echo "No affected tests to run"
-          fi
-
-  test-server-without-datasource:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: yarn
-
-      - name: Pull testcontainers images
-        run: |
-          docker pull minio/minio &
-          docker pull redis &
-          docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.3.3-sqs-v2.1.1 &
-
-          wait $(jobs -p)
-
-      - run: yarn --frozen-lockfile
-
-      - name: Test server
-        env:
-          DATASOURCE: none
-        run: |
-          AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
-          if [ -n "$AFFECTED" ]; then
-            cd packages/server
-            yarn test --filter ./src/tests/filters/datasource-tests.js --passWithNoTests
+            if [ "${{ matrix.datasource }}" == "none" ]; then
+              yarn test --filter ./src/tests/filters/non-datasource-tests.js --passWithNoTests
+            else
+              yarn test --filter ./src/tests/filters/datasource-tests.js --passWithNoTests
+            fi
           else
             echo "No affected tests to run"
           fi
