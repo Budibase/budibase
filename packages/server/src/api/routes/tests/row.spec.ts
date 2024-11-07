@@ -11,9 +11,9 @@ import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import {
   context,
+  features,
   InternalTable,
   tenancy,
-  features,
   utils,
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
@@ -21,27 +21,28 @@ import {
   AIOperationEnum,
   AttachmentFieldMetadata,
   AutoFieldSubType,
+  BBReferenceFieldSubType,
   Datasource,
   DateFieldMetadata,
   DeleteRow,
   FieldSchema,
   FieldType,
-  BBReferenceFieldSubType,
+  FormulaResponseType,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
+  JsonFieldSubType,
   NumberFieldMetadata,
   QuotaUsageType,
+  RelationSchemaField,
   RelationshipType,
   Row,
+  RowExportFormat,
   SaveTableRequest,
   StaticQuotaName,
   Table,
+  TableSchema,
   TableSourceType,
   UpdatedRowEventEmitter,
-  TableSchema,
-  JsonFieldSubType,
-  RowExportFormat,
-  RelationSchemaField,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -50,6 +51,7 @@ import { Knex } from "knex"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
 import { JsTimeoutError } from "@budibase/string-templates"
+import { isDate } from "../../../utilities"
 
 jest.mock("@budibase/pro", () => ({
   ...jest.requireActual("@budibase/pro"),
@@ -87,6 +89,10 @@ async function waitForEvent(
 
   await callback()
   return await p
+}
+
+function encodeJS(binding: string) {
+  return `{{ js "${Buffer.from(binding).toString("base64")}"}}`
 }
 
 describe.each([
@@ -3476,7 +3482,7 @@ describe.each([
   describe("Formula fields", () => {
     let table: Table
     let otherTable: Table
-    let relatedRow: Row
+    let relatedRow: Row, mainRow: Row
 
     beforeAll(async () => {
       otherTable = await config.api.table.save(defaultTable())
@@ -3504,13 +3510,32 @@ describe.each([
         name: generator.word(),
         description: generator.paragraph(),
       })
-      await config.api.row.save(table._id!, {
+      mainRow = await config.api.row.save(table._id!, {
         name: generator.word(),
         description: generator.paragraph(),
         tableId: table._id!,
         links: [relatedRow._id],
       })
     })
+
+    async function updateFormulaColumn(
+      formula: string,
+      opts?: { responseType?: FormulaResponseType; formulaType?: FormulaType }
+    ) {
+      table = await config.api.table.save({
+        ...table,
+        schema: {
+          ...table.schema,
+          formula: {
+            name: "formula",
+            type: FieldType.FORMULA,
+            formula: formula,
+            responseType: opts?.responseType,
+            formulaType: opts?.formulaType || FormulaType.DYNAMIC,
+          },
+        },
+      })
+    }
 
     it("should be able to search for rows containing formulas", async () => {
       const { rows } = await config.api.row.search(table._id!)
@@ -3519,12 +3544,63 @@ describe.each([
       const row = rows[0]
       expect(row.formula).toBe(relatedRow.name)
     })
+
+    it("should coerce - number response type", async () => {
+      await updateFormulaColumn(encodeJS("return 1"), {
+        responseType: FieldType.NUMBER,
+      })
+      const { rows } = await config.api.row.search(table._id!)
+      expect(rows[0].formula).toBe(1)
+    })
+
+    it("should coerce - boolean response type", async () => {
+      await updateFormulaColumn(encodeJS("return true"), {
+        responseType: FieldType.BOOLEAN,
+      })
+      const { rows } = await config.api.row.search(table._id!)
+      expect(rows[0].formula).toBe(true)
+    })
+
+    it("should coerce - datetime response type", async () => {
+      await updateFormulaColumn(encodeJS("return new Date()"), {
+        responseType: FieldType.DATETIME,
+      })
+      const { rows } = await config.api.row.search(table._id!)
+      expect(isDate(rows[0].formula)).toBe(true)
+    })
+
+    it("should coerce - datetime with invalid value", async () => {
+      await updateFormulaColumn(encodeJS("return 'a'"), {
+        responseType: FieldType.DATETIME,
+      })
+      const { rows } = await config.api.row.search(table._id!)
+      expect(rows[0].formula).toBeUndefined()
+    })
+
+    it("should coerce handlebars", async () => {
+      await updateFormulaColumn("{{ add 1 1 }}", {
+        responseType: FieldType.NUMBER,
+      })
+      const { rows } = await config.api.row.search(table._id!)
+      expect(rows[0].formula).toBe(2)
+    })
+
+    it("should coerce a static handlebars formula", async () => {
+      await updateFormulaColumn(encodeJS("return 1"), {
+        responseType: FieldType.NUMBER,
+        formulaType: FormulaType.STATIC,
+      })
+      // save the row to store the static value
+      await config.api.row.save(table._id!, mainRow)
+      const { rows } = await config.api.row.search(table._id!)
+      expect(rows[0].formula).toBe(1)
+    })
   })
 
   describe("Formula JS protection", () => {
     it("should time out JS execution if a single cell takes too long", async () => {
       await withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 40 }, async () => {
-        const js = Buffer.from(
+        const js = encodeJS(
           `
               let i = 0;
               while (true) {
@@ -3532,7 +3608,7 @@ describe.each([
               }
               return i;
             `
-        ).toString("base64")
+        )
 
         const table = await config.api.table.save(
           saveTableRequest({
@@ -3544,7 +3620,7 @@ describe.each([
               formula: {
                 name: "formula",
                 type: FieldType.FORMULA,
-                formula: `{{ js "${js}"}}`,
+                formula: js,
                 formulaType: FormulaType.DYNAMIC,
               },
             },
@@ -3567,7 +3643,7 @@ describe.each([
           JS_PER_REQUEST_TIMEOUT_MS: 80,
         },
         async () => {
-          const js = Buffer.from(
+          const js = encodeJS(
             `
               let i = 0;
               while (true) {
@@ -3575,7 +3651,7 @@ describe.each([
               }
               return i;
             `
-          ).toString("base64")
+          )
 
           const table = await config.api.table.save(
             saveTableRequest({
@@ -3587,7 +3663,7 @@ describe.each([
                 formula: {
                   name: "formula",
                   type: FieldType.FORMULA,
-                  formula: `{{ js "${js}"}}`,
+                  formula: js,
                   formulaType: FormulaType.DYNAMIC,
                 },
               },
@@ -3629,7 +3705,7 @@ describe.each([
     })
 
     it("should not carry over context between formulas", async () => {
-      const js = Buffer.from(`return $("[text]");`).toString("base64")
+      const js = encodeJS(`return $("[text]");`)
       const table = await config.api.table.save(
         saveTableRequest({
           schema: {
@@ -3640,7 +3716,7 @@ describe.each([
             formula: {
               name: "formula",
               type: FieldType.FORMULA,
-              formula: `{{ js "${js}"}}`,
+              formula: js,
               formulaType: FormulaType.DYNAMIC,
             },
           },
