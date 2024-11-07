@@ -7,11 +7,13 @@
   export let type = "text"
   export let readonly = false
   export let api
+  export let format = null
 
   let input
   let active = false
 
   $: editable = focused && !readonly
+  $: displayValue = format?.(value) ?? value ?? ""
 
   const handleChange = e => {
     onChange(e.target.value)
@@ -52,7 +54,7 @@
 {:else}
   <div class="text-cell" class:number={type === "number"}>
     <div class="value">
-      {value ?? ""}
+      {displayValue}
     </div>
   </div>
 {/if}

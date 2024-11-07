@@ -4,6 +4,7 @@ import { capitalise } from "helpers"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import getValidRoute from "../getValidRoute"
 import { Helpers } from "@budibase/bbui"
+import { getRowActionButtonTemplates } from "templates/rowActions"
 
 const getTableScreenTemplate = ({
   route,
@@ -92,7 +93,7 @@ const getTableScreenTemplate = ({
   }
 }
 
-const getUpdateScreenTemplate = ({
+const getUpdateScreenTemplate = async ({
   route,
   tableScreenRoute,
   tableOrView,
@@ -102,27 +103,11 @@ const getUpdateScreenTemplate = ({
   const formId = `${formBlockId}-form`
   const repeaterId = `${formBlockId}-repeater`
 
-  const backButton = new Component("@budibase/standard-components/button")
-    .instanceName("Back button")
-    .customProps({
-      type: "primary",
-      icon: "ri-arrow-go-back-fill",
-      text: "Back",
-      onClick: [
-        {
-          "##eventHandlerType": "Navigate To",
-          parameters: {
-            type: "url",
-            url: tableScreenRoute,
-          },
-        },
-      ],
-    })
-
   const deleteButton = new Component("@budibase/standard-components/button")
     .instanceName("Delete button")
     .customProps({
-      type: "secondary",
+      type: "warning",
+      quiet: true,
       text: "Delete",
       onClick: [
         {
@@ -173,7 +158,7 @@ const getUpdateScreenTemplate = ({
       ],
     })
 
-  const updateFormBlock = new Component(
+  let updateFormBlock = new Component(
     "@budibase/standard-components/formblock",
     formBlockId
   )
@@ -181,11 +166,21 @@ const getUpdateScreenTemplate = ({
     .customProps({
       dataSource: tableOrView.tableSelectFormat,
       labelPosition: "left",
-      buttonPosition: "top",
+      buttonPosition: "bottom",
       actionType: "Update",
       title: `Update ${tableOrView.name} row`,
-      buttons: [backButton.json(), saveButton.json(), deleteButton.json()],
     })
+
+  // Generate button config including row actions
+  let buttons = [saveButton.json(), deleteButton.json()]
+  const rowActionButtons = await getRowActionButtonTemplates({
+    instance: updateFormBlock.json(),
+  })
+  buttons = [...(buttons || []), ...rowActionButtons]
+  updateFormBlock = updateFormBlock.customProps({
+    buttons,
+    buttonsCollapsed: buttons.length > 5,
+  })
 
   const template = new Screen()
     .route(route)
@@ -209,23 +204,6 @@ const getCreateScreenTemplate = ({
 }) => {
   const formBlockId = Helpers.uuid()
   const formId = `${formBlockId}-form`
-
-  const backButton = new Component("@budibase/standard-components/button")
-    .instanceName("Back button")
-    .customProps({
-      type: "primary",
-      icon: "ri-arrow-go-back-fill",
-      text: "Back",
-      onClick: [
-        {
-          "##eventHandlerType": "Navigate To",
-          parameters: {
-            type: "url",
-            url: tableScreenRoute,
-          },
-        },
-      ],
-    })
 
   const saveButton = new Component("@budibase/standard-components/button")
     .instanceName("Save button")
@@ -264,10 +242,10 @@ const getCreateScreenTemplate = ({
     .customProps({
       dataSource: tableOrView.tableSelectFormat,
       labelPosition: "left",
-      buttonPosition: "top",
+      buttonPosition: "bottom",
       actionType: "Create",
       title: `Create ${tableOrView.name} row`,
-      buttons: [backButton.json(), saveButton.json()],
+      buttons: [saveButton.json()],
     })
 
   const template = new Screen()
@@ -284,7 +262,7 @@ const getCreateScreenTemplate = ({
   }
 }
 
-const newScreen = ({ tableOrView, permissions, screens }) => {
+const newScreen = async ({ tableOrView, permissions, screens }) => {
   const tableScreenRoute = getValidRoute(
     screens,
     tableOrView.name,
@@ -312,7 +290,7 @@ const newScreen = ({ tableOrView, permissions, screens }) => {
     gridLayout: true,
   })
 
-  const updateScreenTemplate = getUpdateScreenTemplate({
+  const updateScreenTemplate = await getUpdateScreenTemplate({
     route: updateScreenRoute,
     tableScreenRoute,
     tableOrView,

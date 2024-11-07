@@ -12,7 +12,7 @@
     Tags,
     Tag,
   } from "@budibase/bbui"
-  import { admin, licensing } from "stores/portal"
+  import { admin, licensing, featureFlags } from "stores/portal"
   import { API } from "api"
   import AIConfigModal from "./ConfigModal.svelte"
   import AIConfigTile from "./AIConfigTile.svelte"
@@ -27,14 +27,12 @@
   let editingUuid
 
   $: isCloud = $admin.cloud
-  $: customAIConfigsEnabled = $licensing.customAIConfigsEnabled
+  $: customAIConfigsEnabled =
+    $featureFlags.AI_CUSTOM_CONFIGS && $licensing.customAIConfigsEnabled
 
   async function fetchAIConfig() {
     try {
-      const aiDoc = await API.getConfig(ConfigTypes.AI)
-      if (aiDoc._id) {
-        fullAIConfig = aiDoc
-      }
+      fullAIConfig = await API.getConfig(ConfigTypes.AI)
     } catch (error) {
       notifications.error("Error fetching AI config")
     }
@@ -66,6 +64,7 @@
       }
       // Add new or update existing custom AI Config
       fullAIConfig.config[id] = editingAIConfig
+      fullAIConfig.type = ConfigTypes.AI
     }
 
     try {

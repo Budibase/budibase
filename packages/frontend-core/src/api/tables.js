@@ -48,7 +48,7 @@ export const buildTableEndpoints = API => ({
     return await API.post({
       url: `/api/${tableId}/search`,
       body: {
-        query,
+        ...(query ? { query } : {}),
         bookmark,
         limit,
         sort,

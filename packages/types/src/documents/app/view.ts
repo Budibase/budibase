@@ -1,4 +1,4 @@
-import { LegacyFilter, SearchFilterGroup, SortOrder, SortType } from "../../api"
+import { LegacyFilter, UISearchFilter, SortOrder, SortType } from "../../api"
 import { UIFieldMetadata } from "./table"
 import { Document } from "../document"
 import { DBView, SearchFilters } from "../../sdk"
@@ -54,12 +54,12 @@ export interface NumericCalculationFieldMetadata
 
 export interface CountCalculationFieldMetadata extends BasicViewFieldMetadata {
   calculationType: CalculationType.COUNT
+  field: string
 }
 
 export interface CountDistinctCalculationFieldMetadata
   extends CountCalculationFieldMetadata {
   distinct: true
-  field: string
 }
 
 export type ViewCalculationFieldMetadata =
@@ -92,7 +92,7 @@ export interface ViewV2 {
   tableId: string
   query?: LegacyFilter[] | SearchFilters
   // duplicate to store UI information about filters
-  queryUI?: SearchFilterGroup
+  queryUI?: UISearchFilter
   sort?: {
     field: string
     order?: SortOrder
