@@ -108,7 +108,7 @@ export async function processAIColumns<T extends Row | Row[]>(
     span?.addTags({ table_id: table._id, numRows })
     const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
     const llm = await pro.ai.LargeLanguageModel.forCurrentTenant("gpt-4o-mini")
-    if (rows) {
+    if (rows && llm.initialised) {
       // Ensure we have snippet context
       await context.ensureSnippetContext()
 

@@ -4,8 +4,15 @@ import {
   processAIColumns,
   processFormulas,
 } from "../../../utilities/rowProcessor"
-import { context } from "@budibase/backend-core"
-import { Table, Row, FormulaType, FieldType, ViewV2 } from "@budibase/types"
+import { context, features } from "@budibase/backend-core"
+import {
+  Table,
+  Row,
+  FeatureFlag,
+  FormulaType,
+  FieldType,
+  ViewV2,
+} from "@budibase/types"
 import * as linkRows from "../../../db/linkedRows"
 import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
@@ -145,8 +152,10 @@ export async function finaliseRow(
     contextRows: [enrichedRow],
   })
   const aiEnabled =
-    (await pro.features.isBudibaseAIEnabled()) ||
-    (await pro.features.isAICustomConfigsEnabled())
+    ((await features.flags.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
+      (await pro.features.isBudibaseAIEnabled())) ||
+    ((await features.flags.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS)) &&
+      (await pro.features.isAICustomConfigsEnabled()))
   if (aiEnabled) {
     row = await processAIColumns(table, row, {
       contextRows: [enrichedRow],
@@ -160,7 +169,7 @@ export async function finaliseRow(
     dynamic: false,
   })
   if (aiEnabled) {
-    enrichedRow = await processAIColumns(table, row, {
+    enrichedRow = await processAIColumns(table, enrichedRow, {
       contextRows: [enrichedRow],
     })
   }
