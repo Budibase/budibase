@@ -26,7 +26,11 @@ export async function getDatasource(): Promise<Datasource> {
         .withTmpFs({
           "/opt/oracle/oradata/FREEPDB1": "",
         })
-        .withWaitStrategy(Wait.forLogMessage("DATABASE IS READY TO USE!"))
+        .withWaitStrategy(
+          Wait.forLogMessage("DATABASE IS READY TO USE!").withStartupTimeout(
+            20000
+          )
+        )
     )
   }
 
