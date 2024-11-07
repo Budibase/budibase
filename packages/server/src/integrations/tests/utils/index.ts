@@ -11,6 +11,7 @@ import { testContainerUtils } from "@budibase/backend-core/tests"
 import cloneDeep from "lodash/cloneDeep"
 import { Knex } from "knex"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { create } from "lodash"
 
 export type DatasourceProvider = () => Promise<Datasource | undefined>
 
@@ -89,11 +90,25 @@ async function createDatasources(
   }
 }
 
+// Jest doesn't allow test files to exist with no tests in them. When we run
+// these tests in CI, we break them out by data source, and there are a bunch of
+// test files that only run for a subset of data sources, and for the rest of
+// them they will be empty test files. Defining a dummy test makes it so that
+// Jest doesn't error in this situation.
+function createDummyTest() {
+  describe("no tests", () => {
+    it("no tests", () => {
+      // no tests
+    })
+  })
+}
+
 export function datasourceDescribe(
   opts: DatasourceDescribeOpts,
   cb: (args: DatasourceDescribeReturn) => void
 ) {
   if (process.env.DATASOURCE === "none") {
+    createDummyTest()
     return
   }
 
@@ -115,6 +130,7 @@ export function datasourceDescribe(
   }
 
   if (databases.length === 0) {
+    createDummyTest()
     return
   }
 
