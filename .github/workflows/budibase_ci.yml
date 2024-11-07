@@ -150,7 +150,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        datasource: [mssql, mysql, postgres, mongo, mariadb, oracle]
+        datasource: [mssql, mysql, postgres, mongodb, mariadb, oracle]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -202,7 +202,7 @@ jobs:
           AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
           if [ -n "$AFFECTED" ]; then
             cd packages/server
-            yarn test --filter ./src/tests/filters/datasource-tests.js
+            yarn test --filter ./src/tests/filters/datasource-tests.js --passWithNoTests
           else
             echo "No affected tests to run"
           fi
@@ -241,7 +241,7 @@ jobs:
           AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
           if [ -n "$AFFECTED" ]; then
             cd packages/server
-            yarn test --filter ./src/tests/filters/non-datasource-tests.js
+            yarn test --filter ./src/tests/filters/datasource-tests.js --passWithNoTests
           else
             echo "No affected tests to run"
           fi
