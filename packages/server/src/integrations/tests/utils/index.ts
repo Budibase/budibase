@@ -11,7 +11,6 @@ import { testContainerUtils } from "@budibase/backend-core/tests"
 import cloneDeep from "lodash/cloneDeep"
 import { Knex } from "knex"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { create } from "lodash"
 
 export type DatasourceProvider = () => Promise<Datasource | undefined>
 
