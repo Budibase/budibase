@@ -141,7 +141,7 @@ class InMemoryQueue implements Partial<Queue> {
     } else {
       pushMessage()
     }
-    return {} as any
+    return { id: jobId } as any
   }
 
   /**
