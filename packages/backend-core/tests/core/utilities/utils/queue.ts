@@ -19,7 +19,7 @@ export async function useRealQueues() {
     .start()
 
   const port = redis.getMappedPort(6379)
-  process.env.BULL_TEST_REDIS = `http://127.0.0.1:${port}`
+  process.env.BULL_TEST_REDIS_PORT = port.toString()
 }
 
 export async function processMessages(queue: Queue) {

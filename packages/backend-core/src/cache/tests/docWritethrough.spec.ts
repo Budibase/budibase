@@ -21,6 +21,8 @@ async function waitForQueueCompletion() {
   await utils.queue.processMessages(DocWritethroughProcessor.queue)
 }
 
+beforeAll(() => utils.queue.useRealQueues())
+
 describe("docWritethrough", () => {
   beforeAll(() => {
     init()
