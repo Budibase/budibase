@@ -4,12 +4,10 @@
     Layout,
     Heading,
     Body,
-    Button,
     Divider,
     notifications,
     Label,
-    Modal,
-    ModalContent,
+    Link,
   } from "@budibase/bbui"
   import { API } from "api"
   import { auth, admin } from "stores/portal"
@@ -21,28 +19,11 @@
   let githubVersion
   let githubPublishedDate
   let githubPublishedTime
-  let needsUpdate = true
-  let updateModal
 
   // Only admins allowed here
   $: {
     if (!sdk.users.isAdmin($auth.user) || $admin.cloud) {
       $redirect("../../portal")
-    }
-  }
-
-  async function updateBudibase() {
-    try {
-      notifications.info("Updating budibase..")
-      await fetch("/v1/update", {
-        headers: {
-          Authorization: "Bearer budibase",
-        },
-      })
-      notifications.success("Your budibase installation is up to date.")
-      getVersion()
-    } catch (err) {
-      notifications.error(`Error installing budibase update ${err}`)
     }
   }
 
@@ -69,13 +50,6 @@
       githubPublishedDate = new Date(githubResponse.published_at)
       githubPublishedTime = githubPublishedDate.toLocaleTimeString()
       githubPublishedDate = githubPublishedDate.toLocaleDateString()
-
-      //Does Budibase need to be updated?
-      if (githubVersion === version) {
-        needsUpdate = false
-      } else {
-        needsUpdate = true
-      }
     } catch (error) {
       notifications.error("Error getting the latest Budibase version")
       githubVersion = null
@@ -115,23 +89,15 @@
         >
       </Layout>
       <Divider />
-      <div>
-        <Button cta on:click={updateModal.show} disabled={!needsUpdate}
-          >Update Budibase</Button
+      <Layout noPadding gap="XS">
+        <Heading>Updating Budibase</Heading>
+        <Body
+          >To update your self-host installation, follow the docs found <Link
+            size="L"
+            href="https://docs.budibase.com/docs/updating-budibase">here.</Link
+          ></Body
         >
-        <Modal bind:this={updateModal}>
-          <ModalContent
-            title="Update Budibase"
-            confirmText="Update"
-            onConfirm={updateBudibase}
-          >
-            <span
-              >Are you sure you want to update your budibase installation to the
-              latest version?</span
-            >
-          </ModalContent>
-        </Modal>
-      </div>
+      </Layout>
     {/if}
   </Layout>
 {/if}
