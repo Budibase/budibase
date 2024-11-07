@@ -3240,7 +3240,6 @@
     "name": "Number Field",
     "icon": "123",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3250,8 +3249,7 @@
       {
         "type": "field/number",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -3336,7 +3334,17 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "number"
+        }
+      ]
+    }
   },
   "bigintfield": {
     "name": "BigInt Field",
