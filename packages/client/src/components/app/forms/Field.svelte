@@ -35,7 +35,7 @@
 
   $: formStep = formStepContext ? $formStepContext || 1 : 1
   $: formField = formApi?.registerField(
-    field,
+    field || $component.name,
     type,
     defaultValue,
     disabled,
