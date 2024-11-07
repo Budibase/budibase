@@ -2,6 +2,9 @@
   import Placeholder from "../Placeholder.svelte"
   import { getContext, onDestroy } from "svelte"
   import { Icon } from "@budibase/bbui"
+  import InnerForm from "./InnerForm.svelte"
+  import { writable } from "svelte/store"
+  import Provider from "components/context/Provider.svelte"
 
   export let label
   export let field
@@ -71,52 +74,66 @@
   })
 </script>
 
-<div
-  class="spectrum-Form-item"
-  class:span-2={span === 2}
-  class:span-3={span === 3}
-  class:span-6={span === 6 || !span}
-  use:styleable={$component.styles}
-  class:above={labelPos === "above"}
->
-  {#key $component.editing}
-    <label
-      bind:this={labelNode}
-      contenteditable={$component.editing}
-      on:blur={$component.editing ? updateLabel : null}
-      on:input={() => (touched = true)}
-      class:hidden={!label}
-      class:readonly
-      for={fieldState?.fieldId}
-      class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
+{#if !formContext}
+  <!-- Cant support attachments -->
+  <Provider data={{ value: fieldState?.value }}>
+    <InnerForm
+      {disabled}
+      {readonly}
+      currentStep={writable(1)}
+      provideContext={false}
     >
-      {label || " "}
-    </label>
-  {/key}
-  <div class="spectrum-Form-itemField">
-    {#if !formContext}
-      <Placeholder text="Form components need to be wrapped in a form" />
-    {:else if !fieldState}
-      <Placeholder />
-    {:else if schemaType && schemaType !== type && !["options", "longform"].includes(type)}
-      <Placeholder
-        text="This Field setting is the wrong data type for this component"
-      />
-    {:else}
-      <slot />
-      {#if fieldState.error}
-        <div class="error">
-          <Icon name="Alert" />
-          <span>{fieldState.error}</span>
-        </div>
-      {:else if helpText}
-        <div class="helpText">
-          <Icon name="HelpOutline" /> <span>{helpText}</span>
-        </div>
+      <svelte:self {...$$props} bind:fieldState bind:fieldApi bind:fieldSchema>
+        <slot />
+      </svelte:self>
+    </InnerForm>
+  </Provider>
+{:else}
+  <div
+    class="spectrum-Form-item"
+    class:span-2={span === 2}
+    class:span-3={span === 3}
+    class:span-6={span === 6 || !span}
+    use:styleable={$component.styles}
+    class:above={labelPos === "above"}
+  >
+    {#key $component.editing}
+      <label
+        bind:this={labelNode}
+        contenteditable={$component.editing}
+        on:blur={$component.editing ? updateLabel : null}
+        on:input={() => (touched = true)}
+        class:hidden={!label}
+        class:readonly
+        for={fieldState?.fieldId}
+        class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
+      >
+        {label || " "}
+      </label>
+    {/key}
+    <div class="spectrum-Form-itemField">
+      {#if !fieldState}
+        <Placeholder />
+      {:else if schemaType && schemaType !== type && !["options", "longform"].includes(type)}
+        <Placeholder
+          text="This Field setting is the wrong data type for this component"
+        />
+      {:else}
+        <slot />
+        {#if fieldState.error}
+          <div class="error">
+            <Icon name="Alert" />
+            <span>{fieldState.error}</span>
+          </div>
+        {:else if helpText}
+          <div class="helpText">
+            <Icon name="HelpOutline" /> <span>{helpText}</span>
+          </div>
+        {/if}
       {/if}
-    {/if}
+    </div>
   </div>
-</div>
+{/if}
 
 <style>
   :global(.form-block .spectrum-Form-item.span-2) {
