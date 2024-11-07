@@ -199,7 +199,7 @@ jobs:
         env:
           DATASOURCE: ${{ matrix.datasource }}
         run: |
-          AFFECTED=yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server
+          AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
           if [ -n "$AFFECTED" ]; then
             cd packages/server
             yarn test --filter ./src/tests/filters/datasource-tests.js
@@ -238,7 +238,7 @@ jobs:
         env:
           DATASOURCE: none
         run: |
-          AFFECTED=yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server
+          AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
           if [ -n "$AFFECTED" ]; then
             cd packages/server
             yarn test --filter ./src/tests/filters/non-datasource-tests.js
