@@ -3096,7 +3096,6 @@
     "name": "Text Field",
     "icon": "Text",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3226,7 +3225,17 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
   },
   "numberfield": {
     "name": "Number Field",
@@ -3506,7 +3515,6 @@
     "name": "Options Picker",
     "icon": "Menu",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3714,7 +3722,17 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
   },
   "multifieldselect": {
     "name": "Multi-select Picker",
