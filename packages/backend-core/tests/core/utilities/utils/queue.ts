@@ -1,15 +1,20 @@
 import { Queue } from "bull"
 import { GenericContainer, Wait } from "testcontainers"
+import { startContainer } from "../testContainerUtils"
 
 export async function useRealQueues() {
-  const redis = await new GenericContainer("redis")
-    .withExposedPorts(6379)
-    .withWaitStrategy(
-      Wait.forSuccessfulCommand(`redis-cli`).withStartupTimeout(10000)
-    )
-    .start()
+  const ports = await startContainer(
+    new GenericContainer("redis")
+      .withExposedPorts(6379)
+      .withWaitStrategy(
+        Wait.forSuccessfulCommand(`redis-cli`).withStartupTimeout(10000)
+      )
+  )
 
-  const port = redis.getMappedPort(6379)
+  const port = ports.find(x => x.container === 6379)?.host
+  if (!port) {
+    throw new Error("Redis port not found")
+  }
   process.env.BULL_TEST_REDIS_PORT = port.toString()
 }
 
