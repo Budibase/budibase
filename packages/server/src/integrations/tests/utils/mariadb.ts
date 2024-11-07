@@ -32,7 +32,7 @@ export async function getDatasource(): Promise<Datasource> {
         .withExposedPorts(3306)
         .withTmpFs({ "/var/lib/mysql": "rw" })
         .withEnvironment({ MARIADB_ROOT_PASSWORD: "password" })
-        .withWaitStrategy(new MariaDBWaitStrategy())
+        .withWaitStrategy(new MariaDBWaitStrategy().withStartupTimeout(20000))
     )
   }
 
