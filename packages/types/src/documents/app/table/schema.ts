@@ -115,6 +115,11 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
   type: FieldType.FORMULA
   formula: string
   formulaType?: FormulaType
+  responseType?:
+    | FieldType.STRING
+    | FieldType.NUMBER
+    | FieldType.BOOLEAN
+    | FieldType.DATETIME
 }
 
 export interface AIFieldMetadata extends BaseFieldSchema {
