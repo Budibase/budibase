@@ -21,7 +21,6 @@ export async function getDatasource(): Promise<Datasource> {
           // version in production.
           MSSQL_PID: "Developer",
         })
-        .withTmpFs({ "/var/opt/mssql": "rw" })
         .withWaitStrategy(
           Wait.forSuccessfulCommand(
             "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password_123 -q 'SELECT 1'"

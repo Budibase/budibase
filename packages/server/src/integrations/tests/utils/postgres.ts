@@ -13,7 +13,6 @@ export async function getDatasource(): Promise<Datasource> {
       new GenericContainer(POSTGRES_IMAGE)
         .withExposedPorts(5432)
         .withEnvironment({ POSTGRES_PASSWORD: "password" })
-        .withTmpFs({ "/var/lib/postgresql/data": "rw" })
         .withWaitStrategy(
           Wait.forSuccessfulCommand(
             "pg_isready -h localhost -p 5432"
