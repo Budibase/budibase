@@ -1,4 +1,4 @@
-import { mocks, structures, utils } from "@budibase/backend-core/tests"
+import { mocks, structures } from "@budibase/backend-core/tests"
 import { context, events, features } from "@budibase/backend-core"
 import { Event, IdentityType } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
@@ -12,28 +12,20 @@ const BASE_IDENTITY = {
 const USER_AUDIT_LOG_COUNT = 3
 const APP_ID = "app_1"
 
-const config = new TestConfiguration()
-
-beforeAll(async () => {
-  await config.beforeAll()
-})
-afterAll(async () => {
-  await config.afterAll()
-})
-
 describe.each(["lucene", "sql"])("/api/global/auditlogs (%s)", method => {
+  const config = new TestConfiguration()
   let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
     envCleanup = features.testutils.setFeatureFlags("*", {
       SQS: method === "sql",
     })
-
-    await config.useNewTenant()
+    await config.beforeAll()
   })
 
-  afterAll(() => {
+  afterAll(async () => {
     envCleanup?.()
+    await config.afterAll()
   })
 
   describe("POST /api/global/auditlogs/search", () => {
@@ -52,11 +44,6 @@ describe.each(["lucene", "sql"])("/api/global/auditlogs (%s)", method => {
           await context.doInAppContext(APP_ID, async () => {
             await events.app.created(structures.apps.app(APP_ID))
           })
-
-          await utils.queue.processMessages(
-            events.processors.auditLogsProcessor.queue
-          )
-
           // fetch the user created events
           const response = await config.api.auditLogs.search({
             events: [Event.USER_CREATED],
