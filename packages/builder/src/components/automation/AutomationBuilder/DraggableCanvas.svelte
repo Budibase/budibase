@@ -11,50 +11,12 @@
   import { selectedAutomation, automationStore } from "stores/builder"
   import { memo } from "@budibase/frontend-core"
 
-  const getContentTransformOrigin = () => {
-    const midPoint = {
-      midX: viewPort.getBoundingClientRect().width / 2,
-      midY: viewPort.getBoundingClientRect().height / 2,
-    }
-    return [
-      Math.abs(midPoint.midX - $contentPos.x),
-      Math.abs(midPoint.midY - $contentPos.y),
-    ]
-  }
-
-  // TODO - Remove Debugging
-  window.markCenterPoint = async () => {
-    zoomOrigin = [...getContentTransformOrigin()]
-
-    const scale = 1 //0.9
-
-    const newWidth = contentDims.w * scale
-    const deltaWidth = contentDims.w - newWidth
-
-    const newHeight = contentDims.h * scale
-    const deltaHeight = contentDims.h - newHeight
-
-    console.log({
-      w: {
-        widf: contentDims.w,
-        newWidth,
-        deltaWidth: parseInt(deltaWidth),
-      },
-      h: {
-        hif: contentDims.h,
-        newHeight,
-        deltaHeight: parseInt(deltaHeight),
-      },
-    })
-  }
-
   export function toFocus() {
     viewToFocusEle()
   }
 
   export function zoomIn() {
     const scale = parseFloat(Math.min($view.scale + 0.1, 1.5).toFixed(2))
-    // zoomOrigin = [...getContentTransformOrigin()]
 
     view.update(state => ({
       ...state,
@@ -64,7 +26,6 @@
 
   export function zoomOut() {
     const scale = parseFloat(Math.max($view.scale - 0.1, 0.1).toFixed(2))
-    // zoomOrigin = [...getContentTransformOrigin()]
 
     view.update(state => ({
       ...state,
@@ -164,10 +125,6 @@
   // Monitor the size of the viewPort
   let viewObserver
 
-  // Monitor the size of the content
-  // Always reconfigure when changes occur
-  let contentObserver
-
   // Size of the core display content
   let contentDims = {}
 
@@ -235,8 +192,6 @@
       --posX: ${x}px; --posY: ${y}px; 
       --scale: ${scale}; 
       --wrapH: ${h}px; --wrapW: ${w}px;
-      --ccX: ${cursorContentX}px;
-      --ccY: ${cursorContentY}px;
       `
   }
 
@@ -319,12 +274,14 @@
     }
 
     if ($view.dragging) {
-      // Need to know the internal offset as well.
+      // Static, default buffer centered around the mouse
+      const dragBuffer = 100
+
       scrollZones = {
-        top: y < viewDims.height * 0.05,
-        bottom:
-          y > viewDims.height - ($view.moveStep.h - $view.moveStep.mouse.y),
-        left: x < viewDims.width * 0.05,
+        top: y < dragBuffer,
+        bottom: y > viewDims.height - dragBuffer,
+        left: x < dragBuffer,
+        // An exception for the right side as the drag handle is on the extreme left
         right: x > viewDims.width - $view.moveStep.w,
       }
 
@@ -333,9 +290,6 @@
       if (dragOutEntries.length) {
         if (!scrollInterval) {
           const autoScroll = () => {
-            // Some internal tracking for implying direction
-            // const lastY = $contentPos.y
-            // const lastX = $contentPos.x
             const bump = 30
 
             return () => {
@@ -419,7 +373,7 @@
   }
 
   const onMouseUp = () => {
-    if ($view.droptarget) {
+    if ($view.droptarget && $view.dragging) {
       handleDragDrop()
     }
 
@@ -589,28 +543,12 @@
     on:mousemove={Utils.domDebounce(onViewMouseMove)}
     on:mouseup={onViewDragEnd}
   >
-    <!--delete me-->
-    <div class="reticle" />
-    <div class="debug">
-      <span>
-        View Pos [{$internalPos.x}, {$internalPos.y}]
-      </span>
-      <span>View Dims [{viewDims.width}, {viewDims.height}]</span>
-      <span>Mouse Down [{down}]</span>
-      <span>Drag [{$view.dragging}]</span>
-      <span>Dragging [{$view?.moveStep?.id || "no"}]</span>
-      <span>Scale [{$view.scale}]</span>
-      <span>Content [{JSON.stringify($contentPos)}]</span>
-      <span>Content Cursor [{JSON.stringify(dragOffset)}]</span>
-    </div>
     <div
       class="content-wrap"
       style={wrapStyles}
       bind:this={contentWrap}
       class:dragging={down}
     >
-      <!--delete me-->
-      <div class="reticle-content" />
       <div
         class="content"
         bind:this={mainContent}
@@ -643,33 +581,7 @@
     overflow: hidden;
     position: relative;
   }
-
-  .reticle {
-    display: none;
-    z-index: 10000;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 2px;
-    height: 2px;
-    background-color: red;
-    border-radius: 50%;
-  }
-
-  .reticle-content {
-    z-index: 10000;
-    position: absolute;
-    top: var(--ccY);
-    left: var(--ccX);
-    width: 2px;
-    height: 2px;
-    background-color: greenyellow;
-    border-radius: 50%;
-  }
-
   .content {
-    transform-origin: var(--ccX) var(--ccY);
     transform: scale(var(--scale));
     user-select: none;
     padding: var(--dragPadding);
