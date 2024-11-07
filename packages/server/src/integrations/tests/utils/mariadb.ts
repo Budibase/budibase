@@ -30,6 +30,7 @@ export async function getDatasource(): Promise<Datasource> {
     ports = startContainer(
       new GenericContainer(MARIADB_IMAGE)
         .withExposedPorts(3306)
+        .withTmpFs({ "/var/lib/mysql": "rw" })
         .withEnvironment({ MARIADB_ROOT_PASSWORD: "password" })
         .withWaitStrategy(new MariaDBWaitStrategy())
     )
