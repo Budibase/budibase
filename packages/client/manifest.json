@@ -4520,14 +4520,13 @@
           {
             "type": "boolean",
             "key": "showLogo",
-            "label": "showLogo",
+            "label": "Show Logo",
             "defaultValue": true
           },
           {
             "type": "text",
             "key": "customLogo",
             "label": "Logo",
-            "defaultValue": "https://files.readme.io/3440fe8-Budibase_Symbol_RGB_FullColour_cbqvha_1_z5cwq2_3.svg",
             "dependsOn": {
               "setting": "showLogo",
               "value": true
@@ -4554,6 +4553,17 @@
             "type": "boolean",
             "key": "invertColors",
             "label": "Invert Colors",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "codeType",
+              "value": "Barcode",
+              "invert": false
+            }
+          },
+          {
+            "type": "boolean",
+            "key": "vertical",
+            "label": "Display Vertically",
             "defaultValue": false,
             "dependsOn": {
               "setting": "codeType",
