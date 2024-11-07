@@ -3105,8 +3105,7 @@
       {
         "type": "field/string",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -3524,8 +3523,7 @@
       {
         "type": "field/options",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
