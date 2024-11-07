@@ -147,7 +147,7 @@ jobs:
           fi
 
   test-server:
-    runs-on: ubuntu-latest
+    runs-on: budi-tubby-tornado-quad-core-300gb
     strategy:
       matrix:
         datasource: [mssql, mysql, postgres, mongodb, mariadb, oracle, none]
