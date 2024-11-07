@@ -271,8 +271,8 @@ export const flags = new FlagSet({
   [FeatureFlag.AUTOMATION_BRANCHING]: Flag.boolean(true),
   [FeatureFlag.SQS]: Flag.boolean(true),
   [FeatureFlag.ENRICHED_RELATIONSHIPS]: Flag.boolean(true),
-  [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(env.isDev()),
-  [FeatureFlag.BUDIBASE_AI]: Flag.boolean(env.isDev()),
+  [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(true),
+  [FeatureFlag.BUDIBASE_AI]: Flag.boolean(true),
 })
 
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : T
