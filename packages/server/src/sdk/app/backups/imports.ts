@@ -170,7 +170,10 @@ export async function importApp(
   appId: string,
   db: Database,
   template: TemplateType,
-  opts: { importObjStoreContents: boolean } = { importObjStoreContents: true }
+  opts: {
+    importObjStoreContents: boolean
+    updateAttachmentColumns: boolean
+  } = { importObjStoreContents: true, updateAttachmentColumns: true }
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
   let dbStream: any
@@ -219,7 +222,9 @@ export async function importApp(
   if (!ok) {
     throw "Error loading database dump from template."
   }
-  await updateAttachmentColumns(prodAppId, db)
+  if (opts.updateAttachmentColumns) {
+    await updateAttachmentColumns(prodAppId, db)
+  }
   await updateAutomations(prodAppId, db)
   // clear up afterward
   if (tmpPath) {
