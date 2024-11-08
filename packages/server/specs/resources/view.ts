@@ -24,6 +24,11 @@ const view = {
       readonly: false,
     },
   },
+  query: {
+    string: {
+      column: "value",
+    },
+  },
   primaryDisplay: "name",
 }
 
@@ -66,10 +71,14 @@ const baseColumnDef = {
 const viewSchema = {
   description: "The view to be created/updated.",
   type: "object",
-  required: ["name", "schema"],
+  required: ["name", "schema", "tableId"],
   properties: {
     name: {
       description: "The name of the view.",
+      type: "string",
+    },
+    tableId: {
+      description: "The ID of the table this view is based on.",
       type: "string",
     },
     type: {
