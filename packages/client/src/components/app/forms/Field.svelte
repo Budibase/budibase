@@ -1,10 +1,10 @@
 <script>
-  import Placeholder from "../Placeholder.svelte"
   import { getContext, onDestroy } from "svelte"
-  import { Icon } from "@budibase/bbui"
-  import InnerForm from "./InnerForm.svelte"
   import { writable } from "svelte/store"
-  import Provider from "components/context/Provider.svelte"
+  import { Icon } from "@budibase/bbui"
+  import { memo } from "@budibase/frontend-core"
+  import Placeholder from "../Placeholder.svelte"
+  import InnerForm from "./InnerForm.svelte"
 
   export let label
   export let field
@@ -23,26 +23,39 @@
   const formContext = getContext("form")
   const formStepContext = getContext("form-step")
   const fieldGroupContext = getContext("field-group")
-  const { styleable, builderStore } = getContext("sdk")
+  const { styleable, builderStore, Provider } = getContext("sdk")
   const component = getContext("component")
 
   // Register field with form
   const formApi = formContext?.formApi
   const labelPos = fieldGroupContext?.labelPosition || "above"
 
+  let formField
   let touched = false
   let labelNode
 
-  $: formStep = formStepContext ? $formStepContext || 1 : 1
-  $: formField = formApi?.registerField(
-    field || $component.name,
+  // Memoize values required to register the field to avoid loops
+  const formStep = formStepContext || writable(1)
+  const fieldInfo = memo({
+    field: field || $component.name,
     type,
     defaultValue,
     disabled,
     readonly,
     validation,
-    formStep
-  )
+    formStep: $formStep || 1,
+  })
+  $: fieldInfo.set({
+    field: field || $component.name,
+    type,
+    defaultValue,
+    disabled,
+    readonly,
+    validation,
+    formStep: $formStep || 1,
+  })
+  $: registerField($fieldInfo)
+
   $: schemaType =
     fieldSchema?.type !== "formula" && fieldSchema?.type !== "bigint"
       ? fieldSchema?.type
@@ -61,6 +74,18 @@
   // Determine label class from position
   $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
 
+  const registerField = info => {
+    formField = formApi?.registerField(
+      info.field,
+      info.type,
+      info.defaultValue,
+      info.disabled,
+      info.readonly,
+      info.validation,
+      info.formStep
+    )
+  }
+
   const updateLabel = e => {
     if (touched) {
       builderStore.actions.updateProp("label", e.target.textContent)
@@ -75,7 +100,6 @@
 </script>
 
 {#if !formContext}
-  <!-- Cant support attachments -->
   <Provider data={{ value: fieldState?.value }}>
     <InnerForm
       {disabled}
