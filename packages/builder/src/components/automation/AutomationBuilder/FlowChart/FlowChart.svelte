@@ -7,7 +7,6 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import {
-    Icon,
     notifications,
     Modal,
     Toggle,
@@ -100,15 +99,18 @@
       Run test
     </Button>
     <div class="buttons">
-      <Icon disabled={!$automationStore.testResults} size="M" name="Multiple" />
-      <div
-        class:disabled={!$automationStore.testResults}
-        on:click={() => {
-          $automationStore.showTestPanel = true
-        }}
-      >
-        Test details
-      </div>
+      {#if !$automationStore.showTestPanel && $automationStore.testResults}
+        <Button
+          secondary
+          icon={"Multiple"}
+          disabled={!$automationStore.testResults}
+          on:click={() => {
+            $automationStore.showTestPanel = true
+          }}
+        >
+          Test details
+        </Button>
+      {/if}
     </div>
     {#if !isRowAction}
       <div class="toggle-active setting-spacing">
@@ -168,9 +170,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-height: 100%;
-    height: 100%;
-    width: 100%;
   }
 
   .header-left {
@@ -210,15 +209,26 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-left: var(--spacing-l);
-    transition: background 130ms ease-out;
+    padding: var(--spacing-l);
     flex: 0 0 60px;
     padding-right: var(--spacing-xl);
+    position: absolute;
+    width: 100%;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  .header > * {
+    pointer-events: auto;
   }
 
   .controls {
     display: flex;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-l);
+  }
+
+  .controls .toggle-active :global(.spectrum-Switch-label) {
+    margin-right: 0px;
   }
 
   .buttons {
@@ -230,11 +240,6 @@
 
   .buttons:hover {
     cursor: pointer;
-  }
-
-  .disabled {
-    pointer-events: none;
-    color: var(--spectrum-global-color-gray-500) !important;
   }
 
   .group {
