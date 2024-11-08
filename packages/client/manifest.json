@@ -4377,8 +4377,7 @@
       {
         "type": "field/barcodeqr",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -4523,7 +4522,17 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
   },
   "signaturesinglefield": {
     "name": "Signature",
