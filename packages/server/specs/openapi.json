@@ -456,6 +456,11 @@
                 "readonly": false
               }
             },
+            "query": {
+              "string": {
+                "column": "value"
+              }
+            },
             "primaryDisplay": "name"
           }
         }
@@ -482,6 +487,11 @@
                 "salary": {
                   "visible": false,
                   "readonly": false
+                }
+              },
+              "query": {
+                "string": {
+                  "column": "value"
                 }
               },
               "primaryDisplay": "name"
@@ -2092,11 +2102,16 @@
         "type": "object",
         "required": [
           "name",
-          "schema"
+          "schema",
+          "tableId"
         ],
         "properties": {
           "name": {
             "description": "The name of the view.",
+            "type": "string"
+          },
+          "tableId": {
+            "description": "The ID of the table this view is based on.",
             "type": "string"
           },
           "type": {
@@ -2301,11 +2316,16 @@
             "required": [
               "name",
               "schema",
+              "tableId",
               "id"
             ],
             "properties": {
               "name": {
                 "description": "The name of the view.",
+                "type": "string"
+              },
+              "tableId": {
+                "description": "The ID of the table this view is based on.",
                 "type": "string"
               },
               "type": {
@@ -2521,11 +2541,16 @@
               "required": [
                 "name",
                 "schema",
+                "tableId",
                 "id"
               ],
               "properties": {
                 "name": {
                   "description": "The name of the view.",
+                  "type": "string"
+                },
+                "tableId": {
+                  "description": "The ID of the table this view is based on.",
                   "type": "string"
                 },
                 "type": {

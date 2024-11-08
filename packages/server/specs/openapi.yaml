@@ -468,6 +468,9 @@ components:
             salary:
               visible: false
               readonly: false
+          query:
+            string:
+              column: value
           primaryDisplay: name
     views:
       value:
@@ -488,6 +491,9 @@ components:
               salary:
                 visible: false
                 readonly: false
+            query:
+              string:
+                column: value
             primaryDisplay: name
   securitySchemes:
     ApiKeyAuth:
@@ -1754,9 +1760,13 @@ components:
       required:
         - name
         - schema
+        - tableId
       properties:
         name:
           description: The name of the view.
+          type: string
+        tableId:
+          description: The ID of the table this view is based on.
           type: string
         type:
           description: The type of view - standard (empty value) or calculation.
@@ -1929,10 +1939,14 @@ components:
           required:
             - name
             - schema
+            - tableId
             - id
           properties:
             name:
               description: The name of the view.
+              type: string
+            tableId:
+              description: The ID of the table this view is based on.
               type: string
             type:
               description: The type of view - standard (empty value) or calculation.
@@ -2112,10 +2126,14 @@ components:
             required:
               - name
               - schema
+              - tableId
               - id
             properties:
               name:
                 description: The name of the view.
+                type: string
+              tableId:
+                description: The ID of the table this view is based on.
                 type: string
               type:
                 description: The type of view - standard (empty value) or calculation.

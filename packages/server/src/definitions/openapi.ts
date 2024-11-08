@@ -836,6 +836,8 @@ export interface components {
     view: {
       /** @description The name of the view. */
       name: string;
+      /** @description The ID of the table this view is based on. */
+      tableId: string;
       /**
        * @description The type of view - standard (empty value) or calculation.
        * @enum {string}
@@ -935,6 +937,8 @@ export interface components {
       data: {
         /** @description The name of the view. */
         name: string;
+        /** @description The ID of the table this view is based on. */
+        tableId: string;
         /**
          * @description The type of view - standard (empty value) or calculation.
          * @enum {string}
@@ -1036,6 +1040,8 @@ export interface components {
       data: {
         /** @description The name of the view. */
         name: string;
+        /** @description The ID of the table this view is based on. */
+        tableId: string;
         /**
          * @description The type of view - standard (empty value) or calculation.
          * @enum {string}

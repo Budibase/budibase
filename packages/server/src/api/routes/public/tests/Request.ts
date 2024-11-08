@@ -173,4 +173,18 @@ export class PublicViewAPI {
   ): Promise<Response<ViewV2[]>> {
     return this.request.send("get", "/views", undefined, expectations)
   }
+
+  async search(
+    viewName: string,
+    expectations?: PublicAPIExpectations
+  ): Promise<Response<ViewV2[]>> {
+    return this.request.send(
+      "post",
+      "/views/search",
+      {
+        name: viewName,
+      },
+      expectations
+    )
+  }
 }
