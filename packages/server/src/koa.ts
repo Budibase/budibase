@@ -37,6 +37,7 @@ export default function createKoaApp() {
   app.use(middleware.correlation)
   app.use(middleware.pino)
   app.use(middleware.ip)
+  app.use(middleware.csp)
   app.use(userAgent)
 
   const server = http.createServer(app.callback())
