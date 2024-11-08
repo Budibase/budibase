@@ -172,7 +172,7 @@ export async function importApp(
   template: TemplateType,
   opts: {
     importObjStoreContents: boolean
-    updateAttachmentColumns?: boolean
+    updateAttachmentColumns: boolean
   } = { importObjStoreContents: true, updateAttachmentColumns: true }
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
