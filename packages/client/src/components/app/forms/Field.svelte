@@ -99,8 +99,8 @@
   })
 </script>
 
-{#if !formContext}
-  <Provider data={{ value: fieldState?.value }}>
+<Provider data={{ value: fieldState?.value }}>
+  {#if !formContext}
     <InnerForm
       {disabled}
       {readonly}
@@ -111,53 +111,53 @@
         <slot />
       </svelte:self>
     </InnerForm>
-  </Provider>
-{:else}
-  <div
-    class="spectrum-Form-item"
-    class:span-2={span === 2}
-    class:span-3={span === 3}
-    class:span-6={span === 6 || !span}
-    use:styleable={$component.styles}
-    class:above={labelPos === "above"}
-  >
-    {#key $component.editing}
-      <label
-        bind:this={labelNode}
-        contenteditable={$component.editing}
-        on:blur={$component.editing ? updateLabel : null}
-        on:input={() => (touched = true)}
-        class:hidden={!label}
-        class:readonly
-        for={fieldState?.fieldId}
-        class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
-      >
-        {label || " "}
-      </label>
-    {/key}
-    <div class="spectrum-Form-itemField">
-      {#if !fieldState}
-        <Placeholder />
-      {:else if schemaType && schemaType !== type && !["options", "longform"].includes(type)}
-        <Placeholder
-          text="This Field setting is the wrong data type for this component"
-        />
-      {:else}
-        <slot />
-        {#if fieldState.error}
-          <div class="error">
-            <Icon name="Alert" />
-            <span>{fieldState.error}</span>
-          </div>
-        {:else if helpText}
-          <div class="helpText">
-            <Icon name="HelpOutline" /> <span>{helpText}</span>
-          </div>
+  {:else}
+    <div
+      class="spectrum-Form-item"
+      class:span-2={span === 2}
+      class:span-3={span === 3}
+      class:span-6={span === 6 || !span}
+      use:styleable={$component.styles}
+      class:above={labelPos === "above"}
+    >
+      {#key $component.editing}
+        <label
+          bind:this={labelNode}
+          contenteditable={$component.editing}
+          on:blur={$component.editing ? updateLabel : null}
+          on:input={() => (touched = true)}
+          class:hidden={!label}
+          class:readonly
+          for={fieldState?.fieldId}
+          class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
+        >
+          {label || " "}
+        </label>
+      {/key}
+      <div class="spectrum-Form-itemField">
+        {#if !fieldState}
+          <Placeholder />
+        {:else if schemaType && schemaType !== type && !["options", "longform"].includes(type)}
+          <Placeholder
+            text="This Field setting is the wrong data type for this component"
+          />
+        {:else}
+          <slot />
+          {#if fieldState.error}
+            <div class="error">
+              <Icon name="Alert" />
+              <span>{fieldState.error}</span>
+            </div>
+          {:else if helpText}
+            <div class="helpText">
+              <Icon name="HelpOutline" /> <span>{helpText}</span>
+            </div>
+          {/if}
         {/if}
-      {/if}
+      </div>
     </div>
-  </div>
-{/if}
+  {/if}
+</Provider>
 
 <style>
   :global(.form-block .spectrum-Form-item.span-2) {
