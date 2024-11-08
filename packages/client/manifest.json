@@ -5118,8 +5118,7 @@
       {
         "type": "field/s3",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -5164,7 +5163,17 @@
         "label": "Validation",
         "key": "validation"
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "array"
+        }
+      ]
+    }
   },
   "dataprovider": {
     "name": "Data Provider",
