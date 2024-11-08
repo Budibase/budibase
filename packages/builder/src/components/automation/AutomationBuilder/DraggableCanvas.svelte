@@ -7,6 +7,7 @@
     onDestroy,
     tick,
   } from "svelte"
+  import Logo from "assets/bb-emblem.svg?raw"
   import { Utils } from "@budibase/frontend-core"
   import { selectedAutomation, automationStore } from "stores/builder"
   import { memo } from "@budibase/frontend-core"
@@ -15,17 +16,19 @@
     viewToFocusEle()
   }
 
-  export function zoomIn() {
-    const scale = parseFloat(Math.min($view.scale + 0.1, 1.5).toFixed(2))
+  export async function zoomIn() {
+    const newScale = parseFloat(Math.min($view.scale + 0.1, 1.5).toFixed(2))
+    if ($view.scale === 1.5) return
 
     view.update(state => ({
       ...state,
-      scale,
+      scale: newScale,
     }))
   }
 
   export function zoomOut() {
     const scale = parseFloat(Math.max($view.scale - 0.1, 0.1).toFixed(2))
+    if ($view.scale === 0.1) return
 
     view.update(state => ({
       ...state,
@@ -45,6 +48,8 @@
       x: 0,
       y: 0,
     }))
+    offsetX = 0
+    offsetY = 0
     view.update(state => ({
       ...state,
       scale: 1,
@@ -82,6 +87,7 @@
       scrollX: 0,
       scrollY: 0,
     }))
+    offsetY = parseInt(0 + adjustedY)
   }
 
   const dispatch = createEventDispatcher()
@@ -110,10 +116,6 @@
   })
   setContext("contentPos", contentPos)
 
-  $: if ($view || contentDims) {
-    window.testValues = { ...$view, contentDims }
-  }
-
   // Elements
   let mainContent
   let viewPort
@@ -140,16 +142,30 @@
   // Auto scroll
   let scrollInterval
 
-  let zoomOrigin = []
-
   // Used to track where the draggable item is scrolling into
   let scrollZones
+
+  // Used to track the movements of the dragged content
+  // This allows things like the background to have their own starting coords
+  let offsetX = 0
+  let offsetY = 0
 
   // Focus element details. Used to move the viewport
   let focusElement = memo()
 
   // Memo Focus
   $: focusElement.set($view.focusEle)
+
+  // Background pattern
+  let bgDim = 24
+
+  // Scale prop for the icon
+  let dotDefault = 0.006
+
+  $: bgSize = Math.max(bgDim * $view.scale, 10)
+  $: bgWidth = bgSize
+  $: bgHeight = bgSize
+  $: dotSize = Math.max(dotDefault * $view.scale, dotDefault)
 
   const onScale = async () => {
     dispatch("zoom", $view.scale)
@@ -184,10 +200,9 @@
     return { x: Math.max(x, 0), y: Math.max(y, 0) }
   }
 
-  const buildWrapStyles = (pos, scale, dims, contentCursor) => {
+  const buildWrapStyles = (pos, scale, dims) => {
     const { x, y } = pos
     const { w, h } = dims
-    const [cursorContentX, cursorContentY] = contentCursor
     return `
       --posX: ${x}px; --posY: ${y}px; 
       --scale: ${scale}; 
@@ -216,6 +231,8 @@
             }
           : {}),
       }))
+
+      offsetX = offsetX - xBump
     } else if (e.ctrlKey || e.metaKey) {
       // Scale the content on scrolling
       let updatedScale
@@ -242,6 +259,7 @@
             }
           : {}),
       }))
+      offsetY = offsetY - yBump
     }
   }
 
@@ -264,6 +282,8 @@
         x: x - dragOffset[0],
         y: y - dragOffset[1],
       }))
+      offsetX = x - dragOffset[0]
+      offsetY = y - dragOffset[1]
     }
 
     const clearScrollInterval = () => {
@@ -310,6 +330,8 @@
                 scrollX: state.scrollX + xInterval,
                 scrollY: state.scrollY + yInterval,
               }))
+              offsetX = offsetX + xInterval
+              offsetY = offsetY + yInterval
             }
           }
 
@@ -398,8 +420,6 @@
     if (!viewPort) {
       return
     }
-    // Update viewDims to get the latest viewport dimensions
-    viewDims = viewPort.getBoundingClientRect()
 
     if ($view.moveStep && $view.dragging === false) {
       view.update(state => ({
@@ -499,12 +519,7 @@
 
   // Content mouse pos and scale to css variables.
   // The wrap is set to match the content size
-  $: wrapStyles = buildWrapStyles(
-    $contentPos,
-    $view.scale,
-    contentDims,
-    zoomOrigin
-  )
+  $: wrapStyles = buildWrapStyles($contentPos, $view.scale, contentDims)
 
   onMount(() => {
     // As the view/browser resizes, ensure the stored view is up to date
@@ -535,6 +550,20 @@
   on:mousemove={Utils.domDebounce(onMouseMove)}
   style={`--dragPadding: ${contentDragPadding}px;`}
 >
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <svg class="draggable-background" style={`--dotSize: ${dotSize};`}>
+    <!-- Small 2px offset to tuck the points under the viewport on load-->
+    <pattern
+      id="dot-pattern"
+      width={bgWidth}
+      height={bgHeight}
+      patternUnits="userSpaceOnUse"
+      patternTransform={`translate(${offsetX - 2}, ${offsetY - 2})`}
+    >
+      {@html Logo}
+    </pattern>
+    <rect x="0" y="0" width="100%" height="100%" fill="url(#dot-pattern)" />
+  </svg>
   <!-- svelte-ignore a11y-mouse-events-have-key-events -->
   <div
     class="draggable-view"
@@ -582,6 +611,7 @@
     position: relative;
   }
   .content {
+    transform-origin: 50% 50%;
     transform: scale(var(--scale));
     user-select: none;
     padding: var(--dragPadding);
@@ -602,13 +632,22 @@
     cursor: grabbing;
   }
 
-  .debug {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    position: fixed;
-    padding: var(--spacing-l);
-    z-index: 2;
+  .draggable-background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
     pointer-events: none;
+    z-index: -1;
+    background-color: var(--spectrum-global-color-gray-50);
+  }
+
+  .draggable-background :global(svg g path) {
+    fill: #91919a;
+  }
+
+  .draggable-background :global(svg g) {
+    transform: scale(var(--dotSize));
   }
 </style>
