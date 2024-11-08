@@ -7732,7 +7732,6 @@
     "name": "User List Field",
     "icon": "UserGroup",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -7742,8 +7741,7 @@
       {
         "type": "field/bb_reference",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -7833,14 +7831,23 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "array"
+        }
+      ]
+    }
   },
   "bbreferencesinglefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
     "name": "User Field",
     "icon": "User",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -7850,8 +7857,7 @@
       {
         "type": "field/bb_reference_single",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -7941,6 +7947,16 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
   }
 }
