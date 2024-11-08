@@ -76,16 +76,8 @@ export async function update(ctx: UserCtx) {
 }
 
 export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {
-  const query: { enrich?: string } = ctx.request.query || {}
-  const enrich = query.enrich === "true"
-
   const automations = await sdk.automations.fetch()
   ctx.body = { automations }
-  if (enrich) {
-    ctx.body.builderData = await sdk.automations.utils.getBuilderData(
-      automations
-    )
-  }
 }
 
 export async function find(ctx: UserCtx) {
@@ -159,6 +151,7 @@ export async function trigger(ctx: UserCtx) {
         automation,
         {
           fields: ctx.request.body.fields,
+          user: sdk.users.getUserContextBindings(ctx.user),
           timeout:
             ctx.request.body.timeout * 1000 || env.AUTOMATION_THREAD_TIMEOUT,
         },
@@ -183,6 +176,7 @@ export async function trigger(ctx: UserCtx) {
     await triggers.externalTrigger(automation, {
       ...ctx.request.body,
       appId: ctx.appId,
+      user: sdk.users.getUserContextBindings(ctx.user),
     })
     ctx.body = {
       message: `Automation ${automation._id} has been triggered.`,
@@ -212,6 +206,7 @@ export async function test(ctx: UserCtx) {
     {
       ...testInput,
       appId: ctx.appId,
+      user: sdk.users.getUserContextBindings(ctx.user),
     },
     { getResponses: true }
   )

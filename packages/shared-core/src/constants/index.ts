@@ -1,7 +1,9 @@
+export * from "./ai"
 export * from "./api"
 export * from "./fields"
 export * from "./rows"
 export * from "./colors"
+export * from "./themes"
 
 export const OperatorOptions = {
   Equals: {
@@ -96,6 +98,7 @@ export enum BuilderSocketEvent {
   SelectResource = "SelectResource",
   AppPublishChange = "AppPublishChange",
   AutomationChange = "AutomationChange",
+  RoleChange = "RoleChange",
 }
 
 export const SocketSessionTTL = 60

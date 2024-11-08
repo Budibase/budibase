@@ -1,7 +1,7 @@
 <script>
   import { Icon, Divider } from "@budibase/bbui"
   import TestDisplay from "./TestDisplay.svelte"
-  import { automationStore } from "stores/builder"
+  import { automationStore, selectedAutomation } from "stores/builder"
 
   export let automation
 </script>
@@ -9,9 +9,9 @@
 <div class="title">
   <div class="title-text">
     <Icon name="MultipleCheck" />
-    <div style="padding-left: var(--spacing-l); ">Test Details</div>
+    <div>Test Details</div>
   </div>
-  <div style="padding-right: var(--spacing-xl)">
+  <div>
     <Icon
       on:click={async () => {
         $automationStore.showTestPanel = false
@@ -24,7 +24,11 @@
 
 <Divider />
 
-<TestDisplay {automation} testResults={$automationStore.testResults} />
+<TestDisplay
+  {automation}
+  testResults={$automationStore.testResults}
+  automationBlockRefs={$selectedAutomation.blockRefs}
+/>
 
 <style>
   .title {
@@ -32,7 +36,8 @@
     flex-direction: row;
     align-items: center;
     gap: var(--spacing-xs);
-    padding-left: var(--spacing-xl);
+    padding: 0px 30px;
+    padding-top: var(--spacing-l);
     justify-content: space-between;
   }
 
@@ -40,7 +45,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding-top: var(--spacing-s);
+    gap: var(--spacing-l);
   }
 
   .title :global(h1) {

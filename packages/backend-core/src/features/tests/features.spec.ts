@@ -1,14 +1,16 @@
-import { IdentityContext, IdentityType, UserCtx } from "@budibase/types"
+import { IdentityContext, IdentityType } from "@budibase/types"
 import { Flag, FlagSet, FlagValues, init, shutdown } from "../"
 import * as context from "../../context"
 import environment, { withEnv } from "../../environment"
 import nodeFetch from "node-fetch"
 import nock from "nock"
+import * as crypto from "crypto"
 
 const schema = {
   TEST_BOOLEAN: Flag.boolean(false),
   TEST_STRING: Flag.string("default value"),
   TEST_NUMBER: Flag.number(0),
+  TEST_BOOLEAN_DEFAULT_TRUE: Flag.boolean(true),
 }
 const flags = new FlagSet(schema)
 
@@ -17,7 +19,6 @@ interface TestCase {
   identity?: Partial<IdentityContext>
   environmentFlags?: string
   posthogFlags?: PostHogFlags
-  licenseFlags?: Array<string>
   expected?: Partial<FlagValues<typeof schema>>
   errorMessage?: string | RegExp
 }
@@ -27,10 +28,14 @@ interface PostHogFlags {
   featureFlagPayloads?: Record<string, string>
 }
 
-function mockPosthogFlags(flags: PostHogFlags) {
+function mockPosthogFlags(
+  flags: PostHogFlags,
+  opts?: { token?: string; distinct_id?: string }
+) {
+  const { token = "test", distinct_id = "us_1234" } = opts || {}
   nock("https://us.i.posthog.com")
     .post("/decide/?v=3", body => {
-      return body.token === "test" && body.distinct_id === "us_1234"
+      return body.token === token && body.distinct_id === distinct_id
     })
     .reply(200, flags)
     .persist()
@@ -113,17 +118,6 @@ describe("feature flags", () => {
       expected: { TEST_BOOLEAN: true },
     },
     {
-      it: "should be able to set boolean flags through the license",
-      licenseFlags: ["TEST_BOOLEAN"],
-      expected: { TEST_BOOLEAN: true },
-    },
-    {
-      it: "should not be able to override a negative environment flag from license",
-      environmentFlags: "default:!TEST_BOOLEAN",
-      licenseFlags: ["TEST_BOOLEAN"],
-      expected: { TEST_BOOLEAN: false },
-    },
-    {
       it: "should not error on unrecognised PostHog flag",
       posthogFlags: {
         featureFlags: { UNDEFINED: true },
@@ -131,9 +125,9 @@ describe("feature flags", () => {
       expected: flags.defaults(),
     },
     {
-      it: "should not error on unrecognised license flag",
-      licenseFlags: ["UNDEFINED"],
-      expected: flags.defaults(),
+      it: "should be possible to override a default true flag to false",
+      environmentFlags: "default:!TEST_BOOLEAN_DEFAULT_TRUE",
+      expected: { TEST_BOOLEAN_DEFAULT_TRUE: false },
     },
   ])(
     "$it",
@@ -141,7 +135,6 @@ describe("feature flags", () => {
       identity,
       environmentFlags,
       posthogFlags,
-      licenseFlags,
       expected,
       errorMessage,
     }) => {
@@ -156,8 +149,6 @@ describe("feature flags", () => {
         env.POSTHOG_TOKEN = "test"
         env.POSTHOG_API_HOST = "https://us.i.posthog.com"
       }
-
-      const ctx = { user: { license: { features: licenseFlags || [] } } }
 
       await withEnv(env, async () => {
         // We need to pass in node-fetch here otherwise nock won't get used
@@ -180,18 +171,13 @@ describe("feature flags", () => {
 
         await context.doInIdentityContext(fullIdentity, async () => {
           if (errorMessage) {
-            await expect(flags.fetch(ctx as UserCtx)).rejects.toThrow(
-              errorMessage
-            )
+            await expect(flags.fetch()).rejects.toThrow(errorMessage)
           } else if (expected) {
-            const values = await flags.fetch(ctx as UserCtx)
+            const values = await flags.fetch()
             expect(values).toMatchObject(expected)
 
             for (const [key, expectedValue] of Object.entries(expected)) {
-              const value = await flags.get(
-                key as keyof typeof schema,
-                ctx as UserCtx
-              )
+              const value = await flags.get(key as keyof typeof schema)
               expect(value).toBe(expectedValue)
             }
           } else {
@@ -214,6 +200,14 @@ describe("feature flags", () => {
       lastName: "User",
     }
 
+    // We need to pass in node-fetch here otherwise nock won't get used
+    // because posthog-node uses axios under the hood.
+    init({
+      fetch: (url, opts) => {
+        return nodeFetch(url, opts)
+      },
+    })
+
     nock("https://us.i.posthog.com")
       .post("/decide/?v=3", body => {
         return body.token === "test" && body.distinct_id === "us_1234"
@@ -229,5 +223,45 @@ describe("feature flags", () => {
         })
       }
     )
+  })
+
+  it("should still get flags when user is logged out", async () => {
+    const env: Partial<typeof environment> = {
+      SELF_HOSTED: false,
+      POSTHOG_FEATURE_FLAGS_ENABLED: "true",
+      POSTHOG_API_HOST: "https://us.i.posthog.com",
+      POSTHOG_TOKEN: "test",
+    }
+
+    const ip = "127.0.0.1"
+    const hashedIp = crypto.createHash("sha512").update(ip).digest("hex")
+
+    await withEnv(env, async () => {
+      mockPosthogFlags(
+        {
+          featureFlags: { TEST_BOOLEAN: true },
+        },
+        {
+          distinct_id: hashedIp,
+        }
+      )
+
+      // We need to pass in node-fetch here otherwise nock won't get used
+      // because posthog-node uses axios under the hood.
+      init({
+        fetch: (url, opts) => {
+          return nodeFetch(url, opts)
+        },
+      })
+
+      await context.doInIPContext(ip, async () => {
+        await context.doInTenant("default", async () => {
+          const result = await flags.fetch()
+          expect(result.TEST_BOOLEAN).toBe(true)
+        })
+      })
+
+      shutdown()
+    })
   })
 })

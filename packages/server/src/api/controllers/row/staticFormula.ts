@@ -1,13 +1,23 @@
 import { getRowParams } from "../../../db/utils"
 import {
   outputProcessing,
+  processAIColumns,
   processFormulas,
 } from "../../../utilities/rowProcessor"
-import { context } from "@budibase/backend-core"
-import { Table, Row, FormulaType, FieldType } from "@budibase/types"
+import { context, features } from "@budibase/backend-core"
+import {
+  Table,
+  Row,
+  FeatureFlag,
+  FormulaType,
+  FieldType,
+  ViewV2,
+} from "@budibase/types"
 import * as linkRows from "../../../db/linkedRows"
 import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
+import sdk from "../../../sdk"
+import * as pro from "@budibase/pro"
 
 /**
  * This function runs through a list of enriched rows, looks at the rows which
@@ -101,7 +111,7 @@ export async function updateAllFormulasInTable(table: Table) {
       (enriched: Row) => enriched._id === row._id
     )
     if (enrichedRow) {
-      const processed = await processFormulas(table, cloneDeep(row), {
+      let processed = await processFormulas(table, cloneDeep(row), {
         dynamic: false,
         contextRows: [enrichedRow],
       })
@@ -121,45 +131,53 @@ export async function updateAllFormulasInTable(table: Table) {
  * expects the row to be totally enriched/contain all relationships.
  */
 export async function finaliseRow(
-  table: Table,
+  source: Table | ViewV2,
   row: Row,
-  {
-    oldTable,
-    updateFormula,
-    fromViewId,
-  }: { oldTable?: Table; updateFormula: boolean; fromViewId?: string } = {
-    updateFormula: true,
-  }
+  opts?: { updateFormula: boolean }
 ) {
   const db = context.getAppDB()
+  const { updateFormula = true } = opts || {}
+  const table = sdk.views.isView(source)
+    ? await sdk.views.getTable(source.id)
+    : source
+
   row.type = "row"
   // process the row before return, to include relationships
-  let enrichedRow = (await outputProcessing(table, cloneDeep(row), {
+  let enrichedRow = await outputProcessing(source, cloneDeep(row), {
     squash: false,
-  })) as Row
+  })
   // use enriched row to generate formulas for saving, specifically only use as context
   row = await processFormulas(table, row, {
     dynamic: false,
     contextRows: [enrichedRow],
   })
-  // don't worry about rev, tables handle rev/lastID updates
-  // if another row has been written since processing this will
-  // handle the auto ID clash
-  if (oldTable && !isEqual(oldTable, table)) {
-    await db.put(table)
+  const aiEnabled =
+    ((await features.flags.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
+      (await pro.features.isBudibaseAIEnabled())) ||
+    ((await features.flags.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS)) &&
+      (await pro.features.isAICustomConfigsEnabled()))
+  if (aiEnabled) {
+    row = await processAIColumns(table, row, {
+      contextRows: [enrichedRow],
+    })
   }
+
   const response = await db.put(row)
   // for response, calculate the formulas for the enriched row
   enrichedRow._rev = response.rev
   enrichedRow = await processFormulas(table, enrichedRow, {
     dynamic: false,
   })
+  if (aiEnabled) {
+    enrichedRow = await processAIColumns(table, enrichedRow, {
+      contextRows: [enrichedRow],
+    })
+  }
+
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
     await updateRelatedFormula(table, enrichedRow)
   }
-  const squashed = await linkRows.squashLinks(table, enrichedRow, {
-    fromViewId,
-  })
+  const squashed = await linkRows.squashLinks(source, enrichedRow)
   return { row: enrichedRow, squashed, table }
 }

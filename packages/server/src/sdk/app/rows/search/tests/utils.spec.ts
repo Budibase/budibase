@@ -90,10 +90,8 @@ describe.each([tableWithUserCol, tableWithUsersCol])(
     })
 
     it("shouldn't error if no query supplied", () => {
-      const params: any = {
-        tableId,
-      }
-      const output = searchInputMapping(col, params)
+      // @ts-expect-error - intentionally passing in a bad type
+      const output = searchInputMapping(col, { tableId })
       expect(output.query).toBeUndefined()
     })
   }

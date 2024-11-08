@@ -77,6 +77,13 @@ export enum FieldType {
    */
   AUTO = "auto",
   /**
+   * A complex type, called an AI column within Budibase. This type is only supported against internal tables
+   * and calculates the output based on a chosen operation (summarise text, translation etc) which passes to
+   * the configured Budibase Large Language Model to retrieve the output and write it back into the row.
+   * AI fields function in a similar fashion to static formulas, and possess many of the same characteristics.
+   */
+  AI = "ai",
+  /**
    * a JSON type, called JSON within Budibase. This type allows any arbitrary JSON to be input to this column
    * type, which will be represented as a JSON object in the row. This type depends on a schema being
    * provided to make the JSON searchable/bindable, the JSON cannot be fully dynamic.
@@ -126,6 +133,26 @@ export const JsonTypes = [
   FieldType.JSON,
   FieldType.ARRAY,
 ]
+
+export const NumericTypes = [FieldType.NUMBER, FieldType.BIGINT]
+
+export function isNumeric(type: FieldType) {
+  return NumericTypes.includes(type)
+}
+
+export const GroupByTypes = [
+  FieldType.STRING,
+  FieldType.LONGFORM,
+  FieldType.OPTIONS,
+  FieldType.NUMBER,
+  FieldType.BOOLEAN,
+  FieldType.DATETIME,
+  FieldType.BIGINT,
+]
+
+export function canGroupBy(type: FieldType) {
+  return GroupByTypes.includes(type)
+}
 
 export interface RowAttachment {
   size: number

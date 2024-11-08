@@ -10,7 +10,7 @@
   export let initialValues
   export let size
   export let schema
-  export let table
+  export let definition
   export let disableSchemaValidation = false
   export let editAutoColumns = false
 
@@ -164,7 +164,7 @@
         schemaConstraints,
         validationRules,
         field,
-        table
+        definition
       )
 
       // Sanitise the default value to ensure it doesn't contain invalid data
@@ -338,7 +338,7 @@
         schemaConstraints,
         validationRules,
         field,
-        table
+        definition
       )
 
       // Update validator

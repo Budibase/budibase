@@ -15,7 +15,7 @@ export function triggerRowActionAuthorised(
       const rowActionId: string = ctx.params[actionPath]
 
       const isTableId = docIds.isTableId(sourceId)
-      const isViewId = utils.isViewID(sourceId)
+      const isViewId = docIds.isViewId(sourceId)
       if (!isTableId && !isViewId) {
         ctx.throw(400, `'${sourceId}' is not a valid source id`)
       }

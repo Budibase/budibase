@@ -1,6 +1,6 @@
 import * as utils from "../../../../db/utils"
 
-import { context } from "@budibase/backend-core"
+import { docIds } from "@budibase/backend-core"
 import {
   Ctx,
   DatasourcePlusQueryResponse,
@@ -8,17 +8,18 @@ import {
   RelationshipsJson,
   Row,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import {
   processDates,
   processFormulas,
 } from "../../../../utilities/rowProcessor"
-import { isKnexEmptyReadResponse } from "./sqlUtils"
+import { isKnexRows } from "./sqlUtils"
 import { basicProcessing, generateIdForRow, getInternalRowId } from "./basic"
 import sdk from "../../../../sdk"
 import { processStringSync } from "@budibase/string-templates"
 import validateJs from "validate.js"
-import { getFullUser } from "../../../../utilities/users"
+import { helpers } from "@budibase/shared-core"
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -58,26 +59,11 @@ export async function processRelationshipFields(
   return row
 }
 
-export async function findRow(tableId: string, rowId: string) {
-  const db = context.getAppDB()
-  let row: Row
-  // TODO remove special user case in future
-  if (tableId === utils.InternalTables.USER_METADATA) {
-    row = await getFullUser(rowId)
-  } else {
-    row = await db.get(rowId)
-  }
-  if (row.tableId !== tableId) {
-    throw "Supplied tableId does not match the rows tableId"
-  }
-  return row
-}
-
 export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
   // top priority, use the URL first
   if (ctx.params?.sourceId) {
     const { sourceId } = ctx.params
-    if (utils.isViewID(sourceId)) {
+    if (docIds.isViewId(sourceId)) {
       return {
         tableId: utils.extractViewInfoFromID(sourceId).tableId,
         viewId: sourceId,
@@ -96,22 +82,22 @@ export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
   throw new Error("Unable to find table ID in request")
 }
 
-export async function validate(
-  opts: { row: Row } & ({ tableId: string } | { table: Table })
-) {
-  let fetchedTable: Table
-  if ("tableId" in opts) {
-    fetchedTable = await sdk.tables.getTable(opts.tableId)
-  } else {
-    fetchedTable = opts.table
+export async function getSource(ctx: Ctx): Promise<Table | ViewV2> {
+  const { tableId, viewId } = getSourceId(ctx)
+  if (viewId) {
+    return sdk.views.get(viewId)
   }
-  return sdk.rows.utils.validate({
-    ...opts,
-    table: fetchedTable,
-  })
+  return sdk.tables.getTable(tableId)
 }
 
-function fixBooleanFields({ row, table }: { row: Row; table: Table }) {
+export async function getTableFromSource(source: Table | ViewV2) {
+  if (sdk.views.isView(source)) {
+    return await sdk.views.getTable(source.id)
+  }
+  return source
+}
+
+function fixBooleanFields(row: Row, table: Table) {
   for (let col of Object.values(table.schema)) {
     if (col.type === FieldType.BOOLEAN) {
       if (row[col.name] === 1) {
@@ -126,49 +112,45 @@ function fixBooleanFields({ row, table }: { row: Row; table: Table }) {
 
 export async function sqlOutputProcessing(
   rows: DatasourcePlusQueryResponse,
-  table: Table,
+  source: Table | ViewV2,
   tables: Record<string, Table>,
   relationships: RelationshipsJson[],
   opts?: { sqs?: boolean }
 ): Promise<Row[]> {
-  if (isKnexEmptyReadResponse(rows)) {
+  if (!isKnexRows(rows)) {
     return []
   }
-  let finalRows: { [key: string]: Row } = {}
-  for (let row of rows as Row[]) {
-    let rowId = row._id
+
+  let table: Table
+  let isCalculationView = false
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+    isCalculationView = helpers.views.isCalculationView(source)
+  } else {
+    table = source
+  }
+
+  let processedRows: Row[] = []
+  for (let row of rows) {
     if (opts?.sqs) {
-      rowId = getInternalRowId(row, table)
-      row._id = rowId
-    } else if (!rowId) {
-      rowId = generateIdForRow(row, table)
-      row._id = rowId
+      row._id = getInternalRowId(row, table)
+    } else if (row._id == null && !isCalculationView) {
+      row._id = generateIdForRow(row, table)
     }
-    const thisRow = basicProcessing({
+
+    row = await basicProcessing({
       row,
-      table,
+      source,
       tables: Object.values(tables),
       isLinked: false,
       sqs: opts?.sqs,
     })
-    if (thisRow._id == null) {
-      throw new Error("Unable to generate row ID for SQL rows")
-    }
-
-    finalRows[thisRow._id] = fixBooleanFields({ row: thisRow, table })
+    row = fixBooleanFields(row, table)
+    row = await processRelationshipFields(table, tables, row, relationships)
+    processedRows.push(row)
   }
 
-  // make sure all related rows are correct
-  let finalRowArray = []
-  for (let row of Object.values(finalRows)) {
-    finalRowArray.push(
-      await processRelationshipFields(table, tables, row, relationships)
-    )
-  }
-
-  // process some additional types
-  finalRowArray = processDates(table, finalRowArray)
-  return finalRowArray
+  return processDates(table, processedRows)
 }
 
 export function isUserMetadataTable(tableId: string) {

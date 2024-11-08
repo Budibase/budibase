@@ -40,7 +40,7 @@ export const buildTableEndpoints = API => ({
     sortType,
     paginate,
   }) => {
-    if (!tableId || !query) {
+    if (!tableId) {
       return {
         rows: [],
       }
@@ -48,7 +48,7 @@ export const buildTableEndpoints = API => ({
     return await API.post({
       url: `/api/${tableId}/search`,
       body: {
-        query,
+        ...(query ? { query } : {}),
         bookmark,
         limit,
         sort,

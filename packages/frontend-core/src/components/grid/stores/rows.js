@@ -1,11 +1,17 @@
 import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
-import { getCellID, parseCellID } from "../lib/utils"
+import {
+  generateRowID,
+  getCellID,
+  isGeneratedRowID,
+  parseCellID,
+} from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
 import { FieldType } from "@budibase/types"
+import { getRelatedTableValues } from "../../../utils"
 
 export const createStores = () => {
   const rows = writable([])
@@ -42,15 +48,26 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { rows } = context
+  const { rows, enrichedSchema } = context
 
   // Enrich rows with an index property and any pending changes
-  const enrichedRows = derived(rows, $rows => {
-    return $rows.map((row, idx) => ({
-      ...row,
-      __idx: idx,
-    }))
-  })
+  const enrichedRows = derived(
+    [rows, enrichedSchema],
+    ([$rows, $enrichedSchema]) => {
+      const customColumns = Object.values($enrichedSchema || {}).filter(
+        f => f.related
+      )
+      return $rows.map((row, idx) => ({
+        ...row,
+        __idx: idx,
+        ...customColumns.reduce((map, column) => {
+          const fromField = $enrichedSchema[column.related.field]
+          map[column.name] = getRelatedTableValues(row, column, fromField)
+          return map
+        }, {}),
+      }))
+    }
+  )
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(enrichedRows, $enrichedRows => {
@@ -622,10 +639,10 @@ export const createActions = context => {
       newRow = newRows[i]
 
       // Ensure we have a unique _id.
-      // This means generating one for non DS+, overwriting any that may already
-      // exist as we cannot allow duplicates.
-      if (!$hasBudibaseIdentifiers) {
-        newRow._id = Helpers.uuid()
+      // We generate one for non DS+ where required, but trust that any existing
+      // _id values are unique (e.g. Mongo)
+      if (!$hasBudibaseIdentifiers && !newRow._id?.length) {
+        newRow._id = generateRowID()
       }
 
       if (!rowCacheMap[newRow._id]) {
@@ -662,7 +679,7 @@ export const createActions = context => {
     let clone = { ...row }
     delete clone.__idx
     delete clone.__metadata
-    if (!get(hasBudibaseIdentifiers)) {
+    if (!get(hasBudibaseIdentifiers) && isGeneratedRowID(clone._id)) {
       delete clone._id
     }
     return clone

@@ -8,7 +8,7 @@ import {
 import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
 import { replaceFakeBindings } from "../automations/loopUtils"
-import { dataFilters, helpers } from "@budibase/shared-core"
+import { dataFilters, helpers, utils } from "@budibase/shared-core"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { definitions as triggerDefs } from "../automations/triggerInfo"
@@ -23,14 +23,21 @@ import {
   AutomationStatus,
   AutomationStep,
   AutomationStepStatus,
+  BranchSearchFilters,
   BranchStep,
+  isLogicalSearchOperator,
   LoopStep,
-  SearchFilters,
+  UserBindings,
+  isBasicSearchOperator,
 } from "@budibase/types"
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
-import { context, logging } from "@budibase/backend-core"
-import { processObject, processStringSync } from "@budibase/string-templates"
+import { context, logging, configs } from "@budibase/backend-core"
+import {
+  findHBSBlocks,
+  processObject,
+  processStringSync,
+} from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
@@ -74,7 +81,8 @@ class Orchestrator {
   private job: Job
   private loopStepOutputs: LoopStep[]
   private stopped: boolean
-  private executionOutput: AutomationContext
+  private executionOutput: Omit<AutomationContext, "stepsByName" | "stepsById">
+  private currentUser: UserBindings | undefined
 
   constructor(job: AutomationJob) {
     let automation = job.data.automation
@@ -91,6 +99,7 @@ class Orchestrator {
     // step zero is never used as the template string is zero indexed for customer facing
     this.context = {
       steps: [{}],
+      stepsById: {},
       stepsByName: {},
       trigger: triggerOutput,
     }
@@ -105,6 +114,7 @@ class Orchestrator {
     this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
     this.loopStepOutputs = []
     this.stopped = false
+    this.currentUser = triggerOutput.user
   }
 
   cleanupTriggerOutputs(stepId: string, triggerOutput: TriggerOutput) {
@@ -257,6 +267,19 @@ class Orchestrator {
           automationId: this.automation._id,
         })
         this.context.env = await sdkUtils.getEnvironmentVariables()
+        this.context.user = this.currentUser
+
+        try {
+          const { config } = await configs.getSettingsConfigDoc()
+          this.context.settings = {
+            url: config.platformUrl,
+            logo: config.logoUrl,
+            company: config.company,
+          }
+        } catch (e) {
+          // if settings doc doesn't exist, make the settings blank
+          this.context.settings = {}
+        }
 
         let metadata
 
@@ -307,7 +330,10 @@ class Orchestrator {
     )
   }
 
-  private async executeSteps(steps: AutomationStep[]): Promise<void> {
+  private async executeSteps(
+    steps: AutomationStep[],
+    pathIdx?: number
+  ): Promise<void> {
     return tracer.trace(
       "Orchestrator.executeSteps",
       { resource: "automation" },
@@ -323,10 +349,17 @@ class Orchestrator {
               while (stepIndex < steps.length) {
                 const step = steps[stepIndex]
                 if (step.stepId === AutomationActionStepId.BRANCH) {
-                  await this.executeBranchStep(step)
+                  // stepIndex for current step context offset
+                  // pathIdx relating to the full list of steps in the run
+                  await this.executeBranchStep(step, stepIndex + (pathIdx || 0))
                   stepIndex++
                 } else if (step.stepId === AutomationActionStepId.LOOP) {
-                  stepIndex = await this.executeLoopStep(step, steps, stepIndex)
+                  stepIndex = await this.executeLoopStep(
+                    step,
+                    steps,
+                    stepIndex,
+                    pathIdx
+                  )
                 } else {
                   if (!this.stopped) {
                     await this.executeStep(step)
@@ -349,11 +382,14 @@ class Orchestrator {
   private async executeLoopStep(
     loopStep: LoopStep,
     steps: AutomationStep[],
-    currentIndex: number
+    stepIdx: number,
+    pathIdx?: number
   ): Promise<number> {
-    await processObject(loopStep.inputs, this.context)
+    await processObject(loopStep.inputs, this.processContext(this.context))
     const iterations = getLoopIterations(loopStep)
-    let stepToLoopIndex = currentIndex + 1
+    let stepToLoopIndex = stepIdx + 1
+    let pathStepIdx = (pathIdx || stepIdx) + 1
+
     let iterationCount = 0
     let shouldCleanup = true
 
@@ -364,7 +400,7 @@ class Orchestrator {
         )
       } catch (err) {
         this.updateContextAndOutput(
-          stepToLoopIndex,
+          pathStepIdx + 1,
           steps[stepToLoopIndex],
           {},
           {
@@ -384,7 +420,7 @@ class Orchestrator {
         (loopStep.inputs.iterations && loopStepIndex === maxIterations)
       ) {
         this.updateContextAndOutput(
-          stepToLoopIndex,
+          pathStepIdx + 1,
           steps[stepToLoopIndex],
           {
             items: this.loopStepOutputs,
@@ -411,7 +447,7 @@ class Orchestrator {
 
       if (isFailure) {
         this.updateContextAndOutput(
-          loopStepIndex,
+          pathStepIdx + 1,
           steps[stepToLoopIndex],
           {
             items: this.loopStepOutputs,
@@ -426,11 +462,11 @@ class Orchestrator {
         break
       }
 
-      this.context.steps[currentIndex + 1] = {
+      this.context.steps[pathStepIdx] = {
         currentItem: this.getCurrentLoopItem(loopStep, loopStepIndex),
       }
 
-      stepToLoopIndex = currentIndex + 1
+      stepToLoopIndex = stepIdx + 1
 
       await this.executeStep(steps[stepToLoopIndex], stepToLoopIndex)
       iterationCount++
@@ -450,15 +486,16 @@ class Orchestrator {
             }
 
       // Loop Step clean up
-      this.executionOutput.steps.splice(currentIndex + 1, 0, {
+      this.executionOutput.steps.splice(pathStepIdx, 0, {
         id: steps[stepToLoopIndex].id,
         stepId: steps[stepToLoopIndex].stepId,
         outputs: tempOutput,
         inputs: steps[stepToLoopIndex].inputs,
       })
 
+      this.context.stepsById[steps[stepToLoopIndex].id] = tempOutput
       const stepName = steps[stepToLoopIndex].name || steps[stepToLoopIndex].id
-      this.context.stepsByName![stepName] = tempOutput
+      this.context.stepsByName[stepName] = tempOutput
       this.context.steps[this.context.steps.length] = tempOutput
       this.context.steps = this.context.steps.filter(
         item => !item.hasOwnProperty.call(item, "currentItem")
@@ -469,14 +506,19 @@ class Orchestrator {
 
     return stepToLoopIndex + 1
   }
-  private async executeBranchStep(branchStep: BranchStep): Promise<void> {
+  private async executeBranchStep(
+    branchStep: BranchStep,
+    pathIdx?: number
+  ): Promise<void> {
     const { branches, children } = branchStep.inputs
 
     for (const branch of branches) {
       const condition = await this.evaluateBranchCondition(branch.condition)
       if (condition) {
         const branchStatus = {
+          branchName: branch.name,
           status: `${branch.name} branch taken`,
+          branchId: `${branch.id}`,
           success: true,
         }
 
@@ -487,9 +529,11 @@ class Orchestrator {
           branchStatus
         )
         this.context.steps[this.context.steps.length] = branchStatus
+        this.context.stepsById[branchStep.id] = branchStatus
 
-        const branchSteps = children?.[branch.name] || []
-        await this.executeSteps(branchSteps)
+        const branchSteps = children?.[branch.id] || []
+        // A final +1 to accomodate the branch step itself
+        await this.executeSteps(branchSteps, (pathIdx || 0) + 1)
         return
       }
     }
@@ -507,25 +551,51 @@ class Orchestrator {
   }
 
   private async evaluateBranchCondition(
-    conditions: SearchFilters
+    conditions: BranchSearchFilters
   ): Promise<boolean> {
     const toFilter: Record<string, any> = {}
 
-    const processedConditions = dataFilters.recurseSearchFilters(
-      conditions,
-      filter => {
-        Object.entries(filter).forEach(([_, value]) => {
-          Object.entries(value).forEach(([field, _]) => {
+    const recurseSearchFilters = (
+      filters: BranchSearchFilters
+    ): BranchSearchFilters => {
+      for (const filterKey of Object.keys(
+        filters
+      ) as (keyof typeof filters)[]) {
+        if (!filters[filterKey]) {
+          continue
+        }
+
+        if (isLogicalSearchOperator(filterKey)) {
+          filters[filterKey].conditions = filters[filterKey].conditions.map(
+            condition => recurseSearchFilters(condition)
+          )
+        } else if (isBasicSearchOperator(filterKey)) {
+          for (const [field, value] of Object.entries(filters[filterKey])) {
             const fromContext = processStringSync(
-              `{{ literal ${field} }}`,
-              this.context
+              field,
+              this.processContext(this.context)
             )
             toFilter[field] = fromContext
-          })
-        })
-        return filter
+
+            if (typeof value === "string" && findHBSBlocks(value).length > 0) {
+              const processedVal = processStringSync(
+                value,
+                this.processContext(this.context)
+              )
+
+              filters[filterKey][field] = processedVal
+            }
+          }
+        } else {
+          // We want to types to complain if we extend BranchSearchFilters, but not to throw if the request comes with some extra data. It will just be ignored
+          utils.unreachable(filterKey, { doNotThrow: true })
+        }
       }
-    )
+
+      return filters
+    }
+
+    const processedConditions = recurseSearchFilters(conditions)
 
     const result = dataFilters.runQuery([toFilter], processedConditions)
     return result.length > 0
@@ -565,11 +635,10 @@ class Orchestrator {
         }
 
         const stepFn = await this.getStepFunctionality(step.stepId)
-        let inputs = await this.addContextAndProcess(
+        let inputs = await processObject(
           originalStepInput,
-          this.context
+          this.processContext(this.context)
         )
-
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
 
         const outputs = await stepFn({
@@ -596,16 +665,16 @@ class Orchestrator {
     return null
   }
 
-  private async addContextAndProcess(inputs: any, context: any) {
+  private processContext(context: AutomationContext) {
     const processContext = {
       ...context,
       steps: {
         ...context.steps,
+        ...context.stepsById,
         ...context.stepsByName,
       },
     }
-
-    return processObject(inputs, processContext)
+    return processContext
   }
 
   private handleStepOutput(
@@ -625,6 +694,7 @@ class Orchestrator {
     } else {
       this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
       this.context.steps[this.context.steps.length] = outputs
+      this.context.stepsById![step.id] = outputs
       const stepName = step.name || step.id
       this.context.stepsByName![stepName] = outputs
     }

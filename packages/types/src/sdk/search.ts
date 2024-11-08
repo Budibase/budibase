@@ -2,6 +2,7 @@ import { Operation } from "./datasources"
 import { Row, Table, DocumentType } from "../documents"
 import { SortOrder, SortType } from "../api"
 import { Knex } from "knex"
+import { Aggregation } from "./row"
 
 export enum BasicOperator {
   EQUAL = "equal",
@@ -31,7 +32,19 @@ export enum LogicalOperator {
 export function isLogicalSearchOperator(
   value: string
 ): value is LogicalOperator {
-  return value === LogicalOperator.AND || value === LogicalOperator.OR
+  return Object.values(LogicalOperator).includes(value as LogicalOperator)
+}
+
+export function isBasicSearchOperator(value: string): value is BasicOperator {
+  return Object.values(BasicOperator).includes(value as BasicOperator)
+}
+
+export function isArraySearchOperator(value: string): value is ArrayOperator {
+  return Object.values(ArrayOperator).includes(value as ArrayOperator)
+}
+
+export function isRangeSearchOperator(value: string): value is RangeOperator {
+  return Object.values(RangeOperator).includes(value as RangeOperator)
 }
 
 export type SearchFilterOperator =
@@ -48,7 +61,7 @@ type BasicFilter<T = any> = Record<string, T> & {
   [InternalSearchFilterOperator.COMPLEX_ID_OPERATOR]?: never
 }
 
-type ArrayFilter = Record<string, any[]> & {
+export type ArrayFilter = Record<string, any[]> & {
   [InternalSearchFilterOperator.COMPLEX_ID_OPERATOR]?: {
     id: string[]
     values: string[]
@@ -66,6 +79,8 @@ type RangeFilter = Record<
 > & {
   [InternalSearchFilterOperator.COMPLEX_ID_OPERATOR]?: never
 }
+
+type LogicalFilter = { conditions: SearchFilters[] }
 
 export type AnySearchFilter = BasicFilter | ArrayFilter | RangeFilter
 
@@ -91,12 +106,8 @@ export interface SearchFilters {
   // specific document type (such as just rows)
   documentType?: DocumentType
 
-  [LogicalOperator.AND]?: {
-    conditions: SearchFilters[]
-  }
-  [LogicalOperator.OR]?: {
-    conditions: SearchFilters[]
-  }
+  [LogicalOperator.AND]?: LogicalFilter
+  [LogicalOperator.OR]?: LogicalFilter
 }
 
 export type SearchFilterKey = keyof Omit<
@@ -154,6 +165,7 @@ export interface QueryJson {
   }
   resource?: {
     fields: string[]
+    aggregations?: Aggregation[]
   }
   filters?: SearchFilters
   sort?: SortJson
@@ -189,6 +201,11 @@ export interface SqlQuery {
 export enum EmptyFilterOption {
   RETURN_ALL = "all",
   RETURN_NONE = "none",
+}
+
+export enum UILogicalOperator {
+  ALL = "all",
+  ANY = "any",
 }
 
 export enum SqlClient {

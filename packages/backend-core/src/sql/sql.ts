@@ -11,22 +11,27 @@ import {
 } from "./utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
+  Aggregation,
   AnySearchFilter,
+  ArrayFilter,
   ArrayOperator,
   BasicOperator,
   BBReferenceFieldMetadata,
+  CalculationType,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalSearchFilterOperator,
   JsonFieldMetadata,
   JsonTypes,
+  LogicalOperator,
   Operation,
   prefixed,
   QueryJson,
   QueryOptions,
   RangeOperator,
   RelationshipsJson,
+  SearchFilterKey,
   SearchFilters,
   SortOrder,
   SqlClient,
@@ -40,6 +45,8 @@ import { dataFilters, helpers } from "@budibase/shared-core"
 import { cloneDeep } from "lodash"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
+
+export const COUNT_FIELD_NAME = "__bb_total"
 
 function getBaseLimit() {
   const envLimit = environment.SQL_MAX_ROWS
@@ -69,18 +76,6 @@ function prioritisedArraySort(toSort: string[], priorities: string[]) {
   })
 }
 
-function getTableName(table?: Table): string | undefined {
-  // SQS uses the table ID rather than the table name
-  if (
-    table?.sourceType === TableSourceType.INTERNAL ||
-    table?.sourceId === INTERNAL_TABLE_SOURCE_ID
-  ) {
-    return table?._id
-  } else {
-    return table?.name
-  }
-}
-
 function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
   if (Array.isArray(query)) {
     return query.map((q: SqlQuery) => convertBooleans(q) as SqlQuery)
@@ -95,6 +90,46 @@ function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
     }
   }
   return query
+}
+
+function isSqs(table: Table): boolean {
+  return (
+    table.sourceType === TableSourceType.INTERNAL ||
+    table.sourceId === INTERNAL_TABLE_SOURCE_ID
+  )
+}
+
+function escapeQuotes(value: string, quoteChar = '"'): string {
+  return value.replace(new RegExp(quoteChar, "g"), `${quoteChar}${quoteChar}`)
+}
+
+function wrap(value: string, quoteChar = '"'): string {
+  return `${quoteChar}${escapeQuotes(value, quoteChar)}${quoteChar}`
+}
+
+function stringifyArray(value: any[], quoteStyle = '"'): string {
+  for (let i in value) {
+    if (typeof value[i] === "string") {
+      value[i] = wrap(value[i], quoteStyle)
+    }
+  }
+  return `[${value.join(",")}]`
+}
+
+const allowEmptyRelationships: Record<SearchFilterKey, boolean> = {
+  [BasicOperator.EQUAL]: false,
+  [BasicOperator.NOT_EQUAL]: true,
+  [BasicOperator.EMPTY]: false,
+  [BasicOperator.NOT_EMPTY]: true,
+  [BasicOperator.FUZZY]: false,
+  [BasicOperator.STRING]: false,
+  [RangeOperator.RANGE]: false,
+  [ArrayOperator.CONTAINS]: false,
+  [ArrayOperator.NOT_CONTAINS]: true,
+  [ArrayOperator.CONTAINS_ANY]: false,
+  [ArrayOperator.ONE_OF]: false,
+  [LogicalOperator.AND]: false,
+  [LogicalOperator.OR]: false,
 }
 
 class InternalBuilder {
@@ -135,34 +170,106 @@ class InternalBuilder {
     return this.query.meta.table
   }
 
+  get knexClient(): Knex.Client {
+    return this.knex.client as Knex.Client
+  }
+
   getFieldSchema(key: string): FieldSchema | undefined {
     const { column } = this.splitter.run(key)
     return this.table.schema[column]
   }
 
-  // Takes a string like foo and returns a quoted string like [foo] for SQL Server
-  // and "foo" for Postgres.
+  private quoteChars(): [string, string] {
+    const wrapped = this.knexClient.wrapIdentifier("foo", {})
+    return [wrapped[0], wrapped[wrapped.length - 1]]
+  }
+
+  // Takes a string like foo and returns a quoted string like [foo] for SQL
+  // Server and "foo" for Postgres.
   private quote(str: string): string {
+    return this.knexClient.wrapIdentifier(str, {})
+  }
+
+  private isQuoted(key: string): boolean {
+    const [start, end] = this.quoteChars()
+    return key.startsWith(start) && key.endsWith(end)
+  }
+
+  // Takes a string like a.b.c or an array like ["a", "b", "c"] and returns a
+  // quoted identifier like [a].[b].[c] for SQL Server and `a`.`b`.`c` for
+  // MySQL.
+  private quotedIdentifier(key: string | string[]): string {
+    if (!Array.isArray(key)) {
+      key = this.splitIdentifier(key)
+    }
+    return key.map(part => this.quote(part)).join(".")
+  }
+
+  private quotedValue(value: string): string {
+    const formatter = this.knexClient.formatter(this.knexClient.queryBuilder())
+    return formatter.wrap(value, false)
+  }
+
+  private castIntToString(identifier: string | Knex.Raw): Knex.Raw {
     switch (this.client) {
-      case SqlClient.SQL_LITE:
-      case SqlClient.ORACLE:
-      case SqlClient.POSTGRES:
-        return `"${str}"`
-      case SqlClient.MS_SQL:
-        return `[${str}]`
-      case SqlClient.MARIADB:
+      case SqlClient.ORACLE: {
+        return this.knex.raw("to_char(??)", [identifier])
+      }
+      case SqlClient.POSTGRES: {
+        return this.knex.raw("??::TEXT", [identifier])
+      }
       case SqlClient.MY_SQL:
-        return `\`${str}\``
+      case SqlClient.MARIADB: {
+        return this.knex.raw("CAST(?? AS CHAR)", [identifier])
+      }
+      case SqlClient.SQL_LITE: {
+        // Technically sqlite can actually represent numbers larger than a 64bit
+        // int as a string, but it does it using scientific notation (e.g.
+        // "1e+20") which is not what we want. Given that the external SQL
+        // databases are limited to supporting only 64bit ints, we settle for
+        // that here.
+        return this.knex.raw("printf('%d', ??)", [identifier])
+      }
+      case SqlClient.MS_SQL: {
+        return this.knex.raw("CONVERT(NVARCHAR, ??)", [identifier])
+      }
     }
   }
 
-  // Takes a string like a.b.c and returns a quoted identifier like [a].[b].[c]
-  // for SQL Server and `a`.`b`.`c` for MySQL.
-  private quotedIdentifier(key: string): string {
-    return key
-      .split(".")
-      .map(part => this.quote(part))
-      .join(".")
+  // Unfortuantely we cannot rely on knex's identifier escaping because it trims
+  // the identifier string before escaping it, which breaks cases for us where
+  // columns that start or end with a space aren't referenced correctly anymore.
+  //
+  // So whenever you're using an identifier binding in knex, e.g. knex.raw("??
+  // as ?", ["foo", "bar"]), you need to make sure you call this:
+  //
+  //   knex.raw("?? as ?", [this.quotedIdentifier("foo"), "bar"])
+  //
+  // Issue we filed against knex about this:
+  //   https://github.com/knex/knex/issues/6143
+  private rawQuotedIdentifier(key: string): Knex.Raw {
+    return this.knex.raw(this.quotedIdentifier(key))
+  }
+
+  // Turns an identifier like a.b.c or `a`.`b`.`c` into ["a", "b", "c"]
+  private splitIdentifier(key: string): string[] {
+    const [start, end] = this.quoteChars()
+    if (this.isQuoted(key)) {
+      return key.slice(1, -1).split(`${end}.${start}`)
+    }
+    return key.split(".")
+  }
+
+  private qualifyIdentifier(key: string): string {
+    const tableName = this.getTableName()
+    const parts = this.splitIdentifier(key)
+    if (parts[0] !== tableName) {
+      parts.unshift(tableName)
+    }
+    if (this.isQuoted(key)) {
+      return this.quotedIdentifier(parts)
+    }
+    return parts.join(".")
   }
 
   private isFullSelectStatementRequired(): boolean {
@@ -178,18 +285,16 @@ class InternalBuilder {
   }
 
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
-    const { meta, endpoint, resource, tableAliases } = this.query
+    const { meta, endpoint, resource } = this.query
 
     if (!resource || !resource.fields || resource.fields.length === 0) {
       return "*"
     }
 
-    const alias = tableAliases?.[endpoint.entityId]
-      ? tableAliases?.[endpoint.entityId]
-      : endpoint.entityId
+    const alias = this.getTableName(endpoint.entityId)
     const schema = meta.table.schema
     if (!this.isFullSelectStatementRequired()) {
-      return [this.knex.raw(`${this.quote(alias)}.*`)]
+      return [this.knex.raw("??", [`${alias}.*`])]
     }
     // get just the fields for this table
     return resource.fields
@@ -211,34 +316,49 @@ class InternalBuilder {
         const columnSchema = schema[column]
 
         if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(columnSchema)) {
-          return this.knex.raw(
-            `${this.quotedIdentifier(
-              [table, column].join(".")
-            )}::money::numeric as ${this.quote(field)}`
-          )
+          return this.knex.raw(`??::money::numeric as ??`, [
+            this.rawQuotedIdentifier([table, column].join(".")),
+            this.knex.raw(this.quote(field)),
+          ])
         }
 
         if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(columnSchema)) {
           // Time gets returned as timestamp from mssql, not matching the expected
           // HH:mm format
-          return this.knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
+
+          // TODO: figure out how to express this safely without string
+          // interpolation.
+          return this.knex.raw(`CONVERT(varchar, ??, 108) as ??`, [
+            this.rawQuotedIdentifier(field),
+            this.knex.raw(this.quote(field)),
+          ])
         }
 
-        const quoted = table
-          ? `${this.quote(table)}.${this.quote(column)}`
-          : this.quote(field)
-        return this.knex.raw(quoted)
+        if (table) {
+          return this.rawQuotedIdentifier(`${table}.${column}`)
+        } else {
+          return this.rawQuotedIdentifier(field)
+        }
       })
   }
 
   // OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
   // so when we use them we need to wrap them in to_char(). This function
   // converts a field name to the appropriate identifier.
-  private convertClobs(field: string): string {
-    const parts = field.split(".")
+  private convertClobs(
+    field: string,
+    opts?: { forSelect?: boolean }
+  ): Knex.Raw {
+    if (this.client !== SqlClient.ORACLE) {
+      throw new Error(
+        "you've called convertClobs on a DB that's not Oracle, this is a mistake"
+      )
+    }
+    const parts = this.splitIdentifier(field)
     const col = parts.pop()!
     const schema = this.table.schema[col]
-    let identifier = this.quotedIdentifier(field)
+    let identifier = this.rawQuotedIdentifier(field)
+
     if (
       schema.type === FieldType.STRING ||
       schema.type === FieldType.LONGFORM ||
@@ -247,7 +367,14 @@ class InternalBuilder {
       schema.type === FieldType.OPTIONS ||
       schema.type === FieldType.BARCODEQR
     ) {
-      identifier = `to_char(${identifier})`
+      if (opts?.forSelect) {
+        identifier = this.knex.raw("to_char(??) as ??", [
+          identifier,
+          this.rawQuotedIdentifier(col),
+        ])
+      } else {
+        identifier = this.knex.raw("to_char(??)", [identifier])
+      }
     }
     return identifier
   }
@@ -287,7 +414,7 @@ class InternalBuilder {
     return input
   }
 
-  private parseBody(body: any) {
+  private parseBody(body: Record<string, any>) {
     for (let [key, value] of Object.entries(body)) {
       const { column } = this.splitter.run(key)
       const schema = this.table.schema[column]
@@ -366,31 +493,47 @@ class InternalBuilder {
 
   addRelationshipForFilter(
     query: Knex.QueryBuilder,
+    allowEmptyRelationships: boolean,
     filterKey: string,
-    whereCb: (query: Knex.QueryBuilder) => Knex.QueryBuilder
+    whereCb: (filterKey: string, query: Knex.QueryBuilder) => Knex.QueryBuilder
   ): Knex.QueryBuilder {
-    const mainKnex = this.knex
     const { relationships, endpoint, tableAliases: aliases } = this.query
     const tableName = endpoint.entityId
     const fromAlias = aliases?.[tableName] || tableName
-    const matches = (possibleTable: string) =>
-      filterKey.startsWith(`${possibleTable}`)
+    const matches = (value: string) =>
+      filterKey.match(new RegExp(`^${value}\\.`))
     if (!relationships) {
       return query
     }
     for (const relationship of relationships) {
       const relatedTableName = relationship.tableName
       const toAlias = aliases?.[relatedTableName] || relatedTableName
+
+      const matchesTableName = matches(relatedTableName) || matches(toAlias)
+      const matchesRelationName = matches(relationship.column)
+
       // this is the relationship which is being filtered
       if (
-        (matches(relatedTableName) || matches(toAlias)) &&
+        (matchesTableName || matchesRelationName) &&
         relationship.to &&
         relationship.tableName
       ) {
-        let subQuery = mainKnex
-          .select(mainKnex.raw(1))
+        const joinTable = this.knex
+          .select(this.knex.raw(1))
           .from({ [toAlias]: relatedTableName })
+        let subQuery = joinTable.clone()
         const manyToMany = validateManyToMany(relationship)
+        let updatedKey
+
+        if (!matchesTableName) {
+          updatedKey = filterKey.replace(
+            new RegExp(`^${relationship.column}.`),
+            `${aliases?.[relationship.tableName] || relationship.tableName}.`
+          )
+        } else {
+          updatedKey = filterKey
+        }
+
         if (manyToMany) {
           const throughAlias =
             aliases?.[manyToMany.through] || relationship.through
@@ -401,7 +544,6 @@ class InternalBuilder {
           subQuery = subQuery
             // add a join through the junction table
             .innerJoin(throughTable, function () {
-              // @ts-ignore
               this.on(
                 `${toAlias}.${manyToMany.toPrimary}`,
                 "=",
@@ -412,27 +554,45 @@ class InternalBuilder {
             .where(
               `${throughAlias}.${manyToMany.from}`,
               "=",
-              mainKnex.raw(
-                this.quotedIdentifier(`${fromAlias}.${manyToMany.fromPrimary}`)
-              )
+              this.rawQuotedIdentifier(`${fromAlias}.${manyToMany.fromPrimary}`)
             )
           // in SQS the same junction table is used for different many-to-many relationships between the
           // two same tables, this is needed to avoid rows ending up in all columns
           if (this.client === SqlClient.SQL_LITE) {
             subQuery = this.addJoinFieldCheck(subQuery, manyToMany)
           }
+
+          query = query.where(q => {
+            q.whereExists(whereCb(updatedKey, subQuery))
+            if (allowEmptyRelationships) {
+              q.orWhereNotExists(
+                joinTable.clone().innerJoin(throughTable, function () {
+                  this.on(
+                    `${fromAlias}.${manyToMany.fromPrimary}`,
+                    "=",
+                    `${throughAlias}.${manyToMany.from}`
+                  )
+                })
+              )
+            }
+          })
         } else {
+          const toKey = `${toAlias}.${relationship.to}`
+          const foreignKey = `${fromAlias}.${relationship.from}`
           // "join" to the main table, making sure the ID matches that of the main
           subQuery = subQuery.where(
-            `${toAlias}.${relationship.to}`,
+            toKey,
             "=",
-            mainKnex.raw(
-              this.quotedIdentifier(`${fromAlias}.${relationship.from}`)
-            )
+            this.rawQuotedIdentifier(foreignKey)
           )
+
+          query = query.where(q => {
+            q.whereExists(whereCb(updatedKey, subQuery.clone()))
+            if (allowEmptyRelationships) {
+              q.orWhereNotExists(subQuery)
+            }
+          })
         }
-        query = query.whereExists(whereCb(subQuery))
-        break
       }
     }
     return query
@@ -453,7 +613,7 @@ class InternalBuilder {
     filters = this.parseFilters({ ...filters })
     const aliases = this.query.tableAliases
     // if all or specified in filters, then everything is an or
-    const allOr = filters.allOr
+    const shouldOr = filters.allOr
     const isSqlite = this.client === SqlClient.SQL_LITE
     const tableName = isSqlite ? this.table._id! : this.table.name
 
@@ -463,6 +623,7 @@ class InternalBuilder {
     }
     function iterate(
       structure: AnySearchFilter,
+      operation: SearchFilterKey,
       fn: (
         query: Knex.QueryBuilder,
         key: string,
@@ -482,8 +643,11 @@ class InternalBuilder {
         const [filterTableName, ...otherProperties] = key.split(".")
         const property = otherProperties.join(".")
         const alias = getTableAlias(filterTableName)
-        return fn(q, alias ? `${alias}.${property}` : property, value)
+        return q.andWhere(subquery =>
+          fn(subquery, alias ? `${alias}.${property}` : property, value)
+        )
       }
+
       for (const key in structure) {
         const value = structure[key]
         const updatedKey = dbCore.removeKeyNumbering(key)
@@ -513,93 +677,118 @@ class InternalBuilder {
             value
           )
         } else if (shouldProcessRelationship) {
-          query = builder.addRelationshipForFilter(query, updatedKey, q => {
-            return handleRelationship(q, updatedKey, value)
-          })
+          if (shouldOr) {
+            query = query.or
+          }
+          query = builder.addRelationshipForFilter(
+            query,
+            allowEmptyRelationships[operation],
+            updatedKey,
+            (updatedKey, q) => {
+              return handleRelationship(q, updatedKey, value)
+            }
+          )
         }
       }
     }
 
     const like = (q: Knex.QueryBuilder, key: string, value: any) => {
-      const fuzzyOr = filters?.fuzzyOr
-      const fnc = fuzzyOr || allOr ? "orWhere" : "where"
-      // postgres supports ilike, nothing else does
-      if (this.client === SqlClient.POSTGRES) {
-        return q[fnc](key, "ilike", `%${value}%`)
-      } else {
-        const rawFnc = `${fnc}Raw`
-        // @ts-ignore
-        return q[rawFnc](`LOWER(${this.quotedIdentifier(key)}) LIKE ?`, [
+      if (filters?.fuzzyOr || shouldOr) {
+        q = q.or
+      }
+      if (
+        this.client === SqlClient.ORACLE ||
+        this.client === SqlClient.SQL_LITE
+      ) {
+        return q.whereRaw(`LOWER(??) LIKE ?`, [
+          this.rawQuotedIdentifier(key),
           `%${value.toLowerCase()}%`,
         ])
       }
+      return q.whereILike(
+        // @ts-expect-error knex types are wrong, raw is fine here
+        this.rawQuotedIdentifier(key),
+        this.knex.raw("?", [`%${value}%`])
+      )
     }
 
-    const contains = (mode: AnySearchFilter, any: boolean = false) => {
-      const rawFnc = allOr ? "orWhereRaw" : "whereRaw"
-      const not = mode === filters?.notContains ? "NOT " : ""
-      function stringifyArray(value: Array<any>, quoteStyle = '"'): string {
-        for (let i in value) {
-          if (typeof value[i] === "string") {
-            value[i] = `${quoteStyle}${value[i]}${quoteStyle}`
-          }
+    const contains = (mode: ArrayFilter, any = false) => {
+      function addModifiers<T extends {}, Q>(q: Knex.QueryBuilder<T, Q>) {
+        if (shouldOr || mode === filters?.containsAny) {
+          q = q.or
         }
-        return `[${value.join(",")}]`
+        if (mode === filters?.notContains) {
+          q = q.not
+        }
+        return q
       }
+
       if (this.client === SqlClient.POSTGRES) {
-        iterate(mode, (q, key, value) => {
-          const wrap = any ? "" : "'"
-          const op = any ? "\\?| array" : "@>"
-          const fieldNames = key.split(/\./g)
-          const table = fieldNames[0]
-          const col = fieldNames[1]
-          return q[rawFnc](
-            `${not}COALESCE("${table}"."${col}"::jsonb ${op} ${wrap}${stringifyArray(
-              value,
-              any ? "'" : '"'
-            )}${wrap}, FALSE)`
-          )
+        iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
+          q = addModifiers(q)
+          if (any) {
+            return q.whereRaw(`COALESCE(??::jsonb \\?| array??, FALSE)`, [
+              this.rawQuotedIdentifier(key),
+              this.knex.raw(stringifyArray(value, "'")),
+            ])
+          } else {
+            return q.whereRaw(`COALESCE(??::jsonb @> '??', FALSE)`, [
+              this.rawQuotedIdentifier(key),
+              this.knex.raw(stringifyArray(value)),
+            ])
+          }
         })
       } else if (
         this.client === SqlClient.MY_SQL ||
         this.client === SqlClient.MARIADB
       ) {
-        const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
-        iterate(mode, (q, key, value) => {
-          return q[rawFnc](
-            `${not}COALESCE(${jsonFnc}(${key}, '${stringifyArray(
-              value
-            )}'), FALSE)`
-          )
+        iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
+          return addModifiers(q).whereRaw(`COALESCE(?(??, ?), FALSE)`, [
+            this.knex.raw(any ? "JSON_OVERLAPS" : "JSON_CONTAINS"),
+            this.rawQuotedIdentifier(key),
+            this.knex.raw(wrap(stringifyArray(value))),
+          ])
         })
       } else {
-        const andOr = mode === filters?.containsAny ? " OR " : " AND "
-        iterate(mode, (q, key, value) => {
-          let statement = ""
-          const identifier = this.quotedIdentifier(key)
-          for (let i in value) {
-            if (typeof value[i] === "string") {
-              value[i] = `%"${value[i].toLowerCase()}"%`
-            } else {
-              value[i] = `%${value[i]}%`
-            }
-            statement += `${
-              statement ? andOr : ""
-            }COALESCE(LOWER(${identifier}), '') LIKE ?`
-          }
-
-          if (statement === "") {
+        iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
+          if (value.length === 0) {
             return q
           }
 
-          if (not) {
-            return q[rawFnc](
-              `(NOT (${statement}) OR ${identifier} IS NULL)`,
-              value
-            )
-          } else {
-            return q[rawFnc](statement, value)
-          }
+          q = q.where(subQuery => {
+            if (mode === filters?.notContains) {
+              subQuery = subQuery.not
+            }
+
+            subQuery = subQuery.where(subSubQuery => {
+              for (const elem of value) {
+                if (mode === filters?.containsAny) {
+                  subSubQuery = subSubQuery.or
+                } else {
+                  subSubQuery = subSubQuery.and
+                }
+
+                const lower =
+                  typeof elem === "string" ? `"${elem.toLowerCase()}"` : elem
+
+                subSubQuery = subSubQuery.whereLike(
+                  // @ts-expect-error knex types are wrong, raw is fine here
+                  this.knex.raw(`COALESCE(LOWER(??), '')`, [
+                    this.rawQuotedIdentifier(key),
+                  ]),
+                  `%${lower}%`
+                )
+              }
+            })
+            if (mode === filters?.notContains) {
+              subQuery = subQuery.or.whereNull(
+                // @ts-expect-error knex types are wrong, raw is fine here
+                this.rawQuotedIdentifier(key)
+              )
+            }
+            return subQuery
+          })
+          return q
         })
       }
     }
@@ -625,52 +814,54 @@ class InternalBuilder {
     }
 
     if (filters.oneOf) {
-      const fnc = allOr ? "orWhereIn" : "whereIn"
       iterate(
         filters.oneOf,
+        ArrayOperator.ONE_OF,
         (q, key: string, array) => {
-          if (this.client === SqlClient.ORACLE) {
-            key = this.convertClobs(key)
-            array = Array.isArray(array) ? array : [array]
-            const binding = new Array(array.length).fill("?").join(",")
-            return q.whereRaw(`${key} IN (${binding})`, array)
-          } else {
-            return q[fnc](key, Array.isArray(array) ? array : [array])
+          if (shouldOr) {
+            q = q.or
           }
+          if (this.client === SqlClient.ORACLE) {
+            // @ts-ignore
+            key = this.convertClobs(key)
+          }
+          return q.whereIn(key, Array.isArray(array) ? array : [array])
         },
         (q, key: string[], array) => {
-          if (this.client === SqlClient.ORACLE) {
-            const keyStr = `(${key.map(k => this.convertClobs(k)).join(",")})`
-            const binding = `(${array
-              .map((a: any) => `(${new Array(a.length).fill("?").join(",")})`)
-              .join(",")})`
-            return q.whereRaw(`${keyStr} IN ${binding}`, array.flat())
-          } else {
-            return q[fnc](key, Array.isArray(array) ? array : [array])
+          if (shouldOr) {
+            q = q.or
           }
+          if (this.client === SqlClient.ORACLE) {
+            // @ts-ignore
+            key = key.map(k => this.convertClobs(k))
+          }
+          return q.whereIn(key, Array.isArray(array) ? array : [array])
         }
       )
     }
     if (filters.string) {
-      iterate(filters.string, (q, key, value) => {
-        const fnc = allOr ? "orWhere" : "where"
-        // postgres supports ilike, nothing else does
-        if (this.client === SqlClient.POSTGRES) {
-          return q[fnc](key, "ilike", `${value}%`)
-        } else {
-          const rawFnc = `${fnc}Raw`
-          // @ts-ignore
-          return q[rawFnc](`LOWER(${this.quotedIdentifier(key)}) LIKE ?`, [
+      iterate(filters.string, BasicOperator.STRING, (q, key, value) => {
+        if (shouldOr) {
+          q = q.or
+        }
+        if (
+          this.client === SqlClient.ORACLE ||
+          this.client === SqlClient.SQL_LITE
+        ) {
+          return q.whereRaw(`LOWER(??) LIKE ?`, [
+            this.rawQuotedIdentifier(key),
             `${value.toLowerCase()}%`,
           ])
+        } else {
+          return q.whereILike(key, `${value}%`)
         }
       })
     }
     if (filters.fuzzy) {
-      iterate(filters.fuzzy, like)
+      iterate(filters.fuzzy, BasicOperator.FUZZY, like)
     }
     if (filters.range) {
-      iterate(filters.range, (q, key, value) => {
+      iterate(filters.range, RangeOperator.RANGE, (q, key, value) => {
         const isEmptyObject = (val: any) => {
           return (
             val &&
@@ -689,103 +880,109 @@ class InternalBuilder {
 
         const schema = this.getFieldSchema(key)
 
+        let rawKey: string | Knex.Raw = key
+        let high = value.high
+        let low = value.low
+
         if (this.client === SqlClient.ORACLE) {
-          // @ts-ignore
-          key = this.knex.raw(this.convertClobs(key))
+          rawKey = this.convertClobs(key)
+        } else if (
+          this.client === SqlClient.SQL_LITE &&
+          schema?.type === FieldType.BIGINT
+        ) {
+          rawKey = this.knex.raw("CAST(?? AS INTEGER)", [
+            this.rawQuotedIdentifier(key),
+          ])
+          high = this.knex.raw("CAST(? AS INTEGER)", [value.high])
+          low = this.knex.raw("CAST(? AS INTEGER)", [value.low])
+        }
+
+        if (shouldOr) {
+          q = q.or
         }
 
         if (lowValid && highValid) {
-          if (
-            schema?.type === FieldType.BIGINT &&
-            this.client === SqlClient.SQL_LITE
-          ) {
-            return q.whereRaw(
-              `CAST(${key} AS INTEGER) BETWEEN CAST(? AS INTEGER) AND CAST(? AS INTEGER)`,
-              [value.low, value.high]
-            )
-          } else {
-            const fnc = allOr ? "orWhereBetween" : "whereBetween"
-            return q[fnc](key, [value.low, value.high])
-          }
+          // @ts-expect-error knex types are wrong, raw is fine here
+          return q.whereBetween(rawKey, [low, high])
         } else if (lowValid) {
-          if (
-            schema?.type === FieldType.BIGINT &&
-            this.client === SqlClient.SQL_LITE
-          ) {
-            return q.whereRaw(`CAST(${key} AS INTEGER) >= CAST(? AS INTEGER)`, [
-              value.low,
-            ])
-          } else {
-            const fnc = allOr ? "orWhere" : "where"
-            return q[fnc](key, ">=", value.low)
-          }
+          // @ts-expect-error knex types are wrong, raw is fine here
+          return q.where(rawKey, ">=", low)
         } else if (highValid) {
-          if (
-            schema?.type === FieldType.BIGINT &&
-            this.client === SqlClient.SQL_LITE
-          ) {
-            return q.whereRaw(`CAST(${key} AS INTEGER) <= CAST(? AS INTEGER)`, [
-              value.high,
-            ])
-          } else {
-            const fnc = allOr ? "orWhere" : "where"
-            return q[fnc](key, "<=", value.high)
-          }
+          // @ts-expect-error knex types are wrong, raw is fine here
+          return q.where(rawKey, "<=", high)
         }
         return q
       })
     }
     if (filters.equal) {
-      iterate(filters.equal, (q, key, value) => {
-        const fnc = allOr ? "orWhereRaw" : "whereRaw"
+      iterate(filters.equal, BasicOperator.EQUAL, (q, key, value) => {
+        if (shouldOr) {
+          q = q.or
+        }
         if (this.client === SqlClient.MS_SQL) {
-          return q[fnc](
-            `CASE WHEN ${this.quotedIdentifier(key)} = ? THEN 1 ELSE 0 END = 1`,
-            [value]
-          )
-        } else if (this.client === SqlClient.ORACLE) {
-          const identifier = this.convertClobs(key)
-          return q[fnc](`(${identifier} IS NOT NULL AND ${identifier} = ?)`, [
+          return q.whereRaw(`CASE WHEN ?? = ? THEN 1 ELSE 0 END = 1`, [
+            this.rawQuotedIdentifier(key),
             value,
           ])
+        } else if (this.client === SqlClient.ORACLE) {
+          const identifier = this.convertClobs(key)
+          return q.where(subq =>
+            // @ts-expect-error knex types are wrong, raw is fine here
+            subq.whereNotNull(identifier).andWhere(identifier, value)
+          )
         } else {
-          return q[fnc](`COALESCE(${this.quotedIdentifier(key)} = ?, FALSE)`, [
+          return q.whereRaw(`COALESCE(?? = ?, FALSE)`, [
+            this.rawQuotedIdentifier(key),
             value,
           ])
         }
       })
     }
     if (filters.notEqual) {
-      iterate(filters.notEqual, (q, key, value) => {
-        const fnc = allOr ? "orWhereRaw" : "whereRaw"
+      iterate(filters.notEqual, BasicOperator.NOT_EQUAL, (q, key, value) => {
+        if (shouldOr) {
+          q = q.or
+        }
         if (this.client === SqlClient.MS_SQL) {
-          return q[fnc](
-            `CASE WHEN ${this.quotedIdentifier(key)} = ? THEN 1 ELSE 0 END = 0`,
-            [value]
-          )
+          return q.whereRaw(`CASE WHEN ?? = ? THEN 1 ELSE 0 END = 0`, [
+            this.rawQuotedIdentifier(key),
+            value,
+          ])
         } else if (this.client === SqlClient.ORACLE) {
           const identifier = this.convertClobs(key)
-          return q[fnc](
-            `(${identifier} IS NOT NULL AND ${identifier} != ?) OR ${identifier} IS NULL`,
-            [value]
+          return (
+            q
+              .where(subq =>
+                subq.not
+                  // @ts-expect-error knex types are wrong, raw is fine here
+                  .whereNull(identifier)
+                  .and.where(identifier, "!=", value)
+              )
+              // @ts-expect-error knex types are wrong, raw is fine here
+              .or.whereNull(identifier)
           )
         } else {
-          return q[fnc](`COALESCE(${this.quotedIdentifier(key)} != ?, TRUE)`, [
+          return q.whereRaw(`COALESCE(?? != ?, TRUE)`, [
+            this.rawQuotedIdentifier(key),
             value,
           ])
         }
       })
     }
     if (filters.empty) {
-      iterate(filters.empty, (q, key) => {
-        const fnc = allOr ? "orWhereNull" : "whereNull"
-        return q[fnc](key)
+      iterate(filters.empty, BasicOperator.EMPTY, (q, key) => {
+        if (shouldOr) {
+          q = q.or
+        }
+        return q.whereNull(key)
       })
     }
     if (filters.notEmpty) {
-      iterate(filters.notEmpty, (q, key) => {
-        const fnc = allOr ? "orWhereNotNull" : "whereNotNull"
-        return q[fnc](key)
+      iterate(filters.notEmpty, BasicOperator.NOT_EMPTY, (q, key) => {
+        if (shouldOr) {
+          q = q.or
+        }
+        return q.whereNotNull(key)
       })
     }
     if (filters.contains) {
@@ -811,26 +1008,134 @@ class InternalBuilder {
     return query
   }
 
+  isSqs(): boolean {
+    return isSqs(this.table)
+  }
+
+  getTableName(tableOrName?: Table | string): string {
+    let table: Table
+    if (typeof tableOrName === "string") {
+      const name = tableOrName
+      if (this.query.table?.name === name) {
+        table = this.query.table
+      } else if (this.query.meta.table?.name === name) {
+        table = this.query.meta.table
+      } else if (!this.query.meta.tables?.[name]) {
+        // This can legitimately happen in custom queries, where the user is
+        // querying against a table that may not have been imported into
+        // Budibase.
+        return name
+      } else {
+        table = this.query.meta.tables[name]
+      }
+    } else if (tableOrName) {
+      table = tableOrName
+    } else {
+      table = this.table
+    }
+
+    let name = table.name
+    if (isSqs(table) && table._id) {
+      // SQS uses the table ID rather than the table name
+      name = table._id
+    }
+    const aliases = this.query.tableAliases || {}
+    return aliases[name] ? aliases[name] : name
+  }
+
   addDistinctCount(query: Knex.QueryBuilder): Knex.QueryBuilder {
-    const primary = this.table.primary
-    const aliases = this.query.tableAliases
-    const aliased =
-      this.table.name && aliases?.[this.table.name]
-        ? aliases[this.table.name]
-        : this.table.name
-    if (!primary) {
+    if (!this.table.primary) {
       throw new Error("SQL counting requires primary key to be supplied")
     }
-    return query.countDistinct(`${aliased}.${primary[0]} as total`)
+    return query.countDistinct(
+      `${this.getTableName()}.${this.table.primary[0]} as ${COUNT_FIELD_NAME}`
+    )
+  }
+
+  addAggregations(
+    query: Knex.QueryBuilder,
+    aggregations: Aggregation[]
+  ): Knex.QueryBuilder {
+    const fields = this.query.resource?.fields || []
+    const tableName = this.getTableName()
+    if (fields.length > 0) {
+      const qualifiedFields = fields.map(field => this.qualifyIdentifier(field))
+      if (this.client === SqlClient.ORACLE) {
+        const groupByFields = qualifiedFields.map(field =>
+          this.convertClobs(field)
+        )
+        const selectFields = qualifiedFields.map(field =>
+          this.convertClobs(field, { forSelect: true })
+        )
+        query = query.groupBy(groupByFields).select(selectFields)
+      } else {
+        query = query.groupBy(qualifiedFields).select(qualifiedFields)
+      }
+    }
+    for (const aggregation of aggregations) {
+      const op = aggregation.calculationType
+      if (op === CalculationType.COUNT) {
+        if ("distinct" in aggregation && aggregation.distinct) {
+          if (this.client === SqlClient.ORACLE) {
+            const field = this.convertClobs(`${tableName}.${aggregation.field}`)
+            query = query.select(
+              this.knex.raw(`COUNT(DISTINCT ??) as ??`, [
+                field,
+                aggregation.name,
+              ])
+            )
+          } else {
+            query = query.countDistinct(
+              `${tableName}.${aggregation.field} as ${aggregation.name}`
+            )
+          }
+        } else {
+          if (this.client === SqlClient.ORACLE) {
+            const field = this.convertClobs(`${tableName}.${aggregation.field}`)
+            query = query.select(
+              this.knex.raw(`COUNT(??) as ??`, [field, aggregation.name])
+            )
+          } else {
+            query = query.count(`${aggregation.field} as ${aggregation.name}`)
+          }
+        }
+      } else {
+        const fieldSchema = this.getFieldSchema(aggregation.field)
+        if (!fieldSchema) {
+          // This should not happen in practice.
+          throw new Error(
+            `field schema missing for aggregation target: ${aggregation.field}`
+          )
+        }
+
+        let aggregate = this.knex.raw("??(??)", [
+          this.knex.raw(op),
+          this.rawQuotedIdentifier(`${tableName}.${aggregation.field}`),
+        ])
+
+        if (fieldSchema.type === FieldType.BIGINT) {
+          aggregate = this.castIntToString(aggregate)
+        }
+
+        query = query.select(
+          this.knex.raw("?? as ??", [aggregate, aggregation.name])
+        )
+      }
+    }
+    return query
+  }
+
+  isAggregateField(field: string): boolean {
+    const found = this.query.resource?.aggregations?.find(
+      aggregation => aggregation.name === field
+    )
+    return !!found
   }
 
   addSorting(query: Knex.QueryBuilder): Knex.QueryBuilder {
-    let { sort } = this.query
+    let { sort, resource } = this.query
     const primaryKey = this.table.primary
-    const tableName = getTableName(this.table)
-    const aliases = this.query.tableAliases
-    const aliased =
-      tableName && aliases?.[tableName] ? aliases[tableName] : this.table?.name
+    const aliased = this.getTableName()
     if (!Array.isArray(primaryKey)) {
       throw new Error("Sorting requires primary key to be specified for table")
     }
@@ -849,20 +1154,27 @@ class InternalBuilder {
           nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
         }
 
-        let composite = `${aliased}.${key}`
-        if (this.client === SqlClient.ORACLE) {
-          query = query.orderByRaw(
-            `${this.convertClobs(composite)} ${direction} nulls ${nulls}`
-          )
+        if (this.isAggregateField(key)) {
+          query = query.orderBy(key, direction, nulls)
         } else {
-          query = query.orderBy(composite, direction, nulls)
+          let composite = `${aliased}.${key}`
+          if (this.client === SqlClient.ORACLE) {
+            query = query.orderByRaw(`?? ?? nulls ??`, [
+              this.convertClobs(composite),
+              this.knex.raw(direction),
+              this.knex.raw(nulls as string),
+            ])
+          } else {
+            query = query.orderBy(composite, direction, nulls)
+          }
         }
       }
     }
 
     // add sorting by the primary key if the result isn't already sorted by it,
     // to make sure result is deterministic
-    if (!sort || sort[primaryKey[0]] === undefined) {
+    const hasAggregations = (resource?.aggregations?.length ?? 0) > 0
+    if (!hasAggregations && (!sort || sort[primaryKey[0]] === undefined)) {
       query = query.orderBy(`${aliased}.${primaryKey[0]}`)
     }
     return query
@@ -881,17 +1193,22 @@ class InternalBuilder {
 
   private buildJsonField(field: string): string {
     const parts = field.split(".")
-    let tableField: string, unaliased: string
+    let unaliased: string
+
+    let tableField: string
     if (parts.length > 1) {
       const alias = parts.shift()!
       unaliased = parts.join(".")
-      tableField = `${this.quote(alias)}.${this.quote(unaliased)}`
+      tableField = `${alias}.${unaliased}`
     } else {
       unaliased = parts.join(".")
-      tableField = this.quote(unaliased)
+      tableField = unaliased
     }
+
     const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
-    return `'${unaliased}'${separator}${tableField}`
+    return this.knex
+      .raw(`?${separator}??`, [unaliased, this.rawQuotedIdentifier(tableField)])
+      .toString()
   }
 
   maxFunctionParameters() {
@@ -987,13 +1304,13 @@ class InternalBuilder {
       subQuery = subQuery.where(
         correlatedTo,
         "=",
-        knex.raw(this.quotedIdentifier(correlatedFrom))
+        this.rawQuotedIdentifier(correlatedFrom)
       )
 
-      const standardWrap = (select: string): Knex.QueryBuilder => {
+      const standardWrap = (select: Knex.Raw): Knex.QueryBuilder => {
         subQuery = subQuery.select(`${toAlias}.*`).limit(getRelationshipLimit())
         // @ts-ignore - the from alias syntax isn't in Knex typing
-        return knex.select(knex.raw(select)).from({
+        return knex.select(select).from({
           [toAlias]: subQuery,
         })
       }
@@ -1003,12 +1320,12 @@ class InternalBuilder {
           // need to check the junction table document is to the right column, this is just for SQS
           subQuery = this.addJoinFieldCheck(subQuery, relationship)
           wrapperQuery = standardWrap(
-            `json_group_array(json_object(${fieldList}))`
+            this.knex.raw(`json_group_array(json_object(${fieldList}))`)
           )
           break
         case SqlClient.POSTGRES:
           wrapperQuery = standardWrap(
-            `json_agg(json_build_object(${fieldList}))`
+            this.knex.raw(`json_agg(json_build_object(${fieldList}))`)
           )
           break
         case SqlClient.MARIADB:
@@ -1022,21 +1339,25 @@ class InternalBuilder {
         case SqlClient.MY_SQL:
         case SqlClient.ORACLE:
           wrapperQuery = standardWrap(
-            `json_arrayagg(json_object(${fieldList}))`
+            this.knex.raw(`json_arrayagg(json_object(${fieldList}))`)
           )
           break
-        case SqlClient.MS_SQL:
+        case SqlClient.MS_SQL: {
+          const comparatorQuery = knex
+            .select(`${fromAlias}.*`)
+            // @ts-ignore - from alias syntax not TS supported
+            .from({
+              [fromAlias]: subQuery
+                .select(`${toAlias}.*`)
+                .limit(getRelationshipLimit()),
+            })
+
           wrapperQuery = knex.raw(
-            `(SELECT ${this.quote(toAlias)} = (${knex
-              .select(`${fromAlias}.*`)
-              // @ts-ignore - from alias syntax not TS supported
-              .from({
-                [fromAlias]: subQuery
-                  .select(`${toAlias}.*`)
-                  .limit(getRelationshipLimit()),
-              })} FOR JSON PATH))`
+            `(SELECT ?? = (${comparatorQuery} FOR JSON PATH))`,
+            [this.rawQuotedIdentifier(toAlias)]
           )
           break
+        }
         default:
           throw new Error(`JSON relationships not implement for ${sqlClient}`)
       }
@@ -1075,12 +1396,10 @@ class InternalBuilder {
         })
       : undefined
     if (!throughTable) {
-      // @ts-ignore
       query = query.leftJoin(toTableWithSchema, function () {
         for (let relationship of columns) {
           const from = relationship.from,
             to = relationship.to
-          // @ts-ignore
           this.orOn(`${fromAlias}.${from}`, "=", `${toAlias}.${to}`)
         }
       })
@@ -1091,7 +1410,6 @@ class InternalBuilder {
           for (let relationship of columns) {
             const fromPrimary = relationship.fromPrimary
             const from = relationship.from
-            // @ts-ignore
             this.orOn(
               `${fromAlias}.${fromPrimary}`,
               "=",
@@ -1103,7 +1421,6 @@ class InternalBuilder {
           for (let relationship of columns) {
             const toPrimary = relationship.toPrimary
             const to = relationship.to
-            // @ts-ignore
             this.orOn(`${toAlias}.${toPrimary}`, `${throughAlias}.${to}`)
           }
         })
@@ -1128,6 +1445,10 @@ class InternalBuilder {
 
   create(opts: QueryOptions): Knex.QueryBuilder {
     const { body } = this.query
+    if (!body) {
+      throw new Error("Cannot create without row body")
+    }
+
     let query = this.qualifiedKnex({ alias: false })
     const parsedBody = this.parseBody(body)
 
@@ -1141,7 +1462,8 @@ class InternalBuilder {
           schema.constraints?.presence === true ||
           schema.type === FieldType.FORMULA ||
           schema.type === FieldType.AUTO ||
-          schema.type === FieldType.LINK
+          schema.type === FieldType.LINK ||
+          schema.type === FieldType.AI
         ) {
           continue
         }
@@ -1246,10 +1568,15 @@ class InternalBuilder {
       }
     }
 
-    // if counting, use distinct count, else select
-    query = !counting
-      ? query.select(this.generateSelectStatement())
-      : this.addDistinctCount(query)
+    const aggregations = this.query.resource?.aggregations || []
+    if (counting) {
+      query = this.addDistinctCount(query)
+    } else if (aggregations.length > 0) {
+      query = this.addAggregations(query, aggregations)
+    } else {
+      query = query.select(this.generateSelectStatement())
+    }
+
     // have to add after as well (this breaks MS-SQL)
     if (!counting) {
       query = this.addSorting(query)
@@ -1258,7 +1585,7 @@ class InternalBuilder {
     query = this.addFilters(query, filters, { relationship: true })
 
     // handle relationships with a CTE for all others
-    if (relationships?.length) {
+    if (relationships?.length && aggregations.length === 0) {
       const mainTable =
         this.query.tableAliases?.[this.query.endpoint.entityId] ||
         this.query.endpoint.entityId
@@ -1273,14 +1600,15 @@ class InternalBuilder {
       // add JSON aggregations attached to the CTE
       return this.addJsonRelationships(cte, tableName, relationships)
     }
-    // no relationships found - return query
-    else {
-      return query
-    }
+
+    return query
   }
 
   update(opts: QueryOptions): Knex.QueryBuilder {
     const { body, filters } = this.query
+    if (!body) {
+      throw new Error("Cannot update without row body")
+    }
     let query = this.qualifiedKnex()
     const parsedBody = this.parseBody(body)
     query = this.addFilters(query, filters)
@@ -1468,23 +1796,40 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
 
+  private getTableName(
+    table: Table,
+    aliases?: Record<string, string>
+  ): string | undefined {
+    let name = table.name
+    if (
+      table.sourceType === TableSourceType.INTERNAL ||
+      table.sourceId === INTERNAL_TABLE_SOURCE_ID
+    ) {
+      if (!table._id) {
+        return
+      }
+      // SQS uses the table ID rather than the table name
+      name = table._id
+    }
+    return aliases?.[name] || name
+  }
+
   convertJsonStringColumns<T extends Record<string, any>>(
     table: Table,
     results: T[],
     aliases?: Record<string, string>
   ): T[] {
-    const tableName = getTableName(table)
+    const tableName = this.getTableName(table, aliases)
     for (const [name, field] of Object.entries(table.schema)) {
       if (!this._isJsonColumn(field)) {
         continue
       }
-      const aliasedTableName = (tableName && aliases?.[tableName]) || tableName
-      const fullName = `${aliasedTableName}.${name}`
+      const fullName = `${tableName}.${name}` as keyof T
       for (let row of results) {
-        if (typeof row[fullName as keyof T] === "string") {
-          row[fullName as keyof T] = JSON.parse(row[fullName])
+        if (typeof row[fullName] === "string") {
+          row[fullName] = JSON.parse(row[fullName])
         }
-        if (typeof row[name as keyof T] === "string") {
+        if (typeof row[name] === "string") {
           row[name as keyof T] = JSON.parse(row[name])
         }
       }

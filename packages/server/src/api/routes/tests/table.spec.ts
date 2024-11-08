@@ -21,6 +21,7 @@ import {
   ViewCalculation,
   ViewV2Enriched,
   RowExportFormat,
+  PermissionLevel,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
@@ -189,6 +190,55 @@ describe.each([
         )
       }
     )
+  })
+
+  describe("permissions", () => {
+    it("get the base permissions for the table", async () => {
+      const table = await config.api.table.save(
+        tableForDatasource(datasource, {
+          schema: {
+            name: {
+              type: FieldType.STRING,
+              name: "name",
+            },
+          },
+        })
+      )
+
+      // get the explicit permissions
+      const { permissions } = await config.api.permission.get(table._id!, {
+        status: 200,
+      })
+      const explicitPermissions = {
+        role: "ADMIN",
+        permissionType: "EXPLICIT",
+      }
+      expect(permissions.write).toEqual(explicitPermissions)
+      expect(permissions.read).toEqual(explicitPermissions)
+
+      // revoke the explicit permissions
+      for (let level of [PermissionLevel.WRITE, PermissionLevel.READ]) {
+        await config.api.permission.revoke(
+          {
+            roleId: permissions[level].role,
+            resourceId: table._id!,
+            level,
+          },
+          { status: 200 }
+        )
+      }
+
+      // check base permissions
+      const { permissions: basePermissions } = await config.api.permission.get(
+        table._id!,
+        {
+          status: 200,
+        }
+      )
+      const basePerms = { role: "BASIC", permissionType: "BASE" }
+      expect(basePermissions.write).toEqual(basePerms)
+      expect(basePermissions.read).toEqual(basePerms)
+    })
   })
 
   describe("update", () => {

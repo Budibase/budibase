@@ -203,7 +203,7 @@ describe("query utils", () => {
         },
       })
 
-      const result = await getQueryableFields(Object.keys(table.schema), table)
+      const result = await getQueryableFields(table)
       expect(result).toEqual(["_id", "name", "age"])
     })
 
@@ -216,7 +216,7 @@ describe("query utils", () => {
         },
       })
 
-      const result = await getQueryableFields(Object.keys(table.schema), table)
+      const result = await getQueryableFields(table)
       expect(result).toEqual(["_id", "name"])
     })
 
@@ -245,7 +245,7 @@ describe("query utils", () => {
       })
 
       const result = await config.doInContext(config.appId, () => {
-        return getQueryableFields(Object.keys(table.schema), table)
+        return getQueryableFields(table)
       })
       expect(result).toEqual([
         "_id",
@@ -282,7 +282,7 @@ describe("query utils", () => {
       })
 
       const result = await config.doInContext(config.appId, () => {
-        return getQueryableFields(Object.keys(table.schema), table)
+        return getQueryableFields(table)
       })
       expect(result).toEqual(["_id", "name", "aux.name", "auxTable.name"])
     })
@@ -313,7 +313,7 @@ describe("query utils", () => {
       })
 
       const result = await config.doInContext(config.appId, () => {
-        return getQueryableFields(Object.keys(table.schema), table)
+        return getQueryableFields(table)
       })
       expect(result).toEqual(["_id", "name"])
     })
@@ -381,7 +381,7 @@ describe("query utils", () => {
 
         it("includes nested relationship fields from main table", async () => {
           const result = await config.doInContext(config.appId, () => {
-            return getQueryableFields(Object.keys(table.schema), table)
+            return getQueryableFields(table)
           })
           expect(result).toEqual([
             "_id",
@@ -398,7 +398,7 @@ describe("query utils", () => {
 
         it("includes nested relationship fields from aux 1 table", async () => {
           const result = await config.doInContext(config.appId, () => {
-            return getQueryableFields(Object.keys(aux1.schema), aux1)
+            return getQueryableFields(aux1)
           })
           expect(result).toEqual([
             "_id",
@@ -420,7 +420,7 @@ describe("query utils", () => {
 
         it("includes nested relationship fields from aux 2 table", async () => {
           const result = await config.doInContext(config.appId, () => {
-            return getQueryableFields(Object.keys(aux2.schema), aux2)
+            return getQueryableFields(aux2)
           })
           expect(result).toEqual([
             "_id",
@@ -474,7 +474,7 @@ describe("query utils", () => {
 
         it("includes nested relationship fields from main table", async () => {
           const result = await config.doInContext(config.appId, () => {
-            return getQueryableFields(Object.keys(table.schema), table)
+            return getQueryableFields(table)
           })
           expect(result).toEqual([
             "_id",
@@ -488,7 +488,7 @@ describe("query utils", () => {
 
         it("includes nested relationship fields from aux table", async () => {
           const result = await config.doInContext(config.appId, () => {
-            return getQueryableFields(Object.keys(aux.schema), aux)
+            return getQueryableFields(aux)
           })
           expect(result).toEqual([
             "_id",

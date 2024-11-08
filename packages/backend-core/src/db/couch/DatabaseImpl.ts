@@ -10,6 +10,7 @@ import {
   DatabaseQueryOpts,
   DBError,
   Document,
+  FeatureFlag,
   isDocument,
   RowResponse,
   RowValue,
@@ -43,6 +44,9 @@ function buildNano(couchInfo: { url: string; cookie: string }) {
 }
 
 type DBCall<T> = () => Promise<T>
+type DBCallback<T> = (
+  db: Nano.DocumentScope<any>
+) => Promise<DBCall<T>> | DBCall<T>
 
 class CouchDBError extends Error implements DBError {
   status: number
@@ -171,8 +175,8 @@ export class DatabaseImpl implements Database {
   }
 
   // this function fetches the DB and handles if DB creation is needed
-  private async performCall<T>(
-    call: (db: Nano.DocumentScope<any>) => Promise<DBCall<T>> | DBCall<T>
+  private async performCallWithDBCreation<T>(
+    call: DBCallback<T>
   ): Promise<any> {
     const db = this.getDb()
     const fnc = await call(db)
@@ -181,8 +185,19 @@ export class DatabaseImpl implements Database {
     } catch (err: any) {
       if (err.statusCode === 404 && err.reason === DATABASE_NOT_FOUND) {
         await this.checkAndCreateDb()
-        return await this.performCall(call)
+        return await this.performCallWithDBCreation(call)
       }
+      // stripping the error down the props which are safe/useful, drop everything else
+      throw new CouchDBError(`CouchDB error: ${err.message}`, err)
+    }
+  }
+
+  private async performCall<T>(call: DBCallback<T>): Promise<any> {
+    const db = this.getDb()
+    const fnc = await call(db)
+    try {
+      return await fnc()
+    } catch (err: any) {
       // stripping the error down the props which are safe/useful, drop everything else
       throw new CouchDBError(`CouchDB error: ${err.message}`, err)
     }
@@ -197,19 +212,34 @@ export class DatabaseImpl implements Database {
     })
   }
 
+  async tryGet<T extends Document>(id?: string): Promise<T | undefined> {
+    try {
+      return await this.get<T>(id)
+    } catch (err: any) {
+      if (err.statusCode === 404) {
+        return undefined
+      }
+      throw err
+    }
+  }
+
   async getMultiple<T extends Document>(
     ids: string[],
-    opts?: { allowMissing?: boolean }
+    opts?: { allowMissing?: boolean; excludeDocs?: boolean }
   ): Promise<T[]> {
     // get unique
     ids = [...new Set(ids)]
+    const includeDocs = !opts?.excludeDocs
     const response = await this.allDocs<T>({
       keys: ids,
-      include_docs: true,
+      include_docs: includeDocs,
     })
     const rowUnavailable = (row: RowResponse<T>) => {
       // row is deleted - key lookup can return this
-      if (row.doc == null || ("deleted" in row.value && row.value.deleted)) {
+      if (
+        (includeDocs && row.doc == null) ||
+        (row.value && "deleted" in row.value && row.value.deleted)
+      ) {
         return true
       }
       return row.error === "not_found"
@@ -223,10 +253,11 @@ export class DatabaseImpl implements Database {
       const missingIds = missing.map(row => row.key).join(", ")
       throw new Error(`Unable to get documents: ${missingIds}`)
     }
-    return rows.map(row => row.doc!)
+    return rows.map(row => (includeDocs ? row.doc! : row.value))
   }
 
   async remove(idOrDoc: string | Document, rev?: string) {
+    // not a read call - but don't create a DB to delete a document
     return this.performCall(db => {
       let _id: string
       let _rev: string
@@ -286,7 +317,7 @@ export class DatabaseImpl implements Database {
     if (!document._id) {
       throw new Error("Cannot store document without _id field.")
     }
-    return this.performCall(async db => {
+    return this.performCallWithDBCreation(async db => {
       if (!document.createdAt) {
         document.createdAt = new Date().toISOString()
       }
@@ -309,7 +340,7 @@ export class DatabaseImpl implements Database {
 
   async bulkDocs(documents: AnyDocument[]) {
     const now = new Date().toISOString()
-    return this.performCall(db => {
+    return this.performCallWithDBCreation(db => {
       return () =>
         db.bulk({
           docs: documents.map(d => ({ createdAt: now, ...d, updatedAt: now })),
@@ -321,7 +352,21 @@ export class DatabaseImpl implements Database {
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
     return this.performCall(db => {
-      return () => db.list(params)
+      return async () => {
+        try {
+          return (await db.list(params)) as AllDocsResponse<T>
+        } catch (err: any) {
+          if (err.reason === DATABASE_NOT_FOUND) {
+            return {
+              offset: 0,
+              total_rows: 0,
+              rows: [],
+            }
+          } else {
+            throw err
+          }
+        }
+      }
     })
   }
 
@@ -342,11 +387,21 @@ export class DatabaseImpl implements Database {
     return this.performCall(() => {
       return async () => {
         const response = await directCouchUrlCall(args)
-        const json = await response.json()
+        const text = await response.text()
         if (response.status > 300) {
+          let json
+          try {
+            json = JSON.parse(text)
+          } catch (err) {
+            console.error(`SQS error: ${text}`)
+            throw new CouchDBError(
+              "error while running SQS query, please try again later",
+              { name: "sqs_error", status: response.status }
+            )
+          }
           throw json
         }
-        return json as T
+        return JSON.parse(text) as T
       }
     })
   }
@@ -402,7 +457,7 @@ export class DatabaseImpl implements Database {
 
   async destroy() {
     if (
-      (await flags.isEnabled("SQS")) &&
+      (await flags.isEnabled(FeatureFlag.SQS)) &&
       (await this.exists(SQLITE_DESIGN_DOC_ID))
     ) {
       // delete the design document, then run the cleanup operation

@@ -71,7 +71,6 @@
   ]
   let userData = []
   let invitesLoaded = false
-  let tenantOwnerLoaded = false
   let pendingInvites = []
   let parsedInvites = []
 
@@ -100,13 +99,9 @@
   $: pendingSchema = getPendingSchema(schema)
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
-  $: setEnrichedUsers($fetch.rows, tenantOwnerLoaded)
+  $: setEnrichedUsers($fetch.rows, tenantOwner)
 
-  const setEnrichedUsers = async rows => {
-    if (!tenantOwnerLoaded) {
-      enrichedUsers = []
-      return
-    }
+  const setEnrichedUsers = async (rows, owner) => {
     enrichedUsers = rows?.map(user => {
       let userGroups = []
       $groups.forEach(group => {
@@ -118,7 +113,9 @@
           })
         }
       })
-      user.tenantOwnerEmail = tenantOwner?.email
+      if (owner) {
+        user.tenantOwnerEmail = owner.email
+      }
       const role = Constants.ExtendedBudibaseRoleOptions.find(
         x => x.value === users.getUserRole(user)
       )
@@ -280,7 +277,12 @@
       }
 
       if (ids.length > 0) {
-        await users.bulkDelete(ids)
+        await users.bulkDelete(
+          selectedRows.map(user => ({
+            userId: user._id,
+            email: user.email,
+          }))
+        )
       }
 
       if (selectedInvites.length > 0) {
@@ -317,12 +319,21 @@
     try {
       await groups.actions.init()
       groupsLoaded = true
-      pendingInvites = await users.getInvites()
-      invitesLoaded = true
-      tenantOwner = await users.tenantOwner($auth.tenantId)
-      tenantOwnerLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
+    }
+    try {
+      pendingInvites = await users.getInvites()
+      invitesLoaded = true
+    } catch (err) {
+      notifications.error("Error fetching user invitations")
+    }
+    try {
+      tenantOwner = await users.getAccountHolder()
+    } catch (err) {
+      if (err.status !== 404) {
+        notifications.error("Error fetching account holder")
+      }
     }
   })
 </script>
@@ -395,7 +406,7 @@
     allowSelectRows={!readonly}
     {customRenderers}
     loading={!$fetch.loaded || !groupsLoaded}
-    defaultSortColumn={"__selectable"}
+    defaultSortColumn={"access"}
   />
 
   <div class="pagination">

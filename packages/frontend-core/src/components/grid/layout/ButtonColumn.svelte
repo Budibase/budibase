@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount } from "svelte"
-  import { Button } from "@budibase/bbui"
+  import { Button, CollapsedButtonGroup } from "@budibase/bbui"
   import GridCell from "../cells/GridCell.svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import { BlankRowID } from "../lib/constants"
@@ -18,12 +18,14 @@
     isDragging,
     buttonColumnWidth,
     showVScrollbar,
+    showHScrollbar,
     dispatch,
+    config,
   } = getContext("grid")
 
   let container
 
-  $: buttons = $props.buttons?.slice(0, 3) || []
+  $: buttons = getButtons($props)
   $: columnsWidth = $scrollableColumns.reduce(
     (total, col) => (total += col.width),
     0
@@ -32,16 +34,30 @@
   $: gridEnd = $width - $buttonColumnWidth - 1
   $: left = Math.min(columnEnd, gridEnd)
 
+  const getButtons = ({ buttons, buttonsCollapsed }) => {
+    let gridButtons = buttons || []
+    if (!buttonsCollapsed) {
+      return gridButtons.slice(0, 3)
+    }
+    return gridButtons
+  }
+
   const handleClick = async (button, row) => {
     await button.onClick?.(rows.actions.cleanRow(row))
-    // Refresh the row in case it changed
     await rows.actions.refreshRow(row._id)
+  }
+
+  const makeCollapsedButtons = (buttons, row) => {
+    return buttons.map(button => ({
+      ...button,
+      onClick: () => handleClick(button, row),
+    }))
   }
 
   onMount(() => {
     const observer = new ResizeObserver(entries => {
       const width = entries?.[0]?.contentRect?.width ?? 0
-      buttonColumnWidth.set(Math.floor(width) - 1)
+      buttonColumnWidth.set(width - 1)
     })
     observer.observe(container)
   })
@@ -52,7 +68,6 @@
   class="button-column"
   style="left:{left}px"
   class:hidden={$buttonColumnWidth === 0}
-  class:right-border={left !== gridEnd}
 >
   <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
     <GridScrollWrapper scrollVertically attachHandlers bind:ref={container}>
@@ -72,39 +87,58 @@
             highlighted={rowHovered || rowFocused}
             metadata={row.__metadata?.row}
           >
-            <div class="buttons" class:offset={$showVScrollbar}>
-              {#each buttons as button}
-                <Button
-                  newStyles
+            <div
+              class="buttons"
+              class:offset={$showVScrollbar && $showHScrollbar}
+            >
+              {#if $props.buttonsCollapsed}
+                <CollapsedButtonGroup
+                  buttons={makeCollapsedButtons(buttons, row)}
+                  text={$props.buttonsCollapsedText || "Action"}
+                  align="right"
+                  offset={5}
                   size="S"
-                  cta={button.type === "cta"}
-                  primary={button.type === "primary"}
-                  secondary={button.type === "secondary"}
-                  warning={button.type === "warning"}
-                  overBackground={button.type === "overBackground"}
-                  on:click={() => handleClick(button, row)}
-                >
-                  {#if button.icon}
-                    <i class="{button.icon} S" />
-                  {/if}
-                  {button.text || "Button"}
-                </Button>
-              {/each}
+                  animate={false}
+                  on:mouseenter={() => ($hoveredRowId = row._id)}
+                />
+              {:else}
+                {#each buttons as button}
+                  <Button
+                    newStyles
+                    size="S"
+                    cta={button.type === "cta"}
+                    primary={button.type === "primary"}
+                    secondary={button.type === "secondary"}
+                    warning={button.type === "warning"}
+                    overBackground={button.type === "overBackground"}
+                    on:click={() => handleClick(button, row)}
+                  >
+                    {#if button.icon}
+                      <i class="{button.icon} S" />
+                    {/if}
+                    {button.text || "Button"}
+                  </Button>
+                {/each}
+              {/if}
             </div>
           </GridCell>
         </div>
       {/each}
-      <div
-        class="row blank"
-        on:mouseenter={$isDragging ? null : () => ($hoveredRowId = BlankRowID)}
-        on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
-      >
-        <GridCell
-          width={$buttonColumnWidth}
-          highlighted={$hoveredRowId === BlankRowID}
-          on:click={() => dispatch("add-row-inline")}
-        />
-      </div>
+      {#if $config.canAddRows}
+        <div
+          class="row blank"
+          on:mouseenter={$isDragging
+            ? null
+            : () => ($hoveredRowId = BlankRowID)}
+          on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
+        >
+          <GridCell
+            width="100%"
+            highlighted={$hoveredRowId === BlankRowID}
+            on:click={() => dispatch("add-row-inline")}
+          />
+        </div>
+      {/if}
     </GridScrollWrapper>
   </div>
 </div>
@@ -152,8 +186,5 @@
   /* Add left cell border to all cells */
   .button-column :global(.cell) {
     border-left: var(--cell-border);
-  }
-  .button-column:not(.right-border) :global(.cell) {
-    border-right-color: transparent;
   }
 </style>

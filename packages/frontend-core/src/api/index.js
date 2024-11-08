@@ -2,6 +2,7 @@ import { Helpers } from "@budibase/bbui"
 import { Header } from "@budibase/shared-core"
 import { ApiVersion } from "../constants"
 import { buildAnalyticsEndpoints } from "./analytics"
+import { buildAIEndpoints } from "./ai"
 import { buildAppEndpoints } from "./app"
 import { buildAttachmentEndpoints } from "./attachments"
 import { buildAuthEndpoints } from "./auth"
@@ -34,6 +35,7 @@ import { buildEventEndpoints } from "./events"
 import { buildAuditLogsEndpoints } from "./auditLogs"
 import { buildLogsEndpoints } from "./logs"
 import { buildMigrationEndpoints } from "./migrations"
+import { buildRowActionEndpoints } from "./rowActions"
 
 /**
  * Random identifier to uniquely identify a session in a tab. This is
@@ -268,6 +270,7 @@ export const createAPIClient = config => {
   // Attach all endpoints
   return {
     ...API,
+    ...buildAIEndpoints(API),
     ...buildAnalyticsEndpoints(API),
     ...buildAppEndpoints(API),
     ...buildAttachmentEndpoints(API),
@@ -301,5 +304,6 @@ export const createAPIClient = config => {
     ...buildLogsEndpoints(API),
     ...buildMigrationEndpoints(API),
     viewV2: buildViewV2Endpoints(API),
+    rowActions: buildRowActionEndpoints(API),
   }
 }

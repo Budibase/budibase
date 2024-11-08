@@ -8,6 +8,7 @@ import {
 import { generateTableID } from "../../../../db/utils"
 import { validate } from "../utils"
 import { generator } from "@budibase/backend-core/tests"
+import { withEnv } from "../../../../environment"
 
 describe("validate", () => {
   const hour = () => generator.hour().toString().padStart(2, "0")
@@ -33,7 +34,7 @@ describe("validate", () => {
     it("should accept empty values", async () => {
       const row = {}
       const table = getTable()
-      const output = await validate({ table, tableId: table._id!, row })
+      const output = await validate({ source: table, row })
       expect(output.valid).toBe(true)
       expect(output.errors).toEqual({})
     })
@@ -43,7 +44,7 @@ describe("validate", () => {
         time: `${hour()}:${minute()}`,
       }
       const table = getTable()
-      const output = await validate({ table, tableId: table._id!, row })
+      const output = await validate({ source: table, row })
       expect(output.valid).toBe(true)
     })
 
@@ -52,7 +53,7 @@ describe("validate", () => {
         time: `${hour()}:${minute()}:${second()}`,
       }
       const table = getTable()
-      const output = await validate({ table, tableId: table._id!, row })
+      const output = await validate({ source: table, row })
       expect(output.valid).toBe(true)
     })
 
@@ -67,7 +68,7 @@ describe("validate", () => {
       table.schema.time.constraints = {
         presence: true,
       }
-      const output = await validate({ table, tableId: table._id!, row })
+      const output = await validate({ source: table, row })
       expect(output.valid).toBe(false)
       expect(output.errors).toEqual({ time: ['"time" is not a valid time'] })
     })
@@ -91,7 +92,7 @@ describe("validate", () => {
           `${generator.integer({ min: 11, max: 23 })}:${minute()}`,
         ])("should accept values after config value (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(true)
         })
 
@@ -100,7 +101,7 @@ describe("validate", () => {
           `${generator.integer({ min: 0, max: 9 })}:${minute()}`,
         ])("should reject values before config value (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no earlier than 10:00"],
@@ -125,7 +126,7 @@ describe("validate", () => {
           `${generator.integer({ min: 0, max: 12 })}:${minute()}`,
         ])("should accept values before config value (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(true)
         })
 
@@ -134,7 +135,7 @@ describe("validate", () => {
           `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
         ])("should reject values after config value (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no later than 15:16:17"],
@@ -156,7 +157,7 @@ describe("validate", () => {
           "should accept values in range (%s)",
           async time => {
             const row = { time }
-            const output = await validate({ table, tableId: table._id!, row })
+            const output = await validate({ source: table, row })
             expect(output.valid).toBe(true)
           }
         )
@@ -166,7 +167,7 @@ describe("validate", () => {
           `${generator.integer({ min: 0, max: 9 })}:${minute()}`,
         ])("should reject values before range (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no earlier than 10:00"],
@@ -178,7 +179,7 @@ describe("validate", () => {
           `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
         ])("should reject values after range (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no later than 15:00"],
@@ -199,7 +200,7 @@ describe("validate", () => {
             "should accept values in range (%s)",
             async time => {
               const row = { time }
-              const output = await validate({ table, tableId: table._id!, row })
+              const output = await validate({ source: table, row })
               expect(output.valid).toBe(true)
             }
           )
@@ -208,7 +209,7 @@ describe("validate", () => {
             "should reject values out range (%s)",
             async time => {
               const row = { time }
-              const output = await validate({ table, tableId: table._id!, row })
+              const output = await validate({ source: table, row })
               expect(output.valid).toBe(false)
               expect(output.errors).toEqual({
                 time: ["must be no later than 10:00"],
@@ -226,7 +227,7 @@ describe("validate", () => {
         table.schema.time.constraints = {
           presence: true,
         }
-        const output = await validate({ table, tableId: table._id!, row })
+        const output = await validate({ source: table, row })
         expect(output.valid).toBe(false)
         expect(output.errors).toEqual({ time: ["can't be blank"] })
       })
@@ -237,7 +238,7 @@ describe("validate", () => {
         table.schema.time.constraints = {
           presence: true,
         }
-        const output = await validate({ table, tableId: table._id!, row })
+        const output = await validate({ source: table, row })
         expect(output.valid).toBe(false)
         expect(output.errors).toEqual({ time: ["can't be blank"] })
       })
@@ -257,7 +258,7 @@ describe("validate", () => {
         "should accept values in range (%s)",
         async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(true)
         }
       )
@@ -267,7 +268,7 @@ describe("validate", () => {
         `${generator.integer({ min: 0, max: 9 })}:${minute()}`,
       ])("should reject values before range (%s)", async time => {
         const row = { time }
-        const output = await validate({ table, tableId: table._id!, row })
+        const output = await validate({ source: table, row })
         expect(output.valid).toBe(false)
         expect(output.errors).toEqual({
           time: ["must be no earlier than 10:00"],
@@ -279,7 +280,7 @@ describe("validate", () => {
         `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
       ])("should reject values after range (%s)", async time => {
         const row = { time }
-        const output = await validate({ table, tableId: table._id!, row })
+        const output = await validate({ source: table, row })
         expect(output.valid).toBe(false)
         expect(output.errors).toEqual({
           time: ["must be no later than 15:00"],
@@ -301,7 +302,7 @@ describe("validate", () => {
           "should accept values in range (%s)",
           async time => {
             const row = { time }
-            const output = await validate({ table, tableId: table._id!, row })
+            const output = await validate({ source: table, row })
             expect(output.valid).toBe(true)
           }
         )
@@ -311,7 +312,7 @@ describe("validate", () => {
           `${generator.integer({ min: 0, max: 9 })}:${minute()}`,
         ])("should reject values before range (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no earlier than 10:00"],
@@ -323,11 +324,53 @@ describe("validate", () => {
           `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
         ])("should reject values after range (%s)", async time => {
           const row = { time }
-          const output = await validate({ table, tableId: table._id!, row })
+          const output = await validate({ source: table, row })
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no later than 15:00"],
           })
+        })
+      })
+    })
+  })
+
+  describe("XSS Safe mode", () => {
+    const getTable = (): Table => ({
+      type: "table",
+      _id: generateTableID(),
+      name: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
+      schema: {
+        text: {
+          name: "sometext",
+          type: FieldType.STRING,
+        },
+      },
+    })
+    it.each([
+      "SELECT * FROM users WHERE username = 'admin' --",
+      "SELECT * FROM users WHERE id = 1; DROP TABLE users;",
+      "1' OR '1' = '1",
+      "' OR 'a' = 'a",
+      "<script>alert('XSS');</script>",
+      '"><img src=x onerror=alert(1)>',
+      "</script><script>alert('test')</script>",
+      "<div onmouseover=\"alert('XSS')\">Hover over me!</div>",
+      "'; EXEC sp_msforeachtable 'DROP TABLE ?'; --",
+      "{alert('Injected')}",
+      "UNION SELECT * FROM users",
+      "INSERT INTO users (username, password) VALUES ('admin', 'password')",
+      "/* This is a comment */ SELECT * FROM users",
+      '<iframe src="http://malicious-site.com"></iframe>',
+    ])("test potentially unsafe input: %s", async input => {
+      await withEnv({ XSS_SAFE_MODE: "1" }, async () => {
+        const table = getTable()
+        const row = { text: input }
+        const output = await validate({ source: table, row })
+        expect(output.valid).toBe(false)
+        expect(output.errors).toStrictEqual({
+          text: ["Input not sanitised - potentially vulnerable to XSS"],
         })
       })
     })

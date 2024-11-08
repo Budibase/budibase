@@ -4,7 +4,14 @@ export const FIND_HBS_REGEX = /{{([^{].*?)}}/g
 export const FIND_ANY_HBS_REGEX = /{?{{([^{].*?)}}}?/g
 export const FIND_TRIPLE_HBS_REGEX = /{{{([^{].*?)}}}/g
 
+const isJest = () => typeof jest !== "undefined"
+
 export const isBackendService = () => {
+  // We consider the tests for string-templates to be frontend, so that they
+  // test the frontend JS functionality.
+  if (isJest()) {
+    return false
+  }
   return typeof window === "undefined"
 }
 

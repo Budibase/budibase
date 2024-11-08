@@ -6,7 +6,7 @@
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import RoleCell from "./cells/RoleCell.svelte"
   import { createEventDispatcher } from "svelte"
-  import { canBeSortColumn } from "@budibase/shared-core"
+  import { canBeSortColumn } from "@budibase/frontend-core"
 
   export let schema = {}
   export let data = []
@@ -31,7 +31,7 @@
       acc[key] =
         typeof schema[key] === "string" ? { type: schema[key] } : schema[key]
 
-      if (!canBeSortColumn(acc[key].type)) {
+      if (!canBeSortColumn(acc[key])) {
         acc[key].sortable = false
       }
       return acc

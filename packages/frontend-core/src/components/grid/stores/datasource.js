@@ -1,6 +1,8 @@
 import { derived, get } from "svelte/store"
 import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
-import { memo } from "../../../utils"
+import { enrichSchemaWithRelColumns, memo } from "../../../utils"
+import { cloneDeep } from "lodash"
+import { ViewV2Type } from "@budibase/types"
 
 export const createStores = () => {
   const definition = memo(null)
@@ -53,10 +55,13 @@ export const deriveStores = context => {
       if (!$schema) {
         return null
       }
-      let enrichedSchema = {}
-      Object.keys($schema).forEach(field => {
+
+      const schemaWithRelatedColumns = enrichSchemaWithRelColumns($schema)
+
+      const enrichedSchema = {}
+      Object.keys(schemaWithRelatedColumns).forEach(field => {
         enrichedSchema[field] = {
-          ...$schema[field],
+          ...schemaWithRelatedColumns[field],
           ...$schemaOverrides?.[field],
           ...$schemaMutations[field],
         }
@@ -77,13 +82,20 @@ export const deriveStores = context => {
     }
   )
 
-  const hasBudibaseIdentifiers = derived(datasource, $datasource => {
-    let type = $datasource?.type
-    if (type === "provider") {
-      type = $datasource.value?.datasource?.type
+  const hasBudibaseIdentifiers = derived(
+    [datasource, definition],
+    ([$datasource, $definition]) => {
+      let type = $datasource?.type
+      if (type === "provider") {
+        type = $datasource.value?.datasource?.type
+      }
+      // Handle calculation views
+      if (type === "viewV2" && $definition?.type === ViewV2Type.CALCULATION) {
+        return false
+      }
+      return ["table", "viewV2", "link"].includes(type)
     }
-    return ["table", "viewV2", "link"].includes(type)
-  })
+  )
 
   return {
     schema,
@@ -161,10 +173,18 @@ export const createActions = context => {
 
   // Updates the datasources primary display column
   const changePrimaryDisplay = async column => {
-    return await saveDefinition({
-      ...get(definition),
-      primaryDisplay: column,
-    })
+    let newDefinition = cloneDeep(get(definition))
+
+    // Update primary display
+    newDefinition.primaryDisplay = column
+
+    // Sanitise schema to ensure field is required and has no default value
+    if (!newDefinition.schema[column].constraints) {
+      newDefinition.schema[column].constraints = {}
+    }
+    newDefinition.schema[column].constraints.presence = { allowEmpty: false }
+    delete newDefinition.schema[column].default
+    return await saveDefinition(newDefinition)
   }
 
   // Adds a schema mutation for a single field
@@ -199,24 +219,6 @@ export const createActions = context => {
           },
         },
       }
-    })
-  }
-
-  // Adds schema mutations for multiple fields at once
-  const addSchemaMutations = mutations => {
-    const fields = Object.keys(mutations || {})
-    if (!fields.length) {
-      return
-    }
-    schemaMutations.update($schemaMutations => {
-      let newSchemaMutations = { ...$schemaMutations }
-      fields.forEach(field => {
-        newSchemaMutations[field] = {
-          ...newSchemaMutations[field],
-          ...mutations[field],
-        }
-      })
-      return newSchemaMutations
     })
   }
 
@@ -309,7 +311,6 @@ export const createActions = context => {
         changePrimaryDisplay,
         addSchemaMutation,
         addSubSchemaMutation,
-        addSchemaMutations,
         saveSchemaMutations,
         resetSchemaMutations,
       },

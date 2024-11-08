@@ -84,8 +84,10 @@
     <Label size="M">API Key</Label>
     <Input type="password" bind:value={config.apiKey} />
   </div>
-  <Toggle text="Active" bind:value={config.active} />
-  <Toggle text="Set as default" bind:value={config.isDefault} />
+  <div class="form-row">
+    <Toggle text="Active" bind:value={config.active} />
+    <Toggle text="Set as default" bind:value={config.isDefault} />
+  </div>
 </ModalContent>
 
 <style>

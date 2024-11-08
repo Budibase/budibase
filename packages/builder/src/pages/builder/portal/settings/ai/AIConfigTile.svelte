@@ -4,6 +4,7 @@
   import OpenAILogo from "./logos/OpenAI.svelte"
   import AnthropicLogo from "./logos/Anthropic.svelte"
   import TogetherAILogo from "./logos/TogetherAI.svelte"
+  import AzureOpenAILogo from "./logos/AzureOpenAI.svelte"
   import { Providers } from "./constants"
 
   const logos = {
@@ -11,6 +12,7 @@
     [Providers.OpenAI.name]: OpenAILogo,
     [Providers.Anthropic.name]: AnthropicLogo,
     [Providers.TogetherAI.name]: TogetherAILogo,
+    [Providers.AzureOpenAI.name]: AzureOpenAILogo,
   }
 
   export let config
@@ -26,8 +28,8 @@
   <div class="icon">
     <svelte:component
       this={logos[config.name || config.provider]}
-      height="30"
-      width="30"
+      height="18"
+      width="18"
     />
   </div>
   <div class="header">
@@ -110,7 +112,7 @@
 
   .tag {
     display: flex;
-    color: var(--spectrum-body-m-text-color);
+    color: #ffffff;
     padding: 4px 8px;
     justify-content: center;
     align-items: center;

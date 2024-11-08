@@ -40,16 +40,20 @@ router
     rowActionValidator(),
     rowActionController.create
   )
-  .put(
-    "/api/tables/:tableId/actions/:actionId",
-    authorized(BUILDER),
-    rowActionValidator(),
-    rowActionController.update
-  )
   .delete(
     "/api/tables/:tableId/actions/:actionId",
     authorized(BUILDER),
     rowActionController.remove
+  )
+  .post(
+    "/api/tables/:tableId/actions/:actionId/permissions",
+    authorized(BUILDER),
+    rowActionController.setTablePermission
+  )
+  .delete(
+    "/api/tables/:tableId/actions/:actionId/permissions",
+    authorized(BUILDER),
+    rowActionController.unsetTablePermission
   )
   .post(
     "/api/tables/:tableId/actions/:actionId/permissions/:viewId",

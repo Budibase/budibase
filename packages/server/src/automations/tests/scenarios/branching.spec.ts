@@ -17,44 +17,69 @@ describe("Branching automations", () => {
   afterAll(setup.afterAll)
 
   it("should run a multiple nested branching automation", async () => {
+    const firstLogId = "11111111-1111-1111-1111-111111111111"
+    const branch1LogId = "22222222-2222-2222-2222-222222222222"
+    const branch2LogId = "33333333-3333-3333-3333-333333333333"
+    const branch2Id = "44444444-4444-4444-4444-444444444444"
+
     const builder = createAutomationBuilder({
       name: "Test Trigger with Loop and Create Row",
     })
 
     const results = await builder
       .appAction({ fields: {} })
-      .serverLog({ text: "Starting automation" })
+      .serverLog(
+        { text: "Starting automation" },
+        { stepName: "FirstLog", stepId: firstLogId }
+      )
       .branch({
         topLevelBranch1: {
           steps: stepBuilder =>
-            stepBuilder.serverLog({ text: "Branch 1" }).branch({
-              branch1: {
-                steps: stepBuilder =>
-                  stepBuilder.serverLog({ text: "Branch 1.1" }),
-                condition: {
-                  equal: { "steps.1.success": true },
+            stepBuilder
+              .serverLog(
+                { text: "Branch 1" },
+                { stepId: "66666666-6666-6666-6666-666666666666" }
+              )
+              .branch({
+                branch1: {
+                  steps: stepBuilder =>
+                    stepBuilder.serverLog(
+                      { text: "Branch 1.1" },
+                      { stepId: branch1LogId }
+                    ),
+                  condition: {
+                    equal: {
+                      [`{{ literal steps.${firstLogId}.success }}`]: true,
+                    },
+                  },
                 },
-              },
-              branch2: {
-                steps: stepBuilder =>
-                  stepBuilder.serverLog({ text: "Branch 1.2" }),
-                condition: {
-                  equal: { "steps.1.success": false },
+                branch2: {
+                  steps: stepBuilder =>
+                    stepBuilder.serverLog(
+                      { text: "Branch 1.2" },
+                      { stepId: branch2LogId }
+                    ),
+                  condition: {
+                    equal: {
+                      [`{{ literal steps.${firstLogId}.success }}`]: false,
+                    },
+                  },
                 },
-              },
-            }),
+              }),
           condition: {
-            equal: { "steps.1.success": true },
+            equal: { [`{{ literal steps.${firstLogId}.success }}`]: true },
           },
         },
         topLevelBranch2: {
-          steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
+          steps: stepBuilder =>
+            stepBuilder.serverLog({ text: "Branch 2" }, { stepId: branch2Id }),
           condition: {
-            equal: { "steps.1.success": false },
+            equal: { [`{{ literal steps.${firstLogId}.success }}`]: false },
           },
         },
       })
       .run()
+
     expect(results.steps[3].outputs.status).toContain("branch1 branch taken")
     expect(results.steps[4].outputs.message).toContain("Branch 1.1")
   })
@@ -70,14 +95,14 @@ describe("Branching automations", () => {
         activeBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Active user" }),
           condition: {
-            equal: { "trigger.fields.status": "active" },
+            equal: { "{{trigger.fields.status}}": "active" },
           },
         },
         inactiveBranch: {
           steps: stepBuilder =>
             stepBuilder.serverLog({ text: "Inactive user" }),
           condition: {
-            equal: { "trigger.fields.status": "inactive" },
+            equal: { "{{trigger.fields.status}}": "inactive" },
           },
         },
       })
@@ -102,8 +127,8 @@ describe("Branching automations", () => {
           condition: {
             $and: {
               conditions: [
-                { equal: { "trigger.fields.status": "active" } },
-                { equal: { "trigger.fields.role": "admin" } },
+                { equal: { "{{trigger.fields.status}}": "active" } },
+                { equal: { "{{trigger.fields.role}}": "admin" } },
               ],
             },
           },
@@ -111,7 +136,7 @@ describe("Branching automations", () => {
         otherBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Other user" }),
           condition: {
-            notEqual: { "trigger.fields.status": "active" },
+            notEqual: { "{{trigger.fields.status}}": "active" },
           },
         },
       })
@@ -133,8 +158,8 @@ describe("Branching automations", () => {
           condition: {
             $or: {
               conditions: [
-                { equal: { "trigger.fields.status": "test" } },
-                { equal: { "trigger.fields.role": "admin" } },
+                { equal: { "{{trigger.fields.status}}": "test" } },
+                { equal: { "{{trigger.fields.role}}": "admin" } },
               ],
             },
           },
@@ -144,8 +169,8 @@ describe("Branching automations", () => {
           condition: {
             $and: {
               conditions: [
-                { notEqual: { "trigger.fields.status": "active" } },
-                { notEqual: { "trigger.fields.role": "admin" } },
+                { notEqual: { "{{trigger.fields.status}}": "active" } },
+                { notEqual: { "{{trigger.fields.role}}": "admin" } },
               ],
             },
           },
@@ -170,8 +195,8 @@ describe("Branching automations", () => {
           condition: {
             $or: {
               conditions: [
-                { equal: { "trigger.fields.status": "new" } },
-                { equal: { "trigger.fields.role": "admin" } },
+                { equal: { "{{trigger.fields.status}}": "new" } },
+                { equal: { "{{trigger.fields.role}}": "admin" } },
               ],
             },
           },
@@ -181,8 +206,8 @@ describe("Branching automations", () => {
           condition: {
             $and: {
               conditions: [
-                { equal: { "trigger.fields.status": "active" } },
-                { equal: { "trigger.fields.role": "admin" } },
+                { equal: { "{{trigger.fields.status}}": "active" } },
+                { equal: { "{{trigger.fields.role}}": "admin" } },
               ],
             },
           },
@@ -195,5 +220,91 @@ describe("Branching automations", () => {
       AutomationStatus.NO_CONDITION_MET
     )
     expect(results.steps[2]).toBeUndefined()
+  })
+
+  it("evaluate multiple conditions", async () => {
+    const builder = createAutomationBuilder({
+      name: "evaluate multiple conditions",
+    })
+
+    const results = await builder
+      .appAction({ fields: { test_trigger: true } })
+      .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
+      .branch({
+        specialBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Special user" }),
+          condition: {
+            $or: {
+              conditions: [
+                {
+                  equal: {
+                    '{{ js "cmV0dXJuICQoInRyaWdnZXIuZmllbGRzLnRlc3RfdHJpZ2dlciIp" }}':
+                      "{{ literal trigger.fields.test_trigger}}",
+                  },
+                },
+              ],
+            },
+          },
+        },
+        regularBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Regular user" }),
+          condition: {
+            $and: {
+              conditions: [
+                {
+                  equal: { "{{ literal trigger.fields.test_trigger}}": "blah" },
+                },
+                {
+                  equal: { "{{ literal trigger.fields.test_trigger}}": "123" },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .run()
+
+    expect(results.steps[2].outputs.message).toContain("Special user")
+  })
+
+  it("evaluate multiple conditions with interpolated text", async () => {
+    const builder = createAutomationBuilder({
+      name: "evaluate multiple conditions",
+    })
+
+    const results = await builder
+      .appAction({ fields: { test_trigger: true } })
+      .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
+      .branch({
+        specialBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Special user" }),
+          condition: {
+            $or: {
+              conditions: [
+                {
+                  equal: {
+                    "{{ trigger.fields.test_trigger }} 5":
+                      "{{ trigger.fields.test_trigger }} 5",
+                  },
+                },
+              ],
+            },
+          },
+        },
+        regularBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Regular user" }),
+          condition: {
+            $and: {
+              conditions: [
+                { equal: { "{{ trigger.fields.test_trigger }}": "blah" } },
+                { equal: { "{{ trigger.fields.test_trigger }}": "123" } },
+              ],
+            },
+          },
+        },
+      })
+      .run()
+
+    expect(results.steps[2].outputs.message).toContain("Special user")
   })
 })

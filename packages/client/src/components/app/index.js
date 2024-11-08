@@ -14,7 +14,6 @@ export { default as Placeholder } from "./Placeholder.svelte"
 
 // User facing components
 export { default as container } from "./container/Container.svelte"
-export { default as section } from "./Section.svelte"
 export { default as dataprovider } from "./DataProvider.svelte"
 export { default as divider } from "./Divider.svelte"
 export { default as screenslot } from "./ScreenSlot.svelte"
@@ -50,3 +49,4 @@ export { default as navigation } from "./deprecated/Navigation.svelte"
 export { default as cardhorizontal } from "./deprecated/CardHorizontal.svelte"
 export { default as stackedlist } from "./deprecated/StackedList.svelte"
 export { default as card } from "./deprecated/Card.svelte"
+export { default as section } from "./deprecated/Section.svelte"

@@ -2,16 +2,23 @@ import _ from "lodash"
 import tk from "timekeeper"
 
 import {
+  context,
+  DEFAULT_BB_DATASOURCE_ID,
+  roles,
+} from "@budibase/backend-core"
+import { automations } from "@budibase/pro"
+import {
   CreateRowActionRequest,
   DocumentType,
   PermissionLevel,
   RowActionResponse,
+  TableRowActions,
 } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { Expectations } from "../../../tests/utilities/api/base"
-import { roles } from "@budibase/backend-core"
-import { automations } from "@budibase/pro"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import { generateRowActionsID } from "../../../db/utils"
 
 const expectAutomationId = () =>
   expect.stringMatching(`^${DocumentType.AUTOMATION}_.+`)
@@ -133,6 +140,7 @@ describe("/rowsActions", () => {
         id: expect.stringMatching(/^row_action_\w+/),
         tableId: tableId,
         automationId: expectAutomationId(),
+        allowedSources: [tableId],
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
@@ -142,6 +150,7 @@ describe("/rowsActions", () => {
             id: res.id,
             tableId: tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
         },
       })
@@ -180,18 +189,21 @@ describe("/rowsActions", () => {
             id: responses[0].id,
             tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
           [responses[1].id]: {
             name: rowActions[1].name,
             id: responses[1].id,
             tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
           [responses[2].id]: {
             name: rowActions[2].name,
             id: responses[2].id,
             tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
         },
       })
@@ -224,6 +236,7 @@ describe("/rowsActions", () => {
         id: expect.any(String),
         tableId,
         automationId: expectAutomationId(),
+        allowedSources: [tableId],
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
@@ -233,6 +246,7 @@ describe("/rowsActions", () => {
             id: res.id,
             tableId: tableId,
             automationId: expectAutomationId(),
+            allowedSources: [tableId],
           },
         },
       })
@@ -321,127 +335,6 @@ describe("/rowsActions", () => {
     })
   })
 
-  describe("update", () => {
-    unauthorisedTests((expectations, testConfig) =>
-      config.api.rowAction.update(
-        tableId,
-        generator.guid(),
-        createRowActionRequest(),
-        expectations,
-        testConfig
-      )
-    )
-
-    it("can update existing actions", async () => {
-      for (const rowAction of createRowActionRequests(3)) {
-        await createRowAction(tableId, rowAction)
-      }
-
-      const persisted = await config.api.rowAction.find(tableId)
-
-      const [actionId, actionData] = _.sample(
-        Object.entries(persisted.actions)
-      )!
-
-      const updatedName = generator.string()
-
-      const res = await config.api.rowAction.update(tableId, actionId, {
-        name: updatedName,
-      })
-
-      expect(res).toEqual({
-        id: actionId,
-        tableId,
-        name: updatedName,
-        automationId: actionData.automationId,
-      })
-
-      expect(await config.api.rowAction.find(tableId)).toEqual(
-        expect.objectContaining({
-          actions: expect.objectContaining({
-            [actionId]: {
-              name: updatedName,
-              id: actionData.id,
-              tableId: actionData.tableId,
-              automationId: actionData.automationId,
-            },
-          }),
-        })
-      )
-    })
-
-    it("trims row action names", async () => {
-      const rowAction = await createRowAction(tableId, createRowActionRequest())
-
-      const res = await config.api.rowAction.update(tableId, rowAction.id, {
-        name: "   action  name  ",
-      })
-
-      expect(res).toEqual(expect.objectContaining({ name: "action  name" }))
-
-      expect(await config.api.rowAction.find(tableId)).toEqual(
-        expect.objectContaining({
-          actions: expect.objectContaining({
-            [rowAction.id]: expect.objectContaining({
-              name: "action  name",
-            }),
-          }),
-        })
-      )
-    })
-
-    it("throws Bad Request when trying to update by a non-existing id", async () => {
-      await createRowAction(tableId, createRowActionRequest())
-
-      await config.api.rowAction.update(
-        tableId,
-        generator.guid(),
-        createRowActionRequest(),
-        { status: 400 }
-      )
-    })
-
-    it("throws Bad Request when trying to update by a via another table id", async () => {
-      const otherTable = await config.api.table.save(
-        setup.structures.basicTable()
-      )
-      await createRowAction(otherTable._id!, createRowActionRequest())
-
-      const action = await createRowAction(tableId, createRowActionRequest())
-      await config.api.rowAction.update(
-        otherTable._id!,
-        action.id,
-        createRowActionRequest(),
-        { status: 400 }
-      )
-    })
-
-    it("can not use existing row action names (for the same table)", async () => {
-      const action1 = await createRowAction(tableId, createRowActionRequest())
-      const action2 = await createRowAction(tableId, createRowActionRequest())
-
-      await config.api.rowAction.update(
-        tableId,
-        action1.id,
-        { name: action2.name },
-        {
-          status: 409,
-          body: {
-            message: "A row action with the same name already exists.",
-          },
-        }
-      )
-    })
-
-    it("does not throw with name conflicts for the same row action", async () => {
-      const action1 = await createRowAction(tableId, createRowActionRequest())
-
-      await config.api.rowAction.update(tableId, action1.id, {
-        name: action1.name,
-      })
-    })
-  })
-
   describe("delete", () => {
     unauthorisedTests((expectations, testConfig) =>
       config.api.rowAction.delete(
@@ -515,6 +408,81 @@ describe("/rowsActions", () => {
     })
   })
 
+  describe("set/unsetTablePermission", () => {
+    describe.each([
+      ["setTablePermission", config.api.rowAction.setTablePermission],
+      ["unsetTablePermission", config.api.rowAction.unsetTablePermission],
+    ])("unauthorisedTests for %s", (__, delegateTest) => {
+      unauthorisedTests((expectations, testConfig) =>
+        delegateTest(tableId, generator.guid(), expectations, testConfig)
+      )
+    })
+
+    let actionId1: string, actionId2: string
+
+    beforeEach(async () => {
+      for (const rowAction of createRowActionRequests(3)) {
+        await createRowAction(tableId, rowAction)
+      }
+      const persisted = await config.api.rowAction.find(tableId)
+
+      const actions = _.sampleSize(Object.keys(persisted.actions), 2)
+      actionId1 = actions[0]
+      actionId2 = actions[1]
+    })
+
+    it("can set table permission", async () => {
+      await config.api.rowAction.unsetTablePermission(tableId, actionId1)
+      await config.api.rowAction.unsetTablePermission(tableId, actionId2)
+      const actionResult = await config.api.rowAction.setTablePermission(
+        tableId,
+        actionId1
+      )
+      const expectedAction1 = expect.objectContaining({
+        allowedSources: [tableId],
+      })
+
+      const expectedActions = expect.objectContaining({
+        [actionId1]: expectedAction1,
+        [actionId2]: expect.objectContaining({
+          allowedSources: [],
+        }),
+      })
+      expect(actionResult).toEqual(expectedAction1)
+      expect((await config.api.rowAction.find(tableId)).actions).toEqual(
+        expectedActions
+      )
+    })
+
+    it("can unset table permission", async () => {
+      const actionResult = await config.api.rowAction.unsetTablePermission(
+        tableId,
+        actionId1
+      )
+
+      const expectedAction = expect.objectContaining({
+        allowedSources: [],
+      })
+      expect(actionResult).toEqual(expectedAction)
+      expect(
+        (await config.api.rowAction.find(tableId)).actions[actionId1]
+      ).toEqual(expectedAction)
+    })
+
+    it.each([
+      ["setTablePermission", config.api.rowAction.setTablePermission],
+      ["unsetTablePermission", config.api.rowAction.unsetTablePermission],
+    ])(
+      "cannot update permission for unexisting tables (%s)",
+      async (__, delegateTest) => {
+        const tableId = generator.guid()
+        await delegateTest(tableId, actionId1, {
+          status: 404,
+        })
+      }
+    )
+  })
+
   describe("set/unsetViewPermission", () => {
     describe.each([
       ["setViewPermission", config.api.rowAction.setViewPermission],
@@ -531,11 +499,9 @@ describe("/rowsActions", () => {
       )
     })
 
-    let tableIdForDescribe: string
     let actionId1: string, actionId2: string
     let viewId1: string, viewId2: string
-    beforeAll(async () => {
-      tableIdForDescribe = tableId
+    beforeEach(async () => {
       for (const rowAction of createRowActionRequests(3)) {
         await createRowAction(tableId, rowAction)
       }
@@ -557,11 +523,6 @@ describe("/rowsActions", () => {
       ).id
     })
 
-    beforeEach(() => {
-      // Hack to reuse tables for these given tests
-      tableId = tableIdForDescribe
-    })
-
     it("can set permission views", async () => {
       await config.api.rowAction.setViewPermission(tableId, viewId1, actionId1)
       const action1Result = await config.api.rowAction.setViewPermission(
@@ -576,10 +537,10 @@ describe("/rowsActions", () => {
       )
 
       const expectedAction1 = expect.objectContaining({
-        allowedViews: [viewId1, viewId2],
+        allowedSources: [tableId, viewId1, viewId2],
       })
       const expectedAction2 = expect.objectContaining({
-        allowedViews: [viewId1],
+        allowedSources: [tableId, viewId1],
       })
 
       const expectedActions = expect.objectContaining({
@@ -594,6 +555,8 @@ describe("/rowsActions", () => {
     })
 
     it("can unset permission views", async () => {
+      await config.api.rowAction.setViewPermission(tableId, viewId2, actionId1)
+      await config.api.rowAction.setViewPermission(tableId, viewId1, actionId2)
       const actionResult = await config.api.rowAction.unsetViewPermission(
         tableId,
         viewId1,
@@ -601,7 +564,7 @@ describe("/rowsActions", () => {
       )
 
       const expectedAction = expect.objectContaining({
-        allowedViews: [viewId2],
+        allowedSources: [tableId, viewId2],
       })
       expect(actionResult).toEqual(expectedAction)
       expect(
@@ -672,6 +635,7 @@ describe("/rowsActions", () => {
       )
 
       await config.publish()
+      // Travel time in order to "trim" the selected `getAutomationLogs`
       tk.travel(Date.now() + 100)
     })
 
@@ -687,7 +651,6 @@ describe("/rowsActions", () => {
     it("can trigger an automation given valid data", async () => {
       expect(await getAutomationLogs()).toBeEmpty()
       await config.api.rowAction.trigger(viewId, rowAction.id, { rowId })
-
       const automationLogs = await getAutomationLogs()
       expect(automationLogs).toEqual([
         expect.objectContaining({
@@ -698,11 +661,17 @@ describe("/rowsActions", () => {
             inputs: null,
             outputs: {
               fields: {},
+              id: rowId,
+              revision: (await config.api.row.get(tableId, rowId))._rev,
               row: await config.api.row.get(tableId, rowId),
               table: {
                 ...(await config.api.table.get(tableId)),
                 views: expect.anything(),
               },
+              user: expect.objectContaining({
+                _id: "ro_ta_users_" + config.getUser()._id,
+              }),
+
               automation: expect.objectContaining({
                 _id: rowAction.automationId,
               }),
@@ -710,6 +679,38 @@ describe("/rowsActions", () => {
           },
         }),
       ])
+    })
+
+    it("triggers from an allowed table", async () => {
+      expect(await getAutomationLogs()).toBeEmpty()
+      await config.api.rowAction.trigger(tableId, rowAction.id, { rowId })
+
+      const automationLogs = await getAutomationLogs()
+      expect(automationLogs).toEqual([
+        expect.objectContaining({
+          automationId: rowAction.automationId,
+        }),
+      ])
+    })
+
+    it("rejects triggering from a non-allowed table", async () => {
+      await config.api.rowAction.unsetTablePermission(tableId, rowAction.id)
+      await config.publish()
+
+      await config.api.rowAction.trigger(
+        tableId,
+        rowAction.id,
+        { rowId },
+        {
+          status: 403,
+          body: {
+            message: `Row action '${rowAction.id}' is not enabled for table '${tableId}'`,
+          },
+        }
+      )
+
+      const automationLogs = await getAutomationLogs()
+      expect(automationLogs).toEqual([])
     })
 
     it("rejects triggering from a non-allowed view", async () => {
@@ -826,11 +827,20 @@ describe("/rowsActions", () => {
               )
             ).id
 
+            // Allow row action on view
             await config.api.rowAction.setViewPermission(
               tableId,
               viewId,
               rowAction.id
             )
+
+            // Delete explicit view permissions so they inherit table permissions
+            await config.api.permission.revoke({
+              roleId: roles.BUILTIN_ROLE_IDS.PUBLIC, // Don't think this matters since we are revoking the permission
+              level: PermissionLevel.READ,
+              resourceId: viewId,
+            })
+
             return { permissionResource: tableId, triggerResouce: viewId }
           },
         ],
@@ -892,7 +902,7 @@ describe("/rowsActions", () => {
       })
 
       it.each(allowedRoleConfig)(
-        "does not allow running row actions for tables by default even",
+        "allow running row actions for tables by default",
         async (userRole, resourcePermission) => {
           await config.api.permission.add({
             level: PermissionLevel.READ,
@@ -909,18 +919,120 @@ describe("/rowsActions", () => {
               rowAction.id,
               { rowId },
               {
-                status: 403,
-                body: {
-                  message: `Row action '${rowAction.id}' is not enabled for table '${tableId}'`,
-                },
+                status: 200,
               }
             )
 
             const automationLogs = await getAutomationLogs()
-            expect(automationLogs).toBeEmpty()
+            expect(automationLogs).toHaveLength(1)
           })
         }
       )
     })
+  })
+
+  describe("scenarios", () => {
+    // https://linear.app/budibase/issue/BUDI-8717/
+    it("should not brick the app when deleting a table with row actions", async () => {
+      const view = await config.api.viewV2.create({
+        tableId,
+        name: generator.guid(),
+        schema: {
+          name: { visible: true },
+        },
+      })
+
+      const rowAction = await config.api.rowAction.save(tableId, {
+        name: generator.guid(),
+      })
+
+      await config.api.rowAction.setViewPermission(
+        tableId,
+        view.id,
+        rowAction.id
+      )
+
+      let actionsResp = await config.api.rowAction.find(tableId)
+      expect(actionsResp.actions[rowAction.id]).toEqual({
+        ...rowAction,
+        allowedSources: [tableId, view.id],
+      })
+
+      const table = await config.api.table.get(tableId)
+      await config.api.table.destroy(table._id!, table._rev!)
+
+      // In the bug reported by Conor, when a delete got deleted its row action
+      // document was not being cleaned up. This meant there existed code paths
+      // that would find it and try to reference the tables within it, resulting
+      // in errors.
+      await config.api.automation.fetch({
+        status: 200,
+      })
+    })
+
+    it.each([
+      [
+        "internal",
+        async () => {
+          await config.newTenant()
+          await config.api.application.addSampleData(config.getAppId())
+          const tables = await config.api.table.fetch()
+          const table = tables.find(
+            t => t.sourceId === DEFAULT_BB_DATASOURCE_ID
+          )!
+          return table
+        },
+      ],
+      [
+        "external",
+        async () => {
+          await config.newTenant()
+          const ds = await config.createDatasource({
+            datasource: await getDatasource(DatabaseName.POSTGRES),
+          })
+          const table = await config.api.table.save(
+            setup.structures.tableForDatasource(ds)
+          )
+          return table
+        },
+      ],
+    ])(
+      "should delete all the row actions (and automations) for its tables when a datasource is deleted",
+      async (_, getTable) => {
+        async function getRowActionsFromDb(tableId: string) {
+          return await context.doInAppContext(config.getAppId(), async () => {
+            const db = context.getAppDB()
+            const tableDoc = await db.tryGet<TableRowActions>(
+              generateRowActionsID(tableId)
+            )
+            return tableDoc
+          })
+        }
+
+        const table = await getTable()
+        const tableId = table._id!
+
+        await config.api.rowAction.save(tableId, {
+          name: generator.guid(),
+        })
+        await config.api.rowAction.save(tableId, {
+          name: generator.guid(),
+        })
+
+        const { actions } = (await getRowActionsFromDb(tableId))!
+        expect(Object.entries(actions)).toHaveLength(2)
+
+        const { automations } = await config.api.automation.fetch()
+        expect(automations).toHaveLength(2)
+
+        const datasource = await config.api.datasource.get(table.sourceId)
+        await config.api.datasource.delete(datasource)
+
+        const automationsResp = await config.api.automation.fetch()
+        expect(automationsResp.automations).toHaveLength(0)
+
+        expect(await getRowActionsFromDb(tableId)).toBeUndefined()
+      }
+    )
   })
 })

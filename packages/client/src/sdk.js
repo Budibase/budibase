@@ -26,7 +26,10 @@ import Provider from "components/context/Provider.svelte"
 import Block from "components/Block.svelte"
 import BlockComponent from "components/BlockComponent.svelte"
 import { ActionTypes } from "./constants"
-import { fetchDatasourceSchema } from "./utils/schema.js"
+import {
+  fetchDatasourceSchema,
+  fetchDatasourceDefinition,
+} from "./utils/schema.js"
 import { getAPIKey } from "./utils/api.js"
 import { enrichButtonActions } from "./utils/buttonActions.js"
 import { processStringSync, makePropSafe } from "@budibase/string-templates"
@@ -66,6 +69,7 @@ export default {
   linkable,
   getAction,
   fetchDatasourceSchema,
+  fetchDatasourceDefinition,
   fetchData,
   QueryUtils,
   ContextScopes: Constants.ContextScopes,

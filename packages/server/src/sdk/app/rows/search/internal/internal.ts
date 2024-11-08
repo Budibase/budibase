@@ -62,10 +62,10 @@ export async function exportRows(
     ).rows.map(row => row.doc!)
 
     result = await outputProcessing(table, response)
-  } else if (query) {
+  } else {
     let searchResponse = await sdk.rows.search({
       tableId,
-      query,
+      query: query || {},
       sort,
       sortOrder,
     })

@@ -10,10 +10,7 @@ import {
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
 import { search } from "../../../../../sdk/app/rows/search"
 import { generator } from "@budibase/backend-core/tests"
-import {
-  withEnv as withCoreEnv,
-  setEnv as setCoreEnv,
-} from "@budibase/backend-core"
+import { features } from "@budibase/backend-core"
 import {
   DatabaseName,
   getDatasource,
@@ -41,19 +38,13 @@ describe.each([
   let table: Table
 
   beforeAll(async () => {
-    await withCoreEnv({ TENANT_FEATURE_FLAGS: isSqs ? "*:SQS" : "" }, () =>
+    await features.testutils.withFeatureFlags("*", { SQS: isSqs }, () =>
       config.init()
     )
 
-    if (isLucene) {
-      envCleanup = setCoreEnv({
-        TENANT_FEATURE_FLAGS: "*:!SQS",
-      })
-    } else if (isSqs) {
-      envCleanup = setCoreEnv({
-        TENANT_FEATURE_FLAGS: "*:SQS",
-      })
-    }
+    envCleanup = features.testutils.setFeatureFlags("*", {
+      SQS: isSqs,
+    })
 
     if (dsProvider) {
       datasource = await config.createDatasource({
