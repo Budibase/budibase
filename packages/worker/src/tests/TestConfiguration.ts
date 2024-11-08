@@ -12,7 +12,7 @@ dbConfig.init()
 import env from "../environment"
 import * as controllers from "./controllers"
 
-const supertest = require("supertest")
+import supertest from "supertest"
 
 import { Config } from "../constants"
 import {
