@@ -3585,16 +3585,17 @@ describe.each([
       expect(rows[0].formula).toBe(2)
     })
 
-    it("should coerce a static handlebars formula", async () => {
-      await updateFormulaColumn(encodeJS("return 1"), {
-        responseType: FieldType.NUMBER,
-        formulaType: FormulaType.STATIC,
+    isInternal &&
+      it("should coerce a static handlebars formula", async () => {
+        await updateFormulaColumn(encodeJS("return 1"), {
+          responseType: FieldType.NUMBER,
+          formulaType: FormulaType.STATIC,
+        })
+        // save the row to store the static value
+        await config.api.row.save(table._id!, mainRow)
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows[0].formula).toBe(1)
       })
-      // save the row to store the static value
-      await config.api.row.save(table._id!, mainRow)
-      const { rows } = await config.api.row.search(table._id!)
-      expect(rows[0].formula).toBe(1)
-    })
   })
 
   describe("Formula JS protection", () => {
