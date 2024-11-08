@@ -8,9 +8,8 @@
     tick,
   } from "svelte"
   import Logo from "assets/bb-emblem.svg?raw"
-  import { Utils } from "@budibase/frontend-core"
+  import { Utils, memo } from "@budibase/frontend-core"
   import { selectedAutomation, automationStore } from "stores/builder"
-  import { memo } from "@budibase/frontend-core"
 
   export function toFocus() {
     viewToFocusEle()
@@ -365,7 +364,7 @@
   }
 
   // Reset state on mouse up
-  const globalMouseUp = e => {
+  const globalMouseUp = () => {
     down = false
 
     if ($view.dragging) {
@@ -524,7 +523,7 @@
   onMount(() => {
     // As the view/browser resizes, ensure the stored view is up to date
     viewObserver = new ResizeObserver(
-      Utils.domDebounce(e => {
+      Utils.domDebounce(() => {
         getDims()
       })
     )
@@ -550,7 +549,6 @@
   on:mousemove={Utils.domDebounce(onMouseMove)}
   style={`--dragPadding: ${contentDragPadding}px;`}
 >
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <svg class="draggable-background" style={`--dotSize: ${dotSize};`}>
     <!-- Small 2px offset to tuck the points under the viewport on load-->
     <pattern
@@ -560,11 +558,12 @@
       patternUnits="userSpaceOnUse"
       patternTransform={`translate(${offsetX - 2}, ${offsetY - 2})`}
     >
+      <!-- eslint-disable-next-line svelte/no-at-html-tags-->
       {@html Logo}
     </pattern>
     <rect x="0" y="0" width="100%" height="100%" fill="url(#dot-pattern)" />
   </svg>
-  <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+
   <div
     class="draggable-view"
     bind:this={viewPort}

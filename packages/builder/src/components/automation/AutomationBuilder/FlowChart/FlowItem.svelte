@@ -51,7 +51,7 @@
     if (!blockEle) {
       return
     }
-    const { width, height, top, left } = blockEle?.getBoundingClientRect()
+    const { width, height, top, left } = blockEle.getBoundingClientRect()
     blockDims = {
       width: width / $view.scale,
       height: height / $view.scale,
