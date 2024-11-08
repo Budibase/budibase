@@ -237,6 +237,7 @@ export default class TestConfiguration {
     if (!this) {
       return
     }
+
     if (this.server) {
       this.server.close()
     } else {
