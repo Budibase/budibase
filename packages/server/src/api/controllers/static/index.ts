@@ -260,7 +260,7 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
     const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
     ctx.body = await processString(previewHbs, {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
-      nonce: ctx.state.nonce
+      nonce: ctx.state.nonce,
     })
   } else {
     // just return the app info for jest to assert on
