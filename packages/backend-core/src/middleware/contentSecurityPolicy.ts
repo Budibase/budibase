@@ -91,7 +91,10 @@ export async function contentSecurityPolicy(ctx: any, next: any) {
     const nonce = crypto.randomBytes(16).toString("base64")
 
     const directives = { ...CSP_DIRECTIVES }
-    directives["script-src"] = [...CSP_DIRECTIVES["script-src"], `'nonce-${nonce}'`]
+    directives["script-src"] = [
+      ...CSP_DIRECTIVES["script-src"],
+      `'nonce-${nonce}'`,
+    ]
 
     ctx.state.nonce = nonce
 
