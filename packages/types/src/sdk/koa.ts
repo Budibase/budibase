@@ -48,7 +48,7 @@ export interface Ctx<RequestBody = any, ResponseBody = any> extends Context {
   request: BBRequest<RequestBody>
   body: ResponseBody
   userAgent: UserAgentContext["userAgent"]
-  state: { nonce: string }
+  state: { nonce?: string }
 }
 
 /**
@@ -57,7 +57,7 @@ export interface Ctx<RequestBody = any, ResponseBody = any> extends Context {
 export interface UserCtx<RequestBody = any, ResponseBody = any>
   extends Ctx<RequestBody, ResponseBody> {
   user: ContextUser
-  state: { nonce: string }
+  state: { nonce?: string }
   roleId?: string
   eventEmitter?: ContextEmitter
   loginMethod?: LoginMethod
