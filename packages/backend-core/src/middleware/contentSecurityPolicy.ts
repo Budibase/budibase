@@ -4,14 +4,13 @@ const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
   "script-src": [
     "'self'",
-    // "'unsafe-inline'",
     "'unsafe-eval'",
     "https://*.budibase.net",
     "https://cdn.budi.live",
     "https://js.intercomcdn.com",
     "https://widget.intercom.io",
     "https://d2l5prqdbvm3op.cloudfront.net",
-    "https://us-assets.i.posthog.com"
+    "https://us-assets.i.posthog.com",
   ],
   "style-src": [
     "'self'",
@@ -19,7 +18,7 @@ const CSP_DIRECTIVES = {
     "https://cdn.jsdelivr.net",
     "https://fonts.googleapis.com",
     "https://rsms.me",
-    "https://maxcdn.bootstrapcdn.com"
+    "https://maxcdn.bootstrapcdn.com",
   ],
   "object-src": ["'none'"],
   "base-uri": ["'self'"],
@@ -64,7 +63,7 @@ const CSP_DIRECTIVES = {
     "https://*.s3.me-south-1.amazonaws.com",
     "https://*.s3.us-gov-east-1.amazonaws.com",
     "https://*.s3.us-gov-west-1.amazonaws.com",
-    "https://api.github.com"
+    "https://api.github.com",
   ],
   "font-src": [
     "'self'",
@@ -74,30 +73,36 @@ const CSP_DIRECTIVES = {
     "https://rsms.me",
     "https://maxcdn.bootstrapcdn.com",
     "https://js.intercomcdn.com",
-    "https://fonts.intercomcdn.com"
+    "https://fonts.intercomcdn.com",
   ],
   "frame-src": ["'self'", "https:"],
   "img-src": ["http:", "https:", "data:", "blob:"],
   "manifest-src": ["'self'"],
-  "media-src": ["'self'", "https://js.intercomcdn.com", "https://cdn.budi.live"],
-  "worker-src": ["blob:"]
+  "media-src": [
+    "'self'",
+    "https://js.intercomcdn.com",
+    "https://cdn.budi.live",
+  ],
+  "worker-src": ["blob:"],
 }
 
 export async function contentSecurityPolicy(ctx: any, next: any) {
   try {
     const nonce = crypto.randomBytes(16).toString("base64")
 
-    CSP_DIRECTIVES['script-src'].push(`'nonce-${nonce}'`)
+    CSP_DIRECTIVES["script-src"].push(`'nonce-${nonce}'`)
 
     ctx.state.nonce = nonce
 
     const cspHeader = Object.entries(CSP_DIRECTIVES)
-      .map(([key, sources]) => `${key} ${sources.join(' ')}`)
-      .join('; ')
-    ctx.set("Content-Security-Policy", cspHeader);
+      .map(([key, sources]) => `${key} ${sources.join(" ")}`)
+      .join("; ")
+    ctx.set("Content-Security-Policy", cspHeader)
     await next()
   } catch (err: any) {
-    console.error(`Some error: ${err}`)
+    console.error(
+      `Error occurred in Content-Security-Policy middleware: ${err}`
+    )
   }
 }
 
