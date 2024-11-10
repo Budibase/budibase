@@ -90,11 +90,12 @@ export async function contentSecurityPolicy(ctx: any, next: any) {
   try {
     const nonce = crypto.randomBytes(16).toString("base64")
 
-    CSP_DIRECTIVES["script-src"].push(`'nonce-${nonce}'`)
+    const directives = { ...CSP_DIRECTIVES }
+    directives["script-src"] = [...CSP_DIRECTIVES["script-src"], `'nonce-${nonce}'`]
 
     ctx.state.nonce = nonce
 
-    const cspHeader = Object.entries(CSP_DIRECTIVES)
+    const cspHeader = Object.entries(directives)
       .map(([key, sources]) => `${key} ${sources.join(" ")}`)
       .join("; ")
     ctx.set("Content-Security-Policy", cspHeader)
