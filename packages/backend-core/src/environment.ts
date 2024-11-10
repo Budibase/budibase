@@ -225,6 +225,7 @@ const environment = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   MIN_VERSION_WITHOUT_POWER_ROLE:
     process.env.MIN_VERSION_WITHOUT_POWER_ROLE || "3.0.0",
+  DISABLE_CONTENT_SECURITY_POLICY: process.env.DISABLE_CONTENT_SECURITY_POLICY,
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
