@@ -18,6 +18,7 @@ import * as loop from "./steps/loop"
 import * as collect from "./steps/collect"
 import * as branch from "./steps/branch"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
+import * as classifier from "./steps/classifier"
 import * as openai from "./steps/openai"
 import env from "../environment"
 import {
@@ -43,6 +44,7 @@ const ACTION_IMPLS: ActionImplType = {
   UPDATE_ROW: updateRow.run,
   DELETE_ROW: deleteRow.run,
   OUTGOING_WEBHOOK: outgoingWebhook.run,
+  CLASSIFIER: classifier.run,
   EXECUTE_SCRIPT: executeScript.run,
   EXECUTE_QUERY: executeQuery.run,
   SERVER_LOG: serverLog.run,
@@ -77,6 +79,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   QUERY_ROWS: queryRow.definition,
   LOOP: loop.definition,
   COLLECT: collect.definition,
+  CLASSIFIER: classifier.definition,
   TRIGGER_AUTOMATION_RUN: triggerAutomationRun.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.definition,

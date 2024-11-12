@@ -41,6 +41,8 @@ import {
   n8nStepInputs,
   BashStepInputs,
   BashStepOutputs,
+  ClassifierStepInputs,
+  ClassifierStepOutputs,
   OpenAIStepInputs,
   OpenAIStepOutputs,
   LoopStepInputs,
@@ -130,6 +132,10 @@ export type ActionImplementations<T extends Hosting> = {
     OpenAIStepInputs,
     OpenAIStepOutputs
   >
+  [AutomationActionStepId.CLASSIFIER]: ActionImplementation<
+    ClassifierStepInputs,
+    ClassifierStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -216,6 +222,8 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
     ? BashStepInputs
     : T extends AutomationActionStepId.OPENAI
     ? OpenAIStepInputs
+    : T extends AutomationActionStepId.CLASSIFIER
+    ? ClassifierStepInputs
     : T extends AutomationActionStepId.LOOP
     ? LoopStepInputs
     : T extends AutomationActionStepId.BRANCH
@@ -281,10 +289,14 @@ export type ExecuteBashStep =
 
 export type OpenAIStep = AutomationStepSchema<AutomationActionStepId.OPENAI>
 
+export type ClassifierStep =
+  AutomationStepSchema<AutomationActionStepId.CLASSIFIER>
+
 export type LoopStep = AutomationStepSchema<AutomationActionStepId.LOOP>
 
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH>
 export type AutomationStep =
+  | ClassifierStep
   | CollectStep
   | CreateRowStep
   | DelayStep

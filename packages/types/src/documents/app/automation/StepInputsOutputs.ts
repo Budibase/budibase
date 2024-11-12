@@ -150,6 +150,16 @@ export type OpenAIStepInputs = {
   prompt: string
   model: Model
 }
+
+export type ClassifierStepInputs = {
+  prompt: string
+}
+
+export type ClassifierStepOutputs = Omit<BaseAutomationOutputs, "response"> & {
+  response?: string | null
+  items?: Array<string>
+}
+
 enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API
