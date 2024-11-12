@@ -7,7 +7,6 @@ import {
   ClassifierStepOutputs,
 } from "@budibase/types"
 import * as automationUtils from "../automationUtils"
-import { OpenAIAgent } from "llamaindex"
 import fetch from "node-fetch"
 
 export const definition: AutomationStepDefinition = {
