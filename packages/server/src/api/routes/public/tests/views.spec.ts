@@ -1,6 +1,6 @@
 import * as setup from "../../tests/utilities"
 import { basicTable } from "../../../../tests/utilities/structures"
-import { Table } from "@budibase/types"
+import { BasicOperator, Table, UILogicalOperator } from "@budibase/types"
 import { PublicAPIRequest } from "./Request"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -34,14 +34,10 @@ describe("check public API security", () => {
 
   it("should be able to update a view", async () => {
     const view = await request.views.create(baseView(), { status: 201 })
-    await request.views.update(
-      view.data.id,
-      {
-        ...view.data,
-        name: "new name",
-      },
-      { status: 200 }
-    )
+    const response = await request.views.update(view.data.id, {
+      ...view.data,
+      name: "new name",
+    })
   })
 
   it("should be able to search views", async () => {
@@ -77,9 +73,18 @@ describe("check public API security", () => {
       {
         ...baseView(),
         query: {
-          string: {
-            name: "hello",
-          },
+          logicalOperator: UILogicalOperator.ANY,
+          groups: [
+            {
+              filters: [
+                {
+                  operator: BasicOperator.STRING,
+                  field: "name",
+                  value: "hello",
+                },
+              ],
+            },
+          ],
         },
       },
       { status: 201 }

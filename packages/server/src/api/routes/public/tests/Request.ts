@@ -6,6 +6,7 @@ import {
   ViewV2Schema,
   ViewV2,
   ViewV2Type,
+  PublicAPIView,
 } from "@budibase/types"
 import { HttpMethod, MakeRequestResponse, generateMakeRequest } from "./utils"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
@@ -148,17 +149,17 @@ export class PublicViewAPI {
   }
 
   async create(
-    view: Omit<ViewV2, "id" | "version">,
+    view: Omit<PublicAPIView, "id" | "version">,
     expectations?: PublicAPIExpectations
-  ): Promise<Response<ViewV2>> {
+  ): Promise<Response<PublicAPIView>> {
     return this.request.send("post", "/views", view, expectations)
   }
 
   async update(
     viewId: string,
-    view: Omit<ViewV2, "id" | "version">,
+    view: Omit<PublicAPIView, "id" | "version">,
     expectations?: PublicAPIExpectations
-  ): Promise<Response<ViewV2>> {
+  ): Promise<Response<PublicAPIView>> {
     return this.request.send("put", `/views/${viewId}`, view, expectations)
   }
 
@@ -177,20 +178,14 @@ export class PublicViewAPI {
   async find(
     viewId: string,
     expectations?: PublicAPIExpectations
-  ): Promise<Response<ViewV2>> {
+  ): Promise<Response<PublicAPIView>> {
     return this.request.send("get", `/views/${viewId}`, undefined, expectations)
-  }
-
-  async fetch(
-    expectations?: PublicAPIExpectations
-  ): Promise<Response<ViewV2[]>> {
-    return this.request.send("get", "/views", undefined, expectations)
   }
 
   async search(
     viewName: string,
     expectations?: PublicAPIExpectations
-  ): Promise<Response<ViewV2[]>> {
+  ): Promise<Response<PublicAPIView[]>> {
     return this.request.send(
       "post",
       "/views/search",
