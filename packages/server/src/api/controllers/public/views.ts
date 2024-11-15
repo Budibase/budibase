@@ -11,12 +11,10 @@ function fixView(view: ViewV2, params?: { viewId: string }) {
   if (params?.viewId) {
     view.id = params.viewId
   }
-  if (!view.version) {
-    view.version = 2
-  }
   if (!view.query) {
     view.query = {}
   }
+  view.version = 2
   return view
 }
 

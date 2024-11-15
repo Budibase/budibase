@@ -845,49 +845,90 @@ export interface components {
       type?: "calculation";
       /** @description A column used to display rows from this view - usually used when rendered in tables. */
       primaryDisplay?: string;
+      /** @description Search parameters for view */
       query?: {
-        /** @description Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used. */
-        allOr?: boolean;
         /**
-         * @description A map of field name to the string to search for, this will look for rows that have a value starting with the string value.
-         * @example [object Object]
+         * @description When using groups this defines whether all of the filters must match, or only one of them.
+         * @enum {string}
          */
-        string?: { [key: string]: string };
-        /** @description Searches for a sub-string within a string column, e.g. searching for 'dib' will match 'Budibase'. */
-        fuzzy?: { [key: string]: unknown };
+        logicalOperator?: "all" | "any";
         /**
-         * @description Searches within a range, the format of this must be in the format of an object with a "low" and "high" property.
-         * @example [object Object]
+         * @description If no filters match, should the view return all rows, or no rows.
+         * @enum {string}
          */
-        range?: { [key: string]: unknown };
-        /** @description Searches for rows that have a column value that is exactly the value set. */
-        equal?: { [key: string]: unknown };
-        /** @description Searches for any row which does not contain the specified column value. */
-        notEqual?: { [key: string]: unknown };
-        /**
-         * @description Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.
-         * @example [object Object]
-         */
-        empty?: { [key: string]: unknown };
-        /** @description Searches for rows which have the specified column. */
-        notEmpty?: { [key: string]: unknown };
-        /** @description Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]. */
-        oneOf?: { [key: string]: unknown };
-        /**
-         * @description Searches for a value, or set of values in array column types (such as a multi-select). If an array of search options is provided then it must match all.
-         * @example [object Object]
-         */
-        contains?: { [key: string]: unknown };
-        /**
-         * @description The logical inverse of contains. Only works on array column types. If an array of values is passed, the row must not match any of them to be returned in the response.
-         * @example [object Object]
-         */
-        notContains?: { [key: string]: unknown };
-        /**
-         * @description As with the contains search, only works on array column types and searches for any of the provided values when given an array.
-         * @example [object Object]
-         */
-        containsAny?: { [key: string]: unknown };
+        onEmptyFilter?: "all" | "none";
+        /** @description A grouping of filters to be applied. */
+        groups?: {
+          /**
+           * @description When using groups this defines whether all of the filters must match, or only one of them.
+           * @enum {string}
+           */
+          logicalOperator?: "all" | "any";
+          /** @description A list of filters to apply */
+          filters?: {
+            /**
+             * @description The type of search operation which is being performed.
+             * @enum {string}
+             */
+            operator?:
+              | "equal"
+              | "notEqual"
+              | "empty"
+              | "notEmpty"
+              | "fuzzy"
+              | "string"
+              | "contains"
+              | "notContains"
+              | "containsAny"
+              | "oneOf"
+              | "range";
+            /** @description The field in the view to perform the search on. */
+            field?: string;
+            /** @description The value to search for - the type will depend on the operator in use. */
+            value?:
+              | string
+              | number
+              | boolean
+              | { [key: string]: unknown }
+              | unknown[];
+          }[];
+          /** @description A grouping of filters to be applied. */
+          groups?: {
+            /**
+             * @description When using groups this defines whether all of the filters must match, or only one of them.
+             * @enum {string}
+             */
+            logicalOperator?: "all" | "any";
+            /** @description A list of filters to apply */
+            filters?: {
+              /**
+               * @description The type of search operation which is being performed.
+               * @enum {string}
+               */
+              operator?:
+                | "equal"
+                | "notEqual"
+                | "empty"
+                | "notEmpty"
+                | "fuzzy"
+                | "string"
+                | "contains"
+                | "notContains"
+                | "containsAny"
+                | "oneOf"
+                | "range";
+              /** @description The field in the view to perform the search on. */
+              field?: string;
+              /** @description The value to search for - the type will depend on the operator in use. */
+              value?:
+                | string
+                | number
+                | boolean
+                | { [key: string]: unknown }
+                | unknown[];
+            }[];
+          }[];
+        }[];
       };
       sort?: {
         /** @description The field from the table/view schema to sort on. */
@@ -946,49 +987,90 @@ export interface components {
         type?: "calculation";
         /** @description A column used to display rows from this view - usually used when rendered in tables. */
         primaryDisplay?: string;
+        /** @description Search parameters for view */
         query?: {
-          /** @description Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used. */
-          allOr?: boolean;
           /**
-           * @description A map of field name to the string to search for, this will look for rows that have a value starting with the string value.
-           * @example [object Object]
+           * @description When using groups this defines whether all of the filters must match, or only one of them.
+           * @enum {string}
            */
-          string?: { [key: string]: string };
-          /** @description Searches for a sub-string within a string column, e.g. searching for 'dib' will match 'Budibase'. */
-          fuzzy?: { [key: string]: unknown };
+          logicalOperator?: "all" | "any";
           /**
-           * @description Searches within a range, the format of this must be in the format of an object with a "low" and "high" property.
-           * @example [object Object]
+           * @description If no filters match, should the view return all rows, or no rows.
+           * @enum {string}
            */
-          range?: { [key: string]: unknown };
-          /** @description Searches for rows that have a column value that is exactly the value set. */
-          equal?: { [key: string]: unknown };
-          /** @description Searches for any row which does not contain the specified column value. */
-          notEqual?: { [key: string]: unknown };
-          /**
-           * @description Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.
-           * @example [object Object]
-           */
-          empty?: { [key: string]: unknown };
-          /** @description Searches for rows which have the specified column. */
-          notEmpty?: { [key: string]: unknown };
-          /** @description Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]. */
-          oneOf?: { [key: string]: unknown };
-          /**
-           * @description Searches for a value, or set of values in array column types (such as a multi-select). If an array of search options is provided then it must match all.
-           * @example [object Object]
-           */
-          contains?: { [key: string]: unknown };
-          /**
-           * @description The logical inverse of contains. Only works on array column types. If an array of values is passed, the row must not match any of them to be returned in the response.
-           * @example [object Object]
-           */
-          notContains?: { [key: string]: unknown };
-          /**
-           * @description As with the contains search, only works on array column types and searches for any of the provided values when given an array.
-           * @example [object Object]
-           */
-          containsAny?: { [key: string]: unknown };
+          onEmptyFilter?: "all" | "none";
+          /** @description A grouping of filters to be applied. */
+          groups?: {
+            /**
+             * @description When using groups this defines whether all of the filters must match, or only one of them.
+             * @enum {string}
+             */
+            logicalOperator?: "all" | "any";
+            /** @description A list of filters to apply */
+            filters?: {
+              /**
+               * @description The type of search operation which is being performed.
+               * @enum {string}
+               */
+              operator?:
+                | "equal"
+                | "notEqual"
+                | "empty"
+                | "notEmpty"
+                | "fuzzy"
+                | "string"
+                | "contains"
+                | "notContains"
+                | "containsAny"
+                | "oneOf"
+                | "range";
+              /** @description The field in the view to perform the search on. */
+              field?: string;
+              /** @description The value to search for - the type will depend on the operator in use. */
+              value?:
+                | string
+                | number
+                | boolean
+                | { [key: string]: unknown }
+                | unknown[];
+            }[];
+            /** @description A grouping of filters to be applied. */
+            groups?: {
+              /**
+               * @description When using groups this defines whether all of the filters must match, or only one of them.
+               * @enum {string}
+               */
+              logicalOperator?: "all" | "any";
+              /** @description A list of filters to apply */
+              filters?: {
+                /**
+                 * @description The type of search operation which is being performed.
+                 * @enum {string}
+                 */
+                operator?:
+                  | "equal"
+                  | "notEqual"
+                  | "empty"
+                  | "notEmpty"
+                  | "fuzzy"
+                  | "string"
+                  | "contains"
+                  | "notContains"
+                  | "containsAny"
+                  | "oneOf"
+                  | "range";
+                /** @description The field in the view to perform the search on. */
+                field?: string;
+                /** @description The value to search for - the type will depend on the operator in use. */
+                value?:
+                  | string
+                  | number
+                  | boolean
+                  | { [key: string]: unknown }
+                  | unknown[];
+              }[];
+            }[];
+          }[];
         };
         sort?: {
           /** @description The field from the table/view schema to sort on. */
@@ -1049,49 +1131,90 @@ export interface components {
         type?: "calculation";
         /** @description A column used to display rows from this view - usually used when rendered in tables. */
         primaryDisplay?: string;
+        /** @description Search parameters for view */
         query?: {
-          /** @description Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used. */
-          allOr?: boolean;
           /**
-           * @description A map of field name to the string to search for, this will look for rows that have a value starting with the string value.
-           * @example [object Object]
+           * @description When using groups this defines whether all of the filters must match, or only one of them.
+           * @enum {string}
            */
-          string?: { [key: string]: string };
-          /** @description Searches for a sub-string within a string column, e.g. searching for 'dib' will match 'Budibase'. */
-          fuzzy?: { [key: string]: unknown };
+          logicalOperator?: "all" | "any";
           /**
-           * @description Searches within a range, the format of this must be in the format of an object with a "low" and "high" property.
-           * @example [object Object]
+           * @description If no filters match, should the view return all rows, or no rows.
+           * @enum {string}
            */
-          range?: { [key: string]: unknown };
-          /** @description Searches for rows that have a column value that is exactly the value set. */
-          equal?: { [key: string]: unknown };
-          /** @description Searches for any row which does not contain the specified column value. */
-          notEqual?: { [key: string]: unknown };
-          /**
-           * @description Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.
-           * @example [object Object]
-           */
-          empty?: { [key: string]: unknown };
-          /** @description Searches for rows which have the specified column. */
-          notEmpty?: { [key: string]: unknown };
-          /** @description Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]. */
-          oneOf?: { [key: string]: unknown };
-          /**
-           * @description Searches for a value, or set of values in array column types (such as a multi-select). If an array of search options is provided then it must match all.
-           * @example [object Object]
-           */
-          contains?: { [key: string]: unknown };
-          /**
-           * @description The logical inverse of contains. Only works on array column types. If an array of values is passed, the row must not match any of them to be returned in the response.
-           * @example [object Object]
-           */
-          notContains?: { [key: string]: unknown };
-          /**
-           * @description As with the contains search, only works on array column types and searches for any of the provided values when given an array.
-           * @example [object Object]
-           */
-          containsAny?: { [key: string]: unknown };
+          onEmptyFilter?: "all" | "none";
+          /** @description A grouping of filters to be applied. */
+          groups?: {
+            /**
+             * @description When using groups this defines whether all of the filters must match, or only one of them.
+             * @enum {string}
+             */
+            logicalOperator?: "all" | "any";
+            /** @description A list of filters to apply */
+            filters?: {
+              /**
+               * @description The type of search operation which is being performed.
+               * @enum {string}
+               */
+              operator?:
+                | "equal"
+                | "notEqual"
+                | "empty"
+                | "notEmpty"
+                | "fuzzy"
+                | "string"
+                | "contains"
+                | "notContains"
+                | "containsAny"
+                | "oneOf"
+                | "range";
+              /** @description The field in the view to perform the search on. */
+              field?: string;
+              /** @description The value to search for - the type will depend on the operator in use. */
+              value?:
+                | string
+                | number
+                | boolean
+                | { [key: string]: unknown }
+                | unknown[];
+            }[];
+            /** @description A grouping of filters to be applied. */
+            groups?: {
+              /**
+               * @description When using groups this defines whether all of the filters must match, or only one of them.
+               * @enum {string}
+               */
+              logicalOperator?: "all" | "any";
+              /** @description A list of filters to apply */
+              filters?: {
+                /**
+                 * @description The type of search operation which is being performed.
+                 * @enum {string}
+                 */
+                operator?:
+                  | "equal"
+                  | "notEqual"
+                  | "empty"
+                  | "notEmpty"
+                  | "fuzzy"
+                  | "string"
+                  | "contains"
+                  | "notContains"
+                  | "containsAny"
+                  | "oneOf"
+                  | "range";
+                /** @description The field in the view to perform the search on. */
+                field?: string;
+                /** @description The value to search for - the type will depend on the operator in use. */
+                value?:
+                  | string
+                  | number
+                  | boolean
+                  | { [key: string]: unknown }
+                  | unknown[];
+              }[];
+            }[];
+          }[];
         };
         sort?: {
           /** @description The field from the table/view schema to sort on. */
