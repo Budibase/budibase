@@ -48,7 +48,7 @@ export function validate(
   cronExpression: string
 ): { valid: false; err: string[] } | { valid: true } {
   const result = cronValidate(cronExpression, {
-    preset: "npm-node-cron",
+    preset: "npm-cron-schedule",
     override: {
       useSeconds: false,
     },
