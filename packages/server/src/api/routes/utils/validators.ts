@@ -12,6 +12,10 @@ import {
   ViewV2Type,
   SortOrder,
   SortType,
+  UILogicalOperator,
+  BasicOperator,
+  ArrayOperator,
+  RangeOperator,
 } from "@budibase/types"
 import Joi, { CustomValidator } from "joi"
 import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
@@ -69,6 +73,43 @@ export function tableValidator() {
   )
 }
 
+function searchUIFilterValidator() {
+  const logicalOperator = Joi.string().valid(
+    ...Object.values(UILogicalOperator)
+  )
+  const operators = [
+    ...Object.values(BasicOperator),
+    ...Object.values(ArrayOperator),
+    ...Object.values(RangeOperator),
+  ]
+  const filters = Joi.array().items(
+    Joi.object({
+      operator: Joi.string()
+        .valid(...operators)
+        .required(),
+      field: Joi.string().required(),
+      // could do with better validation of value based on operator
+      value: Joi.any().required(),
+    })
+  )
+  return Joi.object({
+    logicalOperator,
+    onEmptyFilter: Joi.string().valid(...Object.values(EmptyFilterOption)),
+    groups: Joi.array().items(
+      Joi.object({
+        logicalOperator,
+        filters,
+        groups: Joi.array().items(
+          Joi.object({
+            filters,
+            logicalOperator,
+          })
+        ),
+      })
+    ),
+  })
+}
+
 export function viewValidator() {
   return auth.joiValidator.body(
     Joi.object({
@@ -78,7 +119,7 @@ export function viewValidator() {
       type: Joi.string().optional().valid(null, ViewV2Type.CALCULATION),
       primaryDisplay: OPTIONAL_STRING,
       schema: Joi.object().required(),
-      query: searchFiltersValidator().optional(),
+      query: searchUIFilterValidator().optional(),
       sort: Joi.object({
         field: Joi.string().required(),
         order: Joi.string()

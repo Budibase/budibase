@@ -47,12 +47,10 @@ export async function search(ctx: UserCtx, next: Next) {
 
 export async function viewSearch(ctx: UserCtx, next: Next) {
   ctx.request.body = getSearchParameters(ctx)
-  await rowController.views.searchView({
-    ...ctx,
-    params: {
-      viewId: ctx.params.viewId,
-    },
-  })
+  ctx.params = {
+    viewId: ctx.params.viewId,
+  }
+  await rowController.views.searchView(ctx)
   await next()
 }
 

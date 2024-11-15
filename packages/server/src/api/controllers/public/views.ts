@@ -1,72 +1,88 @@
 import { search as stringSearch } from "./utils"
 import * as controller from "../view"
-import { ViewV2, UserCtx } from "@budibase/types"
+import { ViewV2, UserCtx, UISearchFilter, PublicAPIView } from "@budibase/types"
 import { Next } from "koa"
 import { merge } from "lodash"
 
-function fixView(view: ViewV2, params?: { viewId: string }) {
-  if (!params || !view) {
-    return view
+function viewRequest(view: PublicAPIView, params?: { viewId: string }) {
+  const viewV2: ViewV2 = view
+  if (!viewV2) {
+    return viewV2
   }
   if (params?.viewId) {
-    view.id = params.viewId
+    viewV2.id = params.viewId
   }
   if (!view.query) {
-    view.query = {}
+    viewV2.query = {}
+  } else {
+    // public API only has one form of query
+    viewV2.queryUI = viewV2.query as UISearchFilter
   }
-  view.version = 2
-  return view
+  viewV2.version = 2
+  return viewV2
+}
+
+function viewResponse(view: ViewV2): PublicAPIView {
+  // remove our internal structure - always un-necessary
+  delete view.query
+  return {
+    ...view,
+    query: view.queryUI,
+  }
+}
+
+function viewsResponse(views: ViewV2[]): PublicAPIView[] {
+  return views.map(viewResponse)
 }
 
 export async function search(ctx: UserCtx, next: Next) {
   const { name } = ctx.request.body
   await controller.v2.fetch(ctx)
-  ctx.body = stringSearch(ctx.body.data, name)
+  ctx.body.data = viewsResponse(stringSearch(ctx.body.data, name))
   await next()
 }
 
 export async function create(ctx: UserCtx, next: Next) {
-  await controller.v2.create(
-    merge(ctx, {
-      request: {
-        body: fixView(ctx.request.body),
-      },
-    })
-  )
+  ctx = merge(ctx, {
+    request: {
+      body: viewRequest(ctx.request.body),
+    },
+  })
+  await controller.v2.create(ctx)
+  ctx.body.data = viewResponse(ctx.body.data)
   await next()
 }
 
 export async function read(ctx: UserCtx, next: Next) {
-  await controller.v2.get(
-    merge(ctx, {
-      params: {
-        viewId: ctx.params.viewId,
-      },
-    })
-  )
+  ctx = merge(ctx, {
+    params: {
+      viewId: ctx.params.viewId,
+    },
+  })
+  await controller.v2.get(ctx)
+  ctx.body.data = viewResponse(ctx.body.data)
   await next()
 }
 
 export async function update(ctx: UserCtx, next: Next) {
   const viewId = ctx.params.viewId
-  await controller.v2.update(
-    merge(ctx, {
-      request: {
-        body: {
-          data: fixView(ctx.request.body, { viewId }),
-        },
+  ctx = merge(ctx, {
+    request: {
+      body: {
+        data: viewRequest(ctx.request.body, { viewId }),
       },
-      params: {
-        viewId,
-      },
-    })
-  )
+    },
+    params: {
+      viewId,
+    },
+  })
+  await controller.v2.update(ctx)
+  ctx.body.data = viewResponse(ctx.body.data)
   await next()
 }
 
 export async function destroy(ctx: UserCtx, next: Next) {
   await controller.v2.remove(ctx)
-  ctx.body = ctx.table
   await next()
 }
 

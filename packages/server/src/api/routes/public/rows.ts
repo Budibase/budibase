@@ -1,4 +1,4 @@
-import controller from "../../controllers/public/rows"
+import controller, { viewSearch } from "../../controllers/public/rows"
 import Endpoint from "./utils/Endpoint"
 import { externalSearchValidator } from "../utils/validators"
 
@@ -200,7 +200,7 @@ read.push(
   new Endpoint(
     "post",
     "/views/:viewId/rows/search",
-    controller.search
+    controller.viewSearch
   ).addMiddleware(externalSearchValidator())
 )
 
