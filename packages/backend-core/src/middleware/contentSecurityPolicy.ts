@@ -1,4 +1,5 @@
 import crypto from "crypto"
+import env from "../environment"
 
 const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
@@ -95,6 +96,10 @@ export async function contentSecurityPolicy(ctx: any, next: any) {
       ...CSP_DIRECTIVES["script-src"],
       `'nonce-${nonce}'`,
     ]
+
+    if (!env.DISABLE_CSP_UNSAFE_INLINE_SCRIPTS) {
+      directives["script-src"].push("'unsafe-inline'")
+    }
 
     ctx.state.nonce = nonce
 
