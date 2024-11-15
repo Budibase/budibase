@@ -65,4 +65,26 @@ describe("check public API security", () => {
     const result = await request.views.destroy(view.data.id, { status: 204 })
     expect(result).toBeDefined()
   })
+
+  it("should be able to search rows through a view", async () => {
+    const row1 = await request.rows.create(
+      table._id!,
+      { name: "hello world" },
+      { status: 200 }
+    )
+    await request.rows.create(table._id!, { name: "foo bar" }, { status: 200 })
+    const response = await request.views.create(
+      {
+        ...baseView(),
+        query: {
+          string: {
+            name: "hello",
+          },
+        },
+      },
+      { status: 201 }
+    )
+    const results = await request.rows.viewSearch(response.data.id, {})
+    expect(results.data.length).toEqual(1)
+  })
 })

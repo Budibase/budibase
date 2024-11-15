@@ -96,6 +96,19 @@ export class PublicRowAPI {
     this.request = request
   }
 
+  async create(
+    tableId: string,
+    row: Row,
+    expectations?: PublicAPIExpectations
+  ): Promise<Response<Row>> {
+    return this.request.send(
+      "post",
+      `/tables/${tableId}/rows`,
+      row,
+      expectations
+    )
+  }
+
   async search(
     tableId: string,
     query: SearchFilters,

@@ -469,8 +469,19 @@ components:
               visible: false
               readonly: false
           query:
-            string:
-              column: value
+            logicalOperator: all
+            onEmptyFilter: none
+            groups:
+              - logicalOperator: any
+                filters:
+                  - operator: string
+                    field: name
+                    value: John
+                  - operator: range
+                    field: age
+                    value:
+                      low: 18
+                      high: 100
           primaryDisplay: name
     views:
       value:
@@ -492,8 +503,19 @@ components:
                 visible: false
                 readonly: false
             query:
-              string:
-                column: value
+              logicalOperator: all
+              onEmptyFilter: none
+              groups:
+                - logicalOperator: any
+                  filters:
+                    - operator: string
+                      field: name
+                      value: John
+                    - operator: range
+                      field: age
+                      value:
+                        low: 18
+                        high: 100
             primaryDisplay: name
   securitySchemes:
     ApiKeyAuth:
@@ -1778,85 +1800,115 @@ components:
           description: A column used to display rows from this view - usually used when
             rendered in tables.
         query:
+          description: Search parameters for view
           type: object
+          required: []
           properties:
-            allOr:
-              type: boolean
-              description: Specifies that a row should be returned if it satisfies any of the
-                specified options, rather than requiring it to fulfill all the
-                search parameters. This defaults to false, meaning AND logic
-                will be used.
-            string:
-              type: object
-              example:
-                columnName1: value
-                columnName2: value
-              description: A map of field name to the string to search for, this will look for
-                rows that have a value starting with the string value.
-              additionalProperties:
-                type: string
-                description: The value to search for in the column.
-            fuzzy:
-              type: object
-              description: Searches for a sub-string within a string column, e.g. searching
-                for 'dib' will match 'Budibase'.
-            range:
-              type: object
-              description: Searches within a range, the format of this must be in the format
-                of an object with a "low" and "high" property.
-              example:
-                columnName1:
-                  low: 10
-                  high: 20
-            equal:
-              type: object
-              description: Searches for rows that have a column value that is exactly the
-                value set.
-            notEqual:
-              type: object
-              description: Searches for any row which does not contain the specified column
-                value.
-            empty:
-              type: object
-              description: Searches for rows which do not contain the specified column. The
-                object should simply contain keys of the column names, these can
-                map to any value.
-              example:
-                columnName1: ""
-            notEmpty:
-              type: object
-              description: Searches for rows which have the specified column.
-            oneOf:
-              type: object
-              description: Searches for rows which have a column value that is any of the
-                specified values. The format of this must be columnName ->
-                [value1, value2].
-            contains:
-              type: object
-              description: Searches for a value, or set of values in array column types (such
-                as a multi-select). If an array of search options is provided
-                then it must match all.
-              example:
-                arrayColumn:
-                  - a
-                  - b
-            notContains:
-              type: object
-              description: The logical inverse of contains. Only works on array column types.
-                If an array of values is passed, the row must not match any of
-                them to be returned in the response.
-              example:
-                arrayColumn:
-                  - a
-                  - b
-            containsAny:
-              type: object
-              description: As with the contains search, only works on array column types and
-                searches for any of the provided values when given an array.
-              example:
-                arrayColumn:
-                  - a
-                  - b
+            logicalOperator:
+              description: When using groups this defines whether all of the filters must
+                match, or only one of them.
+              type: string
+              enum:
+                - all
+                - any
+            onEmptyFilter:
+              description: If no filters match, should the view return all rows, or no rows.
+              type: string
+              enum:
+                - all
+                - none
+            groups:
+              description: A grouping of filters to be applied.
+              type: array
+              items:
+                type: object
+                properties:
+                  logicalOperator:
+                    description: When using groups this defines whether all of the filters must
+                      match, or only one of them.
+                    type: string
+                    enum:
+                      - all
+                      - any
+                  filters:
+                    description: A list of filters to apply
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        operator:
+                          type: string
+                          description: The type of search operation which is being performed.
+                          enum:
+                            - equal
+                            - notEqual
+                            - empty
+                            - notEmpty
+                            - fuzzy
+                            - string
+                            - contains
+                            - notContains
+                            - containsAny
+                            - oneOf
+                            - range
+                        field:
+                          type: string
+                          description: The field in the view to perform the search on.
+                        value:
+                          description: The value to search for - the type will depend on the operator in
+                            use.
+                          oneOf:
+                            - type: string
+                            - type: number
+                            - type: boolean
+                            - type: object
+                            - type: array
+                  groups:
+                    description: A grouping of filters to be applied.
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        logicalOperator:
+                          description: When using groups this defines whether all of the filters must
+                            match, or only one of them.
+                          type: string
+                          enum:
+                            - all
+                            - any
+                        filters:
+                          description: A list of filters to apply
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              operator:
+                                type: string
+                                description: The type of search operation which is being performed.
+                                enum:
+                                  - equal
+                                  - notEqual
+                                  - empty
+                                  - notEmpty
+                                  - fuzzy
+                                  - string
+                                  - contains
+                                  - notContains
+                                  - containsAny
+                                  - oneOf
+                                  - range
+                              field:
+                                type: string
+                                description: The field in the view to perform the search on.
+                              value:
+                                description: The value to search for - the type will depend on the operator in
+                                  use.
+                                oneOf:
+                                  - type: string
+                                  - type: number
+                                  - type: boolean
+                                  - type: object
+                                  - type: array
         sort:
           type: object
           required:
@@ -1958,85 +2010,115 @@ components:
               description: A column used to display rows from this view - usually used when
                 rendered in tables.
             query:
+              description: Search parameters for view
               type: object
+              required: []
               properties:
-                allOr:
-                  type: boolean
-                  description: Specifies that a row should be returned if it satisfies any of the
-                    specified options, rather than requiring it to fulfill all
-                    the search parameters. This defaults to false, meaning AND
-                    logic will be used.
-                string:
-                  type: object
-                  example:
-                    columnName1: value
-                    columnName2: value
-                  description: A map of field name to the string to search for, this will look for
-                    rows that have a value starting with the string value.
-                  additionalProperties:
-                    type: string
-                    description: The value to search for in the column.
-                fuzzy:
-                  type: object
-                  description: Searches for a sub-string within a string column, e.g. searching
-                    for 'dib' will match 'Budibase'.
-                range:
-                  type: object
-                  description: Searches within a range, the format of this must be in the format
-                    of an object with a "low" and "high" property.
-                  example:
-                    columnName1:
-                      low: 10
-                      high: 20
-                equal:
-                  type: object
-                  description: Searches for rows that have a column value that is exactly the
-                    value set.
-                notEqual:
-                  type: object
-                  description: Searches for any row which does not contain the specified column
-                    value.
-                empty:
-                  type: object
-                  description: Searches for rows which do not contain the specified column. The
-                    object should simply contain keys of the column names, these
-                    can map to any value.
-                  example:
-                    columnName1: ""
-                notEmpty:
-                  type: object
-                  description: Searches for rows which have the specified column.
-                oneOf:
-                  type: object
-                  description: Searches for rows which have a column value that is any of the
-                    specified values. The format of this must be columnName ->
-                    [value1, value2].
-                contains:
-                  type: object
-                  description: Searches for a value, or set of values in array column types (such
-                    as a multi-select). If an array of search options is
-                    provided then it must match all.
-                  example:
-                    arrayColumn:
-                      - a
-                      - b
-                notContains:
-                  type: object
-                  description: The logical inverse of contains. Only works on array column types.
-                    If an array of values is passed, the row must not match any
-                    of them to be returned in the response.
-                  example:
-                    arrayColumn:
-                      - a
-                      - b
-                containsAny:
-                  type: object
-                  description: As with the contains search, only works on array column types and
-                    searches for any of the provided values when given an array.
-                  example:
-                    arrayColumn:
-                      - a
-                      - b
+                logicalOperator:
+                  description: When using groups this defines whether all of the filters must
+                    match, or only one of them.
+                  type: string
+                  enum:
+                    - all
+                    - any
+                onEmptyFilter:
+                  description: If no filters match, should the view return all rows, or no rows.
+                  type: string
+                  enum:
+                    - all
+                    - none
+                groups:
+                  description: A grouping of filters to be applied.
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      logicalOperator:
+                        description: When using groups this defines whether all of the filters must
+                          match, or only one of them.
+                        type: string
+                        enum:
+                          - all
+                          - any
+                      filters:
+                        description: A list of filters to apply
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            operator:
+                              type: string
+                              description: The type of search operation which is being performed.
+                              enum:
+                                - equal
+                                - notEqual
+                                - empty
+                                - notEmpty
+                                - fuzzy
+                                - string
+                                - contains
+                                - notContains
+                                - containsAny
+                                - oneOf
+                                - range
+                            field:
+                              type: string
+                              description: The field in the view to perform the search on.
+                            value:
+                              description: The value to search for - the type will depend on the operator in
+                                use.
+                              oneOf:
+                                - type: string
+                                - type: number
+                                - type: boolean
+                                - type: object
+                                - type: array
+                      groups:
+                        description: A grouping of filters to be applied.
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            logicalOperator:
+                              description: When using groups this defines whether all of the filters must
+                                match, or only one of them.
+                              type: string
+                              enum:
+                                - all
+                                - any
+                            filters:
+                              description: A list of filters to apply
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  operator:
+                                    type: string
+                                    description: The type of search operation which is being performed.
+                                    enum:
+                                      - equal
+                                      - notEqual
+                                      - empty
+                                      - notEmpty
+                                      - fuzzy
+                                      - string
+                                      - contains
+                                      - notContains
+                                      - containsAny
+                                      - oneOf
+                                      - range
+                                  field:
+                                    type: string
+                                    description: The field in the view to perform the search on.
+                                  value:
+                                    description: The value to search for - the type will depend on the operator in
+                                      use.
+                                    oneOf:
+                                      - type: string
+                                      - type: number
+                                      - type: boolean
+                                      - type: object
+                                      - type: array
             sort:
               type: object
               required:
@@ -2145,86 +2227,115 @@ components:
                 description: A column used to display rows from this view - usually used when
                   rendered in tables.
               query:
+                description: Search parameters for view
                 type: object
+                required: []
                 properties:
-                  allOr:
-                    type: boolean
-                    description: Specifies that a row should be returned if it satisfies any of the
-                      specified options, rather than requiring it to fulfill all
-                      the search parameters. This defaults to false, meaning AND
-                      logic will be used.
-                  string:
-                    type: object
-                    example:
-                      columnName1: value
-                      columnName2: value
-                    description: A map of field name to the string to search for, this will look for
-                      rows that have a value starting with the string value.
-                    additionalProperties:
-                      type: string
-                      description: The value to search for in the column.
-                  fuzzy:
-                    type: object
-                    description: Searches for a sub-string within a string column, e.g. searching
-                      for 'dib' will match 'Budibase'.
-                  range:
-                    type: object
-                    description: Searches within a range, the format of this must be in the format
-                      of an object with a "low" and "high" property.
-                    example:
-                      columnName1:
-                        low: 10
-                        high: 20
-                  equal:
-                    type: object
-                    description: Searches for rows that have a column value that is exactly the
-                      value set.
-                  notEqual:
-                    type: object
-                    description: Searches for any row which does not contain the specified column
-                      value.
-                  empty:
-                    type: object
-                    description: Searches for rows which do not contain the specified column. The
-                      object should simply contain keys of the column names,
-                      these can map to any value.
-                    example:
-                      columnName1: ""
-                  notEmpty:
-                    type: object
-                    description: Searches for rows which have the specified column.
-                  oneOf:
-                    type: object
-                    description: Searches for rows which have a column value that is any of the
-                      specified values. The format of this must be columnName ->
-                      [value1, value2].
-                  contains:
-                    type: object
-                    description: Searches for a value, or set of values in array column types (such
-                      as a multi-select). If an array of search options is
-                      provided then it must match all.
-                    example:
-                      arrayColumn:
-                        - a
-                        - b
-                  notContains:
-                    type: object
-                    description: The logical inverse of contains. Only works on array column types.
-                      If an array of values is passed, the row must not match
-                      any of them to be returned in the response.
-                    example:
-                      arrayColumn:
-                        - a
-                        - b
-                  containsAny:
-                    type: object
-                    description: As with the contains search, only works on array column types and
-                      searches for any of the provided values when given an
-                      array.
-                    example:
-                      arrayColumn:
-                        - a
-                        - b
+                  logicalOperator:
+                    description: When using groups this defines whether all of the filters must
+                      match, or only one of them.
+                    type: string
+                    enum:
+                      - all
+                      - any
+                  onEmptyFilter:
+                    description: If no filters match, should the view return all rows, or no rows.
+                    type: string
+                    enum:
+                      - all
+                      - none
+                  groups:
+                    description: A grouping of filters to be applied.
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        logicalOperator:
+                          description: When using groups this defines whether all of the filters must
+                            match, or only one of them.
+                          type: string
+                          enum:
+                            - all
+                            - any
+                        filters:
+                          description: A list of filters to apply
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              operator:
+                                type: string
+                                description: The type of search operation which is being performed.
+                                enum:
+                                  - equal
+                                  - notEqual
+                                  - empty
+                                  - notEmpty
+                                  - fuzzy
+                                  - string
+                                  - contains
+                                  - notContains
+                                  - containsAny
+                                  - oneOf
+                                  - range
+                              field:
+                                type: string
+                                description: The field in the view to perform the search on.
+                              value:
+                                description: The value to search for - the type will depend on the operator in
+                                  use.
+                                oneOf:
+                                  - type: string
+                                  - type: number
+                                  - type: boolean
+                                  - type: object
+                                  - type: array
+                        groups:
+                          description: A grouping of filters to be applied.
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              logicalOperator:
+                                description: When using groups this defines whether all of the filters must
+                                  match, or only one of them.
+                                type: string
+                                enum:
+                                  - all
+                                  - any
+                              filters:
+                                description: A list of filters to apply
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    operator:
+                                      type: string
+                                      description: The type of search operation which is being performed.
+                                      enum:
+                                        - equal
+                                        - notEqual
+                                        - empty
+                                        - notEmpty
+                                        - fuzzy
+                                        - string
+                                        - contains
+                                        - notContains
+                                        - containsAny
+                                        - oneOf
+                                        - range
+                                    field:
+                                      type: string
+                                      description: The field in the view to perform the search on.
+                                    value:
+                                      description: The value to search for - the type will depend on the operator in
+                                        use.
+                                      oneOf:
+                                        - type: string
+                                        - type: number
+                                        - type: boolean
+                                        - type: object
+                                        - type: array
               sort:
                 type: object
                 required:

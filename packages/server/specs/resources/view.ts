@@ -1,7 +1,14 @@
 import { object } from "./utils"
 import Resource from "./utils/Resource"
-import { CalculationType, SortOrder, SortType } from "@budibase/types"
-import { searchSchema } from "./misc"
+import {
+  ArrayOperator,
+  BasicOperator,
+  CalculationType,
+  RangeOperator,
+  SortOrder,
+  SortType,
+} from "@budibase/types"
+import { cloneDeep } from "lodash"
 
 const view = {
   name: "peopleView",
@@ -25,9 +32,17 @@ const view = {
     },
   },
   query: {
-    string: {
-      column: "value",
-    },
+    logicalOperator: "all",
+    onEmptyFilter: "none",
+    groups: [
+      {
+        logicalOperator: "any",
+        filters: [
+          { operator: "string", field: "name", value: "John" },
+          { operator: "range", field: "age", value: { low: 18, high: 100 } },
+        ],
+      },
+    ],
   },
   primaryDisplay: "name",
 }
@@ -68,6 +83,78 @@ const baseColumnDef = {
   },
 }
 
+const logicalOperator = {
+  description:
+    "When using groups this defines whether all of the filters must match, or only one of them.",
+  type: "string",
+  enum: ["all", "any"],
+}
+
+const filterGroup = {
+  description: "A grouping of filters to be applied.",
+  type: "array",
+  items: {
+    type: "object",
+    properties: {
+      logicalOperator,
+      filters: {
+        description: "A list of filters to apply",
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            operator: {
+              type: "string",
+              description:
+                "The type of search operation which is being performed.",
+              enum: [
+                ...Object.values(BasicOperator),
+                ...Object.values(ArrayOperator),
+                ...Object.values(RangeOperator),
+              ],
+            },
+            field: {
+              type: "string",
+              description: "The field in the view to perform the search on.",
+            },
+            value: {
+              description:
+                "The value to search for - the type will depend on the operator in use.",
+              oneOf: [
+                { type: "string" },
+                { type: "number" },
+                { type: "boolean" },
+                { type: "object" },
+                { type: "array" },
+              ],
+            },
+          },
+        },
+      },
+    },
+  },
+}
+
+// have to clone to avoid constantly recursive structure - we can't represent this easily
+const layeredFilterGroup: any = cloneDeep(filterGroup)
+layeredFilterGroup.items.properties.groups = filterGroup
+
+const viewQuerySchema = {
+  description: "Search parameters for view",
+  type: "object",
+  required: [],
+  properties: {
+    logicalOperator,
+    onEmptyFilter: {
+      description:
+        "If no filters match, should the view return all rows, or no rows.",
+      type: "string",
+      enum: ["all", "none"],
+    },
+    groups: layeredFilterGroup,
+  },
+}
+
 const viewSchema = {
   description: "The view to be created/updated.",
   type: "object",
@@ -91,7 +178,7 @@ const viewSchema = {
       description:
         "A column used to display rows from this view - usually used when rendered in tables.",
     },
-    query: searchSchema,
+    query: viewQuerySchema,
     sort: {
       type: "object",
       required: ["field"],
