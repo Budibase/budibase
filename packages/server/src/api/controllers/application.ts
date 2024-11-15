@@ -153,7 +153,11 @@ async function createInstance(appId: string, template: AppTemplate) {
   await createAllSearchIndex()
 
   if (template && template.useTemplate) {
-    await sdk.backups.importApp(appId, db, template)
+    const opts = {
+      importObjStoreContents: true,
+      updateAttachmentColumns: !template.key, // preserve attachments when using Budibase templates
+    }
+    await sdk.backups.importApp(appId, db, template, opts)
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
