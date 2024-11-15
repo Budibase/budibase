@@ -17,6 +17,7 @@ describe("contentSecurityPolicy middleware", () => {
       set: jest.fn(),
     }
     next = jest.fn()
+    // @ts-ignore
     crypto.randomBytes.mockReturnValue(Buffer.from(mockNonce, "base64"))
   })
 
@@ -58,6 +59,7 @@ describe("contentSecurityPolicy middleware", () => {
   it("should handle errors and log an error message", async () => {
     const consoleSpy = jest.spyOn(console, "error").mockImplementation()
     const error = new Error("Test error")
+    // @ts-ignore
     crypto.randomBytes.mockImplementation(() => {
       throw error
     })
