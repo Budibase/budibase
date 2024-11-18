@@ -8,7 +8,6 @@ import {
   context,
   db as dbCore,
   docIds,
-  features,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
   SQLITE_DESIGN_DOC_ID,
@@ -64,7 +63,6 @@ jest.mock("@budibase/pro", () => ({
 
 describe.each([
   ["in-memory", undefined],
-  ["lucene", undefined],
   ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
@@ -72,15 +70,12 @@ describe.each([
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
   [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("search (%s)", (name, dsProvider) => {
-  const isSqs = name === "sqs"
-  const isLucene = name === "lucene"
   const isInMemory = name === "in-memory"
-  const isInternal = isSqs || isLucene || isInMemory
+  const isInternal = !dsProvider
   const isOracle = name === DatabaseName.ORACLE
-  const isSql = !isInMemory && !isLucene
+  const isSql = !isInMemory
   const config = setup.getConfig()
 
-  let envCleanup: (() => void) | undefined
   let datasource: Datasource | undefined
   let client: Knex | undefined
   let tableOrViewId: string
@@ -111,12 +106,7 @@ describe.each([
   }
 
   beforeAll(async () => {
-    await features.testutils.withFeatureFlags("*", { SQS: true }, () =>
-      config.init()
-    )
-    envCleanup = features.testutils.setFeatureFlags("*", {
-      SQS: isSqs,
-    })
+    await config.init()
 
     if (config.app?.appId) {
       config.app = await config.api.application.update(config.app?.appId, {
@@ -140,9 +130,6 @@ describe.each([
 
   afterAll(async () => {
     setup.afterAll()
-    if (envCleanup) {
-      envCleanup()
-    }
   })
 
   async function createTable(schema?: TableSchema) {
@@ -220,11 +207,6 @@ describe.each([
     ],
   ])("from %s", (sourceType, createTableOrView) => {
     const isView = sourceType === "view"
-
-    if (isView && isLucene) {
-      // Some tests don't have the expected result in views via lucene, and given that it is getting deprecated, we exclude them from the tests
-      return
-    }
 
     class SearchAssertion {
       constructor(private readonly query: SearchRowRequest) {}
@@ -598,19 +580,18 @@ describe.each([
           ])
         })
 
-        !isLucene &&
-          it("should return all rows matching the session user firstname when logical operator used", async () => {
-            await expectQuery({
-              $and: {
-                conditions: [{ equal: { name: "{{ [user].firstName }}" } }],
-              },
-            }).toContainExactly([
-              {
-                name: config.getUser().firstName,
-                appointment: future.toISOString(),
-              },
-            ])
-          })
+        it("should return all rows matching the session user firstname when logical operator used", async () => {
+          await expectQuery({
+            $and: {
+              conditions: [{ equal: { name: "{{ [user].firstName }}" } }],
+            },
+          }).toContainExactly([
+            {
+              name: config.getUser().firstName,
+              appointment: future.toISOString(),
+            },
+          ])
+        })
 
         it("should parse the date binding and return all rows after the resolved value", async () => {
           await tk.withFreeze(serverTime, async () => {
@@ -1034,21 +1015,19 @@ describe.each([
           }).toFindNothing()
         })
 
-        !isLucene &&
-          it("ignores low if it's an empty object", async () => {
-            await expectQuery({
-              // @ts-ignore
-              range: { name: { low: {}, high: "z" } },
-            }).toContainExactly([{ name: "foo" }, { name: "bar" }])
-          })
+        it("ignores low if it's an empty object", async () => {
+          await expectQuery({
+            // @ts-ignore
+            range: { name: { low: {}, high: "z" } },
+          }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+        })
 
-        !isLucene &&
-          it("ignores high if it's an empty object", async () => {
-            await expectQuery({
-              // @ts-ignore
-              range: { name: { low: "a", high: {} } },
-            }).toContainExactly([{ name: "foo" }, { name: "bar" }])
-          })
+        it("ignores high if it's an empty object", async () => {
+          await expectQuery({
+            // @ts-ignore
+            range: { name: { low: "a", high: {} } },
+          }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+        })
       })
 
       describe("empty", () => {
@@ -1202,31 +1181,23 @@ describe.each([
           await expectQuery({ oneOf: { age: [2] } }).toFindNothing()
         })
 
-        // I couldn't find a way to make this work in Lucene and given that
-        // we're getting rid of Lucene soon I wasn't inclined to spend time on
-        // it.
-        !isLucene &&
-          it("can convert from a string", async () => {
-            await expectQuery({
-              oneOf: {
-                // @ts-ignore
-                age: "1",
-              },
-            }).toContainExactly([{ age: 1 }])
-          })
+        it("can convert from a string", async () => {
+          await expectQuery({
+            oneOf: {
+              // @ts-ignore
+              age: "1",
+            },
+          }).toContainExactly([{ age: 1 }])
+        })
 
-        // I couldn't find a way to make this work in Lucene and given that
-        // we're getting rid of Lucene soon I wasn't inclined to spend time on
-        // it.
-        !isLucene &&
-          it("can find multiple values for same column", async () => {
-            await expectQuery({
-              oneOf: {
-                // @ts-ignore
-                age: "1,10",
-              },
-            }).toContainExactly([{ age: 1 }, { age: 10 }])
-          })
+        it("can find multiple values for same column", async () => {
+          await expectQuery({
+            oneOf: {
+              // @ts-ignore
+              age: "1,10",
+            },
+          }).toContainExactly([{ age: 1 }, { age: 10 }])
+        })
       })
 
       describe("range", () => {
@@ -1648,7 +1619,8 @@ describe.each([
         })
       })
 
-    isSqs &&
+    isInternal &&
+      !isInMemory &&
       describe("AI Column", () => {
         const UNEXISTING_AI_COLUMN = "Real LLM Response"
 
@@ -1879,47 +1851,43 @@ describe.each([
         })
       })
 
-      // Range searches against bigints don't seem to work at all in Lucene, and I
-      // couldn't figure out why. Given that we're replacing Lucene with SQS,
-      // we've decided not to spend time on it.
-      !isLucene &&
-        describe("range", () => {
-          it("successfully finds a row", async () => {
-            await expectQuery({
-              range: { num: { low: SMALL, high: "5" } },
-            }).toContainExactly([{ num: SMALL }])
-          })
-
-          it("successfully finds multiple rows", async () => {
-            await expectQuery({
-              range: { num: { low: SMALL, high: MEDIUM } },
-            }).toContainExactly([{ num: SMALL }, { num: MEDIUM }])
-          })
-
-          it("successfully finds a row with a high bound", async () => {
-            await expectQuery({
-              range: { num: { low: MEDIUM, high: BIG } },
-            }).toContainExactly([{ num: MEDIUM }, { num: BIG }])
-          })
-
-          it("successfully finds no rows", async () => {
-            await expectQuery({
-              range: { num: { low: "5", high: "5" } },
-            }).toFindNothing()
-          })
-
-          it("can search using just a low value", async () => {
-            await expectQuery({
-              range: { num: { low: MEDIUM } },
-            }).toContainExactly([{ num: MEDIUM }, { num: BIG }])
-          })
-
-          it("can search using just a high value", async () => {
-            await expectQuery({
-              range: { num: { high: MEDIUM } },
-            }).toContainExactly([{ num: SMALL }, { num: MEDIUM }])
-          })
+      describe("range", () => {
+        it("successfully finds a row", async () => {
+          await expectQuery({
+            range: { num: { low: SMALL, high: "5" } },
+          }).toContainExactly([{ num: SMALL }])
         })
+
+        it("successfully finds multiple rows", async () => {
+          await expectQuery({
+            range: { num: { low: SMALL, high: MEDIUM } },
+          }).toContainExactly([{ num: SMALL }, { num: MEDIUM }])
+        })
+
+        it("successfully finds a row with a high bound", async () => {
+          await expectQuery({
+            range: { num: { low: MEDIUM, high: BIG } },
+          }).toContainExactly([{ num: MEDIUM }, { num: BIG }])
+        })
+
+        it("successfully finds no rows", async () => {
+          await expectQuery({
+            range: { num: { low: "5", high: "5" } },
+          }).toFindNothing()
+        })
+
+        it("can search using just a low value", async () => {
+          await expectQuery({
+            range: { num: { low: MEDIUM } },
+          }).toContainExactly([{ num: MEDIUM }, { num: BIG }])
+        })
+
+        it("can search using just a high value", async () => {
+          await expectQuery({
+            range: { num: { high: MEDIUM } },
+          }).toContainExactly([{ num: SMALL }, { num: MEDIUM }])
+        })
+      })
     })
 
     isInternal &&
@@ -2016,93 +1984,92 @@ describe.each([
             }).toFindNothing()
           })
 
-          isSqs &&
-            it("can search using just a low value", async () => {
-              await expectQuery({
-                range: { auto: { low: 9 } },
-              }).toContainExactly([{ auto: 9 }, { auto: 10 }])
-            })
+          it("can search using just a low value", async () => {
+            await expectQuery({
+              range: { auto: { low: 9 } },
+            }).toContainExactly([{ auto: 9 }, { auto: 10 }])
+          })
 
-          isSqs &&
-            it("can search using just a high value", async () => {
-              await expectQuery({
-                range: { auto: { high: 2 } },
-              }).toContainExactly([{ auto: 1 }, { auto: 2 }])
-            })
+          it("can search using just a high value", async () => {
+            await expectQuery({
+              range: { auto: { high: 2 } },
+            }).toContainExactly([{ auto: 1 }, { auto: 2 }])
+          })
         })
 
-        isSqs &&
-          describe("sort", () => {
-            it("sorts ascending", async () => {
-              await expectSearch({
-                query: {},
-                sort: "auto",
-                sortOrder: SortOrder.ASCENDING,
-              }).toMatchExactly([
-                { auto: 1 },
-                { auto: 2 },
-                { auto: 3 },
-                { auto: 4 },
-                { auto: 5 },
-                { auto: 6 },
-                { auto: 7 },
-                { auto: 8 },
-                { auto: 9 },
-                { auto: 10 },
-              ])
-            })
-
-            it("sorts descending", async () => {
-              await expectSearch({
-                query: {},
-                sort: "auto",
-                sortOrder: SortOrder.DESCENDING,
-              }).toMatchExactly([
-                { auto: 10 },
-                { auto: 9 },
-                { auto: 8 },
-                { auto: 7 },
-                { auto: 6 },
-                { auto: 5 },
-                { auto: 4 },
-                { auto: 3 },
-                { auto: 2 },
-                { auto: 1 },
-              ])
-            })
-
-            // This is important for pagination. The order of results must always
-            // be stable or pagination will break. We don't want the user to need
-            // to specify an order for pagination to work.
-            it("is stable without a sort specified", async () => {
-              let { rows: fullRowList } = await config.api.row.search(
-                tableOrViewId,
-                {
-                  tableId: tableOrViewId,
-                  query: {},
-                }
-              )
-
-              // repeat the search many times to check the first row is always the same
-              let bookmark: string | number | undefined,
-                hasNextPage: boolean | undefined = true,
-                rowCount: number = 0
-              do {
-                const response = await config.api.row.search(tableOrViewId, {
-                  tableId: tableOrViewId,
-                  limit: 1,
-                  paginate: true,
-                  query: {},
-                  bookmark,
-                })
-                bookmark = response.bookmark
-                hasNextPage = response.hasNextPage
-                expect(response.rows.length).toEqual(1)
-                const foundRow = response.rows[0]
-                expect(foundRow).toEqual(fullRowList[rowCount++])
-              } while (hasNextPage)
-            })
+        describe("sort", () => {
+          it("sorts ascending", async () => {
+            await expectSearch({
+              query: {},
+              sort: "auto",
+              sortOrder: SortOrder.ASCENDING,
+              sortType: SortType.NUMBER,
+            }).toMatchExactly([
+              { auto: 1 },
+              { auto: 2 },
+              { auto: 3 },
+              { auto: 4 },
+              { auto: 5 },
+              { auto: 6 },
+              { auto: 7 },
+              { auto: 8 },
+              { auto: 9 },
+              { auto: 10 },
+            ])
           })
+
+          it("sorts descending", async () => {
+            await expectSearch({
+              query: {},
+              sort: "auto",
+              sortOrder: SortOrder.DESCENDING,
+              sortType: SortType.NUMBER,
+            }).toMatchExactly([
+              { auto: 10 },
+              { auto: 9 },
+              { auto: 8 },
+              { auto: 7 },
+              { auto: 6 },
+              { auto: 5 },
+              { auto: 4 },
+              { auto: 3 },
+              { auto: 2 },
+              { auto: 1 },
+            ])
+          })
+
+          // This is important for pagination. The order of results must always
+          // be stable or pagination will break. We don't want the user to need
+          // to specify an order for pagination to work.
+          it("is stable without a sort specified", async () => {
+            let { rows: fullRowList } = await config.api.row.search(
+              tableOrViewId,
+              {
+                tableId: tableOrViewId,
+                query: {},
+              }
+            )
+
+            // repeat the search many times to check the first row is always the same
+            let bookmark: string | number | undefined,
+              hasNextPage: boolean | undefined = true,
+              rowCount: number = 0
+            do {
+              const response = await config.api.row.search(tableOrViewId, {
+                tableId: tableOrViewId,
+                limit: 1,
+                paginate: true,
+                query: {},
+                bookmark,
+              })
+              bookmark = response.bookmark
+              hasNextPage = response.hasNextPage
+              expect(response.rows.length).toEqual(1)
+              const foundRow = response.rows[0]
+              expect(foundRow).toEqual(fullRowList[rowCount++])
+            } while (hasNextPage)
+          })
+        })
 
         describe("pagination", () => {
           it("should paginate through all rows", async () => {
@@ -2392,11 +2359,9 @@ describe.each([
       })
     })
 
-    // This will never work for Lucene.
-    !isLucene &&
-      // It also can't work for in-memory searching because the related table name
-      // isn't available.
-      !isInMemory &&
+    // It also can't work for in-memory searching because the related table name
+    // isn't available.
+    !isInMemory &&
       describe.each([
         RelationshipType.ONE_TO_MANY,
         RelationshipType.MANY_TO_ONE,
@@ -2847,41 +2812,39 @@ describe.each([
         })
       })
 
-    // lucene can't count the total rows
-    !isLucene &&
-      describe("row counting", () => {
-        beforeAll(async () => {
-          tableOrViewId = await createTableOrView({
-            name: {
-              name: "name",
-              type: FieldType.STRING,
-            },
-          })
-          await createRows([{ name: "a" }, { name: "b" }])
+    describe("row counting", () => {
+      beforeAll(async () => {
+        tableOrViewId = await createTableOrView({
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
         })
-
-        it("should be able to count rows when option set", async () => {
-          await expectSearch({
-            countRows: true,
-            query: {
-              notEmpty: {
-                name: true,
-              },
-            },
-          }).toMatch({ totalRows: 2, rows: expect.any(Array) })
-        })
-
-        it("shouldn't count rows when option is not set", async () => {
-          await expectSearch({
-            countRows: false,
-            query: {
-              notEmpty: {
-                name: true,
-              },
-            },
-          }).toNotHaveProperty(["totalRows"])
-        })
+        await createRows([{ name: "a" }, { name: "b" }])
       })
+
+      it("should be able to count rows when option set", async () => {
+        await expectSearch({
+          countRows: true,
+          query: {
+            notEmpty: {
+              name: true,
+            },
+          },
+        }).toMatch({ totalRows: 2, rows: expect.any(Array) })
+      })
+
+      it("shouldn't count rows when option is not set", async () => {
+        await expectSearch({
+          countRows: false,
+          query: {
+            notEmpty: {
+              name: true,
+            },
+          },
+        }).toNotHaveProperty(["totalRows"])
+      })
+    })
 
     describe("Invalid column definitions", () => {
       beforeAll(async () => {
@@ -3065,9 +3028,7 @@ describe.each([
         })
       })
 
-    // This was never actually supported in Lucene but SQS does support it, so may
-    // as well have a test for it.
-    ;(isSqs || isInMemory) &&
+    isInternal &&
       describe("space at start of column name", () => {
         beforeAll(async () => {
           tableOrViewId = await createTableOrView({
@@ -3100,7 +3061,7 @@ describe.each([
         })
       })
 
-    isSqs &&
+    isInternal &&
       !isView &&
       describe("duplicate columns", () => {
         beforeAll(async () => {
@@ -3262,291 +3223,286 @@ describe.each([
         })
       })
 
-    !isLucene &&
-      describe("$and", () => {
-        beforeAll(async () => {
-          tableOrViewId = await createTableOrView({
-            age: { name: "age", type: FieldType.NUMBER },
-            name: { name: "name", type: FieldType.STRING },
-          })
-          await createRows([
-            { age: 1, name: "Jane" },
-            { age: 10, name: "Jack" },
-            { age: 7, name: "Hanna" },
-            { age: 8, name: "Jan" },
-          ])
+    describe("$and", () => {
+      beforeAll(async () => {
+        tableOrViewId = await createTableOrView({
+          age: { name: "age", type: FieldType.NUMBER },
+          name: { name: "name", type: FieldType.STRING },
         })
+        await createRows([
+          { age: 1, name: "Jane" },
+          { age: 10, name: "Jack" },
+          { age: 7, name: "Hanna" },
+          { age: 8, name: "Jan" },
+        ])
+      })
 
-        it("successfully finds a row for one level condition", async () => {
-          await expectQuery({
-            $and: {
-              conditions: [{ equal: { age: 10 } }, { equal: { name: "Jack" } }],
-            },
-          }).toContainExactly([{ age: 10, name: "Jack" }])
-        })
+      it("successfully finds a row for one level condition", async () => {
+        await expectQuery({
+          $and: {
+            conditions: [{ equal: { age: 10 } }, { equal: { name: "Jack" } }],
+          },
+        }).toContainExactly([{ age: 10, name: "Jack" }])
+      })
 
-        it("successfully finds a row for one level with multiple conditions", async () => {
-          await expectQuery({
-            $and: {
-              conditions: [{ equal: { age: 10 } }, { equal: { name: "Jack" } }],
-            },
-          }).toContainExactly([{ age: 10, name: "Jack" }])
-        })
+      it("successfully finds a row for one level with multiple conditions", async () => {
+        await expectQuery({
+          $and: {
+            conditions: [{ equal: { age: 10 } }, { equal: { name: "Jack" } }],
+          },
+        }).toContainExactly([{ age: 10, name: "Jack" }])
+      })
 
-        it("successfully finds multiple rows for one level with multiple conditions", async () => {
-          await expectQuery({
-            $and: {
-              conditions: [
-                { range: { age: { low: 1, high: 9 } } },
-                { string: { name: "Ja" } },
-              ],
-            },
-          }).toContainExactly([
-            { age: 1, name: "Jane" },
-            { age: 8, name: "Jan" },
-          ])
-        })
+      it("successfully finds multiple rows for one level with multiple conditions", async () => {
+        await expectQuery({
+          $and: {
+            conditions: [
+              { range: { age: { low: 1, high: 9 } } },
+              { string: { name: "Ja" } },
+            ],
+          },
+        }).toContainExactly([
+          { age: 1, name: "Jane" },
+          { age: 8, name: "Jan" },
+        ])
+      })
 
-        it("successfully finds rows for nested filters", async () => {
-          await expectQuery({
-            $and: {
-              conditions: [
-                {
-                  $and: {
-                    conditions: [
-                      {
-                        range: { age: { low: 1, high: 10 } },
-                      },
-                      { string: { name: "Ja" } },
-                    ],
-                  },
-                  equal: { name: "Jane" },
-                },
-              ],
-            },
-          }).toContainExactly([{ age: 1, name: "Jane" }])
-        })
-
-        it("returns nothing when filtering out all data", async () => {
-          await expectQuery({
-            $and: {
-              conditions: [{ equal: { age: 7 } }, { equal: { name: "Jack" } }],
-            },
-          }).toFindNothing()
-        })
-
-        !isInMemory &&
-          it("validates conditions that are not objects", async () => {
-            await expect(
-              expectQuery({
+      it("successfully finds rows for nested filters", async () => {
+        await expectQuery({
+          $and: {
+            conditions: [
+              {
                 $and: {
                   conditions: [
-                    { equal: { age: 10 } },
-                    "invalidCondition" as any,
-                  ],
-                },
-              }).toFindNothing()
-            ).rejects.toThrow(
-              'Invalid body - "query.$and.conditions[1]" must be of type object'
-            )
-          })
-
-        !isInMemory &&
-          it("validates $and without conditions", async () => {
-            await expect(
-              expectQuery({
-                $and: {
-                  conditions: [
-                    { equal: { age: 10 } },
                     {
-                      $and: {
-                        conditions: undefined as any,
-                      },
+                      range: { age: { low: 1, high: 10 } },
                     },
+                    { string: { name: "Ja" } },
                   ],
                 },
-              }).toFindNothing()
-            ).rejects.toThrow(
-              'Invalid body - "query.$and.conditions[1].$and.conditions" is required'
-            )
-          })
+                equal: { name: "Jane" },
+              },
+            ],
+          },
+        }).toContainExactly([{ age: 1, name: "Jane" }])
+      })
 
-        // onEmptyFilter cannot be sent to view searches
-        !isView &&
-          it("returns no rows when onEmptyFilter set to none", async () => {
-            await expectSearch({
-              query: {
-                onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-                $and: {
-                  conditions: [{ equal: { name: "" } }],
-                },
+      it("returns nothing when filtering out all data", async () => {
+        await expectQuery({
+          $and: {
+            conditions: [{ equal: { age: 7 } }, { equal: { name: "Jack" } }],
+          },
+        }).toFindNothing()
+      })
+
+      !isInMemory &&
+        it("validates conditions that are not objects", async () => {
+          await expect(
+            expectQuery({
+              $and: {
+                conditions: [{ equal: { age: 10 } }, "invalidCondition" as any],
               },
             }).toFindNothing()
-          })
+          ).rejects.toThrow(
+            'Invalid body - "query.$and.conditions[1]" must be of type object'
+          )
+        })
 
-        it("returns all rows when onEmptyFilter set to all", async () => {
+      !isInMemory &&
+        it("validates $and without conditions", async () => {
+          await expect(
+            expectQuery({
+              $and: {
+                conditions: [
+                  { equal: { age: 10 } },
+                  {
+                    $and: {
+                      conditions: undefined as any,
+                    },
+                  },
+                ],
+              },
+            }).toFindNothing()
+          ).rejects.toThrow(
+            'Invalid body - "query.$and.conditions[1].$and.conditions" is required'
+          )
+        })
+
+      // onEmptyFilter cannot be sent to view searches
+      !isView &&
+        it("returns no rows when onEmptyFilter set to none", async () => {
           await expectSearch({
             query: {
-              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              onEmptyFilter: EmptyFilterOption.RETURN_NONE,
               $and: {
                 conditions: [{ equal: { name: "" } }],
               },
             },
-          }).toHaveLength(4)
-        })
-      })
-
-    !isLucene &&
-      describe("$or", () => {
-        beforeAll(async () => {
-          tableOrViewId = await createTableOrView({
-            age: { name: "age", type: FieldType.NUMBER },
-            name: { name: "name", type: FieldType.STRING },
-          })
-          await createRows([
-            { age: 1, name: "Jane" },
-            { age: 10, name: "Jack" },
-            { age: 7, name: "Hanna" },
-            { age: 8, name: "Jan" },
-          ])
-        })
-
-        it("successfully finds a row for one level condition", async () => {
-          await expectQuery({
-            $or: {
-              conditions: [{ equal: { age: 7 } }, { equal: { name: "Jack" } }],
-            },
-          }).toContainExactly([
-            { age: 10, name: "Jack" },
-            { age: 7, name: "Hanna" },
-          ])
-        })
-
-        it("successfully finds a row for one level with multiple conditions", async () => {
-          await expectQuery({
-            $or: {
-              conditions: [{ equal: { age: 7 } }, { equal: { name: "Jack" } }],
-            },
-          }).toContainExactly([
-            { age: 10, name: "Jack" },
-            { age: 7, name: "Hanna" },
-          ])
-        })
-
-        it("successfully finds multiple rows for one level with multiple conditions", async () => {
-          await expectQuery({
-            $or: {
-              conditions: [
-                { range: { age: { low: 1, high: 9 } } },
-                { string: { name: "Jan" } },
-              ],
-            },
-          }).toContainExactly([
-            { age: 1, name: "Jane" },
-            { age: 7, name: "Hanna" },
-            { age: 8, name: "Jan" },
-          ])
-        })
-
-        it("successfully finds rows for nested filters", async () => {
-          await expectQuery({
-            $or: {
-              conditions: [
-                {
-                  $or: {
-                    conditions: [
-                      {
-                        range: { age: { low: 1, high: 7 } },
-                      },
-                      { string: { name: "Jan" } },
-                    ],
-                  },
-                  equal: { name: "Jane" },
-                },
-              ],
-            },
-          }).toContainExactly([
-            { age: 1, name: "Jane" },
-            { age: 7, name: "Hanna" },
-            { age: 8, name: "Jan" },
-          ])
-        })
-
-        it("returns nothing when filtering out all data", async () => {
-          await expectQuery({
-            $or: {
-              conditions: [{ equal: { age: 6 } }, { equal: { name: "John" } }],
-            },
           }).toFindNothing()
         })
 
-        it("can nest $and under $or filters", async () => {
-          await expectQuery({
-            $or: {
-              conditions: [
-                {
-                  $and: {
-                    conditions: [
-                      {
-                        range: { age: { low: 1, high: 8 } },
-                      },
-                      { equal: { name: "Jan" } },
-                    ],
-                  },
-                  equal: { name: "Jane" },
-                },
-              ],
-            },
-          }).toContainExactly([
-            { age: 1, name: "Jane" },
-            { age: 8, name: "Jan" },
-          ])
-        })
-
-        it("can nest $or under $and filters", async () => {
-          await expectQuery({
+      it("returns all rows when onEmptyFilter set to all", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
             $and: {
-              conditions: [
-                {
-                  $or: {
-                    conditions: [
-                      {
-                        range: { age: { low: 1, high: 8 } },
-                      },
-                      { equal: { name: "Jan" } },
-                    ],
-                  },
-                  equal: { name: "Jane" },
-                },
-              ],
+              conditions: [{ equal: { name: "" } }],
             },
-          }).toContainExactly([{ age: 1, name: "Jane" }])
+          },
+        }).toHaveLength(4)
+      })
+    })
+
+    describe("$or", () => {
+      beforeAll(async () => {
+        tableOrViewId = await createTableOrView({
+          age: { name: "age", type: FieldType.NUMBER },
+          name: { name: "name", type: FieldType.STRING },
         })
+        await createRows([
+          { age: 1, name: "Jane" },
+          { age: 10, name: "Jack" },
+          { age: 7, name: "Hanna" },
+          { age: 8, name: "Jan" },
+        ])
+      })
 
-        // onEmptyFilter cannot be sent to view searches
-        !isView &&
-          it("returns no rows when onEmptyFilter set to none", async () => {
-            await expectSearch({
-              query: {
-                onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+      it("successfully finds a row for one level condition", async () => {
+        await expectQuery({
+          $or: {
+            conditions: [{ equal: { age: 7 } }, { equal: { name: "Jack" } }],
+          },
+        }).toContainExactly([
+          { age: 10, name: "Jack" },
+          { age: 7, name: "Hanna" },
+        ])
+      })
+
+      it("successfully finds a row for one level with multiple conditions", async () => {
+        await expectQuery({
+          $or: {
+            conditions: [{ equal: { age: 7 } }, { equal: { name: "Jack" } }],
+          },
+        }).toContainExactly([
+          { age: 10, name: "Jack" },
+          { age: 7, name: "Hanna" },
+        ])
+      })
+
+      it("successfully finds multiple rows for one level with multiple conditions", async () => {
+        await expectQuery({
+          $or: {
+            conditions: [
+              { range: { age: { low: 1, high: 9 } } },
+              { string: { name: "Jan" } },
+            ],
+          },
+        }).toContainExactly([
+          { age: 1, name: "Jane" },
+          { age: 7, name: "Hanna" },
+          { age: 8, name: "Jan" },
+        ])
+      })
+
+      it("successfully finds rows for nested filters", async () => {
+        await expectQuery({
+          $or: {
+            conditions: [
+              {
                 $or: {
-                  conditions: [{ equal: { name: "" } }],
+                  conditions: [
+                    {
+                      range: { age: { low: 1, high: 7 } },
+                    },
+                    { string: { name: "Jan" } },
+                  ],
                 },
+                equal: { name: "Jane" },
               },
-            }).toFindNothing()
-          })
+            ],
+          },
+        }).toContainExactly([
+          { age: 1, name: "Jane" },
+          { age: 7, name: "Hanna" },
+          { age: 8, name: "Jan" },
+        ])
+      })
 
-        it("returns all rows when onEmptyFilter set to all", async () => {
+      it("returns nothing when filtering out all data", async () => {
+        await expectQuery({
+          $or: {
+            conditions: [{ equal: { age: 6 } }, { equal: { name: "John" } }],
+          },
+        }).toFindNothing()
+      })
+
+      it("can nest $and under $or filters", async () => {
+        await expectQuery({
+          $or: {
+            conditions: [
+              {
+                $and: {
+                  conditions: [
+                    {
+                      range: { age: { low: 1, high: 8 } },
+                    },
+                    { equal: { name: "Jan" } },
+                  ],
+                },
+                equal: { name: "Jane" },
+              },
+            ],
+          },
+        }).toContainExactly([
+          { age: 1, name: "Jane" },
+          { age: 8, name: "Jan" },
+        ])
+      })
+
+      it("can nest $or under $and filters", async () => {
+        await expectQuery({
+          $and: {
+            conditions: [
+              {
+                $or: {
+                  conditions: [
+                    {
+                      range: { age: { low: 1, high: 8 } },
+                    },
+                    { equal: { name: "Jan" } },
+                  ],
+                },
+                equal: { name: "Jane" },
+              },
+            ],
+          },
+        }).toContainExactly([{ age: 1, name: "Jane" }])
+      })
+
+      // onEmptyFilter cannot be sent to view searches
+      !isView &&
+        it("returns no rows when onEmptyFilter set to none", async () => {
           await expectSearch({
             query: {
-              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              onEmptyFilter: EmptyFilterOption.RETURN_NONE,
               $or: {
                 conditions: [{ equal: { name: "" } }],
               },
             },
-          }).toHaveLength(4)
+          }).toFindNothing()
         })
+
+      it("returns all rows when onEmptyFilter set to all", async () => {
+        await expectSearch({
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+            $or: {
+              conditions: [{ equal: { name: "" } }],
+            },
+          },
+        }).toHaveLength(4)
       })
+    })
 
     isSql &&
       describe("max related columns", () => {
@@ -3590,8 +3546,7 @@ describe.each([
         })
       })
 
-    isSql &&
-      !isSqs &&
+    !isInternal &&
       describe("SQL injection", () => {
         const badStrings = [
           "1; DROP TABLE %table_name%;",

@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 import { outputProcessing } from ".."
 import { generator, structures } from "@budibase/backend-core/tests"
-import { features } from "@budibase/backend-core"
+
 import * as bbReferenceProcessor from "../bbReferenceProcessor"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
@@ -21,7 +21,6 @@ jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
 
 describe("rowProcessor - outputProcessing", () => {
   const config = new TestConfiguration()
-  let cleanupFlags: () => void = () => {}
 
   beforeAll(async () => {
     await config.init()
@@ -33,11 +32,6 @@ describe("rowProcessor - outputProcessing", () => {
 
   beforeEach(() => {
     jest.resetAllMocks()
-    cleanupFlags = features.testutils.setFeatureFlags("*", { SQS: true })
-  })
-
-  afterEach(() => {
-    cleanupFlags()
   })
 
   const processOutputBBReferenceMock =
