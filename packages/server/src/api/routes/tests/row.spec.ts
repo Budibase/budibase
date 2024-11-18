@@ -9,13 +9,7 @@ import {
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
-import {
-  context,
-  InternalTable,
-  tenancy,
-  features,
-  utils,
-} from "@budibase/backend-core"
+import { context, InternalTable, tenancy, utils } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AIOperationEnum,
@@ -2864,13 +2858,7 @@ describe.each([
 
       let auxData: Row[] = []
 
-      let flagCleanup: (() => void) | undefined
-
       beforeAll(async () => {
-        flagCleanup = features.testutils.setFeatureFlags("*", {
-          ENRICHED_RELATIONSHIPS: true,
-        })
-
         const aux2Table = await config.api.table.save(saveTableRequest())
         const aux2Data = await config.api.row.save(aux2Table._id!, {})
 
@@ -3017,10 +3005,6 @@ describe.each([
         viewId = view.id
       })
 
-      afterAll(() => {
-        flagCleanup?.()
-      })
-
       const testScenarios: [string, (row: Row) => Promise<Row> | Row][] = [
         ["get row", (row: Row) => config.api.row.get(viewId, row._id!)],
         [
@@ -3089,68 +3073,6 @@ describe.each([
                 },
               ],
             })
-          )
-        }
-      )
-
-      it.each(testScenarios)(
-        "does not enrich relationships when not enabled (via %s)",
-        async (__, retrieveDelegate) => {
-          await features.testutils.withFeatureFlags(
-            "*",
-            {
-              ENRICHED_RELATIONSHIPS: false,
-            },
-            async () => {
-              const otherRows = _.sampleSize(auxData, 5)
-
-              const row = await config.api.row.save(viewId, {
-                title: generator.word(),
-                relWithNoSchema: [otherRows[0]],
-                relWithEmptySchema: [otherRows[1]],
-                relWithFullSchema: [otherRows[2]],
-                relWithHalfSchema: [otherRows[3]],
-                relWithIllegalSchema: [otherRows[4]],
-              })
-
-              const retrieved = await retrieveDelegate(row)
-
-              expect(retrieved).toEqual(
-                expect.objectContaining({
-                  title: row.title,
-                  relWithNoSchema: [
-                    {
-                      _id: otherRows[0]._id,
-                      primaryDisplay: otherRows[0].name,
-                    },
-                  ],
-                  relWithEmptySchema: [
-                    {
-                      _id: otherRows[1]._id,
-                      primaryDisplay: otherRows[1].name,
-                    },
-                  ],
-                  relWithFullSchema: [
-                    {
-                      _id: otherRows[2]._id,
-                      primaryDisplay: otherRows[2].name,
-                    },
-                  ],
-                  relWithHalfSchema: [
-                    {
-                      _id: otherRows[3]._id,
-                      primaryDisplay: otherRows[3].name,
-                    },
-                  ],
-                  relWithIllegalSchema: [
-                    {
-                      _id: otherRows[4]._id,
-                      primaryDisplay: otherRows[4].name,
-                    },
-                  ],
-                })
-              )
-            }
           )
         }
       )
