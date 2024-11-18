@@ -48,7 +48,7 @@
   </svelte:fragment>
   <ColumnsSettingContent
     columns={$tableColumns}
-    canSetRelationshipSchemas={isEnabled(FeatureFlag.ENRICHED_RELATIONSHIPS)}
+    canSetRelationshipSchemas
     {permissions}
   />
 </DetailPopover>
