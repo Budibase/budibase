@@ -269,8 +269,6 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 export const flags = new FlagSet({
   [FeatureFlag.DEFAULT_VALUES]: Flag.boolean(true),
   [FeatureFlag.AUTOMATION_BRANCHING]: Flag.boolean(true),
-  [FeatureFlag.SQS]: Flag.boolean(true),
-  [FeatureFlag.ENRICHED_RELATIONSHIPS]: Flag.boolean(true),
   [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(true),
   [FeatureFlag.BUDIBASE_AI]: Flag.boolean(true),
 })
