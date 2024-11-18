@@ -62,6 +62,7 @@ export default async function setup() {
         },
       ])
       .withLabels({ "com.budibase": "true" })
+      .withTmpFs({ "/data": "rw" })
       .withReuse()
       .withWaitStrategy(
         Wait.forSuccessfulCommand(
@@ -72,6 +73,7 @@ export default async function setup() {
     const minio = new GenericContainer("minio/minio")
       .withExposedPorts(9000)
       .withCommand(["server", "/data"])
+      .withTmpFs({ "/data": "rw" })
       .withEnvironment({
         MINIO_ACCESS_KEY: "budibase",
         MINIO_SECRET_KEY: "budibase",
