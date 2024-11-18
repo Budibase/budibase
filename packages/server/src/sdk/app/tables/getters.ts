@@ -1,4 +1,4 @@
-import { context, features } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
@@ -12,7 +12,6 @@ import {
   TableResponse,
   TableSourceType,
   TableViewsResponse,
-  FeatureFlag,
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
@@ -49,10 +48,7 @@ export async function processTable(table: Table): Promise<Table> {
       type: "table",
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
-    }
-    const sqsEnabled = await features.flags.isEnabled(FeatureFlag.SQS)
-    if (sqsEnabled) {
-      processed.sql = true
+      sql: true,
     }
     return processed
   }
