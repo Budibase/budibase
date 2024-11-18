@@ -3308,6 +3308,14 @@ datasourceDescribe(
         expect(rows[0].formula).toBe(2)
       })
 
+      it("should coerce handlebars to string (default)", async () => {
+        await updateFormulaColumn("{{ add 1 1 }}", {
+          responseType: FieldType.STRING,
+        })
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows[0].formula).toBe("2")
+      })
+
       isInternal &&
         it("should coerce a static handlebars formula", async () => {
           await updateFormulaColumn(encodeJS("return 1"), {
