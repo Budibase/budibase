@@ -47,7 +47,7 @@
     "pino": "8.11.0",
     "pino-http": "8.3.3",
     "posthog-node": "4.0.1",
-    "pouchdb": "^9.0.0",
+    "pouchdb": "9.0.0",
     "pouchdb-find": "9.0.0",
     "redlock": "4.2.0",
     "rotating-file-stream": "3.1.0",
