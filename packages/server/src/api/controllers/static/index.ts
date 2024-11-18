@@ -209,6 +209,7 @@ export const serveApp = async function (ctx: UserCtx) {
             ? objectStore.getGlobalFileUrl("settings", "logoUrl")
             : "",
         appMigrating: needMigrations,
+        nonce: ctx.state.nonce,
       })
       const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
@@ -217,6 +218,7 @@ export const serveApp = async function (ctx: UserCtx) {
         css: `:root{${themeVariables}} ${css.code}`,
         appId,
         embedded: bbHeaderEmbed,
+        nonce: ctx.state.nonce,
       })
     } else {
       // just return the app info for jest to assert on
@@ -258,6 +260,7 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
     const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
     ctx.body = await processString(previewHbs, {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
+      nonce: ctx.state.nonce,
     })
   } else {
     // just return the app info for jest to assert on
