@@ -24,7 +24,7 @@ export async function getDatasource(): Promise<Datasource> {
         .withWaitStrategy(
           Wait.forSuccessfulCommand(
             "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password_123 -q 'SELECT 1'"
-          )
+          ).withStartupTimeout(20000)
         )
     )
   }

@@ -1,5 +1,5 @@
 import { mocks, structures } from "@budibase/backend-core/tests"
-import { context, events, features } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
 import { Event, IdentityType } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
 
@@ -12,19 +12,14 @@ const BASE_IDENTITY = {
 const USER_AUDIT_LOG_COUNT = 3
 const APP_ID = "app_1"
 
-describe.each(["lucene", "sql"])("/api/global/auditlogs (%s)", method => {
+describe("/api/global/auditlogs (%s)", () => {
   const config = new TestConfiguration()
-  let envCleanup: (() => void) | undefined
 
   beforeAll(async () => {
-    envCleanup = features.testutils.setFeatureFlags("*", {
-      SQS: method === "sql",
-    })
     await config.beforeAll()
   })
 
   afterAll(async () => {
-    envCleanup?.()
     await config.afterAll()
   })
 

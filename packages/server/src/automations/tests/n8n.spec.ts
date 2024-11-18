@@ -16,7 +16,7 @@ describe("test the outgoing webhook action", () => {
 
   it("should be able to run the action and default to 'get'", async () => {
     nock("http://www.example.com/").get("/").reply(200, { foo: "bar" })
-    const res = await runStep(actions.n8n.stepId, {
+    const res = await runStep(config, actions.n8n.stepId, {
       url: "http://www.example.com",
       body: {
         test: "IGNORE_ME",
@@ -30,7 +30,7 @@ describe("test the outgoing webhook action", () => {
     nock("http://www.example.com/")
       .post("/", { name: "Adam", age: 9 })
       .reply(200)
-    const res = await runStep(actions.n8n.stepId, {
+    const res = await runStep(config, actions.n8n.stepId, {
       body: {
         value: JSON.stringify({ name: "Adam", age: 9 }),
       },
@@ -42,7 +42,7 @@ describe("test the outgoing webhook action", () => {
 
   it("should return a 400 if the JSON payload string is malformed", async () => {
     const payload = `{ value1 1 }`
-    const res = await runStep(actions.n8n.stepId, {
+    const res = await runStep(config, actions.n8n.stepId, {
       value1: "ONE",
       body: {
         value: payload,
@@ -59,7 +59,7 @@ describe("test the outgoing webhook action", () => {
     nock("http://www.example.com/")
       .head("/", body => body === "")
       .reply(200)
-    const res = await runStep(actions.n8n.stepId, {
+    const res = await runStep(config, actions.n8n.stepId, {
       url: "http://www.example.com",
       method: "HEAD",
       body: {
