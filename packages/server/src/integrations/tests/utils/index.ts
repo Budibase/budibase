@@ -101,12 +101,9 @@ function createDummyTest() {
   })
 }
 
-export function datasourceDescribe(
-  opts: DatasourceDescribeOpts
-): DatabaseName[] {
+export function datasourceDescribe(opts: DatasourceDescribeOpts) {
   if (process.env.DATASOURCE === "none") {
     createDummyTest()
-    process.exit(0)
   }
 
   const { only, exclude } = opts
@@ -128,15 +125,11 @@ export function datasourceDescribe(
 
   if (databases.length === 0) {
     createDummyTest()
-    process.exit(0)
   }
 
-  return databases
-}
-
-export function datasourceProps(dbName: DatabaseName) {
   const config = new TestConfiguration()
-  return {
+  return databases.map(dbName => ({
+    dbName,
     config,
     dsProvider: () => createDatasources(config, dbName),
     isInternal: dbName === DatabaseName.SQS,
@@ -153,7 +146,7 @@ export function datasourceProps(dbName: DatabaseName) {
     isMongodb: dbName === DatabaseName.MONGODB,
     isMSSQL: dbName === DatabaseName.SQL_SERVER,
     isOracle: dbName === DatabaseName.ORACLE,
-  }
+  }))
 }
 
 function getDatasource(
