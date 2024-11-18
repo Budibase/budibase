@@ -19,8 +19,7 @@ import {
 } from "@budibase/types"
 import {
   DatabaseName,
-  getDatasource,
-  knexClient,
+  datasourceDescribe,
 } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import nock from "nock"
@@ -69,7 +68,7 @@ describe("/datasources", () => {
         {
           status: 500,
           body: {
-            message: "No datasource implementation found.",
+            message: 'No datasource implementation found called: "invalid"',
           },
         }
       )
@@ -163,21 +162,23 @@ describe("/datasources", () => {
       })
     })
   })
+})
 
-  describe.each([
-    [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-    [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-    [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-    [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-    [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
-  ])("%s", (_, dsProvider) => {
+datasourceDescribe(
+  { name: "%s", exclude: [DatabaseName.MONGODB, DatabaseName.SQS] },
+  ({ config, dsProvider }) => {
+    let datasource: Datasource
     let rawDatasource: Datasource
     let client: Knex
 
     beforeEach(async () => {
-      rawDatasource = await dsProvider
-      datasource = await config.api.datasource.create(rawDatasource)
-      client = await knexClient(rawDatasource)
+      const ds = await dsProvider()
+      rawDatasource = ds.rawDatasource!
+      datasource = ds.datasource!
+      client = ds.client!
+
+      jest.clearAllMocks()
+      nock.cleanAll()
     })
 
     describe("get", () => {
@@ -491,5 +492,5 @@ describe("/datasources", () => {
         )
       })
     })
-  })
-})
+  }
+)
