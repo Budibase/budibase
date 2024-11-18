@@ -147,7 +147,10 @@ jobs:
           fi
 
   test-server:
-    runs-on: budi-tubby-tornado-quad-core-300gb
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        datasource: [mssql, mysql, postgres, mongodb, mariadb, oracle, none]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -170,12 +173,19 @@ jobs:
 
       - name: Pull testcontainers images
         run: |
-          docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }} &
-          docker pull mysql@${{ steps.dotenv.outputs.MYSQL_SHA }} &
-          docker pull postgres@${{ steps.dotenv.outputs.POSTGRES_SHA }} &
-          docker pull mongo@${{ steps.dotenv.outputs.MONGODB_SHA }} &
-          docker pull mariadb@${{ steps.dotenv.outputs.MARIADB_SHA }} &
-          docker pull budibase/oracle-database:23.2-slim-faststart &
+          if [ "${{ matrix.datasource }}" == "mssql" ]; then
+            docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}
+          elif [ "${{ matrix.datasource }}" == "mysql" ]; then
+            docker pull mysql@${{ steps.dotenv.outputs.MYSQL_SHA }}
+          elif [ "${{ matrix.datasource }}" == "postgres" ]; then
+            docker pull postgres@${{ steps.dotenv.outputs.POSTGRES_SHA }}
+          elif [ "${{ matrix.datasource }}" == "mongodb" ]; then
+            docker pull mongo@${{ steps.dotenv.outputs.MONGODB_SHA }}
+          elif [ "${{ matrix.datasource }}" == "mariadb" ]; then
+            docker pull mariadb@${{ steps.dotenv.outputs.MARIADB_SHA }}
+          elif [ "${{ matrix.datasource }}" == "oracle" ]; then
+            docker pull budibase/oracle-database:23.2-slim-faststart
+          fi
           docker pull minio/minio &
           docker pull redis &
           docker pull testcontainers/ryuk:0.5.1 &
@@ -186,12 +196,24 @@ jobs:
       - run: yarn --frozen-lockfile
 
       - name: Test server
+        env:
+          DATASOURCE: ${{ matrix.datasource }}
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            node scripts/run-affected.js --task=test --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
-          else
-            yarn test --scope=@budibase/server
+            AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
+            if [ -z "$AFFECTED" ]; then
+              echo "No affected tests to run"
+              exit 0
+            fi
           fi
+
+          FILTER="./src/tests/filters/datasource-tests.js"
+          if [ "${{ matrix.datasource }}" == "none" ]; then
+            FILTER="./src/tests/filters/non-datasource-tests.js"
+          fi
+
+          cd packages/server
+          yarn test --filter $FILTER --passWithNoTests
 
   check-pro-submodule:
     runs-on: ubuntu-latest

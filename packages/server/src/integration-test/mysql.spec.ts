@@ -1,10 +1,5 @@
-import * as setup from "../api/routes/tests/utilities"
 import { Datasource, FieldType } from "@budibase/types"
-import {
-  DatabaseName,
-  getDatasource,
-  knexClient,
-} from "../integrations/tests/utils"
+import { DatabaseName, datasourceDescribe } from "../integrations/tests/utils"
 import { generator } from "@budibase/backend-core/tests"
 import { Knex } from "knex"
 
@@ -15,31 +10,24 @@ function uniqueTableName(length?: number): string {
     .substring(0, length || 10)
 }
 
-const config = setup.getConfig()!
-
-describe("mysql integrations", () => {
-  let datasource: Datasource
-  let client: Knex
-
-  beforeAll(async () => {
-    await config.init()
-    const rawDatasource = await getDatasource(DatabaseName.MYSQL)
-    datasource = await config.api.datasource.create(rawDatasource)
-    client = await knexClient(rawDatasource)
-  })
-
-  afterAll(config.end)
-
-  describe("Integration compatibility with mysql search_path", () => {
-    let datasource: Datasource
+datasourceDescribe(
+  {
+    name: "Integration compatibility with mysql search_path",
+    only: [DatabaseName.MYSQL],
+  },
+  ({ config, dsProvider }) => {
     let rawDatasource: Datasource
+    let datasource: Datasource
     let client: Knex
+
     const database = generator.guid()
     const database2 = generator.guid()
 
     beforeAll(async () => {
-      rawDatasource = await getDatasource(DatabaseName.MYSQL)
-      client = await knexClient(rawDatasource)
+      const ds = await dsProvider()
+      rawDatasource = ds.rawDatasource!
+      datasource = ds.datasource!
+      client = ds.client!
 
       await client.raw(`CREATE DATABASE \`${database}\`;`)
       await client.raw(`CREATE DATABASE \`${database2}\`;`)
@@ -87,11 +75,25 @@ describe("mysql integrations", () => {
       const schema = res.datasource.entities![repeated_table_name].schema
       expect(Object.keys(schema).sort()).toEqual(["id", "val1"])
     })
-  })
+  }
+)
 
-  describe("POST /api/datasources/:datasourceId/schema", () => {
+datasourceDescribe(
+  {
+    name: "POST /api/datasources/:datasourceId/schema",
+    only: [DatabaseName.MYSQL],
+  },
+  ({ config, dsProvider }) => {
+    let datasource: Datasource
+    let client: Knex
+
+    beforeAll(async () => {
+      const ds = await dsProvider()
+      datasource = ds.datasource!
+      client = ds.client!
+    })
+
     let tableName: string
-
     beforeEach(async () => {
       tableName = uniqueTableName()
     })
@@ -122,5 +124,5 @@ describe("mysql integrations", () => {
       expect(table).toBeDefined()
       expect(table.schema[enumColumnName].type).toEqual(FieldType.OPTIONS)
     })
-  })
-})
+  }
+)

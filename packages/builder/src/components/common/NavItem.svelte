@@ -84,8 +84,8 @@
   on:mouseleave
   on:click={onClick}
   on:contextmenu
-  ondragover="return false"
-  ondragenter="return false"
+  on:dragover={e => e.preventDefault()}
+  on:dragenter={e => e.preventDefault()}
   {id}
   {style}
   {draggable}
