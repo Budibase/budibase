@@ -16,7 +16,7 @@ export async function getDatasource(): Promise<Datasource> {
         .withWaitStrategy(
           Wait.forSuccessfulCommand(
             "pg_isready -h localhost -p 5432"
-          ).withStartupTimeout(10000)
+          ).withStartupTimeout(20000)
         )
     )
   }

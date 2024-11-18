@@ -33,7 +33,11 @@ describe("Test a query step automation", () => {
       sortOrder: "ascending",
       limit: 10,
     }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    const res = await setup.runStep(
+      config,
+      setup.actions.QUERY_ROWS.stepId,
+      inputs
+    )
     expect(res.success).toBe(true)
     expect(res.rows).toBeDefined()
     expect(res.rows.length).toBe(2)
@@ -48,7 +52,11 @@ describe("Test a query step automation", () => {
       sortOrder: "ascending",
       limit: 10,
     }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    const res = await setup.runStep(
+      config,
+      setup.actions.QUERY_ROWS.stepId,
+      inputs
+    )
     expect(res.success).toBe(true)
     expect(res.rows).toBeDefined()
     expect(res.rows.length).toBe(2)
@@ -65,7 +73,11 @@ describe("Test a query step automation", () => {
       limit: 10,
       onEmptyFilter: "none",
     }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    const res = await setup.runStep(
+      config,
+      setup.actions.QUERY_ROWS.stepId,
+      inputs
+    )
     expect(res.success).toBe(false)
     expect(res.rows).toBeDefined()
     expect(res.rows.length).toBe(0)
@@ -85,7 +97,11 @@ describe("Test a query step automation", () => {
       sortOrder: "ascending",
       limit: 10,
     }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    const res = await setup.runStep(
+      config,
+      setup.actions.QUERY_ROWS.stepId,
+      inputs
+    )
     expect(res.success).toBe(false)
     expect(res.rows).toBeDefined()
     expect(res.rows.length).toBe(0)
@@ -100,7 +116,11 @@ describe("Test a query step automation", () => {
       sortOrder: "ascending",
       limit: 10,
     }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    const res = await setup.runStep(
+      config,
+      setup.actions.QUERY_ROWS.stepId,
+      inputs
+    )
     expect(res.success).toBe(true)
     expect(res.rows).toBeDefined()
     expect(res.rows.length).toBe(2)

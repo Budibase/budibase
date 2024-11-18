@@ -23,7 +23,11 @@ export async function getDatasource(): Promise<Datasource> {
         .withEnvironment({
           ORACLE_PASSWORD: password,
         })
-        .withWaitStrategy(Wait.forLogMessage("DATABASE IS READY TO USE!"))
+        .withWaitStrategy(
+          Wait.forLogMessage("DATABASE IS READY TO USE!").withStartupTimeout(
+            20000
+          )
+        )
     )
   }
 
