@@ -62,13 +62,13 @@ describe("test the openai action", () => {
   afterAll(_afterAll)
 
   it("should be able to receive a response from ChatGPT given a prompt", async () => {
-    const res = await runStep("OPENAI", { prompt: OPENAI_PROMPT })
+    const res = await runStep(config, "OPENAI", { prompt: OPENAI_PROMPT })
     expect(res.response).toEqual("This is a test")
     expect(res.success).toBeTruthy()
   })
 
   it("should present the correct error message when a prompt is not provided", async () => {
-    const res = await runStep("OPENAI", { prompt: null })
+    const res = await runStep(config, "OPENAI", { prompt: null })
     expect(res.response).toEqual(
       "Budibase OpenAI Automation Failed: No prompt supplied"
     )
@@ -91,7 +91,7 @@ describe("test the openai action", () => {
         } as any)
     )
 
-    const res = await runStep("OPENAI", {
+    const res = await runStep(config, "OPENAI", {
       prompt: OPENAI_PROMPT,
     })
 
@@ -106,7 +106,7 @@ describe("test the openai action", () => {
     jest.spyOn(pro.features, "isAICustomConfigsEnabled").mockResolvedValue(true)
 
     const prompt = "What is the meaning of life?"
-    await runStep("OPENAI", {
+    await runStep(config, "OPENAI", {
       model: "gpt-4o-mini",
       prompt,
     })
