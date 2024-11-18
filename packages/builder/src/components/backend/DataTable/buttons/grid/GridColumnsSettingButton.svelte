@@ -44,9 +44,5 @@
       {text}
     </ActionButton>
   </svelte:fragment>
-  <ColumnsSettingContent
-    columns={$tableColumns}
-    canSetRelationshipSchemas
-    {permissions}
-  />
+  <ColumnsSettingContent columns={$tableColumns} {permissions} />
 </DetailPopover>
