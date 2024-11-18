@@ -10,11 +10,13 @@ import {
   FieldType,
   OperationFieldTypeEnum,
   AIOperationEnum,
+  AIFieldMetadata,
 } from "@budibase/types"
 import { OperationFields } from "@budibase/shared-core"
 import tracer from "dd-trace"
 import { context } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
+import { coerce } from "./index"
 
 interface FormulaOpts {
   dynamic?: boolean
@@ -67,7 +69,18 @@ export async function processFormulas<T extends Row | Row[]>(
           continue
         }
 
+        const responseType = schema.responseType
         const isStatic = schema.formulaType === FormulaType.STATIC
+        const formula = schema.formula
+
+        // coerce static values
+        if (isStatic) {
+          rows.forEach(row => {
+            if (row[column] && responseType) {
+              row[column] = coerce(row[column], responseType)
+            }
+          })
+        }
 
         if (
           schema.formula == null ||
@@ -80,12 +93,18 @@ export async function processFormulas<T extends Row | Row[]>(
         for (let i = 0; i < rows.length; i++) {
           let row = rows[i]
           let context = contextRows ? contextRows[i] : row
-          let formula = schema.formula
           rows[i] = {
             ...row,
             [column]: tracer.trace("processStringSync", {}, span => {
               span?.addTags({ table_id: table._id, column, static: isStatic })
-              return processStringSync(formula, context)
+              const result = processStringSync(formula, context)
+              try {
+                return responseType ? coerce(result, responseType) : result
+              } catch (err: any) {
+                // if the coercion fails, we return empty row contents
+                span?.addTags({ coercionError: err.message })
+                return undefined
+              }
             }),
           }
         }
@@ -117,12 +136,13 @@ export async function processAIColumns<T extends Row | Row[]>(
           continue
         }
 
+        const operation = schema.operation
+        const aiSchema: AIFieldMetadata = schema
         const rowUpdates = rows.map((row, i) => {
           const contextRow = contextRows ? contextRows[i] : row
 
           // Check if the type is bindable and pass through HBS if so
-          const operationField =
-            OperationFields[schema.operation as AIOperationEnum]
+          const operationField = OperationFields[operation as AIOperationEnum]
           for (const key in schema) {
             const fieldType = operationField[key as keyof typeof operationField]
             if (fieldType === OperationFieldTypeEnum.BINDABLE_TEXT) {
@@ -131,7 +151,10 @@ export async function processAIColumns<T extends Row | Row[]>(
             }
           }
 
-          const prompt = llm.buildPromptFromAIOperation({ schema, row })
+          const prompt = llm.buildPromptFromAIOperation({
+            schema: aiSchema,
+            row,
+          })
 
           return tracer.trace("processAIColumn", {}, async span => {
             span?.addTags({ table_id: table._id, column })
