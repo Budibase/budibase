@@ -1,3 +1,5 @@
+import * as setup from "./utilities"
+
 import {
   DatabaseName,
   datasourceDescribe,
@@ -6,13 +8,7 @@ import {
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
-import {
-  context,
-  InternalTable,
-  tenancy,
-  features,
-  utils,
-} from "@budibase/backend-core"
+import { context, InternalTable, tenancy, utils } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AIOperationEnum,
@@ -44,7 +40,6 @@ import { Knex } from "knex"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
 import { JsTimeoutError } from "@budibase/string-templates"
-import { structures } from "./utilities"
 
 jest.mock("@budibase/pro", () => ({
   ...jest.requireActual("@budibase/pro"),
@@ -87,14 +82,18 @@ async function waitForEvent(
 datasourceDescribe(
   { name: "/rows (%s)", exclude: [DatabaseName.MONGODB] },
   ({ config, dsProvider, isInternal, isMSSQL, isOracle }) => {
+    let table: Table
     let datasource: Datasource | undefined
     let client: Knex | undefined
-    let table: Table
 
     beforeAll(async () => {
       const ds = await dsProvider()
       datasource = ds.datasource
       client = ds.client
+    })
+
+    afterAll(async () => {
+      setup.afterAll()
     })
 
     function saveTableRequest(
@@ -2257,13 +2256,13 @@ datasourceDescribe(
         let expectedRowData: Row
 
         beforeAll(async () => {
-          const fullSchema = structures.fullSchemaWithoutLinks({
+          const fullSchema = setup.structures.fullSchemaWithoutLinks({
             allRequired: true,
           })
 
           const table = await config.api.table.save(
             saveTableRequest({
-              ...structures.basicTable(),
+              ...setup.structures.basicTable(),
               schema: fullSchema,
               primary: ["string"],
             })
@@ -2278,15 +2277,15 @@ datasourceDescribe(
             [FieldType.NUMBER]: generator.natural(),
             [FieldType.BOOLEAN]: generator.bool(),
             [FieldType.DATETIME]: generator.date().toISOString(),
-            [FieldType.ATTACHMENTS]: [structures.basicAttachment()],
-            [FieldType.ATTACHMENT_SINGLE]: structures.basicAttachment(),
+            [FieldType.ATTACHMENTS]: [setup.structures.basicAttachment()],
+            [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
             [FieldType.FORMULA]: undefined, // generated field
             [FieldType.AUTO]: undefined, // generated field
             [FieldType.AI]: "LLM Output",
             [FieldType.JSON]: { name: generator.guid() },
             [FieldType.INTERNAL]: generator.guid(),
             [FieldType.BARCODEQR]: generator.guid(),
-            [FieldType.SIGNATURE_SINGLE]: structures.basicAttachment(),
+            [FieldType.SIGNATURE_SINGLE]: setup.structures.basicAttachment(),
             [FieldType.BIGINT]: generator.integer().toString(),
             [FieldType.BB_REFERENCE]: [{ _id: config.getUser()._id }],
             [FieldType.BB_REFERENCE_SINGLE]: { _id: config.getUser()._id },
@@ -2857,13 +2856,7 @@ datasourceDescribe(
 
         let auxData: Row[] = []
 
-        let flagCleanup: (() => void) | undefined
-
         beforeAll(async () => {
-          flagCleanup = features.testutils.setFeatureFlags("*", {
-            ENRICHED_RELATIONSHIPS: true,
-          })
-
           const aux2Table = await config.api.table.save(saveTableRequest())
           const aux2Data = await config.api.row.save(aux2Table._id!, {})
 
@@ -3010,10 +3003,6 @@ datasourceDescribe(
           viewId = view.id
         })
 
-        afterAll(() => {
-          flagCleanup?.()
-        })
-
         const testScenarios: [string, (row: Row) => Promise<Row> | Row][] = [
           ["get row", (row: Row) => config.api.row.get(viewId, row._id!)],
           [
@@ -3082,68 +3071,6 @@ datasourceDescribe(
                   },
                 ],
               })
-            )
-          }
-        )
-
-        it.each(testScenarios)(
-          "does not enrich relationships when not enabled (via %s)",
-          async (__, retrieveDelegate) => {
-            await features.testutils.withFeatureFlags(
-              "*",
-              {
-                ENRICHED_RELATIONSHIPS: false,
-              },
-              async () => {
-                const otherRows = _.sampleSize(auxData, 5)
-
-                const row = await config.api.row.save(viewId, {
-                  title: generator.word(),
-                  relWithNoSchema: [otherRows[0]],
-                  relWithEmptySchema: [otherRows[1]],
-                  relWithFullSchema: [otherRows[2]],
-                  relWithHalfSchema: [otherRows[3]],
-                  relWithIllegalSchema: [otherRows[4]],
-                })
-
-                const retrieved = await retrieveDelegate(row)
-
-                expect(retrieved).toEqual(
-                  expect.objectContaining({
-                    title: row.title,
-                    relWithNoSchema: [
-                      {
-                        _id: otherRows[0]._id,
-                        primaryDisplay: otherRows[0].name,
-                      },
-                    ],
-                    relWithEmptySchema: [
-                      {
-                        _id: otherRows[1]._id,
-                        primaryDisplay: otherRows[1].name,
-                      },
-                    ],
-                    relWithFullSchema: [
-                      {
-                        _id: otherRows[2]._id,
-                        primaryDisplay: otherRows[2].name,
-                      },
-                    ],
-                    relWithHalfSchema: [
-                      {
-                        _id: otherRows[3]._id,
-                        primaryDisplay: otherRows[3].name,
-                      },
-                    ],
-                    relWithIllegalSchema: [
-                      {
-                        _id: otherRows[4]._id,
-                        primaryDisplay: otherRows[4].name,
-                      },
-                    ],
-                  })
-                )
-              }
             )
           }
         )
@@ -3469,3 +3396,5 @@ datasourceDescribe(
     })
   }
 )
+
+// todo: remove me

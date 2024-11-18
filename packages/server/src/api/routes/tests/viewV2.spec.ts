@@ -42,7 +42,7 @@ import {
 } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { db, roles, features, context } from "@budibase/backend-core"
+import { db, roles, context } from "@budibase/backend-core"
 
 datasourceDescribe(
   { name: "/v2/views (%s)", exclude: [DatabaseName.MONGODB] },
@@ -3269,17 +3269,6 @@ datasourceDescribe(
         })
 
         describe("foreign relationship columns", () => {
-          let envCleanup: () => void
-          beforeAll(() => {
-            envCleanup = features.testutils.setFeatureFlags("*", {
-              ENRICHED_RELATIONSHIPS: true,
-            })
-          })
-
-          afterAll(() => {
-            envCleanup?.()
-          })
-
           const createMainTable = async (
             links: {
               name: string
