@@ -371,6 +371,7 @@
     delete editableColumn.relationshipType
     delete editableColumn.formulaType
     delete editableColumn.constraints
+    delete editableColumn.responseType
 
     // Add in defaults and initial definition
     const definition = fieldDefinitions[type?.toUpperCase()]
@@ -386,6 +387,7 @@
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     } else if (editableColumn.type === FieldType.FORMULA) {
       editableColumn.formulaType = "dynamic"
+      editableColumn.responseType = field.responseType || FIELDS.STRING.type
     }
   }
 
@@ -767,6 +769,25 @@
         </div>
       </div>
     {/if}
+    <div class="split-label">
+      <div class="label-length">
+        <Label size="M">Response Type</Label>
+      </div>
+      <div class="input-length">
+        <Select
+          bind:value={editableColumn.responseType}
+          options={[
+            FIELDS.STRING,
+            FIELDS.NUMBER,
+            FIELDS.BOOLEAN,
+            FIELDS.DATETIME,
+          ]}
+          getOptionLabel={option => option.name}
+          getOptionValue={option => option.type}
+          tooltip="Formulas by default will return a string - however if you need another type the response can be coerced."
+        />
+      </div>
+    </div>
     <div class="split-label">
       <div class="label-length">
         <Label size="M">Formula</Label>
