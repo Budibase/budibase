@@ -3265,17 +3265,6 @@ describe.each([
       })
 
       describe("foreign relationship columns", () => {
-        let envCleanup: () => void
-        beforeAll(() => {
-          envCleanup = features.testutils.setFeatureFlags("*", {
-            ENRICHED_RELATIONSHIPS: true,
-          })
-        })
-
-        afterAll(() => {
-          envCleanup?.()
-        })
-
         const createMainTable = async (
           links: {
             name: string
