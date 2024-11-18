@@ -1,5 +1,5 @@
 <html>
-  <script>
+  <script nonce="{{ nonce }}">
     document.fonts.ready.then(() => {
       window.parent.postMessage({ type: "docLoaded" });
     })
@@ -9,7 +9,7 @@
     <style>{{{css}}}</style>
   </head>
 
-  <script>
+  <script nonce="{{ nonce }}">
     window["##BUDIBASE_APP_ID##"] = "{{appId}}"
     window["##BUDIBASE_APP_EMBEDDED##"] = "{{embedded}}"
   </script>
