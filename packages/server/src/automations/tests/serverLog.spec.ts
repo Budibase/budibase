@@ -1,8 +1,8 @@
-const setup = require("./utilities")
+import { getConfig, afterAll as _afterAll, runStep, actions } from "./utilities"
 
 describe("test the server log action", () => {
-  let config = setup.getConfig()
-  let inputs
+  let config = getConfig()
+  let inputs: any
 
   beforeAll(async () => {
     await config.init()
@@ -10,10 +10,10 @@ describe("test the server log action", () => {
       text: "log message",
     }
   })
-  afterAll(setup.afterAll)
+  afterAll(_afterAll)
 
   it("should be able to log the text", async () => {
-    let res = await setup.runStep(setup.actions.SERVER_LOG.stepId, inputs)
+    let res = await runStep(config, actions.SERVER_LOG.stepId, inputs)
     expect(res.message).toEqual(`App ${config.getAppId()} - ${inputs.text}`)
     expect(res.success).toEqual(true)
   })
