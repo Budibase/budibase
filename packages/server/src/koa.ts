@@ -15,6 +15,7 @@ import {
 } from "@budibase/backend-core"
 import destroyable from "server-destroy"
 import { userAgent } from "koa-useragent"
+import gracefulShutdown from "http-graceful-shutdown"
 
 export default function createKoaApp() {
   const app = new Koa()
@@ -51,34 +52,51 @@ export default function createKoaApp() {
   const server = http.createServer(app.callback())
   destroyable(server)
 
-  let shuttingDown = false,
-    errCode = 0
+  // let shuttingDown = false
+  let errCode = 0
 
-  server.on("close", async () => {
-    // already in process
-    if (shuttingDown) {
-      return
-    }
-    shuttingDown = true
-    console.log("Server Closed")
-    timers.cleanup()
-    await automations.shutdown()
-    await redis.shutdown()
-    events.shutdown()
-    await Thread.shutdown()
-    api.shutdown()
-    if (!env.isTest()) {
-      process.exit(errCode)
-    }
-  })
+  // server.on("close", async () => {
+  //   // already in process
+  //   if (shuttingDown) {
+  //     return
+  //   }
+  //   shuttingDown = true
+  //   console.log("Server Closed")
+  //   timers.cleanup()
+  //   await automations.shutdown()
+  //   await redis.shutdown()
+  //   events.shutdown()
+  //   await Thread.shutdown()
+  //   api.shutdown()
+  //   if (!env.isTest()) {
+  //     process.exit(errCode)
+  //   }
+  // })
 
   const listener = server.listen(env.PORT || 0)
 
-  const shutdown = () => {
-    server.close()
-    // @ts-ignore
-    server.destroy()
-  }
+  gracefulShutdown(server, {
+    onShutdown: async () => {
+      console.log("Server is shutting down gracefully...")
+      timers.cleanup()
+      await automations.shutdown()
+      await redis.shutdown()
+      events.shutdown()
+      await Thread.shutdown()
+      api.shutdown()
+    },
+    finally: () => {
+      if (!env.isTest()) {
+        process.exit(errCode)
+      }
+    },
+  })
+
+  // const shutdown = () => {
+  //   server.close()
+  //   // @ts-ignore
+  //   server.destroy()
+  // }
 
   process.on("uncaughtException", err => {
     // @ts-ignore
@@ -88,16 +106,16 @@ export default function createKoaApp() {
     }
     errCode = -1
     logging.logAlert("Uncaught exception.", err)
-    shutdown()
+    process.kill(process.pid, "SIGTERM")
   })
 
-  process.on("SIGTERM", () => {
-    shutdown()
-  })
+  // process.on("SIGTERM", () => {
+  //   shutdown()
+  // })
 
-  process.on("SIGINT", () => {
-    shutdown()
-  })
+  // process.on("SIGINT", () => {
+  //   shutdown()
+  // })
 
   return { app, server: listener }
 }
