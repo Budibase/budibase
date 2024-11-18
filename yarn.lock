@@ -2044,44 +2044,6 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@3.2.4":
-  version "0.0.0"
-  dependencies:
-    "@budibase/nano" "10.1.5"
-    "@budibase/pouchdb-replication-stream" "1.2.11"
-    "@budibase/shared-core" "0.0.0"
-    "@budibase/types" "0.0.0"
-    aws-cloudfront-sign "3.0.2"
-    aws-sdk "2.1030.0"
-    bcrypt "5.1.0"
-    bcryptjs "2.4.3"
-    bull "4.10.1"
-    correlation-id "4.0.0"
-    dd-trace "5.23.0"
-    dotenv "16.0.1"
-    ioredis "5.3.2"
-    joi "17.6.0"
-    jsonwebtoken "9.0.2"
-    knex "2.4.2"
-    koa-passport "^6.0.0"
-    koa-pino-logger "4.0.0"
-    lodash "4.17.21"
-    node-fetch "2.6.7"
-    passport-google-oauth "2.0.0"
-    passport-local "1.0.0"
-    passport-oauth2-refresh "^2.1.0"
-    pino "8.11.0"
-    pino-http "8.3.3"
-    posthog-node "4.0.1"
-    pouchdb "^9.0.0"
-    pouchdb-find "9.0.0"
-    redlock "4.2.0"
-    rotating-file-stream "3.1.0"
-    sanitize-s3-objectkey "0.0.1"
-    semver "^7.5.4"
-    tar-fs "2.1.1"
-    uuid "^8.3.2"
-
 "@budibase/handlebars-helpers@^0.13.2":
   version "0.13.2"
   resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.13.2.tgz#73ab51c464e91fd955b429017648e0257060db77"
@@ -2123,47 +2085,6 @@
     pouch-stream "^0.4.0"
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
-
-"@budibase/pro@npm:@budibase/pro@latest":
-  version "3.2.4"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.2.4.tgz#b6ceb736686bda7069829cbb0eabf9cc775dd435"
-  integrity sha512-bQhwjbQpjvBrxuE6BSTwGp4JcS0DC2P9kA+NaK8VnVN/L+cJzyk6n7Ogt7jgLZwZcwNz5Wu/eBbrUaoBDDXmjw==
-  dependencies:
-    "@anthropic-ai/sdk" "^0.27.3"
-    "@budibase/backend-core" "3.2.4"
-    "@budibase/shared-core" "3.2.4"
-    "@budibase/string-templates" "3.2.4"
-    "@budibase/types" "3.2.4"
-    "@koa/router" "8.0.8"
-    bull "4.10.1"
-    dd-trace "5.2.0"
-    joi "17.6.0"
-    jsonwebtoken "9.0.2"
-    lru-cache "^7.14.1"
-    memorystream "^0.3.1"
-    node-fetch "2.6.7"
-    openai "4.59.0"
-    scim-patch "^0.8.1"
-    scim2-parse-filter "^0.2.8"
-
-"@budibase/shared-core@3.2.4":
-  version "0.0.0"
-  dependencies:
-    "@budibase/types" "0.0.0"
-    cron-validate "1.4.5"
-
-"@budibase/string-templates@3.2.4":
-  version "0.0.0"
-  dependencies:
-    "@budibase/handlebars-helpers" "^0.13.2"
-    dayjs "^1.10.8"
-    handlebars "^4.7.8"
-    lodash.clonedeep "^4.5.0"
-
-"@budibase/types@3.2.4":
-  version "0.0.0"
-  dependencies:
-    scim-patch "^0.8.1"
 
 "@bull-board/api@5.10.2":
   version "5.10.2"
@@ -17462,7 +17383,7 @@ pouchdb@7.3.0:
     uuid "8.3.2"
     vuvuzela "1.0.3"
 
-pouchdb@^9.0.0:
+pouchdb@9.0.0, pouchdb@^9.0.0:
   version "9.0.0"
   resolved "https://registry.yarnpkg.com/pouchdb/-/pouchdb-9.0.0.tgz#569ee3941f7b03dd34b4b4e53132a9772981a35e"
   integrity sha512-6wjFc/PzwaWz86rmMXoqdBlR/fBSkNoWO1mEJO7RZNS6n3xf+fhhXWAWtws741KpLKx84IkmmJ48tp+fhFzj4A==
