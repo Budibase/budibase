@@ -35,7 +35,6 @@ const providers: Record<DatabaseName, DatasourceProvider> = {
 }
 
 export interface DatasourceDescribeOpts {
-  name: string
   only?: DatabaseName[]
   exclude?: DatabaseName[]
 }
@@ -103,15 +102,14 @@ function createDummyTest() {
 }
 
 export function datasourceDescribe(
-  opts: DatasourceDescribeOpts,
-  cb: (args: DatasourceDescribeReturn) => void
-) {
+  opts: DatasourceDescribeOpts
+): DatabaseName[] {
   if (process.env.DATASOURCE === "none") {
     createDummyTest()
-    return
+    process.exit(0)
   }
 
-  const { name, only, exclude } = opts
+  const { only, exclude } = opts
 
   if (only && exclude) {
     throw new Error("you can only supply one of 'only' or 'exclude'")
@@ -130,36 +128,32 @@ export function datasourceDescribe(
 
   if (databases.length === 0) {
     createDummyTest()
-    return
+    process.exit(0)
   }
 
-  describe.each(databases)(name, name => {
-    const config = new TestConfiguration()
+  return databases
+}
 
-    afterAll(() => {
-      config.end()
-    })
-
-    cb({
-      name,
-      config,
-      dsProvider: () => createDatasources(config, name),
-      isInternal: name === DatabaseName.SQS,
-      isExternal: name !== DatabaseName.SQS,
-      isSql: [
-        DatabaseName.MARIADB,
-        DatabaseName.MYSQL,
-        DatabaseName.POSTGRES,
-        DatabaseName.SQL_SERVER,
-        DatabaseName.ORACLE,
-      ].includes(name),
-      isMySQL: name === DatabaseName.MYSQL,
-      isPostgres: name === DatabaseName.POSTGRES,
-      isMongodb: name === DatabaseName.MONGODB,
-      isMSSQL: name === DatabaseName.SQL_SERVER,
-      isOracle: name === DatabaseName.ORACLE,
-    })
-  })
+export function datasourceProps(dbName: DatabaseName) {
+  const config = new TestConfiguration()
+  return {
+    config,
+    dsProvider: () => createDatasources(config, dbName),
+    isInternal: dbName === DatabaseName.SQS,
+    isExternal: dbName !== DatabaseName.SQS,
+    isSql: [
+      DatabaseName.MARIADB,
+      DatabaseName.MYSQL,
+      DatabaseName.POSTGRES,
+      DatabaseName.SQL_SERVER,
+      DatabaseName.ORACLE,
+    ].includes(dbName),
+    isMySQL: dbName === DatabaseName.MYSQL,
+    isPostgres: dbName === DatabaseName.POSTGRES,
+    isMongodb: dbName === DatabaseName.MONGODB,
+    isMSSQL: dbName === DatabaseName.SQL_SERVER,
+    isOracle: dbName === DatabaseName.ORACLE,
+  }
 }
 
 function getDatasource(
