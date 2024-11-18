@@ -784,7 +784,7 @@
           ]}
           getOptionLabel={option => option.name}
           getOptionValue={option => option.type}
-          tooltip="Formulas by default will return a string - however if you need a another type the response can be coerced."
+          tooltip="Formulas by default will return a string - however if you need another type the response can be coerced."
         />
       </div>
     </div>
