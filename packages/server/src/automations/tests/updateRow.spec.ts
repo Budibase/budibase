@@ -34,7 +34,11 @@ describe("test the update row action", () => {
   afterAll(setup.afterAll)
 
   it("should be able to run the action", async () => {
-    const res = await setup.runStep(setup.actions.UPDATE_ROW.stepId, inputs)
+    const res = await setup.runStep(
+      config,
+      setup.actions.UPDATE_ROW.stepId,
+      inputs
+    )
     expect(res.success).toEqual(true)
     const updatedRow = await config.api.row.get(table._id!, res.id)
     expect(updatedRow.name).toEqual("Updated name")
@@ -42,12 +46,12 @@ describe("test the update row action", () => {
   })
 
   it("should check invalid inputs return an error", async () => {
-    const res = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {})
+    const res = await setup.runStep(config, setup.actions.UPDATE_ROW.stepId, {})
     expect(res.success).toEqual(false)
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const res = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
+    const res = await setup.runStep(config, setup.actions.UPDATE_ROW.stepId, {
       row: { _id: "invalid" },
       rowId: "invalid",
     })
@@ -90,16 +94,20 @@ describe("test the update row action", () => {
     expect(getResp.user1[0]._id).toEqual(user1._id)
     expect(getResp.user2[0]._id).toEqual(user2._id)
 
-    let stepResp = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
-      rowId: row._id,
-      row: {
-        _id: row._id,
-        _rev: row._rev,
-        tableId: row.tableId,
-        user1: [user2._id],
-        user2: "",
-      },
-    })
+    let stepResp = await setup.runStep(
+      config,
+      setup.actions.UPDATE_ROW.stepId,
+      {
+        rowId: row._id,
+        row: {
+          _id: row._id,
+          _rev: row._rev,
+          tableId: row.tableId,
+          user1: [user2._id],
+          user2: "",
+        },
+      }
+    )
     expect(stepResp.success).toEqual(true)
 
     getResp = await config.api.row.get(table._id!, row._id!)
@@ -143,23 +151,27 @@ describe("test the update row action", () => {
     expect(getResp.user1[0]._id).toEqual(user1._id)
     expect(getResp.user2[0]._id).toEqual(user2._id)
 
-    let stepResp = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
-      rowId: row._id,
-      row: {
-        _id: row._id,
-        _rev: row._rev,
-        tableId: row.tableId,
-        user1: [user2._id],
-        user2: "",
-      },
-      meta: {
-        fields: {
-          user2: {
-            clearRelationships: true,
+    let stepResp = await setup.runStep(
+      config,
+      setup.actions.UPDATE_ROW.stepId,
+      {
+        rowId: row._id,
+        row: {
+          _id: row._id,
+          _rev: row._rev,
+          tableId: row.tableId,
+          user1: [user2._id],
+          user2: "",
+        },
+        meta: {
+          fields: {
+            user2: {
+              clearRelationships: true,
+            },
           },
         },
-      },
-    })
+      }
+    )
     expect(stepResp.success).toEqual(true)
 
     getResp = await config.api.row.get(table._id!, row._id!)
