@@ -30,9 +30,10 @@ const koaSession = require("koa-session")
 
 import { userAgent } from "koa-useragent"
 
-import destroyable from "server-destroy"
 import { initPro } from "./initPro"
 import { handleScimBody } from "./middleware/handleScimBody"
+import destroyable from "server-destroy"
+import gracefulShutdown from "http-graceful-shutdown"
 
 if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
   console.warn(
@@ -40,7 +41,7 @@ if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
   )
 }
 
-// this will setup http and https proxies form env variables
+// this will setup http and https proxies from env variables
 bootstrap()
 
 const app: Application = new Application()
@@ -71,28 +72,9 @@ app.use(api.routes())
 const server = http.createServer(app.callback())
 destroyable(server)
 
-let shuttingDown = false,
-  errCode = 0
-server.on("close", async () => {
-  if (shuttingDown) {
-    return
-  }
-  shuttingDown = true
-  console.log("Server Closed")
-  timers.cleanup()
-  events.shutdown()
-  await redis.clients.shutdown()
-  await queue.shutdown()
-  if (!env.isTest()) {
-    process.exit(errCode)
-  }
-})
+let errCode = 0
 
-const shutdown = () => {
-  server.close()
-  server.destroy()
-}
-
+// Start the server
 export default server.listen(parseInt(env.PORT || "4002"), async () => {
   let startupLog = `Worker running on ${JSON.stringify(server.address())}`
   if (env.BUDIBASE_ENVIRONMENT) {
@@ -108,16 +90,26 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
   await events.processors.init(proSdk.auditLogs.write)
 })
 
+gracefulShutdown(server, {
+  signals: "SIGINT SIGTERM",
+  timeout: 30000, // optional: timeout in ms for the shutdown process to finish
+  onShutdown: async () => {
+    console.log("Server is shutting down gracefully...")
+    timers.cleanup()
+    events.shutdown()
+    await redis.clients.shutdown()
+    await queue.shutdown()
+  },
+  finally: () => {
+    if (!env.isTest()) {
+      process.exit(errCode)
+    }
+  },
+})
+
 process.on("uncaughtException", err => {
   errCode = -1
   logging.logAlert("Uncaught exception.", err)
-  shutdown()
-})
-
-process.on("SIGTERM", () => {
-  shutdown()
-})
-
-process.on("SIGINT", () => {
-  shutdown()
+  // Trigger graceful shutdown
+  process.kill(process.pid, "SIGTERM")
 })
