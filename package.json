@@ -54,7 +54,6 @@
     "dev": "yarn run kill-all && lerna run --parallel prebuild && lerna run --stream dev",
     "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up && lerna run --stream dev --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
     "dev:server": "yarn run kill-server && lerna run --stream dev --scope @budibase/worker --scope @budibase/server",
-    "dev:camunda": "./scripts/deploy-camunda.sh",
     "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream dev:built",
     "dev:docker": "./scripts/devDocker.sh",
     "test": "lerna run --concurrency 1 --stream test --stream",
