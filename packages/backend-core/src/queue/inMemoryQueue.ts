@@ -1,5 +1,5 @@
 import events from "events"
-import { newid, timeout } from "../utils"
+import { newid } from "../utils"
 import { Queue, QueueOptions, JobOptions } from "./queue"
 
 interface JobMessage {
@@ -141,7 +141,7 @@ class InMemoryQueue implements Partial<Queue> {
     } else {
       pushMessage()
     }
-    return {} as any
+    return { id: jobId } as any
   }
 
   /**
@@ -183,16 +183,6 @@ class InMemoryQueue implements Partial<Queue> {
   on() {
     // do nothing
     return this as any
-  }
-
-  async waitForCompletion() {
-    do {
-      await timeout(50)
-    } while (this.hasRunningJobs())
-  }
-
-  hasRunningJobs() {
-    return this._addCount > this._runCount
   }
 }
 
