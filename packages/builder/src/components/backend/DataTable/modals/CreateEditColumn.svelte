@@ -387,7 +387,7 @@
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     } else if (editableColumn.type === FieldType.FORMULA) {
       editableColumn.formulaType = "dynamic"
-      editableColumn.responseType = FIELDS.STRING.type
+      editableColumn.responseType = field.responseType || FIELDS.STRING.type
     }
   }
 
@@ -784,7 +784,7 @@
           ]}
           getOptionLabel={option => option.name}
           getOptionValue={option => option.type}
-          tooltip="Formulas by default will return a string - however if you need a native type the response can be coerced."
+          tooltip="Formulas by default will return a string - however if you need a another type the response can be coerced."
         />
       </div>
     </div>

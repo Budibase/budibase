@@ -100,8 +100,9 @@ export async function processFormulas<T extends Row | Row[]>(
               const result = processStringSync(formula, context)
               try {
                 return responseType ? coerce(result, responseType) : result
-              } catch (err) {
+              } catch (err: any) {
                 // if the coercion fails, we return empty row contents
+                span?.addTags({ coercionError: err.message })
                 return undefined
               }
             }),
