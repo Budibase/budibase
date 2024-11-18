@@ -199,17 +199,21 @@ jobs:
         env:
           DATASOURCE: ${{ matrix.datasource }}
         run: |
-          AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
-          if [ -n "$AFFECTED" ]; then
-            cd packages/server
-            if [ "${{ matrix.datasource }}" == "none" ]; then
-              yarn test --filter ./src/tests/filters/non-datasource-tests.js --passWithNoTests
-            else
-              yarn test --filter ./src/tests/filters/datasource-tests.js --passWithNoTests
+          if ${{ env.ONLY_AFFECTED_TASKS }}; then
+            AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
+            if [ -z "$AFFECTED" ]; then
+              echo "No affected tests to run"
+              exit 0
             fi
-          else
-            echo "No affected tests to run"
           fi
+
+          FILTER="./src/tests/filters/datasource-tests.js"
+          if [ "${{ matrix.datasource }}" == "none" ]; then
+            FILTER="./src/tests/filters/non-datasource-tests.js"
+          fi
+
+          cd packages/server
+          yarn test --filter $FILTER --passWithNoTests
 
   check-pro-submodule:
     runs-on: ubuntu-latest
