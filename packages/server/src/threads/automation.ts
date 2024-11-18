@@ -385,7 +385,7 @@ class Orchestrator {
     stepIdx: number,
     pathIdx?: number
   ): Promise<number> {
-    await processObject(loopStep.inputs, this.context)
+    await processObject(loopStep.inputs, this.processContext(this.context))
     const iterations = getLoopIterations(loopStep)
     let stepToLoopIndex = stepIdx + 1
     let pathStepIdx = (pathIdx || stepIdx) + 1

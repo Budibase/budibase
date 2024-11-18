@@ -5,6 +5,7 @@ export default class NestedProviderFetch extends DataFetch {
     // Nested providers should already have exposed their own schema
     return {
       schema: datasource?.value?.schema,
+      primaryDisplay: datasource?.value?.primaryDisplay,
     }
   }
 
