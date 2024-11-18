@@ -1,4 +1,5 @@
 <script>
+  import { tick } from "svelte"
   import {
     ModalContent,
     TextArea,
@@ -8,7 +9,6 @@
   import { automationStore, selectedAutomation } from "stores/builder"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
-  import { memo } from "@budibase/frontend-core"
   import { AutomationEventType } from "@budibase/types"
 
   let failedParse = null
@@ -63,8 +63,7 @@
     return true
   }
 
-  const memoTestData = memo(parseTestData($selectedAutomation.data.testData))
-  $: memoTestData.set(parseTestData($selectedAutomation.data.testData))
+  $: testData = testData || parseTestData($selectedAutomation.data.testData)
 
   $: {
     // clone the trigger so we're not mutating the reference
@@ -83,7 +82,7 @@
   $: isError =
     !isTriggerValid(trigger) ||
     !(trigger.schema.outputs.required || []).every(
-      required => $memoTestData?.[required] || required !== "row"
+      required => testData?.[required] || required !== "row"
     )
 
   function parseTestJSON(e) {
@@ -110,11 +109,10 @@
   }
 
   const testAutomation = async () => {
+    // Ensure testData reactiveness is processed
+    await tick()
     try {
-      await automationStore.actions.test(
-        $selectedAutomation.data,
-        $memoTestData
-      )
+      await automationStore.actions.test($selectedAutomation.data, testData)
       $automationStore.showTestPanel = true
     } catch (error) {
       notifications.error(error)
@@ -152,7 +150,7 @@
   {#if selectedValues}
     <div class="tab-content-padding">
       <AutomationBlockSetup
-        testData={$memoTestData}
+        bind:testData
         {schemaProperties}
         isTestModal
         block={trigger}
