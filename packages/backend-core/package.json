@@ -21,9 +21,10 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "prepack": "cp package.json dist",
-    "build": "node ../../scripts/depcheck.js && tsc -p tsconfig.build.json --paths null && node ./scripts/build.js",
+    "build": "tsc -p tsconfig.build.json --paths null && node ./scripts/build.js",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
+    "check:dependencies": "node ../../scripts/depcheck.js",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
   },
