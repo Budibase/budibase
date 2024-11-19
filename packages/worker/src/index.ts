@@ -24,7 +24,6 @@ import {
 db.init()
 import koaBody from "koa-body"
 import http from "http"
-import bson from "bson"
 import api from "./api"
 
 const koaSession = require("koa-session")
@@ -100,10 +99,6 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
     startupLog = `${startupLog} - environment: "${env.BUDIBASE_ENVIRONMENT}"`
   }
   console.log(startupLog)
-
-  if (coreEnv.BSON_BUFFER_SIZE) {
-    bson.setInternalBufferSize(coreEnv.BSON_BUFFER_SIZE)
-  }
 
   await initPro()
   await redis.clients.init()
