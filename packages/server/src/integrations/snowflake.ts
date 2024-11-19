@@ -90,7 +90,9 @@ class SnowflakePromise {
 
   async execute(sql: string) {
     if (!this.client) {
-      throw Error("No snowflake client present to execute query. Run connect() first to initialise.")
+      throw Error(
+        "No snowflake client present to execute query. Run connect() first to initialise."
+      )
     }
 
     return new Promise((resolve, reject) => {
