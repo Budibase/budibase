@@ -9,6 +9,13 @@
     "./tests": "./dist/tests/index.js",
     "./*": "./dist/*.js"
   },
+  "typesVersions": {
+    "*": {
+      "tests": [
+        "dist/tests/index.d.ts"
+      ]
+    }
+  },
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
