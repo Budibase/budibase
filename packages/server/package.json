@@ -10,7 +10,7 @@
   },
   "scripts": {
     "prebuild": "rimraf dist/",
-    "build": "../../scripts/depcheck.js && node ./scripts/build.js",
+    "build": "node ../../scripts/depcheck.js && node ./scripts/build.js",
     "postbuild": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client && copyfiles -f ../../yarn.lock ./dist/",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
     "build:isolated-vm-lib:snippets": "esbuild --minify --bundle src/jsRunner/bundles/snippets.ts --outfile=src/jsRunner/bundles/snippets.ivm.bundle.js --platform=node --format=iife --global-name=snippets",
