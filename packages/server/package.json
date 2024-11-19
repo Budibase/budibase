@@ -66,7 +66,7 @@
     "airtable": "0.12.2",
     "arangojs": "7.2.0",
     "archiver": "7.0.1",
-    "aws-sdk": "2.1030.0",
+    "aws-sdk": "2.1692.0",
     "bcrypt": "5.1.0",
     "bcryptjs": "2.4.3",
     "buffer": "6.0.3",
@@ -97,7 +97,7 @@
     "lodash": "4.17.21",
     "memorystream": "0.3.1",
     "mongodb": "6.7.0",
-    "mssql": "10.0.1",
+    "mssql": "11.0.1",
     "mysql2": "3.9.8",
     "node-fetch": "2.6.7",
     "object-sizeof": "2.6.1",
@@ -111,6 +111,7 @@
     "redis": "4",
     "serialize-error": "^7.0.1",
     "server-destroy": "1.0.1",
+    "snowflake-sdk": "^1.15.0",
     "socket.io": "4.8.1",
     "tar": "6.2.1",
     "tmp": "0.2.3",
@@ -118,7 +119,7 @@
     "uuid": "^8.3.2",
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
-    "xml2js": "0.5.0"
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@babel/preset-env": "7.16.11",
