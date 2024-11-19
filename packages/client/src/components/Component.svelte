@@ -43,7 +43,6 @@
 
   export let instance = {}
   export let parent = null
-  export let isLayout = false
   export let isRoot = false
   export let isBlock = false
 
@@ -158,7 +157,6 @@
   $: draggable =
     !inDragPath &&
     interactive &&
-    !isLayout &&
     !isRoot &&
     !isBlock &&
     definition?.draggable !== false

@@ -1,5 +1,4 @@
 import authRoutes from "./auth"
-import layoutRoutes from "./layout"
 import screenRoutes from "./screen"
 import userRoutes from "./user"
 import applicationRoutes from "./application"
@@ -42,7 +41,6 @@ export const mainRoutes: Router[] = [
   backupRoutes,
   authRoutes,
   deployRoutes,
-  layoutRoutes,
   screenRoutes,
   userRoutes,
   applicationRoutes,

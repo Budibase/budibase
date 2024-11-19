@@ -11,7 +11,6 @@ import { buildConfigEndpoints } from "./configs"
 import { buildDatasourceEndpoints } from "./datasources"
 import { buildFlagEndpoints } from "./flags"
 import { buildHostingEndpoints } from "./hosting"
-import { buildLayoutEndpoints } from "./layouts"
 import { buildOtherEndpoints } from "./other"
 import { buildPermissionsEndpoints } from "./permissions"
 import { buildQueryEndpoints } from "./queries"
@@ -280,7 +279,6 @@ export const createAPIClient = config => {
     ...buildDatasourceEndpoints(API),
     ...buildFlagEndpoints(API),
     ...buildHostingEndpoints(API),
-    ...buildLayoutEndpoints(API),
     ...buildOtherEndpoints(API),
     ...buildPermissionsEndpoints(API),
     ...buildQueryEndpoints(API),

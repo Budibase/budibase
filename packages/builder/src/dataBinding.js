@@ -12,7 +12,6 @@ import {
   componentStore,
   screenStore,
   appStore,
-  layoutStore,
   queries as queriesStores,
   tables as tablesStore,
   roles as rolesStore,
@@ -1239,13 +1238,9 @@ export const getAllStateVariables = () => {
   return Array.from(bindingSet)
 }
 
+// Get all component containing assets
 export const getAllAssets = () => {
-  // Get all component containing assets
-  let allAssets = []
-  allAssets = allAssets.concat(get(layoutStore).layouts || [])
-  allAssets = allAssets.concat(get(screenStore).screens || [])
-
-  return allAssets
+  return get(screenStore).screens || []
 }
 
 /**

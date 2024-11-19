@@ -131,10 +131,6 @@ export enum Event {
   SCREEN_CREATED = "screen:created",
   SCREEN_DELETED = "screen:deleted",
 
-  // LAYOUT
-  LAYOUT_CREATED = "layout:created",
-  LAYOUT_DELETED = "layout:deleted",
-
   // AUTOMATION
   AUTOMATION_CREATED = "automation:created",
   AUTOMATION_DELETED = "automation:deleted",

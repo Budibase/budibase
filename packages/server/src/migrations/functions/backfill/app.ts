@@ -1,6 +1,5 @@
 import * as automations from "./app/automations"
 import * as datasources from "./app/datasources"
-import * as layouts from "./app/layouts"
 import * as queries from "./app/queries"
 import * as roles from "./app/roles"
 import * as tables from "./app/tables"
@@ -28,7 +27,6 @@ const EVENTS = [
   Event.AUTOMATION_CREATED,
   Event.AUTOMATION_STEP_CREATED,
   Event.DATASOURCE_CREATED,
-  Event.LAYOUT_CREATED,
   Event.QUERY_CREATED,
   Event.ROLE_CREATED,
   Event.SCREEN_CREATED,
@@ -89,12 +87,6 @@ export const run = async (appDb: any) => {
       }
 
       try {
-        totals.layouts = await layouts.backfill(appDb, timestamp)
-      } catch (e) {
-        handleError(e, errors)
-      }
-
-      try {
         totals.queries = await queries.backfill(appDb, timestamp)
       } catch (e) {
         handleError(e, errors)
@@ -123,7 +115,6 @@ export const run = async (appDb: any) => {
       appId: app.appId,
       automations: totals.automations,
       datasources: totals.datasources,
-      layouts: totals.layouts,
       queries: totals.queries,
       roles: totals.roles,
       tables: totals.tables,

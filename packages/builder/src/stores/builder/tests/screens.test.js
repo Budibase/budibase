@@ -19,7 +19,6 @@ const COMP_PREFIX = "@budibase/standard-components"
 vi.mock("stores/builder", async () => {
   const mockAppStore = writable()
   const mockComponentStore = writable()
-  const mockLayoutStore = writable()
 
   const componentStore = {
     getDefinition: vi.fn(),
@@ -42,10 +41,6 @@ vi.mock("stores/builder", async () => {
     componentStore,
     appStore,
     navigationStore,
-    layoutStore: {
-      update: mockLayoutStore.update,
-      subscribe: mockComponentStore.subscribe,
-    },
   }
 })
 

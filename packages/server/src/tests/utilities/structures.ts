@@ -1,7 +1,5 @@
 import { roles, utils } from "@budibase/backend-core"
 import { createHomeScreen } from "../../constants/screens"
-import { EMPTY_LAYOUT } from "../../constants/layouts"
-import { cloneDeep } from "lodash/fp"
 import {
   BUILTIN_ACTION_DEFINITIONS,
   TRIGGER_DEFINITIONS,
@@ -602,10 +600,6 @@ export function powerScreen(route: string = "/") {
 
 export function customScreen(config: { roleId: string; route: string }) {
   return createHomeScreen(config)
-}
-
-export function basicLayout() {
-  return cloneDeep(EMPTY_LAYOUT)
 }
 
 export function basicWebhook(automationId: string): Webhook {

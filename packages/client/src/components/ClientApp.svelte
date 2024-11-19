@@ -5,7 +5,7 @@
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
   import { Constants, CookieUtils } from "@budibase/frontend-core"
   import { getThemeClassNames } from "@budibase/shared-core"
-  import Component from "./Component.svelte"
+  import Router from "./Router.svelte"
   import SDK from "sdk"
   import {
     featuresStore,
@@ -206,20 +206,6 @@
                                 </Body>
                               </Layout>
                             </div>
-                          {:else if !$screenStore.activeLayout}
-                            <div class="error">
-                              <Layout justifyItems="center" gap="S">
-                                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                                {@html ErrorSVG}
-                                <Heading size="L">
-                                  Something went wrong rendering your app
-                                </Heading>
-                                <Body size="S">
-                                  Get in touch with support if this issue
-                                  persists
-                                </Body>
-                              </Layout>
-                            </div>
                           {:else if embedNoScreens}
                             <div class="error">
                               <Layout justifyItems="center" gap="S">
@@ -232,12 +218,7 @@
                             </div>
                           {:else}
                             <CustomThemeWrapper>
-                              {#key $screenStore.activeLayout._id}
-                                <Component
-                                  isLayout
-                                  instance={$screenStore.activeLayout.props}
-                                />
-                              {/key}
+                              <Router />
 
                               <!-- Layers on top of app -->
                               <NotificationDisplay />

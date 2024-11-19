@@ -1,7 +1,6 @@
 export * from "./app"
 export * from "./automation"
 export * from "./datasource"
-export * from "./layout"
 export * from "./query"
 export * from "./role"
 export * from "./table"

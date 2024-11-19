@@ -3,7 +3,7 @@
   import { writable } from "svelte/store"
   import { Heading, Icon, clickOutside } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
-  import NavItem from "./NavItem.svelte"
+  import NavItem from "./app/NavItem.svelte"
 
   const sdk = getContext("sdk")
   const {
@@ -18,7 +18,6 @@
   const context = getContext("context")
   const navStateStore = writable({})
 
-  // Legacy props which must remain unchanged for backwards compatibility
   export let title
   export let hideTitle = false
   export let logoUrl
@@ -26,9 +25,6 @@
   export let navigation = "Top"
   export let sticky = false
   export let links
-  export let width = "Large"
-
-  // New props from new design UI
   export let navBackground
   export let navTextColor
   export let navWidth

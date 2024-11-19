@@ -69,7 +69,6 @@ describe("migrations", () => {
         expect(events.automation.created).toHaveBeenCalledTimes(2)
         expect(events.automation.stepCreated).toHaveBeenCalledTimes(1)
         expect(events.datasource.created).toHaveBeenCalledTimes(2)
-        expect(events.layout.created).toHaveBeenCalledTimes(1)
         expect(events.query.created).toHaveBeenCalledTimes(2)
         expect(events.role.created).toHaveBeenCalledTimes(3) // created roles + admin (created on table creation)
         expect(events.table.created).toHaveBeenCalledTimes(3)
