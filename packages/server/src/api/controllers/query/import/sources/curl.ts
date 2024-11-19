@@ -2,7 +2,7 @@ import { ImportSource, ImportInfo } from "./base"
 import { Query } from "../../../../../definitions/common"
 import { URL } from "url"
 
-const parseCurl = async (data: string): any => {
+const parseCurl = async (data: string): Promise<any> => {
   const curlconverter = await import("curlconverter")
   const curlJson = curlconverter.toJsonString(data)
   return JSON.parse(curlJson)

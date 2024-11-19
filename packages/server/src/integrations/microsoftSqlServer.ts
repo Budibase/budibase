@@ -281,6 +281,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         case MSSQLConfigAuthType.NTLM: {
           const { domain, trustServerCertificate } =
             this.config.ntlmConfig || {}
+
           clientCfg.authentication = {
             type: "ntlm",
             options: {

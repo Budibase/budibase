@@ -74,14 +74,14 @@ const SCHEMA: Integration = {
 
 class SnowflakePromise {
   config: SnowflakeConfig
-  client: snowflakeSdk
+  client?: snowflakeSdk.Connection
 
   constructor(config: SnowflakeConfig) {
     this.config = config
   }
 
   async connect() {
-    if (this.client?.isConnected()) return
+    if (this.client?.isUp()) return
 
     this.client = snowflakeSdk.createConnection(this.config)
     const connectAsync = promisify(this.client.connect.bind(this.client))
@@ -89,6 +89,10 @@ class SnowflakePromise {
   }
 
   async execute(sql: string) {
+    if (!this.client) {
+      throw Error("No snowflake client present to execute query. Run connect() first to initialise.")
+    }
+
     return new Promise((resolve, reject) => {
       this.client.execute({
         sqlText: sql,
