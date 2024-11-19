@@ -38,23 +38,15 @@
   )
 
   const getLayoutSettings = (screen, embedded, app, navigation, logoUrl) => {
-    if (!screen?.showNavigation) {
-      return { navigation: "None" }
-    }
     let settings = {
       embedded,
-      pageWidth: screen?.width,
       ...app?.navigation,
       ...navigation,
     }
 
-    // Migrate legacy width setting
-    if (settings.width && !settings.pageWidth) {
-      layoutSettings.pageWidth = settings.width
-    }
-    if (settings.width && !settings.navWidth) {
-      settings.navWidth = settings.width
-    }
+    // Migrate some settings
+    settings.pageWidth = screen?.width || settings.width || "Large"
+    settings.navWidth = settings.navWidth || settings.width || "Large"
 
     // Default some settings
     if (!settings.navigation) {
@@ -69,6 +61,12 @@
     if (!settings.logoUrl) {
       settings.logoUrl = logoUrl
     }
+
+    // Hide nav if required
+    if (!screen?.showNavigation) {
+      settings.navigation = "None"
+    }
+
     return settings
   }
 
