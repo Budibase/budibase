@@ -99,6 +99,7 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
     startupLog = `${startupLog} - environment: "${env.BUDIBASE_ENVIRONMENT}"`
   }
   console.log(startupLog)
+
   await initPro()
   await redis.clients.init()
   features.init()

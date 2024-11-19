@@ -1,8 +1,7 @@
 {
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
-  "version": "3.2.5",
+  "version": "3.2.7",
   "npmClient": "yarn",
-  "packages": ["packages/*"],
   "concurrency": 20,
   "command": {
     "publish": {

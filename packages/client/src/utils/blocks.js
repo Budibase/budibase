@@ -1,5 +1,7 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { API } from "../api/index.js"
+import { UILogicalOperator } from "@budibase/types"
+import { OnEmptyFilter } from "@budibase/frontend-core/src/constants.js"
 
 // Map of data types to component types for search fields inside blocks
 const schemaComponentMap = {
@@ -60,7 +62,11 @@ export const enrichSearchColumns = async (searchColumns, schema) => {
  * @param formId the ID of the form containing the search fields
  */
 export const enrichFilter = (filter, columns, formId) => {
-  let enrichedFilter = [...(filter || [])]
+  if (!columns?.length) {
+    return filter
+  }
+
+  let newFilters = []
   columns?.forEach(column => {
     const safePath = column.name.split(".").map(safe).join(".")
     const stringType = column.type === "string" || column.type === "formula"
@@ -69,7 +75,7 @@ export const enrichFilter = (filter, columns, formId) => {
 
     // For dates, use a range of the entire day selected
     if (dateType) {
-      enrichedFilter.push({
+      newFilters.push({
         field: column.name,
         type: column.type,
         operator: "rangeLow",
@@ -79,7 +85,7 @@ export const enrichFilter = (filter, columns, formId) => {
       const format = "YYYY-MM-DDTHH:mm:ss.SSSZ"
       let hbs = `{{ date (add (date ${binding} "x") 86399999) "${format}" }}`
       hbs = `{{#if ${binding} }}${hbs}{{/if}}`
-      enrichedFilter.push({
+      newFilters.push({
         field: column.name,
         type: column.type,
         operator: "rangeHigh",
@@ -90,7 +96,7 @@ export const enrichFilter = (filter, columns, formId) => {
 
     // For other fields, do an exact match
     else {
-      enrichedFilter.push({
+      newFilters.push({
         field: column.name,
         type: column.type,
         operator: stringType ? "string" : "equal",
@@ -99,5 +105,16 @@ export const enrichFilter = (filter, columns, formId) => {
       })
     }
   })
-  return enrichedFilter
+
+  return {
+    logicalOperator: UILogicalOperator.ALL,
+    onEmptyFilter: OnEmptyFilter.RETURN_ALL,
+    groups: [
+      ...(filter?.groups || []),
+      {
+        logicalOperator: UILogicalOperator.ALL,
+        filters: newFilters,
+      },
+    ],
+  }
 }
