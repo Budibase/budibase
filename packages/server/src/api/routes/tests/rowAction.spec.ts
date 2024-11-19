@@ -978,7 +978,7 @@ describe("/rowsActions", () => {
 })
 
 const descriptions = datasourceDescribe({
-  exclude: [DatabaseName.SQS, DatabaseName.POSTGRES],
+  only: [DatabaseName.SQS, DatabaseName.POSTGRES],
 })
 
 if (descriptions.length) {
