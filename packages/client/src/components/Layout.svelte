@@ -61,8 +61,8 @@
 
   $: enrichedNavItems = enrichNavItems(links, $roleStore)
   $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
-  $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
-  $: pageWidthClass = WidthClasses[pageWidth || width] || WidthClasses.Large
+  $: navWidthClass = WidthClasses[navWidth] || WidthClasses.Large
+  $: pageWidthClass = WidthClasses[pageWidth] || WidthClasses.Large
   $: navStyle = getNavStyle(
     navBackground,
     navTextColor,
