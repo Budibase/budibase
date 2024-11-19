@@ -14,10 +14,6 @@
     "./package.json": "./package.json",
     "./iife": "./src/iife.js"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
     "build": "tsc --emitDeclarationOnly && rollup -c",
     "dev": "rollup -cw",
