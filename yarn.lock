@@ -3116,15 +3116,10 @@
   dependencies:
     "@octokit/openapi-types" "^18.0.0"
 
-"@opentelemetry/api@>=1.0.0 <1.9.0":
+"@opentelemetry/api@>=1.0.0 <1.9.0", "@opentelemetry/api@^1.0.0":
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/@opentelemetry/api/-/api-1.8.0.tgz#5aa7abb48f23f693068ed2999ae627d2f7d902ec"
   integrity sha512-I/s6F7yKUDdtMsoBWXJe8Qz40Tui5vsuKCWJEWVL+5q9sSWRzzx6v2KeNsOBEwd94j0eWkpWCH4yB6rZg9Mf0w==
-
-"@opentelemetry/api@^1.0.0":
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/@opentelemetry/api/-/api-1.7.0.tgz#b139c81999c23e3c8d3c0a7234480e945920fc40"
-  integrity sha512-AdY5wvN0P2vXBi3b29hxZgSFvdhdxPB9+f0B6s//P9Q8nibRWeA3cHm8UmLpio9ABigkVHJ5NMPk+Mz8VCCyrw==
 
 "@opentelemetry/core@^1.14.0":
   version "1.19.0"
@@ -4626,31 +4621,10 @@
     "@types/pouchdb-core" "*"
     "@types/pouchdb-find" "*"
 
-"@types/pouchdb@6.4.2":
+"@types/pouchdb@6.4.2", "@types/pouchdb@^6.4.0":
   version "6.4.2"
   resolved "https://registry.yarnpkg.com/@types/pouchdb/-/pouchdb-6.4.2.tgz#54777533d86f4abd1a3989b272e085323623bbe1"
   integrity sha512-YsI47rASdtzR+3V3JE2UKY58snhm0AglHBpyckQBkRYoCbTvGagXHtV0x5n8nzN04jQmvTG+Sm85cIzKT3KXBA==
-  dependencies:
-    "@types/pouchdb-adapter-cordova-sqlite" "*"
-    "@types/pouchdb-adapter-fruitdown" "*"
-    "@types/pouchdb-adapter-http" "*"
-    "@types/pouchdb-adapter-idb" "*"
-    "@types/pouchdb-adapter-leveldb" "*"
-    "@types/pouchdb-adapter-localstorage" "*"
-    "@types/pouchdb-adapter-memory" "*"
-    "@types/pouchdb-adapter-node-websql" "*"
-    "@types/pouchdb-adapter-websql" "*"
-    "@types/pouchdb-browser" "*"
-    "@types/pouchdb-core" "*"
-    "@types/pouchdb-http" "*"
-    "@types/pouchdb-mapreduce" "*"
-    "@types/pouchdb-node" "*"
-    "@types/pouchdb-replication" "*"
-
-"@types/pouchdb@^6.4.0":
-  version "6.4.0"
-  resolved "https://registry.yarnpkg.com/@types/pouchdb/-/pouchdb-6.4.0.tgz#f9c41ca64b23029f9bf2eb4bf6956e6431cb79f8"
-  integrity sha512-eGCpX+NXhd5VLJuJMzwe3L79fa9+IDTrAG3CPaf4s/31PD56hOrhDJTSmRELSXuiqXr6+OHzzP0PldSaWsFt7w==
   dependencies:
     "@types/pouchdb-adapter-cordova-sqlite" "*"
     "@types/pouchdb-adapter-fruitdown" "*"
@@ -5307,11 +5281,6 @@ acorn-globals@^7.0.0:
   dependencies:
     acorn "^8.1.0"
     acorn-walk "^8.0.2"
-
-acorn-import-assertions@^1.9.0:
-  version "1.9.0"
-  resolved "https://registry.yarnpkg.com/acorn-import-assertions/-/acorn-import-assertions-1.9.0.tgz#507276249d684797c84e0734ef84860334cfb1ac"
-  integrity sha512-cmMwop9x+8KFhxvKrKfPYmN6/pKTYYHBqLa0DfvVZcKMJWNyWLnaqND7dx/qn66R7ewM1UX5XMaDVP5wlVTaVA==
 
 acorn-import-attributes@^1.9.5:
   version "1.9.5"
@@ -7709,12 +7678,7 @@ dayjs@^1.10.8:
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.13.tgz#92430b0139055c3ebb60150aa13e860a4b5a366c"
   integrity sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg==
 
-dc-polyfill@^0.1.2:
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/dc-polyfill/-/dc-polyfill-0.1.3.tgz#fe9eefc86813439dd46d6f9ad9582ec079c39720"
-  integrity sha512-Wyk5n/5KUj3GfVKV2jtDbtChC/Ff9fjKsBcg4ZtYW1yQe3DXNHcGURvmoxhqQdfOQ9TwyMjnfyv1lyYcOkFkFA==
-
-dc-polyfill@^0.1.4:
+dc-polyfill@^0.1.2, dc-polyfill@^0.1.4:
   version "0.1.6"
   resolved "https://registry.yarnpkg.com/dc-polyfill/-/dc-polyfill-0.1.6.tgz#c2940fa68ffb24a7bf127cc6cfdd15b39f0e7f02"
   integrity sha512-UV33cugmCC49a5uWAApM+6Ev9ZdvIUMTrtCO9fj96TPGOQiea54oeO3tiEVdVeo3J9N2UdJEmbS4zOkkEA35uQ==
@@ -10799,23 +10763,13 @@ import-from@^3.0.0:
   dependencies:
     resolve-from "^5.0.0"
 
-import-in-the-middle@1.11.2:
+import-in-the-middle@1.11.2, import-in-the-middle@^1.7.3:
   version "1.11.2"
   resolved "https://registry.yarnpkg.com/import-in-the-middle/-/import-in-the-middle-1.11.2.tgz#dd848e72b63ca6cd7c34df8b8d97fc9baee6174f"
   integrity sha512-gK6Rr6EykBcc6cVWRSBR5TWf8nn6hZMYSRYqCcHa0l0d1fPK7JSYo6+Mlmck76jIX9aL/IZ71c06U2VpFwl1zA==
   dependencies:
     acorn "^8.8.2"
     acorn-import-attributes "^1.9.5"
-    cjs-module-lexer "^1.2.2"
-    module-details-from-path "^1.0.3"
-
-import-in-the-middle@^1.7.3:
-  version "1.7.3"
-  resolved "https://registry.yarnpkg.com/import-in-the-middle/-/import-in-the-middle-1.7.3.tgz#ffa784cdd57a47d2b68d2e7dd33070ff06baee43"
-  integrity sha512-R2I11NRi0lI3jD2+qjqyVlVEahsejw7LDnYEbGb47QEFjczE3bZYsmWheCTQA+LFs2DzOQxR7Pms7naHW1V4bQ==
-  dependencies:
-    acorn "^8.8.2"
-    acorn-import-assertions "^1.9.0"
     cjs-module-lexer "^1.2.2"
     module-details-from-path "^1.0.3"
 
@@ -14145,12 +14099,7 @@ node-gyp-build@<4.0, node-gyp-build@^3.9.0:
   resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-3.9.0.tgz#53a350187dd4d5276750da21605d1cb681d09e25"
   integrity sha512-zLcTg6P4AbcHPq465ZMFNXx7XpKKJh+7kkN699NiQWisR2uWYOWNWqRHAmbnmKiL4e9aLSlmy5U7rEMUXV59+A==
 
-node-gyp-build@^4.3.0, node-gyp-build@^4.5.0:
-  version "4.6.0"
-  resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.6.0.tgz#0c52e4cbf54bbd28b709820ef7b6a3c2d6209055"
-  integrity sha512-NTZVKn9IylLwUzaKjkas1e4u2DLNcV4rdYagA4PWdPwW87Bi7z+BznyKSRwS/761tV/lzCGXplWsiaMjLqP2zQ==
-
-node-gyp-build@^4.8.0, node-gyp-build@^4.8.2:
+node-gyp-build@^4.3.0, node-gyp-build@^4.5.0, node-gyp-build@^4.8.0, node-gyp-build@^4.8.2:
   version "4.8.4"
   resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.8.4.tgz#8a70ee85464ae52327772a90d66c6077a900cfc8"
   integrity sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==
@@ -15255,22 +15204,12 @@ path-to-regexp@1.x:
   dependencies:
     isarray "0.0.1"
 
-path-to-regexp@^0.1.10:
+path-to-regexp@^0.1.10, path-to-regexp@^0.1.2:
   version "0.1.11"
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-0.1.11.tgz#a527e662c89efc4646dbfa8100bf3e847e495761"
   integrity sha512-c0t+KCuUkO/YDLPG4WWzEwx3J5F/GHXsD1h/SNZfySqAIKe/BaP95x8fWtOfRJokpS5yYHRJjMtYlXD8jxnpbw==
 
-path-to-regexp@^0.1.2:
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-0.1.7.tgz#df604178005f522f15eb4490e7247a1bfaa67f8c"
-  integrity sha512-5DFkuoqlv1uYQKxy8omFBeJPQcdoE07Kv2sferDCrAq1ohOU+MSDswDIbnx3YAM60qIOnYa53wBhXW0EbMonrQ==
-
-path-to-regexp@^6.1.0:
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-6.2.1.tgz#d54934d6798eb9e5ef14e7af7962c945906918e5"
-  integrity sha512-JLyh7xT1kizaEvcaXOQwOc2/Yhw6KZOvPf1S8401UyLk86CU79LN3vl7ztXGm/pZ+YjoyAJ4rxmHwbkBXJX+yw==
-
-path-to-regexp@^6.3.0:
+path-to-regexp@^6.1.0, path-to-regexp@^6.3.0:
   version "6.3.0"
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-6.3.0.tgz#2b6a26a337737a8e1416f9272ed0766b1c0389f4"
   integrity sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==
@@ -16166,12 +16105,7 @@ pouchdb@9.0.0:
     uuid "8.3.2"
     vuvuzela "1.0.3"
 
-pprof-format@^2.0.7:
-  version "2.0.7"
-  resolved "https://registry.yarnpkg.com/pprof-format/-/pprof-format-2.0.7.tgz#526e4361f8b37d16b2ec4bb0696b5292de5046a4"
-  integrity sha512-1qWaGAzwMpaXJP9opRa23nPnt2Egi7RMNoNBptEE/XwHbcn4fC2b/4U4bKc5arkGkIh2ZabpF2bEb+c5GNHEKA==
-
-pprof-format@^2.1.0:
+pprof-format@^2.0.7, pprof-format@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/pprof-format/-/pprof-format-2.1.0.tgz#acc8d7773bcf4faf0a3d3df11bceefba7ac06664"
   integrity sha512-0+G5bHH0RNr8E5hoZo/zJYsL92MhkZjwrHp3O2IxmY8RJL9ooKeuZ8Tm0ZNBw5sGZ9TiM71sthTjWoR2Vf5/xw==
@@ -17057,12 +16991,7 @@ reusify@^1.0.4:
   resolved "https://registry.yarnpkg.com/reusify/-/reusify-1.0.4.tgz#90da382b1e126efc02146e90845a88db12925d76"
   integrity sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==
 
-rfdc@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/rfdc/-/rfdc-1.3.0.tgz#d0b7c441ab2720d05dc4cf26e01c89631d9da08b"
-  integrity sha512-V2hovdzFbOi77/WajaSMXk2OLm+xNIeQdMMuB7icj7bk6zi2F8GGAxigcnDFpJHbNyNcgyJDiP+8nOrY5cZGrA==
-
-rfdc@^1.3.1:
+rfdc@^1.3.0, rfdc@^1.3.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/rfdc/-/rfdc-1.4.1.tgz#778f76c4fb731d93414e8f925fbecf64cce7f6ca"
   integrity sha512-q1b3N5QkRUWUl7iyylaaj3kOpIT0N2i9MqIEQXP73GVsN9cw3fdx8X63cEmWhJGi2PPCF23Ijp7ktmd39rawIA==
