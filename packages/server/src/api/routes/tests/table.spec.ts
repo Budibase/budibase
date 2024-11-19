@@ -1511,5 +1511,20 @@ datasourceDescribe(
           })
       })
     })
+    describe("csvToJson", () => {
+      const delimiters = [",", ";", ":", "|", "~", "\t", " "]
+      it.only.each(delimiters)(
+        "can parse CSVs with delimiter; %s",
+        async delimiter => {
+          const rows = await config.api.table.csvToJson({
+            csvString: [
+              ["a", "b", "c", "d", "e"].join(delimiter),
+              ["1", "2", "3", "4", "5"].join(delimiter),
+            ].join("\n"),
+          })
+          expect(rows).toEqual([{ a: "1", b: "2", c: "3", d: "4", e: "5" }])
+        }
+      )
+    })
   }
 )
