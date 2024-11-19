@@ -2,9 +2,8 @@ import { ImportSource, ImportInfo } from "./base"
 import { Query } from "../../../../../definitions/common"
 import { URL } from "url"
 
-const curlconverter = require("curlconverter")
-
-const parseCurl = (data: string): any => {
+const parseCurl = async (data: string): any => {
+  const curlconverter = await import("curlconverter")
   const curlJson = curlconverter.toJsonString(data)
   return JSON.parse(curlJson)
 }
@@ -53,7 +52,7 @@ export class Curl extends ImportSource {
 
   isSupported = async (data: string): Promise<boolean> => {
     try {
-      const curl = parseCurl(data)
+      const curl = await parseCurl(data)
       this.curl = curl
     } catch (err) {
       return false

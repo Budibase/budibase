@@ -6,7 +6,8 @@ import {
   QueryType,
   SqlQuery,
 } from "@budibase/types"
-import { Snowflake } from "snowflake-promise"
+import snowflakeSdk from "snowflake-sdk"
+import { promisify } from "util"
 
 interface SnowflakeConfig {
   account: string
@@ -16,6 +17,7 @@ interface SnowflakeConfig {
   database: string
   schema: string
 }
+
 
 const SCHEMA: Integration = {
   docs: "https://developers.snowflake.com/",
@@ -71,11 +73,42 @@ const SCHEMA: Integration = {
   },
 }
 
-class SnowflakeIntegration {
-  private client: Snowflake
+class SnowflakePromise {
+  config: SnowflakeConfig
+  client: snowflakeSdk
 
   constructor(config: SnowflakeConfig) {
-    this.client = new Snowflake(config)
+    this.config = config
+  }
+
+  async connect() {
+    if (this.client?.isConnected()) return
+
+    this.client = snowflakeSdk.createConnection(this.config)
+    const connectAsync = promisify(this.client.connect.bind(this.client))
+    return connectAsync()
+  }
+
+  async execute(sql: string) {
+    return new Promise((resolve, reject) => {
+      this.client.execute({
+        sqlText: sql,
+        complete: function(err: Error, statementExecuted: string, rows: any) {
+          if (err) {
+            return reject(err)
+          }
+          resolve(rows)
+        },
+      })
+    })
+  }
+}
+
+class SnowflakeIntegration {
+  private client: SnowflakePromise
+
+  constructor(config: SnowflakeConfig) {
+    this.client = new SnowflakePromise(config)
   }
 
   async testConnection(): Promise<ConnectionInfo> {
