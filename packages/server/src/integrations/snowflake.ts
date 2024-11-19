@@ -18,7 +18,6 @@ interface SnowflakeConfig {
   schema: string
 }
 
-
 const SCHEMA: Integration = {
   docs: "https://developers.snowflake.com/",
   description:
@@ -93,7 +92,7 @@ class SnowflakePromise {
     return new Promise((resolve, reject) => {
       this.client.execute({
         sqlText: sql,
-        complete: function(err: Error, statementExecuted: string, rows: any) {
+        complete: function (err: Error, statementExecuted: string, rows: any) {
           if (err) {
             return reject(err)
           }
