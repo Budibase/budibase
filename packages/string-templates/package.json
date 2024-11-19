@@ -12,7 +12,7 @@
       "import": "./dist/bundle.mjs"
     },
     "./package.json": "./package.json",
-    "./iife": "./src/iife.js"
+    "./iife": "./dist/iife.mjs"
   },
   "scripts": {
     "build": "tsc --emitDeclarationOnly && rollup -c",
