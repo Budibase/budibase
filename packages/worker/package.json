@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "prebuild": "rimraf dist/",
-    "build": "../../scripts/depcheck.js && node ../../scripts/build.js",
+    "build": "node ../../scripts/depcheck.js && node ../../scripts/build.js",
     "postbuild": "copyfiles -f ../../yarn.lock ./dist/",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
