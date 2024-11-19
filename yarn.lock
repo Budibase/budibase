@@ -5575,10 +5575,10 @@
   resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.31.tgz#31b7ca6407128a3d2bbc27fe2d21b345397f6197"
   integrity sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
 
-"@types/mssql@9.1.4":
-  version "9.1.4"
-  resolved "https://registry.yarnpkg.com/@types/mssql/-/mssql-9.1.4.tgz#d485b06494a76d15b957e0952305c55053bac366"
-  integrity sha512-st2ryK+viraRuptxcGs+66J0RrABytxhGxUlpWcOniNPzpnxIaeNhPJVM3lZn1r+s/6lQARYID6Z+MBoseSD8g==
+"@types/mssql@9.1.5":
+  version "9.1.5"
+  resolved "https://registry.yarnpkg.com/@types/mssql/-/mssql-9.1.5.tgz#1574a5870aeb029c6d787861af101161b9b8d3b6"
+  integrity sha512-Q9EsgXwuRoX5wvUSu24YfbKMbFChv7pZ/jeCzPkj47ehcuXYsBcfogwrtVFosSjinD4Q/MY2YPGk9Yy1cM2Ywg==
   dependencies:
     "@types/node" "*"
     "@types/tedious" "*"
