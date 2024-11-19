@@ -135,7 +135,7 @@
     "@types/node-fetch": "2.6.4",
     "@types/oracledb": "6.5.1",
     "@types/pg": "8.6.6",
-    "@types/pouchdb": "^6.4.2",
+    "@types/pouchdb": "6.4.2",
     "@types/server-destroy": "1.0.1",
     "@types/supertest": "2.0.14",
     "@types/tar": "6.1.5",
