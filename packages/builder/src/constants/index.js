@@ -34,13 +34,6 @@ export const UNEDITABLE_USER_FIELDS = [
   "lastName",
 ]
 
-export const LAYOUT_NAMES = {
-  MASTER: {
-    PRIVATE: "layout_private_master",
-    PUBLIC: "layout_private_master",
-  },
-}
-
 // one or more word characters and whitespace
 export const APP_NAME_REGEX = /^[\w\s]+$/
 // zero or more non-whitespace characters

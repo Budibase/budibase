@@ -357,10 +357,6 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.INSTALLATION_BACKFILL_SUCCEEDED]: undefined,
   [Event.INSTALLATION_BACKFILL_FAILED]: undefined,
 
-  // LAYOUT - NOT AUDITED
-  [Event.LAYOUT_CREATED]: undefined,
-  [Event.LAYOUT_DELETED]: undefined,
-
   // VIEW - NOT AUDITED
   [Event.VIEW_CREATED]: undefined,
   [Event.VIEW_UPDATED]: undefined,

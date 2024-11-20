@@ -4,7 +4,6 @@ import { findComponentById, findComponentPathById } from "../utils/components"
 import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 import { builderStore } from "./builder"
-import Router from "../components/Router.svelte"
 import * as AppComponents from "../components/app/index.js"
 
 export const BudibasePrefix = "@budibase/standard-components/"

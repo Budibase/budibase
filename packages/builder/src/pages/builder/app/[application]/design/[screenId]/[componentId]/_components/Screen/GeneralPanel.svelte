@@ -4,7 +4,6 @@
     Helpers,
     Input,
     Checkbox,
-    Banner,
     Select,
     notifications,
   } from "@budibase/bbui"

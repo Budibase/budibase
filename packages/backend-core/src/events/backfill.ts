@@ -6,7 +6,6 @@ import {
   AutomationCreatedEvent,
   AutomationStepCreatedEvent,
   DatasourceCreatedEvent,
-  LayoutCreatedEvent,
   QueryCreatedEvent,
   RoleCreatedEvent,
   ScreenCreatedEvent,
