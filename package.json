@@ -35,11 +35,9 @@
     "setup": "git config submodule.recurse true && git submodule update && node ./hosting/scripts/setup.js && yarn && yarn build && yarn dev",
     "build": "DISABLE_V8_COMPILE_CACHE=1 NODE_OPTIONS=--max-old-space-size=1500 lerna run build --stream",
     "build:apps": "DISABLE_V8_COMPILE_CACHE=1 yarn build --scope @budibase/server --scope @budibase/worker",
-    "build:oss": "DISABLE_V8_COMPILE_CACHE=1 NODE_OPTIONS=--max-old-space-size=1500 lerna run build --stream --ignore @budibase/account-portal-server --ignore @budibase/account-portal-ui",
     "build:cli": "yarn build --scope @budibase/cli",
-    "build:account-portal": "NODE_OPTIONS=--max-old-space-size=1500 lerna run build --stream --scope @budibase/account-portal-server --scope @budibase/account-portal-ui",
     "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",
-    "check:types": "lerna run --concurrency 2 check:types --ignore @budibase/account-portal-server",
+    "check:types": "lerna run --concurrency 2 check:types",
     "build:sdk": "lerna run --stream build:sdk",
     "deps:circular": "madge packages/server/dist/index.js packages/worker/src/index.ts packages/backend-core/dist/src/index.js packages/cli/src/index.js --circular",
     "release": "lerna publish from-package --yes --force-publish --no-git-tag-version --no-push --no-git-reset",
@@ -52,12 +50,9 @@
     "kill-server": "kill-port 4001 4002",
     "kill-accountportal": "kill-port 3001 4003",
     "kill-all": "yarn run kill-builder && yarn run kill-server && yarn kill-accountportal",
-    "dev": "yarn run kill-all && lerna run --parallel prebuild && lerna run --stream dev --ignore=@budibase/account-portal-ui --ignore @budibase/account-portal-server",
-    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up --ignore @budibase/account-portal-server && lerna run --stream dev --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker --ignore=@budibase/account-portal-ui --ignore @budibase/account-portal-server",
+    "dev": "yarn run kill-all && lerna run --parallel prebuild && lerna run --stream dev",
+    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up && lerna run --stream dev --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
     "dev:server": "yarn run kill-server && lerna run --stream dev --scope @budibase/worker --scope @budibase/server",
-    "dev:accountportal": "yarn kill-accountportal && lerna run dev --stream --scope @budibase/account-portal-ui --scope @budibase/account-portal-server",
-    "dev:camunda": "./scripts/deploy-camunda.sh",
-    "dev:all": "yarn run kill-all && lerna run --stream dev",
     "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream dev:built",
     "dev:docker": "./scripts/devDocker.sh",
     "test": "lerna run --concurrency 1 --stream test --stream",
@@ -98,9 +93,7 @@
   },
   "workspaces": {
     "packages": [
-      "packages/*",
-      "!packages/account-portal",
-      "packages/account-portal/packages/*"
+      "packages/*"
     ]
   },
   "resolutions": {
