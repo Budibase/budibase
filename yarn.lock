@@ -802,37 +802,23 @@
     tslib "^2.2.0"
 
 "@azure/msal-browser@^3.11.1":
-  version "3.24.0"
-  resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-3.24.0.tgz#3208047672d0b0c943b0bef5f995d510d6582ae4"
-  integrity sha512-JGNV9hTYAa7lsum9IMIibn2kKczAojNihGo1hi7pG0kNrcKej530Fl6jxwM05A44/6I079CSn6WxYxbVhKUmWg==
+  version "3.27.0"
+  resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-3.27.0.tgz#b6f02f73c8e102d3f115009b4677539fb173fe2b"
+  integrity sha512-+b4ZKSD8+vslCtVRVetkegEhOFMLP3rxDWJY212ct+2r6jVg6OSQKc1Qz3kCoXo0FgwaXkb+76TMZfpHp8QtgA==
   dependencies:
-    "@azure/msal-common" "14.15.0"
-
-"@azure/msal-common@14.15.0":
-  version "14.15.0"
-  resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-14.15.0.tgz#0e27ac0bb88fe100f4f8d1605b64d5c268636a55"
-  integrity sha512-ImAQHxmpMneJ/4S8BRFhjt1MZ3bppmpRPYYNyzeQPeFN288YKbb8TmmISQEbtfkQ1BPASvYZU5doIZOPBAqENQ==
+    "@azure/msal-common" "14.16.0"
 
 "@azure/msal-common@14.16.0":
   version "14.16.0"
   resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-14.16.0.tgz#f3470fcaec788dbe50859952cd499340bda23d7a"
   integrity sha512-1KOZj9IpcDSwpNiQNjt0jDYZpQvNZay7QAEi/5DLubay40iGYtLzya/jbjRPLyOTZhEKyL1MzPuw2HqBCjceYA==
 
-"@azure/msal-node@^2.5.1":
+"@azure/msal-node@^2.5.1", "@azure/msal-node@^2.9.2":
   version "2.16.2"
   resolved "https://registry.yarnpkg.com/@azure/msal-node/-/msal-node-2.16.2.tgz#3eb768d36883ea6f9a939c0b5b467b518e78fffc"
   integrity sha512-An7l1hEr0w1HMMh1LU+rtDtqL7/jw74ORlc9Wnh06v7TU/xpG39/Zdr1ZJu3QpjUfKJ+E0/OXMW8DRSWTlh7qQ==
   dependencies:
     "@azure/msal-common" "14.16.0"
-    jsonwebtoken "^9.0.0"
-    uuid "^8.3.0"
-
-"@azure/msal-node@^2.9.2":
-  version "2.14.0"
-  resolved "https://registry.yarnpkg.com/@azure/msal-node/-/msal-node-2.14.0.tgz#7881895d41b03d8b9b38a29550ba3bbb15f73b3c"
-  integrity sha512-rrfzIpG3Q1rHjVYZmHAEDidWAZZ2cgkxlIcMQ8dHebRISaZ2KCV33Q8Vs+uaV6lxweROabNxKFlR2lIKagZqYg==
-  dependencies:
-    "@azure/msal-common" "14.15.0"
     jsonwebtoken "^9.0.0"
     uuid "^8.3.0"
 
@@ -2125,7 +2111,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.33.2":
+"@budibase/backend-core@3.2.7":
   version "0.0.0"
   dependencies:
     "@budibase/nano" "10.1.5"
@@ -2209,15 +2195,15 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "2.33.2"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.33.2.tgz#5c2012f7b2bf0fd871cda1ad37ad7a0442c84658"
-  integrity sha512-lBB6Wfp6OIOHRlGq82WS9KxvEXRs/P2QlwJT0Aj9PhmkQFsnXm2r8d18f0xTGvcflD+iR7XGP/k56JlCanmhQg==
+  version "3.2.7"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.2.7.tgz#4dfc48f3e2ba3a3b235872e54c3de4de54ea7941"
+  integrity sha512-GRRaf1qSqQfoodjvKjBDvNOVHZrcSXF7so6Y9Xv/MiRTjDES5nmhIT5rL/PQ1+Mb+sPytYmMaJ2mlTtwqSQZgQ==
   dependencies:
     "@anthropic-ai/sdk" "^0.27.3"
-    "@budibase/backend-core" "2.33.2"
-    "@budibase/shared-core" "2.33.2"
-    "@budibase/string-templates" "2.33.2"
-    "@budibase/types" "2.33.2"
+    "@budibase/backend-core" "3.2.7"
+    "@budibase/shared-core" "3.2.7"
+    "@budibase/string-templates" "3.2.7"
+    "@budibase/types" "3.2.7"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     dd-trace "5.2.0"
@@ -2230,13 +2216,13 @@
     scim-patch "^0.8.1"
     scim2-parse-filter "^0.2.8"
 
-"@budibase/shared-core@2.33.2":
+"@budibase/shared-core@3.2.7":
   version "0.0.0"
   dependencies:
     "@budibase/types" "0.0.0"
     cron-validate "1.4.5"
 
-"@budibase/string-templates@2.33.2":
+"@budibase/string-templates@3.2.7":
   version "0.0.0"
   dependencies:
     "@budibase/handlebars-helpers" "^0.13.2"
@@ -2244,7 +2230,7 @@
     handlebars "^4.7.8"
     lodash.clonedeep "^4.5.0"
 
-"@budibase/types@2.33.2":
+"@budibase/types@3.2.7":
   version "0.0.0"
   dependencies:
     scim-patch "^0.8.1"
@@ -4151,10 +4137,10 @@
   resolved "https://registry.yarnpkg.com/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.21.2.tgz#e4291e3c1bc637083f87936c333cdbcad22af63b"
   integrity sha512-6UUxd0+SKomjdzuAcp+HAmxw1FlGBnl1v2yEPSabtx4lBfdXHDVsW7+lQkgz9cNFJGY3AWR7+V8P5BqkD9L9nA==
 
-"@roxi/routify@2.18.12":
-  version "2.18.12"
-  resolved "https://registry.yarnpkg.com/@roxi/routify/-/routify-2.18.12.tgz#901ca95b96f274ddddaefbf18424557ee1ae3fae"
-  integrity sha512-0phd3vkrfc3u4ujEMPQxIdSQTXs/od892cHB4ZwmY6xIGDtfrI/CW0QMrO+BPYeZ5iFFVq8w7htvH1SQsLEqtw==
+"@roxi/routify@2.18.18":
+  version "2.18.18"
+  resolved "https://registry.yarnpkg.com/@roxi/routify/-/routify-2.18.18.tgz#cba6fc80c52d79fa0cae13d227f6af16a352815b"
+  integrity sha512-daCBABx9Qv7JskApuKKrh6u+sXtIVxp9f8R7y07q6/gumGuIYH43V2As3ho29q9mAnorjP/G7REZ4+sflZKdPw==
   dependencies:
     "@roxi/ssr" "^0.2.1"
     "@types/node" "^12.20.52"
@@ -5589,7 +5575,7 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-16.9.1.tgz#0611b37db4246c937feef529ddcc018cf8e35708"
   integrity sha512-QpLcX9ZSsq3YYUUnD3nFDY8H7wctAhQj/TFKL8Ya8v5fMm3CFXxo8zStsLAl780ltoYoo1WvKUVGBQK+1ifr7g==
 
-"@types/node@22.9.1":
+"@types/node@22.9.1", "@types/node@^22.9.0":
   version "22.9.1"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-22.9.1.tgz#bdf91c36e0e7ecfb7257b2d75bf1b206b308ca71"
   integrity sha512-p8Yy/8sw1caA8CdRIQBG5tiLHmxtQKObCijiAa9Ez+d4+PRffM4054xbju0msf+cvhJpnFEeNjxmVT/0ipktrg==
@@ -5619,13 +5605,6 @@
   integrity sha512-aoRR+fJkZT2l0aGOJhuA8frnCSoNX6W7U2mpNq63+BxBIj5BQFt8rHy627kijCmm63ijdSdwvGgpUsU6MBsZZA==
   dependencies:
     undici-types "~5.26.4"
-
-"@types/node@^22.9.0":
-  version "22.9.1"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.9.1.tgz#bdf91c36e0e7ecfb7257b2d75bf1b206b308ca71"
-  integrity sha512-p8Yy/8sw1caA8CdRIQBG5tiLHmxtQKObCijiAa9Ez+d4+PRffM4054xbju0msf+cvhJpnFEeNjxmVT/0ipktrg==
-  dependencies:
-    undici-types "~6.19.8"
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.1"
