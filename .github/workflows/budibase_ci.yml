@@ -113,15 +113,13 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Test
         env:
-          # This enables github annotations for vitest
-          GITHUB_ACTIONS: true
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
             yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
-            yarn test -- --scope=@budibase/builder --since=${{ env.NX_BASE_BRANCH }} --no-prefix
+            yarn test -- --scope=@budibase/builder --since=${{ env.NX_BASE_BRANCH }} --no-prefix -- --reporter=default --reporter=github-actions
           else
             yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --no-prefix -- --verbose --reporters=default --reporters=github-actions
-            yarn test -- --scope=@budibase/builder --no-prefix
+            yarn test -- --scope=@budibase/builder --no-prefix -- --reporter=default --reporter=github-actions
           fi
 
   test-worker:
