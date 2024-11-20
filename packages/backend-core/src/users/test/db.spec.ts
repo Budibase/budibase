@@ -36,26 +36,7 @@ describe("UserDB", () => {
   describe("save", () => {
     describe("create", () => {
       it("creating a new user will persist it", async () => {
-        const email = generator.email({})
-        const user: User = structures.users.user({
-          email,
-          tenantId: config.getTenantId(),
-        })
-
-        await config.doInTenant(async () => {
-          const saveUserResponse = await db.save(user)
-
-          const persistedUser = await db.getUserByEmail(email)
-          expect(persistedUser).toEqual({
-            ...user,
-            _id: saveUserResponse._id,
-            _rev: expect.stringMatching(/^1-\w+/),
-            password: expect.not.stringMatching(user.password!),
-            status: UserStatus.ACTIVE,
-            createdAt: Date.now(),
-            updatedAt: new Date().toISOString(),
-          })
-        })
+        throw new Error("oh no")
       })
 
       it("the same email cannot be used twice in the same tenant", async () => {
