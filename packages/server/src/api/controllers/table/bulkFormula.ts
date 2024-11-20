@@ -6,10 +6,10 @@ import uniq from "lodash/uniq"
 import { updateAllFormulasInTable } from "../row/staticFormula"
 import { context } from "@budibase/backend-core"
 import {
-  FormulaType,
   FieldSchema,
   FieldType,
   FormulaFieldMetadata,
+  FormulaType,
   Table,
 } from "@budibase/types"
 import sdk from "../../../sdk"

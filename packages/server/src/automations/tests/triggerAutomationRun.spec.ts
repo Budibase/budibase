@@ -29,6 +29,7 @@ describe("Test triggering an automation from another automation", () => {
       },
     }
     const res = await setup.runStep(
+      config,
       setup.actions.TRIGGER_AUTOMATION_RUN.stepId,
       inputs
     )
@@ -44,6 +45,7 @@ describe("Test triggering an automation from another automation", () => {
       },
     }
     const res = await setup.runStep(
+      config,
       setup.actions.TRIGGER_AUTOMATION_RUN.stepId,
       inputs
     )

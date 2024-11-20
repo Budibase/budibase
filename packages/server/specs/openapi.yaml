@@ -6,16 +6,14 @@ info:
 servers:
   - url: https://budibase.app/api/public/v1
     description: Budibase Cloud API
-  - url: "{protocol}://{hostname}/api/public/v1"
-    description: Budibase self hosted API
     variables:
-      protocol:
-        default: http
-        description: Whether HTTP or HTTPS should be used to communicate with your
-          Budibase instance.
-      hostname:
-        default: localhost:10000
-        description: The URL of your Budibase instance.
+      apiKey:
+        default: <user API key>
+        description: The API key of the user to assume for API call.
+      appId:
+        default: <App ID>
+        description: The ID of the app the calls will be executed within the context of,
+          this should start with app_ (production) or app_dev (development).
 components:
   parameters:
     tableId:
@@ -38,6 +36,7 @@ components:
       required: true
       description: The ID of the app which this request is targeting.
       schema:
+        default: "{{ appId }}"
         type: string
     appIdUrl:
       in: path
@@ -45,6 +44,7 @@ components:
       required: true
       description: The ID of the app which this request is targeting.
       schema:
+        default: "{{ appId }}"
         type: string
     queryId:
       in: path
@@ -761,6 +761,7 @@ components:
                     enum:
                       - static
                       - dynamic
+                      - ai
                     description: Defines whether this is a static or dynamic formula.
               - type: object
                 properties:
@@ -779,6 +780,7 @@ components:
                       - link
                       - formula
                       - auto
+                      - ai
                       - json
                       - internal
                       - barcodeqr
@@ -929,6 +931,7 @@ components:
                         enum:
                           - static
                           - dynamic
+                          - ai
                         description: Defines whether this is a static or dynamic formula.
                   - type: object
                     properties:
@@ -947,6 +950,7 @@ components:
                           - link
                           - formula
                           - auto
+                          - ai
                           - json
                           - internal
                           - barcodeqr
@@ -1104,6 +1108,7 @@ components:
                           enum:
                             - static
                             - dynamic
+                            - ai
                           description: Defines whether this is a static or dynamic formula.
                     - type: object
                       properties:
@@ -1122,6 +1127,7 @@ components:
                             - link
                             - formula
                             - auto
+                            - ai
                             - json
                             - internal
                             - barcodeqr

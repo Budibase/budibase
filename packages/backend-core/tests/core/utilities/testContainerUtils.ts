@@ -1,4 +1,6 @@
 import { execSync } from "child_process"
+import { cloneDeep } from "lodash"
+import { GenericContainer, StartedTestContainer } from "testcontainers"
 
 const IPV4_PORT_REGEX = new RegExp(`0\\.0\\.0\\.0:(\\d+)->(\\d+)/tcp`, "g")
 
@@ -105,4 +107,59 @@ export function setupEnv(...envs: any[]) {
       env._set(config.key, config.value)
     }
   }
+}
+
+export async function startContainer(container: GenericContainer) {
+  const imageName = (container as any).imageName.string as string
+  let key: string = imageName
+  if (imageName.includes("@sha256")) {
+    key = imageName.split("@")[0]
+  }
+  key = key.replace(/\//g, "-").replace(/:/g, "-")
+
+  container = container
+    .withReuse()
+    .withLabels({ "com.budibase": "true" })
+    .withName(`${key}_testcontainer`)
+
+  let startedContainer: StartedTestContainer | undefined = undefined
+  let lastError = undefined
+  for (let i = 0; i < 10; i++) {
+    try {
+      // container.start() is not an idempotent operation, calling `start`
+      // modifies the internal state of a GenericContainer instance such that
+      // the hash it uses to determine reuse changes. We need to clone the
+      // container before calling start to ensure that we're using the same
+      // reuse hash every time.
+      const containerCopy = cloneDeep(container)
+      startedContainer = await containerCopy.start()
+      lastError = undefined
+      break
+    } catch (e: any) {
+      lastError = e
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+  }
+
+  if (!startedContainer) {
+    if (lastError) {
+      throw lastError
+    }
+    throw new Error(`failed to start container: ${imageName}`)
+  }
+
+  const info = getContainerById(startedContainer.getId())
+  if (!info) {
+    throw new Error("Container not found")
+  }
+
+  // Some Docker runtimes, when you expose a port, will bind it to both
+  // 127.0.0.1 and ::1, so ipv4 and ipv6. The port spaces of ipv4 and ipv6
+  // addresses are not shared, and testcontainers will sometimes give you back
+  // the ipv6 port. There's no way to know that this has happened, and if you
+  // try to then connect to `localhost:port` you may attempt to bind to the v4
+  // address which could be unbound or even an entirely different container. For
+  // that reason, we don't use testcontainers' `getExposedPort` function,
+  // preferring instead our own method that guaranteed v4 ports.
+  return getExposedV4Ports(info)
 }

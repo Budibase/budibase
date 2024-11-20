@@ -123,6 +123,7 @@ export async function updateWithExport(
     // don't need obj store, the existing app already has everything we need
     await backups.importApp(devId, tempDb, template, {
       importObjStoreContents: false,
+      updateAttachmentColumns: true,
     })
     const newMetadata = await getNewAppMetadata(tempDb, appDb)
     // get the documents to copy

@@ -16,14 +16,15 @@ import {
   isSSOUser,
   SaveUserOpts,
   User,
-  UserStatus,
   UserGroup,
+  UserIdentifier,
+  UserStatus,
   PlatformUserBySsoId,
   PlatformUserById,
   AnyDocument,
 } from "@budibase/types"
 import {
-  getAccountHolderFromUserIds,
+  getAccountHolderFromUsers,
   isAdmin,
   isCreator,
   validateUniqueUser,
@@ -412,7 +413,9 @@ export class UserDB {
     )
   }
 
-  static async bulkDelete(userIds: string[]): Promise<BulkUserDeleted> {
+  static async bulkDelete(
+    users: Array<UserIdentifier>
+  ): Promise<BulkUserDeleted> {
     const db = getGlobalDB()
 
     const response: BulkUserDeleted = {
@@ -421,13 +424,13 @@ export class UserDB {
     }
 
     // remove the account holder from the delete request if present
-    const account = await getAccountHolderFromUserIds(userIds)
-    if (account) {
-      userIds = userIds.filter(u => u !== account.budibaseUserId)
+    const accountHolder = await getAccountHolderFromUsers(users)
+    if (accountHolder) {
+      users = users.filter(u => u.userId !== accountHolder.userId)
       // mark user as unsuccessful
       response.unsuccessful.push({
-        _id: account.budibaseUserId,
-        email: account.email,
+        _id: accountHolder.userId,
+        email: accountHolder.email,
         reason: "Account holder cannot be deleted",
       })
     }
@@ -435,7 +438,7 @@ export class UserDB {
     // Get users and delete
     const allDocsResponse = await db.allDocs<User>({
       include_docs: true,
-      keys: userIds,
+      keys: users.map(u => u.userId),
     })
     const usersToDelete = allDocsResponse.rows.map(user => {
       return user.doc!

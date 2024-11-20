@@ -73,8 +73,7 @@ export async function getResourcePerms(
     p[level] = { role, type: PermissionSource.BASE }
     return p
   }, {})
-  const result = Object.assign(basePermissions, permissions)
-  return result
+  return Object.assign(basePermissions, permissions)
 }
 
 export async function getDependantResources(

@@ -1,4 +1,4 @@
-import { context, features } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
@@ -15,12 +15,28 @@ import {
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
+import { ensureQueryUISet } from "../views/utils"
+import { isV2 } from "../views"
 
 export async function processTable(table: Table): Promise<Table> {
   if (!table) {
     return table
   }
+
+  table = { ...table }
+  if (table.views) {
+    for (const [key, view] of Object.entries(table.views)) {
+      if (!isV2(view)) {
+        continue
+      }
+      table.views[key] = ensureQueryUISet(view)
+    }
+  }
   if (table._id && isExternalTableID(table._id)) {
+    // Old created external tables via Budibase might have a missing field name breaking some UI such as filters
+    if (table.schema["id"] && !table.schema["id"].name) {
+      table.schema["id"].name = "id"
+    }
     return {
       ...table,
       type: "table",
@@ -32,10 +48,7 @@ export async function processTable(table: Table): Promise<Table> {
       type: "table",
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
-    }
-    const sqsEnabled = await features.flags.isEnabled("SQS")
-    if (sqsEnabled) {
-      processed.sql = true
+      sql: true,
     }
     return processed
   }
@@ -84,7 +97,11 @@ export async function getExternalTable(
   if (!entities[tableName]) {
     throw new Error(`Unable to find table named "${tableName}"`)
   }
-  return processTable(entities[tableName])
+  const table = await processTable(entities[tableName])
+  if (!table.sourceId) {
+    table.sourceId = datasourceId
+  }
+  return table
 }
 
 export async function getTable(tableId: string): Promise<Table> {

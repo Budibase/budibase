@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
 import { cloneDeep } from "lodash"
+import { createSecretKey } from "crypto"
 
 function isTest() {
   return isJest()
@@ -16,6 +17,12 @@ function isJest() {
 
 function isDev() {
   return process.env.NODE_ENV !== "production"
+}
+
+function parseIntSafe(number?: string) {
+  if (number) {
+    return parseInt(number)
+  }
 }
 
 let LOADED = false
@@ -54,30 +61,46 @@ function getPackageJsonFields(): {
   VERSION: string
   SERVICE_NAME: string
 } {
-  function findFileInAncestors(
-    fileName: string,
-    currentDir: string
-  ): string | null {
-    const filePath = `${currentDir}/${fileName}`
-    if (existsSync(filePath)) {
-      return filePath
+  function getParentFile(file: string) {
+    function findFileInAncestors(
+      fileName: string,
+      currentDir: string
+    ): string | null {
+      const filePath = `${currentDir}/${fileName}`
+      if (existsSync(filePath)) {
+        return filePath
+      }
+
+      const parentDir = `${currentDir}/..`
+      if (parentDir === currentDir) {
+        // reached root directory
+        return null
+      }
+
+      return findFileInAncestors(fileName, parentDir)
     }
 
-    const parentDir = `${currentDir}/..`
-    if (parentDir === currentDir) {
-      // reached root directory
-      return null
-    }
+    const packageJsonFile = findFileInAncestors(file, process.cwd())
+    const content = readFileSync(packageJsonFile!, "utf-8")
+    const parsedContent = JSON.parse(content)
+    return parsedContent
+  }
 
-    return findFileInAncestors(fileName, parentDir)
+  let localVersion: string | undefined
+  if (isDev() && !isTest()) {
+    try {
+      const lerna = getParentFile("lerna.json")
+      localVersion = `${lerna.version}+local`
+    } catch {
+      //
+    }
   }
 
   try {
-    const packageJsonFile = findFileInAncestors("package.json", process.cwd())
-    const content = readFileSync(packageJsonFile!, "utf-8")
-    const parsedContent = JSON.parse(content)
+    const parsedContent = getParentFile("package.json")
     return {
-      VERSION: process.env.BUDIBASE_VERSION || parsedContent.version,
+      VERSION:
+        localVersion || process.env.BUDIBASE_VERSION || parsedContent.version,
       SERVICE_NAME: parsedContent.name,
     }
   } catch {
@@ -110,8 +133,12 @@ const environment = {
   },
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   JS_BCRYPT: process.env.JS_BCRYPT,
-  JWT_SECRET: process.env.JWT_SECRET,
-  JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK,
+  JWT_SECRET: process.env.JWT_SECRET
+    ? createSecretKey(Buffer.from(process.env.JWT_SECRET))
+    : undefined,
+  JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK
+    ? createSecretKey(Buffer.from(process.env.JWT_SECRET_FALLBACK))
+    : undefined,
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
@@ -207,6 +234,10 @@ const environment = {
   BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  MIN_VERSION_WITHOUT_POWER_ROLE:
+    process.env.MIN_VERSION_WITHOUT_POWER_ROLE || "3.0.0",
+  DISABLE_CONTENT_SECURITY_POLICY: process.env.DISABLE_CONTENT_SECURITY_POLICY,
+  BSON_BUFFER_SIZE: parseIntSafe(process.env.BSON_BUFFER_SIZE),
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {

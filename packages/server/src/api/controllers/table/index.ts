@@ -16,6 +16,7 @@ import {
   BulkImportResponse,
   CsvToJsonRequest,
   CsvToJsonResponse,
+  EventType,
   FetchTablesResponse,
   FieldType,
   MigrateRequest,
@@ -71,19 +72,20 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
 
   const datasources = await sdk.datasources.getExternalDatasources()
 
-  const external = datasources.flatMap(datasource => {
+  const external: Table[] = []
+  for (const datasource of datasources) {
     let entities = datasource.entities
     if (entities) {
-      return Object.values(entities).map<Table>((entity: Table) => ({
-        ...entity,
-        sourceType: TableSourceType.EXTERNAL,
-        sourceId: datasource._id!,
-        sql: isSQL(datasource),
-      }))
-    } else {
-      return []
+      for (const entity of Object.values(entities)) {
+        external.push({
+          ...(await processTable(entity)),
+          sourceType: TableSourceType.EXTERNAL,
+          sourceId: datasource._id!,
+          sql: isSQL(datasource),
+        })
+      }
     }
-  })
+  }
 
   const result: FetchTablesResponse = []
   for (const table of [...internal, ...external]) {
@@ -128,8 +130,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   }
   ctx.status = 200
   ctx.message = `Table ${table.name} saved successfully.`
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emitTable(`table:save`, appId, { ...savedTable })
+  ctx.eventEmitter?.emitTable(EventType.TABLE_SAVE, appId, { ...savedTable })
   ctx.body = savedTable
 
   savedTable = await processTable(savedTable)
@@ -139,10 +140,11 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 export async function destroy(ctx: UserCtx) {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
+  await sdk.rowActions.deleteAll(tableId)
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
   await events.table.deleted(deletedTable)
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emitTable(`table:delete`, appId, deletedTable)
+
+  ctx.eventEmitter?.emitTable(EventType.TABLE_DELETE, appId, deletedTable)
   ctx.status = 200
   ctx.table = deletedTable
   ctx.body = { message: `Table ${tableId} deleted.` }
