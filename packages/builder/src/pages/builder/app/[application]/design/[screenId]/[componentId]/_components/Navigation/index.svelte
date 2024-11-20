@@ -175,7 +175,7 @@
           <PropertyControl
             label="Logo size"
             control={DrawerBindableCombobox}
-            value={nav.logoSize}
+            value={$nav.logoSize}
             onChange={logoSize => update("logoSize", logoSize)}
             {bindings}
             props={{
