@@ -565,7 +565,7 @@ datasourceDescribe(
             const row = await config.api.row.save(table._id!, {
               food: ["orange"],
             })
-            expect(row.food).toEqual(["orange"])
+            expect(row.food).toEqual(["orangefdsfsd"])
           })
 
           it("resets back to its default value when empty", async () => {
