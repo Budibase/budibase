@@ -24,6 +24,7 @@ import {
   JsonFieldSubType,
   LogicalOperator,
   RelationshipType,
+  RequiredKeys,
   Row,
   RowSearchParams,
   SearchFilters,
@@ -206,9 +207,23 @@ datasourceDescribe(
 
           private async performSearch(): Promise<SearchResponse<Row>> {
             if (isInMemory) {
-              return dataFilters.search(_.cloneDeep(rows), {
-                ...this.query,
-              })
+              const query: RequiredKeys<Omit<RowSearchParams, "tableId">> = {
+                sort: this.query.sort,
+                query: this.query.query || {},
+                paginate: this.query.paginate,
+                bookmark: this.query.bookmark,
+                limit: this.query.limit,
+                sortOrder: this.query.sortOrder,
+                sortType: this.query.sortType,
+                version: this.query.version,
+                disableEscaping: this.query.disableEscaping,
+                countRows: this.query.countRows,
+                viewId: undefined,
+                fields: undefined,
+                indexer: undefined,
+                rows: undefined,
+              }
+              return dataFilters.search(_.cloneDeep(rows), query)
             } else {
               return config.api.row.search(tableOrViewId, this.query)
             }
