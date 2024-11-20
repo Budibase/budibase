@@ -288,7 +288,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
           clientCfg.authentication = {
             type: "ntlm",
-            // @ts-ignore
+            // @ts-expect-error - username and password not required for NTLM
             options: {
               domain,
             },
