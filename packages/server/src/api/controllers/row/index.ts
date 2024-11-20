@@ -255,7 +255,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
     query: enrichedQuery,
     tableId,
     viewId,
-    bookmark: searchRequest.bookmark,
+    bookmark: searchRequest.bookmark ?? undefined,
     paginate: searchRequest.paginate,
     limit: searchRequest.limit,
     sort: searchRequest.sort,
