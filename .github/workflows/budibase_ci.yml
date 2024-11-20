@@ -112,7 +112,6 @@ jobs:
 
       - run: yarn --frozen-lockfile
       - name: Test
-        env:
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
             yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
