@@ -40,6 +40,7 @@ import {
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
 import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
+import crypto from "crypto"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
