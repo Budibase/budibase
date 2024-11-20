@@ -1,4 +1,4 @@
-import { permissions, roles, utils } from "@budibase/backend-core"
+import { roles, utils } from "@budibase/backend-core"
 import { createHomeScreen } from "../../constants/screens"
 import { EMPTY_LAYOUT } from "../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
@@ -7,30 +7,33 @@ import {
   TRIGGER_DEFINITIONS,
 } from "../../automations"
 import {
+  AIOperationEnum,
+  AutoFieldSubType,
   Automation,
   AutomationActionStepId,
+  AutomationEventType,
   AutomationResults,
   AutomationStatus,
   AutomationStep,
   AutomationStepType,
   AutomationTrigger,
   AutomationTriggerStepId,
+  BBReferenceFieldSubType,
+  CreateViewRequest,
   Datasource,
+  FieldSchema,
   FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  JsonFieldSubType,
+  LoopStepType,
+  Query,
+  Role,
   SourceName,
   Table,
-  INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
-  Query,
   Webhook,
   WebhookActionType,
-  AutomationEventType,
-  LoopStepType,
-  FieldSchema,
-  BBReferenceFieldSubType,
-  JsonFieldSubType,
-  AutoFieldSubType,
-  CreateViewRequest,
+  BuiltinPermissionID,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -242,6 +245,38 @@ export function basicAutomation(appId?: string): Automation {
   }
 }
 
+export function basicCronAutomation(appId: string, cron: string): Automation {
+  const automation: Automation = {
+    name: `Automation ${generator.guid()}`,
+    definition: {
+      trigger: {
+        stepId: AutomationTriggerStepId.CRON,
+        name: "test",
+        tagline: "test",
+        icon: "test",
+        description: "test",
+        type: AutomationStepType.TRIGGER,
+        id: "test",
+        inputs: {
+          cron,
+        },
+        schema: {
+          inputs: {
+            properties: {},
+          },
+          outputs: {
+            properties: {},
+          },
+        },
+      },
+      steps: [],
+    },
+    type: "automation",
+    appId,
+  }
+  return automation
+}
+
 export function serverLogAutomation(appId?: string): Automation {
   return {
     name: "My Automation",
@@ -437,7 +472,7 @@ export function updateRowAutomationWithFilters(
   appId: string,
   tableId: string
 ): Automation {
-  const automation: Automation = {
+  return {
     name: "updateRowWithFilters",
     type: "automation",
     appId,
@@ -470,7 +505,6 @@ export function updateRowAutomationWithFilters(
       },
     },
   }
-  return automation
 }
 
 export function basicAutomationResults(
@@ -510,11 +544,12 @@ export function basicLinkedRow(
   }
 }
 
-export function basicRole() {
+export function basicRole(): Role {
   return {
     name: `NewRole_${utils.newid()}`,
     inherits: roles.BUILTIN_ROLE_IDS.BASIC,
-    permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+    permissionId: BuiltinPermissionID.WRITE,
+    permissions: {},
     version: "name",
   }
 }
@@ -665,6 +700,12 @@ export function fullSchemaWithoutLinks({
       constraints: {
         presence: allRequired,
       },
+    },
+    [FieldType.AI]: {
+      name: "ai",
+      type: FieldType.AI,
+      operation: AIOperationEnum.PROMPT,
+      prompt: "Translate this into German :'{{ product }}'",
     },
     [FieldType.BARCODEQR]: {
       name: "barcodeqr",

@@ -14,10 +14,10 @@ import {
   coreOutputProcessing,
   processFormulas,
 } from "../../utilities/rowProcessor"
-import { context, features } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import {
   ContextUser,
-  FeatureFlag,
+  EventType,
   FieldType,
   LinkDocumentValue,
   Row,
@@ -44,15 +44,7 @@ const INVALID_DISPLAY_COLUMN_TYPE = [
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
  * correctly - making sure that no stale links are left around and that all links have been made successfully.
  */
-
-export const EventType = {
-  ROW_SAVE: "row:save",
-  ROW_UPDATE: "row:update",
-  ROW_DELETE: "row:delete",
-  TABLE_SAVE: "table:save",
-  TABLE_UPDATED: "table:updated",
-  TABLE_DELETE: "table:delete",
-}
+export { EventType } from "@budibase/types"
 
 function clearRelationshipFields(schema: TableSchema, rows: Row[]) {
   for (let [key, field] of Object.entries(schema)) {
@@ -258,19 +250,13 @@ export async function squashLinks<T = Row[] | Row>(
   source: Table | ViewV2,
   enriched: T
 ): Promise<T> {
-  const allowRelationshipSchemas = await features.flags.isEnabled(
-    FeatureFlag.ENRICHED_RELATIONSHIPS
-  )
-
   let viewSchema: ViewV2Schema = {}
   if (sdk.views.isView(source)) {
     if (helpers.views.isCalculationView(source)) {
       return enriched
     }
 
-    if (allowRelationshipSchemas) {
-      viewSchema = source.schema || {}
-    }
+    viewSchema = source.schema || {}
   }
 
   let table: Table
@@ -307,7 +293,9 @@ export async function squashLinks<T = Row[] | Row>(
                 return false
               }
               if (
-                [FieldType.LINK, FieldType.FORMULA].includes(tableColumn.type)
+                [FieldType.LINK, FieldType.FORMULA, FieldType.AI].includes(
+                  tableColumn.type
+                )
               ) {
                 return false
               }

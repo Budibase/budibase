@@ -10,16 +10,13 @@ import ViewV2Fetch from "@budibase/frontend-core/src/fetch/ViewV2Fetch.js"
 import QueryArrayFetch from "@budibase/frontend-core/src/fetch/QueryArrayFetch"
 
 /**
- * Fetches the schema of any kind of datasource.
+ * Constructs a fetch instance for a given datasource.
  * All datasource fetch classes implement their own functionality to get the
  * schema of a datasource of their respective types.
- * @param datasource the datasource to fetch the schema for
- * @param options options for enriching the schema
+ * @param datasource the datasource
+ * @returns
  */
-export const fetchDatasourceSchema = async (
-  datasource,
-  options = { enrichRelationships: false, formSchema: false }
-) => {
+const getDatasourceFetchInstance = datasource => {
   const handler = {
     table: TableFetch,
     view: ViewFetch,
@@ -34,10 +31,23 @@ export const fetchDatasourceSchema = async (
   if (!handler) {
     return null
   }
-  const instance = new handler({ API })
+  return new handler({ API })
+}
 
-  // Get the datasource definition and then schema
-  const definition = await instance.getDefinition(datasource)
+/**
+ * Fetches the schema of any kind of datasource.
+ * @param datasource the datasource to fetch the schema for
+ * @param options options for enriching the schema
+ */
+export const fetchDatasourceSchema = async (
+  datasource,
+  options = { enrichRelationships: false, formSchema: false }
+) => {
+  const instance = getDatasourceFetchInstance(datasource)
+  const definition = await instance?.getDefinition(datasource)
+  if (!definition) {
+    return null
+  }
 
   // Get the normal schema as long as we aren't wanting a form schema
   let schema
@@ -73,6 +83,15 @@ export const fetchDatasourceSchema = async (
 
   // Ensure schema is in the correct structure
   return instance.enrichSchema(schema)
+}
+
+/**
+ * Fetches the definition of any kind of datasource.
+ * @param datasource the datasource to fetch the schema for
+ */
+export const fetchDatasourceDefinition = async datasource => {
+  const instance = getDatasourceFetchInstance(datasource)
+  return await instance?.getDefinition(datasource)
 }
 
 /**

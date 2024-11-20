@@ -267,12 +267,10 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 // All of the machinery in this file is to make sure that flags have their
 // default values set correctly and their types flow through the system.
 export const flags = new FlagSet({
-  DEFAULT_VALUES: Flag.boolean(env.isDev()),
-  AUTOMATION_BRANCHING: Flag.boolean(env.isDev()),
-  SQS: Flag.boolean(env.isDev()),
-  [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(env.isDev()),
-  [FeatureFlag.ENRICHED_RELATIONSHIPS]: Flag.boolean(env.isDev()),
-  [FeatureFlag.TABLES_DEFAULT_ADMIN]: Flag.boolean(env.isDev()),
+  [FeatureFlag.DEFAULT_VALUES]: Flag.boolean(true),
+  [FeatureFlag.AUTOMATION_BRANCHING]: Flag.boolean(true),
+  [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(true),
+  [FeatureFlag.BUDIBASE_AI]: Flag.boolean(true),
 })
 
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : T

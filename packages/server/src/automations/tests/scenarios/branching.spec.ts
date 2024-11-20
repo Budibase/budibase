@@ -48,7 +48,9 @@ describe("Branching automations", () => {
                       { stepId: branch1LogId }
                     ),
                   condition: {
-                    equal: { [`{{ steps.${firstLogId}.success }}`]: true },
+                    equal: {
+                      [`{{ literal steps.${firstLogId}.success }}`]: true,
+                    },
                   },
                 },
                 branch2: {
@@ -58,19 +60,21 @@ describe("Branching automations", () => {
                       { stepId: branch2LogId }
                     ),
                   condition: {
-                    equal: { [`{{ steps.${firstLogId}.success }}`]: false },
+                    equal: {
+                      [`{{ literal steps.${firstLogId}.success }}`]: false,
+                    },
                   },
                 },
               }),
           condition: {
-            equal: { [`{{ steps.${firstLogId}.success }}`]: true },
+            equal: { [`{{ literal steps.${firstLogId}.success }}`]: true },
           },
         },
         topLevelBranch2: {
           steps: stepBuilder =>
             stepBuilder.serverLog({ text: "Branch 2" }, { stepId: branch2Id }),
           condition: {
-            equal: { [`{{ steps.${firstLogId}.success }}`]: false },
+            equal: { [`{{ literal steps.${firstLogId}.success }}`]: false },
           },
         },
       })
@@ -216,5 +220,91 @@ describe("Branching automations", () => {
       AutomationStatus.NO_CONDITION_MET
     )
     expect(results.steps[2]).toBeUndefined()
+  })
+
+  it("evaluate multiple conditions", async () => {
+    const builder = createAutomationBuilder({
+      name: "evaluate multiple conditions",
+    })
+
+    const results = await builder
+      .appAction({ fields: { test_trigger: true } })
+      .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
+      .branch({
+        specialBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Special user" }),
+          condition: {
+            $or: {
+              conditions: [
+                {
+                  equal: {
+                    '{{ js "cmV0dXJuICQoInRyaWdnZXIuZmllbGRzLnRlc3RfdHJpZ2dlciIp" }}':
+                      "{{ literal trigger.fields.test_trigger}}",
+                  },
+                },
+              ],
+            },
+          },
+        },
+        regularBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Regular user" }),
+          condition: {
+            $and: {
+              conditions: [
+                {
+                  equal: { "{{ literal trigger.fields.test_trigger}}": "blah" },
+                },
+                {
+                  equal: { "{{ literal trigger.fields.test_trigger}}": "123" },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .run()
+
+    expect(results.steps[2].outputs.message).toContain("Special user")
+  })
+
+  it("evaluate multiple conditions with interpolated text", async () => {
+    const builder = createAutomationBuilder({
+      name: "evaluate multiple conditions",
+    })
+
+    const results = await builder
+      .appAction({ fields: { test_trigger: true } })
+      .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
+      .branch({
+        specialBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Special user" }),
+          condition: {
+            $or: {
+              conditions: [
+                {
+                  equal: {
+                    "{{ trigger.fields.test_trigger }} 5":
+                      "{{ trigger.fields.test_trigger }} 5",
+                  },
+                },
+              ],
+            },
+          },
+        },
+        regularBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Regular user" }),
+          condition: {
+            $and: {
+              conditions: [
+                { equal: { "{{ trigger.fields.test_trigger }}": "blah" } },
+                { equal: { "{{ trigger.fields.test_trigger }}": "123" } },
+              ],
+            },
+          },
+        },
+      })
+      .run()
+
+    expect(results.steps[2].outputs.message).toContain("Special user")
   })
 })

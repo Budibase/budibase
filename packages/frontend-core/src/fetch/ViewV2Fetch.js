@@ -1,3 +1,4 @@
+import { ViewV2Type } from "@budibase/types"
 import DataFetch from "./DataFetch.js"
 import { get } from "svelte/store"
 
@@ -35,16 +36,22 @@ export default class ViewV2Fetch extends DataFetch {
   }
 
   async getData() {
-    const {
-      datasource,
-      limit,
-      sortColumn,
-      sortOrder,
-      sortType,
-      paginate,
-      filter,
-    } = this.options
+    const { datasource, limit, sortColumn, sortOrder, sortType, paginate } =
+      this.options
     const { cursor, query, definition } = get(this.store)
+
+    // If this is a calculation view and we have no calculations, return nothing
+    if (
+      definition.type === ViewV2Type.CALCULATION &&
+      !Object.values(definition.schema || {}).some(x => x.calculationType)
+    ) {
+      return {
+        rows: [],
+        hasNextPage: false,
+        cursor: null,
+        error: null,
+      }
+    }
 
     // If sort/filter params are not defined, update options to store the
     // params built in to this view. This ensures that we can accurately
@@ -53,14 +60,11 @@ export default class ViewV2Fetch extends DataFetch {
       this.options.sortColumn = definition.sort.field
       this.options.sortOrder = definition.sort.order
     }
-    if (!filter?.length && definition.query?.length) {
-      this.options.filter = definition.query
-    }
 
     try {
       const res = await this.API.viewV2.fetch({
         viewId: datasource.id,
-        query,
+        ...(query ? { query } : {}),
         paginate,
         limit,
         bookmark: cursor,
@@ -77,6 +81,7 @@ export default class ViewV2Fetch extends DataFetch {
       return {
         rows: [],
         hasNextPage: false,
+        cursor: null,
         error,
       }
     }

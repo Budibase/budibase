@@ -110,6 +110,7 @@ export default class TestConfiguration {
   tenantId?: string
   api: API
   csrfToken?: string
+  temporaryHeaders?: Record<string, string | string[]>
 
   constructor(openServer = true) {
     if (openServer) {
@@ -236,6 +237,7 @@ export default class TestConfiguration {
     if (!this) {
       return
     }
+
     if (this.server) {
       this.server.close()
     } else {
@@ -422,11 +424,44 @@ export default class TestConfiguration {
         Accept: "application/json",
         Cookie: [`${constants.Cookie.Auth}=${authToken}`],
         [constants.Header.APP_ID]: appId,
+        ...this.temporaryHeaders,
       }
     })
   }
 
   // HEADERS
+
+  // sets the role for the headers, for the period of a callback
+  async loginAsRole(roleId: string, cb: () => Promise<unknown>) {
+    const roleUser = await this.createUser({
+      roles: {
+        [this.getProdAppId()]: roleId,
+      },
+      builder: { global: false },
+      admin: { global: false },
+    })
+    await this.login({
+      roleId,
+      userId: roleUser._id!,
+      builder: false,
+      prodApp: true,
+    })
+    await this.withUser(roleUser, async () => {
+      await cb()
+    })
+  }
+
+  async withHeaders(
+    headers: Record<string, string | string[]>,
+    cb: () => Promise<unknown>
+  ) {
+    this.temporaryHeaders = headers
+    try {
+      await cb()
+    } finally {
+      this.temporaryHeaders = undefined
+    }
+  }
 
   defaultHeaders(extras = {}, prodApp = false) {
     const tenantId = this.getTenantId()
@@ -451,7 +486,10 @@ export default class TestConfiguration {
     } else if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
-    return headers
+    return {
+      ...headers,
+      ...this.temporaryHeaders,
+    }
   }
 
   publicHeaders({ prodApp = true } = {}) {
@@ -459,6 +497,7 @@ export default class TestConfiguration {
 
     const headers: any = {
       Accept: "application/json",
+      Cookie: "",
     }
     if (appId) {
       headers[constants.Header.APP_ID] = appId
@@ -466,7 +505,10 @@ export default class TestConfiguration {
 
     headers[constants.Header.TENANT_ID] = this.getTenantId()
 
-    return headers
+    return {
+      ...headers,
+      ...this.temporaryHeaders,
+    }
   }
 
   async basicRoleHeaders() {
@@ -485,6 +527,10 @@ export default class TestConfiguration {
     prodApp = true,
   } = {}) {
     return this.login({ userId: email, roleId, builder, prodApp })
+  }
+
+  browserUserAgent() {
+    return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
   }
 
   // TENANCY

@@ -1,24 +1,19 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
-import { getBaseTheme } from "@budibase/frontend-core"
+import { ensureValidTheme, DefaultAppTheme } from "@budibase/shared-core"
 
-const INITIAL_THEMES_STATE = {
-  theme: "",
-  customTheme: {},
-}
-
-export const themes = () => {
+export const createThemeStore = () => {
   const store = writable({
-    ...INITIAL_THEMES_STATE,
+    theme: DefaultAppTheme,
+    customTheme: {},
   })
 
   const syncAppTheme = app => {
     store.update(state => {
-      const theme = app.theme || "spectrum--light"
+      const theme = ensureValidTheme(app.theme, DefaultAppTheme)
       return {
         ...state,
         theme,
-        baseTheme: getBaseTheme(theme),
         customTheme: app.customTheme,
       }
     })
@@ -51,7 +46,7 @@ export const themes = () => {
     const { theme, customTheme } = metadata
     store.update(state => ({
       ...state,
-      theme,
+      theme: ensureValidTheme(theme, DefaultAppTheme),
       customTheme,
     }))
   }
@@ -66,4 +61,4 @@ export const themes = () => {
   }
 }
 
-export const themeStore = themes()
+export const themeStore = createThemeStore()

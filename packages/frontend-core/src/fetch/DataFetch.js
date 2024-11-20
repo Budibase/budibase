@@ -2,6 +2,7 @@ import { writable, derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
+import { FieldType, SortOrder, SortType } from "@budibase/types"
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
@@ -37,7 +38,7 @@ export default class DataFetch {
 
       // Sorting config
       sortColumn: null,
-      sortOrder: "ascending",
+      sortOrder: SortOrder.ASCENDING,
       sortType: null,
 
       // Pagination config
@@ -162,17 +163,22 @@ export default class DataFetch {
     // If we don't have a sort column specified then just ensure we don't set
     // any sorting params
     if (!this.options.sortColumn) {
-      this.options.sortOrder = "ascending"
+      this.options.sortOrder = SortOrder.ASCENDING
       this.options.sortType = null
     } else {
       // Otherwise determine what sort type to use base on sort column
-      const type = schema?.[this.options.sortColumn]?.type
-      this.options.sortType =
-        type === "number" || type === "bigint" ? "number" : "string"
-
+      this.options.sortType = SortType.STRING
+      const fieldSchema = schema?.[this.options.sortColumn]
+      if (
+        fieldSchema?.type === FieldType.NUMBER ||
+        fieldSchema?.type === FieldType.BIGINT ||
+        fieldSchema?.calculationType
+      ) {
+        this.options.sortType = SortType.NUMBER
+      }
       // If no sort order, default to ascending
       if (!this.options.sortOrder) {
-        this.options.sortOrder = "ascending"
+        this.options.sortOrder = SortOrder.ASCENDING
       }
     }
 
@@ -310,7 +316,7 @@ export default class DataFetch {
     let jsonAdditions = {}
     Object.keys(schema).forEach(fieldKey => {
       const fieldSchema = schema[fieldKey]
-      if (fieldSchema?.type === "json") {
+      if (fieldSchema?.type === FieldType.JSON) {
         const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
           squashObjects: true,
         })
@@ -364,7 +370,9 @@ export default class DataFetch {
     let refresh = false
     const entries = Object.entries(newOptions || {})
     for (let [key, value] of entries) {
-      if (JSON.stringify(value) !== JSON.stringify(this.options[key])) {
+      const oldVal = this.options[key] == null ? null : this.options[key]
+      const newVal = value == null ? null : value
+      if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
         refresh = true
         break
       }

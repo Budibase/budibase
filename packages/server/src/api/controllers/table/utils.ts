@@ -1,34 +1,34 @@
-import { parse, isSchema, isRows } from "../../../utilities/schema"
-import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
+import { isRows, isSchema, parse } from "../../../utilities/schema"
+import { generateRowID, getRowParams, InternalTables } from "../../../db/utils"
 import isEqual from "lodash/isEqual"
 import {
-  GOOGLE_SHEETS_PRIMARY_KEY,
-  USERS_TABLE_SCHEMA,
-  SwitchableTypes,
   CanSwitchTypes,
+  GOOGLE_SHEETS_PRIMARY_KEY,
+  SwitchableTypes,
+  USERS_TABLE_SCHEMA,
 } from "../../../constants"
 import {
-  inputProcessing,
   AttachmentCleanup,
+  inputProcessing,
 } from "../../../utilities/rowProcessor"
 import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { events, context, features } from "@budibase/backend-core"
+import { context, events, HTTPError } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
+  Database,
   Datasource,
+  FieldSchema,
+  FieldType,
+  NumberFieldMetadata,
+  RelationshipFieldMetadata,
+  RenameColumn,
   Row,
   SourceName,
   Table,
-  Database,
-  RenameColumn,
-  NumberFieldMetadata,
-  FieldSchema,
   View,
-  RelationshipFieldMetadata,
-  FieldType,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import env from "../../../environment"
@@ -135,23 +135,29 @@ export async function importToRows(
 
     // We use a reference to table here and update it after input processing,
     // so that we can auto increment auto IDs in imported data properly
-    const processed = await inputProcessing(userId, table, row, {
+    row = await inputProcessing(userId, table, row, {
       noAutoRelationships: true,
     })
-    row = processed
 
     // However here we must reference the original table, as we want to mutate
     // the real schema of the table passed in, not the clone used for
     // incrementing auto IDs
     for (const [fieldName, schema] of Object.entries(originalTable.schema)) {
-      const rowVal = Array.isArray(row[fieldName])
-        ? row[fieldName]
-        : [row[fieldName]]
+      if (schema.type === FieldType.LINK && data.find(row => row[fieldName])) {
+        throw new HTTPError(
+          `Can't bulk import relationship fields for internal databases, found value in field "${fieldName}"`,
+          400
+        )
+      }
+
       if (
         (schema.type === FieldType.OPTIONS ||
           schema.type === FieldType.ARRAY) &&
         row[fieldName]
       ) {
+        const rowVal = Array.isArray(row[fieldName])
+          ? row[fieldName]
+          : [row[fieldName]]
         let merged = [...schema.constraints!.inclusion!, ...rowVal]
         let superSet = new Set(merged)
         schema.constraints!.inclusion = Array.from(superSet)
@@ -329,9 +335,8 @@ class TableSaveFunctions {
       importRows: this.importRows,
       userId: this.userId,
     })
-    if (await features.flags.isEnabled("SQS")) {
-      await sdk.tables.sqs.addTable(table)
-    }
+
+    await sdk.tables.sqs.addTable(table)
     return table
   }
 
@@ -523,9 +528,8 @@ export async function internalTableCleanup(table: Table, rows?: Row[]) {
   if (rows) {
     await AttachmentCleanup.tableDelete(table, rows)
   }
-  if (await features.flags.isEnabled("SQS")) {
-    await sdk.tables.sqs.removeTable(table)
-  }
+
+  await sdk.tables.sqs.removeTable(table)
 }
 
 const _TableSaveFunctions = TableSaveFunctions

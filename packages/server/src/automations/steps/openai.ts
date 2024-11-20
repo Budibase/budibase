@@ -7,17 +7,17 @@ import {
   AutomationIOType,
   OpenAIStepInputs,
   OpenAIStepOutputs,
+  FeatureFlag,
 } from "@budibase/types"
-import { env } from "@budibase/backend-core"
+import { env, features } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
 import * as pro from "@budibase/pro"
 
 enum Model {
-  GPT_35_TURBO = "gpt-3.5-turbo",
-  // will only work with api keys that have access to the GPT4 API
-  GPT_4 = "gpt-4",
-  GPT_4O = "gpt-4o",
   GPT_4O_MINI = "gpt-4o-mini",
+  GPT_4O = "gpt-4o",
+  GPT_4 = "gpt-4",
+  GPT_35_TURBO = "gpt-3.5-turbo",
 }
 
 export const definition: AutomationStepDefinition = {
@@ -99,23 +99,21 @@ export async function run({
 
   try {
     let response
-    const customConfigsEnabled = await pro.features.isAICustomConfigsEnabled()
-    const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
+    const customConfigsEnabled =
+      (await features.flags.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS)) &&
+      (await pro.features.isAICustomConfigsEnabled())
+    const budibaseAIEnabled =
+      (await features.flags.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
+      (await pro.features.isBudibaseAIEnabled())
 
+    let llm
     if (budibaseAIEnabled || customConfigsEnabled) {
-      const llm = await pro.ai.LargeLanguageModel.forCurrentTenant(inputs.model)
-      response = await llm.run(inputs.prompt)
-    } else {
-      // fallback to the default that uses the environment variable for backwards compat
-      if (!env.OPENAI_API_KEY) {
-        return {
-          success: false,
-          response:
-            "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable.",
-        }
-      }
-      response = await legacyOpenAIPrompt(inputs)
+      llm = await pro.ai.LargeLanguageModel.forCurrentTenant(inputs.model)
     }
+
+    response = llm?.initialised
+      ? await llm.run(inputs.prompt)
+      : await legacyOpenAIPrompt(inputs)
 
     return {
       response,

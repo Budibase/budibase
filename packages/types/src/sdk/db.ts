@@ -12,7 +12,6 @@ import type PouchDB from "pouchdb-find"
 
 export enum SearchIndex {
   ROWS = "rows",
-  AUDIT = "audit",
   USER = "user",
 }
 
@@ -129,7 +128,12 @@ export interface Database {
   name: string
 
   exists(): Promise<boolean>
+  /**
+   * @deprecated the plan is to get everything using `tryGet` instead, then rename
+   * `tryGet` to `get`.
+   */
   get<T extends Document>(id?: string): Promise<T>
+  tryGet<T extends Document>(id?: string): Promise<T | undefined>
   exists(docId: string): Promise<boolean>
   getMultiple<T extends Document>(
     ids: string[],

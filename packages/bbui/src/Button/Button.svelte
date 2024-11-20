@@ -17,6 +17,8 @@
   export let tooltip = undefined
   export let newStyles = true
   export let id
+  export let ref
+  export let reverse = false
 
   const dispatch = createEventDispatcher()
 </script>
@@ -25,6 +27,7 @@
   <button
     {id}
     {type}
+    bind:this={ref}
     class:spectrum-Button--cta={cta}
     class:spectrum-Button--primary={primary}
     class:spectrum-Button--secondary={secondary}
@@ -41,6 +44,9 @@
       }
     }}
   >
+    {#if $$slots && reverse}
+      <span class="spectrum-Button-label"><slot /></span>
+    {/if}
     {#if icon}
       <svg
         class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
@@ -51,7 +57,7 @@
         <use xlink:href="#spectrum-icon-18-{icon}" />
       </svg>
     {/if}
-    {#if $$slots}
+    {#if $$slots && !reverse}
       <span class="spectrum-Button-label"><slot /></span>
     {/if}
   </button>
@@ -90,5 +96,12 @@
   }
   .spectrum-Button--secondary.new-styles.is-disabled {
     color: var(--spectrum-global-color-gray-500);
+  }
+  .spectrum-Button .spectrum-Button-label + .spectrum-Icon {
+    margin-left: var(--spectrum-button-primary-icon-gap);
+    margin-right: calc(
+      -1 * (var(--spectrum-button-primary-textonly-padding-left-adjusted) -
+            var(--spectrum-button-primary-padding-left-adjusted))
+    );
   }
 </style>

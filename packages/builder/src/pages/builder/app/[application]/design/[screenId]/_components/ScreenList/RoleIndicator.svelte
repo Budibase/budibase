@@ -1,5 +1,4 @@
 <script>
-  import { RoleUtils } from "@budibase/frontend-core"
   import { Tooltip, StatusLight } from "@budibase/bbui"
   import { roles } from "stores/builder"
   import { Roles } from "constants/backend"
@@ -8,12 +7,13 @@
 
   let showTooltip = false
 
-  $: color = RoleUtils.getRoleColour(roleId)
   $: role = $roles.find(role => role._id === roleId)
+  $: color =
+    role?.uiMetadata.color || "var(--spectrum-global-color-static-magenta-400)"
   $: tooltip =
     roleId === Roles.PUBLIC
       ? "Open to the public"
-      : `Requires ${role?.name} access`
+      : `Requires ${role?.uiMetadata.displayName || "Unknown role"} access`
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

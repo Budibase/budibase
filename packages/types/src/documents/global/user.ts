@@ -38,6 +38,11 @@ export function isSSOUser(user: User): user is SSOUser {
 
 // USER
 
+export interface UserIdentifier {
+  userId: string
+  email: string
+}
+
 export interface User extends Document {
   tenantId: string
   email: string
@@ -66,6 +71,16 @@ export interface User extends Document {
   appFavourites?: string[]
   ssoId?: string
   appSort?: string
+}
+
+export interface UserBindings extends Document {
+  firstName?: string
+  lastName?: string
+  email?: string
+  status?: string
+  roleId?: string | null
+  globalId?: string
+  userId?: string
 }
 
 export enum UserStatus {

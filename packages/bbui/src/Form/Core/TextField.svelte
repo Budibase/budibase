@@ -1,6 +1,6 @@
 <script>
   import "@spectrum-css/textfield/dist/index-vars.css"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher, onMount, tick } from "svelte"
 
   export let value = null
   export let placeholder = null
@@ -68,10 +68,13 @@
     return type === "number" ? "decimal" : "text"
   }
 
-  onMount(() => {
+  onMount(async () => {
     if (disabled) return
     focus = autofocus
-    if (focus) field.focus()
+    if (focus) {
+      await tick()
+      field.focus()
+    }
   })
 </script>
 

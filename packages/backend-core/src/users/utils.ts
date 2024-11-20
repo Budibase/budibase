@@ -1,11 +1,9 @@
-import { CloudAccount, ContextUser, User, UserGroup } from "@budibase/types"
+import { ContextUser, User, UserGroup, UserIdentifier } from "@budibase/types"
 import * as accountSdk from "../accounts"
 import env from "../environment"
-import { getFirstPlatformUser } from "./lookup"
+import { getExistingAccounts, getFirstPlatformUser } from "./lookup"
 import { EmailUnavailableError } from "../errors"
-import { getTenantId } from "../context"
 import { sdk } from "@budibase/shared-core"
-import { getAccountByTenantId } from "../accounts"
 import { BUILTIN_ROLE_IDS } from "../security/roles"
 import * as context from "../context"
 
@@ -67,21 +65,17 @@ export async function validateUniqueUser(email: string, tenantId: string) {
 }
 
 /**
- * For the given user id's, return the account holder if it is in the ids.
+ * For a list of users, return the account holder if there is an email match.
  */
-export async function getAccountHolderFromUserIds(
-  userIds: string[]
-): Promise<CloudAccount | undefined> {
+export async function getAccountHolderFromUsers(
+  users: Array<UserIdentifier>
+): Promise<UserIdentifier | undefined> {
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-    const tenantId = getTenantId()
-    const account = await getAccountByTenantId(tenantId)
-    if (!account) {
-      throw new Error(`Account not found for tenantId=${tenantId}`)
-    }
-
-    const budibaseUserId = account.budibaseUserId
-    if (userIds.includes(budibaseUserId)) {
-      return account
-    }
+    const accountMetadata = await getExistingAccounts(
+      users.map(user => user.email)
+    )
+    return users.find(user =>
+      accountMetadata.map(metadata => metadata.email).includes(user.email)
+    )
   }
 }

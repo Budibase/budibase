@@ -1,14 +1,17 @@
 interface RowActionData {
   name: string
 }
+interface RowActionPermissionsData {
+  allowedSources: string[] | undefined
+}
 export interface CreateRowActionRequest extends RowActionData {}
-export interface UpdateRowActionRequest extends RowActionData {}
 
-export interface RowActionResponse extends RowActionData {
+export interface RowActionResponse
+  extends RowActionData,
+    RowActionPermissionsData {
   id: string
   tableId: string
   automationId: string
-  allowedSources: string[] | undefined
 }
 
 export interface RowActionsResponse {
@@ -18,3 +21,6 @@ export interface RowActionsResponse {
 export interface RowActionTriggerRequest {
   rowId: string
 }
+
+export interface RowActionPermissionsResponse
+  extends RowActionPermissionsData {}
