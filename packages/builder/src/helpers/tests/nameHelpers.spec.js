@@ -90,7 +90,7 @@ describe("Automation Binding Update Functions", () => {
       1
     )
 
-    expect(result[1].name).toBe("Second Step")
+    expect(result[1].name).toBe("Second Step fail")
 
     expect(result[2].inputs.branches[0].condition.equal).toEqual({
       "stepsByName.Renamed Step.success": true,
