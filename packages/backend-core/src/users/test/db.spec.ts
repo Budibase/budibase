@@ -48,6 +48,7 @@ describe("UserDB", () => {
           const persistedUser = await db.getUserByEmail(email)
           expect(persistedUser).toEqual({
             ...user,
+            ohno: "what",
             _id: saveUserResponse._id,
             _rev: expect.stringMatching(/^1-\w+/),
             password: expect.not.stringMatching(user.password!),
