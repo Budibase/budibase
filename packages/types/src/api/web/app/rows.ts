@@ -2,6 +2,7 @@ import {
   ArrayOperator,
   BasicOperator,
   EmptyFilterOption,
+  InternalSearchFilterOperator,
   LogicalOperator,
   RangeOperator,
   SearchFilterKey,
@@ -26,10 +27,15 @@ export interface PatchRowRequest extends Row {
 
 export interface PatchRowResponse extends Row {}
 
-// TODO: exclude InternalSearchFilterOperator.COMPLEX_ID_OPERATOR
-const stringBasicFilter = z.record(z.string(), z.string())
-const basicFilter = z.record(z.string(), z.any())
-const arrayFilter = z.record(z.string(), z.union([z.any().array(), z.string()]))
+const fieldKey = z
+  .string()
+  .refine(s => s !== InternalSearchFilterOperator.COMPLEX_ID_OPERATOR, {
+    message: `Key '${InternalSearchFilterOperator.COMPLEX_ID_OPERATOR}' is not allowed`,
+  })
+
+const stringBasicFilter = z.record(fieldKey, z.string())
+const basicFilter = z.record(fieldKey, z.any())
+const arrayFilter = z.record(fieldKey, z.union([z.any().array(), z.string()]))
 const logicFilter = z.lazy(() =>
   z.object({
     conditions: z.array(z.object(queryFilterValidation)),
@@ -43,7 +49,7 @@ const queryFilterValidation: Record<SearchFilterKey, z.ZodTypeAny> = {
   [BasicOperator.FUZZY]: stringBasicFilter.optional(),
   [RangeOperator.RANGE]: z
     .record(
-      z.string(),
+      fieldKey,
       z.union([
         z.object({ high: stringOrNumber, low: stringOrNumber }),
         z.object({ high: stringOrNumber }),
