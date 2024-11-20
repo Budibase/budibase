@@ -211,7 +211,7 @@ datasourceDescribe(
                 sort: this.query.sort,
                 query: this.query.query || {},
                 paginate: this.query.paginate,
-                bookmark: this.query.bookmark,
+                bookmark: this.query.bookmark ?? undefined,
                 limit: this.query.limit,
                 sortOrder: this.query.sortOrder,
                 sortType: this.query.sortType,
