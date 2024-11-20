@@ -116,7 +116,7 @@ jobs:
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
             yarn test --ignore=@budibase/worker --ignore=@budibase/server --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
           else
-            yarn test --ignore=@budibase/worker --ignore=@budibase/server --verbose --reporters=default --reporters=github-actions
+            yarn test --ignore=@budibase/worker --ignore=@budibase/server -- --verbose --reporters=default --reporters=github-actions
           fi
 
   test-worker:
@@ -145,7 +145,8 @@ jobs:
             fi
           fi
 
-          yarn test --scope=@budibase/worker --verbose --reporters=default --reporters=github-actions
+          cd packages/worker
+          yarn test --verbose --reporters=default --reporters=github-actions
 
   test-server:
     runs-on: ubuntu-latest
