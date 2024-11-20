@@ -131,6 +131,12 @@
               options: alignmentOptions,
             }}
           />
+          <PropertyControl
+            label="Title below logo"
+            control={Checkbox}
+            onChange={textBelow => update("textBelow", textBelow)}
+            value={$nav.textBelow}
+          />
         {/if}
         <PropertyControl
           label="Background"

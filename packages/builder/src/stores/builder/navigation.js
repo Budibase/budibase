@@ -13,6 +13,7 @@ export const INITIAL_NAVIGATION_STATE = {
   logoUrl: null,
   hideTitle: null,
   textAlign: "Left",
+  textBelow: false,
   navBackground: null,
   navWidth: null,
   navTextColor: null,

@@ -37,6 +37,7 @@
   export let logoSize
   export let openLogoLinkInNewTab
   export let textAlign
+  export let textBelow
   export let embedded = false
 
   const NavigationClasses = {
@@ -243,38 +244,49 @@
                   />
                 </div>
               {/if}
-              <div class="logo">
-                {#if !hideLogo}
-                  {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
-                    <a
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                      use:linkable
-                    >
+              <div
+                class="logo"
+                style="border: 12px solid blue; display: flex; flex-direction: column;"
+              >
+                <div style="border: 2px solid red;">
+                  {#if !hideLogo}
+                    {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
+                      <a
+                        href={getSanitizedUrl(
+                          logoLinkUrl,
+                          openLogoLinkInNewTab
+                        )}
+                        use:linkable
+                      >
+                        <img
+                          src={logoUrl || "/builder/bblogo.png"}
+                          alt={title}
+                          style="--logo-size: {logoSize};"
+                        />
+                      </a>
+                    {:else if logoLinkUrl}
+                      <a
+                        target={openLogoLinkInNewTab ? "_blank" : "_self"}
+                        href={getSanitizedUrl(
+                          logoLinkUrl,
+                          openLogoLinkInNewTab
+                        )}
+                      >
+                        <img
+                          src={logoUrl || "/builder/bblogo.png"}
+                          alt={title}
+                          style="--logo-size: {logoSize};"
+                        />
+                      </a>
+                    {:else}
                       <img
                         src={logoUrl || "/builder/bblogo.png"}
                         alt={title}
                         style="--logo-size: {logoSize};"
                       />
-                    </a>
-                  {:else if logoLinkUrl}
-                    <a
-                      target={openLogoLinkInNewTab ? "_blank" : "_self"}
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                    >
-                      <img
-                        src={logoUrl || "/builder/bblogo.png"}
-                        alt={title}
-                        style="--logo-size: {logoSize};"
-                      />
-                    </a>
-                  {:else}
-                    <img
-                      src={logoUrl || "/builder/bblogo.png"}
-                      alt={title}
-                      style="--logo-size: {logoSize};"
-                    />
+                    {/if}
                   {/if}
-                {/if}
+                </div>
                 {#if !hideTitle && title}
                   <Heading size="S" {textAlign}>{title}</Heading>
                 {/if}
