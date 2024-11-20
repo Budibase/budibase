@@ -79,7 +79,7 @@
     "content-disposition": "^0.5.4",
     "cookies": "0.8.0",
     "csvtojson": "2.0.10",
-    "curlconverter": "4.11.0",
+    "curlconverter": "3.21.0",
     "dd-trace": "5.23.0",
     "dayjs": "^1.10.8",
     "dotenv": "8.2.0",
