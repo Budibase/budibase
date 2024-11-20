@@ -5751,13 +5751,6 @@
   dependencies:
     "@types/koa" "*"
 
-"@types/koa__router@8.0.8":
-  version "8.0.8"
-  resolved "https://registry.yarnpkg.com/@types/koa__router/-/koa__router-8.0.8.tgz#b1e0e9a512498777d3366bbdf0e853df27ec831c"
-  integrity sha512-9pGCaDtzCsj4HJ8HmGuqzk8+s57sPj4njWd08GG5o92n5Xp9io2snc40CPpXFhoKcZ8OKhuu6ht4gNou9e1C2w==
-  dependencies:
-    "@types/koa" "*"
-
 "@types/lodash@4.14.200":
   version "4.14.200"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.200.tgz#435b6035c7eba9cdf1e039af8212c9e9281e7149"
