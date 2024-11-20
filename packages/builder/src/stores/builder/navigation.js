@@ -9,6 +9,7 @@ export const INITIAL_NAVIGATION_STATE = {
   title: null,
   sticky: null,
   hideLogo: null,
+  logoSize: "36px",
   logoUrl: null,
   hideTitle: null,
   textAlign: "Left",

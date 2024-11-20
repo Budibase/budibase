@@ -34,6 +34,7 @@
   export let navWidth
   export let pageWidth
   export let logoLinkUrl
+  export let logoSize
   export let openLogoLinkInNewTab
   export let textAlign
   export let embedded = false
@@ -249,17 +250,29 @@
                       href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
                       use:linkable
                     >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+                      <img
+                        src={logoUrl || "/builder/bblogo.png"}
+                        alt={title}
+                        style="--logo-size: {logoSize};"
+                      />
                     </a>
                   {:else if logoLinkUrl}
                     <a
                       target={openLogoLinkInNewTab ? "_blank" : "_self"}
                       href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
                     >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+                      <img
+                        src={logoUrl || "/builder/bblogo.png"}
+                        alt={title}
+                        style="--logo-size: {logoSize};"
+                      />
                     </a>
                   {:else}
-                    <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+                    <img
+                      src={logoUrl || "/builder/bblogo.png"}
+                      alt={title}
+                      style="--logo-size: {logoSize};"
+                    />
                   {/if}
                 {/if}
                 {#if !hideTitle && title}
@@ -522,7 +535,8 @@
     flex: 1 1 auto;
   }
   .logo img {
-    height: 36px;
+    width: var(--logo-size);
+    height: var(--logo-size);
   }
   .logo :global(h1) {
     font-weight: 600;
