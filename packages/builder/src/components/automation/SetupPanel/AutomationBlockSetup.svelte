@@ -94,6 +94,7 @@
   $: memoBlock.set(block)
 
   $: filters = lookForFilters(schemaProperties)
+  $: console.log(filters)
   $: filterCount =
     filters?.groups?.reduce((acc, group) => {
       acc = acc += group?.filters?.length || 0
@@ -114,7 +115,7 @@
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
-    { allowLinks: true }
+    { allowLinks: false }
   )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = $memoBlock?.type === AutomationStepType.TRIGGER
