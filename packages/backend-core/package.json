@@ -63,7 +63,7 @@
     "semver": "^7.5.4",
     "tar-fs": "2.1.1",
     "uuid": "^8.3.2",
-    "@techpass/passport-openidconnect": "0.3.3",
+    "@techpass/passport-openidconnect": "1.0.0",
     "google-auth-library": "^8.0.1",
     "google-spreadsheet": "npm:@budibase/google-spreadsheet@4.1.5"
   },
