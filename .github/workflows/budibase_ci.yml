@@ -211,7 +211,7 @@ jobs:
           fi
 
           cd packages/server
-          yarn test --filter $FILTER --passWithNoTests
+          yarn test --filter $FILTER --verbose --reporters=default --reporters=github-actions
 
   check-pro-submodule:
     runs-on: ubuntu-latest
