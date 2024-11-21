@@ -1,13 +1,11 @@
 import svelte from "rollup-plugin-svelte"
 import resolve from "@rollup/plugin-node-resolve"
 import commonjs from "@rollup/plugin-commonjs"
-import json from "@rollup/plugin-json"
 import postcss from "rollup-plugin-postcss"
 import alias from "@rollup/plugin-alias"
 import image from "@rollup/plugin-image"
 import typescript from "@rollup/plugin-typescript"
 import { sveltePreprocess } from "svelte-preprocess"
-import { terser } from "rollup-plugin-terser"
 import copy from "rollup-plugin-copy"
 import path from "path"
 import { createRequire } from "module"
@@ -77,8 +75,6 @@ export default [
       commonjs(),
       postcss(),
       image(),
-      json(),
-      terser(),
       copy({
         targets: [
           { src: "assets", dest: "dist" },
