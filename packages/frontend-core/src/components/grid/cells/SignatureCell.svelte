@@ -1,6 +1,6 @@
 <script>
   import { onMount, getContext } from "svelte"
-  import { SignatureModal } from "@budibase/frontend-core/src/components"
+  import SignatureModal from "../../SignatureModal.svelte"
   import { CoreSignature, ActionButton } from "@budibase/bbui"
   import GridPopover from "../overlays/GridPopover.svelte"
 

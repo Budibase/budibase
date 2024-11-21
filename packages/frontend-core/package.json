@@ -4,7 +4,19 @@
   "description": "Budibase frontend core libraries used in builder and client",
   "author": "Budibase",
   "license": "MPL-2.0",
-  "svelte": "src/index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "svelte": "./src/index.ts",
+      "import": "./dist/index.esm.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "clean": "rimraf dist/",
+    "build": "yarn clean && rollup -c",
+    "dev": "yarn clean && rollup -cw"
+  },
   "dependencies": {
     "@budibase/bbui": "0.0.0",
     "@budibase/shared-core": "0.0.0",
@@ -13,5 +25,24 @@
     "lodash": "4.17.21",
     "shortid": "2.2.15",
     "socket.io-client": "^4.7.5"
+  },
+  "devDependencies": {
+    "@rollup/plugin-alias": "5.1.1",
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-image": "3.0.3",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-typescript": "^12.1.1",
+    "@tsconfig/svelte": "5.0.4",
+    "postcss": "^8.4.49",
+    "rimraf": "3.0.2",
+    "rollup": "^4.27.3",
+    "rollup-plugin-dts": "6.1.1",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-svelte": "^7.2.2",
+    "rollup-plugin-terser": "^7.0.2",
+    "tslib": "2.8.1",
+    "typescript": "5.5.2",
+    "svelte-preprocess": "6.0.3"
   }
 }
