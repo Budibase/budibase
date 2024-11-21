@@ -10,12 +10,17 @@
       "svelte": "./src/index.ts",
       "import": "./dist/index.esm.js",
       "types": "./dist/index.d.ts"
-    }
+    },
+    "./themes/*": "./dist/themes/*",
+    "./assets/*": "./dist/assets/*"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "clean": "rimraf dist/",
-    "build": "yarn clean && rollup -c",
-    "dev": "yarn clean && rollup -cw"
+    "prebuild": "rimraf dist/",
+    "build": "rollup -c",
+    "dev": "rollup -cw"
   },
   "dependencies": {
     "@budibase/bbui": "0.0.0",
@@ -37,6 +42,7 @@
     "postcss": "^8.4.49",
     "rimraf": "3.0.2",
     "rollup": "^4.27.3",
+    "rollup-plugin-copy": "3.5.0",
     "rollup-plugin-dts": "6.1.1",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-svelte": "^7.2.2",

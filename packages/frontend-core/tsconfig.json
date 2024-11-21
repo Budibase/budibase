@@ -13,7 +13,13 @@
     "declaration": true,
     "skipLibCheck": true,
     "allowJs": true,
-    "allowArbitraryExtensions": true
+    "allowArbitraryExtensions": true,
+    "paths": {
+      "@budibase/types": ["../types/src"],
+      "@budibase/shared-core": ["../shared-core/src"],
+      "@budibase/string-templates": ["../string-templates/src"]
+    },
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

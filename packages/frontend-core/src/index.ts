@@ -1,6 +1,6 @@
 export { createAPIClient } from "./api/index.js"
-export { fetchData } from "./fetch/index.js"
 export * as Constants from "./constants.js"
+export * from "./fetch/index.js"
 export * from "./stores/index.js"
 export * from "./utils/index.js"
 export * from "./components/index.js"

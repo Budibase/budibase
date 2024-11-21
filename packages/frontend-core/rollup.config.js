@@ -8,6 +8,7 @@ import image from "@rollup/plugin-image"
 import typescript from "@rollup/plugin-typescript"
 import { sveltePreprocess } from "svelte-preprocess"
 import { terser } from "rollup-plugin-terser"
+import copy from "rollup-plugin-copy"
 import path from "path"
 import { createRequire } from "module"
 const packageJson = createRequire(import.meta.url)("./package.json")
@@ -78,6 +79,12 @@ export default [
       image(),
       json(),
       terser(),
+      copy({
+        targets: [
+          { src: "assets", dest: "dist" },
+          { src: "src/themes", dest: "dist" },
+        ],
+      }),
     ],
   },
 ]

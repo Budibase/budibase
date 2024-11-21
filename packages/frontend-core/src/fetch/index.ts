@@ -36,7 +36,7 @@ export const fetchData = ({ API, datasource, options }) => {
 
 // Creates an empty fetch instance with no datasource configured, so no data
 // will initially be loaded
-const createEmptyFetchInstance = ({ API, datasource }) => {
+export const createEmptyFetchInstance = ({ API, datasource }) => {
   const handler = DataFetchMap[datasource?.type]
   if (!handler) {
     return null
