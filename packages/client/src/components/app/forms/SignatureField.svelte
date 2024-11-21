@@ -2,7 +2,7 @@
   import { CoreSignature, ActionButton } from "@budibase/bbui"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
-  import { SignatureModal } from "@budibase/frontend-core"
+  import { SignatureModal } from "@budibase/frontend-core/src/components"
 
   export let field
   export let label

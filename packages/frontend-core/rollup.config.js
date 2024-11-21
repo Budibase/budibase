@@ -82,7 +82,7 @@ export default [
       copy({
         targets: [
           { src: "assets", dest: "dist" },
-          { src: "themes", dest: "dist" },
+          { src: "src/themes", dest: "dist" },
         ],
       }),
     ],
