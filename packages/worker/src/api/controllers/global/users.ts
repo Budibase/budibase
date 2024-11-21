@@ -40,6 +40,7 @@ import {
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
 import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
+import emailValidator from "email-validator"
 import crypto from "crypto"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
@@ -300,6 +301,10 @@ export const find = async (ctx: any) => {
 
 export const tenantUserLookup = async (ctx: any) => {
   const id = ctx.params.id
+  // is email, check its valid
+  if (id.includes("@") && !emailValidator.validate(id)) {
+    ctx.throw(400, `${id} is not a valid email address to lookup.`)
+  }
   const user = await userSdk.core.getFirstPlatformUser(id)
   if (user) {
     ctx.body = user
