@@ -14,11 +14,6 @@
     "allowJs": true,
     "allowArbitraryExtensions": true,
     "verbatimModuleSyntax": false,
-    "paths": {
-      "@budibase/types": ["../types/src"],
-      "@budibase/shared-core": ["../shared-core/src"],
-      "@budibase/string-templates": ["../string-templates/src"]
-    },
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*"],
