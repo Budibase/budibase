@@ -1,38 +1,5 @@
 import { API } from "api"
-import TableFetch from "@budibase/frontend-core/src/fetch/TableFetch.js"
-import ViewFetch from "@budibase/frontend-core/src/fetch/ViewFetch.js"
-import QueryFetch from "@budibase/frontend-core/src/fetch/QueryFetch.js"
-import RelationshipFetch from "@budibase/frontend-core/src/fetch/RelationshipFetch.js"
-import NestedProviderFetch from "@budibase/frontend-core/src/fetch/NestedProviderFetch.js"
-import FieldFetch from "@budibase/frontend-core/src/fetch/FieldFetch.js"
-import JSONArrayFetch from "@budibase/frontend-core/src/fetch/JSONArrayFetch.js"
-import ViewV2Fetch from "@budibase/frontend-core/src/fetch/ViewV2Fetch.js"
-import QueryArrayFetch from "@budibase/frontend-core/src/fetch/QueryArrayFetch"
-
-/**
- * Constructs a fetch instance for a given datasource.
- * All datasource fetch classes implement their own functionality to get the
- * schema of a datasource of their respective types.
- * @param datasource the datasource
- * @returns
- */
-const getDatasourceFetchInstance = datasource => {
-  const handler = {
-    table: TableFetch,
-    view: ViewFetch,
-    viewV2: ViewV2Fetch,
-    query: QueryFetch,
-    link: RelationshipFetch,
-    provider: NestedProviderFetch,
-    field: FieldFetch,
-    jsonarray: JSONArrayFetch,
-    queryarray: QueryArrayFetch,
-  }[datasource?.type]
-  if (!handler) {
-    return null
-  }
-  return new handler({ API })
-}
+import { createEmptyFetchInstance } from "@budibase/frontend-core"
 
 /**
  * Fetches the schema of any kind of datasource.
@@ -43,7 +10,7 @@ export const fetchDatasourceSchema = async (
   datasource,
   options = { enrichRelationships: false, formSchema: false }
 ) => {
-  const instance = getDatasourceFetchInstance(datasource)
+  const instance = createEmptyFetchInstance({ API, datasource })
   const definition = await instance?.getDefinition(datasource)
   if (!definition) {
     return null
