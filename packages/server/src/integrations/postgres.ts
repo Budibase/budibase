@@ -39,6 +39,10 @@ if (types) {
   types.setTypeParser(1114, (val: any) => val) // timestamp
   types.setTypeParser(1082, (val: any) => val) // date
   types.setTypeParser(1184, (val: any) => val) // timestampz
+  // types.setTypeParser(114, JSON.parse) // json
+  // types.setTypeParser(3802, JSON.parse) // jsonb
+  // types.setTypeParser(199, parseJsonArray) // json[]
+  // types.setTypeParser(3807, parseJsonArray) // jsonb[]
 }
 
 const JSON_REGEX = /'{\s*.*?\s*}'::json/gs

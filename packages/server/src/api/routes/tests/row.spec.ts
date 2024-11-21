@@ -3495,6 +3495,59 @@ if (descriptions.length) {
           )
         })
       })
+
+      !isInternal &&
+        describe("bigint ids", () => {
+          let table: Table
+          let relatedTable: Table
+
+          beforeAll(async () => {
+            const tableName = generator.guid().substring(0, 10)
+            await client!.schema.createTable(tableName, table => {
+              table.bigIncrements("id").primary()
+            })
+
+            const relatedTableName = generator.guid().substring(0, 10)
+            await client!.schema.createTable(relatedTableName, table => {
+              table.increments("id").primary()
+              table
+                .bigInteger("tableid")
+                .unsigned()
+                .references("id")
+                .inTable(tableName)
+            })
+
+            const resp = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+
+            const tables = Object.values(resp.datasource.entities || {})
+            table = tables.find(t => t.name === tableName)!
+            relatedTable = tables.find(t => t.name === relatedTableName)!
+
+            await config.api.table.save({
+              ...table,
+              schema: {
+                ...table.schema,
+                related: {
+                  name: "related",
+                  type: FieldType.LINK,
+                  tableId: relatedTable._id!,
+                  fieldName: "tableid",
+                  relationshipType: RelationshipType.ONE_TO_MANY,
+                },
+              },
+            })
+          })
+
+          it.only("should be able to fetch rows with related bigint ids", async () => {
+            const row = await config.api.row.save(table._id!, {})
+            await config.api.row.save(relatedTable._id!, { tableid: row.id })
+
+            const { rows } = await config.api.row.search(table._id!)
+            expect(rows).toEqual([])
+          })
+        })
     }
   )
 }
