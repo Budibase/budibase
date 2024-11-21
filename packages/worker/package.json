@@ -52,6 +52,7 @@
     "bull": "4.10.1",
     "dd-trace": "5.23.0",
     "dotenv": "8.6.0",
+    "email-validator": "^2.0.4",
     "global-agent": "3.0.0",
     "ical-generator": "4.1.0",
     "joi": "17.6.0",
