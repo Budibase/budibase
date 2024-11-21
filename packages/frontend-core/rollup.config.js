@@ -69,7 +69,7 @@ export default [
       typescript({
         include: ["src/**/*"],
         sourceMap: false,
-        outputToFilesystem: true,
+        outputToFilesystem: false,
       }),
       commonjs(),
       postcss(),
@@ -77,7 +77,7 @@ export default [
       copy({
         targets: [
           { src: "assets", dest: "dist" },
-          { src: "src/themes", dest: "dist" },
+          { src: "themes", dest: "dist" },
         ],
       }),
     ],
