@@ -22,6 +22,8 @@ export const BannedSearchTypes = [
   "queryarray",
 ]
 
+export const foo = "bar3"
+
 // Cookie names
 export const Cookies = {
   Auth: "budibase:auth",

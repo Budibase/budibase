@@ -12,8 +12,10 @@
     "skipLibCheck": true,
     "allowJs": true,
     "allowArbitraryExtensions": true,
-    "verbatimModuleSyntax": false
+    "verbatimModuleSyntax": false,
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "incremental": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.js", "src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
