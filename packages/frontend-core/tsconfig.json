@@ -3,10 +3,9 @@
   "compilerOptions": {
     "outDir": "dist",
     "allowSyntheticDefaultImports": true,
-    "emitDeclarationOnly": false,
+    "emitDeclarationOnly": true,
     "strict": false,
     "noImplicitAny": false,
-    "noEmit": false,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "incremental": true,
