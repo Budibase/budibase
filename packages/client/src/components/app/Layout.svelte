@@ -246,9 +246,9 @@
               {/if}
               <div
                 class="logo"
-                style="border: 12px solid blue; display: flex; flex-direction: column;"
+                style="flex-direction: {textBelow ? 'column' : 'row'};"
               >
-                <div style="border: 2px solid red;">
+                <div>
                   {#if !hideLogo}
                     {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
                       <a
@@ -288,7 +288,11 @@
                   {/if}
                 </div>
                 {#if !hideTitle && title}
-                  <Heading size="S" {textAlign}>{title}</Heading>
+                  <Heading
+                    size="S"
+                    {textAlign}
+                    style="width: {textBelow ? '100%' : ''};">{title}</Heading
+                  >
                 {/if}
               </div>
               {#if !embedded}
@@ -545,6 +549,8 @@
     align-items: center;
     gap: var(--spacing-m);
     flex: 1 1 auto;
+    max-width: 165px;
+    border: 1px solid red;
   }
   .logo img {
     width: var(--logo-size);
@@ -553,7 +559,6 @@
   .logo :global(h1) {
     font-weight: 600;
     flex: 1 1 auto;
-    width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
