@@ -43,8 +43,7 @@ export default [
       },
     ],
     onwarn(warning, warn) {
-      // suppress eval warnings
-      if (warning.code === "EVAL") {
+      if (warning.code === "CIRCULAR_DEPENDENCY" || warning.code === "EVAL") {
         return
       }
       warn(warning)
