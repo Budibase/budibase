@@ -8,13 +8,11 @@
     "noImplicitAny": false,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "incremental": true,
     "declaration": true,
     "skipLibCheck": true,
     "allowJs": true,
     "allowArbitraryExtensions": true,
-    "verbatimModuleSyntax": false,
-    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+    "verbatimModuleSyntax": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
