@@ -3496,18 +3496,18 @@ if (descriptions.length) {
         })
       })
 
-      !isInternal &&
+      if (!isInternal) {
         describe("bigint ids", () => {
-          let table: Table
-          let relatedTable: Table
+          let table: Table, relatedTable: Table
+          let tableName: string, relatedTableName: string
 
           beforeAll(async () => {
-            const tableName = generator.guid().substring(0, 10)
+            tableName = generator.guid().substring(0, 10)
             await client!.schema.createTable(tableName, table => {
               table.bigIncrements("id").primary()
             })
 
-            const relatedTableName = generator.guid().substring(0, 10)
+            relatedTableName = generator.guid().substring(0, 10)
             await client!.schema.createTable(relatedTableName, table => {
               table.increments("id").primary()
               table
@@ -3525,17 +3525,16 @@ if (descriptions.length) {
             table = tables.find(t => t.name === tableName)!
             relatedTable = tables.find(t => t.name === relatedTableName)!
 
-            await config.api.table.save({
-              ...table,
-              schema: {
-                ...table.schema,
-                related: {
-                  name: "related",
-                  type: FieldType.LINK,
-                  tableId: relatedTable._id!,
-                  fieldName: "tableid",
-                  relationshipType: RelationshipType.ONE_TO_MANY,
-                },
+            await config.api.datasource.addExistingRelationship({
+              one: {
+                tableId: relatedTable._id!,
+                relationshipName: "one",
+                foreignKey: "tableid",
+              },
+              many: {
+                tableId: table._id!,
+                relationshipName: "many",
+                primaryKey: "id",
               },
             })
           })
@@ -3545,9 +3544,20 @@ if (descriptions.length) {
             await config.api.row.save(relatedTable._id!, { tableid: row.id })
 
             const { rows } = await config.api.row.search(table._id!)
-            expect(rows).toEqual([])
+            expect(rows.length).toEqual(1)
+            expect(rows[0]).toEqual(
+              expect.objectContaining({
+                many: [
+                  {
+                    _id: "%5B1%5D",
+                    primaryDisplay: 1,
+                  },
+                ],
+              })
+            )
           })
         })
+      }
     }
   )
 }

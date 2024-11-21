@@ -108,52 +108,47 @@ export class DatasourceAPI extends TestAPI {
   }
 
   addExistingRelationship = async (
-    tableId1: string,
-    tableId2: string,
-    relationshipNameInTable1: string,
-    relationshipNameInTable2: string,
-    primaryKey: string,
-    foreignKey: string,
+    {
+      one,
+      many,
+    }: {
+      one: { tableId: string; relationshipName: string; foreignKey: string }
+      many: { tableId: string; relationshipName: string; primaryKey: string }
+    },
     expectations?: Expectations
   ) => {
-    const tableInfo1 = sql.utils.breakExternalTableId(tableId1),
-      tableInfo2 = sql.utils.breakExternalTableId(tableId2)
-    if (tableInfo1.datasourceId !== tableInfo2.datasourceId) {
+    const oneTableInfo = sql.utils.breakExternalTableId(one.tableId),
+      manyTableInfo = sql.utils.breakExternalTableId(many.tableId)
+    if (oneTableInfo.datasourceId !== manyTableInfo.datasourceId) {
       throw new Error(
         "Tables are in different datasources, cannot create relationship."
       )
     }
-    const datasource = await this.get(tableInfo1.datasourceId)
-    const table1 = datasource.entities?.[tableInfo1.tableName],
-      table2 = datasource.entities?.[tableInfo2.tableName]
-    if (!table1 || !table2) {
+    const datasource = await this.get(oneTableInfo.datasourceId)
+    const oneTable = datasource.entities?.[oneTableInfo.tableName],
+      manyTable = datasource.entities?.[manyTableInfo.tableName]
+    if (!oneTable || !manyTable) {
       throw new Error(
         "Both tables not found in datasource, cannot create relationship."
       )
     }
 
-    const table1HasPrimary = table1.primary!.includes(primaryKey)
-    table1.schema[relationshipNameInTable1] = {
+    manyTable.schema[many.relationshipName] = {
       type: FieldType.LINK,
-      name: relationshipNameInTable1,
-      tableId: tableId2,
-      relationshipType: table1HasPrimary
-        ? RelationshipType.MANY_TO_ONE
-        : RelationshipType.ONE_TO_MANY,
-      fieldName: table1HasPrimary ? foreignKey : primaryKey,
-      foreignKey: table1HasPrimary ? primaryKey : foreignKey,
-      main: table1HasPrimary,
+      name: many.relationshipName,
+      tableId: oneTable._id!,
+      relationshipType: RelationshipType.MANY_TO_ONE,
+      fieldName: one.foreignKey,
+      foreignKey: many.primaryKey,
+      main: true,
     }
-    table2.schema[relationshipNameInTable2] = {
+    oneTable.schema[one.relationshipName] = {
       type: FieldType.LINK,
-      name: relationshipNameInTable2,
-      tableId: tableId1,
-      relationshipType: table1HasPrimary
-        ? RelationshipType.ONE_TO_MANY
-        : RelationshipType.MANY_TO_ONE,
-      fieldName: table1HasPrimary ? primaryKey : foreignKey,
-      foreignKey: table1HasPrimary ? foreignKey : primaryKey,
-      main: !table1HasPrimary,
+      name: one.relationshipName,
+      tableId: manyTable._id!,
+      relationshipType: RelationshipType.ONE_TO_MANY,
+      fieldName: many.primaryKey,
+      foreignKey: one.foreignKey,
     }
     return await this.update(datasource, expectations)
   }
