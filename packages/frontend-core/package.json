@@ -7,8 +7,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "svelte": "./src/index.ts",
       "import": "./dist/index.esm.js",
+      "svelte": "./dist/index.esm.js",
       "types": "./dist/index.d.ts"
     },
     "./themes/*": "./dist/themes/*",
