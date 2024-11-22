@@ -18,6 +18,7 @@ type Response<T> = { data: T }
 export interface PublicAPIExpectations {
   status?: number
   body?: Record<string, any>
+  headers?: Record<string, string>
 }
 
 export class PublicAPIRequest {
@@ -71,6 +72,12 @@ export class PublicAPIRequest {
     if (expectations?.body) {
       expect(res.body).toEqual(expectations?.body)
     }
+    if (expectations?.headers) {
+      for (let [header, value] of Object.entries(expectations.headers)) {
+        const found = res.headers[header]
+        expect(found?.toLowerCase()).toEqual(value)
+      }
+    }
     return res.body
   }
 }
@@ -87,6 +94,13 @@ export class PublicTableAPI {
     expectations?: PublicAPIExpectations
   ): Promise<Response<Table>> {
     return this.request.send("post", "/tables", table, expectations)
+  }
+
+  async search(
+    name: string,
+    expectations?: PublicAPIExpectations
+  ): Promise<Response<Table[]>> {
+    return this.request.send("post", "/tables/search", { name }, expectations)
   }
 }
 
