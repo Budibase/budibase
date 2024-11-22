@@ -246,7 +246,11 @@
               {/if}
               <div
                 class="logo"
-                style="flex-direction: {textBelow ? 'column' : 'row'};"
+                style="flex-direction: {textBelow
+                  ? 'column'
+                  : 'row'}; max-width: {navigation === 'Left'
+                  ? '165px'
+                  : '95%'};"
               >
                 <div>
                   {#if !hideLogo}
@@ -546,7 +550,7 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: center;
+    align-items: left;
     gap: var(--spacing-m);
     flex: 1 1 auto;
     max-width: 165px;
