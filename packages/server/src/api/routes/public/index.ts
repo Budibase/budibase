@@ -15,6 +15,7 @@ import mapperMiddleware from "./middleware/mapper"
 import env from "../../../environment"
 import { middleware, redis } from "@budibase/backend-core"
 import { SelectableDatabase } from "@budibase/backend-core/src/redis/utils"
+import cors from "@koa/cors"
 // below imports don't have declaration files
 const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
@@ -82,6 +83,7 @@ const publicRouter = new Router({
 if (limiter && !env.isDev()) {
   publicRouter.use(limiter)
 }
+publicRouter.use(cors())
 
 function addMiddleware(
   endpoints: any,
