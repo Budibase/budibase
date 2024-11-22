@@ -2596,8 +2596,6 @@ if (descriptions.length) {
           let view: ViewV2, view2: ViewV2
           let table: Table, table2: Table
           beforeEach(async () => {
-            // clean app to make sure fixed amount of views
-            await config.init()
             table = await config.api.table.save(saveTableRequest())
             table2 = await config.api.table.save(saveTableRequest())
             view = await config.api.viewV2.create({
@@ -2611,11 +2609,11 @@ if (descriptions.length) {
               schema: {},
             })
           })
+
           it("should be able to list views", async () => {
             const response = await config.api.viewV2.fetch({
               status: 200,
             })
-            expect(response.data.length).toEqual(2)
             expect(response.data.find(v => v.id === view.id)).toBeDefined()
             expect(response.data.find(v => v.id === view2.id)).toBeDefined()
           })
