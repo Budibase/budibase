@@ -291,7 +291,7 @@
                   <Heading
                     size="S"
                     {textAlign}
-                    style="width: {textBelow ? '100%' : ''};">{title}</Heading
+                    style="width: {textBelow ? '100%' : ''}; ">{title}</Heading
                   >
                 {/if}
               </div>
@@ -559,9 +559,11 @@
   .logo :global(h1) {
     font-weight: 600;
     flex: 1 1 auto;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
     white-space: nowrap;
+    border: 2px solid blue;
+    max-width: 100%;
   }
   .portal {
     display: grid;
