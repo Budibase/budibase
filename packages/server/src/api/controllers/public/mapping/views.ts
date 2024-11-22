@@ -1,8 +1,8 @@
 import { View } from "./types"
-import { ViewV2, Ctx } from "@budibase/types"
+import { ViewV2, Ctx, RequiredKeys } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
 
-function view(body: ViewV2): View {
+function view(body: ViewV2): RequiredKeys<View> {
   return {
     id: body.id,
     tableId: body.tableId,
