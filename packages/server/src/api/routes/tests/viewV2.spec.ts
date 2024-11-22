@@ -2592,6 +2592,33 @@ if (descriptions.length) {
           })
         })
 
+        describe("fetch", () => {
+          let view: ViewV2, view2: ViewV2
+          let table: Table, table2: Table
+          beforeEach(async () => {
+            table = await config.api.table.save(saveTableRequest())
+            table2 = await config.api.table.save(saveTableRequest())
+            view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {},
+            })
+            view2 = await config.api.viewV2.create({
+              tableId: table2._id!,
+              name: generator.guid(),
+              schema: {},
+            })
+          })
+
+          it("should be able to list views", async () => {
+            const response = await config.api.viewV2.fetch({
+              status: 200,
+            })
+            expect(response.data.find(v => v.id === view.id)).toBeDefined()
+            expect(response.data.find(v => v.id === view2.id)).toBeDefined()
+          })
+        })
+
         describe("destroy", () => {
           const getRowUsage = async () => {
             const { total } = await config.doInContext(undefined, () =>

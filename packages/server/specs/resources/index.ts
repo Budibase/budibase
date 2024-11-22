@@ -6,6 +6,7 @@ import user from "./user"
 import metrics from "./metrics"
 import misc from "./misc"
 import roles from "./roles"
+import view from "./view"
 
 export const examples = {
   ...application.getExamples(),
@@ -16,6 +17,7 @@ export const examples = {
   ...misc.getExamples(),
   ...metrics.getExamples(),
   ...roles.getExamples(),
+  ...view.getExamples(),
 }
 
 export const schemas = {
@@ -26,4 +28,5 @@ export const schemas = {
   ...user.getSchemas(),
   ...misc.getSchemas(),
   ...roles.getSchemas(),
+  ...view.getSchemas(),
 }
