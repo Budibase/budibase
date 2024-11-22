@@ -94,7 +94,6 @@
   $: memoBlock.set(block)
 
   $: filters = lookForFilters(schemaProperties)
-  $: console.log(filters)
   $: filterCount =
     filters?.groups?.reduce((acc, group) => {
       acc = acc += group?.filters?.length || 0
