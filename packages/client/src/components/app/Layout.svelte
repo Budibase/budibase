@@ -250,7 +250,8 @@
                   ? 'column'
                   : 'row'}; max-width: {navigation === 'Left'
                   ? '165px'
-                  : '95%'};"
+                  : '95%'};
+                  align-items: {navigation === 'Left' ? 'center' : 'left'};"
               >
                 <div>
                   {#if !hideLogo}
@@ -550,10 +551,8 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: left;
     gap: var(--spacing-m);
     flex: 1 1 auto;
-    max-width: 165px;
     border: 1px solid red;
   }
   .logo img {
@@ -563,8 +562,8 @@
   .logo :global(h1) {
     font-weight: 600;
     flex: 1 1 auto;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
     border: 2px solid blue;
     max-width: 100%;
