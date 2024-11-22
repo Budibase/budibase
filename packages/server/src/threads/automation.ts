@@ -385,7 +385,7 @@ class Orchestrator {
     stepIdx: number,
     pathIdx?: number
   ): Promise<number> {
-    await processObject(loopStep.inputs, this.processContext(this.context))
+    await processObject(loopStep.inputs, this.mergeContexts(this.context))
     const iterations = getLoopIterations(loopStep)
     let stepToLoopIndex = stepIdx + 1
     let pathStepIdx = (pathIdx || stepIdx) + 1
@@ -573,14 +573,14 @@ class Orchestrator {
           for (const [field, value] of Object.entries(filters[filterKey])) {
             const fromContext = processStringSync(
               field,
-              this.processContext(this.context)
+              this.mergeContexts(this.context)
             )
             toFilter[field] = fromContext
 
             if (typeof value === "string" && findHBSBlocks(value).length > 0) {
               const processedVal = processStringSync(
                 value,
-                this.processContext(this.context)
+                this.mergeContexts(this.context)
               )
 
               filters[filterKey][field] = processedVal
@@ -637,7 +637,7 @@ class Orchestrator {
         const stepFn = await this.getStepFunctionality(step.stepId)
         let inputs = await processObject(
           originalStepInput,
-          this.processContext(this.context)
+          this.mergeContexts(this.context)
         )
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
 
@@ -645,7 +645,7 @@ class Orchestrator {
           inputs: inputs,
           appId: this.appId,
           emitter: this.emitter,
-          context: this.context,
+          context: this.mergeContexts(this.context),
         })
         this.handleStepOutput(step, outputs, loopIteration)
       }
@@ -665,8 +665,8 @@ class Orchestrator {
     return null
   }
 
-  private processContext(context: AutomationContext) {
-    const processContext = {
+  private mergeContexts(context: AutomationContext) {
+    const mergeContexts = {
       ...context,
       steps: {
         ...context.steps,
@@ -674,7 +674,7 @@ class Orchestrator {
         ...context.stepsByName,
       },
     }
-    return processContext
+    return mergeContexts
   }
 
   private handleStepOutput(
