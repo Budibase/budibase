@@ -179,9 +179,7 @@ export class DDInstrumentedDatabase implements Database {
         style: opts?.style,
         timeout: opts?.timeout,
         num_doc_ids: opts?.doc_ids?.length,
-        query_params: opts?.query_params,
         view: opts?.view,
-        selector: opts?.selector,
       })
       return this.db.dump(stream, opts)
     })
