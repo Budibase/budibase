@@ -12,7 +12,7 @@
   import { API } from "api"
   import { admin, auth } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
-  import { TestimonialPage } from "@budibase/frontend-core/src/components"
+  import { TestimonialPage } from "@budibase/frontend-core"
   import { passwordsMatch, handleError } from "../auth/_components/utils"
 
   let form

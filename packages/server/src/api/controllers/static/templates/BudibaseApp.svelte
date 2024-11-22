@@ -1,5 +1,5 @@
 <script>
-  import ClientAppSkeleton from "@budibase/frontend-core/src/components/ClientAppSkeleton.svelte"
+  import ClientAppSkeleton from "@budibase/frontend-core/ClientAppSkeleton.svelte"
 
   export let title = ""
   export let favicon = ""

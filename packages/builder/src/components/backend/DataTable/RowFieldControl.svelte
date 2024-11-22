@@ -17,7 +17,7 @@
   import { capitalise } from "helpers"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import Editor from "../../integration/QueryEditor.svelte"
-  import { SignatureModal } from "@budibase/frontend-core/src/components"
+  import { SignatureModal } from "@budibase/frontend-core"
   import { themeStore } from "stores/portal"
 
   export let meta

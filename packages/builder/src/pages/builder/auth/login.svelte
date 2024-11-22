@@ -17,7 +17,7 @@
   import OIDCButton from "./_components/OIDCButton.svelte"
   import { handleError } from "./_components/utils"
   import Logo from "assets/bb-emblem.svg"
-  import { TestimonialPage } from "@budibase/frontend-core/src/components"
+  import { TestimonialPage } from "@budibase/frontend-core"
   import { onMount } from "svelte"
 
   let loaded = false

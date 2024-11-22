@@ -59,6 +59,7 @@
         "dependsOn": [
           {
             "projects": [
+              "@budibase/frontend-core",
               "@budibase/shared-core",
               "@budibase/string-templates",
               "@budibase/types"
@@ -71,6 +72,7 @@
         "dependsOn": [
           {
             "projects": [
+              "@budibase/frontend-core",
               "@budibase/shared-core",
               "@budibase/string-templates",
               "@budibase/types"

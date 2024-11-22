@@ -181,7 +181,8 @@
           {
             "comment": "Required for pro usage when submodule not loaded",
             "projects": [
-              "@budibase/backend-core"
+              "@budibase/backend-core",
+              "@budibase/frontend-core"
             ],
             "target": "build"
           }

@@ -13,7 +13,7 @@
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import { TestimonialPage } from "@budibase/frontend-core/src/components"
+  import { TestimonialPage } from "@budibase/frontend-core"
 
   let email = ""
   let form

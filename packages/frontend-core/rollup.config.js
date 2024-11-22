@@ -77,6 +77,7 @@ export default [
         targets: [
           { src: "assets", dest: "dist" },
           { src: "themes", dest: "dist" },
+          { src: "src/Components/ClientAppSkeleton.svelte", dest: "dist" },
         ],
       }),
     ],
