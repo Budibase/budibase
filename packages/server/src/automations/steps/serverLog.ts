@@ -65,6 +65,7 @@ export async function run({
     inputs.text = JSON.stringify(inputs.text)
   }
   const message = `App ${appId} - ${inputs.text}`
+  console.log(message)
   return {
     success: true,
     message,
