@@ -18,7 +18,7 @@ describe("test the outgoing webhook action", () => {
     nock("http://www.example.com")
       .post("/", { a: 1 })
       .reply(200, { foo: "bar" })
-    const res = await runStep(actions.OUTGOING_WEBHOOK.stepId, {
+    const res = await runStep(config, actions.OUTGOING_WEBHOOK.stepId, {
       requestMethod: "POST",
       url: "www.example.com",
       requestBody: JSON.stringify({ a: 1 }),
@@ -28,7 +28,7 @@ describe("test the outgoing webhook action", () => {
   })
 
   it("should return an error if something goes wrong in fetch", async () => {
-    const res = await runStep(actions.OUTGOING_WEBHOOK.stepId, {
+    const res = await runStep(config, actions.OUTGOING_WEBHOOK.stepId, {
       requestMethod: "GET",
       url: "www.invalid.com",
     })

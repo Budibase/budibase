@@ -12,6 +12,7 @@ import {
   RelationSchemaField,
   ViewFieldMetadata,
   CalculationType,
+  ViewFetchResponseEnriched,
   CountDistinctCalculationFieldMetadata,
   CountCalculationFieldMetadata,
 } from "@budibase/types"
@@ -122,6 +123,12 @@ async function parseSchema(view: CreateViewRequest) {
 export async function get(ctx: Ctx<void, ViewResponseEnriched>) {
   ctx.body = {
     data: await sdk.views.getEnriched(ctx.params.viewId),
+  }
+}
+
+export async function fetch(ctx: Ctx<void, ViewFetchResponseEnriched>) {
+  ctx.body = {
+    data: await sdk.views.getAllEnriched(),
   }
 }
 

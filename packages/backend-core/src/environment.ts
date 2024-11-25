@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
 import { cloneDeep } from "lodash"
+import { createSecretKey } from "crypto"
 
 function isTest() {
   return isJest()
@@ -16,6 +17,12 @@ function isJest() {
 
 function isDev() {
   return process.env.NODE_ENV !== "production"
+}
+
+function parseIntSafe(number?: string) {
+  if (number) {
+    return parseInt(number)
+  }
 }
 
 let LOADED = false
@@ -126,8 +133,12 @@ const environment = {
   },
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   JS_BCRYPT: process.env.JS_BCRYPT,
-  JWT_SECRET: process.env.JWT_SECRET,
-  JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK,
+  JWT_SECRET: process.env.JWT_SECRET
+    ? createSecretKey(Buffer.from(process.env.JWT_SECRET))
+    : undefined,
+  JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK
+    ? createSecretKey(Buffer.from(process.env.JWT_SECRET_FALLBACK))
+    : undefined,
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
@@ -226,9 +237,7 @@ const environment = {
   MIN_VERSION_WITHOUT_POWER_ROLE:
     process.env.MIN_VERSION_WITHOUT_POWER_ROLE || "3.0.0",
   DISABLE_CONTENT_SECURITY_POLICY: process.env.DISABLE_CONTENT_SECURITY_POLICY,
-  // stopgap migration strategy until we can ensure backwards compat without unsafe-inline in CSP
-  DISABLE_CSP_UNSAFE_INLINE_SCRIPTS:
-    process.env.DISABLE_CSP_UNSAFE_INLINE_SCRIPTS,
+  BSON_BUFFER_SIZE: parseIntSafe(process.env.BSON_BUFFER_SIZE),
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
