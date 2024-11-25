@@ -3504,16 +3504,16 @@ if (descriptions.length) {
           beforeAll(async () => {
             table1Name = `table1-${generator.guid().substring(0, 5)}`
             await client!.schema.createTable(table1Name, table => {
-              table.bigIncrements("id").primary()
+              table.bigIncrements("table1Id").primary()
             })
 
             table2Name = `table2-${generator.guid().substring(0, 5)}`
             await client!.schema.createTable(table2Name, table => {
-              table.increments("id").primary()
+              table.increments("table2Id").primary()
               table
-                .bigInteger("tableid")
+                .bigInteger("table1Ref")
                 .unsigned()
-                .references("id")
+                .references("table1Id")
                 .inTable(table1Name)
             })
 
@@ -3529,26 +3529,26 @@ if (descriptions.length) {
               one: {
                 tableId: table2._id!,
                 relationshipName: "one",
-                foreignKey: "tableid",
+                foreignKey: "table1Ref",
               },
               many: {
                 tableId: table1._id!,
                 relationshipName: "many",
-                primaryKey: "id",
+                primaryKey: "table1Id",
               },
             })
           })
 
           it.only("should be able to fetch rows with related bigint ids", async () => {
             const row = await config.api.row.save(table1._id!, {})
-            await config.api.row.save(table2._id!, { tableid: row.id })
+            await config.api.row.save(table2._id!, { table1Ref: row.table1Id })
 
             const { rows } = await config.api.row.search(table1._id!)
             expect(rows).toEqual([
               expect.objectContaining({
                 _id: "%5B'1'%5D",
                 _rev: "rev",
-                id: "1",
+                table1Id: "1",
                 many: [
                   {
                     _id: "%5B'1'%5D",
