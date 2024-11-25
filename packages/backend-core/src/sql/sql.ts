@@ -1210,15 +1210,15 @@ class InternalBuilder {
 
     const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
     let identifier = this.rawQuotedIdentifier(tableField)
-    // if (schema.type === FieldType.BIGINT) {
-    //   identifier = this.castIntToString(identifier)
-    // } else if (schema.type === FieldType.LINK) {
-    //   const otherTable = this.query.meta.tables![schema.tableId]
-    //   const otherField = otherTable.schema[schema.fieldName]
-    //   if (otherField.type === FieldType.BIGINT) {
-    //     identifier = this.castIntToString(identifier)
-    //   }
-    // }
+    if (schema.type === FieldType.BIGINT) {
+      identifier = this.castIntToString(identifier)
+    } else if (schema.type === FieldType.LINK) {
+      const otherTable = this.query.meta.tables![schema.tableId]
+      const otherField = otherTable.schema[schema.fieldName]
+      if (otherField.type === FieldType.BIGINT) {
+        identifier = this.castIntToString(identifier)
+      }
+    }
     return this.knex.raw(`?${separator}??`, [unaliased, identifier]).toString()
   }
 
