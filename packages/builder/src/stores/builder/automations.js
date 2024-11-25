@@ -527,10 +527,21 @@ const automationActions = store => ({
       } else if (
         currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT
       ) {
-        runtimeName = `steps["${pathSteps[idx]?.id}"].${name}`
+        const stepId = pathSteps[idx].id
+        if (!stepId) {
+          notifications.error("Error generating binding: Step ID not found.")
+          return null
+        }
+        runtimeName = `steps["${stepId}"].${name}`
       } else {
-        runtimeName = `steps.${pathSteps[idx]?.id}.${name}`
+        const stepId = pathSteps[idx].id
+        if (!stepId) {
+          notifications.error("Error generating binding: Step ID not found.")
+          return null
+        }
+        runtimeName = `steps.${stepId}.${name}`
       }
+
       return runtimeName
     }
 
