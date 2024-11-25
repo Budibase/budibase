@@ -1,6 +1,7 @@
 import { Row, RowSearch } from "./types"
+import { RequiredKeys } from "@budibase/types"
 
-function row(body: any): Row {
+function row(body: any): RequiredKeys<Row> {
   delete body._rev
   // have to input everything, since structure unknown
   return {
