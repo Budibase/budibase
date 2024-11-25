@@ -3549,7 +3549,7 @@ if (descriptions.length) {
                 _id: "%5B'1'%5D",
                 _rev: "rev",
                 id: "1",
-                related: [
+                many: [
                   {
                     _id: "%5B'1'%5D",
                     primaryDisplay: 1,
