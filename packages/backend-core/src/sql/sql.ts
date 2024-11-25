@@ -1191,8 +1191,9 @@ class InternalBuilder {
     return withSchema
   }
 
-  private buildJsonField(field: string): string {
+  private buildJsonField(table: Table, field: string): string {
     const parts = field.split(".")
+    const baseName = parts[parts.length - 1]
     let unaliased: string
 
     let tableField: string
@@ -1205,10 +1206,22 @@ class InternalBuilder {
       tableField = unaliased
     }
 
+    const schema = table.schema[baseName]
+
     const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
-    return this.knex
-      .raw(`?${separator}??`, [unaliased, this.rawQuotedIdentifier(tableField)])
-      .toString()
+    let identifier = this.rawQuotedIdentifier(tableField)
+    if (schema.type === FieldType.BIGINT) {
+      identifier = this.castIntToString(identifier)
+    } else if (schema.type === FieldType.LINK) {
+      const otherTable = this.query.meta.tables![schema.tableId]
+      const otherField = otherTable.schema[schema.fieldName]
+      if (otherField.type === FieldType.BIGINT) {
+        identifier = this.castIntToString(identifier)
+      }
+    } else if (schema.autocolumn && schema.autoReason === "foreign_key")
+      return this.knex
+        .raw(`?${separator}??`, [unaliased, identifier])
+        .toString()
   }
 
   maxFunctionParameters() {
@@ -1272,7 +1285,7 @@ class InternalBuilder {
         Math.floor(this.maxFunctionParameters() / 2)
       )
       const fieldList: string = relationshipFields
-        .map(field => this.buildJsonField(field))
+        .map(field => this.buildJsonField(relatedTable!, field))
         .join(",")
       // SQL Server uses TOP - which performs a little differently to the normal LIMIT syntax
       // it reduces the result set rather than limiting how much data it filters over
