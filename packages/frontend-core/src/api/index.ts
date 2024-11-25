@@ -1,3 +1,10 @@
+import {
+  HTTPMethod,
+  APICallParams,
+  APIClientConfig,
+  APIClient,
+  APICallConfig,
+} from "../types"
 import { Helpers } from "@budibase/bbui"
 import { Header } from "@budibase/shared-core"
 import { ApiVersion } from "../constants"
@@ -45,55 +52,21 @@ import { buildRowActionEndpoints } from "./rowActions"
  */
 export const APISessionID = Helpers.uuid()
 
-const defaultAPIClientConfig = {
-  /**
-   * Certain definitions can't change at runtime for client apps, such as the
-   * schema of tables. The endpoints that are cacheable can be cached by passing
-   * in this flag. It's disabled by default to avoid bugs with stale data.
-   */
-  enableCaching: false,
-
-  /**
-   * A function can be passed in to attach headers to all outgoing requests.
-   * This function is passed in the headers object, which should be directly
-   * mutated. No return value is required.
-   */
-  attachHeaders: null,
-
-  /**
-   * A function can be passed in which will be invoked any time an API error
-   * occurs. An error is defined as a status code >= 400. This function is
-   * invoked before the actual JS error is thrown up the stack.
-   */
-  onError: null,
-
-  /**
-   * A function can be passed to be called when an API call returns info about a migration running for a specific app
-   */
-  onMigrationDetected: null,
-}
-
 /**
  * Constructs an API client with the provided configuration.
- * @param config the API client configuration
- * @return {object} the API client
  */
-export const createAPIClient = config => {
-  config = {
-    ...defaultAPIClientConfig,
-    ...config,
-  }
-  let cache = {}
+export const createAPIClient = (config: APIClientConfig = {}) => {
+  let cache: Record<string, any> = {}
 
   // Generates an error object from an API response
   const makeErrorFromResponse = async (
-    response,
-    method,
+    response: Response,
+    method: HTTPMethod,
     suppressErrors = false
   ) => {
     // Try to read a message from the error
     let message = response.statusText
-    let json = null
+    let json: any = null
     try {
       json = await response.json()
       if (json?.message) {
@@ -116,29 +89,24 @@ export const createAPIClient = config => {
   }
 
   // Generates an error object from a string
-  const makeError = (message, request) => {
+  const makeError = (message: string, url?: string, method?: HTTPMethod) => {
     return {
       message,
       json: null,
       status: 400,
-      url: request?.url,
-      method: request?.method,
+      url: url,
+      method: method,
       handled: true,
     }
   }
 
   // Performs an API call to the server.
-  const makeApiCall = async ({
-    method,
-    url,
-    body,
-    json = true,
-    external = false,
-    parseResponse,
-    suppressErrors = false,
-  }) => {
+  const makeApiCall = async <T>(callConfig: APICallConfig): Promise<T> => {
+    let { json, method, external, body, url, parseResponse, suppressErrors } =
+      callConfig
+
     // Ensure we don't do JSON processing if sending a GET request
-    json = json && method !== "GET"
+    json = json && method !== HTTPMethod.GET
 
     // Build headers
     let headers = { Accept: "application/json" }
@@ -159,12 +127,12 @@ export const createAPIClient = config => {
       try {
         requestBody = JSON.stringify(body)
       } catch (error) {
-        throw makeError("Invalid JSON body", { url, method })
+        throw makeError("Invalid JSON body", url, method)
       }
     }
 
     // Make request
-    let response
+    let response: Response
     try {
       response = await fetch(url, {
         method,
@@ -174,7 +142,7 @@ export const createAPIClient = config => {
       })
     } catch (error) {
       delete cache[url]
-      throw makeError("Failed to send request", { url, method })
+      throw makeError("Failed to send request", url, method)
     }
 
     // Handle response
@@ -182,13 +150,13 @@ export const createAPIClient = config => {
       handleMigrations(response)
       try {
         if (parseResponse) {
-          return await parseResponse(response)
+          return await parseResponse<T>(response)
         } else {
-          return await response.json()
+          return (await response.json()) as T
         }
       } catch (error) {
         delete cache[url]
-        return null
+        throw `Failed to parse response: ${error}`
       }
     } else {
       delete cache[url]
@@ -196,7 +164,7 @@ export const createAPIClient = config => {
     }
   }
 
-  const handleMigrations = response => {
+  const handleMigrations = (response: Response) => {
     if (!config.onMigrationDetected) {
       return
     }
@@ -210,48 +178,55 @@ export const createAPIClient = config => {
   // Performs an API call to the server  and caches the response.
   // Future invocation for this URL will return the cached result instead of
   // hitting the server again.
-  const makeCachedApiCall = async params => {
-    const identifier = params.url
-    if (!identifier) {
-      return null
-    }
+  const makeCachedApiCall = async <T>(
+    callConfig: APICallConfig
+  ): Promise<T> => {
+    const identifier = callConfig.url
     if (!cache[identifier]) {
-      cache[identifier] = makeApiCall(params)
+      cache[identifier] = makeApiCall(callConfig)
       cache[identifier] = await cache[identifier]
     }
-    return await cache[identifier]
+    return (await cache[identifier]) as T
   }
 
   // Constructs an API call function for a particular HTTP method
-  const requestApiCall = method => async params => {
-    try {
-      let { url, cache = false, external = false } = params
-      if (!external) {
-        url = `/${url}`.replace("//", "/")
-      }
+  const requestApiCall =
+    (method: HTTPMethod) =>
+    async <T>(params: APICallParams): Promise<T> => {
+      try {
+        let callConfig: APICallConfig = {
+          json: true,
+          external: false,
+          suppressErrors: false,
+          cache: false,
+          method,
+          ...params,
+        }
+        let { url, cache, external } = callConfig
+        if (!external) {
+          callConfig.url = `/${url}`.replace("//", "/")
+        }
 
-      // Cache the request if possible and desired
-      const cacheRequest = cache && config?.enableCaching
-      const handler = cacheRequest ? makeCachedApiCall : makeApiCall
-
-      const enrichedParams = { ...params, method, url }
-      return await handler(enrichedParams)
-    } catch (error) {
-      if (config?.onError) {
-        config.onError(error)
+        // Cache the request if possible and desired
+        const cacheRequest = cache && config?.enableCaching
+        const handler = cacheRequest ? makeCachedApiCall : makeApiCall
+        return await handler<T>(callConfig)
+      } catch (error) {
+        if (config?.onError) {
+          config.onError(error)
+        }
+        throw error
       }
-      throw error
     }
-  }
 
   // Build the underlying core API methods
-  let API = {
-    post: requestApiCall("POST"),
-    get: requestApiCall("GET"),
-    patch: requestApiCall("PATCH"),
-    delete: requestApiCall("DELETE"),
-    put: requestApiCall("PUT"),
-    error: message => {
+  let API: APIClient = {
+    post: requestApiCall(HTTPMethod.POST),
+    get: requestApiCall(HTTPMethod.GET),
+    patch: requestApiCall(HTTPMethod.PATCH),
+    delete: requestApiCall(HTTPMethod.DELETE),
+    put: requestApiCall(HTTPMethod.PUT),
+    error: (message: string) => {
       throw makeError(message)
     },
     invalidateCache: () => {
@@ -260,9 +235,9 @@ export const createAPIClient = config => {
 
     // Generic utility to extract the current app ID. Assumes that any client
     // that exists in an app context will be attaching our app ID header.
-    getAppID: () => {
+    getAppID: (): string => {
       let headers = {}
-      config?.attachHeaders(headers)
+      config?.attachHeaders?.(headers)
       return headers?.[Header.APP_ID]
     },
   }
