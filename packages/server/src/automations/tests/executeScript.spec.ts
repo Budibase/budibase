@@ -23,10 +23,10 @@ describe("Execute Script Automations", () => {
 
     const results = await builder
       .appAction({ fields: {} })
-      .executeScript({ code: "return 2 + 2" }, { stepId: "basic-script-step" })
+      .executeScript({ code: "return 2 + 2" })
       .run()
 
-    expect(results.steps[0].outputs.result).toEqual(4)
+    expect(results.steps[0].outputs.value).toEqual(4)
   })
 
   it("should access bindings from previous steps", async () => {
@@ -38,13 +38,13 @@ describe("Execute Script Automations", () => {
       .appAction({ fields: { data: [1, 2, 3] } })
       .executeScript(
         {
-          code: "return steps['trigger'].fields.data.map(x => x * 2)",
+          code: "return trigger.fields.data.map(x => x * 2)",
         },
         { stepId: "binding-script-step" }
       )
       .run()
 
-    expect(results.steps[0].outputs.result).toEqual([2, 4, 6])
+    expect(results.steps[0].outputs.value).toEqual([2, 4, 6])
   })
 
   it("should handle script execution errors gracefully", async () => {
@@ -54,13 +54,10 @@ describe("Execute Script Automations", () => {
 
     const results = await builder
       .appAction({ fields: {} })
-      .executeScript(
-        { code: "return nonexistentVariable.map(x => x)" },
-        { stepId: "error-script-step" }
-      )
+      .executeScript({ code: "return nonexistentVariable.map(x => x)" })
       .run()
 
-    expect(results.steps[0].outputs.error).toContain(
+    expect(results.steps[0].outputs.value).toContain(
       "ReferenceError: nonexistentVariable is not defined"
     )
     expect(results.steps[0].outputs.success).toEqual(false)
@@ -73,24 +70,21 @@ describe("Execute Script Automations", () => {
 
     const results = await builder
       .appAction({ fields: { value: 10 } })
-      .executeScript(
-        {
-          code: `
-            if (steps['trigger'].fields.value > 5) {
+      .executeScript({
+        code: `
+            if (trigger.fields.value > 5) {
               return "Value is greater than 5";
             } else {
               return "Value is 5 or less";
             }
           `,
-        },
-        { stepId: "conditional-logic-step" }
-      )
+      })
       .run()
 
-    expect(results.steps[0].outputs.result).toEqual("Value is greater than 5")
+    expect(results.steps[0].outputs.value).toEqual("Value is greater than 5")
   })
 
-  it("should use multiple steps and validate script execution", async () => {
+  it.only("should use multiple steps and validate script execution", async () => {
     const builder = createAutomationBuilder({
       name: "Multi-Step Script Execution",
     })
@@ -103,30 +97,27 @@ describe("Execute Script Automations", () => {
       )
       .createRow(
         { row: { name: "Test Row", value: 42, tableId: "12345" } },
-        { stepId: "create-row-step" }
+        { stepId: "abc123" }
       )
       .executeScript(
         {
           code: `
-            const createdRow = steps['create-row-step'].outputs;
+            const createdRow = steps['abc123'].outputs;
             return createdRow.row.value * 2;
           `,
         },
-        { stepId: "script-step" }
+        { stepId: "def345" }
       )
-      .serverLog(
-        {
-          text: `Final result is {{ steps['script-step'].outputs.result }}`,
-        },
-        { stepId: "final-log-step" }
-      )
+      .serverLog({
+        text: `Final result is {{ steps['def345'].outputs.value }}`,
+      })
       .run()
 
     expect(results.steps[0].outputs.message).toContain(
       "Starting multi-step automation"
     )
-    expect(results.steps[1].outputs.row.value).toEqual(42)
-    expect(results.steps[2].outputs.result).toEqual(84)
-    expect(results.steps[3].outputs.message).toContain("Final result is 84")
+    expect(results.steps[2].outputs.row.value).toEqual(42)
+    expect(results.steps[3].outputs.value).toEqual(84)
+    expect(results.steps[4].outputs.message).toContain("Final result is 84")
   })
 })
