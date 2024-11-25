@@ -61,7 +61,7 @@ export async function run({
   inputs: ServerLogStepInputs
   appId: string
 }): Promise<ServerLogStepOutputs> {
-  if (typeof inputs.text === "object") {
+  if (typeof inputs.text !== "string") {
     inputs.text = JSON.stringify(inputs.text)
   }
   const message = `App ${appId} - ${inputs.text}`
