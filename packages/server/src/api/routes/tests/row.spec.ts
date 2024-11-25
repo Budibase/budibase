@@ -3545,7 +3545,19 @@ if (descriptions.length) {
             await config.api.row.save(relatedTable._id!, { tableid: row.id })
 
             const { rows } = await config.api.row.search(table._id!)
-            expect(rows).toEqual([])
+            expect(rows).toEqual([
+              expect.objectContaining({
+                _id: "%5B'1'%5D",
+                _rev: "rev",
+                id: "1",
+                related: [
+                  {
+                    _id: "%5B'1'%5D",
+                    primaryDisplay: 1,
+                  },
+                ],
+              }),
+            ])
           })
         })
     }
