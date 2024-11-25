@@ -3498,23 +3498,23 @@ if (descriptions.length) {
 
       if (!isInternal) {
         describe("bigint ids", () => {
-          let table: Table, relatedTable: Table
-          let tableName: string, relatedTableName: string
+          let table1: Table, table2: Table
+          let table1Name: string, table2Name: string
 
           beforeAll(async () => {
-            tableName = generator.guid().substring(0, 10)
-            await client!.schema.createTable(tableName, table => {
+            table1Name = `table1-${generator.guid().substring(0, 5)}`
+            await client!.schema.createTable(table1Name, table => {
               table.bigIncrements("id").primary()
             })
 
-            relatedTableName = generator.guid().substring(0, 10)
-            await client!.schema.createTable(relatedTableName, table => {
+            table2Name = `table2-${generator.guid().substring(0, 5)}`
+            await client!.schema.createTable(table2Name, table => {
               table.increments("id").primary()
               table
                 .bigInteger("tableid")
                 .unsigned()
                 .references("id")
-                .inTable(tableName)
+                .inTable(table1Name)
             })
 
             const resp = await config.api.datasource.fetchSchema({
@@ -3522,17 +3522,17 @@ if (descriptions.length) {
             })
 
             const tables = Object.values(resp.datasource.entities || {})
-            table = tables.find(t => t.name === tableName)!
-            relatedTable = tables.find(t => t.name === relatedTableName)!
+            table1 = tables.find(t => t.name === table1Name)!
+            table2 = tables.find(t => t.name === table2Name)!
 
             await config.api.datasource.addExistingRelationship({
               one: {
-                tableId: relatedTable._id!,
+                tableId: table2._id!,
                 relationshipName: "one",
                 foreignKey: "tableid",
               },
               many: {
-                tableId: table._id!,
+                tableId: table1._id!,
                 relationshipName: "many",
                 primaryKey: "id",
               },
@@ -3540,10 +3540,10 @@ if (descriptions.length) {
           })
 
           it.only("should be able to fetch rows with related bigint ids", async () => {
-            const row = await config.api.row.save(table._id!, {})
-            await config.api.row.save(relatedTable._id!, { tableid: row.id })
+            const row = await config.api.row.save(table1._id!, {})
+            await config.api.row.save(table2._id!, { tableid: row.id })
 
-            const { rows } = await config.api.row.search(table._id!)
+            const { rows } = await config.api.row.search(table1._id!)
             expect(rows).toEqual([
               expect.objectContaining({
                 _id: "%5B'1'%5D",
