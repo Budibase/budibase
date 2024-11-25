@@ -1218,10 +1218,8 @@ class InternalBuilder {
       if (otherField.type === FieldType.BIGINT) {
         identifier = this.castIntToString(identifier)
       }
-    } else if (schema.autocolumn && schema.autoReason === "foreign_key")
-      return this.knex
-        .raw(`?${separator}??`, [unaliased, identifier])
-        .toString()
+    }
+    return this.knex.raw(`?${separator}??`, [unaliased, identifier]).toString()
   }
 
   maxFunctionParameters() {
