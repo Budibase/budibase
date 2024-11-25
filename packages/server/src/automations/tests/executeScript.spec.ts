@@ -1,7 +1,7 @@
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 import * as automation from "../index"
 import * as setup from "./utilities"
-import { Table, AutomationStatus } from "@budibase/types"
+import { Table } from "@budibase/types"
 
 describe("Execute Script Automations", () => {
   let config = setup.getConfig(),
@@ -57,7 +57,7 @@ describe("Execute Script Automations", () => {
       .executeScript({ code: "return nonexistentVariable.map(x => x)" })
       .run()
 
-    expect(results.steps[0].outputs.value).toContain(
+    expect(results.steps[0].outputs.response).toContain(
       "ReferenceError: nonexistentVariable is not defined"
     )
     expect(results.steps[0].outputs.success).toEqual(false)
@@ -84,7 +84,7 @@ describe("Execute Script Automations", () => {
     expect(results.steps[0].outputs.value).toEqual("Value is greater than 5")
   })
 
-  it.only("should use multiple steps and validate script execution", async () => {
+  it("should use multiple steps and validate script execution", async () => {
     const builder = createAutomationBuilder({
       name: "Multi-Step Script Execution",
     })
@@ -96,28 +96,28 @@ describe("Execute Script Automations", () => {
         { stepId: "start-log-step" }
       )
       .createRow(
-        { row: { name: "Test Row", value: 42, tableId: "12345" } },
+        { row: { name: "Test Row", value: 42, tableId: table._id } },
         { stepId: "abc123" }
       )
       .executeScript(
         {
           code: `
-            const createdRow = steps['abc123'].outputs;
+            const createdRow = steps['abc123'];
             return createdRow.row.value * 2;
           `,
         },
-        { stepId: "def345" }
+        { stepId: "ScriptingStep1" }
       )
       .serverLog({
-        text: `Final result is {{ steps['def345'].outputs.value }}`,
+        text: `Final result is {{ steps.ScriptingStep1.value }}`,
       })
       .run()
 
     expect(results.steps[0].outputs.message).toContain(
       "Starting multi-step automation"
     )
-    expect(results.steps[2].outputs.row.value).toEqual(42)
-    expect(results.steps[3].outputs.value).toEqual(84)
-    expect(results.steps[4].outputs.message).toContain("Final result is 84")
+    expect(results.steps[1].outputs.row.value).toEqual(42)
+    expect(results.steps[2].outputs.value).toEqual(84)
+    expect(results.steps[3].outputs.message).toContain("Final result is 84")
   })
 })
