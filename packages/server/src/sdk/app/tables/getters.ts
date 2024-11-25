@@ -78,8 +78,11 @@ export async function getAllInternalTables(db?: Database): Promise<Table[]> {
 }
 
 async function getAllExternalTables(): Promise<Table[]> {
+  // this is all datasources, we'll need to filter out internal
   const datasources = await sdk.datasources.fetch({ enriched: true })
-  const allEntities = datasources.map(datasource => datasource.entities)
+  const allEntities = datasources
+    .filter(datasource => datasource._id !== INTERNAL_TABLE_SOURCE_ID)
+    .map(datasource => datasource.entities)
   let final: Table[] = []
   for (let entities of allEntities) {
     if (entities) {

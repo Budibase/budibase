@@ -50,6 +50,7 @@ export async function searchView(
   result.rows.forEach(r => (r._viewId = view.id))
   ctx.body = result
 }
+
 function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
   if (request.sort) {
     return {
