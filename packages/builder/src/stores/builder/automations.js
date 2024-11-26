@@ -77,6 +77,17 @@ const automationActions = store => ({
    * @param {Object} automation the automaton to be mutated
    */
   moveBlock: async (sourcePath, destPath, automation) => {
+    // The last part of the source node address, containing the id.
+    const pathSource = sourcePath.at(-1)
+
+    // The last part of the destination node address, containing the id.
+    const pathEnd = destPath.at(-1)
+
+    // If they are the same then ignore the drag and drop
+    if (pathSource.id === pathEnd.id) {
+      return
+    }
+
     // Use core delete to remove and return the deleted block
     // from the automation
     const { deleted, newAutomation } = store.actions.deleteBlock(
@@ -88,9 +99,6 @@ const automationActions = store => ({
     // will redefine all proceding node locations
     const newRefs = {}
     store.actions.traverse(newRefs, newAutomation)
-
-    // The last part of the destination node address, containing the id.
-    const pathEnd = destPath.at(-1)
 
     let finalPath
     // If dropping in a branch-step dropzone you need to find
