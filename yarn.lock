@@ -17904,7 +17904,7 @@ postcss-values-parser@^6.0.2:
     is-url-superb "^4.0.0"
     quote-unquote "^1.0.0"
 
-postcss@^8.1.7, postcss@^8.2.9, postcss@^8.3.11, postcss@^8.4.12, postcss@^8.4.27, postcss@^8.4.29, postcss@^8.4.35, postcss@^8.4.5:
+postcss@^8.1.7, postcss@^8.2.9, postcss@^8.3.11, postcss@^8.4.12, postcss@^8.4.27, postcss@^8.4.29, postcss@^8.4.5:
   version "8.4.41"
   resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.41.tgz#d6104d3ba272d882fe18fc07d15dc2da62fa2681"
   integrity sha512-TesUflQ0WKZqAvg52PWL6kHgLKP6xB6heTOdoYM0Wt2UHyxNa4K25EZZMgKns3BH1RLVbZCREPpLY0rhnNoHVQ==
