@@ -3,6 +3,7 @@ import * as dbCore from "../db"
 import {
   getNativeSql,
   isExternalTable,
+  isInternalTableID,
   isInvalidISODateString,
   isValidFilter,
   isValidISODateString,
@@ -1192,7 +1193,7 @@ class InternalBuilder {
 
   private buildJsonField(table: Table, field: string): [string, Knex.Raw] {
     const parts = field.split(".")
-    const baseName = parts[parts.length - 1]
+    let baseName = parts[parts.length - 1]
     let unaliased: string
 
     let tableField: string
@@ -1205,10 +1206,16 @@ class InternalBuilder {
       tableField = unaliased
     }
 
-    const schema = table.schema[baseName]
+    if (this.query.meta?.columnPrefix) {
+      baseName = baseName.replace(this.query.meta.columnPrefix, "")
+    }
 
     let identifier = this.rawQuotedIdentifier(tableField)
-    if (schema.type === FieldType.BIGINT) {
+    // Internal tables have special _id, _rev, createdAt, and updatedAt fields
+    // that do not appear in the schema, meaning schema could actually be
+    // undefined.
+    const schema: FieldSchema | undefined = table.schema[baseName]
+    if (schema && schema.type === FieldType.BIGINT) {
       identifier = this.castIntToString(identifier)
     }
     return [unaliased, identifier]

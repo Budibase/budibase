@@ -29,7 +29,7 @@ import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { isEqual } from "lodash"
 import { processTable } from "../../sdk/app/tables/getters"
-import { makeExternalQuery } from "src/integrations/base/query"
+import { makeExternalQuery } from "../../integrations/base/query"
 
 export async function fetch(ctx: UserCtx) {
   ctx.body = await sdk.datasources.fetch()

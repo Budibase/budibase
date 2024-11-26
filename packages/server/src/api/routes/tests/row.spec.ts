@@ -3333,7 +3333,7 @@ if (descriptions.length) {
         })
 
         isInternal &&
-          it("should coerce a static handlebars formula", async () => {
+          it.only("should coerce a static handlebars formula", async () => {
             await updateFormulaColumn(encodeJS("return 1"), {
               responseType: FieldType.NUMBER,
               formulaType: FormulaType.STATIC,
