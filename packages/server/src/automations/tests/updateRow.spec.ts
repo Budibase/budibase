@@ -15,7 +15,7 @@ import * as uuid from "uuid"
 
 describe("test the update row action", () => {
   let table: Table,
-    row: any,
+    row: Row,
     config = setup.getConfig()
 
   beforeAll(async () => {
@@ -34,7 +34,7 @@ describe("test the update row action", () => {
     const results = await builder
       .appAction({ fields: {} })
       .updateRow({
-        rowId: row._id,
+        rowId: row._id!,
         row: {
           ...row,
           name: "Updated name",
