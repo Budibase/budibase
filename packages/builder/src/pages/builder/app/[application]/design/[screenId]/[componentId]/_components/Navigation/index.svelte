@@ -33,6 +33,11 @@
     { value: "Center", barIcon: "TextAlignCenter" },
     { value: "Right", barIcon: "TextAlignRight" },
   ]
+  const alignLogoOptions = [
+    { value: "Left", barIcon: "AlignLeft" },
+    { value: "Center", barIcon: "AlignCenter" },
+    { value: "Right", barIcon: "AlignRight" },
+  ]
   const widthOptions = ["Max", "Large", "Medium", "Small"]
   const logoSizeOptions = ["18px", "24px", "36px", "48px", "72px", "96px"]
 
@@ -190,6 +195,24 @@
               appendBindingsAsOptions: false,
             }}
           />
+          <PropertyControl
+            label="Logo alignment"
+            control={BarButtonList}
+            onChange={logoAlign => update("logoAlign", logoAlign)}
+            value={$nav.logoAlignment}
+            props={{
+              options: alignLogoOptions,
+            }}
+          />
+
+          <!-- label="Text align"
+           control={BarButtonList}
+           onChange={align => update("textAlign", align)}
+           value={$nav.textAlign}
+           props={{
+             options: alignmentOptions,
+           }} -->
+
           <PropertyControl
             label="Logo link URL"
             control={DrawerBindableCombobox}

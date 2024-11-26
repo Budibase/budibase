@@ -38,6 +38,7 @@
   export let openLogoLinkInNewTab
   export let textAlign
   export let textBelow
+  export let logoAlign
   export let embedded = false
 
   const NavigationClasses = {
@@ -253,7 +254,8 @@
                   : '95%'};
                   align-items: {navigation === 'Left' ? 'center' : 'left'};"
               >
-                <div>
+                <div style="text-align: {logoAlign};">
+                  <p>{logoAlign}</p>
                   {#if !hideLogo}
                     {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
                       <a
@@ -266,7 +268,8 @@
                         <img
                           src={logoUrl || "/builder/bblogo.png"}
                           alt={title}
-                          style="--logo-size: {logoSize};"
+                          style="--logo-size: {logoSize};
+                          align"
                         />
                       </a>
                     {:else if logoLinkUrl}
@@ -293,11 +296,7 @@
                   {/if}
                 </div>
                 {#if !hideTitle && title}
-                  <Heading
-                    size="S"
-                    {textAlign}
-                    style="width: {textBelow ? '100%' : ''}; ">{title}</Heading
-                  >
+                  <Heading size="S" {textAlign} style="">{title}</Heading>
                 {/if}
               </div>
               {#if !embedded}
@@ -565,8 +564,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    border: 2px solid blue;
-    max-width: 100%;
+    width: 100%;
   }
   .portal {
     display: grid;
