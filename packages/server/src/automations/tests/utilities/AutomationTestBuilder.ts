@@ -34,6 +34,7 @@ import {
   SearchFilters,
   Branch,
   FilterStepInputs,
+  ExecuteScriptStepInputs,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
@@ -196,6 +197,18 @@ class BaseStepBuilder {
     return this.step(
       AutomationActionStepId.SERVER_LOG,
       BUILTIN_ACTION_DEFINITIONS.SERVER_LOG,
+      input,
+      opts
+    )
+  }
+
+  executeScript(
+    input: ExecuteScriptStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.EXECUTE_SCRIPT,
+      BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT,
       input,
       opts
     )
