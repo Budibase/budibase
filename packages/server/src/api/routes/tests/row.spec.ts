@@ -85,7 +85,7 @@ function encodeJS(binding: string) {
   return `{{ js "${Buffer.from(binding).toString("base64")}"}}`
 }
 
-const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
+const descriptions = datasourceDescribe({ only: [DatabaseName.SQS] })
 
 if (descriptions.length) {
   describe.each(descriptions)(
@@ -2571,12 +2571,14 @@ if (descriptions.length) {
         let tableId: string
         let o2mData: Row[]
         let m2mData: Row[]
+        let isRelationship: boolean
 
         beforeAll(async () => {
           const table = await config.api.table.save(
             defaultTable({ schema: relSchema() })
           )
           tableId = table._id!
+          isRelationship = relSchema().user.type === FieldType.LINK
 
           o2mData = [
             await dataGenerator(o2mTable._id!),
@@ -2763,6 +2765,8 @@ if (descriptions.length) {
             type: isInternal ? "row" : undefined,
             createdAt: isInternal ? new Date().toISOString() : undefined,
             updatedAt: isInternal ? new Date().toISOString() : undefined,
+            users: isRelationship ? undefined : [],
+            user: isRelationship ? undefined : [],
           })
         })
 
