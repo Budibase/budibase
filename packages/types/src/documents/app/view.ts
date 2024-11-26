@@ -101,6 +101,10 @@ export interface ViewV2 {
   schema?: ViewV2Schema
 }
 
+export interface PublicAPIView extends Omit<ViewV2, "query" | "queryUI"> {
+  query?: UISearchFilter
+}
+
 export type ViewV2Schema = Record<string, ViewFieldMetadata>
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
