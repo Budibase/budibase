@@ -11,7 +11,7 @@ import {
   UpdateAppResponse,
 } from "@budibase/types"
 
-export type AppEndpoints = {
+export interface AppEndpoints {
   fetchAppPackage: (appId: string) => Promise<FetchAppPackageResponse>
   saveAppMetadata: (
     appId: string,
@@ -40,7 +40,7 @@ export type AppEndpoints = {
   ) => Promise<App>
   addSampleData: (appId: string) => Promise<void>
 
-  // Untyped - TODO:
+  // TODO
   publishAppChanges: (appId: string) => Promise<any>
   revertAppChanges: (appId: string) => Promise<any>
   updateAppClientVersion: (appId: string) => Promise<any>

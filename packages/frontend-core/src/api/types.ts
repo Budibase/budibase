@@ -1,3 +1,5 @@
+import { AIEndpoints } from "./ai"
+import { AnalyticsEndpoints } from "./analytics"
 import { AppEndpoints } from "./app"
 
 export enum HTTPMethod {
@@ -41,4 +43,7 @@ export type BaseAPIClient = {
   getAppID: () => string
 }
 
-export type APIClient = BaseAPIClient & AppEndpoints & { [key: string]: any }
+export type APIClient = BaseAPIClient &
+  AIEndpoints &
+  AnalyticsEndpoints &
+  AppEndpoints & { [key: string]: any }
