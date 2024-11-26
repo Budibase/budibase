@@ -51,7 +51,7 @@
   "extra": {
     "idFilter": {}
   },
-  "meta": {
+  "table": {
     "type": "table",
     "_id": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__persons",
     "primary": ["personid"],

@@ -1208,7 +1208,7 @@ class InternalBuilder {
     const schema = table.schema[baseName]
 
     let identifier = this.rawQuotedIdentifier(tableField)
-    if (schema.type === FieldType.BIGINT) {
+    if (schema?.type === FieldType.BIGINT) {
       identifier = this.castIntToString(identifier)
     }
     return [unaliased, identifier]
