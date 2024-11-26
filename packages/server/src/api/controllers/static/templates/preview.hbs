@@ -31,7 +31,7 @@
     }
   </style>
   <script src='{{ clientLibPath }}'></script>
-  <script>
+  <script nonce="{{ nonce }}">
     function receiveMessage(event) {
       if (!event.data) {
         return

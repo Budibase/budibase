@@ -9,6 +9,7 @@
     Tags,
     Tag,
   } from "@budibase/bbui"
+  import { AutomationActionStepId } from "@budibase/types"
   import { automationStore, selectedAutomation } from "stores/builder"
   import { admin, licensing } from "stores/portal"
   import { externalActions } from "./ExternalActions"
@@ -21,7 +22,12 @@
   let triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let selectedAction
-  let actions = Object.entries($automationStore.blockDefinitions.ACTION)
+  let actions = Object.entries($automationStore.blockDefinitions.ACTION).filter(
+    entry => {
+      const [key] = entry
+      return key !== AutomationActionStepId.BRANCH
+    }
+  )
   let lockedFeatures = [
     ActionStepID.COLLECT,
     ActionStepID.TRIGGER_AUTOMATION_RUN,

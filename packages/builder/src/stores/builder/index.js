@@ -11,7 +11,6 @@ import {
   automationStore,
   selectedAutomation,
   automationHistoryStore,
-  selectedAutomationDisplayData,
 } from "./automations.js"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
@@ -31,6 +30,7 @@ import { queries } from "./queries"
 import { flags } from "./flags"
 import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
+import { appPublished } from "./published"
 
 export {
   componentTreeNodesStore,
@@ -46,7 +46,6 @@ export {
   previewStore,
   automationStore,
   selectedAutomation,
-  selectedAutomationDisplayData,
   automationHistoryStore,
   sortedScreens,
   userStore,
@@ -67,6 +66,7 @@ export {
   hoverStore,
   snippets,
   rowActions,
+  appPublished,
 }
 
 export const reset = () => {

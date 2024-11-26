@@ -5,17 +5,17 @@ import { Helpers } from "@budibase/bbui"
 /**
  * Creates a validation function from a combination of schema-level constraints
  * and custom validation rules
- * @param schemaConstraints any schema level constraints from the table
+ * @param schemaConstraints any schema level constraints from the datasource
  * @param customRules any custom validation rules
  * @param field the field name we are evaluating
- * @param table the definition of the table we are evaluating
+ * @param definition the definition of the datasource we are evaluating
  * @returns {function} a validator function which accepts test values
  */
 export const createValidatorFromConstraints = (
   schemaConstraints,
   customRules,
   field,
-  table
+  definition
 ) => {
   let rules = []
 
@@ -23,7 +23,7 @@ export const createValidatorFromConstraints = (
   if (schemaConstraints) {
     // Required constraint
     if (
-      field === table?.primaryDisplay ||
+      field === definition?.primaryDisplay ||
       schemaConstraints.presence?.allowEmpty === false ||
       schemaConstraints.presence === true
     ) {

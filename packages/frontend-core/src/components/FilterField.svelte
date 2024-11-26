@@ -29,7 +29,6 @@
   const { OperatorOptions, FilterValueType } = Constants
 
   let bindingDrawer
-  let fieldValue
 
   $: fieldValue = filter?.value
   $: readableValue = toReadable ? toReadable(bindings, fieldValue) : fieldValue
@@ -169,7 +168,7 @@
       {#if filter.valueType === FilterValueType.BINDING}
         <Input
           disabled={filter.noValue}
-          readonly={true}
+          readonly={isJS}
           value={isJS ? "(JavaScript function)" : readableValue}
           on:change={onChange}
         />

@@ -10,13 +10,14 @@
   } from "@budibase/bbui"
   import {
     FieldType,
-    FilterGroupLogicalOperator,
+    UILogicalOperator,
     EmptyFilterOption,
   } from "@budibase/types"
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { getContext, createEventDispatcher } from "svelte"
   import FilterField from "./FilterField.svelte"
   import ConditionField from "./ConditionField.svelte"
+  import { utils } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
   const {
@@ -42,8 +43,7 @@
   export let toReadable
   export let toRuntime
 
-  $: editableFilters = filters ? Helpers.cloneDeep(filters) : null
-
+  $: editableFilters = migrateFilters(filters)
   $: {
     if (
       tables.find(
@@ -55,6 +55,20 @@
     ) {
       schemaFields = [...schemaFields, { name: "_id", type: "string" }]
     }
+  }
+  $: prefix =
+    builderType === "filter"
+      ? "Show data which matches"
+      : "Run branch when matching"
+
+  // We still may need to migrate this even though the backend does it automatically now
+  // for query definitions. This is because we might be editing saved filter definitions
+  // from old screens, which will still be of type LegacyFilter[].
+  const migrateFilters = filters => {
+    if (Array.isArray(filters)) {
+      return utils.processSearchFilters(filters)
+    }
+    return Helpers.cloneDeep(filters)
   }
 
   const filterOperatorOptions = Object.values(FilterOperator).map(entry => {
@@ -72,10 +86,12 @@
 
   const context = getContext("context")
 
-  $: fieldOptions = (schemaFields || []).map(field => ({
-    label: field.displayName || field.name,
-    value: field.name,
-  }))
+  $: fieldOptions = (schemaFields || [])
+    .filter(field => !field.calculationType)
+    .map(field => ({
+      label: field.displayName || field.name,
+      value: field.name,
+    }))
 
   const onFieldChange = filter => {
     const previousType = filter.type
@@ -230,7 +246,7 @@
     } else if (addGroup) {
       if (!editable?.groups?.length) {
         editable = {
-          logicalOperator: FilterGroupLogicalOperator.ALL,
+          logicalOperator: UILogicalOperator.ALL,
           onEmptyFilter: EmptyFilterOption.RETURN_NONE,
           groups: [],
         }
@@ -274,7 +290,7 @@
 
       {#if editableFilters?.groups?.length}
         <div class="global-filter-header">
-          <span>Show data which matches</span>
+          <span>{prefix}</span>
           <span class="operator-picker">
             <Select
               value={editableFilters?.logicalOperator}
@@ -374,7 +390,6 @@
                             ...filter,
                             field: e.detail.field,
                           }
-                          delete updated.valueType
                           onFilterFieldUpdate(updated, groupIdx, filterIdx)
                         }}
                       />

@@ -23,6 +23,7 @@ import {
   cache,
   context,
   db as dbCore,
+  docIds,
   env as envCore,
   ErrorCode,
   events,
@@ -35,7 +36,6 @@ import {
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import { stringToReadStream } from "../../utilities"
 import { doesUserHaveLock } from "../../utilities/redis"
 import { cleanupAutomations } from "../../automations/utils"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
@@ -54,11 +54,16 @@ import {
   DuplicateAppResponse,
   UpdateAppRequest,
   UpdateAppResponse,
+  Database,
+  FieldType,
+  BBReferenceFieldSubType,
+  Row,
+  BBRequest,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
-import { sdk as sharedCoreSDK } from "@budibase/shared-core"
+import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
 
 // utility function, need to do away with this
@@ -123,8 +128,7 @@ function checkAppName(
 }
 
 interface AppTemplate {
-  templateString?: string
-  useTemplate?: string
+  useTemplate?: boolean
   file?: {
     type?: string
     path: string
@@ -148,15 +152,12 @@ async function createInstance(appId: string, template: AppTemplate) {
   await createRoutingView()
   await createAllSearchIndex()
 
-  // replicate the template data to the instance DB
-  // this is currently very hard to test, downloading and importing template files
-  if (template && template.templateString) {
-    const { ok } = await db.load(stringToReadStream(template.templateString))
-    if (!ok) {
-      throw "Error loading database dump from memory."
+  if (template && template.useTemplate) {
+    const opts = {
+      importObjStoreContents: true,
+      updateAttachmentColumns: !template.key, // preserve attachments when using Budibase templates
     }
-  } else if (template && template.useTemplate === "true") {
-    await sdk.backups.importApp(appId, db, template)
+    await sdk.backups.importApp(appId, db, template, opts)
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
@@ -208,9 +209,8 @@ export async function fetchAppDefinition(
 export async function fetchAppPackage(
   ctx: UserCtx<void, FetchAppPackageResponse>
 ) {
-  const db = context.getAppDB()
   const appId = context.getAppId()
-  let application = await db.get<App>(DocumentType.APP_METADATA)
+  const application = await sdk.applications.metadata.get()
   const layouts = await getLayouts()
   let screens = await getScreens()
   const license = await licensing.cache.getCachedLicense()
@@ -244,14 +244,15 @@ export async function fetchAppPackage(
 
 async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
-  const {
-    name,
-    url,
-    encryptionPassword,
-    useTemplate,
-    templateKey,
-    templateString,
-  } = ctx.request.body
+  const { body } = ctx.request
+  const { name, url, encryptionPassword, templateKey } = body
+
+  let useTemplate
+  if (typeof body.useTemplate === "string") {
+    useTemplate = body.useTemplate === "true"
+  } else if (typeof body.useTemplate === "boolean") {
+    useTemplate = body.useTemplate
+  }
 
   checkAppName(ctx, apps, name)
   const appUrl = sdk.applications.getAppUrl({ name, url })
@@ -260,18 +261,18 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
   const instanceConfig: AppTemplate = {
     useTemplate,
     key: templateKey,
-    templateString,
   }
-  if (ctx.request.files && ctx.request.files.templateFile) {
+  if (ctx.request.files && ctx.request.files.fileToImport) {
     instanceConfig.file = {
-      ...(ctx.request.files.templateFile as any),
+      ...(ctx.request.files.fileToImport as any),
       password: encryptionPassword,
     }
-  } else if (typeof ctx.request.body.file?.path === "string") {
+  } else if (typeof body.file?.path === "string") {
     instanceConfig.file = {
-      path: ctx.request.body.file?.path,
+      path: body.file?.path,
     }
   }
+
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const appId = generateDevAppID(generateAppID(tenantId))
 
@@ -279,7 +280,11 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
     const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
 
-    let newApplication: App = {
+    if (instanceConfig.useTemplate && !instanceConfig.file) {
+      await updateUserColumns(appId, db, ctx.user._id!)
+    }
+
+    const newApplication: App = {
       _id: DocumentType.APP_METADATA,
       _rev: undefined,
       appId,
@@ -301,7 +306,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
         navBackground: "var(--spectrum-global-color-gray-50)",
         links: [],
       },
-      theme: "spectrum--light",
+      theme: DefaultAppTheme,
       customTheme: {
         buttonBorderRadius: "16px",
       },
@@ -310,12 +315,18 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
         disableUserMetadata: true,
         skeletonLoader: true,
       },
+      creationVersion: undefined,
     }
 
+    const isImport = !!instanceConfig.file
+    if (!isImport) {
+      newApplication.creationVersion = envCore.VERSION
+    }
+
+    const existing = await sdk.applications.metadata.tryGet()
     // If we used a template or imported an app there will be an existing doc.
     // Fetch and migrate some metadata from the existing app.
-    try {
-      const existing: App = await db.get(DocumentType.APP_METADATA)
+    if (existing) {
       const keys: (keyof App)[] = [
         "_rev",
         "navigation",
@@ -323,6 +334,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
         "customTheme",
         "icon",
         "snippets",
+        "creationVersion",
       ]
       keys.forEach(key => {
         if (existing[key]) {
@@ -340,14 +352,10 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
       }
 
       // Migrate navigation settings and screens if required
-      if (existing) {
-        const navigation = await migrateAppNavigation()
-        if (navigation) {
-          newApplication.navigation = navigation
-        }
+      const navigation = await migrateAppNavigation()
+      if (navigation) {
+        newApplication.navigation = navigation
       }
-    } catch (err) {
-      // Nothing to do
     }
 
     const response = await db.put(newApplication, { force: true })
@@ -372,21 +380,81 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
   })
 }
 
-async function creationEvents(request: any, app: App) {
+async function updateUserColumns(
+  appId: string,
+  db: Database,
+  toUserId: string
+) {
+  await context.doInAppContext(appId, async () => {
+    const allTables = await sdk.tables.getAllTables()
+    const tablesWithUserColumns = []
+    for (const table of allTables) {
+      const userColumns = Object.values(table.schema).filter(
+        f =>
+          (f.type === FieldType.BB_REFERENCE ||
+            f.type === FieldType.BB_REFERENCE_SINGLE) &&
+          f.subtype === BBReferenceFieldSubType.USER
+      )
+      if (!userColumns.length) {
+        continue
+      }
+
+      tablesWithUserColumns.push({
+        tableId: table._id!,
+        columns: userColumns.map(c => c.name),
+      })
+    }
+
+    const docsToUpdate = []
+
+    for (const { tableId, columns } of tablesWithUserColumns) {
+      const docs = await db.allDocs<Row>(
+        docIds.getRowParams(tableId, null, { include_docs: true })
+      )
+      const rows = docs.rows.map(d => d.doc!)
+
+      for (const row of rows) {
+        let shouldUpdate = false
+        const updatedColumns = columns.reduce<Row>((newColumns, column) => {
+          if (row[column]) {
+            shouldUpdate = true
+            if (Array.isArray(row[column])) {
+              newColumns[column] = row[column]?.map(() => toUserId)
+            } else if (row[column]) {
+              newColumns[column] = toUserId
+            }
+          }
+          return newColumns
+        }, {})
+
+        if (shouldUpdate) {
+          docsToUpdate.push({
+            ...row,
+            ...updatedColumns,
+          })
+        }
+      }
+    }
+
+    await db.bulkDocs(docsToUpdate)
+  })
+}
+
+async function creationEvents(request: BBRequest<CreateAppRequest>, app: App) {
   let creationFns: ((app: App) => Promise<void>)[] = []
 
-  const body = request.body
-  if (body.useTemplate === "true") {
+  const { useTemplate, templateKey, file } = request.body
+  if (useTemplate === "true") {
     // from template
-    if (body.templateKey && body.templateKey !== "undefined") {
-      creationFns.push(a => events.app.templateImported(a, body.templateKey))
+    if (templateKey && templateKey !== "undefined") {
+      creationFns.push(a => events.app.templateImported(a, templateKey))
     }
     // from file
-    else if (request.files?.templateFile) {
+    else if (request.files?.fileToImport) {
       creationFns.push(a => events.app.fileImported(a))
     }
     // from server file path
-    else if (request.body.file) {
+    else if (file) {
       // explicitly pass in the newly created app id
       creationFns.push(a => events.app.duplicated(a, app.appId))
     }
@@ -396,16 +464,14 @@ async function creationEvents(request: any, app: App) {
     }
   }
 
-  if (!request.duplicate) {
-    creationFns.push(a => events.app.created(a))
-  }
+  creationFns.push(a => events.app.created(a))
 
   for (let fn of creationFns) {
     await fn(app)
   }
 }
 
-async function appPostCreate(ctx: UserCtx, app: App) {
+async function appPostCreate(ctx: UserCtx<CreateAppRequest, App>, app: App) {
   const tenantId = tenancy.getTenantId()
   await migrations.backPopulateMigrations({
     type: MigrationType.APP,
@@ -416,7 +482,7 @@ async function appPostCreate(ctx: UserCtx, app: App) {
   await creationEvents(ctx.request, app)
 
   // app import, template creation and duplication
-  if (ctx.request.body.useTemplate === "true") {
+  if (ctx.request.body.useTemplate) {
     const { rows } = await getUniqueRows([app.appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
@@ -489,8 +555,7 @@ export async function update(
 
 export async function updateClient(ctx: UserCtx) {
   // Get current app version
-  const db = context.getAppDB()
-  const application = await db.get<App>(DocumentType.APP_METADATA)
+  const application = await sdk.applications.metadata.get()
   const currentVersion = application.version
 
   let manifest
@@ -518,8 +583,7 @@ export async function updateClient(ctx: UserCtx) {
 
 export async function revertClient(ctx: UserCtx) {
   // Check app can be reverted
-  const db = context.getAppDB()
-  const application = await db.get<App>(DocumentType.APP_METADATA)
+  const application = await sdk.applications.metadata.get()
   if (!application.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
   }
@@ -577,7 +641,7 @@ async function destroyApp(ctx: UserCtx) {
 
   const db = dbCore.getDB(devAppId)
   // standard app deletion flow
-  const app = await db.get<App>(DocumentType.APP_METADATA)
+  const app = await sdk.applications.metadata.get()
   const result = await db.destroy()
   await quotas.removeApp()
   await events.app.deleted(app)
@@ -728,7 +792,7 @@ export async function updateAppPackage(
 ) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
-    const application = await db.get<App>(DocumentType.APP_METADATA)
+    const application = await sdk.applications.metadata.get()
 
     const newAppPackage: App = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
@@ -754,7 +818,7 @@ export async function setRevertableVersion(
     return
   }
   const db = context.getAppDB()
-  const app = await db.get<App>(DocumentType.APP_METADATA)
+  const app = await sdk.applications.metadata.get()
   app.revertableVersion = ctx.request.body.revertableVersion
   await db.put(app)
 
@@ -763,7 +827,7 @@ export async function setRevertableVersion(
 
 async function migrateAppNavigation() {
   const db = context.getAppDB()
-  const existing: App = await db.get(DocumentType.APP_METADATA)
+  const existing = await sdk.applications.metadata.get()
   const layouts: Layout[] = await getLayouts()
   const screens: Screen[] = await getScreens()
 

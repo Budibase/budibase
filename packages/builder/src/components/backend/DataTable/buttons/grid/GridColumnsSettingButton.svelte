@@ -8,15 +8,13 @@
 
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Popover } from "@budibase/bbui"
+  import { ActionButton } from "@budibase/bbui"
   import ColumnsSettingContent from "./ColumnsSettingContent.svelte"
-  import { isEnabled } from "helpers/featureFlags"
-  import { FeatureFlag } from "@budibase/types"
+  import DetailPopover from "components/common/DetailPopover.svelte"
 
   const { tableColumns, datasource } = getContext("grid")
 
-  let open = false
-  let anchor
+  let popover
 
   $: anyRestricted = $tableColumns.filter(
     col => !col.visible || col.readonly
@@ -32,24 +30,19 @@
       : [FieldPermissions.WRITABLE, FieldPermissions.HIDDEN]
 </script>
 
-<div bind:this={anchor}>
-  <ActionButton
-    icon="ColumnSettings"
-    quiet
-    size="M"
-    on:click={() => (open = !open)}
-    selected={open || anyRestricted}
-    disabled={!$tableColumns.length}
-    accentColor="#674D00"
-  >
-    {text}
-  </ActionButton>
-</div>
-
-<Popover bind:open {anchor} align="left">
-  <ColumnsSettingContent
-    columns={$tableColumns}
-    canSetRelationshipSchemas={isEnabled(FeatureFlag.ENRICHED_RELATIONSHIPS)}
-    {permissions}
-  />
-</Popover>
+<DetailPopover bind:this={popover} title="Column settings">
+  <svelte:fragment slot="anchor" let:open>
+    <ActionButton
+      icon="ColumnSettings"
+      quiet
+      size="M"
+      on:click={popover?.open}
+      selected={open || anyRestricted}
+      disabled={!$tableColumns.length}
+      accentColor="#674D00"
+    >
+      {text}
+    </ActionButton>
+  </svelte:fragment>
+  <ColumnsSettingContent columns={$tableColumns} {permissions} />
+</DetailPopover>

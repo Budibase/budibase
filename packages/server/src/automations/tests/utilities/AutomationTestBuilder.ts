@@ -34,6 +34,7 @@ import {
   SearchFilters,
   Branch,
   FilterStepInputs,
+  ExecuteScriptStepInputs,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
@@ -201,6 +202,18 @@ class BaseStepBuilder {
     )
   }
 
+  executeScript(
+    input: ExecuteScriptStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.EXECUTE_SCRIPT,
+      BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT,
+      input,
+      opts
+    )
+  }
+
   filter(input: FilterStepInputs): this {
     return this.step(
       AutomationActionStepId.FILTER,
@@ -226,7 +239,9 @@ class AutomationBuilder extends BaseStepBuilder {
   private triggerOutputs: any
   private triggerSet: boolean = false
 
-  constructor(options: { name?: string; appId?: string } = {}) {
+  constructor(
+    options: { name?: string; appId?: string; config?: TestConfiguration } = {}
+  ) {
     super()
     this.automationConfig = {
       name: options.name || `Test Automation ${uuidv4()}`,
@@ -238,7 +253,7 @@ class AutomationBuilder extends BaseStepBuilder {
       type: "automation",
       appId: options.appId ?? setup.getConfig().getAppId(),
     }
-    this.config = setup.getConfig()
+    this.config = options.config || setup.getConfig()
   }
 
   // TRIGGERS
@@ -348,6 +363,7 @@ class AutomationBuilder extends BaseStepBuilder {
 export function createAutomationBuilder(options?: {
   name?: string
   appId?: string
+  config?: TestConfiguration
 }) {
   return new AutomationBuilder(options)
 }

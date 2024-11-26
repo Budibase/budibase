@@ -8,6 +8,16 @@ export const tableId = {
   },
 }
 
+export const viewId = {
+  in: "path",
+  name: "viewId",
+  required: true,
+  description: "The ID of the view which this request is targeting.",
+  schema: {
+    type: "string",
+  },
+}
+
 export const rowId = {
   in: "path",
   name: "rowId",
@@ -24,6 +34,7 @@ export const appId = {
   required: true,
   description: "The ID of the app which this request is targeting.",
   schema: {
+    default: "{{appId}}",
     type: "string",
   },
 }
@@ -34,6 +45,7 @@ export const appIdUrl = {
   required: true,
   description: "The ID of the app which this request is targeting.",
   schema: {
+    default: "{{appId}}",
     type: "string",
   },
 }

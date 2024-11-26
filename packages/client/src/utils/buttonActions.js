@@ -500,6 +500,10 @@ const rowActionHandler = async action => {
     sourceId: resourceId,
     rowId,
   })
+  // Refresh related datasources
+  await dataSourceStore.actions.invalidateDataSource(resourceId, {
+    invalidateRelationships: true,
+  })
 }
 
 const handlerMap = {

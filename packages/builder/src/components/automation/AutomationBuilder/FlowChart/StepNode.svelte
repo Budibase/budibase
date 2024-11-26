@@ -2,11 +2,12 @@
   import FlowItem from "./FlowItem.svelte"
   import BranchNode from "./BranchNode.svelte"
   import { AutomationActionStepId } from "@budibase/types"
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, notifications } from "@budibase/bbui"
   import { automationStore } from "stores/builder"
   import { environment } from "stores/portal"
   import { cloneDeep } from "lodash"
   import { memo } from "@budibase/frontend-core"
+  import { getContext, onMount } from "svelte"
 
   export let step = {}
   export let stepIdx
@@ -15,6 +16,9 @@
   export let isLast = false
 
   const memoEnvVariables = memo($environment.variables)
+  const view = getContext("draggableView")
+
+  let stepEle
 
   $: memoEnvVariables.set($environment.variables)
   $: blockRef = blocks?.[step.id]
@@ -32,8 +36,26 @@
   $: environmentBindings =
     automationStore.actions.buildEnvironmentBindings($memoEnvVariables)
 
+  $: userBindings = automationStore.actions.buildUserBindings()
+  $: settingBindings = automationStore.actions.buildSettingBindings()
+
   // Combine all bindings for the step
-  $: bindings = [...availableBindings, ...environmentBindings]
+  $: bindings = [
+    ...availableBindings,
+    ...environmentBindings,
+    ...userBindings,
+    ...settingBindings,
+  ]
+  onMount(() => {
+    // Register the trigger as the focus element for the automation
+    // Onload, the canvas will use the dimensions to center the step
+    if (stepEle && step.type === "TRIGGER" && !$view.focusEle) {
+      view.update(state => ({
+        ...state,
+        focusEle: stepEle.getBoundingClientRect(),
+      }))
+    }
+  })
 </script>
 
 {#if isBranch}
@@ -44,7 +66,7 @@
         automationStore.actions.branchAutomation(pathToCurrentNode, automation)
       }}
     >
-      Add additional branch
+      Add branch
     </ActionButton>
   </div>
   <div class="branched">
@@ -66,7 +88,7 @@
               pathTo={pathToCurrentNode}
               branchIdx={bIdx}
               isLast={rightMost}
-              on:change={e => {
+              on:change={async e => {
                 const updatedBranch = { ...branch, ...e.detail }
 
                 if (!step?.inputs?.branches?.[bIdx]) {
@@ -77,12 +99,31 @@
                 let branchStepUpdate = cloneDeep(step)
                 branchStepUpdate.inputs.branches[bIdx] = updatedBranch
 
+                // Ensure valid base configuration for all branches
+                // Reinitialise empty branch conditions on update
+                branchStepUpdate.inputs.branches.forEach(
+                  (branch, i, branchArray) => {
+                    if (!Object.keys(branch.condition).length) {
+                      branchArray[i] = {
+                        ...branch,
+                        ...automationStore.actions.generateDefaultConditions(),
+                      }
+                    }
+                  }
+                )
+
                 const updated = automationStore.actions.updateStep(
                   blockRef?.pathTo,
                   automation,
                   branchStepUpdate
                 )
-                automationStore.actions.save(updated)
+
+                try {
+                  await automationStore.actions.save(updated)
+                } catch (e) {
+                  notifications.error("Error saving branch update")
+                  console.error("Error saving automation branch", e)
+                }
               }}
             />
           </div>
@@ -105,8 +146,7 @@
     {/each}
   </div>
 {:else}
-  <!--Drop Zone-->
-  <div class="block">
+  <div class="block" bind:this={stepEle}>
     <FlowItem
       block={step}
       idx={stepIdx}
@@ -114,9 +154,9 @@
       {isLast}
       {automation}
       {bindings}
+      draggable={step.type !== "TRIGGER"}
     />
   </div>
-  <!--Drop Zone-->
 {/if}
 
 <style>

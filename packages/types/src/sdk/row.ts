@@ -18,11 +18,11 @@ export interface NumericAggregation extends BaseAggregation {
 
 export interface CountAggregation extends BaseAggregation {
   calculationType: CalculationType.COUNT
+  field: string
 }
 
 export interface CountDistinctAggregation extends CountAggregation {
   distinct: true
-  field: string
 }
 
 export type Aggregation =

@@ -1,4 +1,4 @@
-import { context, features } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
@@ -15,6 +15,8 @@ import {
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
+import { ensureQueryUISet } from "../views/utils"
+import { isV2 } from "../views"
 
 export async function processTable(table: Table): Promise<Table> {
   if (!table) {
@@ -22,6 +24,14 @@ export async function processTable(table: Table): Promise<Table> {
   }
 
   table = { ...table }
+  if (table.views) {
+    for (const [key, view] of Object.entries(table.views)) {
+      if (!isV2(view)) {
+        continue
+      }
+      table.views[key] = ensureQueryUISet(view)
+    }
+  }
   if (table._id && isExternalTableID(table._id)) {
     // Old created external tables via Budibase might have a missing field name breaking some UI such as filters
     if (table.schema["id"] && !table.schema["id"].name) {
@@ -38,10 +48,7 @@ export async function processTable(table: Table): Promise<Table> {
       type: "table",
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
-    }
-    const sqsEnabled = await features.flags.isEnabled("SQS")
-    if (sqsEnabled) {
-      processed.sql = true
+      sql: true,
     }
     return processed
   }
@@ -71,8 +78,11 @@ export async function getAllInternalTables(db?: Database): Promise<Table[]> {
 }
 
 async function getAllExternalTables(): Promise<Table[]> {
+  // this is all datasources, we'll need to filter out internal
   const datasources = await sdk.datasources.fetch({ enriched: true })
-  const allEntities = datasources.map(datasource => datasource.entities)
+  const allEntities = datasources
+    .filter(datasource => datasource._id !== INTERNAL_TABLE_SOURCE_ID)
+    .map(datasource => datasource.entities)
   let final: Table[] = []
   for (let entities of allEntities) {
     if (entities) {

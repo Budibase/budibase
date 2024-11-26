@@ -11,6 +11,8 @@
     TooltipPosition,
     TooltipType,
     Button,
+    Modal,
+    ModalContent,
   } from "@budibase/bbui"
   import PropField from "components/automation/SetupPanel/PropField.svelte"
   import AutomationBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
@@ -19,7 +21,8 @@
   import { automationStore, selectedAutomation } from "stores/builder"
   import { QueryUtils } from "@budibase/frontend-core"
   import { cloneDeep } from "lodash/fp"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
+  import DragZone from "./DragZone.svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -30,9 +33,12 @@
   export let bindings
   export let automation
 
+  const view = getContext("draggableView")
+
   let drawer
   let condition
   let open = true
+  let confirmDeleteModal
 
   $: branch = step.inputs?.branches?.[branchIdx]
   $: editableConditionUI = cloneDeep(branch.conditionUI || {})
@@ -48,9 +54,25 @@
   })
   $: branchBlockRef = {
     branchNode: true,
-    pathTo: (pathTo || []).concat({ branchIdx }),
+    pathTo: (pathTo || []).concat({ branchIdx, branchStepId: step.id }),
   }
 </script>
+
+<Modal bind:this={confirmDeleteModal}>
+  <ModalContent
+    size="M"
+    title={"Are you sure you want to delete?"}
+    confirmText="Delete"
+    onConfirm={async () => {
+      await automationStore.actions.deleteBranch(
+        branchBlockRef.pathTo,
+        $selectedAutomation.data
+      )
+    }}
+  >
+    <Body>By deleting this branch, you will delete all of its contents.</Body>
+  </ModalContent>
+</Modal>
 
 <Drawer bind:this={drawer} title="Branch condition" forceModal>
   <Button
@@ -84,17 +106,29 @@
 </Drawer>
 
 <div class="flow-item">
-  <div class={`block branch-node hoverable`} class:selected={false}>
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div
+    class={`block branch-node hoverable`}
+    class:selected={false}
+    on:mousedown={e => {
+      e.stopPropagation()
+    }}
+  >
     <FlowItemHeader
       {automation}
       {open}
       itemName={branch.name}
       block={step}
       deleteStep={async () => {
-        await automationStore.actions.deleteBranch(
-          branchBlockRef.pathTo,
-          $selectedAutomation.data
-        )
+        const branchSteps = step.inputs?.children[branch.id]
+        if (branchSteps.length) {
+          confirmDeleteModal.show()
+        } else {
+          await automationStore.actions.deleteBranch(
+            branchBlockRef.pathTo,
+            $selectedAutomation.data
+          )
+        }
       }}
       on:update={async e => {
         let stepUpdate = cloneDeep(step)
@@ -125,9 +159,13 @@
             </ActionButton>
           </PropField>
           <div class="footer">
-            <Icon name="Info" />
-            <Body size="S">
-              Only the first branch which matches it's condition will run
+            <Icon
+              name="InfoOutline"
+              size="S"
+              color="var(--spectrum-global-color-gray-700)"
+            />
+            <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+              Only the first branch which matches its condition will run
             </Body>
           </div>
         </Layout>
@@ -137,7 +175,11 @@
 
   <div class="separator" />
 
-  <FlowItemActions block={branchBlockRef} />
+  {#if $view.dragging}
+    <DragZone path={branchBlockRef.pathTo} />
+  {:else}
+    <FlowItemActions block={branchBlockRef} />
+  {/if}
 
   {#if step.inputs.children[branch.id]?.length}
     <div class="separator" />

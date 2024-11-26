@@ -1,6 +1,6 @@
 // all added by grid/table when defining the
 // column size, position and whether it can be viewed
-import { FieldType } from "../row"
+import { FieldType, FormulaResponseType } from "../row"
 import {
   AutoFieldSubType,
   AutoReason,
@@ -115,6 +115,7 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
   type: FieldType.FORMULA
   formula: string
   formulaType?: FormulaType
+  responseType?: FormulaResponseType
 }
 
 export interface AIFieldMetadata extends BaseFieldSchema {
@@ -186,6 +187,16 @@ export interface ArrayFieldMetadata extends BaseFieldSchema {
   default?: string[]
 }
 
+export interface BooleanFieldMetadata extends BaseFieldSchema {
+  type: FieldType.BOOLEAN
+  default?: string
+}
+
+export interface BigIntFieldMetadata extends BaseFieldSchema {
+  type: FieldType.BIGINT
+  default?: string
+}
+
 interface BaseFieldSchema extends UIFieldMetadata {
   type: FieldType
   name: string
@@ -214,6 +225,8 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.STRING
     | FieldType.ARRAY
     | FieldType.OPTIONS
+    | FieldType.BOOLEAN
+    | FieldType.BIGINT
   >
 }
 
@@ -233,6 +246,8 @@ export type FieldSchema =
   | BBReferenceSingleFieldMetadata
   | ArrayFieldMetadata
   | OptionsFieldMetadata
+  | BooleanFieldMetadata
+  | BigIntFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema

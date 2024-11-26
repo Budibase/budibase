@@ -614,6 +614,40 @@ const getDeviceBindings = () => {
   return bindings
 }
 
+export const getSettingBindings = () => {
+  let bindings = []
+  const safeSetting = makePropSafe("settings")
+
+  bindings = [
+    {
+      type: "context",
+      runtimeBinding: `${safeSetting}.${makePropSafe("url")}`,
+      readableBinding: `Settings.url`,
+      category: "Settings",
+      icon: "Settings",
+      display: { type: "string", name: "url" },
+    },
+    {
+      type: "context",
+      runtimeBinding: `${safeSetting}.${makePropSafe("logo")}`,
+      readableBinding: `Settings.logo`,
+      category: "Settings",
+      icon: "Settings",
+      display: { type: "string", name: "logo" },
+    },
+    {
+      type: "context",
+      runtimeBinding: `${safeSetting}.${makePropSafe("company")}`,
+      readableBinding: `Settings.company`,
+      category: "Settings",
+      icon: "Settings",
+      display: { type: "string", name: "company" },
+    },
+  ]
+
+  return bindings
+}
+
 /**
  * Gets all selected rows bindings for tables in the current asset.
  * TODO: remove in future because we don't need a separate store for this
@@ -725,10 +759,10 @@ const getRoleBindings = () => {
     return {
       type: "context",
       runtimeBinding: `'${role._id}'`,
-      readableBinding: `Role.${role.name}`,
+      readableBinding: `Role.${role.uiMetadata.displayName}`,
       category: "Role",
       icon: "UserGroup",
-      display: { type: "string", name: role.name },
+      display: { type: "string", name: role.uiMetadata.displayName },
     }
   })
 }
@@ -1107,10 +1141,11 @@ export const buildFormSchema = (component, asset) => {
   const fieldSetting = settings.find(
     setting => setting.key === "field" && setting.type.startsWith("field/")
   )
-  if (fieldSetting && component.field) {
+  if (fieldSetting) {
     const type = fieldSetting.type.split("field/")[1]
-    if (type) {
-      schema[component.field] = { type }
+    const key = component.field || component._instanceName
+    if (type && key) {
+      schema[key] = { type }
     }
   }
   component._children?.forEach(child => {

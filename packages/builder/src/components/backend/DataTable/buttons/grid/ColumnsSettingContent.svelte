@@ -11,7 +11,6 @@
   export let disabledPermissions = []
   export let columns
   export let fromRelationshipField
-  export let canSetRelationshipSchemas
 
   const { datasource, dispatch } = getContext("grid")
 
@@ -129,6 +128,8 @@
     }
   })
 
+  $: hasLinkColumns = columns.some(c => c.schema.type === FieldType.LINK)
+
   async function toggleColumn(column, permission) {
     const visible = permission !== FieldPermissions.HIDDEN
     const readonly = permission === FieldPermissions.READONLY
@@ -184,7 +185,7 @@
           value={columnToPermissionOptions(column)}
           options={column.options}
         />
-        {#if canSetRelationshipSchemas && column.schema.type === FieldType.LINK && columnToPermissionOptions(column) !== FieldPermissions.HIDDEN}
+        {#if column.schema.type === FieldType.LINK && columnToPermissionOptions(column) !== FieldPermissions.HIDDEN}
           <div class="relationship-columns">
             <ActionButton
               on:click={e => {
@@ -203,23 +204,25 @@
   </div>
 </div>
 
-{#if canSetRelationshipSchemas}
+{#if hasLinkColumns}
   <Popover
     on:close={() => (relationshipFieldName = null)}
     open={relationshipFieldName}
     anchor={relationshipPanelAnchor}
     align="left"
   >
-    {#if relationshipPanelColumns.length}
-      <div class="relationship-header">
-        {relationshipFieldName} columns
-      </div>
-    {/if}
-    <svelte:self
-      columns={relationshipPanelColumns}
-      permissions={[FieldPermissions.READONLY, FieldPermissions.HIDDEN]}
-      fromRelationshipField={relationshipField}
-    />
+    <div class="nested">
+      {#if relationshipPanelColumns.length}
+        <div class="relationship-header">
+          {relationshipFieldName} columns
+        </div>
+      {/if}
+      <svelte:self
+        columns={relationshipPanelColumns}
+        permissions={[FieldPermissions.READONLY, FieldPermissions.HIDDEN]}
+        fromRelationshipField={relationshipField}
+      />
+    </div>
   </Popover>
 {/if}
 
@@ -230,10 +233,12 @@
   }
 
   .content {
-    padding: 12px 12px;
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+  .nested {
+    padding: 12px;
   }
   .columns {
     display: grid;
@@ -262,6 +267,6 @@
   }
   .relationship-header {
     color: var(--spectrum-global-color-gray-600);
-    padding: 12px 12px 0 12px;
+    margin-bottom: 12px;
   }
 </style>

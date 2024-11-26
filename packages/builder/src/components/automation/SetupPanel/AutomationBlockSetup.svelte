@@ -16,6 +16,7 @@
     DrawerContent,
     Helpers,
     Toggle,
+    Divider,
     Icon,
   } from "@budibase/bbui"
 
@@ -73,6 +74,7 @@
     TriggerStepID.ROW_UPDATED,
     TriggerStepID.ROW_SAVED,
     TriggerStepID.ROW_DELETED,
+    TriggerStepID.ROW_ACTION,
   ]
 
   const rowEvents = [
@@ -112,7 +114,7 @@
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
-    { allowLinks: true }
+    { allowLinks: false }
   )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = $memoBlock?.type === AutomationStepType.TRIGGER
@@ -358,6 +360,12 @@
             ...getIdConfig(),
             ...getRevConfig(),
             ...getRowTypeConfig(),
+            {
+              type: Divider,
+              props: {
+                noMargin: true,
+              },
+            },
             ...getRowSelector(),
           ],
         },
@@ -495,7 +503,15 @@
       row: { "Active": true, "Order Id" : 14, ... }
     })
    */
-  const onChange = Utils.sequential(async update => {
+  const onChange = async update => {
+    if (isTestModal) {
+      testData = update
+    }
+
+    updateAutomation(update)
+  }
+
+  const updateAutomation = Utils.sequential(async update => {
     const request = cloneDeep(update)
     // Process app trigger updates
     if (isTrigger && !isTestModal) {
@@ -570,7 +586,9 @@
         break
       }
     }
-    return utils.processSearchFilters(filters)
+    return Array.isArray(filters)
+      ? utils.processSearchFilters(filters)
+      : filters
   }
 
   function saveFilters(key) {

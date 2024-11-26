@@ -8,7 +8,7 @@ import {
 import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
 import { replaceFakeBindings } from "../automations/loopUtils"
-import { dataFilters, helpers } from "@budibase/shared-core"
+import { dataFilters, helpers, utils } from "@budibase/shared-core"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { definitions as triggerDefs } from "../automations/triggerInfo"
@@ -23,13 +23,16 @@ import {
   AutomationStatus,
   AutomationStep,
   AutomationStepStatus,
+  BranchSearchFilters,
   BranchStep,
+  isLogicalSearchOperator,
   LoopStep,
-  SearchFilters,
+  UserBindings,
+  isBasicSearchOperator,
 } from "@budibase/types"
 import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
-import { context, logging } from "@budibase/backend-core"
+import { context, logging, configs } from "@budibase/backend-core"
 import {
   findHBSBlocks,
   processObject,
@@ -79,6 +82,7 @@ class Orchestrator {
   private loopStepOutputs: LoopStep[]
   private stopped: boolean
   private executionOutput: Omit<AutomationContext, "stepsByName" | "stepsById">
+  private currentUser: UserBindings | undefined
 
   constructor(job: AutomationJob) {
     let automation = job.data.automation
@@ -110,6 +114,7 @@ class Orchestrator {
     this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
     this.loopStepOutputs = []
     this.stopped = false
+    this.currentUser = triggerOutput.user
   }
 
   cleanupTriggerOutputs(stepId: string, triggerOutput: TriggerOutput) {
@@ -262,6 +267,19 @@ class Orchestrator {
           automationId: this.automation._id,
         })
         this.context.env = await sdkUtils.getEnvironmentVariables()
+        this.context.user = this.currentUser
+
+        try {
+          const { config } = await configs.getSettingsConfigDoc()
+          this.context.settings = {
+            url: config.platformUrl,
+            logo: config.logoUrl,
+            company: config.company,
+          }
+        } catch (e) {
+          // if settings doc doesn't exist, make the settings blank
+          this.context.settings = {}
+        }
 
         let metadata
 
@@ -367,7 +385,7 @@ class Orchestrator {
     stepIdx: number,
     pathIdx?: number
   ): Promise<number> {
-    await processObject(loopStep.inputs, this.context)
+    await processObject(loopStep.inputs, this.mergeContexts(this.context))
     const iterations = getLoopIterations(loopStep)
     let stepToLoopIndex = stepIdx + 1
     let pathStepIdx = (pathIdx || stepIdx) + 1
@@ -382,7 +400,7 @@ class Orchestrator {
         )
       } catch (err) {
         this.updateContextAndOutput(
-          pathStepIdx,
+          pathStepIdx + 1,
           steps[stepToLoopIndex],
           {},
           {
@@ -402,7 +420,7 @@ class Orchestrator {
         (loopStep.inputs.iterations && loopStepIndex === maxIterations)
       ) {
         this.updateContextAndOutput(
-          pathStepIdx,
+          pathStepIdx + 1,
           steps[stepToLoopIndex],
           {
             items: this.loopStepOutputs,
@@ -429,7 +447,7 @@ class Orchestrator {
 
       if (isFailure) {
         this.updateContextAndOutput(
-          pathStepIdx,
+          pathStepIdx + 1,
           steps[stepToLoopIndex],
           {
             items: this.loopStepOutputs,
@@ -498,6 +516,7 @@ class Orchestrator {
       const condition = await this.evaluateBranchCondition(branch.condition)
       if (condition) {
         const branchStatus = {
+          branchName: branch.name,
           status: `${branch.name} branch taken`,
           branchId: `${branch.id}`,
           success: true,
@@ -510,6 +529,7 @@ class Orchestrator {
           branchStatus
         )
         this.context.steps[this.context.steps.length] = branchStatus
+        this.context.stepsById[branchStep.id] = branchStatus
 
         const branchSteps = children?.[branch.id] || []
         // A final +1 to accomodate the branch step itself
@@ -531,34 +551,51 @@ class Orchestrator {
   }
 
   private async evaluateBranchCondition(
-    conditions: SearchFilters
+    conditions: BranchSearchFilters
   ): Promise<boolean> {
     const toFilter: Record<string, any> = {}
 
-    const processedConditions = dataFilters.recurseSearchFilters(
-      conditions,
-      filter => {
-        Object.entries(filter).forEach(([_, value]) => {
-          Object.entries(value).forEach(([field, val]) => {
+    const recurseSearchFilters = (
+      filters: BranchSearchFilters
+    ): BranchSearchFilters => {
+      for (const filterKey of Object.keys(
+        filters
+      ) as (keyof typeof filters)[]) {
+        if (!filters[filterKey]) {
+          continue
+        }
+
+        if (isLogicalSearchOperator(filterKey)) {
+          filters[filterKey].conditions = filters[filterKey].conditions.map(
+            condition => recurseSearchFilters(condition)
+          )
+        } else if (isBasicSearchOperator(filterKey)) {
+          for (const [field, value] of Object.entries(filters[filterKey])) {
             const fromContext = processStringSync(
               field,
-              this.processContext(this.context)
+              this.mergeContexts(this.context)
             )
             toFilter[field] = fromContext
 
-            if (typeof val === "string" && findHBSBlocks(val).length > 0) {
+            if (typeof value === "string" && findHBSBlocks(value).length > 0) {
               const processedVal = processStringSync(
-                val,
-                this.processContext(this.context)
+                value,
+                this.mergeContexts(this.context)
               )
 
-              value[field] = processedVal
+              filters[filterKey][field] = processedVal
             }
-          })
-        })
-        return filter
+          }
+        } else {
+          // We want to types to complain if we extend BranchSearchFilters, but not to throw if the request comes with some extra data. It will just be ignored
+          utils.unreachable(filterKey, { doNotThrow: true })
+        }
       }
-    )
+
+      return filters
+    }
+
+    const processedConditions = recurseSearchFilters(conditions)
 
     const result = dataFilters.runQuery([toFilter], processedConditions)
     return result.length > 0
@@ -600,16 +637,15 @@ class Orchestrator {
         const stepFn = await this.getStepFunctionality(step.stepId)
         let inputs = await processObject(
           originalStepInput,
-          this.processContext(this.context)
+          this.mergeContexts(this.context)
         )
-
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
 
         const outputs = await stepFn({
           inputs: inputs,
           appId: this.appId,
           emitter: this.emitter,
-          context: this.context,
+          context: this.mergeContexts(this.context),
         })
         this.handleStepOutput(step, outputs, loopIteration)
       }
@@ -629,8 +665,8 @@ class Orchestrator {
     return null
   }
 
-  private processContext(context: AutomationContext) {
-    const processContext = {
+  private mergeContexts(context: AutomationContext) {
+    const mergeContexts = {
       ...context,
       steps: {
         ...context.steps,
@@ -638,7 +674,7 @@ class Orchestrator {
         ...context.stepsByName,
       },
     }
-    return processContext
+    return mergeContexts
   }
 
   private handleStepOutput(

@@ -4,6 +4,7 @@
   export let title
   export let align = "left"
   export let showPopover
+  export let width
 
   let popover
   let anchor
@@ -22,13 +23,14 @@
 <Popover
   bind:this={popover}
   bind:open
-  minWidth={400}
-  maxWidth={400}
+  minWidth={width || 400}
+  maxWidth={width || 400}
   {anchor}
   {align}
   {showPopover}
   on:open
   on:close
+  customZindex={100}
 >
   <div class="detail-popover">
     <div class="detail-popover__header">

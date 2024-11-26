@@ -21,6 +21,7 @@
   let editing = false
   const dispatch = createEventDispatcher()
 
+  $: blockRefs = $selectedAutomation?.blockRefs || {}
   $: stepNames = automation?.definition.stepNames
   $: allSteps = automation?.definition.steps || []
   $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
@@ -37,11 +38,11 @@
     }
   }
 
-  $: blockRef = $selectedAutomation.blockRefs[block.id]
+  $: blockRef = blockRefs[block.id]
   $: isLooped = blockRef?.looped
 
   async function onSelect(block) {
-    await automationStore.update(state => {
+    automationStore.update(state => {
       state.selectedBlock = block
       return state
     })

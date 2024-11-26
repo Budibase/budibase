@@ -6,13 +6,20 @@
   } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import TestDataModal from "./TestDataModal.svelte"
-  import { Icon, notifications, Modal, Toggle } from "@budibase/bbui"
+  import {
+    Icon,
+    notifications,
+    Modal,
+    Toggle,
+    Button,
+    ActionButton,
+  } from "@budibase/bbui"
   import { ActionStepID } from "constants/backend/automations"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
   import StepNode from "./StepNode.svelte"
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
-  import { onMount } from "svelte"
+  import DraggableCanvas from "../DraggableCanvas.svelte"
 
   export let automation
 
@@ -23,6 +30,7 @@
   let scrolling = false
   let blockRefs = {}
   let treeEle
+  let draggable
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set(automation)
@@ -67,44 +75,41 @@
       notifications.error("Error deleting automation")
     }
   }
-
-  const handleScroll = e => {
-    if (e.target.scrollTop >= 30) {
-      scrolling = true
-    } else if (e.target.scrollTop) {
-      // Set scrolling back to false if scrolled back to less than 100px
-      scrolling = false
-    }
-  }
-
-  onMount(() => {
-    // Ensure the trigger element is centered in the view on load.
-    const triggerBlock = treeEle?.querySelector(".block.TRIGGER")
-    triggerBlock?.scrollIntoView({
-      behavior: "instant",
-      block: "nearest",
-      inline: "center",
-    })
-  })
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="header" class:scrolling>
   <div class="header-left">
-    <UndoRedoControl store={automationHistoryStore} />
+    <UndoRedoControl store={automationHistoryStore} showButtonGroup />
+
+    <div class="zoom">
+      <div class="group">
+        <ActionButton icon="Add" quiet on:click={draggable.zoomIn} />
+        <ActionButton icon="Remove" quiet on:click={draggable.zoomOut} />
+      </div>
+    </div>
+
+    <Button
+      secondary
+      on:click={() => {
+        draggable.zoomToFit()
+      }}
+    >
+      Zoom to fit
+    </Button>
   </div>
   <div class="controls">
-    <div
-      class:disabled={!automation?.definition?.trigger}
+    <Button
+      icon={"Play"}
+      cta
+      disabled={!automation?.definition?.trigger}
       on:click={() => {
         testDataModal.show()
       }}
-      class="buttons"
     >
-      <Icon size="M" name="Play" />
-      <div>Run test</div>
-    </div>
+      Run test
+    </Button>
     <div class="buttons">
       <Icon disabled={!$automationStore.testResults} size="M" name="Multiple" />
       <div
@@ -117,7 +122,7 @@
       </div>
     </div>
     {#if !isRowAction}
-      <div class="setting-spacing">
+      <div class="toggle-active setting-spacing">
         <Toggle
           text={automation.disabled ? "Paused" : "Activated"}
           on:change={automationStore.actions.toggleDisabled(
@@ -131,25 +136,25 @@
     {/if}
   </div>
 </div>
-<div class="canvas" on:scroll={handleScroll}>
-  <div class="content">
-    <div class="tree">
-      <div class="root" bind:this={treeEle}>
-        {#if Object.keys(blockRefs).length}
-          {#each blocks as block, idx (block.id)}
-            <StepNode
-              step={blocks[idx]}
-              stepIdx={idx}
-              isLast={blocks?.length - 1 === idx}
-              automation={$memoAutomation}
-              blocks={blockRefs}
-            />
-          {/each}
-        {/if}
-      </div>
-    </div>
-  </div>
+
+<div class="root" bind:this={treeEle}>
+  <DraggableCanvas bind:this={draggable}>
+    <span class="main-content" slot="content">
+      {#if Object.keys(blockRefs).length}
+        {#each blocks as block, idx (block.id)}
+          <StepNode
+            step={blocks[idx]}
+            stepIdx={idx}
+            isLast={blocks?.length - 1 === idx}
+            automation={$memoAutomation}
+            blocks={blockRefs}
+          />
+        {/each}
+      {/if}
+    </span>
+  </DraggableCanvas>
 </div>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Automation"
@@ -166,24 +171,31 @@
 </Modal>
 
 <style>
-  .canvas {
-    padding: var(--spacing-l) var(--spacing-xl);
-    overflow-y: auto;
+  .toggle-active :global(.spectrum-Switch) {
+    margin: 0px;
+  }
+
+  .root :global(.main-content) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     max-height: 100%;
+    height: 100%;
+    width: 100%;
+  }
+
+  .header-left {
+    display: flex;
+    gap: var(--spacing-l);
   }
 
   .header-left :global(div) {
     border-right: none;
   }
-  /* Fix for firefox not respecting bottom padding in scrolling containers */
-  .canvas > *:last-child {
-    padding-bottom: 40px;
-  }
 
   .root {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
+    height: 100%;
+    width: 100%;
   }
 
   .root :global(.block) {
@@ -198,22 +210,12 @@
     box-sizing: border-box;
   }
 
-  .content {
-    padding: 23px 23px 80px;
-    box-sizing: border-box;
-    /* overflow-x: hidden; */
-  }
-
   .header.scrolling {
     background: var(--background);
     border-bottom: var(--border-light);
     z-index: 1;
   }
-  .tree {
-    justify-content: center;
-    display: inline-flex;
-    min-width: 100%;
-  }
+
   .header {
     z-index: 1;
     display: flex;
@@ -221,7 +223,7 @@
     align-items: center;
     padding-left: var(--spacing-l);
     transition: background 130ms ease-out;
-    flex: 0 0 48px;
+    flex: 0 0 60px;
     padding-right: var(--spacing-xl);
   }
 
@@ -244,5 +246,34 @@
   .disabled {
     pointer-events: none;
     color: var(--spectrum-global-color-gray-500) !important;
+  }
+
+  .group {
+    border-radius: 4px;
+    display: flex;
+    flex-direction: row;
+  }
+  .group :global(> *:not(:first-child)) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: 2px solid var(--spectrum-global-color-gray-300);
+  }
+  .group :global(> *:not(:last-child)) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .header-left .group :global(.spectrum-Button),
+  .header-left .group :global(.spectrum-ActionButton),
+  .header-left .group :global(.spectrum-Icon) {
+    color: var(--spectrum-global-color-gray-900) !important;
+  }
+  .header-left .group :global(.spectrum-Button),
+  .header-left .group :global(.spectrum-ActionButton) {
+    background: var(--spectrum-global-color-gray-200) !important;
+  }
+  .header-left .group :global(.spectrum-Button:hover),
+  .header-left .group :global(.spectrum-ActionButton:hover) {
+    background: var(--spectrum-global-color-gray-300) !important;
   }
 </style>

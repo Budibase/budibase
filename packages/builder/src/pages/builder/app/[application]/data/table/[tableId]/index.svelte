@@ -6,8 +6,9 @@
     integrations,
     appStore,
     rowActions,
+    roles,
   } from "stores/builder"
-  import { themeStore, admin, licensing } from "stores/portal"
+  import { themeStore, admin, featureFlags } from "stores/portal"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
@@ -26,16 +27,20 @@
   import GridRowActionsButton from "components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
   import { DB_TYPE_EXTERNAL } from "constants/backend"
 
-  const userSchemaOverrides = {
+  let generateButton
+
+  $: userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },
     lastName: { displayName: "Last name", disabled: true },
     email: { displayName: "Email", disabled: true },
-    roleId: { displayName: "Role", disabled: true },
     status: { displayName: "Status", disabled: true },
+    roleId: {
+      displayName: "Role",
+      type: "role",
+      disabled: true,
+      roles: $roles,
+    },
   }
-
-  let generateButton
-
   $: autoColumnStatus = verifyAutocolumns($tables?.selected)
   $: duplicates = Object.values(autoColumnStatus).reduce((acc, status) => {
     if (status.length > 1) {
@@ -125,8 +130,7 @@
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     isCloud={$admin.cloud}
-    aiEnabled={$licensing.budibaseAIEnabled ||
-      $licensing.customAIConfigsEnabled}
+    aiEnabled={$featureFlags.BUDIBASE_AI || $featureFlags.AI_CUSTOM_CONFIGS}
     {buttons}
     buttonsCollapsed
     on:updatedatasource={handleGridTableUpdate}
@@ -141,17 +145,11 @@
         <GridRelationshipButton />
       {/if}
       {#if !isUsersTable}
-        <GridRowActionsButton />
-        <GridScreensButton on:request-generate={() => generateButton?.show()} />
-        <GridAutomationsButton
-          on:request-generate={() => generateButton?.show()}
-        />
         <GridImportButton />
-      {/if}
-      <GridExportButton />
-    </svelte:fragment>
-    <svelte:fragment slot="controls-right">
-      {#if !isUsersTable}
+        <GridExportButton />
+        <GridRowActionsButton />
+        <GridScreensButton on:generate={() => generateButton?.show()} />
+        <GridAutomationsButton on:generate={() => generateButton?.show()} />
         <GridGenerateButton bind:this={generateButton} />
       {/if}
     </svelte:fragment>

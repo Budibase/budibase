@@ -8,6 +8,7 @@
   export let onConfirm = undefined
   export let buttonText = ""
   export let cta = false
+
   $: icon = selectIcon(type)
   // if newlines used, convert them to different elements
   $: split = message.split("\n")
