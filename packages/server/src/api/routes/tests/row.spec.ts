@@ -3538,7 +3538,7 @@ if (descriptions.length) {
             })
           })
 
-          it.only("should be able to fetch rows with related bigint ids", async () => {
+          it("should be able to fetch rows with related bigint ids", async () => {
             const row = await config.api.row.save(table1._id!, {
               table1Id: "1",
             })
