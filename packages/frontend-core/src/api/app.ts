@@ -1,6 +1,56 @@
 import { sdk } from "@budibase/shared-core"
+import { BaseAPIClient } from "./types"
+import {
+  App,
+  CreateAppRequest,
+  DuplicateAppRequest,
+  DuplicateAppResponse,
+  FetchAppPackageResponse,
+  GetDiagnosticsResponse,
+  UpdateAppRequest,
+  UpdateAppResponse,
+} from "@budibase/types"
 
-export const buildAppEndpoints = API => ({
+export type AppEndpoints = {
+  fetchAppPackage: (appId: string) => Promise<FetchAppPackageResponse>
+  saveAppMetadata: (
+    appId: string,
+    metadata: UpdateAppRequest
+  ) => Promise<UpdateAppResponse>
+  unpublishApp: (appId: string) => Promise<void>
+  createApp: (app: CreateAppRequest) => Promise<App>
+  deleteApp: (appId: string) => Promise<void>
+  duplicateApp: (
+    appId: string,
+    app: DuplicateAppRequest
+  ) => Promise<DuplicateAppResponse>
+  updateAppFromExport: (
+    appId: string,
+    body: any
+  ) => Promise<{ message: string }>
+  fetchSystemDebugInfo: () => Promise<GetDiagnosticsResponse>
+  syncApp: (appId: string) => Promise<{ message: string }>
+  getApps: () => Promise<App[]>
+  fetchComponentLibDefinitions: (
+    appId: string
+  ) => Promise<{ [key: string]: any }>
+  setRevertableVersion: (
+    appId: string,
+    revertableVersion: string
+  ) => Promise<App>
+  addSampleData: (appId: string) => Promise<void>
+
+  // Untyped - TODO:
+  publishAppChanges: (appId: string) => Promise<any>
+  revertAppChanges: (appId: string) => Promise<any>
+  updateAppClientVersion: (appId: string) => Promise<any>
+  revertAppClientVersion: (appId: string) => Promise<any>
+  importApps: (apps: any) => Promise<any>
+  releaseAppLock: (appId: string) => Promise<any>
+  getAppDeployments: () => Promise<any>
+}
+
+export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
   /**
    * Fetches screen definition for an app.
    * @param appId the ID of the app to fetch from
@@ -16,7 +66,7 @@ export const buildAppEndpoints = API => ({
    * @param appId the ID of the app to update
    * @param metadata the app metadata to save
    */
-  saveAppMetadata: async ({ appId, metadata }) => {
+  saveAppMetadata: async (appId, metadata) => {
     return await API.put({
       url: `/api/applications/${appId}`,
       body: metadata,
@@ -87,7 +137,7 @@ export const buildAppEndpoints = API => ({
    * Duplicate an existing app
    * @param app the app to dupe
    */
-  duplicateApp: async (app, appId) => {
+  duplicateApp: async (appId, app) => {
     return await API.post({
       url: `/api/applications/${appId}/duplicate`,
       body: app,
@@ -192,12 +242,22 @@ export const buildAppEndpoints = API => ({
     })
   },
 
+  /**
+   * Adds sample data to an app
+   * @param appId the app ID
+   */
   addSampleData: async appId => {
     return await API.post({
       url: `/api/applications/${appId}/sample`,
     })
   },
 
+  /**
+   * Sets the revertable version of an app.
+   * Used when manually reverting to older client versions.
+   * @param appId the app ID
+   * @param revertableVersion the version number
+   */
   setRevertableVersion: async (appId, revertableVersion) => {
     return await API.post({
       url: `/api/applications/${appId}/setRevertableVersion`,

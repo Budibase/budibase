@@ -4,7 +4,8 @@ import {
   APIClientConfig,
   APIClient,
   APICallConfig,
-} from "../types"
+  BaseAPIClient,
+} from "./types"
 import { Helpers } from "@budibase/bbui"
 import { Header } from "@budibase/shared-core"
 import { ApiVersion } from "../constants"
@@ -55,7 +56,7 @@ export const APISessionID = Helpers.uuid()
 /**
  * Constructs an API client with the provided configuration.
  */
-export const createAPIClient = (config: APIClientConfig = {}) => {
+export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   let cache: Record<string, any> = {}
 
   // Generates an error object from an API response
@@ -220,7 +221,7 @@ export const createAPIClient = (config: APIClientConfig = {}) => {
     }
 
   // Build the underlying core API methods
-  let API: APIClient = {
+  let API: BaseAPIClient = {
     post: requestApiCall(HTTPMethod.POST),
     get: requestApiCall(HTTPMethod.GET),
     patch: requestApiCall(HTTPMethod.PATCH),
