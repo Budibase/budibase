@@ -10,9 +10,9 @@ export enum HTTPMethod {
 
 export type APIClientConfig = {
   enableCaching?: boolean
-  attachHeaders?: Function
-  onError?: Function
-  onMigrationDetected?: Function
+  attachHeaders?: (headers: Record<string, string>) => void
+  onError?: (error: any) => void
+  onMigrationDetected?: (migration: string) => void
 }
 
 export type APICallConfig = {
