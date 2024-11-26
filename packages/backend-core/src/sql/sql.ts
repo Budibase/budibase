@@ -1191,7 +1191,7 @@ class InternalBuilder {
     return withSchema
   }
 
-  private buildJsonField(table: Table, field: string): string {
+  private buildJsonField(table: Table, field: string): [string, Knex.Raw] {
     const parts = field.split(".")
     const baseName = parts[parts.length - 1]
     let unaliased: string
@@ -1208,18 +1208,11 @@ class InternalBuilder {
 
     const schema = table.schema[baseName]
 
-    const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
     let identifier = this.rawQuotedIdentifier(tableField)
-    // if (schema.type === FieldType.BIGINT) {
-    //   identifier = this.castIntToString(identifier)
-    // } else if (schema.type === FieldType.LINK) {
-    //   const otherTable = this.query.meta.tables![schema.tableId]
-    //   const otherField = otherTable.schema[schema.fieldName]
-    //   if (otherField.type === FieldType.BIGINT) {
-    //     identifier = this.castIntToString(identifier)
-    //   }
-    // }
-    return this.knex.raw(`?${separator}??`, [unaliased, identifier]).toString()
+    if (schema.type === FieldType.BIGINT) {
+      identifier = this.castIntToString(identifier)
+    }
+    return [unaliased, identifier]
   }
 
   maxFunctionParameters() {
@@ -1282,8 +1275,14 @@ class InternalBuilder {
         0,
         Math.floor(this.maxFunctionParameters() / 2)
       )
-      const fieldList: string = relationshipFields
-        .map(field => this.buildJsonField(relatedTable!, field))
+      const fieldList = relationshipFields.map(field =>
+        this.buildJsonField(relatedTable!, field)
+      )
+      const fieldListFormatted = fieldList
+        .map(f => {
+          const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
+          return this.knex.raw(`?${separator}??`, [f[0], f[1]]).toString()
+        })
         .join(",")
       // SQL Server uses TOP - which performs a little differently to the normal LIMIT syntax
       // it reduces the result set rather than limiting how much data it filters over
@@ -1331,35 +1330,42 @@ class InternalBuilder {
           // need to check the junction table document is to the right column, this is just for SQS
           subQuery = this.addJoinFieldCheck(subQuery, relationship)
           wrapperQuery = standardWrap(
-            this.knex.raw(`json_group_array(json_object(${fieldList}))`)
+            this.knex.raw(
+              `json_group_array(json_object(${fieldListFormatted}))`
+            )
           )
           break
         case SqlClient.POSTGRES:
           wrapperQuery = standardWrap(
-            this.knex.raw(`json_agg(json_build_object(${fieldList}))`)
+            this.knex.raw(`json_agg(json_build_object(${fieldListFormatted}))`)
           )
           break
         case SqlClient.MARIADB:
           // can't use the standard wrap due to correlated sub-query limitations in MariaDB
           wrapperQuery = subQuery.select(
             knex.raw(
-              `json_arrayagg(json_object(${fieldList}) LIMIT ${getRelationshipLimit()})`
+              `json_arrayagg(json_object(${fieldListFormatted}) LIMIT ${getRelationshipLimit()})`
             )
           )
           break
         case SqlClient.MY_SQL:
         case SqlClient.ORACLE:
           wrapperQuery = standardWrap(
-            this.knex.raw(`json_arrayagg(json_object(${fieldList}))`)
+            this.knex.raw(`json_arrayagg(json_object(${fieldListFormatted}))`)
           )
           break
         case SqlClient.MS_SQL: {
           const comparatorQuery = knex
-            .select(`${fromAlias}.*`)
+            .select(`*`)
             // @ts-ignore - from alias syntax not TS supported
             .from({
               [fromAlias]: subQuery
-                .select(`${toAlias}.*`)
+                .select(
+                  fieldList.map(f => {
+                    // @ts-expect-error raw is fine here, knex types are wrong
+                    return knex.ref(f[1]).as(f[0])
+                  })
+                )
                 .limit(getRelationshipLimit()),
             })
 
