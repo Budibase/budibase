@@ -4,7 +4,7 @@
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
-    "build": "routify -b && vite build --emptyOutDir",
+    "build": "routify -b && NODE_OPTIONS=\"--max_old_space_size=4096\" vite build --emptyOutDir",
     "start": "routify -c rollup",
     "dev": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
