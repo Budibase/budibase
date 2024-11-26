@@ -400,6 +400,7 @@
     width: 480px;
     font-size: 16px;
     border-radius: 4px;
+    cursor: default;
   }
   .block .wrap {
     width: 100%;
