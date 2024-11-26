@@ -17,7 +17,7 @@ import { BudibaseInternalDB } from "../../../db/utils"
 import { dataFilters } from "@budibase/shared-core"
 
 type PerformQueryFunction = (
-  json: QueryJson
+  json: EnrichedQueryJson
 ) => Promise<DatasourcePlusQueryResponse>
 
 const WRITE_OPERATIONS: Operation[] = [
