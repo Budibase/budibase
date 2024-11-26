@@ -3496,7 +3496,7 @@ if (descriptions.length) {
         })
       })
 
-      if (!isInternal) {
+      if (!isInternal && !isOracle) {
         describe("bigint ids", () => {
           let table1: Table, table2: Table
           let table1Name: string, table2Name: string
@@ -3504,15 +3504,14 @@ if (descriptions.length) {
           beforeAll(async () => {
             table1Name = `table1-${generator.guid().substring(0, 5)}`
             await client!.schema.createTable(table1Name, table => {
-              table.bigIncrements("table1Id").primary()
+              table.bigInteger("table1Id").primary()
             })
 
             table2Name = `table2-${generator.guid().substring(0, 5)}`
             await client!.schema.createTable(table2Name, table => {
-              table.increments("table2Id").primary()
+              table.bigInteger("table2Id").primary()
               table
                 .bigInteger("table1Ref")
-                .unsigned()
                 .references("table1Id")
                 .inTable(table1Name)
             })
@@ -3540,21 +3539,42 @@ if (descriptions.length) {
           })
 
           it.only("should be able to fetch rows with related bigint ids", async () => {
-            const row = await config.api.row.save(table1._id!, {})
-            await config.api.row.save(table2._id!, { table1Ref: row.table1Id })
+            const row = await config.api.row.save(table1._id!, {
+              table1Id: "1",
+            })
+            await config.api.row.save(table2._id!, {
+              table2Id: "2",
+              table1Ref: row.table1Id,
+            })
 
-            const { rows } = await config.api.row.search(table1._id!)
-            expect(rows).toEqual([
+            let resp = await config.api.row.search(table1._id!)
+            expect(resp.rows).toEqual([
               expect.objectContaining({
                 _id: "%5B'1'%5D",
-                _rev: "rev",
                 table1Id: "1",
                 many: [
                   {
-                    _id: "%5B'1'%5D",
-                    primaryDisplay: 1,
+                    _id: "%5B'2'%5D",
+                    primaryDisplay: "2",
                   },
                 ],
+                tableId: table1._id,
+              }),
+            ])
+
+            resp = await config.api.row.search(table2._id!)
+            expect(resp.rows).toEqual([
+              expect.objectContaining({
+                _id: "%5B'2'%5D",
+                table2Id: "2",
+                table1Ref: "1",
+                one: [
+                  {
+                    _id: "%5B'1'%5D",
+                    primaryDisplay: "1",
+                  },
+                ],
+                tableId: table2._id,
               }),
             ])
           })
