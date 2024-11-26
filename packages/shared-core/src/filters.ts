@@ -142,25 +142,6 @@ export function recurseLogicalOperators(
   return filters
 }
 
-export function recurseSearchFilters(
-  filters: SearchFilters,
-  processFn: (filter: SearchFilters) => SearchFilters
-): SearchFilters {
-  // Process the current level
-  filters = processFn(filters)
-
-  // Recurse through logical operators
-  for (const logical of LOGICAL_OPERATORS) {
-    if (filters[logical]) {
-      filters[logical]!.conditions = filters[logical]!.conditions.map(
-        condition => recurseSearchFilters(condition, processFn)
-      )
-    }
-  }
-
-  return filters
-}
-
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
@@ -546,7 +527,12 @@ export function search<T extends Record<string, any>>(
 ): SearchResponse<T> {
   let result = runQuery(docs, query.query)
   if (query.sort) {
-    result = sort(result, query.sort, query.sortOrder || SortOrder.ASCENDING)
+    result = sort(
+      result,
+      query.sort,
+      query.sortOrder || SortOrder.ASCENDING,
+      query.sortType
+    )
   }
   const totalRows = result.length
   if (query.limit) {
