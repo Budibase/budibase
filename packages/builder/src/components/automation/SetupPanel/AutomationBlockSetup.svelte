@@ -503,7 +503,15 @@
       row: { "Active": true, "Order Id" : 14, ... }
     })
    */
-  const onChange = Utils.sequential(async update => {
+  const onChange = async update => {
+    if (isTestModal) {
+      testData = update
+    }
+
+    updateAutomation(update)
+  }
+
+  const updateAutomation = Utils.sequential(async update => {
     const request = cloneDeep(update)
     // Process app trigger updates
     if (isTrigger && !isTestModal) {

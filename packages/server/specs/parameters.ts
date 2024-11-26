@@ -8,6 +8,16 @@ export const tableId = {
   },
 }
 
+export const viewId = {
+  in: "path",
+  name: "viewId",
+  required: true,
+  description: "The ID of the view which this request is targeting.",
+  schema: {
+    type: "string",
+  },
+}
+
 export const rowId = {
   in: "path",
   name: "rowId",
