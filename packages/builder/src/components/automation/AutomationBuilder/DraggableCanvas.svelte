@@ -11,6 +11,9 @@
   import { Utils, memo } from "@budibase/frontend-core"
   import { selectedAutomation, automationStore } from "stores/builder"
 
+  // CSS classes that, on mouse down, will trigger the view drag behaviour
+  export let draggableClasses = []
+
   export function toFocus() {
     viewToFocusEle()
   }
@@ -161,6 +164,10 @@
   // Scale prop for the icon
   let dotDefault = 0.006
 
+  let viewDragStart = { x: 0, y: 0 }
+  let viewDragOffset = [0, 0]
+  let startPos = [0, 0]
+
   $: bgSize = Math.max(bgDim * $view.scale, 10)
   $: bgWidth = bgSize
   $: bgHeight = bgSize
@@ -275,14 +282,17 @@
       y,
     }))
 
-    if (down && !$view.dragging && dragOffset) {
+    if (down && !$view.dragging) {
+      // Determine how much the view has moved since
+      viewDragOffset = [x - viewDragStart.x, y - viewDragStart.y]
+
       contentPos.update(state => ({
         ...state,
-        x: x - dragOffset[0],
-        y: y - dragOffset[1],
+        x: startPos[0] + viewDragOffset[0],
+        y: startPos[1] + viewDragOffset[1],
       }))
-      offsetX = x - dragOffset[0]
-      offsetY = y - dragOffset[1]
+      offsetX = startPos[0] + viewDragOffset[0]
+      offsetY = startPos[1] + viewDragOffset[1]
     }
 
     const clearScrollInterval = () => {
@@ -366,6 +376,9 @@
   // Reset state on mouse up
   const globalMouseUp = () => {
     down = false
+
+    viewDragStart = { x: 0, y: 0 }
+    viewDragOffset = [0, 0]
 
     if ($view.dragging) {
       dragOffset = [0, 0]
@@ -482,6 +495,11 @@
     dragOffset = [Math.abs(x - $contentPos.x), Math.abs(y - $contentPos.y)]
   }
 
+  const isDraggable = e => {
+    const draggable = ["draggable-view", ...draggableClasses]
+    return draggable.some(cls => e.target.classList.contains(cls))
+  }
+
   const viewToFocusEle = () => {
     if ($focusElement) {
       const viewWidth = viewDims.width
@@ -566,31 +584,31 @@
 
   <div
     class="draggable-view"
+    class:dragging={down}
     bind:this={viewPort}
     on:wheel={Utils.domDebounce(onViewScroll)}
     on:mousemove={Utils.domDebounce(onViewMouseMove)}
-    on:mouseup={onViewDragEnd}
+    on:mousedown={e => {
+      if ((e.which === 1 || e.button === 0) && isDraggable(e)) {
+        const { x, y } = eleXY(e, viewPort)
+        viewDragStart = { x, y }
+        startPos = [$contentPos.x, $contentPos.y]
+        down = true
+      }
+    }}
+    on:mouseup={e => {
+      viewDragOffset = [0, 0]
+      if ((e.which === 1 || e.button === 0) && isDraggable(e)) {
+        down = false
+      }
+      onViewDragEnd()
+    }}
   >
-    <div
-      class="content-wrap"
-      style={wrapStyles}
-      bind:this={contentWrap}
-      class:dragging={down}
-    >
+    <div class="content-wrap" style={wrapStyles} bind:this={contentWrap}>
       <div
         class="content"
         bind:this={mainContent}
         on:mousemove={Utils.domDebounce(onMoveContent)}
-        on:mousedown={e => {
-          if (e.which === 1 || e.button === 0) {
-            down = true
-          }
-        }}
-        on:mouseup={e => {
-          if (e.which === 1 || e.button === 0) {
-            down = false
-          }
-        }}
       >
         <slot name="content" />
       </div>
@@ -608,7 +626,12 @@
     height: 100%;
     overflow: hidden;
     position: relative;
+    cursor: grab;
   }
+  .draggable-view.dragging {
+    cursor: grabbing;
+  }
+
   .content {
     transform-origin: 50% 50%;
     transform: scale(var(--scale));
@@ -623,12 +646,7 @@
     left: 0;
     width: var(--wrapW);
     height: var(--wrapH);
-    cursor: grab;
     transform: translate(var(--posX), var(--posY));
-  }
-
-  .content-wrap.dragging {
-    cursor: grabbing;
   }
 
   .draggable-background {

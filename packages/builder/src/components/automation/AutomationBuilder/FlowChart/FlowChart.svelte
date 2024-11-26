@@ -127,7 +127,18 @@
 </div>
 
 <div class="root" bind:this={treeEle}>
-  <DraggableCanvas bind:this={draggable}>
+  <DraggableCanvas
+    bind:this={draggable}
+    draggableClasses={[
+      "main-content",
+      "content",
+      "block",
+      "branched",
+      "branch",
+      "flow-item",
+      "branch-wrap",
+    ]}
+  >
     <span class="main-content" slot="content">
       {#if Object.keys(blockRefs).length}
         {#each blocks as block, idx (block.id)}
