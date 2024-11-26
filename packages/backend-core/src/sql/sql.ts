@@ -1253,6 +1253,9 @@ class InternalBuilder {
         continue
       }
       const relatedTable = tables[toTable]
+      if (!relatedTable) {
+        throw new Error(`related table "${toTable}" not found in datasource`)
+      }
       const toAlias = aliases?.[toTable] || toTable,
         fromAlias = aliases?.[fromTable] || fromTable,
         throughAlias = (throughTable && aliases?.[throughTable]) || throughTable
