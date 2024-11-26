@@ -1,3 +1,5 @@
+import { AppEndpoints } from "./app"
+
 export enum HTTPMethod {
   POST = "POST",
   PATCH = "PATCH",
@@ -26,11 +28,15 @@ export type APICallConfig = {
 
 export type APICallParams = Pick<APICallConfig, "url"> & Partial<APICallConfig>
 
-export type APIClient = {
+export type BaseAPIClient = {
   post: <T>(params: APICallParams) => Promise<T>
   get: <T>(params: APICallParams) => Promise<T>
   put: <T>(params: APICallParams) => Promise<T>
   delete: <T>(params: APICallParams) => Promise<T>
   patch: <T>(params: APICallParams) => Promise<T>
-  [key: string]: any
+  error: (message: string) => void
+  invalidateCache: () => void
+  getAppID: () => string
 }
+
+export type APIClient = BaseAPIClient & AppEndpoints & { [key: string]: any }
