@@ -14,19 +14,13 @@ const createsnippets = () => {
       ...get(store).filter(snippet => snippet.name !== updatedSnippet.name),
       updatedSnippet,
     ]
-    const app = await API.saveAppMetadata({
-      appId: get(appStore).appId,
-      metadata: { snippets },
-    })
+    const app = await API.saveAppMetadata(get(appStore).appId, { snippets })
     syncMetadata(app)
   }
 
   const deleteSnippet = async snippetName => {
     const snippets = get(store).filter(snippet => snippet.name !== snippetName)
-    const app = await API.saveAppMetadata({
-      appId: get(appStore).appId,
-      metadata: { snippets },
-    })
+    const app = await API.saveAppMetadata(get(appStore).appId, { snippets })
     syncMetadata(app)
   }
 
