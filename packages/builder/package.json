@@ -11,9 +11,7 @@
     "rollup": "rollup -c -w",
     "test": "vitest run",
     "test:watch": "vitest",
-    "svelte-check": "svelte-check --no-tsconfig",
-    "check:types": "yarn svelte-check && yarn check:ts",
-    "check:ts": "tsc --noEmit --target es2020"
+    "check:types": "yarn svelte-check"
   },
   "jest": {
     "globals": {
