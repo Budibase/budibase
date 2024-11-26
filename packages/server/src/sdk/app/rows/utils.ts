@@ -14,13 +14,13 @@ import {
   SqlClient,
   ArrayOperator,
   ViewV2,
+  EnrichedQueryJson,
 } from "@budibase/types"
-import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
 import { extractViewInfoFromID, isRelationshipColumn } from "../../../db/utils"
 import { isSQL } from "../../../integrations/utils"
-import { docIds, sql } from "@budibase/backend-core"
+import { docIds, sql, SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getTableFromSource } from "../../../api/controllers/row/utils"
 import env from "../../../environment"
 
@@ -73,18 +73,32 @@ export function processRowCountResponse(
   }
 }
 
-export async function getDatasourceAndQuery(
+export async function enrichQueryJson(
   json: QueryJson
-): Promise<DatasourcePlusQueryResponse> {
-  const datasourceId = json.endpoint.datasourceId
-  const datasource = await sdk.datasources.get(datasourceId)
-  const table = datasource.entities?.[json.endpoint.entityId]
-  if (!json.meta && table) {
-    json.meta = {
-      table,
+): Promise<EnrichedQueryJson> {
+  let datasource: Datasource | undefined = undefined
+  if (json.endpoint.datasourceId !== SQS_DATASOURCE_INTERNAL) {
+    datasource = await sdk.datasources.get(json.endpoint.datasourceId)
+  }
+
+  let tables: Record<string, Table>
+  if (datasource) {
+    tables = datasource.entities || {}
+  } else {
+    tables = {}
+    for (const table of await sdk.tables.getAllInternalTables()) {
+      tables[table._id!] = table
     }
   }
-  return makeExternalQuery(datasource, json)
+
+  const table = tables[json.endpoint.entityId]
+
+  return {
+    table,
+    tables,
+    datasource,
+    ...json,
+  }
 }
 
 export function cleanExportRows(

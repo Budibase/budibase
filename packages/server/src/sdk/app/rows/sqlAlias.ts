@@ -1,11 +1,13 @@
 import {
   Datasource,
   DatasourcePlusQueryResponse,
+  EnrichedQueryJson,
   Operation,
   QueryJson,
   Row,
   SearchFilters,
   SqlClient,
+  Table,
 } from "@budibase/types"
 import { SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getSQLClient } from "./utils"
@@ -15,7 +17,6 @@ import { BudibaseInternalDB } from "../../../db/utils"
 import { dataFilters } from "@budibase/shared-core"
 
 type PerformQueryFunction = (
-  datasource: Datasource,
   json: QueryJson
 ) => Promise<DatasourcePlusQueryResponse>
 
@@ -99,7 +100,11 @@ export default class AliasTables {
     return true
   }
 
-  getAlias(tableName: string) {
+  getAlias(tableName: string | Table) {
+    if (typeof tableName === "object") {
+      tableName = tableName.name
+    }
+
     if (this.aliases[tableName]) {
       return this.aliases[tableName]
     }
@@ -177,7 +182,7 @@ export default class AliasTables {
   }
 
   async queryWithAliasing(
-    json: QueryJson,
+    json: EnrichedQueryJson,
     queryFn: PerformQueryFunction
   ): Promise<DatasourcePlusQueryResponse> {
     const datasourceId = json.endpoint.datasourceId
@@ -215,14 +220,7 @@ export default class AliasTables {
         }
         json.filters = aliasFilters(json.filters)
       }
-      if (json.meta?.table) {
-        this.getAlias(json.meta.table.name)
-      }
-      if (json.meta?.tables) {
-        Object.keys(json.meta.tables).forEach(tableName =>
-          this.getAlias(tableName)
-        )
-      }
+
       if (json.relationships) {
         json.relationships = json.relationships.map(relationship => ({
           ...relationship,
@@ -233,6 +231,12 @@ export default class AliasTables {
           ]),
         }))
       }
+
+      this.getAlias(json.table)
+      for (const tableName of Object.keys(json.tables)) {
+        this.getAlias(tableName)
+      }
+
       // invert and return
       const invertedTableAliases: Record<string, string> = {}
       for (let [key, value] of Object.entries(this.tableAliases)) {
@@ -241,7 +245,7 @@ export default class AliasTables {
       json.tableAliases = invertedTableAliases
     }
 
-    let response: DatasourcePlusQueryResponse = await queryFn(datasource, json)
+    let response = await queryFn(json)
     if (Array.isArray(response) && aliasingEnabled) {
       return this.reverse(response)
     } else {

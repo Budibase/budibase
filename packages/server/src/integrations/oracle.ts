@@ -3,7 +3,6 @@ import {
   DatasourceFieldType,
   Integration,
   Operation,
-  QueryJson,
   QueryType,
   SqlQuery,
   Table,
@@ -15,6 +14,7 @@ import {
   Row,
   DatasourcePlusQueryResponse,
   SqlClient,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -545,7 +545,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
+  async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const operation = this._operation(json)
     const input = this._query(json, { disableReturning: true }) as SqlQuery
     if (Array.isArray(input)) {

@@ -1,8 +1,8 @@
 import {
   Aggregation,
   CalculationType,
-  Datasource,
   DocumentType,
+  EnrichedQueryJson,
   FieldType,
   isLogicalSearchOperator,
   Operation,
@@ -38,7 +38,7 @@ import { generateJunctionTableID } from "../../../../../db/utils"
 import AliasTables from "../../sqlAlias"
 import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
-import { processRowCountResponse } from "../../utils"
+import { enrichQueryJson, processRowCountResponse } from "../../utils"
 import {
   dataFilters,
   helpers,
@@ -223,18 +223,18 @@ function reverseUserColumnMapping(rows: Row[], table?: Table) {
 }
 
 function runSqlQuery(
-  json: QueryJson,
+  json: EnrichedQueryJson,
   tables: Table[],
   relationships: RelationshipsJson[]
 ): Promise<Row[]>
 function runSqlQuery(
-  json: QueryJson,
+  json: EnrichedQueryJson,
   tables: Table[],
   relationships: RelationshipsJson[],
   opts: { countTotalRows: true }
 ): Promise<number>
 async function runSqlQuery(
-  json: QueryJson,
+  json: EnrichedQueryJson,
   tables: Table[],
   relationships: RelationshipsJson[],
   opts?: { countTotalRows?: boolean }
@@ -246,7 +246,7 @@ async function runSqlQuery(
   if (opts?.countTotalRows) {
     json.endpoint.operation = Operation.COUNT
   }
-  const processSQLQuery = async (_: Datasource, json: QueryJson) => {
+  const processSQLQuery = async (json: EnrichedQueryJson) => {
     const query = builder._query(json, {
       disableReturning: true,
     })
@@ -281,7 +281,7 @@ async function runSqlQuery(
   if (opts?.countTotalRows) {
     return processRowCountResponse(response)
   } else if (Array.isArray(response)) {
-    return reverseUserColumnMapping(response, json.meta.table)
+    return reverseUserColumnMapping(response, json.table)
   }
   return response
 }
@@ -372,10 +372,7 @@ export async function search(
       operation: Operation.READ,
     },
     filters: searchFilters,
-    table,
     meta: {
-      table,
-      tables: allTablesMap,
       columnPrefix: USER_COLUMN_PREFIX,
     },
     resource: {
@@ -427,11 +424,13 @@ export async function search(
     }
   }
 
+  const enrichedRequest = await enrichQueryJson(request)
+
   try {
     const [rows, totalRows] = await Promise.all([
-      runSqlQuery(request, allTables, relationships),
+      runSqlQuery(enrichedRequest, allTables, relationships),
       options.countRows
-        ? runSqlQuery(request, allTables, relationships, {
+        ? runSqlQuery(enrichedRequest, allTables, relationships, {
             countTotalRows: true,
           })
         : Promise.resolve(undefined),
