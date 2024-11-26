@@ -8,6 +8,7 @@ packages/server/build/oldClientVersions/**/*
 packages/builder/src/components/deploy/clientVersions.json
 packages/server/src/integrations/tests/utils/*.lock
 packages/builder/vite.config.mjs.timestamp*
+packages/account-portal
 
 # Logs
 logs

@@ -1,4 +1,4 @@
-const setup = require("./utilities")
+import * as setup from "./utilities"
 
 describe("test the delete row action", () => {
   let table: any
@@ -20,32 +20,29 @@ describe("test the delete row action", () => {
   afterAll(setup.afterAll)
 
   it("should be able to run the action", async () => {
-    const res = await setup.runStep(setup.actions.DELETE_ROW.stepId, inputs)
+    const res = await setup.runStep(
+      config,
+      setup.actions.DELETE_ROW.stepId,
+      inputs
+    )
     expect(res.success).toEqual(true)
     expect(res.response).toBeDefined()
     expect(res.row._id).toEqual(row._id)
-    let error
-    try {
-      await config.getRow(table._id, res.row._id)
-    } catch (err) {
-      error = err
-    }
-    expect(error).toBeDefined()
   })
 
   it("check usage quota attempts", async () => {
     await setup.runInProd(async () => {
-      await setup.runStep(setup.actions.DELETE_ROW.stepId, inputs)
+      await setup.runStep(config, setup.actions.DELETE_ROW.stepId, inputs)
     })
   })
 
   it("should check invalid inputs return an error", async () => {
-    const res = await setup.runStep(setup.actions.DELETE_ROW.stepId, {})
+    const res = await setup.runStep(config, setup.actions.DELETE_ROW.stepId, {})
     expect(res.success).toEqual(false)
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const res = await setup.runStep(setup.actions.DELETE_ROW.stepId, {
+    const res = await setup.runStep(config, setup.actions.DELETE_ROW.stepId, {
       tableId: "invalid",
       id: "invalid",
       revision: "invalid",

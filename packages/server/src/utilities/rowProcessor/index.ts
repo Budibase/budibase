@@ -3,7 +3,6 @@ import { fixAutoColumnSubType, processFormulas } from "./utils"
 import {
   cache,
   context,
-  features,
   HTTPError,
   objectStore,
   utils,
@@ -19,7 +18,6 @@ import {
   Table,
   User,
   ViewV2,
-  FeatureFlag,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -163,33 +161,33 @@ async function processDefaultValues(table: Table, row: Row) {
 
 /**
  * This will coerce a value to the correct types based on the type transform map
- * @param row The value to coerce
+ * @param value The value to coerce
  * @param type The type fo coerce to
  * @returns The coerced value
  */
-export function coerce(row: any, type: string) {
+export function coerce(value: unknown, type: string) {
   // no coercion specified for type, skip it
   if (!TYPE_TRANSFORM_MAP[type]) {
-    return row
+    return value
   }
   // eslint-disable-next-line no-prototype-builtins
-  if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(row)) {
+  if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(value)) {
     // @ts-ignore
-    return TYPE_TRANSFORM_MAP[type][row]
+    return TYPE_TRANSFORM_MAP[type][value]
   } else if (TYPE_TRANSFORM_MAP[type].parse) {
     // @ts-ignore
-    return TYPE_TRANSFORM_MAP[type].parse(row)
+    return TYPE_TRANSFORM_MAP[type].parse(value)
   }
 
-  return row
+  return value
 }
 
 /**
  * Given an input route this function will apply all the necessary pre-processing to it, such as coercion
  * of column values or adding auto-column values.
- * @param user the user which is performing the input.
+ * @param userId the ID of the user which is performing the input.
  * @param row the row which is being created/updated.
- * @param table the table which the row is being saved to.
+ * @param source the table/view which the row is being saved to.
  * @param opts some input processing options (like disabling auto-column relationships).
  * @returns the row which has been prepared to be written to the DB.
  */
@@ -423,45 +421,43 @@ export async function coreOutputProcessing(
 
   // remove null properties to match internal API
   const isExternal = isExternalTableID(table._id!)
-  if (isExternal || (await features.flags.isEnabled(FeatureFlag.SQS))) {
-    for (const row of rows) {
-      for (const key of Object.keys(row)) {
-        if (row[key] === null) {
-          delete row[key]
-        } else if (row[key] && table.schema[key]?.type === FieldType.LINK) {
-          for (const link of row[key] || []) {
-            for (const linkKey of Object.keys(link)) {
-              if (link[linkKey] === null) {
-                delete link[linkKey]
-              }
+  for (const row of rows) {
+    for (const key of Object.keys(row)) {
+      if (row[key] === null) {
+        delete row[key]
+      } else if (row[key] && table.schema[key]?.type === FieldType.LINK) {
+        for (const link of row[key] || []) {
+          for (const linkKey of Object.keys(link)) {
+            if (link[linkKey] === null) {
+              delete link[linkKey]
             }
           }
         }
       }
     }
+  }
 
-    if (sdk.views.isView(source)) {
-      // We ensure calculation fields are returned as numbers.  During the
-      // testing of this feature it was discovered that the COUNT operation
-      // returns a string for MySQL, MariaDB, and Postgres. But given that all
-      // calculation fields (except ones operating on BIGINTs) should be
-      // numbers, we blanket make sure of that here.
-      for (const [name, field] of Object.entries(
-        helpers.views.calculationFields(source)
-      )) {
-        if ("field" in field) {
-          const targetSchema = table.schema[field.field]
-          // We don't convert BIGINT fields to floats because we could lose
-          // precision.
-          if (targetSchema.type === FieldType.BIGINT) {
-            continue
-          }
+  if (sdk.views.isView(source)) {
+    // We ensure calculation fields are returned as numbers.  During the
+    // testing of this feature it was discovered that the COUNT operation
+    // returns a string for MySQL, MariaDB, and Postgres. But given that all
+    // calculation fields (except ones operating on BIGINTs) should be
+    // numbers, we blanket make sure of that here.
+    for (const [name, field] of Object.entries(
+      helpers.views.calculationFields(source)
+    )) {
+      if ("field" in field) {
+        const targetSchema = table.schema[field.field]
+        // We don't convert BIGINT fields to floats because we could lose
+        // precision.
+        if (targetSchema.type === FieldType.BIGINT) {
+          continue
         }
+      }
 
-        for (const row of rows) {
-          if (typeof row[name] === "string") {
-            row[name] = parseFloat(row[name])
-          }
+      for (const row of rows) {
+        if (typeof row[name] === "string") {
+          row[name] = parseFloat(row[name])
         }
       }
     }

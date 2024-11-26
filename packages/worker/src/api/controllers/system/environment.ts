@@ -1,7 +1,8 @@
-import { Ctx, MaintenanceType, FeatureFlag } from "@budibase/types"
+import { Ctx, MaintenanceType } from "@budibase/types"
 import env from "../../../environment"
-import { env as coreEnv, db as dbCore, features } from "@budibase/backend-core"
+import { env as coreEnv, db as dbCore } from "@budibase/backend-core"
 import nodeFetch from "node-fetch"
+import { helpers } from "@budibase/shared-core"
 
 let sqsAvailable: boolean
 async function isSqsAvailable() {
@@ -12,27 +13,29 @@ async function isSqsAvailable() {
   }
 
   try {
-    const couchInfo = dbCore.getCouchInfo()
-    if (!couchInfo.sqlUrl) {
+    const { url } = dbCore.getCouchInfo()
+    if (!url) {
       sqsAvailable = false
       return false
     }
-    await nodeFetch(couchInfo.sqlUrl, {
-      timeout: 1000,
-    })
+    await helpers.retry(
+      async () => {
+        await nodeFetch(url, { timeout: 2000 })
+      },
+      { times: 3 }
+    )
+    console.log("connected to SQS")
     sqsAvailable = true
     return true
   } catch (e) {
+    console.warn("failed to connect to SQS", e)
     sqsAvailable = false
     return false
   }
 }
 
 async function isSqsMissing() {
-  return (
-    (await features.flags.isEnabled(FeatureFlag.SQS)) &&
-    !(await isSqsAvailable())
-  )
+  return !(await isSqsAvailable())
 }
 
 export const fetch = async (ctx: Ctx) => {

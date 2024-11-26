@@ -245,6 +245,38 @@ export function basicAutomation(appId?: string): Automation {
   }
 }
 
+export function basicCronAutomation(appId: string, cron: string): Automation {
+  const automation: Automation = {
+    name: `Automation ${generator.guid()}`,
+    definition: {
+      trigger: {
+        stepId: AutomationTriggerStepId.CRON,
+        name: "test",
+        tagline: "test",
+        icon: "test",
+        description: "test",
+        type: AutomationStepType.TRIGGER,
+        id: "test",
+        inputs: {
+          cron,
+        },
+        schema: {
+          inputs: {
+            properties: {},
+          },
+          outputs: {
+            properties: {},
+          },
+        },
+      },
+      steps: [],
+    },
+    type: "automation",
+    appId,
+  }
+  return automation
+}
+
 export function serverLogAutomation(appId?: string): Automation {
   return {
     name: "My Automation",
