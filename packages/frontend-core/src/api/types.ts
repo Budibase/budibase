@@ -8,9 +8,11 @@ export enum HTTPMethod {
   DELETE = "DELETE",
 }
 
+export type Headers = Record<string, string>
+
 export type APIClientConfig = {
   enableCaching?: boolean
-  attachHeaders?: (headers: Record<string, string>) => void
+  attachHeaders?: (headers: Headers) => void
   onError?: (error: any) => void
   onMigrationDetected?: (migration: string) => void
 }
