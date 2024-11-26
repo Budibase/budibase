@@ -4,14 +4,14 @@
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
-    "svelte-check": "svelte-check --no-tsconfig",
-    "build": "yarn svelte-check && routify -b && NODE_OPTIONS=\"--max_old_space_size=4096\" vite build --emptyOutDir",
+    "build": "routify -b && NODE_OPTIONS=\"--max_old_space_size=4096\" vite build --emptyOutDir",
     "start": "routify -c rollup",
     "dev": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:types": "yarn svelte-check"
   },
   "jest": {
     "globals": {
