@@ -164,9 +164,12 @@ describe("/datasources", () => {
   })
 })
 
-datasourceDescribe(
-  { name: "%s", exclude: [DatabaseName.MONGODB, DatabaseName.SQS] },
-  ({ config, dsProvider }) => {
+const descriptions = datasourceDescribe({
+  exclude: [DatabaseName.MONGODB, DatabaseName.SQS],
+})
+
+if (descriptions.length) {
+  describe.each(descriptions)("$dbName", ({ config, dsProvider }) => {
     let datasource: Datasource
     let rawDatasource: Datasource
     let client: Knex
@@ -492,5 +495,5 @@ datasourceDescribe(
         )
       })
     })
-  }
-)
+  })
+}

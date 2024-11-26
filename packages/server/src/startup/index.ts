@@ -28,6 +28,7 @@ import Koa from "koa"
 import { Server } from "http"
 import { AddressInfo } from "net"
 import fs from "fs"
+import bson from "bson"
 
 let STARTUP_RAN = false
 
@@ -191,6 +192,10 @@ export async function startup(
         }
       }
     })
+  }
+
+  if (coreEnv.BSON_BUFFER_SIZE) {
+    bson.setInternalBufferSize(coreEnv.BSON_BUFFER_SIZE)
   }
 
   console.log("Initialising JS runner")

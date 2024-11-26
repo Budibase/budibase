@@ -9,8 +9,5 @@ packages/server/client
 packages/server/coverage
 packages/builder/.routify
 packages/sdk/sdk
-packages/account-portal/packages/server/build
-packages/account-portal/packages/ui/.routify
-packages/account-portal/packages/ui/build
 **/*.ivm.bundle.js
 packages/server/build/oldClientVersions/**/**

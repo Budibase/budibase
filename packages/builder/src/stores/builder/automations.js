@@ -16,6 +16,7 @@ import {
   AutomationTriggerStepId,
   AutomationEventType,
   AutomationStepType,
+  AutomationActionStepId,
 } from "@budibase/types"
 import { ActionStepID } from "constants/backend/automations"
 import { FIELDS } from "constants/backend"
@@ -466,9 +467,13 @@ const automationActions = store => ({
       .getPathSteps(block.pathTo, automation)
       .slice(0, -1)
 
+    // Current step will always be the last step of the path
+    const currentBlock = store.actions
+      .getPathSteps(block.pathTo, automation)
+      .at(-1)
+
     // Extract all outputs from all previous steps as available bindingsx§x
     let bindings = []
-
     const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
       if (!name) return
       const runtimeBinding = determineRuntimeBinding(
@@ -519,9 +524,24 @@ const automationActions = store => ({
         runtimeName = `loop.${name}`
       } else if (idx === 0) {
         runtimeName = `trigger.${name}`
+      } else if (
+        currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT
+      ) {
+        const stepId = pathSteps[idx].id
+        if (!stepId) {
+          notifications.error("Error generating binding: Step ID not found.")
+          return null
+        }
+        runtimeName = `steps["${stepId}"].${name}`
       } else {
-        runtimeName = `steps.${pathSteps[idx]?.id}.${name}`
+        const stepId = pathSteps[idx].id
+        if (!stepId) {
+          notifications.error("Error generating binding: Step ID not found.")
+          return null
+        }
+        runtimeName = `steps.${stepId}.${name}`
       }
+
       return runtimeName
     }
 
@@ -637,7 +657,6 @@ const automationActions = store => ({
           console.error("Loop block missing.")
         }
       }
-
       Object.entries(schema).forEach(([name, value]) => {
         addBinding(name, value, icon, blockIdx, isLoopBlock, bindingName)
       })

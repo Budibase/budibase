@@ -27,7 +27,7 @@ export class DDInstrumentedDatabase implements Database {
 
   exists(docId?: string): Promise<boolean> {
     return tracer.trace("db.exists", span => {
-      span?.addTags({ db_name: this.name, doc_id: docId })
+      span.addTags({ db_name: this.name, doc_id: docId })
       if (docId) {
         return this.db.exists(docId)
       }
@@ -37,15 +37,17 @@ export class DDInstrumentedDatabase implements Database {
 
   get<T extends Document>(id?: string | undefined): Promise<T> {
     return tracer.trace("db.get", span => {
-      span?.addTags({ db_name: this.name, doc_id: id })
+      span.addTags({ db_name: this.name, doc_id: id })
       return this.db.get(id)
     })
   }
 
   tryGet<T extends Document>(id?: string | undefined): Promise<T | undefined> {
-    return tracer.trace("db.tryGet", span => {
-      span?.addTags({ db_name: this.name, doc_id: id })
-      return this.db.tryGet(id)
+    return tracer.trace("db.tryGet", async span => {
+      span.addTags({ db_name: this.name, doc_id: id })
+      const doc = await this.db.tryGet<T>(id)
+      span.addTags({ doc_found: doc !== undefined })
+      return doc
     })
   }
 
@@ -53,13 +55,15 @@ export class DDInstrumentedDatabase implements Database {
     ids: string[],
     opts?: { allowMissing?: boolean | undefined } | undefined
   ): Promise<T[]> {
-    return tracer.trace("db.getMultiple", span => {
-      span?.addTags({
+    return tracer.trace("db.getMultiple", async span => {
+      span.addTags({
         db_name: this.name,
         num_docs: ids.length,
         allow_missing: opts?.allowMissing,
       })
-      return this.db.getMultiple(ids, opts)
+      const docs = await this.db.getMultiple<T>(ids, opts)
+      span.addTags({ num_docs_found: docs.length })
+      return docs
     })
   }
 
@@ -69,12 +73,14 @@ export class DDInstrumentedDatabase implements Database {
     idOrDoc: string | Document,
     rev?: string
   ): Promise<DocumentDestroyResponse> {
-    return tracer.trace("db.remove", span => {
-      span?.addTags({ db_name: this.name, doc_id: idOrDoc })
+    return tracer.trace("db.remove", async span => {
+      span.addTags({ db_name: this.name, doc_id: idOrDoc, rev })
       const isDocument = typeof idOrDoc === "object"
       const id = isDocument ? idOrDoc._id! : idOrDoc
       rev = isDocument ? idOrDoc._rev : rev
-      return this.db.remove(id, rev)
+      const resp = await this.db.remove(id, rev)
+      span.addTags({ ok: resp.ok })
+      return resp
     })
   }
 
@@ -83,7 +89,11 @@ export class DDInstrumentedDatabase implements Database {
     opts?: { silenceErrors?: boolean }
   ): Promise<void> {
     return tracer.trace("db.bulkRemove", span => {
-      span?.addTags({ db_name: this.name, num_docs: documents.length })
+      span.addTags({
+        db_name: this.name,
+        num_docs: documents.length,
+        silence_errors: opts?.silenceErrors,
+      })
       return this.db.bulkRemove(documents, opts)
     })
   }
@@ -92,15 +102,21 @@ export class DDInstrumentedDatabase implements Database {
     document: AnyDocument,
     opts?: DatabasePutOpts | undefined
   ): Promise<DocumentInsertResponse> {
-    return tracer.trace("db.put", span => {
-      span?.addTags({ db_name: this.name, doc_id: document._id })
-      return this.db.put(document, opts)
+    return tracer.trace("db.put", async span => {
+      span.addTags({
+        db_name: this.name,
+        doc_id: document._id,
+        force: opts?.force,
+      })
+      const resp = await this.db.put(document, opts)
+      span.addTags({ ok: resp.ok })
+      return resp
     })
   }
 
   bulkDocs(documents: AnyDocument[]): Promise<DocumentBulkResponse[]> {
     return tracer.trace("db.bulkDocs", span => {
-      span?.addTags({ db_name: this.name, num_docs: documents.length })
+      span.addTags({ db_name: this.name, num_docs: documents.length })
       return this.db.bulkDocs(documents)
     })
   }
@@ -108,9 +124,15 @@ export class DDInstrumentedDatabase implements Database {
   allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
-    return tracer.trace("db.allDocs", span => {
-      span?.addTags({ db_name: this.name })
-      return this.db.allDocs(params)
+    return tracer.trace("db.allDocs", async span => {
+      span.addTags({ db_name: this.name, ...params })
+      const resp = await this.db.allDocs<T>(params)
+      span.addTags({
+        total_rows: resp.total_rows,
+        rows_length: resp.rows.length,
+        offset: resp.offset,
+      })
+      return resp
     })
   }
 
@@ -118,57 +140,75 @@ export class DDInstrumentedDatabase implements Database {
     viewName: string,
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
-    return tracer.trace("db.query", span => {
-      span?.addTags({ db_name: this.name, view_name: viewName })
-      return this.db.query(viewName, params)
+    return tracer.trace("db.query", async span => {
+      span.addTags({ db_name: this.name, view_name: viewName, ...params })
+      const resp = await this.db.query<T>(viewName, params)
+      span.addTags({
+        total_rows: resp.total_rows,
+        rows_length: resp.rows.length,
+        offset: resp.offset,
+      })
+      return resp
     })
   }
 
-  destroy(): Promise<void | OkResponse> {
-    return tracer.trace("db.destroy", span => {
-      span?.addTags({ db_name: this.name })
-      return this.db.destroy()
+  destroy(): Promise<OkResponse> {
+    return tracer.trace("db.destroy", async span => {
+      span.addTags({ db_name: this.name })
+      const resp = await this.db.destroy()
+      span.addTags({ ok: resp.ok })
+      return resp
     })
   }
 
-  compact(): Promise<void | OkResponse> {
-    return tracer.trace("db.compact", span => {
-      span?.addTags({ db_name: this.name })
-      return this.db.compact()
+  compact(): Promise<OkResponse> {
+    return tracer.trace("db.compact", async span => {
+      span.addTags({ db_name: this.name })
+      const resp = await this.db.compact()
+      span.addTags({ ok: resp.ok })
+      return resp
     })
   }
 
   dump(stream: Writable, opts?: DatabaseDumpOpts | undefined): Promise<any> {
     return tracer.trace("db.dump", span => {
-      span?.addTags({ db_name: this.name })
+      span.addTags({
+        db_name: this.name,
+        batch_limit: opts?.batch_limit,
+        batch_size: opts?.batch_size,
+        style: opts?.style,
+        timeout: opts?.timeout,
+        num_doc_ids: opts?.doc_ids?.length,
+        view: opts?.view,
+      })
       return this.db.dump(stream, opts)
     })
   }
 
   load(...args: any[]): Promise<any> {
     return tracer.trace("db.load", span => {
-      span?.addTags({ db_name: this.name })
+      span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.load(...args)
     })
   }
 
   createIndex(...args: any[]): Promise<any> {
     return tracer.trace("db.createIndex", span => {
-      span?.addTags({ db_name: this.name })
+      span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.createIndex(...args)
     })
   }
 
   deleteIndex(...args: any[]): Promise<any> {
     return tracer.trace("db.deleteIndex", span => {
-      span?.addTags({ db_name: this.name })
+      span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.deleteIndex(...args)
     })
   }
 
   getIndexes(...args: any[]): Promise<any> {
     return tracer.trace("db.getIndexes", span => {
-      span?.addTags({ db_name: this.name })
+      span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.getIndexes(...args)
     })
   }
@@ -177,22 +217,27 @@ export class DDInstrumentedDatabase implements Database {
     sql: string,
     parameters?: SqlQueryBinding
   ): Promise<T[]> {
-    return tracer.trace("db.sql", span => {
-      span?.addTags({ db_name: this.name })
-      return this.db.sql(sql, parameters)
+    return tracer.trace("db.sql", async span => {
+      span.addTags({ db_name: this.name, num_bindings: parameters?.length })
+      const resp = await this.db.sql<T>(sql, parameters)
+      span.addTags({ num_rows: resp.length })
+      return resp
     })
   }
 
   sqlPurgeDocument(docIds: string[] | string): Promise<void> {
     return tracer.trace("db.sqlPurgeDocument", span => {
-      span?.addTags({ db_name: this.name })
+      span.addTags({
+        db_name: this.name,
+        num_docs: Array.isArray(docIds) ? docIds.length : 1,
+      })
       return this.db.sqlPurgeDocument(docIds)
     })
   }
 
   sqlDiskCleanup(): Promise<void> {
     return tracer.trace("db.sqlDiskCleanup", span => {
-      span?.addTags({ db_name: this.name })
+      span.addTags({ db_name: this.name })
       return this.db.sqlDiskCleanup()
     })
   }
