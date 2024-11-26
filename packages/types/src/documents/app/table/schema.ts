@@ -1,6 +1,6 @@
 // all added by grid/table when defining the
 // column size, position and whether it can be viewed
-import { FieldType } from "../row"
+import { FieldType, FormulaResponseType } from "../row"
 import {
   AutoFieldSubType,
   AutoReason,
@@ -115,6 +115,7 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
   type: FieldType.FORMULA
   formula: string
   formulaType?: FormulaType
+  responseType?: FormulaResponseType
 }
 
 export interface AIFieldMetadata extends BaseFieldSchema {

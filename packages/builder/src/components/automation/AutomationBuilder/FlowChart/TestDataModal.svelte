@@ -1,4 +1,5 @@
 <script>
+  import { tick } from "svelte"
   import {
     ModalContent,
     TextArea,
@@ -8,7 +9,6 @@
   import { automationStore, selectedAutomation } from "stores/builder"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
-  import { memo } from "@budibase/frontend-core"
   import { AutomationEventType } from "@budibase/types"
 
   let failedParse = null
@@ -29,7 +29,7 @@
    * @todo Parse *all* data for each trigger type and relay adequate feedback
    */
   const parseTestData = testData => {
-    const autoTrigger = $selectedAutomation?.definition?.trigger
+    const autoTrigger = $selectedAutomation.data?.definition?.trigger
     const { tableId } = autoTrigger?.inputs || {}
 
     // Ensure the tableId matches the trigger table for row trigger automations
@@ -63,12 +63,11 @@
     return true
   }
 
-  const memoTestData = memo(parseTestData($selectedAutomation.testData))
-  $: memoTestData.set(parseTestData($selectedAutomation.testData))
+  $: testData = testData || parseTestData($selectedAutomation.data.testData)
 
   $: {
     // clone the trigger so we're not mutating the reference
-    trigger = cloneDeep($selectedAutomation.definition.trigger)
+    trigger = cloneDeep($selectedAutomation.data.definition.trigger)
 
     // get the outputs so we can define the fields
     let schema = Object.entries(trigger.schema?.outputs?.properties || {})
@@ -83,7 +82,7 @@
   $: isError =
     !isTriggerValid(trigger) ||
     !(trigger.schema.outputs.required || []).every(
-      required => $memoTestData?.[required] || required !== "row"
+      required => testData?.[required] || required !== "row"
     )
 
   function parseTestJSON(e) {
@@ -110,8 +109,10 @@
   }
 
   const testAutomation = async () => {
+    // Ensure testData reactiveness is processed
+    await tick()
     try {
-      await automationStore.actions.test($selectedAutomation, $memoTestData)
+      await automationStore.actions.test($selectedAutomation.data, testData)
       $automationStore.showTestPanel = true
     } catch (error) {
       notifications.error(error)
@@ -149,7 +150,7 @@
   {#if selectedValues}
     <div class="tab-content-padding">
       <AutomationBlockSetup
-        testData={$memoTestData}
+        bind:testData
         {schemaProperties}
         isTestModal
         block={trigger}
@@ -159,7 +160,7 @@
   {#if selectedJSON}
     <div class="text-area-container">
       <TextArea
-        value={JSON.stringify($selectedAutomation.testData, null, 2)}
+        value={JSON.stringify($selectedAutomation.data.testData, null, 2)}
         error={failedParse}
         on:change={e => parseTestJSON(e)}
       />

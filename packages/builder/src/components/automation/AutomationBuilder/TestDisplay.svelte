@@ -3,10 +3,12 @@
   import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
   import { ActionStepID } from "constants/backend/automations"
   import { JsonView } from "@zerodevx/svelte-json-view"
+  import { automationStore } from "stores/builder"
+  import { AutomationActionStepId } from "@budibase/types"
 
   export let automation
+  export let automationBlockRefs = {}
   export let testResults
-  export let width = "400px"
 
   let openBlocks = {}
   let blocks
@@ -28,21 +30,28 @@
     }
   }
 
-  $: filteredResults = prepTestResults(testResults)
+  const getBranchName = (step, id) => {
+    if (!step || !id) {
+      return
+    }
+    return step.inputs.branches.find(branch => branch.id === id)?.name
+  }
 
+  $: filteredResults = prepTestResults(testResults)
   $: {
     if (testResults.message) {
-      blocks = automation?.definition?.trigger
-        ? [automation.definition.trigger]
-        : []
+      const trigger = automation?.definition?.trigger
+      blocks = trigger ? [trigger] : []
     } else if (automation) {
-      blocks = []
-      if (automation.definition.trigger) {
-        blocks.push(automation.definition.trigger)
+      const terminatingStep = filteredResults.at(-1)
+      const terminatingBlockRef = automationBlockRefs[terminatingStep.id]
+      if (terminatingBlockRef) {
+        const pathSteps = automationStore.actions.getPathSteps(
+          terminatingBlockRef.pathTo,
+          automation
+        )
+        blocks = [...pathSteps].filter(x => x.stepId !== ActionStepID.LOOP)
       }
-      blocks = blocks
-        .concat(automation.definition.steps || [])
-        .filter(x => x.stepId !== ActionStepID.LOOP)
     } else if (filteredResults) {
       blocks = filteredResults || []
       // make sure there is an ID for each block being displayed
@@ -56,10 +65,14 @@
 
 <div class="container">
   {#each blocks as block, idx}
-    <div class="block" style={width ? `width: ${width}` : ""}>
+    <div class="block">
       {#if block.stepId !== ActionStepID.LOOP}
         <FlowItemHeader
+          {automation}
           enableNaming={false}
+          itemName={block.stepId === AutomationActionStepId.BRANCH
+            ? getBranchName(block, filteredResults?.[idx].outputs?.branchId)
+            : null}
           open={!!openBlocks[block.id]}
           on:toggle={() => (openBlocks[block.id] = !openBlocks[block.id])}
           isTrigger={idx === 0}
@@ -133,7 +146,10 @@
   .container {
     padding: 0 30px 30px 30px;
     height: 100%;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .wrap {
@@ -175,17 +191,17 @@
 
   .block {
     display: inline-block;
-    width: 400px;
-    height: auto;
+    height: fit-content;
     font-size: 16px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px 4px 4px 4px;
+    min-width: 425px;
   }
 
   .separator {
     width: 1px;
-    height: 40px;
+    flex: 0 0 40px;
     border-left: 1px dashed var(--grey-4);
     color: var(--grey-4);
     /* center horizontally */

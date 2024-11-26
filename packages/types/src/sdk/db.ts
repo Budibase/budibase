@@ -12,7 +12,6 @@ import type PouchDB from "pouchdb-find"
 
 export enum SearchIndex {
   ROWS = "rows",
-  AUDIT = "audit",
   USER = "user",
 }
 
@@ -164,8 +163,8 @@ export interface Database {
     viewName: string,
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>
-  destroy(): Promise<Nano.OkResponse | void>
-  compact(): Promise<Nano.OkResponse | void>
+  destroy(): Promise<Nano.OkResponse>
+  compact(): Promise<Nano.OkResponse>
   // these are all PouchDB related functions that are rarely used - in future
   // should be replaced by better typed/non-pouch implemented methods
   dump(stream: Writable, opts?: DatabaseDumpOpts): Promise<any>

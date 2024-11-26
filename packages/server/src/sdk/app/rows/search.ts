@@ -1,11 +1,8 @@
 import {
   EmptyFilterOption,
-  FeatureFlag,
   LegacyFilter,
-  LogicalOperator,
   Row,
   RowSearchParams,
-  SearchFilterKey,
   SearchFilters,
   SearchResponse,
   SortOrder,
@@ -19,7 +16,6 @@ import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { checkFilters, searchInputMapping } from "./search/utils"
-import { db, features } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { getQueryableFields, removeInvalidFilters } from "./queryUtils"
 import { enrichSearchContext } from "../../../api/controllers/row/utils"
@@ -104,44 +100,14 @@ export async function search(
       }
       viewQuery = checkFilters(table, viewQuery)
 
-      const sqsEnabled = await features.flags.isEnabled(FeatureFlag.SQS)
-      const supportsLogicalOperators =
-        isExternalTableID(view.tableId) || sqsEnabled
-
-      if (!supportsLogicalOperators) {
-        // In the unlikely event that a Grouped Filter is in a non-SQS environment
-        // It needs to be ignored entirely
-        let queryFilters: LegacyFilter[] = Array.isArray(view.query)
-          ? view.query
-          : []
-
-        const { filters } = dataFilters.splitFiltersArray(queryFilters)
-
-        // Extract existing fields
-        const existingFields = filters.map(filter =>
-          db.removeKeyNumbering(filter.field)
-        )
-
-        // Carry over filters for unused fields
-        Object.keys(options.query).forEach(key => {
-          const operator = key as Exclude<SearchFilterKey, LogicalOperator>
-          Object.keys(options.query[operator] || {}).forEach(field => {
-            if (!existingFields.includes(db.removeKeyNumbering(field))) {
-              viewQuery[operator]![field] = options.query[operator]![field]
-            }
-          })
-        })
-        options.query = viewQuery
-      } else {
-        const conditions = viewQuery ? [viewQuery] : []
-        options.query = {
-          $and: {
-            conditions: [...conditions, options.query],
-          },
-        }
-        if (viewQuery.onEmptyFilter) {
-          options.query.onEmptyFilter = viewQuery.onEmptyFilter
-        }
+      const conditions = viewQuery ? [viewQuery] : []
+      options.query = {
+        $and: {
+          conditions: [...conditions, options.query],
+        },
+      }
+      if (viewQuery.onEmptyFilter) {
+        options.query.onEmptyFilter = viewQuery.onEmptyFilter
       }
     }
 
@@ -170,12 +136,9 @@ export async function search(
     if (isExternalTable) {
       span?.addTags({ searchType: "external" })
       result = await external.search(options, source)
-    } else if (await features.flags.isEnabled(FeatureFlag.SQS)) {
+    } else {
       span?.addTags({ searchType: "sqs" })
       result = await internal.sqs.search(options, source)
-    } else {
-      span?.addTags({ searchType: "lucene" })
-      result = await internal.lucene.search(options, source)
     }
 
     span.addTags({
