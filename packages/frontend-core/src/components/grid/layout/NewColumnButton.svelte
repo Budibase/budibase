@@ -53,6 +53,7 @@
     on:close={close}
     maxHeight={null}
     resizable
+    minWidth={360}
   >
     <div class="content">
       <slot />
@@ -80,7 +81,6 @@
   }
 
   .content {
-    width: 300px;
     padding: 20px;
     display: flex;
     flex-direction: column;

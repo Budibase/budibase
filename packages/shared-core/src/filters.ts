@@ -527,7 +527,12 @@ export function search<T extends Record<string, any>>(
 ): SearchResponse<T> {
   let result = runQuery(docs, query.query)
   if (query.sort) {
-    result = sort(result, query.sort, query.sortOrder || SortOrder.ASCENDING)
+    result = sort(
+      result,
+      query.sort,
+      query.sortOrder || SortOrder.ASCENDING,
+      query.sortType
+    )
   }
   const totalRows = result.length
   if (query.limit) {

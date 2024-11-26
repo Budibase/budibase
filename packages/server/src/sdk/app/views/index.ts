@@ -26,6 +26,7 @@ import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"
 import * as external from "./external"
 import sdk from "../../../sdk"
+import { ensureQueryUISet } from "./utils"
 
 function pickApi(tableId: any) {
   if (isExternalTableID(tableId)) {
@@ -42,6 +43,24 @@ export async function get(viewId: string): Promise<ViewV2> {
 export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
   return pickApi(tableId).getEnriched(viewId)
+}
+
+export async function getAllEnriched(): Promise<ViewV2Enriched[]> {
+  const tables = await sdk.tables.getAllTables()
+  let views: ViewV2Enriched[] = []
+  for (let table of tables) {
+    if (!table.views || Object.keys(table.views).length === 0) {
+      continue
+    }
+    const v2Views = Object.values(table.views).filter(isV2)
+    const enrichedViews = await Promise.all(
+      v2Views.map(view =>
+        enrichSchema(ensureQueryUISet(view), table.schema, tables)
+      )
+    )
+    views = views.concat(enrichedViews)
+  }
+  return views
 }
 
 export async function getTable(view: string | ViewV2): Promise<Table> {
@@ -333,13 +352,19 @@ export function allowedFields(
 
 export async function enrichSchema(
   view: ViewV2,
-  tableSchema: TableSchema
+  tableSchema: TableSchema,
+  tables?: Table[]
 ): Promise<ViewV2Enriched> {
   async function populateRelTableSchema(
     tableId: string,
     viewFields: Record<string, RelationSchemaField>
   ) {
-    const relTable = await sdk.tables.getTable(tableId)
+    let relTable = tables
+      ? tables?.find(t => t._id === tableId)
+      : await sdk.tables.getTable(tableId)
+    if (!relTable) {
+      throw new Error("Cannot enrich relationship, table not found")
+    }
     const result: Record<string, ViewV2ColumnEnriched> = {}
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
