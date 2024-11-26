@@ -15,7 +15,7 @@ import {
 } from "@budibase/types"
 import * as linkRows from "../../../db/linkedRows"
 import isEqual from "lodash/isEqual"
-import { cloneDeep } from "lodash/fp"
+import { cloneDeep, merge } from "lodash/fp"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
 
@@ -164,10 +164,7 @@ export async function finaliseRow(
 
   await db.put(row)
   const retrieved = await db.tryGet<Row>(row._id)
-  enrichedRow = {
-    ...enrichedRow,
-    ...retrieved,
-  }
+  enrichedRow = merge(retrieved, enrichedRow)
   enrichedRow = await processFormulas(table, enrichedRow, {
     dynamic: false,
   })
