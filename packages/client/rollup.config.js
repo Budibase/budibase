@@ -10,6 +10,7 @@ import json from "rollup-plugin-json"
 import nodePolyfills from "rollup-plugin-polyfill-node"
 import path from "path"
 import { visualizer } from "rollup-plugin-visualizer"
+import typescript from "@rollup/plugin-typescript"
 
 const production = !process.env.ROLLUP_WATCH
 const ignoredWarnings = [
@@ -19,19 +20,6 @@ const ignoredWarnings = [
   "a11y-no-onchange",
   "a11y-click-events-have-key-events",
 ]
-
-const devPaths = production
-  ? []
-  : [
-      {
-        find: "@budibase/shared-core",
-        replacement: path.resolve("../shared-core/dist/index"),
-      },
-      {
-        find: "@budibase/types",
-        replacement: path.resolve("../types/dist/index"),
-      },
-    ]
 
 export default {
   input: "src/index.js",
@@ -53,6 +41,12 @@ export default {
     warn(warning)
   },
   plugins: [
+    typescript({
+      include: [
+        "src/**/*.ts",
+        `${path.resolve("..")}/frontend-core/src/**/*.ts`,
+      ],
+    }),
     alias({
       entries: [
         {
@@ -83,7 +77,6 @@ export default {
           find: "sdk",
           replacement: path.resolve("./src/sdk"),
         },
-        ...devPaths,
       ],
     }),
     svelte({
@@ -102,6 +95,7 @@ export default {
       preferBuiltins: true,
       browser: true,
       dedupe: ["svelte", "svelte/internal"],
+      extensions: [".js", ".ts", ".json"],
     }),
     svg(),
     image({
