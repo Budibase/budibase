@@ -70,6 +70,10 @@ export async function processEvent(job: AutomationJob) {
 
       const task = async () => {
         try {
+          if (isCronTrigger(job.data.automation)) {
+            // Requires the timestamp at run time
+            job.data.event.timestamp = Date.now()
+          }
           // need to actually await these so that an error can be captured properly
           console.log("automation running", ...loggingArgs(job))
 
@@ -210,15 +214,15 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
     }
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
     const jobId = `${appId}_cron_${utils.newid()}`
-    const job: any = await automationQueue.add(
+    const job = await automationQueue.add(
       {
         automation,
-        event: { appId, timestamp: Date.now() },
+        event: { appId },
       },
       { repeat: { cron: cronExp }, jobId }
     )
     // Assign cron job ID from bull so we can remove it later if the cron trigger is removed
-    trigger.cronJobId = job.id
+    trigger.cronJobId = job.id.toString()
     // can't use getAppDB here as this is likely to be called from dev app,
     // but this call could be for dev app or prod app, need to just use what
     // was passed in

@@ -56,6 +56,9 @@ app.use(koaSession(app))
 app.use(middleware.correlation)
 app.use(middleware.pino)
 app.use(middleware.ip)
+if (!coreEnv.DISABLE_CONTENT_SECURITY_POLICY) {
+  app.use(middleware.csp)
+}
 app.use(userAgent)
 
 // authentication
@@ -96,6 +99,7 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
     startupLog = `${startupLog} - environment: "${env.BUDIBASE_ENVIRONMENT}"`
   }
   console.log(startupLog)
+
   await initPro()
   await redis.clients.init()
   features.init()
