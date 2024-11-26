@@ -1,7 +1,7 @@
 import { writable } from "svelte/store"
 import { PluginSource } from "constants/index"
 
-const { API } = require("api")
+import { API } from "api"
 
 interface Plugin {
   _id: string
