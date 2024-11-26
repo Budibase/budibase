@@ -27,9 +27,8 @@
       "extends": "plugin:svelte/recommended",
       "parser": "svelte-eslint-parser",
       "parserOptions": {
-        "parser": "@babel/eslint-parser",
+        "parser": "@typescript-eslint/parser",
         "ecmaVersion": 2019,
-        "sourceType": "module",
         "allowImportExportEverywhere": true
       }
     },
