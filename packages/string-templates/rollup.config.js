@@ -10,8 +10,8 @@ import inject from "@rollup/plugin-inject"
 
 const production = !process.env.ROLLUP_WATCH
 
-const config = (format, outputFile) => ({
-  input: "src/index.ts",
+const config = (input, outputFile, format) => ({
+  input,
   output: {
     sourcemap: !production,
     format,
@@ -42,6 +42,7 @@ const config = (format, outputFile) => ({
 })
 
 export default [
-  config("cjs", "./dist/bundle.cjs"),
-  config("esm", "./dist/bundle.mjs"),
+  config("src/index.ts", "./dist/bundle.cjs", "cjs"),
+  config("src/index.ts", "./dist/bundle.mjs", "esm"),
+  config("src/iife.ts", "./dist/iife.mjs", "esm"),
 ]
