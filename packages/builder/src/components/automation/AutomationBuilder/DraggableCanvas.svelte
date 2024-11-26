@@ -44,7 +44,6 @@
       w: contentDims.original.w,
       h: contentDims.original.h,
     }
-    dragOffset = []
     contentPos.update(state => ({
       ...state,
       x: 0,
@@ -134,9 +133,6 @@
 
   // Size of the view port
   let viewDims = {}
-
-  // When dragging the content, maintain the drag start offset
-  let dragOffset = []
 
   // Edge around the draggable content
   let contentDragPadding = 200
@@ -356,7 +352,6 @@
 
   const onViewDragEnd = () => {
     down = false
-    dragOffset = [0, 0]
   }
 
   const handleDragDrop = () => {
@@ -381,7 +376,6 @@
     viewDragOffset = [0, 0]
 
     if ($view.dragging) {
-      dragOffset = [0, 0]
       view.update(state => ({
         ...state,
         dragging: false,
@@ -491,8 +485,6 @@
       return
     }
     const { x, y } = eleXY(e, viewPort)
-
-    dragOffset = [Math.abs(x - $contentPos.x), Math.abs(y - $contentPos.y)]
   }
 
   const isDraggable = e => {
