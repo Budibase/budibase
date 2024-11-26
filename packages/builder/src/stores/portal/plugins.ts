@@ -11,7 +11,7 @@ export function createPluginsStore() {
   const { subscribe, set, update } = writable<Plugin[]>([])
 
   async function load() {
-    const plugins = await API.getPlugins()
+    const plugins = await API.getPugins()
     set(plugins)
   }
 
