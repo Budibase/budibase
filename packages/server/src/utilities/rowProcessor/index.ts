@@ -204,12 +204,11 @@ export async function inputProcessing(
 
   for (const [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
+    const isBuiltinColumn = isExternalTableID(table._id!)
+      ? isExternalColumnName(key)
+      : isInternalColumnName(key)
     // cleanse fields that aren't in the schema
-    if (
-      !field && isExternalTableID(table._id!)
-        ? !isExternalColumnName(key)
-        : !isInternalColumnName(key)
-    ) {
+    if (!field && !isBuiltinColumn) {
       delete clonedRow[key]
     }
     // field isn't found - might be a built-in column, skip over it
