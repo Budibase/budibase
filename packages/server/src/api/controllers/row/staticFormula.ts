@@ -162,9 +162,12 @@ export async function finaliseRow(
     })
   }
 
-  const response = await db.put(row)
-  // for response, calculate the formulas for the enriched row
-  enrichedRow._rev = response.rev
+  await db.put(row)
+  const retrieved = await db.tryGet<Row>(row._id)
+  enrichedRow = {
+    ...enrichedRow,
+    ...retrieved,
+  }
   enrichedRow = await processFormulas(table, enrichedRow, {
     dynamic: false,
   })
