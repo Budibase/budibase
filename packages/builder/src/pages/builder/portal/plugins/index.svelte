@@ -42,7 +42,7 @@
     { column: "edit", component: EditPluginRenderer },
   ]
 
-  let modal: any
+  let modal
   let searchTerm: any = ""
   let filter: any = "all"
   let filterOptions = [
