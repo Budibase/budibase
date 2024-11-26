@@ -4,7 +4,7 @@
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
-    "svelte-check": "svelte-check --no-tsconfig",
+    "svelte-check": "svelte-check",
     "build": "yarn svelte-check && routify -b && vite build --emptyOutDir",
     "start": "routify -c rollup",
     "dev": "routify -c dev:vite",
