@@ -7,6 +7,7 @@ import {
   Table,
   TableSourceType,
   SqlClient,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import { sql } from "@budibase/backend-core"
 import { join } from "path"
@@ -35,8 +36,8 @@ describe("Captures of real examples", () => {
   const relationshipLimit = 500
   const primaryLimit = 100
 
-  function getJson(name: string): QueryJson {
-    return require(join(__dirname, "sqlQueryJson", name)) as QueryJson
+  function getJson(name: string) {
+    return require(join(__dirname, "sqlQueryJson", name)) as EnrichedQueryJson
   }
 
   describe("create", () => {
@@ -251,9 +252,6 @@ describe("Captures of real examples", () => {
         endpoint: { datasourceId: "", entityId: "", operation: op },
         resource: {
           fields,
-        },
-        meta: {
-          table: TABLE,
         },
       }
     }
