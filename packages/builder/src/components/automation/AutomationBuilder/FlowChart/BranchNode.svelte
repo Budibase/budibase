@@ -8,8 +8,6 @@
     Layout,
     Body,
     Divider,
-    TooltipPosition,
-    TooltipType,
     Button,
     Modal,
     ModalContent,
@@ -29,7 +27,6 @@
   export let pathTo
   export let branchIdx
   export let step
-  export let isLast
   export let bindings
   export let automation
 

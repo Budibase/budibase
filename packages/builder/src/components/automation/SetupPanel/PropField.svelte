@@ -50,8 +50,4 @@
     white-space: nowrap;
     overflow: hidden;
   }
-
-  .prop-field.fullWidth .prop-control {
-    margin-left: 0px;
-  }
 </style>

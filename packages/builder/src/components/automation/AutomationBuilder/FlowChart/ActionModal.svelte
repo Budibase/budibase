@@ -3,7 +3,6 @@
     ModalContent,
     Layout,
     Detail,
-    Body,
     Icon,
     notifications,
     Tags,

@@ -111,26 +111,10 @@
     box-sizing: border-box;
     border-width: 1px;
   }
-  .item p {
-    font-size: 16px !important;
-    margin: 0;
-    color: var(--spectrum-global-color-gray-900);
-  }
 
   .item:not(.disabled):hover,
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);
-  }
-  .disabled {
-    background: var(--spectrum-global-color-gray-200);
-    opacity: 0.5;
-  }
-  .disabled :global(.spectrum-Body) {
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .tag-color :global(.spectrum-Tags-item) {
-    background: var(--spectrum-global-color-gray-200);
   }
   .icon-background-trigger {
     background-color: #ffd230;
@@ -145,10 +129,5 @@
   }
   div:has(svg) {
     color: black;
-  }
-
-  img {
-    border-radius: 6px;
-    padding: 2px;
   }
 </style>

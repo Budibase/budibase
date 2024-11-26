@@ -193,72 +193,72 @@
     class:selected
     class:draggable
   >
-  <div class="wrap">
-    {#if $view.dragging && selected}
-      <div class="drag-placeholder" style={placeholderDims} />
-    {/if}
-
-    <div
-      bind:this={blockEle}
-      class="block-content"
-      class:dragging={$view.dragging && selected}
-      style={positionStyles}
-      on:mousedown={e => {
-        e.stopPropagation()
-      }}
-    >
-      {#if draggable}
-        <div
-          class="handle"
-          class:grabbing={selected}
-          on:mousedown={onHandleMouseDown}
-        >
-          <DragHandle />
-        </div>
+    <div class="wrap">
+      {#if $view.dragging && selected}
+        <div class="drag-placeholder" style={placeholderDims} />
       {/if}
-    <div class="block-core">
-    {#if loopBlock}
-      <div class="blockSection">
-        <div
-          on:click={() => {
-            showLooping = !showLooping
-          }}
-          class="splitHeader"
-        >
-          <div class="center-items">
-            <div class="icon-background-loop">
-              <svg
-                width="20px"
-                height="20px"
-                class="spectrum-Icon"
-                style="color:#000000;"
-                focusable="false"
-              >
-                <use xlink:href="#spectrum-icon-18-Reuse" />
-              </svg>
-            </div>
-            <div class="iconAlign">
-              <p class="label">Looping</p>
-            </div>
-          </div>
 
-          <div class="blockTitle">
-            <AbsTooltip type="negative" text="Remove looping">
-              <Icon
-                on:click={removeLooping}
-                hoverable
-                name="DeleteOutline"
-              />
-            </AbsTooltip>
-            <div on:click={() => {}}>
-              <Icon
-                hoverable
-                name={showLooping ? "ChevronRight" : "ChevronDown"}
-              />
-            </div>
+      <div
+        bind:this={blockEle}
+        class="block-content"
+        class:dragging={$view.dragging && selected}
+        style={positionStyles}
+        on:mousedown={e => {
+          e.stopPropagation()
+        }}
+      >
+        {#if draggable}
+          <div
+            class="handle"
+            class:grabbing={selected}
+            on:mousedown={onHandleMouseDown}
+          >
+            <DragHandle />
           </div>
-        </div>
-      </div>
+        {/if}
+        <div class="block-core">
+          {#if loopBlock}
+            <div class="blockSection">
+              <div
+                on:click={() => {
+                  showLooping = !showLooping
+                }}
+                class="splitHeader"
+              >
+                <div class="center-items">
+                  <div class="icon-background-loop">
+                    <svg
+                      width="20px"
+                      height="20px"
+                      class="spectrum-Icon"
+                      style="color:#000000;"
+                      focusable="false"
+                    >
+                      <use xlink:href="#spectrum-icon-18-Reuse" />
+                    </svg>
+                  </div>
+                  <div class="iconAlign">
+                    <p class="label">Looping</p>
+                  </div>
+                </div>
+
+                <div class="blockTitle">
+                  <AbsTooltip type="negative" text="Remove looping">
+                    <Icon
+                      on:click={removeLooping}
+                      hoverable
+                      name="DeleteOutline"
+                    />
+                  </AbsTooltip>
+                  <div on:click={() => {}}>
+                    <Icon
+                      hoverable
+                      name={showLooping ? "ChevronRight" : "ChevronDown"}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <Divider noMargin />
             {#if !showLooping}
