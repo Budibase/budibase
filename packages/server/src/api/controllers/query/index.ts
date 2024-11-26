@@ -23,6 +23,7 @@ import {
 } from "@budibase/types"
 import { ValidQueryNameRegex, utils as JsonUtils } from "@budibase/shared-core"
 import { findHBSBlocks } from "@budibase/string-templates"
+import { ObjectId } from "mongodb"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -223,6 +224,8 @@ export async function preview(
             } else {
               fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
             }
+          } else if (field instanceof ObjectId) {
+            fieldMetadata = makeQuerySchema(FieldType.STRING, key)
           } else {
             fieldMetadata = makeQuerySchema(FieldType.JSON, key)
           }
