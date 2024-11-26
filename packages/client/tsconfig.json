@@ -16,6 +16,5 @@
       ],
       "*": ["./src/*"]
     }
-  },
-  "include": ["src/**/*.ts", "../frontend-core/src/**/*.ts"]
+  }
 }
