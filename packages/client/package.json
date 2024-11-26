@@ -37,7 +37,6 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "1.4.0",
-    "postcss": "^8.4.35",
     "vite": "^4.5.0",
     "vite-plugin-css-injected-by-js": "3.5.2"
   },
