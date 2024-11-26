@@ -43,7 +43,7 @@
   export let showHeaderBorder = true
   export let placeholderText = "No rows found"
   export let snippets = []
-  export let defaultSortColumn
+  export let defaultSortColumn = undefined
   export let defaultSortOrder = "Ascending"
 
   const dispatch = createEventDispatcher()
