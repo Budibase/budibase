@@ -484,7 +484,6 @@
     if (down || !viewPort) {
       return
     }
-    const { x, y } = eleXY(e, viewPort)
   }
 
   const isDraggable = e => {
