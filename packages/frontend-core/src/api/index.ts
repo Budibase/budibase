@@ -5,6 +5,7 @@ import {
   APIClient,
   APICallConfig,
   BaseAPIClient,
+  Headers,
 } from "./types"
 import { Helpers } from "@budibase/bbui"
 import { Header } from "@budibase/shared-core"
@@ -110,7 +111,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     json = json && method !== HTTPMethod.GET
 
     // Build headers
-    let headers = { Accept: "application/json" }
+    let headers: Headers = { Accept: "application/json" }
     headers[Header.SESSION_ID] = APISessionID
     if (!external) {
       headers[Header.API_VER] = ApiVersion
@@ -237,7 +238,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     // Generic utility to extract the current app ID. Assumes that any client
     // that exists in an app context will be attaching our app ID header.
     getAppID: (): string => {
-      let headers = {}
+      let headers: Headers = {}
       config?.attachHeaders?.(headers)
       return headers?.[Header.APP_ID]
     },
