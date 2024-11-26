@@ -480,12 +480,6 @@
     }
   }
 
-  const onMoveContent = e => {
-    if (down || !viewPort) {
-      return
-    }
-  }
-
   const isDraggable = e => {
     const draggable = ["draggable-view", ...draggableClasses]
     return draggable.some(cls => e.target.classList.contains(cls))
@@ -596,11 +590,7 @@
     }}
   >
     <div class="content-wrap" style={wrapStyles} bind:this={contentWrap}>
-      <div
-        class="content"
-        bind:this={mainContent}
-        on:mousemove={Utils.domDebounce(onMoveContent)}
-      >
+      <div class="content" bind:this={mainContent}>
         <slot name="content" />
       </div>
     </div>
