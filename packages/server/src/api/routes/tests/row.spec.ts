@@ -2607,8 +2607,8 @@ if (descriptions.length) {
             name: "foo",
             description: "bar",
             tableId,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2630,8 +2630,8 @@ if (descriptions.length) {
             id: isInternal ? undefined : expect.any(Number),
             type: isInternal ? "row" : undefined,
             [`fk_${o2mTable.name}_fk_o2m`]: isInternal ? undefined : user.id,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2654,8 +2654,8 @@ if (descriptions.length) {
             _rev: expect.any(String),
             id: isInternal ? undefined : expect.any(Number),
             type: isInternal ? "row" : undefined,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2735,8 +2735,8 @@ if (descriptions.length) {
             id: isInternal ? undefined : expect.any(Number),
             type: isInternal ? "row" : undefined,
             [`fk_${o2mTable.name}_fk_o2m`]: isInternal ? undefined : user.id,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2761,8 +2761,8 @@ if (descriptions.length) {
             _rev: expect.any(String),
             id: isInternal ? undefined : expect.any(Number),
             type: isInternal ? "row" : undefined,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
