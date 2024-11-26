@@ -18,6 +18,7 @@ import {
   BasicOperator,
   BBReferenceFieldMetadata,
   CalculationType,
+  EnrichedQueryJson,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -27,7 +28,6 @@ import {
   LogicalOperator,
   Operation,
   prefixed,
-  QueryJson,
   QueryOptions,
   RangeOperator,
   RelationshipsJson,
@@ -134,18 +134,18 @@ const allowEmptyRelationships: Record<SearchFilterKey, boolean> = {
 
 class InternalBuilder {
   private readonly client: SqlClient
-  private readonly query: QueryJson
+  private readonly query: EnrichedQueryJson
   private readonly splitter: dataFilters.ColumnSplitter
   private readonly knex: Knex
 
-  constructor(client: SqlClient, knex: Knex, query: QueryJson) {
+  constructor(client: SqlClient, knex: Knex, query: EnrichedQueryJson) {
     this.client = client
     this.query = query
     this.knex = knex
 
     this.splitter = new dataFilters.ColumnSplitter([this.table], {
       aliases: this.query.tableAliases,
-      columnPrefix: this.query.meta.columnPrefix,
+      columnPrefix: this.query.meta?.columnPrefix,
     })
   }
 
@@ -167,7 +167,7 @@ class InternalBuilder {
   }
 
   get table(): Table {
-    return this.query.meta.table
+    return this.query.table
   }
 
   get knexClient(): Knex.Client {
@@ -273,8 +273,7 @@ class InternalBuilder {
   }
 
   private isFullSelectStatementRequired(): boolean {
-    const { meta } = this.query
-    for (let column of Object.values(meta.table.schema)) {
+    for (let column of Object.values(this.table.schema)) {
       if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(column)) {
         return true
       } else if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(column)) {
@@ -285,14 +284,14 @@ class InternalBuilder {
   }
 
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
-    const { meta, endpoint, resource } = this.query
+    const { endpoint, resource } = this.query
 
     if (!resource || !resource.fields || resource.fields.length === 0) {
       return "*"
     }
 
     const alias = this.getTableName(endpoint.entityId)
-    const schema = meta.table.schema
+    const schema = this.table.schema
     if (!this.isFullSelectStatementRequired()) {
       return [this.knex.raw("??", [`${alias}.*`])]
     }
@@ -1018,15 +1017,15 @@ class InternalBuilder {
       const name = tableOrName
       if (this.query.table?.name === name) {
         table = this.query.table
-      } else if (this.query.meta.table?.name === name) {
-        table = this.query.meta.table
-      } else if (!this.query.meta.tables?.[name]) {
+      } else if (this.query.table.name === name) {
+        table = this.query.table
+      } else if (!this.query.tables[name]) {
         // This can legitimately happen in custom queries, where the user is
         // querying against a table that may not have been imported into
         // Budibase.
         return name
       } else {
-        table = this.query.meta.tables[name]
+        table = this.query.tables[name]
       }
     } else if (tableOrName) {
       table = tableOrName
@@ -1238,7 +1237,7 @@ class InternalBuilder {
   ): Knex.QueryBuilder {
     const sqlClient = this.client
     const knex = this.knex
-    const { resource, tableAliases: aliases, endpoint, meta } = this.query
+    const { resource, tableAliases: aliases, endpoint, tables } = this.query
     const fields = resource?.fields || []
     for (let relationship of relationships) {
       const {
@@ -1253,7 +1252,7 @@ class InternalBuilder {
       if (!toTable || !fromTable) {
         continue
       }
-      const relatedTable = meta.tables?.[toTable]
+      const relatedTable = tables[toTable]
       const toAlias = aliases?.[toTable] || toTable,
         fromAlias = aliases?.[fromTable] || fromTable,
         throughAlias = (throughTable && aliases?.[throughTable]) || throughTable
@@ -1276,7 +1275,7 @@ class InternalBuilder {
         Math.floor(this.maxFunctionParameters() / 2)
       )
       const fieldList = relationshipFields.map(field =>
-        this.buildJsonField(relatedTable!, field)
+        this.buildJsonField(relatedTable, field)
       )
       const fieldListFormatted = fieldList
         .map(f => {
@@ -1472,9 +1471,7 @@ class InternalBuilder {
     if (this.client === SqlClient.ORACLE) {
       // Oracle doesn't seem to automatically insert nulls
       // if we don't specify them, so we need to do that here
-      for (const [column, schema] of Object.entries(
-        this.query.meta.table.schema
-      )) {
+      for (const [column, schema] of Object.entries(this.query.table.schema)) {
         if (
           schema.constraints?.presence === true ||
           schema.type === FieldType.FORMULA ||
@@ -1678,7 +1675,10 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
    * @return the query ready to be passed to the driver.
    */
-  _query(json: QueryJson, opts: QueryOptions = {}): SqlQuery | SqlQuery[] {
+  _query(
+    json: EnrichedQueryJson,
+    opts: QueryOptions = {}
+  ): SqlQuery | SqlQuery[] {
     const sqlClient = this.getSqlClient()
     const config: Knex.Config = {
       client: this.getBaseSqlClient(),
@@ -1728,34 +1728,30 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return this.convertToNative(query, opts)
   }
 
-  async getReturningRow(queryFn: QueryFunction, json: QueryJson) {
+  async getReturningRow(queryFn: QueryFunction, json: EnrichedQueryJson) {
     if (!json.extra || !json.extra.idFilter) {
       return {}
     }
     const input = this._query({
+      ...json,
       endpoint: {
         ...json.endpoint,
         operation: Operation.READ,
       },
-      resource: {
-        fields: [],
-      },
+      resource: { fields: [] },
       filters: json.extra?.idFilter,
-      paginate: {
-        limit: 1,
-      },
-      meta: json.meta,
+      paginate: { limit: 1 },
     })
     return queryFn(input, Operation.READ)
   }
 
   // when creating if an ID has been inserted need to make sure
   // the id filter is enriched with it before trying to retrieve the row
-  checkLookupKeys(id: any, json: QueryJson) {
-    if (!id || !json.meta.table || !json.meta.table.primary) {
+  checkLookupKeys(id: any, json: EnrichedQueryJson) {
+    if (!id || !json.table.primary) {
       return json
     }
-    const primaryKey = json.meta.table.primary?.[0]
+    const primaryKey = json.table.primary[0]
     json.extra = {
       idFilter: {
         equal: {
@@ -1768,7 +1764,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
 
   // this function recreates the returning functionality of postgres
   async queryWithReturning(
-    json: QueryJson,
+    json: EnrichedQueryJson,
     queryFn: QueryFunction,
     processFn: Function = (result: any) => result
   ) {

@@ -1,5 +1,5 @@
 import { Operation } from "./datasources"
-import { Row, Table, DocumentType } from "../documents"
+import { Row, DocumentType, Table, Datasource } from "../documents"
 import { SortOrder, SortType } from "../api"
 import { Knex } from "knex"
 import { Aggregation } from "./row"
@@ -171,10 +171,7 @@ export interface QueryJson {
   sort?: SortJson
   paginate?: PaginationJson
   body?: Row | Row[]
-  table?: Table
-  meta: {
-    table: Table
-    tables?: Record<string, Table>
+  meta?: {
     renamed?: RenameColumn
     // can specify something that columns could be prefixed with
     columnPrefix?: string
@@ -184,6 +181,12 @@ export interface QueryJson {
   }
   relationships?: RelationshipsJson[]
   tableAliases?: Record<string, string>
+}
+
+export interface EnrichedQueryJson extends QueryJson {
+  table: Table
+  tables: Record<string, Table>
+  datasource?: Datasource
 }
 
 export interface QueryOptions {
