@@ -8,7 +8,7 @@ export interface RowValue {
 export interface RowResponse<T extends Document | RowValue> {
   id: string
   key: string
-  error: string
+  error?: string
   value: T
   doc?: T
 }
