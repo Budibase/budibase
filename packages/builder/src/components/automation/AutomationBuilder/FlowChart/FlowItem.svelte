@@ -9,10 +9,10 @@
     Icon,
     Divider,
     Layout,
-    Detail,
     Modal,
     Label,
     AbsTooltip,
+    InlineAlert,
   } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
@@ -25,7 +25,6 @@
   import DragHandle from "components/design/settings/controls/DraggableList/drag-handle.svelte"
   import { getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
-  import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let block
   export let blockRef
@@ -227,17 +226,19 @@
                 class="splitHeader"
               >
                 <div class="center-items">
-                  <svg
-                    width="28px"
-                    height="28px"
-                    class="spectrum-Icon"
-                    style="color:var(--spectrum-global-color-gray-700);"
-                    focusable="false"
-                  >
-                    <use xlink:href="#spectrum-icon-18-Reuse" />
-                  </svg>
+                  <div class="icon-background-loop">
+                    <svg
+                      width="20px"
+                      height="20px"
+                      class="spectrum-Icon"
+                      style="color:#000000;"
+                      focusable="false"
+                    >
+                      <use xlink:href="#spectrum-icon-18-Reuse" />
+                    </svg>
+                  </div>
                   <div class="iconAlign">
-                    <Detail size="S">Looping</Detail>
+                    <p class="label">Looping</p>
                   </div>
                 </div>
 
@@ -249,11 +250,10 @@
                       name="DeleteOutline"
                     />
                   </AbsTooltip>
-
-                  <div style="margin-left: 10px;" on:click={() => {}}>
+                  <div on:click={() => {}}>
                     <Icon
                       hoverable
-                      name={showLooping ? "ChevronDown" : "ChevronUp"}
+                      name={showLooping ? "ChevronRight" : "ChevronDown"}
                     />
                   </div>
                 </div>
@@ -321,10 +321,9 @@
                   {bindings}
                 />
                 {#if isTrigger && triggerInfo}
-                  <InfoDisplay
-                    title={triggerInfo.title}
-                    body="This trigger is tied to your '{triggerInfo.tableName}' table"
-                    icon="InfoOutline"
+                  <InlineAlert
+                    header={triggerInfo.type}
+                    message={`This trigger is tied to the "${triggerInfo.rowAction.name}" row action in your ${triggerInfo.table.name} table`}
                   />
                 {/if}
               </Layout>
@@ -373,6 +372,9 @@
     display: flex;
     align-items: center;
   }
+  .label {
+    margin: 0;
+  }
   .splitHeader {
     display: flex;
     justify-content: space-between;
@@ -383,7 +385,7 @@
     display: inline-block;
   }
   .block {
-    width: 480px;
+    width: 360px;
     font-size: 16px;
     border-radius: 4px;
   }
@@ -416,11 +418,21 @@
     display: flex;
     flex-direction: row;
     background-color: var(--background);
-    border: 1px solid var(--grey-3);
-    border-radius: 4px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 12px;
   }
   .blockSection {
     padding: var(--spacing-xl);
+  }
+  .icon-background-loop {
+    background-color: #6afdef;
+    padding: 0;
+    border-radius: 8px;
+    min-height: 32px;
+    min-width: 32px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
   }
   .separator {
     width: 1px;
@@ -432,7 +444,7 @@
   .blockTitle {
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: var(--spacing-l);
   }
   .drag-placeholder {
     height: calc(var(--psheight) - 2px);

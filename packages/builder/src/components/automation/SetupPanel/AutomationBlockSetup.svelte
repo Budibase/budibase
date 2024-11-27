@@ -653,7 +653,7 @@
   <!-- Custom Layouts -->
   {#if stepLayouts[block.stepId]}
     {#each Object.keys(stepLayouts[block.stepId] || {}) as key}
-      {#if canShowField(stepLayouts[block.stepId].schema)}
+      {#if canShowField(key, stepLayouts[block.stepId].schema)}
         {#each stepLayouts[block.stepId][key].content as config}
           {#if config.title}
             <PropField label={config.title} labelTooltip={config.tooltip}>
@@ -678,12 +678,12 @@
   {:else}
     <!-- Default Schema Property Layout -->
     {#each schemaProperties as [key, value]}
-      {#if canShowField(value)}
+      {#if canShowField(key, value)}
         {@const label = getFieldLabel(key, value)}
         <div class:block-field={shouldRenderField(value)}>
           {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
             <div class="label-container">
-              <Label>
+              <Label size="L">
                 {label}
               </Label>
               {#if value.customType === AutomationCustomIOType.TRIGGER_FILTER}
@@ -700,8 +700,8 @@
               {/if}
             </div>
           {/if}
-          <div>
-            {#if value.type === "string" && value.enum && canShowField(value)}
+          <div class:field-width={shouldRenderField(value)}>
+            {#if value.type === "string" && value.enum && canShowField(key, value)}
               <Select
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
@@ -757,7 +757,7 @@
             {:else if value.type === "attachment" || value.type === "signature_single"}
               <div class="attachment-field-wrapper">
                 <div class="label-wrapper">
-                  <Label>{label}</Label>
+                  <Label size="L">{label}</Label>
                 </div>
                 <div class="toggle-container">
                   <Toggle
@@ -996,9 +996,8 @@
     align-items: center;
     gap: var(--spacing-s);
   }
-
-  .label-container :global(label) {
-    white-space: unset;
+  .field-width {
+    width: 320px;
   }
 
   .step-fields {
@@ -1010,9 +1009,12 @@
   }
 
   .block-field {
+    display: flex;
     justify-content: space-between;
-    display: grid;
-    grid-template-columns: 1fr 320px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    flex: 1;
   }
 
   .attachment-field-width {

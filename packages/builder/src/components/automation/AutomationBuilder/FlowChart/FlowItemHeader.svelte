@@ -114,30 +114,40 @@
   <div class="splitHeader">
     <div class="center-items">
       {#if externalActions[block.stepId]}
-        <img
-          alt={externalActions[block.stepId].name}
-          width="28px"
-          height="28px"
-          src={externalActions[block.stepId].icon}
-        />
+        <div class="icon-background-external">
+          <img
+            alt={externalActions[block.stepId].name}
+            width="20px"
+            height="20px"
+            src={externalActions[block.stepId].icon}
+          />
+        </div>
+      {:else if isHeaderTrigger}
+        <div class="icon-background-trigger">
+          <svg
+            width="20px"
+            height="20px"
+            class="spectrum-Icon"
+            style="color: black;"
+            focusable="false"
+          >
+            <use xlink:href="#spectrum-icon-18-{block.icon}" />
+          </svg>
+        </div>
       {:else}
-        <svg
-          width="28px"
-          height="28px"
-          class="spectrum-Icon"
-          style="color:var(--spectrum-global-color-gray-700);"
-          focusable="false"
-        >
-          <use xlink:href="#spectrum-icon-18-{block.icon}" />
-        </svg>
+        <div class="icon-background">
+          <svg
+            width="20px"
+            height="20px"
+            class="spectrum-Icon"
+            style="color: white;"
+            focusable="false"
+          >
+            <use xlink:href="#spectrum-icon-18-{block.icon}" />
+          </svg>
+        </div>
       {/if}
       <div class="iconAlign">
-        {#if isHeaderTrigger}
-          <Body size="XS"><b>Trigger</b></Body>
-        {:else}
-          <Body size="XS"><b>{isBranch ? "Branch" : "Step"}</b></Body>
-        {/if}
-
         {#if enableNaming}
           <input
             class="input-text"
@@ -167,6 +177,7 @@
         {/if}
       </div>
     </div>
+
     <div class="blockTitle">
       {#if showTestStatus && testResult}
         <div class="status-container">
@@ -186,7 +197,7 @@
               dispatch("toggle")
             }}
             hoverable
-            name={open ? "ChevronUp" : "ChevronDown"}
+            name={open ? "ChevronDown" : "ChevronRight"}
           />
         </div>
       {/if}
@@ -201,7 +212,12 @@
         {#if !showTestStatus}
           {#if !isHeaderTrigger && !isLooped && !isBranch && (block?.features?.[Features.LOOPING] || !block.features)}
             <AbsTooltip type="info" text="Add looping">
-              <Icon on:click={addLooping} hoverable name="RotateCW" />
+              <Icon
+                on:click={addLooping}
+                tooltip={"Loop automation step"}
+                hoverable
+                name="RotateCW"
+              />
             </AbsTooltip>
           {/if}
           {#if !isHeaderTrigger}
@@ -210,9 +226,6 @@
             </AbsTooltip>
           {/if}
         {/if}
-        {#if !showTestStatus && !isHeaderTrigger}
-          <span class="action-spacer" />
-        {/if}
         {#if !showTestStatus}
           <Icon
             on:click={e => {
@@ -220,7 +233,7 @@
               dispatch("toggle")
             }}
             hoverable
-            name={open ? "ChevronUp" : "ChevronDown"}
+            name={open ? "ChevronDown" : "ChevronRight"}
           />
         {/if}
       </div>
@@ -238,9 +251,6 @@
 </div>
 
 <style>
-  .action-spacer {
-    border-left: 1px solid var(--spectrum-global-color-gray-300);
-  }
   .status-container {
     display: flex;
     align-items: center;
@@ -248,7 +258,6 @@
     gap: var(--spacing-m);
     /* You can also add padding or margin to adjust the spacing between the text and the chevron if needed. */
   }
-
   .context-actions {
     display: flex;
     gap: var(--spacing-l);
@@ -256,6 +265,37 @@
   }
   .center-items {
     display: flex;
+    align-items: center;
+  }
+  .icon-background-trigger {
+    background-color: #ffd230;
+    /*background-color: #6afdef;*/
+    padding: 0;
+    border-radius: 8px;
+    min-height: 32px;
+    min-width: 32px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .icon-background {
+    background-color: #5e12f7;
+    padding: 0;
+    border-radius: 8px;
+    min-height: 32px;
+    min-width: 32px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .icon-background-external {
+    background-color: var(--spectrum-global-color-gray-200);
+    padding: 0;
+    border-radius: 8px;
+    min-height: 32px;
+    min-width: 32px;
+    display: inline-flex;
+    justify-content: center;
     align-items: center;
   }
   .splitHeader {
@@ -267,16 +307,13 @@
     padding: 0 0 0 var(--spacing-m);
     display: inline-block;
   }
-
   .blockSection {
     padding: var(--spacing-xl);
     border: 1px solid transparent;
   }
-
   .blockTitle {
     display: flex;
   }
-
   .hide-context-actions {
     display: none;
   }
@@ -284,14 +321,13 @@
     color: var(--ink);
     background-color: transparent;
     border: 1px solid transparent;
-    width: 230px;
+    width: 100%;
     box-sizing: border-box;
     overflow: hidden;
     white-space: nowrap;
   }
-
   .input-text {
-    font-size: var(--spectrum-alias-font-size-default);
+    font-size: 16px;
     font-family: var(--font-sans);
     text-overflow: ellipsis;
     padding-left: 0px;

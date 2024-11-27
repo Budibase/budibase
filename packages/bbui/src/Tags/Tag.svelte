@@ -31,13 +31,59 @@
   {/if}
   <span class="spectrum-Tags-itemLabel"><slot /></span>
   {#if closable}
-    <ClearButton on:click />
+    <ClearButton small id="clear" on:click />
   {/if}
 </div>
 
 <style>
+  .spectrum-Tags-item > .spectrum-Icon {
+    margin-right: 2px !important;
+  }
   .spectrum-Tags-item {
-    margin-bottom: 0;
-    margin-top: 0;
+    position: relative;
+    display: inline-flex !important;
+    max-width: 100%;
+    align-items: center !important;
+    padding: 2px 8px !important;
+    background-color: var(--spectrum-global-color-gray-300);
+    border: none;
+    border-radius: 7px;
+    text-decoration: none;
+    color: var(--spectrum-global-color-gray-900);
+  }
+  /* Change the color of the tag to draw the eye */
+  .spectrum-Tags-item:has(.spectrum-Icon) {
+    position: relative;
+    display: inline-flex !important;
+    max-width: 100%;
+    align-items: center !important;
+    padding: 2px 8px !important;
+    background-color: var(--spectrum-global-color-indigo-700);
+    border: none;
+    border-radius: 7px;
+    text-decoration: none;
+    color: var(--spectrum-global-color-indigo-100);
+  }
+  /* Change the color of the tag to match the default tag when it has a close button */
+  .spectrum-Tags-item:has(.spectrum-Icon):has(button):has(svg) {
+    position: relative;
+    display: inline-flex !important;
+    max-width: 100%;
+    align-items: center !important;
+    padding: 2px 8px !important;
+    background-color: var(--spectrum-global-color-gray-300);
+    border: none;
+    border-radius: 7px;
+    text-decoration: none;
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .spectrum-Tags-itemLabel {
+    font-size: 13px;
+    font-weight: 400;
+    pointer-events: auto;
+    margin: 0 !important;
+    line-height: 1 !important;
+    height: auto;
   }
 </style>

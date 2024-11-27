@@ -182,6 +182,7 @@
   .spectrum-Dialog-heading {
     font-family: var(--font-accent);
     font-weight: 600;
+    font-size: 20px;
   }
   .spectrum-Dialog-heading.noDivider {
     margin-bottom: 12px;

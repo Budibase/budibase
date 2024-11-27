@@ -43,7 +43,7 @@
 <style>
   .action-bar {
     background-color: var(--background);
-    border-radius: 4px 4px 4px 4px;
+    border-radius: 8px;
     display: flex;
     gap: var(--spacing-m);
     padding: 8px 12px;

@@ -307,7 +307,7 @@ export function serverLogAutomation(appId?: string): Automation {
           stepId: AutomationActionStepId.SERVER_LOG,
           name: "Backend log",
           tagline: "Console log a value in the backend",
-          icon: "Monitoring",
+          icon: "FileCode",
           description: "Logs the given text to the server (using console.log)",
           internal: true,
           features: {

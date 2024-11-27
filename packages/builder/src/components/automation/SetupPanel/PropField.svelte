@@ -13,17 +13,18 @@
   style={`--comp-width: ${componentWidth}px;`}
 >
   <div class="prop-label" title={label}>
-    <Label tooltip={labelTooltip}>{label}</Label>
+    <Label size="L" tooltip={labelTooltip}>{label}</Label>
   </div>
-  <div class="prop-control">
+  <div>
     <slot />
   </div>
 </div>
 
 <style>
   .prop-field {
-    display: grid;
-    grid-template-columns: 1fr var(--comp-width);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .prop-field.fullWidth {
@@ -48,13 +49,5 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-  }
-
-  .prop-control {
-    margin-left: var(--spacing-s);
-  }
-
-  .prop-field.fullWidth .prop-control {
-    margin-left: 0px;
   }
 </style>

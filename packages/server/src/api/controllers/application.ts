@@ -303,7 +303,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
         navigation: "Top",
         title: name,
         navWidth: "Large",
-        navBackground: "var(--spectrum-global-color-gray-100)",
+        navBackground: "var(--spectrum-global-color-gray-50)",
         links: [],
       },
       theme: DefaultAppTheme,

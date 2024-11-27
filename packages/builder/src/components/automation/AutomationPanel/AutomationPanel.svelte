@@ -140,7 +140,7 @@
     flex-direction: column;
     align-items: stretch;
     border-right: var(--border-light);
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--background);
     overflow: hidden;
     transition: margin-left 300ms ease-out;
   }

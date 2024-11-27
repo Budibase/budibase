@@ -38,9 +38,11 @@
   </svg>
   <div class="spectrum-InLineAlert-header">{header}</div>
   <slot>
-    {#each split as splitMsg}
-      <div class="spectrum-InLineAlert-content">{splitMsg}</div>
-    {/each}
+    {#if message}
+      {#each split as splitMsg}
+        <div class="spectrum-InLineAlert-content">{splitMsg}</div>
+      {/each}
+    {/if}
   </slot>
   {#if onConfirm}
     <div class="spectrum-InLineAlert-footer button">
@@ -63,5 +65,8 @@
     min-width: 100px;
     margin: 0;
     border-width: 1px;
+  }
+  .spectrum-InLineAlert-header {
+    line-height: 1.2;
   }
 </style>
