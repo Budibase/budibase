@@ -1,7 +1,7 @@
 import { PutResponse } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
-export interface BackupsEndpoints {
+export interface BackupEndpoints {
   createManualBackup: (
     appId: string
   ) => Promise<{ backupId: string; message: string }>
@@ -24,9 +24,7 @@ export interface BackupsEndpoints {
   searchBackups: (opts: any) => Promise<any>
 }
 
-export const buildBackupsEndpoints = (
-  API: BaseAPIClient
-): BackupsEndpoints => ({
+export const buildBackupEndpoints = (API: BaseAPIClient): BackupEndpoints => ({
   searchBackups: async ({ appId, trigger, type, page, startDate, endDate }) => {
     const opts: any = {}
     if (page) {
