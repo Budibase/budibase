@@ -1,11 +1,31 @@
-export const buildAuthEndpoints = API => ({
+import { BaseAPIClient } from "./types"
+
+export interface AuthEndpoints {
+  logIn: (tenantId: string, username: string, password: string) => Promise<void>
+  logOut: () => Promise<{ message: string }>
+  requestForgotPassword: (
+    tenantId: string,
+    email: string
+  ) => Promise<{ message: string }>
+  resetPassword: (
+    tenantId: string,
+    password: string,
+    resetCode: string
+  ) => Promise<{ message: string }>
+
+  // TODO
+  setInitInfo: (info: any) => Promise<void>
+  getInitInfo: () => Promise<any>
+}
+
+export const buildAuthEndpoints = (API: BaseAPIClient): AuthEndpoints => ({
   /**
    * Performs a login request.
    * @param tenantId the ID of the tenant to log in to
    * @param username the username (email)
    * @param password the password
    */
-  logIn: async ({ tenantId, username, password }) => {
+  logIn: async (tenantId, username, password) => {
     return await API.post({
       url: `/api/global/auth/${tenantId}/login`,
       body: {
@@ -49,7 +69,7 @@ export const buildAuthEndpoints = API => ({
    * @param tenantId the ID of the tenant the user is in
    * @param email the email address of the user
    */
-  requestForgotPassword: async ({ tenantId, email }) => {
+  requestForgotPassword: async (tenantId, email) => {
     return await API.post({
       url: `/api/global/auth/${tenantId}/reset`,
       body: {
@@ -64,7 +84,7 @@ export const buildAuthEndpoints = API => ({
    * @param password the new password to set
    * @param resetCode the reset code to authenticate the request
    */
-  resetPassword: async ({ tenantId, password, resetCode }) => {
+  resetPassword: async (tenantId, password, resetCode) => {
     return await API.post({
       url: `/api/global/auth/${tenantId}/reset/update`,
       body: {
