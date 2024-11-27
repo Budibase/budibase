@@ -142,7 +142,6 @@ layeredFilterGroup.items.properties.groups = filterGroup
 const viewQuerySchema = {
   description: "Search parameters for view",
   type: "object",
-  required: [],
   properties: {
     logicalOperator,
     onEmptyFilter: {
