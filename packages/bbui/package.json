@@ -91,8 +91,7 @@
         "dependsOn": [
           {
             "projects": [
-              "@budibase/string-templates",
-              "@budibase/shared-core"
+              "@budibase/string-templates"
             ],
             "target": "build"
           }
