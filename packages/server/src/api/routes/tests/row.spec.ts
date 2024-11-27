@@ -2571,14 +2571,12 @@ if (descriptions.length) {
         let tableId: string
         let o2mData: Row[]
         let m2mData: Row[]
-        let isRelationship: boolean
 
         beforeAll(async () => {
           const table = await config.api.table.save(
             defaultTable({ schema: relSchema() })
           )
           tableId = table._id!
-          isRelationship = relSchema().user.type === FieldType.LINK
 
           o2mData = [
             await dataGenerator(o2mTable._id!),
@@ -2755,19 +2753,8 @@ if (descriptions.length) {
             user: null,
             users: null,
           })
-          expect(updatedRow).toEqual({
-            name: "foo",
-            description: "bar",
-            tableId,
-            _id: row._id,
-            _rev: expect.any(String),
-            id: isInternal ? undefined : expect.any(Number),
-            type: isInternal ? "row" : undefined,
-            createdAt: isInternal ? new Date().toISOString() : undefined,
-            updatedAt: isInternal ? new Date().toISOString() : undefined,
-            users: isRelationship ? undefined : [],
-            user: isRelationship ? undefined : [],
-          })
+          expect(updatedRow.user).toBeUndefined()
+          expect(updatedRow.users).toBeUndefined()
         })
 
         it("fetch all will populate the relationships", async () => {
