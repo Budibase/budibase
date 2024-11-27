@@ -228,7 +228,7 @@ async function runSqlQuery(
 ) {
   const relationshipJunctionTableIds = relationships.map(rel => rel.through!)
   const alias = new AliasTables(
-    tables.map(table => table.name).concat(relationshipJunctionTableIds)
+    tables.map(table => table._id!).concat(relationshipJunctionTableIds)
   )
   if (opts?.countTotalRows) {
     json.endpoint.operation = Operation.COUNT

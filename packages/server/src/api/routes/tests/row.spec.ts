@@ -3276,7 +3276,7 @@ if (descriptions.length) {
           })
         }
 
-        it.only("should be able to search for rows containing formulas", async () => {
+        it("should be able to search for rows containing formulas", async () => {
           const { rows } = await config.api.row.search(table._id!)
           expect(rows.length).toBe(1)
           expect(rows[0].links.length).toBe(1)
