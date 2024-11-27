@@ -837,7 +837,7 @@ if (descriptions.length) {
 
           const res = await config.api.datasource.query({
             endpoint: {
-              datasource: datasource._id!,
+              datasourceId: datasource._id!,
               operation: Operation.READ,
               entityId,
             },

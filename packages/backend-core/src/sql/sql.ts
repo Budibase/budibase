@@ -3,7 +3,6 @@ import * as dbCore from "../db"
 import {
   getNativeSql,
   isExternalTable,
-  isInternalTableID,
   isInvalidISODateString,
   isValidFilter,
   isValidISODateString,
@@ -497,9 +496,8 @@ class InternalBuilder {
     filterKey: string,
     whereCb: (filterKey: string, query: Knex.QueryBuilder) => Knex.QueryBuilder
   ): Knex.QueryBuilder {
-    const { relationships, endpoint, tableAliases: aliases } = this.query
-    const tableName = endpoint.entityId
-    const fromAlias = aliases?.[tableName] || tableName
+    const { relationships, endpoint, tableAliases: aliases, table } = this.query
+    const fromAlias = aliases?.[table.name] || table.name
     const matches = (value: string) =>
       filterKey.match(new RegExp(`^${value}\\.`))
     if (!relationships) {
@@ -1455,14 +1453,14 @@ class InternalBuilder {
   }
 
   qualifiedKnex(opts?: { alias?: string | boolean }): Knex.QueryBuilder {
-    let alias = this.query.tableAliases?.[this.query.endpoint.entityId]
+    let alias = this.query.tableAliases?.[this.query.table.name]
     if (opts?.alias === false) {
       alias = undefined
     } else if (typeof opts?.alias === "string") {
       alias = opts.alias
     }
     return this.knex(
-      this.tableNameWithSchema(this.query.endpoint.entityId, {
+      this.tableNameWithSchema(this.query.table.name, {
         alias,
         schema: this.query.endpoint.schema,
       })
@@ -1558,11 +1556,10 @@ class InternalBuilder {
       limits?: { base: number; query: number }
     } = {}
   ): Knex.QueryBuilder {
-    let { endpoint, filters, paginate, relationships } = this.query
+    let { endpoint, filters, paginate, relationships, table } = this.query
     const { limits } = opts
     const counting = endpoint.operation === Operation.COUNT
 
-    const tableName = endpoint.entityId
     // start building the query
     let query = this.qualifiedKnex()
     // handle pagination
@@ -1610,9 +1607,7 @@ class InternalBuilder {
 
     // handle relationships with a CTE for all others
     if (relationships?.length && aggregations.length === 0) {
-      const mainTable =
-        this.query.tableAliases?.[this.query.endpoint.entityId] ||
-        this.query.endpoint.entityId
+      const mainTable = this.query.tableAliases?.[table.name] || table.name
       const cte = this.addSorting(
         this.knex
           .with("paginated", query)
@@ -1622,7 +1617,7 @@ class InternalBuilder {
           })
       )
       // add JSON aggregations attached to the CTE
-      return this.addJsonRelationships(cte, tableName, relationships)
+      return this.addJsonRelationships(cte, table.name, relationships)
     }
 
     return query
