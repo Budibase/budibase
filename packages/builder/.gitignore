@@ -6,3 +6,4 @@ release/
 dist/
 routify
 .routify/
+.rollup.cache
