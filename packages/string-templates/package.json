@@ -2,18 +2,9 @@
   "name": "@budibase/string-templates",
   "version": "0.0.0",
   "description": "Handlebars wrapper for Budibase templating.",
-  "main": "dist/bundle.cjs",
-  "module": "dist/bundle.mjs",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MPL-2.0",
-  "exports": {
-    ".": {
-      "require": "./dist/bundle.cjs",
-      "import": "./dist/bundle.mjs"
-    },
-    "./package.json": "./package.json",
-    "./iife": "./dist/iife.mjs"
-  },
   "scripts": {
     "build": "node scripts/build.js -p tsconfig.json && tsc --emitDeclarationOnly",
     "dev": "yarn build",

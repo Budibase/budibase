@@ -24,6 +24,10 @@ export default defineConfig({
     alias: {
       "@budibase/shared-core": path.resolve(__dirname, "../shared-core/src"),
       "@budibase/types": path.resolve(__dirname, "../types/src"),
+      // "@budibase/string-templates": path.resolve(
+      //   __dirname,
+      //   "../string-templates/src"
+      // ),
     },
   },
 })
