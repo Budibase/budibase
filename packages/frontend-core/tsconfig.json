@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@budibase/types": ["../types/src"],
+      "@budibase/shared-core": ["../shared-core/src"]
+    }
+  }
+}
