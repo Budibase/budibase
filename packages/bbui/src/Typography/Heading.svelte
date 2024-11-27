@@ -1,9 +1,9 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/typography/dist/index-vars.css"
 
   // Sizes
   export let size = "M"
-  export let textAlign
+  export let textAlign = undefined
   export let noPadding = false
   export let weight = "default" // light, heavy, default
 </script>

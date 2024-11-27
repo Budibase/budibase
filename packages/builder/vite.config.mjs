@@ -3,6 +3,7 @@ import replace from "@rollup/plugin-replace"
 import { defineConfig, loadEnv } from "vite"
 import { viteStaticCopy } from "vite-plugin-static-copy"
 import path from "path"
+import typescript from "@rollup/plugin-typescript"
 
 const ignoredWarnings = [
   "unused-export-let",
@@ -35,7 +36,7 @@ export default defineConfig(({ mode }) => {
     // Copy fonts to an additional path so that svelte's automatic
     // prefixing of the base URL path can still resolve assets
     copyFonts("builder/fonts"),
-]
+  ]
 
   return {
     test: {
@@ -61,6 +62,7 @@ export default defineConfig(({ mode }) => {
       sourcemap: !isProduction,
     },
     plugins: [
+      typescript({ outDir: "../server/builder/dist" }),
       svelte({
         hot: !isProduction,
         emitCss: true,

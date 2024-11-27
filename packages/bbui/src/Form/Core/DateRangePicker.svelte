@@ -2,13 +2,6 @@
   import CoreDatePicker from "./DatePicker/DatePicker.svelte"
   import Icon from "../../Icon/Icon.svelte"
 
-  export let value = null
-  export let disabled = false
-  export let readonly = false
-  export let error = null
-  export let appendTo = undefined
-  export let ignoreTimezones = false
-
   let fromDate
   let toDate
 </script>
