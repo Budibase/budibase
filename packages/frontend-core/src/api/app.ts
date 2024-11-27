@@ -40,7 +40,7 @@ export interface AppEndpoints {
   ) => Promise<App>
   addSampleData: (appId: string) => Promise<void>
 
-  // TODO
+  // Missing request or response types
   publishAppChanges: (appId: string) => Promise<any>
   revertAppChanges: (appId: string) => Promise<any>
   updateAppClientVersion: (appId: string) => Promise<any>

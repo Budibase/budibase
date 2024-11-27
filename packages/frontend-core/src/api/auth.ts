@@ -13,7 +13,7 @@ export interface AuthEndpoints {
     resetCode: string
   ) => Promise<{ message: string }>
 
-  // TODO
+  // Missing request or response types
   setInitInfo: (info: any) => Promise<void>
   getInitInfo: () => Promise<any>
 }

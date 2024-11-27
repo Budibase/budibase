@@ -6,7 +6,7 @@ import {
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
-export interface AuditLogsEndpoints {
+export interface AuditLogEndpoints {
   searchAuditLogs: (
     opts: SearchAuditLogsRequest
   ) => Promise<SearchAuditLogsResponse>
@@ -49,9 +49,9 @@ const buildOpts = (opts: SearchAuditLogsRequest) => {
   return parsedOpts
 }
 
-export const buildAuditLogsEndpoints = (
+export const buildAuditLogEndpoints = (
   API: BaseAPIClient
-): AuditLogsEndpoints => ({
+): AuditLogEndpoints => ({
   searchAuditLogs: async opts => {
     return await API.post({
       url: `/api/global/auditlogs/search`,
