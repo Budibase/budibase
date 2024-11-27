@@ -3,6 +3,7 @@ import { AnalyticsEndpoints } from "./analytics"
 import { AppEndpoints } from "./app"
 import { AttachmentEndpoints } from "./attachments"
 import { AuditLogsEndpoints } from "./auditLogs"
+import { AuthEndpoints } from "./auth"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -50,4 +51,5 @@ export type APIClient = BaseAPIClient &
   AnalyticsEndpoints &
   AppEndpoints &
   AttachmentEndpoints &
-  AuditLogsEndpoints & { [key: string]: any }
+  AuditLogsEndpoints &
+  AuthEndpoints & { [key: string]: any }
