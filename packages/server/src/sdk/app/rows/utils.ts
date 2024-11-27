@@ -73,6 +73,17 @@ export function processRowCountResponse(
   }
 }
 
+function processInternalTables(tables: Table[]) {
+  const tableMap: Record<string, Table> = {}
+  for (let table of tables) {
+    // update the table name, should never query by name for SQLite
+    table.originalName = table.name
+    table.name = table._id!
+    tableMap[table._id!] = table
+  }
+  return tableMap
+}
+
 export async function enrichQueryJson(
   json: QueryJson
 ): Promise<EnrichedQueryJson> {
@@ -85,10 +96,7 @@ export async function enrichQueryJson(
   if (datasource) {
     tables = datasource.entities || {}
   } else {
-    tables = {}
-    for (const table of await sdk.tables.getAllInternalTables()) {
-      tables[table._id!] = table
-    }
+    tables = processInternalTables(await sdk.tables.getAllInternalTables())
   }
 
   const table = tables[json.endpoint.entityId]

@@ -180,19 +180,6 @@ function cleanupFilters(filters: SearchFilters, allTables: Table[]) {
   return filters
 }
 
-function buildTableMap(tables: Table[]) {
-  const tableMap: Record<string, Table> = {}
-  for (let table of tables) {
-    // update the table name, should never query by name for SQLite
-    table.originalName = table.name
-    table.name = table._id!
-    // need a primary for sorting, lookups etc
-    table.primary = ["_id"]
-    tableMap[table._id!] = table
-  }
-  return tableMap
-}
-
 // table is only needed to handle relationships
 function reverseUserColumnMapping(rows: Row[], table?: Table) {
   const prefixLength = USER_COLUMN_PREFIX.length
@@ -315,7 +302,11 @@ export async function search(
   }
 
   const allTables = await sdk.tables.getAllInternalTables()
-  const allTablesMap = buildTableMap(allTables)
+  const allTablesMap = allTables.reduce((acc, table) => {
+    acc[table._id!] = table
+    return acc
+  }, {} as Record<string, Table>)
+
   // make sure we have the mapped/latest table
   if (table._id) {
     table = allTablesMap[table._id]

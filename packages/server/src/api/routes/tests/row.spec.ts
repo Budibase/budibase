@@ -3268,7 +3268,7 @@ if (descriptions.length) {
               formula: {
                 name: "formula",
                 type: FieldType.FORMULA,
-                formula: formula,
+                formula,
                 responseType: opts?.responseType,
                 formulaType: opts?.formulaType || FormulaType.DYNAMIC,
               },
@@ -3276,7 +3276,7 @@ if (descriptions.length) {
           })
         }
 
-        it("should be able to search for rows containing formulas", async () => {
+        it.only("should be able to search for rows containing formulas", async () => {
           const { rows } = await config.api.row.search(table._id!)
           expect(rows.length).toBe(1)
           expect(rows[0].links.length).toBe(1)
@@ -3333,7 +3333,7 @@ if (descriptions.length) {
         })
 
         isInternal &&
-          it.only("should coerce a static handlebars formula", async () => {
+          it("should coerce a static handlebars formula", async () => {
             await updateFormulaColumn(encodeJS("return 1"), {
               responseType: FieldType.NUMBER,
               formulaType: FormulaType.STATIC,
