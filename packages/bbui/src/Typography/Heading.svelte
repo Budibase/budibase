@@ -20,6 +20,7 @@
 <style>
   h1 {
     font-family: var(--font-accent);
+    border: 1px solid blue;
   }
 
   h1 {

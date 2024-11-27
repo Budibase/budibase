@@ -33,7 +33,13 @@
     { value: "Center", barIcon: "TextAlignCenter" },
     { value: "Right", barIcon: "TextAlignRight" },
   ]
+  const alignLogoOptions = [
+    { value: "Left", barIcon: "AlignLeft" },
+    { value: "Center", barIcon: "AlignCenter" },
+    { value: "Right", barIcon: "AlignRight" },
+  ]
   const widthOptions = ["Max", "Large", "Medium", "Small"]
+  const logoSizeOptions = ["18px", "24px", "36px", "48px", "72px", "96px"]
 
   $: bindings = getBindableProperties(
     $selectedScreen,
@@ -130,6 +136,12 @@
               options: alignmentOptions,
             }}
           />
+          <PropertyControl
+            label="Title below logo"
+            control={Checkbox}
+            onChange={textBelow => update("textBelow", textBelow)}
+            value={$nav.textBelow}
+          />
         {/if}
         <PropertyControl
           label="Background"
@@ -171,6 +183,36 @@
               updateOnChange: false,
             }}
           />
+          <PropertyControl
+            label="Logo size"
+            control={DrawerBindableCombobox}
+            value={$nav.logoSize}
+            onChange={logoSize => update("logoSize", logoSize)}
+            {bindings}
+            props={{
+              updateOnChange: true,
+              options: logoSizeOptions,
+              appendBindingsAsOptions: false,
+            }}
+          />
+          <PropertyControl
+            label="Logo alignment"
+            control={BarButtonList}
+            onChange={logoAlign => update("logoAlign", logoAlign)}
+            value={$nav.logoAlignment}
+            props={{
+              options: alignLogoOptions,
+            }}
+          />
+
+          <!-- label="Text align"
+           control={BarButtonList}
+           onChange={align => update("textAlign", align)}
+           value={$nav.textAlign}
+           props={{
+             options: alignmentOptions,
+           }} -->
+
           <PropertyControl
             label="Logo link URL"
             control={DrawerBindableCombobox}

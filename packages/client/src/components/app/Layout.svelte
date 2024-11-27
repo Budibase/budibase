@@ -34,8 +34,11 @@
   export let navWidth
   export let pageWidth
   export let logoLinkUrl
+  export let logoSize
   export let openLogoLinkInNewTab
   export let textAlign
+  export let textBelow
+  export let logoAlign
   export let embedded = false
 
   const NavigationClasses = {
@@ -242,28 +245,58 @@
                   />
                 </div>
               {/if}
-              <div class="logo">
-                {#if !hideLogo}
-                  {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
-                    <a
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                      use:linkable
-                    >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                    </a>
-                  {:else if logoLinkUrl}
-                    <a
-                      target={openLogoLinkInNewTab ? "_blank" : "_self"}
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                    >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                    </a>
-                  {:else}
-                    <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+              <div
+                class="logo"
+                style="flex-direction: {textBelow
+                  ? 'column'
+                  : 'row'}; max-width: {navigation === 'Left'
+                  ? '165px'
+                  : '95%'};
+                  align-items: {navigation === 'Left' ? 'center' : 'left'};"
+              >
+                <div style="text-align: {logoAlign};">
+                  <p>{logoAlign}</p>
+                  {#if !hideLogo}
+                    {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
+                      <a
+                        href={getSanitizedUrl(
+                          logoLinkUrl,
+                          openLogoLinkInNewTab
+                        )}
+                        use:linkable
+                      >
+                        <img
+                          src={logoUrl || "/builder/bblogo.png"}
+                          alt={title}
+                          style="--logo-size: {logoSize};
+                          align"
+                        />
+                      </a>
+                    {:else if logoLinkUrl}
+                      <a
+                        target={openLogoLinkInNewTab ? "_blank" : "_self"}
+                        href={getSanitizedUrl(
+                          logoLinkUrl,
+                          openLogoLinkInNewTab
+                        )}
+                      >
+                        <img
+                          src={logoUrl || "/builder/bblogo.png"}
+                          alt={title}
+                          style="--logo-size: {logoSize};"
+                        />
+                      </a>
+                    {:else}
+                      <img
+                        src={logoUrl || "/builder/bblogo.png"}
+                        alt={title}
+                        style="--logo-size: {logoSize};"
+                      />
+                    {/if}
                   {/if}
-                {/if}
+                </div>
                 {#if !hideTitle && title}
-                  <Heading size="S" {textAlign}>{title}</Heading>
+                  <Heading size="S" {textAlign} style="">{title}</Heading>
                 {/if}
               </div>
               {#if !embedded}
@@ -517,20 +550,21 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: center;
     gap: var(--spacing-m);
     flex: 1 1 auto;
+    border: 1px solid red;
   }
   .logo img {
-    height: 36px;
+    width: var(--logo-size);
+    height: var(--logo-size);
   }
   .logo :global(h1) {
     font-weight: 600;
     flex: 1 1 auto;
-    width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    width: 100%;
   }
   .portal {
     display: grid;
