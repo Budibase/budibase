@@ -486,6 +486,8 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       this.log(query.sql, bindings)
       const result = await connection.execute(query.sql, bindings, options)
       return result as Result<T>
+    } catch (err) {
+      throw err
     } finally {
       if (connection) {
         try {

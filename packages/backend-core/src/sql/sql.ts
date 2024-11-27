@@ -1743,7 +1743,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       return {}
     }
     const input = this._query({
-      ...json,
+      datasource: json.datasource,
+      table: json.table,
+      tables: json.tables,
       endpoint: {
         ...json.endpoint,
         operation: Operation.READ,
