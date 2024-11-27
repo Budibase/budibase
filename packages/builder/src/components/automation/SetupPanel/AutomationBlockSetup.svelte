@@ -114,7 +114,7 @@
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
-    { allowLinks: true }
+    { allowLinks: false }
   )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = $memoBlock?.type === AutomationStepType.TRIGGER

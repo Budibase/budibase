@@ -6,4 +6,4 @@ release/
 dist/
 routify
 .routify/
-svelte.config.js
+.rollup.cache

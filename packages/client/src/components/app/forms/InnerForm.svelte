@@ -14,6 +14,10 @@
   export let disableSchemaValidation = false
   export let editAutoColumns = false
 
+  // For internal use only, to disable context when being used with standalone
+  // fields
+  export let provideContext = true
+
   // We export this store so that when we remount the inner form we can still
   // persist what step we're on
   export let currentStep
@@ -442,8 +446,14 @@
   ]
 </script>
 
-<Provider {actions} data={dataContext}>
+{#if provideContext}
+  <Provider {actions} data={dataContext}>
+    <div use:styleable={$component.styles} class={size}>
+      <slot />
+    </div>
+  </Provider>
+{:else}
   <div use:styleable={$component.styles} class={size}>
     <slot />
   </div>
-</Provider>
+{/if}
