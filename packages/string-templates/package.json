@@ -24,7 +24,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-typescript": "8.3.0",
     "doctrine": "^3.0.0",
-    "esbuild-plugin-polyfill-node": "^0.3.0",
+    "esbuild-plugins-node-modules-polyfill": "^1.6.8",
     "jest": "29.7.0",
     "marked": "^4.0.10",
     "rollup": "^2.36.2",

@@ -1,7 +1,22 @@
 const coreBuild = require("../../../scripts/build")
-const { polyfillNode } = require("esbuild-plugin-polyfill-node")
+const {
+  nodeModulesPolyfillPlugin,
+} = require("esbuild-plugins-node-modules-polyfill")
 
-coreBuild("./src/index.ts", "./dist/index.js", {
-  platform: "neutral",
-  plugins: [polyfillNode()],
-})
+const configs = [
+  {
+    input: "./src/index.ts",
+    output: "./dist/index.js",
+  },
+  {
+    input: "./src/iife.ts",
+    output: "./dist/iife.js",
+  },
+]
+
+for (const config of configs) {
+  coreBuild(config.input, config.output, {
+    platform: "neutral",
+    plugins: [nodeModulesPolyfillPlugin({ modules: ["vm"] })],
+  })
+}
