@@ -222,7 +222,7 @@ export default class AliasTables {
           aliases: this.aliasMap([
             relationship.through,
             relationship.tableName,
-            json.endpoint.entityId,
+            json.table.name,
           ]),
         }))
       }

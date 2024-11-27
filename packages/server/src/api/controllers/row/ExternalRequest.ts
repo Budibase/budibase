@@ -137,7 +137,7 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
 
 function getEndpoint(tableId: string, operation: Operation) {
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  return { datasource: datasourceId, entityId: tableName, operation }
+  return { datasourceId, entityId: tableName, operation }
 }
 
 function isOneSide(
@@ -706,8 +706,8 @@ export class ExternalRequest<T extends Operation> {
 
     let json: QueryJson = {
       endpoint: {
-        datasource: this.datasource,
-        entityId: table.name,
+        datasourceId: this.datasource,
+        entityId: table,
         operation,
       },
       resource: {

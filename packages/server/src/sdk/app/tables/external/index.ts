@@ -241,7 +241,13 @@ export async function save(
   }
 
   const operation = tableId ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE
-  await makeTableRequest(datasource, operation, tableToSave, opts?.renaming)
+  await makeTableRequest(
+    datasource,
+    operation,
+    tableToSave,
+    oldTable,
+    opts?.renaming
+  )
   // update any extra tables (like foreign keys in other tables)
   for (let extraTable of extraTablesToUpdate) {
     const oldExtraTable = oldTables[extraTable.name]

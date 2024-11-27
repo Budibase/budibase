@@ -11,19 +11,23 @@ export async function makeTableRequest(
   datasource: Datasource,
   operation: Operation,
   table: Table,
+  oldTable?: Table,
   renamed?: RenameColumn
 ) {
   const json: QueryJson = {
     endpoint: {
-      datasource,
-      entityId: table._id!,
+      datasourceId: datasource,
+      entityId: table,
       operation,
     },
   }
+  if (!json.meta) {
+    json.meta = {}
+  }
+  if (oldTable) {
+    json.meta.oldTable = oldTable
+  }
   if (renamed) {
-    if (!json.meta) {
-      json.meta = {}
-    }
     json.meta.renamed = renamed
   }
   return makeExternalQuery(json)

@@ -231,8 +231,7 @@ describe("Captures of real examples", () => {
       }, queryJson)
       expect(returningQuery).toEqual({
         sql: multiline(
-          `select top (@p0) * from [people] as [a] where CASE WHEN [a].[name] = @p1 THEN 1 ELSE 0 END = 1 and 
-               CASE WHEN [a].[age] = @p2 THEN 1 ELSE 0 END = 1 order by [a].[name] asc`
+          `select top (@p0) * from [people] where CASE WHEN [people].[name] = @p1 THEN 1 ELSE 0 END = 1 and CASE WHEN [people].[age] = @p2 THEN 1 ELSE 0 END = 1 order by [people].[name] asc`
         ),
         bindings: [1, "Test", 22],
       })
@@ -270,7 +269,7 @@ describe("Captures of real examples", () => {
       fields: string[] = ["a"]
     ): EnrichedQueryJson {
       return {
-        endpoint: { datasource: "", entityId: "", operation: op },
+        endpoint: { datasourceId: "", entityId: "", operation: op },
         resource: {
           fields,
         },

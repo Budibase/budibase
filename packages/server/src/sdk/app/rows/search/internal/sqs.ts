@@ -358,7 +358,7 @@ export async function search(
   const request: QueryJson = {
     endpoint: {
       // not important, we query ourselves
-      datasource: SQS_DATASOURCE_INTERNAL,
+      datasourceId: SQS_DATASOURCE_INTERNAL,
       entityId: table._id!,
       operation: Operation.READ,
     },

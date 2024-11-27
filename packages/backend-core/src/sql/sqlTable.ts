@@ -25,7 +25,7 @@ function generateSchema(
   schema: CreateTableBuilder,
   table: Table,
   tables: Record<string, Table>,
-  oldTable: null | Table = null,
+  oldTable?: Table,
   renamed?: RenameColumn
 ) {
   let primaryKeys = table && table.primary ? table.primary : []
@@ -55,7 +55,7 @@ function generateSchema(
   )
   for (let [key, column] of Object.entries(table.schema)) {
     // skip things that are already correct
-    const oldColumn = oldTable ? oldTable.schema[key] : null
+    const oldColumn = oldTable?.schema[key]
     if (
       (oldColumn && oldColumn.type) ||
       columnTypeSet.includes(key) ||
@@ -199,7 +199,7 @@ function buildUpdateTable(
   knex: SchemaBuilder,
   table: Table,
   tables: Record<string, Table>,
-  oldTable: Table,
+  oldTable?: Table,
   renamed?: RenameColumn
 ): SchemaBuilder {
   return knex.alterTable(table.name, schema => {
@@ -281,7 +281,7 @@ class SqlTableQueryBuilder {
           client,
           json.table,
           json.tables,
-          json.table,
+          json.meta?.oldTable,
           json.meta?.renamed
         )
 

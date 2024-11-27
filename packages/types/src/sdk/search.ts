@@ -158,8 +158,8 @@ export interface ManyToManyRelationshipJson {
 
 export interface QueryJson {
   endpoint: {
-    datasource: string | Datasource
-    entityId: string
+    datasourceId: string | Datasource
+    entityId: string | Table
     operation: Operation
     schema?: string
   }
@@ -173,6 +173,7 @@ export interface QueryJson {
   body?: Row | Row[]
   meta?: {
     renamed?: RenameColumn
+    oldTable?: Table
     // can specify something that columns could be prefixed with
     columnPrefix?: string
   }
@@ -190,7 +191,7 @@ export interface EnrichedQueryJson extends QueryJson {
 }
 
 export interface QueryJsonRequest extends Omit<QueryJson, "endpoint"> {
-  endpoint: QueryJson["endpoint"] & { datasource: string }
+  endpoint: QueryJson["endpoint"] & { datasourceId: string; entityId: string }
 }
 
 export interface QueryOptions {
