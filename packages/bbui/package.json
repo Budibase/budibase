@@ -14,17 +14,12 @@
     "./spectrum-icons-vite.js": "./src/spectrum-icons-vite.js"
   },
   "scripts": {
-    "build": "rollup -c"
+    "build": "vite build"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^16.0.0",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^11.2.1",
+    "@sveltejs/vite-plugin-svelte": "1.4.0",
     "postcss": "^8.2.9",
-    "rollup": "^2.45.2",
-    "rollup-plugin-postcss": "^4.0.0",
-    "rollup-plugin-svelte": "^7.1.0",
-    "rollup-plugin-terser": "^7.0.2"
+    "vite-plugin-commonjs": "^0.10.4"
   },
   "keywords": [
     "svelte"
