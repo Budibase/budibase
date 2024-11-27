@@ -1,10 +1,52 @@
-export const buildAutomationEndpoints = API => ({
+import {
+  Automation,
+  AutomationLogPage,
+  DeleteAutomationResponse,
+  FetchAutomationResponse,
+} from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface AutomationEndpoints {
+  getAutomations: () => Promise<FetchAutomationResponse>
+  createAutomation: (
+    automation: Automation
+  ) => Promise<{ message: string; automation: Automation }>
+  updateAutomation: (
+    automation: Automation
+  ) => Promise<{ message: string; automation: Automation }>
+  deleteAutomation: (
+    automationId: string,
+    automationRev: string
+  ) => Promise<DeleteAutomationResponse>
+  clearAutomationLogErrors: (
+    automationId: string,
+    appId: string
+  ) => Promise<{ message: string }>
+
+  // Missing request or response types
+  triggerAutomation: (
+    automationId: string,
+    fields: Record<string, any>,
+    timeout?: number
+  ) => Promise<any>
+  testAutomation: (
+    automationdId: string,
+    testData: Record<string, any>
+  ) => Promise<any>
+  getAutomationDefinitions: () => Promise<any>
+  getAutomationLogs: (options: any) => Promise<AutomationLogPage>
+}
+
+export const buildAutomationEndpoints = (
+  API: BaseAPIClient
+): AutomationEndpoints => ({
   /**
    * Executes an automation. Must have "App Action" trigger.
    * @param automationId the ID of the automation to trigger
    * @param fields the fields to trigger the automation with
+   * @param timeout an optional timeout override
    */
-  triggerAutomation: async ({ automationId, fields, timeout }) => {
+  triggerAutomation: async (automationId, fields, timeout) => {
     return await API.post({
       url: `/api/automations/${automationId}/trigger`,
       body: { fields, timeout },
@@ -16,7 +58,7 @@ export const buildAutomationEndpoints = API => ({
    * @param automationId the ID of the automation to test
    * @param testData the test data to run against the automation
    */
-  testAutomation: async ({ automationId, testData }) => {
+  testAutomation: async (automationId, testData) => {
     return await API.post({
       url: `/api/automations/${automationId}/test`,
       body: testData,
@@ -68,7 +110,7 @@ export const buildAutomationEndpoints = API => ({
    * @param automationId the ID of the automation to delete
    * @param automationRev the rev of the automation to delete
    */
-  deleteAutomation: async ({ automationId, automationRev }) => {
+  deleteAutomation: async (automationId, automationRev) => {
     return await API.delete({
       url: `/api/automations/${automationId}/${automationRev}`,
     })
@@ -99,7 +141,7 @@ export const buildAutomationEndpoints = API => ({
    * @param automationId optional - the ID of the automation to clear errors for.
    * @param appId The app ID to clear errors for.
    */
-  clearAutomationLogErrors: async ({ automationId, appId }) => {
+  clearAutomationLogErrors: async (automationId, appId) => {
     return await API.delete({
       url: "/api/automations/logs",
       body: {

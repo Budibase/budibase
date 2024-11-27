@@ -733,10 +733,7 @@ const automationActions = store => ({
         automation.definition.trigger.inputs.rowActionId
       )
     } else {
-      await API.deleteAutomation({
-        automationId: automation?._id,
-        automationRev: automation?._rev,
-      })
+      await API.deleteAutomation(automation?._id, automation?._rev)
     }
 
     store.update(state => {
@@ -818,10 +815,7 @@ const automationActions = store => ({
   test: async (automation, testData) => {
     let result
     try {
-      result = await API.testAutomation({
-        automationId: automation?._id,
-        testData,
-      })
+      result = await API.testAutomation(automation?._id, testData)
     } catch (err) {
       const message = err.message || err.status || JSON.stringify(err)
       throw `Automation test failed - ${message}`
@@ -875,10 +869,7 @@ const automationActions = store => ({
     })
   },
   clearLogErrors: async ({ automationId, appId } = {}) => {
-    return await API.clearAutomationLogErrors({
-      automationId,
-      appId,
-    })
+    return await API.clearAutomationLogErrors(automationId, appId)
   },
   addTestDataToAutomation: async data => {
     let newAutomation = cloneDeep(get(selectedAutomation).data)
