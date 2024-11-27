@@ -44,7 +44,7 @@ const svelteCompilePlugin = {
 
 var { argv } = require("yargs")
 
-async function runBuild(entry, outfile) {
+async function runBuild(entry, outfile, options) {
   const isDev = process.env.NODE_ENV !== "production"
   const tsconfig = argv["p"] || `tsconfig.build.json`
   const tsconfigPathPluginContent = JSON.parse(
@@ -63,6 +63,7 @@ async function runBuild(entry, outfile) {
       nodeExternalsPlugin({
         allowList: ["@budibase/frontend-core", "@budibase/pro", "svelte"],
       }),
+      ...(options?.plugins || []),
     ],
     preserveSymlinks: true,
     metafile: true,
@@ -114,9 +115,11 @@ async function runBuild(entry, outfile) {
     }
   })()
 
+  const { platform = "node" } = options || {}
+
   const mainBuild = build({
     ...sharedConfig,
-    platform: "node",
+    platform,
     outfile,
   })
 
@@ -136,7 +139,8 @@ async function runBuild(entry, outfile) {
 if (require.main === module) {
   const entry = argv["e"] || "./src/index.ts"
   const outfile = `dist/${entry.split("/").pop().replace(".ts", ".js")}`
-  runBuild(entry, outfile)
+  const platform = argv["platform"]
+  runBuild(entry, outfile, { platform })
 } else {
   module.exports = runBuild
 }
