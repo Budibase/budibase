@@ -76,9 +76,9 @@ export const ExtendedBudibaseRoleOptions = [
     value: BudibaseRoles.Owner,
     sortOrder: 0,
   },
+  ...BudibaseRoleOptions,
+  ...BudibaseRoleOptionsOld,
 ]
-  .concat(BudibaseRoleOptions)
-  .concat(BudibaseRoleOptionsOld)
 
 export const PlanType = {
   FREE: "free",
