@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "target": "ESNext",
+    "moduleResolution": "bundler",
     "paths": {
       "@budibase/types": ["../types/src"],
       "@budibase/shared-core": ["../shared-core/src"],
