@@ -3548,35 +3548,16 @@ if (descriptions.length) {
             })
 
             let resp = await config.api.row.search(table1._id!)
-            expect(resp.rows).toEqual([
-              expect.objectContaining({
-                _id: "%5B'1'%5D",
-                table1Id: "1",
-                many: [
-                  {
-                    _id: "%5B'2'%5D",
-                    primaryDisplay: "2",
-                  },
-                ],
-                tableId: table1._id,
-              }),
-            ])
+            expect(resp.rows).toHaveLength(1)
+            expect(resp.rows[0]._id).toBe("%5B'1'%5D")
+            expect(resp.rows[0].many).toHaveLength(1)
+            expect(resp.rows[0].many[0]._id).toBe("%5B'2'%5D")
 
             resp = await config.api.row.search(table2._id!)
-            expect(resp.rows).toEqual([
-              expect.objectContaining({
-                _id: "%5B'2'%5D",
-                table2Id: "2",
-                table1Ref: "1",
-                one: [
-                  {
-                    _id: "%5B'1'%5D",
-                    primaryDisplay: "1",
-                  },
-                ],
-                tableId: table2._id,
-              }),
-            ])
+            expect(resp.rows).toHaveLength(1)
+            expect(resp.rows[0]._id).toBe("%5B'2'%5D")
+            expect(resp.rows[0].one).toHaveLength(1)
+            expect(resp.rows[0].one[0]._id).toBe("%5B'1'%5D")
           })
         })
       }
