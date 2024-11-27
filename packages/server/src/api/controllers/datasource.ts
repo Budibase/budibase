@@ -23,7 +23,7 @@ import {
   Table,
   RowValue,
   DynamicVariable,
-  QueryJson,
+  QueryJsonRequest,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
@@ -299,7 +299,7 @@ export async function find(ctx: UserCtx) {
 }
 
 // dynamic query functionality
-export async function query(ctx: UserCtx<QueryJson>) {
+export async function query(ctx: UserCtx<QueryJsonRequest>) {
   const queryJson = ctx.request.body
   try {
     ctx.body = await makeExternalQuery(queryJson)

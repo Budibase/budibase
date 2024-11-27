@@ -158,7 +158,7 @@ export interface ManyToManyRelationshipJson {
 
 export interface QueryJson {
   endpoint: {
-    datasourceId: string
+    datasource: string | Datasource
     entityId: string
     operation: Operation
     schema?: string
@@ -187,6 +187,10 @@ export interface EnrichedQueryJson extends QueryJson {
   table: Table
   tables: Record<string, Table>
   datasource?: Datasource
+}
+
+export interface QueryJsonRequest extends Omit<QueryJson, "endpoint"> {
+  endpoint: QueryJson["endpoint"] & { datasource: string }
 }
 
 export interface QueryOptions {

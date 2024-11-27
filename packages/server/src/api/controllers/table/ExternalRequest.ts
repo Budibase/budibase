@@ -15,7 +15,7 @@ export async function makeTableRequest(
 ) {
   const json: QueryJson = {
     endpoint: {
-      datasourceId: datasource._id!,
+      datasource,
       entityId: table._id!,
       operation,
     },

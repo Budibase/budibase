@@ -9,11 +9,8 @@ import {
   SqlClient,
   Table,
 } from "@budibase/types"
-import { SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getSQLClient } from "./utils"
 import { cloneDeep } from "lodash"
-import datasources from "../datasources"
-import { BudibaseInternalDB } from "../../../db/utils"
 import { dataFilters } from "@budibase/shared-core"
 
 type PerformQueryFunction = (
@@ -185,14 +182,12 @@ export default class AliasTables {
     json: EnrichedQueryJson,
     queryFn: PerformQueryFunction
   ): Promise<DatasourcePlusQueryResponse> {
-    const datasourceId = json.endpoint.datasourceId
-    const isSqs = datasourceId === SQS_DATASOURCE_INTERNAL
-    let aliasingEnabled: boolean, datasource: Datasource
+    const datasource = json.datasource
+    const isSqs = datasource === undefined
+    let aliasingEnabled: boolean
     if (isSqs) {
       aliasingEnabled = this.isAliasingEnabled(json)
-      datasource = BudibaseInternalDB
     } else {
-      datasource = await datasources.get(datasourceId)
       aliasingEnabled = this.isAliasingEnabled(json, datasource)
     }
 

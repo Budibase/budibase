@@ -4,8 +4,6 @@ import {
   QueryJson,
   SourceName,
   SqlQuery,
-  Table,
-  TableSourceType,
   SqlClient,
   EnrichedQueryJson,
 } from "@budibase/types"
@@ -15,17 +13,6 @@ import { generator } from "@budibase/backend-core/tests"
 import sdk from "../../sdk"
 
 const Sql = sql.Sql
-
-// this doesn't exist strictly
-const TABLE: Table = {
-  type: "table",
-  sourceType: TableSourceType.EXTERNAL,
-  sourceId: "SOURCE_ID",
-  schema: {},
-  name: "tableName",
-  primary: ["id"],
-}
-
 const AliasTables = sdk.rows.AliasTables
 
 function multiline(sql: string) {
@@ -249,7 +236,7 @@ describe("Captures of real examples", () => {
 
     function getQuery(op: Operation, fields: string[] = ["a"]): QueryJson {
       return {
-        endpoint: { datasourceId: "", entityId: "", operation: op },
+        endpoint: { datasource: "", entityId: "", operation: op },
         resource: {
           fields,
         },

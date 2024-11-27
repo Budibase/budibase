@@ -23,5 +23,5 @@ export async function makeExternalQuery(
   }
 
   const integration = new Integration(enrichedJson.datasource.config)
-  return integration.query(json)
+  return integration.query(enrichedJson)
 }
