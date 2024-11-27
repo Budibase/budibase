@@ -23,6 +23,8 @@ import { isSQL } from "../../../integrations/utils"
 import { docIds, sql, SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getTableFromSource } from "../../../api/controllers/row/utils"
 import env from "../../../environment"
+import { breakExternalTableId } from "@budibase/backend-core/src/sql/utils"
+import { isDatasourceId } from "@budibase/backend-core/src/docIds"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.POSTGRES]: SqlClient.POSTGRES,
@@ -88,8 +90,18 @@ export async function enrichQueryJson(
   json: QueryJson
 ): Promise<EnrichedQueryJson> {
   let datasource: Datasource | undefined = undefined
-  if (json.endpoint.datasourceId !== SQS_DATASOURCE_INTERNAL) {
-    datasource = await sdk.datasources.get(json.endpoint.datasourceId)
+  let entityId = json.endpoint.entityId
+  if (typeof json.endpoint.datasource === "string") {
+    if (json.endpoint.datasource !== SQS_DATASOURCE_INTERNAL) {
+      datasource = await sdk.datasources.get(json.endpoint.datasource, {
+        enriched: true,
+      })
+    }
+  } else {
+    datasource = json.endpoint.datasource
+    if (isDatasourceId(entityId)) {
+      entityId = breakExternalTableId(entityId).tableName
+    }
   }
 
   let tables: Record<string, Table>
@@ -99,7 +111,7 @@ export async function enrichQueryJson(
     tables = processInternalTables(await sdk.tables.getAllInternalTables())
   }
 
-  const table = tables[json.endpoint.entityId]
+  const table = tables[entityId]
 
   return {
     table,
