@@ -5,7 +5,6 @@
   import { writable } from "svelte/store"
 
   export let dataSource
-  export let theme
   export let size
   export let disabled = false
   export let readonly = false
@@ -113,11 +112,9 @@
   {#key resetKey}
     <InnerForm
       {dataSource}
-      {theme}
       {size}
       {disabled}
       {readonly}
-      {actionType}
       {schema}
       {definition}
       {initialValues}
