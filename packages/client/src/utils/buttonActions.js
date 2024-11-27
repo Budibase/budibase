@@ -454,12 +454,7 @@ const downloadFileHandler = async action => {
     const { type } = action.parameters
     if (type === "attachment") {
       const { tableId, rowId, attachmentColumn } = action.parameters
-      const res = await API.downloadAttachment(
-        tableId,
-        rowId,
-        attachmentColumn,
-        { suppressErrors: true }
-      )
+      const res = await API.downloadAttachment(tableId, rowId, attachmentColumn)
       await downloadStream(res)
       return
     }
