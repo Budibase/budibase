@@ -27,7 +27,7 @@ export type APICallConfig = {
   suppressErrors: boolean
   cache: boolean
   body?: any
-  parseResponse?: <T>(response: Response) => Promise<T>
+  parseResponse?: <T>(response: Response) => Promise<T> | T
 }
 
 export type APICallParams = Pick<APICallConfig, "url"> & Partial<APICallConfig>
