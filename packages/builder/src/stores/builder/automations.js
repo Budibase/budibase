@@ -84,8 +84,18 @@ const automationActions = store => ({
     // The last part of the destination node address, containing the id.
     const pathEnd = destPath.at(-1)
 
-    // If they are the same then ignore the drag and drop
-    if (pathSource.id === pathEnd.id) {
+    // Check if dragging a step into its own drag zone
+    const isOwnDragzone = pathSource.id === pathEnd.id
+
+    // Check if dragging the first branch step into the branch node drag zone
+    const isFirstBranchStep =
+      pathEnd.branchStepId &&
+      pathEnd.branchIdx === pathSource.branchIdx &&
+      pathSource.stepIdx === 0
+
+    // If dragging into an area that will not affect the tree structure
+    // Ignore the drag and drop.
+    if (isOwnDragzone || isFirstBranchStep) {
       return
     }
 
