@@ -85,7 +85,7 @@ function encodeJS(binding: string) {
   return `{{ js "${Buffer.from(binding).toString("base64")}"}}`
 }
 
-const descriptions = datasourceDescribe({ only: [DatabaseName.SQS] })
+const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
 
 if (descriptions.length) {
   describe.each(descriptions)(
