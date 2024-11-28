@@ -7,7 +7,6 @@ import {
   Integration,
   Operation,
   PaginationJson,
-  QueryJson,
   QueryType,
   Row,
   Schema,
@@ -18,6 +17,7 @@ import {
   TableSourceType,
   DatasourcePlusQueryResponse,
   BBReferenceFieldSubType,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import {
@@ -381,8 +381,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     return { tables: externalTables, errors }
   }
 
-  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
-    const sheet = json.endpoint.entityId
+  async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
+    const sheet = json.table.name
     switch (json.endpoint.operation) {
       case Operation.CREATE:
         return this.create({ sheet, row: json.body as Row })
@@ -400,7 +400,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
           rowIndex: json.extra?.idFilter?.equal?.rowNumber,
           sheet,
           row: json.body,
-          table: json.meta.table,
+          table: json.table,
         })
       case Operation.DELETE:
         return this.delete({
