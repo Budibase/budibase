@@ -433,9 +433,10 @@ describe("Automation Scenarios", () => {
   })
 })
 
-datasourceDescribe(
-  { name: "", only: [DatabaseName.MYSQL] },
-  ({ config, dsProvider }) => {
+const descriptions = datasourceDescribe({ only: [DatabaseName.MYSQL] })
+
+if (descriptions.length) {
+  describe.each(descriptions)("/rows ($dbName)", ({ config, dsProvider }) => {
     let datasource: Datasource
     let client: Knex
 
@@ -531,5 +532,5 @@ datasourceDescribe(
         )
       })
     })
-  }
-)
+  })
+}

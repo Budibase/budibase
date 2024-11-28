@@ -114,9 +114,11 @@ jobs:
       - name: Test
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            yarn test --ignore=@budibase/worker --ignore=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --scope=@budibase/builder --since=${{ env.NX_BASE_BRANCH }}
           else
-            yarn test --ignore=@budibase/worker --ignore=@budibase/server
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --no-prefix -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --scope=@budibase/builder --no-prefix
           fi
 
   test-worker:
@@ -138,16 +140,22 @@ jobs:
       - name: Test worker
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            node scripts/run-affected.js --task=test --scope=@budibase/worker --since=${{ env.NX_BASE_BRANCH }}
-          else
-            yarn test --scope=@budibase/worker
+            AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/worker)
+            if [ -z "$AFFECTED" ]; then
+              echo "No affected tests to run"
+              exit 0
+            fi
           fi
+
+          cd packages/worker
+          yarn test --verbose --reporters=default --reporters=github-actions
 
   test-server:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        datasource: [mssql, mysql, postgres, mongodb, mariadb, oracle, none]
+        datasource:
+          [mssql, mysql, postgres, mongodb, mariadb, oracle, sqs, none]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -210,7 +218,7 @@ jobs:
           fi
 
           cd packages/server
-          yarn test --filter $FILTER --passWithNoTests
+          yarn test --filter $FILTER --verbose --reporters=default --reporters=github-actions
 
   check-pro-submodule:
     runs-on: ubuntu-latest

@@ -1,14 +1,17 @@
 import {
-  Datasource,
-  VerifyDatasourceRequest,
-  CreateDatasourceResponse,
-  UpdateDatasourceResponse,
-  UpdateDatasourceRequest,
-  QueryJson,
   BuildSchemaFromSourceResponse,
+  CreateDatasourceResponse,
+  Datasource,
   FetchDatasourceInfoResponse,
+  FieldType,
+  QueryJsonRequest,
+  RelationshipType,
+  UpdateDatasourceRequest,
+  UpdateDatasourceResponse,
+  VerifyDatasourceRequest,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
+import { sql } from "@budibase/backend-core"
 
 export class DatasourceAPI extends TestAPI {
   create = async (
@@ -66,10 +69,7 @@ export class DatasourceAPI extends TestAPI {
     return await this._get<Datasource[]>(`/api/datasources`, { expectations })
   }
 
-  query = async (
-    query: Omit<QueryJson, "meta"> & Partial<Pick<QueryJson, "meta">>,
-    expectations?: Expectations
-  ) => {
+  query = async (query: QueryJsonRequest, expectations?: Expectations) => {
     return await this._post<any>(`/api/datasources/query`, {
       body: query,
       expectations,
@@ -102,5 +102,51 @@ export class DatasourceAPI extends TestAPI {
         expectations,
       }
     )
+  }
+
+  addExistingRelationship = async (
+    {
+      one,
+      many,
+    }: {
+      one: { tableId: string; relationshipName: string; foreignKey: string }
+      many: { tableId: string; relationshipName: string; primaryKey: string }
+    },
+    expectations?: Expectations
+  ) => {
+    const oneTableInfo = sql.utils.breakExternalTableId(one.tableId),
+      manyTableInfo = sql.utils.breakExternalTableId(many.tableId)
+    if (oneTableInfo.datasourceId !== manyTableInfo.datasourceId) {
+      throw new Error(
+        "Tables are in different datasources, cannot create relationship."
+      )
+    }
+    const datasource = await this.get(oneTableInfo.datasourceId)
+    const oneTable = datasource.entities?.[oneTableInfo.tableName],
+      manyTable = datasource.entities?.[manyTableInfo.tableName]
+    if (!oneTable || !manyTable) {
+      throw new Error(
+        "Both tables not found in datasource, cannot create relationship."
+      )
+    }
+
+    manyTable.schema[many.relationshipName] = {
+      type: FieldType.LINK,
+      name: many.relationshipName,
+      tableId: oneTable._id!,
+      relationshipType: RelationshipType.MANY_TO_ONE,
+      fieldName: one.foreignKey,
+      foreignKey: many.primaryKey,
+      main: true,
+    }
+    oneTable.schema[one.relationshipName] = {
+      type: FieldType.LINK,
+      name: one.relationshipName,
+      tableId: manyTable._id!,
+      relationshipType: RelationshipType.ONE_TO_MANY,
+      fieldName: many.primaryKey,
+      foreignKey: one.foreignKey,
+    }
+    return await this.update(datasource, expectations)
   }
 }

@@ -9,6 +9,7 @@
     "@types/node": "20.10.0",
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/parser": "6.9.0",
+    "depcheck": "^1.4.7",
     "esbuild": "^0.18.17",
     "esbuild-node-externals": "^1.14.0",
     "eslint": "^8.52.0",
@@ -24,11 +25,12 @@
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
     "proper-lockfile": "^4.1.2",
-    "svelte": "^4.2.10",
+    "svelte": "4.2.19",
     "svelte-eslint-parser": "^0.33.1",
     "typescript": "5.5.2",
     "typescript-eslint": "^7.3.1",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "cross-spawn": "7.0.6"
   },
   "scripts": {
     "get-past-client-version": "node scripts/getPastClientVersion.js",
@@ -37,7 +39,8 @@
     "build:apps": "DISABLE_V8_COMPILE_CACHE=1 yarn build --scope @budibase/server --scope @budibase/worker",
     "build:cli": "yarn build --scope @budibase/cli",
     "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",
-    "check:types": "lerna run --concurrency 2 check:types",
+    "check:types": "yarn check:dependencies && lerna run --concurrency 2 check:types",
+    "check:dependencies": "lerna run --concurrency 2 check:dependencies",
     "build:sdk": "lerna run --stream build:sdk",
     "deps:circular": "madge packages/server/dist/index.js packages/worker/src/index.ts packages/backend-core/dist/src/index.js packages/cli/src/index.js --circular",
     "release": "lerna publish from-package --yes --force-publish --no-git-tag-version --no-push --no-git-reset",
@@ -55,7 +58,7 @@
     "dev:server": "yarn run kill-server && lerna run --stream dev --scope @budibase/worker --scope @budibase/server",
     "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream dev:built",
     "dev:docker": "./scripts/devDocker.sh",
-    "test": "lerna run --concurrency 1 --stream test --stream",
+    "test": "lerna run --concurrency 1 --stream test",
     "test:containers:kill": "./scripts/killTestcontainers.sh",
     "lint:eslint": "eslint packages --max-warnings=0",
     "lint:prettier": "prettier --check \"packages/**/*.{js,ts,svelte}\" && prettier --write \"examples/**/*.{js,ts,svelte}\"",
@@ -107,7 +110,7 @@
     "semver": "7.5.3",
     "http-cache-semantics": "4.1.1",
     "msgpackr": "1.10.1",
-    "axios": "1.6.3",
+    "axios": "1.7.7",
     "xml2js": "0.6.2",
     "unset-value": "2.0.1",
     "passport": "0.6.0",
@@ -117,6 +120,5 @@
   },
   "engines": {
     "node": ">=20.0.0 <21.0.0"
-  },
-  "dependencies": {}
+  }
 }
