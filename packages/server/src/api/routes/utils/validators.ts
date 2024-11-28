@@ -1,5 +1,4 @@
 import { auth, permissions } from "@budibase/backend-core"
-import { DataSourceOperation } from "../../../constants"
 import {
   AutomationActionStepId,
   AutomationStep,
