@@ -78,11 +78,11 @@ const searchRowRequest = z.object({
     })
     .optional(),
   paginate: z.boolean().optional(),
-  bookmark: z.union([z.string(), z.number()]).nullable().optional(),
+  bookmark: z.union([z.string(), z.number()]).nullish(),
   limit: z.number().optional(),
   sort: z.string().optional(),
   sortOrder: z.nativeEnum(SortOrder).optional(),
-  sortType: z.nativeEnum(SortType).optional(),
+  sortType: z.nativeEnum(SortType).nullish(),
   version: z.string().optional(),
   disableEscaping: z.boolean().optional(),
   countRows: z.boolean().optional(),
