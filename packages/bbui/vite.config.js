@@ -1,6 +1,5 @@
 import { defineConfig } from "vite"
 import { svelte } from "@sveltejs/vite-plugin-svelte"
-import postcss from "postcss"
 import path from "path"
 
 export default defineConfig(({ mode }) => {
@@ -19,9 +18,6 @@ export default defineConfig(({ mode }) => {
         emitCss: true,
       }),
     ],
-    css: {
-      postcss,
-    },
     resolve: {
       alias: {
         "@budibase/shared-core": path.resolve(__dirname, "../shared-core/src"),
