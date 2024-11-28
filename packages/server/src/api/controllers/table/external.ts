@@ -54,7 +54,7 @@ export async function updateTable(
     return table
   } catch (err: any) {
     if (err instanceof Error) {
-      throw err
+      ctx.throw(400, err.message)
     } else {
       ctx.throw(err.status || 500, err?.message || err)
     }
