@@ -190,10 +190,6 @@ export interface EnrichedQueryJson extends QueryJson {
   datasource?: Datasource
 }
 
-export interface QueryJsonRequest extends Omit<QueryJson, "endpoint"> {
-  endpoint: QueryJson["endpoint"] & { datasourceId: string; entityId: string }
-}
-
 export interface QueryOptions {
   disableReturning?: boolean
   disableBindings?: boolean
