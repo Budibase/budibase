@@ -36,7 +36,3 @@ function validate(schema: AnyZodObject, property: "body" | "params") {
 export function validateBody(schema: AnyZodObject) {
   return validate(schema, "body")
 }
-
-// export function validateParams(schema: AnyZodObject) {
-//   return validate(schema, "params")
-// }
