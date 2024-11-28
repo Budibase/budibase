@@ -60,7 +60,6 @@ import {
   Row,
   BBRequest,
 } from "@budibase/types"
-import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
@@ -349,12 +348,6 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
       }
       if (!existing.features?.disableUserMetadata) {
         newApplication.features!.disableUserMetadata = false
-      }
-
-      // Migrate navigation settings and screens if required
-      const navigation = await migrateAppNavigation()
-      if (navigation) {
-        newApplication.navigation = navigation
       }
     }
 
@@ -823,56 +816,4 @@ export async function setRevertableVersion(
   await db.put(app)
 
   ctx.status = 200
-}
-
-async function migrateAppNavigation() {
-  const db = context.getAppDB()
-  const existing = await sdk.applications.metadata.get()
-  const layouts: Layout[] = await getLayouts()
-  const screens: Screen[] = await getScreens()
-
-  // Migrate all screens, removing custom layouts
-  for (let screen of screens) {
-    if (!screen.layoutId) {
-      continue
-    }
-    const layout = layouts.find(layout => layout._id === screen.layoutId)
-    screen.layoutId = undefined
-    screen.showNavigation = layout?.props.navigation !== "None"
-    screen.width = layout?.props.width || "Large"
-    await db.put(screen)
-  }
-
-  // Migrate layout navigation settings
-  const { name, customTheme } = existing
-  const layout = layouts?.find(
-    (layout: Layout) => layout._id === BASE_LAYOUT_PROP_IDS.PRIVATE
-  )
-  if (layout && !existing.navigation) {
-    let navigationSettings: any = {
-      navigation: "Top",
-      title: name,
-      navWidth: "Large",
-      navBackground:
-        customTheme?.navBackground || "var(--spectrum-global-color-gray-50)",
-      navTextColor:
-        customTheme?.navTextColor || "var(--spectrum-global-color-gray-800)",
-    }
-    if (layout) {
-      navigationSettings.hideLogo = layout.props.hideLogo
-      navigationSettings.hideTitle = layout.props.hideTitle
-      navigationSettings.title = layout.props.title || name
-      navigationSettings.logoUrl = layout.props.logoUrl
-      navigationSettings.links = layout.props.links
-      navigationSettings.navigation = layout.props.navigation || "Top"
-      navigationSettings.sticky = layout.props.sticky
-      navigationSettings.navWidth = layout.props.width || "Large"
-      if (navigationSettings.navigation === "None") {
-        navigationSettings.navigation = "Top"
-      }
-    }
-    return navigationSettings
-  } else {
-    return null
-  }
 }

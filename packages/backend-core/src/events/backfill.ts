@@ -6,7 +6,6 @@ import {
   AutomationCreatedEvent,
   AutomationStepCreatedEvent,
   DatasourceCreatedEvent,
-  LayoutCreatedEvent,
   QueryCreatedEvent,
   RoleCreatedEvent,
   ScreenCreatedEvent,
@@ -104,9 +103,6 @@ const CUSTOM_PROPERTY_SUFFIX: any = {
   },
   [Event.DATASOURCE_CREATED]: (properties: DatasourceCreatedEvent) => {
     return properties.datasourceId
-  },
-  [Event.LAYOUT_CREATED]: (properties: LayoutCreatedEvent) => {
-    return properties.layoutId
   },
   [Event.QUERY_CREATED]: (properties: QueryCreatedEvent) => {
     return properties.queryId

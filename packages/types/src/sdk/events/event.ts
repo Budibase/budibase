@@ -131,10 +131,6 @@ export enum Event {
   SCREEN_CREATED = "screen:created",
   SCREEN_DELETED = "screen:deleted",
 
-  // LAYOUT
-  LAYOUT_CREATED = "layout:created",
-  LAYOUT_DELETED = "layout:deleted",
-
   // AUTOMATION
   AUTOMATION_CREATED = "automation:created",
   AUTOMATION_DELETED = "automation:deleted",
@@ -360,10 +356,6 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.TENANT_BACKFILL_FAILED]: undefined,
   [Event.INSTALLATION_BACKFILL_SUCCEEDED]: undefined,
   [Event.INSTALLATION_BACKFILL_FAILED]: undefined,
-
-  // LAYOUT - NOT AUDITED
-  [Event.LAYOUT_CREATED]: undefined,
-  [Event.LAYOUT_DELETED]: undefined,
 
   // VIEW - NOT AUDITED
   [Event.VIEW_CREATED]: undefined,

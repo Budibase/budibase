@@ -1,5 +1,4 @@
 import { roles } from "@budibase/backend-core"
-import { BASE_LAYOUT_PROP_IDS } from "./layouts"
 import { Screen } from "@budibase/types"
 
 export function createHomeScreen(
@@ -12,7 +11,6 @@ export function createHomeScreen(
   }
 ): Screen {
   return {
-    layoutId: BASE_LAYOUT_PROP_IDS.PRIVATE,
     props: {
       _id: "d834fea2-1b3e-4320-ab34-f9009f5ecc59",
       _component: "@budibase/standard-components/container",

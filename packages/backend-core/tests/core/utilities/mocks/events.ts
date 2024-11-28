@@ -47,9 +47,6 @@ beforeAll(async () => {
   jest.spyOn(events.email, "SMTPCreated")
   jest.spyOn(events.email, "SMTPUpdated")
 
-  jest.spyOn(events.layout, "created")
-  jest.spyOn(events.layout, "deleted")
-
   jest.spyOn(events.org, "nameUpdated")
   jest.spyOn(events.org, "logoUpdated")
   jest.spyOn(events.org, "platformURLUpdated")

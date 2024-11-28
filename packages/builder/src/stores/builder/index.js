@@ -1,4 +1,3 @@
-import { layoutStore } from "./layouts.js"
 import { appStore } from "./app.js"
 import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation.js"
@@ -34,7 +33,6 @@ import { appPublished } from "./published"
 
 export {
   componentTreeNodesStore,
-  layoutStore,
   appStore,
   componentStore,
   navigationStore,
@@ -74,7 +72,6 @@ export const reset = () => {
   builderStore.reset()
   screenStore.reset()
   componentStore.reset()
-  layoutStore.reset()
   navigationStore.reset()
   rowActions.reset()
 }
@@ -109,7 +106,6 @@ export const initialise = async pkg => {
   themeStore.syncAppTheme(application)
   snippets.syncMetadata(application)
   screenStore.syncAppScreens(pkg)
-  layoutStore.syncAppLayouts(pkg)
   resetBuilderHistory()
   await refreshBuilderData()
 }

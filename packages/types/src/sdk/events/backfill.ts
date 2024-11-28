@@ -4,7 +4,6 @@ export interface AppBackfillSucceededEvent extends BaseEvent {
   appId: string
   automations: number
   datasources: number
-  layouts: number
   queries: number
   roles: number
   tables: number

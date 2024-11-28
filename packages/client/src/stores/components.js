@@ -4,9 +4,7 @@ import { findComponentById, findComponentPathById } from "../utils/components"
 import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 import { builderStore } from "./builder"
-import Router from "../components/Router.svelte"
 import * as AppComponents from "../components/app/index.js"
-import { ScreenslotType } from "../constants.js"
 
 export const BudibasePrefix = "@budibase/standard-components/"
 
@@ -105,11 +103,6 @@ const createComponentStore = () => {
       return null
     }
 
-    // Screenslot is an edge case
-    if (type === ScreenslotType) {
-      type = `${BudibasePrefix}${type}`
-    }
-
     // Handle built-in components
     if (type.startsWith(BudibasePrefix)) {
       type = type.replace(BudibasePrefix, "")
@@ -124,9 +117,6 @@ const createComponentStore = () => {
   const getComponentConstructor = type => {
     if (!type) {
       return null
-    }
-    if (type === ScreenslotType) {
-      return Router
     }
 
     // Handle budibase components

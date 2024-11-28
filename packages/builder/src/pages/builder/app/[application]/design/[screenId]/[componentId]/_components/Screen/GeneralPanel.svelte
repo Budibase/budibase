@@ -4,7 +4,6 @@
     Helpers,
     Input,
     Checkbox,
-    Banner,
     Select,
     notifications,
   } from "@budibase/bbui"
@@ -72,7 +71,6 @@
         props: {
           options: ["Extra small", "Small", "Medium", "Large", "Max"],
           placeholder: "Default",
-          disabled: !!screen.layoutId,
         },
       },
       {
@@ -149,22 +147,8 @@
       notifications.error("Error saving screen settings")
     }
   }
-
-  const removeCustomLayout = async () => {
-    return screenStore.removeCustomLayout(get(selectedScreen))
-  }
 </script>
 
-{#if $selectedScreen.layoutId}
-  <Banner
-    type="warning"
-    extraButtonText="Detach custom layout"
-    extraButtonAction={removeCustomLayout}
-    showCloseButton={false}
-  >
-    This screen uses a custom layout, which is deprecated
-  </Banner>
-{/if}
 {#each screenSettings as setting (setting.key)}
   <PropertyControl
     control={setting.control}
