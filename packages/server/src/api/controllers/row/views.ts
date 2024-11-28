@@ -57,7 +57,7 @@ function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
     return {
       sort: request.sort,
       sortOrder: request.sortOrder,
-      sortType: request.sortType,
+      sortType: request.sortType ?? undefined,
     }
   }
   if (view.sort) {
