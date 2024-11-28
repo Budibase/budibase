@@ -1,13 +1,20 @@
 import { writable } from "svelte/store"
 
+type GotoFuncType = (path: string) => void
+
+interface Store {
+  initialisated: boolean
+  goto: GotoFuncType
+}
+
 export function createNavigationStore() {
-  const store = writable({
+  const store = writable<Store>({
     initialisated: false,
-    goto: undefined,
+    goto: undefined as any,
   })
   const { set, subscribe } = store
 
-  const init = gotoFunc => {
+  const init = (gotoFunc: GotoFuncType) => {
     if (typeof gotoFunc !== "function") {
       throw new Error(
         `gotoFunc must be a function, found a "${typeof gotoFunc}" instead`
