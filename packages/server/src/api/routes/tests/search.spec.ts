@@ -3329,7 +3329,7 @@ if (descriptions.length) {
               })
 
             isSql &&
-              describe("primaryDisplay", () => {
+              describe.only("primaryDisplay", () => {
                 beforeAll(async () => {
                   let toRelateTableId = await createTable({
                     name: {
