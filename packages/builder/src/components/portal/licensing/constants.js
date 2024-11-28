@@ -1,6 +1,4 @@
 export const ExpiringKeys = {
-  LICENSING_DAYPASS_WARNING_MODAL: "licensing_daypass_warning_90_modal",
-  LICENSING_DAYPASS_WARNING_BANNER: "licensing_daypass_warning_90_banner",
   LICENSING_PAYMENT_FAILED: "licensing_payment_failed",
   LICENSING_ACCOUNT_DOWNGRADED_MODAL: "licensing_account_downgraded_modal",
   LICENSING_APP_LIMIT_MODAL: "licensing_app_limit_modal",
