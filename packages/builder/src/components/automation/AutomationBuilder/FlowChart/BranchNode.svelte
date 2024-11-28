@@ -34,7 +34,7 @@
 
   let drawer
   let condition
-  let open = true
+  let open = false
   let confirmDeleteModal
 
   $: branch = step.inputs?.branches?.[branchIdx]
@@ -220,7 +220,7 @@
     display: inline-block;
   }
   .block {
-    width: 360px;
+    width: 380px;
     font-size: 16px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);

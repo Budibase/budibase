@@ -39,8 +39,8 @@
   const contentPos = getContext("contentPos")
 
   let webhookModal
-  let open = true
-  let showLooping = false
+  let open = false
+  let showLooping = true
   let role
   let blockEle
   let positionStyles
@@ -387,7 +387,6 @@
   .block {
     width: 360px;
     font-size: 16px;
-    border-radius: 4px;
   }
   .block .wrap {
     width: 100%;
@@ -398,20 +397,27 @@
     flex-direction: row;
   }
   .block.draggable .wrap .handle {
-    height: auto;
+    position: absolute;
+    top: -0.5px;
+    left: -14px;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: var(--grey-3);
-    padding: 6px;
+    padding: 0 4px;
+    height: 100%;
     color: var(--grey-6);
     cursor: grab;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
   }
   .block.draggable .wrap .handle.grabbing {
     cursor: grabbing;
   }
   .block.draggable .wrap .handle :global(.drag-handle) {
     width: 6px;
+    margin-left: 1px;
+    padding-top: 4px;
   }
   .block .wrap .block-content {
     width: 100%;
@@ -420,6 +426,10 @@
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 12px;
+  }
+  .block-content:has(.handle) {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
   }
   .blockSection {
     padding: var(--spacing-xl);

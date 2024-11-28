@@ -91,7 +91,7 @@
 <style>
   .item-body {
     display: flex;
-    margin-left: var(--spacing-m);
+    margin-left: var(--spacing-xs);
     gap: var(--spacing-m);
     align-items: center;
   }

@@ -221,6 +221,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: var(--background);
+    border-bottom: var(--border-light);
     padding-left: var(--spacing-l);
     transition: background 130ms ease-out;
     flex: 0 0 60px;
