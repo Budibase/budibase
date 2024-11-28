@@ -69,13 +69,6 @@ export class DatasourceAPI extends TestAPI {
     return await this._get<Datasource[]>(`/api/datasources`, { expectations })
   }
 
-  query = async (query: QueryJsonRequest, expectations?: Expectations) => {
-    return await this._post<any>(`/api/datasources/query`, {
-      body: query,
-      expectations,
-    })
-  }
-
   fetchSchema = async (
     {
       datasourceId,
