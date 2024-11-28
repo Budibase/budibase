@@ -509,8 +509,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const schema = this.config.schema
     await this.connect()
-    if (schema && schema !== DEFAULT_SCHEMA && json?.endpoint) {
-      json.endpoint.schema = schema
+    if (schema && schema !== DEFAULT_SCHEMA) {
+      json.schema = schema
     }
     const operation = this._operation(json)
     const queryFn = (query: any, op: string) => this.internalQuery(query, op)

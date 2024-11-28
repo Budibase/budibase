@@ -23,13 +23,11 @@ import {
   Table,
   RowValue,
   DynamicVariable,
-  QueryJsonRequest,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { isEqual } from "lodash"
 import { processTable } from "../../sdk/app/tables/getters"
-import { makeExternalQuery } from "../../integrations/base/query"
 
 export async function fetch(ctx: UserCtx) {
   ctx.body = await sdk.datasources.fetch()
