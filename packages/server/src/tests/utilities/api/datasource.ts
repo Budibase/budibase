@@ -4,7 +4,6 @@ import {
   Datasource,
   FetchDatasourceInfoResponse,
   FieldType,
-  QueryJsonRequest,
   RelationshipType,
   UpdateDatasourceRequest,
   UpdateDatasourceResponse,

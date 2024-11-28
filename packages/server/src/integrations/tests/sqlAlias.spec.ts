@@ -269,7 +269,7 @@ describe("Captures of real examples", () => {
       fields: string[] = ["a"]
     ): EnrichedQueryJson {
       return {
-        endpoint: { datasourceId: "", entityId: "", operation: op },
+        operation: op,
         resource: {
           fields,
         },
