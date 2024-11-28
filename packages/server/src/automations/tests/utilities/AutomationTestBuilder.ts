@@ -35,6 +35,7 @@ import {
   Branch,
   FilterStepInputs,
   ExecuteScriptStepInputs,
+  OpenAIStepInputs,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
@@ -219,6 +220,18 @@ class BaseStepBuilder {
       AutomationActionStepId.FILTER,
       BUILTIN_ACTION_DEFINITIONS.FILTER,
       input
+    )
+  }
+
+  openai(
+    input: OpenAIStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.OPENAI,
+      BUILTIN_ACTION_DEFINITIONS.OPENAI,
+      input,
+      opts
     )
   }
 }

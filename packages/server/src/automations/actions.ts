@@ -96,6 +96,11 @@ if (env.SELF_HOSTED) {
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
   // @ts-ignore
   BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
+
+  if (env.isTest()) {
+    ACTION_IMPLS["OPENAI"] = openai.run
+    BUILTIN_ACTION_DEFINITIONS["OPENAI"] = openai.definition
+  }
 }
 
 export async function getActionDefinitions() {
