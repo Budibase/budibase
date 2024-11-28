@@ -1,10 +1,4 @@
-import {
-  Datasource,
-  Operation,
-  Query,
-  QueryPreview,
-  TableSourceType,
-} from "@budibase/types"
+import { Datasource, Query, QueryPreview } from "@budibase/types"
 import {
   DatabaseName,
   datasourceDescribe,
