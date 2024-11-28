@@ -231,7 +231,7 @@ async function runSqlQuery(
     tables.map(table => table._id!).concat(relationshipJunctionTableIds)
   )
   if (opts?.countTotalRows) {
-    json.endpoint.operation = Operation.COUNT
+    json.operation = Operation.COUNT
   }
   const processSQLQuery = async (json: EnrichedQueryJson) => {
     const query = builder._query(json, {

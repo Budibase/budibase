@@ -572,11 +572,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
         return response.rows as Row[]
       } else {
         // get the last row that was updated
-        if (
-          response.lastRowid &&
-          json.endpoint?.entityId &&
-          operation !== Operation.DELETE
-        ) {
+        if (response.lastRowid && operation !== Operation.DELETE) {
           const lastRow = await this.internalQuery({
             sql: `SELECT * FROM "${json.table.name}" WHERE ROWID = '${response.lastRowid}'`,
           })
