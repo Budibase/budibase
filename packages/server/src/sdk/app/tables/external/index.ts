@@ -253,7 +253,7 @@ export async function save(
     const oldExtraTable = oldTables[extraTable.name]
     let op = oldExtraTable ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE
     try {
-      await makeTableRequest(datasource, op, extraTable)
+      await makeTableRequest(datasource, op, extraTable, oldExtraTable)
     } catch (err: any) {
       throw err
     }
