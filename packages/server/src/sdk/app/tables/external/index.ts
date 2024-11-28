@@ -252,11 +252,7 @@ export async function save(
   for (let extraTable of extraTablesToUpdate) {
     const oldExtraTable = oldTables[extraTable.name]
     let op = oldExtraTable ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE
-    try {
-      await makeTableRequest(datasource, op, extraTable, oldExtraTable)
-    } catch (err: any) {
-      throw err
-    }
+    await makeTableRequest(datasource, op, extraTable, oldExtraTable)
   }
 
   // make sure the constrained list, all still exist
