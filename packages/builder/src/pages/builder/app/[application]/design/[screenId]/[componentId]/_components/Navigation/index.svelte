@@ -122,21 +122,25 @@
               updateOnChange: false,
             }}
           />
-          <PropertyControl
-            label="Text align"
-            control={BarButtonList}
-            onChange={align => update("textAlign", align)}
-            value={$nav.textAlign}
-            props={{
-              options: alignmentOptions,
-            }}
-          />
-          <PropertyControl
-            label="Title below logo"
-            control={Checkbox}
-            onChange={textBelow => update("textBelow", textBelow)}
-            value={$nav.textBelow}
-          />
+          {#if !$nav.textBelow}
+            <PropertyControl
+              label="Text align"
+              control={BarButtonList}
+              onChange={align => update("textAlign", align)}
+              value={$nav.textAlign}
+              props={{
+                options: alignmentOptions,
+              }}
+            />
+          {/if}
+          {#if $nav.navigation !== "Top"}
+            <PropertyControl
+              label="Title below logo"
+              control={Checkbox}
+              onChange={textBelow => update("textBelow", textBelow)}
+              value={$nav.textBelow}
+            />
+          {/if}
         {/if}
         <PropertyControl
           label="Background"

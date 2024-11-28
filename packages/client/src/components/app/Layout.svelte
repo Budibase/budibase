@@ -246,12 +246,14 @@
               {/if}
               <div
                 class="logo"
-                style="flex-direction: {textBelow
+                style="flex-direction: {textBelow && navigation === 'Left'
                   ? 'column'
                   : 'row'}; max-width: {navigation === 'Left'
                   ? '165px'
                   : '95%'};
-                  align-items: {navigation === 'Left' ? 'center' : 'left'};"
+                  align-items: {navigation === 'Left'
+                  ? 'center'
+                  : 'center'}; border: 10px solid lime;"
               >
                 <div>
                   {#if !hideLogo}
