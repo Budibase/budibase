@@ -383,7 +383,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
   async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const sheet = json.table.name
-    switch (json.endpoint.operation) {
+    switch (json.operation) {
       case Operation.CREATE:
         return this.create({ sheet, row: json.body as Row })
       case Operation.BULK_CREATE:
@@ -426,7 +426,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
         return this.deleteTable(json?.table?.name)
       default:
         throw new Error(
-          `GSheets integration does not support "${json.endpoint.operation}".`
+          `GSheets integration does not support "${json.operation}".`
         )
     }
   }
