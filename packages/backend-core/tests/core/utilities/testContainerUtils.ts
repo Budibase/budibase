@@ -25,7 +25,7 @@ function getTestcontainers(): ContainerInfo[] {
   // We use --format json to make sure the output is nice and machine-readable,
   // and we use --no-trunc so that the command returns full container IDs so we
   // can filter on them correctly.
-  return execSync("docker ps --format json --no-trunc")
+  return execSync("docker ps --all --format json --no-trunc")
     .toString()
     .split("\n")
     .filter(x => x.length > 0)
@@ -35,6 +35,10 @@ function getTestcontainers(): ContainerInfo[] {
         x.Labels.includes("org.testcontainers=true") &&
         x.Labels.includes("com.budibase=true")
     )
+}
+
+function removeContainer(container: ContainerInfo) {
+  execSync(`docker rm ${container.ID}`)
 }
 
 export function getContainerByImage(image: string) {
@@ -47,6 +51,10 @@ export function getContainerByImage(image: string) {
     throw new Error(errorMessage)
   }
   return containers[0]
+}
+
+function getContainerByName(name: string) {
+  return getTestcontainers().find(x => x.Names === name)
 }
 
 export function getContainerById(id: string) {
@@ -116,6 +124,16 @@ export async function startContainer(container: GenericContainer) {
     key = imageName.split("@")[0]
   }
   key = key.replace(/\//g, "-").replace(/:/g, "-")
+  const name = `${key}_testcontainer`
+
+  // If a container has died it hangs around and future attempts to start a
+  // container with the same name will fail. What we do here is if we find a
+  // matching container and it has exited, we remove it before carrying on. This
+  // removes the need to do this removal manually.
+  const existingContainer = getContainerByName(name)
+  if (existingContainer?.State === "exited") {
+    removeContainer(existingContainer)
+  }
 
   container = container
     .withReuse()
