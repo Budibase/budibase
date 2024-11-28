@@ -231,30 +231,6 @@ export function externalSearchValidator() {
   )
 }
 
-export function datasourceQueryValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      endpoint: Joi.object({
-        datasourceId: Joi.string().required(),
-        operation: Joi.string()
-          .required()
-          .valid(...Object.values(DataSourceOperation)),
-        entityId: Joi.string().required(),
-      }).required(),
-      resource: Joi.object({
-        fields: Joi.array().items(Joi.string()).optional(),
-      }).optional(),
-      body: Joi.object().optional(),
-      sort: Joi.object().optional(),
-      filters: filterObject().optional(),
-      paginate: Joi.object({
-        page: Joi.string().alphanum().optional(),
-        limit: Joi.number().optional(),
-      }).optional(),
-    })
-  )
-}
-
 export function webhookValidator() {
   return auth.joiValidator.body(
     Joi.object({
