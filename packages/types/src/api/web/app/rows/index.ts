@@ -7,13 +7,13 @@ import {
   RangeOperator,
   SearchFilterKey,
   SearchFilters,
-} from "../../../sdk"
-import { Row } from "../../../documents"
+} from "../../../../sdk"
+import { Row } from "../../../../documents"
 import {
   PaginationResponse,
   SortOrder,
   SortType,
-} from "../../../api/web/pagination"
+} from "../../../../api/web/pagination"
 import { ReadStream } from "fs"
 import { z } from "zod"
 
