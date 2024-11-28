@@ -184,14 +184,12 @@ export interface QueryJson {
   tableAliases?: Record<string, string>
 }
 
-export interface EnrichedQueryJson extends QueryJson {
+export interface EnrichedQueryJson extends Omit<QueryJson, "endpoint"> {
+  operation: Operation
   table: Table
   tables: Record<string, Table>
   datasource?: Datasource
-}
-
-export interface QueryJsonRequest extends Omit<QueryJson, "endpoint"> {
-  endpoint: QueryJson["endpoint"] & { datasourceId: string; entityId: string }
+  schema?: string
 }
 
 export interface QueryOptions {
