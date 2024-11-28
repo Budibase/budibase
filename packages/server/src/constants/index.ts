@@ -137,7 +137,6 @@ export enum InvalidColumns {
 
 export enum AutomationErrors {
   INCORRECT_TYPE = "INCORRECT_TYPE",
-  MAX_ITERATIONS = "MAX_ITERATIONS_REACHED",
   FAILURE_CONDITION = "FAILURE_CONDITION_MET",
 }
 
