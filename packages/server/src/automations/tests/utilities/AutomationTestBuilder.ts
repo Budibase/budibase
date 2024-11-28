@@ -36,6 +36,7 @@ import {
   FilterStepInputs,
   ExecuteScriptStepInputs,
   OpenAIStepInputs,
+  BashStepInputs,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
@@ -220,6 +221,18 @@ class BaseStepBuilder {
       AutomationActionStepId.FILTER,
       BUILTIN_ACTION_DEFINITIONS.FILTER,
       input
+    )
+  }
+
+  bash(
+    input: BashStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.EXECUTE_BASH,
+      BUILTIN_ACTION_DEFINITIONS.EXECUTE_BASH,
+      input,
+      opts
     )
   }
 
