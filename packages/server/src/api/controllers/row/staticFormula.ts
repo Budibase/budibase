@@ -179,6 +179,7 @@ export async function finaliseRow(
     throw new Error(`Unable to retrieve row ${row._id} after saving.`)
   }
 
+  delete enrichedRow._rev
   enrichedRow = mergeRows(retrieved, enrichedRow)
   enrichedRow = await processFormulas(table, enrichedRow, {
     dynamic: false,
