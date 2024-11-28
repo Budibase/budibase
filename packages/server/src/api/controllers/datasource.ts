@@ -23,13 +23,11 @@ import {
   Table,
   RowValue,
   DynamicVariable,
-  QueryJsonRequest,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { isEqual } from "lodash"
 import { processTable } from "../../sdk/app/tables/getters"
-import { makeExternalQuery } from "../../integrations/base/query"
 
 export async function fetch(ctx: UserCtx) {
   ctx.body = await sdk.datasources.fetch()
@@ -296,16 +294,6 @@ export async function destroy(ctx: UserCtx) {
 export async function find(ctx: UserCtx) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   ctx.body = await sdk.datasources.removeSecretSingle(datasource)
-}
-
-// dynamic query functionality
-export async function query(ctx: UserCtx<QueryJsonRequest>) {
-  const queryJson = ctx.request.body
-  try {
-    ctx.body = await makeExternalQuery(queryJson)
-  } catch (err: any) {
-    ctx.throw(400, err)
-  }
 }
 
 export async function getExternalSchema(ctx: UserCtx) {
