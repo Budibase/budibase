@@ -42,15 +42,6 @@ router
     datasourceController.update
   )
   .post(
-    "/api/datasources/query",
-    authorized(
-      permissions.PermissionType.TABLE,
-      permissions.PermissionLevel.READ
-    ),
-    datasourceQueryValidator(),
-    datasourceController.query
-  )
-  .post(
     "/api/datasources/:datasourceId/schema",
     authorized(permissions.BUILDER),
     datasourceController.buildSchemaFromSource
