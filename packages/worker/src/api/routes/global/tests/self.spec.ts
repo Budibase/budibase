@@ -1,5 +1,5 @@
 jest.mock("nodemailer")
-import { TestConfiguration, mocks } from "../../../../tests"
+import { TestConfiguration } from "../../../../tests"
 import { events } from "@budibase/backend-core"
 
 describe("/api/global/self", () => {
