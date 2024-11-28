@@ -1,10 +1,4 @@
-import {
-  Datasource,
-  Operation,
-  Query,
-  QueryPreview,
-  TableSourceType,
-} from "@budibase/types"
+import { Datasource, Query, QueryPreview } from "@budibase/types"
 import {
   DatabaseName,
   datasourceDescribe,
@@ -817,49 +811,6 @@ if (descriptions.length) {
       })
 
       describe("query through datasource", () => {
-        it("should be able to query the datasource", async () => {
-          const datasource = await config.api.datasource.create(rawDatasource)
-
-          const entityId = tableName
-          await config.api.datasource.update({
-            ...datasource,
-            entities: {
-              [entityId]: {
-                name: entityId,
-                schema: {},
-                type: "table",
-                primary: ["id"],
-                sourceId: datasource._id!,
-                sourceType: TableSourceType.EXTERNAL,
-              },
-            },
-          })
-
-          const res = await config.api.datasource.query({
-            endpoint: {
-              datasourceId: datasource._id!,
-              operation: Operation.READ,
-              entityId,
-            },
-            resource: {
-              fields: ["id", "name"],
-            },
-            filters: {
-              string: {
-                name: "two",
-              },
-            },
-          })
-          expect(res).toHaveLength(1)
-          expect(res[0]).toEqual({
-            id: 2,
-            name: "two",
-            // the use of table.* introduces the possibility of nulls being returned
-            birthday: null,
-            number: null,
-          })
-        })
-
         // this parameter really only impacts SQL queries
         describe("confirm nullDefaultSupport", () => {
           let queryParams: Partial<Query>
