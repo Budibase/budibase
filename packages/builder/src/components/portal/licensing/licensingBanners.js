@@ -84,45 +84,6 @@ const buildUsageInfoBanner = (
       }
 }
 
-const buildDayPassBanner = () => {
-  const appAuth = get(auth)
-  const appLicensing = get(licensing)
-  if (get(licensing)?.usageMetrics["dayPasses"] >= 100) {
-    return {
-      key: "max_dayPasses",
-      type: BANNER_TYPES.NEGATIVE,
-      criteria: () => {
-        return true
-      },
-      message: `Your apps are currently offline. You have exceeded your plans limit for Day Passes. ${
-        appAuth.user.accountPortalAccess
-          ? ""
-          : "Please contact your account holder to upgrade."
-      }`,
-      ...upgradeAction(),
-      showCloseButton: false,
-    }
-  }
-
-  return buildUsageInfoBanner(
-    "dayPasses",
-    "Day Passes",
-    ExpiringKeys.LICENSING_DAYPASS_WARNING_BANNER,
-    90,
-    `You have used ${
-      appLicensing?.usageMetrics["dayPasses"]
-    }% of your monthly usage of Day Passes with ${
-      appLicensing?.quotaResetDaysRemaining
-    } day${
-      get(licensing).quotaResetDaysRemaining == 1 ? "" : "s"
-    } remaining. All apps will be taken offline if this limit is reached. ${
-      appAuth.user.accountPortalAccess
-        ? ""
-        : "Please contact your account holder to upgrade."
-    }`
-  )
-}
-
 const buildPaymentFailedBanner = () => {
   return {
     key: "payment_Failed",
@@ -166,7 +127,6 @@ const buildUsersAboveLimitBanner = EXPIRY_KEY => {
 export const getBanners = () => {
   return [
     buildPaymentFailedBanner(),
-    buildDayPassBanner(ExpiringKeys.LICENSING_DAYPASS_WARNING_BANNER),
     buildUsageInfoBanner(
       "rows",
       "Rows",
