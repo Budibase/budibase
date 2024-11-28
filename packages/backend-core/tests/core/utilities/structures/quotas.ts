@@ -15,7 +15,6 @@ export const usage = (users: number = 0, creators: number = 0): QuotaUsage => {
     monthly: {
       "01-2023": {
         automations: 0,
-        dayPasses: 0,
         queries: 0,
         budibaseAICredits: 0,
         triggers: {},
@@ -45,14 +44,12 @@ export const usage = (users: number = 0, creators: number = 0): QuotaUsage => {
       },
       "02-2023": {
         automations: 0,
-        dayPasses: 0,
         queries: 0,
         budibaseAICredits: 0,
         triggers: {},
       },
       current: {
         automations: 0,
-        dayPasses: 0,
         queries: 0,
         budibaseAICredits: 0,
         triggers: {},
