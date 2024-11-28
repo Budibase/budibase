@@ -48,7 +48,7 @@
   import { QueryUtils, Utils, search, memo } from "@budibase/frontend-core"
   import { getSchemaForDatasourcePlus } from "dataBinding"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
-  import { onMount } from "svelte"
+  import { onMount, createEventDispatcher } from "svelte"
   import { writable } from "svelte/store"
   import { cloneDeep } from "lodash/fp"
   import {
@@ -66,6 +66,8 @@
   export let schemaProperties
   export let isTestModal = false
   export let bindings = []
+
+  const dispatch = createEventDispatcher()
 
   // Stop unnecessary rendering
   const memoBlock = memo(block)
@@ -503,15 +505,7 @@
       row: { "Active": true, "Order Id" : 14, ... }
     })
    */
-  const onChange = async update => {
-    if (isTestModal) {
-      testData = update
-    }
-
-    updateAutomation(update)
-  }
-
-  const updateAutomation = Utils.sequential(async update => {
+  const onChange = Utils.sequential(async update => {
     const request = cloneDeep(update)
     // Process app trigger updates
     if (isTrigger && !isTestModal) {
@@ -540,7 +534,9 @@
     }
     try {
       if (isTestModal) {
-        let newTestData = { schema }
+        // Be sure to merge in the testData prop data, as it can contain custom
+        // default data
+        let newTestData = { schema, ...testData }
 
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
         if (stepId === TriggerStepID.WEBHOOK) {
@@ -557,7 +553,13 @@
           ...request,
         }
 
-        await automationStore.actions.addTestDataToAutomation(newTestData)
+        const updatedAuto =
+          automationStore.actions.addTestDataToAutomation(newTestData)
+
+        // Ensure the test request has the latest info.
+        dispatch("update", updatedAuto)
+
+        await automationStore.actions.save(updatedAuto)
       } else {
         const data = { schema, ...request }
         await automationStore.actions.updateBlockInputs(block, data)
