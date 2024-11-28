@@ -68,7 +68,6 @@ export const OnboardingType = {
 
 export const PlanModel = {
   PER_USER: "perUser",
-  DAY_PASS: "dayPass",
 }
 
 export const ChangelogURL = "https://docs.budibase.com/changelog"

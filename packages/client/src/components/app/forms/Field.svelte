@@ -1,7 +1,10 @@
 <script>
-  import Placeholder from "../Placeholder.svelte"
   import { getContext, onDestroy } from "svelte"
+  import { writable } from "svelte/store"
   import { Icon } from "@budibase/bbui"
+  import { memo } from "@budibase/frontend-core"
+  import Placeholder from "../Placeholder.svelte"
+  import InnerForm from "./InnerForm.svelte"
 
   export let label
   export let field
@@ -20,26 +23,39 @@
   const formContext = getContext("form")
   const formStepContext = getContext("form-step")
   const fieldGroupContext = getContext("field-group")
-  const { styleable, builderStore } = getContext("sdk")
+  const { styleable, builderStore, Provider } = getContext("sdk")
   const component = getContext("component")
 
   // Register field with form
   const formApi = formContext?.formApi
   const labelPos = fieldGroupContext?.labelPosition || "above"
 
+  let formField
   let touched = false
   let labelNode
 
-  $: formStep = formStepContext ? $formStepContext || 1 : 1
-  $: formField = formApi?.registerField(
-    field,
+  // Memoize values required to register the field to avoid loops
+  const formStep = formStepContext || writable(1)
+  const fieldInfo = memo({
+    field: field || $component.name,
     type,
     defaultValue,
     disabled,
     readonly,
     validation,
-    formStep
-  )
+    formStep: $formStep || 1,
+  })
+  $: fieldInfo.set({
+    field: field || $component.name,
+    type,
+    defaultValue,
+    disabled,
+    readonly,
+    validation,
+    formStep: $formStep || 1,
+  })
+  $: registerField($fieldInfo)
+
   $: schemaType =
     fieldSchema?.type !== "formula" && fieldSchema?.type !== "bigint"
       ? fieldSchema?.type
@@ -58,6 +74,18 @@
   // Determine label class from position
   $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
 
+  const registerField = info => {
+    formField = formApi?.registerField(
+      info.field,
+      info.type,
+      info.defaultValue,
+      info.disabled,
+      info.readonly,
+      info.validation,
+      info.formStep
+    )
+  }
+
   const updateLabel = e => {
     if (touched) {
       builderStore.actions.updateProp("label", e.target.textContent)
@@ -71,52 +99,65 @@
   })
 </script>
 
-<div
-  class="spectrum-Form-item"
-  class:span-2={span === 2}
-  class:span-3={span === 3}
-  class:span-6={span === 6 || !span}
-  use:styleable={$component.styles}
-  class:above={labelPos === "above"}
->
-  {#key $component.editing}
-    <label
-      bind:this={labelNode}
-      contenteditable={$component.editing}
-      on:blur={$component.editing ? updateLabel : null}
-      on:input={() => (touched = true)}
-      class:hidden={!label}
-      class:readonly
-      for={fieldState?.fieldId}
-      class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
+<Provider data={{ value: fieldState?.value }}>
+  {#if !formContext}
+    <InnerForm
+      {disabled}
+      {readonly}
+      currentStep={writable(1)}
+      provideContext={false}
     >
-      {label || " "}
-    </label>
-  {/key}
-  <div class="spectrum-Form-itemField">
-    {#if !formContext}
-      <Placeholder text="Form components need to be wrapped in a form" />
-    {:else if !fieldState}
-      <Placeholder />
-    {:else if schemaType && schemaType !== type && !["options", "longform"].includes(type)}
-      <Placeholder
-        text="This Field setting is the wrong data type for this component"
-      />
-    {:else}
-      <slot />
-      {#if fieldState.error}
-        <div class="error">
-          <Icon name="Alert" />
-          <span>{fieldState.error}</span>
-        </div>
-      {:else if helpText}
-        <div class="helpText">
-          <Icon name="HelpOutline" /> <span>{helpText}</span>
-        </div>
-      {/if}
-    {/if}
-  </div>
-</div>
+      <svelte:self {...$$props} bind:fieldState bind:fieldApi bind:fieldSchema>
+        <slot />
+      </svelte:self>
+    </InnerForm>
+  {:else}
+    <div
+      class="spectrum-Form-item"
+      class:span-2={span === 2}
+      class:span-3={span === 3}
+      class:span-6={span === 6 || !span}
+      use:styleable={$component.styles}
+      class:above={labelPos === "above"}
+    >
+      {#key $component.editing}
+        <label
+          bind:this={labelNode}
+          contenteditable={$component.editing}
+          on:blur={$component.editing ? updateLabel : null}
+          on:input={() => (touched = true)}
+          class:hidden={!label}
+          class:readonly
+          for={fieldState?.fieldId}
+          class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
+        >
+          {label || " "}
+        </label>
+      {/key}
+      <div class="spectrum-Form-itemField">
+        {#if !fieldState}
+          <Placeholder />
+        {:else if schemaType && schemaType !== type && !["options", "longform"].includes(type)}
+          <Placeholder
+            text="This Field setting is the wrong data type for this component"
+          />
+        {:else}
+          <slot />
+          {#if fieldState.error}
+            <div class="error">
+              <Icon name="Alert" />
+              <span>{fieldState.error}</span>
+            </div>
+          {:else if helpText}
+            <div class="helpText">
+              <Icon name="HelpOutline" /> <span>{helpText}</span>
+            </div>
+          {/if}
+        {/if}
+      </div>
+    </div>
+  {/if}
+</Provider>
 
 <style>
   :global(.form-block .spectrum-Form-item.span-2) {

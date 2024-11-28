@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Layout,
     Heading,
@@ -42,23 +42,25 @@
     { column: "edit", component: EditPluginRenderer },
   ]
 
-  let modal
-  let searchTerm = ""
-  let filter = "all"
+  let modal: any
+  let searchTerm: any = ""
+  let filter: any = "all"
   let filterOptions = [
     { label: "All plugins", value: "all" },
     { label: "Components", value: "component" },
   ]
+
+  const searchPlaceholder: any = "Search"
 
   if (!$admin.cloud) {
     filterOptions.push({ label: "Datasources", value: "datasource" })
   }
 
   $: filteredPlugins = $plugins
-    .filter(plugin => {
+    .filter((plugin: any) => {
       return filter === "all" || plugin.schema.type === filter
     })
-    .filter(plugin => {
+    .filter((plugin: any) => {
       return (
         !searchTerm ||
         plugin?.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -85,8 +87,8 @@
           <Button
             on:click={() =>
               window
-                .open("https://github.com/Budibase/plugins", "_blank")
-                .focus()}
+                ?.open("https://github.com/Budibase/plugins", "_blank")
+                ?.focus()}
             secondary
           >
             GitHub repo
@@ -98,12 +100,12 @@
           <div class="select">
             <Select
               bind:value={filter}
-              placeholder={null}
+              placeholder={undefined}
               options={filterOptions}
               autoWidth
             />
           </div>
-          <Search bind:value={searchTerm} placeholder="Search" />
+          <Search bind:value={searchTerm} placeholder={searchPlaceholder} />
         </div>
       {/if}
     </div>
