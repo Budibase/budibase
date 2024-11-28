@@ -78,7 +78,34 @@ export function getExposedV4Port(container: ContainerInfo, port: number) {
   return getExposedV4Ports(container).find(x => x.container === port)?.host
 }
 
+interface DockerContext {
+  Name: string
+  Description: string
+  DockerEndpoint: string
+  ContextType: string
+  Error: string
+}
+
+function getCurrentDockerContext(): DockerContext {
+  const out = execSync("docker context ls --format json")
+  for (const line of out.toString().split("\n")) {
+    const parsed = JSON.parse(line)
+    if (parsed.Current) {
+      return parsed as DockerContext
+    }
+  }
+  throw new Error("No current Docker context")
+}
+
 export function setupEnv(...envs: any[]) {
+  // For whatever reason, testcontainers doesn't always use the correct current
+  // docker context. This bit of code forces the issue by finding the current
+  // context and setting it as the DOCKER_HOST environment
+  if (!process.env.DOCKER_HOST) {
+    const dockerContext = getCurrentDockerContext()
+    process.env.DOCKER_HOST = dockerContext.DockerEndpoint
+  }
+
   // We start couchdb in globalSetup.ts, in the root of the monorepo, so it
   // should be relatively safe to look for it by its image name.
   const couch = getContainerByImage("budibase/couchdb")
