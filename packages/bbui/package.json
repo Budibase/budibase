@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "license": "MPL-2.0",
   "svelte": "src/index.js",
-  "module": "dist/bbui.es.mjs",
+  "module": "dist/bbui.mjs",
   "exports": {
     ".": {
-      "import": "./dist/bbui.es.mjs"
+      "import": "./dist/bbui.mjs"
     },
     "./package.json": "./package.json",
     "./spectrum-icons-rollup.js": "./src/spectrum-icons-rollup.js",
