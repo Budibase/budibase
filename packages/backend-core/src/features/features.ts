@@ -271,6 +271,7 @@ const flagsConfig: Record<FeatureFlag, Flag<any>> = {
   [FeatureFlag.AUTOMATION_BRANCHING]: Flag.boolean(true),
   [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(true),
   [FeatureFlag.BUDIBASE_AI]: Flag.boolean(true),
+  [FeatureFlag.USE_ZOD_VALIDATOR]: Flag.boolean(env.isDev()),
 }
 export const flags = new FlagSet(flagsConfig)
 
