@@ -117,7 +117,4 @@
     align-items: center;
     margin-bottom: 12px;
   }
-
-  .tabs {
-  }
 </style>

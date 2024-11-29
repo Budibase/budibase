@@ -281,6 +281,7 @@ jobs:
 
   check-lockfile:
     runs-on: ubuntu-latest
+    if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
