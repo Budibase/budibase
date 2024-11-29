@@ -284,13 +284,13 @@ class InternalBuilder {
   }
 
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
-    const { endpoint, resource } = this.query
+    const { table, resource } = this.query
 
     if (!resource || !resource.fields || resource.fields.length === 0) {
       return "*"
     }
 
-    const alias = this.getTableName(endpoint.entityId)
+    const alias = this.getTableName(table)
     const schema = this.table.schema
     if (!this.isFullSelectStatementRequired()) {
       return [this.knex.raw("??", [`${alias}.*`])]
@@ -496,7 +496,7 @@ class InternalBuilder {
     filterKey: string,
     whereCb: (filterKey: string, query: Knex.QueryBuilder) => Knex.QueryBuilder
   ): Knex.QueryBuilder {
-    const { relationships, endpoint, tableAliases: aliases, table } = this.query
+    const { relationships, schema, tableAliases: aliases, table } = this.query
     const fromAlias = aliases?.[table.name] || table.name
     const matches = (value: string) =>
       filterKey.match(new RegExp(`^${value}\\.`))
@@ -537,7 +537,7 @@ class InternalBuilder {
             aliases?.[manyToMany.through] || relationship.through
           let throughTable = this.tableNameWithSchema(manyToMany.through, {
             alias: throughAlias,
-            schema: endpoint.schema,
+            schema,
           })
           subQuery = subQuery
             // add a join through the junction table
@@ -1010,28 +1010,10 @@ class InternalBuilder {
     return isSqs(this.table)
   }
 
-  getTableName(tableOrName?: Table | string): string {
-    let table: Table
-    if (typeof tableOrName === "string") {
-      const name = tableOrName
-      if (this.query.table?.name === name) {
-        table = this.query.table
-      } else if (this.query.table.name === name) {
-        table = this.query.table
-      } else if (!this.query.tables[name]) {
-        // This can legitimately happen in custom queries, where the user is
-        // querying against a table that may not have been imported into
-        // Budibase.
-        return name
-      } else {
-        table = this.query.tables[name]
-      }
-    } else if (tableOrName) {
-      table = tableOrName
-    } else {
+  getTableName(table?: Table): string {
+    if (!table) {
       table = this.table
     }
-
     let name = table.name
     if (isSqs(table) && table._id) {
       // SQS uses the table ID rather than the table name
@@ -1242,7 +1224,7 @@ class InternalBuilder {
   ): Knex.QueryBuilder {
     const sqlClient = this.client
     const knex = this.knex
-    const { resource, tableAliases: aliases, endpoint, tables } = this.query
+    const { resource, tableAliases: aliases, schema, tables } = this.query
     const fields = resource?.fields || []
     for (let relationship of relationships) {
       const {
@@ -1266,7 +1248,7 @@ class InternalBuilder {
         throughAlias = (throughTable && aliases?.[throughTable]) || throughTable
       let toTableWithSchema = this.tableNameWithSchema(toTable, {
         alias: toAlias,
-        schema: endpoint.schema,
+        schema,
       })
       const requiredFields = [
         ...(relatedTable?.primary || []),
@@ -1310,7 +1292,7 @@ class InternalBuilder {
       if (isManyToMany) {
         let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
           alias: throughAlias,
-          schema: endpoint.schema,
+          schema,
         })
         subQuery = subQuery.join(throughTableWithSchema, function () {
           this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
@@ -1401,8 +1383,7 @@ class InternalBuilder {
       toPrimary?: string
     }[]
   ): Knex.QueryBuilder {
-    const { tableAliases: aliases, endpoint } = this.query
-    const schema = endpoint.schema
+    const { tableAliases: aliases, schema } = this.query
     const toTable = tables.to,
       fromTable = tables.from,
       throughTable = tables.through
@@ -1462,7 +1443,7 @@ class InternalBuilder {
     return this.knex(
       this.tableNameWithSchema(this.query.table.name, {
         alias,
-        schema: this.query.endpoint.schema,
+        schema: this.query.schema,
       })
     )
   }
@@ -1556,9 +1537,8 @@ class InternalBuilder {
       limits?: { base: number; query: number }
     } = {}
   ): Knex.QueryBuilder {
-    let { endpoint, filters, paginate, relationships, table } = this.query
+    let { operation, filters, paginate, relationships, table } = this.query
     const { limits } = opts
-    const counting = endpoint.operation === Operation.COUNT
 
     // start building the query
     let query = this.qualifiedKnex()
@@ -1578,7 +1558,7 @@ class InternalBuilder {
       foundLimit = paginate.limit
     }
     // counting should not sort, limit or offset
-    if (!counting) {
+    if (operation !== Operation.COUNT) {
       // add the found limit if supplied
       if (foundLimit != null) {
         query = query.limit(foundLimit)
@@ -1590,7 +1570,7 @@ class InternalBuilder {
     }
 
     const aggregations = this.query.resource?.aggregations || []
-    if (counting) {
+    if (operation === Operation.COUNT) {
       query = this.addDistinctCount(query)
     } else if (aggregations.length > 0) {
       query = this.addAggregations(query, aggregations)
@@ -1599,7 +1579,7 @@ class InternalBuilder {
     }
 
     // have to add after as well (this breaks MS-SQL)
-    if (!counting) {
+    if (operation !== Operation.COUNT) {
       query = this.addSorting(query)
     }
 
@@ -1738,13 +1718,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       return {}
     }
     const input = this._query({
+      operation: Operation.READ,
       datasource: json.datasource,
+      schema: json.schema,
       table: json.table,
       tables: json.tables,
-      endpoint: {
-        ...json.endpoint,
-        operation: Operation.READ,
-      },
       resource: { fields: [] },
       filters: json.extra?.idFilter,
       paginate: { limit: 1 },

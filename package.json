@@ -9,6 +9,7 @@
     "@types/node": "20.10.0",
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/parser": "6.9.0",
+    "cross-spawn": "7.0.6",
     "depcheck": "^1.4.7",
     "esbuild": "^0.18.17",
     "esbuild-node-externals": "^1.14.0",
@@ -29,8 +30,7 @@
     "svelte-eslint-parser": "^0.33.1",
     "typescript": "5.5.2",
     "typescript-eslint": "^7.3.1",
-    "yargs": "^17.7.2",
-    "cross-spawn": "7.0.6"
+    "yargs": "^17.7.2"
   },
   "scripts": {
     "get-past-client-version": "node scripts/getPastClientVersion.js",
@@ -76,7 +76,6 @@
     "build:docker:dependencies": "docker build -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest ./hosting",
     "publish:docker:couch": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/couchdb/Dockerfile -t budibase/couchdb:latest -t budibase/couchdb:v3.3.3 -t budibase/couchdb:v3.3.3-sqs-v2.1.1 --push ./hosting/couchdb",
     "publish:docker:dependencies": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest -t budibase/dependencies:v3.2.1 --push ./hosting",
-    "release:helm": "node scripts/releaseHelmChart",
     "env:multi:enable": "lerna run --stream env:multi:enable",
     "env:multi:disable": "lerna run --stream env:multi:disable",
     "env:selfhost:enable": "lerna run --stream env:selfhost:enable",

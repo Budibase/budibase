@@ -118,9 +118,11 @@ export async function enrichQueryJson(
   }
 
   return {
+    operation: json.endpoint.operation,
     table,
     tables,
     datasource,
+    schema: json.endpoint.schema,
     ...json,
   }
 }

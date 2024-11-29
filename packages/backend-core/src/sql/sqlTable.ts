@@ -239,14 +239,13 @@ class SqlTableQueryBuilder {
    * @return the operation that was found in the JSON.
    */
   _operation(json: EnrichedQueryJson): Operation {
-    return json.endpoint.operation
+    return json.operation
   }
 
   _tableQuery(json: EnrichedQueryJson): SqlQuery | SqlQuery[] {
     let client = knex({ client: this.sqlClient }).schema
-    let schemaName = json?.endpoint?.schema
-    if (schemaName) {
-      client = client.withSchema(schemaName)
+    if (json?.schema) {
+      client = client.withSchema(json.schema)
     }
 
     let query: Knex.SchemaBuilder
@@ -268,8 +267,8 @@ class SqlTableQueryBuilder {
         // renameColumn does not work for MySQL, so return a raw query
         if (this.sqlClient === SqlClient.MY_SQL && json.meta?.renamed) {
           const updatedColumn = json.meta.renamed.updated
-          const tableName = schemaName
-            ? `\`${schemaName}\`.\`${json.table.name}\``
+          const tableName = json?.schema
+            ? `\`${json.schema}\`.\`${json.table.name}\``
             : `\`${json.table.name}\``
           return {
             sql: `alter table ${tableName} rename column \`${json.meta.renamed.old}\` to \`${updatedColumn}\`;`,
@@ -290,8 +289,8 @@ class SqlTableQueryBuilder {
         if (this.sqlClient === SqlClient.MS_SQL && json.meta?.renamed) {
           const oldColumn = json.meta.renamed.old
           const updatedColumn = json.meta.renamed.updated
-          const tableName = schemaName
-            ? `${schemaName}.${json.table.name}`
+          const tableName = json?.schema
+            ? `${json.schema}.${json.table.name}`
             : `${json.table.name}`
           const sql = getNativeSql(query)
           if (Array.isArray(sql)) {

@@ -1,9 +1,5 @@
 {
-  "endpoint": {
-    "datasourceId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
-    "entityId": "persons",
-    "operation": "UPDATE"
-  },
+  "operation": "UPDATE",
   "resource": {
     "fields": [
       "a.year",
