@@ -177,7 +177,7 @@ export async function trigger(
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
   if (hasCollectStep && (await features.isSyncAutomationsEnabled())) {
     try {
-      const response: AutomationResults = await triggers.externalTrigger(
+      const response = await triggers.externalTrigger(
         automation,
         {
           fields: ctx.request.body.fields,
@@ -187,6 +187,10 @@ export async function trigger(
         },
         { getResponses: true }
       )
+
+      if (!("steps" in response)) {
+        ctx.throw(400, "Unable to collect response")
+      }
 
       let collectedValue = response.steps.find(
         step => step.stepId === AutomationActionStepId.COLLECT

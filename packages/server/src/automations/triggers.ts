@@ -20,6 +20,7 @@ import {
   AutomationStatus,
   AutomationRowEvent,
   UserBindings,
+  AutomationResults,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"
@@ -31,6 +32,14 @@ const JOB_OPTS = {
 }
 import * as automationUtils from "../automations/automationUtils"
 import { doesTableExist } from "../sdk/app/tables/getters"
+
+type DidNotTriggerResponse = {
+  outputs: {
+    success: false
+    status: AutomationStatus.STOPPED
+  }
+  message: AutomationStoppedReason.TRIGGER_FILTER_NOT_MET
+}
 
 async function getAllAutomations() {
   const db = context.getAppDB()
@@ -148,7 +157,7 @@ export async function externalTrigger(
     user?: UserBindings
   },
   { getResponses }: { getResponses?: boolean } = {}
-): Promise<Record<string, any>> {
+): Promise<AutomationResults | DidNotTriggerResponse | AutomationJob> {
   if (automation.disabled) {
     throw new Error("Automation is disabled")
   }
