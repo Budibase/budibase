@@ -90,6 +90,7 @@ router
 router.post(
   "/api/v2/views/:viewId/search",
   internalSearchValidator(),
+  validateBody(searchRowRequestValidator),
   authorizedResource(PermissionType.VIEW, PermissionLevel.READ, "viewId"),
   rowController.views.searchView
 )
