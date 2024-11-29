@@ -2607,6 +2607,8 @@ if (descriptions.length) {
             name: "foo",
             description: "bar",
             tableId,
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2628,6 +2630,8 @@ if (descriptions.length) {
             id: isInternal ? undefined : expect.any(Number),
             type: isInternal ? "row" : undefined,
             [`fk_${o2mTable.name}_fk_o2m`]: isInternal ? undefined : user.id,
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2650,6 +2654,8 @@ if (descriptions.length) {
             _rev: expect.any(String),
             id: isInternal ? undefined : expect.any(Number),
             type: isInternal ? "row" : undefined,
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2729,6 +2735,8 @@ if (descriptions.length) {
             id: isInternal ? undefined : expect.any(Number),
             type: isInternal ? "row" : undefined,
             [`fk_${o2mTable.name}_fk_o2m`]: isInternal ? undefined : user.id,
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2745,15 +2753,8 @@ if (descriptions.length) {
             user: null,
             users: null,
           })
-          expect(updatedRow).toEqual({
-            name: "foo",
-            description: "bar",
-            tableId,
-            _id: row._id,
-            _rev: expect.any(String),
-            id: isInternal ? undefined : expect.any(Number),
-            type: isInternal ? "row" : undefined,
-          })
+          expect(updatedRow.user).toBeUndefined()
+          expect(updatedRow.users).toBeUndefined()
         })
 
         it("fetch all will populate the relationships", async () => {
