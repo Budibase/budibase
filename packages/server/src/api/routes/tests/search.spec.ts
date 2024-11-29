@@ -212,7 +212,7 @@ if (descriptions.length) {
                   const inMemoryQuery: RequiredKeys<
                     Omit<RowSearchParams, "tableId">
                   > = {
-                    sort: this.query.sort,
+                    sort: this.query.sort ?? undefined,
                     query: { ...this.query.query },
                     paginate: this.query.paginate,
                     bookmark: this.query.bookmark ?? undefined,
