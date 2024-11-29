@@ -258,7 +258,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
     bookmark: searchRequest.bookmark ?? undefined,
     paginate: searchRequest.paginate,
     limit: searchRequest.limit,
-    sort: searchRequest.sort,
+    sort: searchRequest.sort ?? undefined,
     sortOrder: searchRequest.sortOrder,
     sortType: searchRequest.sortType ?? undefined,
     countRows: searchRequest.countRows,
