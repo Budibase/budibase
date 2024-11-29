@@ -10,22 +10,23 @@ import { backups } from "@budibase/pro"
 import {
   App,
   AppBackupTrigger,
+  DeploymentDoc,
+  FetchDeploymentResponse,
   PublishAppResponse,
   UserCtx,
+  DeploymentStatus,
+  DeploymentProgressResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
-const DeploymentStatus = {
-  SUCCESS: "SUCCESS",
-  PENDING: "PENDING",
-  FAILURE: "FAILURE",
-}
 
 // checks that deployments are in a good state, any pending will be updated
-async function checkAllDeployments(deployments: any) {
+async function checkAllDeployments(
+  deployments: any
+): Promise<{ updated: boolean; deployments: DeploymentDoc }> {
   let updated = false
   let deployment: any
   for (deployment of Object.values(deployments.history)) {
@@ -101,7 +102,9 @@ async function initDeployedApp(prodAppId: any) {
   })
 }
 
-export async function fetchDeployments(ctx: any) {
+export async function fetchDeployments(
+  ctx: UserCtx<void, FetchDeploymentResponse>
+) {
   try {
     const db = context.getAppDB()
     const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
@@ -109,17 +112,21 @@ export async function fetchDeployments(ctx: any) {
     if (updated) {
       await db.put(deployments)
     }
-    ctx.body = Object.values(deployments.history).reverse()
+    ctx.body = deployments.history
+      ? Object.values(deployments.history).reverse()
+      : []
   } catch (err) {
     ctx.body = []
   }
 }
 
-export async function deploymentProgress(ctx: any) {
+export async function deploymentProgress(
+  ctx: UserCtx<void, DeploymentProgressResponse>
+) {
   try {
     const db = context.getAppDB()
-    const deploymentDoc = await db.get<any>(DocumentType.DEPLOYMENTS)
-    ctx.body = deploymentDoc[ctx.params.deploymentId]
+    const deploymentDoc = await db.get<DeploymentDoc>(DocumentType.DEPLOYMENTS)
+    ctx.body = deploymentDoc.history?.[ctx.params.deploymentId]
   } catch (err) {
     ctx.throw(
       500,
