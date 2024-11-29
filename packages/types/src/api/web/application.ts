@@ -1,5 +1,6 @@
 import type { PlanType } from "../../sdk"
 import type { Layout, App, Screen } from "../../documents"
+import { ReadStream } from "fs"
 
 export interface SyncAppResponse {
   message: string
@@ -70,3 +71,10 @@ export interface ImportToUpdateAppResponse {
 export interface SetRevertableAppVersionRequest {
   revertableVersion: string
 }
+
+export interface ExportAppDumpRequest {
+  excludeRows: boolean
+  encryptPassword?: string
+}
+
+export type ExportAppDumpResponse = ReadStream
