@@ -261,11 +261,10 @@
               {/if}
               <div
                 class="logo"
-                style="flex-direction: {textBelow && navigation === 'Left'
-                  ? 'column'
-                  : 'row'}; max-width: {navigation === 'Left'
-                  ? '165px'
-                  : '95%'};
+                style="flex-flow: {textBelow && navigation === 'Left'
+                  ? 'column wrap'
+                  : 'row'}; 
+                  max-width: {navigation === 'Left' ? '165px' : '95%'};
                   align-items: {navigation === 'Left'
                   ? 'center'
                   : 'center'}; border: 1px solid lime;"
@@ -577,8 +576,8 @@
     border: 1px solid red;
   }
   .logo img {
-    width: var(--logo-size);
-    height: var(--logo-size);
+    max-width: var(--logo-size);
+    max-height: var(--logo-size);
   }
   .logo :global(h1) {
     font-weight: 600;
