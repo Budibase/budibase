@@ -121,13 +121,13 @@ const identifyInstallationGroup = async (
 
 const identifyTenantGroup = async (
   tenantId: string,
+  hosting: Hosting,
   timestamp?: string | number
 ): Promise<void> => {
   const id = await getEventTenantId(tenantId)
   const type = IdentityType.TENANT
   const installationId = await getInstallationId()
   const environment = getDeploymentEnvironment()
-  const hosting = Hosting.CLOUD
 
   const group: TenantGroup = {
     id,

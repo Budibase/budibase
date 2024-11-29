@@ -11,6 +11,7 @@ import {
   Ctx,
   DeleteInviteUserRequest,
   DeleteInviteUsersRequest,
+  Hosting,
   InviteUserRequest,
   InviteUsersRequest,
   InviteUsersResponse,
@@ -190,7 +191,10 @@ export const adminUser = async (
         lastName: familyName,
       })
 
-      await events.identification.identifyTenantGroup(tenantId)
+      await events.identification.identifyTenantGroup(
+        tenantId,
+        env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
+      )
 
       ctx.body = {
         _id: finalUser._id!,
