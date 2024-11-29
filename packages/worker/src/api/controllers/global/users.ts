@@ -6,7 +6,6 @@ import {
   AddSSoUserRequest,
   BulkUserRequest,
   BulkUserResponse,
-  CloudAccount,
   CreateAdminUserRequest,
   CreateAdminUserResponse,
   Ctx,
@@ -26,7 +25,6 @@ import {
   UserIdentifier,
 } from "@budibase/types"
 import {
-  accounts,
   users,
   cache,
   ErrorCode,
@@ -192,12 +190,7 @@ export const adminUser = async (
         lastName: familyName,
       })
 
-      // events
-      let account: CloudAccount | undefined
-      if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-        account = await accounts.getAccountByTenantId(tenantId)
-      }
-      await events.identification.identifyTenantGroup(tenantId, account)
+      await events.identification.identifyTenantGroup(tenantId)
 
       ctx.body = {
         _id: finalUser._id!,
