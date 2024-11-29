@@ -11,7 +11,6 @@ export default defineConfig(({ mode }) => {
       lib: {
         entry: "src/index.js",
         formats: ["es"],
-        fileName: "bbui.es",
       },
     },
     plugins: [
