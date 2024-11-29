@@ -3,7 +3,6 @@ import {
   DatasourcePlusQueryResponse,
   EnrichedQueryJson,
   Operation,
-  QueryJson,
   Row,
   SearchFilters,
   SqlClient,
@@ -69,13 +68,12 @@ export default class AliasTables {
     this.charSeq = new CharSequence()
   }
 
-  isAliasingEnabled(json: QueryJson, datasource?: Datasource) {
-    const operation = json.endpoint.operation
+  isAliasingEnabled(json: EnrichedQueryJson, datasource?: Datasource) {
     const fieldLength = json.resource?.fields?.length
     if (
       !fieldLength ||
       fieldLength <= 0 ||
-      DISABLED_OPERATIONS.includes(operation)
+      DISABLED_OPERATIONS.includes(json.operation)
     ) {
       return false
     }
@@ -85,7 +83,7 @@ export default class AliasTables {
     }
     try {
       const sqlClient = getSQLClient(datasource)
-      const isWrite = WRITE_OPERATIONS.includes(operation)
+      const isWrite = WRITE_OPERATIONS.includes(json.operation)
       const isDisabledClient = DISABLED_WRITE_CLIENTS.includes(sqlClient)
       if (isWrite && isDisabledClient) {
         return false
