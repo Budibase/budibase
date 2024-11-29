@@ -7,3 +7,5 @@ export interface SetFlagRequest {
   flag: string
   value: any
 }
+
+export type AppSelfResponse = ContextUserMetadata | {}
