@@ -19,6 +19,7 @@ import {
   isRelationshipField,
   PatchRowRequest,
   PatchRowResponse,
+  RequiredKeys,
   Row,
   RowAttachment,
   RowSearchParams,
@@ -239,7 +240,8 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
 
   await context.ensureSnippetContext(true)
 
-  let { query } = ctx.request.body
+  const searchRequest = ctx.request.body
+  let { query } = searchRequest
   if (query) {
     const allTables = await sdk.tables.getAllTables()
     query = replaceTableNamesInFilters(tableId, query, allTables)
@@ -249,11 +251,22 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
     user: sdk.users.getUserContextBindings(ctx.user),
   })
 
-  const searchParams: RowSearchParams = {
-    ...ctx.request.body,
+  const searchParams: RequiredKeys<RowSearchParams> = {
     query: enrichedQuery,
     tableId,
     viewId,
+    bookmark: searchRequest.bookmark ?? undefined,
+    paginate: searchRequest.paginate,
+    limit: searchRequest.limit,
+    sort: searchRequest.sort ?? undefined,
+    sortOrder: searchRequest.sortOrder,
+    sortType: searchRequest.sortType ?? undefined,
+    countRows: searchRequest.countRows,
+    version: searchRequest.version,
+    disableEscaping: searchRequest.disableEscaping,
+    fields: undefined,
+    indexer: undefined,
+    rows: undefined,
   }
 
   ctx.status = 200
