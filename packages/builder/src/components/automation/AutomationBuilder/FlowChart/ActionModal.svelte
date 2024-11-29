@@ -159,7 +159,11 @@
                 <Tag icon="LockClosed">Premium</Tag>
               </Tags>
             {:else if isDisabled}
-              <Icon name="Help" tooltip={disabled()[idx].message} />
+              <Icon
+                name="Help"
+                tooltip={disabled()[idx].message}
+                color="var(--spectrum-global-color-gray-700)"
+              />
             {/if}
           </div>
         </div>

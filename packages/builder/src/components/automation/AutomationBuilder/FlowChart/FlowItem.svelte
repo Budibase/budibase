@@ -410,6 +410,10 @@
     cursor: grab;
     border-top-left-radius: 12px;
     border-bottom-left-radius: 12px;
+    transition: background 200ms ease;
+  }
+  .block.draggable .wrap .handle:hover {
+    background-color: var(--grey-4);
   }
   .block.draggable .wrap .handle.grabbing {
     cursor: grabbing;
