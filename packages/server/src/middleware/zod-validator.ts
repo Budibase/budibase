@@ -1,11 +1,16 @@
-import { Ctx } from "@budibase/types"
+import { features } from "@budibase/backend-core"
+import { Ctx, FeatureFlag } from "@budibase/types"
 
 import { AnyZodObject } from "zod"
 import { fromZodError } from "zod-validation-error"
 
 function validate(schema: AnyZodObject, property: "body" | "params") {
   // Return a Koa middleware function
-  return (ctx: Ctx, next: any) => {
+  return async (ctx: Ctx, next: any) => {
+    if (!(await features.flags.isEnabled(FeatureFlag.USE_ZOD_VALIDATOR))) {
+      return next()
+    }
+
     if (!schema) {
       return next()
     }
