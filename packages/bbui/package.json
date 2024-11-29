@@ -17,7 +17,8 @@
     "build": "vite build"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "1.4.0"
+    "@sveltejs/vite-plugin-svelte": "1.4.0",
+    "vite-plugin-css-injected-by-js": "3.5.2"
   },
   "keywords": [
     "svelte"
