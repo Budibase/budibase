@@ -1,4 +1,33 @@
-export const buildConfigEndpoints = API => ({
+import {
+  Config,
+  ConfigType,
+  GetPublicOIDCConfigResponse,
+  GetPublicSettingsResponse,
+  OIDCLogosConfig,
+} from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface ConfigEndpoints {
+  saveConfig: <T>(
+    config: Config<T>
+  ) => Promise<{ type: ConfigType; _id: string; _rev: string }>
+  getConfig: <T>(type: ConfigType) => Promise<Config<T>>
+  deleteConfig: (id: string, rev: string) => Promise<{ message: string }>
+  getTenantConfig: (tentantId: string) => Promise<GetPublicSettingsResponse>
+  getOIDCConfig: (tenantId: string) => Promise<GetPublicOIDCConfigResponse>
+  getOIDCLogos: () => Promise<Config<OIDCLogosConfig>>
+
+  // Missing request or response types
+  getChecklist: (tenantId: string) => Promise<any>
+  uploadLogo: (data: any) => Promise<{ message: string; url: string }>
+  uploadFavicon: (data: any) => Promise<{ message: string; url: string }>
+  uploadOIDCLogo: (
+    name: string,
+    data: any
+  ) => Promise<{ message: string; url: string }>
+}
+
+export const buildConfigEndpoints = (API: BaseAPIClient): ConfigEndpoints => ({
   /**
    * Saves a global config.
    * @param config the config to save
@@ -25,7 +54,7 @@ export const buildConfigEndpoints = API => ({
    * @param id the id of the config to delete
    * @param rev the revision of the config to delete
    */
-  deleteConfig: async ({ id, rev }) => {
+  deleteConfig: async (id, rev) => {
     return await API.delete({
       url: `/api/global/configs/${id}/${rev}`,
     })
@@ -90,7 +119,7 @@ export const buildConfigEndpoints = API => ({
    * @param name the name of the OIDC provider
    * @param data the logo form data to upload
    */
-  uploadOIDCLogo: async ({ name, data }) => {
+  uploadOIDCLogo: async (name, data) => {
     return await API.post({
       url: `/api/global/configs/upload/logos_oidc/${name}`,
       body: data,

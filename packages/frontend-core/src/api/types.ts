@@ -6,6 +6,7 @@ import { AuditLogEndpoints } from "./auditLogs"
 import { AuthEndpoints } from "./auth"
 import { AutomationEndpoints } from "./automations"
 import { BackupEndpoints } from "./backups"
+import { ConfigEndpoints } from "./configs"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -56,4 +57,5 @@ export type APIClient = BaseAPIClient &
   AuditLogEndpoints &
   AuthEndpoints &
   AutomationEndpoints &
-  BackupEndpoints & { [key: string]: any }
+  BackupEndpoints &
+  ConfigEndpoints & { [key: string]: any }
