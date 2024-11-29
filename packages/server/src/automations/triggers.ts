@@ -148,7 +148,7 @@ export async function externalTrigger(
     user?: UserBindings
   },
   { getResponses }: { getResponses?: boolean } = {}
-): Promise<any> {
+): Promise<Record<string, any>> {
   if (automation.disabled) {
     throw new Error("Automation is disabled")
   }
