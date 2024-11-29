@@ -198,6 +198,21 @@
     return url
   }
 
+  const getSanitizedLogoSize = logoSize => {
+    let sanitizedSize = 36
+
+    try {
+      const result = Function('"use strict"; return (' + logoSize + ")")()
+      if (typeof result === "number" && isFinite(result)) {
+        sanitizedSize = result
+      }
+    } catch (error) {
+      console.log("Invalid logo size:", error)
+    }
+
+    return sanitizedSize < 165 ? sanitizedSize : 165
+  }
+
   const handleClickLink = () => {
     mobileOpen = false
     sidePanelStore.actions.close()
@@ -253,7 +268,7 @@
                   : '95%'};
                   align-items: {navigation === 'Left'
                   ? 'center'
-                  : 'center'}; border: 10px solid lime;"
+                  : 'center'}; border: 1px solid lime;"
               >
                 <div>
                   {#if !hideLogo}
@@ -268,7 +283,9 @@
                         <img
                           src={logoUrl || "/builder/bblogo.png"}
                           alt={title}
-                          style="--logo-size: {logoSize};"
+                          style="--logo-size: {getSanitizedLogoSize(
+                            logoSize
+                          )}px;"
                         />
                       </a>
                     {:else if logoLinkUrl}
@@ -282,14 +299,16 @@
                         <img
                           src={logoUrl || "/builder/bblogo.png"}
                           alt={title}
-                          style="--logo-size: {logoSize};"
+                          style="--logo-size: {getSanitizedLogoSize(
+                            logoSize
+                          )}px;"
                         />
                       </a>
                     {:else}
                       <img
                         src={logoUrl || "/builder/bblogo.png"}
                         alt={title}
-                        style="--logo-size: {logoSize};"
+                        style="--logo-size: {getSanitizedLogoSize(logoSize)}px;"
                       />
                     {/if}
                   {/if}
@@ -567,7 +586,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    border: 2px solid blue;
+    border: 1px solid blue;
     max-width: 100%;
   }
   .portal {

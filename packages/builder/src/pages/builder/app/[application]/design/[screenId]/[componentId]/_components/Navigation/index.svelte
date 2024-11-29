@@ -34,7 +34,7 @@
     { value: "Right", barIcon: "TextAlignRight" },
   ]
   const widthOptions = ["Max", "Large", "Medium", "Small"]
-  const logoSizeOptions = ["18px", "24px", "36px", "48px", "72px", "96px"]
+  const logoSizeOptions = ["18", "24", "36", "48", "72", "96"]
 
   $: bindings = getBindableProperties(
     $selectedScreen,
@@ -183,7 +183,7 @@
             }}
           />
           <PropertyControl
-            label="Logo size"
+            label="Logo size (px)"
             control={DrawerBindableCombobox}
             value={$nav.logoSize}
             onChange={logoSize => update("logoSize", logoSize)}
