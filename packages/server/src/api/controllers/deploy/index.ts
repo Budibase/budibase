@@ -7,7 +7,12 @@ import {
   enableCronTrigger,
 } from "../../../automations/utils"
 import { backups } from "@budibase/pro"
-import { App, AppBackupTrigger } from "@budibase/types"
+import {
+  App,
+  AppBackupTrigger,
+  PublishAppResponse,
+  UserCtx,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 
@@ -123,7 +128,9 @@ export async function deploymentProgress(ctx: any) {
   }
 }
 
-export const publishApp = async function (ctx: any) {
+export const publishApp = async function (
+  ctx: UserCtx<void, PublishAppResponse>
+) {
   let deployment = new Deployment()
   console.log("Deployment object created")
   deployment.setStatus(DeploymentStatus.PENDING)
