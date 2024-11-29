@@ -470,12 +470,14 @@ class Orchestrator {
               success: true,
             }
           : {
-              success: reachedMaxIterations
-                ? AutomationStepStatus.MAX_ITERATIONS
-                : true,
+              success: true,
               items: this.loopStepOutputs,
               iterations: iterationCount,
             }
+
+      if (reachedMaxIterations && iterations !== 0) {
+        tempOutput.status = AutomationStepStatus.MAX_ITERATIONS
+      }
 
       // Loop Step clean up
       this.executionOutput.steps.splice(pathStepIdx, 0, {
