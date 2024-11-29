@@ -168,7 +168,7 @@ describe("Loop automations", () => {
       .serverLog({ text: "{{steps.1.iterations}}" })
       .run()
 
-    expect(results.steps[1].outputs.iterations).toBe(2)
+    expect(results.steps[0].outputs.iterations).toBe(2)
   })
 
   it("should run an automation with loop and max iterations to ensure context correctness further down the tree", async () => {
@@ -187,7 +187,7 @@ describe("Loop automations", () => {
       .serverLog({ text: "{{steps.1.iterations}}" })
       .run()
 
-    expect(results.steps[2].outputs.message).toContain("- 2")
+    expect(results.steps[1].outputs.message).toContain("- 2")
   })
 
   it("should run an automation where a loop is successfully run twice", async () => {
