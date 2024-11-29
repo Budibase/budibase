@@ -3,6 +3,10 @@
     "allowJs": true,
     "strict": true,
     "outDir": "dist",
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
     "paths": {
       "@budibase/*": [
         "../*/src/index.ts",
@@ -12,6 +16,5 @@
       ],
       "*": ["./src/*"]
     }
-  },
-  "include": ["src/**/*"]
+  }
 }

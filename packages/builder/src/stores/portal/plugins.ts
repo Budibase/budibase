@@ -1,16 +1,21 @@
 import { writable } from "svelte/store"
+import { PluginSource } from "constants/index"
+
 import { API } from "api"
-import { PluginSource } from "constants"
+
+interface Plugin {
+  _id: string
+}
 
 export function createPluginsStore() {
-  const { subscribe, set, update } = writable([])
+  const { subscribe, set, update } = writable<Plugin[]>([])
 
   async function load() {
     const plugins = await API.getPlugins()
     set(plugins)
   }
 
-  async function deletePlugin(pluginId) {
+  async function deletePlugin(pluginId: string) {
     await API.deletePlugin(pluginId)
     update(state => {
       state = state.filter(existing => existing._id !== pluginId)
@@ -18,8 +23,8 @@ export function createPluginsStore() {
     })
   }
 
-  async function createPlugin(source, url, auth = null) {
-    let pluginData = {
+  async function createPlugin(source: string, url: string, auth = null) {
+    let pluginData: any = {
       source,
       url,
     }
@@ -46,7 +51,7 @@ export function createPluginsStore() {
     })
   }
 
-  async function uploadPlugin(file) {
+  async function uploadPlugin(file: File) {
     if (!file) {
       return
     }

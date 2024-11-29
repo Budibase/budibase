@@ -296,16 +296,6 @@ export async function find(ctx: UserCtx) {
   ctx.body = await sdk.datasources.removeSecretSingle(datasource)
 }
 
-// dynamic query functionality
-export async function query(ctx: UserCtx) {
-  const queryJson = ctx.request.body
-  try {
-    ctx.body = await sdk.rows.utils.getDatasourceAndQuery(queryJson)
-  } catch (err: any) {
-    ctx.throw(400, err)
-  }
-}
-
 export async function getExternalSchema(ctx: UserCtx) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
