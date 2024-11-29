@@ -1802,7 +1802,6 @@ components:
         query:
           description: Search parameters for view
           type: object
-          required: []
           properties:
             logicalOperator:
               description: When using groups this defines whether all of the filters must
@@ -2012,7 +2011,6 @@ components:
             query:
               description: Search parameters for view
               type: object
-              required: []
               properties:
                 logicalOperator:
                   description: When using groups this defines whether all of the filters must
@@ -2229,7 +2227,6 @@ components:
               query:
                 description: Search parameters for view
                 type: object
-                required: []
                 properties:
                   logicalOperator:
                     description: When using groups this defines whether all of the filters must

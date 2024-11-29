@@ -1,8 +1,8 @@
 import {
   Aggregation,
   CalculationType,
-  Datasource,
   DocumentType,
+  EnrichedQueryJson,
   FieldType,
   isLogicalSearchOperator,
   Operation,
@@ -38,7 +38,7 @@ import { generateJunctionTableID } from "../../../../../db/utils"
 import AliasTables from "../../sqlAlias"
 import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
-import { processRowCountResponse } from "../../utils"
+import { enrichQueryJson, processRowCountResponse } from "../../utils"
 import {
   dataFilters,
   helpers,
@@ -180,19 +180,6 @@ function cleanupFilters(filters: SearchFilters, allTables: Table[]) {
   return filters
 }
 
-function buildTableMap(tables: Table[]) {
-  const tableMap: Record<string, Table> = {}
-  for (let table of tables) {
-    // update the table name, should never query by name for SQLite
-    table.originalName = table.name
-    table.name = table._id!
-    // need a primary for sorting, lookups etc
-    table.primary = ["_id"]
-    tableMap[table._id!] = table
-  }
-  return tableMap
-}
-
 // table is only needed to handle relationships
 function reverseUserColumnMapping(rows: Row[], table?: Table) {
   const prefixLength = USER_COLUMN_PREFIX.length
@@ -223,30 +210,30 @@ function reverseUserColumnMapping(rows: Row[], table?: Table) {
 }
 
 function runSqlQuery(
-  json: QueryJson,
+  json: EnrichedQueryJson,
   tables: Table[],
   relationships: RelationshipsJson[]
 ): Promise<Row[]>
 function runSqlQuery(
-  json: QueryJson,
+  json: EnrichedQueryJson,
   tables: Table[],
   relationships: RelationshipsJson[],
   opts: { countTotalRows: true }
 ): Promise<number>
 async function runSqlQuery(
-  json: QueryJson,
+  json: EnrichedQueryJson,
   tables: Table[],
   relationships: RelationshipsJson[],
   opts?: { countTotalRows?: boolean }
 ) {
   const relationshipJunctionTableIds = relationships.map(rel => rel.through!)
   const alias = new AliasTables(
-    tables.map(table => table.name).concat(relationshipJunctionTableIds)
+    tables.map(table => table._id!).concat(relationshipJunctionTableIds)
   )
   if (opts?.countTotalRows) {
-    json.endpoint.operation = Operation.COUNT
+    json.operation = Operation.COUNT
   }
-  const processSQLQuery = async (_: Datasource, json: QueryJson) => {
+  const processSQLQuery = async (json: EnrichedQueryJson) => {
     const query = builder._query(json, {
       disableReturning: true,
     })
@@ -281,7 +268,7 @@ async function runSqlQuery(
   if (opts?.countTotalRows) {
     return processRowCountResponse(response)
   } else if (Array.isArray(response)) {
-    return reverseUserColumnMapping(response, json.meta.table)
+    return reverseUserColumnMapping(response, json.table)
   }
   return response
 }
@@ -315,7 +302,11 @@ export async function search(
   }
 
   const allTables = await sdk.tables.getAllInternalTables()
-  const allTablesMap = buildTableMap(allTables)
+  const allTablesMap = allTables.reduce((acc, table) => {
+    acc[table._id!] = table
+    return acc
+  }, {} as Record<string, Table>)
+
   // make sure we have the mapped/latest table
   if (table._id) {
     table = allTablesMap[table._id]
@@ -372,10 +363,7 @@ export async function search(
       operation: Operation.READ,
     },
     filters: searchFilters,
-    table,
     meta: {
-      table,
-      tables: allTablesMap,
       columnPrefix: USER_COLUMN_PREFIX,
     },
     resource: {
@@ -427,11 +415,13 @@ export async function search(
     }
   }
 
+  const enrichedRequest = await enrichQueryJson(request)
+
   try {
     const [rows, totalRows] = await Promise.all([
-      runSqlQuery(request, allTables, relationships),
+      runSqlQuery(enrichedRequest, allTables, relationships),
       options.countRows
-        ? runSqlQuery(request, allTables, relationships, {
+        ? runSqlQuery(enrichedRequest, allTables, relationships, {
             countTotalRows: true,
           })
         : Promise.resolve(undefined),

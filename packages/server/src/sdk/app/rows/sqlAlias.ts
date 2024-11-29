@@ -1,22 +1,19 @@
 import {
   Datasource,
   DatasourcePlusQueryResponse,
+  EnrichedQueryJson,
   Operation,
-  QueryJson,
   Row,
   SearchFilters,
   SqlClient,
+  Table,
 } from "@budibase/types"
-import { SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getSQLClient } from "./utils"
 import { cloneDeep } from "lodash"
-import datasources from "../datasources"
-import { BudibaseInternalDB } from "../../../db/utils"
 import { dataFilters } from "@budibase/shared-core"
 
 type PerformQueryFunction = (
-  datasource: Datasource,
-  json: QueryJson
+  json: EnrichedQueryJson
 ) => Promise<DatasourcePlusQueryResponse>
 
 const WRITE_OPERATIONS: Operation[] = [
@@ -71,13 +68,12 @@ export default class AliasTables {
     this.charSeq = new CharSequence()
   }
 
-  isAliasingEnabled(json: QueryJson, datasource?: Datasource) {
-    const operation = json.endpoint.operation
+  isAliasingEnabled(json: EnrichedQueryJson, datasource?: Datasource) {
     const fieldLength = json.resource?.fields?.length
     if (
       !fieldLength ||
       fieldLength <= 0 ||
-      DISABLED_OPERATIONS.includes(operation)
+      DISABLED_OPERATIONS.includes(json.operation)
     ) {
       return false
     }
@@ -87,7 +83,7 @@ export default class AliasTables {
     }
     try {
       const sqlClient = getSQLClient(datasource)
-      const isWrite = WRITE_OPERATIONS.includes(operation)
+      const isWrite = WRITE_OPERATIONS.includes(json.operation)
       const isDisabledClient = DISABLED_WRITE_CLIENTS.includes(sqlClient)
       if (isWrite && isDisabledClient) {
         return false
@@ -99,7 +95,11 @@ export default class AliasTables {
     return true
   }
 
-  getAlias(tableName: string) {
+  getAlias(tableName: string | Table) {
+    if (typeof tableName === "object") {
+      tableName = tableName.name
+    }
+
     if (this.aliases[tableName]) {
       return this.aliases[tableName]
     }
@@ -177,17 +177,15 @@ export default class AliasTables {
   }
 
   async queryWithAliasing(
-    json: QueryJson,
+    json: EnrichedQueryJson,
     queryFn: PerformQueryFunction
   ): Promise<DatasourcePlusQueryResponse> {
-    const datasourceId = json.endpoint.datasourceId
-    const isSqs = datasourceId === SQS_DATASOURCE_INTERNAL
-    let aliasingEnabled: boolean, datasource: Datasource
+    const datasource = json.datasource
+    const isSqs = datasource === undefined
+    let aliasingEnabled: boolean
     if (isSqs) {
       aliasingEnabled = this.isAliasingEnabled(json)
-      datasource = BudibaseInternalDB
     } else {
-      datasource = await datasources.get(datasourceId)
       aliasingEnabled = this.isAliasingEnabled(json, datasource)
     }
 
@@ -215,24 +213,23 @@ export default class AliasTables {
         }
         json.filters = aliasFilters(json.filters)
       }
-      if (json.meta?.table) {
-        this.getAlias(json.meta.table.name)
-      }
-      if (json.meta?.tables) {
-        Object.keys(json.meta.tables).forEach(tableName =>
-          this.getAlias(tableName)
-        )
-      }
+
       if (json.relationships) {
         json.relationships = json.relationships.map(relationship => ({
           ...relationship,
           aliases: this.aliasMap([
             relationship.through,
             relationship.tableName,
-            json.endpoint.entityId,
+            json.table.name,
           ]),
         }))
       }
+
+      this.getAlias(json.table)
+      for (const tableName of Object.keys(json.tables)) {
+        this.getAlias(tableName)
+      }
+
       // invert and return
       const invertedTableAliases: Record<string, string> = {}
       for (let [key, value] of Object.entries(this.tableAliases)) {
@@ -241,7 +238,7 @@ export default class AliasTables {
       json.tableAliases = invertedTableAliases
     }
 
-    let response: DatasourcePlusQueryResponse = await queryFn(datasource, json)
+    let response = await queryFn(json)
     if (Array.isArray(response) && aliasingEnabled) {
       return this.reverse(response)
     } else {

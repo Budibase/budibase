@@ -45,17 +45,6 @@ export enum AuthTypes {
   EXTERNAL = "external",
 }
 
-export enum DataSourceOperation {
-  CREATE = "CREATE",
-  READ = "READ",
-  UPDATE = "UPDATE",
-  DELETE = "DELETE",
-  BULK_CREATE = "BULK_CREATE",
-  CREATE_TABLE = "CREATE_TABLE",
-  UPDATE_TABLE = "UPDATE_TABLE",
-  DELETE_TABLE = "DELETE_TABLE",
-}
-
 export enum DatasourceAuthTypes {
   GOOGLE = "google",
 }
