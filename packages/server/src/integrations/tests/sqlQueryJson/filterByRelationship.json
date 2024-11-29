@@ -1,9 +1,5 @@
 {
-  "endpoint": {
-    "datasourceId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
-    "entityId": "products",
-    "operation": "READ"
-  },
+  "operation": "READ",
   "resource": {
     "fields": [
       "a.productname",
@@ -46,47 +42,45 @@
     "tasks": "b",
     "products": "a"
   },
-  "meta": {
-    "table": {
-      "type": "table",
-      "_id": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__products",
-      "primary": ["productid"],
-      "name": "products",
-      "schema": {
-        "productname": {
-          "type": "string",
-          "externalType": "character varying",
-          "autocolumn": false,
-          "name": "productname",
-          "constraints": {
-            "presence": false
-          }
-        },
-        "productid": {
-          "type": "number",
-          "externalType": "integer",
-          "autocolumn": true,
-          "name": "productid",
-          "constraints": {
-            "presence": false
-          }
-        },
-        "tasks": {
-          "tableId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__tasks",
-          "name": "tasks",
-          "relationshipType": "many-to-many",
-          "fieldName": "taskid",
-          "through": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__products_tasks",
-          "throughFrom": "taskid",
-          "throughTo": "productid",
-          "type": "link",
-          "main": true,
-          "_id": "ca6862d9ba09146dd8a68e3b5b7055a09"
+  "table": {
+    "type": "table",
+    "_id": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__products",
+    "primary": ["productid"],
+    "name": "products",
+    "schema": {
+      "productname": {
+        "type": "string",
+        "externalType": "character varying",
+        "autocolumn": false,
+        "name": "productname",
+        "constraints": {
+          "presence": false
         }
       },
-      "sourceId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
-      "sourceType": "external",
-      "primaryDisplay": "productname"
-    }
+      "productid": {
+        "type": "number",
+        "externalType": "integer",
+        "autocolumn": true,
+        "name": "productid",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "tasks": {
+        "tableId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__tasks",
+        "name": "tasks",
+        "relationshipType": "many-to-many",
+        "fieldName": "taskid",
+        "through": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__products_tasks",
+        "throughFrom": "taskid",
+        "throughTo": "productid",
+        "type": "link",
+        "main": true,
+        "_id": "ca6862d9ba09146dd8a68e3b5b7055a09"
+      }
+    },
+    "sourceId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
+    "sourceType": "external",
+    "primaryDisplay": "productname"
   }
 }
