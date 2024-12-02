@@ -57,7 +57,7 @@ export interface UpdateAppResponse extends App {}
 export interface UpdateAppClientResponse extends App {}
 export interface RevertAppClientResponse extends App {}
 
-export interface DestroyAppResponse {
+export interface DeleteAppResponse {
   ok: boolean
 }
 
