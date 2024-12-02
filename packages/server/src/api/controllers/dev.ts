@@ -11,7 +11,13 @@ import {
   db as dbCore,
   cache,
 } from "@budibase/backend-core"
-import { App, Ctx, GetVersionResponse } from "@budibase/types"
+import {
+  App,
+  ClearDevLockResponse,
+  Ctx,
+  GetVersionResponse,
+  RevertAppResponse,
+} from "@budibase/types"
 
 async function redirect(
   ctx: any,
@@ -69,7 +75,7 @@ export function buildRedirectDelete(path: string) {
   }
 }
 
-export async function clearLock(ctx: any) {
+export async function clearLock(ctx: Ctx<void, ClearDevLockResponse>) {
   const { appId } = ctx.params
   try {
     await redisClearLock(appId, ctx.user)
@@ -81,7 +87,7 @@ export async function clearLock(ctx: any) {
   }
 }
 
-export async function revert(ctx: any) {
+export async function revert(ctx: Ctx<void, RevertAppResponse>) {
   const { appId } = ctx.params
   const productionAppId = dbCore.getProdAppID(appId)
 
