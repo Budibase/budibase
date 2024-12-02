@@ -1537,11 +1537,16 @@ class InternalBuilder {
       limits?: { base: number; query: number }
     } = {}
   ): Knex.QueryBuilder {
-    let { operation, filters, paginate, relationships, table } = this.query
+    const { operation, filters, paginate, relationships, table, resource } =
+      this.query
     const { limits } = opts
 
     // start building the query
     let query = this.qualifiedKnex()
+    if (resource?.fields) {
+      query = query.columns(resource?.fields)
+    }
+
     // handle pagination
     let foundOffset: number | null = null
     let foundLimit = limits?.query || limits?.base
