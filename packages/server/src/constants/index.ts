@@ -124,11 +124,6 @@ export enum BaseQueryVerbs {
   DELETE = "delete",
 }
 
-export enum MetadataTypes {
-  AUTOMATION_TEST_INPUT = "automationTestInput",
-  AUTOMATION_TEST_HISTORY = "automationTestHistory",
-}
-
 export enum InvalidColumns {
   ID = "_id",
   REV = "_rev",
