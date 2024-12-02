@@ -1,13 +1,50 @@
-export const buildGroupsEndpoints = API => {
-  // underlying functionality of adding/removing users/apps to groups
-  async function updateGroupResource(groupId, resource, operation, ids) {
-    if (!Array.isArray(ids)) {
-      ids = [ids]
-    }
-    return await API.post({
+import { SearchUserGroupResponse, UserGroup } from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface GroupEndpoints {
+  saveGroup: (group: UserGroup) => Promise<{ _id: string; _rev: string }>
+  getGroups: () => Promise<UserGroup[]>
+  getGroup: (id: string) => Promise<UserGroup>
+  deleteGroup: (id: string, rev: string) => Promise<{ message: string }>
+  getGroupUsers: (
+    data: GetGroupUsersRequest
+  ) => Promise<SearchUserGroupResponse>
+  addUsersToGroup: (groupId: string, userIds: string[]) => Promise<void>
+  removeUsersFromGroup: (groupId: string, userIds: string[]) => Promise<void>
+  addAppsToGroup: (groupId: string, appArray: object[]) => Promise<void>
+  removeAppsFromGroup: (groupId: string, appArray: object[]) => Promise<void>
+  addGroupAppBuilder: (groupId: string, appId: string) => Promise<void>
+  removeGroupAppBuilder: (groupId: string, appId: string) => Promise<void>
+}
+
+enum GroupResource {
+  USERS = "users",
+  APPS = "apps",
+}
+
+enum GroupOperation {
+  ADD = "add",
+  REMOVE = "remove",
+}
+
+type GetGroupUsersRequest = {
+  id: string
+  bookmark?: string
+  emailSearch?: string
+}
+
+export const buildGroupsEndpoints = (API: BaseAPIClient): GroupEndpoints => {
+  // Underlying functionality of adding/removing users/apps to groups
+  async function updateGroupResource(
+    groupId: string,
+    resource: GroupResource,
+    operation: GroupOperation,
+    resources: string[] | object[]
+  ) {
+    return await API.post<{ [key in GroupOperation]?: string[] | object[] }>({
       url: `/api/global/groups/${groupId}/${resource}`,
       body: {
-        [operation]: ids,
+        [operation]: resources,
       },
     })
   }
@@ -46,7 +83,7 @@ export const buildGroupsEndpoints = API => {
      * @param id the id of the config to delete
      * @param rev the revision of the config to delete
      */
-    deleteGroup: async ({ id, rev }) => {
+    deleteGroup: async (id, rev) => {
       return await API.delete({
         url: `/api/global/groups/${id}/${rev}`,
       })
@@ -61,9 +98,8 @@ export const buildGroupsEndpoints = API => {
         url += `bookmark=${bookmark}&`
       }
       if (emailSearch) {
-        url += `emailSearch=${emailSearch}&`
+        url += `emailSearch=${emailSearch}`
       }
-
       return await API.get({
         url,
       })
@@ -75,7 +111,12 @@ export const buildGroupsEndpoints = API => {
      * @param userIds The user IDs to be added
      */
     addUsersToGroup: async (groupId, userIds) => {
-      return updateGroupResource(groupId, "users", "add", userIds)
+      return updateGroupResource(
+        groupId,
+        GroupResource.USERS,
+        GroupOperation.ADD,
+        userIds
+      )
     },
 
     /**
@@ -84,7 +125,12 @@ export const buildGroupsEndpoints = API => {
      * @param userIds The user IDs to be removed
      */
     removeUsersFromGroup: async (groupId, userIds) => {
-      return updateGroupResource(groupId, "users", "remove", userIds)
+      return updateGroupResource(
+        groupId,
+        GroupResource.USERS,
+        GroupOperation.REMOVE,
+        userIds
+      )
     },
 
     /**
@@ -93,7 +139,12 @@ export const buildGroupsEndpoints = API => {
      * @param appArray Array of objects, containing the appId and roleId to be added
      */
     addAppsToGroup: async (groupId, appArray) => {
-      return updateGroupResource(groupId, "apps", "add", appArray)
+      return updateGroupResource(
+        groupId,
+        GroupResource.APPS,
+        GroupOperation.ADD,
+        appArray
+      )
     },
 
     /**
@@ -102,7 +153,12 @@ export const buildGroupsEndpoints = API => {
      * @param appArray Array of objects, containing the appId to be removed
      */
     removeAppsFromGroup: async (groupId, appArray) => {
-      return updateGroupResource(groupId, "apps", "remove", appArray)
+      return updateGroupResource(
+        groupId,
+        GroupResource.APPS,
+        GroupOperation.REMOVE,
+        appArray
+      )
     },
 
     /**
@@ -110,7 +166,7 @@ export const buildGroupsEndpoints = API => {
      * @param groupId The group to update
      * @param appId The app id where the builder will be added
      */
-    addGroupAppBuilder: async ({ groupId, appId }) => {
+    addGroupAppBuilder: async (groupId, appId) => {
       return await API.post({
         url: `/api/global/groups/${groupId}/app/${appId}/builder`,
       })
@@ -121,7 +177,7 @@ export const buildGroupsEndpoints = API => {
      * @param groupId The group to update
      * @param appId The app id where the builder will be removed
      */
-    removeGroupAppBuilder: async ({ groupId, appId }) => {
+    removeGroupAppBuilder: async (groupId, appId) => {
       return await API.delete({
         url: `/api/global/groups/${groupId}/app/${appId}/builder`,
       })
