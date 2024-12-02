@@ -3,6 +3,7 @@ export enum FeatureFlag {
   AI_CUSTOM_CONFIGS = "AI_CUSTOM_CONFIGS",
   DEFAULT_VALUES = "DEFAULT_VALUES",
   BUDIBASE_AI = "BUDIBASE_AI",
+  USE_ZOD_VALIDATOR = "USE_ZOD_VALIDATOR",
 }
 
 export interface TenantFeatureFlags {

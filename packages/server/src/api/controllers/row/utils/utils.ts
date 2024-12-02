@@ -175,7 +175,7 @@ export async function enrichArrayContext(
 }
 
 export async function enrichSearchContext(
-  fields: Record<string, any>,
+  fields: Record<string, any> | undefined,
   inputs = {},
   helpers = true
 ): Promise<Record<string, any>> {
