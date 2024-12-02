@@ -7,6 +7,7 @@ import { AuthEndpoints } from "./auth"
 import { AutomationEndpoints } from "./automations"
 import { BackupEndpoints } from "./backups"
 import { ConfigEndpoints } from "./configs"
+import { DatasourceEndpoints } from "./datasources"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -25,25 +26,42 @@ export type APIClientConfig = {
   onMigrationDetected?: (migration: string) => void
 }
 
-export type APICallConfig = {
+export type APICallConfig<RequestT = null, ResponseT = void> = {
   method: HTTPMethod
   url: string
+  body: RequestT
   json: boolean
   external: boolean
   suppressErrors: boolean
   cache: boolean
-  body?: any
-  parseResponse?: <T>(response: Response) => Promise<T> | T
+  parseResponse?: (response: Response) => Promise<ResponseT> | ResponseT
 }
 
-export type APICallParams = Pick<APICallConfig, "url"> & Partial<APICallConfig>
+export type APICallParams<
+  RequestT = null,
+  ResponseT = void
+> = RequestT extends null
+  ? Pick<APICallConfig<RequestT, ResponseT>, "url"> &
+      Partial<APICallConfig<RequestT, ResponseT>>
+  : Pick<APICallConfig<RequestT, ResponseT>, "url" | "body"> &
+      Partial<APICallConfig<RequestT, ResponseT>>
 
 export type BaseAPIClient = {
-  post: <T>(params: APICallParams) => Promise<T>
-  get: <T>(params: APICallParams) => Promise<T>
-  put: <T>(params: APICallParams) => Promise<T>
-  delete: <T>(params: APICallParams) => Promise<T>
-  patch: <T>(params: APICallParams) => Promise<T>
+  post: <RequestT = null, ResponseT = void>(
+    params: APICallParams<RequestT, ResponseT>
+  ) => Promise<ResponseT>
+  get: <ResponseT = void>(
+    params: APICallParams<undefined | null, ResponseT>
+  ) => Promise<ResponseT>
+  put: <RequestT = null, ResponseT = void>(
+    params: APICallParams<RequestT, ResponseT>
+  ) => Promise<ResponseT>
+  delete: <RequestT = null, ResponseT = void>(
+    params: APICallParams<RequestT, ResponseT>
+  ) => Promise<ResponseT>
+  patch: <RequestT = null, ResponseT = void>(
+    params: APICallParams<RequestT, ResponseT>
+  ) => Promise<ResponseT>
   error: (message: string) => void
   invalidateCache: () => void
   getAppID: () => string
@@ -58,4 +76,5 @@ export type APIClient = BaseAPIClient &
   AuthEndpoints &
   AutomationEndpoints &
   BackupEndpoints &
-  ConfigEndpoints & { [key: string]: any }
+  ConfigEndpoints &
+  DatasourceEndpoints & { [key: string]: any }
