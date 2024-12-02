@@ -64,7 +64,7 @@ import {
   FetchAppsResponse,
   UpdateAppClientResponse,
   RevertAppClientResponse,
-  DestroyAppResponse,
+  DeleteAppResponse,
   ImportToUpdateAppRequest,
   ImportToUpdateAppResponse,
   SetRevertableAppVersionRequest,
@@ -685,7 +685,7 @@ async function postDestroyApp(ctx: UserCtx) {
   }
 }
 
-export async function destroy(ctx: UserCtx<void, DestroyAppResponse>) {
+export async function destroy(ctx: UserCtx<void, DeleteAppResponse>) {
   await preDestroyApp(ctx)
   const result = await destroyApp(ctx)
   await postDestroyApp(ctx)

@@ -1,10 +1,10 @@
 export type ApiKeyFetchResponse = Record<string, string>
 
-export interface ApiKeyUpdateRequest {
+export interface UpdateApiKeyRequest {
   value: string
 }
 
-export interface ApiKeyUpdateResponse {
+export interface UpdateApiKeyResponse {
   _id: string
   _rev: string
 }
