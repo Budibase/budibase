@@ -11,7 +11,7 @@ import {
   db as dbCore,
   cache,
 } from "@budibase/backend-core"
-import { App } from "@budibase/types"
+import { App, Ctx, GetVersionResponse } from "@budibase/types"
 
 async function redirect(
   ctx: any,
@@ -131,7 +131,7 @@ export async function revert(ctx: any) {
   }
 }
 
-export async function getBudibaseVersion(ctx: any) {
+export async function getBudibaseVersion(ctx: Ctx<void, GetVersionResponse>) {
   const version = envCore.VERSION
   ctx.body = {
     version,
