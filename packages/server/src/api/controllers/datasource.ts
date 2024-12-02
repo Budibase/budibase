@@ -25,7 +25,7 @@ import {
   DynamicVariable,
   FetchDatasourcesResponse,
   FindDatasourcesResponse,
-  DestroyDatasourceResponse,
+  DeleteDatasourceResponse,
   FetchExternalSchemaResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
@@ -264,7 +264,7 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
   }
 }
 
-export async function destroy(ctx: UserCtx<void, DestroyDatasourceResponse>) {
+export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
 
