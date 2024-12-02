@@ -8,6 +8,7 @@ import { AutomationEndpoints } from "./automations"
 import { BackupEndpoints } from "./backups"
 import { ConfigEndpoints } from "./configs"
 import { DatasourceEndpoints } from "./datasources"
+import { EnvironmentVariableEndpoints } from "./environmentVariables"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -77,4 +78,5 @@ export type APIClient = BaseAPIClient &
   AutomationEndpoints &
   BackupEndpoints &
   ConfigEndpoints &
-  DatasourceEndpoints & { [key: string]: any }
+  DatasourceEndpoints &
+  EnvironmentVariableEndpoints
