@@ -10,7 +10,6 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import * as pro from "@budibase/pro"
-import { isAutomationResults } from "../../automations/triggers"
 
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate
