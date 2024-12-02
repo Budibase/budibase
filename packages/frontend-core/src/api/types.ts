@@ -10,6 +10,7 @@ import { ConfigEndpoints } from "./configs"
 import { DatasourceEndpoints } from "./datasources"
 import { EnvironmentVariableEndpoints } from "./environmentVariables"
 import { EventEndpoints } from "./events"
+import { FlagEndpoints } from "./flags"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -81,4 +82,5 @@ export type APIClient = BaseAPIClient &
   ConfigEndpoints &
   DatasourceEndpoints &
   EnvironmentVariableEndpoints &
-  EventEndpoints
+  EventEndpoints &
+  FlagEndpoints
