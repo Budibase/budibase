@@ -9,7 +9,6 @@ import {
   App,
   Automation,
   AutomationActionStepId,
-  AutomationResults,
   UserCtx,
   DeleteAutomationResponse,
   FetchAutomationResponse,
