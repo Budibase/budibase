@@ -138,6 +138,7 @@ async function enrichDatasourceWithValues(
   datasource: Datasource,
   variables?: Record<string, string>
 ) {
+  console.log("wtf")
   const cloned = cloneDeep(datasource)
   const env = variables ? variables : await getEnvironmentVariables()
   //Do not process entities, as we do not want to process formulas
