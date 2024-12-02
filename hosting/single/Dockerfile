@@ -1,5 +1,5 @@
 ARG BASEIMG=budibase/couchdb:v3.3.3-sqs-v2.1.1
-FROM node:20-slim as build
+FROM node:20-slim AS build
 
 # install node-gyp dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3 jq
@@ -11,40 +11,42 @@ COPY yarn.lock .
 COPY lerna.json .
 COPY .yarnrc .
 
-COPY packages/server/package.json packages/server/package.json
+COPY packages/types/package.json packages/types/package.json
+COPY packages/shared-core/package.json packages/shared-core/package.json
+COPY packages/backend-core/package.json packages/backend-core/package.json
+COPY packages/frontend-core/package.json packages/frontend-core/package.json
+COPY packages/bbui/package.json packages/bbui/package.json
+COPY packages/builder/package.json packages/builder/package.json
+COPY packages/sdk/package.json packages/sdk/package.json
+COPY packages/client/package.json packages/client/package.json
 COPY packages/worker/package.json packages/worker/package.json
-
-
-COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
-RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
-RUN ./scripts/removeWorkspaceDependencies.sh packages/server/package.json
-RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
+COPY packages/server/package.json packages/server/package.json
+COPY packages/string-templates/package.json packages/string-templates/package.json
+COPY packages/pro/package.json packages/pro/package.json
 
 RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
-RUN ./scripts/removeWorkspaceDependencies.sh package.json
-ARG TARGETPLATFORM
-RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} yarn install --production --frozen-lockfile
+RUN yarn install --frozen-lockfile
 
-# copy the actual code
-COPY packages/server/dist packages/server/dist
-COPY packages/server/pm2.config.js packages/server/pm2.config.js
-COPY packages/server/client packages/server/client
-COPY packages/server/builder packages/server/builder
-COPY packages/worker/dist packages/worker/dist
-COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
+COPY . .
 
+RUN yarn build
 
-FROM $BASEIMG as runner
+# Prune non-production dependencies
+RUN yarn install --production --ignore-scripts --prefer-offline
+
+FROM $BASEIMG AS runner
 ARG TARGETARCH
-ENV TARGETARCH $TARGETARCH
+ENV TARGETARCH=$TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
 # e.g. docker build --build-arg TARGETBUILD=aas ....
 ARG TARGETBUILD=single
-ENV TARGETBUILD $TARGETBUILD
+ENV TARGETBUILD=$TARGETBUILD
 
 # install base dependencies
 RUN apt-get update && \
-  apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server libaio1
+  apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server libaio1 certbot python3-certbot-nginx && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
 # Install postgres client for pg_dump utils
 RUN apt install -y software-properties-common apt-transport-https ca-certificates gnupg \
@@ -52,7 +54,9 @@ RUN apt install -y software-properties-common apt-transport-https ca-certificate
   && echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list \
   && apt update -y \
   && apt install postgresql-client-15 -y \
-  && apt remove software-properties-common apt-transport-https gpg -y
+  && apt remove software-properties-common apt-transport-https gpg -y \
+  && apt clean \
+  && rm -rf /var/lib/apt/lists/*
 
 # We use pm2 in order to run multiple node processes in a single container
 RUN npm install --global pm2
@@ -86,15 +90,15 @@ COPY hosting/single/ssh/sshd_config /etc/
 COPY hosting/single/ssh/ssh_setup.sh /tmp
 
 #  setup letsencrypt certificate
-RUN apt-get install -y certbot python3-certbot-nginx
 COPY hosting/letsencrypt /app/letsencrypt
 RUN chmod +x /app/letsencrypt/certificate-request.sh /app/letsencrypt/certificate-renew.sh
 
 COPY --from=build /app/node_modules /node_modules
 COPY --from=build /app/package.json /package.json
-COPY --from=build /app/packages/server /app
-COPY --from=build /app/packages/worker /worker
-
+COPY --from=build /app/packages/server/package.json /app/package.json
+COPY --from=build /app/packages/server/dist /app/dist
+COPY --from=build /app/packages/worker/package.json /worker/package.json
+COPY --from=build /app/packages/worker/dist /worker/dist
 
 EXPOSE 80
 EXPOSE 443
