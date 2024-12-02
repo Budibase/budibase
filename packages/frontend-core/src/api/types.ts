@@ -13,6 +13,7 @@ import { EventEndpoints } from "./events"
 import { FlagEndpoints } from "./flags"
 import { GroupEndpoints } from "./groups"
 import { LayoutEndpoints } from "./layouts"
+import { LicensingEndpoints } from "./licensing"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -87,4 +88,5 @@ export type APIClient = BaseAPIClient &
   EventEndpoints &
   FlagEndpoints &
   GroupEndpoints &
-  LayoutEndpoints
+  LayoutEndpoints &
+  LicensingEndpoints

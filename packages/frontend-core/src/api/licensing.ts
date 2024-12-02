@@ -1,10 +1,34 @@
-export const buildLicensingEndpoints = API => ({
+import {
+  ActivateLicenseKeyRequest,
+  ActivateOfflineLicenseTokenRequest,
+  GetLicenseKeyResponse,
+  GetOfflineIdentifierResponse,
+  GetOfflineLicenseTokenResponse,
+  QuotaUsage,
+} from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface LicensingEndpoints {
+  activateLicenseKey: (licenseKey: string) => Promise<void>
+  deleteLicenseKey: () => Promise<void>
+  getLicenseKey: () => Promise<GetLicenseKeyResponse>
+  activateOfflineLicense: (offlineLicenseToken: string) => Promise<void>
+  deleteOfflineLicense: () => Promise<void>
+  getOfflineLicense: () => Promise<GetOfflineLicenseTokenResponse>
+  getOfflineLicenseIdentifier: () => Promise<GetOfflineIdentifierResponse>
+  refreshLicense: () => Promise<void>
+  getQuotaUsage: () => Promise<QuotaUsage>
+}
+
+export const buildLicensingEndpoints = (
+  API: BaseAPIClient
+): LicensingEndpoints => ({
   // LICENSE KEY
 
-  activateLicenseKey: async data => {
-    return API.post({
+  activateLicenseKey: async licenseKey => {
+    return API.post<ActivateLicenseKeyRequest>({
       url: `/api/global/license/key`,
-      body: data,
+      body: { licenseKey },
     })
   },
   deleteLicenseKey: async () => {
@@ -26,8 +50,8 @@ export const buildLicensingEndpoints = API => ({
 
   // OFFLINE LICENSE
 
-  activateOfflineLicense: async ({ offlineLicenseToken }) => {
-    return API.post({
+  activateOfflineLicense: async offlineLicenseToken => {
+    return API.post<ActivateOfflineLicenseTokenRequest>({
       url: "/api/global/license/offline",
       body: {
         offlineLicenseToken,
