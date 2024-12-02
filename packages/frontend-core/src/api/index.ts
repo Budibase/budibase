@@ -103,7 +103,9 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   }
 
   // Performs an API call to the server.
-  const makeApiCall = async <T>(callConfig: APICallConfig): Promise<T> => {
+  const makeApiCall = async <RequestT, ResponseT>(
+    callConfig: APICallConfig<RequestT, ResponseT>
+  ): Promise<ResponseT> => {
     let { json, method, external, body, url, parseResponse, suppressErrors } =
       callConfig
 
@@ -124,7 +126,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     }
 
     // Build request body
-    let requestBody = body
+    let requestBody: RequestT | string = body
     if (json) {
       try {
         requestBody = JSON.stringify(body)
@@ -139,7 +141,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       response = await fetch(url, {
         method,
         headers,
-        body: requestBody,
+        body: requestBody as any,
         credentials: "same-origin",
       })
     } catch (error) {
@@ -152,9 +154,9 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       handleMigrations(response)
       try {
         if (parseResponse) {
-          return await parseResponse<T>(response)
+          return await parseResponse(response)
         } else {
-          return (await response.json()) as T
+          return (await response.json()) as ResponseT
         }
       } catch (error) {
         delete cache[url]
@@ -180,28 +182,31 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   // Performs an API call to the server  and caches the response.
   // Future invocation for this URL will return the cached result instead of
   // hitting the server again.
-  const makeCachedApiCall = async <T>(
-    callConfig: APICallConfig
-  ): Promise<T> => {
+  const makeCachedApiCall = async <RequestT = void, ResponseT = void>(
+    callConfig: APICallConfig<RequestT, ResponseT>
+  ): Promise<ResponseT> => {
     const identifier = callConfig.url
     if (!cache[identifier]) {
       cache[identifier] = makeApiCall(callConfig)
       cache[identifier] = await cache[identifier]
     }
-    return (await cache[identifier]) as T
+    return (await cache[identifier]) as ResponseT
   }
 
   // Constructs an API call function for a particular HTTP method
   const requestApiCall =
     (method: HTTPMethod) =>
-    async <T>(params: APICallParams): Promise<T> => {
+    async <RequestT = void, ResponseT = void>(
+      params: APICallParams<RequestT, ResponseT>
+    ): Promise<ResponseT> => {
       try {
-        let callConfig: APICallConfig = {
+        let callConfig: APICallConfig<RequestT, ResponseT> = {
           json: true,
           external: false,
           suppressErrors: false,
           cache: false,
           method,
+          body: params.body,
           ...params,
         }
         let { url, cache, external } = callConfig
@@ -212,7 +217,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
         // Cache the request if possible and desired
         const cacheRequest = cache && config?.enableCaching
         const handler = cacheRequest ? makeCachedApiCall : makeApiCall
-        return await handler<T>(callConfig)
+        return await handler(callConfig)
       } catch (error) {
         if (config?.onError) {
           config.onError(error)
