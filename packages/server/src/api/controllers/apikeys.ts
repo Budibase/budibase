@@ -4,8 +4,8 @@ import {
   UserCtx,
   ApiKeyDoc,
   ApiKeyFetchResponse,
-  ApiKeyUpdateRequest,
-  ApiKeyUpdateResponse,
+  UpdateApiKeyRequest,
+  UpdateApiKeyResponse,
 } from "@budibase/types"
 
 const KEYS_DOC = dbCore.StaticDatabases.GLOBAL.docs.apiKeys
@@ -40,7 +40,7 @@ export async function fetch(ctx: UserCtx<void, ApiKeyFetchResponse>) {
 }
 
 export async function update(
-  ctx: UserCtx<ApiKeyUpdateRequest, ApiKeyUpdateResponse>
+  ctx: UserCtx<UpdateApiKeyRequest, UpdateApiKeyResponse>
 ) {
   const key = ctx.params.key
   const value = ctx.request.body.value

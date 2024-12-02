@@ -46,7 +46,7 @@ export interface BuildSchemaFromSourceResponse {
 export type FetchDatasourcesResponse = Datasource[]
 export type FindDatasourcesResponse = Datasource
 
-export interface DestroyDatasourceResponse {
+export interface DeleteDatasourceResponse {
   message: string
 }
 
