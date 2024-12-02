@@ -10,6 +10,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import * as pro from "@budibase/pro"
+import { isAutomationResults } from "../../automations/triggers"
 
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate
@@ -94,12 +95,16 @@ export async function trigger(ctx: BBContext) {
             { getResponses: true }
           )
 
-          let collectedValue = response.steps.find(
-            (step: any) => step.stepId === AutomationActionStepId.COLLECT
-          )
+          if (triggers.isAutomationResults(response)) {
+            let collectedValue = response.steps.find(
+              (step: any) => step.stepId === AutomationActionStepId.COLLECT
+            )
 
-          ctx.status = 200
-          ctx.body = collectedValue.outputs
+            ctx.status = 200
+            ctx.body = collectedValue?.outputs
+          } else {
+            ctx.throw(400, "Automation did not have a collect block.")
+          }
         } else {
           await triggers.externalTrigger(target, {
             body: ctx.request.body,
