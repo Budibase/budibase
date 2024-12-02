@@ -1,3 +1,8 @@
+import {
+  LoginRequest,
+  PasswordResetRequest,
+  PasswordResetUpdateRequest,
+} from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface AuthEndpoints {
@@ -26,7 +31,7 @@ export const buildAuthEndpoints = (API: BaseAPIClient): AuthEndpoints => ({
    * @param password the password
    */
   logIn: async (tenantId, username, password) => {
-    return await API.post({
+    return await API.post<LoginRequest>({
       url: `/api/global/auth/${tenantId}/login`,
       body: {
         username,
@@ -70,7 +75,7 @@ export const buildAuthEndpoints = (API: BaseAPIClient): AuthEndpoints => ({
    * @param email the email address of the user
    */
   requestForgotPassword: async (tenantId, email) => {
-    return await API.post({
+    return await API.post<PasswordResetRequest, { message: string }>({
       url: `/api/global/auth/${tenantId}/reset`,
       body: {
         email,
@@ -85,7 +90,7 @@ export const buildAuthEndpoints = (API: BaseAPIClient): AuthEndpoints => ({
    * @param resetCode the reset code to authenticate the request
    */
   resetPassword: async (tenantId, password, resetCode) => {
-    return await API.post({
+    return await API.post<PasswordResetUpdateRequest, { message: string }>({
       url: `/api/global/auth/${tenantId}/reset/update`,
       body: {
         password,
