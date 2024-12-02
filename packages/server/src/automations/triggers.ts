@@ -148,6 +148,14 @@ function rowPassesFilters(row: Row, filters: SearchFilters) {
   return filteredRows.length > 0
 }
 
+export function isAutomationResults(
+  response: AutomationResults | DidNotTriggerResponse | AutomationJob
+): response is AutomationResults {
+  return (
+    response !== null && "steps" in response && Array.isArray(response.steps)
+  )
+}
+
 export async function externalTrigger(
   automation: Automation,
   params: {
