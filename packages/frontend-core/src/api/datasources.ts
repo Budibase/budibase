@@ -20,7 +20,7 @@ export interface DatasourceEndpoints {
     tablesFilter?: BuildSchemaFromSourceRequest["tablesFilter"]
   ) => Promise<BuildSchemaFromSourceResponse>
   createDatasource: (
-    request: CreateDatasourceRequest
+    data: CreateDatasourceRequest
   ) => Promise<CreateDatasourceResponse>
   updateDatasource: (
     datasource: Datasource
@@ -65,10 +65,10 @@ export const buildDatasourceEndpoints = (
   /**
    * Creates a datasource
    */
-  createDatasource: async request => {
+  createDatasource: async data => {
     return await API.post({
       url: "/api/datasources",
-      body: request,
+      body: data,
     })
   },
 
