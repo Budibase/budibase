@@ -147,7 +147,7 @@ const fetchRowHandler = async action => {
 
   if (tableId && rowId) {
     try {
-      const row = await API.fetchRow({ tableId, rowId })
+      const row = await API.fetchRow(tableId, rowId)
 
       return { row }
     } catch (error) {
@@ -192,7 +192,7 @@ const deleteRowHandler = async action => {
         return false
       }
 
-      const resp = await API.deleteRows({ tableId, rows: requestConfig })
+      const resp = await API.deleteRows(tableId, requestConfig)
 
       if (!notificationOverride) {
         notificationStore.actions.success(
@@ -378,10 +378,8 @@ const exportDataHandler = async action => {
       if (typeof rows[0] !== "string") {
         rows = rows.map(row => row._id)
       }
-      const data = await API.exportRows({
-        tableId,
+      const data = await API.exportRows(tableId, type, {
         rows,
-        format: type,
         columns: columns?.map(column => column.name || column),
         delimiter,
         customHeaders,

@@ -19,10 +19,7 @@ export const createActions = context => {
   }
 
   const deleteRows = async rows => {
-    await API.deleteRows({
-      tableId: get(datasource).tableId,
-      rows,
-    })
+    await API.deleteRows(get(datasource).tableId, rows)
   }
 
   const isDatasourceValid = datasource => {
