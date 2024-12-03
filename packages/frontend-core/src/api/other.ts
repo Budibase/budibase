@@ -1,4 +1,17 @@
-export const buildOtherEndpoints = API => ({
+import { SystemStatusResponse } from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface OtherEndpoints {
+  getSystemStatus: () => Promise<SystemStatusResponse>
+  getBudibaseVersion: () => Promise<string>
+
+  // Missing request or response types
+  getEnvironment: () => Promise<Record<string, any>>
+  getIntegrations: () => Promise<Record<string, any>>
+  getBasePermissions: () => Promise<any[]>
+}
+
+export const buildOtherEndpoints = (API: BaseAPIClient): OtherEndpoints => ({
   /**
    * Gets the current environment details.
    */
@@ -31,7 +44,7 @@ export const buildOtherEndpoints = API => ({
    */
   getBudibaseVersion: async () => {
     return (
-      await API.get({
+      await API.get<{ version: string }>({
         url: "/api/dev/version",
       })
     ).version
@@ -43,16 +56,6 @@ export const buildOtherEndpoints = API => ({
   getBasePermissions: async () => {
     return await API.get({
       url: "/api/permission/builtin",
-    })
-  },
-
-  /**
-   * Check if they are part of the budibase beta program.
-   */
-  checkBetaAccess: async email => {
-    return await API.get({
-      url: `/api/beta/access?email=${email}`,
-      external: true,
     })
   },
 })
