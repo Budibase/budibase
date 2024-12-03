@@ -11,10 +11,10 @@ import { BaseAPIClient } from "./types"
 export interface LicensingEndpoints {
   activateLicenseKey: (licenseKey: string) => Promise<void>
   deleteLicenseKey: () => Promise<void>
-  getLicenseKey: () => Promise<GetLicenseKeyResponse>
+  getLicenseKey: () => Promise<GetLicenseKeyResponse | void>
   activateOfflineLicense: (offlineLicenseToken: string) => Promise<void>
   deleteOfflineLicense: () => Promise<void>
-  getOfflineLicense: () => Promise<GetOfflineLicenseTokenResponse>
+  getOfflineLicense: () => Promise<GetOfflineLicenseTokenResponse | void>
   getOfflineLicenseIdentifier: () => Promise<GetOfflineIdentifierResponse>
   refreshLicense: () => Promise<void>
   getQuotaUsage: () => Promise<QuotaUsage>
@@ -24,7 +24,6 @@ export const buildLicensingEndpoints = (
   API: BaseAPIClient
 ): LicensingEndpoints => ({
   // LICENSE KEY
-
   activateLicenseKey: async licenseKey => {
     return API.post<ActivateLicenseKeyRequest>({
       url: `/api/global/license/key`,
@@ -49,7 +48,6 @@ export const buildLicensingEndpoints = (
   },
 
   // OFFLINE LICENSE
-
   activateOfflineLicense: async offlineLicenseToken => {
     return API.post<ActivateOfflineLicenseTokenRequest>({
       url: "/api/global/license/offline",

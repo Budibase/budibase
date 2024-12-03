@@ -6,6 +6,7 @@ import {
   APICallConfig,
   BaseAPIClient,
   Headers,
+  APIError,
 } from "./types"
 import { Helpers } from "@budibase/bbui"
 import { Header } from "@budibase/shared-core"
@@ -64,7 +65,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     response: Response,
     method: HTTPMethod,
     suppressErrors = false
-  ) => {
+  ): Promise<APIError> => {
     // Try to read a message from the error
     let message = response.statusText
     let json: any = null
@@ -90,7 +91,11 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   }
 
   // Generates an error object from a string
-  const makeError = (message: string, url?: string, method?: HTTPMethod) => {
+  const makeError = (
+    message: string,
+    url?: string,
+    method?: HTTPMethod
+  ): APIError => {
     return {
       message,
       json: null,
@@ -98,6 +103,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       url: url,
       method: method,
       handled: true,
+      suppressErrors: false,
     }
   }
 
