@@ -1,11 +1,30 @@
-export const buildSelfEndpoints = API => ({
+import {
+  ContextUser,
+  UpdateSelfRequest,
+  UpdateSelfResponse,
+  User,
+} from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface SelfEndpoints {
+  updateSelf: (user: UpdateSelfRequest) => Promise<UpdateSelfResponse>
+
+  // Missing request or response types
+  generateAPIKey: () => Promise<any>
+  fetchDeveloperInfo: () => Promise<any>
+
+  // There are flags and session attributes mixed in to the user
+  fetchBuilderSelf: () => Promise<User & { [key: string]: any }>
+  fetchSelf: () => Promise<(ContextUser | {}) & { [key: string]: any }>
+}
+
+export const buildSelfEndpoints = (API: BaseAPIClient): SelfEndpoints => ({
   /**
    * Using the logged in user, this will generate a new API key,
    * assuming the user is a builder.
-   * @return {Promise<object>} returns the API response, including an API key.
    */
   generateAPIKey: async () => {
-    const response = await API.post({
+    const response = await API.post<null, any>({
       url: "/api/global/self/api_key",
     })
     return response?.apiKey
@@ -13,7 +32,6 @@ export const buildSelfEndpoints = API => ({
 
   /**
    * retrieves the API key for the logged in user.
-   * @return {Promise<object>} An object containing the user developer information.
    */
   fetchDeveloperInfo: async () => {
     return API.get({
