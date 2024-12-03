@@ -20,6 +20,7 @@ import { OtherEndpoints } from "./other"
 import { PermissionEndpoints } from "./permissions"
 import { PluginEndpoins } from "./plugins"
 import { QueryEndpoints } from "./queries"
+import { RelationshipEndpoints } from "./relationships"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -111,4 +112,5 @@ export type APIClient = BaseAPIClient &
   OtherEndpoints &
   PermissionEndpoints &
   PluginEndpoins &
-  QueryEndpoints & { [key: string]: any }
+  QueryEndpoints &
+  RelationshipEndpoints & { [key: string]: any }
