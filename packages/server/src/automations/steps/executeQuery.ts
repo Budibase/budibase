@@ -12,6 +12,7 @@ import {
   ExecuteQueryStepInputs,
   ExecuteQueryStepOutputs,
 } from "@budibase/types"
+import { executeV2AsAutomation } from "../../api/controllers/query"
 
 export const definition: AutomationStepDefinition = {
   name: "External Data Connector",
@@ -94,7 +95,7 @@ export async function run({
   })
 
   try {
-    await queryController.executeV2(ctx, { isAutomation: true })
+    await queryController.executeV2AsAutomation(ctx)
     const { data, ...rest } = ctx.body
 
     return {
