@@ -24,6 +24,7 @@ import { RelationshipEndpoints } from "./relationships"
 import { RoleEndpoints } from "./roles"
 import { RouteEndpoints } from "./routes"
 import { RowActionEndpoints } from "./rowActions"
+import { RowEndpoints } from "./rows"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -118,4 +119,5 @@ export type APIClient = BaseAPIClient &
   QueryEndpoints &
   RelationshipEndpoints &
   RoleEndpoints &
-  RouteEndpoints & { rowActions: RowActionEndpoints; [key: string]: any }
+  RouteEndpoints &
+  RowEndpoints & { rowActions: RowActionEndpoints; [key: string]: any }
