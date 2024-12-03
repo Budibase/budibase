@@ -10,7 +10,7 @@ import env from "../../environment"
 import { clientAppSocket } from "../../websockets"
 import { sdk as pro } from "@budibase/pro"
 
-export async function fetch(type?: PluginType) {
+export async function fetch(type?: PluginType): Promise<Plugin[]> {
   const db = tenancy.getGlobalDB()
   const response = await db.allDocs(
     dbCore.getPluginParams(null, {

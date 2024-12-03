@@ -13,8 +13,8 @@ export enum PluginSource {
   FILE = "File Upload",
 }
 export interface FileType {
-  path: string
-  name: string
+  path: string | null
+  name: string | null
 }
 
 export interface Plugin extends Document {
