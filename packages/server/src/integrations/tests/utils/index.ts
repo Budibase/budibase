@@ -102,6 +102,9 @@ function createDummyTest() {
 }
 
 export function datasourceDescribe(opts: DatasourceDescribeOpts) {
+  // tests that call this need a lot longer timeouts
+  jest.setTimeout(120000)
+
   if (process.env.DATASOURCE === "none") {
     createDummyTest()
   }

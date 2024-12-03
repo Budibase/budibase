@@ -152,6 +152,44 @@ describe("Loop automations", () => {
     )
   })
 
+  it("ensure the loop stops if the max iterations are reached", async () => {
+    const builder = createAutomationBuilder({
+      name: "Test Loop max iterations",
+    })
+
+    const results = await builder
+      .appAction({ fields: {} })
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: ["test", "test2", "test3"],
+        iterations: 2,
+      })
+      .serverLog({ text: "{{loop.currentItem}}" })
+      .serverLog({ text: "{{steps.1.iterations}}" })
+      .run()
+
+    expect(results.steps[0].outputs.iterations).toBe(2)
+  })
+
+  it("should run an automation with loop and max iterations to ensure context correctness further down the tree", async () => {
+    const builder = createAutomationBuilder({
+      name: "Test context down tree with Loop and max iterations",
+    })
+
+    const results = await builder
+      .appAction({ fields: {} })
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: ["test", "test2", "test3"],
+        iterations: 2,
+      })
+      .serverLog({ text: "{{loop.currentItem}}" })
+      .serverLog({ text: "{{steps.1.iterations}}" })
+      .run()
+
+    expect(results.steps[1].outputs.message).toContain("- 2")
+  })
+
   it("should run an automation where a loop is successfully run twice", async () => {
     const builder = createAutomationBuilder({
       name: "Test Trigger with Loop and Create Row",

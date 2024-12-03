@@ -18,6 +18,7 @@ import {
   BasicOperator,
   BBReferenceFieldMetadata,
   CalculationType,
+  EnrichedQueryJson,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -27,7 +28,6 @@ import {
   LogicalOperator,
   Operation,
   prefixed,
-  QueryJson,
   QueryOptions,
   RangeOperator,
   RelationshipsJson,
@@ -134,18 +134,18 @@ const allowEmptyRelationships: Record<SearchFilterKey, boolean> = {
 
 class InternalBuilder {
   private readonly client: SqlClient
-  private readonly query: QueryJson
+  private readonly query: EnrichedQueryJson
   private readonly splitter: dataFilters.ColumnSplitter
   private readonly knex: Knex
 
-  constructor(client: SqlClient, knex: Knex, query: QueryJson) {
+  constructor(client: SqlClient, knex: Knex, query: EnrichedQueryJson) {
     this.client = client
     this.query = query
     this.knex = knex
 
     this.splitter = new dataFilters.ColumnSplitter([this.table], {
       aliases: this.query.tableAliases,
-      columnPrefix: this.query.meta.columnPrefix,
+      columnPrefix: this.query.meta?.columnPrefix,
     })
   }
 
@@ -167,7 +167,7 @@ class InternalBuilder {
   }
 
   get table(): Table {
-    return this.query.meta.table
+    return this.query.table
   }
 
   get knexClient(): Knex.Client {
@@ -273,8 +273,7 @@ class InternalBuilder {
   }
 
   private isFullSelectStatementRequired(): boolean {
-    const { meta } = this.query
-    for (let column of Object.values(meta.table.schema)) {
+    for (let column of Object.values(this.table.schema)) {
       if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(column)) {
         return true
       } else if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(column)) {
@@ -285,14 +284,14 @@ class InternalBuilder {
   }
 
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
-    const { meta, endpoint, resource } = this.query
+    const { table, resource } = this.query
 
     if (!resource || !resource.fields || resource.fields.length === 0) {
       return "*"
     }
 
-    const alias = this.getTableName(endpoint.entityId)
-    const schema = meta.table.schema
+    const alias = this.getTableName(table)
+    const schema = this.table.schema
     if (!this.isFullSelectStatementRequired()) {
       return [this.knex.raw("??", [`${alias}.*`])]
     }
@@ -497,9 +496,8 @@ class InternalBuilder {
     filterKey: string,
     whereCb: (filterKey: string, query: Knex.QueryBuilder) => Knex.QueryBuilder
   ): Knex.QueryBuilder {
-    const { relationships, endpoint, tableAliases: aliases } = this.query
-    const tableName = endpoint.entityId
-    const fromAlias = aliases?.[tableName] || tableName
+    const { relationships, schema, tableAliases: aliases, table } = this.query
+    const fromAlias = aliases?.[table.name] || table.name
     const matches = (value: string) =>
       filterKey.match(new RegExp(`^${value}\\.`))
     if (!relationships) {
@@ -539,7 +537,7 @@ class InternalBuilder {
             aliases?.[manyToMany.through] || relationship.through
           let throughTable = this.tableNameWithSchema(manyToMany.through, {
             alias: throughAlias,
-            schema: endpoint.schema,
+            schema,
           })
           subQuery = subQuery
             // add a join through the junction table
@@ -1012,28 +1010,10 @@ class InternalBuilder {
     return isSqs(this.table)
   }
 
-  getTableName(tableOrName?: Table | string): string {
-    let table: Table
-    if (typeof tableOrName === "string") {
-      const name = tableOrName
-      if (this.query.table?.name === name) {
-        table = this.query.table
-      } else if (this.query.meta.table?.name === name) {
-        table = this.query.meta.table
-      } else if (!this.query.meta.tables?.[name]) {
-        // This can legitimately happen in custom queries, where the user is
-        // querying against a table that may not have been imported into
-        // Budibase.
-        return name
-      } else {
-        table = this.query.meta.tables[name]
-      }
-    } else if (tableOrName) {
-      table = tableOrName
-    } else {
+  getTableName(table?: Table): string {
+    if (!table) {
       table = this.table
     }
-
     let name = table.name
     if (isSqs(table) && table._id) {
       // SQS uses the table ID rather than the table name
@@ -1191,8 +1171,9 @@ class InternalBuilder {
     return withSchema
   }
 
-  private buildJsonField(field: string): string {
+  private buildJsonField(table: Table, field: string): [string, Knex.Raw] {
     const parts = field.split(".")
+    let baseName = parts[parts.length - 1]
     let unaliased: string
 
     let tableField: string
@@ -1205,10 +1186,19 @@ class InternalBuilder {
       tableField = unaliased
     }
 
-    const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
-    return this.knex
-      .raw(`?${separator}??`, [unaliased, this.rawQuotedIdentifier(tableField)])
-      .toString()
+    if (this.query.meta?.columnPrefix) {
+      baseName = baseName.replace(this.query.meta.columnPrefix, "")
+    }
+
+    let identifier = this.rawQuotedIdentifier(tableField)
+    // Internal tables have special _id, _rev, createdAt, and updatedAt fields
+    // that do not appear in the schema, meaning schema could actually be
+    // undefined.
+    const schema: FieldSchema | undefined = table.schema[baseName]
+    if (schema && schema.type === FieldType.BIGINT) {
+      identifier = this.castIntToString(identifier)
+    }
+    return [unaliased, identifier]
   }
 
   maxFunctionParameters() {
@@ -1234,7 +1224,7 @@ class InternalBuilder {
   ): Knex.QueryBuilder {
     const sqlClient = this.client
     const knex = this.knex
-    const { resource, tableAliases: aliases, endpoint, meta } = this.query
+    const { resource, tableAliases: aliases, schema, tables } = this.query
     const fields = resource?.fields || []
     for (let relationship of relationships) {
       const {
@@ -1249,13 +1239,16 @@ class InternalBuilder {
       if (!toTable || !fromTable) {
         continue
       }
-      const relatedTable = meta.tables?.[toTable]
+      const relatedTable = tables[toTable]
+      if (!relatedTable) {
+        throw new Error(`related table "${toTable}" not found in datasource`)
+      }
       const toAlias = aliases?.[toTable] || toTable,
         fromAlias = aliases?.[fromTable] || fromTable,
         throughAlias = (throughTable && aliases?.[throughTable]) || throughTable
       let toTableWithSchema = this.tableNameWithSchema(toTable, {
         alias: toAlias,
-        schema: endpoint.schema,
+        schema,
       })
       const requiredFields = [
         ...(relatedTable?.primary || []),
@@ -1271,8 +1264,14 @@ class InternalBuilder {
         0,
         Math.floor(this.maxFunctionParameters() / 2)
       )
-      const fieldList: string = relationshipFields
-        .map(field => this.buildJsonField(field))
+      const fieldList = relationshipFields.map(field =>
+        this.buildJsonField(relatedTable, field)
+      )
+      const fieldListFormatted = fieldList
+        .map(f => {
+          const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
+          return this.knex.raw(`?${separator}??`, [f[0], f[1]]).toString()
+        })
         .join(",")
       // SQL Server uses TOP - which performs a little differently to the normal LIMIT syntax
       // it reduces the result set rather than limiting how much data it filters over
@@ -1293,7 +1292,7 @@ class InternalBuilder {
       if (isManyToMany) {
         let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
           alias: throughAlias,
-          schema: endpoint.schema,
+          schema,
         })
         subQuery = subQuery.join(throughTableWithSchema, function () {
           this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
@@ -1320,35 +1319,42 @@ class InternalBuilder {
           // need to check the junction table document is to the right column, this is just for SQS
           subQuery = this.addJoinFieldCheck(subQuery, relationship)
           wrapperQuery = standardWrap(
-            this.knex.raw(`json_group_array(json_object(${fieldList}))`)
+            this.knex.raw(
+              `json_group_array(json_object(${fieldListFormatted}))`
+            )
           )
           break
         case SqlClient.POSTGRES:
           wrapperQuery = standardWrap(
-            this.knex.raw(`json_agg(json_build_object(${fieldList}))`)
+            this.knex.raw(`json_agg(json_build_object(${fieldListFormatted}))`)
           )
           break
         case SqlClient.MARIADB:
           // can't use the standard wrap due to correlated sub-query limitations in MariaDB
           wrapperQuery = subQuery.select(
             knex.raw(
-              `json_arrayagg(json_object(${fieldList}) LIMIT ${getRelationshipLimit()})`
+              `json_arrayagg(json_object(${fieldListFormatted}) LIMIT ${getRelationshipLimit()})`
             )
           )
           break
         case SqlClient.MY_SQL:
         case SqlClient.ORACLE:
           wrapperQuery = standardWrap(
-            this.knex.raw(`json_arrayagg(json_object(${fieldList}))`)
+            this.knex.raw(`json_arrayagg(json_object(${fieldListFormatted}))`)
           )
           break
         case SqlClient.MS_SQL: {
           const comparatorQuery = knex
-            .select(`${fromAlias}.*`)
+            .select(`*`)
             // @ts-ignore - from alias syntax not TS supported
             .from({
               [fromAlias]: subQuery
-                .select(`${toAlias}.*`)
+                .select(
+                  fieldList.map(f => {
+                    // @ts-expect-error raw is fine here, knex types are wrong
+                    return knex.ref(f[1]).as(f[0])
+                  })
+                )
                 .limit(getRelationshipLimit()),
             })
 
@@ -1377,8 +1383,7 @@ class InternalBuilder {
       toPrimary?: string
     }[]
   ): Knex.QueryBuilder {
-    const { tableAliases: aliases, endpoint } = this.query
-    const schema = endpoint.schema
+    const { tableAliases: aliases, schema } = this.query
     const toTable = tables.to,
       fromTable = tables.from,
       throughTable = tables.through
@@ -1429,16 +1434,16 @@ class InternalBuilder {
   }
 
   qualifiedKnex(opts?: { alias?: string | boolean }): Knex.QueryBuilder {
-    let alias = this.query.tableAliases?.[this.query.endpoint.entityId]
+    let alias = this.query.tableAliases?.[this.query.table.name]
     if (opts?.alias === false) {
       alias = undefined
     } else if (typeof opts?.alias === "string") {
       alias = opts.alias
     }
     return this.knex(
-      this.tableNameWithSchema(this.query.endpoint.entityId, {
+      this.tableNameWithSchema(this.query.table.name, {
         alias,
-        schema: this.query.endpoint.schema,
+        schema: this.query.schema,
       })
     )
   }
@@ -1455,9 +1460,7 @@ class InternalBuilder {
     if (this.client === SqlClient.ORACLE) {
       // Oracle doesn't seem to automatically insert nulls
       // if we don't specify them, so we need to do that here
-      for (const [column, schema] of Object.entries(
-        this.query.meta.table.schema
-      )) {
+      for (const [column, schema] of Object.entries(this.query.table.schema)) {
         if (
           schema.constraints?.presence === true ||
           schema.type === FieldType.FORMULA ||
@@ -1534,11 +1537,9 @@ class InternalBuilder {
       limits?: { base: number; query: number }
     } = {}
   ): Knex.QueryBuilder {
-    let { endpoint, filters, paginate, relationships } = this.query
+    let { operation, filters, paginate, relationships, table } = this.query
     const { limits } = opts
-    const counting = endpoint.operation === Operation.COUNT
 
-    const tableName = endpoint.entityId
     // start building the query
     let query = this.qualifiedKnex()
     // handle pagination
@@ -1557,7 +1558,7 @@ class InternalBuilder {
       foundLimit = paginate.limit
     }
     // counting should not sort, limit or offset
-    if (!counting) {
+    if (operation !== Operation.COUNT) {
       // add the found limit if supplied
       if (foundLimit != null) {
         query = query.limit(foundLimit)
@@ -1569,7 +1570,7 @@ class InternalBuilder {
     }
 
     const aggregations = this.query.resource?.aggregations || []
-    if (counting) {
+    if (operation === Operation.COUNT) {
       query = this.addDistinctCount(query)
     } else if (aggregations.length > 0) {
       query = this.addAggregations(query, aggregations)
@@ -1578,7 +1579,7 @@ class InternalBuilder {
     }
 
     // have to add after as well (this breaks MS-SQL)
-    if (!counting) {
+    if (operation !== Operation.COUNT) {
       query = this.addSorting(query)
     }
 
@@ -1586,9 +1587,7 @@ class InternalBuilder {
 
     // handle relationships with a CTE for all others
     if (relationships?.length && aggregations.length === 0) {
-      const mainTable =
-        this.query.tableAliases?.[this.query.endpoint.entityId] ||
-        this.query.endpoint.entityId
+      const mainTable = this.query.tableAliases?.[table.name] || table.name
       const cte = this.addSorting(
         this.knex
           .with("paginated", query)
@@ -1598,7 +1597,7 @@ class InternalBuilder {
           })
       )
       // add JSON aggregations attached to the CTE
-      return this.addJsonRelationships(cte, tableName, relationships)
+      return this.addJsonRelationships(cte, table.name, relationships)
     }
 
     return query
@@ -1661,7 +1660,10 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
    * @return the query ready to be passed to the driver.
    */
-  _query(json: QueryJson, opts: QueryOptions = {}): SqlQuery | SqlQuery[] {
+  _query(
+    json: EnrichedQueryJson,
+    opts: QueryOptions = {}
+  ): SqlQuery | SqlQuery[] {
     const sqlClient = this.getSqlClient()
     const config: Knex.Config = {
       client: this.getBaseSqlClient(),
@@ -1711,34 +1713,30 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return this.convertToNative(query, opts)
   }
 
-  async getReturningRow(queryFn: QueryFunction, json: QueryJson) {
+  async getReturningRow(queryFn: QueryFunction, json: EnrichedQueryJson) {
     if (!json.extra || !json.extra.idFilter) {
       return {}
     }
     const input = this._query({
-      endpoint: {
-        ...json.endpoint,
-        operation: Operation.READ,
-      },
-      resource: {
-        fields: [],
-      },
+      operation: Operation.READ,
+      datasource: json.datasource,
+      schema: json.schema,
+      table: json.table,
+      tables: json.tables,
+      resource: { fields: [] },
       filters: json.extra?.idFilter,
-      paginate: {
-        limit: 1,
-      },
-      meta: json.meta,
+      paginate: { limit: 1 },
     })
     return queryFn(input, Operation.READ)
   }
 
   // when creating if an ID has been inserted need to make sure
   // the id filter is enriched with it before trying to retrieve the row
-  checkLookupKeys(id: any, json: QueryJson) {
-    if (!id || !json.meta.table || !json.meta.table.primary) {
+  checkLookupKeys(id: any, json: EnrichedQueryJson) {
+    if (!id || !json.table.primary) {
       return json
     }
-    const primaryKey = json.meta.table.primary?.[0]
+    const primaryKey = json.table.primary[0]
     json.extra = {
       idFilter: {
         equal: {
@@ -1751,7 +1749,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
 
   // this function recreates the returning functionality of postgres
   async queryWithReturning(
-    json: QueryJson,
+    json: EnrichedQueryJson,
     queryFn: QueryFunction,
     processFn: Function = (result: any) => result
   ) {

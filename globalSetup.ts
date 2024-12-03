@@ -6,6 +6,26 @@ import {
 import { ContainerInfo } from "dockerode"
 import path from "path"
 import lockfile from "proper-lockfile"
+import { execSync } from "child_process"
+
+interface DockerContext {
+  Name: string
+  Description: string
+  DockerEndpoint: string
+  ContextType: string
+  Error: string
+}
+
+function getCurrentDockerContext(): DockerContext {
+  const out = execSync("docker context ls --format json")
+  for (const line of out.toString().split("\n")) {
+    const parsed = JSON.parse(line)
+    if (parsed.Current) {
+      return parsed as DockerContext
+    }
+  }
+  throw new Error("No current Docker context")
+}
 
 async function getBudibaseContainers() {
   const client = await getContainerRuntimeClient()
@@ -27,6 +47,14 @@ async function killContainers(containers: ContainerInfo[]) {
 }
 
 export default async function setup() {
+  // For whatever reason, testcontainers doesn't always use the correct current
+  // docker context. This bit of code forces the issue by finding the current
+  // context and setting it as the DOCKER_HOST environment
+  if (!process.env.DOCKER_HOST) {
+    const dockerContext = getCurrentDockerContext()
+    process.env.DOCKER_HOST = dockerContext.DockerEndpoint
+  }
+
   const lockPath = path.resolve(__dirname, "globalSetup.ts")
   // If you run multiple tests at the same time, it's possible for the CouchDB
   // shared container to get started multiple times despite having an

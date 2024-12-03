@@ -392,6 +392,7 @@ class Orchestrator {
 
     let iterationCount = 0
     let shouldCleanup = true
+    let reachedMaxIterations = false
 
     for (let loopStepIndex = 0; loopStepIndex < iterations; loopStepIndex++) {
       try {
@@ -419,19 +420,8 @@ class Orchestrator {
         loopStepIndex === env.AUTOMATION_MAX_ITERATIONS ||
         (loopStep.inputs.iterations && loopStepIndex === maxIterations)
       ) {
-        this.updateContextAndOutput(
-          pathStepIdx + 1,
-          steps[stepToLoopIndex],
-          {
-            items: this.loopStepOutputs,
-            iterations: loopStepIndex,
-          },
-          {
-            status: AutomationErrors.MAX_ITERATIONS,
-            success: true,
-          }
-        )
-        shouldCleanup = false
+        reachedMaxIterations = true
+        shouldCleanup = true
         break
       }
 
@@ -484,6 +474,10 @@ class Orchestrator {
               items: this.loopStepOutputs,
               iterations: iterationCount,
             }
+
+      if (reachedMaxIterations && iterations !== 0) {
+        tempOutput.status = AutomationStepStatus.MAX_ITERATIONS
+      }
 
       // Loop Step clean up
       this.executionOutput.steps.splice(pathStepIdx, 0, {
