@@ -7,7 +7,6 @@ import {
   Integration,
   Operation,
   PaginationJson,
-  QueryJson,
   QueryType,
   Row,
   Schema,
@@ -18,6 +17,7 @@ import {
   TableSourceType,
   DatasourcePlusQueryResponse,
   BBReferenceFieldSubType,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import {
@@ -381,9 +381,9 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     return { tables: externalTables, errors }
   }
 
-  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
-    const sheet = json.endpoint.entityId
-    switch (json.endpoint.operation) {
+  async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
+    const sheet = json.table.name
+    switch (json.operation) {
       case Operation.CREATE:
         return this.create({ sheet, row: json.body as Row })
       case Operation.BULK_CREATE:
@@ -400,7 +400,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
           rowIndex: json.extra?.idFilter?.equal?.rowNumber,
           sheet,
           row: json.body,
-          table: json.meta.table,
+          table: json.table,
         })
       case Operation.DELETE:
         return this.delete({
@@ -426,7 +426,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
         return this.deleteTable(json?.table?.name)
       default:
         throw new Error(
-          `GSheets integration does not support "${json.endpoint.operation}".`
+          `GSheets integration does not support "${json.operation}".`
         )
     }
   }
