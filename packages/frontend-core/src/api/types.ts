@@ -42,14 +42,14 @@ export type APIClientConfig = {
   onMigrationDetected?: (migration: string) => void
 }
 
-export type APICallConfig<RequestT = null, ResponseT = void> = {
+export type APICallConfig<RequestT, ResponseT> = {
   method: HTTPMethod
   url: string
-  body: RequestT
   json: boolean
   external: boolean
   suppressErrors: boolean
   cache: boolean
+  body?: RequestT
   parseResponse?: (response: Response) => Promise<ResponseT> | ResponseT
 }
 

@@ -108,7 +108,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   }
 
   // Performs an API call to the server.
-  const makeApiCall = async <RequestT, ResponseT>(
+  const makeApiCall = async <RequestT = null, ResponseT = void>(
     callConfig: APICallConfig<RequestT, ResponseT>
   ): Promise<ResponseT> => {
     let { json, method, external, body, url, parseResponse, suppressErrors } =
@@ -131,7 +131,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     }
 
     // Build request body
-    let requestBody: RequestT | string = body
+    let requestBody: any = body
     if (json) {
       try {
         requestBody = JSON.stringify(body)
@@ -146,7 +146,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       response = await fetch(url, {
         method,
         headers,
-        body: requestBody as any,
+        body: requestBody,
         credentials: "same-origin",
       })
     } catch (error) {
@@ -187,7 +187,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   // Performs an API call to the server  and caches the response.
   // Future invocation for this URL will return the cached result instead of
   // hitting the server again.
-  const makeCachedApiCall = async <RequestT = void, ResponseT = void>(
+  const makeCachedApiCall = async <RequestT = null, ResponseT = void>(
     callConfig: APICallConfig<RequestT, ResponseT>
   ): Promise<ResponseT> => {
     const identifier = callConfig.url
@@ -201,7 +201,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   // Constructs an API call function for a particular HTTP method
   const requestApiCall =
     (method: HTTPMethod) =>
-    async <RequestT = void, ResponseT = void>(
+    async <RequestT = null, ResponseT = void>(
       params: APICallParams<RequestT, ResponseT>
     ): Promise<ResponseT> => {
       try {
@@ -211,7 +211,6 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
           suppressErrors: false,
           cache: false,
           method,
-          body: params.body,
           ...params,
         }
         let { url, cache, external } = callConfig
