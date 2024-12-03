@@ -158,6 +158,8 @@ describe("test the openai action", () => {
 
     const llmInstance =
       mockedPro.ai.LargeLanguageModel.forCurrentTenant.mock.results[0].value
+    // init does not appear to be called currently
+    // expect(llmInstance.init).toHaveBeenCalled()
     expect(llmInstance.run).toHaveBeenCalledWith(prompt)
   })
 })
