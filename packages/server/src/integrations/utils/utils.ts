@@ -138,7 +138,7 @@ export function generateColumnDefinition(config: {
   let { externalType, autocolumn, name, presence, options } = config
   let foundType = FieldType.STRING
   const lowerCaseType = externalType.toLowerCase()
-  let matchingTypes = []
+  let matchingTypes: { external: string; internal: PrimitiveTypes }[] = []
 
   // In at least MySQL, the external type of an ENUM column is "enum('option1',
   // 'option2', ...)", which can potentially contain any type name as a
