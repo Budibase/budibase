@@ -1,4 +1,18 @@
-export const buildPluginEndpoints = API => ({
+import {
+  CreatePluginRequest,
+  CreatePluginResponse,
+  Plugin,
+} from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface PluginEndpoins {
+  uploadPlugin: (data: any) => Promise<{ message: string; plugins: any[] }>
+  createPlugin: (data: CreatePluginRequest) => Promise<CreatePluginResponse>
+  getPlugins: () => Promise<Plugin[]>
+  deletePlugin: (pluginId: string) => Promise<{ message: string }>
+}
+
+export const buildPluginEndpoints = (API: BaseAPIClient): PluginEndpoins => ({
   /**
    * Uploads a plugin tarball bundle
    * @param data the plugin tarball bundle to upload
