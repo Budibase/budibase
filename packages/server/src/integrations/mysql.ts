@@ -2,7 +2,6 @@ import {
   Integration,
   DatasourceFieldType,
   QueryType,
-  QueryJson,
   SqlQuery,
   Table,
   TableSchema,
@@ -15,6 +14,7 @@ import {
   DatasourcePlusQueryResponse,
   SqlQueryBinding,
   SqlClient,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -390,15 +390,15 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     return results.length ? results : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
+  async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     await this.connect()
     try {
       const queryFn = (query: any) =>
         this.internalQuery(query, { connect: false, disableCoercion: true })
       const processFn = (result: any) => {
-        if (json?.meta?.table && Array.isArray(result)) {
+        if (Array.isArray(result)) {
           return this.convertJsonStringColumns(
-            json.meta.table,
+            json.table,
             result,
             json.tableAliases
           )

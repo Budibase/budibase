@@ -2166,7 +2166,6 @@
           "query": {
             "description": "Search parameters for view",
             "type": "object",
-            "required": [],
             "properties": {
               "logicalOperator": {
                 "description": "When using groups this defines whether all of the filters must match, or only one of them.",
@@ -2449,7 +2448,6 @@
               "query": {
                 "description": "Search parameters for view",
                 "type": "object",
-                "required": [],
                 "properties": {
                   "logicalOperator": {
                     "description": "When using groups this defines whether all of the filters must match, or only one of them.",
@@ -2743,7 +2741,6 @@
                 "query": {
                   "description": "Search parameters for view",
                   "type": "object",
-                  "required": [],
                   "properties": {
                     "logicalOperator": {
                       "description": "When using groups this defines whether all of the filters must match, or only one of them.",
