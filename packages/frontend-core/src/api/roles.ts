@@ -1,12 +1,29 @@
-export const buildRoleEndpoints = API => ({
+import {
+  AccessibleRolesResponse,
+  DestroyRoleResponse,
+  FetchRolesResponse,
+  SaveRoleRequest,
+  SaveRoleResponse,
+} from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface RoleEndpoints {
+  deleteRole: (id: string, rev: string) => Promise<DestroyRoleResponse>
+  saveRole: (role: SaveRoleRequest) => Promise<SaveRoleResponse>
+  getRoles: () => Promise<FetchRolesResponse>
+  getRolesForApp: (appId: string) => Promise<any>
+  getAccessibleRoles: () => Promise<AccessibleRolesResponse>
+}
+
+export const buildRoleEndpoints = (API: BaseAPIClient): RoleEndpoints => ({
   /**
    * Deletes a role.
-   * @param roleId the ID of the role to delete
-   * @param roleRev the rev of the role to delete
+   * @param id the ID of the role to delete
+   * @param rev the rev of the role to delete
    */
-  deleteRole: async ({ roleId, roleRev }) => {
+  deleteRole: async (id, rev) => {
     return await API.delete({
-      url: `/api/roles/${roleId}/${roleRev}`,
+      url: `/api/roles/${id}/${rev}`,
     })
   },
 
