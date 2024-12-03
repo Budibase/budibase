@@ -2,7 +2,7 @@ import { outputProcessing } from "../../utilities/rowProcessor"
 import { InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
 import { roles, context, db as dbCore } from "@budibase/backend-core"
-import { ContextUser, Row, UserCtx } from "@budibase/types"
+import { AppSelfResponse, ContextUser, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
 import { processUser } from "../../utilities/global"
 
@@ -17,7 +17,7 @@ const addSessionAttributesToUser = (ctx: any) => {
   }
 }
 
-export async function fetchSelf(ctx: UserCtx) {
+export async function fetchSelf(ctx: UserCtx<void, AppSelfResponse>) {
   let userId = ctx.user.userId || ctx.user._id
   /* istanbul ignore next */
   if (!userId || !ctx.isAuthenticated) {
@@ -45,9 +45,9 @@ export async function fetchSelf(ctx: UserCtx) {
     try {
       const userTable = await sdk.tables.getTable(InternalTables.USER_METADATA)
       // specifically needs to make sure is enriched
-      ctx.body = await outputProcessing(userTable, user as Row)
+      ctx.body = await outputProcessing(userTable, user)
     } catch (err: any) {
-      let response
+      let response: ContextUser | {}
       // user didn't exist in app, don't pretend they do
       if (user.roleId === PUBLIC_ROLE) {
         response = {}
