@@ -265,7 +265,7 @@
                   ? 'column'
                   : 'row'}; max-width: {navigation === 'Left'
                   ? '165px'
-                  : '95%'};
+                  : '100%'};
                   align-items: {navigation === 'Left'
                   ? 'center'
                   : 'center'}; border: 1px solid lime;"
@@ -314,11 +314,9 @@
                   {/if}
                 </div>
                 {#if !hideTitle && title}
-                  <Heading
-                    size="S"
-                    {textAlign}
-                    style="width: {textBelow ? '100%' : ''}; ">{title}</Heading
-                  >
+                  <div id="heading">
+                    <Heading size="S" {textAlign}>{title}</Heading>
+                  </div>
                 {/if}
               </div>
               {#if !embedded}
@@ -574,11 +572,12 @@
     justify-content: flex-start;
     gap: var(--spacing-m);
     flex: 1 1 auto;
+    flex-wrap: wrap;
     border: 1px solid red;
   }
   .logo img {
-    width: var(--logo-size);
-    height: var(--logo-size);
+    max-width: var(--logo-size);
+    max-height: var(--logo-size);
   }
   .logo :global(h1) {
     font-weight: 600;
@@ -588,6 +587,14 @@
     white-space: nowrap;
     border: 1px solid blue;
     max-width: 100%;
+  }
+  #heading {
+    display: flex;
+    flex-grow: 1;
+    max-width: 100%;
+  }
+  #heading > * {
+    width: 100%;
   }
   .portal {
     display: grid;
