@@ -322,9 +322,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
             presence: required && !isAuto && !hasDefault,
             externalType: column.Type,
             options: column.Type.startsWith("enum")
-              ? column.Type.substring(5, column.Type.length - 1)
-                  .split(",")
-                  .map(str => str.replace(/^'(.*)'$/, "$1"))
+              ? column.Type.substring(6, column.Type.length - 2).split("','")
               : undefined,
           })
         }

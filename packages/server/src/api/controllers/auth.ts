@@ -2,7 +2,7 @@ import { outputProcessing } from "../../utilities/rowProcessor"
 import { InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
 import { roles, context, db as dbCore } from "@budibase/backend-core"
-import { AppSelfResponse, ContextUser, Row, UserCtx } from "@budibase/types"
+import { AppSelfResponse, ContextUser, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
 import { processUser } from "../../utilities/global"
 
@@ -45,7 +45,7 @@ export async function fetchSelf(ctx: UserCtx<void, AppSelfResponse>) {
     try {
       const userTable = await sdk.tables.getTable(InternalTables.USER_METADATA)
       // specifically needs to make sure is enriched
-      ctx.body = (await outputProcessing(userTable, user as Row)) as ContextUser
+      ctx.body = await outputProcessing(userTable, user)
     } catch (err: any) {
       let response: ContextUser | {}
       // user didn't exist in app, don't pretend they do
