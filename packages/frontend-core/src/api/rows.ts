@@ -2,7 +2,6 @@ import {
   DeleteRow,
   DeleteRows,
   ExportRowsRequest,
-  ExportRowsResponse,
   GetRowResponse,
   PatchRowRequest,
   PatchRowResponse,
