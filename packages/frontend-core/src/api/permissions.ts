@@ -1,4 +1,32 @@
-export const buildPermissionsEndpoints = API => ({
+import {
+  AddPermissionResponse,
+  GetDependantResourcesResponse,
+  GetResourcePermsResponse,
+  PermissionLevel,
+  RemovePermissionResponse,
+} from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface PermissionEndpoints {
+  getPermissionForResource: (
+    resourceId: string
+  ) => Promise<GetResourcePermsResponse>
+  updatePermissionForResource: (
+    resourceId: string,
+    roleId: string,
+    level: PermissionLevel
+  ) => Promise<AddPermissionResponse>
+  removePermissionFromResource: (
+    resourceId: string,
+    roleId: string,
+    level: PermissionLevel
+  ) => Promise<RemovePermissionResponse>
+  getDependants: (resourceId: string) => Promise<GetDependantResourcesResponse>
+}
+
+export const buildPermissionsEndpoints = (
+  API: BaseAPIClient
+): PermissionEndpoints => ({
   /**
    * Gets the permission required to access a specific resource
    * @param resourceId the resource ID to check
@@ -14,9 +42,8 @@ export const buildPermissionsEndpoints = API => ({
    * @param resourceId the ID of the resource to update
    * @param roleId the ID of the role to update the permissions of
    * @param level the level to assign the role for this resource
-   * @return {Promise<*>}
    */
-  updatePermissionForResource: async ({ resourceId, roleId, level }) => {
+  updatePermissionForResource: async (resourceId, roleId, level) => {
     return await API.post({
       url: `/api/permission/${roleId}/${resourceId}/${level}`,
     })
@@ -27,9 +54,8 @@ export const buildPermissionsEndpoints = API => ({
    * @param resourceId the ID of the resource to update
    * @param roleId the ID of the role to update the permissions of
    * @param level the level to remove the role for this resource
-   * @return {Promise<*>}
    */
-  removePermissionFromResource: async ({ resourceId, roleId, level }) => {
+  removePermissionFromResource: async (resourceId, roleId, level) => {
     return await API.delete({
       url: `/api/permission/${roleId}/${resourceId}/${level}`,
     })
