@@ -1,12 +1,39 @@
-export const buildQueryEndpoints = API => ({
+import {
+  ExecuteQueryRequest,
+  ExecuteQueryResponse,
+  PreviewQueryRequest,
+  PreviewQueryResponse,
+  Query,
+} from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface QueryEndpoints {
+  executeQuery: (
+    queryId: string,
+    opts?: ExecuteQueryRequest
+  ) => Promise<ExecuteQueryResponse | Record<string, any>[]>
+  fetchQueryDefinition: (queryId: string) => Promise<Query>
+  getQueries: () => Promise<Query[]>
+  saveQuery: (query: Query) => Promise<Query>
+  deleteQuery: (id: string, rev: string) => Promise<void>
+  previewQuery: (query: PreviewQueryRequest) => Promise<PreviewQueryResponse>
+
+  // Missing request or response types
+  importQueries: (datasourceId: string, data: any) => Promise<any>
+}
+
+export const buildQueryEndpoints = (API: BaseAPIClient): QueryEndpoints => ({
   /**
    * Executes a query against an external data connector.
    * @param queryId the ID of the query to execute
    * @param pagination pagination info for the query
    * @param parameters parameters for the query
    */
-  executeQuery: async ({ queryId, pagination, parameters }) => {
-    return await API.post({
+  executeQuery: async (queryId, { pagination, parameters } = {}) => {
+    return await API.post<
+      ExecuteQueryRequest,
+      ExecuteQueryResponse | Record<string, any>[]
+    >({
       url: `/api/v2/queries/${queryId}`,
       body: {
         parameters,
@@ -48,12 +75,12 @@ export const buildQueryEndpoints = API => ({
 
   /**
    * Deletes a query
-   * @param queryId the ID of the query to delete
-   * @param queryRev the rev of the query to delete
+   * @param id the ID of the query to delete
+   * @param rev the rev of the query to delete
    */
-  deleteQuery: async ({ queryId, queryRev }) => {
+  deleteQuery: async (id, rev) => {
     return await API.delete({
-      url: `/api/queries/${queryId}/${queryRev}`,
+      url: `/api/queries/${id}/${rev}`,
     })
   },
 
@@ -62,7 +89,7 @@ export const buildQueryEndpoints = API => ({
    * @param datasourceId the datasource ID to import queries into
    * @param data the data string of the content to import
    */
-  importQueries: async ({ datasourceId, data }) => {
+  importQueries: async (datasourceId, data) => {
     return await API.post({
       url: "/api/queries/import",
       body: {

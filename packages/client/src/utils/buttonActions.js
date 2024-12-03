@@ -251,17 +251,14 @@ const navigationHandler = action => {
 }
 
 const queryExecutionHandler = async action => {
-  const { datasourceId, queryId, queryParams, notificationOverride } =
-    action.parameters
+  const { queryId, queryParams, notificationOverride } = action.parameters
   try {
     const query = await API.fetchQueryDefinition(queryId)
     if (query?.datasourceId == null) {
       notificationStore.actions.error("That query couldn't be found")
       return false
     }
-    const result = await API.executeQuery({
-      datasourceId,
-      queryId,
+    const result = await API.executeQuery(queryId, {
       parameters: queryParams,
     })
 
