@@ -126,6 +126,9 @@ export async function deploymentProgress(
   try {
     const db = context.getAppDB()
     const deploymentDoc = await db.get<DeploymentDoc>(DocumentType.DEPLOYMENTS)
+    if (!deploymentDoc.history?.[ctx.params.deploymentId]) {
+      ctx.throw(404, "No deployment found")
+    }
     ctx.body = deploymentDoc.history?.[ctx.params.deploymentId]
   } catch (err) {
     ctx.throw(
