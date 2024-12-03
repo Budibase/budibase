@@ -23,13 +23,17 @@ import {
   Table,
   RowValue,
   DynamicVariable,
+  FetchDatasourcesResponse,
+  FindDatasourcesResponse,
+  DeleteDatasourceResponse,
+  FetchExternalSchemaResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { isEqual } from "lodash"
 import { processTable } from "../../sdk/app/tables/getters"
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: UserCtx<void, FetchDatasourcesResponse>) {
   ctx.body = await sdk.datasources.fetch()
 }
 
@@ -260,7 +264,7 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
   }
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
 
@@ -291,12 +295,14 @@ export async function destroy(ctx: UserCtx) {
   builderSocket?.emitDatasourceDeletion(ctx, datasourceId)
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: UserCtx<void, FindDatasourcesResponse>) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   ctx.body = await sdk.datasources.removeSecretSingle(datasource)
 }
 
-export async function getExternalSchema(ctx: UserCtx) {
+export async function getExternalSchema(
+  ctx: UserCtx<void, FetchExternalSchemaResponse>
+) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
     datasource

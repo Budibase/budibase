@@ -311,6 +311,7 @@ export type AutomationStep =
 type EmptyInputs = {}
 export type AutomationStepDefinition = Omit<AutomationStep, "id" | "inputs"> & {
   inputs: EmptyInputs
+  deprecated?: boolean
 }
 
 export type AutomationTriggerDefinition = Omit<
@@ -318,6 +319,7 @@ export type AutomationTriggerDefinition = Omit<
   "id" | "inputs"
 > & {
   inputs: EmptyInputs
+  deprecated?: boolean
 }
 
 export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
