@@ -6,7 +6,7 @@ import {
   GetOfflineLicenseTokenResponse,
   QuotaUsage,
 } from "@budibase/types"
-import { APIError, BaseAPIClient } from "./types"
+import { BaseAPIClient } from "./types"
 
 export interface LicensingEndpoints {
   activateLicenseKey: (licenseKey: string) => Promise<void>
