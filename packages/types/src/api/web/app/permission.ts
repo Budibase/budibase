@@ -1,4 +1,8 @@
-import { PermissionLevel } from "../../../sdk"
+import { BuiltinPermission, PermissionLevel } from "../../../sdk"
+
+export type FetchBuiltinPermissionsRequest = BuiltinPermission[]
+
+export type FetchPermissionLevelsRequest = string[]
 
 export interface FetchResourcePermissionInfoResponse {
   [key: string]: Record<string, string>
