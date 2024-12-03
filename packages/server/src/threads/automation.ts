@@ -30,7 +30,11 @@ import {
   UserBindings,
   isBasicSearchOperator,
 } from "@budibase/types"
-import { AutomationContext, TriggerOutput } from "../definitions/automations"
+import {
+  AutomationContext,
+  AutomationResponse,
+  TriggerOutput,
+} from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
 import { context, logging, configs } from "@budibase/backend-core"
 import {
@@ -81,7 +85,7 @@ class Orchestrator {
   private job: Job
   private loopStepOutputs: LoopStep[]
   private stopped: boolean
-  private executionOutput: Omit<AutomationContext, "stepsByName" | "stepsById">
+  private executionOutput: AutomationResponse
   private currentUser: UserBindings | undefined
 
   constructor(job: AutomationJob) {
@@ -257,7 +261,7 @@ class Orchestrator {
     })
   }
 
-  async execute(): Promise<any> {
+  async execute(): Promise<AutomationResponse | undefined> {
     return tracer.trace(
       "Orchestrator.execute",
       { resource: "automation" },
@@ -723,7 +727,9 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   })
 }
 
-export async function executeInThread(job: Job<AutomationData>) {
+export async function executeInThread(
+  job: Job<AutomationData>
+): Promise<AutomationResponse> {
   const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
@@ -735,7 +741,7 @@ export async function executeInThread(job: Job<AutomationData>) {
     }, job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT)
   })
 
-  return await context.doInAppContext(appId, async () => {
+  return (await context.doInAppContext(appId, async () => {
     await context.ensureSnippetContext()
     const envVars = await sdkUtils.getEnvironmentVariables()
     // put into automation thread for whole context
@@ -746,7 +752,7 @@ export async function executeInThread(job: Job<AutomationData>) {
         timeoutPromise,
       ])
     })
-  })
+  })) as AutomationResponse
 }
 
 export const removeStalled = async (job: Job) => {
