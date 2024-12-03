@@ -26,6 +26,7 @@ import { RouteEndpoints } from "./routes"
 import { RowActionEndpoints } from "./rowActions"
 import { RowEndpoints } from "./rows"
 import { ScreenEndpoints } from "./screens"
+import { SelfEndpoints } from "./self"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -122,4 +123,5 @@ export type APIClient = BaseAPIClient &
   RoleEndpoints &
   RouteEndpoints &
   RowEndpoints &
-  ScreenEndpoints & { rowActions: RowActionEndpoints; [key: string]: any }
+  ScreenEndpoints &
+  SelfEndpoints & { rowActions: RowActionEndpoints; [key: string]: any }
