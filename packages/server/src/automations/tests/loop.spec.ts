@@ -3,7 +3,7 @@ import * as triggers from "../triggers"
 import { loopAutomation } from "../../tests/utilities/structures"
 import { context } from "@budibase/backend-core"
 import * as setup from "./utilities"
-import { Table, LoopStepType } from "@budibase/types"
+import { Table, LoopStepType, AutomationResults } from "@budibase/types"
 import * as loopUtils from "../loopUtils"
 import { LoopInput } from "../../definitions/automations"
 
@@ -20,15 +20,19 @@ describe("Attempt to run a basic loop automation", () => {
 
   afterAll(setup.afterAll)
 
-  async function runLoop(loopOpts?: LoopInput) {
+  async function runLoop(loopOpts?: LoopInput): Promise<AutomationResults> {
     const appId = config.getAppId()
     return await context.doInAppContext(appId, async () => {
       const params = { fields: { appId } }
-      return await triggers.externalTrigger(
+      const result = await triggers.externalTrigger(
         loopAutomation(table._id!, loopOpts),
         params,
         { getResponses: true }
       )
+      if ("outputs" in result && !result.outputs.success) {
+        throw new Error("Unable to proceed - failed to return anything.")
+      }
+      return result as AutomationResults
     })
   }
 
