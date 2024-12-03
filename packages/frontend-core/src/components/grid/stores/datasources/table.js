@@ -27,8 +27,7 @@ export const createActions = context => {
   }
 
   const getRow = async id => {
-    const res = await API.searchTable({
-      tableId: get(datasource).tableId,
+    const res = await API.searchTable(get(datasource).tableId, {
       limit: 1,
       query: {
         equal: {
