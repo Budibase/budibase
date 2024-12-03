@@ -150,7 +150,7 @@ export type OpenAIStepInputs = {
   prompt: string
   model: Model
 }
-enum Model {
+export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API
   GPT_4 = "gpt-4",
