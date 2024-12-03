@@ -1,13 +1,46 @@
-export const buildRowActionEndpoints = API => ({
+import {
+  RowActionsResponse,
+  RowActionResponse,
+  CreateRowActionRequest,
+  RowActionPermissionsResponse,
+  RowActionTriggerRequest,
+} from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface RowActionEndpoints {
+  fetch: (tableId: string) => Promise<Record<string, RowActionResponse>>
+  create: (tableId: string, name: string) => Promise<RowActionResponse>
+  delete: (tableId: string, rowActionId: string) => Promise<void>
+  enableView: (
+    tableId: string,
+    rowActionId: string,
+    viewId: string
+  ) => Promise<RowActionPermissionsResponse>
+  disableView: (
+    tableId: string,
+    rowActionId: string,
+    viewId: string
+  ) => Promise<RowActionPermissionsResponse>
+  trigger: (
+    sourceId: string,
+    rowActionId: string,
+    rowId: string
+  ) => Promise<void>
+}
+
+export const buildRowActionEndpoints = (
+  API: BaseAPIClient
+): RowActionEndpoints => ({
   /**
    * Gets the available row actions for a table.
    * @param tableId the ID of the table
    */
   fetch: async tableId => {
-    const res = await API.get({
-      url: `/api/tables/${tableId}/actions`,
-    })
-    return res?.actions || {}
+    return (
+      await API.get<RowActionsResponse>({
+        url: `/api/tables/${tableId}/actions`,
+      })
+    ).actions
   },
 
   /**
@@ -15,24 +48,9 @@ export const buildRowActionEndpoints = API => ({
    * @param name the name of the row action
    * @param tableId the ID of the table
    */
-  create: async ({ name, tableId }) => {
-    return await API.post({
+  create: async (tableId, name) => {
+    return await API.post<CreateRowActionRequest, RowActionResponse>({
       url: `/api/tables/${tableId}/actions`,
-      body: {
-        name,
-      },
-    })
-  },
-
-  /**
-   * Updates a row action.
-   * @param name the new name of the row action
-   * @param tableId the ID of the table
-   * @param rowActionId the ID of the row action to update
-   */
-  update: async ({ tableId, rowActionId, name }) => {
-    return await API.put({
-      url: `/api/tables/${tableId}/actions/${rowActionId}`,
       body: {
         name,
       },
@@ -44,7 +62,7 @@ export const buildRowActionEndpoints = API => ({
    * @param tableId the ID of the table
    * @param rowActionId the ID of the row action to delete
    */
-  delete: async ({ tableId, rowActionId }) => {
+  delete: async (tableId, rowActionId) => {
     return await API.delete({
       url: `/api/tables/${tableId}/actions/${rowActionId}`,
     })
@@ -56,7 +74,7 @@ export const buildRowActionEndpoints = API => ({
    * @param rowActionId the ID of the row action
    * @param viewId the ID of the view
    */
-  enableView: async ({ tableId, rowActionId, viewId }) => {
+  enableView: async (tableId, rowActionId, viewId) => {
     return await API.post({
       url: `/api/tables/${tableId}/actions/${rowActionId}/permissions/${viewId}`,
     })
@@ -68,7 +86,7 @@ export const buildRowActionEndpoints = API => ({
    * @param rowActionId the ID of the row action
    * @param viewId the ID of the view
    */
-  disableView: async ({ tableId, rowActionId, viewId }) => {
+  disableView: async (tableId, rowActionId, viewId) => {
     return await API.delete({
       url: `/api/tables/${tableId}/actions/${rowActionId}/permissions/${viewId}`,
     })
@@ -79,8 +97,8 @@ export const buildRowActionEndpoints = API => ({
    * @param tableId the ID of the table
    * @param rowActionId the ID of the row action to trigger
    */
-  trigger: async ({ sourceId, rowActionId, rowId }) => {
-    return await API.post({
+  trigger: async (sourceId, rowActionId, rowId) => {
+    return await API.post<RowActionTriggerRequest>({
       url: `/api/tables/${sourceId}/actions/${rowActionId}/trigger`,
       body: {
         rowId,

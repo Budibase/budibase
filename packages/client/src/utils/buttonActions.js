@@ -487,11 +487,7 @@ const downloadFileHandler = async action => {
 
 const rowActionHandler = async action => {
   const { resourceId, rowId, rowActionId } = action.parameters
-  await API.rowActions.trigger({
-    rowActionId,
-    sourceId: resourceId,
-    rowId,
-  })
+  await API.rowActions.trigger(resourceId, rowActionId, rowId)
   // Refresh related datasources
   await dataSourceStore.actions.invalidateDataSource(resourceId, {
     invalidateRelationships: true,
