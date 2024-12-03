@@ -8,7 +8,7 @@ import { get } from "svelte/store"
 import { auth, navigation } from "./stores/portal"
 
 export const API = createAPIClient({
-  attachHeaders: headers => {
+  attachHeaders: (headers: Record<string, string>) => {
     // Attach app ID header from store
     let appId = get(appStore).appId
     if (appId) {
@@ -16,13 +16,13 @@ export const API = createAPIClient({
     }
 
     // Add csrf token if authenticated
-    const user = get(auth).user
+    const user: any = get(auth).user
     if (user?.csrfToken) {
       headers["x-csrf-token"] = user.csrfToken
     }
   },
 
-  onError: error => {
+  onError: (error: any) => {
     const { url, message, status, method, handled } = error || {}
 
     // Log any errors that we haven't manually handled
@@ -45,14 +45,14 @@ export const API = createAPIClient({
       }
     }
   },
-  onMigrationDetected: appId => {
+  onMigrationDetected: (appId: string) => {
     const updatingUrl = `/builder/app/updating/${appId}`
 
     if (window.location.pathname === updatingUrl) {
       return
     }
 
-    get(navigation).goto(
+    get(navigation)?.goto(
       `${updatingUrl}?returnUrl=${encodeURIComponent(window.location.pathname)}`
     )
   },

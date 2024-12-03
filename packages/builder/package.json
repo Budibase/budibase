@@ -4,14 +4,14 @@
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
-    "svelte-check": "svelte-check --no-tsconfig",
-    "build": "yarn svelte-check && routify -b && vite build --emptyOutDir",
+    "build": "routify -b && NODE_OPTIONS=\"--max_old_space_size=4096\" vite build --emptyOutDir",
     "start": "routify -c rollup",
     "dev": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:types": "yarn svelte-check"
   },
   "jest": {
     "globals": {
@@ -89,6 +89,7 @@
     "@babel/plugin-transform-runtime": "^7.13.10",
     "@babel/preset-env": "^7.13.12",
     "@rollup/plugin-replace": "^5.0.3",
+    "@rollup/plugin-typescript": "8.3.0",
     "@roxi/routify": "2.18.12",
     "@sveltejs/vite-plugin-svelte": "1.4.0",
     "@testing-library/jest-dom": "6.4.2",

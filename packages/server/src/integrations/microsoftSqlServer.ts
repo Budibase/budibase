@@ -4,9 +4,9 @@ import {
   DatasourceFieldType,
   DatasourcePlus,
   DatasourcePlusQueryResponse,
+  EnrichedQueryJson,
   Integration,
   Operation,
-  QueryJson,
   QueryType,
   Schema,
   SourceName,
@@ -342,7 +342,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           ? `${query.sql}; SELECT SCOPE_IDENTITY() AS id;`
           : query.sql
       this.log(sql, query.bindings)
-      return await request.query(sql)
+      const resp = await request.query(sql)
+      return resp
     } catch (err: any) {
       let readableMessage = getReadableErrorMessage(
         SourceName.SQL_SERVER,
@@ -505,23 +506,21 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     return response.recordset || [{ deleted: true }]
   }
 
-  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
+  async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const schema = this.config.schema
     await this.connect()
-    if (schema && schema !== DEFAULT_SCHEMA && json?.endpoint) {
-      json.endpoint.schema = schema
+    if (schema && schema !== DEFAULT_SCHEMA) {
+      json.schema = schema
     }
     const operation = this._operation(json)
     const queryFn = (query: any, op: string) => this.internalQuery(query, op)
     const processFn = (result: any) => {
-      if (json?.meta?.table && result.recordset) {
+      if (result.recordset) {
         return this.convertJsonStringColumns(
-          json.meta.table,
+          json.table,
           result.recordset,
           json.tableAliases
         )
-      } else if (result.recordset) {
-        return result.recordset
       }
       return [{ [operation]: true }]
     }
