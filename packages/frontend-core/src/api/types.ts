@@ -73,6 +73,16 @@ export type BaseAPIClient = {
   getAppID: () => string
 }
 
+export type APIError = {
+  message?: string
+  json: any
+  status: number
+  url: string
+  method: HTTPMethod
+  handled: boolean
+  suppressErrors: boolean
+}
+
 export type APIClient = BaseAPIClient &
   AIEndpoints &
   AnalyticsEndpoints &
@@ -89,4 +99,4 @@ export type APIClient = BaseAPIClient &
   FlagEndpoints &
   GroupEndpoints &
   LayoutEndpoints &
-  LicensingEndpoints
+  LicensingEndpoints & { [key: string]: any }
