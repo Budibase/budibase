@@ -85,10 +85,10 @@ export type BaseAPIClient = {
 
 export type APIError = {
   message?: string
+  url?: string
+  method?: HTTPMethod
   json: any
   status: number
-  url: string
-  method: HTTPMethod
   handled: boolean
   suppressErrors: boolean
 }

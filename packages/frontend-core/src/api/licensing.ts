@@ -6,7 +6,7 @@ import {
   GetOfflineLicenseTokenResponse,
   QuotaUsage,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import { APIError, BaseAPIClient } from "./types"
 
 export interface LicensingEndpoints {
   activateLicenseKey: (licenseKey: string) => Promise<void>
@@ -40,7 +40,7 @@ export const buildLicensingEndpoints = (
       return await API.get({
         url: "/api/global/license/key",
       })
-    } catch (e) {
+    } catch (e: any) {
       if (e.status !== 404) {
         throw e
       }
@@ -66,7 +66,7 @@ export const buildLicensingEndpoints = (
       return await API.get({
         url: "/api/global/license/offline",
       })
-    } catch (e) {
+    } catch (e: any) {
       if (e.status !== 404) {
         throw e
       }
