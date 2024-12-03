@@ -102,7 +102,9 @@ if (env.SELF_HOSTED) {
   }
 }
 
-export async function getActionDefinitions() {
+export async function getActionDefinitions(): Promise<
+  Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
+> {
   if (await features.flags.isEnabled(FeatureFlag.AUTOMATION_BRANCHING)) {
     BUILTIN_ACTION_DEFINITIONS["BRANCH"] = branch.definition
   }

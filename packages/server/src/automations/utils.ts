@@ -9,9 +9,11 @@ import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import {
   Automation,
+  AutomationActionStepId,
   AutomationJob,
   AutomationStepDefinition,
   AutomationTriggerDefinition,
+  AutomationTriggerStepId,
 } from "@budibase/types"
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
@@ -120,19 +122,21 @@ export async function updateTestHistory(
   )
 }
 
-export function removeDeprecated(
-  definitions: Record<
+export function removeDeprecated<
+  T extends
+    | Record<keyof typeof AutomationTriggerStepId, AutomationTriggerDefinition>
+    | Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
+>(definitions: T): T {
+  const base: Record<
     string,
-    AutomationStepDefinition | AutomationTriggerDefinition
-  >
-) {
-  const base = cloneDeep(definitions)
+    AutomationTriggerDefinition | AutomationStepDefinition
+  > = cloneDeep(definitions)
   for (let key of Object.keys(base)) {
     if (base[key].deprecated) {
       delete base[key]
     }
   }
-  return base
+  return base as T
 }
 
 // end the repetition and the job itself

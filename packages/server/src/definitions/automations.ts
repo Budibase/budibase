@@ -26,3 +26,6 @@ export interface AutomationContext extends AutomationResults {
     company?: string
   }
 }
+
+export interface AutomationResponse
+  extends Omit<AutomationContext, "stepsByName" | "stepsById"> {}

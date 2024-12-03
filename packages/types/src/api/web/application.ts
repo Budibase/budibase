@@ -1,5 +1,10 @@
 import type { PlanType } from "../../sdk"
 import type { Layout, App, Screen } from "../../documents"
+import { ReadStream } from "fs"
+
+export interface SyncAppResponse {
+  message: string
+}
 
 export interface CreateAppRequest {
   name: string
@@ -11,6 +16,8 @@ export interface CreateAppRequest {
   encryptionPassword?: string
   file?: { path: string }
 }
+
+export interface CreateAppResponse extends App {}
 
 export interface DuplicateAppRequest {
   name: string
@@ -37,6 +44,8 @@ export interface FetchAppPackageResponse {
   hasLock: boolean
 }
 
+export type FetchAppsResponse = App[]
+
 export interface PublishResponse {
   _id: string
   status: string
@@ -45,3 +54,27 @@ export interface PublishResponse {
 
 export interface UpdateAppRequest extends Partial<App> {}
 export interface UpdateAppResponse extends App {}
+export interface UpdateAppClientResponse extends App {}
+export interface RevertAppClientResponse extends App {}
+
+export interface DeleteAppResponse {
+  ok: boolean
+}
+
+export interface ImportToUpdateAppRequest {
+  encryptionPassword?: string
+}
+export interface ImportToUpdateAppResponse {
+  message: string
+}
+
+export interface SetRevertableAppVersionRequest {
+  revertableVersion: string
+}
+
+export interface ExportAppDumpRequest {
+  excludeRows: boolean
+  encryptPassword?: string
+}
+
+export type ExportAppDumpResponse = ReadStream
