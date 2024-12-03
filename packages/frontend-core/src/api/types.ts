@@ -22,6 +22,7 @@ import { PluginEndpoins } from "./plugins"
 import { QueryEndpoints } from "./queries"
 import { RelationshipEndpoints } from "./relationships"
 import { RoleEndpoints } from "./roles"
+import { RouteEndpoints } from "./routes"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -115,4 +116,5 @@ export type APIClient = BaseAPIClient &
   PluginEndpoins &
   QueryEndpoints &
   RelationshipEndpoints &
-  RoleEndpoints & { [key: string]: any }
+  RoleEndpoints &
+  RouteEndpoints & { [key: string]: any }
