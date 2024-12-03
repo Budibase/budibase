@@ -62,10 +62,7 @@ export function createQueriesStore() {
   }
 
   const importQueries = async ({ data, datasourceId }) => {
-    return await API.importQueries({
-      datasourceId,
-      data,
-    })
+    return await API.importQueries(datasourceId, data)
   }
 
   const select = id => {
