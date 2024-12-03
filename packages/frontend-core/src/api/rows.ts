@@ -14,7 +14,7 @@ export interface RowEndpoints {
   saveRow: (
     row: Row,
     suppressErrors?: boolean
-  ) => Promise<PatchRowResponse | null>
+  ) => Promise<PatchRowResponse | undefined>
   patchRow: (
     row: PatchRowRequest,
     suppressErrors?: boolean
