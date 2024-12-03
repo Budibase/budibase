@@ -1,4 +1,10 @@
-export const buildLogsEndpoints = API => ({
+import { BaseAPIClient } from "./types"
+
+export interface LogEndpoints {
+  getSystemLogs: () => Promise<any>
+}
+
+export const buildLogsEndpoints = (API: BaseAPIClient): LogEndpoints => ({
   /**
    * Gets a stream for the system logs.
    */
