@@ -11,7 +11,7 @@ import {
   ViewFilterDeletedEvent,
   ViewFilterUpdatedEvent,
   ViewUpdatedEvent,
-  View,
+  ViewV2,
   ViewCalculation,
   Table,
   TableExportFormat,
@@ -19,9 +19,10 @@ import {
 
 /* eslint-disable */
 
-async function created(view: View, timestamp?: string | number) {
+async function created(view: Partial<ViewV2>, timestamp?: string | number) {
   const properties: ViewCreatedEvent = {
-    tableId: view.tableId,
+    name: view.name,
+    type: view.type,
   }
   await publishEvent(Event.VIEW_CREATED, properties, timestamp)
 }

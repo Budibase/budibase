@@ -16,6 +16,7 @@ import {
   CountDistinctCalculationFieldMetadata,
   CountCalculationFieldMetadata,
 } from "@budibase/types"
+import { events } from "@budibase/backend-core"
 import { builderSocket, gridSocket } from "../../../websockets"
 import { helpers } from "@budibase/shared-core"
 
@@ -149,6 +150,9 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
     primaryDisplay: view.primaryDisplay,
   }
   const result = await sdk.views.create(tableId, parsedView)
+
+  await events.view.created(view)
+
   ctx.status = 201
   ctx.body = {
     data: result,
