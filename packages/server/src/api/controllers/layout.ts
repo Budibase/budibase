@@ -2,7 +2,6 @@ import { EMPTY_LAYOUT } from "../../constants/layouts"
 import { generateLayoutID, getScreenParams } from "../../db/utils"
 import { events, context } from "@budibase/backend-core"
 import {
-  BBContext,
   DeleteLayoutResponse,
   Layout,
   SaveLayoutRequest,
