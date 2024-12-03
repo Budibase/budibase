@@ -18,6 +18,7 @@ import { LogEndpoints } from "./logs"
 import { MigrationEndpoints } from "./migrations"
 import { OtherEndpoints } from "./other"
 import { PermissionEndpoints } from "./permissions"
+import { PluginEndpoins } from "./plugins"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -107,4 +108,5 @@ export type APIClient = BaseAPIClient &
   LogEndpoints &
   MigrationEndpoints &
   OtherEndpoints &
-  PermissionEndpoints & { [key: string]: any }
+  PermissionEndpoints &
+  PluginEndpoins & { [key: string]: any }
