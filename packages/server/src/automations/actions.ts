@@ -98,7 +98,6 @@ if (env.SELF_HOSTED) {
   BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
 
   if (env.isTest()) {
-    ACTION_IMPLS["OPENAI"] = openai.run
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = openai.definition
   }
 }
