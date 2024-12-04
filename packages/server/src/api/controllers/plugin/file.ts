@@ -3,9 +3,9 @@ import {
   getPluginMetadata,
   extractTarball,
 } from "../../../utilities/fileSystem"
-import { FileType } from "@budibase/types"
+import { KoaFile } from "@budibase/types"
 
-export async function fileUpload(file: FileType) {
+export async function fileUpload(file: KoaFile) {
   if (!file.name || !file.path) {
     throw new Error("File is not valid - cannot upload.")
   }

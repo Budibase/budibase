@@ -12,7 +12,6 @@ import {
   ExecuteQueryStepInputs,
   ExecuteQueryStepOutputs,
 } from "@budibase/types"
-import { executeV2AsAutomation } from "../../api/controllers/query"
 
 export const definition: AutomationStepDefinition = {
   name: "External Data Connector",

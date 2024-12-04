@@ -27,7 +27,7 @@ jest.mock("@budibase/pro", () => ({
   ai: {
     LargeLanguageModel: {
       forCurrentTenant: jest.fn().mockImplementation(() => ({
-        initialised: true,
+        llm: {},
         init: jest.fn(),
         run: jest.fn(),
       })),
