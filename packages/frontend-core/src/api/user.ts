@@ -32,7 +32,7 @@ export interface UserEndpoints {
       userId: string
       email: string
     }>
-  ) => Promise<BulkUserDeleted | null>
+  ) => Promise<BulkUserDeleted | undefined>
   onboardUsers: (data: InviteUsersRequest) => Promise<InviteUsersResponse>
   getUserInvite: (code: string) => Promise<{ email: string }>
   getUserInvites: () => Promise<any[]>
@@ -53,7 +53,10 @@ export interface UserEndpoints {
 
   // Missing request or response types
   searchUsers: (data: SearchUsersRequest) => Promise<any>
-  createUsers: (users: User[], groups: any[]) => Promise<BulkUserCreated | null>
+  createUsers: (
+    users: User[],
+    groups: any[]
+  ) => Promise<BulkUserCreated | undefined>
   updateUserInvite: (data: any) => Promise<any>
 }
 
