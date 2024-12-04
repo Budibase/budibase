@@ -1,4 +1,25 @@
-export const buildViewV2Endpoints = API => ({
+import {
+  CreateViewRequest,
+  SearchRowResponse,
+  SearchViewRowRequest,
+  UpdateViewRequest,
+  ViewResponse,
+  ViewResponseEnriched,
+} from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface ViewV2Endpoints {
+  fetchDefinition: (viewId: string) => Promise<ViewResponseEnriched>
+  create: (view: CreateViewRequest) => Promise<ViewResponse>
+  update: (view: UpdateViewRequest) => Promise<ViewResponse>
+  fetch: (
+    viewId: string,
+    opts: SearchViewRowRequest
+  ) => Promise<SearchRowResponse>
+  delete: (viewId: string) => Promise<void>
+}
+
+export const buildViewV2Endpoints = (API: BaseAPIClient): ViewV2Endpoints => ({
   /**
    * Fetches the definition of a view
    * @param viewId the ID of the view to fetch
@@ -9,6 +30,7 @@ export const buildViewV2Endpoints = API => ({
       cache: true,
     })
   },
+
   /**
    * Create a new view
    * @param view the view object
@@ -19,6 +41,7 @@ export const buildViewV2Endpoints = API => ({
       body: view,
     })
   },
+
   /**
    * Updates a view
    * @param view the view object
@@ -29,40 +52,19 @@ export const buildViewV2Endpoints = API => ({
       body: view,
     })
   },
+
   /**
    * Fetches all rows in a view
    * @param viewId the id of the view
-   * @param query the search query
-   * @param paginate whether to paginate or not
-   * @param limit page size
-   * @param bookmark pagination cursor
-   * @param sort sort column
-   * @param sortOrder sort order
-   * @param sortType sort type (text or numeric)
+   * @param opts the search options
    */
-  fetch: async ({
-    viewId,
-    query,
-    paginate,
-    limit,
-    bookmark,
-    sort,
-    sortOrder,
-    sortType,
-  }) => {
+  fetch: async (viewId, opts) => {
     return await API.post({
       url: `/api/v2/views/${encodeURIComponent(viewId)}/search`,
-      body: {
-        query,
-        paginate,
-        limit,
-        bookmark,
-        sort,
-        sortOrder,
-        sortType,
-      },
+      body: opts,
     })
   },
+
   /**
    * Delete a view
    * @param viewId the id of the view

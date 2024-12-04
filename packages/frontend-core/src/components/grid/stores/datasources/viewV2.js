@@ -28,8 +28,7 @@ export const createActions = context => {
   }
 
   const getRow = async id => {
-    const res = await API.viewV2.fetch({
-      viewId: get(datasource).id,
+    const res = await API.viewV2.fetch(get(datasource).id, {
       limit: 1,
       query: {
         equal: {
