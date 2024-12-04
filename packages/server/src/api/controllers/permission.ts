@@ -9,6 +9,8 @@ import {
   RemovePermissionRequest,
   RemovePermissionResponse,
   FetchResourcePermissionInfoResponse,
+  FetchBuiltinPermissionsRequest,
+  FetchPermissionLevelsRequest,
 } from "@budibase/types"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
@@ -19,11 +21,13 @@ import { PermissionUpdateType } from "../../sdk/app/permissions"
 
 const SUPPORTED_LEVELS = CURRENTLY_SUPPORTED_LEVELS
 
-export function fetchBuiltin(ctx: UserCtx) {
+export function fetchBuiltin(
+  ctx: UserCtx<void, FetchBuiltinPermissionsRequest>
+) {
   ctx.body = Object.values(permissions.getBuiltinPermissions())
 }
 
-export function fetchLevels(ctx: UserCtx) {
+export function fetchLevels(ctx: UserCtx<void, FetchPermissionLevelsRequest>) {
   // for now only provide the read/write perms externally
   ctx.body = SUPPORTED_LEVELS
 }
