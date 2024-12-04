@@ -2,7 +2,7 @@ export enum TemplateType {
   APP = "app",
 }
 
-export interface Template {
+export interface TemplateMetadata {
   background: string
   icon: string
   category: string
@@ -14,7 +14,7 @@ export interface Template {
   image: string
 }
 
-export type FetchTemplateResponse = Template[]
+export type FetchTemplateResponse = TemplateMetadata[]
 
 export interface DownloadTemplateResponse {
   message: string
