@@ -108,7 +108,9 @@ export async function run({
 
     let llmWrapper
     if (budibaseAIEnabled || customConfigsEnabled) {
-      llmWrapper = await pro.ai.LargeLanguageModel.forCurrentTenant(inputs.model)
+      llmWrapper = await pro.ai.LargeLanguageModel.forCurrentTenant(
+        inputs.model
+      )
     }
 
     response = llmWrapper?.llm
