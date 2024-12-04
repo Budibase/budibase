@@ -1,4 +1,4 @@
-import { Layout } from "../../documents"
+import { Layout } from "../../../documents"
 
 export interface SaveLayoutRequest extends Layout {}
 
