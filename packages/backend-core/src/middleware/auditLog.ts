@@ -1,6 +1,6 @@
-import { BBContext } from "@budibase/types"
+import { Ctx } from "@budibase/types"
 
-export default async (ctx: BBContext | any, next: any) => {
+export default async (ctx: Ctx, next: any) => {
   // Placeholder for audit log middleware
   return next()
 }
