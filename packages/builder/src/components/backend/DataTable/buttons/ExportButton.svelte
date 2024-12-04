@@ -56,10 +56,7 @@
   }
 
   const exportAllData = async () => {
-    return await API.exportView({
-      viewName: view,
-      format: exportFormat,
-    })
+    return await API.exportView(view, exportFormat)
   }
 
   const exportFilteredData = async () => {
