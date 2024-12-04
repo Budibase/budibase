@@ -18,7 +18,7 @@ jest.mock("@budibase/pro", () => ({
   ai: {
     LargeLanguageModel: {
       forCurrentTenant: async () => ({
-        initialised: true,
+        llm: {},
         run: jest.fn(() => "response from LLM"),
         buildPromptFromAIOperation: buildPromptMock,
       }),
