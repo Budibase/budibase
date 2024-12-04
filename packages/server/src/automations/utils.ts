@@ -2,7 +2,6 @@ import { Thread, ThreadType } from "../threads"
 import { definitions } from "./triggerInfo"
 import { automationQueue } from "./bullboard"
 import { updateEntityMetadata } from "../utilities"
-import { MetadataTypes } from "../constants"
 import { context, db as dbCore, utils } from "@budibase/backend-core"
 import { getAutomationMetadataParams } from "../db/utils"
 import { cloneDeep } from "lodash/fp"
@@ -14,6 +13,7 @@ import {
   AutomationStepDefinition,
   AutomationTriggerDefinition,
   AutomationTriggerStepId,
+  MetadataType,
 } from "@budibase/types"
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
@@ -107,7 +107,7 @@ export async function updateTestHistory(
   history: any
 ) {
   return updateEntityMetadata(
-    MetadataTypes.AUTOMATION_TEST_HISTORY,
+    MetadataType.AUTOMATION_TEST_HISTORY,
     automation._id,
     (metadata: any) => {
       if (metadata && Array.isArray(metadata.history)) {
