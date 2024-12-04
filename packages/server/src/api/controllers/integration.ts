@@ -26,7 +26,7 @@ export async function find(ctx: UserCtx<void, FindIntegrationResponse>) {
   }
   const integration = await getDefinition(ctx.params.type)
   if (!integration) {
-    ctx.throw(400, "Integration not found")
+    ctx.throw(404, "Integration not found")
   }
   ctx.body = integration
 }

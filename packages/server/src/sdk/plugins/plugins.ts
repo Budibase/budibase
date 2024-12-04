@@ -1,4 +1,4 @@
-import { FileType, Plugin, PluginSource, PluginType } from "@budibase/types"
+import { KoaFile, Plugin, PluginSource, PluginType } from "@budibase/types"
 import {
   db as dbCore,
   objectStore,
@@ -26,7 +26,7 @@ export async function fetch(type?: PluginType): Promise<Plugin[]> {
   }
 }
 
-export async function processUploaded(plugin: FileType, source?: PluginSource) {
+export async function processUploaded(plugin: KoaFile, source?: PluginSource) {
   const { metadata, directory } = await fileUpload(plugin)
   pluginCore.validate(metadata?.schema)
 
