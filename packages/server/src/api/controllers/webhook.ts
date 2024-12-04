@@ -4,9 +4,17 @@ import { db as dbCore, context } from "@budibase/backend-core"
 import {
   Webhook,
   WebhookActionType,
-  BBContext,
+  Ctx,
   Automation,
   AutomationActionStepId,
+  FetchWebhooksResponse,
+  SaveWebhookResponse,
+  SaveWebhookRequest,
+  DeleteWebhookResponse,
+  BuildWebhookSchemaRequest,
+  BuildWebhookSchemaResponse,
+  TriggerWebhookRequest,
+  TriggerWebhookResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import * as pro from "@budibase/pro"
@@ -16,17 +24,17 @@ const validate = require("jsonschema").validate
 
 const AUTOMATION_DESCRIPTION = "Generated from Webhook Schema"
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: Ctx<void, FetchWebhooksResponse>) {
   const db = context.getAppDB()
-  const response = await db.allDocs(
+  const response = await db.allDocs<Webhook>(
     getWebhookParams(null, {
       include_docs: true,
     })
   )
-  ctx.body = response.rows.map((row: any) => row.doc)
+  ctx.body = response.rows.filter(row => row.doc).map(row => row.doc!)
 }
 
-export async function save(ctx: BBContext) {
+export async function save(ctx: Ctx<SaveWebhookRequest, SaveWebhookResponse>) {
   const webhook = await sdk.automations.webhook.save(ctx.request.body)
   ctx.body = {
     message: "Webhook created successfully",
@@ -34,21 +42,23 @@ export async function save(ctx: BBContext) {
   }
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: Ctx<void, DeleteWebhookResponse>) {
   ctx.body = await sdk.automations.webhook.destroy(
     ctx.params.id,
     ctx.params.rev
   )
 }
 
-export async function buildSchema(ctx: BBContext) {
+export async function buildSchema(
+  ctx: Ctx<BuildWebhookSchemaRequest, BuildWebhookSchemaResponse>
+) {
   await context.doInAppContext(ctx.params.instance, async () => {
     const db = context.getAppDB()
-    const webhook = (await db.get(ctx.params.id)) as Webhook
+    const webhook = await db.get<Webhook>(ctx.params.id)
     webhook.bodySchema = toJsonSchema(ctx.request.body)
     // update the automation outputs
     if (webhook.action.type === WebhookActionType.AUTOMATION) {
-      let automation = (await db.get(webhook.action.target)) as Automation
+      let automation = await db.get<Automation>(webhook.action.target)
       const autoOutputs = automation.definition.trigger.schema.outputs
       let properties = webhook.bodySchema.properties
       // reset webhook outputs
@@ -67,60 +77,66 @@ export async function buildSchema(ctx: BBContext) {
   })
 }
 
-export async function trigger(ctx: BBContext) {
+export async function trigger(
+  ctx: Ctx<TriggerWebhookRequest, TriggerWebhookResponse>
+) {
   const prodAppId = dbCore.getProdAppID(ctx.params.instance)
+  const appNotDeployed = () => {
+    ctx.body = {
+      message: "Application not deployed yet.",
+    }
+  }
   await context.doInAppContext(prodAppId, async () => {
-    try {
-      const db = context.getAppDB()
-      const webhook = (await db.get(ctx.params.id)) as Webhook
-      // validate against the schema
-      if (webhook.bodySchema) {
-        validate(ctx.request.body, webhook.bodySchema)
-      }
-      const target = await db.get<Automation>(webhook.action.target)
-      if (webhook.action.type === WebhookActionType.AUTOMATION) {
-        // trigger with both the pure request and then expand it
-        // incase the user has produced a schema to bind to
-        let hasCollectStep = sdk.automations.utils.checkForCollectStep(target)
+    const db = context.getAppDB()
+    const webhook = await db.tryGet<Webhook>(ctx.params.id)
+    if (!webhook) {
+      return appNotDeployed()
+    }
+    // validate against the schema
+    if (webhook.bodySchema) {
+      validate(ctx.request.body, webhook.bodySchema)
+    }
+    const target = await db.tryGet<Automation>(webhook.action.target)
+    if (!target) {
+      return appNotDeployed()
+    }
+    if (webhook.action.type === WebhookActionType.AUTOMATION) {
+      // trigger with both the pure request and then expand it
+      // incase the user has produced a schema to bind to
+      let hasCollectStep = sdk.automations.utils.checkForCollectStep(target)
 
-        if (hasCollectStep && (await pro.features.isSyncAutomationsEnabled())) {
-          const response = await triggers.externalTrigger(
-            target,
-            {
-              body: ctx.request.body,
+      if (hasCollectStep && (await pro.features.isSyncAutomationsEnabled())) {
+        const response = await triggers.externalTrigger(
+          target,
+          {
+            fields: {
               ...ctx.request.body,
-              appId: prodAppId,
+              body: ctx.request.body,
             },
-            { getResponses: true }
+            appId: prodAppId,
+          },
+          { getResponses: true }
+        )
+
+        if (triggers.isAutomationResults(response)) {
+          let collectedValue = response.steps.find(
+            (step: any) => step.stepId === AutomationActionStepId.COLLECT
           )
 
-          if (triggers.isAutomationResults(response)) {
-            let collectedValue = response.steps.find(
-              (step: any) => step.stepId === AutomationActionStepId.COLLECT
-            )
-
-            ctx.status = 200
-            ctx.body = collectedValue?.outputs
-          } else {
-            ctx.throw(400, "Automation did not have a collect block.")
-          }
+          ctx.body = collectedValue?.outputs
         } else {
-          await triggers.externalTrigger(target, {
-            body: ctx.request.body,
-            ...ctx.request.body,
-            appId: prodAppId,
-          })
-          ctx.status = 200
-          ctx.body = {
-            message: "Webhook trigger fired successfully",
-          }
+          ctx.throw(400, "Automation did not have a collect block.")
         }
-      }
-    } catch (err: any) {
-      if (err.status === 404) {
-        ctx.status = 200
+      } else {
+        await triggers.externalTrigger(target, {
+          fields: {
+            ...ctx.request.body,
+            body: ctx.request.body,
+          },
+          appId: prodAppId,
+        })
         ctx.body = {
-          message: "Application not deployed yet.",
+          message: "Webhook trigger fired successfully",
         }
       }
     }
