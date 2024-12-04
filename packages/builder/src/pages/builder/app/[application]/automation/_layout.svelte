@@ -89,6 +89,7 @@
           href="https://t.maze.co/310149185"
           target="_blank"
           rel="noopener noreferrer"
+          on:click={() => surveyDismissed.set(true)}
         >
           Complete our survey on Automations</a
         >
