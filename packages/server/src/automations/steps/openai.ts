@@ -106,13 +106,15 @@ export async function run({
       (await features.flags.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
       (await pro.features.isBudibaseAIEnabled())
 
-    let llm
+    let llmWrapper
     if (budibaseAIEnabled || customConfigsEnabled) {
-      llm = await pro.ai.LargeLanguageModel.forCurrentTenant(inputs.model)
+      llmWrapper = await pro.ai.LargeLanguageModel.forCurrentTenant(
+        inputs.model
+      )
     }
 
-    response = llm?.initialised
-      ? await llm.run(inputs.prompt)
+    response = llmWrapper?.llm
+      ? await llmWrapper.run(inputs.prompt)
       : await legacyOpenAIPrompt(inputs)
 
     return {
