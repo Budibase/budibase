@@ -3,7 +3,7 @@ import { getTenantIDFromCtx } from "../tenancy"
 import { buildMatcherRegex, matches } from "./matchers"
 import { Header } from "../constants"
 import {
-  BBContext,
+  Ctx,
   EndpointMatcher,
   GetTenantIdOptions,
   TenantResolutionStrategy,
@@ -17,7 +17,7 @@ export default function (
   const allowQsOptions = buildMatcherRegex(allowQueryStringPatterns)
   const noTenancyOptions = buildMatcherRegex(noTenancyPatterns)
 
-  return async function (ctx: BBContext | any, next: any) {
+  return async function (ctx: Ctx, next: any) {
     const allowNoTenant =
       opts.noTenancyRequired || !!matches(ctx, noTenancyOptions)
     const tenantOpts: GetTenantIdOptions = {
