@@ -96,9 +96,15 @@ if (env.SELF_HOSTED) {
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
   // @ts-ignore
   BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
+
+  if (env.isTest()) {
+    BUILTIN_ACTION_DEFINITIONS["OPENAI"] = openai.definition
+  }
 }
 
-export async function getActionDefinitions() {
+export async function getActionDefinitions(): Promise<
+  Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
+> {
   if (await features.flags.isEnabled(FeatureFlag.AUTOMATION_BRANCHING)) {
     BUILTIN_ACTION_DEFINITIONS["BRANCH"] = branch.definition
   }

@@ -25,7 +25,7 @@ function getTestcontainers(): ContainerInfo[] {
   // We use --format json to make sure the output is nice and machine-readable,
   // and we use --no-trunc so that the command returns full container IDs so we
   // can filter on them correctly.
-  return execSync("docker ps --format json --no-trunc")
+  return execSync("docker ps --all --format json --no-trunc")
     .toString()
     .split("\n")
     .filter(x => x.length > 0)
@@ -35,6 +35,10 @@ function getTestcontainers(): ContainerInfo[] {
         x.Labels.includes("org.testcontainers=true") &&
         x.Labels.includes("com.budibase=true")
     )
+}
+
+function removeContainer(container: ContainerInfo) {
+  execSync(`docker rm ${container.ID}`)
 }
 
 export function getContainerByImage(image: string) {
@@ -47,6 +51,10 @@ export function getContainerByImage(image: string) {
     throw new Error(errorMessage)
   }
   return containers[0]
+}
+
+function getContainerByName(name: string) {
+  return getTestcontainers().find(x => x.Names === name)
 }
 
 export function getContainerById(id: string) {
@@ -70,7 +78,34 @@ export function getExposedV4Port(container: ContainerInfo, port: number) {
   return getExposedV4Ports(container).find(x => x.container === port)?.host
 }
 
+interface DockerContext {
+  Name: string
+  Description: string
+  DockerEndpoint: string
+  ContextType: string
+  Error: string
+}
+
+function getCurrentDockerContext(): DockerContext {
+  const out = execSync("docker context ls --format json")
+  for (const line of out.toString().split("\n")) {
+    const parsed = JSON.parse(line)
+    if (parsed.Current) {
+      return parsed as DockerContext
+    }
+  }
+  throw new Error("No current Docker context")
+}
+
 export function setupEnv(...envs: any[]) {
+  // For whatever reason, testcontainers doesn't always use the correct current
+  // docker context. This bit of code forces the issue by finding the current
+  // context and setting it as the DOCKER_HOST environment
+  if (!process.env.DOCKER_HOST) {
+    const dockerContext = getCurrentDockerContext()
+    process.env.DOCKER_HOST = dockerContext.DockerEndpoint
+  }
+
   // We start couchdb in globalSetup.ts, in the root of the monorepo, so it
   // should be relatively safe to look for it by its image name.
   const couch = getContainerByImage("budibase/couchdb")
@@ -116,6 +151,16 @@ export async function startContainer(container: GenericContainer) {
     key = imageName.split("@")[0]
   }
   key = key.replace(/\//g, "-").replace(/:/g, "-")
+  const name = `${key}_testcontainer`
+
+  // If a container has died it hangs around and future attempts to start a
+  // container with the same name will fail. What we do here is if we find a
+  // matching container and it has exited, we remove it before carrying on. This
+  // removes the need to do this removal manually.
+  const existingContainer = getContainerByName(name)
+  if (existingContainer?.State === "exited") {
+    removeContainer(existingContainer)
+  }
 
   container = container
     .withReuse()

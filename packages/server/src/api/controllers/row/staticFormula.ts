@@ -15,9 +15,20 @@ import {
 } from "@budibase/types"
 import * as linkRows from "../../../db/linkedRows"
 import isEqual from "lodash/isEqual"
-import { cloneDeep } from "lodash/fp"
+import { cloneDeep, merge } from "lodash/fp"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
+
+function mergeRows(row1: Row, row2: Row) {
+  const merged = merge(row1, row2)
+  // make sure any specifically undefined fields are removed
+  for (const key of Object.keys(row2)) {
+    if (row2[key] === undefined) {
+      delete merged[key]
+    }
+  }
+  return merged
+}
 
 /**
  * This function runs through a list of enriched rows, looks at the rows which
@@ -162,9 +173,14 @@ export async function finaliseRow(
     })
   }
 
-  const response = await db.put(row)
-  // for response, calculate the formulas for the enriched row
-  enrichedRow._rev = response.rev
+  await db.put(row)
+  const retrieved = await db.tryGet<Row>(row._id)
+  if (!retrieved) {
+    throw new Error(`Unable to retrieve row ${row._id} after saving.`)
+  }
+
+  delete enrichedRow._rev
+  enrichedRow = mergeRows(retrieved, enrichedRow)
   enrichedRow = await processFormulas(table, enrichedRow, {
     dynamic: false,
   })

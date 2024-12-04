@@ -10,7 +10,7 @@ import {
   eventStore,
   hoverStore,
 } from "./stores"
-import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
+import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
 import { get } from "svelte/store"
 import { initWebsocket } from "./websocket.js"
 
