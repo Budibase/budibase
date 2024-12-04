@@ -122,7 +122,7 @@
               updateOnChange: false,
             }}
           />
-          {#if !$nav.textBelow}
+          {#if (!$nav.textBelow && $nav.navigation === "Left") || $nav.navigation === "Top"}
             <PropertyControl
               label="Text align"
               control={BarButtonList}

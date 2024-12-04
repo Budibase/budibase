@@ -260,15 +260,12 @@
                 </div>
               {/if}
               <div
-                class="logo"
-                style="flex-direction: {textBelow && navigation === 'Left'
-                  ? 'column'
-                  : 'row'}; max-width: {navigation === 'Left'
-                  ? '165px'
-                  : '100%'};
-                  align-items: {navigation === 'Left'
-                  ? 'center'
-                  : 'center'}; border: 1px solid lime;"
+                class="logo {navigation === 'Left'
+                  ? 'left-nav'
+                  : ''} {navigation === 'Left' && textBelow
+                  ? 'text-below-left-nav'
+                  : ''}"
+                style={navigation === "Top" && hideLogo ? "column-gap: 0;" : ""}
               >
                 <div>
                   {#if !hideLogo}
@@ -572,8 +569,7 @@
     justify-content: flex-start;
     gap: var(--spacing-m);
     flex: 1 1 auto;
-    flex-wrap: wrap;
-    border: 1px solid red;
+    align-items: center;
   }
   .logo img {
     max-width: var(--logo-size);
@@ -585,16 +581,19 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    border: 1px solid blue;
     max-width: 100%;
   }
   #heading {
     display: flex;
     flex-grow: 1;
+    overflow: hidden;
     max-width: 100%;
   }
-  #heading > * {
-    width: 100%;
+  .left-nav {
+    max-width: 165px;
+  }
+  .text-below-left-nav {
+    flex-direction: column !important; /* Over-rides row setting in .logo*/
   }
   .portal {
     display: grid;
