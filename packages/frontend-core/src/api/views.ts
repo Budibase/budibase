@@ -1,4 +1,15 @@
-export const buildViewEndpoints = API => ({
+import { Row } from "@budibase/types"
+import { BaseAPIClient } from "./types"
+
+export interface ViewEndpoints {
+  // Missing request or response types
+  fetchViewData: (name: string, opts: any) => Promise<Row[]>
+  exportView: (name: string, format: string) => Promise<any>
+  saveView: (view: any) => Promise<any>
+  deleteView: (name: string) => Promise<any>
+}
+
+export const buildViewEndpoints = (API: BaseAPIClient): ViewEndpoints => ({
   /**
    * Fetches all rows in a view
    * @param name the name of the view
@@ -6,7 +17,7 @@ export const buildViewEndpoints = API => ({
    * @param groupBy the field to group by
    * @param calculation the calculation to perform
    */
-  fetchViewData: async ({ name, field, groupBy, calculation }) => {
+  fetchViewData: async (name, { field, groupBy, calculation }) => {
     const params = new URLSearchParams()
     if (calculation) {
       params.set("field", field)
@@ -23,11 +34,11 @@ export const buildViewEndpoints = API => ({
 
   /**
    * Exports a view for download
-   * @param viewName the view to export
+   * @param name the view to export
    * @param format the format to download
    */
-  exportView: async ({ viewName, format }) => {
-    const safeViewName = encodeURIComponent(viewName)
+  exportView: async (name, format) => {
+    const safeViewName = encodeURIComponent(name)
     return await API.get({
       url: `/api/views/export?view=${safeViewName}&format=${format}`,
       parseResponse: async response => {
@@ -51,9 +62,9 @@ export const buildViewEndpoints = API => ({
    * Deletes a view.
    * @param viewName the name of the view to delete
    */
-  deleteView: async viewName => {
+  deleteView: async name => {
     return await API.delete({
-      url: `/api/views/${encodeURIComponent(viewName)}`,
+      url: `/api/views/${encodeURIComponent(name)}`,
     })
   },
 })
