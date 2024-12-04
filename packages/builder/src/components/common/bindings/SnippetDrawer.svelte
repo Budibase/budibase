@@ -63,7 +63,7 @@
     if (!name?.length) {
       return "Name is required"
     }
-    if (snippets.some(snippet => snippet.name === name)) {
+    if (!snippet?.name && snippets.some(snippet => snippet.name === name)) {
       return "That name is already in use"
     }
     if (firstCharNumberRegex.test(name)) {
@@ -106,11 +106,7 @@
         Delete
       </Button>
     {/if}
-    <Button
-      cta
-      on:click={saveSnippet}
-      disabled={!snippet && (loading || nameError)}
-    >
+    <Button cta on:click={saveSnippet} disabled={!code || loading || nameError}>
       Save
     </Button>
   </svelte:fragment>
