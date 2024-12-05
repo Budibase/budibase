@@ -456,7 +456,6 @@ describe("REST Integration", () => {
     // node-fetch >=3, and we're not on that because upgrading to it produces errors to
     // do with ESM that are above my pay grade.
 
-    // eslint-disable-next-line jest/no-commented-out-tests
     // it("doesn't fail when legacyHttpParser is set", async () => {
     //   const server = createServer((req, res) => {
     //     res.writeHead(200, {
