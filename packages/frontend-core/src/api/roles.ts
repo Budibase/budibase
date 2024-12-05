@@ -1,6 +1,6 @@
 import {
   AccessibleRolesResponse,
-  DestroyRoleResponse,
+  DeleteRoleResponse,
   FetchRolesResponse,
   SaveRoleRequest,
   SaveRoleResponse,
@@ -8,7 +8,7 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface RoleEndpoints {
-  deleteRole: (id: string, rev: string) => Promise<DestroyRoleResponse>
+  deleteRole: (id: string, rev: string) => Promise<DeleteRoleResponse>
   saveRole: (role: SaveRoleRequest) => Promise<SaveRoleResponse>
   getRoles: () => Promise<FetchRolesResponse>
   getRolesForApp: (appId: string) => Promise<any>
