@@ -188,7 +188,7 @@
             "projects": [
               "@budibase/backend-core"
             ],
-            "target": "build"
+            "target": "build:oss"
           }
         ]
       },

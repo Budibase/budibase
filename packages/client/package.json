@@ -61,7 +61,6 @@
         "dependsOn": [
           {
             "projects": [
-              "@budibase/shared-core",
               "@budibase/string-templates"
             ],
             "target": "build"
