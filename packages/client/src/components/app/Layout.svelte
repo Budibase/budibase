@@ -107,6 +107,8 @@
     }
   }
 
+  $: sanitizedSize = getSanitizedLogoSize(logoSize)
+
   const enrichNavItem = navItem => {
     const internalLink = isInternal(navItem.url)
     return {
@@ -210,7 +212,12 @@
       console.log("Invalid logo size:", error)
     }
 
-    return sanitizedSize < 165 ? sanitizedSize : 165
+    // return sanitizedSize < 165 ? sanitizedSize : 165
+    if (sanitizedSize > 165) {
+      sanitizedSize = 165
+    }
+
+    return sanitizedSize + "px"
   }
 
   const handleClickLink = () => {
@@ -280,9 +287,8 @@
                         <img
                           src={logoUrl || "/builder/bblogo.png"}
                           alt={title}
-                          style="--logo-size: {getSanitizedLogoSize(
-                            logoSize
-                          )}px;"
+                          class="logo-image"
+                          style="--logoSize: {getSanitizedLogoSize(logoSize)}"
                         />
                       </a>
                     {:else if logoLinkUrl}
@@ -296,16 +302,16 @@
                         <img
                           src={logoUrl || "/builder/bblogo.png"}
                           alt={title}
-                          style="--logo-size: {getSanitizedLogoSize(
-                            logoSize
-                          )}px;"
+                          class="logo-image"
+                          style="--logoSize: {getSanitizedLogoSize(logoSize)}"
                         />
                       </a>
                     {:else}
                       <img
                         src={logoUrl || "/builder/bblogo.png"}
                         alt={title}
-                        style="--logo-size: {getSanitizedLogoSize(logoSize)}px;"
+                        class="logo-image"
+                        style="--logoSize: {getSanitizedLogoSize(logoSize)}"
                       />
                     {/if}
                   {/if}
@@ -571,9 +577,9 @@
     flex: 1 1 auto;
     align-items: center;
   }
-  .logo img {
-    max-width: var(--logo-size);
-    max-height: var(--logo-size);
+  .logo-image {
+    max-width: var(--logoSize);
+    max-height: var(--logoSize);
   }
   .logo :global(h1) {
     font-weight: 600;
