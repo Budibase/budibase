@@ -19,17 +19,18 @@ import {
   EventType,
   FetchTablesResponse,
   FieldType,
-  MigrateRequest,
-  MigrateResponse,
+  MigrateTableRequest,
+  MigrateTableResponse,
   SaveTableRequest,
   SaveTableResponse,
   Table,
-  TableResponse,
+  FindTableResponse,
   TableSourceType,
   UserCtx,
   ValidateNewTableImportRequest,
   ValidateTableImportRequest,
   ValidateTableImportResponse,
+  DeleteTableResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
@@ -94,7 +95,7 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
   ctx.body = result
 }
 
-export async function find(ctx: UserCtx<void, TableResponse>) {
+export async function find(ctx: UserCtx<void, FindTableResponse>) {
   const tableId = ctx.params.tableId
   const table = await sdk.tables.getTable(tableId)
 
@@ -137,7 +138,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: UserCtx<void, DeleteTableResponse>) {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
   await sdk.rowActions.deleteAll(tableId)
@@ -223,7 +224,9 @@ export async function validateExistingTableImport(
   }
 }
 
-export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
+export async function migrate(
+  ctx: UserCtx<MigrateTableRequest, MigrateTableResponse>
+) {
   const { oldColumn, newColumn } = ctx.request.body
   let tableId = ctx.params.tableId as string
   const table = await sdk.tables.getTable(tableId)

@@ -4,7 +4,6 @@ import {
   Ctx,
   RequiredKeys,
   UpdateViewRequest,
-  ViewResponse,
   ViewResponseEnriched,
   ViewV2,
   BasicViewFieldMetadata,
@@ -15,6 +14,8 @@ import {
   ViewFetchResponseEnriched,
   CountDistinctCalculationFieldMetadata,
   CountCalculationFieldMetadata,
+  CreateViewResponse,
+  UpdateViewResponse,
 } from "@budibase/types"
 import { builderSocket, gridSocket } from "../../../websockets"
 import { helpers } from "@budibase/shared-core"
@@ -132,7 +133,7 @@ export async function fetch(ctx: Ctx<void, ViewFetchResponseEnriched>) {
   }
 }
 
-export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
+export async function create(ctx: Ctx<CreateViewRequest, CreateViewResponse>) {
   const view = ctx.request.body
   const { tableId } = view
 
@@ -159,7 +160,7 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   gridSocket?.emitViewUpdate(ctx, result)
 }
 
-export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
+export async function update(ctx: Ctx<UpdateViewRequest, UpdateViewResponse>) {
   const view = ctx.request.body
 
   if (view.version !== 2) {
@@ -196,7 +197,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
   gridSocket?.emitViewUpdate(ctx, result)
 }
 
-export async function remove(ctx: Ctx) {
+export async function remove(ctx: Ctx<void, void>) {
   const { viewId } = ctx.params
 
   const view = await sdk.views.remove(viewId)

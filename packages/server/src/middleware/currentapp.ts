@@ -13,8 +13,9 @@ import env from "../environment"
 import { isWebhookEndpoint, isBrowser, isApiKey } from "./utils"
 import { UserCtx, ContextUser } from "@budibase/types"
 import tracer from "dd-trace"
+import type { Middleware, Next } from "koa"
 
-export default async (ctx: UserCtx, next: any) => {
+const middleware = (async (ctx: UserCtx, next: Next) => {
   // try to get the appID from the request
   let requestAppId = await utils.getAppIdFromCtx(ctx)
   if (!requestAppId) {
@@ -116,4 +117,6 @@ export default async (ctx: UserCtx, next: any) => {
 
     return next()
   })
-}
+}) as Middleware
+
+export default middleware
