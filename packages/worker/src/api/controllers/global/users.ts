@@ -6,12 +6,12 @@ import {
   AddSSoUserRequest,
   BulkUserRequest,
   BulkUserResponse,
-  CloudAccount,
   CreateAdminUserRequest,
   CreateAdminUserResponse,
   Ctx,
   DeleteInviteUserRequest,
   DeleteInviteUsersRequest,
+  Hosting,
   InviteUserRequest,
   InviteUsersRequest,
   InviteUsersResponse,
@@ -26,7 +26,6 @@ import {
   UserIdentifier,
 } from "@budibase/types"
 import {
-  accounts,
   users,
   cache,
   ErrorCode,
@@ -40,6 +39,8 @@ import {
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
 import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
+import emailValidator from "email-validator"
+import crypto from "crypto"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -190,12 +191,10 @@ export const adminUser = async (
         lastName: familyName,
       })
 
-      // events
-      let account: CloudAccount | undefined
-      if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-        account = await accounts.getAccountByTenantId(tenantId)
-      }
-      await events.identification.identifyTenantGroup(tenantId, account)
+      await events.identification.identifyTenantGroup(
+        tenantId,
+        env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
+      )
 
       ctx.body = {
         _id: finalUser._id!,
@@ -299,6 +298,10 @@ export const find = async (ctx: any) => {
 
 export const tenantUserLookup = async (ctx: any) => {
   const id = ctx.params.id
+  // is email, check its valid
+  if (id.includes("@") && !emailValidator.validate(id)) {
+    ctx.throw(400, `${id} is not a valid email address to lookup.`)
+  }
   const user = await userSdk.core.getFirstPlatformUser(id)
   if (user) {
     ctx.body = user

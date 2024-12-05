@@ -114,7 +114,7 @@
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
-    { allowLinks: true }
+    { allowLinks: false }
   )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = $memoBlock?.type === AutomationStepType.TRIGGER
@@ -503,7 +503,15 @@
       row: { "Active": true, "Order Id" : 14, ... }
     })
    */
-  const onChange = Utils.sequential(async update => {
+  const onChange = async update => {
+    if (isTestModal) {
+      testData = update
+    }
+
+    updateAutomation(update)
+  }
+
+  const updateAutomation = Utils.sequential(async update => {
     const request = cloneDeep(update)
     // Process app trigger updates
     if (isTrigger && !isTestModal) {

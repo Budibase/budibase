@@ -2,7 +2,7 @@ import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
-import knex from "knex"
+import knex, { Knex } from "knex"
 
 let ports: Promise<testContainerUtils.Port[]>
 
@@ -23,7 +23,11 @@ export async function getDatasource(): Promise<Datasource> {
         .withEnvironment({
           ORACLE_PASSWORD: password,
         })
-        .withWaitStrategy(Wait.forLogMessage("DATABASE IS READY TO USE!"))
+        .withWaitStrategy(
+          Wait.forLogMessage("DATABASE IS READY TO USE!").withStartupTimeout(
+            60000
+          )
+        )
     )
   }
 
@@ -54,7 +58,7 @@ export async function getDatasource(): Promise<Datasource> {
   return datasource
 }
 
-export async function knexClient(ds: Datasource) {
+export async function knexClient(ds: Datasource, opts?: Knex.Config) {
   if (!ds.config) {
     throw new Error("Datasource config is missing")
   }
@@ -72,6 +76,7 @@ export async function knexClient(ds: Datasource) {
       user: ds.config.user,
       password: ds.config.password,
     },
+    ...opts,
   })
 
   return c

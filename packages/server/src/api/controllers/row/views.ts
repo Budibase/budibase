@@ -29,19 +29,20 @@ export async function searchView(
 
   await context.ensureSnippetContext(true)
 
-  const searchOptions: RequiredKeys<SearchViewRowRequest> &
-    RequiredKeys<
-      Pick<RowSearchParams, "tableId" | "viewId" | "query" | "fields">
-    > = {
+  const searchOptions: RequiredKeys<RowSearchParams> = {
     tableId: view.tableId,
     viewId: view.id,
-    query: body.query,
+    query: body.query || {},
     fields: viewFields,
     ...getSortOptions(body, view),
     limit: body.limit,
-    bookmark: body.bookmark,
+    bookmark: body.bookmark ?? undefined,
     paginate: body.paginate,
     countRows: body.countRows,
+    version: undefined,
+    disableEscaping: undefined,
+    indexer: undefined,
+    rows: undefined,
   }
 
   const result = await sdk.rows.search(searchOptions, {
@@ -50,12 +51,13 @@ export async function searchView(
   result.rows.forEach(r => (r._viewId = view.id))
   ctx.body = result
 }
+
 function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
   if (request.sort) {
     return {
       sort: request.sort,
       sortOrder: request.sortOrder,
-      sortType: request.sortType,
+      sortType: request.sortType ?? undefined,
     }
   }
   if (view.sort) {

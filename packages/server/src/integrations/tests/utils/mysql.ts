@@ -3,7 +3,7 @@ import { GenericContainer, Wait } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
-import knex from "knex"
+import knex, { Knex } from "knex"
 import { MYSQL_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>
@@ -34,7 +34,7 @@ export async function getDatasource(): Promise<Datasource> {
       new GenericContainer(MYSQL_IMAGE)
         .withExposedPorts(3306)
         .withEnvironment({ MYSQL_ROOT_PASSWORD: "password" })
-        .withWaitStrategy(new MySQLWaitStrategy().withStartupTimeout(10000))
+        .withWaitStrategy(new MySQLWaitStrategy().withStartupTimeout(20000))
     )
   }
 
@@ -63,7 +63,7 @@ export async function getDatasource(): Promise<Datasource> {
   return datasource
 }
 
-export async function knexClient(ds: Datasource) {
+export async function knexClient(ds: Datasource, opts?: Knex.Config) {
   if (!ds.config) {
     throw new Error("Datasource config is missing")
   }
@@ -74,5 +74,6 @@ export async function knexClient(ds: Datasource) {
   return knex({
     client: "mysql2",
     connection: ds.config,
+    ...opts,
   })
 }

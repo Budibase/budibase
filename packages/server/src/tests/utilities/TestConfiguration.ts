@@ -237,6 +237,7 @@ export default class TestConfiguration {
     if (!this) {
       return
     }
+
     if (this.server) {
       this.server.close()
     } else {
@@ -620,7 +621,7 @@ export default class TestConfiguration {
   }
 
   async unpublish() {
-    const response = await this._req(appController.unpublish, {
+    const response = await this._req(appController.unpublish, undefined, {
       appId: this.appId,
     })
     this.prodAppId = undefined

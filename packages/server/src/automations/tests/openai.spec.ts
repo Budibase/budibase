@@ -1,7 +1,9 @@
-import { getConfig, runStep, afterAll as _afterAll } from "./utilities"
+import { getConfig, afterAll as _afterAll } from "./utilities"
+import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 import { OpenAI } from "openai"
 import { setEnv as setCoreEnv } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
+import { Model } from "@budibase/types"
 
 jest.mock("openai", () => ({
   OpenAI: jest.fn().mockImplementation(() => ({
@@ -25,7 +27,7 @@ jest.mock("@budibase/pro", () => ({
   ai: {
     LargeLanguageModel: {
       forCurrentTenant: jest.fn().mockImplementation(() => ({
-        initialised: true,
+        llm: {},
         init: jest.fn(),
         run: jest.fn(),
       })),
@@ -47,6 +49,7 @@ describe("test the openai action", () => {
   let resetEnv: () => void | undefined
 
   beforeAll(async () => {
+    setCoreEnv({ SELF_HOSTED: true })
     await config.init()
   })
 
@@ -62,17 +65,39 @@ describe("test the openai action", () => {
   afterAll(_afterAll)
 
   it("should be able to receive a response from ChatGPT given a prompt", async () => {
-    const res = await runStep("OPENAI", { prompt: OPENAI_PROMPT })
-    expect(res.response).toEqual("This is a test")
-    expect(res.success).toBeTruthy()
+    setCoreEnv({ SELF_HOSTED: true })
+
+    const result = await createAutomationBuilder({
+      name: "Test OpenAI Response",
+      config,
+    })
+      .appAction({ fields: {} })
+      .openai(
+        { prompt: OPENAI_PROMPT, model: Model.GPT_4O_MINI },
+        { stepName: "Basic OpenAI Query" }
+      )
+      .run()
+
+    expect(result.steps[0].outputs.response).toEqual("This is a test")
+    expect(result.steps[0].outputs.success).toBeTruthy()
   })
 
   it("should present the correct error message when a prompt is not provided", async () => {
-    const res = await runStep("OPENAI", { prompt: null })
-    expect(res.response).toEqual(
+    const result = await createAutomationBuilder({
+      name: "Test OpenAI No Prompt",
+      config,
+    })
+      .appAction({ fields: {} })
+      .openai(
+        { prompt: "", model: Model.GPT_4O_MINI },
+        { stepName: "Empty Prompt Query" }
+      )
+      .run()
+
+    expect(result.steps[0].outputs.response).toEqual(
       "Budibase OpenAI Automation Failed: No prompt supplied"
     )
-    expect(res.success).toBeFalsy()
+    expect(result.steps[0].outputs.success).toBeFalsy()
   })
 
   it("should present the correct error message when an error is thrown from the createChatCompletion call", async () => {
@@ -91,14 +116,21 @@ describe("test the openai action", () => {
         } as any)
     )
 
-    const res = await runStep("OPENAI", {
-      prompt: OPENAI_PROMPT,
+    const result = await createAutomationBuilder({
+      name: "Test OpenAI Error",
+      config,
     })
+      .appAction({ fields: {} })
+      .openai(
+        { prompt: OPENAI_PROMPT, model: Model.GPT_4O_MINI },
+        { stepName: "Error Producing Query" }
+      )
+      .run()
 
-    expect(res.response).toEqual(
+    expect(result.steps[0].outputs.response).toEqual(
       "Error: An error occurred while calling createChatCompletion"
     )
-    expect(res.success).toBeFalsy()
+    expect(result.steps[0].outputs.success).toBeFalsy()
   })
 
   it("should ensure that the pro AI module is called when the budibase AI features are enabled", async () => {
@@ -106,10 +138,19 @@ describe("test the openai action", () => {
     jest.spyOn(pro.features, "isAICustomConfigsEnabled").mockResolvedValue(true)
 
     const prompt = "What is the meaning of life?"
-    await runStep("OPENAI", {
-      model: "gpt-4o-mini",
-      prompt,
+    await createAutomationBuilder({
+      name: "Test OpenAI Pro Features",
+      config,
     })
+      .appAction({ fields: {} })
+      .openai(
+        {
+          model: Model.GPT_4O_MINI,
+          prompt,
+        },
+        { stepName: "Pro Features Query" }
+      )
+      .run()
 
     expect(pro.ai.LargeLanguageModel.forCurrentTenant).toHaveBeenCalledWith(
       "gpt-4o-mini"

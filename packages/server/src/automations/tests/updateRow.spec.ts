@@ -8,54 +8,83 @@ import {
   Table,
   TableSourceType,
 } from "@budibase/types"
+import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 
 import * as setup from "./utilities"
 import * as uuid from "uuid"
 
 describe("test the update row action", () => {
-  let table: Table, row: Row, inputs: any
-  let config = setup.getConfig()
+  let table: Table,
+    row: Row,
+    config = setup.getConfig()
 
   beforeAll(async () => {
     await config.init()
     table = await config.createTable()
     row = await config.createRow()
-    inputs = {
-      rowId: row._id,
-      row: {
-        ...row,
-        name: "Updated name",
-        // put a falsy option in to be removed
-        description: "",
-      },
-    }
   })
 
   afterAll(setup.afterAll)
 
-  it("should be able to run the action", async () => {
-    const res = await setup.runStep(setup.actions.UPDATE_ROW.stepId, inputs)
-    expect(res.success).toEqual(true)
-    const updatedRow = await config.api.row.get(table._id!, res.id)
+  it("should be able to run the update row action", async () => {
+    const builder = createAutomationBuilder({
+      name: "Update Row Automation",
+    })
+
+    const results = await builder
+      .appAction({ fields: {} })
+      .updateRow({
+        rowId: row._id!,
+        row: {
+          ...row,
+          name: "Updated name",
+          description: "",
+        },
+        meta: {},
+      })
+      .run()
+
+    expect(results.steps[0].outputs.success).toEqual(true)
+    const updatedRow = await config.api.row.get(
+      table._id!,
+      results.steps[0].outputs.id
+    )
     expect(updatedRow.name).toEqual("Updated name")
     expect(updatedRow.description).not.toEqual("")
   })
 
   it("should check invalid inputs return an error", async () => {
-    const res = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {})
-    expect(res.success).toEqual(false)
+    const builder = createAutomationBuilder({
+      name: "Invalid Inputs Automation",
+    })
+
+    const results = await builder
+      .appAction({ fields: {} })
+      .updateRow({ meta: {}, row: {}, rowId: "" })
+      .run()
+
+    expect(results.steps[0].outputs.success).toEqual(false)
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const res = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
-      row: { _id: "invalid" },
-      rowId: "invalid",
+    const builder = createAutomationBuilder({
+      name: "Nonexistent Table Automation",
     })
-    expect(res.success).toEqual(false)
+
+    const results = await builder
+      .appAction({ fields: {} })
+      .updateRow({
+        row: { _id: "invalid" },
+        rowId: "invalid",
+        meta: {},
+      })
+      .run()
+
+    expect(results.steps[0].outputs.success).toEqual(false)
   })
 
   it("should not overwrite links if those links are not set", async () => {
-    let linkField: FieldSchema = {
+    const linkField: FieldSchema = {
       type: FieldType.LINK,
       name: "",
       fieldName: "",
@@ -67,7 +96,7 @@ describe("test the update row action", () => {
       tableId: InternalTable.USER_METADATA,
     }
 
-    let table = await config.api.table.save({
+    const table = await config.api.table.save({
       name: uuid.v4(),
       type: "table",
       sourceType: TableSourceType.INTERNAL,
@@ -78,37 +107,42 @@ describe("test the update row action", () => {
       },
     })
 
-    let user1 = await config.createUser()
-    let user2 = await config.createUser()
+    const user1 = await config.createUser()
+    const user2 = await config.createUser()
 
-    let row = await config.api.row.save(table._id!, {
+    const row = await config.api.row.save(table._id!, {
       user1: [{ _id: user1._id }],
       user2: [{ _id: user2._id }],
     })
 
-    let getResp = await config.api.row.get(table._id!, row._id!)
-    expect(getResp.user1[0]._id).toEqual(user1._id)
-    expect(getResp.user2[0]._id).toEqual(user2._id)
-
-    let stepResp = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
-      rowId: row._id,
-      row: {
-        _id: row._id,
-        _rev: row._rev,
-        tableId: row.tableId,
-        user1: [user2._id],
-        user2: "",
-      },
+    const builder = createAutomationBuilder({
+      name: "Link Preservation Automation",
     })
-    expect(stepResp.success).toEqual(true)
 
-    getResp = await config.api.row.get(table._id!, row._id!)
+    const results = await builder
+      .appAction({ fields: {} })
+      .updateRow({
+        rowId: row._id!,
+        row: {
+          _id: row._id,
+          _rev: row._rev,
+          tableId: row.tableId,
+          user1: [user2._id],
+          user2: "",
+        },
+        meta: {},
+      })
+      .run()
+
+    expect(results.steps[0].outputs.success).toEqual(true)
+
+    const getResp = await config.api.row.get(table._id!, row._id!)
     expect(getResp.user1[0]._id).toEqual(user2._id)
     expect(getResp.user2[0]._id).toEqual(user2._id)
   })
 
-  it("should overwrite links if those links are not set and we ask it do", async () => {
-    let linkField: FieldSchema = {
+  it("should overwrite links if those links are not set and we ask it to", async () => {
+    const linkField: FieldSchema = {
       type: FieldType.LINK,
       name: "",
       fieldName: "",
@@ -120,7 +154,7 @@ describe("test the update row action", () => {
       tableId: InternalTable.USER_METADATA,
     }
 
-    let table = await config.api.table.save({
+    const table = await config.api.table.save({
       name: uuid.v4(),
       type: "table",
       sourceType: TableSourceType.INTERNAL,
@@ -131,38 +165,42 @@ describe("test the update row action", () => {
       },
     })
 
-    let user1 = await config.createUser()
-    let user2 = await config.createUser()
+    const user1 = await config.createUser()
+    const user2 = await config.createUser()
 
-    let row = await config.api.row.save(table._id!, {
+    const row = await config.api.row.save(table._id!, {
       user1: [{ _id: user1._id }],
       user2: [{ _id: user2._id }],
     })
 
-    let getResp = await config.api.row.get(table._id!, row._id!)
-    expect(getResp.user1[0]._id).toEqual(user1._id)
-    expect(getResp.user2[0]._id).toEqual(user2._id)
+    const builder = createAutomationBuilder({
+      name: "Link Overwrite Automation",
+    })
 
-    let stepResp = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
-      rowId: row._id,
-      row: {
-        _id: row._id,
-        _rev: row._rev,
-        tableId: row.tableId,
-        user1: [user2._id],
-        user2: "",
-      },
-      meta: {
-        fields: {
-          user2: {
-            clearRelationships: true,
+    const results = await builder
+      .appAction({ fields: {} })
+      .updateRow({
+        rowId: row._id!,
+        row: {
+          _id: row._id,
+          _rev: row._rev,
+          tableId: row.tableId,
+          user1: [user2._id],
+          user2: "",
+        },
+        meta: {
+          fields: {
+            user2: {
+              clearRelationships: true,
+            },
           },
         },
-      },
-    })
-    expect(stepResp.success).toEqual(true)
+      })
+      .run()
 
-    getResp = await config.api.row.get(table._id!, row._id!)
+    expect(results.steps[0].outputs.success).toEqual(true)
+
+    const getResp = await config.api.row.get(table._id!, row._id!)
     expect(getResp.user1[0]._id).toEqual(user2._id)
     expect(getResp.user2).toBeUndefined()
   })

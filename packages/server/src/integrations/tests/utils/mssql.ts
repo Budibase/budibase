@@ -2,7 +2,7 @@ import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
-import knex from "knex"
+import knex, { Knex } from "knex"
 import { MSSQL_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>
@@ -24,7 +24,7 @@ export async function getDatasource(): Promise<Datasource> {
         .withWaitStrategy(
           Wait.forSuccessfulCommand(
             "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password_123 -q 'SELECT 1'"
-          )
+          ).withStartupTimeout(20000)
         )
     )
   }
@@ -57,7 +57,7 @@ export async function getDatasource(): Promise<Datasource> {
   return datasource
 }
 
-export async function knexClient(ds: Datasource) {
+export async function knexClient(ds: Datasource, opts?: Knex.Config) {
   if (!ds.config) {
     throw new Error("Datasource config is missing")
   }
@@ -68,5 +68,6 @@ export async function knexClient(ds: Datasource) {
   return knex({
     client: "mssql",
     connection: ds.config,
+    ...opts,
   })
 }
