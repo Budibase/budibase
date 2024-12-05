@@ -48,8 +48,21 @@ export function addBaseTemplates(templates: Template[], type?: string) {
 export async function getTemplates({
   ownerId,
   type,
-  id,
-}: { ownerId?: string; type?: string; id?: string } = {}) {
+}: { ownerId?: string; type?: string } = {}) {
+  const db = tenancy.getGlobalDB()
+  const response = await db.allDocs<Template>(
+    dbCore.getTemplateParams(ownerId || GLOBAL_OWNER, undefined, {
+      include_docs: true,
+    })
+  )
+  let templates = response.rows.map(row => row.doc!)
+  if (type) {
+    templates = templates.filter(template => template.type === type)
+  }
+  return addBaseTemplates(templates, type)
+}
+
+export async function getTemplateByID(id: string, ownerId?: string) {
   const db = tenancy.getGlobalDB()
   const response = await db.allDocs<Template>(
     dbCore.getTemplateParams(ownerId || GLOBAL_OWNER, id, {
@@ -58,16 +71,10 @@ export async function getTemplates({
   )
   let templates = response.rows.map(row => row.doc!)
   // should only be one template with ID
-  if (id) {
-    return templates[0]
-  }
-  if (type) {
-    templates = templates.filter(template => template.type === type)
-  }
-  return addBaseTemplates(templates, type)
+  return templates[0]
 }
 
 export async function getTemplateByPurpose(type: string, purpose: string) {
-  const templates = (await getTemplates({ type })) as Template[]
+  const templates = await getTemplates({ type })
   return templates.find((template: Template) => template.purpose === purpose)
 }
