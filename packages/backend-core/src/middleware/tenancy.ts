@@ -3,11 +3,12 @@ import { getTenantIDFromCtx } from "../tenancy"
 import { buildMatcherRegex, matches } from "./matchers"
 import { Header } from "../constants"
 import {
-  BBContext,
+  Ctx,
   EndpointMatcher,
   GetTenantIdOptions,
   TenantResolutionStrategy,
 } from "@budibase/types"
+import type { Next, Middleware } from "koa"
 
 export default function (
   allowQueryStringPatterns: EndpointMatcher[],
@@ -17,7 +18,7 @@ export default function (
   const allowQsOptions = buildMatcherRegex(allowQueryStringPatterns)
   const noTenancyOptions = buildMatcherRegex(noTenancyPatterns)
 
-  return async function (ctx: BBContext | any, next: any) {
+  return async function (ctx: Ctx, next: Next) {
     const allowNoTenant =
       opts.noTenancyRequired || !!matches(ctx, noTenancyOptions)
     const tenantOpts: GetTenantIdOptions = {
@@ -32,5 +33,5 @@ export default function (
     const tenantId = getTenantIDFromCtx(ctx, tenantOpts)
     ctx.set(Header.TENANT_ID, tenantId as string)
     return doInTenant(tenantId, next)
-  }
+  } as Middleware
 }
