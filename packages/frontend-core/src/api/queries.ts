@@ -1,9 +1,15 @@
 import {
+  DeleteQueryResponse,
   ExecuteQueryRequest,
-  ExecuteQueryResponse,
+  ExecuteV2QueryResponse,
+  FetchQueriesResponse,
+  FindQueryResponse,
+  ImportRestQueryRequest,
+  ImportRestQueryResponse,
   PreviewQueryRequest,
   PreviewQueryResponse,
-  Query,
+  SaveQueryRequest,
+  SaveQueryResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -11,15 +17,15 @@ export interface QueryEndpoints {
   executeQuery: (
     queryId: string,
     opts?: ExecuteQueryRequest
-  ) => Promise<ExecuteQueryResponse | Record<string, any>[]>
-  fetchQueryDefinition: (queryId: string) => Promise<Query>
-  getQueries: () => Promise<Query[]>
-  saveQuery: (query: Query) => Promise<Query>
-  deleteQuery: (id: string, rev: string) => Promise<void>
+  ) => Promise<ExecuteV2QueryResponse>
+  fetchQueryDefinition: (queryId: string) => Promise<FindQueryResponse>
+  getQueries: () => Promise<FetchQueriesResponse>
+  saveQuery: (query: SaveQueryRequest) => Promise<SaveQueryResponse>
+  deleteQuery: (id: string, rev: string) => Promise<DeleteQueryResponse>
   previewQuery: (query: PreviewQueryRequest) => Promise<PreviewQueryResponse>
-
-  // Missing request or response types
-  importQueries: (datasourceId: string, data: any) => Promise<any>
+  importQueries: (
+    data: ImportRestQueryRequest
+  ) => Promise<ImportRestQueryResponse>
 }
 
 export const buildQueryEndpoints = (API: BaseAPIClient): QueryEndpoints => ({
@@ -30,10 +36,7 @@ export const buildQueryEndpoints = (API: BaseAPIClient): QueryEndpoints => ({
    * @param parameters parameters for the query
    */
   executeQuery: async (queryId, { pagination, parameters } = {}) => {
-    return await API.post<
-      ExecuteQueryRequest,
-      ExecuteQueryResponse | Record<string, any>[]
-    >({
+    return await API.post<ExecuteQueryRequest, ExecuteV2QueryResponse>({
       url: `/api/v2/queries/${queryId}`,
       body: {
         parameters,
@@ -86,16 +89,11 @@ export const buildQueryEndpoints = (API: BaseAPIClient): QueryEndpoints => ({
 
   /**
    * Imports a set of queries into a certain datasource
-   * @param datasourceId the datasource ID to import queries into
-   * @param data the data string of the content to import
    */
-  importQueries: async (datasourceId, data) => {
+  importQueries: async data => {
     return await API.post({
       url: "/api/queries/import",
-      body: {
-        datasourceId,
-        data,
-      },
+      body: data,
     })
   },
 
