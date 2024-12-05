@@ -47,6 +47,8 @@ async function killContainers(containers: ContainerInfo[]) {
 }
 
 export default async function setup() {
+  process.env.TESTCONTAINERS_RYUK_DISABLED = "true"
+
   // For whatever reason, testcontainers doesn't always use the correct current
   // docker context. This bit of code forces the issue by finding the current
   // context and setting it as the DOCKER_HOST environment
@@ -75,6 +77,7 @@ export default async function setup() {
 
   try {
     const couchdb = new GenericContainer("budibase/couchdb:v3.3.3-sqs-v2.1.1")
+      .withName("couchdb_testcontainer")
       .withExposedPorts(5984, 4984)
       .withEnvironment({
         COUCHDB_PASSWORD: "budibase",
@@ -99,6 +102,7 @@ export default async function setup() {
       )
 
     const minio = new GenericContainer("minio/minio")
+      .withName("minio_testcontainer")
       .withExposedPorts(9000)
       .withCommand(["server", "/data"])
       .withTmpFs({ "/data": "rw" })
