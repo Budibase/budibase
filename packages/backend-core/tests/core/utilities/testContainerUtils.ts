@@ -37,10 +37,6 @@ function getTestcontainers(): ContainerInfo[] {
     )
 }
 
-function removeContainer(container: ContainerInfo) {
-  execSync(`docker rm ${container.ID}`)
-}
-
 export function getContainerByImage(image: string) {
   const containers = getTestcontainers().filter(x => x.Image.startsWith(image))
   if (containers.length > 1) {
@@ -51,10 +47,6 @@ export function getContainerByImage(image: string) {
     throw new Error(errorMessage)
   }
   return containers[0]
-}
-
-function getContainerByName(name: string) {
-  return getTestcontainers().find(x => x.Names === name)
 }
 
 export function getContainerById(id: string) {
