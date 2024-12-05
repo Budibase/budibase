@@ -152,8 +152,8 @@
       logsPageInfo.loading()
       await auditLogs.search({
         bookmark: logsPage,
-        startDate: dateRange[0],
-        endDate: dateRange[1],
+        startDate: dateRange[0] || undefined,
+        endDate: dateRange[1] || undefined,
         fullSearch: logSearchTerm,
         userIds: selectedUsers,
         appIds: selectedApps,
