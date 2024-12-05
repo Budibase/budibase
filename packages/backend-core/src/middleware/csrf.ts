@@ -1,7 +1,7 @@
 import { Header } from "../constants"
 import { buildMatcherRegex, matches } from "./matchers"
 import { Ctx, EndpointMatcher } from "@budibase/types"
-import { Middleware, Next } from "koa"
+import type { Middleware, Next } from "koa"
 
 /**
  * GET, HEAD and OPTIONS methods are considered safe operations
