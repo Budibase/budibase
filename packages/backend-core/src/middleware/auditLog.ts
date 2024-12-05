@@ -1,5 +1,5 @@
 import { Ctx } from "@budibase/types"
-import { Middleware, Next } from "koa"
+import type { Middleware, Next } from "koa"
 
 // this middleware exists purely to be overridden by middlewares supplied by the @budibase/pro library
 const middleware = (async (ctx: Ctx, next: Next) => {

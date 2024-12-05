@@ -8,7 +8,7 @@ import {
   GetTenantIdOptions,
   TenantResolutionStrategy,
 } from "@budibase/types"
-import { Next, Middleware } from "koa"
+import type { Next, Middleware } from "koa"
 
 export default function (
   allowQueryStringPatterns: EndpointMatcher[],
