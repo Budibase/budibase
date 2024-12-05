@@ -4,8 +4,10 @@ import {
   CreateDatasourceRequest,
   CreateDatasourceResponse,
   Datasource,
+  DeleteDatasourceResponse,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
+  FetchExternalSchemaResponse,
   UpdateDatasourceRequest,
   UpdateDatasourceResponse,
   VerifyDatasourceRequest,
@@ -17,7 +19,7 @@ export interface DatasourceEndpoints {
   getDatasources: () => Promise<Datasource[]>
   buildDatasourceSchema: (
     datasourceId: string,
-    tablesFilter?: BuildSchemaFromSourceRequest["tablesFilter"]
+    tablesFilter?: string[]
   ) => Promise<BuildSchemaFromSourceResponse>
   createDatasource: (
     data: CreateDatasourceRequest
@@ -25,14 +27,19 @@ export interface DatasourceEndpoints {
   updateDatasource: (
     datasource: Datasource
   ) => Promise<UpdateDatasourceResponse>
-  deleteDatasource: (id: string, rev: string) => Promise<void>
+  deleteDatasource: (
+    id: string,
+    rev: string
+  ) => Promise<DeleteDatasourceResponse>
   validateDatasource: (
     datasource: Datasource
   ) => Promise<VerifyDatasourceResponse>
   fetchInfoForDatasource: (
     datasource: Datasource
   ) => Promise<FetchDatasourceInfoResponse>
-  fetchExternalSchema: (datasourceId: string) => Promise<{ schema: string }>
+  fetchExternalSchema: (
+    datasourceId: string
+  ) => Promise<FetchExternalSchemaResponse>
 }
 
 export const buildDatasourceEndpoints = (
