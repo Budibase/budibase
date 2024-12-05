@@ -13,7 +13,7 @@ import env from "../environment"
 import { isWebhookEndpoint, isBrowser, isApiKey } from "./utils"
 import { UserCtx, ContextUser } from "@budibase/types"
 import tracer from "dd-trace"
-import { Middleware, Next } from "koa"
+import type { Middleware, Next } from "koa"
 
 const middleware = (async (ctx: UserCtx, next: Next) => {
   // try to get the appID from the request
