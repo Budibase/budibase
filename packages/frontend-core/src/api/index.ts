@@ -160,10 +160,8 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       try {
         if (parseResponse) {
           return await parseResponse(response)
-        } else if (response.status !== 204) {
-          return (await response.json()) as ResponseT
         } else {
-          return undefined
+          return (await response.json()) as ResponseT
         }
       } catch (error) {
         delete cache[url]
