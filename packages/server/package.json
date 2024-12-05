@@ -129,7 +129,8 @@
     "uuid": "^8.3.2",
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
-    "xml2js": "0.6.2"
+    "xml2js": "0.6.2",
+    "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.22.5",
@@ -175,7 +176,8 @@
     "tsconfig-paths": "4.0.0",
     "typescript": "5.5.2",
     "update-dotenv": "1.1.1",
-    "yargs": "13.2.4"
+    "yargs": "^13.2.4",
+    "zod": "^3.23.8"
   },
   "nx": {
     "targets": {

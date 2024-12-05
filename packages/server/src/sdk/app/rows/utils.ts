@@ -96,7 +96,7 @@ export async function enrichQueryJson(
       })
     }
   } else {
-    datasource = json.endpoint.datasourceId
+    datasource = await sdk.datasources.enrich(json.endpoint.datasourceId)
   }
 
   let tables: Record<string, Table>

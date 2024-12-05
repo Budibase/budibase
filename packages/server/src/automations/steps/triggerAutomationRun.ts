@@ -3,7 +3,6 @@ import {
   AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
-  AutomationResults,
   Automation,
   AutomationCustomIOType,
   TriggerAutomationStepInputs,
@@ -78,7 +77,7 @@ export async function run({
       const db = context.getAppDB()
       let automation = await db.get<Automation>(inputs.automation.automationId)
 
-      const response: AutomationResults = await triggers.externalTrigger(
+      const response = await triggers.externalTrigger(
         automation,
         {
           fields: { ...fieldParams },
@@ -88,9 +87,13 @@ export async function run({
         { getResponses: true }
       )
 
-      return {
-        success: true,
-        value: response.steps,
+      if (triggers.isAutomationResults(response)) {
+        return {
+          success: true,
+          value: response.steps,
+        }
+      } else {
+        throw new Error("Automation did not have a collect block")
       }
     }
   } else {

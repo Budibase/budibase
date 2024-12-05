@@ -2,7 +2,7 @@ import { EMPTY_LAYOUT } from "../../constants/layouts"
 import { generateLayoutID, getScreenParams } from "../../db/utils"
 import { events, context } from "@budibase/backend-core"
 import {
-  BBContext,
+  DeleteLayoutResponse,
   Layout,
   SaveLayoutRequest,
   SaveLayoutResponse,
@@ -32,7 +32,7 @@ export async function save(
   ctx.status = 200
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: UserCtx<void, DeleteLayoutResponse>) {
   const db = context.getAppDB()
   const layoutId = ctx.params.layoutId,
     layoutRev = ctx.params.layoutRev

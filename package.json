@@ -9,6 +9,7 @@
     "@types/node": "22.9.1",
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/parser": "6.9.0",
+    "cross-spawn": "7.0.6",
     "depcheck": "^1.4.7",
     "esbuild": "^0.18.17",
     "esbuild-node-externals": "^1.14.0",
@@ -29,8 +30,7 @@
     "svelte-eslint-parser": "^0.33.1",
     "typescript": "5.5.2",
     "typescript-eslint": "^7.3.1",
-    "yargs": "^17.7.2",
-    "cross-spawn": "7.0.6"
+    "yargs": "^17.7.2"
   },
   "scripts": {
     "get-past-client-version": "node scripts/getPastClientVersion.js",
