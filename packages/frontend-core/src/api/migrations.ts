@@ -1,7 +1,8 @@
+import { GetOldMigrationStatus } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface MigrationEndpoints {
-  getMigrationStatus: () => Promise<{ migrated: boolean }>
+  getMigrationStatus: () => Promise<GetOldMigrationStatus>
 }
 
 export const buildMigrationEndpoints = (
