@@ -149,6 +149,7 @@ export function datasourceDescribe(opts: DatasourceDescribeOpts) {
     isMongodb: dbName === DatabaseName.MONGODB,
     isMSSQL: dbName === DatabaseName.SQL_SERVER,
     isOracle: dbName === DatabaseName.ORACLE,
+    isMariaDB: dbName === DatabaseName.MARIADB,
   }))
 }
 
@@ -158,19 +159,19 @@ function getDatasource(
   return providers[sourceName]()
 }
 
-export async function knexClient(ds: Datasource) {
+export async function knexClient(ds: Datasource, opts?: Knex.Config) {
   switch (ds.source) {
     case SourceName.POSTGRES: {
-      return postgres.knexClient(ds)
+      return postgres.knexClient(ds, opts)
     }
     case SourceName.MYSQL: {
-      return mysql.knexClient(ds)
+      return mysql.knexClient(ds, opts)
     }
     case SourceName.SQL_SERVER: {
-      return mssql.knexClient(ds)
+      return mssql.knexClient(ds, opts)
     }
     case SourceName.ORACLE: {
-      return oracle.knexClient(ds)
+      return oracle.knexClient(ds, opts)
     }
     default: {
       throw new Error(`Unsupported source: ${ds.source}`)
