@@ -1,14 +1,19 @@
-import { SystemStatusResponse } from "@budibase/types"
+import {
+  FetchBuiltinPermissionsRequest,
+  FetchIntegrationsResponse,
+  GetVersionResponse,
+  SystemStatusResponse,
+} from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface OtherEndpoints {
   getSystemStatus: () => Promise<SystemStatusResponse>
   getBudibaseVersion: () => Promise<string>
+  getIntegrations: () => Promise<FetchIntegrationsResponse>
+  getBasePermissions: () => Promise<FetchBuiltinPermissionsRequest>
 
   // Missing request or response types
   getEnvironment: () => Promise<Record<string, any>>
-  getIntegrations: () => Promise<Record<string, any>>
-  getBasePermissions: () => Promise<any[]>
 }
 
 export const buildOtherEndpoints = (API: BaseAPIClient): OtherEndpoints => ({
@@ -44,7 +49,7 @@ export const buildOtherEndpoints = (API: BaseAPIClient): OtherEndpoints => ({
    */
   getBudibaseVersion: async () => {
     return (
-      await API.get<{ version: string }>({
+      await API.get<GetVersionResponse>({
         url: "/api/dev/version",
       })
     ).version
