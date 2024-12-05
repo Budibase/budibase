@@ -30,6 +30,7 @@ export const buildAnalyticsEndpoints = (
         ...request,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
+      parseResponse: () => null,
     })
   },
 })

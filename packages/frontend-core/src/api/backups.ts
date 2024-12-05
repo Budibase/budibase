@@ -1,26 +1,20 @@
 import {
-  CreateAppBackupRequest,
   CreateAppBackupResponse,
   ImportAppBackupResponse,
   SearchAppBackupsRequest,
-  UpdateAppBackupRequest,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface BackupEndpoints {
-  createManualBackup: (
-    appId: string,
-    name?: string
-  ) => Promise<CreateAppBackupResponse>
+  createManualBackup: (appId: string) => Promise<CreateAppBackupResponse>
   restoreBackup: (
     appId: string,
     backupId: string,
-    name: string
+    name?: string
   ) => Promise<ImportAppBackupResponse>
 
   // Missing request or response types
   searchBackups: (appId: string, opts: SearchAppBackupsRequest) => Promise<any>
-  updateBackup: (appId: string, backupId: string, name: string) => Promise<any>
   deleteBackup: (
     appId: string,
     backupId: string
@@ -28,14 +22,9 @@ export interface BackupEndpoints {
 }
 
 export const buildBackupEndpoints = (API: BaseAPIClient): BackupEndpoints => ({
-  createManualBackup: async (appId, name) => {
-    return await API.post<CreateAppBackupRequest, CreateAppBackupResponse>({
+  createManualBackup: async appId => {
+    return await API.post({
       url: `/api/apps/${appId}/backups`,
-      body: name
-        ? {
-            name,
-          }
-        : undefined,
     })
   },
   searchBackups: async (appId, opts) => {
@@ -49,15 +38,12 @@ export const buildBackupEndpoints = (API: BaseAPIClient): BackupEndpoints => ({
       url: `/api/apps/${appId}/backups/${backupId}`,
     })
   },
-  updateBackup: async (appId, backupId, name) => {
-    return await API.patch<UpdateAppBackupRequest, any>({
-      url: `/api/apps/${appId}/backups/${backupId}`,
-      body: { name },
-    })
-  },
   restoreBackup: async (appId, backupId, name) => {
     return await API.post({
       url: `/api/apps/${appId}/backups/${backupId}/import`,
+      // Name is a legacy thing, but unsure if it is needed for restoring.
+      // Leaving this in just in case, but not type casting the body here
+      // as we won't normally have it, but it's required in the type.
       body: { name },
     })
   },
