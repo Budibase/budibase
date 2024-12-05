@@ -16,7 +16,6 @@ import {
   CountCalculationFieldMetadata,
   CreateViewResponse,
   UpdateViewResponse,
-  DeleteViewResponse,
 } from "@budibase/types"
 import { builderSocket, gridSocket } from "../../../websockets"
 import { helpers } from "@budibase/shared-core"
