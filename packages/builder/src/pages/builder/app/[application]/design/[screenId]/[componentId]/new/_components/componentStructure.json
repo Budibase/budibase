@@ -46,7 +46,8 @@
       "embed",
       "markdownviewer",
       "backgroundimage",
-      "embeddedmap"
+      "embeddedmap",
+      "codegenerator"
     ]
   },
   {
