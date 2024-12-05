@@ -2201,8 +2201,8 @@
   dependencies:
     "@budibase/nano" "10.1.5"
     "@budibase/pouchdb-replication-stream" "1.2.11"
-    "@budibase/shared-core" "0.0.0"
-    "@budibase/types" "0.0.0"
+    "@budibase/shared-core" "*"
+    "@budibase/types" "*"
     "@techpass/passport-openidconnect" "0.3.3"
     aws-cloudfront-sign "3.0.2"
     aws-sdk "2.1692.0"
@@ -2304,7 +2304,7 @@
 "@budibase/shared-core@3.2.16":
   version "0.0.0"
   dependencies:
-    "@budibase/types" "0.0.0"
+    "@budibase/types" "*"
     cron-validate "1.4.5"
 
 "@budibase/string-templates@3.2.16":
@@ -2319,7 +2319,6 @@
   version "0.0.0"
   dependencies:
     scim-patch "^0.8.1"
-    zod "^3.23.8"
 
 "@bull-board/api@5.10.2":
   version "5.10.2"
@@ -14624,6 +14623,11 @@ load-json-file@^4.0.0:
     parse-json "^4.0.0"
     pify "^3.0.0"
     strip-bom "^3.0.0"
+
+load-tsconfig@^0.2.5:
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/load-tsconfig/-/load-tsconfig-0.2.5.tgz#453b8cd8961bfb912dea77eb6c168fe8cca3d3a1"
+  integrity sha512-IXO6OCs9yg8tMKzfPZ1YmheJbZCiEsnBdcB03l0OcfK9prKnJb96siuHCr5Fl37/yo9DnKU+TLpxzTUspw9shg==
 
 local-pkg@^0.4.2:
   version "0.4.3"
