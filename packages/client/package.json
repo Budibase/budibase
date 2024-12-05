@@ -62,8 +62,7 @@
           {
             "projects": [
               "@budibase/shared-core",
-              "@budibase/string-templates",
-              "@budibase/types"
+              "@budibase/string-templates"
             ],
             "target": "build"
           }
