@@ -7,6 +7,8 @@ import { BaseAPIClient } from "./types"
 
 export interface AuthEndpoints {
   logIn: (tenantId: string, username: string, password: string) => Promise<void>
+
+  // Missing request or response types
   logOut: () => Promise<{ message: string }>
   requestForgotPassword: (
     tenantId: string,
@@ -17,8 +19,6 @@ export interface AuthEndpoints {
     password: string,
     resetCode: string
   ) => Promise<{ message: string }>
-
-  // Missing request or response types
   setInitInfo: (info: any) => Promise<void>
   getInitInfo: () => Promise<any>
 }
