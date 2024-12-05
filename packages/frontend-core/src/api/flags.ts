@@ -3,6 +3,8 @@ import { BaseAPIClient } from "./types"
 
 export interface FlagEndpoints {
   getFlags: () => Promise<Flags>
+
+  // Missing request or response types
   updateFlag: (flag: string, value: any) => Promise<{ message: string }>
   toggleUiFeature: (value: string) => Promise<{ message: string }>
 }
