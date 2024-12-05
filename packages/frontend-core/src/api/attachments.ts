@@ -1,7 +1,17 @@
-import { ProcessAttachmentResponse } from "@budibase/types"
+import {
+  DownloadAttachmentResponse,
+  ProcessAttachmentResponse,
+} from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface AttachmentEndpoints {
+  downloadAttachment: (
+    datasourceId: string,
+    rowId: string,
+    columnName: string
+  ) => Promise<DownloadAttachmentResponse>
+
+  // Missing request or response types
   getSignedDatasourceURL: (
     datasourceId: string,
     bucket: string,
@@ -18,11 +28,6 @@ export interface AttachmentEndpoints {
     key: string,
     data: any
   ) => Promise<{ publicUrl: string }>
-  downloadAttachment: (
-    datasourceId: string,
-    rowId: string,
-    columnName: string
-  ) => Promise<any>
 }
 
 export const buildAttachmentEndpoints = (
