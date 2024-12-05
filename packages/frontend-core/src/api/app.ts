@@ -1,7 +1,6 @@
 import { sdk } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
 import {
-  App,
   ClearDevLockResponse,
   CreateAppRequest,
   CreateAppResponse,
