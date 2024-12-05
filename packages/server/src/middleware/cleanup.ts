@@ -1,7 +1,7 @@
 import { Ctx } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { tracer } from "dd-trace"
-import { Middleware, Next } from "koa"
+import type { Middleware, Next } from "koa"
 
 const middleware = (async (ctx: Ctx, next: Next) => {
   const resp = await next()

@@ -1,7 +1,7 @@
 import { UserCtx } from "@budibase/types"
 import { checkMissingMigrations } from "../appMigrations"
 import env from "../environment"
-import { Middleware, Next } from "koa"
+import type { Middleware, Next } from "koa"
 
 const middleware = (async (ctx: UserCtx, next: Next) => {
   const { appId } = ctx
