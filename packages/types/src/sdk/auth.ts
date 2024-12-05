@@ -1,4 +1,4 @@
-import { BBContext } from "./koa"
+import { Ctx } from "./koa"
 import { Hosting } from "./hosting"
 
 export interface AuthToken {
@@ -32,7 +32,7 @@ export interface ScannedSession {
 }
 
 export interface PlatformLogoutOpts {
-  ctx: BBContext
+  ctx: Ctx
   userId: string
   keepActiveSession?: boolean
 }

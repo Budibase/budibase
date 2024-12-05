@@ -1,8 +1,8 @@
 import { createMockContext, createMockCookies } from "@shopify/jest-koa-mocks"
-import { BBContext } from "@budibase/types"
+import { Ctx } from "@budibase/types"
 
-export const newContext = (): BBContext => {
-  const ctx = createMockContext() as any
+export const newContext = (): Ctx => {
+  const ctx = createMockContext() as Ctx
   return {
     ...ctx,
     path: "/",
