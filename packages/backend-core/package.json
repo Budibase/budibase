@@ -95,5 +95,20 @@
     "testcontainers": "^10.7.2",
     "timekeeper": "2.2.0",
     "typescript": "5.5.2"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/shared-core",
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   }
 }
