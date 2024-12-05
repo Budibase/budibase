@@ -20,10 +20,11 @@ import {
 import {
   DatabaseName,
   datasourceDescribe,
+  knexClient,
 } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import nock from "nock"
-import { Knex } from "knex"
+import knex, { Knex } from "knex"
 
 describe("/datasources", () => {
   const config = setup.getConfig()
@@ -583,6 +584,105 @@ if (descriptions.length) {
           expect(info.tableNames).toHaveLength(
             existingTableNames.length + tableNames.length
           )
+        })
+      })
+    }
+  )
+}
+
+const datasources = datasourceDescribe({
+  exclude: [DatabaseName.MONGODB, DatabaseName.SQS, DatabaseName.ORACLE],
+})
+
+if (datasources.length) {
+  describe.each(datasources)(
+    "$dbName",
+    ({ config, dsProvider, isPostgres, isMySQL, isMariaDB }) => {
+      let datasource: Datasource
+      let client: Knex
+
+      beforeEach(async () => {
+        const ds = await dsProvider()
+        datasource = ds.datasource!
+        client = ds.client!
+      })
+
+      describe("external export", () => {
+        let table: Table
+
+        beforeEach(async () => {
+          table = await config.api.table.save(
+            tableForDatasource(datasource, {
+              name: "simple",
+              primary: ["id"],
+              primaryDisplay: "name",
+              schema: {
+                id: {
+                  name: "id",
+                  autocolumn: true,
+                  type: FieldType.NUMBER,
+                  constraints: {
+                    presence: false,
+                  },
+                },
+                name: {
+                  name: "name",
+                  autocolumn: false,
+                  type: FieldType.STRING,
+                  constraints: {
+                    presence: false,
+                  },
+                },
+              },
+            })
+          )
+        })
+
+        it.only("should be able to export and reimport a schema", async () => {
+          let { schema } = await config.api.datasource.externalSchema(
+            datasource
+          )
+
+          if (isPostgres) {
+            // pg_dump 17 puts this config parameter into the dump but no DB < 17
+            // can load it. We're using postgres 16 in tests at the time of writing.
+            schema = schema.replace("SET transaction_timeout = 0;", "")
+          }
+
+          await config.api.table.destroy(table._id!, table._rev!)
+
+          if (isMySQL || isMariaDB) {
+            // MySQL/MariaDB clients don't let you run multiple queries in a
+            // single call.  They also throw an error when given an empty query.
+            // The below handles both of these things.
+            for (let query of schema.split(";\n")) {
+              query = query.trim()
+              if (!query) {
+                continue
+              }
+              await client.raw(query)
+            }
+          } else {
+            await client.raw(schema)
+          }
+
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          const tables = await config.api.table.fetch()
+          const newTable = tables.find(t => t.name === table.name)!
+
+          // This is only set on tables created through Budibase, we don't
+          // expect it to match after we import the table.
+          delete table.created
+
+          for (const field of Object.values(newTable.schema)) {
+            // Will differ per-database, not useful for this test.
+            delete field.externalType
+          }
+
+          expect(newTable).toEqual(table)
         })
       })
     }
