@@ -14,7 +14,7 @@ export const backfill = async (appDb: Database, timestamp: string | number) => {
           continue
         }
 
-        await events.view.created(view, timestamp)
+        // await events.view.created(view, timestamp)
 
         if (view.calculation) {
           await events.view.calculationCreated(view, timestamp)

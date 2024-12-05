@@ -63,7 +63,7 @@ export async function create(
 export async function update(
   tableId: string,
   view: Readonly<ViewV2>
-): Promise<ViewV2> {
+): Promise<{ view: ViewV2; existingView: ViewV2 }> {
   const db = context.getAppDB()
 
   const { datasourceId, tableName } = breakExternalTableId(tableId)
@@ -87,7 +87,7 @@ export async function update(
   delete views[existingView.name]
   views[view.name] = view
   await db.put(ds)
-  return view
+  return { view, existingView }
 }
 
 export async function remove(viewId: string): Promise<ViewV2> {

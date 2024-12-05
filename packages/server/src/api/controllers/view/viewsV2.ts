@@ -151,7 +151,7 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   }
   const result = await sdk.views.create(tableId, parsedView)
 
-  await events.view.created(view)
+  await events.view.created(result)
 
   ctx.status = 201
   ctx.body = {
@@ -190,10 +190,11 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
     primaryDisplay: view.primaryDisplay,
   }
 
-  const result = await sdk.views.update(tableId, parsedView)
-  ctx.body = {
-    data: result,
-  }
+  const { view: result } = await sdk.views.update(tableId, parsedView)
+
+  await events.view.updated(result)
+
+  ctx.body = { data: result }
 
   const table = await sdk.tables.getTable(tableId)
   builderSocket?.emitTableUpdate(ctx, table)

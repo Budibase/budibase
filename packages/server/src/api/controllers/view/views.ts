@@ -60,35 +60,31 @@ export async function save(ctx: Ctx) {
     existingTable.views[viewName] = existingTable.views[originalName]
   }
   await db.put(table)
-  await handleViewEvents(
-    existingTable.views[viewName] as View,
-    table.views[viewName]
-  )
 
   ctx.body = table.views[viewName]
   builderSocket?.emitTableUpdate(ctx, table)
 }
 
-export async function calculationEvents(existingView: View, newView: View) {
-  const existingCalculation = existingView && existingView.calculation
-  const newCalculation = newView && newView.calculation
-
-  if (existingCalculation && !newCalculation) {
-    await events.view.calculationDeleted(existingView)
-  }
-
-  if (!existingCalculation && newCalculation) {
-    await events.view.calculationCreated(newView)
-  }
-
-  if (
-    existingCalculation &&
-    newCalculation &&
-    existingCalculation !== newCalculation
-  ) {
-    await events.view.calculationUpdated(newView)
-  }
-}
+// export async function calculationEvents(existingView: View, newView: View) {
+//   const existingCalculation = existingView && existingView.calculation
+//   const newCalculation = newView && newView.calculation
+//
+//   if (existingCalculation && !newCalculation) {
+//     await events.view.calculationDeleted(existingView)
+//   }
+//
+//   if (!existingCalculation && newCalculation) {
+//     await events.view.calculationCreated(newView)
+//   }
+//
+//   if (
+//     existingCalculation &&
+//     newCalculation &&
+//     existingCalculation !== newCalculation
+//   ) {
+//     await events.view.calculationUpdated(newView)
+//   }
+// }
 
 export async function filterEvents(existingView: View, newView: View) {
   const hasExistingFilters = !!(
@@ -113,16 +109,6 @@ export async function filterEvents(existingView: View, newView: View) {
   ) {
     await events.view.filterUpdated(newView)
   }
-}
-
-async function handleViewEvents(existingView: View, newView: View) {
-  if (!existingView) {
-    await events.view.created(newView)
-  } else {
-    await events.view.updated(newView)
-  }
-  await calculationEvents(existingView, newView)
-  await filterEvents(existingView, newView)
 }
 
 export async function destroy(ctx: Ctx) {

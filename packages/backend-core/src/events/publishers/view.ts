@@ -11,6 +11,7 @@ import {
   ViewFilterDeletedEvent,
   ViewFilterUpdatedEvent,
   ViewUpdatedEvent,
+  View,
   ViewV2,
   ViewCalculation,
   Table,
@@ -19,17 +20,27 @@ import {
 
 /* eslint-disable */
 
-async function created(view: Partial<ViewV2>, timestamp?: string | number) {
+async function created(view: ViewV2, timestamp?: string | number) {
   const properties: ViewCreatedEvent = {
     name: view.name,
     type: view.type,
+    tableId: view.tableId,
   }
   await publishEvent(Event.VIEW_CREATED, properties, timestamp)
 }
 
-async function updated(view: View) {
+async function updated(newView: ViewV2) {
+  // // check whether any of the fields are different
+  let viewJoins = 0
+  for (const key in newView.schema) {
+    if (newView.schema[key]?.columns) {
+      viewJoins += Object.keys(newView.schema[key]?.columns).length
+    }
+  }
   const properties: ViewUpdatedEvent = {
-    tableId: view.tableId,
+    tableId: newView.tableId,
+    groupedFilters: newView.queryUI?.groups?.length || 0,
+    viewJoins,
   }
   await publishEvent(Event.VIEW_UPDATED, properties)
 }

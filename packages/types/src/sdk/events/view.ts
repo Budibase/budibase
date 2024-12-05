@@ -1,15 +1,16 @@
-import { ViewCalculation, ViewV2Schema, ViewV2Type } from "../../documents"
+import { ViewCalculation, ViewV2Type } from "../../documents"
 import { BaseEvent, TableExportFormat } from "./event"
-import { LegacyFilter, SortOrder, SortType, UISearchFilter } from "../../api"
-import { SearchFilters } from "../search"
 
 export interface ViewCreatedEvent extends BaseEvent {
   name: string
   type?: ViewV2Type
+  tableId: string
 }
 
 export interface ViewUpdatedEvent extends BaseEvent {
   tableId: string
+  groupedFilters: number
+  viewJoins: number
 }
 
 export interface ViewDeletedEvent extends BaseEvent {
