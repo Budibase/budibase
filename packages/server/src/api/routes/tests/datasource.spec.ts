@@ -638,7 +638,7 @@ if (datasources.length) {
           )
         })
 
-        it.only("should be able to export and reimport a schema", async () => {
+        it("should be able to export and reimport a schema", async () => {
           let { schema } = await config.api.datasource.externalSchema(
             datasource
           )
