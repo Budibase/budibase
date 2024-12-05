@@ -115,7 +115,8 @@
     "passport": "0.6.0",
     "fast-xml-parser": "4.4.1",
     "@azure/identity": "4.2.1",
-    "kind-of": "6.0.3"
+    "kind-of": "6.0.3",
+    "**/nan": "2.22.0"
   },
   "engines": {
     "node": ">=22.0.0 <23.0.0"
