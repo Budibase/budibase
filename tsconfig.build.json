@@ -10,6 +10,7 @@
     "skipLibCheck": true,
     "declaration": true,
     "isolatedModules": true,
+    "baseUrl": ".",
     "paths": {
       "@budibase/types": ["./packages/types/src"],
       "@budibase/backend-core": ["./packages/backend-core/src"],
