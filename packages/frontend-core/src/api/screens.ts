@@ -1,9 +1,13 @@
-import { Screen } from "@budibase/types"
+import {
+  DeleteScreenResponse,
+  SaveScreenRequest,
+  SaveScreenResponse,
+} from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface ScreenEndpoints {
-  saveScreen: (screen: Screen) => Promise<Screen>
-  deleteScreen: (id: string, rev: string) => Promise<{ message: string }>
+  saveScreen: (screen: SaveScreenRequest) => Promise<SaveScreenResponse>
+  deleteScreen: (id: string, rev: string) => Promise<DeleteScreenResponse>
 }
 
 export const buildScreenEndpoints = (API: BaseAPIClient): ScreenEndpoints => ({
