@@ -1,4 +1,4 @@
-import { DeploymentDoc, DeploymentStatus } from "../../documents"
+import { DeploymentDoc, DeploymentStatus } from "../../../documents"
 
 export interface PublishAppResponse extends DeploymentDoc {}
 
