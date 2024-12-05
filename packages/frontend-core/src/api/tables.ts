@@ -4,24 +4,26 @@ import {
   CsvToJsonRequest,
   CsvToJsonResponse,
   FetchTablesResponse,
-  MigrateRequest,
-  MigrateResponse,
   Row,
   SaveTableRequest,
   SaveTableResponse,
   SearchRowRequest,
   PaginatedSearchRowResponse,
-  TableResponse,
   TableSchema,
   ValidateNewTableImportRequest,
   ValidateTableImportRequest,
   ValidateTableImportResponse,
+  FindTableResponse,
+  FetchRowsResponse,
+  MigrateTableResponse,
+  MigrateTableRequest,
+  DeleteTableResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface TableEndpoints {
-  fetchTableDefinition: (tableId: string) => Promise<TableResponse>
-  fetchTableData: (tableId: string) => Promise<Row[]>
+  fetchTableDefinition: (tableId: string) => Promise<FindTableResponse>
+  fetchTableData: (tableId: string) => Promise<FetchRowsResponse>
   searchTable: (
     sourceId: string,
     opts: SearchRowRequest
@@ -33,9 +35,9 @@ export interface TableEndpoints {
   ) => Promise<BulkImportResponse>
   csvToJson: (csvString: string) => Promise<CsvToJsonResponse>
   getTables: () => Promise<FetchTablesResponse>
-  getTable: (tableId: string) => Promise<TableResponse>
+  getTable: (tableId: string) => Promise<FindTableResponse>
   saveTable: (table: SaveTableRequest) => Promise<SaveTableResponse>
-  deleteTable: (id: string, rev: string) => Promise<{ message: string }>
+  deleteTable: (id: string, rev: string) => Promise<DeleteTableResponse>
   validateNewTableImport: (
     rows: Row[],
     schema: TableSchema
@@ -48,7 +50,7 @@ export interface TableEndpoints {
     tableId: string,
     oldColumn: string,
     newColumn: string
-  ) => Promise<MigrateResponse>
+  ) => Promise<MigrateTableResponse>
 }
 
 export const buildTableEndpoints = (API: BaseAPIClient): TableEndpoints => ({
@@ -179,7 +181,7 @@ export const buildTableEndpoints = (API: BaseAPIClient): TableEndpoints => ({
     })
   },
   migrateColumn: async (tableId, oldColumn, newColumn) => {
-    return await API.post<MigrateRequest, MigrateResponse>({
+    return await API.post<MigrateTableRequest, MigrateTableResponse>({
       url: `/api/tables/${tableId}/migrate`,
       body: {
         oldColumn,
