@@ -2,11 +2,25 @@ import { sdk } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
 import {
   App,
+  ClearDevLockResponse,
   CreateAppRequest,
+  CreateAppResponse,
+  DeleteAppResponse,
   DuplicateAppRequest,
   DuplicateAppResponse,
+  FetchAppDefinitionResponse,
   FetchAppPackageResponse,
+  FetchAppsResponse,
+  FetchDeploymentResponse,
   GetDiagnosticsResponse,
+  ImportToUpdateAppRequest,
+  ImportToUpdateAppResponse,
+  PublishAppResponse,
+  RevertAppClientResponse,
+  RevertAppResponse,
+  SetRevertableAppVersionRequest,
+  SyncAppResponse,
+  UpdateAppClientResponse,
   UpdateAppRequest,
   UpdateAppResponse,
 } from "@budibase/types"
@@ -18,36 +32,36 @@ export interface AppEndpoints {
     metadata: UpdateAppRequest
   ) => Promise<UpdateAppResponse>
   unpublishApp: (appId: string) => Promise<void>
-  createApp: (app: CreateAppRequest) => Promise<App>
-  deleteApp: (appId: string) => Promise<void>
+  publishAppChanges: (appId: string) => Promise<PublishAppResponse>
+  revertAppChanges: (appId: string) => Promise<RevertAppResponse>
+  updateAppClientVersion: (appId: string) => Promise<UpdateAppClientResponse>
+  revertAppClientVersion: (appId: string) => Promise<RevertAppClientResponse>
+  releaseAppLock: (appId: string) => Promise<ClearDevLockResponse>
+  getAppDeployments: () => Promise<FetchDeploymentResponse>
+  createApp: (app: CreateAppRequest) => Promise<CreateAppResponse>
+  deleteApp: (appId: string) => Promise<DeleteAppResponse>
   duplicateApp: (
     appId: string,
     app: DuplicateAppRequest
   ) => Promise<DuplicateAppResponse>
   updateAppFromExport: (
     appId: string,
-    body: any
-  ) => Promise<{ message: string }>
+    body: ImportToUpdateAppRequest
+  ) => Promise<ImportToUpdateAppResponse>
   fetchSystemDebugInfo: () => Promise<GetDiagnosticsResponse>
-  syncApp: (appId: string) => Promise<{ message: string }>
-  getApps: () => Promise<App[]>
+  syncApp: (appId: string) => Promise<SyncAppResponse>
+  getApps: () => Promise<FetchAppsResponse>
   fetchComponentLibDefinitions: (
     appId: string
-  ) => Promise<{ [key: string]: any }>
+  ) => Promise<FetchAppDefinitionResponse>
   setRevertableVersion: (
     appId: string,
     revertableVersion: string
-  ) => Promise<App>
+  ) => Promise<void>
   addSampleData: (appId: string) => Promise<void>
 
   // Missing request or response types
-  publishAppChanges: (appId: string) => Promise<any>
-  revertAppChanges: (appId: string) => Promise<any>
-  updateAppClientVersion: (appId: string) => Promise<any>
-  revertAppClientVersion: (appId: string) => Promise<any>
   importApps: (apps: any) => Promise<any>
-  releaseAppLock: (appId: string) => Promise<any>
-  getAppDeployments: () => Promise<any>
 }
 
 export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
@@ -259,7 +273,7 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
    * @param revertableVersion the version number
    */
   setRevertableVersion: async (appId, revertableVersion) => {
-    return await API.post({
+    return await API.post<SetRevertableAppVersionRequest>({
       url: `/api/applications/${appId}/setRevertableVersion`,
       body: {
         revertableVersion,
