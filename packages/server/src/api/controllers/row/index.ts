@@ -11,11 +11,14 @@ import {
   DeleteRow,
   DeleteRowRequest,
   DeleteRows,
+  DownloadAttachmentResponse,
   EventType,
   ExportRowsRequest,
   ExportRowsResponse,
+  FetchEnrichedRowResponse,
+  FetchRowsResponse,
   FieldType,
-  GetRowResponse,
+  FindRowResponse,
   isRelationshipField,
   PatchRowRequest,
   PatchRowResponse,
@@ -23,12 +26,15 @@ import {
   Row,
   RowAttachment,
   RowSearchParams,
+  SaveRowRequest,
+  SaveRowResponse,
   SearchFilters,
   SearchRowRequest,
   SearchRowResponse,
   Table,
   UserCtx,
-  ValidateResponse,
+  ValidateRowRequest,
+  ValidateRowResponse,
 } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
@@ -83,7 +89,7 @@ export async function patch(
   }
 }
 
-export const save = async (ctx: UserCtx<Row, Row>) => {
+export const save = async (ctx: UserCtx<SaveRowRequest, SaveRowResponse>) => {
   const { tableId, viewId } = utils.getSourceId(ctx)
   const sourceId = viewId || tableId
 
@@ -131,12 +137,12 @@ export async function fetchLegacyView(ctx: any) {
   })
 }
 
-export async function fetch(ctx: any) {
+export async function fetch(ctx: UserCtx<void, FetchRowsResponse>) {
   const { tableId } = utils.getSourceId(ctx)
   ctx.body = await sdk.rows.fetch(tableId)
 }
 
-export async function find(ctx: UserCtx<void, GetRowResponse>) {
+export async function find(ctx: UserCtx<void, FindRowResponse>) {
   const { tableId, viewId } = utils.getSourceId(ctx)
   const sourceId = viewId || tableId
   const rowId = ctx.params.rowId
@@ -314,7 +320,9 @@ function replaceTableNamesInFilters(
   })
 }
 
-export async function validate(ctx: Ctx<Row, ValidateResponse>) {
+export async function validate(
+  ctx: Ctx<ValidateRowRequest, ValidateRowResponse>
+) {
   const source = await utils.getSource(ctx)
   const table = await utils.getTableFromSource(source)
   // external tables are hard to validate currently
@@ -328,7 +336,9 @@ export async function validate(ctx: Ctx<Row, ValidateResponse>) {
   }
 }
 
-export async function fetchEnrichedRow(ctx: UserCtx<void, Row>) {
+export async function fetchEnrichedRow(
+  ctx: UserCtx<void, FetchEnrichedRowResponse>
+) {
   const { tableId } = utils.getSourceId(ctx)
   ctx.body = await pickApi(tableId).fetchEnrichedRow(ctx)
 }
@@ -366,7 +376,9 @@ export const exportRows = async (
   ctx.body = apiFileReturn(content)
 }
 
-export async function downloadAttachment(ctx: UserCtx) {
+export async function downloadAttachment(
+  ctx: UserCtx<void, DownloadAttachmentResponse>
+) {
   const { columnName } = ctx.params
 
   const { tableId } = utils.getSourceId(ctx)

@@ -1,7 +1,7 @@
 import {
   Query,
   ExecuteQueryRequest,
-  ExecuteQueryResponse,
+  ExecuteV2QueryResponse,
   PreviewQueryRequest,
   PreviewQueryResponse,
 } from "@budibase/types"
@@ -17,8 +17,8 @@ export class QueryAPI extends TestAPI {
     queryId: string,
     body?: ExecuteQueryRequest,
     expectations?: Expectations
-  ): Promise<ExecuteQueryResponse> => {
-    return await this._post<ExecuteQueryResponse>(
+  ): Promise<ExecuteV2QueryResponse> => {
+    return await this._post<ExecuteV2QueryResponse>(
       `/api/v2/queries/${queryId}`,
       {
         body,

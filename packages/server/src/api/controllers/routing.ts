@@ -1,11 +1,17 @@
 import { getRoutingInfo } from "../../utilities/routing"
 import { roles } from "@budibase/backend-core"
-import { UserCtx } from "@budibase/types"
+import {
+  FetchClientScreenRoutingResponse,
+  FetchScreenRoutingResponse,
+  ScreenRoutingJson,
+  UserCtx,
+} from "@budibase/types"
 
 const URL_SEPARATOR = "/"
 
 class Routing {
-  json: any
+  json: ScreenRoutingJson
+
   constructor() {
     this.json = {}
   }
@@ -43,7 +49,7 @@ class Routing {
  * @returns The routing structure, this is the full structure designed for use in the builder,
  * if the client routing is required then the updateRoutingStructureForUserRole should be used.
  */
-async function getRoutingStructure() {
+async function getRoutingStructure(): Promise<{ routes: ScreenRoutingJson }> {
   const screenRoutes = await getRoutingInfo()
   const routing = new Routing()
 
@@ -56,11 +62,13 @@ async function getRoutingStructure() {
   return { routes: routing.json }
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: UserCtx<void, FetchScreenRoutingResponse>) {
   ctx.body = await getRoutingStructure()
 }
 
-export async function clientFetch(ctx: UserCtx) {
+export async function clientFetch(
+  ctx: UserCtx<void, FetchClientScreenRoutingResponse>
+) {
   const routing = await getRoutingStructure()
   let roleId = ctx.user?.role?._id
   const roleIds = roleId ? await roles.getUserRoleIdHierarchy(roleId) : []
