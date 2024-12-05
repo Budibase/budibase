@@ -193,6 +193,34 @@ const SCHEMA: Integration = {
   },
 }
 
+interface MSSQLColumnDefinition {
+  TableName: string
+  ColumnName: string
+  DataType: string
+  MaxLength: number
+  IsNullable: boolean
+  IsIdentity: boolean
+  Precision: number
+  Scale: number
+}
+
+interface ColumnDefinitionMetadata {
+  usesMaxLength?: boolean
+  usesPrecision?: boolean
+}
+
+const COLUMN_DEFINITION_METADATA: Record<string, ColumnDefinitionMetadata> = {
+  DATETIME2: { usesMaxLength: true },
+  TIME: { usesMaxLength: true },
+  DATETIMEOFFSET: { usesMaxLength: true },
+  NCHAR: { usesMaxLength: true },
+  NVARCHAR: { usesMaxLength: true },
+  BINARY: { usesMaxLength: true },
+  VARBINARY: { usesMaxLength: true },
+  DECIMAL: { usesPrecision: true },
+  NUMERIC: { usesPrecision: true },
+}
+
 class SqlServerIntegration extends Sql implements DatasourcePlus {
   private readonly config: MSSQLConfig
   private index: number = 0
@@ -527,20 +555,24 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     return this.queryWithReturning(json, queryFn, processFn)
   }
 
-  async getExternalSchema() {
+  private async getColumnDefinitions(): Promise<MSSQLColumnDefinition[]> {
     // Query to retrieve table schema
     const query = `
   SELECT
     t.name AS TableName,
     c.name AS ColumnName,
     ty.name AS DataType,
+    ty.precision AS Precision,
+    ty.scale AS Scale,
     c.max_length AS MaxLength,
     c.is_nullable AS IsNullable,
     c.is_identity AS IsIdentity
   FROM
     sys.tables t
     INNER JOIN sys.columns c ON t.object_id = c.object_id
-    INNER JOIN sys.types ty ON c.system_type_id = ty.system_type_id
+    INNER JOIN sys.types ty 
+      ON c.system_type_id = ty.system_type_id 
+      AND c.user_type_id = ty.user_type_id
   WHERE
     t.is_ms_shipped = 0
   ORDER BY
@@ -553,17 +585,36 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       sql: query,
     })
 
+    return result.recordset as MSSQLColumnDefinition[]
+  }
+
+  private getDataType(columnDef: MSSQLColumnDefinition): string {
+    const { DataType, MaxLength, Precision, Scale } = columnDef
+    const { usesMaxLength = false, usesPrecision = false } =
+      COLUMN_DEFINITION_METADATA[DataType] || {}
+
+    let dataType = DataType
+
+    if (usesMaxLength) {
+      if (MaxLength === -1) {
+        dataType += `(MAX)`
+      } else {
+        dataType += `(${MaxLength})`
+      }
+    }
+    if (usesPrecision) {
+      dataType += `(${Precision}, ${Scale})`
+    }
+
+    return dataType
+  }
+
+  async getExternalSchema() {
     const scriptParts = []
     const tables: any = {}
-    for (const row of result.recordset) {
-      const {
-        TableName,
-        ColumnName,
-        DataType,
-        MaxLength,
-        IsNullable,
-        IsIdentity,
-      } = row
+    const columns = await this.getColumnDefinitions()
+    for (const row of columns) {
+      const { TableName, ColumnName, IsNullable, IsIdentity } = row
 
       if (!tables[TableName]) {
         tables[TableName] = {
@@ -571,9 +622,11 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         }
       }
 
-      const columnDefinition = `${ColumnName} ${DataType}${
-        MaxLength ? `(${MaxLength})` : ""
-      }${IsNullable ? " NULL" : " NOT NULL"}`
+      const nullable = IsNullable ? "NULL" : "NOT NULL"
+      const identity = IsIdentity ? "IDENTITY" : ""
+      const columnDefinition = `[${ColumnName}] ${this.getDataType(
+        row
+      )} ${nullable} ${identity}`
 
       tables[TableName].columns.push(columnDefinition)
 
