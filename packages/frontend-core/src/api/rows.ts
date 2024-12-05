@@ -1,20 +1,21 @@
 import {
-  DeleteRow,
-  DeleteRows,
+  DeleteRowRequest,
   ExportRowsRequest,
-  GetRowResponse,
+  FindRowResponse,
   PatchRowRequest,
   PatchRowResponse,
   Row,
+  SaveRowRequest,
+  SaveRowResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface RowEndpoints {
-  fetchRow: (tableId: string, rowId: string) => Promise<GetRowResponse>
+  fetchRow: (tableId: string, rowId: string) => Promise<FindRowResponse>
   saveRow: (
-    row: Row,
+    row: SaveRowRequest,
     suppressErrors?: boolean
-  ) => Promise<PatchRowResponse | undefined>
+  ) => Promise<SaveRowResponse>
   patchRow: (
     row: PatchRowRequest,
     suppressErrors?: boolean
@@ -30,13 +31,13 @@ export interface RowEndpoints {
 
 export const buildRowEndpoints = (API: BaseAPIClient): RowEndpoints => ({
   /**
-   * Fetches data about a certain row in a table.
-   * @param tableId the ID of the table to fetch from
+   * Fetches data about a certain row in a data source.
+   * @param sourceId the ID of the table or view to fetch from
    * @param rowId the ID of the row to fetch
    */
-  fetchRow: async (tableId, rowId) => {
+  fetchRow: async (sourceId, rowId) => {
     return await API.get({
-      url: `/api/${tableId}/rows/${rowId}`,
+      url: `/api/${sourceId}/rows/${rowId}`,
     })
   },
 
@@ -46,12 +47,9 @@ export const buildRowEndpoints = (API: BaseAPIClient): RowEndpoints => ({
    * @param suppressErrors whether or not to suppress error notifications
    */
   saveRow: async (row, suppressErrors = false) => {
-    const resourceId = row?._viewId || row?.tableId
-    if (!resourceId) {
-      return
-    }
+    const sourceId = row._viewId || row.tableId
     return await API.post({
-      url: `/api/${resourceId}/rows`,
+      url: `/api/${sourceId}/rows`,
       body: row,
       suppressErrors,
     })
@@ -63,8 +61,9 @@ export const buildRowEndpoints = (API: BaseAPIClient): RowEndpoints => ({
    * @param suppressErrors whether or not to suppress error notifications
    */
   patchRow: async (row, suppressErrors = false) => {
+    const sourceId = row._viewId || row.tableId
     return await API.patch({
-      url: `/api/${row.tableId}/rows`,
+      url: `/api/${sourceId}/rows`,
       body: row,
       suppressErrors,
     })
@@ -76,7 +75,7 @@ export const buildRowEndpoints = (API: BaseAPIClient): RowEndpoints => ({
    * @param rowId the ID of the row to delete
    */
   deleteRow: async (sourceId, rowId) => {
-    return await API.delete<DeleteRow>({
+    return await API.delete<DeleteRowRequest>({
       url: `/api/${sourceId}/rows`,
       body: {
         _id: rowId,
@@ -90,12 +89,12 @@ export const buildRowEndpoints = (API: BaseAPIClient): RowEndpoints => ({
    * @param rows the array of rows to delete
    */
   deleteRows: async (sourceId, rows) => {
-    rows?.forEach((row: Row | string) => {
+    rows.forEach(row => {
       if (typeof row === "object") {
         delete row?._viewId
       }
     })
-    return await API.delete<DeleteRows>({
+    return await API.delete<DeleteRowRequest>({
       url: `/api/${sourceId}/rows`,
       body: {
         rows,
