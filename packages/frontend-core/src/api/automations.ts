@@ -1,19 +1,30 @@
 import {
-  Automation,
-  AutomationLogPage,
+  ClearAutomationLogRequest,
+  ClearAutomationLogResponse,
+  CreateAutomationRequest,
+  CreateAutomationResponse,
   DeleteAutomationResponse,
   FetchAutomationResponse,
+  GetAutomationStepDefinitionsResponse,
+  SearchAutomationLogsRequest,
+  SearchAutomationLogsResponse,
+  TestAutomationRequest,
+  TestAutomationResponse,
+  TriggerAutomationRequest,
+  TriggerAutomationResponse,
+  UpdateAutomationRequest,
+  UpdateAutomationResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface AutomationEndpoints {
   getAutomations: () => Promise<FetchAutomationResponse>
   createAutomation: (
-    automation: Automation
-  ) => Promise<{ message: string; automation: Automation }>
+    automation: CreateAutomationRequest
+  ) => Promise<CreateAutomationResponse>
   updateAutomation: (
-    automation: Automation
-  ) => Promise<{ message: string; automation: Automation }>
+    automation: UpdateAutomationRequest
+  ) => Promise<UpdateAutomationResponse>
   deleteAutomation: (
     automationId: string,
     automationRev: string
@@ -21,20 +32,20 @@ export interface AutomationEndpoints {
   clearAutomationLogErrors: (
     automationId: string,
     appId: string
-  ) => Promise<{ message: string }>
-
-  // Missing request or response types
+  ) => Promise<ClearAutomationLogResponse>
   triggerAutomation: (
     automationId: string,
     fields: Record<string, any>,
-    timeout?: number
-  ) => Promise<any>
+    timeout: number
+  ) => Promise<TriggerAutomationResponse>
   testAutomation: (
     automationdId: string,
-    testData: Record<string, any>
-  ) => Promise<any>
-  getAutomationDefinitions: () => Promise<any>
-  getAutomationLogs: (options: any) => Promise<AutomationLogPage>
+    data: TestAutomationRequest
+  ) => Promise<TestAutomationResponse>
+  getAutomationDefinitions: () => Promise<GetAutomationStepDefinitionsResponse>
+  getAutomationLogs: (
+    options: SearchAutomationLogsRequest
+  ) => Promise<SearchAutomationLogsResponse>
 }
 
 export const buildAutomationEndpoints = (
@@ -44,10 +55,10 @@ export const buildAutomationEndpoints = (
    * Executes an automation. Must have "App Action" trigger.
    * @param automationId the ID of the automation to trigger
    * @param fields the fields to trigger the automation with
-   * @param timeout an optional timeout override
+   * @param timeout a timeout override
    */
   triggerAutomation: async (automationId, fields, timeout) => {
-    return await API.post({
+    return await API.post<TriggerAutomationRequest, TriggerAutomationResponse>({
       url: `/api/automations/${automationId}/trigger`,
       body: { fields, timeout },
     })
@@ -56,12 +67,12 @@ export const buildAutomationEndpoints = (
   /**
    * Tests an automation with data.
    * @param automationId the ID of the automation to test
-   * @param testData the test data to run against the automation
+   * @param data the test data to run against the automation
    */
-  testAutomation: async (automationId, testData) => {
+  testAutomation: async (automationId, data) => {
     return await API.post({
       url: `/api/automations/${automationId}/test`,
-      body: testData,
+      body: data,
     })
   },
 
@@ -118,20 +129,11 @@ export const buildAutomationEndpoints = (
 
   /**
    * Get the logs for the app, or by automation ID.
-   * @param automationId The ID of the automation to get logs for.
-   * @param startDate An ISO date string to state the start of the date range.
-   * @param status The status, error or success.
-   * @param page The page to retrieve.
    */
-  getAutomationLogs: async ({ automationId, startDate, status, page }) => {
+  getAutomationLogs: async data => {
     return await API.post({
       url: "/api/automations/logs/search",
-      body: {
-        automationId,
-        startDate,
-        status,
-        page,
-      },
+      body: data,
     })
   },
 
@@ -142,7 +144,10 @@ export const buildAutomationEndpoints = (
    * @param appId The app ID to clear errors for.
    */
   clearAutomationLogErrors: async (automationId, appId) => {
-    return await API.delete({
+    return await API.delete<
+      ClearAutomationLogRequest,
+      ClearAutomationLogResponse
+    >({
       url: "/api/automations/logs",
       body: {
         appId,
