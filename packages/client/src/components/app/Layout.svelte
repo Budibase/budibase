@@ -107,8 +107,6 @@
     }
   }
 
-  $: sanitizedSize = getSanitizedLogoSize(logoSize)
-
   const enrichNavItem = navItem => {
     const internalLink = isInternal(navItem.url)
     return {
@@ -208,11 +206,8 @@
       if (typeof result === "number" && isFinite(result)) {
         sanitizedSize = result
       }
-    } catch (error) {
-      console.log("Invalid logo size:", error)
-    }
+    } catch (error) {}
 
-    // return sanitizedSize < 165 ? sanitizedSize : 165
     if (sanitizedSize > 165) {
       sanitizedSize = 165
     }
