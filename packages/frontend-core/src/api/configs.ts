@@ -8,16 +8,16 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface ConfigEndpoints {
-  saveConfig: <T>(
-    config: Config<T>
-  ) => Promise<{ type: ConfigType; _id: string; _rev: string }>
   getConfig: <T>(type: ConfigType) => Promise<Config<T>>
-  deleteConfig: (id: string, rev: string) => Promise<{ message: string }>
   getTenantConfig: (tentantId: string) => Promise<GetPublicSettingsResponse>
   getOIDCConfig: (tenantId: string) => Promise<GetPublicOIDCConfigResponse>
   getOIDCLogos: () => Promise<Config<OIDCLogosConfig>>
 
   // Missing request or response types
+  saveConfig: <T>(
+    config: Config<T>
+  ) => Promise<{ type: ConfigType; _id: string; _rev: string }>
+  deleteConfig: (id: string, rev: string) => Promise<{ message: string }>
   getChecklist: (tenantId: string) => Promise<any>
   uploadLogo: (data: any) => Promise<{ message: string; url: string }>
   uploadFavicon: (data: any) => Promise<{ message: string; url: string }>
