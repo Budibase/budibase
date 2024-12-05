@@ -1,11 +1,11 @@
-import { Flags, SetFlagRequest } from "@budibase/types"
+import { Flags, SetUserFlagRequest, SetUserFlagResponse } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface FlagEndpoints {
   getFlags: () => Promise<Flags>
 
   // Missing request or response types
-  updateFlag: (flag: string, value: any) => Promise<{ message: string }>
+  updateFlag: (flag: string, value: any) => Promise<SetUserFlagResponse>
   toggleUiFeature: (value: string) => Promise<{ message: string }>
 }
 
@@ -25,7 +25,7 @@ export const buildFlagEndpoints = (API: BaseAPIClient): FlagEndpoints => ({
    * @param value the value to set the flag to
    */
   updateFlag: async (flag, value) => {
-    return await API.post<SetFlagRequest, { message: string }>({
+    return await API.post<SetUserFlagRequest, SetUserFlagResponse>({
       url: "/api/users/flags",
       body: {
         flag,
