@@ -312,9 +312,10 @@ export async function getExternalSchema(
   if (!connector.getExternalSchema) {
     ctx.throw(400, "Datasource does not support exporting external schema")
   }
-  const response = await connector.getExternalSchema()
 
-  ctx.body = {
-    schema: response,
+  try {
+    ctx.body = { schema: await connector.getExternalSchema() }
+  } catch (e: any) {
+    ctx.throw(400, e.message)
   }
 }
