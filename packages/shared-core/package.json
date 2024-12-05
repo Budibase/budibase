@@ -16,7 +16,7 @@
     "test:watch": "yarn test --watchAll"
   },
   "dependencies": {
-    "@budibase/types": "0.0.0",
+    "@budibase/types": "*",
     "cron-validate": "1.4.5"
   },
   "devDependencies": {
