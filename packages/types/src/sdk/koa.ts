@@ -47,7 +47,7 @@ export interface BBRequest<RequestBody> extends Request {
 export interface Ctx<RequestBody = any, ResponseBody = any> extends Context {
   request: BBRequest<RequestBody>
   body: ResponseBody
-  userAgent: UserAgentContext["userAgent"]
+  userAgent?: UserAgentContext["userAgent"]
   state: { nonce?: string }
 }
 
