@@ -1,15 +1,18 @@
 import {
   CreatePluginRequest,
   CreatePluginResponse,
-  Plugin,
+  DeletePluginResponse,
+  FetchPluginResponse,
+  UploadPluginRequest,
+  UploadPluginResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface PluginEndpoins {
-  uploadPlugin: (data: any) => Promise<{ message: string; plugins: any[] }>
+  uploadPlugin: (data: UploadPluginRequest) => Promise<UploadPluginResponse>
   createPlugin: (data: CreatePluginRequest) => Promise<CreatePluginResponse>
-  getPlugins: () => Promise<Plugin[]>
-  deletePlugin: (pluginId: string) => Promise<{ message: string }>
+  getPlugins: () => Promise<FetchPluginResponse>
+  deletePlugin: (pluginId: string) => Promise<DeletePluginResponse>
 }
 
 export const buildPluginEndpoints = (API: BaseAPIClient): PluginEndpoins => ({
