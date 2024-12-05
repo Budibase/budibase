@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "rimraf": "3.0.2",
-    "typescript": "5.5.2"
+    "typescript": "5.7.2"
   },
   "nx": {
     "targets": {
