@@ -13,6 +13,7 @@
     selectedAutomation,
   } from "stores/builder"
   import { createLocalStorageStore } from "@budibase/frontend-core"
+  import { fly } from "svelte/transition"
 
   $: automationId = $selectedAutomation?.data?._id
   $: builderStore.selectResource(automationId)
@@ -30,9 +31,11 @@
 
   let modal
   let webhookModal
+  let mounted = false
 
   onMount(() => {
     $automationStore.showTestPanel = false
+    mounted = true
   })
 
   onDestroy(stopSyncing)
@@ -80,8 +83,12 @@
   </Modal>
 </div>
 
-{#if !$surveyDismissed}
-  <div class="survey">
+{#if !$surveyDismissed && mounted}
+  <div
+    class="survey"
+    in:fly={{ x: 600, duration: 260, delay: 1000 }}
+    out:fly={{ x: 600, duration: 260 }}
+  >
     <div class="survey__body">
       <div class="survey__title">We value your feedback!</div>
       <div class="survey__text">
