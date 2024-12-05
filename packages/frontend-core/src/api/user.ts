@@ -13,7 +13,8 @@ import {
   InviteUsersResponse,
   SaveUserResponse,
   SearchUsersRequest,
-  UpdateSelfRequest,
+  UpdateSelfMetadataRequest,
+  UpdateSelfMetadataResponse,
   User,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
@@ -21,7 +22,9 @@ import { BaseAPIClient } from "./types"
 export interface UserEndpoints {
   getUsers: () => Promise<User[]>
   getUser: (userId: string) => Promise<User>
-  updateOwnMetadata: (metadata: UpdateSelfRequest) => Promise<void>
+  updateOwnMetadata: (
+    metadata: UpdateSelfMetadataRequest
+  ) => Promise<UpdateSelfMetadataResponse>
   createAdminUser: (
     user: CreateAdminUserRequest
   ) => Promise<CreateAdminUserResponse>
