@@ -1,13 +1,13 @@
-import { Template } from "@budibase/types"
+import { FetchTemplateResponse, Template } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface TemplateEndpoints {
   getEmailTemplates: () => Promise<Template[]>
+  getAppTemplates: () => Promise<FetchTemplateResponse>
 
   // Missing request or response types
   getEmailTemplateDefinitions: () => Promise<any>
   saveEmailTemplate: (templaet: any) => Promise<any>
-  getAppTemplates: () => Promise<any>
 }
 
 export const buildTemplateEndpoints = (
