@@ -1,15 +1,9 @@
 {
-  "include": ["src/**/*"],
+  "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "declaration": true,
-    "target": "es6",
-    "moduleResolution": "node",
-    "noImplicitAny": true,
-    "incremental": true,
     "lib": ["dom"],
-    "outDir": "dist",
-    "esModuleInterop": true,
-    "types": ["node", "jest"],
-    "resolveJsonModule": true
-  }
+    "baseUrl": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*"]
 }

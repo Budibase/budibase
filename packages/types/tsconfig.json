@@ -1,7 +1,3 @@
 {
-  "extends": "./tsconfig.build.json",
-  "compilerOptions": {
-    "composite": true
-  },
-  "exclude": ["node_modules", "dist"]
+  "extends": "./tsconfig.build.json"
 }

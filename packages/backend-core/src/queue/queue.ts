@@ -7,7 +7,7 @@ import { addListeners, StalledFn } from "./listeners"
 import { Duration } from "../utils"
 import * as timers from "../timers"
 
-export { QueueOptions, Queue, JobOptions } from "bull"
+export type { QueueOptions, Queue, JobOptions } from "bull"
 
 // the queue lock is held for 5 minutes
 const QUEUE_LOCK_MS = Duration.fromMinutes(5).toMs()
