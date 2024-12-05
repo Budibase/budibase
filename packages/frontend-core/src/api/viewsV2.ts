@@ -1,17 +1,18 @@
 import {
   CreateViewRequest,
+  CreateViewResponse,
   SearchRowResponse,
   SearchViewRowRequest,
   UpdateViewRequest,
-  ViewResponse,
+  UpdateViewResponse,
   ViewResponseEnriched,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface ViewV2Endpoints {
   fetchDefinition: (viewId: string) => Promise<ViewResponseEnriched>
-  create: (view: CreateViewRequest) => Promise<ViewResponse>
-  update: (view: UpdateViewRequest) => Promise<ViewResponse>
+  create: (view: CreateViewRequest) => Promise<CreateViewResponse>
+  update: (view: UpdateViewRequest) => Promise<UpdateViewResponse>
   fetch: (
     viewId: string,
     opts: SearchViewRowRequest
