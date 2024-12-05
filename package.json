@@ -28,7 +28,7 @@
     "proper-lockfile": "^4.1.2",
     "svelte": "4.2.19",
     "svelte-eslint-parser": "^0.33.1",
-    "typescript": "5.5.2",
+    "typescript": "5.7.2",
     "typescript-eslint": "^7.3.1",
     "yargs": "^17.7.2"
   },
