@@ -15,7 +15,7 @@ export class EmailAPI extends TestAPI {
         attachments,
         purpose,
         tenantId: this.config.getTenantId(),
-        userId: this.config.user?._id!,
+        userId: this.config.user!._id!,
       })
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)

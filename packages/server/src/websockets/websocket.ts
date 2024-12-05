@@ -250,7 +250,7 @@ export class BaseSocket {
   }
 
   // Updates a connected user's metadata, assuming a room change is not required.
-  async updateUser(socket: Socket, patch: Object) {
+  async updateUser(socket: Socket, patch: object) {
     socket.data = {
       ...socket.data,
       ...patch,

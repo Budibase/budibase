@@ -343,7 +343,7 @@ describe("/api/global/users", () => {
     })
 
     it("should not allow a user to update their own admin/builder status", async () => {
-      const user = (await config.api.users.getUser(config.user?._id!))
+      const user = (await config.api.users.getUser(config.user!._id!))
         .body as User
       await config.api.users.saveUser({
         ...user,
