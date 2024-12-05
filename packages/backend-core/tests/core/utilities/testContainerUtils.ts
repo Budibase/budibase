@@ -37,10 +37,6 @@ function getTestcontainers(): ContainerInfo[] {
     )
 }
 
-function removeContainer(container: ContainerInfo) {
-  execSync(`docker rm ${container.ID}`)
-}
-
 export function getContainerByImage(image: string) {
   const containers = getTestcontainers().filter(x => x.Image.startsWith(image))
   if (containers.length > 1) {
@@ -51,10 +47,6 @@ export function getContainerByImage(image: string) {
     throw new Error(errorMessage)
   }
   return containers[0]
-}
-
-function getContainerByName(name: string) {
-  return getTestcontainers().find(x => x.Names === name)
 }
 
 export function getContainerById(id: string) {
@@ -98,6 +90,8 @@ function getCurrentDockerContext(): DockerContext {
 }
 
 export function setupEnv(...envs: any[]) {
+  process.env.TESTCONTAINERS_RYUK_DISABLED = "true"
+
   // For whatever reason, testcontainers doesn't always use the correct current
   // docker context. This bit of code forces the issue by finding the current
   // context and setting it as the DOCKER_HOST environment
@@ -153,19 +147,10 @@ export async function startContainer(container: GenericContainer) {
   key = key.replace(/\//g, "-").replace(/:/g, "-")
   const name = `${key}_testcontainer`
 
-  // If a container has died it hangs around and future attempts to start a
-  // container with the same name will fail. What we do here is if we find a
-  // matching container and it has exited, we remove it before carrying on. This
-  // removes the need to do this removal manually.
-  const existingContainer = getContainerByName(name)
-  if (existingContainer?.State === "exited") {
-    removeContainer(existingContainer)
-  }
-
   container = container
     .withReuse()
     .withLabels({ "com.budibase": "true" })
-    .withName(`${key}_testcontainer`)
+    .withName(name)
 
   let startedContainer: StartedTestContainer | undefined = undefined
   let lastError = undefined
