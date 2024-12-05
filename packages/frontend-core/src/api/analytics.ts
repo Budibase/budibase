@@ -1,8 +1,8 @@
 import { BaseAPIClient } from "./types"
-import { AnalyticsPingRequest } from "@budibase/types"
+import { AnalyticsEnabledResponse, AnalyticsPingRequest } from "@budibase/types"
 
 export interface AnalyticsEndpoints {
-  getAnalyticsStatus: () => Promise<{ enabled: boolean }>
+  getAnalyticsStatus: () => Promise<AnalyticsEnabledResponse>
   analyticsPing: (
     payload: Omit<AnalyticsPingRequest, "timezone">
   ) => Promise<void>
