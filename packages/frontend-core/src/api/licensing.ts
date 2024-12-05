@@ -84,6 +84,7 @@ export const buildLicensingEndpoints = (
   refreshLicense: async () => {
     return API.post({
       url: "/api/global/license/refresh",
+      parseResponse: () => null,
     })
   },
   /**
