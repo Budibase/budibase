@@ -20,11 +20,10 @@ import {
 import {
   DatabaseName,
   datasourceDescribe,
-  knexClient,
 } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import nock from "nock"
-import knex, { Knex } from "knex"
+import { Knex } from "knex"
 
 describe("/datasources", () => {
   const config = setup.getConfig()
