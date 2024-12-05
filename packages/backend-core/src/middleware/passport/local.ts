@@ -2,7 +2,7 @@ import { UserStatus } from "../../constants"
 import { compare } from "../../utils"
 import * as users from "../../users"
 import { authError } from "./utils"
-import { BBContext } from "@budibase/types"
+import { Ctx } from "@budibase/types"
 
 const INVALID_ERR = "Invalid credentials"
 const EXPIRED = "This account has expired. Please reset your password"
@@ -20,7 +20,7 @@ export const options = {
  * @returns The authenticated user, or errors if they occur
  */
 export async function authenticate(
-  ctx: BBContext,
+  ctx: Ctx,
   email: string,
   password: string,
   done: Function
