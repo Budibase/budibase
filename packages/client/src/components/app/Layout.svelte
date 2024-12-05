@@ -206,7 +206,9 @@
       if (typeof result === "number" && isFinite(result)) {
         sanitizedSize = result
       }
-    } catch (error) {}
+    } catch (error) {
+      sanitizedSize = 36
+    }
 
     if (sanitizedSize > 165) {
       sanitizedSize = 165
