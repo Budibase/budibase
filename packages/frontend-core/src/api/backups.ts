@@ -1,51 +1,47 @@
-import { PutResponse } from "@budibase/types"
+import {
+  CreateAppBackupRequest,
+  CreateAppBackupResponse,
+  ImportAppBackupResponse,
+  SearchAppBackupsRequest,
+  UpdateAppBackupRequest,
+} from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface BackupEndpoints {
   createManualBackup: (
-    appId: string
-  ) => Promise<{ backupId: string; message: string }>
-  deleteBackup: (
     appId: string,
-    backupId: string
-  ) => Promise<{ message: string }>
-  updateBackup: (
-    appId: string,
-    backupId: string,
-    name: string
-  ) => Promise<PutResponse>
+    name?: string
+  ) => Promise<CreateAppBackupResponse>
   restoreBackup: (
     appId: string,
     backupId: string,
     name: string
-  ) => Promise<{ restoreId: string; message: string }>
+  ) => Promise<ImportAppBackupResponse>
 
   // Missing request or response types
-  searchBackups: (opts: any) => Promise<any>
+  searchBackups: (appId: string, opts: SearchAppBackupsRequest) => Promise<any>
+  updateBackup: (appId: string, backupId: string, name: string) => Promise<any>
+  deleteBackup: (
+    appId: string,
+    backupId: string
+  ) => Promise<{ message: string }>
 }
 
 export const buildBackupEndpoints = (API: BaseAPIClient): BackupEndpoints => ({
-  searchBackups: async ({ appId, trigger, type, page, startDate, endDate }) => {
-    const opts: any = {}
-    if (page) {
-      opts.page = page
-    }
-    if (trigger && type) {
-      opts.trigger = trigger.toLowerCase()
-      opts.type = type.toLowerCase()
-    }
-    if (startDate && endDate) {
-      opts.startDate = startDate
-      opts.endDate = endDate
-    }
+  createManualBackup: async (appId, name) => {
+    return await API.post<CreateAppBackupRequest, CreateAppBackupResponse>({
+      url: `/api/apps/${appId}/backups`,
+      body: name
+        ? {
+            name,
+          }
+        : undefined,
+    })
+  },
+  searchBackups: async (appId, opts) => {
     return await API.post({
       url: `/api/apps/${appId}/backups/search`,
       body: opts,
-    })
-  },
-  createManualBackup: async appId => {
-    return await API.post({
-      url: `/api/apps/${appId}/backups`,
     })
   },
   deleteBackup: async (appId, backupId) => {
@@ -54,7 +50,7 @@ export const buildBackupEndpoints = (API: BaseAPIClient): BackupEndpoints => ({
     })
   },
   updateBackup: async (appId, backupId, name) => {
-    return await API.patch({
+    return await API.patch<UpdateAppBackupRequest, any>({
       url: `/api/apps/${appId}/backups/${backupId}`,
       body: { name },
     })
