@@ -23,6 +23,7 @@
     "prepack": "cp package.json dist",
     "build": "tsc -p tsconfig.build.json --paths null && node ./scripts/build.js",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
+    "build:oss": "node ./scripts/build.js",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
     "check:dependencies": "node ../../scripts/depcheck.js",
     "test": "bash scripts/test.sh",
@@ -94,20 +95,5 @@
     "testcontainers": "^10.7.2",
     "timekeeper": "2.2.0",
     "typescript": "5.5.2"
-  },
-  "nx": {
-    "targets": {
-      "build": {
-        "dependsOn": [
-          {
-            "projects": [
-              "@budibase/shared-core",
-              "@budibase/types"
-            ],
-            "target": "build"
-          }
-        ]
-      }
-    }
   }
 }
