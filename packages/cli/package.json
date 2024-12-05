@@ -40,6 +40,6 @@
     "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "^6.4.0",
     "ts-node": "10.8.1",
-    "typescript": "5.5.2"
+    "typescript": "5.7.2"
   }
 }
