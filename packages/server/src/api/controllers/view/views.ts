@@ -65,27 +65,6 @@ export async function save(ctx: Ctx) {
   builderSocket?.emitTableUpdate(ctx, table)
 }
 
-// export async function calculationEvents(existingView: View, newView: View) {
-//   const existingCalculation = existingView && existingView.calculation
-//   const newCalculation = newView && newView.calculation
-//
-//   if (existingCalculation && !newCalculation) {
-//     await events.view.calculationDeleted(existingView)
-//   }
-//
-//   if (!existingCalculation && newCalculation) {
-//     await events.view.calculationCreated(newView)
-//   }
-//
-//   if (
-//     existingCalculation &&
-//     newCalculation &&
-//     existingCalculation !== newCalculation
-//   ) {
-//     await events.view.calculationUpdated(newView)
-//   }
-// }
-
 export async function filterEvents(existingView: View, newView: View) {
   const hasExistingFilters = !!(
     existingView &&
