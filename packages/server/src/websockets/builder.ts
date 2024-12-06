@@ -92,7 +92,7 @@ export default class BuilderSocket extends BaseSocket {
     }
   }
 
-  async updateUser(socket: Socket, patch: Object) {
+  async updateUser(socket: Socket, patch: object) {
     await super.updateUser(socket, {
       builderMetadata: {
         ...socket.data.builderMetadata,

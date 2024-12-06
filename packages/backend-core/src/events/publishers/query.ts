@@ -12,8 +12,6 @@ import {
   QueriesRunEvent,
 } from "@budibase/types"
 
-/* eslint-disable */
-
 const created = async (
   datasource: Datasource,
   query: Query,

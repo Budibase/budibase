@@ -389,7 +389,6 @@ describe("Google Sheets Integration", () => {
     })
 
     // TODO: this gets the error "Sheet is not large enough to fit 27 columns. Resize the sheet first."
-    // eslint-disable-next-line jest/no-commented-out-tests
     // it("should be able to add a new column", async () => {
     //   const updatedTable = await config.api.table.save({
     //     ...table,

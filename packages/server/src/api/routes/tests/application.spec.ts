@@ -208,7 +208,7 @@ describe("/applications", () => {
 
     it("should reject with a known url", async () => {
       await config.api.application.create(
-        { name: "made up", url: app?.url! },
+        { name: "made up", url: app!.url! },
         { body: { message: "App URL is already in use." }, status: 400 }
       )
     })

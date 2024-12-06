@@ -7,7 +7,6 @@
 
   async function checkMigrationsFinished() {
     let totalWaitMs = 0
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const waitForMs = 5000 + Math.random() * 5000
       await new Promise(resolve => setTimeout(resolve, waitForMs))

@@ -17,8 +17,6 @@ import {
   TableExportFormat,
 } from "@budibase/types"
 
-/* eslint-disable */
-
 async function created(view: View, timestamp?: string | number) {
   const properties: ViewCreatedEvent = {
     tableId: view.tableId,

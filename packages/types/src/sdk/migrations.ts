@@ -1,6 +1,6 @@
 export interface Migration extends MigrationDefinition {
   appOpts?: object
-  fn: Function
+  fn: () => void
   silent?: boolean
   preventRetry?: boolean
 }
