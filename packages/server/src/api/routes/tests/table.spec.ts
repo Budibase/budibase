@@ -248,7 +248,7 @@ if (descriptions.length) {
                 },
               },
               views: {},
-              sql: true
+              sql: true,
             })
           )
 
