@@ -186,7 +186,7 @@
   <div class="snippet-popover">
     {#key hoveredSnippet}
       <CodeEditor
-        value={hoveredSnippet.code.trim()}
+        value={hoveredSnippet.code?.trim()}
         mode={EditorModes.JS}
         readonly
       />

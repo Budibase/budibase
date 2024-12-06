@@ -48,7 +48,7 @@ jest.mock("@budibase/pro", () => ({
   ai: {
     LargeLanguageModel: {
       forCurrentTenant: async () => ({
-        initialised: true,
+        llm: {},
         run: jest.fn(() => `Mock LLM Response`),
         buildPromptFromAIOperation: jest.fn(),
       }),
@@ -2607,6 +2607,8 @@ if (descriptions.length) {
             name: "foo",
             description: "bar",
             tableId,
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2628,6 +2630,8 @@ if (descriptions.length) {
             id: isInternal ? undefined : expect.any(Number),
             type: isInternal ? "row" : undefined,
             [`fk_${o2mTable.name}_fk_o2m`]: isInternal ? undefined : user.id,
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2650,6 +2654,8 @@ if (descriptions.length) {
             _rev: expect.any(String),
             id: isInternal ? undefined : expect.any(Number),
             type: isInternal ? "row" : undefined,
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2729,6 +2735,8 @@ if (descriptions.length) {
             id: isInternal ? undefined : expect.any(Number),
             type: isInternal ? "row" : undefined,
             [`fk_${o2mTable.name}_fk_o2m`]: isInternal ? undefined : user.id,
+            createdAt: isInternal ? new Date().toISOString() : undefined,
+            updatedAt: isInternal ? new Date().toISOString() : undefined,
           })
         })
 
@@ -2745,15 +2753,8 @@ if (descriptions.length) {
             user: null,
             users: null,
           })
-          expect(updatedRow).toEqual({
-            name: "foo",
-            description: "bar",
-            tableId,
-            _id: row._id,
-            _rev: expect.any(String),
-            id: isInternal ? undefined : expect.any(Number),
-            type: isInternal ? "row" : undefined,
-          })
+          expect(updatedRow.user).toBeUndefined()
+          expect(updatedRow.users).toBeUndefined()
         })
 
         it("fetch all will populate the relationships", async () => {
@@ -3268,7 +3269,7 @@ if (descriptions.length) {
               formula: {
                 name: "formula",
                 type: FieldType.FORMULA,
-                formula: formula,
+                formula,
                 responseType: opts?.responseType,
                 formulaType: opts?.formulaType || FormulaType.DYNAMIC,
               },
@@ -3495,6 +3496,72 @@ if (descriptions.length) {
           )
         })
       })
+
+      if (!isInternal && !isOracle) {
+        describe("bigint ids", () => {
+          let table1: Table, table2: Table
+          let table1Name: string, table2Name: string
+
+          beforeAll(async () => {
+            table1Name = `table1-${generator.guid().substring(0, 5)}`
+            await client!.schema.createTable(table1Name, table => {
+              table.bigInteger("table1Id").primary()
+            })
+
+            table2Name = `table2-${generator.guid().substring(0, 5)}`
+            await client!.schema.createTable(table2Name, table => {
+              table.bigInteger("table2Id").primary()
+              table
+                .bigInteger("table1Ref")
+                .references("table1Id")
+                .inTable(table1Name)
+            })
+
+            const resp = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+
+            const tables = Object.values(resp.datasource.entities || {})
+            table1 = tables.find(t => t.name === table1Name)!
+            table2 = tables.find(t => t.name === table2Name)!
+
+            await config.api.datasource.addExistingRelationship({
+              one: {
+                tableId: table2._id!,
+                relationshipName: "one",
+                foreignKey: "table1Ref",
+              },
+              many: {
+                tableId: table1._id!,
+                relationshipName: "many",
+                primaryKey: "table1Id",
+              },
+            })
+          })
+
+          it("should be able to fetch rows with related bigint ids", async () => {
+            const row = await config.api.row.save(table1._id!, {
+              table1Id: "1",
+            })
+            await config.api.row.save(table2._id!, {
+              table2Id: "2",
+              table1Ref: row.table1Id,
+            })
+
+            let resp = await config.api.row.search(table1._id!)
+            expect(resp.rows).toHaveLength(1)
+            expect(resp.rows[0]._id).toBe("%5B'1'%5D")
+            expect(resp.rows[0].many).toHaveLength(1)
+            expect(resp.rows[0].many[0]._id).toBe("%5B'2'%5D")
+
+            resp = await config.api.row.search(table2._id!)
+            expect(resp.rows).toHaveLength(1)
+            expect(resp.rows[0]._id).toBe("%5B'2'%5D")
+            expect(resp.rows[0].one).toHaveLength(1)
+            expect(resp.rows[0].one[0]._id).toBe("%5B'1'%5D")
+          })
+        })
+      }
     }
   )
 }

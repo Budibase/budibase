@@ -42,3 +42,14 @@ export interface BuildSchemaFromSourceResponse {
   datasource: Datasource
   errors: Record<string, string>
 }
+
+export type FetchDatasourcesResponse = Datasource[]
+export type FindDatasourcesResponse = Datasource
+
+export interface DeleteDatasourceResponse {
+  message: string
+}
+
+export interface FetchExternalSchemaResponse {
+  schema: string
+}
