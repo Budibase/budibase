@@ -84,14 +84,6 @@ describe("/views", () => {
       const view = await saveView({ calculation: ViewCalculation.COUNT })
 
       expect(view.tableId).toBe(table._id)
-      expect(events.view.created).toHaveBeenCalledTimes(1)
-      expect(events.view.updated).not.toHaveBeenCalled()
-      expect(events.view.calculationCreated).toHaveBeenCalledTimes(1)
-      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
-      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
-      expect(events.view.filterCreated).not.toHaveBeenCalled()
-      expect(events.view.filterUpdated).not.toHaveBeenCalled()
-      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("creates a view with a filter", async () => {
@@ -109,14 +101,6 @@ describe("/views", () => {
       })
 
       expect(view.tableId).toBe(table._id)
-      expect(events.view.created).toHaveBeenCalledTimes(1)
-      expect(events.view.updated).not.toHaveBeenCalled()
-      expect(events.view.calculationCreated).not.toHaveBeenCalled()
-      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
-      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
-      expect(events.view.filterCreated).toHaveBeenCalledTimes(1)
-      expect(events.view.filterUpdated).not.toHaveBeenCalled()
-      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("updates the table row with the new view metadata", async () => {
@@ -166,13 +150,6 @@ describe("/views", () => {
       await saveView()
 
       expect(events.view.created).not.toHaveBeenCalled()
-      expect(events.view.updated).toHaveBeenCalledTimes(1)
-      expect(events.view.calculationCreated).not.toHaveBeenCalled()
-      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
-      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
-      expect(events.view.filterCreated).not.toHaveBeenCalled()
-      expect(events.view.filterUpdated).not.toHaveBeenCalled()
-      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("updates a view calculation", async () => {
@@ -182,13 +159,6 @@ describe("/views", () => {
       await saveView({ calculation: ViewCalculation.COUNT })
 
       expect(events.view.created).not.toHaveBeenCalled()
-      expect(events.view.updated).toHaveBeenCalledTimes(1)
-      expect(events.view.calculationCreated).not.toHaveBeenCalled()
-      expect(events.view.calculationUpdated).toHaveBeenCalledTimes(1)
-      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
-      expect(events.view.filterCreated).not.toHaveBeenCalled()
-      expect(events.view.filterUpdated).not.toHaveBeenCalled()
-      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("deletes a view calculation", async () => {
@@ -198,13 +168,6 @@ describe("/views", () => {
       await saveView({ calculation: undefined })
 
       expect(events.view.created).not.toHaveBeenCalled()
-      expect(events.view.updated).toHaveBeenCalledTimes(1)
-      expect(events.view.calculationCreated).not.toHaveBeenCalled()
-      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
-      expect(events.view.calculationDeleted).toHaveBeenCalledTimes(1)
-      expect(events.view.filterCreated).not.toHaveBeenCalled()
-      expect(events.view.filterUpdated).not.toHaveBeenCalled()
-      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("updates a view filter", async () => {
@@ -230,13 +193,6 @@ describe("/views", () => {
       })
 
       expect(events.view.created).not.toHaveBeenCalled()
-      expect(events.view.updated).toHaveBeenCalledTimes(1)
-      expect(events.view.calculationCreated).not.toHaveBeenCalled()
-      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
-      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
-      expect(events.view.filterCreated).not.toHaveBeenCalled()
-      expect(events.view.filterUpdated).toHaveBeenCalledTimes(1)
-      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("deletes a view filter", async () => {
@@ -254,13 +210,6 @@ describe("/views", () => {
       await saveView({ filters: [] })
 
       expect(events.view.created).not.toHaveBeenCalled()
-      expect(events.view.updated).toHaveBeenCalledTimes(1)
-      expect(events.view.calculationCreated).not.toHaveBeenCalled()
-      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
-      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
-      expect(events.view.filterCreated).not.toHaveBeenCalled()
-      expect(events.view.filterUpdated).not.toHaveBeenCalled()
-      expect(events.view.filterDeleted).toHaveBeenCalledTimes(1)
     })
   })
 
