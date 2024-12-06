@@ -36,3 +36,22 @@ export enum PermissionSource {
   INHERITED = "INHERITED",
   BASE = "BASE",
 }
+
+export interface Permission {
+  type: PermissionType
+  level: PermissionLevel
+}
+
+export interface BuiltinPermission {
+  _id: BuiltinPermissionID
+  name: string
+  permissions: Permission[]
+}
+
+export type BuiltinPermissions = {
+  [key in keyof typeof BuiltinPermissionID]: {
+    _id: (typeof BuiltinPermissionID)[key]
+    name: string
+    permissions: Permission[]
+  }
+}

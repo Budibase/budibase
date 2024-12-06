@@ -27,7 +27,13 @@ import {
   Ctx,
   DocumentType,
   Feature,
+  GetSignedUploadUrlRequest,
+  GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
+  ServeAppResponse,
+  ServeBuilderPreviewResponse,
+  ServeClientLibraryResponse,
+  ToggleBetaFeatureResponse,
   UserCtx,
 } from "@budibase/types"
 import {
@@ -38,7 +44,9 @@ import {
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
 
-export const toggleBetaUiFeature = async function (ctx: Ctx) {
+export const toggleBetaUiFeature = async function (
+  ctx: Ctx<void, ToggleBetaFeatureResponse>
+) {
   const cookieName = `beta:${ctx.params.feature}`
 
   if (ctx.cookies.get(cookieName)) {
@@ -66,13 +74,13 @@ export const toggleBetaUiFeature = async function (ctx: Ctx) {
   }
 }
 
-export const serveBuilder = async function (ctx: Ctx) {
+export const serveBuilder = async function (ctx: Ctx<void, void>) {
   const builderPath = join(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
 }
 
 export const uploadFile = async function (
-  ctx: Ctx<{}, ProcessAttachmentResponse>
+  ctx: Ctx<void, ProcessAttachmentResponse>
 ) {
   const file = ctx.request?.files?.file
   if (!file) {
@@ -144,7 +152,7 @@ const requiresMigration = async (ctx: Ctx) => {
   return latestMigrationApplied !== latestMigration
 }
 
-export const serveApp = async function (ctx: UserCtx) {
+export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   if (ctx.url.includes("apple-touch-icon.png")) {
     ctx.redirect("/builder/bblogo.png")
     return
@@ -249,7 +257,9 @@ export const serveApp = async function (ctx: UserCtx) {
   }
 }
 
-export const serveBuilderPreview = async function (ctx: Ctx) {
+export const serveBuilderPreview = async function (
+  ctx: Ctx<void, ServeBuilderPreviewResponse>
+) {
   const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get<App>(DocumentType.APP_METADATA)
 
@@ -268,7 +278,9 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
   }
 }
 
-export const serveClientLibrary = async function (ctx: Ctx) {
+export const serveClientLibrary = async function (
+  ctx: Ctx<void, ServeClientLibraryResponse>
+) {
   const version = ctx.request.query.version
 
   if (Array.isArray(version)) {
@@ -297,7 +309,9 @@ export const serveClientLibrary = async function (ctx: Ctx) {
   }
 }
 
-export const getSignedUploadURL = async function (ctx: Ctx) {
+export const getSignedUploadURL = async function (
+  ctx: Ctx<GetSignedUploadUrlRequest, GetSignedUploadUrlResponse>
+) {
   // Ensure datasource is valid
   let datasource
   try {
