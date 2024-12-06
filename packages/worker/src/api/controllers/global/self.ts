@@ -10,6 +10,11 @@ import {
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
 import {
+  DevInfo,
+  FetchAPIKeyResponse,
+  GenerateAPIKeyRequest,
+  GenerateAPIKeyResponse,
+  GetGlobalSelfResponse,
   UpdateSelfRequest,
   UpdateSelfResponse,
   User,
@@ -35,22 +40,24 @@ function cleanupDevInfo(info: any) {
   return info
 }
 
-export async function generateAPIKey(ctx: any) {
+export async function generateAPIKey(
+  ctx: UserCtx<GenerateAPIKeyRequest, GenerateAPIKeyResponse>
+) {
   let userId
   let apiKey
   if (env.isTest() && ctx.request.body.userId) {
     userId = ctx.request.body.userId
     apiKey = newTestApiKey()
   } else {
-    userId = ctx.user._id
+    userId = ctx.user._id!
     apiKey = newApiKey()
   }
 
   const db = tenancy.getGlobalDB()
   const id = dbCore.generateDevInfoID(userId)
-  let devInfo
+  let devInfo: DevInfo
   try {
-    devInfo = await db.get<any>(id)
+    devInfo = await db.get<DevInfo>(id)
   } catch (err) {
     devInfo = { _id: id, userId }
   }
@@ -59,9 +66,9 @@ export async function generateAPIKey(ctx: any) {
   ctx.body = cleanupDevInfo(devInfo)
 }
 
-export async function fetchAPIKey(ctx: any) {
+export async function fetchAPIKey(ctx: UserCtx<void, FetchAPIKeyResponse>) {
   const db = tenancy.getGlobalDB()
-  const id = dbCore.generateDevInfoID(ctx.user._id)
+  const id = dbCore.generateDevInfoID(ctx.user._id!)
   let devInfo
   try {
     devInfo = await db.get(id)
@@ -87,11 +94,11 @@ const addSessionAttributesToUser = (ctx: any) => {
   ctx.body.csrfToken = ctx.user.csrfToken
 }
 
-export async function getSelf(ctx: any) {
+export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
   if (!ctx.user) {
     ctx.throw(403, "User not logged in")
   }
-  const userId = ctx.user._id
+  const userId = ctx.user._id!
   ctx.params = {
     id: userId,
   }

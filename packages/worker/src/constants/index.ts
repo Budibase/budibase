@@ -1,4 +1,5 @@
 import { constants } from "@budibase/backend-core"
+import { EmailTemplatePurpose } from "@budibase/types"
 
 export const LOGO_URL =
   "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg"
@@ -17,15 +18,6 @@ export enum ConfigUpload {
 
 export enum TemplateType {
   EMAIL = "email",
-}
-
-export enum EmailTemplatePurpose {
-  CORE = "core",
-  BASE = "base",
-  PASSWORD_RECOVERY = "password_recovery",
-  INVITATION = "invitation",
-  WELCOME = "welcome",
-  CUSTOM = "custom",
 }
 
 export enum TemplateMetadataNames {

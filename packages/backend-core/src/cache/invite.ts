@@ -3,17 +3,9 @@ import { Duration } from "../utils"
 import env from "../environment"
 import { getTenantId } from "../context"
 import * as redis from "../redis/init"
+import { Invite, InviteWithCode } from "@budibase/types"
 
 const TTL_SECONDS = Duration.fromDays(7).toSeconds()
-
-interface Invite {
-  email: string
-  info: any
-}
-
-interface InviteWithCode extends Invite {
-  code: string
-}
 
 /**
  * Given an invite code and invite body, allow the update an existing/valid invite in redis

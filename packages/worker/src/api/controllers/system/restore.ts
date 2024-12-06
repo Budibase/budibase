@@ -1,8 +1,10 @@
 import env from "../../../environment"
-import { BBContext } from "@budibase/types"
+import { SystemRestoreResponse, UserCtx } from "@budibase/types"
 import { cache } from "@budibase/backend-core"
 
-export async function systemRestored(ctx: BBContext) {
+export async function systemRestored(
+  ctx: UserCtx<void, SystemRestoreResponse>
+) {
   if (!env.SELF_HOSTED) {
     ctx.throw(405, "This operation is not allowed in cloud.")
   }

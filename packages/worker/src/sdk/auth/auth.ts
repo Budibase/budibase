@@ -8,11 +8,10 @@ import {
   utils as coreUtils,
   cache,
 } from "@budibase/backend-core"
-import { PlatformLogoutOpts, User } from "@budibase/types"
+import { PlatformLogoutOpts, User, EmailTemplatePurpose } from "@budibase/types"
 import jwt from "jsonwebtoken"
 import * as userSdk from "../users"
 import * as emails from "../../utilities/email"
-import { EmailTemplatePurpose } from "../../constants"
 
 // LOGIN / LOGOUT
 
