@@ -88,7 +88,7 @@ export async function saveEntityMetadata(
   type: string,
   entityId: string,
   metadata: Document
-) {
+): Promise<Document> {
   return updateEntityMetadata(type, entityId, () => {
     return metadata
   })

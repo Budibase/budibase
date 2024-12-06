@@ -9,7 +9,7 @@ import {
   Database,
   INTERNAL_TABLE_SOURCE_ID,
   Table,
-  TableResponse,
+  FindTableResponse,
   TableSourceType,
   TableViewsResponse,
 } from "@budibase/types"
@@ -46,6 +46,7 @@ export async function processTable(table: Table): Promise<Table> {
     const processed: Table = {
       ...table,
       type: "table",
+      primary: ["_id"], // internal tables must always use _id as primary key
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
       sql: true,
@@ -172,7 +173,9 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
   return await processTables(tables)
 }
 
-export async function enrichViewSchemas(table: Table): Promise<TableResponse> {
+export async function enrichViewSchemas(
+  table: Table
+): Promise<FindTableResponse> {
   const views = []
   for (const view of Object.values(table.views ?? [])) {
     if (sdk.views.isV2(view)) {
