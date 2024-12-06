@@ -128,11 +128,7 @@
     allValid = false
 
     if (rows.length > 0) {
-      const response = await API.validateExistingTableImport({
-        rows,
-        tableId,
-      })
-
+      const response = await API.validateExistingTableImport(rows, tableId)
       validation = response.schemaValidation
       invalidColumns = response.invalidColumns
       allValid = response.allValid

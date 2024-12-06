@@ -19,10 +19,7 @@ export const createActions = context => {
   }
 
   const deleteRows = async rows => {
-    await API.deleteRows({
-      tableId: get(datasource).tableId,
-      rows,
-    })
+    await API.deleteRows(get(datasource).tableId, rows)
   }
 
   const isDatasourceValid = datasource => {
@@ -30,8 +27,7 @@ export const createActions = context => {
   }
 
   const getRow = async id => {
-    const res = await API.searchTable({
-      tableId: get(datasource).tableId,
+    const res = await API.searchTable(get(datasource).tableId, {
       limit: 1,
       query: {
         equal: {

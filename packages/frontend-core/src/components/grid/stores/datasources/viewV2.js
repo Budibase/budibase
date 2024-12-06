@@ -24,15 +24,11 @@ export const createActions = context => {
   }
 
   const deleteRows = async rows => {
-    await API.deleteRows({
-      tableId: get(datasource).id,
-      rows,
-    })
+    await API.deleteRows(get(datasource).id, rows)
   }
 
   const getRow = async id => {
-    const res = await API.viewV2.fetch({
-      viewId: get(datasource).id,
+    const res = await API.viewV2.fetch(get(datasource).id, {
       limit: 1,
       query: {
         equal: {

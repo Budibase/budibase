@@ -10,14 +10,11 @@ export function createFlagsStore() {
       set(flags)
     },
     updateFlag: async (flag, value) => {
-      await API.updateFlag({
-        flag,
-        value,
-      })
+      await API.updateFlag(flag, value)
       await actions.fetch()
     },
     toggleUiFeature: async feature => {
-      await API.toggleUiFeature({ value: feature })
+      await API.toggleUiFeature(feature)
     },
   }
 

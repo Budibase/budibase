@@ -113,11 +113,7 @@ export function createAuthStore() {
     },
     login: async creds => {
       const tenantId = get(store).tenantId
-      await API.logIn({
-        username: creds.username,
-        password: creds.password,
-        tenantId,
-      })
+      await API.logIn(tenantId, creds.username, creds.password)
       await actions.getSelf()
     },
     logout: async () => {
@@ -138,18 +134,11 @@ export function createAuthStore() {
     },
     forgotPassword: async email => {
       const tenantId = get(store).tenantId
-      await API.requestForgotPassword({
-        tenantId,
-        email,
-      })
+      await API.requestForgotPassword(tenantId, email)
     },
     resetPassword: async (password, resetCode) => {
       const tenantId = get(store).tenantId
-      await API.resetPassword({
-        tenantId,
-        password,
-        resetCode,
-      })
+      await API.resetPassword(tenantId, password, resetCode)
     },
     generateAPIKey: async () => {
       return API.generateAPIKey()
