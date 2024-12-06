@@ -9,10 +9,25 @@ import {
   App,
   Automation,
   AutomationActionStepId,
-  AutomationResults,
   UserCtx,
   DeleteAutomationResponse,
   FetchAutomationResponse,
+  GetAutomationTriggerDefinitionsResponse,
+  GetAutomationStepDefinitionsResponse,
+  GetAutomationActionDefinitionsResponse,
+  FindAutomationResponse,
+  UpdateAutomationRequest,
+  UpdateAutomationResponse,
+  CreateAutomationRequest,
+  CreateAutomationResponse,
+  SearchAutomationLogsRequest,
+  SearchAutomationLogsResponse,
+  ClearAutomationLogRequest,
+  ClearAutomationLogResponse,
+  TriggerAutomationRequest,
+  TriggerAutomationResponse,
+  TestAutomationRequest,
+  TestAutomationResponse,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
@@ -34,7 +49,7 @@ function getTriggerDefinitions() {
  *************************/
 
 export async function create(
-  ctx: UserCtx<Automation, { message: string; automation: Automation }>
+  ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
   let automation = ctx.request.body
   automation.appId = ctx.appId
@@ -55,7 +70,9 @@ export async function create(
   builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
-export async function update(ctx: UserCtx) {
+export async function update(
+  ctx: UserCtx<UpdateAutomationRequest, UpdateAutomationResponse>
+) {
   let automation = ctx.request.body
   automation.appId = ctx.appId
 
@@ -80,7 +97,7 @@ export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {
   ctx.body = { automations }
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: UserCtx<void, FindAutomationResponse>) {
   ctx.body = await sdk.automations.get(ctx.params.id)
 }
 
@@ -96,11 +113,15 @@ export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
   builderSocket?.emitAutomationDeletion(ctx, automationId)
 }
 
-export async function logSearch(ctx: UserCtx) {
+export async function logSearch(
+  ctx: UserCtx<SearchAutomationLogsRequest, SearchAutomationLogsResponse>
+) {
   ctx.body = await automations.logs.logSearch(ctx.request.body)
 }
 
-export async function clearLogError(ctx: UserCtx) {
+export async function clearLogError(
+  ctx: UserCtx<ClearAutomationLogRequest, ClearAutomationLogResponse>
+) {
   const { automationId, appId } = ctx.request.body
   await context.doInAppContext(appId, async () => {
     const db = context.getProdAppDB()
@@ -119,15 +140,21 @@ export async function clearLogError(ctx: UserCtx) {
   })
 }
 
-export async function getActionList(ctx: UserCtx) {
+export async function getActionList(
+  ctx: UserCtx<void, GetAutomationActionDefinitionsResponse>
+) {
   ctx.body = await getActionDefinitions()
 }
 
-export async function getTriggerList(ctx: UserCtx) {
+export async function getTriggerList(
+  ctx: UserCtx<void, GetAutomationTriggerDefinitionsResponse>
+) {
   ctx.body = getTriggerDefinitions()
 }
 
-export async function getDefinitionList(ctx: UserCtx) {
+export async function getDefinitionList(
+  ctx: UserCtx<void, GetAutomationStepDefinitionsResponse>
+) {
   ctx.body = {
     trigger: getTriggerDefinitions(),
     action: await getActionDefinitions(),
@@ -140,14 +167,16 @@ export async function getDefinitionList(ctx: UserCtx) {
  *                   *
  *********************/
 
-export async function trigger(ctx: UserCtx) {
+export async function trigger(
+  ctx: UserCtx<TriggerAutomationRequest, TriggerAutomationResponse>
+) {
   const db = context.getAppDB()
   let automation = await db.get<Automation>(ctx.params.id)
 
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
   if (hasCollectStep && (await features.isSyncAutomationsEnabled())) {
     try {
-      const response: AutomationResults = await triggers.externalTrigger(
+      const response = await triggers.externalTrigger(
         automation,
         {
           fields: ctx.request.body.fields,
@@ -157,6 +186,10 @@ export async function trigger(ctx: UserCtx) {
         },
         { getResponses: true }
       )
+
+      if (!("steps" in response)) {
+        ctx.throw(400, "Unable to collect response")
+      }
 
       let collectedValue = response.steps.find(
         step => step.stepId === AutomationActionStepId.COLLECT
@@ -185,7 +218,7 @@ export async function trigger(ctx: UserCtx) {
   }
 }
 
-function prepareTestInput(input: any) {
+function prepareTestInput(input: TestAutomationRequest) {
   // prepare the test parameters
   if (input.id && input.row) {
     input.row._id = input.id
@@ -196,7 +229,9 @@ function prepareTestInput(input: any) {
   return input
 }
 
-export async function test(ctx: UserCtx) {
+export async function test(
+  ctx: UserCtx<TestAutomationRequest, TestAutomationResponse>
+) {
   const db = context.getAppDB()
   let automation = await db.get<Automation>(ctx.params.id)
   await setTestFlag(automation._id!)

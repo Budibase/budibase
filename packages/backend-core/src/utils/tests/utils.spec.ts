@@ -5,7 +5,7 @@ import * as db from "../../db"
 import { Header } from "../../constants"
 import { newid } from "../../utils"
 import env from "../../environment"
-import { BBContext } from "@budibase/types"
+import { Ctx } from "@budibase/types"
 
 describe("utils", () => {
   const config = new DBTestConfiguration()
@@ -109,7 +109,7 @@ describe("utils", () => {
   })
 
   describe("isServingBuilder", () => {
-    let ctx: BBContext
+    let ctx: Ctx
 
     const expectResult = (result: boolean) =>
       expect(utils.isServingBuilder(ctx)).toBe(result)
@@ -133,7 +133,7 @@ describe("utils", () => {
   })
 
   describe("isServingBuilderPreview", () => {
-    let ctx: BBContext
+    let ctx: Ctx
 
     const expectResult = (result: boolean) =>
       expect(utils.isServingBuilderPreview(ctx)).toBe(result)
@@ -157,7 +157,7 @@ describe("utils", () => {
   })
 
   describe("isPublicAPIRequest", () => {
-    let ctx: BBContext
+    let ctx: Ctx
 
     const expectResult = (result: boolean) =>
       expect(utils.isPublicApiRequest(ctx)).toBe(result)

@@ -266,12 +266,14 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 // new flag, add it here and use the `fetch` and `get` functions to access it.
 // All of the machinery in this file is to make sure that flags have their
 // default values set correctly and their types flow through the system.
-export const flags = new FlagSet({
+const flagsConfig: Record<FeatureFlag, Flag<any>> = {
   [FeatureFlag.DEFAULT_VALUES]: Flag.boolean(true),
   [FeatureFlag.AUTOMATION_BRANCHING]: Flag.boolean(true),
   [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(true),
   [FeatureFlag.BUDIBASE_AI]: Flag.boolean(true),
-})
+  [FeatureFlag.USE_ZOD_VALIDATOR]: Flag.boolean(env.isDev()),
+}
+export const flags = new FlagSet(flagsConfig)
 
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : T
 export type FeatureFlags = UnwrapPromise<ReturnType<typeof flags.fetch>>
