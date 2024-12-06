@@ -10,7 +10,6 @@ import {
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
 import {
-  Ctx,
   DevInfo,
   FetchAPIKeyResponse,
   GenerateAPIKeyRequest,

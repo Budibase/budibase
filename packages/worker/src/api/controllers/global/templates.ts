@@ -14,8 +14,8 @@ import {
   FindGlobalTemplateResponse,
   SaveGlobalTemplateRequest,
   SaveGlobalTemplateResponse,
-  TemplateBinding,
-  TemplateDefinition,
+  GlobalTemplateBinding,
+  GlobalTemplateDefinition,
   UserCtx,
 } from "@budibase/types"
 
@@ -41,8 +41,8 @@ export async function save(
 export async function definitions(
   ctx: UserCtx<void, FetchGlobalTemplateDefinitionResponse>
 ) {
-  const bindings: Record<string, TemplateBinding[]> = {}
-  const info: Record<string, TemplateDefinition> = {}
+  const bindings: Record<string, GlobalTemplateBinding[]> = {}
+  const info: Record<string, GlobalTemplateDefinition> = {}
   for (let template of TemplateMetadata.email) {
     bindings[template.purpose] = template.bindings
     info[template.purpose] = {
