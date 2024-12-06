@@ -6,21 +6,21 @@ import {
 import { getTemplateByID, getTemplates } from "../../../constants/templates"
 import { tenancy, db as dbCore } from "@budibase/backend-core"
 import {
-  DeleteTemplateResponse,
-  FetchTemplateByOwnerIDResponse,
-  FetchTemplateByTypeResponse,
-  FetchTemplateDefinitionResponse,
-  FetchTemplateResponse,
-  FindTemplateResponse,
-  SaveTemplateRequest,
-  SaveTemplateResponse,
+  DeleteGlobalTemplateResponse,
+  FetchGlobalTemplateByOwnerIDResponse,
+  FetchGlobalTemplateByTypeResponse,
+  FetchGlobalTemplateDefinitionResponse,
+  FetchGlobalTemplateResponse,
+  FindGlobalTemplateResponse,
+  SaveGlobalTemplateRequest,
+  SaveGlobalTemplateResponse,
   TemplateBinding,
   TemplateDefinition,
   UserCtx,
 } from "@budibase/types"
 
 export async function save(
-  ctx: UserCtx<SaveTemplateRequest, SaveTemplateResponse>
+  ctx: UserCtx<SaveGlobalTemplateRequest, SaveGlobalTemplateResponse>
 ) {
   const db = tenancy.getGlobalDB()
   let template = ctx.request.body
@@ -39,7 +39,7 @@ export async function save(
 }
 
 export async function definitions(
-  ctx: UserCtx<void, FetchTemplateDefinitionResponse>
+  ctx: UserCtx<void, FetchGlobalTemplateDefinitionResponse>
 ) {
   const bindings: Record<string, TemplateBinding[]> = {}
   const info: Record<string, TemplateDefinition> = {}
@@ -61,12 +61,12 @@ export async function definitions(
   }
 }
 
-export async function fetch(ctx: UserCtx<void, FetchTemplateResponse>) {
+export async function fetch(ctx: UserCtx<void, FetchGlobalTemplateResponse>) {
   ctx.body = await getTemplates()
 }
 
 export async function fetchByType(
-  ctx: UserCtx<void, FetchTemplateByTypeResponse>
+  ctx: UserCtx<void, FetchGlobalTemplateByTypeResponse>
 ) {
   ctx.body = await getTemplates({
     type: ctx.params.type,
@@ -74,7 +74,7 @@ export async function fetchByType(
 }
 
 export async function fetchByOwner(
-  ctx: UserCtx<void, FetchTemplateByOwnerIDResponse>
+  ctx: UserCtx<void, FetchGlobalTemplateByOwnerIDResponse>
 ) {
   // @ts-ignore
   ctx.body = await getTemplates({
@@ -82,11 +82,13 @@ export async function fetchByOwner(
   })
 }
 
-export async function find(ctx: UserCtx<void, FindTemplateResponse>) {
+export async function find(ctx: UserCtx<void, FindGlobalTemplateResponse>) {
   ctx.body = await getTemplateByID(ctx.params.id)
 }
 
-export async function destroy(ctx: UserCtx<void, DeleteTemplateResponse>) {
+export async function destroy(
+  ctx: UserCtx<void, DeleteGlobalTemplateResponse>
+) {
   const db = tenancy.getGlobalDB()
   await db.remove(ctx.params.id, ctx.params.rev)
   ctx.body = { message: `Template ${ctx.params.id} deleted.` }
