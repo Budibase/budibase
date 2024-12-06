@@ -2,7 +2,7 @@ import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
-import knex from "knex"
+import knex, { Knex } from "knex"
 import { POSTGRES_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>
@@ -51,7 +51,10 @@ export async function getDatasource(): Promise<Datasource> {
   return datasource
 }
 
-export async function knexClient(ds: Datasource) {
+export async function knexClient(
+  ds: Datasource,
+  opts?: Knex.Config
+): Promise<Knex> {
   if (!ds.config) {
     throw new Error("Datasource config is missing")
   }
@@ -62,5 +65,6 @@ export async function knexClient(ds: Datasource) {
   return knex({
     client: "pg",
     connection: ds.config,
+    ...opts,
   })
 }

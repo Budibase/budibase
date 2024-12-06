@@ -1,9 +1,5 @@
 {
-  "endpoint": {
-    "datasourceId": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81",
-    "entityId": "tasks",
-    "operation": "READ"
-  },
+  "operation": "READ",
   "resource": {
     "fields": [
       "a.executorid",
@@ -17,10 +13,7 @@
   },
   "filters": {
     "oneOf": {
-      "taskid": [
-        1,
-        2
-      ]
+      "taskid": [1, 2]
     }
   },
   "relationships": [
@@ -42,78 +35,74 @@
   "extra": {
     "idFilter": {}
   },
-  "meta": {
-    "table": {
-      "type": "table",
-      "_id": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81__tasks",
-      "primary": [
-        "taskid"
-      ],
-      "name": "tasks",
-      "schema": {
-        "executorid": {
-          "type": "number",
-          "externalType": "integer",
-          "autocolumn": false,
-          "name": "executorid",
-          "constraints": {
-            "presence": false
-          }
-        },
-        "taskname": {
-          "type": "string",
-          "externalType": "character varying",
-          "autocolumn": false,
-          "name": "taskname",
-          "constraints": {
-            "presence": false
-          }
-        },
-        "taskid": {
-          "type": "number",
-          "externalType": "integer",
-          "autocolumn": true,
-          "name": "taskid",
-          "constraints": {
-            "presence": false
-          }
-        },
-        "completed": {
-          "type": "boolean",
-          "externalType": "boolean",
-          "autocolumn": false,
-          "name": "completed",
-          "constraints": {
-            "presence": false
-          }
-        },
-        "qaid": {
-          "type": "number",
-          "externalType": "integer",
-          "autocolumn": false,
-          "name": "qaid",
-          "constraints": {
-            "presence": false
-          }
-        },
-        "products": {
-          "tableId": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81__products",
-          "name": "products",
-          "relationshipType": "many-to-many",
-          "through": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81__products_tasks",
-          "type": "link",
-          "_id": "c3b91d00cd36c4cc1a347794725b9adbd",
-          "fieldName": "productid",
-          "throughFrom": "productid",
-          "throughTo": "taskid"
+  "table": {
+    "type": "table",
+    "_id": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81__tasks",
+    "primary": ["taskid"],
+    "name": "tasks",
+    "schema": {
+      "executorid": {
+        "type": "number",
+        "externalType": "integer",
+        "autocolumn": false,
+        "name": "executorid",
+        "constraints": {
+          "presence": false
         }
       },
-      "sourceId": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81",
-      "sourceType": "external",
-      "primaryDisplay": "taskname",
-      "sql": true,
-      "views": {}
-    }
+      "taskname": {
+        "type": "string",
+        "externalType": "character varying",
+        "autocolumn": false,
+        "name": "taskname",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "taskid": {
+        "type": "number",
+        "externalType": "integer",
+        "autocolumn": true,
+        "name": "taskid",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "completed": {
+        "type": "boolean",
+        "externalType": "boolean",
+        "autocolumn": false,
+        "name": "completed",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "qaid": {
+        "type": "number",
+        "externalType": "integer",
+        "autocolumn": false,
+        "name": "qaid",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "products": {
+        "tableId": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81__products",
+        "name": "products",
+        "relationshipType": "many-to-many",
+        "through": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81__products_tasks",
+        "type": "link",
+        "_id": "c3b91d00cd36c4cc1a347794725b9adbd",
+        "fieldName": "productid",
+        "throughFrom": "productid",
+        "throughTo": "taskid"
+      }
+    },
+    "sourceId": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81",
+    "sourceType": "external",
+    "primaryDisplay": "taskname",
+    "sql": true,
+    "views": {}
   },
   "tableAliases": {
     "tasks": "a",
