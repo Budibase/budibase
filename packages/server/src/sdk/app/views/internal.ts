@@ -76,7 +76,7 @@ export async function update(
   delete table.views[existingView.name]
   table.views[view.name] = view
   await db.put(table)
-  return { view, existingView }
+  return { view, existingView } as { view: ViewV2; existingView: ViewV2 }
 }
 
 export async function remove(viewId: string): Promise<ViewV2> {

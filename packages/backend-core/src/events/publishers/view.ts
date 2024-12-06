@@ -30,7 +30,6 @@ async function created(view: ViewV2, timestamp?: string | number) {
 }
 
 async function updated(newView: ViewV2) {
-  // // check whether any of the fields are different
   let viewJoins = 0
   for (const key in newView.schema) {
     if (newView.schema[key]?.columns) {
