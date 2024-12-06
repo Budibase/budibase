@@ -1,5 +1,5 @@
-import { Role, RoleUIMetadata } from "../../documents"
-import { PermissionLevel, BuiltinPermissionID } from "../../sdk"
+import { Role, RoleUIMetadata } from "../../../documents"
+import { PermissionLevel, BuiltinPermissionID } from "../../../sdk"
 
 export interface SaveRoleRequest {
   _id?: string
@@ -18,7 +18,7 @@ export interface FindRoleResponse extends Role {}
 
 export type FetchRolesResponse = Role[]
 
-export interface DestroyRoleResponse {
+export interface DeleteRoleResponse {
   message: string
 }
 
