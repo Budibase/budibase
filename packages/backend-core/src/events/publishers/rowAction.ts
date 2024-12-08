@@ -5,7 +5,7 @@ async function created(
   rowAction: RowActionCreatedEvent,
   timestamp?: string | number
 ) {
-  await publishEvent(Event.TABLE_CREATED, rowAction, timestamp)
+  await publishEvent(Event.ROW_ACTION_CREATED, rowAction, timestamp)
 }
 
 export default {

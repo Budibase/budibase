@@ -42,7 +42,7 @@ import {
 } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { db, roles, context } from "@budibase/backend-core"
+import { db, roles, context, events } from "@budibase/backend-core"
 
 const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
 
@@ -129,6 +129,7 @@ if (descriptions.length) {
               id: expect.stringMatching(new RegExp(`${table._id!}_`)),
               version: 2,
             })
+            expect(events.view.created).toHaveBeenCalledTimes(1)
           })
 
           it("can persist views with all fields", async () => {
@@ -195,6 +196,7 @@ if (descriptions.length) {
             }
 
             expect(res).toEqual(expected)
+            expect(events.view.created).toHaveBeenCalledTimes(1)
           })
 
           it("can create a view with just a query field, no queryUI, for backwards compatibility", async () => {
@@ -224,6 +226,7 @@ if (descriptions.length) {
               },
             }
             const res = await config.api.viewV2.create(newView)
+            expect(events.view.created).toHaveBeenCalledTimes(1)
 
             const expected: ViewV2 = {
               ...newView,
@@ -283,6 +286,7 @@ if (descriptions.length) {
             }
 
             const createdView = await config.api.viewV2.create(newView)
+            expect(events.view.created).toHaveBeenCalledTimes(1)
 
             expect(createdView).toEqual({
               ...newView,
@@ -990,6 +994,7 @@ if (descriptions.length) {
             expect((await config.api.table.get(tableId)).views).toEqual({
               [view.name]: expected,
             })
+            expect(events.view.updated).toHaveBeenCalledTimes(1)
           })
 
           it("can update all fields", async () => {
@@ -1621,6 +1626,7 @@ if (descriptions.length) {
                 field: "age",
               }
               await config.api.viewV2.update(view)
+              expect(events.view.calculationCreated).toHaveBeenCalledTimes(1)
 
               const { rows } = await config.api.row.search(view.id)
               expect(rows).toHaveLength(2)
@@ -2154,6 +2160,7 @@ if (descriptions.length) {
                   }),
                 })
               )
+              expect(events.view.viewJoinCreated).not.toBeCalled()
             })
 
             it("does not rename columns with the same name but from other tables", async () => {

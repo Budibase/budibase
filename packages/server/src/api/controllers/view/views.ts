@@ -65,31 +65,6 @@ export async function save(ctx: Ctx) {
   builderSocket?.emitTableUpdate(ctx, table)
 }
 
-export async function filterEvents(existingView: View, newView: View) {
-  const hasExistingFilters = !!(
-    existingView &&
-    existingView.filters &&
-    existingView.filters.length
-  )
-  const hasNewFilters = !!(newView && newView.filters && newView.filters.length)
-
-  if (hasExistingFilters && !hasNewFilters) {
-    await events.view.filterDeleted(newView)
-  }
-
-  if (!hasExistingFilters && hasNewFilters) {
-    await events.view.filterCreated(newView)
-  }
-
-  if (
-    hasExistingFilters &&
-    hasNewFilters &&
-    !isEqual(existingView.filters, newView.filters)
-  ) {
-    await events.view.filterUpdated(newView)
-  }
-}
-
 export async function destroy(ctx: Ctx) {
   const db = context.getAppDB()
   const viewName = decodeURIComponent(ctx.params.viewName)
