@@ -1,39 +1,39 @@
 import {
+  ArrayOperator,
+  BasicOperator,
+  BBReferenceFieldSubType,
+  CalculationType,
   CreateViewRequest,
   Datasource,
+  EmptyFilterOption,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  JsonFieldSubType,
+  JsonTypes,
+  LegacyFilter,
+  NumericCalculationFieldMetadata,
   PermissionLevel,
   QuotaUsageType,
+  RelationshipType,
+  RenameColumn,
   Row,
   SaveTableRequest,
+  SearchFilters,
+  SearchResponse,
+  SearchViewRowRequest,
   SortOrder,
   SortType,
   StaticQuotaName,
   Table,
+  TableSchema,
   TableSourceType,
+  UILogicalOperator,
+  UISearchFilter,
   UpdateViewRequest,
   ViewV2,
-  SearchResponse,
-  BasicOperator,
-  CalculationType,
-  RelationshipType,
-  TableSchema,
-  RenameColumn,
-  BBReferenceFieldSubType,
-  NumericCalculationFieldMetadata,
   ViewV2Schema,
   ViewV2Type,
-  JsonTypes,
-  EmptyFilterOption,
-  JsonFieldSubType,
-  UISearchFilter,
-  LegacyFilter,
-  SearchViewRowRequest,
-  ArrayOperator,
-  UILogicalOperator,
-  SearchFilters,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import {
@@ -42,7 +42,7 @@ import {
 } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { db, roles, context, events } from "@budibase/backend-core"
+import { context, db, events, roles } from "@budibase/backend-core"
 
 const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
 
@@ -1360,6 +1360,8 @@ if (descriptions.length) {
               },
             })
 
+            expect(events.view.filterCreated).toHaveBeenCalledTimes(1)
+
             updatedView = await config.api.viewV2.get(view.id)
             expected = {
               onEmptyFilter: EmptyFilterOption.RETURN_ALL,
@@ -2160,7 +2162,7 @@ if (descriptions.length) {
                   }),
                 })
               )
-              expect(events.view.viewJoinCreated).not.toBeCalled()
+              expect(events.view.viewJoinCreated).not.toHaveBeenCalled()
             })
 
             it("does not rename columns with the same name but from other tables", async () => {
@@ -2231,6 +2233,36 @@ if (descriptions.length) {
                   }),
                 })
               )
+            })
+
+            it("handles events for changing column visibility from default false", async () => {
+              let auxTable = await createAuxTable()
+              let aux2Table = await createAuxTable()
+
+              const table = await createMainTable([
+                { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+                { name: "aux2", tableId: aux2Table._id!, fk: "fk_aux2" },
+              ])
+
+              const view = await createView(table._id!, {
+                aux: {
+                  visible: true,
+                  columns: {
+                    name: { visible: false, readonly: true },
+                  },
+                },
+                aux2: {
+                  visible: true,
+                  columns: {
+                    name: { visible: false, readonly: true },
+                  },
+                },
+              })
+
+              // @ts-expect-error column exists above
+              view.schema.aux2.columns.name.visible = true
+              await config.api.viewV2.update(view)
+              expect(events.view.viewJoinCreated).toHaveBeenCalledTimes(1)
             })
 
             it("updates all views references", async () => {

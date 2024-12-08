@@ -16,14 +16,10 @@ import {
   CountCalculationFieldMetadata,
   CreateViewResponse,
   UpdateViewResponse,
-  View,
-  Event,
 } from "@budibase/types"
 import { events } from "@budibase/backend-core"
 import { builderSocket, gridSocket } from "../../../websockets"
 import { helpers } from "@budibase/shared-core"
-import isEqual from "lodash/isEqual"
-import { publishEvent } from "@budibase/backend-core/src/events"
 
 function stripUnknownFields(
   field: ViewFieldMetadata
@@ -168,48 +164,51 @@ export async function create(ctx: Ctx<CreateViewRequest, CreateViewResponse>) {
   gridSocket?.emitViewUpdate(ctx, result)
 }
 
+async function handleViewFilterEvents(existingView: ViewV2, view: ViewV2) {
+  const filterGroups = view.queryUI?.groups?.length || 0
+  const properties = { filterGroups, tableId: view.tableId }
+  if (!existingView?.queryUI) {
+    await events.view.filterCreated(properties)
+  } else {
+    if (
+      filterGroups >
+      ((existingView && existingView?.queryUI?.groups?.length) || 0)
+    ) {
+      await events.view.filterUpdated(properties)
+    }
+  }
+}
+
 async function handleViewEvents(existingView: ViewV2, view: ViewV2) {
   // Grouped filters
   if (view.queryUI?.groups) {
-    const filterGroups = view.queryUI?.groups?.length || 0
-    const properties = { filterGroups, tableId: view.tableId }
-    if (!existingView?.queryUI) {
-      await publishEvent(Event.VIEW_FILTER_CREATED, properties)
-      await events.view.filterCreated(properties)
-    } else {
-      if (
-        filterGroups >
-        ((existingView && existingView?.queryUI?.groups?.length) || 0)
-      ) {
-        await events.view.filterUpdated(properties)
-      }
-    }
+    await handleViewFilterEvents(existingView, view)
   }
 
   // if new columns in the view
   for (const key in view.schema) {
     if (!existingView?.schema?.[key]) {
-      const newColumn = view.schema[key]
-
       // view calculations
       // @ts-expect-error non calculation types just won't have the calculationType field
-      const calculationType = newColumn.calculationType
+      const calculationType = view.schema[key].calculationType
       if (calculationType) {
-        // Send the event
         await events.view.calculationCreated({
           calculationType,
           tableId: view.tableId,
         })
       }
+    }
 
-      // view joins
-      if (newColumn.columns) {
-        for (const column in newColumn?.columns) {
-          // if the new column is visible and it wasn't before
-          if (!existingView?.schema?.[key].columns?.[column].visible) {
-            // new view join exposing a column
-            await events.view.viewJoinCreated({ tableId: view.tableId })
-          }
+    // view joins
+    if (view.schema[key].columns) {
+      for (const column in view.schema[key]?.columns) {
+        // if the new column is visible and it wasn't before
+        if (
+          !existingView?.schema?.[key].columns?.[column].visible &&
+          view.schema?.[key].columns?.[column].visible
+        ) {
+          // new view join exposing a column
+          await events.view.viewJoinCreated({ tableId: view.tableId })
         }
       }
     }

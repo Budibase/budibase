@@ -247,6 +247,7 @@ if (descriptions.length) {
                   },
                 },
               },
+              primary: ["_id"],
               views: {},
               sql: true,
             })
