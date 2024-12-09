@@ -18,7 +18,8 @@
       "@budibase/shared-core": ["./packages/shared-core/src"],
       "@budibase/pro": ["./packages/pro/src"],
       "@budibase/string-templates": ["./packages/string-templates/src"],
-      "@budibase/string-templates/*": ["./packages/string-templates/*"]
+      "@budibase/string-templates/*": ["./packages/string-templates/*"],
+      "@budibase/frontend-core": ["./packages/frontend-core/src"]
     }
   },
   "exclude": []
