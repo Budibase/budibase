@@ -24,7 +24,7 @@
     "build": "node ./scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "build:oss": "node ./scripts/build.js",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "check:dependencies": "node ../../scripts/depcheck.js",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
@@ -77,7 +77,6 @@
     "@types/cookies": "0.7.8",
     "@types/jest": "29.5.5",
     "@types/lodash": "4.14.200",
-    "@types/node": "^22.9.0",
     "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "6.4.2",
     "@types/redlock": "4.0.7",
