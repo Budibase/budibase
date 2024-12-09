@@ -1,5 +1,9 @@
 {
   "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "allowArbitraryExtensions": true,
+    "isolatedModules": false
+  },
   "include": ["src/**/*"],
   "exclude": [
     "node_modules",
