@@ -187,29 +187,22 @@ async function handleViewEvents(existingView: ViewV2, view: ViewV2) {
 
   // if new columns in the view
   for (const key in view.schema) {
-    if (!existingView?.schema?.[key]) {
-      // view calculations
-      // @ts-expect-error non calculation types just won't have the calculationType field
-      const calculationType = view.schema[key].calculationType
-      if (calculationType) {
-        await events.view.calculationCreated({
-          calculationType,
-          tableId: view.tableId,
-        })
-      }
+    if ("calculationType" in view.schema[key] && !existingView?.schema?.[key]) {
+      await events.view.calculationCreated({
+        calculationType: view.schema[key].calculationType,
+        tableId: view.tableId,
+      })
     }
 
     // view joins
-    if (view.schema[key].columns) {
-      for (const column in view.schema[key]?.columns) {
-        // if the new column is visible and it wasn't before
-        if (
-          !existingView?.schema?.[key].columns?.[column].visible &&
-          view.schema?.[key].columns?.[column].visible
-        ) {
-          // new view join exposing a column
-          await events.view.viewJoinCreated({ tableId: view.tableId })
-        }
+    for (const column in view.schema[key]?.columns ?? []) {
+      // if the new column is visible and it wasn't before
+      if (
+        !existingView?.schema?.[key].columns?.[column].visible &&
+        view.schema?.[key].columns?.[column].visible
+      ) {
+        // new view join exposing a column
+        await events.view.viewJoinCreated({ tableId: view.tableId })
       }
     }
   }

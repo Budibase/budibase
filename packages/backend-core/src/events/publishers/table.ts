@@ -29,7 +29,7 @@ async function updated(oldTable: Table, newTable: Table) {
   for (const key in newTable.schema) {
     if (!oldTable.schema[key]) {
       const newColumn = newTable.schema[key]
-      if ("default" in newColumn) {
+      if ("default" in newColumn && newColumn.default != null) {
         defaultValues = true
       }
       if (newColumn.type === FieldType.AI) {
