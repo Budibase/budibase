@@ -34,6 +34,7 @@
     { value: "Right", barIcon: "TextAlignRight" },
   ]
   const widthOptions = ["Max", "Large", "Medium", "Small"]
+  const logoSizeOptions = ["18", "24", "36", "48", "72", "96"]
 
   $: bindings = getBindableProperties(
     $selectedScreen,
@@ -121,15 +122,25 @@
               updateOnChange: false,
             }}
           />
-          <PropertyControl
-            label="Text align"
-            control={BarButtonList}
-            onChange={align => update("textAlign", align)}
-            value={$nav.textAlign}
-            props={{
-              options: alignmentOptions,
-            }}
-          />
+          {#if (!$nav.textBelow && $nav.navigation === "Left") || $nav.navigation === "Top"}
+            <PropertyControl
+              label="Text align"
+              control={BarButtonList}
+              onChange={align => update("textAlign", align)}
+              value={$nav.textAlign}
+              props={{
+                options: alignmentOptions,
+              }}
+            />
+          {/if}
+          {#if $nav.navigation !== "Top"}
+            <PropertyControl
+              label="Title below logo"
+              control={Checkbox}
+              onChange={textBelow => update("textBelow", textBelow)}
+              value={$nav.textBelow}
+            />
+          {/if}
         {/if}
         <PropertyControl
           label="Background"
@@ -169,6 +180,18 @@
             {bindings}
             props={{
               updateOnChange: false,
+            }}
+          />
+          <PropertyControl
+            label="Logo size (px)"
+            control={DrawerBindableCombobox}
+            value={$nav.logoSize}
+            onChange={logoSize => update("logoSize", logoSize)}
+            {bindings}
+            props={{
+              updateOnChange: true,
+              options: logoSizeOptions,
+              appendBindingsAsOptions: false,
             }}
           />
           <PropertyControl

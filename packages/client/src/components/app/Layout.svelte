@@ -34,8 +34,10 @@
   export let navWidth
   export let pageWidth
   export let logoLinkUrl
+  export let logoSize
   export let openLogoLinkInNewTab
   export let textAlign
+  export let textBelow
   export let embedded = false
 
   const NavigationClasses = {
@@ -196,6 +198,25 @@
     return url
   }
 
+  const getSanitizedLogoSize = logoSize => {
+    let sanitizedSize = 36
+
+    try {
+      const result = Function('"use strict"; return (' + logoSize + ")")()
+      if (typeof result === "number" && isFinite(result)) {
+        sanitizedSize = result
+      }
+    } catch (error) {
+      sanitizedSize = 36
+    }
+
+    if (sanitizedSize > 165) {
+      sanitizedSize = 165
+    }
+
+    return sanitizedSize + "px"
+  }
+
   const handleClickLink = () => {
     mobileOpen = false
     sidePanelStore.actions.close()
@@ -242,28 +263,60 @@
                   />
                 </div>
               {/if}
-              <div class="logo">
-                {#if !hideLogo}
-                  {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
-                    <a
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                      use:linkable
-                    >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                    </a>
-                  {:else if logoLinkUrl}
-                    <a
-                      target={openLogoLinkInNewTab ? "_blank" : "_self"}
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                    >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                    </a>
-                  {:else}
-                    <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+              <div
+                class="logo {navigation === 'Left'
+                  ? 'left-nav'
+                  : ''} {navigation === 'Left' && textBelow
+                  ? 'text-below-left-nav'
+                  : ''}"
+                style={navigation === "Top" && hideLogo ? "column-gap: 0;" : ""}
+              >
+                <div>
+                  {#if !hideLogo}
+                    {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
+                      <a
+                        href={getSanitizedUrl(
+                          logoLinkUrl,
+                          openLogoLinkInNewTab
+                        )}
+                        use:linkable
+                      >
+                        <img
+                          src={logoUrl || "/builder/bblogo.png"}
+                          alt={title}
+                          class="logo-image"
+                          style="--logoSize: {getSanitizedLogoSize(logoSize)}"
+                        />
+                      </a>
+                    {:else if logoLinkUrl}
+                      <a
+                        target={openLogoLinkInNewTab ? "_blank" : "_self"}
+                        href={getSanitizedUrl(
+                          logoLinkUrl,
+                          openLogoLinkInNewTab
+                        )}
+                      >
+                        <img
+                          src={logoUrl || "/builder/bblogo.png"}
+                          alt={title}
+                          class="logo-image"
+                          style="--logoSize: {getSanitizedLogoSize(logoSize)}"
+                        />
+                      </a>
+                    {:else}
+                      <img
+                        src={logoUrl || "/builder/bblogo.png"}
+                        alt={title}
+                        class="logo-image"
+                        style="--logoSize: {getSanitizedLogoSize(logoSize)}"
+                      />
+                    {/if}
                   {/if}
-                {/if}
+                </div>
                 {#if !hideTitle && title}
-                  <Heading size="S" {textAlign}>{title}</Heading>
+                  <div id="heading">
+                    <Heading size="S" {textAlign}>{title}</Heading>
+                  </div>
                 {/if}
               </div>
               {#if !embedded}
@@ -517,20 +570,33 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: center;
     gap: var(--spacing-m);
     flex: 1 1 auto;
+    align-items: center;
   }
-  .logo img {
-    height: 36px;
+  .logo-image {
+    max-width: var(--logoSize);
+    max-height: var(--logoSize);
   }
   .logo :global(h1) {
     font-weight: 600;
     flex: 1 1 auto;
-    width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 100%;
+  }
+  #heading {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden;
+    max-width: 100%;
+  }
+  .left-nav {
+    max-width: 165px;
+  }
+  .text-below-left-nav {
+    flex-direction: column !important; /* Over-rides row setting in .logo*/
   }
   .portal {
     display: grid;
