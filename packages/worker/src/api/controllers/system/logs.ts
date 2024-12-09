@@ -1,7 +1,7 @@
-import { UserCtx } from "@budibase/types"
+import { GetLogResponse, UserCtx } from "@budibase/types"
 import { installation, logging } from "@budibase/backend-core"
 
-export async function getLogs(ctx: UserCtx) {
+export async function getLogs(ctx: UserCtx<void, GetLogResponse>) {
   const logReadStream = logging.system.getLogReadStream()
 
   const { installId } = await installation.getInstall()

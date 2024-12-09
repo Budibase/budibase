@@ -15,8 +15,11 @@ import {
   AIConfig,
   AIInnerConfig,
   Config,
+  ConfigChecklistResponse,
   ConfigType,
   Ctx,
+  DeleteConfigResponse,
+  FindConfigResponse,
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
   GoogleInnerConfig,
@@ -29,11 +32,14 @@ import {
   OIDCLogosConfig,
   PASSWORD_REPLACEMENT,
   QuotaUsageType,
+  SaveConfigRequest,
+  SaveConfigResponse,
   SettingsBrandingConfig,
   SettingsInnerConfig,
   SSOConfig,
   SSOConfigType,
   StaticQuotaName,
+  UploadConfigFileResponse,
   UserCtx,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
@@ -225,7 +231,9 @@ export async function verifyAIConfig(
   }
 }
 
-export async function save(ctx: UserCtx<Config>) {
+export async function save(
+  ctx: UserCtx<SaveConfigRequest, SaveConfigResponse>
+) {
   const body = ctx.request.body
   const type = body.type
   const config = body.config
@@ -337,7 +345,7 @@ function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
   )
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: UserCtx<void, FindConfigResponse>) {
   try {
     // Find the config with the most granular scope based on context
     const type = ctx.params.type
@@ -473,7 +481,7 @@ export async function publicSettings(
   }
 }
 
-export async function upload(ctx: UserCtx) {
+export async function upload(ctx: UserCtx<void, UploadConfigFileResponse>) {
   if (ctx.request.files == null || Array.isArray(ctx.request.files.file)) {
     ctx.throw(400, "One file must be uploaded.")
   }
@@ -518,7 +526,7 @@ export async function upload(ctx: UserCtx) {
   }
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: UserCtx<void, DeleteConfigResponse>) {
   const db = tenancy.getGlobalDB()
   const { id, rev } = ctx.params
   try {
@@ -537,14 +545,14 @@ export async function destroy(ctx: UserCtx) {
   }
 }
 
-export async function configChecklist(ctx: Ctx) {
+export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
   const tenantId = tenancy.getTenantId()
 
   try {
     ctx.body = await cache.withCache(
       cache.CacheKey.CHECKLIST,
       env.CHECKLIST_CACHE_TTL,
-      async () => {
+      async (): Promise<ConfigChecklistResponse> => {
         let apps = []
         if (!env.MULTI_TENANCY || tenantId) {
           // Apps exist

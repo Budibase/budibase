@@ -56,7 +56,10 @@
     .map(table => format.table(table, $datasources.list))
     .sort((a, b) => {
       // sort tables alphabetically, grouped by datasource
-      const dsComparison = a.datasourceName.localeCompare(b.datasourceName)
+      const dsA = a.datasourceName ?? ""
+      const dsB = b.datasourceName ?? ""
+
+      const dsComparison = dsA.localeCompare(dsB)
       if (dsComparison !== 0) {
         return dsComparison
       }
