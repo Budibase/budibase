@@ -2133,7 +2133,7 @@ if (descriptions.length) {
                     // repeat the search many times to check the first row is always the same
                     let bookmark: string | number | undefined,
                       hasNextPage: boolean | undefined = true,
-                      rowCount: number = 0
+                      rowCount= 0
                     do {
                       const response = await config.api.row.search(
                         tableOrViewId,

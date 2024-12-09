@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-concat */
 import { derived } from "svelte/store"
 import { appStore } from "./app"
 import { builderStore } from "./builder"
