@@ -9,6 +9,7 @@
     "@types/node": "20.10.0",
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/parser": "8.17.0",
+    "@vitest/eslint-plugin": "^1.1.14",
     "cross-spawn": "7.0.6",
     "depcheck": "^1.4.7",
     "esbuild": "^0.18.17",
