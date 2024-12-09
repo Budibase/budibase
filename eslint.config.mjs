@@ -6,6 +6,7 @@ import tsParser from "@typescript-eslint/parser"
 import eslintPluginJest from "eslint-plugin-jest"
 import eslintPluginSvelte from "eslint-plugin-svelte"
 import eslintPluginLocalRules from "eslint-plugin-local-rules"
+import eslintPluginVitest from "@vitest/eslint-plugin"
 
 import eslint from "@eslint/js"
 import tseslint from "typescript-eslint"
@@ -17,17 +18,10 @@ export default [
       "**/node_modules",
       "**/dist",
       "**/public",
-      "**/*.spec.js",
       "**/bundle.js",
-      "**/node_modules",
-      "**/public",
-      "**/dist",
+      "**/coverage",
       "packages/server/builder",
-      "packages/server/coverage",
-      "packages/worker/coverage",
-      "packages/backend-core/coverage",
       "packages/server/client",
-      "packages/server/coverage",
       "packages/builder/.routify",
       "packages/sdk/sdk",
       "**/*.ivm.bundle.js",
@@ -102,18 +96,12 @@ export default [
       },
 
       rules: {
-        "prefer-spread": "off",
-        "no-unused-vars": "off",
-        "prefer-rest-params": "off",
         "local-rules/no-barrel-imports": "error",
         "local-rules/no-budibase-imports": "error",
         "local-rules/no-console-error": "error",
 
-        "@typescript-eslint/no-this-alias": "off",
-        "@typescript-eslint/no-unused-expressions": "off",
-        "@typescript-eslint/no-empty-object-type": "off",
-        "@typescript-eslint/no-require-imports": "off",
-        "@typescript-eslint/ban-ts-comment": "off",
+        // @typscript-eslint/no-unused-vars supersedes no-unused-vars
+        "no-unused-vars": "off",
         "@typescript-eslint/no-unused-vars": [
           "error",
           {
@@ -125,22 +113,28 @@ export default [
           },
         ],
 
+        // @typescript-eslint/no-redeclare supersedes no-redeclare
         "no-redeclare": "off",
         "@typescript-eslint/no-redeclare": "error",
+
+        // @typescript-eslint/no-dupe-class-members supersedes no-dupe-class-members
         "no-dupe-class-members": "off",
+        "@typescript-eslint/no-dupe-class-members": "error",
       },
     }
   }),
   {
-    files: ["**/*.spec.ts"],
+    files: ["**/*.spec.ts", "**/*.spec.js"],
 
     plugins: {
       jest: eslintPluginJest,
+      vitest: eslintPluginVitest,
     },
 
     languageOptions: {
       globals: {
         ...eslintPluginJest.environments.globals.globals,
+        ...eslintPluginVitest.environments.env.globals,
         NodeJS: true,
       },
 
@@ -148,13 +142,20 @@ export default [
     },
 
     rules: {
-      "local-rules/no-test-com": "error",
-      "local-rules/email-domain-example-com": "error",
+      ...eslintPluginVitest.configs.recommended.rules,
+      ...eslintPluginJest.configs.recommended.rules,
+
       "no-console": "warn",
+
+      "vitest/expect-expect": "off",
+
       "jest/expect-expect": "off",
       "jest/no-conditional-expect": "off",
-      "no-dupe-class-members": "off",
-      "no-redeclare": "off",
+      "jest/no-disabled-tests": "off",
+      "jest/no-standalone-expect": "off",
+
+      "local-rules/no-test-com": "error",
+      "local-rules/email-domain-example-com": "error",
     },
   },
   {
