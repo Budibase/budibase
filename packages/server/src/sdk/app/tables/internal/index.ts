@@ -171,7 +171,7 @@ export async function save(
   }
   // has to run after, make sure it has _id
   await runStaticFormulaChecks(table, { oldTable, deletion: false })
-  return { table }
+  return { table, oldTable }
 }
 
 export async function destroy(table: Table) {

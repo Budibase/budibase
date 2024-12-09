@@ -281,7 +281,7 @@ export async function save(
     tableToSave.sql = true
   }
 
-  return { datasource: updatedDatasource, table: tableToSave }
+  return { datasource: updatedDatasource, table: tableToSave, oldTable }
 }
 
 export async function destroy(datasourceId: string, table: Table) {

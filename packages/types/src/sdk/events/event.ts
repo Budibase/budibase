@@ -118,6 +118,7 @@ export enum Event {
   VIEW_CALCULATION_CREATED = "view:calculation:created",
   VIEW_CALCULATION_UPDATED = "view:calculation:updated",
   VIEW_CALCULATION_DELETED = "view:calculation:deleted",
+  VIEW_JOIN_CREATED = "view:join:created",
 
   // ROWS
   ROWS_CREATED = "rows:created",
@@ -192,6 +193,9 @@ export enum Event {
   // AUDIT LOG
   AUDIT_LOGS_FILTERED = "audit_log:filtered",
   AUDIT_LOGS_DOWNLOADED = "audit_log:downloaded",
+
+  // ROW ACTION
+  ROW_ACTION_CREATED = "row_action:created",
 }
 
 export const UserGroupSyncEvents: Event[] = [
@@ -376,6 +380,7 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.VIEW_CALCULATION_CREATED]: undefined,
   [Event.VIEW_CALCULATION_UPDATED]: undefined,
   [Event.VIEW_CALCULATION_DELETED]: undefined,
+  [Event.VIEW_JOIN_CREATED]: undefined,
 
   // SERVED - NOT AUDITED
   [Event.SERVED_BUILDER]: undefined,
@@ -395,6 +400,9 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   // AUDIT LOG - NOT AUDITED
   [Event.AUDIT_LOGS_FILTERED]: undefined,
   [Event.AUDIT_LOGS_DOWNLOADED]: undefined,
+
+  // ROW ACTIONS - NOT AUDITED
+  [Event.ROW_ACTION_CREATED]: undefined,
 }
 
 // properties added at the final stage of the event pipeline

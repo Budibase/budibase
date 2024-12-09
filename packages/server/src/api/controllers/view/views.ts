@@ -19,8 +19,6 @@ import { builderSocket } from "../../../websockets"
 
 const cloneDeep = require("lodash/cloneDeep")
 
-import isEqual from "lodash/isEqual"
-
 export async function fetch(ctx: Ctx) {
   ctx.body = await getViews()
 }
@@ -60,69 +58,9 @@ export async function save(ctx: Ctx) {
     existingTable.views[viewName] = existingTable.views[originalName]
   }
   await db.put(table)
-  await handleViewEvents(
-    existingTable.views[viewName] as View,
-    table.views[viewName]
-  )
 
   ctx.body = table.views[viewName]
   builderSocket?.emitTableUpdate(ctx, table)
-}
-
-export async function calculationEvents(existingView: View, newView: View) {
-  const existingCalculation = existingView && existingView.calculation
-  const newCalculation = newView && newView.calculation
-
-  if (existingCalculation && !newCalculation) {
-    await events.view.calculationDeleted(existingView)
-  }
-
-  if (!existingCalculation && newCalculation) {
-    await events.view.calculationCreated(newView)
-  }
-
-  if (
-    existingCalculation &&
-    newCalculation &&
-    existingCalculation !== newCalculation
-  ) {
-    await events.view.calculationUpdated(newView)
-  }
-}
-
-export async function filterEvents(existingView: View, newView: View) {
-  const hasExistingFilters = !!(
-    existingView &&
-    existingView.filters &&
-    existingView.filters.length
-  )
-  const hasNewFilters = !!(newView && newView.filters && newView.filters.length)
-
-  if (hasExistingFilters && !hasNewFilters) {
-    await events.view.filterDeleted(newView)
-  }
-
-  if (!hasExistingFilters && hasNewFilters) {
-    await events.view.filterCreated(newView)
-  }
-
-  if (
-    hasExistingFilters &&
-    hasNewFilters &&
-    !isEqual(existingView.filters, newView.filters)
-  ) {
-    await events.view.filterUpdated(newView)
-  }
-}
-
-async function handleViewEvents(existingView: View, newView: View) {
-  if (!existingView) {
-    await events.view.created(newView)
-  } else {
-    await events.view.updated(newView)
-  }
-  await calculationEvents(existingView, newView)
-  await filterEvents(existingView, newView)
 }
 
 export async function destroy(ctx: Ctx) {
