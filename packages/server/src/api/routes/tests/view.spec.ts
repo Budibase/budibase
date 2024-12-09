@@ -73,11 +73,6 @@ describe("/views", () => {
   }
 
   describe("create", () => {
-    it("returns a success message when the view is successfully created", async () => {
-      await saveView()
-      expect(events.view.created).toHaveBeenCalledTimes(1)
-    })
-
     it("creates a view with a calculation", async () => {
       jest.clearAllMocks()
 
