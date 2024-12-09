@@ -1,9 +1,14 @@
 import env from "../environment"
-import { EmailTemplatePurpose, TemplateType } from "../constants"
+import { TemplateType } from "../constants"
 import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
-import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
+import {
+  User,
+  SendEmailOpts,
+  SMTPInnerConfig,
+  EmailTemplatePurpose,
+} from "@budibase/types"
 import { configs, cache, objectStore } from "@budibase/backend-core"
 import ical from "ical-generator"
 import _ from "lodash"
