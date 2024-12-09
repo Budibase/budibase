@@ -264,10 +264,7 @@ describe("Navigation store", () => {
 
     await ctx.test.navigationStore.save(update)
 
-    expect(saveSpy).toHaveBeenCalledWith({
-      appId: "testing_123",
-      metadata: { navigation: update },
-    })
+    expect(saveSpy).toHaveBeenCalledWith("testing_123", { navigation: update })
 
     expect(ctx.test.store.links.length).toBe(3)
 

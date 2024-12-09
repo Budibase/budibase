@@ -62,10 +62,7 @@ export function createQueriesStore() {
   }
 
   const importQueries = async ({ data, datasourceId }) => {
-    return await API.importQueries({
-      datasourceId,
-      data,
-    })
+    return await API.importQueries(datasourceId, data)
   }
 
   const select = id => {
@@ -87,10 +84,7 @@ export function createQueriesStore() {
   }
 
   const deleteQuery = async query => {
-    await API.deleteQuery({
-      queryId: query?._id,
-      queryRev: query?._rev,
-    })
+    await API.deleteQuery(query._id, query._rev)
     store.update(state => {
       state.list = state.list.filter(existing => existing._id !== query._id)
       return state

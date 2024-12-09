@@ -20,10 +20,7 @@ export const createThemeStore = () => {
   }
 
   const save = async (theme, appId) => {
-    const app = await API.saveAppMetadata({
-      appId,
-      metadata: { theme },
-    })
+    const app = await API.saveAppMetadata(appId, { theme })
     store.update(state => {
       state.theme = app.theme
       return state
@@ -32,10 +29,7 @@ export const createThemeStore = () => {
 
   const saveCustom = async (theme, appId) => {
     const updated = { ...get(store).customTheme, ...theme }
-    const app = await API.saveAppMetadata({
-      appId,
-      metadata: { customTheme: updated },
-    })
+    const app = await API.saveAppMetadata(appId, { customTheme: updated })
     store.update(state => {
       state.customTheme = app.customTheme
       return state

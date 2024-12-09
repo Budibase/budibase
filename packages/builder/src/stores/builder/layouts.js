@@ -59,10 +59,7 @@ export class LayoutStore extends BudiStore {
     if (!layout?._id) {
       return
     }
-    await API.deleteLayout({
-      layoutId: layout._id,
-      layoutRev: layout._rev,
-    })
+    await API.deleteLayout(layout._id, layout._rev)
     this.update(state => {
       state.layouts = state.layouts.filter(x => x._id !== layout._id)
       return state

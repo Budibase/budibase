@@ -128,10 +128,7 @@ export class AppsStore extends BudiStore {
   }
 
   async save(appId, value) {
-    await API.saveAppMetadata({
-      appId,
-      metadata: value,
-    })
+    await API.saveAppMetadata(appId, value)
     this.update(state => {
       const updatedAppIndex = state.apps.findIndex(
         app => app.instance._id === appId
