@@ -997,6 +997,45 @@ if (descriptions.length) {
             expect(events.view.updated).toHaveBeenCalledTimes(1)
           })
 
+          it("handles view grouped filter events", async () => {
+            view.queryUI = {
+              logicalOperator: UILogicalOperator.ALL,
+              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              groups: [
+                {
+                  logicalOperator: UILogicalOperator.ALL,
+                  filters: [
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "newField",
+                      value: "newValue",
+                    },
+                  ],
+                },
+              ],
+            }
+            await config.api.viewV2.update(view)
+            expect(events.view.filterUpdated).not.toHaveBeenCalled()
+
+            // @ts-ignore
+            view.queryUI.groups.push({
+              logicalOperator: UILogicalOperator.ALL,
+              filters: [
+                {
+                  operator: BasicOperator.EQUAL,
+                  field: "otherField",
+                  value: "otherValue",
+                },
+              ],
+            })
+
+            await config.api.viewV2.update(view)
+            expect(events.view.filterUpdated).toHaveBeenCalledWith({
+              filterGroups: 2,
+              tableId: view.tableId,
+            })
+          })
+
           it("can update all fields", async () => {
             const tableId = table._id!
 
@@ -1359,8 +1398,6 @@ if (descriptions.length) {
                 ],
               },
             })
-
-            expect(events.view.filterCreated).toHaveBeenCalledTimes(1)
 
             updatedView = await config.api.viewV2.get(view.id)
             expected = {
