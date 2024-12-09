@@ -54,7 +54,7 @@ export async function create(
 export async function update(
   tableId: string,
   view: Readonly<ViewV2>
-): Promise<ViewV2> {
+): Promise<{ view: ViewV2; existingView: ViewV2 }> {
   const db = context.getAppDB()
   const table = await sdk.tables.getTable(tableId)
   table.views ??= {}
@@ -76,7 +76,7 @@ export async function update(
   delete table.views[existingView.name]
   table.views[view.name] = view
   await db.put(table)
-  return view
+  return { view, existingView } as { view: ViewV2; existingView: ViewV2 }
 }
 
 export async function remove(viewId: string): Promise<ViewV2> {
