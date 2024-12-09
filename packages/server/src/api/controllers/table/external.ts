@@ -45,13 +45,13 @@ export async function updateTable(
     inputs.created = true
   }
   try {
-    const { datasource, table } = await sdk.tables.external.save(
+    const { datasource, oldTable, table } = await sdk.tables.external.save(
       datasourceId!,
       inputs,
       { tableId, renaming }
     )
     builderSocket?.emitDatasourceUpdate(ctx, datasource)
-    return table
+    return { table, oldTable }
   } catch (err: any) {
     if (err instanceof Error) {
       ctx.throw(400, err.message)
