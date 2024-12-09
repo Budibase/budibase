@@ -50,7 +50,7 @@ async function updateAppUpdatedAt(ctx: UserCtx) {
       const metadata = await db.get<any>(DocumentType.APP_METADATA)
       metadata.updatedAt = new Date().toISOString()
 
-      metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user?.userId!)
+      metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user!.userId!)
 
       const response = await db.put(metadata)
       metadata._rev = response.rev

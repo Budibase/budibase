@@ -1,6 +1,8 @@
+import { Database } from "./db"
+
 export interface Migration extends MigrationDefinition {
   appOpts?: object
-  fn: Function
+  fn: (db: Database) => Promise<void>
   silent?: boolean
   preventRetry?: boolean
 }

@@ -20,8 +20,6 @@ import {
   ViewJoinCreatedEvent,
 } from "@budibase/types"
 
-/* eslint-disable */
-
 async function created(view: ViewV2, timestamp?: string | number) {
   const properties: ViewCreatedEvent = {
     name: view.name,
