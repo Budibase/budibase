@@ -9,7 +9,7 @@ import { getUserMetadataParams, InternalTables } from "../../db/utils"
 import {
   AccessibleRolesResponse,
   Database,
-  DestroyRoleResponse,
+  DeleteRoleResponse,
   FetchRolesResponse,
   FindRoleResponse,
   Role,
@@ -199,7 +199,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   builderSocket?.emitRoleUpdate(ctx, role)
 }
 
-export async function destroy(ctx: UserCtx<void, DestroyRoleResponse>) {
+export async function destroy(ctx: UserCtx<void, DeleteRoleResponse>) {
   const db = context.getAppDB()
   let roleId = ctx.params.roleId as string
   if (roles.isBuiltin(roleId)) {

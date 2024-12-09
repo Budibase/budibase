@@ -24,3 +24,20 @@ export interface Screen extends Document {
   name?: string
   pluginAdded?: boolean
 }
+
+export interface ScreenRoutesViewOutput extends Document {
+  id: string
+  routing: ScreenRouting
+}
+
+export type ScreenRoutingJson = Record<
+  string,
+  {
+    subpaths: Record<
+      string,
+      {
+        screens: Record<string, string>
+      }
+    >
+  }
+>

@@ -3,7 +3,6 @@ import {
   Integration,
   DatasourceFieldType,
   QueryType,
-  QueryJson,
   SqlQuery,
   Table,
   DatasourcePlus,
@@ -14,6 +13,7 @@ import {
   TableSourceType,
   DatasourcePlusQueryResponse,
   SqlClient,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -419,7 +419,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     return response.rows.length ? response.rows : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
+  async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const operation = this._operation(json).toLowerCase()
     const input = this._query(json) as SqlQuery
     if (Array.isArray(input)) {
@@ -476,21 +476,15 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       this.config.password
     }" pg_dump --schema-only "${dumpCommandParts.join(" ")}"`
 
-    return new Promise<string>((res, rej) => {
+    return new Promise<string>((resolve, reject) => {
       exec(dumpCommand, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error generating dump: ${error.message}`)
-          rej(error.message)
+        if (error || stderr) {
+          console.error(stderr)
+          reject(new Error(stderr))
           return
         }
 
-        if (stderr) {
-          console.error(`pg_dump error: ${stderr}`)
-          rej(stderr)
-          return
-        }
-
-        res(stdout)
+        resolve(stdout)
         console.log("SQL dump generated successfully!")
       })
     })

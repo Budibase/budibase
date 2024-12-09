@@ -1,14 +1,7 @@
 {
-  "endpoint": {
-    "datasourceId": "datasource_plus_0ed5835e5552496285df546030f7c4ae",
-    "entityId": "people",
-    "operation": "CREATE"
-  },
+  "operation": "CREATE",
   "resource": {
-    "fields": [
-      "a.name",
-      "a.age"
-    ]
+    "fields": ["a.name", "a.age"]
   },
   "filters": {},
   "relationships": [],
@@ -24,39 +17,34 @@
       }
     }
   },
-  "meta": {
-    "table": {
-      "_id": "datasource_plus_0ed5835e5552496285df546030f7c4ae__people",
-      "type": "table",
-      "sourceId": "datasource_plus_0ed5835e5552496285df546030f7c4ae",
-      "sourceType": "external",
-      "primary": [
-        "name",
-        "age"
-      ],
-      "name": "people",
-      "schema": {
-        "name": {
-          "type": "string",
-          "externalType": "varchar",
-          "autocolumn": false,
-          "name": "name",
-          "constraints": {
-            "presence": true
-          }
-        },
-        "age": {
-          "type": "number",
-          "externalType": "int",
-          "autocolumn": false,
-          "name": "age",
-          "constraints": {
-            "presence": false
-          }
+  "table": {
+    "_id": "datasource_plus_0ed5835e5552496285df546030f7c4ae__people",
+    "type": "table",
+    "sourceId": "datasource_plus_0ed5835e5552496285df546030f7c4ae",
+    "sourceType": "external",
+    "primary": ["name", "age"],
+    "name": "people",
+    "schema": {
+      "name": {
+        "type": "string",
+        "externalType": "varchar",
+        "autocolumn": false,
+        "name": "name",
+        "constraints": {
+          "presence": true
         }
       },
-      "primaryDisplay": "name"
-    }
+      "age": {
+        "type": "number",
+        "externalType": "int",
+        "autocolumn": false,
+        "name": "age",
+        "constraints": {
+          "presence": false
+        }
+      }
+    },
+    "primaryDisplay": "name"
   },
   "tableAliases": {
     "people": "a"

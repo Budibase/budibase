@@ -1,4 +1,4 @@
-import { BBContext, EndpointMatcher, RegexMatcher } from "@budibase/types"
+import { Ctx, EndpointMatcher, RegexMatcher } from "@budibase/types"
 
 const PARAM_REGEX = /\/:(.*?)(\/.*)?$/g
 
@@ -27,7 +27,7 @@ export const buildMatcherRegex = (
   })
 }
 
-export const matches = (ctx: BBContext, options: RegexMatcher[]) => {
+export const matches = (ctx: Ctx, options: RegexMatcher[]) => {
   return options.find(({ regex, method }) => {
     const urlMatch = regex.test(ctx.request.url)
     const methodMatch =
