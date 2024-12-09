@@ -407,6 +407,7 @@
                     />
                     <FilterField
                       placeholder="Value"
+                      disabled={!filter.field && builderType === "filter"}
                       drawerTitle={builderType === "condition"
                         ? "Edit binding"
                         : null}
