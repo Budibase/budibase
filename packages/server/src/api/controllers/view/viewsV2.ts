@@ -169,7 +169,7 @@ async function handleViewFilterEvents(existingView: ViewV2, view: ViewV2) {
   const properties = { filterGroups, tableId: view.tableId }
   if (
     filterGroups >= 2 &&
-    ((existingView && existingView?.queryUI?.groups?.length) || 0)
+    filterGroups > (existingView?.queryUI?.groups?.length || 0)
   ) {
     await events.view.filterUpdated(properties)
   }
