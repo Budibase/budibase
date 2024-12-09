@@ -11,7 +11,7 @@
   "scripts": {
     "tsc": "node ../../scripts/build.js",
     "build": "yarn tsc",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "start": "ts-node ./src/index.ts"
   },
   "dependencies": {
