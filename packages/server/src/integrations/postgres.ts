@@ -149,7 +149,7 @@ const SCHEMA: Integration = {
 class PostgresIntegration extends Sql implements DatasourcePlus {
   private readonly client: Client
   private readonly config: PostgresConfig
-  private index= 1
+  private index = 1
   private open: boolean
 
   PRIMARY_KEYS_SQL = () => `
