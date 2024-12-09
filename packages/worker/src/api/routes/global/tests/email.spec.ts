@@ -1,8 +1,8 @@
 jest.mock("nodemailer")
+import { EmailTemplatePurpose } from "@budibase/types"
 import { TestConfiguration, mocks } from "../../../../tests"
 
 const sendMailMock = mocks.email.mock()
-import { EmailTemplatePurpose } from "../../../../constants"
 
 describe("/api/global/email", () => {
   const config = new TestConfiguration()

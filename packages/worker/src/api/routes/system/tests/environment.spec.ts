@@ -22,7 +22,7 @@ describe("/api/system/environment", () => {
       const env = await config.api.environment.getEnvironment()
       expect(env.body).toEqual({
         cloud: true,
-        disableAccountPortal: 0,
+        disableAccountPortal: false,
         isDev: false,
         multiTenancy: true,
         baseUrl: "http://localhost:10000",
@@ -36,7 +36,7 @@ describe("/api/system/environment", () => {
         const env = await config.api.environment.getEnvironment()
         expect(env.body).toEqual({
           cloud: false,
-          disableAccountPortal: 0,
+          disableAccountPortal: false,
           isDev: false,
           multiTenancy: true,
           baseUrl: "http://localhost:10000",
