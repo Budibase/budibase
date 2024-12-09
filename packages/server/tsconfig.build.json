@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
+    "target": "es2020",
     "allowArbitraryExtensions": true,
     "isolatedModules": false
   },
