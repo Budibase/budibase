@@ -15,7 +15,7 @@
     "prebuild": "rimraf dist/",
     "build": "node ../../scripts/build.js",
     "postbuild": "copyfiles -f ../../yarn.lock ./dist/",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "check:dependencies": "node ../../scripts/depcheck.js",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "run:docker": "node dist/index.js",
@@ -38,11 +38,11 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
-    "@budibase/backend-core": "0.0.0",
-    "@budibase/pro": "0.0.0",
-    "@budibase/shared-core": "0.0.0",
-    "@budibase/string-templates": "0.0.0",
-    "@budibase/types": "0.0.0",
+    "@budibase/backend-core": "*",
+    "@budibase/pro": "*",
+    "@budibase/shared-core": "*",
+    "@budibase/string-templates": "*",
+    "@budibase/types": "*",
     "@koa/router": "13.1.0",
     "@techpass/passport-openidconnect": "0.3.3",
     "@types/global-agent": "2.1.1",
@@ -85,7 +85,6 @@
     "@types/koa": "2.13.4",
     "@types/koa__router": "12.0.4",
     "@types/lodash": "4.14.200",
-    "@types/node": "^22.9.0",
     "@types/node-fetch": "2.6.4",
     "@types/server-destroy": "1.0.1",
     "@types/supertest": "2.0.14",
@@ -109,7 +108,7 @@
             "projects": [
               "@budibase/backend-core"
             ],
-            "target": "build"
+            "target": "build:oss"
           }
         ]
       }

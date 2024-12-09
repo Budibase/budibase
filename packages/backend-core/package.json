@@ -21,9 +21,10 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "prepack": "cp package.json dist",
-    "build": "tsc -p tsconfig.build.json --paths null && node ./scripts/build.js",
+    "build": "node ./scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
+    "build:oss": "node ./scripts/build.js",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "check:dependencies": "node ../../scripts/depcheck.js",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
@@ -31,8 +32,8 @@
   "dependencies": {
     "@budibase/nano": "10.1.5",
     "@budibase/pouchdb-replication-stream": "1.2.11",
-    "@budibase/shared-core": "0.0.0",
-    "@budibase/types": "0.0.0",
+    "@budibase/shared-core": "*",
+    "@budibase/types": "*",
     "@techpass/passport-openidconnect": "0.3.3",
     "aws-cloudfront-sign": "3.0.2",
     "aws-sdk": "2.1692.0",
@@ -76,7 +77,6 @@
     "@types/cookies": "0.7.8",
     "@types/jest": "29.5.5",
     "@types/lodash": "4.14.200",
-    "@types/node": "^22.9.0",
     "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "6.4.2",
     "@types/redlock": "4.0.7",

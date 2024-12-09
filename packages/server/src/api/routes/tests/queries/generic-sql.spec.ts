@@ -3,7 +3,7 @@ import {
   DatabaseName,
   datasourceDescribe,
 } from "../../../../integrations/tests/utils"
-import { Expectations } from "src/tests/utilities/api/base"
+import { Expectations } from "../../../../tests/utilities/api/base"
 import { events } from "@budibase/backend-core"
 import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"

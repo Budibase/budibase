@@ -1,27 +1,9 @@
 {
+  "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "lib": ["es2020"],
-    "strict": true,
-    "noImplicitAny": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "incremental": true,
-    "types": ["node", "jest"],
-    "outDir": "dist/src",
-    "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@budibase/types": ["../types/src"],
-      "@budibase/backend-core": ["../backend-core/src"],
-      "@budibase/backend-core/*": ["../backend-core/*"],
-      "@budibase/shared-core": ["../shared-core/src"],
-      "@budibase/pro": ["../pro/src"],
-      "@budibase/string-templates": ["../string-templates/src"],
-      "@budibase/string-templates/*": ["../string-templates/*"]
-    },
-    "allowArbitraryExtensions": true
+    "target": "es2020",
+    "allowArbitraryExtensions": true,
+    "isolatedModules": false
   },
   "include": ["src/**/*"],
   "exclude": [

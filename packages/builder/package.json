@@ -48,11 +48,11 @@
     ]
   },
   "dependencies": {
-    "@budibase/bbui": "0.0.0",
-    "@budibase/frontend-core": "0.0.0",
-    "@budibase/shared-core": "0.0.0",
-    "@budibase/string-templates": "0.0.0",
-    "@budibase/types": "0.0.0",
+    "@budibase/bbui": "*",
+    "@budibase/frontend-core": "*",
+    "@budibase/shared-core": "*",
+    "@budibase/string-templates": "*",
+    "@budibase/types": "*",
     "@codemirror/autocomplete": "^6.7.1",
     "@codemirror/commands": "^6.2.4",
     "@codemirror/lang-javascript": "^6.1.8",
