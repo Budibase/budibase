@@ -52,9 +52,16 @@
   let modal
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = $tablesStore.list.map(table =>
-    format.table(table, $datasources.list)
-  )
+  $: tables = $tablesStore.list
+    .map(table => format.table(table, $datasources.list))
+    .sort((a, b) => {
+      // sort tables alphabetically, grouped by datasource
+      const dsComparison = a.datasourceName.localeCompare(b.datasourceName)
+      if (dsComparison !== 0) {
+        return dsComparison
+      }
+      return a.label.localeCompare(b.label)
+    })
   $: viewsV1 = $viewsStore.list.map(view => ({
     ...view,
     label: view.name,

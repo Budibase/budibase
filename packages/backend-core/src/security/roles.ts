@@ -592,7 +592,10 @@ export class AccessController {
     )
   }
 
-  async checkScreensAccess(screens: Screen[], userRoleId: string) {
+  async checkScreensAccess(
+    screens: Screen[],
+    userRoleId: string
+  ): Promise<Screen[]> {
     let accessibleScreens = []
     // don't want to handle this with Promise.all as this would mean all custom roles would be
     // retrieved at same time, it is likely a custom role will be re-used and therefore want
