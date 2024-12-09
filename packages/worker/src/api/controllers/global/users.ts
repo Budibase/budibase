@@ -6,21 +6,34 @@ import {
   AddSSoUserRequest,
   BulkUserRequest,
   BulkUserResponse,
+  CheckInviteResponse,
+  CountUserResponse,
   CreateAdminUserRequest,
   CreateAdminUserResponse,
   Ctx,
   DeleteInviteUserRequest,
   DeleteInviteUsersRequest,
+  DeleteInviteUsersResponse,
+  DeleteUserResponse,
+  FetchUsersResponse,
+  FindUserResponse,
+  GetUserInvitesResponse,
   Hosting,
   InviteUserRequest,
+  InviteUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
   LockName,
   LockType,
+  LookupAccountHolderResponse,
+  LookupTenantUserResponse,
   MigrationType,
   PlatformUserByEmail,
   SaveUserResponse,
   SearchUsersRequest,
+  SearchUsersResponse,
+  UpdateInviteRequest,
+  UpdateInviteResponse,
   User,
   UserCtx,
   UserIdentifier,
@@ -80,7 +93,7 @@ export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
   }
 }
 
-export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
+export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest, void>) => {
   const { email, ssoId } = ctx.request.body
   try {
     // Status is changed to 404 from getUserDoc if user is not found
@@ -207,7 +220,7 @@ export const adminUser = async (
   })
 }
 
-export const countByApp = async (ctx: any) => {
+export const countByApp = async (ctx: UserCtx<void, CountUserResponse>) => {
   const appId = ctx.params.appId
   try {
     ctx.body = await userSdk.db.countUsersByApp(appId)
@@ -216,7 +229,7 @@ export const countByApp = async (ctx: any) => {
   }
 }
 
-export const destroy = async (ctx: any) => {
+export const destroy = async (ctx: UserCtx<void, DeleteUserResponse>) => {
   const id = ctx.params.id
   if (id === ctx.user._id) {
     ctx.throw(400, "Unable to delete self.")
@@ -239,7 +252,9 @@ export const getAppUsers = async (ctx: Ctx<SearchUsersRequest>) => {
   ctx.body = { data: users }
 }
 
-export const search = async (ctx: Ctx<SearchUsersRequest>) => {
+export const search = async (
+  ctx: Ctx<SearchUsersRequest, SearchUsersResponse>
+) => {
   const body = ctx.request.body
 
   // TODO: for now only two supported search keys; string.email and equal._id
@@ -280,7 +295,7 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
 }
 
 // called internally by app server user fetch
-export const fetch = async (ctx: any) => {
+export const fetch = async (ctx: UserCtx<void, FetchUsersResponse>) => {
   const all = await userSdk.db.allUsers()
   // user hashed password shouldn't ever be returned
   for (let user of all) {
@@ -292,11 +307,13 @@ export const fetch = async (ctx: any) => {
 }
 
 // called internally by app server user find
-export const find = async (ctx: any) => {
+export const find = async (ctx: UserCtx<void, FindUserResponse>) => {
   ctx.body = await userSdk.db.getUser(ctx.params.id)
 }
 
-export const tenantUserLookup = async (ctx: any) => {
+export const tenantUserLookup = async (
+  ctx: UserCtx<void, LookupTenantUserResponse>
+) => {
   const id = ctx.params.id
   // is email, check its valid
   if (id.includes("@") && !emailValidator.validate(id)) {
@@ -314,7 +331,9 @@ export const tenantUserLookup = async (ctx: any) => {
  * This will be paginated to a default of the first 50 users,
  * So the account holder may not be found until further pagination has occurred
  */
-export const accountHolderLookup = async (ctx: Ctx) => {
+export const accountHolderLookup = async (
+  ctx: Ctx<void, LookupAccountHolderResponse>
+) => {
   try {
     const users = await userSdk.core.getAllUsers()
     const response = await userSdk.core.getExistingAccounts(
@@ -366,7 +385,9 @@ export const onboardUsers = async (
   ctx.body = { ...resp, created: true }
 }
 
-export const invite = async (ctx: Ctx<InviteUserRequest>) => {
+export const invite = async (
+  ctx: Ctx<InviteUserRequest, InviteUserResponse>
+) => {
   const request = ctx.request.body
 
   let multiRequest = [request]
@@ -389,12 +410,14 @@ export const invite = async (ctx: Ctx<InviteUserRequest>) => {
   }
 }
 
-export const inviteMultiple = async (ctx: Ctx<InviteUsersRequest>) => {
+export const inviteMultiple = async (
+  ctx: Ctx<InviteUsersRequest, InviteUsersResponse>
+) => {
   ctx.body = await userSdk.invite(ctx.request.body)
 }
 
 export const removeMultipleInvites = async (
-  ctx: Ctx<DeleteInviteUsersRequest>
+  ctx: Ctx<DeleteInviteUsersRequest, DeleteInviteUsersResponse>
 ) => {
   const inviteCodesToRemove = ctx.request.body.map(
     (invite: DeleteInviteUserRequest) => invite.code
@@ -407,7 +430,7 @@ export const removeMultipleInvites = async (
   }
 }
 
-export const checkInvite = async (ctx: any) => {
+export const checkInvite = async (ctx: UserCtx<void, CheckInviteResponse>) => {
   const { code } = ctx.params
   let invite
   try {
@@ -422,7 +445,9 @@ export const checkInvite = async (ctx: any) => {
   }
 }
 
-export const getUserInvites = async (ctx: any) => {
+export const getUserInvites = async (
+  ctx: UserCtx<void, GetUserInvitesResponse>
+) => {
   try {
     // Restricted to the currently authenticated tenant
     ctx.body = await cache.invite.getInviteCodes()
@@ -431,7 +456,9 @@ export const getUserInvites = async (ctx: any) => {
   }
 }
 
-export const updateInvite = async (ctx: any) => {
+export const updateInvite = async (
+  ctx: UserCtx<UpdateInviteRequest, UpdateInviteResponse>
+) => {
   const { code } = ctx.params
   let updateBody = { ...ctx.request.body }
 
