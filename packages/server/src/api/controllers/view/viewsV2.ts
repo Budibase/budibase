@@ -167,15 +167,11 @@ export async function create(ctx: Ctx<CreateViewRequest, CreateViewResponse>) {
 async function handleViewFilterEvents(existingView: ViewV2, view: ViewV2) {
   const filterGroups = view.queryUI?.groups?.length || 0
   const properties = { filterGroups, tableId: view.tableId }
-  if (!existingView?.queryUI) {
-    await events.view.filterCreated(properties)
-  } else {
-    if (
-      filterGroups >
-      ((existingView && existingView?.queryUI?.groups?.length) || 0)
-    ) {
-      await events.view.filterUpdated(properties)
-    }
+  if (
+    filterGroups >= 2 &&
+    ((existingView && existingView?.queryUI?.groups?.length) || 0)
+  ) {
+    await events.view.filterUpdated(properties)
   }
 }
 
