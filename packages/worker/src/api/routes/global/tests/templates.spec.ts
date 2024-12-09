@@ -1,9 +1,6 @@
-import {
-  EmailTemplatePurpose,
-  TemplateMetadata,
-  TemplateType,
-} from "../../../../constants"
+import { TemplateMetadata, TemplateType } from "../../../../constants"
 import { TestConfiguration } from "../../../../tests"
+import { EmailTemplatePurpose } from "@budibase/types"
 
 // TODO
 

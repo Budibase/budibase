@@ -3,7 +3,7 @@ import { downloadTemplate as dlTemplate } from "../../utilities/fileSystem"
 import env from "../../environment"
 import {
   DownloadTemplateResponse,
-  FetchTemplateResponse,
+  FetchGlobalTemplateResponse,
   UserCtx,
 } from "@budibase/types"
 
@@ -11,7 +11,7 @@ import {
 const DEFAULT_TEMPLATES_BUCKET =
   "prod-budi-templates.s3-eu-west-1.amazonaws.com"
 
-export async function fetch(ctx: UserCtx<void, FetchTemplateResponse>) {
+export async function fetch(ctx: UserCtx<void, FetchGlobalTemplateResponse>) {
   let type = env.TEMPLATE_REPOSITORY
   let response,
     error = false

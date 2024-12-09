@@ -97,7 +97,7 @@
     "superagent": "^10.1.1",
     "supertest": "6.3.3",
     "timekeeper": "2.2.0",
-    "typescript": "5.5.2",
+    "typescript": "5.7.2",
     "update-dotenv": "1.1.1"
   },
   "nx": {
