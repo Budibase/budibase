@@ -5,6 +5,7 @@ import {
   GetLicenseKeyResponse,
   GetOfflineIdentifierResponse,
   GetOfflineLicenseTokenResponse,
+  GetQuotaUsageResponse,
   UserCtx,
 } from "@budibase/types"
 
@@ -36,7 +37,7 @@ export async function deleteLicenseKey(ctx: UserCtx<void, void>) {
 // OFFLINE LICENSE
 
 export async function activateOfflineLicenseToken(
-  ctx: UserCtx<ActivateOfflineLicenseTokenRequest>
+  ctx: UserCtx<ActivateOfflineLicenseTokenRequest, void>
 ) {
   const { offlineLicenseToken } = ctx.request.body
   await licensing.offline.activateOfflineLicenseToken(offlineLicenseToken)
@@ -70,14 +71,16 @@ export async function getOfflineLicenseIdentifier(
 
 // LICENSES
 
-export const refresh = async (ctx: any) => {
+export const refresh = async (ctx: UserCtx<void, void>) => {
   await licensing.cache.refresh()
   ctx.status = 200
 }
 
 // USAGE
 
-export const getQuotaUsage = async (ctx: any) => {
+export const getQuotaUsage = async (
+  ctx: UserCtx<void, GetQuotaUsageResponse>
+) => {
   ctx.body = await quotas.getQuotaUsage()
   ctx.status = 200
 }

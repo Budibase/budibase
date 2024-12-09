@@ -1,11 +1,10 @@
 jest.unmock("node-fetch")
 import { TestConfiguration } from "../../../../tests"
-import { EmailTemplatePurpose } from "../../../../constants"
 import { objectStore } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
 
 import tk from "timekeeper"
-import { EmailAttachment } from "@budibase/types"
+import { EmailAttachment, EmailTemplatePurpose } from "@budibase/types"
 
 const fetch = require("node-fetch")
 
