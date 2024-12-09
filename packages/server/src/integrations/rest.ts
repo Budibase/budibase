@@ -171,7 +171,7 @@ export class RestIntegration implements IntegrationBase {
         path.basename(parse(contentDisposition).parameters?.filename) || ""
     }
 
-    let triedParsing: boolean = false,
+    let triedParsing = false,
       responseTxt: string | undefined
     try {
       if (filename) {

@@ -245,7 +245,7 @@ describe("Captures of real examples", () => {
         tableNames.push(generator.guid())
       }
       const aliasing = new AliasTables(tableNames)
-      let alias: string = ""
+      let alias= ""
       for (let table of tableNames) {
         alias = aliasing.getAlias(table)
       }
