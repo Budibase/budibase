@@ -1,11 +1,6 @@
-import TestConfiguration from "../TestConfiguration"
 import { TestAPI, TestAPIOpts } from "./base"
 
 export class TemplatesAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   definitions = (opts?: TestAPIOpts) => {
     return this.request
       .get(`/api/global/template/definitions`)

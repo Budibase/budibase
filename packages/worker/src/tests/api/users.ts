@@ -9,14 +9,9 @@ import {
 } from "@budibase/types"
 import structures from "../structures"
 import { generator } from "@budibase/backend-core/tests"
-import TestConfiguration from "../TestConfiguration"
 import { TestAPI, TestAPIOpts } from "./base"
 
 export class UserAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   // INVITE
 
   sendUserInvite = async (sendMailMock: any, email: string, status = 200) => {
@@ -178,11 +173,7 @@ export class UserAPI extends TestAPI {
       .expect(opts?.status ? opts.status : 200)
   }
 
-  grantBuilderToApp = (
-    userId: string,
-    appId: string,
-    statusCode: number = 200
-  ) => {
+  grantBuilderToApp = (userId: string, appId: string, statusCode = 200) => {
     return this.request
       .post(`/api/global/users/${userId}/app/${appId}/builder`)
       .set(this.config.defaultHeaders())

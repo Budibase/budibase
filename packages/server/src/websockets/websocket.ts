@@ -33,7 +33,7 @@ export class BaseSocket {
   constructor(
     app: Koa,
     server: http.Server,
-    path: string = "/",
+    path = "/",
     additionalMiddlewares?: any[]
   ) {
     this.app = app

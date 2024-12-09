@@ -42,7 +42,7 @@ const svelteCompilePlugin = {
   },
 }
 
-var { argv } = require("yargs")
+let { argv } = require("yargs")
 
 async function runBuild(entry, outfile) {
   const isDev = process.env.NODE_ENV !== "production"

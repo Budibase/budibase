@@ -51,8 +51,23 @@ export default [
     },
 
     rules: {
-      "no-self-assign": "off",
-      "prefer-const": "off",
+      "no-self-compare": "error",
+      "no-template-curly-in-string": "error",
+      "no-unmodified-loop-condition": "error",
+      "no-unreachable-loop": "error",
+      "no-implied-eval": "error",
+      "no-extend-native": "error",
+      "no-labels": "error",
+      "no-lone-blocks": "error",
+      "no-new-wrappers": "error",
+      "no-octal-escape": "error",
+      "no-return-assign": "error",
+      "no-useless-concat": "error",
+      "no-useless-constructor": "error",
+      "no-useless-rename": "error",
+      "no-var": "error",
+      "no-void": "error",
+
       "no-unused-vars": [
         "error",
         {
@@ -65,64 +80,69 @@ export default [
       ],
     },
   },
-  ...eslintPluginSvelte.configs["flat/recommended"].map(config => {
-    return {
-      ...config,
-      files: ["**/*.svelte"],
+  ...eslintPluginSvelte.configs["flat/recommended"].map(config => ({
+    ...config,
+    files: ["**/*.svelte"],
 
-      languageOptions: {
-        parser: svelteParser,
-        ecmaVersion: 2019,
-        sourceType: "script",
+    languageOptions: {
+      parser: svelteParser,
+      ecmaVersion: 2019,
+      sourceType: "script",
 
-        parserOptions: {
-          parser: "@typescript-eslint/parser",
-          allowImportExportEverywhere: true,
+      parserOptions: {
+        parser: "@typescript-eslint/parser",
+        allowImportExportEverywhere: true,
+      },
+    },
+  })),
+  ...tseslint.configs.strict.map(config => ({
+    ...config,
+    files: ["**/*.ts"],
+
+    languageOptions: {
+      globals: {
+        NodeJS: true,
+      },
+
+      parser: tsParser,
+    },
+
+    rules: {
+      "local-rules/no-barrel-imports": "error",
+      "local-rules/no-budibase-imports": "error",
+      "local-rules/no-console-error": "error",
+
+      "@typescript-eslint/no-inferrable-types": "error",
+      "@typescript-eslint/adjacent-overload-signatures": "error",
+      "@typescript-eslint/class-literal-property-style": "error",
+      "@typescript-eslint/no-confusing-non-null-assertion": "error",
+      "@typescript-eslint/no-unnecessary-parameter-property-assignment":
+        "error",
+      "@typescript-eslint/no-useless-empty-export": "error",
+
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          varsIgnorePattern: "^_",
+          argsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+          caughtErrors: "none",
         },
-      },
-    }
-  }),
-  ...tseslint.configs.recommended.map(config => {
-    return {
-      ...config,
-      files: ["**/*.ts"],
+      ],
 
-      languageOptions: {
-        globals: {
-          NodeJS: true,
-        },
+      "no-redeclare": "off",
+      "@typescript-eslint/no-redeclare": "error",
 
-        parser: tsParser,
-      },
+      // @typescript-eslint/no-dupe-class-members supersedes no-dupe-class-members
+      "no-dupe-class-members": "off",
+      "@typescript-eslint/no-dupe-class-members": "error",
 
-      rules: {
-        "local-rules/no-barrel-imports": "error",
-        "local-rules/no-budibase-imports": "error",
-        "local-rules/no-console-error": "error",
-
-        // @typscript-eslint/no-unused-vars supersedes no-unused-vars
-        "no-unused-vars": "off",
-        "@typescript-eslint/no-unused-vars": [
-          "error",
-          {
-            varsIgnorePattern: "^_",
-            argsIgnorePattern: "^_",
-            destructuredArrayIgnorePattern: "^_",
-            ignoreRestSiblings: true,
-            caughtErrors: "none",
-          },
-        ],
-
-        // @typescript-eslint/no-redeclare supersedes no-redeclare
-        "no-redeclare": "off",
-        "@typescript-eslint/no-redeclare": "error",
-
-        // @typescript-eslint/no-dupe-class-members supersedes no-dupe-class-members
-        "no-dupe-class-members": "off",
-        "@typescript-eslint/no-dupe-class-members": "error",
-      },
-    }
-  }),
+      "no-useless-constructor": "off",
+      "@typescript-eslint/no-useless-constructor": "error",
+    },
+  })),
   {
     files: ["**/*.spec.ts", "**/*.spec.js"],
 
