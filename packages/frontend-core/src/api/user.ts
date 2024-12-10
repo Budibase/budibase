@@ -13,6 +13,9 @@ import {
   InviteUsersResponse,
   SaveUserResponse,
   SearchUsersRequest,
+  SearchUsersResponse,
+  UpdateInviteRequest,
+  UpdateInviteResponse,
   UpdateSelfMetadataRequest,
   UpdateSelfMetadataResponse,
   User,
@@ -53,14 +56,15 @@ export interface UserEndpoints {
     appId: string
   ) => Promise<{ message: string }>
   getAccountHolder: () => Promise<AccountMetadata | null>
-
-  // Missing request or response types
-  searchUsers: (data: SearchUsersRequest) => Promise<any>
+  searchUsers: (data: SearchUsersRequest) => Promise<SearchUsersResponse>
   createUsers: (
     users: User[],
     groups: any[]
   ) => Promise<BulkUserCreated | undefined>
-  updateUserInvite: (data: any) => Promise<any>
+  updateUserInvite: (
+    code: string,
+    data: UpdateInviteRequest
+  ) => Promise<UpdateInviteResponse>
 }
 
 export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
@@ -77,7 +81,7 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
    * Searches a list of users in the current tenant.
    */
   searchUsers: async data => {
-    return await API.post<SearchUsersRequest, any>({
+    return await API.post({
       url: `/api/global/users/search`,
       body: data,
     })
@@ -182,15 +186,11 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
   /**
    * Accepts a user invite as a body and will update the associated app roles.
    * for an existing invite
-   * @param invite the invite code sent in the email
    */
-  updateUserInvite: async invite => {
-    await API.post({
-      url: `/api/global/users/invite/update/${invite.code}`,
-      body: {
-        apps: invite.apps,
-        builder: invite.builder,
-      },
+  updateUserInvite: async (code, data) => {
+    return await API.post<UpdateInviteRequest, UpdateInviteResponse>({
+      url: `/api/global/users/invite/update/${code}`,
+      body: data,
     })
   },
 
