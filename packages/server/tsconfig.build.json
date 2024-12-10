@@ -1,5 +1,7 @@
 {
+  "extends": "../../tsconfig.build.json",
   "compilerOptions": {
+<<<<<<< HEAD
     "target": "es6",
     "module": "commonjs",
     "lib": ["es2020"],
@@ -23,6 +25,11 @@
     },
     "allowArbitraryExtensions": true,
     "noUncheckedIndexedAccess": true
+=======
+    "target": "es2020",
+    "allowArbitraryExtensions": true,
+    "isolatedModules": false
+>>>>>>> c66c8de8258d98358e33ea566f4074afbd2e8b9e
   },
   "include": ["src/**/*"],
   "exclude": [
