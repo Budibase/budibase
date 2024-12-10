@@ -41,10 +41,10 @@ function generateSchema(
     if (isJunction) {
       schema.primary(metaCols.map(col => col.name))
     } else if (primaryKeys.length === 1) {
-      const primary = primaryKeys[0]!
-      schema.increments(primary).primary()
+      const primaryKey = primaryKeys[0]!
+      schema.increments(primaryKey).primary()
       // note that we've set its type
-      columnTypeSet.push(primary)
+      columnTypeSet.push(primaryKey)
     } else {
       schema.primary(primaryKeys)
     }
@@ -135,9 +135,9 @@ function generateSchema(
               relatedTable.schema[relatedPrimary]?.externalType
             if (externalType) {
               schema.specificType(column.foreignKey, externalType)
+            } else {
+              schema.integer(column.foreignKey).unsigned()
             }
-          } else {
-            schema.integer(column.foreignKey).unsigned()
           }
 
           schema
