@@ -134,10 +134,10 @@ const environment = {
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   JS_BCRYPT: process.env.JS_BCRYPT,
   JWT_SECRET: process.env.JWT_SECRET
-    ? createSecretKey(Buffer.from(process.env.JWT_SECRET))
+    ? createSecretKey(process.env.JWT_SECRET, "utf8")
     : undefined,
   JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK
-    ? createSecretKey(Buffer.from(process.env.JWT_SECRET_FALLBACK))
+    ? createSecretKey(process.env.JWT_SECRET_FALLBACK, "utf8")
     : undefined,
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),

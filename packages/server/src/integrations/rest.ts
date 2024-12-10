@@ -171,7 +171,7 @@ export class RestIntegration implements IntegrationBase {
         path.basename(parse(contentDisposition).parameters?.filename) || ""
     }
 
-    let triedParsing: boolean = false,
+    let triedParsing = false,
       responseTxt: string | undefined
     try {
       if (filename) {
@@ -313,7 +313,9 @@ export class RestIntegration implements IntegrationBase {
     }
 
     // Util to add pagination values to a certain body type
-    const addPaginationToBody = (insertFn: Function) => {
+    const addPaginationToBody = (
+      insertFn: (pageParam: string, page?: string | number) => void
+    ) => {
       if (pagination?.location === "body") {
         if (pagination?.pageParam && paginationValues?.page != null) {
           insertFn(pagination.pageParam, paginationValues.page)

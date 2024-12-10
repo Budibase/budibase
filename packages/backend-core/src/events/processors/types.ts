@@ -1,1 +1,1 @@
-export { EventProcessor } from "@budibase/types"
+export type { EventProcessor } from "@budibase/types"

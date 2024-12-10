@@ -247,6 +247,9 @@ if (descriptions.length) {
                   },
                 },
               },
+              primary: ["_id"],
+              views: {},
+              sql: true,
             })
           )
 
@@ -254,9 +257,8 @@ if (descriptions.length) {
             ...table,
             name: generator.guid(),
           })
-
           expect(events.table.updated).toHaveBeenCalledTimes(1)
-          expect(events.table.updated).toHaveBeenCalledWith(updatedTable)
+          expect(events.table.updated).toHaveBeenCalledWith(table, updatedTable)
         })
 
         it("updates all the row fields for a table when a schema key is renamed", async () => {

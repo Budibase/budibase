@@ -1,4 +1,3 @@
-import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 import {
   ActivateLicenseKeyRequest,
@@ -6,10 +5,6 @@ import {
 } from "@budibase/types"
 
 export class LicenseAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   refresh = async () => {
     return this.request
       .post("/api/global/license/refresh")

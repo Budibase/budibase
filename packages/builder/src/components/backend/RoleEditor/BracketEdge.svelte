@@ -24,9 +24,9 @@
     const j = 32 // Outer radius strength (higher is stronger)
 
     // Calculate unit vector
-    var dx = x1 - x2
-    var dy = y1 - y2
-    var len = Math.sqrt(dx * dx + dy * dy)
+    let dx = x1 - x2
+    let dy = y1 - y2
+    let len = Math.sqrt(dx * dx + dy * dy)
     dx = dx / len
     dy = dy / len
 

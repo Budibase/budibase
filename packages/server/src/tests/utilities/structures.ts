@@ -535,7 +535,7 @@ export function basicRow(tableId: string) {
 export function basicLinkedRow(
   tableId: string,
   linkedRowId: string,
-  linkField: string = "link"
+  linkField = "link"
 ) {
   // this is based on the basic linked tables you get from the test configuration
   return {
@@ -586,14 +586,14 @@ export function basicUser(role: string) {
   }
 }
 
-export function basicScreen(route: string = "/") {
+export function basicScreen(route = "/") {
   return createHomeScreen({
     roleId: BUILTIN_ROLE_IDS.BASIC,
     route,
   })
 }
 
-export function powerScreen(route: string = "/") {
+export function powerScreen(route = "/") {
   return createHomeScreen({
     roleId: BUILTIN_ROLE_IDS.POWER,
     route,
