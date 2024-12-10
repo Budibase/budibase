@@ -1,30 +1,29 @@
 import {
   Config,
+  ConfigChecklistResponse,
   ConfigType,
+  DeleteConfigResponse,
+  FindConfigResponse,
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
   OIDCLogosConfig,
+  SaveConfigRequest,
+  SaveConfigResponse,
+  UploadConfigFileResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface ConfigEndpoints {
-  getConfig: <T>(type: ConfigType) => Promise<Config<T>>
+  getConfig: (type: ConfigType) => Promise<FindConfigResponse>
   getTenantConfig: (tentantId: string) => Promise<GetPublicSettingsResponse>
   getOIDCConfig: (tenantId: string) => Promise<GetPublicOIDCConfigResponse>
   getOIDCLogos: () => Promise<Config<OIDCLogosConfig>>
-
-  // Missing request or response types
-  saveConfig: <T>(
-    config: Config<T>
-  ) => Promise<{ type: ConfigType; _id: string; _rev: string }>
-  deleteConfig: (id: string, rev: string) => Promise<{ message: string }>
-  getChecklist: (tenantId: string) => Promise<any>
-  uploadLogo: (data: any) => Promise<{ message: string; url: string }>
-  uploadFavicon: (data: any) => Promise<{ message: string; url: string }>
-  uploadOIDCLogo: (
-    name: string,
-    data: any
-  ) => Promise<{ message: string; url: string }>
+  saveConfig: (config: SaveConfigRequest) => Promise<SaveConfigResponse>
+  deleteConfig: (id: string, rev: string) => Promise<DeleteConfigResponse>
+  getChecklist: (tenantId: string) => Promise<ConfigChecklistResponse>
+  uploadLogo: (data: any) => Promise<UploadConfigFileResponse>
+  uploadFavicon: (data: any) => Promise<UploadConfigFileResponse>
+  uploadOIDCLogo: (name: string, data: any) => Promise<UploadConfigFileResponse>
 }
 
 export const buildConfigEndpoints = (API: BaseAPIClient): ConfigEndpoints => ({
