@@ -25,39 +25,39 @@ describe("/api/global/template", () => {
         let result = await config.api.templates.definitions()
 
         expect(result.body.info[EmailTemplatePurpose.BASE].description).toEqual(
-          TemplateMetadata[TemplateType.EMAIL][0].description
+          TemplateMetadata[TemplateType.EMAIL]?.[0]?.description
         )
         expect(
           result.body.info[EmailTemplatePurpose.PASSWORD_RECOVERY].description
-        ).toEqual(TemplateMetadata[TemplateType.EMAIL][1].description)
+        ).toEqual(TemplateMetadata[TemplateType.EMAIL]?.[1]?.description)
         expect(
           result.body.info[EmailTemplatePurpose.WELCOME].description
-        ).toEqual(TemplateMetadata[TemplateType.EMAIL][2].description)
+        ).toEqual(TemplateMetadata[TemplateType.EMAIL]?.[2]?.description)
         expect(
           result.body.info[EmailTemplatePurpose.INVITATION].description
-        ).toEqual(TemplateMetadata[TemplateType.EMAIL][3].description)
+        ).toEqual(TemplateMetadata[TemplateType.EMAIL]?.[3]?.description)
         expect(
           result.body.info[EmailTemplatePurpose.CUSTOM].description
-        ).toEqual(TemplateMetadata[TemplateType.EMAIL][4].description)
+        ).toEqual(TemplateMetadata[TemplateType.EMAIL]?.[4]?.description)
       })
 
       it("checks description bindings", async () => {
         let result = await config.api.templates.definitions()
 
         expect(result.body.bindings[EmailTemplatePurpose.BASE]).toEqual(
-          TemplateMetadata[TemplateType.EMAIL][0].bindings
+          TemplateMetadata[TemplateType.EMAIL]?.[0]?.bindings
         )
         expect(
           result.body.bindings[EmailTemplatePurpose.PASSWORD_RECOVERY]
-        ).toEqual(TemplateMetadata[TemplateType.EMAIL][1].bindings)
+        ).toEqual(TemplateMetadata[TemplateType.EMAIL]?.[1]?.bindings)
         expect(result.body.bindings[EmailTemplatePurpose.WELCOME]).toEqual(
-          TemplateMetadata[TemplateType.EMAIL][2].bindings
+          TemplateMetadata[TemplateType.EMAIL]?.[2]?.bindings
         )
         expect(result.body.bindings[EmailTemplatePurpose.INVITATION]).toEqual(
-          TemplateMetadata[TemplateType.EMAIL][3].bindings
+          TemplateMetadata[TemplateType.EMAIL]?.[3]?.bindings
         )
         expect(result.body.bindings[EmailTemplatePurpose.CUSTOM]).toEqual(
-          TemplateMetadata[TemplateType.EMAIL][4].bindings
+          TemplateMetadata[TemplateType.EMAIL]?.[4]?.bindings
         )
       })
     })

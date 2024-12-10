@@ -60,7 +60,7 @@ const getEventFns = async (config: Config, existing?: Config) => {
       }
     } else if (isOIDCConfig(config)) {
       fns.push(() => events.auth.SSOCreated(ConfigType.OIDC))
-      if (config.config.configs[0].activated) {
+      if (config.config.configs[0]!.activated) {
         fns.push(() => events.auth.SSOActivated(ConfigType.OIDC))
       }
     } else if (isSettingsConfig(config)) {
@@ -108,12 +108,12 @@ const getEventFns = async (config: Config, existing?: Config) => {
       fns.push(() => events.auth.SSOUpdated(ConfigType.OIDC))
       if (
         !existing.config.configs[0].activated &&
-        config.config.configs[0].activated
+        config.config.configs[0]!.activated
       ) {
         fns.push(() => events.auth.SSOActivated(ConfigType.OIDC))
       } else if (
         existing.config.configs[0].activated &&
-        !config.config.configs[0].activated
+        !config.config.configs[0]!.activated
       ) {
         fns.push(() => events.auth.SSODeactivated(ConfigType.OIDC))
       }
@@ -216,7 +216,7 @@ async function verifyGoogleConfig(config: GoogleInnerConfig) {
 }
 
 async function verifyOIDCConfig(config: OIDCConfigs) {
-  await verifySSOConfig(ConfigType.OIDC, config.configs[0])
+  await verifySSOConfig(ConfigType.OIDC, config.configs[0]!)
 }
 
 export async function verifyAIConfig(
@@ -226,7 +226,7 @@ export async function verifyAIConfig(
   // ensure that the redacted API keys are not overwritten in the DB
   for (const uuid in existingConfig.config) {
     if (configToSave[uuid]?.apiKey === PASSWORD_REPLACEMENT) {
-      configToSave[uuid].apiKey = existingConfig.config[uuid].apiKey
+      configToSave[uuid].apiKey = existingConfig.config[uuid]!.apiKey
     }
   }
 }
@@ -382,9 +382,9 @@ async function handleAIConfig(config: AIConfig) {
 }
 
 function stripApiKeys(config: AIConfig) {
-  for (const key in config?.config) {
-    if (config.config[key].apiKey) {
-      config.config[key].apiKey = PASSWORD_REPLACEMENT
+  for (const innerConfig of Object.values(config?.config)) {
+    if (innerConfig.apiKey) {
+      innerConfig.apiKey = PASSWORD_REPLACEMENT
     }
   }
 }

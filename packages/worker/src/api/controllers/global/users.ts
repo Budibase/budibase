@@ -394,8 +394,8 @@ export const invite = async (
   const response = await userSdk.invite(multiRequest)
 
   // explicitly throw for single user invite
-  if (response.unsuccessful.length) {
-    const reason = response.unsuccessful[0].reason
+  if (response.unsuccessful.length > 0) {
+    const reason = response.unsuccessful[0]!.reason
     if (reason === "Unavailable") {
       ctx.throw(400, reason)
     } else {
