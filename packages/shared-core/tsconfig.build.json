@@ -16,7 +16,8 @@
     "paths": {
       "@budibase/types": ["../types/src"]
     },
-    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "noUncheckedIndexedAccess": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["**/*.spec.ts", "**/*.spec.js", "__mocks__", "src/tests"]

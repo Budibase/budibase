@@ -300,7 +300,7 @@ class InternalBuilder {
       .map(field => {
         const parts = field.split(/\./g)
         let table: string | undefined = undefined
-        let column = parts[0]
+        let column = parts[0]!
 
         // Just a column name, e.g.: "column"
         if (parts.length > 1) {
@@ -357,6 +357,10 @@ class InternalBuilder {
     const col = parts.pop()!
     const schema = this.table.schema[col]
     let identifier = this.rawQuotedIdentifier(field)
+
+    if (!schema) {
+      return identifier
+    }
 
     if (
       schema.type === FieldType.STRING ||
@@ -457,7 +461,7 @@ class InternalBuilder {
         if (!schema) {
           continue
         }
-        filter[key] = filter[key].map(v => this.parse(v, schema))
+        filter[key] = filter[key]!.map(v => this.parse(v, schema))
       }
     }
 
@@ -472,7 +476,7 @@ class InternalBuilder {
         if (!schema) {
           continue
         }
-        const value = filter[key]
+        const value = filter[key] || {}
         if ("low" in value) {
           value.low = this.parse(value.low, schema)
         }
@@ -640,7 +644,7 @@ class InternalBuilder {
       ) => {
         const [filterTableName, ...otherProperties] = key.split(".")
         const property = otherProperties.join(".")
-        const alias = getTableAlias(filterTableName)
+        const alias = getTableAlias(filterTableName!)
         return q.andWhere(subquery =>
           fn(subquery, alias ? `${alias}.${property}` : property, value)
         )
@@ -1020,7 +1024,7 @@ class InternalBuilder {
       name = table._id
     }
     const aliases = this.query.tableAliases || {}
-    return aliases[name] ? aliases[name] : name
+    return aliases[name] ?? name
   }
 
   addDistinctCount(query: Knex.QueryBuilder): Knex.QueryBuilder {
@@ -1114,9 +1118,9 @@ class InternalBuilder {
 
   addSorting(query: Knex.QueryBuilder): Knex.QueryBuilder {
     let { sort, resource } = this.query
-    const primaryKey = this.table.primary
+    const primaryKey = this.table.primary?.[0]
     const aliased = this.getTableName()
-    if (!Array.isArray(primaryKey)) {
+    if (!primaryKey) {
       throw new Error("Sorting requires primary key to be specified for table")
     }
     if (sort && Object.keys(sort || {}).length > 0) {
@@ -1154,8 +1158,8 @@ class InternalBuilder {
     // add sorting by the primary key if the result isn't already sorted by it,
     // to make sure result is deterministic
     const hasAggregations = (resource?.aggregations?.length ?? 0) > 0
-    if (!hasAggregations && (!sort || sort[primaryKey[0]] === undefined)) {
-      query = query.orderBy(`${aliased}.${primaryKey[0]}`)
+    if (!hasAggregations && (!sort || sort[primaryKey] === undefined)) {
+      query = query.orderBy(`${aliased}.${primaryKey}`)
     }
     return query
   }
@@ -1173,7 +1177,7 @@ class InternalBuilder {
 
   private buildJsonField(table: Table, field: string): [string, Knex.Raw] {
     const parts = field.split(".")
-    let baseName = parts[parts.length - 1]
+    let baseName = parts[parts.length - 1]!
     let unaliased: string
 
     let tableField: string
@@ -1737,6 +1741,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       return json
     }
     const primaryKey = json.table.primary[0]
+    if (!primaryKey) {
+      return json
+    }
     json.extra = {
       idFilter: {
         equal: {

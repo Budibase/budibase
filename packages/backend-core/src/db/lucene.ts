@@ -256,12 +256,12 @@ export class QueryBuilder<T> {
 
   compressFilters(filters: Record<string, string[]>) {
     const compressed: typeof filters = {}
-    for (let key of Object.keys(filters)) {
+    for (const [key, filter] of Object.entries(filters)) {
       const finalKey = removeKeyNumbering(key)
       if (compressed[finalKey]) {
-        compressed[finalKey] = compressed[finalKey].concat(filters[key])
+        compressed[finalKey] = compressed[finalKey].concat(filter)
       } else {
-        compressed[finalKey] = filters[key]
+        compressed[finalKey] = filter
       }
     }
     // add prefixes back

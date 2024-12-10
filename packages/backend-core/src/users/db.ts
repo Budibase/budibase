@@ -486,25 +486,28 @@ export class UserDB {
 
     // Build Response
     // index users by id
-    const userIndex: { [key: string]: User } = {}
-    usersToDelete.reduce((prev, current) => {
-      prev[current._id!] = current
-      return prev
-    }, userIndex)
+    const userIndex = usersToDelete.reduce((acc, current) => {
+      acc[current._id!] = current
+      return acc
+    }, {} as Record<string, User>)
 
     // add the successful and unsuccessful users to response
-    dbResponse.forEach(item => {
-      const email = userIndex[item.id].email
+    for (const item of dbResponse) {
+      const user = userIndex[item.id]
+      if (!user) {
+        // this should never happen
+        continue
+      }
       if (item.ok) {
-        response.successful.push({ _id: item.id, email })
+        response.successful.push({ _id: item.id, email: user.email })
       } else {
         response.unsuccessful.push({
           _id: item.id,
-          email,
+          email: user.email,
           reason: "Database error",
         })
       }
-    })
+    }
 
     return response
   }

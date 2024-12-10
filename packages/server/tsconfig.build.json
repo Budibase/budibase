@@ -21,7 +21,8 @@
       "@budibase/string-templates": ["../string-templates/src"],
       "@budibase/string-templates/*": ["../string-templates/*"]
     },
-    "allowArbitraryExtensions": true
+    "allowArbitraryExtensions": true,
+    "noUncheckedIndexedAccess": true
   },
   "include": ["src/**/*"],
   "exclude": [

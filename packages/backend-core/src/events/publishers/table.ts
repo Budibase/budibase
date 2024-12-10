@@ -26,9 +26,8 @@ async function updated(oldTable: Table, newTable: Table) {
   let defaultValues, aiColumn
 
   // check that new fields have been added
-  for (const key in newTable.schema) {
+  for (const [key, newColumn] of Object.entries(newTable.schema)) {
     if (!oldTable.schema[key]) {
-      const newColumn = newTable.schema[key]
       if ("default" in newColumn && newColumn.default != null) {
         defaultValues = true
       }

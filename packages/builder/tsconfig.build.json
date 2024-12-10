@@ -10,7 +10,8 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "incremental": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true
   },
   "include": ["./src/**/*"],
   "exclude": ["node_modules", "**/*.json", "**/*.spec.ts", "**/*.spec.js"]

@@ -24,7 +24,7 @@ export function getSingleFileMaxSizeInfo(totalMaxSize: string) {
     return undefined
   }
 
-  const size = +match[1]
+  const size = +match[1]!
   const unit = match[2]
   if (size === 1) {
     switch (unit) {

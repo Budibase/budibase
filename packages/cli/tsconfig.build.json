@@ -18,7 +18,8 @@
       "@budibase/backend-core/*": ["../backend-core/*"],
       "@budibase/shared-core": ["../shared-core/src"],
       "@budibase/string-templates": ["../string-templates/src"]
-    }
+    },
+    "noUncheckedIndexedAccess": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.spec.js"]

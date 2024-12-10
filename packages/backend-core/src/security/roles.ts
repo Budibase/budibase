@@ -514,6 +514,9 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
     // need to combine builtin with any DB record of them (for sake of permissions)
     for (let builtinRoleId of externalBuiltinRoles) {
       const builtinRole = builtinRoles[builtinRoleId]
+      if (!builtinRole) {
+        throw new Error(`Role ${builtinRoleId} not found`)
+      }
       const dbBuiltin = roles.filter(dbRole =>
         roleIDsAreEqual(dbRole._id!, builtinRoleId)
       )[0]
