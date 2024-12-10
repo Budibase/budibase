@@ -4,7 +4,7 @@
   import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { getUserBindings } from "dataBinding"
   import { makePropSafe } from "@budibase/string-templates"
-  import { search } from "@budibase/frontend-core"
+  import { search, Utils } from "@budibase/frontend-core"
   import { tables } from "stores/builder"
   import DetailPopover from "components/common/DetailPopover.svelte"
 
@@ -73,7 +73,7 @@
       cta
       slot="buttons"
       on:click={() => {
-        dispatch("change", localFilters)
+        dispatch("change", Utils.parseFilter(localFilters))
         popover.hide()
       }}
     >
