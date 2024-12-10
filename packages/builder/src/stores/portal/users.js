@@ -77,7 +77,7 @@ export function createUsersStore() {
   }
 
   async function updateInvite(invite) {
-    return API.updateUserInvite(invite)
+    return API.updateUserInvite(invite.code, invite)
   }
 
   async function create(data) {
