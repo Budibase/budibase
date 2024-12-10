@@ -1,26 +1,29 @@
 import {
+  GetInitInfoResponse,
   LoginRequest,
+  LogoutResponse,
   PasswordResetRequest,
+  PasswordResetResponse,
   PasswordResetUpdateRequest,
+  PasswordResetUpdateResponse,
+  SetInitInfoRequest,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface AuthEndpoints {
   logIn: (tenantId: string, username: string, password: string) => Promise<void>
-
-  // Missing request or response types
-  logOut: () => Promise<{ message: string }>
+  logOut: () => Promise<LogoutResponse>
   requestForgotPassword: (
     tenantId: string,
     email: string
-  ) => Promise<{ message: string }>
+  ) => Promise<PasswordResetResponse>
   resetPassword: (
     tenantId: string,
     password: string,
     resetCode: string
-  ) => Promise<{ message: string }>
-  setInitInfo: (info: any) => Promise<void>
-  getInitInfo: () => Promise<any>
+  ) => Promise<PasswordResetUpdateResponse>
+  setInitInfo: (info: SetInitInfoRequest) => Promise<void>
+  getInitInfo: () => Promise<GetInitInfoResponse>
 }
 
 export const buildAuthEndpoints = (API: BaseAPIClient): AuthEndpoints => ({
@@ -75,7 +78,7 @@ export const buildAuthEndpoints = (API: BaseAPIClient): AuthEndpoints => ({
    * @param email the email address of the user
    */
   requestForgotPassword: async (tenantId, email) => {
-    return await API.post<PasswordResetRequest, { message: string }>({
+    return await API.post<PasswordResetRequest, PasswordResetResponse>({
       url: `/api/global/auth/${tenantId}/reset`,
       body: {
         email,
@@ -90,7 +93,10 @@ export const buildAuthEndpoints = (API: BaseAPIClient): AuthEndpoints => ({
    * @param resetCode the reset code to authenticate the request
    */
   resetPassword: async (tenantId, password, resetCode) => {
-    return await API.post<PasswordResetUpdateRequest, { message: string }>({
+    return await API.post<
+      PasswordResetUpdateRequest,
+      PasswordResetUpdateResponse
+    >({
       url: `/api/global/auth/${tenantId}/reset/update`,
       body: {
         password,

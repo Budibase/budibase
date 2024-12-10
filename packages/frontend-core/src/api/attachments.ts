@@ -1,5 +1,7 @@
 import {
   DownloadAttachmentResponse,
+  GetSignedUploadUrlRequest,
+  GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
@@ -10,13 +12,11 @@ export interface AttachmentEndpoints {
     rowId: string,
     columnName: string
   ) => Promise<DownloadAttachmentResponse>
-
-  // Missing request or response types
   getSignedDatasourceURL: (
     datasourceId: string,
     bucket: string,
     key: string
-  ) => Promise<{ signedUrl: string; publicUrl: string }>
+  ) => Promise<GetSignedUploadUrlResponse>
   uploadAttachment: (
     tableId: string,
     data: any
@@ -41,7 +41,10 @@ export const buildAttachmentEndpoints = (
      * @param key the name of the file to upload to
      */
     getSignedDatasourceURL: async (datasourceId, bucket, key) => {
-      return await API.post({
+      return await API.post<
+        GetSignedUploadUrlRequest,
+        GetSignedUploadUrlResponse
+      >({
         url: `/api/attachments/${datasourceId}/url`,
         body: { bucket, key },
       })
