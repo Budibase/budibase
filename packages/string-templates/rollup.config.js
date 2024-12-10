@@ -25,7 +25,7 @@ const config = (input, outputFile, format) => ({
     typescript({
       moduleResolution: "node",
     }),
-    polyfillNode(), // Replaces Node.js built-ins for browser compatibility
+    polyfillNode(),
     resolve({
       preferBuiltins: true,
       browser: true,
