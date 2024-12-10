@@ -104,8 +104,6 @@ export async function getDependantResources(
       return p
     }, {} as Record<string, number>)
   }
-
-  return
 }
 
 export async function updatePermissionOnRole(

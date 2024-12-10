@@ -16,7 +16,7 @@ function escapeCsvString(str: string) {
 export function csv(
   headers: string[],
   rows: Row[],
-  delimiter: string = ",",
+  delimiter = ",",
   customHeaders: { [key: string]: string } = {}
 ) {
   let csvRows = [getHeaders(headers, customHeaders)]
