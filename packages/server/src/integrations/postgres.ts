@@ -149,7 +149,7 @@ const SCHEMA: Integration = {
 class PostgresIntegration extends Sql implements DatasourcePlus {
   private readonly client: Client
   private readonly config: PostgresConfig
-  private index: number = 1
+  private index = 1
   private open: boolean
 
   PRIMARY_KEYS_SQL = () => `
@@ -252,7 +252,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     })
   }
 
-  async internalQuery(query: SqlQuery, close: boolean = true) {
+  async internalQuery(query: SqlQuery, close = true) {
     if (!this.open) {
       await this.openConnection()
     }

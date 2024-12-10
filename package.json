@@ -3,21 +3,21 @@
   "private": true,
   "devDependencies": {
     "@babel/core": "^7.22.5",
-    "@babel/eslint-parser": "^7.22.5",
+    "@babel/eslint-parser": "7.25.9",
     "@babel/preset-env": "^7.22.5",
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
     "@types/node": "20.10.0",
     "@types/proper-lockfile": "^4.1.4",
-    "@typescript-eslint/parser": "6.9.0",
+    "@typescript-eslint/parser": "8.17.0",
+    "@vitest/eslint-plugin": "^1.1.14",
     "cross-spawn": "7.0.6",
     "depcheck": "^1.4.7",
     "esbuild": "^0.18.17",
     "esbuild-node-externals": "^1.14.0",
-    "eslint": "^8.52.0",
-    "eslint-plugin-import": "^2.29.0",
-    "eslint-plugin-jest": "^27.9.0",
-    "eslint-plugin-local-rules": "^2.0.0",
-    "eslint-plugin-svelte": "^2.34.0",
+    "eslint": "9.16.0",
+    "eslint-plugin-jest": "28.9.0",
+    "eslint-plugin-local-rules": "3.0.2",
+    "eslint-plugin-svelte": "2.46.1",
     "husky": "^8.0.3",
     "kill-port": "^1.6.1",
     "lerna": "7.4.2",
@@ -27,9 +27,9 @@
     "prettier-plugin-svelte": "^2.3.0",
     "proper-lockfile": "^4.1.2",
     "svelte": "4.2.19",
-    "svelte-eslint-parser": "^0.33.1",
+    "svelte-eslint-parser": "0.43.0",
     "typescript": "5.7.2",
-    "typescript-eslint": "^7.3.1",
+    "typescript-eslint": "8.17.0",
     "yargs": "^17.7.2"
   },
   "scripts": {
@@ -115,7 +115,8 @@
     "passport": "0.6.0",
     "fast-xml-parser": "4.4.1",
     "@azure/identity": "4.2.1",
-    "kind-of": "6.0.3"
+    "kind-of": "6.0.3",
+    "globals": "15.13.0"
   },
   "engines": {
     "node": ">=20.0.0 <21.0.0"
