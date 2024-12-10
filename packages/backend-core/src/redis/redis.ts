@@ -67,9 +67,8 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   const RedisCore = env.MOCK_REDIS && MockRedis ? MockRedis : Redis
   let timeout: NodeJS.Timeout
   CLOSED = false
-  let client = pickClient(selectDb)
   // already connected, ignore
-  if (client && CONNECTED) {
+  if (CLIENTS[selectDb] && CONNECTED) {
     return
   }
   // testing uses a single in memory client
@@ -83,13 +82,10 @@ function init(selectDb = DEFAULT_SELECT_DB) {
     }
   }, STARTUP_TIMEOUT_MS)
 
-  // disconnect any lingering client
-  if (client) {
-    client.disconnect()
-  }
   const { host, port } = getRedisConnectionDetails()
   const opts = getRedisOptions()
 
+  let client: Redis
   if (CLUSTERED) {
     client = new RedisCore.Cluster([{ host, port }], opts)
   } else {
