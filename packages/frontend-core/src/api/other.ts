@@ -1,6 +1,7 @@
 import {
   FetchBuiltinPermissionsRequest,
   FetchIntegrationsResponse,
+  GetEnvironmentResponse,
   GetVersionResponse,
   SystemStatusResponse,
 } from "@budibase/types"
@@ -11,9 +12,7 @@ export interface OtherEndpoints {
   getBudibaseVersion: () => Promise<string>
   getIntegrations: () => Promise<FetchIntegrationsResponse>
   getBasePermissions: () => Promise<FetchBuiltinPermissionsRequest>
-
-  // Missing request or response types
-  getEnvironment: () => Promise<Record<string, any>>
+  getEnvironment: () => Promise<GetEnvironmentResponse>
 }
 
 export const buildOtherEndpoints = (API: BaseAPIClient): OtherEndpoints => ({
