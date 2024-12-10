@@ -2,7 +2,6 @@
 
 const os = require("os")
 const exec = require("child_process").exec
-const fs = require("fs")
 const platform = os.platform()
 
 const windows = platform === "win32"
@@ -17,10 +16,11 @@ function execute(command) {
 
 async function commandExistsUnix(command) {
   const unixCmd = `command -v ${command} 2>/dev/null && { echo >&1 ${command}; exit 0; }`
-  return execute(command)
+  return execute(unixCmd)
 }
 
 async function commandExistsWindows(command) {
+  // eslint-disable-next-line no-control-regex
   if (/[\x00-\x1f<>:"|?*]/.test(command)) {
     return false
   }

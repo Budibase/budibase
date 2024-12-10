@@ -33,7 +33,7 @@ function improveErrors(errors: string[]): string[] {
 
 export function getNextExecutionDates(
   cronExpression: string,
-  limit: number = 4
+  limit = 4
 ): string[] {
   const parsed = cronParser.parseExpression(cronExpression)
   const nextRuns = []

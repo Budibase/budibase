@@ -1,3 +1,3 @@
-export const runQuotaMigration = async (migration: Function) => {
+export const runQuotaMigration = async (migration: () => Promise<void>) => {
   await migration()
 }
