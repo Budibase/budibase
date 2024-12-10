@@ -173,8 +173,13 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   `
 
   COLUMNS_SQL = () => `
-    select * from information_schema.columns where table_schema = ANY(current_schemas(false)) 
-      AND pg_table_is_visible(to_regclass(format('%I.%I', table_schema, table_name)));
+  SELECT columns.*
+  FROM information_schema.columns columns
+  JOIN pg_class pg_class ON pg_class.relname = columns.table_name
+  JOIN pg_namespace name_space ON name_space.oid = pg_class.relnamespace
+  WHERE columns.table_schema = ANY(current_schemas(false))
+    AND columns.table_schema = name_space.nspname
+    AND pg_table_is_visible(pg_class.oid);
   `
 
   constructor(config: PostgresConfig) {
