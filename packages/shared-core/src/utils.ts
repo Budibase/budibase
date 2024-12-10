@@ -9,7 +9,6 @@ import {
   SearchFilter,
   EmptyFilterOption,
 } from "@budibase/types"
-import * as Constants from "./constants"
 import { removeKeyNumbering, splitFiltersArray } from "./filters"
 import _ from "lodash"
 
@@ -61,6 +60,12 @@ export async function parallelForeach<T>(
     }
 
     const item = items[index]
+    if (!item) {
+      throw new Error(
+        `invalid item index: ${index} (items.length: ${items.length})`
+      )
+    }
+
     index++
 
     const promise = processItem(item)
@@ -75,18 +80,6 @@ export async function parallelForeach<T>(
   processNext()
 
   await Promise.all(promises)
-}
-
-export function filterValueToLabel() {
-  return Object.keys(Constants.OperatorOptions).reduce(
-    (acc: { [key: string]: string }, key: string) => {
-      const ops: { [key: string]: any } = Constants.OperatorOptions
-      const op: { [key: string]: string } = ops[key]
-      acc[op["value"]] = op.label
-      return acc
-    },
-    {}
-  )
 }
 
 export function hasSchema(test: any) {

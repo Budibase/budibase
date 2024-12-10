@@ -19,7 +19,7 @@ function improveErrors(errors: string[]): string[] {
 
   for (let error of errors) {
     if (error.includes(INPUT_CRON_START)) {
-      error = error.split(INPUT_CRON_START)[0].trim()
+      error = error.split(INPUT_CRON_START)[0]!.trim()
     }
     for (let [oldErr, newErr] of Object.entries(ERROR_SWAPS)) {
       if (error.includes(oldErr)) {
