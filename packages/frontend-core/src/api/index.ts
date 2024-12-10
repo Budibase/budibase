@@ -158,7 +158,9 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     if (response.status >= 200 && response.status < 400) {
       handleMigrations(response)
       try {
-        if (parseResponse) {
+        if (response.status === 204) {
+          return undefined as ResponseT
+        } else if (parseResponse) {
           return await parseResponse(response)
         } else {
           return (await response.json()) as ResponseT
