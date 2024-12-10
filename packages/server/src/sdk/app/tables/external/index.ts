@@ -110,12 +110,11 @@ export async function create(table: Omit<Table, "_id" | "_rev">) {
     const result = await save(datasourceId!, tableToCreate)
     return result.table
   } catch (err: any) {
-    throw err
-    // if (err instanceof Error) {
-    //   throw new HTTPError(err.message, 400)
-    // } else {
-    //   throw new HTTPError(err?.message || err, err.status || 500)
-    // }
+    if (err instanceof Error) {
+      throw new HTTPError(err.message, 400)
+    } else {
+      throw new HTTPError(err?.message || err, err.status || 500)
+    }
   }
 }
 

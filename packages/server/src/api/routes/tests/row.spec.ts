@@ -3216,7 +3216,7 @@ if (descriptions.length) {
           })
         })
 
-      describe.only("Formula fields", () => {
+      describe("Formula fields", () => {
         let table: Table
         let otherTable: Table
         let relatedRow: Row, mainRow: Row
