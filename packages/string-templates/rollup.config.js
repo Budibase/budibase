@@ -24,7 +24,9 @@ const config = (input, outputFile, format) => ({
     warn(warning)
   },
   plugins: [
-    typescript(),
+    typescript({
+      moduleResolution: "node",
+    }),
     resolve({
       preferBuiltins: true,
       browser: true,
