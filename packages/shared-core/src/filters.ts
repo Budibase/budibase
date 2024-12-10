@@ -298,7 +298,8 @@ export class ColumnSplitter {
 function buildCondition(filter: undefined): undefined
 function buildCondition(filter: SearchFilter): SearchFilters
 function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
-  if (!filter) {
+  // Ignore empty or invalid filters
+  if (!filter || !filter?.operator || !filter?.field) {
     return
   }
 
@@ -475,7 +476,6 @@ export function buildQuery(
       if (group.logicalOperator) {
         operator = logicalOperatorFromUI(group.logicalOperator)
       }
-
       return {
         [operator]: { conditions: filters.map(buildCondition).filter(f => f) },
       }
