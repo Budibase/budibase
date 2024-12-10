@@ -8,6 +8,7 @@ const path = require("path")
 
 const { build } = require("esbuild")
 const { compile } = require("svelte/compiler")
+const { loadTsConfig } = require("load-tsconfig")
 
 const {
   default: TsconfigPathsPlugin,
@@ -47,8 +48,10 @@ let { argv } = require("yargs")
 async function runBuild(entry, outfile) {
   const isDev = process.env.NODE_ENV !== "production"
   const tsconfig = argv["p"] || `tsconfig.build.json`
-  const tsconfigPathPluginContent = JSON.parse(
-    fs.readFileSync(tsconfig, "utf-8")
+
+  const { data: tsconfigPathPluginContent } = loadTsConfig(
+    process.cwd(),
+    tsconfig
   )
 
   const sharedConfig = {
