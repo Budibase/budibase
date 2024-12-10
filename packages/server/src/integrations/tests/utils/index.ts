@@ -147,7 +147,11 @@ export function datasourceDescribe(opts: DatasourceDescribeOpts) {
       DatabaseName.ORACLE,
     ].includes(dbName),
     isMySQL: dbName === DatabaseName.MYSQL,
-    isPostgres: dbName === DatabaseName.POSTGRES,
+    isPostgres:
+      dbName === DatabaseName.POSTGRES ||
+      dbName === DatabaseName.POSTGRES_LEGACY,
+    // check if any of the legacy tags
+    isLegacy: dbName === DatabaseName.POSTGRES_LEGACY,
     isMongodb: dbName === DatabaseName.MONGODB,
     isMSSQL: dbName === DatabaseName.SQL_SERVER,
     isOracle: dbName === DatabaseName.ORACLE,
