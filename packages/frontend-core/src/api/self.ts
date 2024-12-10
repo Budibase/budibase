@@ -1,21 +1,19 @@
 import {
-  ContextUser,
+  AppSelfResponse,
+  FetchAPIKeyResponse,
+  GenerateAPIKeyResponse,
+  GetGlobalSelfResponse,
   UpdateSelfRequest,
   UpdateSelfResponse,
-  User,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface SelfEndpoints {
   updateSelf: (user: UpdateSelfRequest) => Promise<UpdateSelfResponse>
-
-  // Missing request or response types
-  generateAPIKey: () => Promise<any>
-  fetchDeveloperInfo: () => Promise<any>
-
-  // There are flags and session attributes mixed in to the user
-  fetchBuilderSelf: () => Promise<User & { [key: string]: any }>
-  fetchSelf: () => Promise<(ContextUser | {}) & { [key: string]: any }>
+  generateAPIKey: () => Promise<string | undefined>
+  fetchDeveloperInfo: () => Promise<FetchAPIKeyResponse>
+  fetchBuilderSelf: () => Promise<GetGlobalSelfResponse>
+  fetchSelf: () => Promise<AppSelfResponse>
 }
 
 export const buildSelfEndpoints = (API: BaseAPIClient): SelfEndpoints => ({
@@ -24,7 +22,7 @@ export const buildSelfEndpoints = (API: BaseAPIClient): SelfEndpoints => ({
    * assuming the user is a builder.
    */
   generateAPIKey: async () => {
-    const response = await API.post<null, any>({
+    const response = await API.post<null, GenerateAPIKeyResponse>({
       url: "/api/global/self/api_key",
     })
     return response?.apiKey

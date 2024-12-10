@@ -5,7 +5,6 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface RouteEndpoints {
-  // Missing request or response types
   fetchClientAppRoutes: () => Promise<FetchClientScreenRoutingResponse>
   fetchAppRoutes: () => Promise<FetchScreenRoutingResponse>
 }
