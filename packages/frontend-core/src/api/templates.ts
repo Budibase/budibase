@@ -1,13 +1,20 @@
-import { FetchTemplateResponse, Template } from "@budibase/types"
+import {
+  FetchGlobalTemplateByTypeResponse,
+  FetchGlobalTemplateDefinitionResponse,
+  FetchTemplateResponse,
+  SaveGlobalTemplateRequest,
+  SaveGlobalTemplateResponse,
+  Template,
+} from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface TemplateEndpoints {
-  getEmailTemplates: () => Promise<Template[]>
+  getEmailTemplates: () => Promise<FetchGlobalTemplateByTypeResponse>
   getAppTemplates: () => Promise<FetchTemplateResponse>
-
-  // Missing request or response types
-  getEmailTemplateDefinitions: () => Promise<any>
-  saveEmailTemplate: (templaet: any) => Promise<any>
+  getEmailTemplateDefinitions: () => Promise<FetchGlobalTemplateDefinitionResponse>
+  saveEmailTemplate: (
+    template: SaveGlobalTemplateRequest
+  ) => Promise<SaveGlobalTemplateResponse>
 }
 
 export const buildTemplateEndpoints = (
@@ -24,10 +31,9 @@ export const buildTemplateEndpoints = (
    * Gets the list of email templates.
    */
   getEmailTemplates: async () => {
-    const res = await API.get<Template | Template[]>({
+    return await API.get({
       url: "/api/global/template/email",
     })
-    return Array.isArray(res) ? res : [res]
   },
 
   /**
