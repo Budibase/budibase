@@ -9,7 +9,6 @@ import {
   CreateAdminUserRequest,
   CreateAdminUserResponse,
   DeleteInviteUsersRequest,
-  DeleteUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
   SaveUserResponse,
