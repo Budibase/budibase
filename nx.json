@@ -12,7 +12,8 @@
       "inputs": [
         "{workspaceRoot}/scripts/*",
         "{workspaceRoot}/lerna.json",
-        "{workspaceRoot}/.github/workflows/*"
+        "{workspaceRoot}/.github/workflows/*",
+        "{workspaceRoot}/tsconfig.build.json"
       ]
     },
     "test": {

@@ -880,13 +880,13 @@ const automationActions = store => ({
       appId,
     })
   },
-  addTestDataToAutomation: async data => {
+  addTestDataToAutomation: data => {
     let newAutomation = cloneDeep(get(selectedAutomation).data)
     newAutomation.testData = {
       ...newAutomation.testData,
       ...data,
     }
-    await store.actions.save(newAutomation)
+    return newAutomation
   },
   constructBlock(type, stepId, blockDefinition) {
     let newName

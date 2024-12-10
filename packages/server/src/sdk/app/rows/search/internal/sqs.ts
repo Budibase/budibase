@@ -437,7 +437,7 @@ export async function search(
     )
 
     // check for pagination final row
-    let nextRow: boolean = false
+    let nextRow = false
     if (paginate && params.limit && rows.length > params.limit) {
       // remove the extra row that confirmed if there is another row to move to
       nextRow = true

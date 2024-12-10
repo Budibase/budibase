@@ -107,7 +107,7 @@ if (mainDescriptions.length) {
           const table = response.datasource.entities?.["binaryTable"]
           expect(table).toBeDefined()
           expect(table?.schema.id.externalType).toBe("bytea")
-          const row = await config.api.row.save(table?._id!, {
+          const row = await config.api.row.save(table!._id!, {
             id: "1111",
             column1: "hello",
             column2: 222,

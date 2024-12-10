@@ -6,6 +6,7 @@ import {
   RowActionResponse,
   RowActionsResponse,
 } from "@budibase/types"
+import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
 async function getTable(ctx: Ctx) {
@@ -58,6 +59,8 @@ export async function create(
   const createdAction = await sdk.rowActions.create(tableId, {
     name: ctx.request.body.name,
   })
+
+  await events.rowAction.created(createdAction)
 
   ctx.body = {
     tableId,
