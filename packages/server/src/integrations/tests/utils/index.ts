@@ -9,7 +9,6 @@ import * as oracle from "./oracle"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import { Knex } from "knex"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { getLegacyDatasource } from "./postgres"
 
 export type DatasourceProvider = () => Promise<Datasource | undefined>
 

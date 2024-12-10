@@ -155,7 +155,7 @@ jobs:
     strategy:
       matrix:
         datasource:
-          [mssql, mysql, postgres, mongodb, mariadb, oracle, sqs, none]
+          [mssql, mysql, postgres, postgres_legacy, mongodb, mariadb, oracle, sqs, none]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
