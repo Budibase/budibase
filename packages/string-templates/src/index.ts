@@ -360,7 +360,7 @@ export function decodeJSBinding(handlebars: string): string | null {
   if (!match || match.length < 2) {
     return null
   }
-  return atob(match[1])
+  return atob(match[1]!)
 }
 
 /**
@@ -437,9 +437,9 @@ export function convertToJS(hbs: string) {
   for (let block of blocks) {
     let stringPart = hbs
     if (prevBlock) {
-      stringPart = stringPart.split(prevBlock)[1]
+      stringPart = stringPart.split(prevBlock)[1]!
     }
-    stringPart = stringPart.split(block)[0]
+    stringPart = stringPart.split(block)[0]!
     prevBlock = block
     const { variable, value } = convertHBSBlock(block, count++)
     variables[variable] = value

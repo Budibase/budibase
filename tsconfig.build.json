@@ -20,8 +20,8 @@
       "@budibase/string-templates": ["./packages/string-templates/src"],
       "@budibase/string-templates/*": ["./packages/string-templates/*"],
       "@budibase/frontend-core": ["./packages/frontend-core/src"]
-    },
-    "noUncheckedIndexedAccess": true
+    }
+    // "noUncheckedIndexedAccess": true
   },
   "exclude": []
 }
