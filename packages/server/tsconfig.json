@@ -1,10 +1,5 @@
 {
   "extends": "./tsconfig.build.json",
-  "compilerOptions": {
-    "lib": ["es2020", "dom"],
-    "composite": true,
-    "baseUrl": "."
-  },
   "ts-node": {
     "require": ["tsconfig-paths/register"],
     "swc": true
