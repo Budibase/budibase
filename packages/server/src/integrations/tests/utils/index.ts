@@ -9,6 +9,7 @@ import * as oracle from "./oracle"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import { Knex } from "knex"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { getLegacyDatasource } from "./postgres"
 
 export type DatasourceProvider = () => Promise<Datasource | undefined>
 
@@ -16,6 +17,7 @@ export const { startContainer } = testContainerUtils
 
 export enum DatabaseName {
   POSTGRES = "postgres",
+  POSTGRES_LEGACY = "postgres_legacy",
   MONGODB = "mongodb",
   MYSQL = "mysql",
   SQL_SERVER = "mssql",
@@ -26,6 +28,7 @@ export enum DatabaseName {
 
 const providers: Record<DatabaseName, DatasourceProvider> = {
   [DatabaseName.POSTGRES]: postgres.getDatasource,
+  [DatabaseName.POSTGRES_LEGACY]: postgres.getLegacyDatasource,
   [DatabaseName.MONGODB]: mongodb.getDatasource,
   [DatabaseName.MYSQL]: mysql.getDatasource,
   [DatabaseName.SQL_SERVER]: mssql.getDatasource,
