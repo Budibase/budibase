@@ -9,6 +9,7 @@ import {
   CreateAdminUserRequest,
   CreateAdminUserResponse,
   DeleteInviteUsersRequest,
+  DeleteUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
   SaveUserResponse,
@@ -55,7 +56,7 @@ export interface UserEndpoints {
     userId: string,
     appId: string
   ) => Promise<{ message: string }>
-  getAccountHolder: () => Promise<AccountMetadata | null>
+  getAccountHolder: () => Promise<AccountMetadata | undefined>
   searchUsers: (data: SearchUsersRequest) => Promise<SearchUsersResponse>
   createUsers: (
     users: User[],
