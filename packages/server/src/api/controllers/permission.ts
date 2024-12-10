@@ -78,7 +78,7 @@ export async function getResourcePerms(
           role: role.role,
           permissionType: role.type,
           inheritablePermission:
-            inheritablePermissions && inheritablePermissions[level].role,
+            inheritablePermissions && inheritablePermissions[level]?.role,
         }
         return p
       },

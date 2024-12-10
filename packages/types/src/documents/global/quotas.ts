@@ -56,6 +56,7 @@ export interface MonthlyUsage {
 export interface BaseQuotaUsage {
   usageQuota: StaticUsage
   monthly: {
+    current: MonthlyUsage
     [key: string]: MonthlyUsage
   }
 }

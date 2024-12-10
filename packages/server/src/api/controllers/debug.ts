@@ -16,7 +16,7 @@ export async function systemDebugInfo(
     platform: process.platform,
     cpuArch: process.arch,
     cpuCores: os.cpus().length,
-    cpuInfo: os.cpus()[0].model,
+    cpuInfo: os.cpus()[0]?.model,
     totalMemory: `${totalMemory.gb}GB`,
     uptime: `${days} day(s), ${hours} hour(s), ${minutes} minute(s)`,
   }

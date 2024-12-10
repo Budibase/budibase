@@ -124,6 +124,12 @@ export interface DatabaseDumpOpts {
   selector?: any
 }
 
+export interface DocumentBulkResponse extends Nano.DocumentBulkResponse {
+  // For some reason this doesn't appear on the Nano type but is present on the
+  // response and in the docs.
+  ok: boolean
+}
+
 export interface Database {
   name: string
 
@@ -149,7 +155,7 @@ export interface Database {
     document: AnyDocument,
     opts?: DatabasePutOpts
   ): Promise<Nano.DocumentInsertResponse>
-  bulkDocs(documents: AnyDocument[]): Promise<Nano.DocumentBulkResponse[]>
+  bulkDocs(documents: AnyDocument[]): Promise<DocumentBulkResponse[]>
   sql<T extends Document>(
     sql: string,
     parameters?: SqlQueryBinding

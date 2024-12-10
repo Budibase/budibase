@@ -4,27 +4,6 @@ import { OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
 
-const parameterNotRef = (
-  param: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject
-): param is OpenAPIV3.ParameterObject => {
-  // all refs are deferenced by parser library
-  return true
-}
-
-const requestBodyNotRef = (
-  param: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject | undefined
-): param is OpenAPIV3.RequestBodyObject => {
-  // all refs are deferenced by parser library
-  return param !== undefined
-}
-
-const schemaNotRef = (
-  param: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined
-): param is OpenAPIV3.SchemaObject => {
-  // all refs are deferenced by parser library
-  return param !== undefined
-}
-
 const isOpenAPI3 = (document: any): document is OpenAPIV3.Document => {
   return document.openapi.includes("3.0")
 }
@@ -46,36 +25,32 @@ const isParameter = (
 }
 
 const getRequestBody = (operation: OpenAPIV3.OperationObject) => {
-  if (requestBodyNotRef(operation.requestBody)) {
-    const request: OpenAPIV3.RequestBodyObject = operation.requestBody
-    const supportedMimeTypes = getMimeTypes(operation)
-    if (supportedMimeTypes.length > 0) {
-      const mimeType = supportedMimeTypes[0]
-
-      // try get example from request
-      const content = request.content[mimeType]
-      if (content.example) {
-        return content.example
-      }
-
-      // try get example from schema
-      if (schemaNotRef(content.schema)) {
-        const schema = content.schema
-        if (schema.example) {
-          return schema.example
-        }
-      }
-    }
+  if (!operation.requestBody || "$ref" in operation.requestBody) {
+    return undefined
   }
+
+  const mimeType = getMimeTypes(operation)[0]
+  if (!mimeType) {
+    return undefined
+  }
+
+  const content = operation.requestBody.content[mimeType]
+  if (content?.example) {
+    return content.example
+  }
+
+  if (content?.schema && "example" in content.schema) {
+    return content.schema.example
+  }
+
   return undefined
 }
 
 const getMimeTypes = (operation: OpenAPIV3.OperationObject): string[] => {
-  if (requestBodyNotRef(operation.requestBody)) {
-    const request: OpenAPIV3.RequestBodyObject = operation.requestBody
-    return Object.keys(request.content)
+  if (!operation.requestBody || "$ref" in operation.requestBody) {
+    return []
   }
-  return []
+  return Object.keys(operation.requestBody.content)
 }
 
 /**
@@ -112,10 +87,10 @@ export class OpenAPI3 extends OpenAPISource {
 
   getQueries = async (datasourceId: string): Promise<Query[]> => {
     let url: string | URL | undefined
-    if (this.document.servers?.length) {
-      url = this.document.servers[0].url
+    const server = this.document.servers?.[0]
+    if (server) {
       try {
-        url = new URL(url)
+        url = new URL(server.url)
       } catch (err) {
         // unable to construct url, e.g. with variables
         // proceed with string form of url
@@ -145,13 +120,13 @@ export class OpenAPI3 extends OpenAPISource {
         const methodName = key
         const name = operation.operationId || path
         let queryString = ""
-        const headers: any = {}
+        const headers: Record<string, string> = {}
         let requestBody = getRequestBody(operation)
         const parameters: QueryParameter[] = []
-        const mimeTypes = getMimeTypes(operation)
 
-        if (mimeTypes.length > 0) {
-          headers["Content-Type"] = mimeTypes[0]
+        const mimeType = getMimeTypes(operation)[0]
+        if (mimeType) {
+          headers["Content-Type"] = mimeType
         }
 
         // combine the path parameters with the operation parameters
@@ -159,34 +134,36 @@ export class OpenAPI3 extends OpenAPISource {
         const allParams = [...pathParams, ...operationParams]
 
         for (let param of allParams) {
-          if (parameterNotRef(param)) {
-            switch (param.in) {
-              case "query": {
-                let prefix = ""
-                if (queryString) {
-                  prefix = "&"
-                }
-                queryString = `${queryString}${prefix}${param.name}={{${param.name}}}`
-                break
-              }
-              case "header":
-                headers[param.name] = `{{${param.name}}}`
-                break
-              case "path":
-                // do nothing: param is already in the path
-                break
-              case "formData":
-                // future enhancement
-                break
-            }
+          if (!param || "$ref" in param) {
+            continue
+          }
 
-            // add the parameter if it can be bound in our config
-            if (["query", "header", "path"].includes(param.in)) {
-              parameters.push({
-                name: param.name,
-                default: "",
-              })
+          switch (param.in) {
+            case "query": {
+              let prefix = ""
+              if (queryString) {
+                prefix = "&"
+              }
+              queryString = `${queryString}${prefix}${param.name}={{${param.name}}}`
+              break
             }
+            case "header":
+              headers[param.name] = `{{${param.name}}}`
+              break
+            case "path":
+              // do nothing: param is already in the path
+              break
+            case "formData":
+              // future enhancement
+              break
+          }
+
+          // add the parameter if it can be bound in our config
+          if (["query", "header", "path"].includes(param.in)) {
+            parameters.push({
+              name: param.name,
+              default: "",
+            })
           }
         }
 

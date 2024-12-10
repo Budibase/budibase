@@ -123,19 +123,16 @@ export async function fetchDeployments(
 export async function deploymentProgress(
   ctx: UserCtx<void, DeploymentProgressResponse>
 ) {
-  try {
-    const db = context.getAppDB()
-    const deploymentDoc = await db.get<DeploymentDoc>(DocumentType.DEPLOYMENTS)
-    if (!deploymentDoc.history?.[ctx.params.deploymentId]) {
-      ctx.throw(404, "No deployment found")
-    }
-    ctx.body = deploymentDoc.history?.[ctx.params.deploymentId]
-  } catch (err) {
-    ctx.throw(
-      500,
-      `Error fetching data for deployment ${ctx.params.deploymentId}`
-    )
+  const db = context.getAppDB()
+  const deploymentDoc = await db.tryGet<DeploymentDoc>(DocumentType.DEPLOYMENTS)
+  if (!deploymentDoc) {
+    ctx.throw(404, "No deployment found")
   }
+  const progress = deploymentDoc.history?.[ctx.params.deploymentId]
+  if (!progress) {
+    ctx.throw(404, "No deployment found")
+  }
+  ctx.body = progress
 }
 
 export const publishApp = async function (

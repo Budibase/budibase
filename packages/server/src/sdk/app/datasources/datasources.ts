@@ -234,7 +234,8 @@ export async function removeSecrets(datasources: Datasource[]) {
 }
 
 export async function removeSecretSingle(datasource: Datasource) {
-  return (await removeSecrets([datasource]))[0]
+  const [datasourceWithoutSecrets] = await removeSecrets([datasource])
+  return datasourceWithoutSecrets!
 }
 
 export function mergeConfigs(update: Datasource, old: Datasource) {

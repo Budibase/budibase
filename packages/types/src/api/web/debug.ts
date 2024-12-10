@@ -5,7 +5,7 @@ export interface GetDiagnosticsResponse {
   platform: string
   cpuArch: string
   cpuCores: number
-  cpuInfo: string
+  cpuInfo?: string
   totalMemory: string
   uptime: string
 }

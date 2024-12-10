@@ -70,12 +70,12 @@ export class RestImporter {
     }, {} as { [key: string]: Query })
 
     // check for failed writes
-    response.forEach((query: any) => {
-      if (!query.ok) {
-        errorQueries.push(queryIndex[query.id])
+    for (const query of response) {
+      if (!query.ok && queryIndex[query.id]) {
+        errorQueries.push(queryIndex[query.id]!)
         delete queryIndex[query.id]
       }
-    })
+    }
 
     const successQueries = Object.values(queryIndex)
 
