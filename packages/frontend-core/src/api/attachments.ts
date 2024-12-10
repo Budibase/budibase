@@ -27,7 +27,7 @@ export interface AttachmentEndpoints {
     bucket: string,
     key: string,
     data: any
-  ) => Promise<{ publicUrl: string }>
+  ) => Promise<{ publicUrl: string | undefined }>
 }
 
 export const buildAttachmentEndpoints = (
@@ -92,6 +92,9 @@ export const buildAttachmentEndpoints = (
         bucket,
         key
       )
+      if (!signedUrl) {
+        return { publicUrl: undefined }
+      }
       await API.put({
         url: signedUrl,
         body: data,
@@ -100,6 +103,7 @@ export const buildAttachmentEndpoints = (
       })
       return { publicUrl }
     },
+
     /**
      * Download an attachment from a row given its column name.
      * @param datasourceId the ID of the datasource to download from
