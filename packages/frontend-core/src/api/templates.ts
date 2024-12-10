@@ -4,7 +4,6 @@ import {
   FetchTemplateResponse,
   SaveGlobalTemplateRequest,
   SaveGlobalTemplateResponse,
-  Template,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
