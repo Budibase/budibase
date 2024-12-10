@@ -2,7 +2,7 @@ import { Event, Identity, Group } from "@budibase/types"
 import { EventProcessor } from "./types"
 
 export default class Processor implements EventProcessor {
-  initialised: boolean = false
+  initialised = false
   processors: EventProcessor[] = []
 
   constructor(processors: EventProcessor[]) {
