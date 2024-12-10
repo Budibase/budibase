@@ -1,12 +1,7 @@
 import { Account, AccountMetadata } from "@budibase/types"
-import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 
 export class AccountAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   saveMetadata = async (account: Account) => {
     const res = await this.request
       .put(`/api/system/accounts/${account.accountId}/metadata`)

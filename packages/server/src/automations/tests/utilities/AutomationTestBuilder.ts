@@ -263,7 +263,7 @@ class AutomationBuilder extends BaseStepBuilder {
   private automationConfig: Automation
   private config: TestConfiguration
   private triggerOutputs: any
-  private triggerSet: boolean = false
+  private triggerSet = false
 
   constructor(
     options: { name?: string; appId?: string; config?: TestConfiguration } = {}

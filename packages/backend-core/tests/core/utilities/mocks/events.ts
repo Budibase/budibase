@@ -117,6 +117,7 @@ beforeAll(async () => {
   jest.spyOn(events.view, "calculationCreated")
   jest.spyOn(events.view, "calculationUpdated")
   jest.spyOn(events.view, "calculationDeleted")
+  jest.spyOn(events.view, "viewJoinCreated")
 
   jest.spyOn(events.plugin, "init")
   jest.spyOn(events.plugin, "imported")

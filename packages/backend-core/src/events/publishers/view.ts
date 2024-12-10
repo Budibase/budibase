@@ -1,6 +1,11 @@
 import { publishEvent } from "../events"
 import {
+  CalculationType,
   Event,
+  Table,
+  TableExportFormat,
+  View,
+  ViewCalculation,
   ViewCalculationCreatedEvent,
   ViewCalculationDeletedEvent,
   ViewCalculationUpdatedEvent,
@@ -11,22 +16,20 @@ import {
   ViewFilterDeletedEvent,
   ViewFilterUpdatedEvent,
   ViewUpdatedEvent,
-  View,
-  ViewCalculation,
-  Table,
-  TableExportFormat,
+  ViewV2,
+  ViewJoinCreatedEvent,
 } from "@budibase/types"
 
-/* eslint-disable */
-
-async function created(view: View, timestamp?: string | number) {
+async function created(view: ViewV2, timestamp?: string | number) {
   const properties: ViewCreatedEvent = {
+    name: view.name,
+    type: view.type,
     tableId: view.tableId,
   }
   await publishEvent(Event.VIEW_CREATED, properties, timestamp)
 }
 
-async function updated(view: View) {
+async function updated(view: ViewV2) {
   const properties: ViewUpdatedEvent = {
     tableId: view.tableId,
   }
@@ -48,16 +51,27 @@ async function exported(table: Table, format: TableExportFormat) {
   await publishEvent(Event.VIEW_EXPORTED, properties)
 }
 
-async function filterCreated(view: View, timestamp?: string | number) {
+async function filterCreated(
+  { tableId, filterGroups }: { tableId: string; filterGroups: number },
+  timestamp?: string | number
+) {
   const properties: ViewFilterCreatedEvent = {
-    tableId: view.tableId,
+    tableId,
+    filterGroups,
   }
   await publishEvent(Event.VIEW_FILTER_CREATED, properties, timestamp)
 }
 
-async function filterUpdated(view: View) {
+async function filterUpdated({
+  tableId,
+  filterGroups,
+}: {
+  tableId: string
+  filterGroups: number
+}) {
   const properties: ViewFilterUpdatedEvent = {
-    tableId: view.tableId,
+    tableId: tableId,
+    filterGroups,
   }
   await publishEvent(Event.VIEW_FILTER_UPDATED, properties)
 }
@@ -69,10 +83,16 @@ async function filterDeleted(view: View) {
   await publishEvent(Event.VIEW_FILTER_DELETED, properties)
 }
 
-async function calculationCreated(view: View, timestamp?: string | number) {
+async function calculationCreated(
+  {
+    tableId,
+    calculationType,
+  }: { tableId: string; calculationType: CalculationType },
+  timestamp?: string | number
+) {
   const properties: ViewCalculationCreatedEvent = {
-    tableId: view.tableId,
-    calculation: view.calculation as ViewCalculation,
+    tableId,
+    calculation: calculationType,
   }
   await publishEvent(Event.VIEW_CALCULATION_CREATED, properties, timestamp)
 }
@@ -93,6 +113,13 @@ async function calculationDeleted(existingView: View) {
   await publishEvent(Event.VIEW_CALCULATION_DELETED, properties)
 }
 
+async function viewJoinCreated(tableId: any, timestamp?: string | number) {
+  const properties: ViewJoinCreatedEvent = {
+    tableId,
+  }
+  await publishEvent(Event.VIEW_JOIN_CREATED, properties, timestamp)
+}
+
 export default {
   created,
   updated,
@@ -104,4 +131,5 @@ export default {
   calculationCreated,
   calculationUpdated,
   calculationDeleted,
+  viewJoinCreated,
 }

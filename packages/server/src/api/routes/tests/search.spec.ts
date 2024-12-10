@@ -314,9 +314,7 @@ if (descriptions.length) {
                 const cloned = cloneDeep(response)
                 const foundRows = response.rows
 
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect(foundRows).toHaveLength(expectedRows.length)
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect([...foundRows]).toEqual(
                   expectedRows.map((expectedRow: any) =>
                     expect.objectContaining(this.popRow(expectedRow, foundRows))
@@ -333,9 +331,7 @@ if (descriptions.length) {
                 const cloned = cloneDeep(response)
                 const foundRows = response.rows
 
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect(foundRows).toHaveLength(expectedRows.length)
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect([...foundRows]).toEqual(
                   expect.arrayContaining(
                     expectedRows.map((expectedRow: any) =>
@@ -358,10 +354,8 @@ if (descriptions.length) {
                   keyof SearchResponse<Row>
                 >
                 for (let key of keys) {
-                  // eslint-disable-next-line jest/no-standalone-expect
                   expect(response[key]).toBeDefined()
                   if (properties[key]) {
-                    // eslint-disable-next-line jest/no-standalone-expect
                     expect(response[key]).toEqual(properties[key])
                   }
                 }
@@ -375,7 +369,6 @@ if (descriptions.length) {
                 const response = await this.performSearch()
                 const cloned = cloneDeep(response)
                 for (let property of properties) {
-                  // eslint-disable-next-line jest/no-standalone-expect
                   expect(response[property]).toBeUndefined()
                 }
                 return cloned
@@ -389,7 +382,6 @@ if (descriptions.length) {
                 const cloned = cloneDeep(response)
                 const foundRows = response.rows
 
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect([...foundRows]).toEqual(
                   expect.arrayContaining(
                     expectedRows.map((expectedRow: any) =>
@@ -409,7 +401,6 @@ if (descriptions.length) {
               async toHaveLength(length: number) {
                 const { rows: foundRows } = await this.performSearch()
 
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect(foundRows).toHaveLength(length)
               }
             }
@@ -2142,7 +2133,7 @@ if (descriptions.length) {
                     // repeat the search many times to check the first row is always the same
                     let bookmark: string | number | undefined,
                       hasNextPage: boolean | undefined = true,
-                      rowCount: number = 0
+                      rowCount = 0
                     do {
                       const response = await config.api.row.search(
                         tableOrViewId,
@@ -2169,7 +2160,6 @@ if (descriptions.length) {
                     let bookmark: string | number = undefined
                     let rows: Row[] = []
 
-                    // eslint-disable-next-line no-constant-condition
                     while (true) {
                       const response = await config.api.row.search(
                         tableOrViewId,
