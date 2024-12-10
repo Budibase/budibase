@@ -1,6 +1,6 @@
 export async function retry<T extends (...arg0: any[]) => any>(
   fn: T,
-  maxTry: number = 5,
+  maxTry = 5,
   retryCount = 1
 ): Promise<Awaited<ReturnType<T>>> {
   const currRetry = typeof retryCount === "number" ? retryCount : 1

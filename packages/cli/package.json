@@ -11,13 +11,13 @@
   "scripts": {
     "tsc": "node ../../scripts/build.js",
     "build": "yarn tsc",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "start": "ts-node ./src/index.ts"
   },
   "dependencies": {
-    "@budibase/backend-core": "0.0.0",
-    "@budibase/string-templates": "0.0.0",
-    "@budibase/types": "0.0.0",
+    "@budibase/backend-core": "*",
+    "@budibase/string-templates": "*",
+    "@budibase/types": "*",
     "chalk": "4.1.0",
     "cli-progress": "3.11.2",
     "commander": "7.1.0",

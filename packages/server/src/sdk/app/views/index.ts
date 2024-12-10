@@ -315,7 +315,10 @@ export async function create(
   return view
 }
 
-export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
+export async function update(
+  tableId: string,
+  view: ViewV2
+): Promise<{ view: ViewV2; existingView: ViewV2 }> {
   await guardViewSchema(tableId, view)
 
   return pickApi(tableId).update(tableId, view)

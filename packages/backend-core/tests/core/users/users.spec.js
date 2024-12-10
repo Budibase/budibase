@@ -11,15 +11,15 @@ const { getCreatorCount } = require("../../../src/users/users")
 
 describe("Users", () => {
   let getGlobalDBMock
-  let getGlobalUserParamsMock
   let paginationMock
 
   beforeEach(() => {
     jest.resetAllMocks()
 
     getGlobalDBMock = jest.spyOn(context, "getGlobalDB")
-    getGlobalUserParamsMock = jest.spyOn(db, "getGlobalUserParams")
     paginationMock = jest.spyOn(db, "pagination")
+
+    jest.spyOn(db, "getGlobalUserParams")
   })
 
   it("Retrieves the number of creators", async () => {
