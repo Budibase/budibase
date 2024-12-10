@@ -1,5 +1,4 @@
 import {
-  Flags,
   GetUserFlagsResponse,
   SetUserFlagRequest,
   SetUserFlagResponse,
