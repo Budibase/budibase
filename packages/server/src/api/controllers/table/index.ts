@@ -120,8 +120,15 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     await events.table.created(savedTable)
   } else {
     const api = pickApi({ table })
-    savedTable = await api.updateTable(ctx, renaming)
-    await events.table.updated(savedTable)
+    const { table: updatedTable, oldTable } = await api.updateTable(
+      ctx,
+      renaming
+    )
+    savedTable = updatedTable
+
+    if (oldTable) {
+      await events.table.updated(oldTable, savedTable)
+    }
   }
   if (renaming) {
     await sdk.views.renameLinkedViews(savedTable, renaming)

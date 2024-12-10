@@ -22,7 +22,7 @@ import {
 async function redirect(
   ctx: any,
   method: "GET" | "POST" | "DELETE",
-  path: string = "global"
+  path = "global"
 ) {
   const { devPath } = ctx.params
   const queryString = ctx.originalUrl.split("?")[1] || ""

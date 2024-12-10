@@ -6,8 +6,6 @@ import {
   Table,
 } from "@budibase/types"
 
-/* eslint-disable */
-
 const created = async (count: number, timestamp?: string | number) => {
   const properties: RowsCreatedEvent = {
     count,

@@ -12,7 +12,6 @@ vi.mock("stores/selectors", () => ({
 describe("datasource creation store", () => {
   beforeEach(ctx => {
     vi.clearAllMocks()
-    // eslint-disable-next-line no-import-assign
     ctx.store = createDatasourceCreationStore()
 
     ctx.integration = { data: "integration" }
