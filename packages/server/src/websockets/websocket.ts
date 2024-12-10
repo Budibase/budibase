@@ -33,7 +33,7 @@ export class BaseSocket {
   constructor(
     app: Koa,
     server: http.Server,
-    path: string = "/",
+    path = "/",
     additionalMiddlewares?: any[]
   ) {
     this.app = app
@@ -57,7 +57,7 @@ export class BaseSocket {
       const ctx = createContext(this.app, socket)
 
       try {
-        await runMiddlewares(ctx, middlewares, () => {
+        await runMiddlewares(ctx, middlewares, async () => {
           // Middlewares are finished
           // Extract some data from our enriched koa context to persist
           // as metadata for the socket
@@ -250,7 +250,7 @@ export class BaseSocket {
   }
 
   // Updates a connected user's metadata, assuming a room change is not required.
-  async updateUser(socket: Socket, patch: Object) {
+  async updateUser(socket: Socket, patch: object) {
     socket.data = {
       ...socket.data,
       ...patch,

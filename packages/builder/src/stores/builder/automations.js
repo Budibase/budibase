@@ -871,13 +871,13 @@ const automationActions = store => ({
   clearLogErrors: async ({ automationId, appId } = {}) => {
     return await API.clearAutomationLogErrors(automationId, appId)
   },
-  addTestDataToAutomation: async data => {
+  addTestDataToAutomation: data => {
     let newAutomation = cloneDeep(get(selectedAutomation).data)
     newAutomation.testData = {
       ...newAutomation.testData,
       ...data,
     }
-    await store.actions.save(newAutomation)
+    return newAutomation
   },
   constructBlock(type, stepId, blockDefinition) {
     let newName
