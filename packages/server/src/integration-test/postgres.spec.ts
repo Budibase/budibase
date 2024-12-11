@@ -1,5 +1,4 @@
 import { Datasource, FieldType, Table } from "@budibase/types"
-import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import {
   DatabaseName,
@@ -8,7 +7,9 @@ import {
 } from "../integrations/tests/utils"
 import { Knex } from "knex"
 
-const mainDescriptions = datasourceDescribe({ only: [DatabaseName.POSTGRES] })
+const mainDescriptions = datasourceDescribe({
+  only: [DatabaseName.POSTGRES, DatabaseName.POSTGRES_LEGACY],
+})
 
 if (mainDescriptions.length) {
   describe.each(mainDescriptions)(
