@@ -40,6 +40,7 @@ export const buildAuthEndpoints = (API: BaseAPIClient): AuthEndpoints => ({
         username,
         password,
       },
+      parseResponse: () => undefined,
     })
   },
 
