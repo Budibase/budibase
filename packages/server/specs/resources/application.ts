@@ -12,7 +12,7 @@ const application = {
   updatedAt: "2022-02-22T13:00:54.035Z",
   createdAt: "2022-02-11T18:02:26.961Z",
   status: "development",
-  lockedBy: userResource.getExamples().user.value.user,
+  lockedBy: userResource.getExamples().user?.value.user,
 }
 
 const deployment = {

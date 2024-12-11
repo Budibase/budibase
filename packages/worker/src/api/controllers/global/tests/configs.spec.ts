@@ -47,6 +47,6 @@ describe("Global configs controller", () => {
 
     await verifyAIConfig(newConfig, data)
     // should be unchanged
-    expect(newConfig.ai.apiKey).toEqual("myapikey")
+    expect(newConfig.ai!.apiKey).toEqual("myapikey")
   })
 })

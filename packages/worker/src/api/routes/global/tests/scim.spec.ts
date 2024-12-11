@@ -183,7 +183,7 @@ describe("scim", () => {
             params: {
               filter: encodeURI(
                 `emails[type eq "work"].value eq "${
-                  userToFetch?.emails![0].value
+                  userToFetch?.emails![0]!.value
                 }"`
               ),
             },
@@ -646,7 +646,7 @@ describe("scim", () => {
         const account: CloudAccount = {
           ...structures.accounts.account(),
           budibaseUserId: user.id,
-          email: user.emails![0].value,
+          email: user.emails![0]!.value,
         }
         mocks.accounts.getAccount.mockResolvedValue(account)
 
@@ -1006,7 +1006,7 @@ describe("scim", () => {
                 value: [
                   {
                     $ref: null,
-                    value: userToAdd.id,
+                    value: userToAdd!.id,
                   },
                 ],
               },
@@ -1019,7 +1019,7 @@ describe("scim", () => {
             ...group,
             members: [
               {
-                value: userToAdd.id,
+                value: userToAdd!.id,
               },
             ],
           }
@@ -1039,15 +1039,15 @@ describe("scim", () => {
                 value: [
                   {
                     $ref: null,
-                    value: users[1].id,
+                    value: users[1]!.id,
                   },
                   {
                     $ref: null,
-                    value: users[2].id,
+                    value: users[2]!.id,
                   },
                   {
                     $ref: null,
-                    value: users[3].id,
+                    value: users[3]!.id,
                   },
                 ],
               },
@@ -1060,16 +1060,16 @@ describe("scim", () => {
             ...group,
             members: [
               {
-                value: users[0].id,
+                value: users[0]!.id,
               },
               {
-                value: users[1].id,
+                value: users[1]!.id,
               },
               {
-                value: users[2].id,
+                value: users[2]!.id,
               },
               {
-                value: users[3].id,
+                value: users[3]!.id,
               },
             ],
           }
@@ -1089,11 +1089,11 @@ describe("scim", () => {
                 value: [
                   {
                     $ref: null,
-                    value: users[0].id,
+                    value: users[0]!.id,
                   },
                   {
                     $ref: null,
-                    value: users[2].id,
+                    value: users[2]!.id,
                   },
                 ],
               },
@@ -1106,10 +1106,10 @@ describe("scim", () => {
             ...group,
             members: expect.arrayContaining([
               {
-                value: users[1].id,
+                value: users[1]!.id,
               },
               {
-                value: users[3].id,
+                value: users[3]!.id,
               },
             ]),
           }
@@ -1129,7 +1129,7 @@ describe("scim", () => {
                 value: [
                   {
                     $ref: null,
-                    value: users[1].id,
+                    value: users[1]!.id,
                   },
                 ],
               },
@@ -1139,7 +1139,7 @@ describe("scim", () => {
                 value: [
                   {
                     $ref: null,
-                    value: users[4].id,
+                    value: users[4]!.id,
                   },
                 ],
               },
@@ -1152,10 +1152,10 @@ describe("scim", () => {
             ...group,
             members: expect.arrayContaining([
               {
-                value: users[3].id,
+                value: users[3]!.id,
               },
               {
-                value: users[4].id,
+                value: users[4]!.id,
               },
             ]),
           }
@@ -1182,7 +1182,7 @@ describe("scim", () => {
                 value: [
                   {
                     $ref: null,
-                    value: users[5].id,
+                    value: users[5]?.id,
                   },
                 ],
               },
@@ -1196,13 +1196,13 @@ describe("scim", () => {
             displayName: newDisplayName,
             members: expect.arrayContaining([
               {
-                value: users[3].id,
+                value: users[3]?.id,
               },
               {
-                value: users[4].id,
+                value: users[4]?.id,
               },
               {
-                value: users[5].id,
+                value: users[5]?.id,
               },
             ]),
           }

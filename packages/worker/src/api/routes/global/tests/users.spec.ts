@@ -116,7 +116,7 @@ describe("/api/global/users", () => {
       const body = res.body as InviteUsersResponse
       expect(body.successful.length).toBe(0)
       expect(body.unsuccessful.length).toBe(1)
-      expect(body.unsuccessful[0].reason).toBe("Unavailable")
+      expect(body.unsuccessful[0]?.reason).toBe("Unavailable")
       expect(sendMailMock).toHaveBeenCalledTimes(0)
       expect(events.user.invited).toHaveBeenCalledTimes(0)
     })
@@ -133,7 +133,7 @@ describe("/api/global/users", () => {
       const body = res.body as InviteUsersResponse
       expect(body.successful.length).toBe(0)
       expect(body.unsuccessful.length).toBe(1)
-      expect(body.unsuccessful[0].reason).toBe("Unavailable")
+      expect(body.unsuccessful[0]?.reason).toBe("Unavailable")
       expect(sendMailMock).toHaveBeenCalledTimes(0)
       expect(events.user.invited).toHaveBeenCalledTimes(0)
     })
@@ -148,7 +148,7 @@ describe("/api/global/users", () => {
 
       expect(response.created?.successful.length).toBe(0)
       expect(response.created?.unsuccessful.length).toBe(1)
-      expect(response.created?.unsuccessful[0].email).toBe(user.email)
+      expect(response.created?.unsuccessful[0]?.email).toBe(user.email)
       expect(events.user.created).toHaveBeenCalledTimes(0)
     })
 
@@ -161,7 +161,7 @@ describe("/api/global/users", () => {
 
         expect(response.created?.successful.length).toBe(0)
         expect(response.created?.unsuccessful.length).toBe(1)
-        expect(response.created?.unsuccessful[0].email).toBe(user.email)
+        expect(response.created?.unsuccessful[0]?.email).toBe(user.email)
         expect(events.user.created).toHaveBeenCalledTimes(0)
       })
     })
@@ -176,7 +176,7 @@ describe("/api/global/users", () => {
 
       expect(response.created?.successful.length).toBe(0)
       expect(response.created?.unsuccessful.length).toBe(1)
-      expect(response.created?.unsuccessful[0].email).toBe(user.email)
+      expect(response.created?.unsuccessful[0]?.email).toBe(user.email)
       expect(events.user.created).toHaveBeenCalledTimes(0)
     })
 
@@ -192,9 +192,9 @@ describe("/api/global/users", () => {
       ])
 
       expect(response.created?.successful.length).toBe(3)
-      expect(response.created?.successful[0].email).toBe(builder.email)
-      expect(response.created?.successful[1].email).toBe(admin.email)
-      expect(response.created?.successful[2].email).toBe(user.email)
+      expect(response.created?.successful[0]?.email).toBe(builder.email)
+      expect(response.created?.successful[1]?.email).toBe(admin.email)
+      expect(response.created?.successful[2]?.email).toBe(user.email)
       expect(response.created?.unsuccessful.length).toBe(0)
       expect(events.user.created).toHaveBeenCalledTimes(3)
       expect(events.user.permissionAdminAssigned).toHaveBeenCalledTimes(1)

@@ -67,6 +67,7 @@ export async function getTemplateByID(id: string, ownerId?: string) {
   const response = await db.allDocs<Template>(
     dbCore.getTemplateParams(ownerId || GLOBAL_OWNER, id, {
       include_docs: true,
+      limit: 1,
     })
   )
   let templates = response.rows.map(row => row.doc!)

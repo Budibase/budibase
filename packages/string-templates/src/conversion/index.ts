@@ -77,8 +77,7 @@ function splitBySpace(layer: string) {
     }
   }
   const continuationChars = ["[", "'", '"']
-  for (let index = 0; index < layer.length; index++) {
-    const char = layer[index]
+  for (const [index, char] of layer.split("").entries()) {
     if (continuationChars.indexOf(char) !== -1 && started == null) {
       started = index
       endChar = char === "[" ? "]" : char
@@ -114,16 +113,16 @@ export function convertHBSBlock(block: string, blockNumber: number) {
   const list = getJsHelperList()
   for (let layer of layers) {
     const parts = splitBySpace(layer)
-    if (value || parts.length > 1 || list[parts[0]]) {
+    if (value || parts.length > 1 || list[parts[0]!]) {
       // first of layer should always be the helper
       const [helper] = parts.splice(0, 1)
-      if (list[helper]) {
+      if (list[helper!]) {
         value = `helpers.${helper}(${buildList(parts, value)})`
       }
     }
     // no helpers
     else {
-      value = getVariable(parts[0])
+      value = getVariable(parts[0]!)
     }
   }
   // split by space will remove square brackets

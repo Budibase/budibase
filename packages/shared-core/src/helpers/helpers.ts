@@ -18,8 +18,8 @@ export const deepGet = (obj: { [x: string]: any }, key: string) => {
     return obj[key]
   }
   const split = key.split(".")
-  for (let i = 0; i < split.length; i++) {
-    obj = obj?.[split[i]]
+  for (const part of split) {
+    obj = obj?.[part]
   }
   return obj
 }

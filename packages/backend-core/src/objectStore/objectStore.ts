@@ -377,11 +377,10 @@ export async function retrieveDirectory(bucketName: string, path: string) {
   let streams = await Promise.all(
     objects.map(obj => getReadStream(bucketName, obj.Key!))
   )
-  let count = 0
   const writePromises: Promise<Error>[] = []
-  for (let obj of objects) {
+  for (const [i, obj] of objects.entries()) {
     const filename = obj.Key!
-    const stream = streams[count++]
+    const stream = streams[i]!
     const possiblePath = filename.split("/")
     const dirs = possiblePath.slice(0, possiblePath.length - 1)
     const possibleDir = join(writePath, ...dirs)
@@ -562,6 +561,10 @@ export async function getObjectMetadata(
   }
 }
 
+const bucketPathRegex = new RegExp(
+  `^${SIGNED_FILE_PREFIX}/(?<bucket>[^/]+)/(?<path>.+)$`
+)
+
 /*
 Given a signed url like '/files/signed/tmp-files-attachments/app_123456/myfile.txt' extract
 the bucket and the path from it
@@ -570,13 +573,12 @@ export function extractBucketAndPath(
   url: string
 ): { bucket: string; path: string } | null {
   const baseUrl = url.split("?")[0]
+  if (!baseUrl) {
+    return null
+  }
 
-  const regex = new RegExp(
-    `^${SIGNED_FILE_PREFIX}/(?<bucket>[^/]+)/(?<path>.+)$`
-  )
-  const match = baseUrl.match(regex)
-
-  if (match && match.groups) {
+  const match = baseUrl.match(bucketPathRegex)
+  if (match && match.groups && match.groups.bucket && match.groups.path) {
     const { bucket, path } = match.groups
     return { bucket, path }
   }

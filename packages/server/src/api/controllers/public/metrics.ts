@@ -76,7 +76,7 @@ export async function fetch(ctx: Ctx) {
     "budibase_os_load1",
     "Host operating system load average",
     "gauge",
-    os.loadavg()[0]
+    os.loadavg()[0]!
   )
 
   // **** budibase_os_load5 ****
@@ -84,14 +84,14 @@ export async function fetch(ctx: Ctx) {
     "budibase_os_load5",
     "Host operating system load average",
     "gauge",
-    os.loadavg()[1]
+    os.loadavg()[1]!
   )
   // **** budibase_os_load15 ****
   outputString += convertToOpenMetrics(
     "budibase_os_load15",
     "Host operating system load average",
     "gauge",
-    os.loadavg()[2]
+    os.loadavg()[2]!
   )
 
   // **** budibase_tenant_user_count ****

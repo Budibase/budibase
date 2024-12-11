@@ -61,52 +61,32 @@ export enum SelectableDatabase {
   UNUSED_14 = 15,
 }
 
-export function getRedisConnectionDetails() {
-  let password = env.REDIS_PASSWORD
-  let url: string[] | string = env.REDIS_URL.split("//")
-  // get rid of the protocol
-  url = url.length > 1 ? url[1] : url[0]
-  // check for a password etc
-  url = url.split("@")
-  if (url.length > 1) {
-    // get the password
-    password = url[0].split(":")[1]
-    url = url[1]
-  } else {
-    url = url[0]
-  }
-  const [host, port] = url.split(":")
-
-  const portNumber = parseInt(port)
-  return {
-    host,
-    password,
-    // assume default port for redis if invalid found
-    port: isNaN(portNumber) ? 6379 : portNumber,
-  }
+export function getRedisConnectionDetails(): Redis.RedisOptions {
+  // The URL class will return most things as the empty string if not present,
+  // so we add `|| undefined` to not confuse the Redis client.
+  const url = new URL(env.REDIS_URL)
+  const host = url.hostname || undefined
+  const password = url.password || env.REDIS_PASSWORD
+  const username = url.username || undefined
+  const port = parseInt(url.port) || 6379 // NaN is falsey, parseInt('') is NaN
+  return { host, password, port, username }
 }
 
 export function getRedisOptions() {
-  const { host, password, port } = getRedisConnectionDetails()
-  let redisOpts: Redis.RedisOptions = {
+  const opts: Redis.RedisOptions = {
+    ...getRedisConnectionDetails(),
     connectTimeout: CONNECT_TIMEOUT_MS,
-    port: port,
-    host,
-    password,
   }
-  let opts: Redis.ClusterOptions | Redis.RedisOptions = redisOpts
   if (env.REDIS_CLUSTERED) {
-    opts = {
+    return {
       connectTimeout: CONNECT_TIMEOUT_MS,
-      redisOptions: {
-        ...redisOpts,
-        tls: {},
-      },
+      redisOptions: { ...opts, tls: {} },
       slotsRefreshTimeout: SLOT_REFRESH_MS,
       dnsLookup: (address: string, callback: any) => callback(null, address),
     } as Redis.ClusterOptions
+  } else {
+    return opts
   }
-  return opts
 }
 
 export function addDbPrefix(db: string, key: string) {

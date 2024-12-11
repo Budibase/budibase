@@ -260,13 +260,13 @@ export async function paginatedUsers({
   }
   // property specifies what to use for the page/anchor
   let userList: User[],
-    property = "_id",
+    property: keyof User = "_id",
     getKey
   if (query?.equal?._id) {
     userList = [await getById(query.equal._id)]
   } else if (appId) {
     userList = await searchGlobalUsersByApp(appId, opts)
-    getKey = (doc: any) => getGlobalUserByAppPage(appId, doc)
+    getKey = (doc: User) => getGlobalUserByAppPage(appId, doc)
   } else if (query?.string?.email) {
     userList = await searchGlobalUsersByEmail(query?.string?.email, opts)
     property = "email"
@@ -275,7 +275,8 @@ export async function paginatedUsers({
       cleanup: true,
     })
   } else if (query) {
-    // TODO: this should use SQS search, but the logic is built in the 'server' package. Using the in-memory filtering to get this working meanwhile
+    // TODO: this should use SQS search, but the logic is built in the 'server'
+    // package. Using the in-memory filtering to get this working meanwhile
     const response = await db.allDocs<User>(
       getGlobalUserParams(null, { ...opts, limit: undefined })
     )
@@ -286,11 +287,7 @@ export async function paginatedUsers({
     const response = await db.allDocs<User>(getGlobalUserParams(null, opts))
     userList = response.rows.map(row => row.doc!)
   }
-  return pagination(userList, pageSize, {
-    paginate: true,
-    property,
-    getKey,
-  })
+  return pagination(userList, pageSize, { property, getKey })
 }
 
 export async function getUserCount() {

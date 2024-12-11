@@ -37,7 +37,11 @@ if (env.MOCK_REDIS) {
 }
 
 function pickClient(selectDb: number) {
-  return CLIENTS[selectDb]
+  const client = CLIENTS[selectDb]
+  if (!client) {
+    throw new Error(`No Redis client for db: ${selectDb}`)
+  }
+  return client
 }
 
 function connectionError(timeout: NodeJS.Timeout, err: Error | string) {
@@ -63,9 +67,8 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   const RedisCore = env.MOCK_REDIS && MockRedis ? MockRedis : Redis
   let timeout: NodeJS.Timeout
   CLOSED = false
-  let client = pickClient(selectDb)
   // already connected, ignore
-  if (client && CONNECTED) {
+  if (CLIENTS[selectDb] && CONNECTED) {
     return
   }
   // testing uses a single in memory client
@@ -79,13 +82,10 @@ function init(selectDb = DEFAULT_SELECT_DB) {
     }
   }, STARTUP_TIMEOUT_MS)
 
-  // disconnect any lingering client
-  if (client) {
-    client.disconnect()
-  }
   const { host, port } = getRedisConnectionDetails()
   const opts = getRedisOptions()
 
+  let client: Redis
   if (CLUSTERED) {
     client = new RedisCore.Cluster([{ host, port }], opts)
   } else {
@@ -205,8 +205,11 @@ class RedisWrapper {
     key = `${db}${SEPARATOR}${key}`
     let stream
     if (CLUSTERED) {
-      let node = (this.getClient() as never as Cluster).nodes("master")
-      stream = node[0].scanStream({ match: key + "*", count: 100 })
+      let node = (this.getClient() as never as Cluster).nodes("master")[0]
+      if (!node) {
+        throw new Error("No master node found in Redis cluster")
+      }
+      stream = node.scanStream({ match: key + "*", count: 100 })
     } else {
       stream = (this.getClient() as Redis).scanStream({
         match: key + "*",
@@ -244,31 +247,29 @@ class RedisWrapper {
   }
 
   async bulkGet<T>(keys: string[]) {
-    const db = this._db
     if (keys.length === 0) {
       return {}
     }
-    const prefixedKeys = keys.map(key => addDbPrefix(db, key))
+
+    const prefixedKeys = keys.map(key => addDbPrefix(this._db, key))
     let response = await this.getClient().mget(prefixedKeys)
-    if (Array.isArray(response)) {
-      let final: Record<string, T> = {}
-      let count = 0
-      for (let result of response) {
-        if (result) {
-          let parsed
-          try {
-            parsed = JSON.parse(result)
-          } catch (err) {
-            parsed = result
-          }
-          final[keys[count]] = parsed
-        }
-        count++
-      }
-      return final
-    } else {
+    if (!Array.isArray(response)) {
       throw new Error(`Invalid response: ${response}`)
     }
+
+    let final: Record<string, T> = {}
+    for (const [i, result] of response.entries()) {
+      if (!result) {
+        continue
+      }
+      const key = keys[i]!
+      try {
+        final[key] = JSON.parse(result)
+      } catch (err) {
+        final[key] = result as T
+      }
+    }
+    return final
   }
 
   async store(key: string, value: any, expirySeconds: number | null = null) {

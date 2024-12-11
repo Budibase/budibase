@@ -70,12 +70,16 @@ export function generateUserMetadataID(globalId: string) {
 /**
  * Breaks up the ID to get the global ID.
  */
-export function getGlobalIDFromUserMetadataID(id: string) {
+export function getGlobalIDFromUserMetadataID(id: string): string {
   const prefix = `${DocumentType.ROW}${SEPARATOR}${InternalTable.USER_METADATA}${SEPARATOR}`
   if (!id || !id.includes(prefix)) {
     return id
   }
-  return id.split(prefix)[1]
+  const split = id.split(prefix)
+  if (!split[1]) {
+    return id
+  }
+  return split[1]
 }
 
 /**
