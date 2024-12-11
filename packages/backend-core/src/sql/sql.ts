@@ -292,7 +292,7 @@ class InternalBuilder {
 
     const alias = this.getTableName(table)
     const schema = this.table.schema
-    if (!this.isFullSelectStatementRequired()) {
+    if (this.isFullSelectStatementRequired()) {
       return [this.knex.raw("??", [`${alias}.*`])]
     }
     // get just the fields for this table
@@ -1543,9 +1543,6 @@ class InternalBuilder {
 
     // start building the query
     let query = this.qualifiedKnex()
-    if (resource?.fields) {
-      query = query.columns(resource?.fields)
-    }
 
     // handle pagination
     let foundOffset: number | null = null
