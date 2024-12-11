@@ -6,6 +6,7 @@
     QueryUtils,
     Constants,
     CoreFilterBuilder,
+    Utils,
   } from "@budibase/frontend-core"
   import Button from "../Button.svelte"
 
@@ -95,7 +96,7 @@
   }
 
   const updateQuery = () => {
-    filters = editableFilters
+    filters = Utils.parseFilter(editableFilters)
   }
 
   onDestroy(() => {
