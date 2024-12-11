@@ -140,10 +140,7 @@
     if (image) {
       let data = new FormData()
       data.append("file", image)
-      await API.uploadOIDCLogo({
-        name: image.name,
-        data,
-      })
+      await API.uploadOIDCLogo(image.name, data)
     }
   }
 

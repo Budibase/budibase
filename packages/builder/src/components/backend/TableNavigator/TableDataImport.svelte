@@ -147,7 +147,7 @@
     loading = true
     try {
       if (rows.length > 0) {
-        const response = await API.validateNewTableImport({ rows, schema })
+        const response = await API.validateNewTableImport(rows, schema)
         validation = response.schemaValidation
         allValid = response.allValid
         errors = response.errors

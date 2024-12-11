@@ -49,10 +49,7 @@
       data.append("file", fileList[i])
     }
     try {
-      return await API.uploadAttachment({
-        data,
-        tableId: formContext?.dataSource?.tableId,
-      })
+      return await API.uploadAttachment(formContext?.dataSource?.tableId, data)
     } catch (error) {
       return []
     }

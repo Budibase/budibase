@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "paths": {
+      "@budibase/types": ["../types/src"],
+      "@budibase/shared-core": ["../shared-core/src"],
+      "@budibase/bbui": ["../bbui/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

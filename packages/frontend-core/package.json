@@ -4,7 +4,7 @@
   "description": "Budibase frontend core libraries used in builder and client",
   "author": "Budibase",
   "license": "MPL-2.0",
-  "svelte": "src/index.js",
+  "svelte": "./src/index.ts",
   "dependencies": {
     "@budibase/bbui": "*",
     "@budibase/shared-core": "*",

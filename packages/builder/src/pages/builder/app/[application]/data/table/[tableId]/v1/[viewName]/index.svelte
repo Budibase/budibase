@@ -43,8 +43,7 @@
       return
     }
     try {
-      data = await API.fetchViewData({
-        name,
+      data = await API.fetchViewData(name, {
         calculation,
         field,
         groupBy,

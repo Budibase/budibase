@@ -48,7 +48,7 @@ export default class QueryFetch extends DataFetch {
     }
 
     // Add pagination to query if supported
-    let queryPayload = { queryId: datasource?._id, parameters }
+    let queryPayload = { parameters }
     if (paginate && supportsPagination) {
       const requestCursor = type === "page" ? parseInt(cursor || 1) : cursor
       queryPayload.pagination = { page: requestCursor, limit }
@@ -56,7 +56,7 @@ export default class QueryFetch extends DataFetch {
 
     // Execute query
     try {
-      const res = await this.API.executeQuery(queryPayload)
+      const res = await this.API.executeQuery(datasource?._id, queryPayload)
       const { data, pagination, ...rest } = res
 
       // Derive pagination info from response
