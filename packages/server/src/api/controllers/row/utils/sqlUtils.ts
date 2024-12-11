@@ -142,6 +142,7 @@ export async function buildSqlFieldList(
   let table: Table
   if (sdk.views.isView(source)) {
     table = await sdk.views.getTable(source.id)
+    fields = fields.filter(f => table.schema[f].type !== FieldType.LINK)
   } else {
     table = source
   }
