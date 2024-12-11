@@ -5,9 +5,16 @@ import {
   BulkUserDeleted,
   BulkUserRequest,
   BulkUserResponse,
+  CheckInviteResponse,
+  CountUserResponse,
   CreateAdminUserRequest,
   CreateAdminUserResponse,
   DeleteInviteUsersRequest,
+  DeleteInviteUsersResponse,
+  DeleteUserResponse,
+  FetchUsersResponse,
+  FindUserResponse,
+  GetUserInvitesResponse,
   InviteUsersRequest,
   InviteUsersResponse,
   LookupAccountHolderResponse,
@@ -23,8 +30,8 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface UserEndpoints {
-  getUsers: () => Promise<User[]>
-  getUser: (userId: string) => Promise<User>
+  getUsers: () => Promise<FetchUsersResponse>
+  getUser: (userId: string) => Promise<FindUserResponse>
   updateOwnMetadata: (
     metadata: UpdateSelfMetadataRequest
   ) => Promise<UpdateSelfMetadataResponse>
@@ -32,7 +39,7 @@ export interface UserEndpoints {
     user: CreateAdminUserRequest
   ) => Promise<CreateAdminUserResponse>
   saveUser: (user: User) => Promise<SaveUserResponse>
-  deleteUser: (userId: string) => Promise<{ message: string }>
+  deleteUser: (userId: string) => Promise<DeleteUserResponse>
   deleteUsers: (
     users: Array<{
       userId: string
@@ -40,21 +47,16 @@ export interface UserEndpoints {
     }>
   ) => Promise<BulkUserDeleted | undefined>
   onboardUsers: (data: InviteUsersRequest) => Promise<InviteUsersResponse>
-  getUserInvite: (code: string) => Promise<{ email: string }>
-  getUserInvites: () => Promise<any[]>
+  getUserInvite: (code: string) => Promise<CheckInviteResponse>
+  getUserInvites: () => Promise<GetUserInvitesResponse>
   inviteUsers: (users: InviteUsersRequest) => Promise<InviteUsersResponse>
   removeUserInvites: (
     data: DeleteInviteUsersRequest
-  ) => Promise<{ message: string }>
+  ) => Promise<DeleteInviteUsersResponse>
   acceptInvite: (
     data: AcceptUserInviteRequest
   ) => Promise<AcceptUserInviteResponse>
   getUserCountByApp: (appId: string) => Promise<number>
-  addAppBuilder: (userId: string, appId: string) => Promise<{ message: string }>
-  removeAppBuilder: (
-    userId: string,
-    appId: string
-  ) => Promise<{ message: string }>
   getAccountHolder: () => Promise<LookupAccountHolderResponse>
   searchUsers: (data: SearchUsersRequest) => Promise<SearchUsersResponse>
   createUsers: (
@@ -65,6 +67,13 @@ export interface UserEndpoints {
     code: string,
     data: UpdateInviteRequest
   ) => Promise<UpdateInviteResponse>
+
+  // Missing request or response types
+  addAppBuilder: (userId: string, appId: string) => Promise<{ message: string }>
+  removeAppBuilder: (
+    userId: string,
+    appId: string
+  ) => Promise<{ message: string }>
 }
 
 export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
@@ -248,7 +257,7 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
    * Counts the number of users in an app
    */
   getUserCountByApp: async appId => {
-    const res = await API.get<{ userCount: number }>({
+    const res = await API.get<CountUserResponse>({
       url: `/api/global/users/count/${appId}`,
     })
     return res.userCount
