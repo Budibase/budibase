@@ -1537,8 +1537,7 @@ class InternalBuilder {
       limits?: { base: number; query: number }
     } = {}
   ): Knex.QueryBuilder {
-    const { operation, filters, paginate, relationships, table, resource } =
-      this.query
+    const { operation, filters, paginate, relationships, table } = this.query
     const { limits } = opts
 
     // start building the query
