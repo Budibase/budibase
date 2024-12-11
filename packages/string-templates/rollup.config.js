@@ -32,7 +32,7 @@ const config = (input, outputFile, format) => ({
     }),
     commonjs(),
     json(),
-    inject({ Buffer: ["buffer", "Buffer"] }),
+    inject({ Buffer: ["buffer", "Buffer"], process: "process/browser" }),
     production && terser(),
   ],
 })
