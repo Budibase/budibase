@@ -1,5 +1,6 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
+import { cloneDeep } from "lodash"
 
 export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -350,4 +351,28 @@ export const buildMultiStepFormBlockDefaultProps = props => {
     buttons,
     title,
   }
+}
+
+/**
+ * Parse out empty or invalid UI filters and clear empty groups
+ * @param {Object} filter UI filter
+ * @returns {Object} parsed filter
+ */
+export function parseFilter(filter) {
+  if (!filter?.groups) {
+    return filter
+  }
+
+  const update = cloneDeep(filter)
+
+  update.groups = update.groups
+    .map(group => {
+      group.filters = group.filters.filter(filter => {
+        return filter.field && filter.operator
+      })
+      return group.filters.length ? group : null
+    })
+    .filter(group => group)
+
+  return update
 }
