@@ -25,8 +25,8 @@ export default defineConfig(({ mode }) => {
         outDir: "dist",
         name: "budibase_client",
         fileName: () => "budibase-client.js",
-        minify: isProduction,
       },
+      minify: isProduction,
     },
     plugins: [
       svelte({
