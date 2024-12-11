@@ -196,8 +196,7 @@
                           {#if permissionError}
                             <div class="error">
                               <Layout justifyItems="center" gap="S">
-                                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                                {@html ErrorSVG}
+                                <img src={ErrorSVG} alt="Error" />
                                 <Heading size="L">
                                   You don't have permission to use this app
                                 </Heading>
@@ -210,7 +209,7 @@
                             <div class="error">
                               <Layout justifyItems="center" gap="S">
                                 <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                                {@html ErrorSVG}
+                                <img src={ErrorSVG} alt="My Icon" />
                                 <Heading size="L">
                                   Something went wrong rendering your app
                                 </Heading>
@@ -224,7 +223,7 @@
                             <div class="error">
                               <Layout justifyItems="center" gap="S">
                                 <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                                {@html ErrorSVG}
+                                <img src={ErrorSVG} alt="My Icon" />
                                 <Heading size="L">
                                   This Budibase app is not publicly accessible
                                 </Heading>
