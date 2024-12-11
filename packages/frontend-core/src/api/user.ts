@@ -1,7 +1,6 @@
 import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
-  AccountMetadata,
   BulkUserCreated,
   BulkUserDeleted,
   BulkUserRequest,
@@ -11,6 +10,7 @@ import {
   DeleteInviteUsersRequest,
   InviteUsersRequest,
   InviteUsersResponse,
+  LookupAccountHolderResponse,
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
@@ -55,7 +55,7 @@ export interface UserEndpoints {
     userId: string,
     appId: string
   ) => Promise<{ message: string }>
-  getAccountHolder: () => Promise<AccountMetadata | undefined>
+  getAccountHolder: () => Promise<LookupAccountHolderResponse>
   searchUsers: (data: SearchUsersRequest) => Promise<SearchUsersResponse>
   createUsers: (
     users: User[],
