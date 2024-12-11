@@ -1,7 +1,7 @@
 import authorized from "../middleware/authorized"
 import currentApp from "../middleware/currentapp"
 import { BaseSocket } from "./websocket"
-import { auth, permissions } from "@budibase/backend-core"
+import { auth, permissions, context } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 import { getSourceId } from "../api/controllers/row/utils"
@@ -10,6 +10,7 @@ import { Socket } from "socket.io"
 import { GridSocketEvent } from "@budibase/shared-core"
 import { userAgent } from "koa-useragent"
 import { createContext, runMiddlewares } from "./middleware"
+import sdk from "../sdk"
 
 const { PermissionType, PermissionLevel } = permissions
 
@@ -24,9 +25,26 @@ export default class GridSocket extends BaseSocket {
       const ds = payload.datasource
       const appId = payload.appId
       const resourceId = ds?.type === "table" ? ds?.tableId : ds?.id
+      let valid = true
 
-      // Ignore if no table or app specified
+      // Validate datasource
       if (!resourceId || !appId) {
+        // Ignore if no table or app specified
+        valid = false
+      } else if (ds.type === "viewV2") {
+        // If this is a view filtered by current user, don't sync changes
+        try {
+          await context.doInAppContext(appId, async () => {
+            const view = await sdk.views.get(ds.id)
+            if (JSON.stringify(view.query).includes("[user]")) {
+              valid = false
+            }
+          })
+        } catch (err) {
+          valid = false
+        }
+      }
+      if (!valid) {
         socket.disconnect(true)
         return
       }
