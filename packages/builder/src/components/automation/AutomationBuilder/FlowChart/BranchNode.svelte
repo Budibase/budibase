@@ -222,6 +222,7 @@
   .branch-actions {
     display: flex;
     gap: var(--spacing-l);
+    cursor: default;
   }
   .footer {
     display: flex;
@@ -260,6 +261,7 @@
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px 4px 4px 4px;
+    cursor: default;
   }
 
   .blockSection {
