@@ -1,12 +1,7 @@
 import { UserGroup } from "@budibase/types"
-import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 
 export class GroupsAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   saveGroup = (
     group: UserGroup,
     { expect }: { expect: number | object } = { expect: 200 }

@@ -137,9 +137,9 @@ export default function (
       }
 
       const tenantId = getHeader(ctx, Header.TENANT_ID)
-      let authenticated: boolean = false,
+      let authenticated = false,
         user: User | { tenantId: string } | undefined = undefined,
-        internal: boolean = false,
+        internal = false,
         loginMethod: LoginMethod | undefined = undefined
       if (authCookie && !apiKey) {
         const sessionId = authCookie.sessionId

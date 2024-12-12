@@ -378,7 +378,7 @@ export class ExternalRequest<T extends Operation> {
         }
         // many to one
         else {
-          const thisKey: string = "id"
+          const thisKey = "id"
           // @ts-ignore
           const otherKey: string = field.fieldName
           for (const relationship of row[key]) {

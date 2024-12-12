@@ -12,7 +12,7 @@
     "prebuild": "rimraf dist/",
     "build": "node ./scripts/build.js",
     "postbuild": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client && copyfiles -f ../../yarn.lock ./dist/",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "check:dependencies": "node ../../scripts/depcheck.js",
     "build:isolated-vm-lib:snippets": "esbuild --minify --bundle src/jsRunner/bundles/snippets.ts --outfile=src/jsRunner/bundles/snippets.ivm.bundle.js --platform=node --format=iife --global-name=snippets",
     "build:isolated-vm-lib:string-templates": "esbuild --minify --bundle src/jsRunner/bundles/index-helpers.ts --outfile=src/jsRunner/bundles/index-helpers.ivm.bundle.js --platform=node --format=iife --external:handlebars --global-name=helpers",
@@ -51,14 +51,14 @@
   "dependencies": {
     "@apidevtools/swagger-parser": "10.0.3",
     "@azure/msal-node": "^2.5.1",
-    "@budibase/backend-core": "0.0.0",
-    "@budibase/client": "0.0.0",
-    "@budibase/frontend-core": "0.0.0",
+    "@budibase/backend-core": "*",
+    "@budibase/client": "*",
+    "@budibase/frontend-core": "*",
     "@budibase/nano": "10.1.5",
-    "@budibase/pro": "0.0.0",
-    "@budibase/shared-core": "0.0.0",
-    "@budibase/string-templates": "0.0.0",
-    "@budibase/types": "0.0.0",
+    "@budibase/pro": "*",
+    "@budibase/shared-core": "*",
+    "@budibase/string-templates": "*",
+    "@budibase/types": "*",
     "@bull-board/api": "5.10.2",
     "@bull-board/koa": "5.10.2",
     "@elastic/elasticsearch": "7.10.0",
@@ -147,7 +147,6 @@
     "@types/koa__router": "12.0.4",
     "@types/lodash": "4.14.200",
     "@types/mssql": "9.1.5",
-    "@types/node": "^22.9.0",
     "@types/node-fetch": "2.6.4",
     "@types/oracledb": "6.5.1",
     "@types/pg": "8.6.6",
@@ -188,7 +187,7 @@
             "projects": [
               "@budibase/backend-core"
             ],
-            "target": "build"
+            "target": "build:oss"
           }
         ]
       },

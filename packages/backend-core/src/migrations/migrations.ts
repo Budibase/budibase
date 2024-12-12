@@ -35,7 +35,7 @@ export const backPopulateMigrations = async (opts: MigrationNoOpOptions) => {
   // filter migrations to the type and populate a no-op migration
   const migrations: Migration[] = DEFINITIONS.filter(
     def => def.type === opts.type
-  ).map(d => ({ ...d, fn: () => {} }))
+  ).map(d => ({ ...d, fn: async () => {} }))
   await runMigrations(migrations, { noOp: opts })
 }
 
