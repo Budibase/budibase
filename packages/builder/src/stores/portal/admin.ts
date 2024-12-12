@@ -2,23 +2,26 @@ import { writable, get } from "svelte/store"
 import { API } from "api"
 import { auth } from "stores/portal"
 import { banner } from "@budibase/bbui"
+import {
+  ConfigChecklistResponse,
+  GetEnvironmentResponse,
+  SystemStatusResponse,
+} from "@budibase/types"
 
-export const DEFAULT_CONFIG = {
+interface PortalAdminStore extends GetEnvironmentResponse {
+  loaded: boolean
+  checklist?: ConfigChecklistResponse
+  status?: SystemStatusResponse
+}
+
+export const DEFAULT_CONFIG: PortalAdminStore = {
   loaded: false,
   multiTenancy: false,
   cloud: false,
   isDev: false,
   disableAccountPortal: false,
-  accountPortalUrl: "",
-  importComplete: false,
-  checklist: {
-    apps: { checked: false },
-    smtp: { checked: false },
-    adminUser: { checked: false },
-    sso: { checked: false },
-  },
-  maintenance: [],
   offlineMode: false,
+  maintenance: [],
 }
 
 export function createAdminStore() {
