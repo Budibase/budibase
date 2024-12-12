@@ -1239,6 +1239,12 @@ class InternalBuilder {
       if (!toTable || !fromTable) {
         continue
       }
+
+      // Don't include if not required
+      if (relationship.from && !fields.find(f => f === relationship.from)) {
+        continue
+      }
+
       const relatedTable = tables[toTable]
       if (!relatedTable) {
         throw new Error(`related table "${toTable}" not found in datasource`)
