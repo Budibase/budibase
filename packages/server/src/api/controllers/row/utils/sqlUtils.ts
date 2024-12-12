@@ -150,10 +150,19 @@ export async function buildSqlFieldList(
     table = source
   }
 
-  for (let field of Object.values(table.schema)) {
+  for (const field of Object.values(table.schema)) {
     if (field.type !== FieldType.LINK || !relationships || !field.tableId) {
       continue
     }
+
+    if (
+      isView &&
+      source.schema?.[field.name] &&
+      !helpers.views.isVisible(source.schema[field.name])
+    ) {
+      continue
+    }
+
     const { tableName } = breakExternalTableId(field.tableId)
     if (tables[tableName]) {
       fields = fields.concat(extractRealFields(tables[tableName], fields))
