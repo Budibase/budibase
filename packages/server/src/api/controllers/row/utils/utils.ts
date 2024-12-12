@@ -65,21 +65,19 @@ export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
     const { sourceId } = ctx.params
     if (docIds.isViewId(sourceId)) {
       return {
-        tableId: sql.utils.checkTableId(
-          utils.extractViewInfoFromID(sourceId).tableId
-        ),
+        tableId: utils.extractViewInfoFromID(sourceId).tableId,
         viewId: sourceId,
       }
     }
-    return { tableId: sql.utils.checkTableId(ctx.params.sourceId) }
+    return { tableId: sql.utils.encodeTableId(ctx.params.sourceId) }
   }
   // now check for old way of specifying table ID
   if (ctx.params?.tableId) {
-    return { tableId: sql.utils.checkTableId(ctx.params.tableId) }
+    return { tableId: sql.utils.encodeTableId(ctx.params.tableId) }
   }
   // check body for a table ID
   if (ctx.request.body?.tableId) {
-    return { tableId: sql.utils.checkTableId(ctx.request.body.tableId) }
+    return { tableId: sql.utils.encodeTableId(ctx.request.body.tableId) }
   }
   throw new Error("Unable to find table ID in request")
 }
