@@ -1,19 +1,39 @@
 import { derived } from "svelte/store"
+// @ts-ignore
 import { AppStatus } from "constants"
 import { API } from "api"
 import { auth } from "./auth"
-import BudiStore from "../BudiStore" // move this
+import BudiStore from "../BudiStore"
+import { App, UpdateAppRequest, User } from "@budibase/types"
 
-// properties that should always come from the dev app, not the deployed
-const DEV_PROPS = ["updatedBy", "updatedAt"]
-
-export const INITIAL_APPS_STATE = {
-  apps: [],
+interface AppIdentifierMetadata {
+  devId?: string
+  devRev?: string
+  prodId?: string
+  prodRev?: string
 }
 
-export class AppsStore extends BudiStore {
+interface AppUIMetadata {
+  deployed: boolean
+  lockedYou: boolean
+  lockedOther: boolean
+  favourite: boolean
+}
+
+interface StoreApp extends App, AppIdentifierMetadata {}
+
+interface EnrichedApp extends StoreApp, AppUIMetadata {}
+
+interface PortalAppsStore {
+  apps: StoreApp[]
+  sortBy?: string
+}
+
+export class AppsStore extends BudiStore<PortalAppsStore> {
   constructor() {
-    super({ ...INITIAL_APPS_STATE })
+    super({
+      apps: [],
+    })
 
     this.extractAppId = this.extractAppId.bind(this)
     this.getProdAppID = this.getProdAppID.bind(this)
@@ -22,12 +42,12 @@ export class AppsStore extends BudiStore {
     this.save = this.save.bind(this)
   }
 
-  extractAppId(id) {
-    const split = id?.split("_") || []
+  extractAppId(appId?: string) {
+    const split = appId?.split("_") || []
     return split.length ? split[split.length - 1] : null
   }
 
-  getProdAppID(appId) {
+  getProdAppID(appId: string) {
     if (!appId) {
       return appId
     }
@@ -47,15 +67,15 @@ export class AppsStore extends BudiStore {
     return `app${separator}${rest}`
   }
 
-  updateSort(sortBy) {
+  async updateSort(sortBy: string) {
     this.update(state => ({
       ...state,
       sortBy,
     }))
-    this.updateUserSort(sortBy)
+    await this.updateUserSort(sortBy)
   }
 
-  async updateUserSort(sortBy) {
+  async updateUserSort(sortBy: string) {
     try {
       await auth.updateSelf({ appSort: sortBy })
     } catch (err) {
@@ -64,16 +84,19 @@ export class AppsStore extends BudiStore {
   }
 
   async load() {
-    const json = await API.getApps()
+    const json = (await API.getApps()) as App[]
     if (Array.isArray(json)) {
       // Merge apps into one sensible list
-      let appMap = {}
+      let appMap: Record<string, StoreApp> = {}
       let devApps = json.filter(app => app.status === AppStatus.DEV)
       let deployedApps = json.filter(app => app.status === AppStatus.DEPLOYED)
 
       // First append all dev app version
       devApps.forEach(app => {
         const id = this.extractAppId(app.appId)
+        if (!id) {
+          return
+        }
         appMap[id] = {
           ...app,
           devId: app.appId,
@@ -84,20 +107,22 @@ export class AppsStore extends BudiStore {
       // Then merge with all prod app versions
       deployedApps.forEach(app => {
         const id = this.extractAppId(app.appId)
+        if (!id) {
+          return
+        }
 
         // Skip any deployed apps which don't have a dev counterpart
         if (!appMap[id]) {
           return
         }
 
-        let devProps = {}
+        // Extract certain properties from the dev app to override the prod app
+        let devProps: Pick<App, "updatedBy" | "updatedAt"> = {}
         if (appMap[id]) {
-          const entries = Object.entries(appMap[id]).filter(
-            ([key]) => DEV_PROPS.indexOf(key) !== -1
-          )
-          entries.forEach(entry => {
-            devProps[entry[0]] = entry[1]
-          })
+          devProps = {
+            updatedBy: appMap[id].updatedBy,
+            updatedAt: appMap[id].updatedAt,
+          }
         }
         appMap[id] = {
           ...appMap[id],
@@ -111,7 +136,10 @@ export class AppsStore extends BudiStore {
       // Transform into an array and clean up
       const apps = Object.values(appMap)
       apps.forEach(app => {
-        app.appId = this.extractAppId(app.devId)
+        const appId = this.extractAppId(app.devId)
+        if (appId) {
+          app.appId = appId
+        }
         delete app._id
         delete app._rev
       })
@@ -127,7 +155,7 @@ export class AppsStore extends BudiStore {
     }
   }
 
-  async save(appId, value) {
+  async save(appId: string, value: UpdateAppRequest) {
     await API.saveAppMetadata(appId, value)
     this.update(state => {
       const updatedAppIndex = state.apps.findIndex(
@@ -146,22 +174,23 @@ export class AppsStore extends BudiStore {
 export const appsStore = new AppsStore()
 
 export const sortBy = derived([appsStore, auth], ([$store, $auth]) => {
-  return $store.sortBy || $auth.user?.appSort || "name"
+  return $store.sortBy || ($auth.user as User | null)?.appSort || "name"
 })
 
 // Centralise any logic that enriches the apps list
 export const enrichedApps = derived(
   [appsStore, auth, sortBy],
   ([$store, $auth, $sortBy]) => {
-    const enrichedApps = $store.apps
-      ? $store.apps.map(app => ({
-          ...app,
-          deployed: app.status === AppStatus.DEPLOYED,
-          lockedYou: app.lockedBy && app.lockedBy.email === $auth.user?.email,
-          lockedOther: app.lockedBy && app.lockedBy.email !== $auth.user?.email,
-          favourite: $auth.user?.appFavourites?.includes(app.appId),
-        }))
-      : []
+    const enrichedApps: EnrichedApp[] = $store.apps.map(app => {
+      const user = $auth.user as User | null
+      return {
+        ...app,
+        deployed: app.status === AppStatus.DEPLOYED,
+        lockedYou: app.lockedBy != null && app.lockedBy.email === user?.email,
+        lockedOther: app.lockedBy != null && app.lockedBy.email !== user?.email,
+        favourite: !!user?.appFavourites?.includes(app.appId),
+      }
+    })
 
     if ($sortBy === "status") {
       return enrichedApps.sort((a, b) => {

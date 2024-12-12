@@ -1,8 +1,17 @@
-import { writable } from "svelte/store"
+import { writable, Writable } from "svelte/store"
 
-export default class BudiStore {
-  constructor(init, opts) {
-    const store = writable({ ...init })
+interface BudiStoreOpts {
+  debug?: boolean
+}
+
+export default class BudiStore<T> implements Writable<T> {
+  store: Writable<T>
+  subscribe: Writable<T>["subscribe"]
+  update: Writable<T>["update"]
+  set: Writable<T>["set"]
+
+  constructor(init: T, opts?: BudiStoreOpts) {
+    const store = writable<T>({ ...init })
 
     /**
      * Internal Svelte store
