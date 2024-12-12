@@ -120,6 +120,11 @@
     <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
 
     {#if parameters.confirm}
+      <Label small>Title text</Label>
+      <Input
+        placeholder="Trigger Automation"
+        bind:value={parameters.customTitleText}
+      />
       <Label small>Confirm text</Label>
       <Input
         placeholder="Are you sure you want to trigger this automation?"
