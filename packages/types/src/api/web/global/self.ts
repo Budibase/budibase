@@ -1,7 +1,7 @@
 import { DevInfo, User } from "../../../documents"
 
 export interface GenerateAPIKeyRequest {
-  userId: string
+  userId?: string
 }
 export interface GenerateAPIKeyResponse extends DevInfo {}
 

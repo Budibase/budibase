@@ -51,8 +51,13 @@
     if (!blockEle) {
       return
     }
-    const { width, height } = blockEle.getBoundingClientRect()
-    blockDims = { width: width / $view.scale, height: height / $view.scale }
+    const { width, height, top, left } = blockEle.getBoundingClientRect()
+    blockDims = {
+      width: width / $view.scale,
+      height: height / $view.scale,
+      top,
+      left,
+    }
   }
 
   const loadSteps = blockRef => {
@@ -174,12 +179,21 @@
 
     e.stopPropagation()
 
+    updateBlockDims()
+
+    const { clientX, clientY } = e
     view.update(state => ({
       ...state,
       moveStep: {
         id: block.id,
         offsetX: $pos.x,
         offsetY: $pos.y,
+        w: blockDims.width,
+        h: blockDims.height,
+        mouse: {
+          x: Math.max(Math.round(clientX - blockDims.left), 0),
+          y: Math.max(Math.round(clientY - blockDims.top), 0),
+        },
       },
     }))
   }
@@ -386,6 +400,7 @@
     width: 480px;
     font-size: 16px;
     border-radius: 4px;
+    cursor: default;
   }
   .block .wrap {
     width: 100%;
