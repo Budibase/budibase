@@ -13,7 +13,7 @@ export function clientLibraryPath(appId: string) {
  * due to issues with the domain we were unable to continue doing this - keeping
  * incase we are able to switch back to CDN path again in future.
  */
-export function clientLibraryCDNUrl(appId: string, version: string) {
+export async function clientLibraryCDNUrl(appId: string, version: string) {
   let file = clientLibraryPath(appId)
   if (env.CLOUDFRONT_CDN) {
     // append app version to bust the cache
@@ -24,7 +24,7 @@ export function clientLibraryCDNUrl(appId: string, version: string) {
     // file is public
     return cloudfront.getUrl(file)
   } else {
-    return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
+    return await objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
   }
 }
 
@@ -44,10 +44,10 @@ export function clientLibraryUrl(appId: string, version: string) {
   return `/api/assets/client?${qs.encode(qsParams)}`
 }
 
-export function getAppFileUrl(s3Key: string) {
+export async function getAppFileUrl(s3Key: string) {
   if (env.CLOUDFRONT_CDN) {
     return cloudfront.getPresignedUrl(s3Key)
   } else {
-    return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, s3Key)
+    return await objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, s3Key)
   }
 }

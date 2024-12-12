@@ -24,9 +24,9 @@ describe("global", () => {
         expect(url).toBe("http://s3.example.com/global/settings/logoUrl")
       })
 
-      it("gets url with cloudfront + s3", () => {
+      it("gets url with cloudfront + s3", async () => {
         testEnv.withCloudfront()
-        const url = getGlobalFileUrl()
+        const url = await getGlobalFileUrl()
         // omit rest of signed params
         expect(
           url.includes("http://cf.example.com/settings/logoUrl?etag=etag&")
@@ -59,8 +59,8 @@ describe("global", () => {
 
       it("gets url with cloudfront + s3", async () => {
         testEnv.withCloudfront()
-        await testEnv.withTenant(tenantId => {
-          const url = getGlobalFileUrl()
+        await testEnv.withTenant(async tenantId => {
+          const url = await getGlobalFileUrl()
           // omit rest of signed params
           expect(
             url.includes(
