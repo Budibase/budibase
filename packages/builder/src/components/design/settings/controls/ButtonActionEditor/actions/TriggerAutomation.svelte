@@ -130,6 +130,10 @@
         placeholder="Are you sure you want to trigger this automation?"
         bind:value={parameters.confirmText}
       />
+      <Label small>Cancel button text</Label>
+      <Input placeholder="Cancel" bind:value={parameters.cancelButtonText} />
+      <Label small>Confirm button text</Label>
+      <Input placeholder="Confirm" bind:value={parameters.confirmButtonText} />
     {/if}
   </div>
 </div>
