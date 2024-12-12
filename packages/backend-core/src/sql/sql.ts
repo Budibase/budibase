@@ -1268,6 +1268,10 @@ class InternalBuilder {
       const fieldList = relationshipFields.map(field =>
         this.buildJsonField(relatedTable, field)
       )
+      if (!fieldList.length) {
+        continue
+      }
+
       const fieldListFormatted = fieldList
         .map(f => {
           const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
