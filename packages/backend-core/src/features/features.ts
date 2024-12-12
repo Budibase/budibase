@@ -108,6 +108,9 @@ export function parseEnvFlags(flags: string): EnvFlagEntry[] {
   const split = flags.split(",").map(x => x.split(":"))
   const result: EnvFlagEntry[] = []
   for (const [tenantId, ...features] of split) {
+    if (!tenantId) {
+      continue
+    }
     for (let feature of features) {
       let value = true
       if (feature.startsWith("!")) {
@@ -131,9 +134,8 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
   }
 
   defaults(): FlagValues<T> {
-    return Object.keys(this.flagSchema).reduce((acc, key) => {
-      const typedKey = key as keyof T
-      acc[typedKey] = this.flagSchema[key].defaultValue
+    return Object.entries(this.flagSchema).reduce((acc, [key, flag]) => {
+      acc[key as keyof T] = flag.defaultValue
       return acc
     }, {} as FlagValues<T>)
   }

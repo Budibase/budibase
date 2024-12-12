@@ -70,19 +70,21 @@ export const processors = [
         insideStatement = insideStatement.slice(0, insideStatement.length - 1)
       }
       const possibleHelper = insideStatement.split(" ")[0]
-      // function helpers can't be wrapped
-      for (let specialCase of FUNCTION_CASES) {
-        if (possibleHelper.includes(specialCase)) {
-          return statement
+      if (possibleHelper) {
+        // function helpers can't be wrapped
+        for (let specialCase of FUNCTION_CASES) {
+          if (possibleHelper.includes(specialCase)) {
+            return statement
+          }
         }
-      }
-      const testHelper = possibleHelper.trim().toLowerCase()
-      if (
-        helpersEnabled &&
-        !opts?.disabledHelpers?.includes(testHelper) &&
-        HelperNames().some(option => testHelper === option.toLowerCase())
-      ) {
-        insideStatement = `(${insideStatement})`
+        const testHelper = possibleHelper.trim().toLowerCase()
+        if (
+          helpersEnabled &&
+          !opts?.disabledHelpers?.includes(testHelper) &&
+          HelperNames().some(option => testHelper === option.toLowerCase())
+        ) {
+          insideStatement = `(${insideStatement})`
+        }
       }
       return `{{ all ${insideStatement} }}`
     }

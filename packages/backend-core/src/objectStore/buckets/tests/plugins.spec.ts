@@ -7,7 +7,7 @@ describe("plugins", () => {
     const plugin = structures.plugins.plugin()
 
     function getEnrichedPluginUrls() {
-      const enriched = plugins.enrichPluginURLs([plugin])[0]
+      const enriched = plugins.enrichPluginURLs([plugin])[0]!
       return {
         jsUrl: enriched.jsUrl!,
         iconUrl: enriched.iconUrl!,

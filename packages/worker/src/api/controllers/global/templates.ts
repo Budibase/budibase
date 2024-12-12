@@ -83,7 +83,11 @@ export async function fetchByOwner(
 }
 
 export async function find(ctx: UserCtx<void, FindGlobalTemplateResponse>) {
-  ctx.body = await getTemplateByID(ctx.params.id)
+  const template = await getTemplateByID(ctx.params.id)
+  if (!template) {
+    ctx.throw(404, `Template ${ctx.params.id} not found.`)
+  }
+  ctx.body = template
 }
 
 export async function destroy(

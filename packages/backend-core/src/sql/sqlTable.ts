@@ -41,9 +41,10 @@ function generateSchema(
     if (isJunction) {
       schema.primary(metaCols.map(col => col.name))
     } else if (primaryKeys.length === 1) {
-      schema.increments(primaryKeys[0]).primary()
+      const primaryKey = primaryKeys[0]!
+      schema.increments(primaryKey).primary()
       // note that we've set its type
-      columnTypeSet.push(primaryKeys[0])
+      columnTypeSet.push(primaryKey)
     } else {
       schema.primary(primaryKeys)
     }
@@ -129,11 +130,14 @@ function generateSchema(
             )
           }
           const relatedPrimary = relatedTable.primary[0]
-          const externalType = relatedTable.schema[relatedPrimary].externalType
-          if (externalType) {
-            schema.specificType(column.foreignKey, externalType)
-          } else {
-            schema.integer(column.foreignKey).unsigned()
+          if (relatedPrimary) {
+            const externalType =
+              relatedTable.schema[relatedPrimary]?.externalType
+            if (externalType) {
+              schema.specificType(column.foreignKey, externalType)
+            } else {
+              schema.integer(column.foreignKey).unsigned()
+            }
           }
 
           schema
@@ -160,7 +164,7 @@ function generateSchema(
     }
   }
 
-  const oldType = renamed ? oldTable?.schema[renamed.old].type : undefined
+  const oldType = renamed ? oldTable?.schema[renamed.old]?.type : undefined
   if (renamed && oldType && !isIgnoredType(oldType)) {
     schema.renameColumn(renamed.old, renamed.updated)
   }

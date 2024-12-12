@@ -15,6 +15,9 @@ export async function exportAppDump(
   const { excludeRows, encryptPassword } = ctx.request.body
 
   const [app] = await db.getAppsByIDs([appId])
+  if (!app) {
+    ctx.throw(404, "App not found")
+  }
   const appName = app.name
 
   // remove the 120 second limit for the request

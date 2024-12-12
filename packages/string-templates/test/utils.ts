@@ -41,6 +41,12 @@ export const getParsedManifest = () => {
         const example = details.example
         let [hbs, js] = example.split("->").map(x => x.trim())
 
+        if (!hbs || !js) {
+          throw new Error(
+            `Invalid example for ${name} in ${collection}: ${example}`
+          )
+        }
+
         // Trim 's
         js = js.replace(/^'|'$/g, "")
         let parsedExpected: string
@@ -87,14 +93,14 @@ export const runJsHelpersTests = ({
   describe("can be parsed and run as js", () => {
     const jsHelpers = getJsHelperList()!
     const jsExamples = Object.keys(manifest).reduce((acc, v) => {
-      acc[v] = manifest[v].filter(([key]) => jsHelpers[key])
+      acc[v] = manifest[v]!.filter(([key]) => jsHelpers[key])
       return acc
     }, {} as typeof manifest)
 
     describe.each(Object.keys(jsExamples))("%s", collection => {
-      const examplesToRun = jsExamples[collection]
-        .filter(([, { requiresHbsBody }]) => !requiresHbsBody)
-        .filter(([key]) => !testsToSkip?.includes(key))
+      const examplesToRun = jsExamples[collection]!.filter(
+        ([, { requiresHbsBody }]) => !requiresHbsBody
+      ).filter(([key]) => !testsToSkip?.includes(key))
 
       examplesToRun.length &&
         it.each(examplesToRun)("%s", async (_, { hbs, js }) => {

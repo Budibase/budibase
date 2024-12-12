@@ -79,10 +79,17 @@ export function generateTableID() {
  * @returns The table ID.
  */
 export function getTableIDFromRowID(rowId: string) {
-  const components = rowId
-    .split(DocumentType.TABLE + SEPARATOR)[1]
-    .split(SEPARATOR)
-  return `${DocumentType.TABLE}${SEPARATOR}${components[0]}`
+  const tableId = rowId.split(DocumentType.TABLE + SEPARATOR)[1]
+  if (!tableId) {
+    throw new Error(`Unable to extract table ID from row ID: ${rowId}`)
+  }
+
+  const loneId = tableId.split(SEPARATOR)[0]
+  if (!loneId) {
+    throw new Error(`Unable to extract table ID from row ID: ${rowId}`)
+  }
+
+  return `${DocumentType.TABLE}${SEPARATOR}${loneId}`
 }
 
 /**

@@ -283,7 +283,7 @@ describe("/api/global/auth", () => {
 
     const generateOidcConfig = async () => {
       const oidcConf = await config.saveOIDCConfig()
-      const chosenConfig = oidcConf.config.configs[0]
+      const chosenConfig = oidcConf.config.configs[0]!
       return chosenConfig.uuid
     }
 

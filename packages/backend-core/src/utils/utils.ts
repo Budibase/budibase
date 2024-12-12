@@ -12,6 +12,7 @@ import {
 } from "@budibase/types"
 import type { SetOption } from "cookies"
 import jwt, { Secret } from "jsonwebtoken"
+import { HTTPError } from "../errors"
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
@@ -29,6 +30,9 @@ function confirmAppId(possibleAppId: string | undefined) {
 
 export async function resolveAppUrl(ctx: Ctx) {
   const appUrl = ctx.path.split("/")[2]
+  if (!appUrl) {
+    throw new HTTPError("No app ID found in path", 400)
+  }
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
   let tenantId: string | undefined = context.getTenantId()
@@ -127,10 +131,11 @@ function parseAppIdFromUrlPath(url?: string) {
   if (!url) {
     return
   }
-  return url
-    .split("?")[0] // Remove any possible query string
-    .split("/")
-    .find(subPath => subPath.startsWith(APP_PREFIX))
+  const preQuery = url.split("?")[0]
+  if (!preQuery) {
+    return undefined
+  }
+  return preQuery.split("/").find(subPath => subPath.startsWith(APP_PREFIX))
 }
 
 /**

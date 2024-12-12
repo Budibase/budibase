@@ -59,7 +59,7 @@ export async function processInputBBReferences(
     return null
   }
 
-  let referenceIds
+  let referenceIds: string[]
   if (typeof value === "string") {
     referenceIds = value
       .split(",")
@@ -89,9 +89,9 @@ export async function processInputBBReferences(
     case BBReferenceFieldSubType.USERS: {
       const { notFoundIds } = await cache.user.getUsers(referenceIds)
 
-      if (notFoundIds?.length) {
+      if (notFoundIds && notFoundIds.length > 0) {
         throw new InvalidBBRefError(
-          notFoundIds[0],
+          notFoundIds[0]!,
           BBReferenceFieldSubType.USER
         )
       }

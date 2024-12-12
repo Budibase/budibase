@@ -61,7 +61,12 @@ export interface Port {
 export function getExposedV4Ports(container: ContainerInfo): Port[] {
   let ports: Port[] = []
   for (const match of container.Ports.matchAll(IPV4_PORT_REGEX)) {
-    ports.push({ host: parseInt(match[1]), container: parseInt(match[2]) })
+    const host = match[1]
+    const container = match[2]
+    if (!host || !container) {
+      continue
+    }
+    ports.push({ host: parseInt(host), container: parseInt(container) })
   }
   return ports
 }
@@ -118,6 +123,9 @@ export function setupEnv(...envs: any[]) {
   }
 
   const minio = getContainerByImage("minio/minio")
+  if (!minio) {
+    throw new Error("Minio container not found")
+  }
 
   const minioPort = getExposedV4Port(minio, 9000)
   if (!minioPort) {
@@ -142,7 +150,7 @@ export async function startContainer(container: GenericContainer) {
   const imageName = (container as any).imageName.string as string
   let key: string = imageName
   if (imageName.includes("@sha256")) {
-    key = imageName.split("@")[0]
+    key = imageName.split("@")[0]!
   }
   key = key.replace(/\//g, "-").replace(/:/g, "-")
   const name = `${key}_testcontainer`

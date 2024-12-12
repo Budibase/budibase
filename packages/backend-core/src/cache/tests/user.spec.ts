@@ -93,7 +93,7 @@ describe("user cache", () => {
       jest.spyOn(UserDB, "bulkGet")
 
       await config.doInTenant(() =>
-        getUsers([userIdsToRequest[0], userIdsToRequest[3]])
+        getUsers([userIdsToRequest[0]!, userIdsToRequest[3]!])
       )
       ;(UserDB.bulkGet as jest.Mock).mockClear()
 

@@ -173,32 +173,36 @@ export async function dbExists(dbName: any) {
   )
 }
 
+export interface PaginationOpts<T> {
+  paginate?: boolean
+  property?: keyof T
+  getKey?: (doc: T) => string | undefined
+}
+
+export interface PaginationResult<T> {
+  data: T[]
+  hasNextPage: boolean
+  nextPage?: string
+}
+
 export function pagination<T>(
   data: T[],
   pageSize: number,
-  {
-    paginate,
-    property,
-    getKey,
-  }: {
-    paginate: boolean
-    property: string
-    getKey?: (doc: T) => string | undefined
-  } = {
-    paginate: true,
-    property: "_id",
-  }
-) {
+  opts?: PaginationOpts<T>
+): PaginationResult<T> {
+  const {
+    paginate = true,
+    property = "_id" as keyof T,
+    getKey = (d: T) => d[property]?.toString(),
+  } = opts || {}
+
   if (!paginate) {
     return { data, hasNextPage: false }
   }
   const hasNextPage = data.length > pageSize
-  let nextPage = undefined
-  if (!getKey) {
-    getKey = (doc: any) => (property ? doc?.[property] : doc?._id)
-  }
+  let nextPage: string | undefined = undefined
   if (hasNextPage) {
-    nextPage = getKey(data[pageSize])
+    nextPage = getKey(data[pageSize]!)
   }
   return {
     data: data.slice(0, pageSize),

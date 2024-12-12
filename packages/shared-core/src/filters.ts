@@ -224,9 +224,9 @@ export class ColumnSplitter {
     this.tableNames = tables.map(table => table.name)
     this.tableIds = tables.map(table => table._id!)
     this.relationshipColumnNames = tables.flatMap(table =>
-      Object.keys(table.schema).filter(
-        columnName => table.schema[columnName].type === FieldType.LINK
-      )
+      Object.entries(table.schema)
+        .filter(([_, column]) => column.type === FieldType.LINK)
+        .map(([key, _]) => key)
     )
     this.relationships = this.tableNames
       .concat(this.tableIds)

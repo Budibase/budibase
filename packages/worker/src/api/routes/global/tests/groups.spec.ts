@@ -229,25 +229,25 @@ describe("/api/global/groups", () => {
           const result = await config.api.groups.searchUsers(groupId)
           expect(result.body).toEqual({
             users: users.slice(0, 10),
-            bookmark: users[10]._id,
+            bookmark: users[10]!._id,
             hasNextPage: true,
           })
         })
 
         it("given a bookmark, should return skip items", async () => {
           const result = await config.api.groups.searchUsers(groupId, {
-            bookmark: users[7]._id,
+            bookmark: users[7]!._id,
           })
           expect(result.body).toEqual({
             users: users.slice(7, 17),
-            bookmark: users[17]._id,
+            bookmark: users[17]!._id,
             hasNextPage: true,
           })
         })
 
         it("bookmarking the last page, should return last page info", async () => {
           const result = await config.api.groups.searchUsers(groupId, {
-            bookmark: users[20]._id,
+            bookmark: users[20]!._id,
           })
           expect(result.body).toEqual({
             users: users.slice(20),
@@ -269,7 +269,7 @@ describe("/api/global/groups", () => {
 
           expect(result.body).toEqual({
             users: matchedUsers.slice(0, 10),
-            bookmark: matchedUsers[10].email,
+            bookmark: matchedUsers[10]!.email,
             hasNextPage: true,
           })
         })
@@ -281,7 +281,7 @@ describe("/api/global/groups", () => {
 
           const result = await config.api.groups.searchUsers(groupId, {
             emailSearch: `user1`,
-            bookmark: matchedUsers[4].email,
+            bookmark: matchedUsers[4]!.email,
           })
 
           expect(result.body).toEqual({

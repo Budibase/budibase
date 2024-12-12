@@ -58,6 +58,9 @@ export function decrypt(
   secretOption: SecretOption = SecretOption.API
 ) {
   const [salt, encrypted] = input.split(SEPARATOR)
+  if (!salt || !encrypted) {
+    throw new Error("Invalid input to decrypt")
+  }
   const saltBuffer = Buffer.from(salt, "hex")
   const stretched = stretchString(getSecret(secretOption), saltBuffer)
   const decipher = crypto.createDecipheriv(ALGO, stretched, saltBuffer)
