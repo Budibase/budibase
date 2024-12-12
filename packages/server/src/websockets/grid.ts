@@ -11,12 +11,31 @@ import { GridSocketEvent } from "@budibase/shared-core"
 import { userAgent } from "koa-useragent"
 import { createContext, runMiddlewares } from "./middleware"
 import sdk from "../sdk"
+import {
+  findHBSBlocks,
+  isJSBinding,
+  decodeJSBinding,
+} from "@budibase/string-templates"
 
 const { PermissionType, PermissionLevel } = permissions
 
 export default class GridSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
     super(app, server, "/socket/grid")
+  }
+
+  // Checks if a view's query contains any current user bindings
+  containsCurrentUserBinding(view: ViewV2): boolean {
+    return findHBSBlocks(JSON.stringify(view.query))
+      .map(binding => {
+        const sanitizedBinding = binding.replace(/\\"/g, '"')
+        if (isJSBinding(sanitizedBinding)) {
+          return decodeJSBinding(sanitizedBinding)
+        } else {
+          return sanitizedBinding
+        }
+      })
+      .some(binding => binding?.includes("[user]"))
   }
 
   async onConnect(socket: Socket) {
@@ -36,7 +55,7 @@ export default class GridSocket extends BaseSocket {
         try {
           await context.doInAppContext(appId, async () => {
             const view = await sdk.views.get(ds.id)
-            if (JSON.stringify(view.query).includes("[user]")) {
+            if (this.containsCurrentUserBinding(view)) {
               valid = false
             }
           })
