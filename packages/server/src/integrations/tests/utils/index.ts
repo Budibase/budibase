@@ -16,6 +16,7 @@ export const { startContainer } = testContainerUtils
 
 export enum DatabaseName {
   POSTGRES = "postgres",
+  POSTGRES_LEGACY = "postgres_legacy",
   MONGODB = "mongodb",
   MYSQL = "mysql",
   SQL_SERVER = "mssql",
@@ -26,6 +27,7 @@ export enum DatabaseName {
 
 const providers: Record<DatabaseName, DatasourceProvider> = {
   [DatabaseName.POSTGRES]: postgres.getDatasource,
+  [DatabaseName.POSTGRES_LEGACY]: postgres.getLegacyDatasource,
   [DatabaseName.MONGODB]: mongodb.getDatasource,
   [DatabaseName.MYSQL]: mysql.getDatasource,
   [DatabaseName.SQL_SERVER]: mssql.getDatasource,
@@ -145,7 +147,11 @@ export function datasourceDescribe(opts: DatasourceDescribeOpts) {
       DatabaseName.ORACLE,
     ].includes(dbName),
     isMySQL: dbName === DatabaseName.MYSQL,
-    isPostgres: dbName === DatabaseName.POSTGRES,
+    isPostgres:
+      dbName === DatabaseName.POSTGRES ||
+      dbName === DatabaseName.POSTGRES_LEGACY,
+    // check if any of the legacy tags
+    isLegacy: dbName === DatabaseName.POSTGRES_LEGACY,
     isMongodb: dbName === DatabaseName.MONGODB,
     isMSSQL: dbName === DatabaseName.SQL_SERVER,
     isOracle: dbName === DatabaseName.ORACLE,

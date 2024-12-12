@@ -3,14 +3,14 @@ import { GenericContainer, Wait } from "testcontainers"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
 import knex, { Knex } from "knex"
-import { POSTGRES_IMAGE } from "./images"
+import { POSTGRES_IMAGE, POSTGRES_LEGACY_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>
 
-export async function getDatasource(): Promise<Datasource> {
+async function datasourceWithImage(image: string): Promise<Datasource> {
   if (!ports) {
     ports = startContainer(
-      new GenericContainer(POSTGRES_IMAGE)
+      new GenericContainer(image)
         .withExposedPorts(5432)
         .withEnvironment({ POSTGRES_PASSWORD: "password" })
         .withWaitStrategy(
@@ -49,6 +49,14 @@ export async function getDatasource(): Promise<Datasource> {
   datasource.config!.database = database
 
   return datasource
+}
+
+export async function getDatasource(): Promise<Datasource> {
+  return datasourceWithImage(POSTGRES_IMAGE)
+}
+
+export async function getLegacyDatasource(): Promise<Datasource> {
+  return datasourceWithImage(POSTGRES_LEGACY_IMAGE)
 }
 
 export async function knexClient(
