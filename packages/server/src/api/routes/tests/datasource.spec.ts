@@ -590,7 +590,7 @@ if (descriptions.length) {
 }
 
 const datasources = datasourceDescribe({
-  only: [DatabaseName.POSTGRES_LEGACY],
+  exclude: [DatabaseName.MONGODB, DatabaseName.SQS, DatabaseName.ORACLE],
 })
 
 if (datasources.length) {
