@@ -14,18 +14,16 @@ interface PortalAdminStore extends GetEnvironmentResponse {
   status?: SystemStatusResponse
 }
 
-export const DEFAULT_CONFIG: PortalAdminStore = {
-  loaded: false,
-  multiTenancy: false,
-  cloud: false,
-  isDev: false,
-  disableAccountPortal: false,
-  offlineMode: false,
-  maintenance: [],
-}
-
 export function createAdminStore() {
-  const admin = writable(DEFAULT_CONFIG)
+  const admin = writable<PortalAdminStore>({
+    loaded: false,
+    multiTenancy: false,
+    cloud: false,
+    isDev: false,
+    disableAccountPortal: false,
+    offlineMode: false,
+    maintenance: [],
+  })
 
   async function init() {
     await getChecklist()
