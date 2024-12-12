@@ -1240,11 +1240,6 @@ class InternalBuilder {
         continue
       }
 
-      // Don't include if not required
-      if (relationship.from && !fields.find(f => f === relationship.from)) {
-        continue
-      }
-
       const relatedTable = tables[toTable]
       if (!relatedTable) {
         throw new Error(`related table "${toTable}" not found in datasource`)
@@ -1594,17 +1589,8 @@ class InternalBuilder {
 
     // handle relationships with a CTE for all others
     if (relationships?.length && aggregations.length === 0) {
-      const mainTable = this.query.tableAliases?.[table.name] || table.name
-      const cte = this.addSorting(
-        this.knex
-          .with("paginated", query.clone().clearSelect().select("*"))
-          .select(this.generateSelectStatement())
-          .from({
-            [mainTable]: "paginated",
-          })
-      )
       // add JSON aggregations attached to the CTE
-      return this.addJsonRelationships(cte, table.name, relationships)
+      return this.addJsonRelationships(query, table.name, relationships)
     }
 
     return query
