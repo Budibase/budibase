@@ -1,6 +1,6 @@
 import * as utils from "../../../../db/utils"
 
-import { docIds } from "@budibase/backend-core"
+import { docIds, sql } from "@budibase/backend-core"
 import {
   Ctx,
   DatasourcePlusQueryResponse,
@@ -69,15 +69,15 @@ export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
         viewId: sourceId,
       }
     }
-    return { tableId: ctx.params.sourceId }
+    return { tableId: sql.utils.encodeTableId(ctx.params.sourceId) }
   }
   // now check for old way of specifying table ID
   if (ctx.params?.tableId) {
-    return { tableId: ctx.params.tableId }
+    return { tableId: sql.utils.encodeTableId(ctx.params.tableId) }
   }
   // check body for a table ID
   if (ctx.request.body?.tableId) {
-    return { tableId: ctx.request.body.tableId }
+    return { tableId: sql.utils.encodeTableId(ctx.request.body.tableId) }
   }
   throw new Error("Unable to find table ID in request")
 }
