@@ -1591,7 +1591,7 @@ class InternalBuilder {
       const mainTable = this.query.tableAliases?.[table.name] || table.name
       const cte = this.addSorting(
         this.knex
-          .with("paginated", query)
+          .with("paginated", query.clone().clearSelect().select("*"))
           .select(this.generateSelectStatement())
           .from({
             [mainTable]: "paginated",
