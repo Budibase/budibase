@@ -596,7 +596,7 @@ const datasources = datasourceDescribe({
 if (datasources.length) {
   describe.each(datasources)(
     "$dbName",
-    ({ config, dsProvider, isPostgres, isMySQL, isMariaDB }) => {
+    ({ config, dsProvider, isPostgres, isLegacy, isMySQL, isMariaDB }) => {
       let datasource: Datasource
       let client: Knex
 
@@ -646,6 +646,13 @@ if (datasources.length) {
             // pg_dump 17 puts this config parameter into the dump but no DB < 17
             // can load it. We're using postgres 16 in tests at the time of writing.
             schema = schema.replace("SET transaction_timeout = 0;", "")
+          }
+          if (isPostgres && isLegacy) {
+            // in older versions of Postgres, this is not a valid option - Postgres 9.5 does not support this.
+            schema = schema.replace(
+              "SET idle_in_transaction_session_timeout = 0;",
+              ""
+            )
           }
 
           await config.api.table.destroy(table._id!, table._rev!)
