@@ -50,6 +50,10 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@apidevtools/swagger-parser": "10.0.3",
+    "@aws-sdk/client-dynamodb": "3.709.0",
+    "@aws-sdk/client-s3": "3.709.0",
+    "@aws-sdk/lib-dynamodb": "3.709.0",
+    "@aws-sdk/s3-request-presigner": "3.709.0",
     "@azure/msal-node": "^2.5.1",
     "@budibase/backend-core": "*",
     "@budibase/client": "*",
@@ -70,7 +74,6 @@
     "airtable": "0.12.2",
     "arangojs": "7.2.0",
     "archiver": "7.0.1",
-    "aws-sdk": "2.1692.0",
     "bcrypt": "5.1.0",
     "bcryptjs": "2.4.3",
     "bson": "^6.9.0",
