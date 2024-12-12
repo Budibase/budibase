@@ -66,6 +66,14 @@ export function buildExternalTableId(datasourceId: string, tableName: string) {
   return `${datasourceId}${DOUBLE_SEPARATOR}${tableName}`
 }
 
+export function checkTableId(tableId: string) {
+  if (isExternalTableID(tableId) && tableId.includes(" ")) {
+    return encodeURIComponent(tableId)
+  } else {
+    return tableId
+  }
+}
+
 export function breakExternalTableId(tableId: string) {
   const parts = tableId.split(DOUBLE_SEPARATOR)
   let datasourceId = parts.shift()
