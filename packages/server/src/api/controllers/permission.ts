@@ -9,7 +9,7 @@ import {
   RemovePermissionRequest,
   RemovePermissionResponse,
   FetchResourcePermissionInfoResponse,
-  FetchBuiltinPermissionsRequest,
+  FetchBuiltinPermissionsResponse,
   FetchPermissionLevelsRequest,
 } from "@budibase/types"
 import {
@@ -22,7 +22,7 @@ import { PermissionUpdateType } from "../../sdk/app/permissions"
 const SUPPORTED_LEVELS = CURRENTLY_SUPPORTED_LEVELS
 
 export function fetchBuiltin(
-  ctx: UserCtx<void, FetchBuiltinPermissionsRequest>
+  ctx: UserCtx<void, FetchBuiltinPermissionsResponse>
 ) {
   ctx.body = Object.values(permissions.getBuiltinPermissions())
 }
