@@ -594,10 +594,11 @@
   }
 
   function saveFilters(key) {
-    const query = QueryUtils.buildQuery(tempFilters)
+    const update = Utils.parseFilter(tempFilters)
+    const query = QueryUtils.buildQuery(update)
     onChange({
       [key]: query,
-      [`${key}-def`]: tempFilters, // need to store the builder definition in the automation
+      [`${key}-def`]: update, // need to store the builder definition in the automation
     })
 
     drawer.hide()

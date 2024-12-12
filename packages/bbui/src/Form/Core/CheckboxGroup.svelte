@@ -13,9 +13,8 @@
 
   const dispatch = createEventDispatcher()
 
-  const onChange = e => {
-    const optionValue = e.target.value
-    if (e.target.checked && !value.includes(optionValue)) {
+  const onChange = optionValue => {
+    if (!value.includes(optionValue)) {
       dispatch("change", [...value, optionValue])
     } else {
       dispatch(
@@ -39,10 +38,9 @@
           class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-FieldGroup-item"
         >
           <input
-            on:change={onChange}
+            on:change={() => onChange(optionValue)}
             type="checkbox"
             class="spectrum-Checkbox-input"
-            value={optionValue}
             checked={value.includes(optionValue)}
             {disabled}
           />
