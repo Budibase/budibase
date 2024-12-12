@@ -1,12 +1,10 @@
 import commonjs from "@rollup/plugin-commonjs"
-import resolve from "rollup-plugin-node-resolve"
+import resolve from "@rollup/plugin-node-resolve"
 import json from "@rollup/plugin-json"
-import { terser } from "rollup-plugin-terser"
-import builtins from "rollup-plugin-node-builtins"
-import globals from "rollup-plugin-node-globals"
 import typescript from "@rollup/plugin-typescript"
-import injectProcessEnv from "rollup-plugin-inject-process-env"
+import polyfillNode from "rollup-plugin-polyfill-node"
 import inject from "@rollup/plugin-inject"
+import { terser } from "rollup-plugin-terser"
 
 const production = !process.env.ROLLUP_WATCH
 
@@ -24,19 +22,17 @@ const config = (input, outputFile, format) => ({
     warn(warning)
   },
   plugins: [
-    typescript(),
+    typescript({
+      moduleResolution: "node",
+    }),
+    polyfillNode(),
     resolve({
       preferBuiltins: true,
       browser: true,
     }),
     commonjs(),
-    globals(),
-    inject({ Buffer: ["buffer", "Buffer"] }),
-    builtins(),
     json(),
-    injectProcessEnv({
-      NO_JS: process.env.NO_JS,
-    }),
+    inject({ Buffer: ["buffer", "Buffer"], process: "process/browser" }),
     production && terser(),
   ],
 })
@@ -44,5 +40,4 @@ const config = (input, outputFile, format) => ({
 export default [
   config("src/index.ts", "./dist/bundle.cjs", "cjs"),
   config("src/index.ts", "./dist/bundle.mjs", "esm"),
-  config("src/iife.ts", "./dist/iife.mjs", "esm"),
 ]

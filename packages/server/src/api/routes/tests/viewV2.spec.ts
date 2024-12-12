@@ -1,39 +1,39 @@
 import {
+  ArrayOperator,
+  BasicOperator,
+  BBReferenceFieldSubType,
+  CalculationType,
   CreateViewRequest,
   Datasource,
+  EmptyFilterOption,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  JsonFieldSubType,
+  JsonTypes,
+  LegacyFilter,
+  NumericCalculationFieldMetadata,
   PermissionLevel,
   QuotaUsageType,
+  RelationshipType,
+  RenameColumn,
   Row,
   SaveTableRequest,
+  SearchFilters,
+  SearchResponse,
+  SearchViewRowRequest,
   SortOrder,
   SortType,
   StaticQuotaName,
   Table,
+  TableSchema,
   TableSourceType,
+  UILogicalOperator,
+  UISearchFilter,
   UpdateViewRequest,
   ViewV2,
-  SearchResponse,
-  BasicOperator,
-  CalculationType,
-  RelationshipType,
-  TableSchema,
-  RenameColumn,
-  BBReferenceFieldSubType,
-  NumericCalculationFieldMetadata,
   ViewV2Schema,
   ViewV2Type,
-  JsonTypes,
-  EmptyFilterOption,
-  JsonFieldSubType,
-  UISearchFilter,
-  LegacyFilter,
-  SearchViewRowRequest,
-  ArrayOperator,
-  UILogicalOperator,
-  SearchFilters,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import {
@@ -42,7 +42,7 @@ import {
 } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { db, roles, context } from "@budibase/backend-core"
+import { context, db, events, roles } from "@budibase/backend-core"
 
 const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
 
@@ -129,6 +129,7 @@ if (descriptions.length) {
               id: expect.stringMatching(new RegExp(`${table._id!}_`)),
               version: 2,
             })
+            expect(events.view.created).toHaveBeenCalledTimes(1)
           })
 
           it("can persist views with all fields", async () => {
@@ -195,6 +196,7 @@ if (descriptions.length) {
             }
 
             expect(res).toEqual(expected)
+            expect(events.view.created).toHaveBeenCalledTimes(1)
           })
 
           it("can create a view with just a query field, no queryUI, for backwards compatibility", async () => {
@@ -224,6 +226,7 @@ if (descriptions.length) {
               },
             }
             const res = await config.api.viewV2.create(newView)
+            expect(events.view.created).toHaveBeenCalledTimes(1)
 
             const expected: ViewV2 = {
               ...newView,
@@ -283,6 +286,7 @@ if (descriptions.length) {
             }
 
             const createdView = await config.api.viewV2.create(newView)
+            expect(events.view.created).toHaveBeenCalledTimes(1)
 
             expect(createdView).toEqual({
               ...newView,
@@ -990,6 +994,46 @@ if (descriptions.length) {
             expect((await config.api.table.get(tableId)).views).toEqual({
               [view.name]: expected,
             })
+            expect(events.view.updated).toHaveBeenCalledTimes(1)
+          })
+
+          it("handles view grouped filter events", async () => {
+            view.queryUI = {
+              logicalOperator: UILogicalOperator.ALL,
+              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              groups: [
+                {
+                  logicalOperator: UILogicalOperator.ALL,
+                  filters: [
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "newField",
+                      value: "newValue",
+                    },
+                  ],
+                },
+              ],
+            }
+            await config.api.viewV2.update(view)
+            expect(events.view.filterUpdated).not.toHaveBeenCalled()
+
+            // @ts-ignore
+            view.queryUI.groups.push({
+              logicalOperator: UILogicalOperator.ALL,
+              filters: [
+                {
+                  operator: BasicOperator.EQUAL,
+                  field: "otherField",
+                  value: "otherValue",
+                },
+              ],
+            })
+
+            await config.api.viewV2.update(view)
+            expect(events.view.filterUpdated).toHaveBeenCalledWith({
+              filterGroups: 2,
+              tableId: view.tableId,
+            })
           })
 
           it("can update all fields", async () => {
@@ -1621,6 +1665,7 @@ if (descriptions.length) {
                 field: "age",
               }
               await config.api.viewV2.update(view)
+              expect(events.view.calculationCreated).toHaveBeenCalledTimes(1)
 
               const { rows } = await config.api.row.search(view.id)
               expect(rows).toHaveLength(2)
@@ -2154,6 +2199,7 @@ if (descriptions.length) {
                   }),
                 })
               )
+              expect(events.view.viewJoinCreated).not.toHaveBeenCalled()
             })
 
             it("does not rename columns with the same name but from other tables", async () => {
@@ -2224,6 +2270,36 @@ if (descriptions.length) {
                   }),
                 })
               )
+            })
+
+            it("handles events for changing column visibility from default false", async () => {
+              let auxTable = await createAuxTable()
+              let aux2Table = await createAuxTable()
+
+              const table = await createMainTable([
+                { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+                { name: "aux2", tableId: aux2Table._id!, fk: "fk_aux2" },
+              ])
+
+              const view = await createView(table._id!, {
+                aux: {
+                  visible: true,
+                  columns: {
+                    name: { visible: false, readonly: true },
+                  },
+                },
+                aux2: {
+                  visible: true,
+                  columns: {
+                    name: { visible: false, readonly: true },
+                  },
+                },
+              })
+
+              // @ts-expect-error column exists above
+              view.schema.aux2.columns.name.visible = true
+              await config.api.viewV2.update(view)
+              expect(events.view.viewJoinCreated).toHaveBeenCalledTimes(1)
             })
 
             it("updates all views references", async () => {
