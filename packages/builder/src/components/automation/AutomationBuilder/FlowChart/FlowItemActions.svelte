@@ -47,5 +47,6 @@
     display: flex;
     gap: var(--spacing-m);
     padding: 8px 12px;
+    cursor: default;
   }
 </style>

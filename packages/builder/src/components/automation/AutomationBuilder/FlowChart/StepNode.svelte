@@ -50,9 +50,12 @@
     // Register the trigger as the focus element for the automation
     // Onload, the canvas will use the dimensions to center the step
     if (stepEle && step.type === "TRIGGER" && !$view.focusEle) {
+      const { width, height, left, right, top, bottom, x, y } =
+        stepEle.getBoundingClientRect()
+
       view.update(state => ({
         ...state,
-        focusEle: stepEle.getBoundingClientRect(),
+        focusEle: { width, height, left, right, top, bottom, x, y },
       }))
     }
   })
