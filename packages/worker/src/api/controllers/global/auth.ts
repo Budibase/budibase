@@ -22,6 +22,8 @@ import {
   GetInitInfoResponse,
   PasswordResetResponse,
   PasswordResetUpdateResponse,
+  SetInitInfoResponse,
+  LoginResponse,
 } from "@budibase/types"
 import env from "../../../environment"
 import { Next } from "koa"
@@ -59,7 +61,10 @@ async function passportCallback(
   ctx.set(Header.TOKEN, token)
 }
 
-export const login = async (ctx: Ctx<LoginRequest, void>, next: Next) => {
+export const login = async (
+  ctx: Ctx<LoginRequest, LoginResponse>,
+  next: Next
+) => {
   const email = ctx.request.body.username
 
   const user = await userSdk.db.getUserByEmail(email)
@@ -74,7 +79,10 @@ export const login = async (ctx: Ctx<LoginRequest, void>, next: Next) => {
       await context.identity.doInUserContext(user, ctx, async () => {
         await events.auth.login("local", user.email)
       })
-      ctx.status = 200
+      ctx.body = {
+        message: "Login successful",
+        userId: user.userId,
+      }
     }
   )(ctx, next)
 }
@@ -88,10 +96,14 @@ export const logout = async (ctx: UserCtx<void, LogoutResponse>) => {
 
 // INIT
 
-export const setInitInfo = (ctx: UserCtx<SetInitInfoRequest, void>) => {
+export const setInitInfo = (
+  ctx: UserCtx<SetInitInfoRequest, SetInitInfoResponse>
+) => {
   const initInfo = ctx.request.body
   setCookie(ctx, initInfo, Cookie.Init)
-  ctx.status = 200
+  ctx.body = {
+    message: "Init info updated.",
+  }
 }
 
 export const getInitInfo = (ctx: UserCtx<void, GetInitInfoResponse>) => {
