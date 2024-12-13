@@ -218,14 +218,14 @@ class S3Integration implements IntegrationBase {
       const response = await this.client.createBucket(params).promise()
       return response
     } catch (e: unknown) {
-      let message = "AWS S3: Unable to process the request"
+      let message = "Unable to process the request"
       if (e instanceof Error) {
-        message = "AWS S3: " + e.message
+        message = e.message
       }
 
       // Do not rethrow AWS errors as the statusCode prop will be
       // interpreted by koa
-      throw new Error(message)
+      throw new Error("AWS S3: " + message)
     }
   }
 
@@ -249,12 +249,12 @@ class S3Integration implements IntegrationBase {
         .promise()
       return response.Contents
     } catch (e: unknown) {
-      let message = "AWS S3: Unable to process the request"
+      let message = "Unable to process the request"
       if (e instanceof Error) {
-        message = "AWS S3: " + e.message
+        message = e.message
       }
 
-      throw new Error(message)
+      throw new Error("AWS S3: " + message)
     }
   }
 
@@ -279,12 +279,14 @@ class S3Integration implements IntegrationBase {
       stream.on("finish", () => {
         resolve(response)
       })
-    }).catch(err => {
+    }).catch((e: unknown) => {
+      let message = "Unable to process the request"
       if (csvError) {
-        throw new Error("Could not read CSV")
-      } else {
-        throw err
+        message = "Could not read CSV"
+      } else if (e instanceof Error) {
+        message = e.message
       }
+      throw new Error("AWS S3: " + message)
     })
   }
 
@@ -298,12 +300,12 @@ class S3Integration implements IntegrationBase {
         .promise()
       return response
     } catch (e: unknown) {
-      let message = "AWS S3: Unable to process the request"
+      let message = "Unable to process the request"
       if (e instanceof Error) {
-        message = "AWS S3: " + e.message
+        message = e.message
       }
 
-      throw new Error(message)
+      throw new Error("AWS S3: " + message)
     }
   }
 }
