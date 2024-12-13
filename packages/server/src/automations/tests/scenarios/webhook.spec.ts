@@ -17,6 +17,7 @@ describe("Branching automations", () => {
       .createRow({
         row: { tableId: table._id!, name: "{{ trigger.parameter }}" },
       })
+      .collect({ collection: `{{ trigger.parameter }}` })
       .save()
 
     webhook = await config.api.webhook.save({
@@ -28,6 +29,10 @@ describe("Branching automations", () => {
       },
       bodySchema: {},
     })
+    await config.api.webhook.buildSchema(config.getAppId(), webhook._id!, {
+      parameter: "string",
+    })
+    return { webhook, automation }
   }
 
   beforeEach(async () => {
@@ -38,5 +43,16 @@ describe("Branching automations", () => {
 
   afterAll(setup.afterAll)
 
-  it("should run the webhook automation", async () => {})
+  it("should run the webhook automation - checking for parameters", async () => {
+    const { webhook } = await createWebhookAutomation(
+      "Check a basic webhook works as expected"
+    )
+    const res = await config.api.webhook.trigger(
+      config.getAppId(),
+      webhook._id!,
+      {
+        parameter: "testing",
+      }
+    )
+  })
 })
