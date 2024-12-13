@@ -177,7 +177,7 @@
       <Button
         secondary
         on:click={deleteSmtp}
-        disabled={!$admin.checklist.smtp.checked}
+        disabled={!$admin.checklist?.smtp?.checked}
       >
         Reset
       </Button>

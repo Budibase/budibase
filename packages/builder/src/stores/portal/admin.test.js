@@ -1,5 +1,5 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
-import { DEFAULT_CONFIG, createAdminStore } from "./admin"
+import { createAdminStore } from "./admin"
 
 import { writable, get } from "svelte/store"
 import { API } from "api"
@@ -43,11 +43,6 @@ describe("admin store", () => {
     writable.mockReturnValue(ctx.writableReturn)
 
     ctx.returnedStore = createAdminStore()
-  })
-
-  it("inits the writable store with the default config", () => {
-    expect(writable).toHaveBeenCalledTimes(1)
-    expect(writable).toHaveBeenCalledWith(DEFAULT_CONFIG)
   })
 
   it("returns the created store", ctx => {
