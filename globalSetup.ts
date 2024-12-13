@@ -4,8 +4,8 @@ import {
   getContainerRuntimeClient,
 } from "testcontainers"
 import { ContainerInfo } from "dockerode"
-import path from "path"
-import lockfile from "proper-lockfile"
+import * as path from "path"
+import * as lockfile from "proper-lockfile"
 import { execSync } from "child_process"
 
 interface DockerContext {
@@ -29,8 +29,8 @@ function getCurrentDockerContext(): DockerContext {
 
 async function getBudibaseContainers() {
   const client = await getContainerRuntimeClient()
-  const conatiners = await client.container.list()
-  return conatiners.filter(
+  const containers = await client.container.list()
+  return containers.filter(
     container =>
       container.Labels["com.budibase"] === "true" &&
       container.Labels["org.testcontainers"] === "true"

@@ -9,7 +9,7 @@
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
 
   onMount(() => {
-    if ($admin?.checklist?.adminUser.checked || useAccountPortal) {
+    if ($admin?.checklist?.adminUser?.checked || useAccountPortal) {
       $redirect("../")
     } else {
       loaded = true
