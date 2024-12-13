@@ -2,6 +2,9 @@ import * as automation from "../../index"
 import * as setup from "../utilities"
 import { Table, Webhook, WebhookActionType } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { mocks } from "@budibase/backend-core/tests"
+
+mocks.licenses.useSyncAutomations()
 
 describe("Branching automations", () => {
   let config = setup.getConfig(),
@@ -32,6 +35,7 @@ describe("Branching automations", () => {
     await config.api.webhook.buildSchema(config.getAppId(), webhook._id!, {
       parameter: "string",
     })
+    await config.publish()
     return { webhook, automation }
   }
 
@@ -48,12 +52,14 @@ describe("Branching automations", () => {
       "Check a basic webhook works as expected"
     )
     const res = await config.api.webhook.trigger(
-      config.getAppId(),
+      config.getProdAppId(),
       webhook._id!,
       {
         parameter: "testing",
       }
     )
-    expect(res).toBeDefined()
+    expect(typeof res).toBe("object")
+    const collectedInfo = res as Record<string, any>
+    expect(collectedInfo.value).toEqual("testing")
   })
 })
