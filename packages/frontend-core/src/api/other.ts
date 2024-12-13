@@ -1,5 +1,5 @@
 import {
-  FetchBuiltinPermissionsRequest,
+  FetchBuiltinPermissionsResponse,
   FetchIntegrationsResponse,
   GetEnvironmentResponse,
   GetVersionResponse,
@@ -11,7 +11,7 @@ export interface OtherEndpoints {
   getSystemStatus: () => Promise<SystemStatusResponse>
   getBudibaseVersion: () => Promise<string>
   getIntegrations: () => Promise<FetchIntegrationsResponse>
-  getBasePermissions: () => Promise<FetchBuiltinPermissionsRequest>
+  getBasePermissions: () => Promise<FetchBuiltinPermissionsResponse>
   getEnvironment: () => Promise<GetEnvironmentResponse>
 }
 
