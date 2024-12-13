@@ -8,7 +8,7 @@ import {
 
 export class WebhookAPI extends TestAPI {
   save = async (webhook: Webhook, expectations?: Expectations) => {
-    const resp = await this._post<SaveWebhookResponse>("/api/webhooks", {
+    const resp = await this._put<SaveWebhookResponse>("/api/webhooks", {
       body: webhook,
       expectations: {
         status: 200,
