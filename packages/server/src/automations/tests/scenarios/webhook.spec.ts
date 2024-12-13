@@ -54,5 +54,6 @@ describe("Branching automations", () => {
         parameter: "testing",
       }
     )
+    expect(res).toBeDefined()
   })
 })
