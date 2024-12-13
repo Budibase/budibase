@@ -234,6 +234,17 @@ async function runSqlQuery(
     json.operation = Operation.COUNT
   }
   const processSQLQuery = async (json: EnrichedQueryJson) => {
+    const fields = json.resource?.fields
+    if (fields) {
+      const tableId = json.tableAliases?.[json.table._id!] ?? json.table._id!
+      for (const key of ["_id", "_rev", "tableId"]) {
+        const field = `${tableId}.${key}`
+        if (fields.includes(field)) {
+          continue
+        }
+        fields.push(field)
+      }
+    }
     const query = builder._query(json, {
       disableReturning: true,
     })
