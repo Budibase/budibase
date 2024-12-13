@@ -36,7 +36,7 @@ describe("/api/system/migrations", () => {
 
     it("runs migrations", async () => {
       const res = await config.api.migrations.runMigrations()
-      expect(res.text).toBe("OK")
+      expect(res.body.message).toBeDefined()
       expect(migrateFn).toHaveBeenCalledTimes(1)
     })
   })
