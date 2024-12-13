@@ -2,6 +2,8 @@
   import Field from "./Field.svelte"
   import { CoreDropzone, ProgressCircle, Helpers } from "@budibase/bbui"
   import { getContext, onMount, onDestroy } from "svelte"
+  import { builderStore } from "stores/builder.js"
+  import { processStringSync } from "@budibase/string-templates"
 
   export let datasourceId
   export let bucket
@@ -42,6 +44,9 @@
   // Process the file input and return a serializable structure expected by
   // the dropzone component to display the file
   const processFiles = async fileList => {
+    if ($builderStore.inBuilder) {
+      return []
+    }
     return await new Promise(resolve => {
       if (!fileList?.length) {
         return []
@@ -78,12 +83,15 @@
   }
 
   const upload = async () => {
+    const processedFileKey = processStringSync(key, {
+      [$component.id]: fieldState,
+    })
     loading = true
     try {
       const res = await API.externalUpload({
         datasourceId,
         bucket,
-        key,
+        key: processedFileKey,
         data,
       })
       notificationStore.actions.success("File uploaded successfully")
@@ -131,7 +139,7 @@
   bind:fieldApi
   defaultValue={[]}
 >
-  <div class="content">
+  <div class="content" class:builder={$builderStore.inBuilder}>
     {#if fieldState}
       <CoreDropzone
         value={localFiles}
@@ -154,6 +162,9 @@
 </Field>
 
 <style>
+  .content.builder :global(.spectrum-Dropzone) {
+    pointer-events: none;
+  }
   .content {
     position: relative;
   }
