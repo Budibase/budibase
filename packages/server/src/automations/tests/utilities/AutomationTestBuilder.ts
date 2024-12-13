@@ -1,42 +1,43 @@
 import { v4 as uuidv4 } from "uuid"
 import { testAutomation } from "../../../api/routes/tests/utilities/TestFunctions"
-import {} from "../../steps/createRow"
 import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
 import { TRIGGER_DEFINITIONS } from "../../triggers"
 import {
-  LoopStepInputs,
-  DeleteRowStepInputs,
-  UpdateRowStepInputs,
-  CreateRowStepInputs,
+  AppActionTriggerInputs,
+  AppActionTriggerOutputs,
   Automation,
-  AutomationTrigger,
-  AutomationResults,
-  SmtpEmailStepInputs,
-  ExecuteQueryStepInputs,
-  QueryRowsStepInputs,
   AutomationActionStepId,
-  AutomationTriggerStepId,
+  AutomationResults,
   AutomationStep,
+  AutomationStepInputs,
+  AutomationTrigger,
   AutomationTriggerDefinition,
-  RowDeletedTriggerInputs,
-  RowDeletedTriggerOutputs,
-  RowUpdatedTriggerOutputs,
-  RowUpdatedTriggerInputs,
+  AutomationTriggerInputs,
+  AutomationTriggerStepId,
+  BashStepInputs,
+  Branch,
+  BranchStepInputs,
+  CreateRowStepInputs,
+  CronTriggerOutputs,
+  DeleteRowStepInputs,
+  ExecuteQueryStepInputs,
+  ExecuteScriptStepInputs,
+  FilterStepInputs,
+  LoopStepInputs,
+  OpenAIStepInputs,
+  QueryRowsStepInputs,
   RowCreatedTriggerInputs,
   RowCreatedTriggerOutputs,
-  AppActionTriggerOutputs,
-  CronTriggerOutputs,
-  AppActionTriggerInputs,
-  AutomationStepInputs,
-  AutomationTriggerInputs,
-  ServerLogStepInputs,
-  BranchStepInputs,
+  RowDeletedTriggerInputs,
+  RowDeletedTriggerOutputs,
+  RowUpdatedTriggerInputs,
+  RowUpdatedTriggerOutputs,
   SearchFilters,
-  Branch,
-  FilterStepInputs,
-  ExecuteScriptStepInputs,
-  OpenAIStepInputs,
-  BashStepInputs,
+  ServerLogStepInputs,
+  SmtpEmailStepInputs,
+  UpdateRowStepInputs,
+  WebhookTriggerInputs,
+  WebhookTriggerOutputs,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
@@ -47,6 +48,7 @@ type TriggerOutputs =
   | RowUpdatedTriggerOutputs
   | RowDeletedTriggerOutputs
   | AppActionTriggerOutputs
+  | WebhookTriggerOutputs
   | CronTriggerOutputs
   | undefined
 
@@ -329,6 +331,16 @@ class AutomationBuilder extends BaseStepBuilder {
     )
   }
 
+  webhook(outputs: WebhookTriggerOutputs, inputs?: WebhookTriggerInputs) {
+    this.triggerOutputs = outputs
+    return this.trigger(
+      TRIGGER_DEFINITIONS.WEBHOOK,
+      AutomationTriggerStepId.WEBHOOK,
+      inputs,
+      outputs
+    )
+  }
+
   private trigger<TStep extends AutomationTriggerStepId>(
     triggerSchema: AutomationTriggerDefinition,
     stepId: TStep,
@@ -361,12 +373,16 @@ class AutomationBuilder extends BaseStepBuilder {
     return this.automationConfig
   }
 
-  async run() {
+  async save() {
     if (!Object.keys(this.automationConfig.definition.trigger).length) {
       throw new Error("Please add a trigger to this automation test")
     }
     this.automationConfig.definition.steps = this.steps
-    const automation = await this.config.createAutomation(this.build())
+    return await this.config.createAutomation(this.build())
+  }
+
+  async run() {
+    const automation = await this.save()
     const results = await testAutomation(
       this.config,
       automation,

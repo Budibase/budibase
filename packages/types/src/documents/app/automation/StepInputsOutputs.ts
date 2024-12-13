@@ -296,3 +296,12 @@ export type RowUpdatedTriggerOutputs = {
   id: string
   revision?: string
 }
+
+export type WebhookTriggerInputs = {
+  schemaUrl: string
+  triggerUrl: string
+}
+
+export type WebhookTriggerOutputs = {
+  fields: Record<string, any>
+}
