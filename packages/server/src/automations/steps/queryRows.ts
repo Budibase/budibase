@@ -152,7 +152,7 @@ export async function run({
 
     return {
       rows,
-      success: !!ctx.body.rows,
+      success: true,
     }
   } catch (err) {
     return {
