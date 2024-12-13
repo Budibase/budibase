@@ -17,6 +17,7 @@ import {
   BashStepInputs,
   Branch,
   BranchStepInputs,
+  CollectStepInputs,
   CreateRowStepInputs,
   CronTriggerOutputs,
   DeleteRowStepInputs,
@@ -182,6 +183,7 @@ class BaseStepBuilder {
       opts
     )
   }
+
   loop(
     inputs: LoopStepInputs,
     opts?: { stepName?: string; stepId?: string }
@@ -249,7 +251,20 @@ class BaseStepBuilder {
       opts
     )
   }
+
+  collect(
+    input: CollectStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.COLLECT,
+      BUILTIN_ACTION_DEFINITIONS.COLLECT,
+      input,
+      opts
+    )
+  }
 }
+
 class StepBuilder extends BaseStepBuilder {
   build(): AutomationStep[] {
     return this.steps

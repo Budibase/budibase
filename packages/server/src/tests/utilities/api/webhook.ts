@@ -1,5 +1,6 @@
 import { Expectations, TestAPI } from "./base"
 import {
+  BuildWebhookSchemaResponse,
   SaveWebhookResponse,
   TriggerWebhookResponse,
   Webhook,
@@ -15,6 +16,25 @@ export class WebhookAPI extends TestAPI {
       },
     })
     return resp.webhook
+  }
+
+  buildSchema = async (
+    appId: string,
+    webhookId: string,
+    fields: Record<string, any>,
+    expectations?: Expectations
+  ) => {
+    const resp = await this._post<BuildWebhookSchemaResponse>(
+      `/api/webhooks/schema/${appId}/${webhookId}`,
+      {
+        body: fields,
+        expectations: {
+          status: 200,
+          ...expectations,
+        },
+      }
+    )
+    return resp.id
   }
 
   trigger = async (
@@ -33,6 +53,6 @@ export class WebhookAPI extends TestAPI {
         },
       }
     )
-    return resp?.message
+    return resp
   }
 }
