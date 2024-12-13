@@ -2,10 +2,13 @@ import {
   UserCtx,
   PostEventPublishRequest,
   EventPublishType,
+  PostEventPublishResponse,
 } from "@budibase/types"
 import { events } from "@budibase/backend-core"
 
-export async function publish(ctx: UserCtx<PostEventPublishRequest, void>) {
+export async function publish(
+  ctx: UserCtx<PostEventPublishRequest, PostEventPublishResponse>
+) {
   switch (ctx.request.body.type) {
     case EventPublishType.ENVIRONMENT_VARIABLE_UPGRADE_PANEL_OPENED:
       await events.environmentVariable.upgradePanelOpened(ctx.user._id!)
@@ -13,5 +16,5 @@ export async function publish(ctx: UserCtx<PostEventPublishRequest, void>) {
     default:
       ctx.throw(400, "Invalid publish event type.")
   }
-  ctx.status = 200
+  ctx.body = { message: "Event published." }
 }
