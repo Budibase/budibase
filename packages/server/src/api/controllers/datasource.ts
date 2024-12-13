@@ -182,7 +182,6 @@ export async function update(
     }
   }
 
-  ctx.status = 200
   ctx.message = "Datasource saved successfully."
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
@@ -290,8 +289,7 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
   await db.remove(datasourceId, ctx.params.revId)
   await events.datasource.deleted(datasource)
 
-  ctx.message = `Datasource deleted.`
-  ctx.status = 200
+  ctx.body = { message: `Datasource deleted.` }
   builderSocket?.emitDatasourceDeletion(ctx, datasourceId)
 }
 

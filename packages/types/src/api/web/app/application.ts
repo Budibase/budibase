@@ -44,6 +44,10 @@ export interface FetchAppPackageResponse {
   hasLock: boolean
 }
 
+export interface AddAppSampleDataResponse {
+  message: string
+}
+
 export type FetchAppsResponse = App[]
 
 export interface PublishResponse {
@@ -61,6 +65,10 @@ export interface DeleteAppResponse {
   ok: boolean
 }
 
+export interface UnpublishAppResponse {
+  message: string
+}
+
 export interface ImportToUpdateAppRequest {
   encryptionPassword?: string
 }
@@ -70,6 +78,9 @@ export interface ImportToUpdateAppResponse {
 
 export interface SetRevertableAppVersionRequest {
   revertableVersion: string
+}
+export interface SetRevertableAppVersionResponse {
+  message: string
 }
 
 export interface ExportAppDumpRequest {
