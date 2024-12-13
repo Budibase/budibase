@@ -164,8 +164,24 @@ export async function buildSqlFieldList(
     }
 
     const { tableName } = breakExternalTableId(field.tableId)
-    if (tables[tableName]) {
-      fields = fields.concat(extractRealFields(tables[tableName], fields))
+    const relatedTable = tables[tableName]
+    if (relatedTable) {
+      const viewFields = new Set<string>()
+      relatedTable.primary?.forEach(f => viewFields.add(f))
+      if (relatedTable.primaryDisplay) {
+        viewFields.add(relatedTable.primaryDisplay)
+      }
+
+      if (isView) {
+        Object.entries(source.schema?.[field.name].columns || {})
+          .filter(([_, column]) => helpers.views.isVisible(column))
+          .forEach(([field]) => viewFields.add(field))
+      }
+
+      const fieldsToAdd = Array.from(viewFields)
+        .map(f => `${relatedTable.name}.${f}`)
+        .filter(f => !fields.includes(f))
+      fields.push(...fieldsToAdd)
     }
   }
 
