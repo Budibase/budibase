@@ -288,19 +288,21 @@ function replaceTableNamesInFilters(
     for (const key of Object.keys(filter)) {
       const matches = key.match(`^(?<relation>.+)\\.(?<field>.+)`)
 
-      const relation = matches?.groups?.["relation"]
+      // this is the possible table name which we need to check if it needs to be converted
+      const relatedTableName = matches?.groups?.["relation"]
       const field = matches?.groups?.["field"]
 
-      if (!relation || !field) {
+      if (!relatedTableName || !field) {
         continue
       }
 
-      const table = allTables.find(r => r._id === tableId)!
-      if (Object.values(table.schema).some(f => f.name === relation)) {
+      const table = allTables.find(r => r._id === tableId)
+      const isColumnName = !!table?.schema[relatedTableName]
+      if (!table || isColumnName) {
         continue
       }
 
-      const matchedTable = allTables.find(t => t.name === relation)
+      const matchedTable = allTables.find(t => t.name === relatedTableName)
       const relationship = Object.values(table.schema).find(
         f => isRelationshipField(f) && f.tableId === matchedTable?._id
       )
