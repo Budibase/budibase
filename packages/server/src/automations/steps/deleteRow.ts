@@ -94,7 +94,7 @@ export async function run({
     return {
       response: ctx.body,
       row: ctx.row,
-      success: ctx.status === 200,
+      success: ctx.body.ok,
     }
   } catch (err) {
     return {
