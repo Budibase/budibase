@@ -59,11 +59,15 @@ export function isExternalTable(table: Table) {
 }
 
 export function buildExternalTableId(datasourceId: string, tableName: string) {
-  // encode spaces
-  if (tableName.includes(" ")) {
-    tableName = encodeURIComponent(tableName)
+  return `${datasourceId}${DOUBLE_SEPARATOR}${encodeURIComponent(tableName)}`
+}
+
+export function encodeTableId(tableId: string) {
+  if (isExternalTableID(tableId)) {
+    return encodeURIComponent(tableId)
+  } else {
+    return tableId
   }
-  return `${datasourceId}${DOUBLE_SEPARATOR}${tableName}`
 }
 
 export function breakExternalTableId(tableId: string) {
