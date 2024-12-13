@@ -78,6 +78,27 @@ const automationActions = store => ({
    * @param {Object} automation the automaton to be mutated
    */
   moveBlock: async (sourcePath, destPath, automation) => {
+    // The last part of the source node address, containing the id.
+    const pathSource = sourcePath.at(-1)
+
+    // The last part of the destination node address, containing the id.
+    const pathEnd = destPath.at(-1)
+
+    // Check if dragging a step into its own drag zone
+    const isOwnDragzone = pathSource.id === pathEnd.id
+
+    // Check if dragging the first branch step into the branch node drag zone
+    const isFirstBranchStep =
+      pathEnd.branchStepId &&
+      pathEnd.branchIdx === pathSource.branchIdx &&
+      pathSource.stepIdx === 0
+
+    // If dragging into an area that will not affect the tree structure
+    // Ignore the drag and drop.
+    if (isOwnDragzone || isFirstBranchStep) {
+      return
+    }
+
     // Use core delete to remove and return the deleted block
     // from the automation
     const { deleted, newAutomation } = store.actions.deleteBlock(
@@ -89,9 +110,6 @@ const automationActions = store => ({
     // will redefine all proceding node locations
     const newRefs = {}
     store.actions.traverse(newRefs, newAutomation)
-
-    // The last part of the destination node address, containing the id.
-    const pathEnd = destPath.at(-1)
 
     let finalPath
     // If dropping in a branch-step dropzone you need to find
