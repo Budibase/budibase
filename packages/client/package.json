@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "vite build",
-    "dev": "vite build --watch"
+    "dev": "vite build --watch --mode=dev"
   },
   "dependencies": {
     "@budibase/bbui": "*",
