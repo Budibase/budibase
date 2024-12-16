@@ -66,7 +66,7 @@ export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
     if (docIds.isViewId(sourceId)) {
       return {
         tableId: utils.extractViewInfoFromID(sourceId).tableId,
-        viewId: sourceId,
+        viewId: encodeURI(sourceId),
       }
     }
     return { tableId: sql.utils.encodeTableId(ctx.params.sourceId) }
