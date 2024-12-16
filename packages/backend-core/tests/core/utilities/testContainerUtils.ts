@@ -39,6 +39,7 @@ function getTestcontainers(): ContainerInfo[] {
 
 function removeContainer(container: ContainerInfo) {
   execSync(`docker rm -f ${container.ID}`)
+  execSync(`docker system prune -f`)
 }
 
 export function getContainerByImage(image: string) {
