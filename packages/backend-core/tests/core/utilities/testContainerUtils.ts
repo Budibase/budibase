@@ -55,7 +55,7 @@ export function getContainerByImage(image: string) {
 }
 
 function getContainerByName(name: string) {
-  return getTestcontainers().find(x => x.Names === name)
+  return getTestcontainers().find(x => x.Names.includes(name))
 }
 
 export function getContainerById(id: string) {
