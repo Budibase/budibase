@@ -96,7 +96,7 @@ describe("Test a query step automation", () => {
       )
       .run()
 
-    expect(result.steps[0].outputs.success).toBe(false)
+    expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
     expect(result.steps[0].outputs.rows.length).toBe(0)
   })
@@ -125,7 +125,7 @@ describe("Test a query step automation", () => {
       )
       .run()
 
-    expect(result.steps[0].outputs.success).toBe(false)
+    expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
     expect(result.steps[0].outputs.rows.length).toBe(0)
   })

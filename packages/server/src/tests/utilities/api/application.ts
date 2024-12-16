@@ -48,7 +48,7 @@ export class ApplicationAPI extends TestAPI {
 
   unpublish = async (appId: string): Promise<void> => {
     await this._post(`/api/applications/${appId}/unpublish`, {
-      expectations: { status: 204 },
+      expectations: { status: 200 },
     })
   }
 
