@@ -178,6 +178,7 @@ jobs:
 
       - name: Pull testcontainers images
         run: |
+          docker system prune -f 
           if [ "${{ matrix.datasource }}" == "mssql" ]; then
             docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}
           elif [ "${{ matrix.datasource }}" == "mysql" ]; then
