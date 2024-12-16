@@ -67,7 +67,7 @@ export async function buildSchema(
         body: autoOutputs.properties.body,
       }
       for (let prop of Object.keys(properties || {})) {
-        if (!properties?.[prop]) {
+        if (properties?.[prop] == null) {
           continue
         }
         const def = properties[prop]
