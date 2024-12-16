@@ -99,8 +99,6 @@ function getCurrentDockerContext(): DockerContext {
 }
 
 export function setupEnv(...envs: any[]) {
-  process.env.TESTCONTAINERS_RYUK_DISABLED = "true"
-
   // For whatever reason, testcontainers doesn't always use the correct current
   // docker context. This bit of code forces the issue by finding the current
   // context and setting it as the DOCKER_HOST environment
