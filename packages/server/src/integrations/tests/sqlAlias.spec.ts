@@ -73,6 +73,15 @@ describe("Captures of real examples", () => {
   })
 
   describe("read", () => {
+    it("should retrieve only requested fields", () => {
+      const queryJson = getJson("basicFetch.json")
+      let query = new Sql(SqlClient.POSTGRES)._query(queryJson)
+      expect(query).toEqual({
+        bindings: [primaryLimit],
+        sql: `select "a"."year", "a"."firstname", "a"."personid", "a"."age", "a"."type", "a"."lastname" from "persons" as "a" order by "a"."firstname" asc nulls first, "a"."personid" asc limit $1`,
+      })
+    })
+
     it("should handle basic retrieval with relationships", () => {
       const queryJson = getJson("basicFetchWithRelationships.json")
       let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
