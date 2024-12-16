@@ -234,8 +234,7 @@ export async function destroy(ctx: UserCtx<void, DeleteRoleResponse>) {
   // clean up inherits
   await removeRoleFromOthers(roleId)
 
-  ctx.message = `Role ${ctx.params.roleId} deleted successfully`
-  ctx.status = 200
+  ctx.body = { message: `Role ${ctx.params.roleId} deleted successfully` }
   builderSocket?.emitRoleDeletion(ctx, role)
 }
 

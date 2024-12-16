@@ -12,3 +12,7 @@ export interface AnalyticsPingRequest {
   timezone: string
   embedded?: boolean
 }
+export interface AnalyticsPingResponse {
+  message: string
+  source?: PingSource
+}

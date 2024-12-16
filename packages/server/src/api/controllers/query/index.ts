@@ -104,7 +104,6 @@ const _import = async (
     ...importResult,
     datasourceId,
   }
-  ctx.status = 200
 }
 export { _import as import }
 
@@ -455,6 +454,5 @@ export async function destroy(ctx: UserCtx<void, DeleteQueryResponse>) {
   const datasource = await sdk.datasources.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.body = { message: `Query deleted.` }
-  ctx.status = 200
   await events.query.deleted(datasource, query)
 }
