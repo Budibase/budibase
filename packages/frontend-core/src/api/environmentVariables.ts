@@ -1,8 +1,11 @@
 import {
   CreateEnvironmentVariableRequest,
+  CreateEnvironmentVariableResponse,
+  DeleteEnvironmentVariablesResponse,
   GetEnvironmentVariablesResponse,
   StatusEnvironmentVariableResponse,
   UpdateEnvironmentVariableRequest,
+  UpdateEnvironmentVariableResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -11,12 +14,14 @@ export interface EnvironmentVariableEndpoints {
   fetchEnvironmentVariables: () => Promise<GetEnvironmentVariablesResponse>
   createEnvironmentVariable: (
     data: CreateEnvironmentVariableRequest
-  ) => Promise<void>
-  deleteEnvironmentVariable: (name: string) => Promise<void>
+  ) => Promise<CreateEnvironmentVariableResponse>
+  deleteEnvironmentVariable: (
+    name: string
+  ) => Promise<DeleteEnvironmentVariablesResponse>
   updateEnvironmentVariable: (
     name: string,
     data: UpdateEnvironmentVariableRequest
-  ) => Promise<void>
+  ) => Promise<UpdateEnvironmentVariableResponse>
 }
 
 export const buildEnvironmentVariableEndpoints = (
