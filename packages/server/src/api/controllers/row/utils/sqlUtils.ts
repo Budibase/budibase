@@ -206,7 +206,14 @@ export async function buildSqlFieldList(
 
       if (isView) {
         Object.entries(source.schema?.[field.name]?.columns || {})
-          .filter(([_, column]) => helpers.views.isVisible(column))
+          .filter(
+            ([columnName, columnConfig]) =>
+              relatedTable.schema[columnName] &&
+              helpers.views.isVisible(columnConfig) &&
+              ![FieldType.LINK, FieldType.FORMULA].includes(
+                relatedTable.schema[columnName].type
+              )
+          )
           .forEach(([field]) => viewFields.add(field))
       }
 
