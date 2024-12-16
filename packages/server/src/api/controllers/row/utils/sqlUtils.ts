@@ -173,7 +173,7 @@ export async function buildSqlFieldList(
       }
 
       if (isView) {
-        Object.entries(source.schema?.[field.name].columns || {})
+        Object.entries(source.schema?.[field.name]?.columns || {})
           .filter(([_, column]) => helpers.views.isVisible(column))
           .forEach(([field]) => viewFields.add(field))
       }

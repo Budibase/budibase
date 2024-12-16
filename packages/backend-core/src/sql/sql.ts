@@ -272,11 +272,16 @@ class InternalBuilder {
     return parts.join(".")
   }
 
-  private isFullSelectStatementRequired(): boolean {
-    for (let column of Object.values(this.table.schema)) {
+  private isFullSelectStatementRequired(includedFields: string[]): boolean {
+    for (const column of Object.values(this.table.schema)) {
       if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(column)) {
         return true
       } else if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(column)) {
+        return true
+      } else if (
+        column.type === FieldType.FORMULA &&
+        includedFields.includes(column.name)
+      ) {
         return true
       }
     }
@@ -292,11 +297,9 @@ class InternalBuilder {
 
     const alias = this.getTableName(table)
     const schema = this.table.schema
-    if (this.isFullSelectStatementRequired()) {
-      return [this.knex.raw("??", [`${alias}.*`])]
-    }
+
     // get just the fields for this table
-    return resource.fields
+    const tableFields = resource.fields
       .map(field => {
         const parts = field.split(/\./g)
         let table: string | undefined = undefined
@@ -311,34 +314,43 @@ class InternalBuilder {
         return { table, column, field }
       })
       .filter(({ table }) => !table || table === alias)
-      .map(({ table, column, field }) => {
-        const columnSchema = schema[column]
 
-        if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(columnSchema)) {
-          return this.knex.raw(`??::money::numeric as ??`, [
-            this.rawQuotedIdentifier([table, column].join(".")),
-            this.knex.raw(this.quote(field)),
-          ])
-        }
+    if (
+      this.isFullSelectStatementRequired(
+        tableFields.map(({ column }) => column)
+      )
+    ) {
+      return [this.knex.raw("??", [`${alias}.*`])]
+    }
 
-        if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(columnSchema)) {
-          // Time gets returned as timestamp from mssql, not matching the expected
-          // HH:mm format
+    return tableFields.map(({ table, column, field }) => {
+      const columnSchema = schema[column]
 
-          // TODO: figure out how to express this safely without string
-          // interpolation.
-          return this.knex.raw(`CONVERT(varchar, ??, 108) as ??`, [
-            this.rawQuotedIdentifier(field),
-            this.knex.raw(this.quote(field)),
-          ])
-        }
+      if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(columnSchema)) {
+        return this.knex.raw(`??::money::numeric as ??`, [
+          this.rawQuotedIdentifier([table, column].join(".")),
+          this.knex.raw(this.quote(field)),
+        ])
+      }
 
-        if (table) {
-          return this.rawQuotedIdentifier(`${table}.${column}`)
-        } else {
-          return this.rawQuotedIdentifier(field)
-        }
-      })
+      if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(columnSchema)) {
+        // Time gets returned as timestamp from mssql, not matching the expected
+        // HH:mm format
+
+        // TODO: figure out how to express this safely without string
+        // interpolation.
+        return this.knex.raw(`CONVERT(varchar, ??, 108) as ??`, [
+          this.rawQuotedIdentifier(field),
+          this.knex.raw(this.quote(field)),
+        ])
+      }
+
+      if (table) {
+        return this.rawQuotedIdentifier(`${table}.${column}`)
+      } else {
+        return this.rawQuotedIdentifier(field)
+      }
+    })
   }
 
   // OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
