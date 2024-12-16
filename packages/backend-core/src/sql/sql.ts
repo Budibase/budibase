@@ -315,11 +315,10 @@ class InternalBuilder {
       })
       .filter(({ table }) => !table || table === alias)
 
-    if (
-      this.isFullSelectStatementRequired(
-        tableFields.map(({ column }) => column)
-      )
-    ) {
+    const requestedTableColumns = tableFields.map(({ column }) =>
+      column.replace(new RegExp(`^${this.query.meta?.columnPrefix}`), "")
+    )
+    if (this.isFullSelectStatementRequired(requestedTableColumns)) {
       return [this.knex.raw("??", [`${alias}.*`])]
     }
 
