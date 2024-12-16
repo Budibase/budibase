@@ -160,7 +160,7 @@ export async function startContainer(container: GenericContainer) {
   // matching container and it has exited, we remove it before carrying on. This
   // removes the need to do this removal manually.
   const existingContainer = getContainerByName(name)
-  if (existingContainer?.State === "exited") {
+  if (existingContainer && existingContainer.State !== "running") {
     removeContainer(existingContainer)
   }
 
