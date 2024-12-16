@@ -15,6 +15,7 @@ import { breakExternalTableId } from "../../../../integrations/utils"
 import { generateJunctionTableID } from "../../../../db/utils"
 import sdk from "../../../../sdk"
 import { helpers } from "@budibase/shared-core"
+import { sql } from "@budibase/backend-core"
 
 type TableMap = Record<string, Table>
 
@@ -132,6 +133,27 @@ export async function buildSqlFieldList(
       .map(([columnName]) => `${table.name}.${columnName}`)
   }
 
+  function getRequiredFields(table: Table, existing: string[] = []) {
+    const requiredFields: string[] = []
+    if (table.primary) {
+      requiredFields.push(...table.primary)
+    }
+    if (table.primaryDisplay) {
+      requiredFields.push(table.primaryDisplay)
+    }
+
+    if (!sql.utils.isExternalTable(table)) {
+      requiredFields.push(...["_id", "_rev", "_tableId"])
+    }
+
+    return requiredFields
+      .filter(
+        column =>
+          !existing.find((field: string) => field === `${table.name}.${column}`)
+      )
+      .map(column => `${table.name}.${column}`)
+  }
+
   let fields: string[] = []
 
   const isView = sdk.views.isView(source)
@@ -149,6 +171,16 @@ export async function buildSqlFieldList(
   } else {
     table = source
   }
+
+  fields.push(
+    ...getRequiredFields(
+      {
+        ...table,
+        primaryDisplay: source.primaryDisplay || table.primaryDisplay,
+      },
+      fields
+    )
+  )
 
   for (const field of Object.values(table.schema)) {
     if (field.type !== FieldType.LINK || !relationships || !field.tableId) {
