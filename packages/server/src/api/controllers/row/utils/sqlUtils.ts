@@ -161,15 +161,14 @@ export async function buildSqlFieldList(
   let table: Table
   if (isView) {
     table = await sdk.views.getTable(source.id)
-    fields = fields.filter(f => table.schema[f].type !== FieldType.LINK)
   } else {
     table = source
   }
 
   if (isView) {
-    fields = Object.keys(helpers.views.basicFields(source)).map(
-      c => `${table.name}.${c}`
-    )
+    fields = Object.keys(helpers.views.basicFields(source))
+      .filter(f => table.schema[f].type !== FieldType.LINK)
+      .map(c => `${table.name}.${c}`)
   } else {
     fields = extractRealFields(source)
   }
