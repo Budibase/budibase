@@ -69,7 +69,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     throw { validation: validateResult.errors }
   }
 
-  const beforeRow = await sdk.rows.external.getRow(sourceId, _id, {
+  const beforeRow = await sdk.rows.external.getRow(table._id!, _id, {
     relationships: true,
   })
 
