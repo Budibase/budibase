@@ -8,6 +8,7 @@ import {
   TableSchema,
   Table,
   TableSourceType,
+  FieldType,
 } from "@budibase/types"
 import { sql } from "@budibase/backend-core"
 import { join } from "path"
@@ -73,12 +74,40 @@ describe("Captures of real examples", () => {
   })
 
   describe("read", () => {
+    it("should retrieve all fields if non are specified", () => {
+      const queryJson = getJson("basicFetch.json")
+      delete queryJson.resource
+
+      let query = new Sql(SqlClient.POSTGRES)._query(queryJson)
+      expect(query).toEqual({
+        bindings: [primaryLimit],
+        sql: `select * from "persons" as "a" order by "a"."firstname" asc nulls first, "a"."personid" asc limit $1`,
+      })
+    })
+
     it("should retrieve only requested fields", () => {
       const queryJson = getJson("basicFetch.json")
+
       let query = new Sql(SqlClient.POSTGRES)._query(queryJson)
       expect(query).toEqual({
         bindings: [primaryLimit],
         sql: `select "a"."year", "a"."firstname", "a"."personid", "a"."age", "a"."type", "a"."lastname" from "persons" as "a" order by "a"."firstname" asc nulls first, "a"."personid" asc limit $1`,
+      })
+    })
+
+    it("should retrieve all fields if a formula column is requested", () => {
+      const queryJson = getJson("basicFetch.json")
+      queryJson.table.schema["formula"] = {
+        name: "formula",
+        type: FieldType.FORMULA,
+        formula: "any",
+      }
+      queryJson.resource!.fields.push("formula")
+
+      let query = new Sql(SqlClient.POSTGRES)._query(queryJson)
+      expect(query).toEqual({
+        bindings: [primaryLimit],
+        sql: `select "a".* from "persons" as "a" order by "a"."firstname" asc nulls first, "a"."personid" asc limit $1`,
       })
     })
 
