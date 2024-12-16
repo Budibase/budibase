@@ -79,7 +79,7 @@ describe("Captures of real examples", () => {
         queryJson
       )
       expect(query).toEqual({
-        bindings: [relationshipLimit, relationshipLimit, primaryLimit],
+        bindings: [primaryLimit, relationshipLimit, relationshipLimit],
         sql: expect.stringContaining(
           multiline(
             `select json_agg(json_build_object('executorid',"b"."executorid",'executorid',"b"."executorid",'qaid',"b"."qaid",'qaid',"b"."qaid",'taskid',"b"."taskid",'taskid',"b"."taskid",'completed',"b"."completed",'completed',"b"."completed",'taskname',"b"."taskname",'taskname',"b"."taskname"`
@@ -94,10 +94,10 @@ describe("Captures of real examples", () => {
         queryJson
       )
       expect(query).toEqual({
-        bindings: [relationshipLimit, "assembling", primaryLimit],
+        bindings: ["assembling", primaryLimit, relationshipLimit],
         sql: expect.stringContaining(
           multiline(
-            `where (exists (select 1 from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" and (COALESCE("b"."taskname" = $2, FALSE)))`
+            `where (exists (select 1 from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" and (COALESCE("b"."taskname" = $1, FALSE)))`
           )
         ),
       })
@@ -109,13 +109,13 @@ describe("Captures of real examples", () => {
         queryJson
       )
       expect(query).toEqual({
-        bindings: [relationshipLimit, primaryLimit],
+        bindings: [primaryLimit, relationshipLimit],
         sql: expect.stringContaining(
           multiline(
-            `select "a"."productname",
-              "a"."productid",
-              (select json_agg(json_build_object('executorid',"b"."executorid",'qaid',"b"."qaid",'taskid',"b"."taskid",'completed',"b"."completed",'taskname',"b"."taskname")) from (select "b".* from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" order by "b"."taskid" asc limit $1) as "b") as "tasks"
-              from "products" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc limit $2`
+            `with "paginated" as (select * from "products" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc limit $1) 
+                 select "a"."productname", "a"."productid", (select json_agg(json_build_object('executorid',"b"."executorid",'qaid',"b"."qaid",'taskid',"b"."taskid",'completed',"b"."completed",'taskname',"b"."taskname")) 
+                 from (select "b".* from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" order by "b"."taskid" asc limit $2) as "b") as "tasks" 
+                 from "paginated" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc`
           )
         ),
       })
@@ -128,8 +128,13 @@ describe("Captures of real examples", () => {
         queryJson
       )
       expect(query).toEqual({
-        bindings: [relationshipLimit, ...filters, relationshipLimit],
-        sql: `select "a"."executorid", "a"."taskname", "a"."taskid", "a"."completed", "a"."qaid", (select json_agg(json_build_object('productid',"b"."productid",'productname',"b"."productname")) from (select "b".* from "products" as "b" inner join "products_tasks" as "c" on "b"."productid" = "c"."productid" where "c"."taskid" = "a"."taskid" order by "b"."productid" asc limit $1) as "b") as "products" from "tasks" as "a" where "a"."taskid" in ($2, $3) order by "a"."taskid" asc limit $4`,
+        bindings: [...filters, relationshipLimit, relationshipLimit],
+        sql: multiline(
+          `with "paginated" as (select * from "tasks" as "a" where "a"."taskid" in ($1, $2) order by "a"."taskid" asc limit $3) 
+               select "a"."executorid", "a"."taskname", "a"."taskid", "a"."completed", "a"."qaid", (select json_agg(json_build_object('productid',"b"."productid",'productname',"b"."productname")) 
+               from (select "b".* from "products" as "b" inner join "products_tasks" as "c" on "b"."productid" = "c"."productid" 
+               where "c"."taskid" = "a"."taskid" order by "b"."productid" asc limit $4) as "b") as "products" from "paginated" as "a" order by "a"."taskid" asc`
+        ),
       })
     })
 
@@ -146,9 +151,6 @@ describe("Captures of real examples", () => {
 
       expect(query).toEqual({
         bindings: [
-          relationshipLimit,
-          relationshipLimit,
-          relationshipLimit,
           rangeValue.low,
           rangeValue.high,
           rangeValue.low,
@@ -156,10 +158,13 @@ describe("Captures of real examples", () => {
           equalValue,
           notEqualsValue,
           primaryLimit,
+          relationshipLimit,
+          relationshipLimit,
+          relationshipLimit,
         ],
         sql: expect.stringContaining(
           multiline(
-            `where (exists (select 1 from "persons" as "c" where "c"."personid" = "a"."executorid" and ("c"."year" between $4 and $5))) and (exists (select 1 from "persons" as "c" where "c"."personid" = "a"."qaid" and ("c"."year" between $6 and $7))) and (exists (select 1 from "products" as "b" inner join "products_tasks" as "d" on "b"."productid" = "d"."productid" where "d"."taskid" = "a"."taskid" and (COALESCE("b"."productname" = $8, FALSE))))`
+            `where (exists (select 1 from "persons" as "c" where "c"."personid" = "a"."executorid" and ("c"."year" between $1 and $2))) and (exists (select 1 from "persons" as "c" where "c"."personid" = "a"."qaid" and ("c"."year" between $3 and $4))) and (exists (select 1 from "products" as "b" inner join "products_tasks" as "d" on "b"."productid" = "d"."productid" where "d"."taskid" = "a"."taskid" and (COALESCE("b"."productname" = $5, FALSE))))`
           )
         ),
       })
