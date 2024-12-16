@@ -1323,7 +1323,9 @@ class InternalBuilder {
       )
 
       const standardWrap = (select: Knex.Raw): Knex.QueryBuilder => {
-        subQuery = subQuery.select(`${toAlias}.*`).limit(getRelationshipLimit())
+        subQuery = subQuery
+          .select(relationshipFields)
+          .limit(getRelationshipLimit())
         // @ts-ignore - the from alias syntax isn't in Knex typing
         return knex.select(select).from({
           [toAlias]: subQuery,
