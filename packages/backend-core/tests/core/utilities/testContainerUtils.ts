@@ -161,6 +161,7 @@ export async function startContainer(container: GenericContainer) {
   // removes the need to do this removal manually.
   const existingContainer = getContainerByName(name)
   if (existingContainer && existingContainer.State !== "running") {
+    console.log("--- REMOVING EXISTING CONTAINER --- ")
     removeContainer(existingContainer)
   }
 
