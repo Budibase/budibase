@@ -52,10 +52,22 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const table = await utils.getTableFromSource(source)
   const { _id, ...rowData } = ctx.request.body
 
-  const dataToUpdate = await inputProcessing(
+  const beforeRow = await sdk.rows.external.getRow(table._id!, _id, {
+    relationships: true,
+  })
+
+  let dataToUpdate = cloneDeep(beforeRow)
+  const allowedField = utils.getSourceFields(source)
+  for (const key of Object.keys(rowData)) {
+    if (!allowedField.includes(key)) continue
+
+    dataToUpdate[key] = rowData[key]
+  }
+
+  dataToUpdate = await inputProcessing(
     ctx.user?._id,
     cloneDeep(source),
-    rowData
+    dataToUpdate
   )
 
   const validateResult = await sdk.rows.utils.validate({
@@ -65,10 +77,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   if (!validateResult.valid) {
     throw { validation: validateResult.errors }
   }
-
-  const beforeRow = await sdk.rows.external.getRow(table._id!, _id, {
-    relationships: true,
-  })
 
   const response = await handleRequest(Operation.UPDATE, source, {
     id: breakRowIdField(_id),

@@ -110,6 +110,21 @@ function fixBooleanFields(row: Row, table: Table) {
   return row
 }
 
+export function getSourceFields(source: Table | ViewV2): string[] {
+  const isView = sdk.views.isView(source)
+  if (isView) {
+    const fields = Object.keys(
+      helpers.views.basicFields(source, { visible: true })
+    )
+    return fields
+  }
+
+  const fields = Object.entries(source.schema)
+    .filter(([_, field]) => field.visible !== false)
+    .map(([columnName]) => columnName)
+  return fields
+}
+
 export async function sqlOutputProcessing(
   rows: DatasourcePlusQueryResponse,
   source: Table | ViewV2,
