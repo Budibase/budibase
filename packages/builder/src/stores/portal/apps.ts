@@ -4,7 +4,7 @@ import { AppStatus } from "constants"
 import { API } from "api"
 import { auth } from "./auth"
 import BudiStore from "../BudiStore"
-import { App, UpdateAppRequest, User } from "@budibase/types"
+import { App, UpdateAppRequest } from "@budibase/types"
 
 interface AppIdentifierMetadata {
   devId?: string
@@ -174,7 +174,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
 export const appsStore = new AppsStore()
 
 export const sortBy = derived([appsStore, auth], ([$store, $auth]) => {
-  return $store.sortBy || ($auth.user as User | null)?.appSort || "name"
+  return $store.sortBy || $auth.user?.appSort || "name"
 })
 
 // Centralise any logic that enriches the apps list
@@ -182,7 +182,7 @@ export const enrichedApps = derived(
   [appsStore, auth, sortBy],
   ([$store, $auth, $sortBy]) => {
     const enrichedApps: EnrichedApp[] = $store.apps.map(app => {
-      const user = $auth.user as User | null
+      const user = $auth.user
       return {
         ...app,
         deployed: app.status === AppStatus.DEPLOYED,
