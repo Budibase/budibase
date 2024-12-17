@@ -14,7 +14,7 @@ import {
 import { breakExternalTableId } from "../../../../integrations/utils"
 import { generateJunctionTableID } from "../../../../db/utils"
 import sdk from "../../../../sdk"
-import { helpers } from "@budibase/shared-core"
+import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 import { sql } from "@budibase/backend-core"
 
 type TableMap = Record<string, Table>
@@ -126,11 +126,9 @@ export async function buildSqlFieldList(
           column.type !== FieldType.LINK &&
           column.type !== FieldType.FORMULA &&
           column.type !== FieldType.AI &&
-          !existing.find(
-            (field: string) => field === `${table.name}.${columnName}`
-          )
+          !existing.find((field: string) => field === columnName)
       )
-      .map(([columnName]) => `${table.name}.${columnName}`)
+      .map(([columnName]) => columnName)
   }
 
   function getRequiredFields(table: Table, existing: string[] = []) {
@@ -143,15 +141,12 @@ export async function buildSqlFieldList(
     }
 
     if (!sql.utils.isExternalTable(table)) {
-      requiredFields.push(...["_id", "_rev", "_tableId"])
+      requiredFields.push(...PROTECTED_INTERNAL_COLUMNS)
     }
 
-    return requiredFields
-      .filter(
-        column =>
-          !existing.find((field: string) => field === `${table.name}.${column}`)
-      )
-      .map(column => `${table.name}.${column}`)
+    return requiredFields.filter(
+      column => !existing.find((field: string) => field === column)
+    )
   }
 
   let fields: string[] = []
@@ -161,29 +156,33 @@ export async function buildSqlFieldList(
   let table: Table
   if (isView) {
     table = await sdk.views.getTable(source.id)
+
+    fields = Object.keys(helpers.views.basicFields(source)).filter(
+      f => table.schema[f].type !== FieldType.LINK
+    )
   } else {
     table = source
-  }
-
-  if (isView) {
-    fields = Object.keys(helpers.views.basicFields(source))
-      .filter(f => table.schema[f].type !== FieldType.LINK)
-      .map(c => `${table.name}.${c}`)
-
-    if (!helpers.views.isCalculationView(source)) {
-      fields.push(
-        ...getRequiredFields(
-          {
-            ...table,
-            primaryDisplay: source.primaryDisplay || table.primaryDisplay,
-          },
-          fields
-        )
-      )
-    }
-  } else {
     fields = extractRealFields(source)
   }
+
+  // If are requesting for a formula field, we need to retrieve all fields
+  if (fields.find(f => table.schema[f]?.type === FieldType.FORMULA)) {
+    fields = extractRealFields(table)
+  }
+
+  if (!isView || !helpers.views.isCalculationView(source)) {
+    fields.push(
+      ...getRequiredFields(
+        {
+          ...table,
+          primaryDisplay: source.primaryDisplay || table.primaryDisplay,
+        },
+        fields
+      )
+    )
+  }
+
+  fields = fields.map(c => `${table.name}.${c}`)
 
   for (const field of Object.values(table.schema)) {
     if (field.type !== FieldType.LINK || !relationships || !field.tableId) {
@@ -227,7 +226,7 @@ export async function buildSqlFieldList(
     }
   }
 
-  return fields
+  return [...new Set(fields)]
 }
 
 export function isKnexEmptyReadResponse(resp: DatasourcePlusQueryResponse) {
