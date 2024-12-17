@@ -93,10 +93,10 @@ export function createDatasourcesStore() {
   }
 
   const updateSchema = async (datasource, tablesFilter) => {
-    const response = await API.buildDatasourceSchema({
-      datasourceId: datasource?._id,
-      tablesFilter,
-    })
+    const response = await API.buildDatasourceSchema(
+      datasource?._id,
+      tablesFilter
+    )
     updateDatasource(response)
   }
 
@@ -155,10 +155,7 @@ export function createDatasourcesStore() {
     if (!datasource?._id || !datasource?._rev) {
       return
     }
-    await API.deleteDatasource({
-      datasourceId: datasource._id,
-      datasourceRev: datasource._rev,
-    })
+    await API.deleteDatasource(datasource._id, datasource._rev)
     replaceDatasource(datasource._id, null)
   }
 
