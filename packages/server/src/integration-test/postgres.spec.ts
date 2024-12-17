@@ -13,7 +13,7 @@ const mainDescriptions = datasourceDescribe({
 
 if (mainDescriptions.length) {
   describe.each(mainDescriptions)(
-    "/postgres integrations",
+    "/postgres integrations ($dbName)",
     ({ config, dsProvider }) => {
       let datasource: Datasource
       let client: Knex
