@@ -93,10 +93,10 @@ export function createDatasourcesStore() {
   }
 
   const updateSchema = async (datasource, tablesFilter) => {
-    const response = await API.buildDatasourceSchema({
-      datasourceId: datasource?._id,
-      tablesFilter,
-    })
+    const response = await API.buildDatasourceSchema(
+      datasource?._id,
+      tablesFilter
+    )
     updateDatasource(response)
   }
 
