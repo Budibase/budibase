@@ -62,7 +62,8 @@ async function buildInternalFieldList(
 ) {
   const { relationships, allowedFields } = opts || {}
   let schemaFields: string[] = []
-  if (sdk.views.isView(source)) {
+  const isView = sdk.views.isView(source)
+  if (isView) {
     schemaFields = Object.keys(helpers.views.basicFields(source))
   } else {
     schemaFields = Object.keys(source.schema).filter(
@@ -75,7 +76,7 @@ async function buildInternalFieldList(
   }
 
   let table: Table
-  if (sdk.views.isView(source)) {
+  if (isView) {
     table = await sdk.views.getTable(source.id)
   } else {
     table = source
@@ -125,6 +126,13 @@ async function buildInternalFieldList(
       fieldList = fieldList.concat(relatedFields)
     }
   }
+
+  if (isView && !helpers.views.isCalculationView(source)) {
+    for (const field of ["_id", "_rev", "tableId"]) {
+      fieldList.push(field)
+    }
+  }
+
   return [...new Set(fieldList)]
 }
 
@@ -234,17 +242,6 @@ async function runSqlQuery(
     json.operation = Operation.COUNT
   }
   const processSQLQuery = async (json: EnrichedQueryJson) => {
-    const fields = json.resource?.fields
-    if (fields) {
-      const tableId = json.tableAliases?.[json.table._id!] ?? json.table._id!
-      for (const key of ["_id", "_rev", "tableId"]) {
-        const field = `${tableId}.${key}`
-        if (fields.includes(field)) {
-          continue
-        }
-        fields.push(field)
-      }
-    }
     const query = builder._query(json, {
       disableReturning: true,
     })
@@ -334,8 +331,9 @@ export async function search(
   }
 
   let aggregations: Aggregation[] = []
-  if (sdk.views.isView(source)) {
+  if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
     const calculationFields = helpers.views.calculationFields(source)
+
     for (const [key, field] of Object.entries(calculationFields)) {
       if (options.fields && !options.fields.includes(key)) {
         continue
