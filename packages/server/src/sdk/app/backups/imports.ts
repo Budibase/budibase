@@ -187,6 +187,10 @@ export async function importApp(
       await decryptFiles(tmpPath, template.file.password)
     }
     const contents = await fsp.readdir(tmpPath)
+    const stillEncrypted = !!contents.find(name => name.endsWith(".enc"))
+    if (stillEncrypted) {
+      throw new Error("Files are encrypted but no password has been supplied.")
+    }
     // have to handle object import
     if (contents.length && opts.importObjStoreContents) {
       let promises = []
