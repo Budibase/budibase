@@ -1,11 +1,15 @@
 import { BaseAPIClient } from "./types"
-import { AnalyticsEnabledResponse, AnalyticsPingRequest } from "@budibase/types"
+import {
+  AnalyticsEnabledResponse,
+  AnalyticsPingRequest,
+  AnalyticsPingResponse,
+} from "@budibase/types"
 
 export interface AnalyticsEndpoints {
   getAnalyticsStatus: () => Promise<AnalyticsEnabledResponse>
   analyticsPing: (
     payload: Omit<AnalyticsPingRequest, "timezone">
-  ) => Promise<void>
+  ) => Promise<AnalyticsPingResponse>
 }
 
 export const buildAnalyticsEndpoints = (
@@ -24,13 +28,12 @@ export const buildAnalyticsEndpoints = (
    * Notifies analytics of a certain environment
    */
   analyticsPing: async request => {
-    return await API.post<AnalyticsPingRequest>({
+    return await API.post<AnalyticsPingRequest, AnalyticsPingResponse>({
       url: "/api/bbtel/ping",
       body: {
         ...request,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
-      parseResponse: () => undefined,
     })
   },
 })
