@@ -26,6 +26,7 @@
   const values = writable({ name: "", url: null })
   const validation = createValidationStore()
   const encryptionValidation = createValidationStore()
+  const isEncryptedRegex = /^.*\.enc.*\.tar\.gz$/gm
 
   $: {
     const { url } = $values
@@ -37,7 +38,9 @@
     encryptionValidation.check({ ...$values })
   }
 
-  $: encryptedFile = $values.file?.name?.endsWith(".enc.tar.gz")
+  // filename should be separated to avoid updates everytime any other form element changes
+  $: filename = $values.file?.name
+  $: encryptedFile = isEncryptedRegex.test(filename)
 
   onMount(async () => {
     const lastChar = $auth.user?.firstName
@@ -171,7 +174,7 @@
           try {
             await createNewApp()
           } catch (error) {
-            notifications.error("Error creating app")
+            notifications.error(`Error creating app - ${error.message}`)
           }
         }
       },
