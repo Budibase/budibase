@@ -191,6 +191,16 @@ export async function importApp(
     if (stillEncrypted) {
       throw new Error("Files are encrypted but no password has been supplied.")
     }
+    const isPlugin = !!contents.find(name => name === "plugin.min.js")
+    if (isPlugin) {
+      throw new Error("Supplied file is a plugin - cannot import as app.")
+    }
+    const isInvalid = !contents.find(name => name === DB_EXPORT_FILE)
+    if (isInvalid) {
+      throw new Error(
+        "App export does not appear to be valid - no DB file found."
+      )
+    }
     // have to handle object import
     if (contents.length && opts.importObjStoreContents) {
       let promises = []
