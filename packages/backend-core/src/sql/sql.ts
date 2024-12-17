@@ -274,9 +274,7 @@ class InternalBuilder {
 
   private isFullSelectStatementRequired(includedFields: string[]): boolean {
     for (const column of Object.values(this.table.schema)) {
-      if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(column)) {
-        return true
-      } else if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(column)) {
+      if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(column)) {
         return true
       } else if (
         column.type === FieldType.FORMULA &&
