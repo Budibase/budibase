@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { JSONSchema7 } from "json-schema"
 
 export enum WebhookActionType {
   AUTOMATION = "automation",
@@ -11,5 +12,5 @@ export interface Webhook extends Document {
     type: WebhookActionType
     target: string
   }
-  bodySchema?: any
+  bodySchema?: JSONSchema7
 }
