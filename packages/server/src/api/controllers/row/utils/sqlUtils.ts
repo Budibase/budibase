@@ -119,13 +119,14 @@ export async function buildSqlFieldList(
   opts?: { relationships: boolean }
 ) {
   const { relationships } = opts || {}
+
+  const nonMappedColumns = [FieldType.LINK, FieldType.FORMULA, FieldType.AI]
+
   function extractRealFields(table: Table, existing: string[] = []) {
     return Object.entries(table.schema)
       .filter(
         ([columnName, column]) =>
-          column.type !== FieldType.LINK &&
-          column.type !== FieldType.FORMULA &&
-          column.type !== FieldType.AI &&
+          !nonMappedColumns.includes(column.type) &&
           !existing.find((field: string) => field === columnName)
       )
       .map(([columnName]) => columnName)
@@ -145,7 +146,10 @@ export async function buildSqlFieldList(
     }
 
     return requiredFields.filter(
-      column => !existing.find((field: string) => field === column)
+      column =>
+        !existing.find((field: string) => field === column) &&
+        table.schema[column] &&
+        !nonMappedColumns.includes(table.schema[column].type)
     )
   }
 
@@ -231,6 +235,7 @@ export async function buildSqlFieldList(
     }
 
     const fieldsToAdd = Array.from(viewFields)
+      .filter(f => !nonMappedColumns.includes(relatedTable.schema[f].type))
       .map(f => `${relatedTable.name}.${f}`)
       .filter(f => !fields.includes(f))
     fields.push(...fieldsToAdd)
