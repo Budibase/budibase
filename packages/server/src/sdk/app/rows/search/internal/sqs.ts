@@ -62,7 +62,15 @@ async function buildInternalFieldList(
 ) {
   const { relationships, allowedFields } = opts || {}
   let schemaFields: string[] = []
+
   const isView = sdk.views.isView(source)
+  let table: Table
+  if (isView) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
+
   if (isView) {
     schemaFields = Object.keys(helpers.views.basicFields(source))
   } else {
@@ -71,15 +79,14 @@ async function buildInternalFieldList(
     )
   }
 
-  if (allowedFields) {
+  const containsFormula = schemaFields.some(
+    f => table.schema[f]?.type === FieldType.FORMULA
+  )
+  // If are requesting for a formula field, we need to retrieve all fields
+  if (containsFormula) {
+    schemaFields = Object.keys(table.schema)
+  } else if (allowedFields) {
     schemaFields = schemaFields.filter(field => allowedFields.includes(field))
-  }
-
-  let table: Table
-  if (isView) {
-    table = await sdk.views.getTable(source.id)
-  } else {
-    table = source
   }
 
   let fieldList: string[] = []
