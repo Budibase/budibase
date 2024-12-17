@@ -98,9 +98,7 @@
   async function generateAICronExpression() {
     loadingAICronExpression = true
     try {
-      const response = await API.generateCronExpression({
-        prompt: aiCronPrompt,
-      })
+      const response = await API.generateCronExpression(aiCronPrompt)
       cronExpression = response.message
       dispatch("change", response.message)
     } catch (err) {
