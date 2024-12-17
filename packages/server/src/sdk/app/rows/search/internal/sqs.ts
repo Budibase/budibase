@@ -128,7 +128,7 @@ async function buildInternalFieldList(
   }
 
   if (!isView || !helpers.views.isCalculationView(source)) {
-    for (const field of ["_id", "_rev", "tableId"]) {
+    for (const field of PROTECTED_INTERNAL_COLUMNS) {
       fieldList.push(field)
     }
   }
