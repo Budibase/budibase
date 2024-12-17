@@ -139,7 +139,7 @@
       await auth.setInitInfo({})
       $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
-      notifications.error("Error creating app")
+      notifications.error(`Error creating app - ${error.message}`)
     }
   }
 
