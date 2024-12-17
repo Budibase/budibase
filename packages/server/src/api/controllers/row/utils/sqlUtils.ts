@@ -169,19 +169,21 @@ export async function buildSqlFieldList(
     fields = Object.keys(helpers.views.basicFields(source))
       .filter(f => table.schema[f].type !== FieldType.LINK)
       .map(c => `${table.name}.${c}`)
+
+    if (!helpers.views.isCalculationView(source)) {
+      fields.push(
+        ...getRequiredFields(
+          {
+            ...table,
+            primaryDisplay: source.primaryDisplay || table.primaryDisplay,
+          },
+          fields
+        )
+      )
+    }
   } else {
     fields = extractRealFields(source)
   }
-
-  fields.push(
-    ...getRequiredFields(
-      {
-        ...table,
-        primaryDisplay: source.primaryDisplay || table.primaryDisplay,
-      },
-      fields
-    )
-  )
 
   for (const field of Object.values(table.schema)) {
     if (field.type !== FieldType.LINK || !relationships || !field.tableId) {
