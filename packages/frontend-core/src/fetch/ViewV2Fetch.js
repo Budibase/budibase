@@ -62,8 +62,7 @@ export default class ViewV2Fetch extends DataFetch {
     }
 
     try {
-      const res = await this.API.viewV2.fetch({
-        viewId: datasource.id,
+      const res = await this.API.viewV2.fetch(datasource.id, {
         ...(query ? { query } : {}),
         paginate,
         limit,
