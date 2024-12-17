@@ -272,20 +272,6 @@ class InternalBuilder {
     return parts.join(".")
   }
 
-  private isFullSelectStatementRequired(includedFields: string[]): boolean {
-    for (const column of Object.values(this.table.schema)) {
-      if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(column)) {
-        return true
-      } else if (
-        column.type === FieldType.FORMULA &&
-        includedFields.includes(column.name)
-      ) {
-        return true
-      }
-    }
-    return false
-  }
-
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
     const { table, resource } = this.query
 
@@ -312,13 +298,6 @@ class InternalBuilder {
         return { table, column, field }
       })
       .filter(({ table }) => !table || table === alias)
-
-    const requestedTableColumns = tableFields.map(({ column }) =>
-      column.replace(new RegExp(`^${this.query.meta?.columnPrefix}`), "")
-    )
-    if (this.isFullSelectStatementRequired(requestedTableColumns)) {
-      return [this.knex.raw("??", [`${alias}.*`])]
-    }
 
     return tableFields.map(({ table, column, field }) => {
       const columnSchema = schema[column]
