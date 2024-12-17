@@ -160,8 +160,8 @@
         events: selectedEvents,
       })
       logsPageInfo.fetched(
-        $auditLogs.logs.hasNextPage,
-        $auditLogs.logs.bookmark
+        $auditLogs.logs?.hasNextPage,
+        $auditLogs.logs?.bookmark
       )
     } catch (error) {
       notifications.error(`Error getting audit logs - ${error}`)
@@ -200,6 +200,8 @@
       return Object.entries(obj).map(([id, label]) => {
         return { id, label }
       })
+    } else {
+      return []
     }
   }
 
@@ -316,7 +318,7 @@
     <Table
       on:click={({ detail }) => viewDetails(detail)}
       {customRenderers}
-      data={$auditLogs.logs.data}
+      data={$auditLogs.logs?.data}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
