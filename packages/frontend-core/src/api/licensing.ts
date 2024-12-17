@@ -1,22 +1,29 @@
 import {
   ActivateLicenseKeyRequest,
+  ActivateLicenseKeyResponse,
   ActivateOfflineLicenseTokenRequest,
+  ActivateOfflineLicenseTokenResponse,
   GetLicenseKeyResponse,
   GetOfflineIdentifierResponse,
   GetOfflineLicenseTokenResponse,
   QuotaUsage,
+  RefreshOfflineLicenseResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface LicensingEndpoints {
-  activateLicenseKey: (licenseKey: string) => Promise<void>
+  activateLicenseKey: (
+    licenseKey: string
+  ) => Promise<ActivateLicenseKeyResponse>
   deleteLicenseKey: () => Promise<void>
   getLicenseKey: () => Promise<GetLicenseKeyResponse | void>
-  activateOfflineLicense: (offlineLicenseToken: string) => Promise<void>
+  activateOfflineLicense: (
+    offlineLicenseToken: string
+  ) => Promise<ActivateOfflineLicenseTokenResponse>
   deleteOfflineLicense: () => Promise<void>
   getOfflineLicense: () => Promise<GetOfflineLicenseTokenResponse | void>
   getOfflineLicenseIdentifier: () => Promise<GetOfflineIdentifierResponse>
-  refreshLicense: () => Promise<void>
+  refreshLicense: () => Promise<RefreshOfflineLicenseResponse>
   getQuotaUsage: () => Promise<QuotaUsage>
 }
 
@@ -25,7 +32,7 @@ export const buildLicensingEndpoints = (
 ): LicensingEndpoints => ({
   // LICENSE KEY
   activateLicenseKey: async licenseKey => {
-    return API.post<ActivateLicenseKeyRequest>({
+    return API.post<ActivateLicenseKeyRequest, ActivateLicenseKeyResponse>({
       url: `/api/global/license/key`,
       body: { licenseKey },
     })
@@ -49,7 +56,10 @@ export const buildLicensingEndpoints = (
 
   // OFFLINE LICENSE
   activateOfflineLicense: async offlineLicenseToken => {
-    return API.post<ActivateOfflineLicenseTokenRequest>({
+    return API.post<
+      ActivateOfflineLicenseTokenRequest,
+      ActivateOfflineLicenseTokenResponse
+    >({
       url: "/api/global/license/offline",
       body: {
         offlineLicenseToken,
@@ -84,7 +94,6 @@ export const buildLicensingEndpoints = (
   refreshLicense: async () => {
     return API.post({
       url: "/api/global/license/refresh",
-      parseResponse: () => undefined,
     })
   },
   /**

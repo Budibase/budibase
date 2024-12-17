@@ -19,7 +19,6 @@ export const save = async (
   metadata = await accounts.metadata.saveMetadata(metadata)
 
   ctx.body = metadata
-  ctx.status = 200
 }
 
 export const destroy = async (ctx: Ctx<void, void>) => {
