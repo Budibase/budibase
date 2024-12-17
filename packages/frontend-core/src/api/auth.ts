@@ -1,17 +1,23 @@
 import {
   GetInitInfoResponse,
   LoginRequest,
+  LoginResponse,
   LogoutResponse,
   PasswordResetRequest,
   PasswordResetResponse,
   PasswordResetUpdateRequest,
   PasswordResetUpdateResponse,
   SetInitInfoRequest,
+  SetInitInfoResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface AuthEndpoints {
-  logIn: (tenantId: string, username: string, password: string) => Promise<void>
+  logIn: (
+    tenantId: string,
+    username: string,
+    password: string
+  ) => Promise<LoginResponse>
   logOut: () => Promise<LogoutResponse>
   requestForgotPassword: (
     tenantId: string,
@@ -22,7 +28,7 @@ export interface AuthEndpoints {
     password: string,
     resetCode: string
   ) => Promise<PasswordResetUpdateResponse>
-  setInitInfo: (info: SetInitInfoRequest) => Promise<void>
+  setInitInfo: (info: SetInitInfoRequest) => Promise<SetInitInfoResponse>
   getInitInfo: () => Promise<GetInitInfoResponse>
 }
 
@@ -34,13 +40,12 @@ export const buildAuthEndpoints = (API: BaseAPIClient): AuthEndpoints => ({
    * @param password the password
    */
   logIn: async (tenantId, username, password) => {
-    return await API.post<LoginRequest>({
+    return await API.post<LoginRequest, LoginResponse>({
       url: `/api/global/auth/${tenantId}/login`,
       body: {
         username,
         password,
       },
-      parseResponse: () => undefined,
     })
   },
 

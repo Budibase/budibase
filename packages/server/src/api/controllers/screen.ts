@@ -123,7 +123,6 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
   ctx.body = {
     message: "Screen deleted successfully",
   }
-  ctx.status = 200
   builderSocket?.emitScreenDeletion(ctx, id)
 }
 
