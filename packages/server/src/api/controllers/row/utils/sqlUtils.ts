@@ -165,8 +165,11 @@ export async function buildSqlFieldList(
     fields = extractRealFields(source)
   }
 
+  const containsFormula = (isView ? fields : Object.keys(table.schema)).some(
+    f => table.schema[f]?.type === FieldType.FORMULA
+  )
   // If are requesting for a formula field, we need to retrieve all fields
-  if (fields.find(f => table.schema[f]?.type === FieldType.FORMULA)) {
+  if (containsFormula) {
     fields = extractRealFields(table)
   }
 
@@ -192,15 +195,22 @@ export async function buildSqlFieldList(
     if (
       isView &&
       source.schema?.[field.name] &&
-      !helpers.views.isVisible(source.schema[field.name])
+      !helpers.views.isVisible(source.schema[field.name]) &&
+      !containsFormula
     ) {
       continue
     }
 
     const { tableName } = breakExternalTableId(field.tableId)
     const relatedTable = tables[tableName]
-    if (relatedTable) {
-      const viewFields = new Set<string>()
+    if (!relatedTable) {
+      continue
+    }
+
+    const viewFields = new Set<string>()
+    if (containsFormula) {
+      extractRealFields(relatedTable).forEach(f => viewFields.add(f))
+    } else {
       relatedTable.primary?.forEach(f => viewFields.add(f))
       if (relatedTable.primaryDisplay) {
         viewFields.add(relatedTable.primaryDisplay)
@@ -218,12 +228,12 @@ export async function buildSqlFieldList(
           )
           .forEach(([field]) => viewFields.add(field))
       }
-
-      const fieldsToAdd = Array.from(viewFields)
-        .map(f => `${relatedTable.name}.${f}`)
-        .filter(f => !fields.includes(f))
-      fields.push(...fieldsToAdd)
     }
+
+    const fieldsToAdd = Array.from(viewFields)
+      .map(f => `${relatedTable.name}.${f}`)
+      .filter(f => !fields.includes(f))
+    fields.push(...fieldsToAdd)
   }
 
   return [...new Set(fields)]
