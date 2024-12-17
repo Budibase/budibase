@@ -19,7 +19,7 @@ const getIntegrationOrder = (type: string | undefined) => {
   return type.charCodeAt(0) + 4
 }
 
-class SortedIntegrationStore extends BudiStore<UIIntegration[]> {
+export class SortedIntegrationStore extends BudiStore<UIIntegration[]> {
   constructor() {
     super([])
 
