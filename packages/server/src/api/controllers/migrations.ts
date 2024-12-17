@@ -4,6 +4,7 @@ import {
   Ctx,
   FetchOldMigrationResponse,
   GetOldMigrationStatus,
+  RuneOldMigrationResponse,
   RunOldMigrationRequest,
 } from "@budibase/types"
 import {
@@ -11,18 +12,19 @@ import {
   getLatestEnabledMigrationId,
 } from "../../appMigrations"
 
-export async function migrate(ctx: Ctx<RunOldMigrationRequest, void>) {
+export async function migrate(
+  ctx: Ctx<RunOldMigrationRequest, RuneOldMigrationResponse>
+) {
   const options = ctx.request.body
   // don't await as can take a while, just return
   migrationImpl(options)
-  ctx.status = 200
+  ctx.body = { message: "Migration started." }
 }
 
 export async function fetchDefinitions(
   ctx: Ctx<void, FetchOldMigrationResponse>
 ) {
   ctx.body = MIGRATIONS
-  ctx.status = 200
 }
 
 export async function getMigrationStatus(
@@ -41,5 +43,4 @@ export async function getMigrationStatus(
     !latestMigrationId || latestAppliedMigration >= latestMigrationId
 
   ctx.body = { migrated }
-  ctx.status = 200
 }
