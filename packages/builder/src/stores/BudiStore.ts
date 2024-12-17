@@ -11,7 +11,7 @@ export default class BudiStore<T> implements Writable<T> {
   set: Writable<T>["set"]
 
   constructor(init: T, opts?: BudiStoreOpts) {
-    const store = writable<T>({ ...init })
+    const store = writable<T>(init)
 
     /**
      * Internal Svelte store
