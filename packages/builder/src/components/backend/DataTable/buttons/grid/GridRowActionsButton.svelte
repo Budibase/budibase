@@ -39,9 +39,9 @@
 
   const toggleAction = async (action, enabled) => {
     if (enabled) {
-      await rowActions.enableView(tableId, viewId, action.id)
+      await rowActions.enableView(tableId, action.id, viewId)
     } else {
-      await rowActions.disableView(tableId, viewId, action.id)
+      await rowActions.disableView(tableId, action.id, viewId)
     }
   }
 

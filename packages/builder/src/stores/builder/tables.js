@@ -110,10 +110,7 @@ export function createTablesStore() {
     if (!table?._id) {
       return
     }
-    await API.deleteTable({
-      tableId: table._id,
-      tableRev: table._rev || "rev",
-    })
+    await API.deleteTable(table._id, table._rev || "rev")
     replaceTable(table._id, null)
   }
 
