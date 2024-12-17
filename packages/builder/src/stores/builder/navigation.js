@@ -35,10 +35,7 @@ export class NavigationStore extends BudiStore {
 
   async save(navigation) {
     const appId = get(appStore).appId
-    const app = await API.saveAppMetadata({
-      appId,
-      metadata: { navigation },
-    })
+    const app = await API.saveAppMetadata(appId, { navigation })
     this.syncAppNavigation(app.navigation)
   }
 

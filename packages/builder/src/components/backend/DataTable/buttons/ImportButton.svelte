@@ -30,11 +30,7 @@
   const importData = async () => {
     try {
       loading = true
-      await API.importTableData({
-        tableId,
-        rows,
-        identifierFields,
-      })
+      await API.importTableData(tableId, rows, identifierFields)
       notifications.success("Rows successfully imported")
       popover.hide()
     } catch (error) {

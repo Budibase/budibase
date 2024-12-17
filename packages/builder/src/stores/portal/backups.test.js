@@ -20,7 +20,6 @@ vi.mock("api", () => {
       restoreBackup: vi.fn(() => "restoreBackupReturn"),
       deleteBackup: vi.fn(() => "deleteBackupReturn"),
       createManualBackup: vi.fn(() => "createManualBackupReturn"),
-      updateBackup: vi.fn(() => "updateBackupReturn"),
     },
   }
 })
@@ -61,8 +60,7 @@ describe("backups store", () => {
       ctx.page = "page"
       ctx.startDate = "startDate"
       ctx.endDate = "endDate"
-      ctx.value = await ctx.returnedStore.searchBackups({
-        appId: ctx.appId,
+      ctx.value = await ctx.returnedStore.searchBackups(ctx.appId, {
         trigger: ctx.trigger,
         type: ctx.type,
         page: ctx.page,
@@ -73,8 +71,7 @@ describe("backups store", () => {
 
     it("calls and returns the API searchBackups method", ctx => {
       expect(API.searchBackups).toHaveBeenCalledTimes(1)
-      expect(API.searchBackups).toHaveBeenCalledWith({
-        appId: ctx.appId,
+      expect(API.searchBackups).toHaveBeenCalledWith(ctx.appId, {
         trigger: ctx.trigger,
         type: ctx.type,
         page: ctx.page,
@@ -103,18 +100,12 @@ describe("backups store", () => {
     beforeEach(async ctx => {
       ctx.appId = "appId"
       ctx.backupId = "backupId"
-      ctx.value = await ctx.returnedStore.deleteBackup({
-        appId: ctx.appId,
-        backupId: ctx.backupId,
-      })
+      ctx.value = await ctx.returnedStore.deleteBackup(ctx.appId, ctx.backupId)
     })
 
     it("calls and returns the API deleteBackup method", ctx => {
       expect(API.deleteBackup).toHaveBeenCalledTimes(1)
-      expect(API.deleteBackup).toHaveBeenCalledWith({
-        appId: ctx.appId,
-        backupId: ctx.backupId,
-      })
+      expect(API.deleteBackup).toHaveBeenCalledWith(ctx.appId, ctx.backupId)
       expect(ctx.value).toBe("deleteBackupReturn")
     })
   })
@@ -124,44 +115,21 @@ describe("backups store", () => {
       ctx.appId = "appId"
       ctx.backupId = "backupId"
       ctx.$name = "name" // `name` is used by some sort of internal ctx thing and is readonly
-      ctx.value = await ctx.returnedStore.restoreBackup({
-        appId: ctx.appId,
-        backupId: ctx.backupId,
-        name: ctx.$name,
-      })
+      ctx.value = await ctx.returnedStore.restoreBackup(
+        ctx.appId,
+        ctx.backupId,
+        ctx.$name
+      )
     })
 
     it("calls and returns the API restoreBackup method", ctx => {
       expect(API.restoreBackup).toHaveBeenCalledTimes(1)
-      expect(API.restoreBackup).toHaveBeenCalledWith({
-        appId: ctx.appId,
-        backupId: ctx.backupId,
-        name: ctx.$name,
-      })
+      expect(API.restoreBackup).toHaveBeenCalledWith(
+        ctx.appId,
+        ctx.backupId,
+        ctx.$name
+      )
       expect(ctx.value).toBe("restoreBackupReturn")
-    })
-  })
-
-  describe("updateBackup", () => {
-    beforeEach(async ctx => {
-      ctx.appId = "appId"
-      ctx.backupId = "backupId"
-      ctx.$name = "name" // `name` is used by some sort of internal ctx thing and is readonly
-      ctx.value = await ctx.returnedStore.updateBackup({
-        appId: ctx.appId,
-        backupId: ctx.backupId,
-        name: ctx.$name,
-      })
-    })
-
-    it("calls and returns the API updateBackup method", ctx => {
-      expect(API.updateBackup).toHaveBeenCalledTimes(1)
-      expect(API.updateBackup).toHaveBeenCalledWith({
-        appId: ctx.appId,
-        backupId: ctx.backupId,
-        name: ctx.$name,
-      })
-      expect(ctx.value).toBe("updateBackupReturn")
     })
   })
 

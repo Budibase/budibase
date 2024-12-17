@@ -43,10 +43,7 @@ export function createRolesStore() {
       setRoles(roles)
     },
     delete: async role => {
-      await API.deleteRole({
-        roleId: role?._id,
-        roleRev: role?._rev,
-      })
+      await API.deleteRole(role._id, role._rev)
       await actions.fetch()
     },
     save: async role => {
