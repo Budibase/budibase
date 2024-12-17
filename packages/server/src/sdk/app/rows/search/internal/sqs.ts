@@ -127,7 +127,7 @@ async function buildInternalFieldList(
     }
   }
 
-  if (isView && !helpers.views.isCalculationView(source)) {
+  if (!isView || !helpers.views.isCalculationView(source)) {
     for (const field of ["_id", "_rev", "tableId"]) {
       fieldList.push(field)
     }
