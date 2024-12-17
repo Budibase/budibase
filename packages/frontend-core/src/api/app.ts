@@ -1,6 +1,7 @@
 import { sdk } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
 import {
+  AddAppSampleDataResponse,
   ClearDevLockResponse,
   CreateAppRequest,
   CreateAppResponse,
@@ -18,7 +19,9 @@ import {
   RevertAppClientResponse,
   RevertAppResponse,
   SetRevertableAppVersionRequest,
+  SetRevertableAppVersionResponse,
   SyncAppResponse,
+  UnpublishAppResponse,
   UpdateAppClientResponse,
   UpdateAppRequest,
   UpdateAppResponse,
@@ -30,7 +33,7 @@ export interface AppEndpoints {
     appId: string,
     metadata: UpdateAppRequest
   ) => Promise<UpdateAppResponse>
-  unpublishApp: (appId: string) => Promise<void>
+  unpublishApp: (appId: string) => Promise<UnpublishAppResponse>
   publishAppChanges: (appId: string) => Promise<PublishAppResponse>
   revertAppChanges: (appId: string) => Promise<RevertAppResponse>
   updateAppClientVersion: (appId: string) => Promise<UpdateAppClientResponse>
@@ -56,8 +59,8 @@ export interface AppEndpoints {
   setRevertableVersion: (
     appId: string,
     revertableVersion: string
-  ) => Promise<void>
-  addSampleData: (appId: string) => Promise<void>
+  ) => Promise<SetRevertableAppVersionResponse>
+  addSampleData: (appId: string) => Promise<AddAppSampleDataResponse>
 
   // Missing request or response types
   importApps: (apps: any) => Promise<any>
@@ -272,7 +275,10 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
    * @param revertableVersion the version number
    */
   setRevertableVersion: async (appId, revertableVersion) => {
-    return await API.post<SetRevertableAppVersionRequest>({
+    return await API.post<
+      SetRevertableAppVersionRequest,
+      SetRevertableAppVersionResponse
+    >({
       url: `/api/applications/${appId}/setRevertableVersion`,
       body: {
         revertableVersion,
