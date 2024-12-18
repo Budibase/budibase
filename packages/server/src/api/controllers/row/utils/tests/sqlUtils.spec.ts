@@ -4,37 +4,51 @@ import {
   RelationshipType,
   SourceName,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import { buildSqlFieldList } from "../sqlUtils"
 import { structures } from "../../../../routes/tests/utilities"
 import { sql } from "@budibase/backend-core"
+import { generator } from "@budibase/backend-core/tests"
+import { generateViewID } from "../../../../../db/utils"
+
+import sdk from "../../../../../sdk"
+
+jest.mock("../../../../../sdk/app/views", () => ({
+  ...jest.requireActual("../../../../../sdk/app/views"),
+  getTable: jest.fn(),
+}))
+const getTableMock = sdk.views.getTable as jest.MockedFunction<
+  typeof sdk.views.getTable
+>
 
 describe("buildSqlFieldList", () => {
   let table: Table & { _id: string }
 
   beforeEach(() => {
+    jest.clearAllMocks()
     table = {
-    ...structures.tableForDatasource({
-      type: "datasource",
-      source: SourceName.POSTGRES,
-    }),
-    name: "table",
-    _id: sql.utils.buildExternalTableId("ds_id", "table"),
-    schema: {
-      name: {
-        name: "name",
-        type: FieldType.STRING,
+      ...structures.tableForDatasource({
+        type: "datasource",
+        source: SourceName.POSTGRES,
+      }),
+      name: "table",
+      _id: sql.utils.buildExternalTableId("ds_id", "table"),
+      schema: {
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+        },
+        description: {
+          name: "description",
+          type: FieldType.STRING,
+        },
+        amount: {
+          name: "amount",
+          type: FieldType.NUMBER,
+        },
       },
-      description: {
-        name: "description",
-        type: FieldType.STRING,
-      },
-      amount: {
-        name: "amount",
-        type: FieldType.NUMBER,
-      },
-    },
-  }
+    }
   })
 
   describe("table", () => {
@@ -96,7 +110,7 @@ describe("buildSqlFieldList", () => {
       ])
     })
 
-    it("includes relationships fields when flag", async () => {
+    it("includes relationships fields when flagged", async () => {
       const otherTable: Table = {
         ...table,
         name: "linkedTable",
@@ -263,6 +277,69 @@ describe("buildSqlFieldList", () => {
         "linkedTable.id",
         "linkedTable.hidden",
       ])
+    })
+  })
+
+  describe("view", () => {
+    let view: ViewV2
+
+    beforeEach(() => {
+      getTableMock.mockResolvedValueOnce(table)
+
+      view = {
+        version: 2,
+        id: generateViewID(table._id),
+        name: generator.word(),
+        tableId: table._id,
+      }
+    })
+
+    it("extracts fields from table schema", async () => {
+      view.schema = {
+        name: { visible: false },
+        amount: { visible: true },
+      }
+
+      const result = await buildSqlFieldList(view, {})
+      expect(result).toEqual(["table.amount"])
+    })
+
+    it("includes all fields if there is a formula column", async () => {
+      table.schema.formula = {
+        name: "formula",
+        type: FieldType.FORMULA,
+        formula: "any",
+      }
+
+      view.schema = {
+        name: { visible: false },
+        amount: { visible: true },
+        formula: { visible: true },
+      }
+
+      const result = await buildSqlFieldList(view, {})
+      expect(result).toEqual([
+        "table.name",
+        "table.description",
+        "table.amount",
+      ])
+    })
+
+    it("does not includes all fields if the formula column is not included", async () => {
+      table.schema.formula = {
+        name: "formula",
+        type: FieldType.FORMULA,
+        formula: "any",
+      }
+
+      view.schema = {
+        name: { visible: false },
+        amount: { visible: true },
+        formula: { visible: false },
+      }
+
+      const result = await buildSqlFieldList(view, {})
+      expect(result).toEqual(["table.amount"])
     })
   })
 })
