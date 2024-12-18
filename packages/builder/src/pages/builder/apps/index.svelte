@@ -22,7 +22,7 @@
   } from "@/stores/portal"
   import { goto } from "@roxi/routify"
   import { AppStatus } from "@/constants"
-  import { gradient } from "actions"
+  import { gradient } from "@/actions"
   import ProfileModal from "@/components/settings/ProfileModal.svelte"
   import ChangePasswordModal from "@/components/settings/ChangePasswordModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
