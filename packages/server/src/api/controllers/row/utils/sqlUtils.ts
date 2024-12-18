@@ -166,7 +166,9 @@ export async function buildSqlFieldList(
     )
   } else {
     table = source
-    fields = extractRealFields(source)
+    fields = extractRealFields(source).filter(
+      f => table.schema[f].visible !== false
+    )
   }
 
   const containsFormula = (isView ? fields : Object.keys(table.schema)).some(
