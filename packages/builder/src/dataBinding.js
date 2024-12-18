@@ -837,7 +837,7 @@ export const getActionBindings = (actions, actionId) => {
         bindings.push({
           readableBinding: `Action ${idx + 1}.${contextValue.label}`,
           runtimeBinding: `actions.${idx}.${contextValue.value}`,
-          category: "actions",
+          category: "Actions",
           icon: "JourneyAction",
           display: {
             name: contextValue.label,
