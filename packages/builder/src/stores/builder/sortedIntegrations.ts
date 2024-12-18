@@ -3,7 +3,7 @@ import { derived } from "svelte/store"
 
 import { DatasourceTypes } from "constants/backend"
 import { UIIntegration, Integration } from "@budibase/types"
-import BudiStore from "stores/BudiStore"
+import { BudiStore } from "stores/BudiStore"
 
 const getIntegrationOrder = (type: string | undefined) => {
   // if type is not known, sort to end
