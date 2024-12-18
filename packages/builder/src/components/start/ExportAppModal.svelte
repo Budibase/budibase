@@ -9,7 +9,7 @@
     notifications,
   } from "@budibase/bbui"
   import { downloadFile } from "@budibase/frontend-core"
-  import { createValidationStore } from "helpers/validation/yup"
+  import { createValidationStore } from "@/helpers/validation/yup"
 
   export let app
   export let published

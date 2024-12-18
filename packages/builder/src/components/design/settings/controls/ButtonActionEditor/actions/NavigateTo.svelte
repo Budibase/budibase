@@ -1,9 +1,9 @@
 <script>
-  import { screenStore } from "stores/builder"
+  import { screenStore } from "@/stores/builder"
   import { onMount } from "svelte"
   import { Label, Checkbox, Select } from "@budibase/bbui"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
 
   export let parameters
   export let bindings = []

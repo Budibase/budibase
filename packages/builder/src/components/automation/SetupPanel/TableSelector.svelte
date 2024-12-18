@@ -1,8 +1,8 @@
 <script>
-  import { tables } from "stores/builder"
+  import { tables } from "@/stores/builder"
   import { Select } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { TableNames } from "constants"
+  import { TableNames } from "@/constants"
 
   const dispatch = createEventDispatcher()
 

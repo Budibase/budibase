@@ -4,8 +4,11 @@
   import { createEventDispatcher } from "svelte"
   import ColumnDrawer from "./ColumnDrawer.svelte"
   import { cloneDeep } from "lodash/fp"
-  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import { selectedScreen, tables } from "stores/builder"
+  import {
+    getDatasourceForProvider,
+    getSchemaForDatasource,
+  } from "@/dataBinding"
+  import { selectedScreen, tables } from "@/stores/builder"
 
   export let componentInstance
   export let value = []

@@ -1,9 +1,9 @@
 <script>
   import { goto, params } from "@roxi/routify"
-  import { appStore, tables, datasources, screenStore } from "stores/builder"
+  import { appStore, tables, datasources, screenStore } from "@/stores/builder"
   import { InlineAlert, Link, Input, notifications } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DB_TYPE_EXTERNAL } from "constants/backend"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
   export let table
 

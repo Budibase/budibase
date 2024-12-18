@@ -6,8 +6,8 @@
     Layout,
     ModalContent,
   } from "@budibase/bbui"
-  import Spinner from "components/common/Spinner.svelte"
-  import { IntegrationTypes } from "constants/backend"
+  import Spinner from "@/components/common/Spinner.svelte"
+  import { IntegrationTypes } from "@/constants/backend"
   import { createTableSelectionStore } from "./tableSelectionStore"
 
   export let integration

@@ -1,8 +1,8 @@
 <script>
   import AppPanel from "./_components/AppPanel.svelte"
   import * as routify from "@roxi/routify"
-  import { syncURLToState } from "helpers/urlStateSync"
-  import { screenStore, selectedScreen } from "stores/builder"
+  import { syncURLToState } from "@/helpers/urlStateSync"
+  import { screenStore, selectedScreen } from "@/stores/builder"
   import { onDestroy } from "svelte"
   import LeftPanel from "./_components/LeftPanel.svelte"
 

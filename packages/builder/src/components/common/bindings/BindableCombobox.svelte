@@ -3,7 +3,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "dataBinding"
+  } from "@/dataBinding"
   import { createEventDispatcher } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
 

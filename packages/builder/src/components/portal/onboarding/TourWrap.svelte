@@ -2,7 +2,7 @@
   import { tourHandler } from "./tourHandler"
   import { TOURSBYSTEP, TOURS, getCurrentStepIdx } from "./tours"
   import { onMount, onDestroy } from "svelte"
-  import { builderStore } from "stores/builder"
+  import { builderStore } from "@/stores/builder"
 
   export let stepKeys = []
 

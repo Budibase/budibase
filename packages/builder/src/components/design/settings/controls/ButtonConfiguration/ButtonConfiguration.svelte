@@ -3,10 +3,10 @@
   import ButtonSetting from "./ButtonSetting.svelte"
   import { createEventDispatcher } from "svelte"
   import { Helpers, Menu, MenuItem, Popover } from "@budibase/bbui"
-  import { componentStore } from "stores/builder"
-  import { getEventContextBindings } from "dataBinding"
+  import { componentStore } from "@/stores/builder"
+  import { getEventContextBindings } from "@/dataBinding"
   import { cloneDeep, isEqual } from "lodash/fp"
-  import { getRowActionButtonTemplates } from "templates/rowActions"
+  import { getRowActionButtonTemplates } from "@/templates/rowActions"
 
   export let componentInstance
   export let componentBindings

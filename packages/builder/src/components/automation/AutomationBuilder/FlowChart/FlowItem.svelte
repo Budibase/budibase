@@ -4,7 +4,7 @@
     permissions,
     selectedAutomation,
     tables,
-  } from "stores/builder"
+  } from "@/stores/builder"
   import {
     Icon,
     Divider,
@@ -16,16 +16,16 @@
   } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
-  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
+  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
-  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
-  import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+  import RoleSelect from "@/components/design/settings/controls/RoleSelect.svelte"
+  import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
   import { AutomationStepType } from "@budibase/types"
   import FlowItemActions from "./FlowItemActions.svelte"
-  import DragHandle from "components/design/settings/controls/DraggableList/drag-handle.svelte"
+  import DragHandle from "@/components/design/settings/controls/DraggableList/drag-handle.svelte"
   import { getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
-  import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let block
   export let blockRef

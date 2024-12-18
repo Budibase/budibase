@@ -1,5 +1,5 @@
 <script>
-  import { BackupTrigger } from "constants/backend/backups"
+  import { BackupTrigger } from "@/constants/backend/backups"
 
   export let row
 

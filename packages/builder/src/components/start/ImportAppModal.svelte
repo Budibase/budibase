@@ -8,8 +8,8 @@
     notifications,
     Body,
   } from "@budibase/bbui"
-  import { API } from "api"
-  import { initialise } from "stores/builder"
+  import { API } from "@/api"
+  import { initialise } from "@/stores/builder"
 
   export let app
 

@@ -1,6 +1,6 @@
 <script>
   import BindingPanel from "./BindingPanel.svelte"
-  import { previewStore, snippets } from "stores/builder"
+  import { previewStore, snippets } from "@/stores/builder"
   import { onMount } from "svelte"
 
   export let bindings = []

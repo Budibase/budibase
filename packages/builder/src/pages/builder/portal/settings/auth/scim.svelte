@@ -12,8 +12,8 @@
     Helpers,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { API } from "api"
-  import { organisation, auth } from "stores/portal"
+  import { API } from "@/api"
+  import { organisation, auth } from "@/stores/portal"
 
   const configType = "scim"
 

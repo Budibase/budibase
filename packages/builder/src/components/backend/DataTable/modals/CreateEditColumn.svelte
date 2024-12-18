@@ -25,32 +25,32 @@
   import { makePropSafe } from "@budibase/string-templates"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { tables, datasources } from "stores/builder"
-  import { featureFlags } from "stores/portal"
-  import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
+  import { tables, datasources } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
+  import { TableNames, UNEDITABLE_USER_FIELDS } from "@/constants"
   import {
     FIELDS,
     RelationshipType,
     PrettyRelationshipDefinitions,
     DB_TYPE_EXTERNAL,
-  } from "constants/backend"
-  import { getAutoColumnInformation, buildAutoColumn } from "helpers/utils"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import AIFieldConfiguration from "components/common/AIFieldConfiguration.svelte"
-  import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
-  import { getBindings } from "components/backend/DataTable/formula"
+  } from "@/constants/backend"
+  import { getAutoColumnInformation, buildAutoColumn } from "@/helpers/utils"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import AIFieldConfiguration from "@/components/common/AIFieldConfiguration.svelte"
+  import ModalBindableInput from "@/components/common/bindings/ModalBindableInput.svelte"
+  import { getBindings } from "@/components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import {
     BBReferenceFieldSubType,
     FieldType,
     SourceName,
   } from "@budibase/types"
-  import RelationshipSelector from "components/common/RelationshipSelector.svelte"
+  import RelationshipSelector from "@/components/common/RelationshipSelector.svelte"
   import { RowUtils, canBeDisplayColumn } from "@budibase/frontend-core"
-  import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
+  import ServerBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import OptionsEditor from "./OptionsEditor.svelte"
-  import { isEnabled } from "helpers/featureFlags"
-  import { getUserBindings } from "dataBinding"
+  import { isEnabled } from "@/helpers/featureFlags"
+  import { getUserBindings } from "@/dataBinding"
 
   export let field
 

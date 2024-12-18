@@ -9,11 +9,11 @@
     AbsTooltip,
     TooltipPosition,
   } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import CreateRestoreModal from "./CreateRestoreModal.svelte"
   import { createEventDispatcher } from "svelte"
-  import { isOnlyUser } from "stores/builder"
-  import { BackupType } from "constants/backend/backups"
+  import { isOnlyUser } from "@/stores/builder"
+  import { BackupType } from "@/constants/backend/backups"
 
   export let row
 

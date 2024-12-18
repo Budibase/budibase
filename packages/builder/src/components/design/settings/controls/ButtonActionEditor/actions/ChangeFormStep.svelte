@@ -1,9 +1,9 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { selectedScreen, componentStore } from "stores/builder"
-  import { getActionProviders } from "dataBinding"
+  import { selectedScreen, componentStore } from "@/stores/builder"
+  import { getActionProviders } from "@/dataBinding"
   import { onMount } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
   export let bindings = []

@@ -1,8 +1,8 @@
 import { writable, get, derived } from "svelte/store"
 import { datasources } from "./datasources"
 import { integrations } from "./integrations"
-import { API } from "api"
-import { duplicateName } from "helpers/duplicate"
+import { API } from "@/api"
+import { duplicateName } from "@/helpers/duplicate"
 
 const sortQueries = queryList => {
   queryList.sort((q1, q2) => {

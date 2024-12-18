@@ -2,7 +2,7 @@
   import groupBy from "lodash/fp/groupBy"
   import { convertToJS } from "@budibase/string-templates"
   import { Input, Layout, Icon, Popover } from "@budibase/bbui"
-  import { handlebarsCompletions } from "constants/completions"
+  import { handlebarsCompletions } from "@/constants/completions"
 
   export let addHelper
   export let addBinding

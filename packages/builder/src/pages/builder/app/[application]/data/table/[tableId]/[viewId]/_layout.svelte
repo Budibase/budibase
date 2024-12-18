@@ -1,6 +1,6 @@
 <script>
-  import { viewsV2, builderStore } from "stores/builder"
-  import { syncURLToState } from "helpers/urlStateSync"
+  import { viewsV2, builderStore } from "@/stores/builder"
+  import { syncURLToState } from "@/helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
 

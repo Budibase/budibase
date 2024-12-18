@@ -24,8 +24,8 @@
     Link,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { API } from "api"
-  import { organisation, admin, licensing } from "stores/portal"
+  import { API } from "@/api"
+  import { organisation, admin, licensing } from "@/stores/portal"
   import Scim from "./scim.svelte"
   import Google from "./google.svelte"
 

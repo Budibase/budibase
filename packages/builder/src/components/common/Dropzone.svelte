@@ -1,7 +1,7 @@
 <script>
   import { Dropzone, notifications } from "@budibase/bbui"
-  import { admin } from "stores/portal"
-  import { API } from "api"
+  import { admin } from "@/stores/portal"
+  import { API } from "@/api"
 
   export let value = []
   export let label

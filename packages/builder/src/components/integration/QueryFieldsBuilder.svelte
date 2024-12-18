@@ -2,7 +2,7 @@
   import { Label, Layout, Input } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
-  import { capitalise } from "helpers"
+  import { capitalise } from "@/helpers"
 
   export let fields = {}
   export let schema

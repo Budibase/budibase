@@ -7,16 +7,16 @@
     Toggle,
   } from "@budibase/bbui"
   import { FieldType } from "@budibase/types"
-  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
+  import LinkedRowSelector from "@/components/common/LinkedRowSelector.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
-  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+  import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
+  import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "dataBinding"
+  } from "@/dataBinding"
 
   export let onChange
   export let field

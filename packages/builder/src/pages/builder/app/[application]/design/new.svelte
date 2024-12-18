@@ -1,6 +1,6 @@
 <script>
   import NewScreen from "./_components/NewScreen/index.svelte"
-  import { screenStore } from "stores/builder"
+  import { screenStore } from "@/stores/builder"
   import { goto } from "@roxi/routify"
 
   $: onClose = getOnClose($screenStore)

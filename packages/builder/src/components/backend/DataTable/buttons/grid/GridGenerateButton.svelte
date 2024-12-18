@@ -6,14 +6,14 @@
     tables,
     builderStore,
     viewsV2,
-  } from "stores/builder"
-  import { TriggerStepID } from "constants/backend/automations"
+  } from "@/stores/builder"
+  import { TriggerStepID } from "@/constants/backend/automations"
   import { goto } from "@roxi/routify"
-  import DetailPopover from "components/common/DetailPopover.svelte"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
   import MagicWand from "./magic-wand.svg"
-  import { AutoScreenTypes } from "constants"
-  import CreateScreenModal from "pages/builder/app/[application]/design/_components/NewScreen/CreateScreenModal.svelte"
-  import { getSequentialName } from "helpers/duplicate"
+  import { AutoScreenTypes } from "@/constants"
+  import CreateScreenModal from "@/pages/builder/app/[application]/design/_components/NewScreen/CreateScreenModal.svelte"
+  import { getSequentialName } from "@/helpers/duplicate"
 
   const { datasource } = getContext("grid")
 

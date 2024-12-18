@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 
 const createIntegrationsStore = () => {
   const store = writable({})

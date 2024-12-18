@@ -2,8 +2,8 @@
   import { Label, Select, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import ColumnEditor from "../../ColumnEditor/ColumnEditor.svelte"
-  import { findAllMatchingComponents } from "helpers/components"
-  import { selectedScreen } from "stores/builder"
+  import { findAllMatchingComponents } from "@/helpers/components"
+  import { selectedScreen } from "@/stores/builder"
 
   export let parameters
 

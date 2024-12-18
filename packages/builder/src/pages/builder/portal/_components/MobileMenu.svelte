@@ -1,12 +1,12 @@
 <script>
   import { Layout } from "@budibase/bbui"
-  import { SideNav, SideNavItem } from "components/portal/page"
+  import { SideNav, SideNavItem } from "@/components/portal/page"
   import { createEventDispatcher } from "svelte"
   import { isActive } from "@roxi/routify"
   import UpgradeButton from "./UpgradeButton.svelte"
   import { fade } from "svelte/transition"
   import Logo from "./Logo.svelte"
-  import { menu } from "stores/portal"
+  import { menu } from "@/stores/portal"
 
   export let visible = false
 

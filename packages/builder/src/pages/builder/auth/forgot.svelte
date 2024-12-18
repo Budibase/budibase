@@ -9,7 +9,7 @@
     FancyForm,
     FancyInput,
   } from "@budibase/bbui"
-  import { organisation, auth } from "stores/portal"
+  import { organisation, auth } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"

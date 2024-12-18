@@ -1,7 +1,7 @@
 <script>
   import { Select, ModalContent, notifications } from "@budibase/bbui"
-  import { tables, views } from "stores/builder"
-  import { FIELDS } from "constants/backend"
+  import { tables, views } from "@/stores/builder"
+  import { FIELDS } from "@/constants/backend"
 
   export let view = {}
 

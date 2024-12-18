@@ -1,7 +1,7 @@
 import { Screen } from "./Screen"
-import { capitalise } from "helpers"
+import { capitalise } from "@/helpers"
 import getValidRoute from "./getValidRoute"
-import { Roles } from "constants/backend"
+import { Roles } from "@/constants/backend"
 
 const blank = ({ route, screens }) => {
   const validRoute = getValidRoute(screens, route, Roles.BASIC)

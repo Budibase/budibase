@@ -1,8 +1,8 @@
 <script>
   import { Select } from "@budibase/bbui"
   import { makePropSafe } from "@budibase/string-templates"
-  import { selectedScreen } from "stores/builder"
-  import { findAllMatchingComponents } from "helpers/components"
+  import { selectedScreen } from "@/stores/builder"
+  import { findAllMatchingComponents } from "@/helpers/components"
 
   export let value
 

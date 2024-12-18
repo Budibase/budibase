@@ -8,8 +8,8 @@
     userSelectedResourceMap,
     hoverStore,
     contextMenuStore,
-  } from "stores/builder"
-  import NavItem from "components/common/NavItem.svelte"
+  } from "@/stores/builder"
+  import NavItem from "@/components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
   import { dndStore, DropPosition } from "./dndStore.js"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"

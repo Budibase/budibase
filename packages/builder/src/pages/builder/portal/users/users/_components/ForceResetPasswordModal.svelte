@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
-  import { users } from "stores/portal"
+  import { users } from "@/stores/portal"
 
   const dispatch = createEventDispatcher()
 

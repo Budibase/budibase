@@ -1,13 +1,13 @@
 <script>
   import { goto, url } from "@roxi/routify"
-  import { tables, datasources } from "stores/builder"
+  import { tables, datasources } from "@/stores/builder"
   import { notifications, Input, ModalContent } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import {
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
     DB_TYPE_INTERNAL,
-  } from "constants/backend"
+  } from "@/constants/backend"
 
   $: tableNames = $tables.list.map(table => table.name)
   $: selectedSource = $datasources.list.find(

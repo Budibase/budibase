@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { email } from "stores/portal"
+  import { email } from "@/stores/portal"
   import { notifications } from "@budibase/bbui"
 
   onMount(async () => {

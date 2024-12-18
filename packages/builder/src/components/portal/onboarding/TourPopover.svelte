@@ -2,7 +2,7 @@
   import { Popover, Layout, Heading, Body, Button, Link } from "@budibase/bbui"
   import { TOURS, getCurrentStepIdx } from "./tours.js"
   import { goto, layout, isActive } from "@roxi/routify"
-  import { builderStore } from "stores/builder"
+  import { builderStore } from "@/stores/builder"
 
   let popoverAnchor
   let popover

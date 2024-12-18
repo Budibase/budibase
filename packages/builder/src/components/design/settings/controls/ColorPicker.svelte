@@ -1,6 +1,6 @@
 <script>
   import { ColorPicker } from "@budibase/bbui"
-  import { themeStore } from "stores/builder"
+  import { themeStore } from "@/stores/builder"
 
   export let value
 </script>

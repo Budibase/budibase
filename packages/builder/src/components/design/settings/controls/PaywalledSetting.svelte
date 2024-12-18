@@ -1,6 +1,6 @@
 <script>
   import { Tag, Tags } from "@budibase/bbui"
-  import { getFormattedPlanName } from "helpers/planTitle"
+  import { getFormattedPlanName } from "@/helpers/planTitle"
 
   export let license
 

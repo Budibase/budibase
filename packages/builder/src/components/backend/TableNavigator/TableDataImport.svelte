@@ -1,9 +1,9 @@
 <script>
   import { Select, Icon, Layout, Label } from "@budibase/bbui"
-  import { FIELDS } from "constants/backend"
+  import { FIELDS } from "@/constants/backend"
   import { utils } from "@budibase/shared-core"
   import { canBeDisplayColumn } from "@budibase/frontend-core"
-  import { API } from "api"
+  import { API } from "@/api"
   import { parseFile } from "./utils"
 
   export let rows = []

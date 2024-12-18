@@ -14,8 +14,8 @@
     Label,
     TextArea,
   } from "@budibase/bbui"
-  import { auth, organisation, licensing, admin } from "stores/portal"
-  import { API } from "api"
+  import { auth, organisation, licensing, admin } from "@/stores/portal"
+  import { API } from "@/api"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"

@@ -1,10 +1,10 @@
 import { Screen } from "../Screen"
 import { Component } from "../../Component"
-import { capitalise } from "helpers"
+import { capitalise } from "@/helpers"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import getValidRoute from "../getValidRoute"
 import { Helpers } from "@budibase/bbui"
-import { getRowActionButtonTemplates } from "templates/rowActions"
+import { getRowActionButtonTemplates } from "@/templates/rowActions"
 
 const getTableScreenTemplate = ({
   route,

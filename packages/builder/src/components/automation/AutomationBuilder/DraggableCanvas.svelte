@@ -9,7 +9,7 @@
   } from "svelte"
   import Logo from "assets/bb-emblem.svg?raw"
   import { Utils, memo } from "@budibase/frontend-core"
-  import { selectedAutomation, automationStore } from "stores/builder"
+  import { selectedAutomation, automationStore } from "@/stores/builder"
 
   // CSS classes that, on mouse down, will trigger the view drag behaviour
   export let draggableClasses = []

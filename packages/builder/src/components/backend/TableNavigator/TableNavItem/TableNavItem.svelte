@@ -3,14 +3,14 @@
     tables as tablesStore,
     userSelectedResourceMap,
     contextMenuStore,
-  } from "stores/builder"
-  import { TableNames } from "constants"
-  import NavItem from "components/common/NavItem.svelte"
+  } from "@/stores/builder"
+  import { TableNames } from "@/constants"
+  import NavItem from "@/components/common/NavItem.svelte"
   import { isActive } from "@roxi/routify"
   import EditModal from "./EditModal.svelte"
   import DeleteConfirmationModal from "./DeleteConfirmationModal.svelte"
   import { Icon } from "@budibase/bbui"
-  import { DB_TYPE_EXTERNAL } from "constants/backend"
+  import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
   export let table
   export let idx

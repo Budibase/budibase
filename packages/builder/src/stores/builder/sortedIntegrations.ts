@@ -1,7 +1,6 @@
 import { integrations } from "./integrations"
 import { derived } from "svelte/store"
-
-import { DatasourceTypes } from "constants/backend"
+import { DatasourceTypes } from "@/constants/backend"
 import { UIIntegration, Integration } from "@budibase/types"
 import { BudiStore } from "stores/BudiStore"
 

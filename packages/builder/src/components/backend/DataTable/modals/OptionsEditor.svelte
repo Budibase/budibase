@@ -4,7 +4,7 @@
   import { Icon, Popover } from "@budibase/bbui"
   import { tick } from "svelte"
   import { Constants } from "@budibase/frontend-core"
-  import { getSequentialName } from "helpers/duplicate"
+  import { getSequentialName } from "@/helpers/duplicate"
   import { derived, writable } from "svelte/store"
 
   export let constraints

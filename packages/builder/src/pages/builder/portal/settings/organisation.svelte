@@ -10,7 +10,7 @@
     notifications,
     Toggle,
   } from "@budibase/bbui"
-  import { auth, organisation, admin } from "stores/portal"
+  import { auth, organisation, admin } from "@/stores/portal"
   import { writable } from "svelte/store"
   import { redirect } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"

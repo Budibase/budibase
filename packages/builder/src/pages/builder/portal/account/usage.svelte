@@ -10,12 +10,12 @@
     TooltipWrapper,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { admin, auth, licensing } from "stores/portal"
+  import { admin, auth, licensing } from "@/stores/portal"
   import { Constants } from "@budibase/frontend-core"
-  import { DashCard, Usage } from "components/usage"
-  import { PlanModel } from "constants"
+  import { DashCard, Usage } from "@/components/usage"
+  import { PlanModel } from "@/constants"
   import { sdk } from "@budibase/shared-core"
-  import { getFormattedPlanName } from "helpers/planTitle"
+  import { getFormattedPlanName } from "@/helpers/planTitle"
 
   let staticUsage = []
   let monthlyUsage = []

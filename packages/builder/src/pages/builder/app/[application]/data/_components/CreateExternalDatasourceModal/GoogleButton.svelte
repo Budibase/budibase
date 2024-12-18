@@ -1,7 +1,7 @@
 <script>
   import GoogleLogo from "assets/google-logo.png"
-  import { auth } from "stores/portal"
-  import { appStore } from "stores/builder"
+  import { auth } from "@/stores/portal"
+  import { appStore } from "@/stores/builder"
 
   export let disabled
   export let samePage

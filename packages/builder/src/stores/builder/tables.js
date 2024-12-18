@@ -2,7 +2,7 @@ import { FieldType } from "@budibase/types"
 import { SWITCHABLE_TYPES } from "@budibase/shared-core"
 import { get, writable, derived } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { API } from "api"
+import { API } from "@/api"
 
 export function createTablesStore() {
   const store = writable({

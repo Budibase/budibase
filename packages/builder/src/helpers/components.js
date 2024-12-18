@@ -1,4 +1,4 @@
-import { componentStore } from "stores/builder"
+import { componentStore } from "@/stores/builder"
 import { get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 import {
@@ -6,7 +6,7 @@ import {
   encodeJSBinding,
   findHBSBlocks,
 } from "@budibase/string-templates"
-import { capitalise } from "helpers"
+import { capitalise } from "@/helpers"
 import { Constants } from "@budibase/frontend-core"
 
 const { ContextScopes } = Constants

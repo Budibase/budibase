@@ -1,11 +1,11 @@
 <script>
-  import { auth } from "stores/portal"
+  import { auth } from "@/stores/portal"
   import { ActionMenu, MenuItem, Icon, Modal } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import ProfileModal from "components/settings/ProfileModal.svelte"
-  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
-  import ThemeModal from "components/settings/ThemeModal.svelte"
-  import APIKeyModal from "components/settings/APIKeyModal.svelte"
+  import ProfileModal from "@/components/settings/ProfileModal.svelte"
+  import ChangePasswordModal from "@/components/settings/ChangePasswordModal.svelte"
+  import ThemeModal from "@/components/settings/ThemeModal.svelte"
+  import APIKeyModal from "@/components/settings/APIKeyModal.svelte"
   import { UserAvatar } from "@budibase/frontend-core"
 
   let themeModal

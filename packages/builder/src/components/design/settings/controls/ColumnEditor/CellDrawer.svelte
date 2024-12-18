@@ -7,8 +7,8 @@
     Layout,
     Label,
   } from "@budibase/bbui"
-  import { themeStore, previewStore } from "stores/builder"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { themeStore, previewStore } from "@/stores/builder"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
   export let column
 

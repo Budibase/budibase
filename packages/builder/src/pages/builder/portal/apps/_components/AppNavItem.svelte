@@ -1,13 +1,13 @@
 <script>
-  import { auth } from "stores/portal"
+  import { auth } from "@/stores/portal"
   import { params, goto } from "@roxi/routify"
-  import NavItem from "components/common/NavItem.svelte"
-  import AppContextMenuModals from "components/start/AppContextMenuModals.svelte"
-  import getAppContextMenuItems from "components/start/getAppContextMenuItems.js"
+  import NavItem from "@/components/common/NavItem.svelte"
+  import AppContextMenuModals from "@/components/start/AppContextMenuModals.svelte"
+  import getAppContextMenuItems from "@/components/start/getAppContextMenuItems.js"
   import FavouriteAppButton from "../FavouriteAppButton.svelte"
   import { sdk } from "@budibase/shared-core"
   import { Icon } from "@budibase/bbui"
-  import { contextMenuStore } from "stores/builder"
+  import { contextMenuStore } from "@/stores/builder"
 
   export let app
 

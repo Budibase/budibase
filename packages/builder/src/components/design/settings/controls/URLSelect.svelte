@@ -1,6 +1,6 @@
 <script>
-  import { screenStore } from "stores/builder"
-  import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
+  import { screenStore } from "@/stores/builder"
+  import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
 
   export let value
   export let bindings

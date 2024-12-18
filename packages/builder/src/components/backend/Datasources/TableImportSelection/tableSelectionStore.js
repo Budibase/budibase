@@ -1,6 +1,6 @@
 import { derived, writable, get } from "svelte/store"
 import { keepOpen, notifications } from "@budibase/bbui"
-import { datasources, tables } from "stores/builder"
+import { datasources, tables } from "@/stores/builder"
 
 export const createTableSelectionStore = (integration, datasource) => {
   const tableNamesStore = writable([])

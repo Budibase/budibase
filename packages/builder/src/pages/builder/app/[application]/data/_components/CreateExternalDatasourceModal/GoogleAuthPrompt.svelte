@@ -1,6 +1,6 @@
 <script>
   import { ModalContent, Body, Layout, Link } from "@budibase/bbui"
-  import { organisation } from "stores/portal"
+  import { organisation } from "@/stores/portal"
   import GoogleButton from "./GoogleButton.svelte"
 
   $: isGoogleConfigured = !!$organisation.googleDatasourceConfigured

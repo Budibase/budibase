@@ -1,20 +1,20 @@
 <script>
-  import { API } from "api"
+  import { API } from "@/api"
   import {
     tables,
     datasources,
     sortedIntegrations as integrations,
-  } from "stores/builder"
+  } from "@/stores/builder"
 
-  import { hasData } from "stores/selectors"
+  import { hasData } from "@/stores/selectors"
   import { notifications, Body, Icon, AbsTooltip } from "@budibase/bbui"
   import { params, goto } from "@roxi/routify"
   import CreateExternalDatasourceModal from "./_components/CreateExternalDatasourceModal/index.svelte"
   import CreateInternalTableModal from "./_components/CreateInternalTableModal.svelte"
   import DatasourceOption from "./_components/DatasourceOption.svelte"
-  import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
-  import CreationPage from "components/common/CreationPage.svelte"
-  import ICONS from "components/backend/DatasourceNavigator/icons/index.js"
+  import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
+  import CreationPage from "@/components/common/CreationPage.svelte"
+  import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
 
   let internalTableModal
   let externalDatasourceModal

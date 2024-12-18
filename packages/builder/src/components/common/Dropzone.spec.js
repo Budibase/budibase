@@ -2,7 +2,7 @@ import { it, expect, describe, vi } from "vitest"
 import Dropzone from "./Dropzone.svelte"
 import { render, fireEvent } from "@testing-library/svelte"
 import { notifications } from "@budibase/bbui"
-import { admin } from "stores/portal"
+import { admin } from "@/stores/portal"
 
 vi.spyOn(notifications, "error").mockImplementation(() => {})
 

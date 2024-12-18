@@ -1,6 +1,6 @@
 <script>
   import { StatusLight } from "@budibase/bbui"
-  import { roles } from "stores/builder"
+  import { roles } from "@/stores/builder"
 
   export let id
   export let size = "M"

@@ -1,6 +1,6 @@
 <script>
   import { Icon, Modal } from "@budibase/bbui"
-  import ChooseIconModal from "components/start/ChooseIconModal.svelte"
+  import ChooseIconModal from "@/components/start/ChooseIconModal.svelte"
 
   export let name
   export let size = "M"

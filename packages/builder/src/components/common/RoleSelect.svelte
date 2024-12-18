@@ -1,11 +1,11 @@
 <script>
   import { Select, FancySelect } from "@budibase/bbui"
-  import { roles } from "stores/builder"
-  import { licensing } from "stores/portal"
+  import { roles } from "@/stores/builder"
+  import { licensing } from "@/stores/portal"
 
   import { Constants } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
-  import { capitalise } from "helpers"
+  import { capitalise } from "@/helpers"
 
   export let value
   export let error

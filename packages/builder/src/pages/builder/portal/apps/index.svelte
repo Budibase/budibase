@@ -11,13 +11,13 @@
     Body,
     Search,
   } from "@budibase/bbui"
-  import Spinner from "components/common/Spinner.svelte"
-  import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
-  import AccountLockedModal from "components/portal/licensing/AccountLockedModal.svelte"
+  import Spinner from "@/components/common/Spinner.svelte"
+  import CreateAppModal from "@/components/start/CreateAppModal.svelte"
+  import AppLimitModal from "@/components/portal/licensing/AppLimitModal.svelte"
+  import AccountLockedModal from "@/components/portal/licensing/AccountLockedModal.svelte"
   import { sdk } from "@budibase/shared-core"
-  import { automationStore, initialise } from "stores/builder"
-  import { API } from "api"
+  import { automationStore, initialise } from "@/stores/builder"
+  import { API } from "@/api"
   import { onMount } from "svelte"
   import {
     appsStore,
@@ -27,9 +27,9 @@
     environment,
     enrichedApps,
     sortBy,
-  } from "stores/portal"
+  } from "@/stores/portal"
   import { goto } from "@roxi/routify"
-  import AppRow from "components/start/AppRow.svelte"
+  import AppRow from "@/components/start/AppRow.svelte"
   import Logo from "assets/bb-space-man.svg"
 
   let template

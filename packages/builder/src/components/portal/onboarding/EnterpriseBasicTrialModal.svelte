@@ -2,8 +2,8 @@
   import { Modal, ModalContent } from "@budibase/bbui"
   import FreeTrial from "../../../../assets/FreeTrial.svelte"
   import { get } from "svelte/store"
-  import { auth, licensing, admin } from "stores/portal"
-  import { API } from "api"
+  import { auth, licensing, admin } from "@/stores/portal"
+  import { API } from "@/api"
   import { PlanType } from "@budibase/types"
 
   let freeTrialModal

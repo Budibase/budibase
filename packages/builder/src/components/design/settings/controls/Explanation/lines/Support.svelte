@@ -2,7 +2,7 @@
   import { Line, InfoWord, DocumentationLink, Text } from "../typography"
   import subjects from "../subjects"
   import * as explanation from "../explanation"
-  import { componentStore } from "stores/builder"
+  import { componentStore } from "@/stores/builder"
 
   export let setExplanationSubject
   export let support

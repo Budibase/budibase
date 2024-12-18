@@ -1,6 +1,6 @@
 <script>
   import { redirect } from "@roxi/routify"
-  import { auth } from "stores/portal"
+  import { auth } from "@/stores/portal"
   import { onMount } from "svelte"
   import { notifications } from "@budibase/bbui"
 

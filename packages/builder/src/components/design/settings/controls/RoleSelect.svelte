@@ -1,6 +1,6 @@
 <script>
   import { Select } from "@budibase/bbui"
-  import { roles } from "stores/builder"
+  import { roles } from "@/stores/builder"
 
   export let value
   export let error

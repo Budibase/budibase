@@ -1,5 +1,5 @@
 <script>
-  import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
+  import FontAwesomeIcon from "@/components/common/FontAwesomeIcon.svelte"
   import { Heading, Body } from "@budibase/bbui"
 
   export let onBack = null

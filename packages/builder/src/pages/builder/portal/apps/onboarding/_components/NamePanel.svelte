@@ -1,7 +1,7 @@
 <script>
   import { Button, FancyForm, FancyInput } from "@budibase/bbui"
   import PanelHeader from "./PanelHeader.svelte"
-  import { APP_URL_REGEX } from "constants"
+  import { APP_URL_REGEX } from "@/constants"
 
   export let disabled
   export let name = ""

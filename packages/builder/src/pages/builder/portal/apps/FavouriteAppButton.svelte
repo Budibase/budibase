@@ -1,6 +1,6 @@
 <script>
   import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
-  import { auth } from "stores/portal"
+  import { auth } from "@/stores/portal"
 
   export let app
   export let size = "S"

@@ -1,6 +1,6 @@
 <script>
   import { ModalContent, Input, Body } from "@budibase/bbui"
-  import { auth } from "stores/portal"
+  import { auth } from "@/stores/portal"
 
   export let confirm
 

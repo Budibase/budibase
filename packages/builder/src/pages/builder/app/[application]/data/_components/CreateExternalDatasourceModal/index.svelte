@@ -1,16 +1,16 @@
 <script>
   import { Modal, keepOpen, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { IntegrationTypes } from "constants/backend"
+  import { IntegrationTypes } from "@/constants/backend"
   import GoogleAuthPrompt from "./GoogleAuthPrompt.svelte"
 
   import { get } from "svelte/store"
-  import TableImportSelection from "components/backend/Datasources/TableImportSelection/index.svelte"
-  import DatasourceConfigEditor from "components/backend/Datasources/ConfigEditor/index.svelte"
-  import { datasources } from "stores/builder"
+  import TableImportSelection from "@/components/backend/Datasources/TableImportSelection/index.svelte"
+  import DatasourceConfigEditor from "@/components/backend/Datasources/ConfigEditor/index.svelte"
+  import { datasources } from "@/stores/builder"
   import { createOnGoogleAuthStore } from "./stores/onGoogleAuth.js"
   import { createDatasourceCreationStore } from "./stores/datasourceCreation.js"
-  import { configFromIntegration } from "stores/selectors"
+  import { configFromIntegration } from "@/stores/selectors"
 
   export let loading = false
   const store = createDatasourceCreationStore()

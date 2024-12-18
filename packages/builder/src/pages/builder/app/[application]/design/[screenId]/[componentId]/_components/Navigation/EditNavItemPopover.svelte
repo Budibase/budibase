@@ -1,12 +1,12 @@
 <script>
   import { Icon, Popover, RadioGroup } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
-  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
-  import RoleSelect from "components/common/RoleSelect.svelte"
+  import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
+  import RoleSelect from "@/components/common/RoleSelect.svelte"
   import SubLinksDrawer from "./SubLinksDrawer.svelte"
-  import { screenStore } from "stores/builder"
+  import { screenStore } from "@/stores/builder"
 
   export let anchor
   export let navItem

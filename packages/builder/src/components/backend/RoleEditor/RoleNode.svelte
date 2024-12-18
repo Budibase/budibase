@@ -10,8 +10,8 @@
   } from "@budibase/bbui"
   import { NodeWidth, NodeHeight } from "./constants"
   import { getContext } from "svelte"
-  import { roles } from "stores/builder"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { roles } from "@/stores/builder"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   export let data
   export let id

@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
-import { API } from "api"
-import { admin } from "stores/portal"
-import analytics from "analytics"
+import { API } from "@/api"
+import { admin } from "@/stores/portal"
+import analytics from "@/analytics"
 import { BudiStore } from "stores/BudiStore"
 import {
   isSSOUser,

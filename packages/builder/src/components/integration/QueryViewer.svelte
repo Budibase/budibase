@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { datasources, integrations, queries } from "stores/builder"
+  import { datasources, integrations, queries } from "@/stores/builder"
   import {
     Icon,
     Select,
@@ -12,13 +12,13 @@
     Divider,
     Button,
   } from "@budibase/bbui"
-  import { capitalise } from "helpers"
+  import { capitalise } from "@/helpers"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
-  import IntegrationQueryEditor from "components/integration/index.svelte"
+  import IntegrationQueryEditor from "@/components/integration/index.svelte"
   import QueryViewerSidePanel from "./QueryViewerSidePanel/index.svelte"
   import { cloneDeep } from "lodash/fp"
-  import BindingBuilder from "components/integration/QueryViewerBindingBuilder.svelte"
-  import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
+  import BindingBuilder from "@/components/integration/QueryViewerBindingBuilder.svelte"
+  import CodeMirrorEditor from "@/components/common/CodeMirrorEditor.svelte"
   import { ValidQueryNameRegex } from "@budibase/shared-core"
   import ExtraQueryConfig from "./ExtraQueryConfig.svelte"
   import QueryViewerSavePromptModal from "./QueryViewerSavePromptModal.svelte"

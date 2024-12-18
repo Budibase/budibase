@@ -2,11 +2,11 @@
   import { url } from "@roxi/routify"
   import FirstAppOnboarding from "./onboarding/index.svelte"
   import { Layout, Page, Button, Modal } from "@budibase/bbui"
-  import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import TemplateDisplay from "components/common/TemplateDisplay.svelte"
-  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
-  import { appsStore, templates, licensing } from "stores/portal"
-  import { Breadcrumbs, Breadcrumb, Header } from "components/portal/page"
+  import CreateAppModal from "@/components/start/CreateAppModal.svelte"
+  import TemplateDisplay from "@/components/common/TemplateDisplay.svelte"
+  import AppLimitModal from "@/components/portal/licensing/AppLimitModal.svelte"
+  import { appsStore, templates, licensing } from "@/stores/portal"
+  import { Breadcrumbs, Breadcrumb, Header } from "@/components/portal/page"
 
   let template
   let creationModal = false

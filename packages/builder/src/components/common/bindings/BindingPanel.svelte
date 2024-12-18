@@ -14,7 +14,7 @@
     processObjectSync,
     processStringSync,
   } from "@budibase/string-templates"
-  import { readableToRuntimeBinding } from "dataBinding"
+  import { readableToRuntimeBinding } from "@/dataBinding"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
   import {
     getHelperCompletions,
@@ -29,9 +29,9 @@
   import SnippetSidePanel from "./SnippetSidePanel.svelte"
   import { BindingHelpers } from "./utils"
   import formatHighlight from "json-format-highlight"
-  import { capitalise } from "helpers"
+  import { capitalise } from "@/helpers"
   import { Utils } from "@budibase/frontend-core"
-  import { licensing } from "stores/portal"
+  import { licensing } from "@/stores/portal"
 
   const dispatch = createEventDispatcher()
 

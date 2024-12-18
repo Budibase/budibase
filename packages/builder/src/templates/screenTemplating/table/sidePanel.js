@@ -3,9 +3,9 @@ import { Component } from "../../Component"
 import { generate } from "shortid"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Utils } from "@budibase/frontend-core"
-import { capitalise } from "helpers"
+import { capitalise } from "@/helpers"
 import getValidRoute from "../getValidRoute"
-import { getRowActionButtonTemplates } from "templates/rowActions"
+import { getRowActionButtonTemplates } from "@/templates/rowActions"
 
 const sidePanel = async ({ tableOrView, permissions, screens }) => {
   /*

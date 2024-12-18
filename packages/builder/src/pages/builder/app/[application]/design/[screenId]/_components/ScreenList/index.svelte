@@ -1,10 +1,10 @@
 <script>
   import { Layout } from "@budibase/bbui"
-  import { sortedScreens } from "stores/builder"
+  import { sortedScreens } from "@/stores/builder"
   import ScreenNavItem from "./ScreenNavItem.svelte"
   import { goto } from "@roxi/routify"
-  import { getVerticalResizeActions } from "components/common/resizable"
-  import NavHeader from "components/common/NavHeader.svelte"
+  import { getVerticalResizeActions } from "@/components/common/resizable"
+  import NavHeader from "@/components/common/NavHeader.svelte"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 

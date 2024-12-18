@@ -1,5 +1,5 @@
 import { appStore } from "./app"
-import { appsStore } from "stores/portal/apps"
+import { appsStore } from "@/stores/portal/apps"
 import { deploymentStore } from "./deployments"
 import { derived } from "svelte/store"
 

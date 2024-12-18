@@ -1,4 +1,4 @@
-import { TableNames } from "constants"
+import { TableNames } from "@/constants"
 
 const showDatasourceOpen = ({
   selected,

@@ -6,7 +6,7 @@
     themeStore,
     selectedScreen,
     appStore,
-  } from "stores/builder"
+  } from "@/stores/builder"
   import { ProgressCircle } from "@budibase/bbui"
 
   $: route = $selectedScreen?.routing.route || "/"

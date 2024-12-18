@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 
 export function createFlagsStore() {
   const { subscribe, set } = writable({})

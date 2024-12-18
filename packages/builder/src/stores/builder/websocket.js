@@ -10,9 +10,9 @@ import {
   datasources,
   tables,
   roles,
-} from "stores/builder"
+} from "@/stores/builder"
 import { get } from "svelte/store"
-import { auth, appsStore } from "stores/portal"
+import { auth, appsStore } from "@/stores/portal"
 import { screenStore } from "./screens"
 import { SocketEvent, BuilderSocketEvent, helpers } from "@budibase/shared-core"
 import { notifications } from "@budibase/bbui"

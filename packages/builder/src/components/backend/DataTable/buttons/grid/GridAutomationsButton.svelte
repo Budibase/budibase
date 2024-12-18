@@ -1,8 +1,8 @@
 <script>
   import { ActionButton, List, ListItem, Button } from "@budibase/bbui"
-  import DetailPopover from "components/common/DetailPopover.svelte"
-  import { TriggerStepID } from "constants/backend/automations"
-  import { automationStore, appStore } from "stores/builder"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
+  import { TriggerStepID } from "@/constants/backend/automations"
+  import { automationStore, appStore } from "@/stores/builder"
   import { createEventDispatcher, getContext } from "svelte"
 
   const dispatch = createEventDispatcher()

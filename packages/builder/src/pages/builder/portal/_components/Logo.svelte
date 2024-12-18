@@ -1,7 +1,7 @@
 <script>
   import Logo from "assets/bb-emblem.svg"
   import { goto } from "@roxi/routify"
-  import { organisation } from "stores/portal"
+  import { organisation } from "@/stores/portal"
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions-->

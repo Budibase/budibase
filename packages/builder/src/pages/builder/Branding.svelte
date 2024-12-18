@@ -1,5 +1,5 @@
 <script>
-  import { organisation, auth } from "stores/portal"
+  import { organisation, auth } from "@/stores/portal"
   import { onMount } from "svelte"
 
   let loaded = false

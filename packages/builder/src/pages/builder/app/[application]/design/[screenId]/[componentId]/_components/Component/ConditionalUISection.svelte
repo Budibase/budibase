@@ -6,7 +6,7 @@
     Button,
     notifications,
   } from "@budibase/bbui"
-  import { componentStore } from "stores/builder"
+  import { componentStore } from "@/stores/builder"
   import ConditionalUIDrawer from "./ConditionalUIDrawer.svelte"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
 

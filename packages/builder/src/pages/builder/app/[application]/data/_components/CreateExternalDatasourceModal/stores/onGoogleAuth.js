@@ -1,7 +1,7 @@
 import { derived } from "svelte/store"
 import { params } from "@roxi/routify"
-import { integrations } from "stores/builder"
-import { IntegrationTypes } from "constants/backend"
+import { integrations } from "@/stores/builder"
+import { IntegrationTypes } from "@/constants/backend"
 
 export const createOnGoogleAuthStore = () => {
   return derived([params, integrations], ([$params, $integrations]) => {

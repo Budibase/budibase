@@ -1,12 +1,12 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { ActionButton, Button } from "@budibase/bbui"
-  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { getUserBindings } from "dataBinding"
+  import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
+  import { getUserBindings } from "@/dataBinding"
   import { makePropSafe } from "@budibase/string-templates"
   import { search, Utils } from "@budibase/frontend-core"
-  import { tables } from "stores/builder"
-  import DetailPopover from "components/common/DetailPopover.svelte"
+  import { tables } from "@/stores/builder"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
 
   export let schema
   export let filters

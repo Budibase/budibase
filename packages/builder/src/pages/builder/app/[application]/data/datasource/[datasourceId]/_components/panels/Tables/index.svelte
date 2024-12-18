@@ -1,7 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { Table } from "@budibase/bbui"
-  import ArrayRenderer from "components/common/renderers/ArrayRenderer.svelte"
+  import ArrayRenderer from "@/components/common/renderers/ArrayRenderer.svelte"
   import Controls from "./Controls.svelte"
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"

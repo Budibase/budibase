@@ -1,6 +1,6 @@
 <script>
   import { Layout, Divider, Heading, Body } from "@budibase/bbui"
-  import UpdateAppForm from "components/common/UpdateAppForm.svelte"
+  import UpdateAppForm from "@/components/common/UpdateAppForm.svelte"
 </script>
 
 <Layout noPadding>

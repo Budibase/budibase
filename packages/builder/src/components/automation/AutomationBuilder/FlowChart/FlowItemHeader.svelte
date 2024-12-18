@@ -1,9 +1,9 @@
 <script>
-  import { automationStore, selectedAutomation } from "stores/builder"
+  import { automationStore, selectedAutomation } from "@/stores/builder"
   import { Icon, Body, AbsTooltip, StatusLight } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
-  import { Features } from "constants/backend/automations"
+  import { Features } from "@/constants/backend/automations"
 
   export let block
   export let open

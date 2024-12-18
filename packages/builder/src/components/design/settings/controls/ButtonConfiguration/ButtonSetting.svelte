@@ -1,7 +1,7 @@
 <script>
   import EditComponentPopover from "../EditComponentPopover.svelte"
   import { Icon } from "@budibase/bbui"
-  import { runtimeToReadableBinding } from "dataBinding"
+  import { runtimeToReadableBinding } from "@/dataBinding"
   import { isJSBinding } from "@budibase/string-templates"
 
   export let item

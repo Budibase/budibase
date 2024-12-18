@@ -1,6 +1,6 @@
 <script>
   import { Select } from "@budibase/bbui"
-  import { datasources } from "stores/builder"
+  import { datasources } from "@/stores/builder"
 
   export let value = null
 

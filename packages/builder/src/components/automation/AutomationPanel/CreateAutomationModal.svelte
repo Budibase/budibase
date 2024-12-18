@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { automationStore } from "stores/builder"
+  import { automationStore } from "@/stores/builder"
   import {
     notifications,
     Input,
@@ -11,7 +11,7 @@
     Icon,
     Label,
   } from "@budibase/bbui"
-  import { TriggerStepID } from "constants/backend/automations"
+  import { TriggerStepID } from "@/constants/backend/automations"
 
   export let webhookModal
 

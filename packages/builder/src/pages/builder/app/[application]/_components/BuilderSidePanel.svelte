@@ -14,7 +14,7 @@
     Button,
     FancySelect,
   } from "@budibase/bbui"
-  import { builderStore, appStore, roles, appPublished } from "stores/builder"
+  import { builderStore, appStore, roles, appPublished } from "@/stores/builder"
   import {
     groups,
     licensing,
@@ -22,7 +22,7 @@
     users,
     auth,
     admin,
-  } from "stores/portal"
+  } from "@/stores/portal"
   import {
     fetchData,
     Constants,
@@ -30,11 +30,11 @@
     RoleUtils,
   } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
-  import { API } from "api"
+  import { API } from "@/api"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
-  import RoleSelect from "components/common/RoleSelect.svelte"
-  import UpgradeModal from "components/common/users/UpgradeModal.svelte"
-  import { emailValidator } from "helpers/validation"
+  import RoleSelect from "@/components/common/RoleSelect.svelte"
+  import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import { emailValidator } from "@/helpers/validation"
   import { fly } from "svelte/transition"
   import InfoDisplay from "../design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 

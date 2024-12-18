@@ -1,8 +1,11 @@
 <script>
   import { Multiselect } from "@budibase/bbui"
   import { search } from "@budibase/frontend-core"
-  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import { selectedScreen, tables } from "stores/builder"
+  import {
+    getDatasourceForProvider,
+    getSchemaForDatasource,
+  } from "@/dataBinding"
+  import { selectedScreen, tables } from "@/stores/builder"
   import { createEventDispatcher } from "svelte"
 
   export let componentInstance = {}

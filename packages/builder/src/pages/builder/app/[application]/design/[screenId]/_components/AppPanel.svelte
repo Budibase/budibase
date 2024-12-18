@@ -1,8 +1,8 @@
 <script>
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
-  import { screenStore, appStore } from "stores/builder"
-  import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+  import { screenStore, appStore } from "@/stores/builder"
+  import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
 </script>
 
 <div class="app-panel">

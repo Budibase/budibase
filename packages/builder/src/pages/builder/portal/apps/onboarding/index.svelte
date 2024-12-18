@@ -4,8 +4,8 @@
   import ExampleApp from "./_components/ExampleApp.svelte"
   import { notifications } from "@budibase/bbui"
   import { SplitPage } from "@budibase/frontend-core"
-  import { API } from "api"
-  import { auth, admin } from "stores/portal"
+  import { API } from "@/api"
+  import { auth, admin } from "@/stores/portal"
 
   let name = "My first app"
   let url = "my-first-app"

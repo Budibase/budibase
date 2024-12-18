@@ -2,9 +2,12 @@
   import {
     findClosestMatchingComponent,
     findComponent,
-  } from "helpers/components"
-  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import { tables, selectedScreen, componentStore } from "stores/builder"
+  } from "@/helpers/components"
+  import {
+    getDatasourceForProvider,
+    getSchemaForDatasource,
+  } from "@/dataBinding"
+  import { tables, selectedScreen, componentStore } from "@/stores/builder"
   import FilterEditor from "./FilterEditor/FilterEditor.svelte"
 
   export let componentInstance
