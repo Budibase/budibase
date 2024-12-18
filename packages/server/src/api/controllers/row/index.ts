@@ -71,7 +71,6 @@ export async function patch(
     if (!row) {
       ctx.throw(404, "Row not found")
     }
-    ctx.status = 200
 
     ctx.eventEmitter?.emitRow({
       eventName: EventType.ROW_UPDATE,
@@ -110,7 +109,6 @@ export const save = async (ctx: UserCtx<SaveRowRequest, SaveRowResponse>) => {
     : await quotas.addRow(() =>
         sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
       )
-  ctx.status = 200
 
   ctx.eventEmitter?.emitRow({
     eventName: EventType.ROW_SAVE,
@@ -223,7 +221,6 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
 
 export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
   let response, row
-  ctx.status = 200
 
   if (isDeleteRows(ctx.request.body)) {
     response = await deleteRows(ctx)
@@ -275,7 +272,6 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
     rows: undefined,
   }
 
-  ctx.status = 200
   ctx.body = await sdk.rows.search(searchParams)
 }
 
@@ -288,19 +284,21 @@ function replaceTableNamesInFilters(
     for (const key of Object.keys(filter)) {
       const matches = key.match(`^(?<relation>.+)\\.(?<field>.+)`)
 
-      const relation = matches?.groups?.["relation"]
+      // this is the possible table name which we need to check if it needs to be converted
+      const relatedTableName = matches?.groups?.["relation"]
       const field = matches?.groups?.["field"]
 
-      if (!relation || !field) {
+      if (!relatedTableName || !field) {
         continue
       }
 
-      const table = allTables.find(r => r._id === tableId)!
-      if (Object.values(table.schema).some(f => f.name === relation)) {
+      const table = allTables.find(r => r._id === tableId)
+      const isColumnName = !!table?.schema[relatedTableName]
+      if (!table || isColumnName) {
         continue
       }
 
-      const matchedTable = allTables.find(t => t.name === relation)
+      const matchedTable = allTables.find(t => t.name === relatedTableName)
       const relationship = Object.values(table.schema).find(
         f => isRelationshipField(f) && f.tableId === matchedTable?._id
       )

@@ -66,10 +66,7 @@
 
   async function login() {
     try {
-      await auth.login({
-        username: formData.email.trim(),
-        password: formData.password.trim(),
-      })
+      await auth.login(formData.email.trim(), formData.password.trim())
       notifications.success("Logged in successfully")
       $goto("../portal")
     } catch (err) {

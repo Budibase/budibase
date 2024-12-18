@@ -35,7 +35,24 @@ export function createUsersStore() {
   }
 
   async function invite(payload) {
-    return API.inviteUsers(payload)
+    const users = payload.map(user => {
+      let builder = undefined
+      if (user.admin || user.builder) {
+        builder = { global: true }
+      } else if (user.creator) {
+        builder = { creator: true }
+      }
+      return {
+        email: user.email,
+        userInfo: {
+          admin: user.admin ? { global: true } : undefined,
+          builder,
+          userGroups: user.groups,
+          roles: user.apps ? user.apps : undefined,
+        },
+      }
+    })
+    return API.inviteUsers(users)
   }
 
   async function removeInvites(payload) {
@@ -60,7 +77,7 @@ export function createUsersStore() {
   }
 
   async function updateInvite(invite) {
-    return API.updateUserInvite(invite)
+    return API.updateUserInvite(invite.code, invite)
   }
 
   async function create(data) {
@@ -93,10 +110,7 @@ export function createUsersStore() {
 
       return body
     })
-    const response = await API.createUsers({
-      users: mappedUsers,
-      groups: data.groups,
-    })
+    const response = await API.createUsers(mappedUsers, data.groups)
 
     // re-search from first page
     await search()
@@ -108,8 +122,8 @@ export function createUsersStore() {
     update(users => users.filter(user => user._id !== id))
   }
 
-  async function getUserCountByApp({ appId }) {
-    return await API.getUserCountByApp({ appId })
+  async function getUserCountByApp(appId) {
+    return await API.getUserCountByApp(appId)
   }
 
   async function bulkDelete(users) {
@@ -121,11 +135,11 @@ export function createUsersStore() {
   }
 
   async function addAppBuilder(userId, appId) {
-    return await API.addAppBuilder({ userId, appId })
+    return await API.addAppBuilder(userId, appId)
   }
 
   async function removeAppBuilder(userId, appId) {
-    return await API.removeAppBuilder({ userId, appId })
+    return await API.removeAppBuilder(userId, appId)
   }
 
   async function getAccountHolder() {

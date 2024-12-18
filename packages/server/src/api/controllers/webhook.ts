@@ -15,6 +15,7 @@ import {
   BuildWebhookSchemaResponse,
   TriggerWebhookRequest,
   TriggerWebhookResponse,
+  AutomationIOType,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import * as pro from "@budibase/pro"
@@ -60,14 +61,21 @@ export async function buildSchema(
     if (webhook.action.type === WebhookActionType.AUTOMATION) {
       let automation = await db.get<Automation>(webhook.action.target)
       const autoOutputs = automation.definition.trigger.schema.outputs
-      let properties = webhook.bodySchema.properties
+      let properties = webhook.bodySchema?.properties
       // reset webhook outputs
       autoOutputs.properties = {
         body: autoOutputs.properties.body,
       }
-      for (let prop of Object.keys(properties)) {
+      for (let prop of Object.keys(properties || {})) {
+        if (properties?.[prop] == null) {
+          continue
+        }
+        const def = properties[prop]
+        if (typeof def === "boolean") {
+          continue
+        }
         autoOutputs.properties[prop] = {
-          type: properties[prop].type,
+          type: def.type as AutomationIOType,
           description: AUTOMATION_DESCRIPTION,
         }
       }

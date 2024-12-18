@@ -77,12 +77,11 @@ export const patchAPI = API => {
     return await enrichRows(rows, tableId)
   }
   const searchTable = API.searchTable
-  API.searchTable = async params => {
-    const tableId = params?.tableId
-    const output = await searchTable(params)
+  API.searchTable = async (sourceId, opts) => {
+    const output = await searchTable(sourceId, opts)
     return {
       ...output,
-      rows: await enrichRows(output?.rows, tableId),
+      rows: await enrichRows(output.rows, sourceId),
     }
   }
   const fetchViewData = API.fetchViewData

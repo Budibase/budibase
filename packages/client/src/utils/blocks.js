@@ -1,7 +1,7 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { API } from "../api/index.js"
 import { UILogicalOperator } from "@budibase/types"
-import { OnEmptyFilter } from "@budibase/frontend-core/src/constants.js"
+import { Constants } from "@budibase/frontend-core"
 
 // Map of data types to component types for search fields inside blocks
 const schemaComponentMap = {
@@ -108,7 +108,7 @@ export const enrichFilter = (filter, columns, formId) => {
 
   return {
     logicalOperator: UILogicalOperator.ALL,
-    onEmptyFilter: OnEmptyFilter.RETURN_ALL,
+    onEmptyFilter: Constants.OnEmptyFilter.RETURN_ALL,
     groups: [
       ...(filter?.groups || []),
       {
