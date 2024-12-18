@@ -16,7 +16,7 @@
         get(integrations),
         updatedDatasource
       )
-      await datasources.update({ datasource: updatedDatasource, integration })
+      await datasources.save({ datasource: updatedDatasource, integration })
       notifications.success(
         `Datasource ${updatedDatasource.name} updated successfully`
       )

@@ -2,7 +2,7 @@ import { derived } from "svelte/store"
 import { AppStatus } from "@/constants"
 import { API } from "@/api"
 import { auth } from "./auth"
-import BudiStore from "../BudiStore"
+import { BudiStore } from "../BudiStore"
 import { App, UpdateAppRequest } from "@budibase/types"
 
 interface AppIdentifierMetadata {

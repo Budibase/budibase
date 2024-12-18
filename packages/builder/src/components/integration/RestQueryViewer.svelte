@@ -176,7 +176,7 @@
       notifications.success(`Request saved successfully`)
       if (dynamicVariables) {
         datasource.config.dynamicVariables = rebuildVariables(saveId)
-        datasource = await datasources.update({
+        datasource = await datasources.save({
           integration: integrationInfo,
           datasource,
         })
