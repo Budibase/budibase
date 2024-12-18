@@ -133,7 +133,7 @@
     </div>
 
     {#if withActions}
-      <div class="@/actions">
+      <div class="actions">
         <slot />
       </div>
     {/if}

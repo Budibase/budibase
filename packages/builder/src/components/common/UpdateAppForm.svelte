@@ -167,7 +167,7 @@
         disabled={appDeployed}
       />
     </div>
-    <div class="@/actions" class:right={alignActions === "right"}>
+    <div class="actions" class:right={alignActions === "right"}>
       {#if !appDeployed}
         <Button
           cta
