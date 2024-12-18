@@ -1902,7 +1902,7 @@ if (descriptions.length) {
           it("tables and views can contain whitespaces", async () => {
             const table = await config.api.table.save(
               saveTableRequest({
-                name: "table with spaces",
+                name: `table with spaces ${generator.hash()}`,
                 schema: {
                   name: {
                     type: FieldType.STRING,
