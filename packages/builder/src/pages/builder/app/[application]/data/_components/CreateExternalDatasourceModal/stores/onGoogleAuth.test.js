@@ -11,7 +11,7 @@ vi.mock("@roxi/routify", () => ({
   params: vi.fn(),
 }))
 
-vi.mock("stores/builder", () => ({
+vi.mock("@/stores/builder", () => ({
   integrations: vi.fn(),
 }))
 
