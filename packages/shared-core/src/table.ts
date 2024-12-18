@@ -12,8 +12,8 @@ const allowDisplayColumnByType: Record<FieldType, boolean> = {
   [FieldType.AUTO]: true,
   [FieldType.INTERNAL]: true,
   [FieldType.BARCODEQR]: true,
-
   [FieldType.BIGINT]: true,
+
   [FieldType.BOOLEAN]: false,
   [FieldType.ARRAY]: false,
   [FieldType.ATTACHMENTS]: false,
