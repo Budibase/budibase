@@ -190,7 +190,7 @@ export function createDatasourcesStore() {
     integration: Integration
     datasource: Datasource
   }) => {
-    if (await checkDatasourceValidity(integration, datasource)) {
+    if (!(await checkDatasourceValidity(integration, datasource)).valid) {
       throw new Error("Unable to connect")
     }
 
