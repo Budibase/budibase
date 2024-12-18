@@ -341,5 +341,229 @@ describe("buildSqlFieldList", () => {
       const result = await buildSqlFieldList(view, {})
       expect(result).toEqual(["table.amount"])
     })
+
+    it("includes relationships fields when flagged", async () => {
+      const otherTable: Table = {
+        ...table,
+        name: "linkedTable",
+        primary: ["id"],
+        primaryDisplay: "name",
+        schema: {
+          ...table.schema,
+          id: {
+            name: "id",
+            type: FieldType.NUMBER,
+          },
+        },
+      }
+
+      table.schema.link = {
+        name: "link",
+        type: FieldType.LINK,
+        relationshipType: RelationshipType.ONE_TO_MANY,
+        fieldName: "link",
+        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
+      }
+
+      view.schema = {
+        name: { visible: true },
+        link: { visible: true },
+      }
+
+      const allTables: Record<string, Table> = {
+        otherTableId: otherTable,
+      }
+
+      const result = await buildSqlFieldList(view, allTables, {
+        relationships: true,
+      })
+      expect(result).toEqual([
+        "table.name",
+        "linkedTable.id",
+        "linkedTable.name",
+      ])
+    })
+
+    it("includes relationships columns", async () => {
+      const otherTable: Table = {
+        ...table,
+        name: "linkedTable",
+        primary: ["id"],
+        schema: {
+          ...table.schema,
+          id: {
+            name: "id",
+            type: FieldType.NUMBER,
+          },
+          formula: {
+            name: "formula",
+            type: FieldType.FORMULA,
+            formula: "any",
+          },
+        },
+      }
+
+      table.schema.link = {
+        name: "link",
+        type: FieldType.LINK,
+        relationshipType: RelationshipType.ONE_TO_MANY,
+        fieldName: "link",
+        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
+      }
+
+      view.schema = {
+        name: { visible: true },
+        link: {
+          visible: true,
+          columns: {
+            name: { visible: false },
+            amount: { visible: true },
+            formula: { visible: false },
+          },
+        },
+      }
+
+      const allTables: Record<string, Table> = {
+        otherTableId: otherTable,
+      }
+
+      const result = await buildSqlFieldList(view, allTables, {
+        relationships: true,
+      })
+      expect(result).toEqual([
+        "table.name",
+        "linkedTable.id",
+        "linkedTable.amount",
+      ])
+    })
+
+    it("does not include relationships columns for hidden links", async () => {
+      const otherTable: Table = {
+        ...table,
+        name: "linkedTable",
+        primary: ["id"],
+        schema: {
+          ...table.schema,
+          id: {
+            name: "id",
+            type: FieldType.NUMBER,
+          },
+          formula: {
+            name: "formula",
+            type: FieldType.FORMULA,
+            formula: "any",
+          },
+        },
+      }
+
+      table.schema.link = {
+        name: "link",
+        type: FieldType.LINK,
+        relationshipType: RelationshipType.ONE_TO_MANY,
+        fieldName: "link",
+        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
+      }
+
+      view.schema = {
+        name: { visible: true },
+        link: {
+          visible: false,
+          columns: {
+            name: { visible: false },
+            amount: { visible: true },
+            formula: { visible: false },
+          },
+        },
+      }
+
+      const allTables: Record<string, Table> = {
+        otherTableId: otherTable,
+      }
+
+      const result = await buildSqlFieldList(view, allTables, {
+        relationships: true,
+      })
+      expect(result).toEqual(["table.name"])
+    })
+
+    it("includes all relationship fields if there is a formula column", async () => {
+      const otherTable: Table = {
+        ...table,
+        name: "linkedTable",
+        schema: {
+          ...table.schema,
+          id: {
+            name: "id",
+            type: FieldType.NUMBER,
+          },
+          hidden: {
+            name: "other",
+            type: FieldType.STRING,
+            visible: false,
+          },
+          formula: {
+            name: "formula",
+            type: FieldType.FORMULA,
+            formula: "any",
+          },
+          ai: {
+            name: "ai",
+            type: FieldType.AI,
+            operation: AIOperationEnum.PROMPT,
+          },
+          link: {
+            name: "link",
+            type: FieldType.LINK,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            fieldName: "link",
+            tableId: "otherTableId",
+          },
+        },
+      }
+
+      table.schema.link = {
+        name: "link",
+        type: FieldType.LINK,
+        relationshipType: RelationshipType.ONE_TO_MANY,
+        fieldName: "link",
+        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
+      }
+      table.schema.formula = {
+        name: "formula",
+        type: FieldType.FORMULA,
+        formula: "any",
+      }
+
+      view.schema = {
+        name: { visible: true },
+        formula: { visible: true },
+        link: {
+          visible: false,
+          columns: {
+            name: { visible: false },
+            amount: { visible: true },
+            formula: { visible: false },
+          },
+        },
+      }
+
+      const allTables: Record<string, Table> = {
+        otherTableId: otherTable,
+      }
+
+      const result = await buildSqlFieldList(view, allTables, {
+        relationships: true,
+      })
+      expect(result).toEqual([
+        "table.name",
+        "table.description",
+        "table.amount",
+        "linkedTable.name",
+        "linkedTable.description",
+        "linkedTable.amount",
+        "linkedTable.id",
+        "linkedTable.hidden",
+      ])
+    })
   })
 })
