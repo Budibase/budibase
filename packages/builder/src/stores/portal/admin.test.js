@@ -6,7 +6,7 @@ import { API } from "@/api"
 import { auth } from "@/stores/portal"
 import { banner } from "@budibase/bbui"
 
-vi.mock("stores/portal", () => {
+vi.mock("@/stores/portal", () => {
   return { auth: vi.fn() }
 })
 
