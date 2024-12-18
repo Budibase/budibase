@@ -70,6 +70,10 @@ export function encodeTableId(tableId: string) {
   }
 }
 
+export function encodeViewId(viewId: string) {
+  return encodeURIComponent(viewId)
+}
+
 export function breakExternalTableId(tableId: string) {
   const parts = tableId.split(DOUBLE_SEPARATOR)
   let datasourceId = parts.shift()
