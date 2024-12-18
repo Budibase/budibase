@@ -36,10 +36,7 @@
       await API.createAdminUser(adminUser)
       notifications.success("Admin user created")
       await admin.init()
-      await auth.login({
-        username: formData?.email.trim(),
-        password: formData?.password,
-      })
+      await auth.login(formData?.email.trim(), formData?.password)
       $goto("../portal")
     } catch (error) {
       submitted = false

@@ -12,7 +12,7 @@ import {
 } from "stores/builder"
 import { createHistoryStore } from "stores/builder/history"
 import { API } from "api"
-import BudiStore from "../BudiStore"
+import { BudiStore } from "../BudiStore"
 
 export const INITIAL_SCREENS_STATE = {
   screens: [],
@@ -344,12 +344,7 @@ export class ScreenStore extends BudiStore {
     let deleteUrls = []
     screensToDelete.forEach(screen => {
       // Delete the screen
-      promises.push(
-        API.deleteScreen({
-          screenId: screen._id,
-          screenRev: screen._rev,
-        })
-      )
+      promises.push(API.deleteScreen(screen._id, screen._rev))
       // Remove links to this screen
       deleteUrls.push(screen.routing.route)
     })

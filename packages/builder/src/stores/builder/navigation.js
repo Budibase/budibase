@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
 import { API } from "api"
 import { appStore } from "stores/builder"
-import BudiStore from "../BudiStore"
+import { BudiStore } from "../BudiStore"
 
 export const INITIAL_NAVIGATION_STATE = {
   navigation: "Top",
@@ -35,10 +35,7 @@ export class NavigationStore extends BudiStore {
 
   async save(navigation) {
     const appId = get(appStore).appId
-    const app = await API.saveAppMetadata({
-      appId,
-      metadata: { navigation },
-    })
+    const app = await API.saveAppMetadata(appId, { navigation })
     this.syncAppNavigation(app.navigation)
   }
 

@@ -110,6 +110,9 @@ export interface AddSSoUserRequest {
   ssoId: string
   email: string
 }
+export interface AddSSoUserResponse {
+  message: string
+}
 
 export interface CreateAdminUserResponse {
   _id: string

@@ -69,10 +69,7 @@
   async function deleteSmtp() {
     // Delete the SMTP config
     try {
-      await API.deleteConfig({
-        id: smtpConfig._id,
-        rev: smtpConfig._rev,
-      })
+      await API.deleteConfig(smtpConfig._id, smtpConfig._rev)
       smtpConfig = {
         type: ConfigTypes.SMTP,
         config: {
@@ -180,7 +177,7 @@
       <Button
         secondary
         on:click={deleteSmtp}
-        disabled={!$admin.checklist.smtp.checked}
+        disabled={!$admin.checklist?.smtp?.checked}
       >
         Reset
       </Button>

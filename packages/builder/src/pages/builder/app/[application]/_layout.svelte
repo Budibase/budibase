@@ -105,9 +105,6 @@
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
-        // check if user has beta access
-        // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
-        // betaAccess = betaResponse.access
       } catch (error) {
         notifications.error("Failed to sync with production database")
       }

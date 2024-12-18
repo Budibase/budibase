@@ -150,6 +150,7 @@ export type OpenAIStepInputs = {
   prompt: string
   model: Model
 }
+
 export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API
@@ -295,4 +296,13 @@ export type RowUpdatedTriggerOutputs = {
   row: Row
   id: string
   revision?: string
+}
+
+export type WebhookTriggerInputs = {
+  schemaUrl: string
+  triggerUrl: string
+}
+
+export type WebhookTriggerOutputs = {
+  fields: Record<string, any>
 }

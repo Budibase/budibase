@@ -8,7 +8,7 @@ export default class ViewFetch extends DataFetch {
   async getData() {
     const { datasource } = this.options
     try {
-      const res = await this.API.fetchViewData(datasource)
+      const res = await this.API.fetchViewData(datasource.name)
       return { rows: res || [] }
     } catch (error) {
       return { rows: [] }
