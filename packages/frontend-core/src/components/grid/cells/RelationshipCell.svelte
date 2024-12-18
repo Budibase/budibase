@@ -102,9 +102,8 @@
     lastSearchId = Math.random()
     searching = true
     const thisSearchId = lastSearchId
-    const results = await searchFunction({
+    const results = await searchFunction(schema.tableId, {
       paginate: false,
-      tableId: schema.tableId,
       limit: 20,
       query: {
         string: {
