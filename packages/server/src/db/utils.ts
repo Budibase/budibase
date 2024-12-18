@@ -1,10 +1,4 @@
-import {
-  context,
-  db as dbCore,
-  docIds,
-  utils,
-  sql,
-} from "@budibase/backend-core"
+import { context, db as dbCore, docIds, utils } from "@budibase/backend-core"
 import {
   DatabaseQueryOpts,
   Datasource,
@@ -334,7 +328,7 @@ export function extractViewInfoFromID(viewId: string) {
   const regex = new RegExp(`^(?<tableId>.+)${SEPARATOR}([^${SEPARATOR}]+)$`)
   const res = regex.exec(viewId)
   return {
-    tableId: sql.utils.encodeTableId(res!.groups!["tableId"]),
+    tableId: res!.groups!["tableId"],
   }
 }
 
