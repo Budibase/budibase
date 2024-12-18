@@ -68,17 +68,24 @@ function checkDefaultFields(table: Table) {
   }
 }
 
-function guardTable(table: Table) {
+async function guardTable(table: Table, isCreate: boolean) {
   checkDefaultFields(table)
 
   if (
     table.primaryDisplay &&
     !canBeDisplayColumn(table.schema[table.primaryDisplay]?.type)
   ) {
-    throw new HTTPError(
-      `Column "${table.primaryDisplay}" cannot be used as a display type.`,
-      400
-    )
+    // Prevent throwing errors from existing badly configured tables. Only throw for new tables or if this setting is being updated
+    if (
+      isCreate ||
+      (await sdk.tables.getTable(table._id!)).primaryDisplay !==
+        table.primaryDisplay
+    ) {
+      throw new HTTPError(
+        `Column "${table.primaryDisplay}" cannot be used as a display type.`,
+        400
+      )
+    }
   }
 }
 
@@ -126,7 +133,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 
   const isCreate = !table._id
 
-  guardTable(table)
+  await guardTable(table, isCreate)
 
   let savedTable: Table
   if (isCreate) {
