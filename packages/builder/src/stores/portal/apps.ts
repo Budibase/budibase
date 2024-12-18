@@ -1,5 +1,4 @@
 import { derived } from "svelte/store"
-// @ts-ignore
 import { AppStatus } from "@/constants"
 import { API } from "@/api"
 import { auth } from "./auth"
