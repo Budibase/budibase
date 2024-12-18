@@ -220,7 +220,7 @@ export class DatasourceStore extends BudiStore<DerivedDatasourceStore> {
     integration: Integration
     datasource: Datasource
   }) {
-    if (await this.checkDatasourceValidity(integration, datasource)) {
+    if (!(await this.checkDatasourceValidity(integration, datasource)).valid) {
       throw new Error("Unable to connect")
     }
 
