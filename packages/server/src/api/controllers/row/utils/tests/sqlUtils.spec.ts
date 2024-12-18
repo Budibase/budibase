@@ -7,11 +7,13 @@ import {
 } from "@budibase/types"
 import { buildSqlFieldList } from "../sqlUtils"
 import { structures } from "../../../../routes/tests/utilities"
-import { cloneDeep } from "lodash"
 import { sql } from "@budibase/backend-core"
 
 describe("buildSqlFieldList", () => {
-  const basicTable: Table = {
+  let table: Table & { _id: string }
+
+  beforeEach(() => {
+    table = {
     ...structures.tableForDatasource({
       type: "datasource",
       source: SourceName.POSTGRES,
@@ -33,10 +35,11 @@ describe("buildSqlFieldList", () => {
       },
     },
   }
+  })
 
   describe("table", () => {
     it("extracts fields from table schema", async () => {
-      const result = await buildSqlFieldList(basicTable, {})
+      const result = await buildSqlFieldList(table, {})
       expect(result).toEqual([
         "table.name",
         "table.description",
@@ -45,14 +48,12 @@ describe("buildSqlFieldList", () => {
     })
 
     it("excludes hidden fields", async () => {
-      const table = cloneDeep(basicTable)
       table.schema.description.visible = false
       const result = await buildSqlFieldList(table, {})
       expect(result).toEqual(["table.name", "table.amount"])
     })
 
     it("excludes non-sql fields fields", async () => {
-      const table = cloneDeep(basicTable)
       table.schema.formula = {
         name: "formula",
         type: FieldType.FORMULA,
@@ -80,7 +81,6 @@ describe("buildSqlFieldList", () => {
     })
 
     it("includes hidden fields if there is a formula column", async () => {
-      const table = cloneDeep(basicTable)
       table.schema.description.visible = false
       table.schema.formula = {
         name: "formula",
@@ -97,27 +97,26 @@ describe("buildSqlFieldList", () => {
     })
 
     it("includes relationships fields when flag", async () => {
-      const table = cloneDeep(basicTable)
+      const otherTable: Table = {
+        ...table,
+        name: "linkedTable",
+        primary: ["id"],
+        primaryDisplay: "name",
+        schema: {
+          ...table.schema,
+          id: {
+            name: "id",
+            type: FieldType.NUMBER,
+          },
+        },
+      }
+
       table.schema.link = {
         name: "link",
         type: FieldType.LINK,
         relationshipType: RelationshipType.ONE_TO_MANY,
         fieldName: "link",
         tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
-      }
-
-      const otherTable: Table = {
-        ...cloneDeep(basicTable),
-        name: "linkedTable",
-        primary: ["id"],
-        primaryDisplay: "name",
-        schema: {
-          ...cloneDeep(basicTable).schema,
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-          },
-        },
       }
 
       const allTables: Record<string, Table> = {
@@ -137,25 +136,11 @@ describe("buildSqlFieldList", () => {
     })
 
     it("includes all relationship fields if there is a formula column", async () => {
-      const table = cloneDeep(basicTable)
-      table.schema.link = {
-        name: "link",
-        type: FieldType.LINK,
-        relationshipType: RelationshipType.ONE_TO_MANY,
-        fieldName: "link",
-        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
-      }
-      table.schema.formula = {
-        name: "formula",
-        type: FieldType.FORMULA,
-        formula: "any",
-      }
-
       const otherTable: Table = {
-        ...cloneDeep(basicTable),
+        ...table,
         name: "linkedTable",
         schema: {
-          ...cloneDeep(basicTable).schema,
+          ...table.schema,
           id: {
             name: "id",
             type: FieldType.NUMBER,
@@ -183,6 +168,19 @@ describe("buildSqlFieldList", () => {
             tableId: "otherTableId",
           },
         },
+      }
+
+      table.schema.link = {
+        name: "link",
+        type: FieldType.LINK,
+        relationshipType: RelationshipType.ONE_TO_MANY,
+        fieldName: "link",
+        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
+      }
+      table.schema.formula = {
+        name: "formula",
+        type: FieldType.FORMULA,
+        formula: "any",
       }
 
       const allTables: Record<string, Table> = {
@@ -205,22 +203,8 @@ describe("buildSqlFieldList", () => {
     })
 
     it("never includes non-sql columns from relationships", async () => {
-      const table = cloneDeep(basicTable)
-      table.schema.link = {
-        name: "link",
-        type: FieldType.LINK,
-        relationshipType: RelationshipType.ONE_TO_MANY,
-        fieldName: "link",
-        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
-      }
-      table.schema.formula = {
-        name: "formula",
-        type: FieldType.FORMULA,
-        formula: "any",
-      }
-
       const otherTable: Table = {
-        ...cloneDeep(basicTable),
+        ...table,
         name: "linkedTable",
         schema: {
           id: {
@@ -250,6 +234,19 @@ describe("buildSqlFieldList", () => {
             tableId: "otherTableId",
           },
         },
+      }
+
+      table.schema.link = {
+        name: "link",
+        type: FieldType.LINK,
+        relationshipType: RelationshipType.ONE_TO_MANY,
+        fieldName: "link",
+        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
+      }
+      table.schema.formula = {
+        name: "formula",
+        type: FieldType.FORMULA,
+        formula: "any",
       }
 
       const allTables: Record<string, Table> = {
