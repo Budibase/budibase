@@ -13,6 +13,7 @@
     selectedAutomation,
   } from "@/stores/builder"
 
+  $: automationId = $selectedAutomation?.data?._id
   $: builderStore.selectResource(automationId)
 
   const stopSyncing = syncURLToState({
