@@ -152,6 +152,23 @@ describe("buildSqlFieldList", () => {
           type: FieldType.STRING,
           visible: false,
         },
+        formula: {
+          name: "formula",
+          type: FieldType.FORMULA,
+          formula: "any",
+        },
+        ai: {
+          name: "ai",
+          type: FieldType.AI,
+          operation: AIOperationEnum.PROMPT,
+        },
+        link: {
+          name: "link",
+          type: FieldType.LINK,
+          relationshipType: RelationshipType.ONE_TO_MANY,
+          fieldName: "link",
+          tableId: "otherTableId",
+        },
       },
     }
 
@@ -169,6 +186,70 @@ describe("buildSqlFieldList", () => {
       "linkedTable.name",
       "linkedTable.description",
       "linkedTable.amount",
+      "linkedTable.id",
+      "linkedTable.hidden",
+    ])
+  })
+
+  it("never includes non-sql columns from relationships", async () => {
+    const table = cloneDeep(basicTable)
+    table.schema.link = {
+      name: "link",
+      type: FieldType.LINK,
+      relationshipType: RelationshipType.ONE_TO_MANY,
+      fieldName: "link",
+      tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
+    }
+    table.schema.formula = {
+      name: "formula",
+      type: FieldType.FORMULA,
+      formula: "any",
+    }
+
+    const otherTable: Table = {
+      ...cloneDeep(basicTable),
+      name: "linkedTable",
+      schema: {
+        id: {
+          name: "id",
+          type: FieldType.NUMBER,
+        },
+        hidden: {
+          name: "other",
+          type: FieldType.STRING,
+          visible: false,
+        },
+        formula: {
+          name: "formula",
+          type: FieldType.FORMULA,
+          formula: "any",
+        },
+        ai: {
+          name: "ai",
+          type: FieldType.AI,
+          operation: AIOperationEnum.PROMPT,
+        },
+        link: {
+          name: "link",
+          type: FieldType.LINK,
+          relationshipType: RelationshipType.ONE_TO_MANY,
+          fieldName: "link",
+          tableId: "otherTableId",
+        },
+      },
+    }
+
+    const allTables: Record<string, Table> = {
+      otherTableId: otherTable,
+    }
+
+    const result = await buildSqlFieldList(table, allTables, {
+      relationships: true,
+    })
+    expect(result).toEqual([
+      "table.name",
+      "table.description",
+      "table.amount",
       "linkedTable.id",
       "linkedTable.hidden",
     ])
