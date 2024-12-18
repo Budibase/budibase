@@ -9,11 +9,11 @@
     Body,
     Button,
   } from "@budibase/bbui"
-  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import { EditorModes } from "components/common/CodeEditor"
+  import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
+  import { EditorModes } from "@/components/common/CodeEditor"
   import SnippetDrawer from "./SnippetDrawer.svelte"
-  import { licensing } from "stores/portal"
-  import UpgradeButton from "pages/builder/portal/_components/UpgradeButton.svelte"
+  import { licensing } from "@/stores/portal"
+  import UpgradeButton from "@/pages/builder/portal/_components/UpgradeButton.svelte"
 
   export let addSnippet
   export let snippets

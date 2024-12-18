@@ -1,8 +1,8 @@
 import { get, derived } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { API } from "api"
+import { API } from "@/api"
 import { Helpers } from "@budibase/bbui"
-import analytics, { Events } from "analytics"
+import analytics, { Events } from "@/analytics"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import {
   findComponentPath,
@@ -11,8 +11,8 @@ import {
   findComponentParent,
   findAllMatchingComponents,
   makeComponentUnique,
-} from "helpers/components"
-import { getComponentFieldOptions } from "helpers/formFields"
+} from "@/helpers/components"
+import { getComponentFieldOptions } from "@/helpers/formFields"
 import { selectedScreen } from "./screens"
 import {
   screenStore,
@@ -20,14 +20,14 @@ import {
   previewStore,
   tables,
   componentTreeNodesStore,
-} from "stores/builder"
-import { buildFormSchema, getSchemaForDatasource } from "dataBinding"
+} from "@/stores/builder"
+import { buildFormSchema, getSchemaForDatasource } from "@/dataBinding"
 import {
   BUDIBASE_INTERNAL_DB_ID,
   DEFAULT_BB_DATASOURCE_ID,
   DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
-} from "constants/backend"
+} from "@/constants/backend"
 import BudiStore from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
 import { FieldType } from "@budibase/types"

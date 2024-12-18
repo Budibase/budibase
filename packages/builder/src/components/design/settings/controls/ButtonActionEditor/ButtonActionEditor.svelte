@@ -12,7 +12,7 @@
   export let bindings
   export let nested
   export let componentInstance
-  export let title = "Actions"
+  export let title = "@/actions"
 
   let drawer
   let tmpValue

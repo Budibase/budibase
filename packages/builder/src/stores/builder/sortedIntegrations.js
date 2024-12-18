@@ -1,7 +1,7 @@
 import { integrations } from "./integrations"
 import { derived } from "svelte/store"
 
-import { DatasourceTypes } from "constants/backend"
+import { DatasourceTypes } from "@/constants/backend"
 
 const getIntegrationOrder = type => {
   if (type === DatasourceTypes.API) return 1

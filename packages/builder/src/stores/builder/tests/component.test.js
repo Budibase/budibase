@@ -3,9 +3,9 @@ import { get, writable } from "svelte/store"
 import {
   INITIAL_COMPONENTS_STATE,
   ComponentStore,
-} from "stores/builder/components"
-import { API } from "api"
-import { appStore, tables } from "stores/builder"
+} from "@/stores/builder/components"
+import { API } from "@/api"
+import { appStore, tables } from "@/stores/builder"
 import {
   componentDefinitionMap,
   getComponentFixture,
@@ -22,7 +22,7 @@ import {
   DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
   DEFAULT_BB_DATASOURCE_ID,
-} from "constants/backend"
+} from "@/constants/backend"
 import { makePropSafe as safe } from "@budibase/string-templates"
 
 // Could move to fixtures

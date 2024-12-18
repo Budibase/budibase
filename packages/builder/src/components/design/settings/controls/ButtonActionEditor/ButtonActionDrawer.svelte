@@ -16,7 +16,7 @@
     getActionBindings,
     makeStateBinding,
     updateReferencesInObject,
-  } from "dataBinding"
+  } from "@/dataBinding"
   import { cloneDeep } from "lodash/fp"
 
   const flipDurationMs = 150
@@ -123,7 +123,7 @@
       obj: actions,
       modifiedIndex: index,
       action: "delete",
-      label: "actions",
+      label: "@/actions",
     })
   }
 
@@ -175,7 +175,7 @@
         action => action.id === e.detail.info.id
       ),
       action: "move",
-      label: "actions",
+      label: "@/actions",
       originalIndex: originalActionIndex,
     })
 
@@ -255,7 +255,7 @@
 <DrawerContent>
   <Layout noPadding gap="S" slot="sidebar">
     {#if showAvailableActions || !actions?.length}
-      <div class="actions-list">
+      <div class="@/actions-list">
         {#if actions?.length > 0}
           <div>
             <ActionButton
@@ -290,7 +290,7 @@
         <Button secondary on:click={toggleActionList}>Add Action</Button>
       </div>
       <div
-        class="actions"
+        class="@/actions"
         use:dndzone={{
           items: actions,
           flipDurationMs,

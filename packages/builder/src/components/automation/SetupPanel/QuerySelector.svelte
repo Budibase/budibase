@@ -1,5 +1,5 @@
 <script>
-  import { queries } from "stores/builder"
+  import { queries } from "@/stores/builder"
   import { Select } from "@budibase/bbui"
 
   export let value

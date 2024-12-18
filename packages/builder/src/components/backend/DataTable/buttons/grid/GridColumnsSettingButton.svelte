@@ -10,7 +10,7 @@
   import { getContext } from "svelte"
   import { ActionButton } from "@budibase/bbui"
   import ColumnsSettingContent from "./ColumnsSettingContent.svelte"
-  import DetailPopover from "components/common/DetailPopover.svelte"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
 
   const { tableColumns, datasource } = getContext("grid")
 

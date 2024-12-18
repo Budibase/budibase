@@ -1,11 +1,11 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get, writable } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 import {
   INITIAL_NAVIGATION_STATE,
   NavigationStore,
-} from "stores/builder/navigation"
-import { appStore } from "stores/builder"
+} from "@/stores/builder/navigation"
+import { appStore } from "@/stores/builder"
 
 vi.mock("api", () => {
   return {

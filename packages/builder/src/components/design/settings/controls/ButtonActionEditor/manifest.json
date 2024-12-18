@@ -1,5 +1,5 @@
 {
-  "actions": [
+  "@/actions": [
     {
       "name": "Save Row",
       "type": "data",
