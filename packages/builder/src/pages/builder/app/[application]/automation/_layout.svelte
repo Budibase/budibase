@@ -17,6 +17,9 @@
   $: builderStore.selectResource(automationId)
 
   const stopSyncing = syncURLToState({
+    urlParam: "automationId",
+    stateKey: "selectedAutomationId",
+    validate: id => $automationStore.automations.some(x => x._id === id),
     fallbackUrl: "./index",
     store: automationStore,
     update: automationStore.actions.select,
