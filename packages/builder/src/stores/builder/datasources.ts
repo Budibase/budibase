@@ -43,7 +43,7 @@ interface InternalDatasource extends Omit<Datasource, "entities"> {
 }
 
 interface BuilderDatasourceStore {
-  datasources: Datasource[]
+  rawList: Datasource[]
   selectedDatasourceId: null | string
 }
 
@@ -65,8 +65,8 @@ export class DatasourceStore extends DerivedBudiStore<
         // able to keep updated unlike the egress generated definition of the
         // internal datasource
         let internalDS: Datasource | InternalDatasource | undefined =
-          $store.datasources?.find(ds => ds._id === BUDIBASE_INTERNAL_DB_ID)
-        let otherDS = $store.datasources?.filter(
+          $store.rawList?.find(ds => ds._id === BUDIBASE_INTERNAL_DB_ID)
+        let otherDS = $store.rawList?.filter(
           ds => ds._id !== BUDIBASE_INTERNAL_DB_ID
         )
         if (internalDS) {
@@ -102,7 +102,7 @@ export class DatasourceStore extends DerivedBudiStore<
 
     super(
       {
-        datasources: [],
+        rawList: [],
         selectedDatasourceId: null,
       },
       makeDerivedStore
@@ -123,7 +123,7 @@ export class DatasourceStore extends DerivedBudiStore<
     const datasources = await API.getDatasources()
     this.store.update(state => ({
       ...state,
-      datasources,
+      rawList: datasources,
     }))
   }
 
@@ -160,7 +160,7 @@ export class DatasourceStore extends DerivedBudiStore<
   }
 
   sourceCount(source: string) {
-    return get(this.store).datasources.filter(
+    return get(this.store).rawList.filter(
       datasource => datasource.source === source
     ).length
   }
@@ -252,7 +252,7 @@ export class DatasourceStore extends DerivedBudiStore<
     if (!datasource) {
       this.store.update(state => ({
         ...state,
-        datasources: state.datasources.filter(x => x._id !== datasourceId),
+        rawList: state.rawList.filter(x => x._id !== datasourceId),
       }))
       tables.removeDatasourceTables(datasourceId)
       queries.removeDatasourceQueries(datasourceId)
@@ -260,13 +260,13 @@ export class DatasourceStore extends DerivedBudiStore<
     }
 
     // Add new datasource
-    const index = get(this.store).datasources.findIndex(
+    const index = get(this.store).rawList.findIndex(
       x => x._id === datasource._id
     )
     if (index === -1) {
       this.store.update(state => ({
         ...state,
-        datasources: [...state.datasources, datasource],
+        rawList: [...state.rawList, datasource],
       }))
 
       // If this is a new datasource then we should refresh the tables list,
@@ -277,7 +277,7 @@ export class DatasourceStore extends DerivedBudiStore<
     // Update existing datasource
     else if (datasource) {
       this.store.update(state => {
-        state.datasources[index] = datasource
+        state.rawList[index] = datasource
         return state
       })
     }
