@@ -82,7 +82,7 @@
 
   const customRenderers = [
     { column: "appSize", component: AppSizeRenderer },
-    { column: "@/actions", component: ActionsRenderer },
+    { column: "actions", component: ActionsRenderer },
     { column: "createdAt", component: TimeAgoRenderer },
     { column: "createdBy", component: UserRenderer },
     { column: "status", component: StatusRenderer },

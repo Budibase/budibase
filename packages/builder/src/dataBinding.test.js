@@ -129,7 +129,7 @@ describe("Builder dataBinding", () => {
         obj,
         modifiedIndex: 0,
         action: "add",
-        label: "@/actions",
+        label: "Actions",
       })
 
       expect(obj).toEqual([
@@ -203,7 +203,7 @@ describe("Builder dataBinding", () => {
         obj,
         modifiedIndex: 2,
         action: "delete",
-        label: "@/actions",
+        label: "Actions",
       })
 
       expect(obj).toEqual([
@@ -271,7 +271,7 @@ describe("Builder dataBinding", () => {
         obj,
         modifiedIndex: 2,
         action: "move",
-        label: "@/actions",
+        label: "Actions",
         originalIndex: 4,
       })
 
@@ -346,7 +346,7 @@ describe("Builder dataBinding", () => {
         obj,
         modifiedIndex: 2,
         action: "move",
-        label: "@/actions",
+        label: "Actions",
         originalIndex: 0,
       })
 
@@ -423,7 +423,7 @@ describe("Builder dataBinding", () => {
         obj,
         modifiedIndex: 2,
         action: "move",
-        label: "@/actions",
+        label: "Actions",
         originalIndex: 1,
       })
 
@@ -502,7 +502,7 @@ describe("Builder dataBinding", () => {
         obj,
         modifiedIndex: 0,
         action: "move",
-        label: "@/actions",
+        label: "Actions",
         originalIndex: 4,
       })
 
