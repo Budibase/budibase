@@ -37,6 +37,7 @@ import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
 import { cloneDeep } from "lodash"
 import {
+  canBeDisplayColumn,
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
@@ -64,6 +65,20 @@ function checkDefaultFields(table: Table) {
         400
       )
     }
+  }
+}
+
+function guardTable(table: Table) {
+  checkDefaultFields(table)
+
+  if (
+    table.primaryDisplay &&
+    !canBeDisplayColumn(table.schema[table.primaryDisplay]?.type)
+  ) {
+    throw new HTTPError(
+      `Column "${table.primaryDisplay}" cannot be used as a display type.`,
+      400
+    )
   }
 }
 
@@ -111,7 +126,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 
   const isCreate = !table._id
 
-  checkDefaultFields(table)
+  guardTable(table)
 
   let savedTable: Table
   if (isCreate) {
