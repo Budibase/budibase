@@ -1,4 +1,4 @@
-import { writable, derived, get } from "svelte/store"
+import { derived, get } from "svelte/store"
 import {
   IntegrationTypes,
   DEFAULT_BB_DATASOURCE_ID,
@@ -17,6 +17,7 @@ import {
 } from "@budibase/types"
 // @ts-ignore
 import { TableNames } from "constants"
+import BudiStore from "stores/BudiStore"
 
 // when building the internal DS - seems to represent it slightly differently to the backend typing of a DS
 interface InternalDatasource extends Omit<Datasource, "entities"> {
@@ -41,102 +42,131 @@ class TableImportError extends Error {
   }
 }
 
-interface DatasourceStore {
+interface BuilderDatasourceStore {
   list: Datasource[]
   selectedDatasourceId: null | string
 }
 
-export function createDatasourcesStore() {
-  const store = writable<DatasourceStore>({
-    list: [],
-    selectedDatasourceId: null,
-  })
+interface DerivedDatasourceStore extends Omit<BuilderDatasourceStore, "list"> {
+  list: (Datasource | InternalDatasource)[]
+  selected?: Datasource | InternalDatasource
+  hasDefaultData: boolean
+  hasData: boolean
+}
 
-  const derivedStore = derived([store, tables], ([$store, $tables]) => {
-    // Set the internal datasource entities from the table list, which we're
-    // able to keep updated unlike the egress generated definition of the
-    // internal datasource
-    let internalDS: Datasource | InternalDatasource | undefined =
-      $store.list?.find(ds => ds._id === BUDIBASE_INTERNAL_DB_ID)
-    let otherDS = $store.list?.filter(ds => ds._id !== BUDIBASE_INTERNAL_DB_ID)
-    if (internalDS) {
-      const tables: Table[] = $tables.list?.filter((table: Table) => {
-        return (
-          table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
-          table._id !== TableNames.USERS
-        )
-      })
-      internalDS = {
-        ...internalDS,
-        entities: tables,
+export class DatasourceStore extends BudiStore<DerivedDatasourceStore> {
+  constructor() {
+    super({
+      list: [],
+      selectedDatasourceId: null,
+      hasDefaultData: false,
+      hasData: false,
+    })
+
+    const derivedStore = derived<
+      [DatasourceStore, BudiStore<any>],
+      DerivedDatasourceStore
+    >([this, tables as any], ([$store, $tables]) => {
+      // Set the internal datasource entities from the table list, which we're
+      // able to keep updated unlike the egress generated definition of the
+      // internal datasource
+      let internalDS: Datasource | InternalDatasource | undefined =
+        $store.list?.find(ds => ds._id === BUDIBASE_INTERNAL_DB_ID)
+      let otherDS = $store.list?.filter(
+        ds => ds._id !== BUDIBASE_INTERNAL_DB_ID
+      )
+      if (internalDS) {
+        const tables: Table[] = $tables.list?.filter((table: Table) => {
+          return (
+            table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+            table._id !== TableNames.USERS
+          )
+        })
+        internalDS = {
+          ...internalDS,
+          entities: tables,
+        }
       }
-    }
 
-    // Build up enriched DS list
-    // Only add the internal DS if we have at least one non-users table
-    let list: (InternalDatasource | Datasource)[] = []
-    if (internalDS?.entities?.length) {
-      list.push(internalDS)
-    }
-    list = list.concat(otherDS || [])
+      // Build up enriched DS list
+      // Only add the internal DS if we have at least one non-users table
+      let list: (InternalDatasource | Datasource)[] = []
+      if (internalDS?.entities?.length) {
+        list.push(internalDS)
+      }
+      list = list.concat(otherDS || [])
 
-    return {
-      ...$store,
-      list,
-      selected: list?.find(ds => ds._id === $store.selectedDatasourceId),
-      hasDefaultData: list?.some(ds => ds._id === DEFAULT_BB_DATASOURCE_ID),
-      hasData: list?.length > 0,
-    }
-  })
+      return {
+        ...$store,
+        list,
+        selected: list?.find(ds => ds._id === $store.selectedDatasourceId),
+        hasDefaultData: list?.some(ds => ds._id === DEFAULT_BB_DATASOURCE_ID),
+        hasData: list?.length > 0,
+      }
+    })
 
-  const fetch = async () => {
+    this.fetch = this.fetch.bind(this)
+    this.init = this.fetch.bind(this)
+    this.select = this.select.bind(this)
+    this.updateSchema = this.updateSchema.bind(this)
+    this.create = this.create.bind(this)
+    this.delete = this.deleteDatasource.bind(this)
+    this.save = this.save.bind(this)
+    this.replaceDatasource = this.replaceDatasource.bind(this)
+    this.getTableNames = this.getTableNames.bind(this)
+    this.subscribe = derivedStore.subscribe
+  }
+
+  async fetch() {
     const datasources = await API.getDatasources()
-    store.update(state => ({
+    this.store.update(state => ({
       ...state,
       list: datasources,
     }))
   }
 
-  const select = (id: string) => {
-    store.update(state => ({
+  async init() {
+    return this.fetch()
+  }
+
+  select(id: string) {
+    this.store.update(state => ({
       ...state,
       selectedDatasourceId: id,
     }))
   }
 
-  const updateDatasource = (
+  private updateDatasourceInStore(
     response: { datasource: Datasource; errors?: Record<string, string> },
     { ignoreErrors }: { ignoreErrors?: boolean } = {}
-  ) => {
+  ) {
     const { datasource, errors } = response
     if (!ignoreErrors && errors && Object.keys(errors).length > 0) {
       throw new TableImportError(errors)
     }
-    replaceDatasource(datasource._id!, datasource)
-    select(datasource._id!)
+    this.replaceDatasource(datasource._id!, datasource)
+    this.select(datasource._id!)
     return datasource
   }
 
-  const updateSchema = async (
-    datasource: Datasource,
-    tablesFilter: string[]
-  ) => {
+  async updateSchema(datasource: Datasource, tablesFilter: string[]) {
     const response = await API.buildDatasourceSchema(
       datasource?._id!,
       tablesFilter
     )
-    updateDatasource(response)
+    this.updateDatasourceInStore(response)
   }
 
-  const sourceCount = (source: string) => {
-    return get(store).list.filter(datasource => datasource.source === source)
-      .length
+  sourceCount(source: string) {
+    return get(this.store).list.filter(
+      datasource => datasource.source === source
+    ).length
   }
 
-  const checkDatasourceValidity = async (
+  async checkDatasourceValidity(
     integration: Integration,
     datasource: Datasource
-  ): Promise<{ valid: boolean; error?: string }> => {
+  ): Promise<{ valid: boolean; error?: string }> {
     if (integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
       const { connected, error } = await API.validateDatasource(datasource)
       if (connected) {
@@ -148,14 +178,14 @@ export function createDatasourcesStore() {
     return { valid: true }
   }
 
-  const create = async ({
+  async create({
     integration,
     config,
   }: {
     integration: UIIntegration
     config: Record<string, any>
-  }) => {
-    const count = sourceCount(integration.name)
+  }) {
+    const count = this.sourceCount(integration.name)
     const nameModifier = count === 0 ? "" : ` ${count + 1}`
 
     const datasource: Datasource = {
@@ -167,7 +197,7 @@ export function createDatasourcesStore() {
       isSQL: integration.isSQL,
     }
 
-    const { valid, error } = await checkDatasourceValidity(
+    const { valid, error } = await this.checkDatasourceValidity(
       integration,
       datasource
     )
@@ -180,41 +210,45 @@ export function createDatasourcesStore() {
       fetchSchema: integration.plus,
     })
 
-    return updateDatasource(response, { ignoreErrors: true })
+    return this.updateDatasourceInStore(response, { ignoreErrors: true })
   }
 
-  const update = async ({
+  async save({
     integration,
     datasource,
   }: {
     integration: Integration
     datasource: Datasource
-  }) => {
-    if (await checkDatasourceValidity(integration, datasource)) {
+  }) {
+    if (await this.checkDatasourceValidity(integration, datasource)) {
       throw new Error("Unable to connect")
     }
 
     const response = await API.updateDatasource(datasource)
 
-    return updateDatasource(response)
+    return this.updateDatasourceInStore(response)
   }
 
-  const deleteDatasource = async (datasource: Datasource) => {
+  async deleteDatasource(datasource: Datasource) {
     if (!datasource?._id || !datasource?._rev) {
       return
     }
     await API.deleteDatasource(datasource._id, datasource._rev)
-    replaceDatasource(datasource._id)
+    this.replaceDatasource(datasource._id)
   }
 
-  const replaceDatasource = (datasourceId: string, datasource?: Datasource) => {
+  async delete(datasource: Datasource) {
+    return this.deleteDatasource(datasource)
+  }
+
+  replaceDatasource(datasourceId: string, datasource?: Datasource) {
     if (!datasourceId) {
       return
     }
 
     // Handle deletion
     if (!datasource) {
-      store.update(state => ({
+      this.store.update(state => ({
         ...state,
         list: state.list.filter(x => x._id !== datasourceId),
       }))
@@ -224,9 +258,9 @@ export function createDatasourcesStore() {
     }
 
     // Add new datasource
-    const index = get(store).list.findIndex(x => x._id === datasource._id)
+    const index = get(this.store).list.findIndex(x => x._id === datasource._id)
     if (index === -1) {
-      store.update(state => ({
+      this.store.update(state => ({
         ...state,
         list: [...state.list, datasource],
       }))
@@ -238,30 +272,21 @@ export function createDatasourcesStore() {
 
     // Update existing datasource
     else if (datasource) {
-      store.update(state => {
+      this.store.update(state => {
         state.list[index] = datasource
         return state
       })
     }
   }
 
-  const getTableNames = async (datasource: Datasource) => {
+  async getTableNames(datasource: Datasource) {
     const info = await API.fetchInfoForDatasource(datasource)
     return info.tableNames || []
   }
 
-  return {
-    subscribe: derivedStore.subscribe,
-    fetch,
-    init: fetch,
-    select,
-    updateSchema,
-    create,
-    update,
-    delete: deleteDatasource,
-    replaceDatasource,
-    getTableNames,
-  }
+  // subscribe() {
+  //   return this.derivedStore.subscribe()
+  // }
 }
 
-export const datasources = createDatasourcesStore()
+export const datasources = new DatasourceStore()
