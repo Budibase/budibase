@@ -102,7 +102,7 @@
     <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
   </div>
 
-  <div class="@/actions-wrap">
+  <div class="actions-wrap">
     <div class="app-row-actions">
       {#if isBuilder}
         <div class="row-action">
