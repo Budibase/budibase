@@ -28,7 +28,7 @@ import {
   DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
-import BudiStore from "../BudiStore"
+import { BudiStore } from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
 import { FieldType } from "@budibase/types"
 import { utils } from "@budibase/shared-core"
