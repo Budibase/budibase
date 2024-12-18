@@ -16,7 +16,7 @@ import {
 
 const COMP_PREFIX = "@budibase/standard-components"
 
-vi.mock("stores/builder", async () => {
+vi.mock("@/stores/builder", async () => {
   const mockAppStore = writable()
   const mockComponentStore = writable()
   const mockLayoutStore = writable()
@@ -49,7 +49,7 @@ vi.mock("stores/builder", async () => {
   }
 })
 
-vi.mock("stores/builder/components/utils", () => {
+vi.mock("@/stores/builder/components/utils", () => {
   return {
     findAllMatchingComponents: vi.fn().mockImplementation(() => {
       return []

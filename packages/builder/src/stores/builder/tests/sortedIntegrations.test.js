@@ -12,7 +12,7 @@ vi.mock("svelte/store", () => ({
   })),
 }))
 
-vi.mock("stores/builder/integrations", () => ({ integrations: vi.fn() }))
+vi.mock("@/stores/builder/integrations", () => ({ integrations: vi.fn() }))
 
 const inputA = {
   nonRelationalA: {
