@@ -13,8 +13,8 @@
     Table,
     Checkbox,
   } from "@budibase/bbui"
-  import { email, admin } from "stores/portal"
-  import { API } from "api"
+  import { email, admin } from "@/stores/portal"
+  import { API } from "@/api"
   import { cloneDeep } from "lodash/fp"
 
   const ConfigTypes = {

@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import CreateEditColumn from "components/backend/DataTable/modals/CreateEditColumn.svelte"
+  import CreateEditColumn from "@/components/backend/DataTable/modals/CreateEditColumn.svelte"
 
   const { datasource, rows } = getContext("grid")
 

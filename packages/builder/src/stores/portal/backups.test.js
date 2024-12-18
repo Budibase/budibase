@@ -2,7 +2,7 @@ import { it, expect, describe, beforeEach, vi } from "vitest"
 import { createBackupsStore } from "./backups"
 
 import { writable } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 
 vi.mock("svelte/store", () => {
   return {

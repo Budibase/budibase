@@ -1,6 +1,6 @@
-import { FieldTypeToComponentMap } from "components/design/settings/controls/FieldConfiguration/utils"
+import { FieldTypeToComponentMap } from "@/components/design/settings/controls/FieldConfiguration/utils"
 import { Component } from "./Component"
-import { getSchemaForDatasource } from "dataBinding"
+import { getSchemaForDatasource } from "@/dataBinding"
 
 export function makeDatasourceFormComponents(datasource) {
   const { schema } = getSchemaForDatasource(null, datasource, {

@@ -1,4 +1,4 @@
-import { builderStore } from "stores/builder"
+import { builderStore } from "@/stores/builder"
 import { get } from "svelte/store"
 
 const registerNode = async (node, tourStepKey) => {

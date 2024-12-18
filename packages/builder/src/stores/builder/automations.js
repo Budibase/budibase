@@ -1,28 +1,28 @@
 import { writable, get, derived } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
-import { createHistoryStore } from "stores/builder/history"
-import { licensing } from "stores/portal"
-import { tables } from "stores/builder"
+import { createHistoryStore } from "@/stores/builder/history"
+import { licensing } from "@/stores/portal"
+import { tables } from "@/stores/builder"
 import { notifications } from "@budibase/bbui"
 import {
   getEnvironmentBindings,
   migrateReferencesInObject,
   getUserBindings,
   getSettingBindings,
-} from "dataBinding"
+} from "@/dataBinding"
 import {
   AutomationTriggerStepId,
   AutomationEventType,
   AutomationStepType,
   AutomationActionStepId,
 } from "@budibase/types"
-import { ActionStepID } from "constants/backend/automations"
-import { FIELDS } from "constants/backend"
+import { ActionStepID } from "@/constants/backend/automations"
+import { FIELDS } from "@/constants/backend"
 import { sdk } from "@budibase/shared-core"
 import { rowActions } from "./rowActions"
-import { getNewStepName } from "helpers/automations/nameHelpers"
+import { getNewStepName } from "@/helpers/automations/nameHelpers"
 import { QueryUtils } from "@budibase/frontend-core"
 
 const initialAutomationState = {

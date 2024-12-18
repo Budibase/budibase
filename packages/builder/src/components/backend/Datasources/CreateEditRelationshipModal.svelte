@@ -2,8 +2,8 @@
   import { Modal } from "@budibase/bbui"
   import { get } from "svelte/store"
   import CreateEditRelationship from "./CreateEditRelationship.svelte"
-  import { integrations, datasources } from "stores/builder"
-  import { integrationForDatasource } from "stores/selectors"
+  import { integrations, datasources } from "@/stores/builder"
+  import { integrationForDatasource } from "@/stores/selectors"
 
   export let datasource
   export let tables

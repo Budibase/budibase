@@ -6,7 +6,7 @@
     Label,
     notifications,
   } from "@budibase/bbui"
-  import { appsStore } from "stores/portal"
+  import { appsStore } from "@/stores/portal"
   import { createEventDispatcher } from "svelte"
 
   export let app
@@ -18,7 +18,7 @@
 
   let iconsList = [
     "Apps",
-    "Actions",
+    "@/actions",
     "ConversionFunnel",
     "App",
     "Briefcase",

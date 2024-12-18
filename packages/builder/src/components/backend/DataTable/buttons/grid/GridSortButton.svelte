@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Select } from "@budibase/bbui"
   import { canBeSortColumn } from "@budibase/frontend-core"
-  import DetailPopover from "components/common/DetailPopover.svelte"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
 
   const { sort, columns } = getContext("grid")
 

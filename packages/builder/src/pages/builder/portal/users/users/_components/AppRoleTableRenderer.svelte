@@ -1,8 +1,8 @@
 <script>
   import { StatusLight } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
-  import { roles } from "stores/builder"
-  import { capitalise } from "helpers"
+  import { roles } from "@/stores/builder"
+  import { capitalise } from "@/helpers"
 
   export let value
 

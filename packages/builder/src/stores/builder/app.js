@@ -1,4 +1,4 @@
-import { API } from "api"
+import { API } from "@/api"
 import BudiStore from "../BudiStore"
 
 export const INITIAL_APP_META_STATE = {

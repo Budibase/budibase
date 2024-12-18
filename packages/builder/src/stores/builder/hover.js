@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import { previewStore } from "stores/builder"
+import { previewStore } from "@/stores/builder"
 import BudiStore from "../BudiStore"
 
 export const INITIAL_HOVER_STATE = {

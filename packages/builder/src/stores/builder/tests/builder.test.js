@@ -1,6 +1,6 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get } from "svelte/store"
-import { INITIAL_BUILDER_STATE, BuilderStore } from "stores/builder/builder"
+import { INITIAL_BUILDER_STATE, BuilderStore } from "@/stores/builder/builder"
 import { createBuilderWebsocket } from "../websocket.js"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 

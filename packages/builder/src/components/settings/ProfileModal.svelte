@@ -1,7 +1,7 @@
 <script>
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { writable } from "svelte/store"
-  import { auth } from "stores/portal"
+  import { auth } from "@/stores/portal"
 
   const values = writable({
     firstName: $auth.user.firstName,

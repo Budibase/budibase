@@ -1,7 +1,7 @@
 <script>
   import { redirect } from "@roxi/routify"
-  import { TableNames } from "constants"
-  import { datasources } from "stores/builder"
+  import { TableNames } from "@/constants"
+  import { datasources } from "@/stores/builder"
 
   $: {
     if ($datasources.hasData) {
