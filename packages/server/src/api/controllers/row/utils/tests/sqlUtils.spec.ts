@@ -13,6 +13,8 @@ import { generator } from "@budibase/backend-core/tests"
 import { generateViewID } from "../../../../../db/utils"
 
 import sdk from "../../../../../sdk"
+import { cloneDeep } from "lodash"
+import { utils } from "@budibase/shared-core"
 
 jest.mock("../../../../../sdk/app/views", () => ({
   ...jest.requireActual("../../../../../sdk/app/views"),
@@ -23,36 +25,161 @@ const getTableMock = sdk.views.getTable as jest.MockedFunction<
 >
 
 describe("buildSqlFieldList", () => {
-  let table: Table & { _id: string }
+  let allTables: Record<string, Table>
+
+  class TableConfig {
+    private _table: Table & { _id: string }
+
+    constructor(name: string) {
+      this._table = {
+        ...structures.tableForDatasource({
+          type: "datasource",
+          source: SourceName.POSTGRES,
+        }),
+        name,
+        _id: sql.utils.buildExternalTableId("ds_id", name),
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+          description: {
+            name: "description",
+            type: FieldType.STRING,
+          },
+          amount: {
+            name: "amount",
+            type: FieldType.NUMBER,
+          },
+        },
+      }
+
+      allTables[name] = this._table
+    }
+
+    withHiddenField(field: string) {
+      this._table.schema[field].visible = false
+      return this
+    }
+
+    withField(
+      name: string,
+      type:
+        | FieldType.STRING
+        | FieldType.NUMBER
+        | FieldType.FORMULA
+        | FieldType.AI,
+      options?: { visible: boolean }
+    ) {
+      switch (type) {
+        case FieldType.NUMBER:
+        case FieldType.STRING:
+          this._table.schema[name] = {
+            name,
+            type,
+            ...options,
+          }
+          break
+        case FieldType.FORMULA:
+          this._table.schema[name] = {
+            name,
+            type,
+            formula: "any",
+            ...options,
+          }
+          break
+        case FieldType.AI:
+          this._table.schema[name] = {
+            name,
+            type,
+            operation: AIOperationEnum.PROMPT,
+            ...options,
+          }
+          break
+        default:
+          utils.unreachable(type)
+      }
+      return this
+    }
+
+    withRelation(name: string, toTableId: string) {
+      this._table.schema[name] = {
+        name,
+        type: FieldType.LINK,
+        relationshipType: RelationshipType.ONE_TO_MANY,
+        fieldName: "link",
+        tableId: toTableId,
+      }
+      return this
+    }
+
+    withPrimary(field: string) {
+      this._table.primary = [field]
+      return this
+    }
+
+    withDisplay(field: string) {
+      this._table.primaryDisplay = field
+      return this
+    }
+
+    create() {
+      return cloneDeep(this._table)
+    }
+  }
+
+  class ViewConfig {
+    private _table: Table
+    private _view: ViewV2
+
+    constructor(table: Table) {
+      this._table = table
+      this._view = {
+        version: 2,
+        id: generateViewID(table._id!),
+        name: generator.word(),
+        tableId: table._id!,
+      }
+    }
+
+    withVisible(field: string) {
+      this._view.schema ??= {}
+      this._view.schema[field] ??= {}
+      this._view.schema[field].visible = true
+      return this
+    }
+
+    withHidden(field: string) {
+      this._view.schema ??= {}
+      this._view.schema[field] ??= {}
+      this._view.schema[field].visible = false
+      return this
+    }
+
+    withRelationshipColumns(
+      field: string,
+      columns: Record<string, { visible: boolean }>
+    ) {
+      this._view.schema ??= {}
+      this._view.schema[field] ??= {}
+      this._view.schema[field].columns = columns
+      return this
+    }
+
+    create() {
+      getTableMock.mockResolvedValueOnce(this._table)
+      return cloneDeep(this._view)
+    }
+  }
 
   beforeEach(() => {
     jest.clearAllMocks()
-    table = {
-      ...structures.tableForDatasource({
-        type: "datasource",
-        source: SourceName.POSTGRES,
-      }),
-      name: "table",
-      _id: sql.utils.buildExternalTableId("ds_id", "table"),
-      schema: {
-        name: {
-          name: "name",
-          type: FieldType.STRING,
-        },
-        description: {
-          name: "description",
-          type: FieldType.STRING,
-        },
-        amount: {
-          name: "amount",
-          type: FieldType.NUMBER,
-        },
-      },
-    }
+    allTables = {}
   })
 
   describe("table", () => {
     it("extracts fields from table schema", async () => {
+      const table = new TableConfig("table").create()
       const result = await buildSqlFieldList(table, {})
       expect(result).toEqual([
         "table.name",
@@ -62,29 +189,19 @@ describe("buildSqlFieldList", () => {
     })
 
     it("excludes hidden fields", async () => {
-      table.schema.description.visible = false
+      const table = new TableConfig("table")
+        .withHiddenField("description")
+        .create()
       const result = await buildSqlFieldList(table, {})
       expect(result).toEqual(["table.name", "table.amount"])
     })
 
     it("excludes non-sql fields fields", async () => {
-      table.schema.formula = {
-        name: "formula",
-        type: FieldType.FORMULA,
-        formula: "any",
-      }
-      table.schema.ai = {
-        name: "ai",
-        type: FieldType.AI,
-        operation: AIOperationEnum.PROMPT,
-      }
-      table.schema.link = {
-        name: "link",
-        type: FieldType.LINK,
-        relationshipType: RelationshipType.ONE_TO_MANY,
-        fieldName: "link",
-        tableId: "otherTableId",
-      }
+      const table = new TableConfig("table")
+        .withField("formula", FieldType.FORMULA)
+        .withField("ai", FieldType.AI)
+        .withRelation("link", "otherTableId")
+        .create()
 
       const result = await buildSqlFieldList(table, {})
       expect(result).toEqual([
@@ -95,12 +212,10 @@ describe("buildSqlFieldList", () => {
     })
 
     it("includes hidden fields if there is a formula column", async () => {
-      table.schema.description.visible = false
-      table.schema.formula = {
-        name: "formula",
-        type: FieldType.FORMULA,
-        formula: "any",
-      }
+      const table = new TableConfig("table")
+        .withHiddenField("description")
+        .withField("formula", FieldType.FORMULA)
+        .create()
 
       const result = await buildSqlFieldList(table, {})
       expect(result).toEqual([
@@ -111,31 +226,15 @@ describe("buildSqlFieldList", () => {
     })
 
     it("includes relationships fields when flagged", async () => {
-      const otherTable: Table = {
-        ...table,
-        name: "linkedTable",
-        primary: ["id"],
-        primaryDisplay: "name",
-        schema: {
-          ...table.schema,
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-          },
-        },
-      }
+      const otherTable = new TableConfig("linkedTable")
+        .withField("id", FieldType.NUMBER)
+        .withPrimary("id")
+        .withDisplay("name")
+        .create()
 
-      table.schema.link = {
-        name: "link",
-        type: FieldType.LINK,
-        relationshipType: RelationshipType.ONE_TO_MANY,
-        fieldName: "link",
-        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
-      }
-
-      const allTables: Record<string, Table> = {
-        otherTableId: otherTable,
-      }
+      const table = new TableConfig("table")
+        .withRelation("link", otherTable._id)
+        .create()
 
       const result = await buildSqlFieldList(table, allTables, {
         relationships: true,
@@ -150,56 +249,42 @@ describe("buildSqlFieldList", () => {
     })
 
     it("includes all relationship fields if there is a formula column", async () => {
-      const otherTable: Table = {
-        ...table,
-        name: "linkedTable",
-        schema: {
-          ...table.schema,
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-          },
-          hidden: {
-            name: "other",
-            type: FieldType.STRING,
-            visible: false,
-          },
-          formula: {
-            name: "formula",
-            type: FieldType.FORMULA,
-            formula: "any",
-          },
-          ai: {
-            name: "ai",
-            type: FieldType.AI,
-            operation: AIOperationEnum.PROMPT,
-          },
-          link: {
-            name: "link",
-            type: FieldType.LINK,
-            relationshipType: RelationshipType.ONE_TO_MANY,
-            fieldName: "link",
-            tableId: "otherTableId",
-          },
-        },
-      }
+      const otherTable = new TableConfig("linkedTable")
+        .withField("hidden", FieldType.STRING, { visible: false })
+        .create()
 
-      table.schema.link = {
-        name: "link",
-        type: FieldType.LINK,
-        relationshipType: RelationshipType.ONE_TO_MANY,
-        fieldName: "link",
-        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
-      }
-      table.schema.formula = {
-        name: "formula",
-        type: FieldType.FORMULA,
-        formula: "any",
-      }
+      const table = new TableConfig("table")
+        .withRelation("link", otherTable._id)
+        .withField("formula", FieldType.FORMULA)
+        .create()
 
-      const allTables: Record<string, Table> = {
-        otherTableId: otherTable,
-      }
+      const result = await buildSqlFieldList(table, allTables, {
+        relationships: true,
+      })
+      expect(result).toEqual([
+        "table.name",
+        "table.description",
+        "table.amount",
+        "linkedTable.name",
+        "linkedTable.description",
+        "linkedTable.amount",
+        "linkedTable.hidden",
+      ])
+    })
+
+    it("never includes non-sql columns from relationships", async () => {
+      const otherTable = new TableConfig("linkedTable")
+        .withField("id", FieldType.NUMBER)
+        .withField("hidden", FieldType.STRING, { visible: false })
+        .withField("formula", FieldType.FORMULA)
+        .withField("ai", FieldType.AI)
+        .withRelation("link", "otherTableId")
+        .create()
+
+      const table = new TableConfig("table")
+        .withRelation("link", otherTable._id)
+        .withField("formula", FieldType.FORMULA)
+        .create()
 
       const result = await buildSqlFieldList(table, allTables, {
         relationships: true,
@@ -215,107 +300,28 @@ describe("buildSqlFieldList", () => {
         "linkedTable.hidden",
       ])
     })
-
-    it("never includes non-sql columns from relationships", async () => {
-      const otherTable: Table = {
-        ...table,
-        name: "linkedTable",
-        schema: {
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-          },
-          hidden: {
-            name: "other",
-            type: FieldType.STRING,
-            visible: false,
-          },
-          formula: {
-            name: "formula",
-            type: FieldType.FORMULA,
-            formula: "any",
-          },
-          ai: {
-            name: "ai",
-            type: FieldType.AI,
-            operation: AIOperationEnum.PROMPT,
-          },
-          link: {
-            name: "link",
-            type: FieldType.LINK,
-            relationshipType: RelationshipType.ONE_TO_MANY,
-            fieldName: "link",
-            tableId: "otherTableId",
-          },
-        },
-      }
-
-      table.schema.link = {
-        name: "link",
-        type: FieldType.LINK,
-        relationshipType: RelationshipType.ONE_TO_MANY,
-        fieldName: "link",
-        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
-      }
-      table.schema.formula = {
-        name: "formula",
-        type: FieldType.FORMULA,
-        formula: "any",
-      }
-
-      const allTables: Record<string, Table> = {
-        otherTableId: otherTable,
-      }
-
-      const result = await buildSqlFieldList(table, allTables, {
-        relationships: true,
-      })
-      expect(result).toEqual([
-        "table.name",
-        "table.description",
-        "table.amount",
-        "linkedTable.id",
-        "linkedTable.hidden",
-      ])
-    })
   })
 
   describe("view", () => {
-    let view: ViewV2
-
-    beforeEach(() => {
-      getTableMock.mockResolvedValueOnce(table)
-
-      view = {
-        version: 2,
-        id: generateViewID(table._id),
-        name: generator.word(),
-        tableId: table._id,
-      }
-    })
-
     it("extracts fields from table schema", async () => {
-      view.schema = {
-        name: { visible: false },
-        amount: { visible: true },
-      }
+      const view = new ViewConfig(new TableConfig("table").create())
+        .withVisible("amount")
+        .withHidden("name")
+        .create()
 
       const result = await buildSqlFieldList(view, {})
       expect(result).toEqual(["table.amount"])
     })
 
     it("includes all fields if there is a formula column", async () => {
-      table.schema.formula = {
-        name: "formula",
-        type: FieldType.FORMULA,
-        formula: "any",
-      }
-
-      view.schema = {
-        name: { visible: false },
-        amount: { visible: true },
-        formula: { visible: true },
-      }
+      const table = new TableConfig("table")
+        .withField("formula", FieldType.FORMULA)
+        .create()
+      const view = new ViewConfig(table)
+        .withHidden("name")
+        .withVisible("amount")
+        .withVisible("formula")
+        .create()
 
       const result = await buildSqlFieldList(view, {})
       expect(result).toEqual([
@@ -326,53 +332,35 @@ describe("buildSqlFieldList", () => {
     })
 
     it("does not includes all fields if the formula column is not included", async () => {
-      table.schema.formula = {
-        name: "formula",
-        type: FieldType.FORMULA,
-        formula: "any",
-      }
-
-      view.schema = {
-        name: { visible: false },
-        amount: { visible: true },
-        formula: { visible: false },
-      }
+      const table = new TableConfig("table")
+        .withField("formula", FieldType.FORMULA)
+        .create()
+      const view = new ViewConfig(table)
+        .withHidden("name")
+        .withVisible("amount")
+        .withHidden("formula")
+        .create()
 
       const result = await buildSqlFieldList(view, {})
       expect(result).toEqual(["table.amount"])
     })
 
     it("includes relationships fields when flagged", async () => {
-      const otherTable: Table = {
-        ...table,
-        name: "linkedTable",
-        primary: ["id"],
-        primaryDisplay: "name",
-        schema: {
-          ...table.schema,
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-          },
-        },
-      }
+      const otherTable = new TableConfig("linkedTable")
+        .withField("id", FieldType.NUMBER)
+        .withPrimary("id")
+        .withDisplay("name")
+        .create()
 
-      table.schema.link = {
-        name: "link",
-        type: FieldType.LINK,
-        relationshipType: RelationshipType.ONE_TO_MANY,
-        fieldName: "link",
-        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
-      }
+      const table = new TableConfig("table")
+        .withRelation("link", otherTable._id)
+        .withField("formula", FieldType.FORMULA)
+        .create()
 
-      view.schema = {
-        name: { visible: true },
-        link: { visible: true },
-      }
-
-      const allTables: Record<string, Table> = {
-        otherTableId: otherTable,
-      }
+      const view = new ViewConfig(table)
+        .withVisible("name")
+        .withHidden("amount")
+        .create()
 
       const result = await buildSqlFieldList(view, allTables, {
         relationships: true,
@@ -385,47 +373,25 @@ describe("buildSqlFieldList", () => {
     })
 
     it("includes relationships columns", async () => {
-      const otherTable: Table = {
-        ...table,
-        name: "linkedTable",
-        primary: ["id"],
-        schema: {
-          ...table.schema,
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-          },
-          formula: {
-            name: "formula",
-            type: FieldType.FORMULA,
-            formula: "any",
-          },
-        },
-      }
+      const otherTable = new TableConfig("linkedTable")
+        .withField("id", FieldType.NUMBER)
+        .withField("formula", FieldType.FORMULA)
+        .withPrimary("id")
+        .create()
 
-      table.schema.link = {
-        name: "link",
-        type: FieldType.LINK,
-        relationshipType: RelationshipType.ONE_TO_MANY,
-        fieldName: "link",
-        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
-      }
+      const table = new TableConfig("table")
+        .withRelation("link", otherTable._id)
+        .create()
 
-      view.schema = {
-        name: { visible: true },
-        link: {
-          visible: true,
-          columns: {
-            name: { visible: false },
-            amount: { visible: true },
-            formula: { visible: false },
-          },
-        },
-      }
-
-      const allTables: Record<string, Table> = {
-        otherTableId: otherTable,
-      }
+      const view = new ViewConfig(table)
+        .withVisible("name")
+        .withVisible("link")
+        .withRelationshipColumns("link", {
+          name: { visible: false },
+          amount: { visible: true },
+          formula: { visible: false },
+        })
+        .create()
 
       const result = await buildSqlFieldList(view, allTables, {
         relationships: true,
@@ -438,47 +404,25 @@ describe("buildSqlFieldList", () => {
     })
 
     it("does not include relationships columns for hidden links", async () => {
-      const otherTable: Table = {
-        ...table,
-        name: "linkedTable",
-        primary: ["id"],
-        schema: {
-          ...table.schema,
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-          },
-          formula: {
-            name: "formula",
-            type: FieldType.FORMULA,
-            formula: "any",
-          },
-        },
-      }
+      const otherTable = new TableConfig("linkedTable")
+        .withField("id", FieldType.NUMBER)
+        .withField("formula", FieldType.FORMULA)
+        .withPrimary("id")
+        .create()
 
-      table.schema.link = {
-        name: "link",
-        type: FieldType.LINK,
-        relationshipType: RelationshipType.ONE_TO_MANY,
-        fieldName: "link",
-        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
-      }
+      const table = new TableConfig("table")
+        .withRelation("link", otherTable._id)
+        .create()
 
-      view.schema = {
-        name: { visible: true },
-        link: {
-          visible: false,
-          columns: {
-            name: { visible: false },
-            amount: { visible: true },
-            formula: { visible: false },
-          },
-        },
-      }
-
-      const allTables: Record<string, Table> = {
-        otherTableId: otherTable,
-      }
+      const view = new ViewConfig(table)
+        .withVisible("name")
+        .withHidden("link")
+        .withRelationshipColumns("link", {
+          name: { visible: false },
+          amount: { visible: true },
+          formula: { visible: false },
+        })
+        .create()
 
       const result = await buildSqlFieldList(view, allTables, {
         relationships: true,
@@ -487,69 +431,30 @@ describe("buildSqlFieldList", () => {
     })
 
     it("includes all relationship fields if there is a formula column", async () => {
-      const otherTable: Table = {
-        ...table,
-        name: "linkedTable",
-        schema: {
-          ...table.schema,
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-          },
-          hidden: {
-            name: "other",
-            type: FieldType.STRING,
-            visible: false,
-          },
-          formula: {
-            name: "formula",
-            type: FieldType.FORMULA,
-            formula: "any",
-          },
-          ai: {
-            name: "ai",
-            type: FieldType.AI,
-            operation: AIOperationEnum.PROMPT,
-          },
-          link: {
-            name: "link",
-            type: FieldType.LINK,
-            relationshipType: RelationshipType.ONE_TO_MANY,
-            fieldName: "link",
-            tableId: "otherTableId",
-          },
-        },
-      }
+      const otherTable = new TableConfig("linkedTable")
+        .withField("id", FieldType.NUMBER)
+        .withField("hidden", FieldType.STRING, { visible: false })
+        .withField("formula", FieldType.FORMULA)
+        .withField("ai", FieldType.AI)
+        .withRelation("link", "otherTableId")
+        .withPrimary("id")
+        .create()
 
-      table.schema.link = {
-        name: "link",
-        type: FieldType.LINK,
-        relationshipType: RelationshipType.ONE_TO_MANY,
-        fieldName: "link",
-        tableId: sql.utils.buildExternalTableId("ds_id", "otherTableId"),
-      }
-      table.schema.formula = {
-        name: "formula",
-        type: FieldType.FORMULA,
-        formula: "any",
-      }
+      const table = new TableConfig("table")
+        .withRelation("link", otherTable._id)
+        .withField("formula", FieldType.FORMULA)
+        .create()
 
-      view.schema = {
-        name: { visible: true },
-        formula: { visible: true },
-        link: {
-          visible: false,
-          columns: {
-            name: { visible: false },
-            amount: { visible: true },
-            formula: { visible: false },
-          },
-        },
-      }
-
-      const allTables: Record<string, Table> = {
-        otherTableId: otherTable,
-      }
+      const view = new ViewConfig(table)
+        .withVisible("name")
+        .withVisible("formula")
+        .withHidden("link")
+        .withRelationshipColumns("link", {
+          name: { visible: false },
+          amount: { visible: true },
+          formula: { visible: false },
+        })
+        .create()
 
       const result = await buildSqlFieldList(view, allTables, {
         relationships: true,
