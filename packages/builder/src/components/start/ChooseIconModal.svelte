@@ -18,7 +18,7 @@
 
   let iconsList = [
     "Apps",
-    "@/actions",
+    "Actions",
     "ConversionFunnel",
     "App",
     "Briefcase",
