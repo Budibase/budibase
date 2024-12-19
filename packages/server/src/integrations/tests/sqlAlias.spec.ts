@@ -73,6 +73,27 @@ describe("Captures of real examples", () => {
   })
 
   describe("read", () => {
+    it("should retrieve all fields if non are specified", () => {
+      const queryJson = getJson("basicFetch.json")
+      delete queryJson.resource
+
+      let query = new Sql(SqlClient.POSTGRES)._query(queryJson)
+      expect(query).toEqual({
+        bindings: [primaryLimit],
+        sql: `select * from "persons" as "a" order by "a"."firstname" asc nulls first, "a"."personid" asc limit $1`,
+      })
+    })
+
+    it("should retrieve only requested fields", () => {
+      const queryJson = getJson("basicFetch.json")
+
+      let query = new Sql(SqlClient.POSTGRES)._query(queryJson)
+      expect(query).toEqual({
+        bindings: [primaryLimit],
+        sql: `select "a"."year", "a"."firstname", "a"."personid", "a"."age", "a"."type", "a"."lastname" from "persons" as "a" order by "a"."firstname" asc nulls first, "a"."personid" asc limit $1`,
+      })
+    })
+
     it("should handle basic retrieval with relationships", () => {
       const queryJson = getJson("basicFetchWithRelationships.json")
       let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
@@ -112,9 +133,9 @@ describe("Captures of real examples", () => {
         bindings: [primaryLimit, relationshipLimit],
         sql: expect.stringContaining(
           multiline(
-            `with "paginated" as (select "a".* from "products" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc limit $1) 
-                 select "a".*, (select json_agg(json_build_object('executorid',"b"."executorid",'qaid',"b"."qaid",'taskid',"b"."taskid",'completed',"b"."completed",'taskname',"b"."taskname")) 
-                 from (select "b".* from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" order by "b"."taskid" asc limit $2) as "b") as "tasks" 
+            `with "paginated" as (select * from "products" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc limit $1) 
+                 select "a"."productname", "a"."productid", (select json_agg(json_build_object('executorid',"b"."executorid",'qaid',"b"."qaid",'taskid',"b"."taskid",'completed',"b"."completed",'taskname',"b"."taskname")) 
+                 from (select "b"."executorid", "b"."qaid", "b"."taskid", "b"."completed", "b"."taskname" from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" order by "b"."taskid" asc limit $2) as "b") as "tasks" 
                  from "paginated" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc`
           )
         ),
@@ -130,9 +151,9 @@ describe("Captures of real examples", () => {
       expect(query).toEqual({
         bindings: [...filters, relationshipLimit, relationshipLimit],
         sql: multiline(
-          `with "paginated" as (select "a".* from "tasks" as "a" where "a"."taskid" in ($1, $2) order by "a"."taskid" asc limit $3) 
-               select "a".*, (select json_agg(json_build_object('productid',"b"."productid",'productname',"b"."productname")) 
-               from (select "b".* from "products" as "b" inner join "products_tasks" as "c" on "b"."productid" = "c"."productid" 
+          `with "paginated" as (select * from "tasks" as "a" where "a"."taskid" in ($1, $2) order by "a"."taskid" asc limit $3) 
+               select "a"."executorid", "a"."taskname", "a"."taskid", "a"."completed", "a"."qaid", (select json_agg(json_build_object('productid',"b"."productid",'productname',"b"."productname")) 
+               from (select "b"."productid", "b"."productname" from "products" as "b" inner join "products_tasks" as "c" on "b"."productid" = "c"."productid" 
                where "c"."taskid" = "a"."taskid" order by "b"."productid" asc limit $4) as "b") as "products" from "paginated" as "a" order by "a"."taskid" asc`
         ),
       })
@@ -209,7 +230,7 @@ describe("Captures of real examples", () => {
         bindings: ["ddd", ""],
         sql: multiline(`delete from "compositetable" as "a" 
           where COALESCE("a"."keypartone" = $1, FALSE) and COALESCE("a"."keyparttwo" = $2, FALSE)
-          returning "a".*`),
+          returning "a"."keyparttwo", "a"."keypartone", "a"."name"`),
       })
     })
   })
