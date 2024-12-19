@@ -1,5 +1,52 @@
-jest.mock("aws-sdk", () => require("./aws-sdk.mock"))
 import { default as S3Integration } from "../s3"
+jest.mock("@aws-sdk/client-s3", () => {
+  class S3Mock {
+    response(body: any, extra?: any) {
+      return () => ({
+        promise: () => body,
+        ...extra,
+      })
+    }
+
+    listObjects = jest.fn(
+      this.response({
+        Contents: [],
+      })
+    )
+    createBucket = jest.fn(
+      this.response({
+        Contents: {},
+      })
+    )
+    deleteObjects = jest.fn(
+      this.response({
+        Contents: {},
+      })
+    )
+    headBucket = jest.fn(
+      this.response({
+        Contents: {},
+      })
+    )
+    upload = jest.fn(
+      this.response({
+        Contents: {},
+      })
+    )
+    getObject = jest.fn(
+      this.response(
+        {
+          Body: "",
+        },
+        {
+          createReadStream: jest.fn().mockReturnValue("stream"),
+        }
+      )
+    )
+  }
+
+  return { S3: S3Mock }
+})
 
 class TestConfiguration {
   integration: any
