@@ -119,7 +119,7 @@ export function ObjectStore(
       // Normally a signed url will need to be generated with a specified host in mind.
       // To support dynamic hosts, e.g. some unknown self-hosted installation url,
       // use a predefined host. The host 'minio-service' is also forwarded to minio requests via nginx
-      config.endpoint = "minio-service"
+      config.endpoint = "http://minio-service"
     } else {
       config.endpoint = env.MINIO_URL
     }
