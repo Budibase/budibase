@@ -1,10 +1,12 @@
 import {
   AIOperationEnum,
+  CalculationType,
   FieldType,
   RelationshipType,
   SourceName,
   Table,
   ViewV2,
+  ViewV2Type,
 } from "@budibase/types"
 import { buildSqlFieldList } from "../sqlUtils"
 import { structures } from "../../../../routes/tests/utilities"
@@ -163,6 +165,21 @@ describe("buildSqlFieldList", () => {
       this._view.schema ??= {}
       this._view.schema[field] ??= {}
       this._view.schema[field].columns = columns
+      return this
+    }
+
+    withCalculation(
+      name: string,
+      field: string,
+      calculationType: CalculationType
+    ) {
+      this._view.type = ViewV2Type.CALCULATION
+      this._view.schema ??= {}
+      this._view.schema[name] = {
+        field,
+        calculationType,
+        visible: true,
+      }
       return this
     }
 
@@ -469,6 +486,30 @@ describe("buildSqlFieldList", () => {
         "linkedTable.id",
         "linkedTable.hidden",
       ])
+    })
+  })
+
+  describe("calculation view", () => {
+    it("does not include calculation fields", async () => {
+      const view = new ViewConfig(new TableConfig("table").create())
+        .withCalculation("average", "amount", CalculationType.AVG)
+
+        .create()
+
+      const result = await buildSqlFieldList(view, {})
+      expect(result).toEqual([])
+    })
+
+    it("includes visible fields calculation fields", async () => {
+      const view = new ViewConfig(new TableConfig("table").create())
+        .withCalculation("average", "amount", CalculationType.AVG)
+        .withHidden("name")
+        .withVisible("amount")
+
+        .create()
+
+      const result = await buildSqlFieldList(view, {})
+      expect(result).toEqual(["table.amount"])
     })
   })
 })
