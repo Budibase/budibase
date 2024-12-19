@@ -46,7 +46,7 @@ interface AutomationState {
   selectedAutomationId: string | null
 }
 
-interface DerivedAutomationState {
+interface DerivedAutomationState extends AutomationState {
   data: Automation | null
   blockRefs: Record<string, any>
 }
@@ -81,27 +81,7 @@ const getFinalDefinitions = (
   }
 }
 
-class AutomationStore extends BudiStore<AutomationState> {
-  history: any
-
-  constructor() {
-    super(initialAutomationState)
-
-    // Setup history for automations
-    this.history = createHistoryStore({
-      getDoc: this.getDefinition.bind(this),
-      selectDoc: this.select.bind(this),
-      beforeAction: () => {},
-      afterAction: () => {},
-    })
-
-    // Wrap save and delete with history
-    const originalSave = this.save.bind(this)
-    const originalDelete = this.delete.bind(this)
-    this.save = this.history.wrapSaveDoc(originalSave)
-    this.delete = this.history.wrapDeleteDoc(originalDelete)
-  }
-
+const automationActions = (store: AutomationStore) => ({
   /**
    * Move a given block from one location on the tree to another.
    *
@@ -109,7 +89,7 @@ class AutomationStore extends BudiStore<AutomationState> {
    * @param {Object} destPath the destinationPart
    * @param {Object} automation the automaton to be mutated
    */
-  async moveBlock(sourcePath: any, destPath: any, automation: Automation) {
+  moveBlock: async (sourcePath: any, destPath: any, automation: Automation) => {
     // The last part of the source node address, containing the id.
     const pathSource = sourcePath.at(-1)
 
@@ -133,12 +113,15 @@ class AutomationStore extends BudiStore<AutomationState> {
 
     // Use core delete to remove and return the deleted block
     // from the automation
-    const { deleted, newAutomation } = this.deleteBlock(sourcePath, automation)
+    const { deleted, newAutomation } = store.actions.deleteBlock(
+      sourcePath,
+      automation
+    )
 
     // Traverse again as deleting the node from its original location
     // will redefine all proceding node locations
-    const newRefs = {}
-    this.traverse(newRefs, newAutomation)
+    const newRefs: Record<string, any> = {}
+    store.actions.traverse(newRefs, newAutomation)
 
     let finalPath
     // If dropping in a branch-step dropzone you need to find
@@ -155,16 +138,20 @@ class AutomationStore extends BudiStore<AutomationState> {
 
     // Uses the updated tree refs to resolve the new position
     // for the moved element.
-    const updated = this.updateStep(finalPath, newAutomation, deleted, true)
+    const updated = store.actions.updateStep(
+      finalPath,
+      newAutomation,
+      deleted,
+      true
+    )
 
     try {
-      await this.save(updated)
+      await store.actions.save(updated)
     } catch (e) {
       notifications.error("Error moving automation block")
       console.error("Error moving automation block ", e)
     }
-  }
-
+  },
   /**
    * Core delete function that will delete the node at the provided
    * location. Loops require 2 deletes so the function returns an array.
@@ -174,7 +161,7 @@ class AutomationStore extends BudiStore<AutomationState> {
    * @param {*} automation the automation to alter.
    * @returns {Object} contains the deleted nodes and new updated automation
    */
-  deleteBlock(pathTo: Array<any>, automation: Automation) {
+  deleteBlock: (pathTo: Array<any>, automation: Automation) => {
     let newAutomation = cloneDeep(automation)
 
     const steps = [
@@ -251,8 +238,7 @@ class AutomationStore extends BudiStore<AutomationState> {
 
     // should be 1-2 blocks in an array
     return cache
-  }
-
+  },
   /**
    * Build metadata for the automation tree. Store the path and
    * note any loop information used when rendering
@@ -260,13 +246,12 @@ class AutomationStore extends BudiStore<AutomationState> {
    * @param {Object} block
    * @param {Array<Object>} pathTo
    */
-  registerBlock(
+  registerBlock: (
     blocks: Record<string, any>,
     block: AutomationStep,
     pathTo: Array<any>,
     terminating: boolean
-  ) {
-    // Directly mutate the `blocks` object without reassigning
+  ) => {
     blocks[block.id] = {
       ...(blocks[block.id] || {}),
       pathTo,
@@ -281,7 +266,7 @@ class AutomationStore extends BudiStore<AutomationState> {
         looped: block.id,
       }
     }
-  }
+  },
 
   /**
    * Build a sequential list of all steps on the step path provided
@@ -289,7 +274,7 @@ class AutomationStore extends BudiStore<AutomationState> {
    * @param {Array<Object>} pathWay e.g. [{stepIdx:2},{branchIdx:0, stepIdx:2},...]
    * @returns {Array<Object>} all steps encountered on the provided path
    */
-  getPathSteps(pathWay: Array<any>, automation: Automation) {
+  getPathSteps: (pathWay: Array<any>, automation: Automation) => {
     // Base Steps, including trigger
     const steps = [
       automation.definition.trigger,
@@ -315,7 +300,7 @@ class AutomationStore extends BudiStore<AutomationState> {
       }
     })
     return result
-  }
+  },
 
   /**
    * Take an updated step and replace it in the specified location
@@ -328,12 +313,12 @@ class AutomationStore extends BudiStore<AutomationState> {
    * @param {Boolean} insert defaults to false
    * @returns
    */
-  updateStep(
+  updateStep: (
     pathWay: Array<any>,
     automation: Automation,
     update: AutomationStep | AutomationStep[],
     insert = false
-  ) {
+  ) => {
     let newAutomation = cloneDeep(automation)
 
     const finalise = (
@@ -348,7 +333,7 @@ class AutomationStore extends BudiStore<AutomationState> {
       )
     }
 
-    let cache = null
+    let cache: any = null
     pathWay.forEach((path, idx, array) => {
       const { stepIdx, branchIdx } = path
       let final = idx === array.length - 1
@@ -375,7 +360,7 @@ class AutomationStore extends BudiStore<AutomationState> {
     })
 
     return newAutomation
-  }
+  },
 
   /**
    * If the current license covers Environment variables,
@@ -383,7 +368,7 @@ class AutomationStore extends BudiStore<AutomationState> {
    *
    * @returns {Array<Object>} all available environment bindings
    */
-  buildEnvironmentBindings() {
+  buildEnvironmentBindings: () => {
     if (get(licensing).environmentVariablesEnabled) {
       return getEnvironmentBindings().map(binding => {
         return {
@@ -396,14 +381,15 @@ class AutomationStore extends BudiStore<AutomationState> {
       })
     }
     return []
-  }
+  },
+
   /**
    * Get user bindings
    *
    * @returns {Array<Object>} all available user bindings
    */
-  buildUserBindings() {
-    return getUserBindings().map(binding => {
+  buildUserBindings: () => {
+    return getUserBindings().map((binding: any) => {
       return {
         ...binding,
         category: "User",
@@ -413,13 +399,14 @@ class AutomationStore extends BudiStore<AutomationState> {
         },
       }
     })
-  }
+  },
+
   /**
    * Get settings bindings
    *
    * @returns {Array<Object>} all available settings bindings
    */
-  buildSettingBindings() {
+  buildSettingBindings: () => {
     return getSettingBindings().map(binding => {
       return {
         ...binding,
@@ -429,7 +416,7 @@ class AutomationStore extends BudiStore<AutomationState> {
         },
       }
     })
-  }
+  },
   /**
    * Take the supplied step id and aggregate all bindings for every
    * step preceding it.
@@ -437,10 +424,13 @@ class AutomationStore extends BudiStore<AutomationState> {
    * @param {string} id the step id of the target
    * @returns {Array<Object>} all bindings on the path to this step
    */
-  getPathBindings(id: string) {
+  getPathBindings: (id: string) => {
     const block = get(selectedAutomation)?.blockRefs[id]
-    return this.getAvailableBindings(block, get(selectedAutomation)?.data)
-  }
+    return store.actions.getAvailableBindings(
+      block,
+      get(selectedAutomation)?.data
+    )
+  },
 
   /**
    * Takes the provided automation and traverses all possible paths.
@@ -450,7 +440,7 @@ class AutomationStore extends BudiStore<AutomationState> {
    *
    * @param {Object} automation
    */
-  traverse(blockRefs: Record<string, any>, automation: Automation) {
+  traverse: (blockRefs: Record<string, any>, automation: Automation) => {
     let blocks: AutomationStep[] = []
     if (!automation || !blockRefs) {
       return
@@ -475,17 +465,19 @@ class AutomationStore extends BudiStore<AutomationState> {
           id: block.id,
         },
       ]
-      const branches = block.inputs?.branches || []
+      const branches: Branch[] = block.inputs?.branches || []
 
       branches.forEach((branch, bIdx) => {
-        block.inputs?.children[branch.id].forEach((bBlock, sIdx, array) => {
-          const ended =
-            array.length - 1 === sIdx && !bBlock.inputs?.branches?.length
-          treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
-        })
+        block.inputs?.children[branch.id].forEach(
+          (bBlock: any, sIdx: any, array: any) => {
+            const ended =
+              array.length - 1 === sIdx && !bBlock.inputs?.branches?.length
+            treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
+          }
+        )
       })
 
-      this.registerBlock(
+      store.actions.registerBlock(
         blockRefs,
         block,
         pathToCurrentNode,
@@ -499,18 +491,9 @@ class AutomationStore extends BudiStore<AutomationState> {
     })
 
     return blockRefs
-  }
+  },
 
-  /**
-   * Build a list of all bindings specifically on the path
-   * preceding the provided block.
-   *
-   * @param {Object} block step object
-   * @param {Object} automation The complete automation
-   * @returns
-   */
-
-  getAvailableBindings(block: any, automation: Automation | null) {
+  getAvailableBindings: (block: any, automation: Automation | null) => {
     if (!block || !automation?.definition) {
       return []
     }
@@ -520,10 +503,14 @@ class AutomationStore extends BudiStore<AutomationState> {
 
     // Get all preceeding steps, including the trigger
     // Filter out the target step as we don't want to include itself
-    const pathSteps = this.getPathSteps(block.pathTo, automation).slice(0, -1)
+    const pathSteps = store.actions
+      .getPathSteps(block.pathTo, automation)
+      .slice(0, -1)
 
     // Current step will always be the last step of the path
-    const currentBlock = this.getPathSteps(block.pathTo, automation).at(-1)
+    const currentBlock = store.actions
+      .getPathSteps(block.pathTo, automation)
+      .at(-1)
 
     // Extract all outputs from all previous steps as available bindings
     let bindings: any[] = []
@@ -536,7 +523,7 @@ class AutomationStore extends BudiStore<AutomationState> {
       bindingName?: string
     ) => {
       if (!name) return
-      const runtimeBinding = this.determineRuntimeBinding(
+      const runtimeBinding = store.actions.determineRuntimeBinding(
         name,
         idx,
         isLoopBlock,
@@ -545,14 +532,14 @@ class AutomationStore extends BudiStore<AutomationState> {
         currentBlock,
         pathSteps
       )
-      const categoryName = this.determineCategoryName(
+      const categoryName = store.actions.determineCategoryName(
         idx,
         isLoopBlock,
         bindingName,
         loopBlockCount
       )
       bindings.push(
-        this.createBindingObject(
+        store.actions.createBindingObject(
           name,
           value,
           icon,
@@ -581,9 +568,6 @@ class AutomationStore extends BudiStore<AutomationState> {
 
       const isTrigger = pathBlock.type === AutomationStepType.TRIGGER
 
-      // Add the loop schema
-      // Should only be visible for blocks[pathBlock.id].looped
-      // Only a once otherwise there will be 1 per loop block
       if (isLoopBlock && loopBlockCount == 0) {
         schema = {
           currentItem: {
@@ -604,17 +588,15 @@ class AutomationStore extends BudiStore<AutomationState> {
           pathBlock.event === AutomationEventType.ROW_UPDATE ||
           pathBlock.event === AutomationEventType.ROW_SAVE
         ) {
-          let table: Table = get(tables).list.find(
-            table => table._id === pathBlock.inputs.tableId
+          let table = get(tables).list.find(
+            (table: Table) => table._id === pathBlock.inputs.tableId
           )
-          // We want to generate our own schema for the bindings from the table schema itself
           for (const key in table?.schema) {
             schema[key] = {
               type: table.schema[key].type,
               subtype: table.schema[key].subtype,
             }
           }
-          // remove the original binding
           delete schema.row
         } else if (pathBlock.event === AutomationEventType.APP_TRIGGER) {
           schema = Object.fromEntries(
@@ -648,9 +630,9 @@ class AutomationStore extends BudiStore<AutomationState> {
       bindings = bindings.filter(x => !x.readableBinding.includes("loop"))
     }
     return bindings
-  }
+  },
 
-  private determineRuntimeBinding(
+  determineRuntimeBinding: (
     name: string,
     idx: number,
     isLoopBlock: boolean,
@@ -658,7 +640,7 @@ class AutomationStore extends BudiStore<AutomationState> {
     automation: Automation,
     currentBlock: AutomationStep | undefined,
     pathSteps: AutomationStep[]
-  ) {
+  ) => {
     let runtimeName: string | null
 
     /* Begin special cases for generating custom schemas based on triggers */
@@ -701,22 +683,22 @@ class AutomationStore extends BudiStore<AutomationState> {
     }
 
     return runtimeName
-  }
+  },
 
-  private determineCategoryName(
+  determineCategoryName: (
     idx: number,
     isLoopBlock: boolean,
     bindingName: string | undefined,
     loopBlockCount: number
-  ) {
+  ) => {
     if (idx === 0) return "Trigger outputs"
     if (isLoopBlock) return "Loop Outputs"
     return bindingName
       ? `${bindingName} outputs`
       : `Step ${idx - loopBlockCount} outputs`
-  }
+  },
 
-  private createBindingObject(
+  createBindingObject: (
     name: string,
     value: any,
     icon: string,
@@ -726,7 +708,7 @@ class AutomationStore extends BudiStore<AutomationState> {
     runtimeBinding: string | null,
     categoryName: string,
     bindingName?: string
-  ) {
+  ) => {
     const field = Object.values(FIELDS).find(
       field => field.type === value.type && field.subtype === value.subtype
     )
@@ -746,129 +728,12 @@ class AutomationStore extends BudiStore<AutomationState> {
         rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
       },
     }
-  }
+  },
 
-  async definitions() {
-    const response = await API.getAutomationDefinitions()
-    this.store.update(state => {
-      state.blockDefinitions = getFinalDefinitions(
-        response.trigger,
-        response.action
-      )
-      return state
-    })
-    return response
-  }
-
-  async fetch() {
-    const [automationResponse, definitions] = await Promise.all([
-      API.getAutomations(),
-      API.getAutomationDefinitions(),
-    ])
-    this.store.update(state => {
-      state.automations = automationResponse.automations
-      state.automations.sort((a, b) => {
-        return a.name < b.name ? -1 : 1
-      })
-      state.blockDefinitions = getFinalDefinitions(
-        definitions.trigger,
-        definitions.action
-      )
-      return state
-    })
-  }
-
-  async create(name: string, trigger: AutomationStep) {
-    const automation: Automation = {
-      name,
-      type: "automation",
-      definition: {
-        steps: [],
-        trigger,
-      },
-      disabled: false,
-    }
-    const response = await this.save(automation)
-    return response
-  }
-
-  async duplicate(automation: Automation) {
-    const response = await this.save({
-      ...automation,
-      name: `${automation.name} - copy`,
-      _id: undefined,
-      _rev: undefined,
-    })
-    return response
-  }
-
-  async save(automation: Automation) {
-    const response = await API.updateAutomation(automation)
-    await this.fetch()
-    this.select(response._id)
-    return response.automation
-  }
-
-  async delete(automation: Automation) {
-    const isRowAction = sdk.automations.isRowAction(automation)
-    if (isRowAction) {
-      await rowActions.delete(
-        automation.definition.trigger.inputs.tableId,
-        automation.definition.trigger.inputs.rowActionId
-      )
-    } else {
-      await API.deleteAutomation(automation._id!, automation._rev!)
-    }
-
-    this.store.update(state => {
-      state.automations = state.automations.filter(
-        x => x._id !== automation._id
-      )
-      if (automation._id === state.selectedAutomationId) {
-        state.selectedAutomationId = state.automations[0]?._id || null
-      }
-      return state
-    })
-  }
-
-  select(id: string | null) {
-    if (!id || id === get(this.store).selectedAutomationId) {
-      return
-    }
-    this.store.update(state => {
-      state.selectedAutomationId = id
-      state.testResults = null
-      state.showTestPanel = false
-      return state
-    })
-  }
-
-  getDefinition(id: string): Automation | undefined {
-    return get(this.store).automations?.find(x => x._id === id)
-  }
-
-  async toggleDisabled(automationId: string) {
-    let automation: Automation | undefined
-    try {
-      automation = this.getDefinition(automationId)
-      if (!automation) {
-        return
-      }
-      automation.disabled = !automation.disabled
-      await this.save(automation)
-      notifications.success(
-        `Automation ${
-          automation.disabled ? "disabled" : "enabled"
-        } successfully`
-      )
-    } catch (error) {
-      notifications.error(
-        `Error ${automation?.disabled ? "disabling" : "enabling"} automation`
-      )
-    }
-  }
-
-  async processBlockInputs(block: AutomationStep, data: Record<string, any>) {
+  processBlockInputs: async (
+    block: AutomationStep,
+    data: Record<string, any>
+  ) => {
     // Create new modified block
     let newBlock = {
       ...block,
@@ -891,7 +756,10 @@ class AutomationStore extends BudiStore<AutomationState> {
     if (!automation) {
       return false
     }
-    const newAutomation = this.getUpdatedDefinition(automation, newBlock)
+    const newAutomation = store.actions.getUpdatedDefinition(
+      automation,
+      newBlock
+    )
 
     // Don't save if no changes were made
     if (JSON.stringify(newAutomation) === JSON.stringify(automation)) {
@@ -899,17 +767,20 @@ class AutomationStore extends BudiStore<AutomationState> {
     }
 
     return newAutomation
-  }
+  },
 
-  async updateBlockInputs(block: AutomationStep, data: Record<string, any>) {
-    const newAutomation = await this.processBlockInputs(block, data)
+  updateBlockInputs: async (
+    block: AutomationStep,
+    data: Record<string, any>
+  ) => {
+    const newAutomation = await store.actions.processBlockInputs(block, data)
     if (newAutomation === false) {
       return
     }
-    await this.save(newAutomation)
-  }
+    await store.actions.save(newAutomation)
+  },
 
-  async test(automation: Automation, testData: any) {
+  test: async (automation: Automation, testData: any) => {
     let result: any
     try {
       result = await API.testAutomation(automation._id!, testData)
@@ -923,28 +794,28 @@ class AutomationStore extends BudiStore<AutomationState> {
       }
       throw "Something went wrong testing your automation"
     }
-    this.store.update(state => {
+    store.update(state => {
       state.testResults = result
       return state
     })
-  }
+  },
 
-  getUpdatedDefinition(
+  getUpdatedDefinition: (
     automation: Automation,
     block: AutomationStep | AutomationTrigger
-  ): Automation {
+  ): Automation => {
     let newAutomation: Automation
     if (automation.definition.trigger?.id === block.id) {
       newAutomation = cloneDeep(automation)
       newAutomation.definition.trigger = block as AutomationTrigger
     } else {
       const pathToStep = get(selectedAutomation)!.blockRefs[block.id].pathTo
-      newAutomation = this.updateStep(pathToStep, automation, block)
+      newAutomation = store.actions.updateStep(pathToStep, automation, block)
     }
     return newAutomation
-  }
+  },
 
-  async getLogs({
+  getLogs: async ({
     automationId,
     startDate,
     status,
@@ -953,27 +824,30 @@ class AutomationStore extends BudiStore<AutomationState> {
     automationId?: string
     startDate?: string
     status?: AutomationStatus
-    page?: number
-  } = {}) {
+    page?: string
+  } = {}) => {
     return await API.getAutomationLogs({
       automationId,
       startDate,
       status,
       page,
     })
-  }
+  },
 
-  async clearLogErrors({
+  clearLogErrors: async ({
     automationId,
     appId,
   }: {
-    automationId?: string
-    appId?: string
-  } = {}) {
+    automationId: string
+    appId: string
+  }) => {
+    if (!automationId || !appId) {
+      throw new Error("automationId and appId are required")
+    }
     return await API.clearAutomationLogErrors(automationId, appId)
-  }
+  },
 
-  addTestDataToAutomation(data: any) {
+  addTestDataToAutomation: (data: any) => {
     let newAutomation = cloneDeep(get(selectedAutomation)?.data)
     if (!newAutomation) {
       return newAutomation
@@ -983,9 +857,9 @@ class AutomationStore extends BudiStore<AutomationState> {
       ...data,
     }
     return newAutomation
-  }
+  },
 
-  constructBlock(type: string, stepId: string, blockDefinition: any) {
+  constructBlock: (type: string, stepId: string, blockDefinition: any) => {
     const newStep = {
       ...blockDefinition,
       inputs: blockDefinition.inputs || {},
@@ -996,14 +870,27 @@ class AutomationStore extends BudiStore<AutomationState> {
     const newName = getNewStepName(get(selectedAutomation)?.data, newStep)
     newStep.name = newName
     return newStep
-  }
+  },
 
-  generateBranchBlock() {
-    const branchDefinition = get(this.store).blockDefinitions.ACTION.BRANCH
-    return this.constructBlock("ACTION", "BRANCH", branchDefinition)
-  }
+  /**
+   * Generate a new branch block for adding to the automation
+   * There are a minimum of 2 empty branches by default.
+   *
+   * @returns {Object} - a default branch block
+   */
+  generateBranchBlock: () => {
+    const branchDefinition = get(store).blockDefinitions.ACTION.BRANCH
+    return store.actions.constructBlock("ACTION", "BRANCH", branchDefinition)
+  },
 
-  async addBlockToAutomation(block: AutomationStep, pathWay: Array<any>) {
+  /**
+   * Take a newly constructed block and insert it in the automation tree
+   * at the specified location.
+   *
+   * @param {Object} block the new block
+   * @param {Array<Object>} pathWay location of insert point
+   */
+  addBlockToAutomation: async (block: AutomationStep, pathWay: Array<any>) => {
     const automation = get(selectedAutomation)?.data
     if (!automation) {
       return
@@ -1022,17 +909,13 @@ class AutomationStore extends BudiStore<AutomationState> {
 
       const insertBlock = (steps: AutomationStep[], stepIdx: number) => {
         const isBranchNode = !Number.isInteger(stepIdx)
-
-        // If it's a loop block, insert at the looped block stepIdx
         const insertIdx =
           block.blockToLoop || isBranchNode ? stepIdx : stepIdx + 1
-
         steps.splice(insertIdx, 0, block)
       }
 
       if (!cache) {
         if (final) {
-          // Offset path to accommodate the trigger
           insertBlock(newAutomation.definition.steps, stepIdx - 1)
           cache = block
         } else {
@@ -1055,14 +938,20 @@ class AutomationStore extends BudiStore<AutomationState> {
     })
 
     try {
-      await this.save(newAutomation)
+      await store.actions.save(newAutomation)
     } catch (e) {
       notifications.error("Error adding automation block")
       console.error("Automation adding block ", e)
     }
-  }
+  },
 
-  generateDefaultConditions() {
+  /**
+   * Generate empty condition config
+   * Used on initialisation and reset of a condition.
+   *
+   * @returns {Object} contains a condition and conditionUI entry.
+   */
+  generateDefaultConditions: () => {
     const baseConditionUI = {
       logicalOperator: "all",
       onEmptyFilter: "none",
@@ -1072,9 +961,17 @@ class AutomationStore extends BudiStore<AutomationState> {
       condition: QueryUtils.buildQuery(baseConditionUI),
       conditionUI: baseConditionUI,
     }
-  }
+  },
 
-  async branchAutomation(path: Array<any>, automation: Automation) {
+  /**
+   * Generates a new branch in the tree at the given location.
+   * All steps below the path, if any, are added to a new default branch
+   * 2 branch nodes are created by default.
+   *
+   * @param {Array<Object>} path - the insertion point on the tree.
+   * @param {Object} automation - the target automation to update.
+   */
+  branchAutomation: async (path: Array<any>, automation: Automation) => {
     const insertPoint = path.at(-1)
     let newAutomation = cloneDeep(automation)
     let cache: any = null
@@ -1084,7 +981,7 @@ class AutomationStore extends BudiStore<AutomationState> {
     const createBranch = (name: string) => {
       return {
         name,
-        ...this.generateDefaultConditions(),
+        ...store.actions.generateDefaultConditions(),
         id: generate(),
       }
     }
@@ -1129,7 +1026,7 @@ class AutomationStore extends BudiStore<AutomationState> {
       cache[insertIdx].inputs.children[branchEntry.id] = []
 
       try {
-        await this.save(newAutomation)
+        await store.actions.save(newAutomation)
       } catch (e) {
         notifications.error("Error adding branch to automation")
         console.error("Error adding automation branch", e)
@@ -1138,7 +1035,7 @@ class AutomationStore extends BudiStore<AutomationState> {
     }
 
     // Creating a new branch block
-    const newBranch = this.generateBranchBlock()
+    const newBranch = store.actions.generateBranchBlock()
 
     // Default branch node count is 2. Build 2 default entries
     newBranch.inputs.branches = Array.from({ length: 2 }).map((_, idx) => {
@@ -1162,22 +1059,33 @@ class AutomationStore extends BudiStore<AutomationState> {
     cache.push(newBranch)
 
     try {
-      await this.save(newAutomation)
+      await store.actions.save(newAutomation)
     } catch (e) {
       notifications.error("Error adding branch to automation")
       console.error("Error adding automation branch", e)
     }
-  }
+  },
 
-  async branchLeft(
+  /**
+   * Take a block and move the provided branch to the left
+   *
+   * @param {Array<Object>} pathTo
+   * @param {Object} automation
+   * @param {Object} block
+   */
+  branchLeft: async (
     pathTo: Array<any>,
     automation: Automation,
     block: AutomationStep
-  ) {
-    const update = this.shiftBranch(pathTo, block)
-    const updatedAuto = this.updateStep(pathTo.slice(0, -1), automation, update)
-    await this.save(updatedAuto)
-  }
+  ) => {
+    const update = store.actions.shiftBranch(pathTo, block)
+    const updatedAuto = store.actions.updateStep(
+      pathTo.slice(0, -1),
+      automation,
+      update
+    )
+    await store.actions.save(updatedAuto)
+  },
 
   /**
    * Take a block and move the provided branch right
@@ -1186,17 +1094,28 @@ class AutomationStore extends BudiStore<AutomationState> {
    * @param {Object} automation
    * @param {Object} block
    */
-  async branchRight(
+  branchRight: async (
     pathTo: Array<any>,
     automation: Automation,
     block: AutomationStep
-  ) {
-    const update = this.shiftBranch(pathTo, block, 1)
-    const updatedAuto = this.updateStep(pathTo.slice(0, -1), automation, update)
-    await this.save(updatedAuto)
-  }
+  ) => {
+    const update = store.actions.shiftBranch(pathTo, block, 1)
+    const updatedAuto = store.actions.updateStep(
+      pathTo.slice(0, -1),
+      automation,
+      update
+    )
+    await store.actions.save(updatedAuto)
+  },
 
-  shiftBranch(pathTo: Array<any>, block: AutomationStep, direction = -1) {
+  /**
+   * Shift swap a branch with its immediate neighbour.
+   * @param {Array<Object>} pathTo - address of the branch to be moved.
+   * @param {Object} block - the step the branch belongs to
+   * @param {Number} direction - the direction of the swap. Defaults to -1 for left, add 1 for right
+   * @returns
+   */
+  shiftBranch: (pathTo: Array<any>, block: AutomationStep, direction = -1) => {
     let newBlock = cloneDeep(block)
     const branchPath = pathTo.at(-1)
     const targetIdx = branchPath.branchIdx
@@ -1207,12 +1126,10 @@ class AutomationStore extends BudiStore<AutomationState> {
     }
 
     let [neighbour] = newBlock.inputs.branches.splice(targetIdx + direction, 1)
-
-    // Put it back in the previous position.
     newBlock.inputs.branches.splice(targetIdx, 0, neighbour)
-
     return newBlock
-  }
+  },
+
   /**
    * Delete a branch at the given path
    * When branch count reaches 1, the branch children are removed
@@ -1221,15 +1138,15 @@ class AutomationStore extends BudiStore<AutomationState> {
    * @param {Array<Object>} path
    * @param {Array<Object>} automation
    */
-  async deleteBranch(path: Array<any>, automation: Automation) {
+  deleteBranch: async (path: Array<any>, automation: Automation) => {
     let newAutomation = cloneDeep(automation)
-    let cache: any[] = []
+    let cache: any = []
 
     path.forEach((path, pathIdx, array) => {
       const { stepIdx, branchIdx } = path
       const final = pathIdx === array.length - 1
 
-      // The first point
+      // The first poi
       if (!cache.length) {
         if (final) {
           cache = newAutomation.definition.steps
@@ -1283,14 +1200,14 @@ class AutomationStore extends BudiStore<AutomationState> {
     })
 
     try {
-      await this.save(newAutomation)
+      await store.actions.save(newAutomation)
     } catch (e) {
       notifications.error("Error deleting automation branch")
       console.error("Error deleting automation branch", e)
     }
-  }
+  },
 
-  async saveAutomationName(blockId: string, name: string) {
+  saveAutomationName: async (blockId: string, name: string) => {
     const automation = get(selectedAutomation)?.data
     let newAutomation = cloneDeep(automation)
     if (!newAutomation) {
@@ -1298,16 +1215,15 @@ class AutomationStore extends BudiStore<AutomationState> {
     }
 
     const newName = name.trim()
-
     newAutomation.definition.stepNames = {
       ...newAutomation.definition.stepNames,
       [blockId]: newName,
     }
 
-    await this.save(newAutomation)
-  }
+    await store.actions.save(newAutomation)
+  },
 
-  async deleteAutomationName(blockId: string) {
+  deleteAutomationName: async (blockId: string) => {
     const automation = get(selectedAutomation)?.data
     let newAutomation = cloneDeep(automation)
     if (!automation) {
@@ -1317,68 +1233,219 @@ class AutomationStore extends BudiStore<AutomationState> {
       delete newAutomation.definition.stepNames[blockId]
     }
 
-    await this.save(newAutomation)
-  }
+    await store.actions.save(newAutomation)
+  },
 
-  async deleteAutomationBlock(pathTo: Array<any>) {
+  /**
+   * Delete the block at a given path and save.
+   * Any related blocks, like loops, are purged at the same time
+   *
+   * @param {Array<Object>} pathTo the path to the target node
+   */
+  deleteAutomationBlock: async (pathTo: Array<any>) => {
     const automation = get(selectedAutomation)?.data
     if (!automation) {
       return
     }
 
-    const { newAutomation } = this.deleteBlock(pathTo, automation)
+    const { newAutomation } = store.actions.deleteBlock(pathTo, automation)
 
     try {
-      await this.save(newAutomation)
+      await store.actions.save(newAutomation)
     } catch (e) {
       notifications.error("Error deleting automation block")
       console.error("Automation deleting block ", e)
     }
-  }
+  },
 
-  async replace(automationId: string, automation?: Automation) {
+  replace: (automationId: string, automation?: Automation) => {
     if (!automation) {
-      this.store.update(state => {
-        // Remove the automation
+      store.store.update(state => {
         state.automations = state.automations.filter(
           x => x._id !== automationId
         )
-        // Select a new automation if required
         if (automationId === state.selectedAutomationId) {
-          this.select(state.automations[0]?._id || null)
+          store.actions.select(state.automations[0]?._id || null)
         }
         return state
       })
     } else {
-      const index = get(this.store).automations.findIndex(
+      const index = get(store.store).automations.findIndex(
         x => x._id === automation._id
       )
       if (index === -1) {
-        // Automation addition
-        this.store.update(state => ({
+        store.store.update(state => ({
           ...state,
           automations: [...state.automations, automation],
         }))
       } else {
-        // Automation update
-        this.store.update(state => {
+        store.store.update(state => {
           state.automations[index] = automation
           return state
         })
       }
     }
+  },
+
+  create: async (name: string, trigger: AutomationTrigger) => {
+    const automation: Automation = {
+      name,
+      type: "automation",
+      definition: {
+        steps: [],
+        trigger,
+      },
+      disabled: false,
+    }
+    const response = await store.actions.save(automation)
+    return response
+  },
+
+  duplicate: async (automation: Automation) => {
+    const response = await store.actions.save({
+      ...automation,
+      name: `${automation.name} - copy`,
+      _id: undefined,
+      _rev: undefined,
+    })
+    return response
+  },
+
+  toggleDisabled: async (automationId: string) => {
+    let automation: Automation | undefined
+    try {
+      automation = store.actions.getDefinition(automationId)
+      if (!automation) {
+        return
+      }
+      automation.disabled = !automation.disabled
+      await store.actions.save(automation)
+      notifications.success(
+        `Automation ${
+          automation.disabled ? "disabled" : "enabled"
+        } successfully`
+      )
+    } catch (error) {
+      notifications.error(
+        `Error ${automation?.disabled ? "disabling" : "enabling"} automation`
+      )
+    }
+  },
+
+  definitions: async () => {
+    const response = await API.getAutomationDefinitions()
+    store.update(state => {
+      state.blockDefinitions = getFinalDefinitions(
+        response.trigger,
+        response.action
+      )
+      return state
+    })
+    return response
+  },
+
+  fetch: async () => {
+    const [automationResponse, definitions] = await Promise.all([
+      API.getAutomations(),
+      API.getAutomationDefinitions(),
+    ])
+    store.update(state => {
+      state.automations = automationResponse.automations
+      state.automations.sort((a, b) => {
+        return a.name < b.name ? -1 : 1
+      })
+      state.blockDefinitions = getFinalDefinitions(
+        definitions.trigger,
+        definitions.action
+      )
+      return state
+    })
+  },
+
+  select: (id: string | null) => {
+    if (!id || id === get(store).selectedAutomationId) {
+      return
+    }
+    store.update(state => {
+      state.selectedAutomationId = id
+      state.testResults = null
+      state.showTestPanel = false
+      return state
+    })
+  },
+
+  getDefinition: (id: string): Automation | undefined => {
+    return get(store.store).automations?.find(x => x._id === id)
+  },
+
+  save: async (automation: Automation) => {
+    const response = await API.updateAutomation(automation)
+    await store.actions.fetch()
+    store.actions.select(response._id)
+    return response.automation
+  },
+
+  delete: async (automation: Automation) => {
+    const isRowAction = sdk.automations.isRowAction(automation)
+    if (isRowAction) {
+      await rowActions.delete(
+        automation.definition.trigger.inputs.tableId,
+        automation.definition.trigger.inputs.rowActionId
+      )
+    } else {
+      await API.deleteAutomation(automation._id!, automation._rev!)
+    }
+
+    store.update(state => {
+      state.automations = state.automations.filter(
+        x => x._id !== automation._id
+      )
+      if (automation._id === state.selectedAutomationId) {
+        state.selectedAutomationId = state.automations[0]?._id || null
+      }
+      return state
+    })
+  },
+})
+
+class AutomationStore extends BudiStore<AutomationState> {
+  history: any
+  actions: ReturnType<typeof automationActions>
+
+  constructor() {
+    super(initialAutomationState)
+    this.actions = automationActions(this)
+    this.history = createHistoryStore({
+      getDoc: this.actions.getDefinition.bind(this),
+      selectDoc: this.actions.select.bind(this),
+      beforeAction: () => {},
+      afterAction: () => {},
+    })
+
+    // Then wrap save and delete with history
+    const originalSave = this.actions.save.bind(this.actions)
+    const originalDelete = this.actions.delete.bind(this.actions)
+    this.actions.save = this.history.wrapSaveDoc(originalSave)
+    this.actions.delete = this.history.wrapDeleteDoc(originalDelete)
   }
 }
 
+export const automationStore = new AutomationStore()
+export const automationHistoryStore = automationStore.history
+
 export class SelectedAutomationStore extends DerivedBudiStore<
   AutomationState,
-  AutomationState & { data: Automation | null; blockRefs: Record<string, any> }
+  DerivedAutomationState
 > {
   constructor(automationStore: AutomationStore) {
     const makeDerivedStore = (store: Writable<AutomationState>) => {
-      return derived(store, $store => {
-        if (!$store.selectedAutomationId === null) {
-          return { ...$store, data: null, blockRefs: {} }
+      return derived(automationStore, $store => {
+        if (!$store.selectedAutomationId) {
+          return {
+            data: null,
+            blockRefs: {},
+            ...$store,
+          }
         }
 
         const selected = $store.automations?.find(
@@ -1386,46 +1453,47 @@ export class SelectedAutomationStore extends DerivedBudiStore<
         )
 
         if (!selected) {
-          return { ...$store, data: null, blockRefs: {} }
+          return {
+            data: null,
+            blockRefs: {},
+            ...$store,
+          }
         }
 
-        // Traverse the entire tree and record all nodes found
-        // Also store any info relevant to the UX
         const blockRefs: Record<string, any> = {}
-        automations.traverse(blockRefs, selected)
-
-        // Parse the steps for references to sequential binding
-        // Replace all bindings with id based alternatives
         const updatedAuto = cloneDeep(selected)
-        Object.values(blockRefs)
-          .filter(blockRef => {
-            // Pulls out all distinct terminating nodes
-            return blockRef.terminating
-          })
-          .forEach(blockRef => {
-            automations
-              .getPathSteps(blockRef.pathTo, updatedAuto)
-              .forEach((step, idx, steps) => {
-                migrateReferencesInObject({
-                  obj: step,
-                  originalIndex: idx,
-                  steps,
+
+        // Only traverse if we have a valid automation
+        if (updatedAuto) {
+          automationStore.actions.traverse(blockRefs, updatedAuto)
+
+          Object.values(blockRefs)
+            .filter(blockRef => blockRef.terminating)
+            .forEach(blockRef => {
+              automationStore.actions
+                .getPathSteps(blockRef.pathTo, updatedAuto)
+                .forEach((step, idx, steps) => {
+                  migrateReferencesInObject({
+                    obj: step,
+                    originalIndex: idx,
+                    steps,
+                  })
                 })
-              })
-          })
+            })
+        }
 
         return {
-          ...$store,
           data: updatedAuto,
           blockRefs,
+          ...$store,
         }
       })
     }
 
+    // Initialize the DerivedBudiStore with automation state and derived logic
     super(initialAutomationState, makeDerivedStore)
   }
 }
 
-export const automations = new AutomationStore()
-export const automationHistoryStore = automations.history
-export const selectedAutomation = new SelectedAutomationStore(automations)
+// Exporting an instance of the `SelectedAutomationStore`
+export const selectedAutomation = new SelectedAutomationStore(automationStore)
