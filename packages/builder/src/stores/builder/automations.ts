@@ -1,4 +1,4 @@
-import { writable, get, derived } from "svelte/store"
+import { derived, get, Writable } from "svelte/store"
 import { API } from "api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
@@ -17,6 +17,12 @@ import {
   AutomationEventType,
   AutomationStepType,
   AutomationActionStepId,
+  Automation,
+  AutomationStep,
+  Table,
+  Branch,
+  AutomationTrigger,
+  AutomationStatus,
 } from "@budibase/types"
 import { ActionStepID } from "constants/backend/automations"
 import { FIELDS } from "constants/backend"
@@ -24,8 +30,28 @@ import { sdk } from "@budibase/shared-core"
 import { rowActions } from "./rowActions"
 import { getNewStepName } from "helpers/automations/nameHelpers"
 import { QueryUtils } from "@budibase/frontend-core"
+import { BudiStore, DerivedBudiStore } from "stores/BudiStore"
 
-const initialAutomationState = {
+interface BlockDefinitions {
+  TRIGGER: Record<string, any>
+  CREATABLE_TRIGGER: Record<string, any>
+  ACTION: Record<string, any>
+}
+
+interface AutomationState {
+  automations: Automation[]
+  testResults: any | null
+  showTestPanel: boolean
+  blockDefinitions: BlockDefinitions
+  selectedAutomationId: string | null
+}
+
+interface DerivedAutomationState {
+  data: Automation | null
+  blockRefs: Record<string, any>
+}
+
+const initialAutomationState: AutomationState = {
   automations: [],
   testResults: null,
   showTestPanel: false,
@@ -37,25 +63,11 @@ const initialAutomationState = {
   selectedAutomationId: null,
 }
 
-// If this functions, remove the actions elements
-export const createAutomationStore = () => {
-  const store = writable(initialAutomationState)
-
-  store.actions = automationActions(store)
-
-  // Setup history for automations
-  const history = createHistoryStore({
-    getDoc: store.actions.getDefinition,
-    selectDoc: store.actions.select,
-  })
-
-  store.actions.save = history.wrapSaveDoc(store.actions.save)
-  store.actions.delete = history.wrapDeleteDoc(store.actions.delete)
-  return { store, history }
-}
-
-const getFinalDefinitions = (triggers, actions) => {
-  const creatable = {}
+const getFinalDefinitions = (
+  triggers: Record<string, any>,
+  actions: Record<string, any>
+): BlockDefinitions => {
+  const creatable: Record<string, any> = {}
   Object.entries(triggers).forEach(entry => {
     if (entry[0] === AutomationTriggerStepId.ROW_ACTION) {
       return
@@ -69,7 +81,27 @@ const getFinalDefinitions = (triggers, actions) => {
   }
 }
 
-const automationActions = store => ({
+class AutomationStore extends BudiStore<AutomationState> {
+  history: any
+
+  constructor() {
+    super(initialAutomationState)
+
+    // Setup history for automations
+    this.history = createHistoryStore({
+      getDoc: this.getDefinition.bind(this),
+      selectDoc: this.select.bind(this),
+      beforeAction: () => {},
+      afterAction: () => {},
+    })
+
+    // Wrap save and delete with history
+    const originalSave = this.save.bind(this)
+    const originalDelete = this.delete.bind(this)
+    this.save = this.history.wrapSaveDoc(originalSave)
+    this.delete = this.history.wrapDeleteDoc(originalDelete)
+  }
+
   /**
    * Move a given block from one location on the tree to another.
    *
@@ -77,7 +109,7 @@ const automationActions = store => ({
    * @param {Object} destPath the destinationPart
    * @param {Object} automation the automaton to be mutated
    */
-  moveBlock: async (sourcePath, destPath, automation) => {
+  async moveBlock(sourcePath: any, destPath: any, automation: Automation) {
     // The last part of the source node address, containing the id.
     const pathSource = sourcePath.at(-1)
 
@@ -101,15 +133,12 @@ const automationActions = store => ({
 
     // Use core delete to remove and return the deleted block
     // from the automation
-    const { deleted, newAutomation } = store.actions.deleteBlock(
-      sourcePath,
-      automation
-    )
+    const { deleted, newAutomation } = this.deleteBlock(sourcePath, automation)
 
     // Traverse again as deleting the node from its original location
     // will redefine all proceding node locations
     const newRefs = {}
-    store.actions.traverse(newRefs, newAutomation)
+    this.traverse(newRefs, newAutomation)
 
     let finalPath
     // If dropping in a branch-step dropzone you need to find
@@ -126,20 +155,15 @@ const automationActions = store => ({
 
     // Uses the updated tree refs to resolve the new position
     // for the moved element.
-    const updated = store.actions.updateStep(
-      finalPath,
-      newAutomation,
-      deleted,
-      true
-    )
+    const updated = this.updateStep(finalPath, newAutomation, deleted, true)
 
     try {
-      await store.actions.save(updated)
+      await this.save(updated)
     } catch (e) {
       notifications.error("Error moving automation block")
       console.error("Error moving automation block ", e)
     }
-  },
+  }
 
   /**
    * Core delete function that will delete the node at the provided
@@ -150,7 +174,7 @@ const automationActions = store => ({
    * @param {*} automation the automation to alter.
    * @returns {Object} contains the deleted nodes and new updated automation
    */
-  deleteBlock: (pathTo, automation) => {
+  deleteBlock(pathTo: Array<any>, automation: Automation) {
     let newAutomation = cloneDeep(automation)
 
     const steps = [
@@ -158,20 +182,20 @@ const automationActions = store => ({
       ...newAutomation.definition.steps,
     ]
 
-    let cache
+    let cache: any
     pathTo.forEach((path, pathIdx, array) => {
       const final = pathIdx === array.length - 1
       const { stepIdx, branchIdx } = path
 
-      const deleteCore = (steps, idx) => {
+      const deleteCore = (steps: AutomationStep[], idx: number) => {
         const targetBlock = steps[idx]
         // By default, include the id of the target block
         const idsToDelete = [targetBlock.id]
-        const blocksDeleted = []
+        const blocksDeleted: AutomationStep[] = []
 
         // If deleting a looped block, ensure all related block references are
         // collated beforehand. Delete can then be handled atomically
-        const loopSteps = {}
+        const loopSteps: Record<string, string> = {}
         steps.forEach(child => {
           const { blockToLoop, id: loopBlockId } = child
           if (blockToLoop) {
@@ -227,7 +251,7 @@ const automationActions = store => ({
 
     // should be 1-2 blocks in an array
     return cache
-  },
+  }
 
   /**
    * Build metadata for the automation tree. Store the path and
@@ -236,7 +260,12 @@ const automationActions = store => ({
    * @param {Object} block
    * @param {Array<Object>} pathTo
    */
-  registerBlock: (blocks, block, pathTo, terminating) => {
+  registerBlock(
+    blocks: Record<string, any>,
+    block: AutomationStep,
+    pathTo: Array<any>,
+    terminating: boolean
+  ) {
     // Directly mutate the `blocks` object without reassigning
     blocks[block.id] = {
       ...(blocks[block.id] || {}),
@@ -252,21 +281,22 @@ const automationActions = store => ({
         looped: block.id,
       }
     }
-  },
+  }
+
   /**
    * Build a sequential list of all steps on the step path provided
    *
    * @param {Array<Object>} pathWay e.g. [{stepIdx:2},{branchIdx:0, stepIdx:2},...]
    * @returns {Array<Object>} all steps encountered on the provided path
    */
-  getPathSteps: (pathWay, automation) => {
+  getPathSteps(pathWay: Array<any>, automation: Automation) {
     // Base Steps, including trigger
     const steps = [
       automation.definition.trigger,
       ...automation.definition.steps,
     ]
 
-    let result
+    let result: AutomationStep[]
     pathWay.forEach(path => {
       const { stepIdx, branchIdx } = path
       let last = result ? result[result.length - 1] : []
@@ -285,7 +315,7 @@ const automationActions = store => ({
       }
     })
     return result
-  },
+  }
 
   /**
    * Take an updated step and replace it in the specified location
@@ -298,13 +328,22 @@ const automationActions = store => ({
    * @param {Boolean} insert defaults to false
    * @returns
    */
-  updateStep: (pathWay, automation, update, insert = false) => {
+  updateStep(
+    pathWay: Array<any>,
+    automation: Automation,
+    update: AutomationStep | AutomationStep[],
+    insert = false
+  ) {
     let newAutomation = cloneDeep(automation)
 
-    const finalise = (dest, idx, update) => {
+    const finalise = (
+      dest: AutomationStep[],
+      idx: number,
+      update: AutomationStep | AutomationStep[]
+    ) => {
       dest.splice(
         idx,
-        insert ? 0 : update.length || 1,
+        insert ? 0 : Array.isArray(update) ? update.length : 1,
         ...(Array.isArray(update) ? update : [update])
       )
     }
@@ -336,7 +375,7 @@ const automationActions = store => ({
     })
 
     return newAutomation
-  },
+  }
 
   /**
    * If the current license covers Environment variables,
@@ -344,7 +383,7 @@ const automationActions = store => ({
    *
    * @returns {Array<Object>} all available environment bindings
    */
-  buildEnvironmentBindings: () => {
+  buildEnvironmentBindings() {
     if (get(licensing).environmentVariablesEnabled) {
       return getEnvironmentBindings().map(binding => {
         return {
@@ -357,14 +396,13 @@ const automationActions = store => ({
       })
     }
     return []
-  },
-
+  }
   /**
    * Get user bindings
    *
    * @returns {Array<Object>} all available user bindings
    */
-  buildUserBindings: () => {
+  buildUserBindings() {
     return getUserBindings().map(binding => {
       return {
         ...binding,
@@ -375,14 +413,13 @@ const automationActions = store => ({
         },
       }
     })
-  },
-
+  }
   /**
    * Get settings bindings
    *
    * @returns {Array<Object>} all available settings bindings
    */
-  buildSettingBindings: () => {
+  buildSettingBindings() {
     return getSettingBindings().map(binding => {
       return {
         ...binding,
@@ -392,8 +429,7 @@ const automationActions = store => ({
         },
       }
     })
-  },
-
+  }
   /**
    * Take the supplied step id and aggregate all bindings for every
    * step preceding it.
@@ -401,15 +437,11 @@ const automationActions = store => ({
    * @param {string} id the step id of the target
    * @returns {Array<Object>} all bindings on the path to this step
    */
-  getPathBindings: id => {
-    const block = get(selectedAutomation).blockRefs[id]
-    const bindings = store.actions.getAvailableBindings(
-      block,
-      get(selectedAutomation).data
-    )
+  getPathBindings(id: string) {
+    const block = get(selectedAutomation)?.blockRefs[id]
+    return this.getAvailableBindings(block, get(selectedAutomation)?.data)
+  }
 
-    return bindings
-  },
   /**
    * Takes the provided automation and traverses all possible paths.
    * References to all nodes/steps encountered on the way are stored
@@ -418,8 +450,8 @@ const automationActions = store => ({
    *
    * @param {Object} automation
    */
-  traverse: (blockRefs, automation) => {
-    let blocks = []
+  traverse(blockRefs: Record<string, any>, automation: Automation) {
+    let blocks: AutomationStep[] = []
     if (!automation || !blockRefs) {
       return
     }
@@ -428,7 +460,13 @@ const automationActions = store => ({
     }
     blocks = blocks.concat(automation.definition.steps || [])
 
-    const treeTraverse = (block, pathTo, stepIdx, branchIdx, terminating) => {
+    const treeTraverse = (
+      block: AutomationStep,
+      pathTo: Array<any> | null,
+      stepIdx: number,
+      branchIdx: number | null,
+      terminating: boolean
+    ) => {
       const pathToCurrentNode = [
         ...(pathTo || []),
         {
@@ -447,7 +485,7 @@ const automationActions = store => ({
         })
       })
 
-      store.actions.registerBlock(
+      this.registerBlock(
         blockRefs,
         block,
         pathToCurrentNode,
@@ -461,7 +499,7 @@ const automationActions = store => ({
     })
 
     return blockRefs
-  },
+  }
 
   /**
    * Build a list of all bindings specifically on the path
@@ -471,38 +509,50 @@ const automationActions = store => ({
    * @param {Object} automation The complete automation
    * @returns
    */
-  getAvailableBindings: (block, automation) => {
+
+  getAvailableBindings(block: any, automation: Automation | null) {
     if (!block || !automation?.definition) {
       return []
     }
 
     // Registered blocks
-    const blocks = get(selectedAutomation).blockRefs
+    const blocks = get(selectedAutomation)?.blockRefs
 
     // Get all preceeding steps, including the trigger
     // Filter out the target step as we don't want to include itself
-    const pathSteps = store.actions
-      .getPathSteps(block.pathTo, automation)
-      .slice(0, -1)
+    const pathSteps = this.getPathSteps(block.pathTo, automation).slice(0, -1)
 
     // Current step will always be the last step of the path
-    const currentBlock = store.actions
-      .getPathSteps(block.pathTo, automation)
-      .at(-1)
+    const currentBlock = this.getPathSteps(block.pathTo, automation).at(-1)
 
-    // Extract all outputs from all previous steps as available bindingsx§x
-    let bindings = []
-    const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
+    // Extract all outputs from all previous steps as available bindings
+    let bindings: any[] = []
+    const addBinding = (
+      name: string,
+      value: any,
+      icon: string,
+      idx: number,
+      isLoopBlock: boolean,
+      bindingName?: string
+    ) => {
       if (!name) return
-      const runtimeBinding = determineRuntimeBinding(
+      const runtimeBinding = this.determineRuntimeBinding(
         name,
         idx,
         isLoopBlock,
-        bindingName
+        bindingName,
+        automation,
+        currentBlock,
+        pathSteps
       )
-      const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
+      const categoryName = this.determineCategoryName(
+        idx,
+        isLoopBlock,
+        bindingName,
+        loopBlockCount
+      )
       bindings.push(
-        createBindingObject(
+        this.createBindingObject(
           name,
           value,
           icon,
@@ -514,93 +564,6 @@ const automationActions = store => ({
           bindingName
         )
       )
-    }
-
-    const determineRuntimeBinding = (name, idx, isLoopBlock) => {
-      let runtimeName
-
-      /* Begin special cases for generating custom schemas based on triggers */
-      if (
-        idx === 0 &&
-        automation.definition.trigger?.event === AutomationEventType.APP_TRIGGER
-      ) {
-        return `trigger.fields.${name}`
-      }
-
-      if (
-        idx === 0 &&
-        (automation.definition.trigger?.event ===
-          AutomationEventType.ROW_UPDATE ||
-          automation.definition.trigger?.event === AutomationEventType.ROW_SAVE)
-      ) {
-        let noRowKeywordBindings = ["id", "revision", "oldRow"]
-        if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
-      }
-      /* End special cases for generating custom schemas based on triggers */
-
-      if (isLoopBlock) {
-        runtimeName = `loop.${name}`
-      } else if (idx === 0) {
-        runtimeName = `trigger.${name}`
-      } else if (
-        currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT
-      ) {
-        const stepId = pathSteps[idx].id
-        if (!stepId) {
-          notifications.error("Error generating binding: Step ID not found.")
-          return null
-        }
-        runtimeName = `steps["${stepId}"].${name}`
-      } else {
-        const stepId = pathSteps[idx].id
-        if (!stepId) {
-          notifications.error("Error generating binding: Step ID not found.")
-          return null
-        }
-        runtimeName = `steps.${stepId}.${name}`
-      }
-
-      return runtimeName
-    }
-
-    const determineCategoryName = (idx, isLoopBlock, bindingName) => {
-      if (idx === 0) return "Trigger outputs"
-      if (isLoopBlock) return "Loop Outputs"
-      return bindingName
-        ? `${bindingName} outputs`
-        : `Step ${idx - loopBlockCount} outputs`
-    }
-
-    const createBindingObject = (
-      name,
-      value,
-      icon,
-      idx,
-      loopBlockCount,
-      isLoopBlock,
-      runtimeBinding,
-      categoryName,
-      bindingName
-    ) => {
-      const field = Object.values(FIELDS).find(
-        field => field.type === value.type && field.subtype === value.subtype
-      )
-      return {
-        readableBinding:
-          bindingName && !isLoopBlock && idx !== 0
-            ? `steps.${bindingName}.${name}`
-            : runtimeBinding,
-        runtimeBinding,
-        type: value.type,
-        description: value.description,
-        icon,
-        category: categoryName,
-        display: {
-          type: field?.name || value.type,
-          name,
-          rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
-        },
-      }
     }
 
     let loopBlockCount = 0
@@ -641,7 +604,7 @@ const automationActions = store => ({
           pathBlock.event === AutomationEventType.ROW_UPDATE ||
           pathBlock.event === AutomationEventType.ROW_SAVE
         ) {
-          let table = get(tables).list.find(
+          let table: Table = get(tables).list.find(
             table => table._id === pathBlock.inputs.tableId
           )
           // We want to generate our own schema for the bindings from the table schema itself
@@ -685,10 +648,109 @@ const automationActions = store => ({
       bindings = bindings.filter(x => !x.readableBinding.includes("loop"))
     }
     return bindings
-  },
-  definitions: async () => {
+  }
+
+  private determineRuntimeBinding(
+    name: string,
+    idx: number,
+    isLoopBlock: boolean,
+    bindingName: string | undefined,
+    automation: Automation,
+    currentBlock: AutomationStep | undefined,
+    pathSteps: AutomationStep[]
+  ) {
+    let runtimeName: string | null
+
+    /* Begin special cases for generating custom schemas based on triggers */
+    if (
+      idx === 0 &&
+      automation.definition.trigger?.event === AutomationEventType.APP_TRIGGER
+    ) {
+      return `trigger.fields.${name}`
+    }
+
+    if (
+      idx === 0 &&
+      (automation.definition.trigger?.event ===
+        AutomationEventType.ROW_UPDATE ||
+        automation.definition.trigger?.event === AutomationEventType.ROW_SAVE)
+    ) {
+      let noRowKeywordBindings = ["id", "revision", "oldRow"]
+      if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
+    }
+    /* End special cases for generating custom schemas based on triggers */
+
+    if (isLoopBlock) {
+      runtimeName = `loop.${name}`
+    } else if (idx === 0) {
+      runtimeName = `trigger.${name}`
+    } else if (currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT) {
+      const stepId = pathSteps[idx].id
+      if (!stepId) {
+        notifications.error("Error generating binding: Step ID not found.")
+        return null
+      }
+      runtimeName = `steps["${stepId}"].${name}`
+    } else {
+      const stepId = pathSteps[idx].id
+      if (!stepId) {
+        notifications.error("Error generating binding: Step ID not found.")
+        return null
+      }
+      runtimeName = `steps.${stepId}.${name}`
+    }
+
+    return runtimeName
+  }
+
+  private determineCategoryName(
+    idx: number,
+    isLoopBlock: boolean,
+    bindingName: string | undefined,
+    loopBlockCount: number
+  ) {
+    if (idx === 0) return "Trigger outputs"
+    if (isLoopBlock) return "Loop Outputs"
+    return bindingName
+      ? `${bindingName} outputs`
+      : `Step ${idx - loopBlockCount} outputs`
+  }
+
+  private createBindingObject(
+    name: string,
+    value: any,
+    icon: string,
+    idx: number,
+    loopBlockCount: number,
+    isLoopBlock: boolean,
+    runtimeBinding: string | null,
+    categoryName: string,
+    bindingName?: string
+  ) {
+    const field = Object.values(FIELDS).find(
+      field => field.type === value.type && field.subtype === value.subtype
+    )
+    return {
+      readableBinding:
+        bindingName && !isLoopBlock && idx !== 0
+          ? `steps.${bindingName}.${name}`
+          : runtimeBinding,
+      runtimeBinding,
+      type: value.type,
+      description: value.description,
+      icon,
+      category: categoryName,
+      display: {
+        type: field?.name || value.type,
+        name,
+        rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
+      },
+    }
+  }
+
+  async definitions() {
     const response = await API.getAutomationDefinitions()
-    store.update(state => {
+    this.store.update(state => {
       state.blockDefinitions = getFinalDefinitions(
         response.trigger,
         response.action
@@ -696,13 +758,14 @@ const automationActions = store => ({
       return state
     })
     return response
-  },
-  fetch: async () => {
+  }
+
+  async fetch() {
     const [automationResponse, definitions] = await Promise.all([
       API.getAutomations(),
       API.getAutomationDefinitions(),
     ])
-    store.update(state => {
+    this.store.update(state => {
       state.automations = automationResponse.automations
       state.automations.sort((a, b) => {
         return a.name < b.name ? -1 : 1
@@ -713,9 +776,10 @@ const automationActions = store => ({
       )
       return state
     })
-  },
-  create: async (name, trigger) => {
-    const automation = {
+  }
+
+  async create(name: string, trigger: AutomationStep) {
+    const automation: Automation = {
       name,
       type: "automation",
       definition: {
@@ -724,26 +788,28 @@ const automationActions = store => ({
       },
       disabled: false,
     }
-    const response = await store.actions.save(automation)
+    const response = await this.save(automation)
     return response
-  },
-  duplicate: async automation => {
-    const response = await store.actions.save({
+  }
+
+  async duplicate(automation: Automation) {
+    const response = await this.save({
       ...automation,
       name: `${automation.name} - copy`,
       _id: undefined,
-      _ref: undefined,
+      _rev: undefined,
     })
     return response
-  },
-  save: async automation => {
-    const response = await API.updateAutomation(automation)
+  }
 
-    await store.actions.fetch()
-    store.actions.select(response._id)
+  async save(automation: Automation) {
+    const response = await API.updateAutomation(automation)
+    await this.fetch()
+    this.select(response._id)
     return response.automation
-  },
-  delete: async automation => {
+  }
+
+  async delete(automation: Automation) {
     const isRowAction = sdk.automations.isRowAction(automation)
     if (isRowAction) {
       await rowActions.delete(
@@ -751,32 +817,45 @@ const automationActions = store => ({
         automation.definition.trigger.inputs.rowActionId
       )
     } else {
-      await API.deleteAutomation(automation?._id, automation?._rev)
+      await API.deleteAutomation(automation._id!, automation._rev!)
     }
 
-    store.update(state => {
-      // Remove the automation
+    this.store.update(state => {
       state.automations = state.automations.filter(
         x => x._id !== automation._id
       )
-
-      // Select a new automation if required
       if (automation._id === state.selectedAutomationId) {
         state.selectedAutomationId = state.automations[0]?._id || null
       }
-
       return state
     })
-  },
-  toggleDisabled: async automationId => {
-    let automation
+  }
+
+  select(id: string | null) {
+    if (!id || id === get(this.store).selectedAutomationId) {
+      return
+    }
+    this.store.update(state => {
+      state.selectedAutomationId = id
+      state.testResults = null
+      state.showTestPanel = false
+      return state
+    })
+  }
+
+  getDefinition(id: string): Automation | undefined {
+    return get(this.store).automations?.find(x => x._id === id)
+  }
+
+  async toggleDisabled(automationId: string) {
+    let automation: Automation | undefined
     try {
-      automation = store.actions.getDefinition(automationId)
+      automation = this.getDefinition(automationId)
       if (!automation) {
         return
       }
       automation.disabled = !automation.disabled
-      await store.actions.save(automation)
+      await this.save(automation)
       notifications.success(
         `Automation ${
           automation.disabled ? "disabled" : "enabled"
@@ -784,14 +863,12 @@ const automationActions = store => ({
       )
     } catch (error) {
       notifications.error(
-        `Error ${
-          automation && automation.disabled ? "disabling" : "enabling"
-        } automation`
+        `Error ${automation?.disabled ? "disabling" : "enabling"} automation`
       )
     }
-  },
+  }
 
-  processBlockInputs: async (block, data) => {
+  async processBlockInputs(block: AutomationStep, data: Record<string, any>) {
     // Create new modified block
     let newBlock = {
       ...block,
@@ -810,11 +887,11 @@ const automationActions = store => ({
     })
 
     // Create new modified automation
-    const automation = get(selectedAutomation).data
-    const newAutomation = store.actions.getUpdatedDefinition(
-      automation,
-      newBlock
-    )
+    const automation = get(selectedAutomation)?.data
+    if (!automation) {
+      return false
+    }
+    const newAutomation = this.getUpdatedDefinition(automation, newBlock)
 
     // Don't save if no changes were made
     if (JSON.stringify(newAutomation) === JSON.stringify(automation)) {
@@ -822,19 +899,21 @@ const automationActions = store => ({
     }
 
     return newAutomation
-  },
-  updateBlockInputs: async (block, data) => {
-    const newAutomation = await store.actions.processBlockInputs(block, data)
+  }
+
+  async updateBlockInputs(block: AutomationStep, data: Record<string, any>) {
+    const newAutomation = await this.processBlockInputs(block, data)
     if (newAutomation === false) {
       return
     }
-    await store.actions.save(newAutomation)
-  },
-  test: async (automation, testData) => {
-    let result
+    await this.save(newAutomation)
+  }
+
+  async test(automation: Automation, testData: any) {
+    let result: any
     try {
-      result = await API.testAutomation(automation?._id, testData)
-    } catch (err) {
+      result = await API.testAutomation(automation._id!, testData)
+    } catch (err: any) {
       const message = err.message || err.status || JSON.stringify(err)
       throw `Automation test failed - ${message}`
     }
@@ -844,61 +923,69 @@ const automationActions = store => ({
       }
       throw "Something went wrong testing your automation"
     }
-    store.update(state => {
+    this.store.update(state => {
       state.testResults = result
       return state
     })
-  },
-  getDefinition: id => {
-    return get(store).automations?.find(x => x._id === id)
-  },
-  getUpdatedDefinition: (automation, block) => {
-    let newAutomation
+  }
+
+  getUpdatedDefinition(
+    automation: Automation,
+    block: AutomationStep | AutomationTrigger
+  ): Automation {
+    let newAutomation: Automation
     if (automation.definition.trigger?.id === block.id) {
       newAutomation = cloneDeep(automation)
-      newAutomation.definition.trigger = block
+      newAutomation.definition.trigger = block as AutomationTrigger
     } else {
-      const pathToStep = get(selectedAutomation).blockRefs[block.id].pathTo
-      newAutomation = automationStore.actions.updateStep(
-        pathToStep,
-        automation,
-        block
-      )
+      const pathToStep = get(selectedAutomation)!.blockRefs[block.id].pathTo
+      newAutomation = this.updateStep(pathToStep, automation, block)
     }
     return newAutomation
-  },
-  select: id => {
-    if (!id || id === get(store).selectedAutomationId) {
-      return
-    }
-    store.update(state => {
-      state.selectedAutomationId = id
-      state.testResults = null
-      state.showTestPanel = false
-      return state
-    })
-  },
-  getLogs: async ({ automationId, startDate, status, page } = {}) => {
+  }
+
+  async getLogs({
+    automationId,
+    startDate,
+    status,
+    page,
+  }: {
+    automationId?: string
+    startDate?: string
+    status?: AutomationStatus
+    page?: number
+  } = {}) {
     return await API.getAutomationLogs({
       automationId,
       startDate,
       status,
       page,
     })
-  },
-  clearLogErrors: async ({ automationId, appId } = {}) => {
+  }
+
+  async clearLogErrors({
+    automationId,
+    appId,
+  }: {
+    automationId?: string
+    appId?: string
+  } = {}) {
     return await API.clearAutomationLogErrors(automationId, appId)
-  },
-  addTestDataToAutomation: data => {
-    let newAutomation = cloneDeep(get(selectedAutomation).data)
+  }
+
+  addTestDataToAutomation(data: any) {
+    let newAutomation = cloneDeep(get(selectedAutomation)?.data)
+    if (!newAutomation) {
+      return newAutomation
+    }
     newAutomation.testData = {
       ...newAutomation.testData,
       ...data,
     }
     return newAutomation
-  },
-  constructBlock(type, stepId, blockDefinition) {
-    let newName
+  }
+
+  constructBlock(type: string, stepId: string, blockDefinition: any) {
     const newStep = {
       ...blockDefinition,
       inputs: blockDefinition.inputs || {},
@@ -906,35 +993,21 @@ const automationActions = store => ({
       type,
       id: generate(),
     }
-    newName = getNewStepName(get(selectedAutomation)?.data, newStep)
+    const newName = getNewStepName(get(selectedAutomation)?.data, newStep)
     newStep.name = newName
     return newStep
-  },
-  /**
-   * Generate a new branch block for adding to the automation
-   * There are a minimum of 2 empty branches by default.
-   *
-   * @returns {Object} - a default branch block
-   */
-  generateBranchBlock: () => {
-    const branchDefinition = get(automationStore).blockDefinitions.ACTION.BRANCH
-    const branchBlock = automationStore.actions.constructBlock(
-      "ACTION",
-      "BRANCH",
-      branchDefinition
-    )
-    return branchBlock
-  },
+  }
 
-  /**
-   * Take a newly constructed block and insert it in the automation tree
-   * at the specified location.
-   *
-   * @param {Object} block the new block
-   * @param {Array<Object>} pathWay location of insert point
-   */
-  addBlockToAutomation: async (block, pathWay) => {
-    const automation = get(selectedAutomation).data
+  generateBranchBlock() {
+    const branchDefinition = get(this.store).blockDefinitions.ACTION.BRANCH
+    return this.constructBlock("ACTION", "BRANCH", branchDefinition)
+  }
+
+  async addBlockToAutomation(block: AutomationStep, pathWay: Array<any>) {
+    const automation = get(selectedAutomation)?.data
+    if (!automation) {
+      return
+    }
     let newAutomation = cloneDeep(automation)
 
     const steps = [
@@ -942,12 +1015,12 @@ const automationActions = store => ({
       ...newAutomation.definition.steps,
     ]
 
-    let cache
+    let cache: any
     pathWay.forEach((path, pathIdx, array) => {
       const { stepIdx, branchIdx } = path
       const final = pathIdx === array.length - 1
 
-      const insertBlock = (steps, stepIdx) => {
+      const insertBlock = (steps: AutomationStep[], stepIdx: number) => {
         const isBranchNode = !Number.isInteger(stepIdx)
 
         // If it's a loop block, insert at the looped block stepIdx
@@ -982,20 +1055,14 @@ const automationActions = store => ({
     })
 
     try {
-      await store.actions.save(newAutomation)
+      await this.save(newAutomation)
     } catch (e) {
       notifications.error("Error adding automation block")
       console.error("Automation adding block ", e)
     }
-  },
+  }
 
-  /**
-   * Generate empty condition config
-   * Used on initialisation and reset of a condition.
-   *
-   * @returns {Object} contains a condition and conditionUI entry.
-   */
-  generateDefaultConditions: () => {
+  generateDefaultConditions() {
     const baseConditionUI = {
       logicalOperator: "all",
       onEmptyFilter: "none",
@@ -1005,27 +1072,19 @@ const automationActions = store => ({
       condition: QueryUtils.buildQuery(baseConditionUI),
       conditionUI: baseConditionUI,
     }
-  },
+  }
 
-  /**
-   * Generates a new branch in the tree at the given location.
-   * All steps below the path, if any, are added to a new default branch
-   * 2 branch nodes are created by default.
-   *
-   * @param {Array<Object>} path - the insertion point on the tree.
-   * @param {Object} automation - the target automation to update.
-   */
-  branchAutomation: async (path, automation) => {
+  async branchAutomation(path: Array<any>, automation: Automation) {
     const insertPoint = path.at(-1)
     let newAutomation = cloneDeep(automation)
-    let cache = null
+    let cache: any = null
     let atRoot = false
 
     // Generate a default empty branch
-    const createBranch = name => {
+    const createBranch = (name: string) => {
       return {
-        name: name,
-        ...store.actions.generateDefaultConditions(),
+        name,
+        ...this.generateDefaultConditions(),
         id: generate(),
       }
     }
@@ -1070,7 +1129,7 @@ const automationActions = store => ({
       cache[insertIdx].inputs.children[branchEntry.id] = []
 
       try {
-        await store.actions.save(newAutomation)
+        await this.save(newAutomation)
       } catch (e) {
         notifications.error("Error adding branch to automation")
         console.error("Error adding automation branch", e)
@@ -1079,7 +1138,7 @@ const automationActions = store => ({
     }
 
     // Creating a new branch block
-    const newBranch = store.actions.generateBranchBlock()
+    const newBranch = this.generateBranchBlock()
 
     // Default branch node count is 2. Build 2 default entries
     newBranch.inputs.branches = Array.from({ length: 2 }).map((_, idx) => {
@@ -1089,7 +1148,7 @@ const automationActions = store => ({
     // Init the branch children. Shift all steps following the new branch step
     // into the 0th branch.
     newBranch.inputs.children = newBranch.inputs.branches.reduce(
-      (acc, branch, idx) => {
+      (acc: Record<string, AutomationStep[]>, branch: Branch, idx: number) => {
         acc[branch.id] = idx == 0 ? cache.slice(insertIdx + 1) : []
         return acc
       },
@@ -1103,29 +1162,22 @@ const automationActions = store => ({
     cache.push(newBranch)
 
     try {
-      await store.actions.save(newAutomation)
+      await this.save(newAutomation)
     } catch (e) {
       notifications.error("Error adding branch to automation")
       console.error("Error adding automation branch", e)
     }
-  },
+  }
 
-  /**
-   * Take a block and move the provided branch to the left
-   *
-   * @param {Array<Object>} pathTo
-   * @param {Object} automation
-   * @param {Object} block
-   */
-  branchLeft: async (pathTo, automation, block) => {
-    const update = store.actions.shiftBranch(pathTo, block)
-    const updatedAuto = store.actions.updateStep(
-      pathTo.slice(0, -1),
-      automation,
-      update
-    )
-    await store.actions.save(updatedAuto)
-  },
+  async branchLeft(
+    pathTo: Array<any>,
+    automation: Automation,
+    block: AutomationStep
+  ) {
+    const update = this.shiftBranch(pathTo, block)
+    const updatedAuto = this.updateStep(pathTo.slice(0, -1), automation, update)
+    await this.save(updatedAuto)
+  }
 
   /**
    * Take a block and move the provided branch right
@@ -1134,24 +1186,17 @@ const automationActions = store => ({
    * @param {Object} automation
    * @param {Object} block
    */
-  branchRight: async (pathTo, automation, block) => {
-    const update = store.actions.shiftBranch(pathTo, block, 1)
-    const updatedAuto = store.actions.updateStep(
-      pathTo.slice(0, -1),
-      automation,
-      update
-    )
-    await store.actions.save(updatedAuto)
-  },
+  async branchRight(
+    pathTo: Array<any>,
+    automation: Automation,
+    block: AutomationStep
+  ) {
+    const update = this.shiftBranch(pathTo, block, 1)
+    const updatedAuto = this.updateStep(pathTo.slice(0, -1), automation, update)
+    await this.save(updatedAuto)
+  }
 
-  /**
-   * Shift swap a branch with its immediate neighbour.
-   * @param {Array<Object>} pathTo - address of the branch to be moved.
-   * @param {Object} block - the step the branch belongs to
-   * @param {Number} direction - the direction of the swap. Defaults to -1 for left, add 1 for right
-   * @returns
-   */
-  shiftBranch(pathTo, block, direction = -1) {
+  shiftBranch(pathTo: Array<any>, block: AutomationStep, direction = -1) {
     let newBlock = cloneDeep(block)
     const branchPath = pathTo.at(-1)
     const targetIdx = branchPath.branchIdx
@@ -1167,8 +1212,7 @@ const automationActions = store => ({
     newBlock.inputs.branches.splice(targetIdx, 0, neighbour)
 
     return newBlock
-  },
-
+  }
   /**
    * Delete a branch at the given path
    * When branch count reaches 1, the branch children are removed
@@ -1177,15 +1221,15 @@ const automationActions = store => ({
    * @param {Array<Object>} path
    * @param {Array<Object>} automation
    */
-  deleteBranch: async (path, automation) => {
+  async deleteBranch(path: Array<any>, automation: Automation) {
     let newAutomation = cloneDeep(automation)
-    let cache = []
+    let cache: any[] = []
 
     path.forEach((path, pathIdx, array) => {
       const { stepIdx, branchIdx } = path
       const final = pathIdx === array.length - 1
 
-      // The first poi
+      // The first point
       if (!cache.length) {
         if (final) {
           cache = newAutomation.definition.steps
@@ -1239,15 +1283,15 @@ const automationActions = store => ({
     })
 
     try {
-      await store.actions.save(newAutomation)
+      await this.save(newAutomation)
     } catch (e) {
       notifications.error("Error deleting automation branch")
       console.error("Error deleting automation branch", e)
     }
-  },
+  }
 
-  saveAutomationName: async (blockId, name) => {
-    const automation = get(selectedAutomation).data
+  async saveAutomationName(blockId: string, name: string) {
+    const automation = get(selectedAutomation)?.data
     let newAutomation = cloneDeep(automation)
     if (!newAutomation) {
       return
@@ -1260,117 +1304,128 @@ const automationActions = store => ({
       [blockId]: newName,
     }
 
-    await store.actions.save(newAutomation)
-  },
-  deleteAutomationName: async blockId => {
-    const automation = get(selectedAutomation).data
+    await this.save(newAutomation)
+  }
+
+  async deleteAutomationName(blockId: string) {
+    const automation = get(selectedAutomation)?.data
     let newAutomation = cloneDeep(automation)
     if (!automation) {
       return
     }
-    if (newAutomation.definition.stepNames) {
+    if (newAutomation?.definition.stepNames) {
       delete newAutomation.definition.stepNames[blockId]
     }
 
-    await store.actions.save(newAutomation)
-  },
+    await this.save(newAutomation)
+  }
 
-  /**
-   * Delete the block at a given path and save.
-   * Any related blocks, like loops, are purged at the same time
-   *
-   * @param {Array<Object>} pathTo the path to the target node
-   */
-  deleteAutomationBlock: async pathTo => {
+  async deleteAutomationBlock(pathTo: Array<any>) {
     const automation = get(selectedAutomation)?.data
+    if (!automation) {
+      return
+    }
 
-    const { newAutomation } = store.actions.deleteBlock(pathTo, automation)
+    const { newAutomation } = this.deleteBlock(pathTo, automation)
 
     try {
-      await store.actions.save(newAutomation)
+      await this.save(newAutomation)
     } catch (e) {
       notifications.error("Error deleting automation block")
       console.error("Automation deleting block ", e)
     }
-  },
+  }
 
-  replace: async (automationId, automation) => {
+  async replace(automationId: string, automation?: Automation) {
     if (!automation) {
-      store.update(state => {
+      this.store.update(state => {
         // Remove the automation
         state.automations = state.automations.filter(
           x => x._id !== automationId
         )
         // Select a new automation if required
         if (automationId === state.selectedAutomationId) {
-          store.actions.select(state.automations[0]?._id)
+          this.select(state.automations[0]?._id || null)
         }
         return state
       })
     } else {
-      const index = get(store).automations.findIndex(
+      const index = get(this.store).automations.findIndex(
         x => x._id === automation._id
       )
       if (index === -1) {
         // Automation addition
-        store.update(state => ({
+        this.store.update(state => ({
           ...state,
           automations: [...state.automations, automation],
         }))
       } else {
         // Automation update
-        store.update(state => {
+        this.store.update(state => {
           state.automations[index] = automation
           return state
         })
       }
     }
-  },
-})
-
-const automations = createAutomationStore()
-
-export const automationStore = automations.store
-
-export const automationHistoryStore = automations.history
-
-// Derived automation state
-export const selectedAutomation = derived(automationStore, $automationStore => {
-  if (!$automationStore.selectedAutomationId) {
-    return null
   }
+}
 
-  const selected = $automationStore.automations?.find(
-    x => x._id === $automationStore.selectedAutomationId
-  )
+export class SelectedAutomationStore extends DerivedBudiStore<
+  AutomationState,
+  AutomationState & { data: Automation | null; blockRefs: Record<string, any> }
+> {
+  constructor(automationStore: AutomationStore) {
+    const makeDerivedStore = (store: Writable<AutomationState>) => {
+      return derived(store, $store => {
+        if (!$store.selectedAutomationId === null) {
+          return { ...$store, data: null, blockRefs: {} }
+        }
 
-  // Traverse the entire tree and record all nodes found
-  // Also store any info relevant to the UX
-  const blockRefs = {}
-  automationStore.actions.traverse(blockRefs, selected)
+        const selected = $store.automations?.find(
+          x => x._id === $store.selectedAutomationId
+        )
 
-  // Parse the steps for references to sequential binding
-  // Replace all bindings with id based alternatives
-  const updatedAuto = cloneDeep(selected)
-  Object.values(blockRefs)
-    .filter(blockRef => {
-      // Pulls out all distinct terminating nodes
-      return blockRef.terminating
-    })
-    .forEach(blockRef => {
-      automationStore.actions
-        .getPathSteps(blockRef.pathTo, updatedAuto)
-        .forEach((step, idx, steps) => {
-          migrateReferencesInObject({
-            obj: step,
-            originalIndex: idx,
-            steps,
+        if (!selected) {
+          return { ...$store, data: null, blockRefs: {} }
+        }
+
+        // Traverse the entire tree and record all nodes found
+        // Also store any info relevant to the UX
+        const blockRefs: Record<string, any> = {}
+        automations.traverse(blockRefs, selected)
+
+        // Parse the steps for references to sequential binding
+        // Replace all bindings with id based alternatives
+        const updatedAuto = cloneDeep(selected)
+        Object.values(blockRefs)
+          .filter(blockRef => {
+            // Pulls out all distinct terminating nodes
+            return blockRef.terminating
           })
-        })
-    })
+          .forEach(blockRef => {
+            automations
+              .getPathSteps(blockRef.pathTo, updatedAuto)
+              .forEach((step, idx, steps) => {
+                migrateReferencesInObject({
+                  obj: step,
+                  originalIndex: idx,
+                  steps,
+                })
+              })
+          })
 
-  return {
-    data: updatedAuto,
-    blockRefs,
+        return {
+          ...$store,
+          data: updatedAuto,
+          blockRefs,
+        }
+      })
+    }
+
+    super(initialAutomationState, makeDerivedStore)
   }
-})
+}
+
+export const automations = new AutomationStore()
+export const automationHistoryStore = automations.history
+export const selectedAutomation = new SelectedAutomationStore(automations)
