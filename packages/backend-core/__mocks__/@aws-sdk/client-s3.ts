@@ -17,11 +17,6 @@ export class S3 {
   listObject() {
     return jest.fn().mockReturnThis()
   }
-  getSignedUrl() {
-    return jest.fn((operation: string, params: any) => {
-      return `http://s3.example.com/${params.Bucket}/${params.Key}`
-    })
-  }
   promise() {
     return jest.fn().mockReturnThis()
   }
@@ -30,4 +25,4 @@ export class S3 {
   }
 }
 
-export const GetObjectCommand = jest.fn()
+export const GetObjectCommand = jest.fn(inputs => ({ inputs }))
