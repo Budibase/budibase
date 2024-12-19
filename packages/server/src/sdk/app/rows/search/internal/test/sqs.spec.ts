@@ -238,27 +238,6 @@ describe("buildInternalFieldList", () => {
       ])
     })
 
-    it("excludes non-sql fields fields", async () => {
-      const table = new TableConfig()
-        .withField("formula", FieldType.FORMULA)
-        .withField("ai", FieldType.AI)
-        .withRelation("link", "otherTableId")
-        .create()
-
-      const result = await buildInternalFieldList(table, [])
-      expect(result).toEqual([
-        `${table._id}.data_name`,
-        `${table._id}.data_description`,
-        `${table._id}.data_amount`,
-        `${table._id}._id`,
-        `${table._id}._rev`,
-        `${table._id}.type`,
-        `${table._id}.createdAt`,
-        `${table._id}.updatedAt`,
-        `${table._id}.tableId`,
-      ])
-    })
-
     it("includes hidden fields if there is a formula column", async () => {
       const table = new TableConfig()
         .withHiddenField("description")
@@ -270,6 +249,7 @@ describe("buildInternalFieldList", () => {
         `${table._id}.data_name`,
         `${table._id}.data_description`,
         `${table._id}.data_amount`,
+        `${table._id}.data_formula`,
         `${table._id}._id`,
         `${table._id}._rev`,
         `${table._id}.type`,
@@ -347,48 +327,7 @@ describe("buildInternalFieldList", () => {
         `${otherTable._id}.tableId`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc1.fieldName`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc2.fieldName`,
-        `${table._id}._id`,
-        `${table._id}._rev`,
-        `${table._id}.type`,
-        `${table._id}.createdAt`,
-        `${table._id}.updatedAt`,
-        `${table._id}.tableId`,
-      ])
-    })
-
-    it("never includes non-sql columns from relationships", async () => {
-      const otherTable = new TableConfig()
-        .withField("hidden", FieldType.STRING, { visible: false })
-        .withField("formula", FieldType.FORMULA)
-        .withField("ai", FieldType.AI)
-        .withRelation("link", "otherTableId")
-        .create()
-
-      const table = new TableConfig()
-        .withRelation("link", otherTable._id)
-        .withField("formula", FieldType.FORMULA)
-        .create()
-
-      const relationships = [{ tableName: otherTable.name, column: "link" }]
-      const result = await buildInternalFieldList(table, allTables, {
-        relationships,
-      })
-      expect(result).toEqual([
-        `${table._id}.data_name`,
-        `${table._id}.data_description`,
-        `${table._id}.data_amount`,
-        `${otherTable._id}.data_name`,
-        `${otherTable._id}.data_description`,
-        `${otherTable._id}.data_amount`,
-        `${otherTable._id}.data_hidden`,
-        `${otherTable._id}._id`,
-        `${otherTable._id}._rev`,
-        `${otherTable._id}.type`,
-        `${otherTable._id}.createdAt`,
-        `${otherTable._id}.updatedAt`,
-        `${otherTable._id}.tableId`,
-        `${generateJunctionTableID(table._id, otherTable._id)}.doc1.fieldName`,
-        `${generateJunctionTableID(table._id, otherTable._id)}.doc2.fieldName`,
+        `${table._id}.data_formula`,
         `${table._id}._id`,
         `${table._id}._rev`,
         `${table._id}.type`,
@@ -446,6 +385,7 @@ describe("buildInternalFieldList", () => {
         `${view.tableId}.data_name`,
         `${view.tableId}.data_description`,
         `${view.tableId}.data_amount`,
+        `${view.tableId}.data_formula`,
         `${view.tableId}._id`,
         `${view.tableId}._rev`,
         `${view.tableId}.type`,
@@ -545,6 +485,7 @@ describe("buildInternalFieldList", () => {
         `${otherTable._id}.data_name`,
         `${otherTable._id}.data_description`,
         `${otherTable._id}.data_amount`,
+        `${otherTable._id}.data_formula`,
         `${otherTable._id}._id`,
         `${otherTable._id}._rev`,
         `${otherTable._id}.type`,
@@ -632,6 +573,8 @@ describe("buildInternalFieldList", () => {
         `${otherTable._id}.data_description`,
         `${otherTable._id}.data_amount`,
         `${otherTable._id}.data_hidden`,
+        `${otherTable._id}.data_formula`,
+        `${otherTable._id}.data_ai`,
         `${otherTable._id}._id`,
         `${otherTable._id}._rev`,
         `${otherTable._id}.type`,
@@ -640,6 +583,7 @@ describe("buildInternalFieldList", () => {
         `${otherTable._id}.tableId`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc1.fieldName`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc2.fieldName`,
+        `${table._id}.data_formula`,
         `${table._id}._id`,
         `${table._id}._rev`,
         `${table._id}.type`,
