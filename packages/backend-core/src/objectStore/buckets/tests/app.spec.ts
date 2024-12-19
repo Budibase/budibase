@@ -109,9 +109,9 @@ describe("app", () => {
         )
       })
 
-      it("gets url with cloudfront + s3", () => {
+      it("gets url with cloudfront + s3", async () => {
         testEnv.withCloudfront()
-        const url = getAppFileUrl()
+        const url = await getAppFileUrl()
         // omit rest of signed params
         expect(
           url.includes("http://cf.example.com/app_123/attachments/image.jpeg?")
@@ -146,8 +146,8 @@ describe("app", () => {
 
       it("gets url with cloudfront + s3", async () => {
         testEnv.withCloudfront()
-        await testEnv.withTenant(() => {
-          const url = getAppFileUrl()
+        await testEnv.withTenant(async () => {
+          const url = await getAppFileUrl()
           // omit rest of signed params
           expect(
             url.includes(

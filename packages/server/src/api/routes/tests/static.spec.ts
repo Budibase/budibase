@@ -1,12 +1,10 @@
 // Directly mock the AWS SDK
-jest.mock("aws-sdk", () => ({
-  S3: jest.fn(() => ({
-    getSignedUrl: jest.fn(
-      (operation, params) => `http://example.com/${params.Bucket}/${params.Key}`
-    ),
-    upload: jest.fn(() => ({ Contents: {} })),
-  })),
+jest.mock("@aws-sdk/s3-request-presigner", () => ({
+  getSignedUrl: jest.fn(() => {
+    return `http://example.com`
+  }),
 }))
+jest.mock("@aws-sdk/client-s3")
 
 import { Datasource, SourceName } from "@budibase/types"
 import { setEnv } from "../../../environment"
@@ -77,7 +75,10 @@ describe("/static", () => {
             type: "datasource",
             name: "Test",
             source: SourceName.S3,
-            config: {},
+            config: {
+              accessKeyId: "bb",
+              secretAccessKey: "bb",
+            },
           },
         })
       })
@@ -91,7 +92,7 @@ describe("/static", () => {
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
           .expect(200)
-        expect(res.body.signedUrl).toEqual("http://example.com/foo/bar")
+        expect(res.body.signedUrl).toEqual("http://example.com")
         expect(res.body.publicUrl).toEqual(
           `https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`
         )
