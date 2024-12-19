@@ -37,6 +37,9 @@
   <a href="https://codecov.io/gh/Budibase/budibase">
     <img src="https://codecov.io/gh/Budibase/budibase/graph/badge.svg?token=E8W2ZFXQOH"/>
   </a>
+  <a href="https://gurubase.io/g/budibase">
+    <img src="https://img.shields.io/badge/Gurubase-Ask%20Budibase%20Guru-006BFF" alt="Gurubase" />
+  </a>
 </p>
 
 <h3 align="center">
