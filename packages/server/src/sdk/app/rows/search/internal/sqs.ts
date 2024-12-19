@@ -55,12 +55,16 @@ const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
 const MISSING_TABLE_REGX = new RegExp(`no such table: .+`)
 const DUPLICATE_COLUMN_REGEX = new RegExp(`duplicate column name: .+`)
 
-async function buildInternalFieldList(
+export async function buildInternalFieldList(
   source: Table | ViewV2,
   tables: Table[],
-  opts?: { relationships?: RelationshipsJson[]; allowedFields?: string[] }
+  opts?: {
+    relationships?: RelationshipsJson[]
+    allowedFields?: string[]
+    includeHiddenFields?: boolean
+  }
 ) {
-  const { relationships, allowedFields } = opts || {}
+  const { relationships, allowedFields, includeHiddenFields } = opts || {}
   let schemaFields: string[] = []
 
   const isView = sdk.views.isView(source)
@@ -75,7 +79,7 @@ async function buildInternalFieldList(
     schemaFields = Object.keys(helpers.views.basicFields(source))
   } else {
     schemaFields = Object.keys(source.schema).filter(
-      key => source.schema[key].visible !== false
+      key => includeHiddenFields || source.schema[key].visible !== false
     )
   }
 
@@ -109,10 +113,16 @@ async function buildInternalFieldList(
   }
   for (let key of schemaFields) {
     const col = table.schema[key]
+
+    if ([FieldType.FORMULA, FieldType.AI].includes(col.type)) {
+      continue
+    }
+
     const isRelationship = col.type === FieldType.LINK
     if (!relationships && isRelationship) {
       continue
     }
+
     if (!isRelationship) {
       fieldList.push(`${table._id}.${mapToUserColumn(key)}`)
     } else {
@@ -121,6 +131,7 @@ async function buildInternalFieldList(
       if (!relatedTable) {
         continue
       }
+
       // a quirk of how junction documents work in Budibase, refer to the "LinkDocument" type to see the full
       // structure - essentially all relationships between two tables will be inserted into a single "table"
       // we don't use an independent junction table ID for each separate relationship between two tables. For
@@ -128,7 +139,9 @@ async function buildInternalFieldList(
       // end up in the same junction table ID. We need to retrieve the field name property of the junction documents
       // as part of the relationship to tell us which relationship column the junction is related to.
       const relatedFields = (
-        await buildInternalFieldList(relatedTable, tables)
+        await buildInternalFieldList(relatedTable, tables, {
+          includeHiddenFields: containsFormula,
+        })
       ).concat(
         getJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
       )
