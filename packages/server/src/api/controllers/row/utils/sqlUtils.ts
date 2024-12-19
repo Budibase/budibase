@@ -200,8 +200,8 @@ export async function buildSqlFieldList(
 
     if (
       isView &&
-      source.schema?.[field.name] &&
-      !helpers.views.isVisible(source.schema[field.name]) &&
+      (!source.schema?.[field.name] ||
+        !helpers.views.isVisible(source.schema[field.name])) &&
       !containsFormula
     ) {
       continue
