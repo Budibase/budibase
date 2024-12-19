@@ -362,33 +362,6 @@ describe("buildSqlFieldList", () => {
       expect(result).toEqual(["table.amount"])
     })
 
-    it("includes relationships fields when flagged", async () => {
-      const otherTable = new TableConfig("linkedTable")
-        .withField("id", FieldType.NUMBER)
-        .withPrimary("id")
-        .withDisplay("name")
-        .create()
-
-      const table = new TableConfig("table")
-        .withRelation("link", otherTable._id)
-        .withField("formula", FieldType.FORMULA)
-        .create()
-
-      const view = new ViewConfig(table)
-        .withVisible("name")
-        .withHidden("amount")
-        .create()
-
-      const result = await buildSqlFieldList(view, allTables, {
-        relationships: true,
-      })
-      expect(result).toEqual([
-        "table.name",
-        "linkedTable.id",
-        "linkedTable.name",
-      ])
-    })
-
     it("includes relationships columns", async () => {
       const otherTable = new TableConfig("linkedTable")
         .withField("id", FieldType.NUMBER)
@@ -418,6 +391,29 @@ describe("buildSqlFieldList", () => {
         "linkedTable.id",
         "linkedTable.amount",
       ])
+    })
+
+    it("excludes relationships fields when view is not included in the view", async () => {
+      const otherTable = new TableConfig("linkedTable")
+        .withField("id", FieldType.NUMBER)
+        .withPrimary("id")
+        .withDisplay("name")
+        .create()
+
+      const table = new TableConfig("table")
+        .withRelation("link", otherTable._id)
+        .withField("formula", FieldType.FORMULA)
+        .create()
+
+      const view = new ViewConfig(table)
+        .withVisible("name")
+        .withHidden("amount")
+        .create()
+
+      const result = await buildSqlFieldList(view, allTables, {
+        relationships: true,
+      })
+      expect(result).toEqual(["table.name"])
     })
 
     it("does not include relationships columns for hidden links", async () => {
