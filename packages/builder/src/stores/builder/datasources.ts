@@ -1,4 +1,4 @@
-import { derived, get } from "svelte/store"
+import { derived, get, Writable } from "svelte/store"
 import {
   IntegrationTypes,
   DEFAULT_BB_DATASOURCE_ID,
@@ -17,12 +17,7 @@ import {
 } from "@budibase/types"
 // @ts-ignore
 import { TableNames } from "constants"
-import BudiStore from "stores/BudiStore"
-
-// when building the internal DS - seems to represent it slightly differently to the backend typing of a DS
-interface InternalDatasource extends Omit<Datasource, "entities"> {
-  entities: Table[]
-}
+import { DerivedBudiStore } from "stores/BudiStore"
 
 class TableImportError extends Error {
   errors: Record<string, string>
@@ -42,68 +37,76 @@ class TableImportError extends Error {
   }
 }
 
+// when building the internal DS - seems to represent it slightly differently to the backend typing of a DS
+interface InternalDatasource extends Omit<Datasource, "entities"> {
+  entities: Table[]
+}
+
 interface BuilderDatasourceStore {
-  list: Datasource[]
+  rawList: Datasource[]
   selectedDatasourceId: null | string
 }
 
-interface DerivedDatasourceStore extends Omit<BuilderDatasourceStore, "list"> {
+interface DerivedDatasourceStore extends BuilderDatasourceStore {
   list: (Datasource | InternalDatasource)[]
   selected?: Datasource | InternalDatasource
   hasDefaultData: boolean
   hasData: boolean
 }
 
-export class DatasourceStore extends BudiStore<DerivedDatasourceStore> {
+export class DatasourceStore extends DerivedBudiStore<
+  BuilderDatasourceStore,
+  DerivedDatasourceStore
+> {
   constructor() {
-    super({
-      list: [],
-      selectedDatasourceId: null,
-      hasDefaultData: false,
-      hasData: false,
-    })
-
-    const derivedStore = derived<
-      [DatasourceStore, BudiStore<any>],
-      DerivedDatasourceStore
-    >([this, tables as any], ([$store, $tables]) => {
-      // Set the internal datasource entities from the table list, which we're
-      // able to keep updated unlike the egress generated definition of the
-      // internal datasource
-      let internalDS: Datasource | InternalDatasource | undefined =
-        $store.list?.find(ds => ds._id === BUDIBASE_INTERNAL_DB_ID)
-      let otherDS = $store.list?.filter(
-        ds => ds._id !== BUDIBASE_INTERNAL_DB_ID
-      )
-      if (internalDS) {
-        const tables: Table[] = $tables.list?.filter((table: Table) => {
-          return (
-            table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
-            table._id !== TableNames.USERS
-          )
-        })
-        internalDS = {
-          ...internalDS,
-          entities: tables,
+    const makeDerivedStore = (store: Writable<BuilderDatasourceStore>) => {
+      return derived([store, tables], ([$store, $tables]) => {
+        // Set the internal datasource entities from the table list, which we're
+        // able to keep updated unlike the egress generated definition of the
+        // internal datasource
+        let internalDS: Datasource | InternalDatasource | undefined =
+          $store.rawList?.find(ds => ds._id === BUDIBASE_INTERNAL_DB_ID)
+        let otherDS = $store.rawList?.filter(
+          ds => ds._id !== BUDIBASE_INTERNAL_DB_ID
+        )
+        if (internalDS) {
+          const tables: Table[] = $tables.list?.filter((table: Table) => {
+            return (
+              table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+              table._id !== TableNames.USERS
+            )
+          })
+          internalDS = {
+            ...internalDS,
+            entities: tables,
+          }
         }
-      }
 
-      // Build up enriched DS list
-      // Only add the internal DS if we have at least one non-users table
-      let list: (InternalDatasource | Datasource)[] = []
-      if (internalDS?.entities?.length) {
-        list.push(internalDS)
-      }
-      list = list.concat(otherDS || [])
+        // Build up enriched DS list
+        // Only add the internal DS if we have at least one non-users table
+        let list: (InternalDatasource | Datasource)[] = []
+        if (internalDS?.entities?.length) {
+          list.push(internalDS)
+        }
+        list = list.concat(otherDS || [])
 
-      return {
-        ...$store,
-        list,
-        selected: list?.find(ds => ds._id === $store.selectedDatasourceId),
-        hasDefaultData: list?.some(ds => ds._id === DEFAULT_BB_DATASOURCE_ID),
-        hasData: list?.length > 0,
-      }
-    })
+        return {
+          ...$store,
+          list,
+          selected: list?.find(ds => ds._id === $store.selectedDatasourceId),
+          hasDefaultData: list?.some(ds => ds._id === DEFAULT_BB_DATASOURCE_ID),
+          hasData: list?.length > 0,
+        }
+      })
+    }
+
+    super(
+      {
+        rawList: [],
+        selectedDatasourceId: null,
+      },
+      makeDerivedStore
+    )
 
     this.fetch = this.fetch.bind(this)
     this.init = this.fetch.bind(this)
@@ -114,14 +117,13 @@ export class DatasourceStore extends BudiStore<DerivedDatasourceStore> {
     this.save = this.save.bind(this)
     this.replaceDatasource = this.replaceDatasource.bind(this)
     this.getTableNames = this.getTableNames.bind(this)
-    this.subscribe = derivedStore.subscribe
   }
 
   async fetch() {
     const datasources = await API.getDatasources()
     this.store.update(state => ({
       ...state,
-      list: datasources,
+      rawList: datasources,
     }))
   }
 
@@ -158,7 +160,7 @@ export class DatasourceStore extends BudiStore<DerivedDatasourceStore> {
   }
 
   sourceCount(source: string) {
-    return get(this.store).list.filter(
+    return get(this.store).rawList.filter(
       datasource => datasource.source === source
     ).length
   }
@@ -220,7 +222,7 @@ export class DatasourceStore extends BudiStore<DerivedDatasourceStore> {
     integration: Integration
     datasource: Datasource
   }) {
-    if (await this.checkDatasourceValidity(integration, datasource)) {
+    if (!(await this.checkDatasourceValidity(integration, datasource)).valid) {
       throw new Error("Unable to connect")
     }
 
@@ -250,7 +252,7 @@ export class DatasourceStore extends BudiStore<DerivedDatasourceStore> {
     if (!datasource) {
       this.store.update(state => ({
         ...state,
-        list: state.list.filter(x => x._id !== datasourceId),
+        rawList: state.rawList.filter(x => x._id !== datasourceId),
       }))
       tables.removeDatasourceTables(datasourceId)
       queries.removeDatasourceQueries(datasourceId)
@@ -258,11 +260,13 @@ export class DatasourceStore extends BudiStore<DerivedDatasourceStore> {
     }
 
     // Add new datasource
-    const index = get(this.store).list.findIndex(x => x._id === datasource._id)
+    const index = get(this.store).rawList.findIndex(
+      x => x._id === datasource._id
+    )
     if (index === -1) {
       this.store.update(state => ({
         ...state,
-        list: [...state.list, datasource],
+        rawList: [...state.rawList, datasource],
       }))
 
       // If this is a new datasource then we should refresh the tables list,
@@ -273,7 +277,7 @@ export class DatasourceStore extends BudiStore<DerivedDatasourceStore> {
     // Update existing datasource
     else if (datasource) {
       this.store.update(state => {
-        state.list[index] = datasource
+        state.rawList[index] = datasource
         return state
       })
     }
@@ -283,10 +287,6 @@ export class DatasourceStore extends BudiStore<DerivedDatasourceStore> {
     const info = await API.fetchInfoForDatasource(datasource)
     return info.tableNames || []
   }
-
-  // subscribe() {
-  //   return this.derivedStore.subscribe()
-  // }
 }
 
 export const datasources = new DatasourceStore()
