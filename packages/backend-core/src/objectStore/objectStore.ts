@@ -138,30 +138,25 @@ export async function createBucketIfNotExists(
 ): Promise<{ created: boolean; exists: boolean }> {
   bucketName = sanitizeBucket(bucketName)
   try {
-    await // The `.promise()` call might be on an JS SDK v2 client API.
-    // If yes, please remove .promise(). If not, remove this comment.
-    client
-      .headBucket({
-        Bucket: bucketName,
-      })
-      .promise()
+    await client.headBucket({
+      Bucket: bucketName,
+    })
     return { created: false, exists: true }
   } catch (err: any) {
-    const promises: any = STATE.bucketCreationPromises
-    const doesntExist = err.statusCode === 404,
-      noAccess = err.statusCode === 403
+    const statusCode = err.statusCode || err.$response?.statusCode
+    const promises: Record<string, Promise<any> | undefined> =
+      STATE.bucketCreationPromises
+    const doesntExist = statusCode === 404,
+      noAccess = statusCode === 403
     if (promises[bucketName]) {
       await promises[bucketName]
       return { created: false, exists: true }
     } else if (doesntExist || noAccess) {
       if (doesntExist) {
-        promises[bucketName] = // The `.promise()` call might be on an JS SDK v2 client API.
-          // If yes, please remove .promise(). If not, remove this comment.
-          client
-            .createBucket({
-              Bucket: bucketName,
-            })
-            .promise()
+        promises[bucketName] = client.createBucket({
+          Bucket: bucketName,
+        })
+
         await promises[bucketName]
         delete promises[bucketName]
         return { created: true, exists: false }
@@ -474,10 +469,7 @@ export async function deleteFolder(
     Prefix: folder,
   }
 
-  const existingObjectsResponse =
-    await // The `.promise()` call might be on an JS SDK v2 client API.
-    // If yes, please remove .promise(). If not, remove this comment.
-    client.listObjects(listParams)
+  const existingObjectsResponse = await client.listObjects(listParams)
   if (existingObjectsResponse.Contents?.length === 0) {
     return
   }
