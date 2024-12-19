@@ -324,9 +324,7 @@ export async function update(
   return pickApi(tableId).update(tableId, view)
 }
 
-export function isV2(view: View | ViewV2): view is ViewV2 {
-  return (view as ViewV2).version === 2
-}
+export const isV2 = helpers.views.isV2
 
 export async function remove(viewId: string): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
