@@ -177,8 +177,12 @@ class S3Integration implements IntegrationBase {
     try {
       await this.client.listBuckets().promise()
       response.connected = true
-    } catch (e: any) {
-      response.error = e.message as string
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        response.error = e.message as string
+      } else {
+        response.error = "AWS S3: Unable to process the request"
+      }
     }
     return response
   }
@@ -209,7 +213,20 @@ class S3Integration implements IntegrationBase {
         LocationConstraint: query.location,
       }
     }
-    return await this.client.createBucket(params).promise()
+
+    try {
+      const response = await this.client.createBucket(params).promise()
+      return response
+    } catch (e: unknown) {
+      let message = "Unable to process the request"
+      if (e instanceof Error) {
+        message = e.message
+      }
+
+      // Do not rethrow AWS errors as the statusCode prop will be
+      // interpreted by koa
+      throw new Error("AWS S3: " + message)
+    }
   }
 
   async read(query: {
@@ -220,16 +237,25 @@ class S3Integration implements IntegrationBase {
     maxKeys: number
     prefix: string
   }) {
-    const response = await this.client
-      .listObjects({
-        Bucket: query.bucket,
-        Delimiter: query.delimiter,
-        Marker: query.marker,
-        MaxKeys: query.maxKeys,
-        Prefix: query.prefix,
-      })
-      .promise()
-    return response.Contents
+    try {
+      const response = await this.client
+        .listObjects({
+          Bucket: query.bucket,
+          Delimiter: query.delimiter,
+          Marker: query.marker,
+          MaxKeys: query.maxKeys,
+          Prefix: query.prefix,
+        })
+        .promise()
+      return response.Contents
+    } catch (e: unknown) {
+      let message = "Unable to process the request"
+      if (e instanceof Error) {
+        message = e.message
+      }
+
+      throw new Error("AWS S3: " + message)
+    }
   }
 
   async readCsv(query: { bucket: string; key: string }) {
@@ -253,22 +279,34 @@ class S3Integration implements IntegrationBase {
       stream.on("finish", () => {
         resolve(response)
       })
-    }).catch(err => {
+    }).catch((e: unknown) => {
+      let message = "Unable to process the request"
       if (csvError) {
-        throw new Error("Could not read CSV")
-      } else {
-        throw err
+        message = "Could not read CSV"
+      } else if (e instanceof Error) {
+        message = e.message
       }
+      throw new Error("AWS S3: " + message)
     })
   }
 
   async delete(query: { bucket: string; delete: string }) {
-    return await this.client
-      .deleteObjects({
-        Bucket: query.bucket,
-        Delete: JSON.parse(query.delete),
-      })
-      .promise()
+    try {
+      const response = await this.client
+        .deleteObjects({
+          Bucket: query.bucket,
+          Delete: JSON.parse(query.delete),
+        })
+        .promise()
+      return response
+    } catch (e: unknown) {
+      let message = "Unable to process the request"
+      if (e instanceof Error) {
+        message = e.message
+      }
+
+      throw new Error("AWS S3: " + message)
+    }
   }
 }
 
