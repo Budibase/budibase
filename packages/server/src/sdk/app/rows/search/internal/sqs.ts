@@ -114,10 +114,6 @@ export async function buildInternalFieldList(
   for (let key of schemaFields) {
     const col = table.schema[key]
 
-    if ([FieldType.FORMULA, FieldType.AI].includes(col.type)) {
-      continue
-    }
-
     const isRelationship = col.type === FieldType.LINK
     if (!relationships && isRelationship) {
       continue
