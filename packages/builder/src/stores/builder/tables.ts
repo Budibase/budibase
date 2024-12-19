@@ -140,7 +140,7 @@ export class TableStore extends DerivedBudiStore<
     return savedTable
   }
 
-  async delete(table: { _id: string; _rev: any }) {
+  async delete(table: { _id: string; _rev: string }) {
     if (!table?._id) {
       return
     }
@@ -237,7 +237,7 @@ export class TableStore extends DerivedBudiStore<
     }
   }
 
-  removeDatasourceTables(datasourceId: any) {
+  removeDatasourceTables(datasourceId: string) {
     this.store.update(state => ({
       ...state,
       list: state.list.filter(table => table.sourceId !== datasourceId),
