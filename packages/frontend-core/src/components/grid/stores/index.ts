@@ -50,14 +50,13 @@ const DependencyOrderedStores = [
   Cache,
 ]
 
-export type Store = Columns.Store &
-  Columns.DerivedStore & {
-    // TODO while typing the rest of stores
-    datasource: any
-    definition: Writable<any>
-    displayColumn: Writable<any>
-    enrichedSchema: any
-  }
+export type Store = Columns.Store & {
+  // TODO while typing the rest of stores
+  datasource: any
+  definition: Writable<any>
+  displayColumn: Writable<any>
+  enrichedSchema: any
+}
 
 export const attachStores = (context): Store => {
   // Atomic store creation
