@@ -1,4 +1,5 @@
 import { Writable } from "svelte/store"
+import type { APIClient } from "../../../api/types"
 
 import * as Bounds from "./bounds"
 import * as Columns from "./columns"
@@ -51,7 +52,7 @@ const DependencyOrderedStores = [
 ]
 
 export interface BaseStore {
-  API: any
+  API: APIClient
 }
 
 export type Store = BaseStore &

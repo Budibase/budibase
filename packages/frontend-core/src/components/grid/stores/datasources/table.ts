@@ -1,4 +1,9 @@
-import { SortOrder } from "@budibase/types"
+import {
+  Row,
+  SaveRowRequest,
+  SaveTableRequest,
+  SortOrder,
+} from "@budibase/types"
 import { get } from "svelte/store"
 import { Store as StoreContext } from ".."
 
@@ -7,11 +12,11 @@ const SuppressErrors = true
 export const createActions = (context: StoreContext) => {
   const { API, datasource, columns } = context
 
-  const saveDefinition = async newDefinition => {
+  const saveDefinition = async (newDefinition: SaveTableRequest) => {
     await API.saveTable(newDefinition)
   }
 
-  const saveRow = async row => {
+  const saveRow = async (row: SaveRowRequest) => {
     row = {
       ...row,
       tableId: get(datasource)?.tableId,
@@ -19,15 +24,15 @@ export const createActions = (context: StoreContext) => {
     return await API.saveRow(row, SuppressErrors)
   }
 
-  const deleteRows = async rows => {
+  const deleteRows = async (rows: (string | Row)[]) => {
     await API.deleteRows(get(datasource).tableId, rows)
   }
 
-  const isDatasourceValid = datasource => {
+  const isDatasourceValid = (datasource: { type: string; tableId: any }) => {
     return datasource?.type === "table" && datasource?.tableId
   }
 
-  const getRow = async id => {
+  const getRow = async (id: string) => {
     const res = await API.searchTable(get(datasource).tableId, {
       limit: 1,
       query: {
@@ -40,7 +45,7 @@ export const createActions = (context: StoreContext) => {
     return res?.rows?.[0]
   }
 
-  const canUseColumn = name => {
+  const canUseColumn = (name: string) => {
     return get(columns).some(col => col.name === name)
   }
 
