@@ -3,11 +3,11 @@ import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
 import { CalculationType, FieldSchema, FieldType } from "@budibase/types"
 import { Store as StoreContext } from "."
 
-export interface Store {
+interface ColumnStore {
   columns: Writable<Column[]>
 }
 
-export interface DerivedStore {
+interface DerivedColumnStore {
   tableColumns: Readable<Column[]>
   displayColumn: Readable<Column>
   columnLookupMap: Readable<Record<string, Column>>
@@ -15,6 +15,8 @@ export interface DerivedStore {
   scrollableColumns: Readable<Column[]>
   hasNonAutoColumn: Readable<boolean>
 }
+
+export type Store = ColumnStore & DerivedColumnStore
 
 type Column = FieldSchema & {
   label: string
@@ -34,7 +36,7 @@ type Column = FieldSchema & {
   calculationType: CalculationType
 }
 
-export const createStores = (): Store => {
+export const createStores = (): ColumnStore => {
   const columns = writable([])
 
   // Enrich columns with metadata about their display position
@@ -63,7 +65,7 @@ export const createStores = (): Store => {
   }
 }
 
-export const deriveStores = (context: StoreContext): DerivedStore => {
+export const deriveStores = (context: StoreContext): DerivedColumnStore => {
   const { columns } = context
 
   // Derive a lookup map for all columns by name
