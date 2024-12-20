@@ -58,7 +58,8 @@ export interface BaseStore {
 export type Store = BaseStore &
   Columns.Store &
   Table.Store &
-  ViewV2.Store & {
+  ViewV2.Store &
+  NonPlus.Store & {
     // TODO while typing the rest of stores
     datasource: Writable<any> & { actions: any }
     definition: Writable<any>
