@@ -141,9 +141,6 @@ export class TableStore extends DerivedBudiStore<
   }
 
   async delete(table: { _id: string; _rev: string }) {
-    if (!table?._id) {
-      return
-    }
     await API.deleteTable(table._id, table._rev)
     this.replaceTable(table._id, null)
   }
