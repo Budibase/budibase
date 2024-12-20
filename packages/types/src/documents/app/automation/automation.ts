@@ -148,6 +148,7 @@ export interface Automation extends Document {
 
 interface BaseIOStructure {
   type?: AutomationIOType
+  subtype?: AutomationIOType
   customType?: AutomationCustomIOType
   title?: string
   description?: string

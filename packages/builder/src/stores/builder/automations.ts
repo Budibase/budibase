@@ -1,4 +1,4 @@
-import { derived, get, Writable } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { API } from "api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
@@ -23,6 +23,9 @@ import {
   Branch,
   AutomationTrigger,
   AutomationStatus,
+  UILogicalOperator,
+  EmptyFilterOption,
+  AutomationIOType,
 } from "@budibase/types"
 import { ActionStepID } from "constants/backend/automations"
 import { FIELDS } from "constants/backend"
@@ -31,6 +34,7 @@ import { rowActions } from "./rowActions"
 import { getNewStepName } from "helpers/automations/nameHelpers"
 import { QueryUtils } from "@budibase/frontend-core"
 import { BudiStore, DerivedBudiStore } from "stores/BudiStore"
+import { appStore } from "stores/builder"
 
 interface BlockDefinitions {
   TRIGGER: Record<string, any>
@@ -248,7 +252,7 @@ const automationActions = (store: AutomationStore) => ({
    */
   registerBlock: (
     blocks: Record<string, any>,
-    block: AutomationStep,
+    block: AutomationStep | AutomationTrigger,
     pathTo: Array<any>,
     terminating: boolean
   ) => {
@@ -281,7 +285,7 @@ const automationActions = (store: AutomationStore) => ({
       ...automation.definition.steps,
     ]
 
-    let result: AutomationStep[]
+    let result: (AutomationStep | AutomationTrigger)[] = []
     pathWay.forEach(path => {
       const { stepIdx, branchIdx } = path
       let last = result ? result[result.length - 1] : []
@@ -290,13 +294,14 @@ const automationActions = (store: AutomationStore) => ({
         result = steps.slice(0, stepIdx + 1)
         return
       }
-
-      if (Number.isInteger(branchIdx)) {
-        const branchId = last.inputs.branches[branchIdx].id
-        const children = last.inputs.children[branchId]
-        const stepChildren = children.slice(0, stepIdx + 1)
-        // Preceeding steps.
-        result = result.concat(stepChildren)
+      if (last && "inputs" in last) {
+        if (Number.isInteger(branchIdx)) {
+          const branchId = last.inputs.branches[branchIdx].id
+          const children = last.inputs.children[branchId]
+          const stepChildren = children.slice(0, stepIdx + 1)
+          // Preceeding steps.
+          result = result.concat(stepChildren)
+        }
       }
     })
     return result
@@ -316,7 +321,7 @@ const automationActions = (store: AutomationStore) => ({
   updateStep: (
     pathWay: Array<any>,
     automation: Automation,
-    update: AutomationStep | AutomationStep[],
+    update: AutomationStep | AutomationTrigger,
     insert = false
   ) => {
     let newAutomation = cloneDeep(automation)
@@ -324,7 +329,7 @@ const automationActions = (store: AutomationStore) => ({
     const finalise = (
       dest: AutomationStep[],
       idx: number,
-      update: AutomationStep | AutomationStep[]
+      update: AutomationStep | AutomationTrigger
     ) => {
       dest.splice(
         idx,
@@ -441,7 +446,7 @@ const automationActions = (store: AutomationStore) => ({
    * @param {Object} automation
    */
   traverse: (blockRefs: Record<string, any>, automation: Automation) => {
-    let blocks: AutomationStep[] = []
+    let blocks: (AutomationStep | AutomationTrigger)[] = []
     if (!automation || !blockRefs) {
       return
     }
@@ -451,7 +456,7 @@ const automationActions = (store: AutomationStore) => ({
     blocks = blocks.concat(automation.definition.steps || [])
 
     const treeTraverse = (
-      block: AutomationStep,
+      block: AutomationStep | AutomationTrigger,
       pathTo: Array<any> | null,
       stepIdx: number,
       branchIdx: number | null,
@@ -571,7 +576,7 @@ const automationActions = (store: AutomationStore) => ({
       if (isLoopBlock && loopBlockCount == 0) {
         schema = {
           currentItem: {
-            type: "string",
+            type: AutomationIOType.STRING,
             description: "the item currently being executed",
           },
         }
@@ -588,9 +593,10 @@ const automationActions = (store: AutomationStore) => ({
           pathBlock.event === AutomationEventType.ROW_UPDATE ||
           pathBlock.event === AutomationEventType.ROW_SAVE
         ) {
-          let table = get(tables).list.find(
+          let table: any = get(tables).list.find(
             (table: Table) => table._id === pathBlock.inputs.tableId
           )
+
           for (const key in table?.schema) {
             schema[key] = {
               type: table.schema[key].type,
@@ -638,8 +644,8 @@ const automationActions = (store: AutomationStore) => ({
     isLoopBlock: boolean,
     bindingName: string | undefined,
     automation: Automation,
-    currentBlock: AutomationStep | undefined,
-    pathSteps: AutomationStep[]
+    currentBlock: AutomationStep | AutomationTrigger | undefined,
+    pathSteps: (AutomationStep | AutomationTrigger)[]
   ) => {
     let runtimeName: string | null
 
@@ -710,7 +716,9 @@ const automationActions = (store: AutomationStore) => ({
     bindingName?: string
   ) => {
     const field = Object.values(FIELDS).find(
-      field => field.type === value.type && field.subtype === value.subtype
+      field =>
+        field.type === value.type &&
+        ("subtype" in field ? field.subtype === value.subtype : true)
     )
     return {
       readableBinding:
@@ -735,7 +743,7 @@ const automationActions = (store: AutomationStore) => ({
     data: Record<string, any>
   ) => {
     // Create new modified block
-    let newBlock = {
+    let newBlock: any = {
       ...block,
       inputs: {
         ...block.inputs,
@@ -953,8 +961,8 @@ const automationActions = (store: AutomationStore) => ({
    */
   generateDefaultConditions: () => {
     const baseConditionUI = {
-      logicalOperator: "all",
-      onEmptyFilter: "none",
+      logicalOperator: UILogicalOperator.ALL,
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
       groups: [],
     }
     return {
@@ -1079,12 +1087,14 @@ const automationActions = (store: AutomationStore) => ({
     block: AutomationStep
   ) => {
     const update = store.actions.shiftBranch(pathTo, block)
-    const updatedAuto = store.actions.updateStep(
-      pathTo.slice(0, -1),
-      automation,
-      update
-    )
-    await store.actions.save(updatedAuto)
+    if (update) {
+      const updatedAuto = store.actions.updateStep(
+        pathTo.slice(0, -1),
+        automation,
+        update
+      )
+      await store.actions.save(updatedAuto)
+    }
   },
 
   /**
@@ -1100,12 +1110,14 @@ const automationActions = (store: AutomationStore) => ({
     block: AutomationStep
   ) => {
     const update = store.actions.shiftBranch(pathTo, block, 1)
-    const updatedAuto = store.actions.updateStep(
-      pathTo.slice(0, -1),
-      automation,
-      update
-    )
-    await store.actions.save(updatedAuto)
+    if (update) {
+      const updatedAuto = store.actions.updateStep(
+        pathTo.slice(0, -1),
+        automation,
+        update
+      )
+      await store.actions.save(updatedAuto)
+    }
   },
 
   /**
@@ -1226,7 +1238,7 @@ const automationActions = (store: AutomationStore) => ({
   deleteAutomationName: async (blockId: string) => {
     const automation = get(selectedAutomation)?.data
     let newAutomation = cloneDeep(automation)
-    if (!automation) {
+    if (!automation || !newAutomation) {
       return
     }
     if (newAutomation?.definition.stepNames) {
@@ -1291,6 +1303,7 @@ const automationActions = (store: AutomationStore) => ({
     const automation: Automation = {
       name,
       type: "automation",
+      appId: get(appStore).appId,
       definition: {
         steps: [],
         trigger,
@@ -1381,7 +1394,7 @@ const automationActions = (store: AutomationStore) => ({
   save: async (automation: Automation) => {
     const response = await API.updateAutomation(automation)
     await store.actions.fetch()
-    store.actions.select(response._id)
+    store.actions.select(response.automation._id!)
     return response.automation
   },
 
@@ -1438,7 +1451,7 @@ export class SelectedAutomationStore extends DerivedBudiStore<
   DerivedAutomationState
 > {
   constructor(automationStore: AutomationStore) {
-    const makeDerivedStore = (store: Writable<AutomationState>) => {
+    const makeDerivedStore = () => {
       return derived(automationStore, $store => {
         if (!$store.selectedAutomationId) {
           return {
@@ -1490,10 +1503,7 @@ export class SelectedAutomationStore extends DerivedBudiStore<
       })
     }
 
-    // Initialize the DerivedBudiStore with automation state and derived logic
     super(initialAutomationState, makeDerivedStore)
   }
 }
-
-// Exporting an instance of the `SelectedAutomationStore`
 export const selectedAutomation = new SelectedAutomationStore(automationStore)
