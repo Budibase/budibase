@@ -1,6 +1,7 @@
 import {
   Row,
   SaveRowRequest,
+  SaveRowResponse,
   SaveTableRequest,
   SortOrder,
 } from "@budibase/types"
@@ -9,7 +10,23 @@ import { Store as StoreContext } from ".."
 
 const SuppressErrors = true
 
-export const createActions = (context: StoreContext) => {
+interface TableActions {
+  table: {
+    actions: {
+      saveDefinition: (newDefinition: SaveTableRequest) => Promise<void>
+      addRow: (row: SaveRowRequest) => Promise<SaveRowResponse>
+      updateRow: (row: SaveRowRequest) => Promise<SaveRowResponse>
+      deleteRows: (rows: (string | Row)[]) => Promise<void>
+      getRow: (id: string) => Promise<Row>
+      isDatasourceValid: (datasource: { type: string; tableId: any }) => boolean
+      canUseColumn: (name: string) => boolean
+    }
+  }
+}
+
+export type Store = TableActions
+
+export const createActions = (context: StoreContext): TableActions => {
   const { API, datasource, columns } = context
 
   const saveDefinition = async (newDefinition: SaveTableRequest) => {
@@ -29,7 +46,7 @@ export const createActions = (context: StoreContext) => {
   }
 
   const isDatasourceValid = (datasource: { type: string; tableId: any }) => {
-    return datasource?.type === "table" && datasource?.tableId
+    return datasource?.type === "table" && !!datasource?.tableId
   }
 
   const getRow = async (id: string) => {
@@ -80,7 +97,7 @@ export const initialise = (context: StoreContext) => {
 
   // Keep a list of subscriptions so that we can clear them when the datasource
   // config changes
-  let unsubscribers = []
+  let unsubscribers: any[] = []
 
   // Observe datasource changes and apply logic for table datasources
   datasource.subscribe($datasource => {
