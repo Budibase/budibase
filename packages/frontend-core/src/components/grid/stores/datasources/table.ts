@@ -4,6 +4,7 @@ import {
   SaveRowResponse,
   SaveTableRequest,
   SortOrder,
+  UIDatasource,
 } from "@budibase/types"
 import { get } from "svelte/store"
 import { Store as StoreContext } from ".."
@@ -18,7 +19,7 @@ interface TableActions {
       updateRow: (row: SaveRowRequest) => Promise<SaveRowResponse>
       deleteRows: (rows: (string | Row)[]) => Promise<void>
       getRow: (id: string) => Promise<Row>
-      isDatasourceValid: (datasource: { type: string; tableId: any }) => boolean
+      isDatasourceValid: (datasource: UIDatasource) => boolean
       canUseColumn: (name: string) => boolean
     }
   }
@@ -45,7 +46,7 @@ export const createActions = (context: StoreContext): TableActions => {
     await API.deleteRows(get(datasource).tableId, rows)
   }
 
-  const isDatasourceValid = (datasource: { type: string; tableId: any }) => {
+  const isDatasourceValid = (datasource: UIDatasource) => {
     return datasource?.type === "table" && !!datasource?.tableId
   }
 

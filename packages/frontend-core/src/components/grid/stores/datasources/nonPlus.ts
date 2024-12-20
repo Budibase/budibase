@@ -1,4 +1,4 @@
-import { SortOrder } from "@budibase/types"
+import { SortOrder, UIDatasource } from "@budibase/types"
 import { get } from "svelte/store"
 import { Store as StoreContext } from ".."
 
@@ -10,11 +10,7 @@ interface NonPlusActions {
       updateRow: () => Promise<void>
       deleteRows: () => Promise<void>
       getRow: () => Promise<void>
-      isDatasourceValid: (datasource: {
-        type: string
-        id: string
-        tableId: string
-      }) => boolean
+      isDatasourceValid: (datasource: UIDatasource) => boolean
       canUseColumn: (name: string) => boolean
     }
   }
@@ -41,11 +37,7 @@ export const createActions = (context: StoreContext): NonPlusActions => {
     throw "This datasource does not support fetching individual rows"
   }
 
-  const isDatasourceValid = (datasource: {
-    type: string
-    id: string
-    tableId: string
-  }) => {
+  const isDatasourceValid = (datasource: UIDatasource) => {
     // There are many different types and shapes of datasource, so we only
     // check that we aren't null
     return (
