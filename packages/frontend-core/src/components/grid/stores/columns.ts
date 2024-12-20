@@ -1,43 +1,25 @@
 import { derived, get, Readable, Writable, writable } from "svelte/store"
 import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
-import { CalculationType, FieldSchema, FieldType } from "@budibase/types"
+import { UIColumn } from "@budibase/types"
 import { Store as StoreContext } from "."
 
 interface ColumnStore {
-  columns: Writable<Column[]>
+  columns: Writable<UIColumn[]>
 }
 
 interface DerivedColumnStore {
-  tableColumns: Readable<Column[]>
-  displayColumn: Readable<Column | undefined>
-  columnLookupMap: Readable<Record<string, Column>>
-  visibleColumns: Readable<Column[]>
-  scrollableColumns: Readable<Column[]>
+  tableColumns: Readable<UIColumn[]>
+  displayColumn: Readable<UIColumn | undefined>
+  columnLookupMap: Readable<Record<string, UIColumn>>
+  visibleColumns: Readable<UIColumn[]>
+  scrollableColumns: Readable<UIColumn[]>
   hasNonAutoColumn: Readable<boolean>
 }
 
 export type Store = ColumnStore & DerivedColumnStore
 
-type Column = FieldSchema & {
-  label: string
-  readonly: boolean
-  conditions: any
-  related?: {
-    field: string
-    subField: string
-  }
-  primaryDisplay?: boolean
-  schema?: {
-    disabled: boolean
-    type: FieldType
-    readonly: boolean
-    autocolumn: boolean
-  }
-  calculationType: CalculationType
-}
-
 export const createStores = (): ColumnStore => {
-  const columns = writable<Column[]>([])
+  const columns = writable<UIColumn[]>([])
 
   // Enrich columns with metadata about their display position
   const enrichedColumns = derived(columns, $columns => {
@@ -70,7 +52,7 @@ export const deriveStores = (context: StoreContext): DerivedColumnStore => {
 
   // Derive a lookup map for all columns by name
   const columnLookupMap = derived(columns, $columns => {
-    let map: Record<string, Column> = {}
+    let map: Record<string, UIColumn> = {}
     $columns.forEach(column => {
       map[column.name] = column
     })
@@ -136,7 +118,7 @@ export const createActions = (context: StoreContext) => {
   }
 
   // Checks if a column is readonly
-  const isReadonly = (column: Column) => {
+  const isReadonly = (column: UIColumn) => {
     if (!column?.schema) {
       return false
     }
@@ -186,7 +168,7 @@ export const initialise = (context: StoreContext) => {
         .map(field => {
           const fieldSchema = $enrichedSchema[field]
           const oldColumn = $columns?.find(col => col.name === field)
-          const column: Column = {
+          const column: UIColumn = {
             type: fieldSchema.type,
             name: field,
             label: fieldSchema.displayName || field,
