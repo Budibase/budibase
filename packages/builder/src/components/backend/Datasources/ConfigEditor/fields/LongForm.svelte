@@ -5,11 +5,12 @@
   export let name
   export let value
   export let error
+  export let placeholder
 </script>
 
 <div class="form-row">
   <Label>{name}</Label>
-  <TextArea on:blur on:change {type} {value} {error} />
+  <TextArea on:blur on:change {type} {value} {error} {placeholder} />
 </div>
 
 <style>
