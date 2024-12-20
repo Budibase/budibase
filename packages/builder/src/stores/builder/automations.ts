@@ -564,11 +564,12 @@ const automationActions = (store: AutomationStore) => ({
         automation.definition.stepNames?.[pathBlock.id] || pathBlock.name
 
       let schema = cloneDeep(pathBlock?.schema?.outputs?.properties) ?? {}
-
-      const isLoopBlock =
-        pathBlock.stepId === ActionStepID.LOOP &&
-        pathBlock.blockToLoop! in blocks
-
+      let isLoopBlock = false
+      if (pathBlock.blockToLoop) {
+        isLoopBlock =
+          pathBlock.stepId === ActionStepID.LOOP &&
+          pathBlock.blockToLoop in blocks
+      }
       const isTrigger = pathBlock.type === AutomationStepType.TRIGGER
 
       if (isLoopBlock && loopBlockCount == 0) {
