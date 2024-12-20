@@ -12,6 +12,7 @@ interface FirebaseConfig {
   email: string
   privateKey: string
   projectId: string
+  databaseId?: string
 }
 
 const SCHEMA: Integration = {
@@ -30,11 +31,20 @@ const SCHEMA: Integration = {
     },
     privateKey: {
       type: DatasourceFieldType.STRING,
+      display: "Private Key",
       required: true,
     },
     projectId: {
       type: DatasourceFieldType.STRING,
+      display: "Project ID",
       required: true,
+    },
+    databaseId: {
+      type: DatasourceFieldType.STRING,
+      display: "Database ID",
+      required: false,
+      default: "(default)",
+      placeholder: "(default)",
     },
   },
   query: {
@@ -97,6 +107,7 @@ class FirebaseIntegration implements IntegrationBase {
     this.config = config
     this.client = new Firestore({
       projectId: config.projectId,
+      databaseId: config.databaseId || "(default)",
       credentials: {
         client_email: config.email,
         private_key: config.privateKey?.replace(/\\n/g, "\n"),
