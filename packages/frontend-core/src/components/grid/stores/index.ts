@@ -1,3 +1,5 @@
+import { Writable } from "svelte/store"
+
 import * as Bounds from "./bounds"
 import * as Columns from "./columns"
 import * as Menu from "./menu"
@@ -75,7 +77,7 @@ export const attachStores = context => {
 export interface StoreContext {
   columns: Columns.Store["columns"]
   datasource: any
-  definition: any
-  displayColumn: any
+  definition: Writable<any>
+  displayColumn: Writable<any>
   enrichedSchema: any
 }
