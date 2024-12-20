@@ -11,7 +11,7 @@ interface BuilderViewV2Store {
 
 interface DerivedViewV2Store extends BuilderViewV2Store {
   list: ViewV2[]
-  selected: ViewV2
+  selected?: ViewV2
 }
 
 export class ViewV2Store extends DerivedBudiStore<
@@ -20,20 +20,23 @@ export class ViewV2Store extends DerivedBudiStore<
 > {
   constructor() {
     const makeDerivedStore = (store: Writable<BuilderViewV2Store>) => {
-      return derived([store, tables], ([$store, $tables]) => {
-        let list: ViewV2[] = []
-        $tables.list?.forEach(table => {
-          const views = Object.values(table?.views || {}).filter(
-            helpers.views.isV2
-          )
-          list = list.concat(views)
-        })
-        return {
-          ...$store,
-          list,
-          selected: list.find(view => view.id === $store.selectedViewId),
+      return derived(
+        [store, tables],
+        ([$store, $tables]): DerivedViewV2Store => {
+          let list: ViewV2[] = []
+          $tables.list?.forEach(table => {
+            const views = Object.values(table?.views || {}).filter(
+              helpers.views.isV2
+            )
+            list = list.concat(views)
+          })
+          return {
+            ...$store,
+            list,
+            selected: list.find(view => view.id === $store.selectedViewId),
+          }
         }
-      })
+      )
     }
 
     super(
