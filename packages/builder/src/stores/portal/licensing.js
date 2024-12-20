@@ -22,6 +22,7 @@ export const createLicensingStore = () => {
     backupsEnabled: false,
     brandingEnabled: false,
     scimEnabled: false,
+    environmentVariablesEnabled: false,
     budibaseAIEnabled: false,
     customAIConfigsEnabled: false,
     auditLogsEnabled: false,
