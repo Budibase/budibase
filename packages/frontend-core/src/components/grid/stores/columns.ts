@@ -1,8 +1,25 @@
-import { derived, get, writable } from "svelte/store"
+import { derived, get, Readable, Writable, writable } from "svelte/store"
 import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
+import { UIColumn } from "@budibase/types"
+import { Store as StoreContext } from "."
 
-export const createStores = () => {
-  const columns = writable([])
+interface ColumnStore {
+  columns: Writable<UIColumn[]>
+}
+
+interface DerivedColumnStore {
+  tableColumns: Readable<UIColumn[]>
+  displayColumn: Readable<UIColumn | undefined>
+  columnLookupMap: Readable<Record<string, UIColumn>>
+  visibleColumns: Readable<UIColumn[]>
+  scrollableColumns: Readable<UIColumn[]>
+  hasNonAutoColumn: Readable<boolean>
+}
+
+export type Store = ColumnStore & DerivedColumnStore
+
+export const createStores = (): ColumnStore => {
+  const columns = writable<UIColumn[]>([])
 
   // Enrich columns with metadata about their display position
   const enrichedColumns = derived(columns, $columns => {
@@ -16,7 +33,7 @@ export const createStores = () => {
       }
       if (col.visible) {
         idx++
-        offset += col.width
+        offset += col.width ?? 0
       }
       return enriched
     })
@@ -30,12 +47,12 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: StoreContext): DerivedColumnStore => {
   const { columns } = context
 
   // Derive a lookup map for all columns by name
   const columnLookupMap = derived(columns, $columns => {
-    let map = {}
+    let map: Record<string, UIColumn> = {}
     $columns.forEach(column => {
       map[column.name] = column
     })
@@ -78,11 +95,11 @@ export const deriveStores = context => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext) => {
   const { columns, datasource } = context
 
   // Updates the width of all columns
-  const changeAllColumnWidths = async width => {
+  const changeAllColumnWidths = async (width: number) => {
     const $columns = get(columns)
     $columns.forEach(column => {
       const { related } = column
@@ -101,7 +118,7 @@ export const createActions = context => {
   }
 
   // Checks if a column is readonly
-  const isReadonly = column => {
+  const isReadonly = (column: UIColumn) => {
     if (!column?.schema) {
       return false
     }
@@ -125,11 +142,11 @@ export const createActions = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const { definition, columns, displayColumn, enrichedSchema } = context
 
   // Merge new schema fields with existing schema in order to preserve widths
-  const processColumns = $enrichedSchema => {
+  const processColumns = ($enrichedSchema: any) => {
     if (!$enrichedSchema) {
       columns.set([])
       return
@@ -139,7 +156,7 @@ export const initialise = context => {
     const $displayColumn = get(displayColumn)
 
     // Find primary display
-    let primaryDisplay
+    let primaryDisplay: string
     const candidatePD = $definition.primaryDisplay || $displayColumn?.name
     if (candidatePD && $enrichedSchema[candidatePD]) {
       primaryDisplay = candidatePD
@@ -151,7 +168,8 @@ export const initialise = context => {
         .map(field => {
           const fieldSchema = $enrichedSchema[field]
           const oldColumn = $columns?.find(col => col.name === field)
-          const column = {
+          const column: UIColumn = {
+            type: fieldSchema.type,
             name: field,
             label: fieldSchema.displayName || field,
             schema: fieldSchema,
