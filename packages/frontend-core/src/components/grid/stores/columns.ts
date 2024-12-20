@@ -1,6 +1,6 @@
 import { derived, get, Writable, writable } from "svelte/store"
 import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
-import { FieldSchema } from "@budibase/types"
+import { CalculationType, FieldSchema } from "@budibase/types"
 import { StoreContext } from "."
 
 export interface Store {
@@ -8,15 +8,18 @@ export interface Store {
 }
 
 type Column = FieldSchema & {
+  label: string
+  readonly: boolean
+  conditions: any
   related?: {
     field: string
     subField: string
   }
-  primaryDisplay: boolean
-
+  primaryDisplay?: boolean
   schema?: {
     autocolumn: boolean
   }
+  calculationType: CalculationType
 }
 
 export const createStores = (): Store => {
@@ -169,7 +172,8 @@ export const initialise = (context: StoreContext) => {
         .map(field => {
           const fieldSchema = $enrichedSchema[field]
           const oldColumn = $columns?.find(col => col.name === field)
-          const column = {
+          const column: Column = {
+            type: fieldSchema.type,
             name: field,
             label: fieldSchema.displayName || field,
             schema: fieldSchema,
