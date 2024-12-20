@@ -1,30 +1,64 @@
-import { FieldType } from "@budibase/types"
+import {
+  FieldSchema,
+  FieldType,
+  SaveTableRequest,
+  Table,
+} from "@budibase/types"
 import { SWITCHABLE_TYPES } from "@budibase/shared-core"
-import { get, writable, derived } from "svelte/store"
+import { get, derived, Writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { API } from "api"
+import { DerivedBudiStore } from "stores/BudiStore"
 
-export function createTablesStore() {
-  const store = writable({
-    list: [],
-    selectedTableId: null,
-  })
-  const derivedStore = derived(store, $store => ({
-    ...$store,
-    selected: $store.list?.find(table => table._id === $store.selectedTableId),
-  }))
+interface BuilderTableStore {
+  list: Table[]
+  selectedTableId?: string
+}
 
-  const fetch = async () => {
+interface DerivedTableStore extends BuilderTableStore {
+  selected?: Table
+}
+
+export class TableStore extends DerivedBudiStore<
+  BuilderTableStore,
+  DerivedTableStore
+> {
+  constructor() {
+    const makeDerivedStore = (store: Writable<BuilderTableStore>) => {
+      return derived(store, $store => ({
+        ...$store,
+        selected: $store.list?.find(
+          table => table._id === $store.selectedTableId
+        ),
+      }))
+    }
+
+    super(
+      {
+        list: [],
+        selectedTableId: undefined,
+      },
+      makeDerivedStore
+    )
+
+    this.select = this.select.bind(this)
+  }
+
+  async init() {
+    return this.fetch()
+  }
+
+  async fetch() {
     const tables = await API.getTables()
-    store.update(state => ({
+    this.store.update(state => ({
       ...state,
       list: tables,
     }))
   }
 
-  const singleFetch = async tableId => {
+  private async singleFetch(tableId: string) {
     const table = await API.getTable(tableId)
-    store.update(state => {
+    this.store.update(state => {
       const list = []
       // update the list, keep order accurate
       for (let tbl of state.list) {
@@ -39,16 +73,16 @@ export function createTablesStore() {
     })
   }
 
-  const select = tableId => {
-    store.update(state => ({
+  select(tableId: string | undefined) {
+    this.store.update(state => ({
       ...state,
       selectedTableId: tableId,
     }))
   }
 
-  const save = async table => {
-    const updatedTable = cloneDeep(table)
-    const oldTable = get(store).list.filter(t => t._id === table._id)[0]
+  async save(table: Table) {
+    const updatedTable: SaveTableRequest = cloneDeep(table)
+    const oldTable = get(this.store).list.filter(t => t._id === table._id)[0]
 
     const fieldNames = []
     // Update any renamed schema keys to reflect their names
@@ -79,8 +113,8 @@ export function createTablesStore() {
     }
 
     const savedTable = await API.saveTable(updatedTable)
-    replaceTable(savedTable._id, savedTable)
-    select(savedTable._id)
+    this.replaceTable(savedTable._id, savedTable)
+    this.select(savedTable._id)
     // make sure tables up to date (related)
     let newTableIds = []
     for (let column of Object.values(updatedTable?.schema || {})) {
@@ -99,28 +133,30 @@ export function createTablesStore() {
     const tableIdsToFetch = [...new Set([...newTableIds, ...oldTableIds])]
     // too many tables to fetch, just get all
     if (tableIdsToFetch.length > 3) {
-      await fetch()
+      await this.fetch()
     } else {
-      await Promise.all(tableIdsToFetch.map(id => singleFetch(id)))
+      await Promise.all(tableIdsToFetch.map(id => this.singleFetch(id)))
     }
     return savedTable
   }
 
-  const deleteTable = async table => {
-    if (!table?._id) {
-      return
-    }
-    await API.deleteTable(table._id, table._rev || "rev")
-    replaceTable(table._id, null)
+  async delete(table: { _id: string; _rev: string }) {
+    await API.deleteTable(table._id, table._rev)
+    this.replaceTable(table._id, null)
   }
 
-  const saveField = async ({
+  async saveField({
     originalName,
     field,
     primaryDisplay = false,
     indexes,
-  }) => {
-    let draft = cloneDeep(get(derivedStore).selected)
+  }: {
+    originalName: string
+    field: FieldSchema
+    primaryDisplay: boolean
+    indexes: Record<string, any>
+  }) {
+    const draft: SaveTableRequest = cloneDeep(get(this.derivedStore).selected!)
 
     // delete the original if renaming
     // need to handle if the column had no name, empty string
@@ -139,7 +175,7 @@ export function createTablesStore() {
       const fields = Object.keys(draft.schema)
       // pick another display column randomly if unselecting
       draft.primaryDisplay = fields.filter(
-        name => name !== originalName || name !== field
+        name => name !== originalName || name !== field.name
       )[0]
     }
     if (indexes) {
@@ -150,24 +186,24 @@ export function createTablesStore() {
       [field.name]: cloneDeep(field),
     }
 
-    await save(draft)
+    await this.save(draft)
   }
 
-  const deleteField = async field => {
-    let draft = cloneDeep(get(derivedStore).selected)
+  async deleteField(field: { name: string | number }) {
+    let draft = cloneDeep(get(this.derivedStore).selected!)
     delete draft.schema[field.name]
-    await save(draft)
+    await this.save(draft)
   }
 
   // Handles external updates of tables
-  const replaceTable = (tableId, table) => {
+  replaceTable(tableId: string | undefined, table: Table | null) {
     if (!tableId) {
       return
     }
 
     // Handle deletion
     if (!table) {
-      store.update(state => ({
+      this.store.update(state => ({
         ...state,
         list: state.list.filter(x => x._id !== tableId),
       }))
@@ -175,9 +211,9 @@ export function createTablesStore() {
     }
 
     // Add new table
-    const index = get(store).list.findIndex(x => x._id === table._id)
+    const index = get(this.store).list.findIndex(x => x._id === table._id)
     if (index === -1) {
-      store.update(state => ({
+      this.store.update(state => ({
         ...state,
         list: [...state.list, table],
       }))
@@ -188,7 +224,7 @@ export function createTablesStore() {
       // This function has to merge state as there discrepancies with the table
       // API endpoints. The table list endpoint and get table endpoint use the
       // "type" property to mean different things.
-      store.update(state => {
+      this.store.update(state => {
         state.list[index] = {
           ...table,
           type: state.list[index].type,
@@ -198,26 +234,12 @@ export function createTablesStore() {
     }
   }
 
-  const removeDatasourceTables = datasourceId => {
-    store.update(state => ({
+  removeDatasourceTables(datasourceId: string) {
+    this.store.update(state => ({
       ...state,
       list: state.list.filter(table => table.sourceId !== datasourceId),
     }))
   }
-
-  return {
-    ...store,
-    subscribe: derivedStore.subscribe,
-    fetch,
-    init: fetch,
-    select,
-    save,
-    delete: deleteTable,
-    saveField,
-    deleteField,
-    replaceTable,
-    removeDatasourceTables,
-  }
 }
 
-export const tables = createTablesStore()
+export const tables = new TableStore()
