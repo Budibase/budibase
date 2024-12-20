@@ -29,6 +29,7 @@ import {
   AutomationStepSchema,
   AutomationTriggerSchema,
   BranchPath,
+  BlockDefinitions,
 } from "@budibase/types"
 import { ActionStepID } from "constants/backend/automations"
 import { FIELDS } from "constants/backend"
@@ -38,12 +39,6 @@ import { getNewStepName } from "helpers/automations/nameHelpers"
 import { QueryUtils } from "@budibase/frontend-core"
 import { BudiStore, DerivedBudiStore } from "stores/BudiStore"
 import { appStore } from "stores/builder"
-
-interface BlockDefinitions {
-  TRIGGER: Record<string, any>
-  CREATABLE_TRIGGER: Record<string, any>
-  ACTION: Record<string, any>
-}
 
 interface AutomationState {
   automations: Automation[]
