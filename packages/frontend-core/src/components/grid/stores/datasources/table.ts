@@ -1,9 +1,10 @@
 import { SortOrder } from "@budibase/types"
 import { get } from "svelte/store"
+import { Store as StoreContext } from ".."
 
 const SuppressErrors = true
 
-export const createActions = context => {
+export const createActions = (context: StoreContext) => {
   const { API, datasource, columns } = context
 
   const saveDefinition = async newDefinition => {
@@ -58,7 +59,7 @@ export const createActions = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const {
     datasource,
     fetch,

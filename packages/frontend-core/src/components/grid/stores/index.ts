@@ -50,14 +50,25 @@ const DependencyOrderedStores = [
   Cache,
 ]
 
-export interface BaseStore {}
+export interface BaseStore {
+  API: any
+}
 
 export type Store = BaseStore &
   Columns.Store & {
     // TODO while typing the rest of stores
-    datasource: any
+    datasource: Writable<any>
     definition: Writable<any>
-    enrichedSchema: any
+    enrichedSchema: Writable<any>
+    fetch: Writable<any>
+    filter: Writable<any>
+    inlineFilters: Writable<any>
+    allFilters: Writable<any>
+    sort: Writable<any>
+    table: Writable<any> & { actions: any }
+    initialFilter: Writable<any>
+    initialSortColumn: Writable<any>
+    initialSortOrder: Writable<any>
   }
 
 export const attachStores = (context: Store): Store => {
