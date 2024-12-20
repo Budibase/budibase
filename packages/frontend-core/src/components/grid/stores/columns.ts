@@ -63,7 +63,7 @@ export const createStores = (): Store => {
   }
 }
 
-export const deriveStores = (context: Store): DerivedStore => {
+export const deriveStores = (context: StoreContext): DerivedStore => {
   const { columns } = context
 
   // Derive a lookup map for all columns by name
