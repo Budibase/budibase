@@ -71,3 +71,11 @@ export const attachStores = context => {
 
   return context
 }
+
+export interface StoreContext {
+  columns: Columns.Store["columns"]
+  datasource: any
+  definition: any
+  displayColumn: any
+  enrichedSchema: any
+}

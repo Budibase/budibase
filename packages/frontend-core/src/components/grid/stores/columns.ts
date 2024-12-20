@@ -1,7 +1,25 @@
-import { derived, get, writable } from "svelte/store"
+import { derived, get, Writable, writable } from "svelte/store"
 import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
+import { FieldSchema } from "@budibase/types"
+import { StoreContext } from "."
 
-export const createStores = () => {
+export interface Store {
+  columns: Writable<Column[]>
+}
+
+type Column = FieldSchema & {
+  related?: {
+    field: string
+    subField: string
+  }
+  primaryDisplay: boolean
+
+  schema?: {
+    autocolumn: boolean
+  }
+}
+
+export const createStores = (): Store => {
   const columns = writable([])
 
   // Enrich columns with metadata about their display position
@@ -30,7 +48,7 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: Store) => {
   const { columns } = context
 
   // Derive a lookup map for all columns by name
@@ -78,7 +96,7 @@ export const deriveStores = context => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext) => {
   const { columns, datasource } = context
 
   // Updates the width of all columns
@@ -125,7 +143,7 @@ export const createActions = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const { definition, columns, displayColumn, enrichedSchema } = context
 
   // Merge new schema fields with existing schema in order to preserve widths
