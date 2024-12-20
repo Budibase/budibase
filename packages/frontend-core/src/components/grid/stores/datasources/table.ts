@@ -49,7 +49,7 @@ export const createActions = (context: StoreContext): TableActions => {
     return datasource?.type === "table" && !!datasource?.tableId
   }
 
-  const getRow = async (id: string) => {
+  const getRow = async (id: any) => {
     const res = await API.searchTable(get(datasource).tableId, {
       limit: 1,
       query: {
