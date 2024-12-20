@@ -45,7 +45,7 @@ const DependencyOrderedStores = [
   Users,
   Menu,
   Pagination,
-  Config,
+  Config as any,
   Clipboard,
   Notifications,
   Cache,
@@ -56,17 +56,17 @@ export interface BaseStore {
 }
 
 export type Store = BaseStore &
-  Columns.Store & {
+  Columns.Store &
+  Table.Store & {
     // TODO while typing the rest of stores
-    datasource: Writable<any>
+    datasource: Writable<any> & { actions: any }
     definition: Writable<any>
-    enrichedSchema: Writable<any>
+    enrichedSchema: any
     fetch: Writable<any>
     filter: Writable<any>
     inlineFilters: Writable<any>
     allFilters: Writable<any>
     sort: Writable<any>
-    table: Writable<any> & { actions: any }
     initialFilter: Writable<any>
     initialSortColumn: Writable<any>
     initialSortOrder: Writable<any>
