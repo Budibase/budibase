@@ -1,16 +1,39 @@
 import { get } from "svelte/store"
-import { SortOrder } from "@budibase/types"
+import {
+  Row,
+  SaveRowRequest,
+  SortOrder,
+  UIDatasource,
+  UpdateViewRequest,
+} from "@budibase/types"
+import { Store as StoreContext } from ".."
 
 const SuppressErrors = true
 
-export const createActions = context => {
+interface ViewActions {
+  viewV2: {
+    actions: {
+      saveDefinition: (newDefinition: UpdateViewRequest) => Promise<void>
+      addRow: (row: SaveRowRequest) => Promise<Row>
+      updateRow: (row: SaveRowRequest) => Promise<Row>
+      deleteRows: (rows: (string | Row)[]) => Promise<void>
+      getRow: (id: string) => Promise<Row>
+      isDatasourceValid: (datasource: UIDatasource) => boolean
+      canUseColumn: (name: string) => boolean
+    }
+  }
+}
+
+export type Store = ViewActions
+
+export const createActions = (context: StoreContext): ViewActions => {
   const { API, datasource, columns } = context
 
-  const saveDefinition = async newDefinition => {
+  const saveDefinition = async (newDefinition: UpdateViewRequest) => {
     await API.viewV2.update(newDefinition)
   }
 
-  const saveRow = async row => {
+  const saveRow = async (row: SaveRowRequest) => {
     const $datasource = get(datasource)
     row = {
       ...row,
@@ -23,11 +46,11 @@ export const createActions = context => {
     }
   }
 
-  const deleteRows = async rows => {
+  const deleteRows = async (rows: (string | Row)[]) => {
     await API.deleteRows(get(datasource).id, rows)
   }
 
-  const getRow = async id => {
+  const getRow = async (id: string) => {
     const res = await API.viewV2.fetch(get(datasource).id, {
       limit: 1,
       query: {
@@ -40,13 +63,13 @@ export const createActions = context => {
     return res?.rows?.[0]
   }
 
-  const isDatasourceValid = datasource => {
+  const isDatasourceValid = (datasource: UIDatasource) => {
     return (
-      datasource?.type === "viewV2" && datasource?.id && datasource?.tableId
+      datasource?.type === "viewV2" && !!datasource?.id && !!datasource?.tableId
     )
   }
 
-  const canUseColumn = name => {
+  const canUseColumn = (name: string) => {
     return get(columns).some(col => col.name === name && col.visible)
   }
 
@@ -65,7 +88,7 @@ export const createActions = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const {
     definition,
     datasource,
@@ -85,7 +108,7 @@ export const initialise = context => {
 
   // Keep a list of subscriptions so that we can clear them when the datasource
   // config changes
-  let unsubscribers = []
+  let unsubscribers: any[] = []
 
   // Observe datasource changes and apply logic for view V2 datasources
   datasource.subscribe($datasource => {
