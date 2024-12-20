@@ -193,7 +193,7 @@ export enum AutomationStoppedReason {
 export interface AutomationResults {
   automationId?: string
   status?: AutomationStatus
-  trigger?: any
+  trigger?: AutomationTrigger
   steps: {
     stepId: AutomationTriggerStepId | AutomationActionStepId
     inputs: {
