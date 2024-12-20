@@ -3,3 +3,9 @@ export interface BranchPath {
   branchIdx: number
   branchStepId: string
 }
+
+export interface BlockDefinitions {
+  TRIGGER: Record<string, any>
+  CREATABLE_TRIGGER: Record<string, any>
+  ACTION: Record<string, any>
+}
