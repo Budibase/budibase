@@ -1,10 +1,19 @@
-import { derived, get, Writable, writable } from "svelte/store"
+import { derived, get, Readable, Writable, writable } from "svelte/store"
 import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
 import { CalculationType, FieldSchema } from "@budibase/types"
 import { StoreContext } from "."
 
 export interface Store {
   columns: Writable<Column[]>
+}
+
+export interface DerivedStore {
+  tableColumns: Readable<Column[]>
+  displayColumn: Readable<Column>
+  columnLookupMap: Readable<Record<string, Column>>
+  visibleColumns: Readable<Column[]>
+  scrollableColumns: Readable<Column[]>
+  hasNonAutoColumn: Readable<boolean>
 }
 
 type Column = FieldSchema & {
@@ -51,7 +60,7 @@ export const createStores = (): Store => {
   }
 }
 
-export const deriveStores = (context: Store) => {
+export const deriveStores = (context: Store): DerivedStore => {
   const { columns } = context
 
   // Derive a lookup map for all columns by name
