@@ -37,8 +37,8 @@ export interface AppInstance {
 
 export interface AppNavigation {
   navigation: string
-  title: string
-  navWidth: string
+  title?: string
+  navWidth?: string
   sticky?: boolean
   hideLogo?: boolean
   logoUrl?: string
@@ -46,6 +46,7 @@ export interface AppNavigation {
   navBackground?: string
   navTextColor?: string
   links?: AppNavigationLink[]
+  textAlign?: string
 }
 
 export interface AppNavigationLink {
@@ -53,6 +54,8 @@ export interface AppNavigationLink {
   url: string
   id?: string
   roleId?: string
+  type?: string
+  subLinks?: AppNavigationLink[]
 }
 
 export interface AppCustomTheme {
