@@ -26,6 +26,9 @@ import {
   UILogicalOperator,
   EmptyFilterOption,
   AutomationIOType,
+  AutomationStepSchema,
+  AutomationTriggerSchema,
+  BranchPath,
 } from "@budibase/types"
 import { ActionStepID } from "constants/backend/automations"
 import { FIELDS } from "constants/backend"
@@ -165,7 +168,7 @@ const automationActions = (store: AutomationStore) => ({
    * @param {*} automation the automation to alter.
    * @returns {Object} contains the deleted nodes and new updated automation
    */
-  deleteBlock: (pathTo: Array<any>, automation: Automation) => {
+  deleteBlock: (pathTo: Array<BranchPath>, automation: Automation) => {
     let newAutomation = cloneDeep(automation)
 
     const steps = [
@@ -253,7 +256,7 @@ const automationActions = (store: AutomationStore) => ({
   registerBlock: (
     blocks: Record<string, any>,
     block: AutomationStep | AutomationTrigger,
-    pathTo: Array<any>,
+    pathTo: Array<BranchPath>,
     terminating: boolean
   ) => {
     blocks[block.id] = {
@@ -278,7 +281,7 @@ const automationActions = (store: AutomationStore) => ({
    * @param {Array<Object>} pathWay e.g. [{stepIdx:2},{branchIdx:0, stepIdx:2},...]
    * @returns {Array<Object>} all steps encountered on the provided path
    */
-  getPathSteps: (pathWay: Array<any>, automation: Automation) => {
+  getPathSteps: (pathWay: Array<BranchPath>, automation: Automation) => {
     // Base Steps, including trigger
     const steps = [
       automation.definition.trigger,
@@ -319,7 +322,7 @@ const automationActions = (store: AutomationStore) => ({
    * @returns
    */
   updateStep: (
-    pathWay: Array<any>,
+    pathWay: Array<BranchPath>,
     automation: Automation,
     update: AutomationStep | AutomationTrigger,
     insert = false
@@ -474,7 +477,7 @@ const automationActions = (store: AutomationStore) => ({
 
       branches.forEach((branch, bIdx) => {
         block.inputs?.children[branch.id].forEach(
-          (bBlock: any, sIdx: any, array: any) => {
+          (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
             const ended =
               array.length - 1 === sIdx && !bBlock.inputs?.branches?.length
             treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
@@ -569,7 +572,7 @@ const automationActions = (store: AutomationStore) => ({
 
       const isLoopBlock =
         pathBlock.stepId === ActionStepID.LOOP &&
-        pathBlock.blockToLoop in blocks
+        pathBlock.blockToLoop! in blocks
 
       const isTrigger = pathBlock.type === AutomationStepType.TRIGGER
 
@@ -910,7 +913,10 @@ const automationActions = (store: AutomationStore) => ({
       ...newAutomation.definition.steps,
     ]
 
-    let cache: any
+    let cache:
+      | AutomationStepSchema<AutomationActionStepId>
+      | AutomationTriggerSchema<AutomationTriggerStepId>
+
     pathWay.forEach((path, pathIdx, array) => {
       const { stepIdx, branchIdx } = path
       const final = pathIdx === array.length - 1
@@ -931,7 +937,6 @@ const automationActions = (store: AutomationStore) => ({
         }
         return
       }
-
       if (Number.isInteger(branchIdx)) {
         const branchId = cache.inputs.branches[branchIdx].id
         const children = cache.inputs.children[branchId]
@@ -982,7 +987,7 @@ const automationActions = (store: AutomationStore) => ({
   branchAutomation: async (path: Array<any>, automation: Automation) => {
     const insertPoint = path.at(-1)
     let newAutomation = cloneDeep(automation)
-    let cache: any = null
+    let cache: any
     let atRoot = false
 
     // Generate a default empty branch
@@ -1105,7 +1110,7 @@ const automationActions = (store: AutomationStore) => ({
    * @param {Object} block
    */
   branchRight: async (
-    pathTo: Array<any>,
+    pathTo: Array<BranchPath>,
     automation: Automation,
     block: AutomationStep
   ) => {
@@ -1254,7 +1259,7 @@ const automationActions = (store: AutomationStore) => ({
    *
    * @param {Array<Object>} pathTo the path to the target node
    */
-  deleteAutomationBlock: async (pathTo: Array<any>) => {
+  deleteAutomationBlock: async (pathTo: Array<BranchPath>) => {
     const automation = get(selectedAutomation)?.data
     if (!automation) {
       return
