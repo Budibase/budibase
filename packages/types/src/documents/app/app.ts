@@ -1,6 +1,5 @@
 import { User, Document, Plugin, Snippet } from "../"
 import { SocketSession } from "../../sdk"
-import { NavLink } from "../../ui"
 
 export type AppMetadataErrors = { [key: string]: string[] }
 
