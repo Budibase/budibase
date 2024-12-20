@@ -115,7 +115,7 @@ export const initialise = (context: StoreContext) => {
 
   // Keep a list of subscriptions so that we can clear them when the datasource
   // config changes
-  let unsubscribers = []
+  let unsubscribers: any[] = []
 
   // Observe datasource changes and apply logic for view V2 datasources
   datasource.subscribe($datasource => {
