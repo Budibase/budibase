@@ -1,6 +1,6 @@
 import { derived, get, Readable, Writable, writable } from "svelte/store"
 import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
-import { CalculationType, FieldSchema } from "@budibase/types"
+import { CalculationType, FieldSchema, FieldType } from "@budibase/types"
 import { Store as StoreContext } from "."
 
 export interface Store {
@@ -26,6 +26,9 @@ type Column = FieldSchema & {
   }
   primaryDisplay?: boolean
   schema?: {
+    disabled: boolean
+    type: FieldType
+    readonly: boolean
     autocolumn: boolean
   }
   calculationType: CalculationType
@@ -112,7 +115,7 @@ export const createActions = (context: StoreContext) => {
   const { columns, datasource } = context
 
   // Updates the width of all columns
-  const changeAllColumnWidths = async width => {
+  const changeAllColumnWidths = async (width: number) => {
     const $columns = get(columns)
     $columns.forEach(column => {
       const { related } = column
@@ -131,7 +134,7 @@ export const createActions = (context: StoreContext) => {
   }
 
   // Checks if a column is readonly
-  const isReadonly = column => {
+  const isReadonly = (column: Column) => {
     if (!column?.schema) {
       return false
     }
