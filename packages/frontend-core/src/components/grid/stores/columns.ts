@@ -1,7 +1,7 @@
 import { derived, get, Readable, Writable, writable } from "svelte/store"
 import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
 import { CalculationType, FieldSchema } from "@budibase/types"
-import { StoreContext } from "."
+import { Store as StoreContext } from "."
 
 export interface Store {
   columns: Writable<Column[]>
