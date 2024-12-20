@@ -3,6 +3,7 @@ import {
   Row,
   SaveRowRequest,
   SortOrder,
+  UIDatasource,
   UpdateViewRequest,
 } from "@budibase/types"
 import { Store as StoreContext } from ".."
@@ -17,11 +18,7 @@ interface ViewActions {
       updateRow: (row: SaveRowRequest) => Promise<Row>
       deleteRows: (rows: (string | Row)[]) => Promise<void>
       getRow: (id: string) => Promise<Row>
-      isDatasourceValid: (datasource: {
-        type: string
-        id: string
-        tableId: string
-      }) => boolean
+      isDatasourceValid: (datasource: UIDatasource) => boolean
       canUseColumn: (name: string) => boolean
     }
   }
@@ -66,11 +63,7 @@ export const createActions = (context: StoreContext): ViewActions => {
     return res?.rows?.[0]
   }
 
-  const isDatasourceValid = (datasource: {
-    type: string
-    id: string
-    tableId: string
-  }) => {
+  const isDatasourceValid = (datasource: UIDatasource) => {
     return (
       datasource?.type === "viewV2" && !!datasource?.id && !!datasource?.tableId
     )
