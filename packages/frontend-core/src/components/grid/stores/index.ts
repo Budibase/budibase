@@ -50,33 +50,43 @@ const DependencyOrderedStores = [
   Cache,
 ]
 
-export type Store = Columns.Store & {
-  // TODO while typing the rest of stores
-  datasource: any
-  definition: Writable<any>
-  displayColumn: Writable<any>
-  enrichedSchema: any
-}
+export interface BaseStore {}
 
-export const attachStores = (context): Store => {
+export type Store = BaseStore &
+  Columns.Store & {
+    // TODO while typing the rest of stores
+    datasource: any
+    definition: Writable<any>
+    enrichedSchema: any
+  }
+
+export const attachStores = (context: Store): Store => {
   // Atomic store creation
   for (let store of DependencyOrderedStores) {
-    context = { ...context, ...store.createStores?.(context) }
+    if ("createStores" in store) {
+      context = { ...context, ...store.createStores?.(context) }
+    }
   }
 
   // Derived store creation
   for (let store of DependencyOrderedStores) {
-    context = { ...context, ...store.deriveStores?.(context) }
+    if ("deriveStores" in store) {
+      context = { ...context, ...store.deriveStores?.(context) }
+    }
   }
 
   // Action creation
   for (let store of DependencyOrderedStores) {
-    context = { ...context, ...store.createActions?.(context) }
+    if ("createActions" in store) {
+      context = { ...context, ...store.createActions?.(context) }
+    }
   }
 
   // Initialise any store logic
   for (let store of DependencyOrderedStores) {
-    store.initialise?.(context)
+    if ("initialise" in store) {
+      store.initialise?.(context)
+    }
   }
 
   return context

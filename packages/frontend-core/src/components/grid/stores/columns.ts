@@ -9,7 +9,7 @@ interface ColumnStore {
 
 interface DerivedColumnStore {
   tableColumns: Readable<Column[]>
-  displayColumn: Readable<Column>
+  displayColumn: Readable<Column | undefined>
   columnLookupMap: Readable<Record<string, Column>>
   visibleColumns: Readable<Column[]>
   scrollableColumns: Readable<Column[]>
@@ -37,7 +37,7 @@ type Column = FieldSchema & {
 }
 
 export const createStores = (): ColumnStore => {
-  const columns = writable([])
+  const columns = writable<Column[]>([])
 
   // Enrich columns with metadata about their display position
   const enrichedColumns = derived(columns, $columns => {
@@ -51,7 +51,7 @@ export const createStores = (): ColumnStore => {
       }
       if (col.visible) {
         idx++
-        offset += col.width
+        offset += col.width ?? 0
       }
       return enriched
     })
@@ -70,7 +70,7 @@ export const deriveStores = (context: StoreContext): DerivedColumnStore => {
 
   // Derive a lookup map for all columns by name
   const columnLookupMap = derived(columns, $columns => {
-    let map = {}
+    let map: Record<string, Column> = {}
     $columns.forEach(column => {
       map[column.name] = column
     })
@@ -164,7 +164,7 @@ export const initialise = (context: StoreContext) => {
   const { definition, columns, displayColumn, enrichedSchema } = context
 
   // Merge new schema fields with existing schema in order to preserve widths
-  const processColumns = $enrichedSchema => {
+  const processColumns = ($enrichedSchema: any) => {
     if (!$enrichedSchema) {
       columns.set([])
       return
@@ -174,7 +174,7 @@ export const initialise = (context: StoreContext) => {
     const $displayColumn = get(displayColumn)
 
     // Find primary display
-    let primaryDisplay
+    let primaryDisplay: string
     const candidatePD = $definition.primaryDisplay || $displayColumn?.name
     if (candidatePD && $enrichedSchema[candidatePD]) {
       primaryDisplay = candidatePD
