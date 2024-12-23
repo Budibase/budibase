@@ -1,27 +1,19 @@
 import {
   Row,
   SaveRowRequest,
-  SaveRowResponse,
   SaveTableRequest,
   SortOrder,
   UIDatasource,
 } from "@budibase/types"
 import { get } from "svelte/store"
 import { Store as StoreContext } from ".."
+import { DatasourceActions } from "."
 
 const SuppressErrors = true
 
 interface TableActions {
   table: {
-    actions: {
-      saveDefinition: (newDefinition: SaveTableRequest) => Promise<void>
-      addRow: (row: SaveRowRequest) => Promise<SaveRowResponse>
-      updateRow: (row: SaveRowRequest) => Promise<SaveRowResponse>
-      deleteRows: (rows: (string | Row)[]) => Promise<void>
-      getRow: (id: string) => Promise<Row>
-      isDatasourceValid: (datasource: UIDatasource) => boolean
-      canUseColumn: (name: string) => boolean
-    }
+    actions: DatasourceActions<SaveTableRequest>
   }
 }
 

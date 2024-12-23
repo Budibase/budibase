@@ -7,20 +7,13 @@ import {
   UpdateViewRequest,
 } from "@budibase/types"
 import { Store as StoreContext } from ".."
+import { DatasourceActions } from "."
 
 const SuppressErrors = true
 
 interface ViewActions {
   viewV2: {
-    actions: {
-      saveDefinition: (newDefinition: UpdateViewRequest) => Promise<void>
-      addRow: (row: SaveRowRequest) => Promise<Row>
-      updateRow: (row: SaveRowRequest) => Promise<Row>
-      deleteRows: (rows: (string | Row)[]) => Promise<void>
-      getRow: (id: string) => Promise<Row>
-      isDatasourceValid: (datasource: UIDatasource) => boolean
-      canUseColumn: (name: string) => boolean
-    }
+    actions: DatasourceActions<UpdateViewRequest>
   }
 }
 
