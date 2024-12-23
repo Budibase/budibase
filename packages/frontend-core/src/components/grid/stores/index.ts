@@ -1,4 +1,5 @@
 import { Writable } from "svelte/store"
+import type { APIClient } from "../../../api/types"
 
 import * as Bounds from "./bounds"
 import * as Columns from "./columns"
@@ -44,20 +45,36 @@ const DependencyOrderedStores = [
   Users,
   Menu,
   Pagination,
-  Config,
+  Config as any,
   Clipboard,
   Notifications,
   Cache,
 ]
 
-export interface BaseStore {}
+export interface BaseStore {
+  API: APIClient
+}
 
 export type Store = BaseStore &
-  Columns.Store & {
+  Columns.Store &
+  Table.Store &
+  ViewV2.Store &
+  NonPlus.Store & {
     // TODO while typing the rest of stores
-    datasource: any
+    datasource: Writable<any> & { actions: any }
     definition: Writable<any>
     enrichedSchema: any
+    fetch: Writable<any>
+    filter: Writable<any>
+    inlineFilters: Writable<any>
+    allFilters: Writable<any>
+    sort: Writable<any>
+    initialFilter: Writable<any>
+    initialSortColumn: Writable<any>
+    initialSortOrder: Writable<any>
+    rows: Writable<any> & { actions: any }
+    subscribe: any
+    config: Writable<any>
   }
 
 export const attachStores = (context: Store): Store => {
