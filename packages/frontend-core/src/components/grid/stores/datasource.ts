@@ -1,10 +1,47 @@
-import { derived, get } from "svelte/store"
+import { derived, get, Readable, Writable } from "svelte/store"
 import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
 import { enrichSchemaWithRelColumns, memo } from "../../../utils"
 import { cloneDeep } from "lodash"
-import { ViewV2Type } from "@budibase/types"
+import {
+  FieldSchema,
+  SaveTableRequest,
+  UIDatasource,
+  UpdateViewRequest,
+  ViewV2Type,
+} from "@budibase/types"
+import { Store as StoreContext } from "."
+import { DatasourceActions } from "./datasources"
 
-export const createStores = () => {
+interface DatasourceStore {
+  definition: Writable<UIDatasource>
+  schemaMutations: Writable<Record<string, {}>>
+  subSchemaMutations: Writable<Record<string, {}>>
+}
+
+interface DerivedDatasourceStore {
+  schema: Readable<Record<string, FieldSchema>>
+  enrichedSchema: Readable<Record<string, FieldSchema>>
+  hasBudibaseIdentifiers: Readable<boolean>
+}
+
+interface ActionDatasourceStore {
+  datasource: DatasourceStore["definition"] & {
+    actions: DatasourceActions<UpdateViewRequest | SaveTableRequest> & {
+      refreshDefinition: () => Promise<void>
+      changePrimaryDisplay: any
+      addSchemaMutation: any
+      addSubSchemaMutation: any
+      saveSchemaMutations: any
+      resetSchemaMutations: any
+    }
+  }
+}
+
+export type Store = DatasourceStore &
+  DerivedDatasourceStore &
+  ActionDatasourceStore
+
+export const createStores = (): DatasourceStore => {
   const definition = memo(null)
   const schemaMutations = memo({})
   const subSchemaMutations = memo({})
@@ -16,7 +53,7 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
   const {
     API,
     definition,
@@ -27,7 +64,7 @@ export const deriveStores = context => {
   } = context
 
   const schema = derived(definition, $definition => {
-    let schema = getDatasourceSchema({
+    let schema: Record<string, FieldSchema> = getDatasourceSchema({
       API,
       datasource: get(datasource),
       definition: $definition,
@@ -40,7 +77,7 @@ export const deriveStores = context => {
     // Certain datasources like queries use primitives.
     Object.keys(schema || {}).forEach(key => {
       if (typeof schema[key] !== "object") {
-        schema[key] = { type: schema[key] }
+        schema[key] = { type: schema[key] } as any // TODO
       }
     })
 
@@ -68,9 +105,8 @@ export const deriveStores = context => {
 
         if ($subSchemaMutations[field]) {
           enrichedSchema[field].columns ??= {}
-          for (const [fieldName, mutation] of Object.entries(
-            $subSchemaMutations[field]
-          )) {
+          for (const fieldName of Object.keys($subSchemaMutations[field])) {
+            const mutation = $subSchemaMutations[field][fieldName]
             enrichedSchema[field].columns[fieldName] = {
               ...enrichedSchema[field].columns[fieldName],
               ...mutation,
@@ -104,7 +140,7 @@ export const deriveStores = context => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext): ActionDatasourceStore => {
   const {
     API,
     datasource,
@@ -147,7 +183,9 @@ export const createActions = context => {
   }
 
   // Saves the datasource definition
-  const saveDefinition = async newDefinition => {
+  const saveDefinition = async (
+    newDefinition: UpdateViewRequest | SaveTableRequest
+  ) => {
     // Update local state
     const originalDefinition = get(definition)
     definition.set(newDefinition)
@@ -155,7 +193,7 @@ export const createActions = context => {
     // Update server
     if (get(config).canSaveSchema) {
       try {
-        await getAPI()?.actions.saveDefinition(newDefinition)
+        await getAPI()?.actions.saveDefinition(newDefinition as any)
 
         // Broadcast change so external state can be updated, as this change
         // will not be received by the builder websocket because we caused it
@@ -242,9 +280,8 @@ export const createActions = context => {
       }
       if ($subSchemaMutations[column]) {
         newSchema[column].columns ??= {}
-        for (const [fieldName, mutation] of Object.entries(
-          $subSchemaMutations[column]
-        )) {
+        for (const fieldName of Object.keys($subSchemaMutations[column])) {
+          const mutation = $subSchemaMutations[column][fieldName]
           newSchema[column].columns[fieldName] = {
             ...newSchema[column].columns[fieldName],
             ...mutation,
