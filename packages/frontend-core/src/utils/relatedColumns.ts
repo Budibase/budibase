@@ -14,7 +14,14 @@ const columnTypeManyTypeOverrides = {
 }
 
 const columnTypeManyParser = {
-  [FieldType.DATETIME]: (value: any[], field: any) => {
+  [FieldType.DATETIME]: (
+    value: any[],
+    field: {
+      timeOnly?: boolean
+      dateOnly?: boolean
+      ignoreTimezones?: boolean
+    }
+  ) => {
     function parseDate(value: any) {
       const { timeOnly, dateOnly, ignoreTimezones } = field || {}
       const enableTime = !dateOnly

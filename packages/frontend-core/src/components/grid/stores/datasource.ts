@@ -4,8 +4,11 @@ import { enrichSchemaWithRelColumns, memo } from "../../../utils"
 import { cloneDeep } from "lodash"
 import {
   FieldSchema,
+  Row,
+  SaveRowRequest,
   SaveTableRequest,
   UIDatasource,
+  UIFieldMutation,
   UIFieldSchema,
   UpdateViewRequest,
   ViewV2Type,
@@ -211,7 +214,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   }
 
   // Updates the datasources primary display column
-  const changePrimaryDisplay = async column => {
+  const changePrimaryDisplay = async (column: string) => {
     let newDefinition = cloneDeep(get(definition))
 
     // Update primary display
@@ -227,7 +230,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   }
 
   // Adds a schema mutation for a single field
-  const addSchemaMutation = (field, mutation) => {
+  const addSchemaMutation = (field: string, mutation: UIFieldMutation) => {
     if (!field || !mutation) {
       return
     }
@@ -243,7 +246,11 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   }
 
   // Adds a nested schema mutation for a single field
-  const addSubSchemaMutation = (field, fromField, mutation) => {
+  const addSubSchemaMutation = (
+    field: string,
+    fromField: string,
+    mutation: UIFieldMutation
+  ) => {
     if (!field || !fromField || !mutation) {
       return
     }
@@ -305,32 +312,32 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   }
 
   // Adds a row to the datasource
-  const addRow = async row => {
+  const addRow = async (row: SaveRowRequest) => {
     return await getAPI()?.actions.addRow(row)
   }
 
   // Updates an existing row in the datasource
-  const updateRow = async row => {
+  const updateRow = async (row: SaveRowRequest) => {
     return await getAPI()?.actions.updateRow(row)
   }
 
   // Deletes rows from the datasource
-  const deleteRows = async rows => {
+  const deleteRows = async (rows: Row[]) => {
     return await getAPI()?.actions.deleteRows(rows)
   }
 
   // Gets a single row from a datasource
-  const getRow = async id => {
+  const getRow = async (id: string) => {
     return await getAPI()?.actions.getRow(id)
   }
 
   // Checks if a certain datasource config is valid
-  const isDatasourceValid = datasource => {
+  const isDatasourceValid = (datasource: UIDatasource) => {
     return getAPI()?.actions.isDatasourceValid(datasource)
   }
 
   // Checks if this datasource can use a specific column by name
-  const canUseColumn = name => {
+  const canUseColumn = (name: string) => {
     return getAPI()?.actions.canUseColumn(name)
   }
 
