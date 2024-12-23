@@ -6,6 +6,7 @@ import {
   FieldSchema,
   SaveTableRequest,
   UIDatasource,
+  UIFieldSchema,
   UpdateViewRequest,
   ViewV2Type,
 } from "@budibase/types"
@@ -20,7 +21,7 @@ interface DatasourceStore {
 
 interface DerivedDatasourceStore {
   schema: Readable<Record<string, FieldSchema>>
-  enrichedSchema: Readable<Record<string, FieldSchema>>
+  enrichedSchema: Readable<Record<string, UIFieldSchema>>
   hasBudibaseIdentifiers: Readable<boolean>
 }
 
@@ -95,7 +96,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
 
       const schemaWithRelatedColumns = enrichSchemaWithRelColumns($schema)
 
-      const enrichedSchema = {}
+      const enrichedSchema: Record<string, UIFieldSchema> = {}
       Object.keys(schemaWithRelatedColumns).forEach(field => {
         enrichedSchema[field] = {
           ...schemaWithRelatedColumns[field],
