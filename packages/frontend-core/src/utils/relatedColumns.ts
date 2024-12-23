@@ -19,17 +19,12 @@ const columnTypeManyParser = {
     field: {
       timeOnly?: boolean
       dateOnly?: boolean
-      ignoreTimezones?: boolean
     }
   ) => {
     function parseDate(value: any) {
-      const { timeOnly, dateOnly, ignoreTimezones } = field || {}
+      const { timeOnly, dateOnly } = field || {}
       const enableTime = !dateOnly
-      const parsedValue = Helpers.parseDate(value, {
-        timeOnly,
-        enableTime,
-        ignoreTimezones,
-      })
+      const parsedValue = Helpers.parseDate(value, { enableTime })
       const parsed = Helpers.getDateDisplayValue(parsedValue, {
         enableTime,
         timeOnly,
@@ -51,40 +46,44 @@ const columnTypeManyParser = {
 
 export function enrichSchemaWithRelColumns(
   schema: Record<string, UIFieldSchema>
-) {
+): Record<string, UIFieldSchema> {
   if (!schema) {
     return
   }
-  const result = Object.keys(schema).reduce((result, fieldName) => {
-    const field = schema[fieldName]
-    result[fieldName] = field
+  const result = Object.keys(schema).reduce<Record<string, UIFieldSchema>>(
+    (result, fieldName) => {
+      const field = schema[fieldName]
+      result[fieldName] = field
 
-    if (
-      field.visible !== false &&
-      isRelationshipField(field) &&
-      field.columns
-    ) {
-      const fromSingle =
-        field?.relationshipType === RelationshipType.ONE_TO_MANY
+      if (
+        field.visible !== false &&
+        isRelationshipField(field) &&
+        field.columns
+      ) {
+        const fromSingle =
+          field?.relationshipType === RelationshipType.ONE_TO_MANY
 
-      for (const relColumn of Object.keys(field.columns)) {
-        const relField = field.columns[relColumn]
-        if (!relField.visible) {
-          continue
-        }
-        const name = `${field.name}.${relColumn}`
-        result[name] = {
-          ...relField,
-          name,
-          related: { field: fieldName, subField: relColumn },
-          cellRenderType:
-            (!fromSingle && columnTypeManyTypeOverrides[relField.type]) ||
-            relField.type,
+        for (const relColumn of Object.keys(field.columns)) {
+          const relField = field.columns[relColumn]
+          if (!relField.visible) {
+            continue
+          }
+          const name = `${field.name}.${relColumn}`
+          result[name] = {
+            ...relField,
+            type: null, // TODO
+            name,
+            related: { field: fieldName, subField: relColumn },
+            cellRenderType:
+              (!fromSingle && columnTypeManyTypeOverrides[relField.type]) ||
+              relField.type,
+          }
         }
       }
-    }
-    return result
-  }, {})
+      return result
+    },
+    {}
+  )
 
   return result
 }
