@@ -1,5 +1,11 @@
-import { FieldType, RelationshipType, UIFieldSchema } from "@budibase/types"
 import { Helpers } from "@budibase/bbui"
+import {
+  FieldType,
+  isRelationshipField,
+  RelationshipType,
+  Row,
+  UIFieldSchema,
+} from "@budibase/types"
 
 const columnTypeManyTypeOverrides = {
   [FieldType.DATETIME]: FieldType.STRING,
@@ -8,8 +14,8 @@ const columnTypeManyTypeOverrides = {
 }
 
 const columnTypeManyParser = {
-  [FieldType.DATETIME]: (value, field) => {
-    function parseDate(value) {
+  [FieldType.DATETIME]: (value: any[], field: any) => {
+    function parseDate(value: any) {
       const { timeOnly, dateOnly, ignoreTimezones } = field || {}
       const enableTime = !dateOnly
       const parsedValue = Helpers.parseDate(value, {
@@ -26,14 +32,14 @@ const columnTypeManyParser = {
 
     return value.map(v => parseDate(v))
   },
-  [FieldType.BOOLEAN]: value => value.map(v => !!v),
-  [FieldType.BB_REFERENCE_SINGLE]: value => [
+  [FieldType.BOOLEAN]: (value: any[]) => value.map(v => !!v),
+  [FieldType.BB_REFERENCE_SINGLE]: (value: any[]) => [
     ...new Map(value.map(i => [i._id, i])).values(),
   ],
-  [FieldType.BB_REFERENCE]: value => [
+  [FieldType.BB_REFERENCE]: (value: any[]) => [
     ...new Map(value.map(i => [i._id, i])).values(),
   ],
-  [FieldType.ARRAY]: value => Array.from(new Set(value)),
+  [FieldType.ARRAY]: (value: any[]) => Array.from(new Set(value)),
 }
 
 export function enrichSchemaWithRelColumns(
@@ -46,7 +52,11 @@ export function enrichSchemaWithRelColumns(
     const field = schema[fieldName]
     result[fieldName] = field
 
-    if (field.visible !== false && field.columns) {
+    if (
+      field.visible !== false &&
+      isRelationshipField(field) &&
+      field.columns
+    ) {
       const fromSingle =
         field?.relationshipType === RelationshipType.ONE_TO_MANY
 
@@ -72,8 +82,13 @@ export function enrichSchemaWithRelColumns(
   return result
 }
 
-export function getRelatedTableValues(row, field, fromField) {
+export function getRelatedTableValues(
+  row: Row,
+  field: UIFieldSchema,
+  fromField: UIFieldSchema
+) {
   const fromSingle =
+    isRelationshipField(fromField) &&
     fromField?.relationshipType === RelationshipType.ONE_TO_MANY
 
   let result = ""
@@ -85,7 +100,8 @@ export function getRelatedTableValues(row, field, fromField) {
     const value = row[field.related.field]
       ?.flatMap(r => r[field.related.subField])
       ?.filter(i => i !== undefined && i !== null)
-    result = parser(value || [], field)
+    const parsed = parser(value || [], field)
+    result = parsed
     if (
       [
         FieldType.STRING,
@@ -97,7 +113,7 @@ export function getRelatedTableValues(row, field, fromField) {
         FieldType.BARCODEQR,
       ].includes(field.type)
     ) {
-      result = result?.join(", ")
+      result = parsed?.join(", ")
     }
   }
 
