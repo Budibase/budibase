@@ -1,3 +1,6 @@
+import { Writable } from "svelte/store"
+import type { APIClient } from "../../../api/types"
+
 import * as Bounds from "./bounds"
 import * as Columns from "./columns"
 import * as Menu from "./menu"
@@ -42,31 +45,65 @@ const DependencyOrderedStores = [
   Users,
   Menu,
   Pagination,
-  Config,
+  Config as any,
   Clipboard,
   Notifications,
   Cache,
 ]
 
-export const attachStores = context => {
+export interface BaseStore {
+  API: APIClient
+}
+
+export type Store = BaseStore &
+  Columns.Store &
+  Table.Store &
+  ViewV2.Store &
+  NonPlus.Store & {
+    // TODO while typing the rest of stores
+    datasource: Writable<any> & { actions: any }
+    definition: Writable<any>
+    enrichedSchema: any
+    fetch: Writable<any>
+    filter: Writable<any>
+    inlineFilters: Writable<any>
+    allFilters: Writable<any>
+    sort: Writable<any>
+    initialFilter: Writable<any>
+    initialSortColumn: Writable<any>
+    initialSortOrder: Writable<any>
+    rows: Writable<any> & { actions: any }
+    subscribe: any
+    config: Writable<any>
+  }
+
+export const attachStores = (context: Store): Store => {
   // Atomic store creation
   for (let store of DependencyOrderedStores) {
-    context = { ...context, ...store.createStores?.(context) }
+    if ("createStores" in store) {
+      context = { ...context, ...store.createStores?.(context) }
+    }
   }
 
   // Derived store creation
   for (let store of DependencyOrderedStores) {
-    context = { ...context, ...store.deriveStores?.(context) }
+    if ("deriveStores" in store) {
+      context = { ...context, ...store.deriveStores?.(context) }
+    }
   }
 
   // Action creation
   for (let store of DependencyOrderedStores) {
-    context = { ...context, ...store.createActions?.(context) }
+    if ("createActions" in store) {
+      context = { ...context, ...store.createActions?.(context) }
+    }
   }
 
   // Initialise any store logic
   for (let store of DependencyOrderedStores) {
-    store.initialise?.(context)
+    if ("initialise" in store) {
+      store.initialise?.(context)
+    }
   }
 
   return context
