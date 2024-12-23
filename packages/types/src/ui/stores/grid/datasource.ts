@@ -10,3 +10,8 @@ export interface UIDatasource {
   }
   queryUI: any // TODO
 }
+
+export interface UIFieldMutation {
+  visible: boolean
+  readonly?: boolean
+}
