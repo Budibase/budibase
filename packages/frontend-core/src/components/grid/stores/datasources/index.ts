@@ -10,10 +10,10 @@ export interface DatasourceActions<
   TSaveDefinitionRequest = UpdateViewRequest | SaveTableRequest
 > {
   saveDefinition: (newDefinition: TSaveDefinitionRequest) => Promise<void>
-  addRow: (row: SaveRowRequest) => Promise<Row>
-  updateRow: (row: SaveRowRequest) => Promise<Row>
+  addRow: (row: SaveRowRequest) => Promise<Row | void>
+  updateRow: (row: SaveRowRequest) => Promise<Row | void>
   deleteRows: (rows: (string | Row)[]) => Promise<void>
-  getRow: (id: string) => Promise<Row>
-  isDatasourceValid: (datasource: UIDatasource) => boolean
-  canUseColumn: (name: string) => boolean
+  getRow: (id: string) => Promise<Row | void>
+  isDatasourceValid: (datasource: UIDatasource) => boolean | void
+  canUseColumn: (name: string) => boolean | void
 }
