@@ -1,7 +1,24 @@
-import { SortOrder } from "@budibase/types"
+import { SortOrder, UIDatasource } from "@budibase/types"
 import { get } from "svelte/store"
+import { Store as StoreContext } from ".."
 
-export const createActions = context => {
+interface NonPlusActions {
+  nonPlus: {
+    actions: {
+      saveDefinition: () => Promise<void>
+      addRow: () => Promise<void>
+      updateRow: () => Promise<void>
+      deleteRows: () => Promise<void>
+      getRow: () => Promise<void>
+      isDatasourceValid: (datasource: UIDatasource) => boolean
+      canUseColumn: (name: string) => boolean
+    }
+  }
+}
+
+export type Store = NonPlusActions
+
+export const createActions = (context: StoreContext): NonPlusActions => {
   const { columns, table, viewV2 } = context
 
   const saveDefinition = async () => {
@@ -20,7 +37,7 @@ export const createActions = context => {
     throw "This datasource does not support fetching individual rows"
   }
 
-  const isDatasourceValid = datasource => {
+  const isDatasourceValid = (datasource: UIDatasource) => {
     // There are many different types and shapes of datasource, so we only
     // check that we aren't null
     return (
@@ -30,7 +47,7 @@ export const createActions = context => {
     )
   }
 
-  const canUseColumn = name => {
+  const canUseColumn = (name: string) => {
     return get(columns).some(col => col.name === name)
   }
 
@@ -50,11 +67,11 @@ export const createActions = context => {
 }
 
 // Small util to compare datasource definitions
-const isSameDatasource = (a, b) => {
+const isSameDatasource = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b)
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const {
     datasource,
     sort,
@@ -69,7 +86,7 @@ export const initialise = context => {
   } = context
   // Keep a list of subscriptions so that we can clear them when the datasource
   // config changes
-  let unsubscribers = []
+  let unsubscribers: any[] = []
 
   // Observe datasource changes and apply logic for view V2 datasources
   datasource.subscribe($datasource => {
