@@ -65,7 +65,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
   } = context
 
   const schema = derived(definition, $definition => {
-    let schema: Record<string, FieldSchema> = getDatasourceSchema({
+    let schema: Record<string, UIFieldSchema> = getDatasourceSchema({
       API,
       datasource: get(datasource),
       definition: $definition,
