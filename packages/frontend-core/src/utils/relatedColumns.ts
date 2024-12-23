@@ -1,4 +1,4 @@
-import { FieldType, RelationshipType } from "@budibase/types"
+import { FieldType, RelationshipType, UIFieldSchema } from "@budibase/types"
 import { Helpers } from "@budibase/bbui"
 
 const columnTypeManyTypeOverrides = {
@@ -36,7 +36,9 @@ const columnTypeManyParser = {
   [FieldType.ARRAY]: value => Array.from(new Set(value)),
 }
 
-export function enrichSchemaWithRelColumns(schema) {
+export function enrichSchemaWithRelColumns(
+  schema: Record<string, UIFieldSchema>
+) {
   if (!schema) {
     return
   }
