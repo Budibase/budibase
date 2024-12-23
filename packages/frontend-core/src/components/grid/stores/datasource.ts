@@ -203,7 +203,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
         // will not be received by the builder websocket because we caused it
         // ourselves
         dispatch("updatedatasource", newDefinition)
-      } catch (error) {
+      } catch (error: any) {
         const msg = error?.message || error || "Unknown error"
         get(notifications).error(`Error saving schema: ${msg}`)
 

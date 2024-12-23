@@ -7,7 +7,7 @@ import {
   UIFieldSchema,
 } from "@budibase/types"
 
-const columnTypeManyTypeOverrides = {
+const columnTypeManyTypeOverrides: Partial<Record<FieldType, FieldType>> = {
   [FieldType.DATETIME]: FieldType.STRING,
   [FieldType.BOOLEAN]: FieldType.STRING,
   [FieldType.SIGNATURE_SINGLE]: FieldType.ATTACHMENTS,
@@ -46,7 +46,7 @@ const columnTypeManyParser = {
 
 export function enrichSchemaWithRelColumns(
   schema: Record<string, UIFieldSchema>
-): Record<string, UIFieldSchema> {
+): Record<string, UIFieldSchema> | undefined {
   if (!schema) {
     return
   }
@@ -71,7 +71,7 @@ export function enrichSchemaWithRelColumns(
           const name = `${field.name}.${relColumn}`
           result[name] = {
             ...relField,
-            type: null, // TODO
+            type: relField.type as any, // TODO
             name,
             related: { field: fieldName, subField: relColumn },
             cellRenderType:
@@ -102,10 +102,10 @@ export function getRelatedTableValues(
   if (fromSingle) {
     result = row[field.related.field]?.[0]?.[field.related.subField]
   } else {
-    const parser = columnTypeManyParser[field.type] || (value => value)
+    const parser = columnTypeManyParser[field.type] || ((value: any) => value)
     const value = row[field.related.field]
-      ?.flatMap(r => r[field.related.subField])
-      ?.filter(i => i !== undefined && i !== null)
+      ?.flatMap((r: Row) => r[field.related.subField])
+      ?.filter((i: any) => i !== undefined && i !== null)
     const parsed = parser(value || [], field)
     result = parsed
     if (
