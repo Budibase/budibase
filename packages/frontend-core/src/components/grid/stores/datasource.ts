@@ -5,11 +5,9 @@ import { cloneDeep } from "lodash"
 import {
   Row,
   SaveRowRequest,
-  SaveTableRequest,
   UIDatasource,
   UIFieldMutation,
   UIFieldSchema,
-  UpdateViewRequest,
   ViewV2Type,
 } from "@budibase/types"
 import { Store as StoreContext } from "."
@@ -195,12 +193,10 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   }
 
   // Saves the datasource definition
-  const saveDefinition = async (
-    newDefinition: UpdateViewRequest | SaveTableRequest
-  ) => {
+  const saveDefinition = async (newDefinition: UIDatasource) => {
     // Update local state
     const originalDefinition = get(definition)
-    definition.set(newDefinition as any)
+    definition.set(newDefinition)
 
     // Update server
     if (get(config).canSaveSchema) {
