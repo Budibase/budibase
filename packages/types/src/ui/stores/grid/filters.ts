@@ -1,4 +1,11 @@
-import { FieldType } from "@budibase/types"
+import { FieldType, UILogicalOperator } from "@budibase/types"
+
+export interface UIFilter {
+  groups: {
+    logicalOperator: UILogicalOperator
+    filters: UIInlineFilter[]
+  }[]
+}
 
 export interface UIInlineFilter {
   field: string
