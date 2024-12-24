@@ -5,7 +5,7 @@ import { DatasourceActions } from "."
 
 interface NonPlusActions {
   nonPlus: {
-    actions: DatasourceActions<never>
+    actions: DatasourceActions
   }
 }
 

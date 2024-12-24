@@ -19,7 +19,7 @@ import { DatasourceActions } from "./datasources"
 interface DatasourceStore {
   definition: Writable<UIDatasource>
   schemaMutations: Writable<Record<string, UIFieldMutation>>
-  subSchemaMutations: Writable<Record<string, UIFieldMutation>>
+  subSchemaMutations: Writable<Record<string, Record<string, UIFieldMutation>>>
 }
 
 interface DerivedDatasourceStore {
@@ -197,7 +197,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
     // Update server
     if (get(config).canSaveSchema) {
       try {
-        await getAPI()?.actions.saveDefinition(newDefinition)
+        await getAPI()?.actions.saveDefinition(newDefinition as never)
 
         // Broadcast change so external state can be updated, as this change
         // will not be received by the builder websocket because we caused it
@@ -277,15 +277,15 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
     const $definition = get(definition)
     const $schemaMutations = get(schemaMutations)
     const $subSchemaMutations = get(subSchemaMutations)
-    const $schema = get(schema)
-    let newSchema = {}
+    const $schema = get(schema) || {}
+    let newSchema: Record<string, UIFieldSchema> = {}
 
     // Build new updated datasource schema
     Object.keys($schema).forEach(column => {
       newSchema[column] = {
         ...$schema[column],
         ...$schemaMutations[column],
-      }
+      } as UIFieldSchema // TODO
       if ($subSchemaMutations[column]) {
         newSchema[column].columns ??= {}
         for (const fieldName of Object.keys($subSchemaMutations[column])) {

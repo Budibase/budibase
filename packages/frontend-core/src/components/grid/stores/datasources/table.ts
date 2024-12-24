@@ -34,7 +34,7 @@ export const createActions = (context: StoreContext): TableActions => {
     return await API.saveRow(row, SuppressErrors)
   }
 
-  const deleteRows = async (rows: (string | Row)[]) => {
+  const deleteRows = async (rows: Row[]) => {
     await API.deleteRows(get(datasource).tableId, rows)
   }
 
