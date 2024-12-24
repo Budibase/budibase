@@ -1,21 +1,23 @@
 import { get, derived, Writable, Readable } from "svelte/store"
 import {
+  ArrayOperator,
+  BasicOperator,
   FieldType,
   UIColumn,
-  UIFilter,
-  UIInlineFilter,
+  UILegacyFilter,
   UILogicalOperator,
+  UISearchFilter,
 } from "@budibase/types"
 import { Store as StoreContext } from "."
 import { memo } from "../../../utils/memo"
 
 export interface FilterStore {
-  filter: Writable<UIFilter>
-  inlineFilters: Writable<UIInlineFilter[]>
+  filter: Writable<UISearchFilter | undefined>
+  inlineFilters: Writable<UILegacyFilter[]>
 }
 
 export interface FilterDerivedStore {
-  allFilters: Readable<UIFilter>
+  allFilters: Readable<UISearchFilter | undefined>
 }
 
 export type Store = FilterStore & FilterDerivedStore
@@ -42,7 +44,7 @@ export const deriveStores = (context: StoreContext): FilterDerivedStore => {
       if (!$inlineFilters?.length) {
         return $filter
       }
-      let allFilters = {
+      const allFilters: UISearchFilter = {
         logicalOperator: UILogicalOperator.ALL,
         groups: [
           {
@@ -51,12 +53,13 @@ export const deriveStores = (context: StoreContext): FilterDerivedStore => {
           },
         ],
       }
+
       // Just use inline if no filter
       if (!$filter?.groups?.length) {
         return allFilters
       }
       // Join them together if both
-      allFilters.groups = [...allFilters.groups, ...$filter.groups]
+      allFilters.groups = [...allFilters.groups!, ...$filter.groups]
       return allFilters
     }
   )
@@ -72,10 +75,10 @@ export const createActions = (context: StoreContext) => {
   const addInlineFilter = (column: UIColumn, value: string) => {
     const filterId = `inline-${column.name}`
     const type = column.schema.type
-    const inlineFilter: UIInlineFilter = {
+    const inlineFilter: UILegacyFilter = {
       field: column.name,
       id: filterId,
-      operator: "string",
+      operator: BasicOperator.STRING,
       valueType: "value",
       type,
       value,
@@ -84,11 +87,11 @@ export const createActions = (context: StoreContext) => {
     // Add overrides specific so the certain column type
     if (type === FieldType.NUMBER) {
       inlineFilter.value = parseFloat(value)
-      inlineFilter.operator = "equal"
+      inlineFilter.operator = BasicOperator.EQUAL
     } else if (type === FieldType.BIGINT) {
-      inlineFilter.operator = "equal"
+      inlineFilter.operator = BasicOperator.EQUAL
     } else if (type === FieldType.ARRAY) {
-      inlineFilter.operator = "contains"
+      inlineFilter.operator = ArrayOperator.CONTAINS
     }
 
     inlineFilters.update($inlineFilters => {
