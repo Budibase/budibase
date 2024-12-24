@@ -1,11 +1,11 @@
-import { SortOrder, UIDatasource } from "@budibase/types"
+import { SortOrder, UIDatasource, UITable, UIView } from "@budibase/types"
 import { get } from "svelte/store"
 import { Store as StoreContext } from ".."
-import { DatasourceActions } from "."
+import { DatasourceNonPlusActions } from "."
 
 interface NonPlusActions {
   nonPlus: {
-    actions: DatasourceActions
+    actions: DatasourceNonPlusActions
   }
 }
 
@@ -34,8 +34,8 @@ export const createActions = (context: StoreContext): NonPlusActions => {
     // There are many different types and shapes of datasource, so we only
     // check that we aren't null
     return (
-      !table.actions.isDatasourceValid(datasource) &&
-      !viewV2.actions.isDatasourceValid(datasource) &&
+      !table.actions.isDatasourceValid(datasource as UITable) &&
+      !viewV2.actions.isDatasourceValid(datasource as UIView) &&
       datasource?.type != null
     )
   }
