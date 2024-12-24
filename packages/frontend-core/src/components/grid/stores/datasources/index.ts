@@ -31,6 +31,4 @@ export interface DatasourceNonPlusActions
   extends DatasourceBaseActions<UIDatasource, never> {}
 
 export type DatasourceActions =
-  | DatasourceTableActions
-  | DatasourceViewActions
-  | DatasourceNonPlusActions
+  | DatasourceTableActions & DatasourceViewActions & DatasourceNonPlusActions
