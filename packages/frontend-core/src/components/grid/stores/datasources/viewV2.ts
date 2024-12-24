@@ -39,7 +39,7 @@ export const createActions = (context: StoreContext): ViewActions => {
     }
   }
 
-  const deleteRows = async (rows: (string | Row)[]) => {
+  const deleteRows = async (rows: Row[]) => {
     await API.deleteRows(get(datasource).id, rows)
   }
 
