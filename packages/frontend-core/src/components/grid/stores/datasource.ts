@@ -131,7 +131,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
     ([$datasource, $definition]) => {
       let type = $datasource?.type
       if (type === "provider") {
-        type = $datasource.value?.datasource?.type
+        type = ($datasource as any).value?.datasource?.type
       }
       // Handle calculation views
       if (type === "viewV2" && $definition?.type === ViewV2Type.CALCULATION) {
@@ -196,7 +196,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   ) => {
     // Update local state
     const originalDefinition = get(definition)
-    definition.set(newDefinition)
+    definition.set(newDefinition as any)
 
     // Update server
     if (get(config).canSaveSchema) {
@@ -229,8 +229,10 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
       newDefinition.schema[column].constraints = {}
     }
     newDefinition.schema[column].constraints.presence = { allowEmpty: false }
-    delete newDefinition.schema[column].default
-    return await saveDefinition(newDefinition)
+    if ("default" in newDefinition.schema[column]) {
+      delete newDefinition.schema[column].default
+    }
+    return await saveDefinition(newDefinition as any)
   }
 
   // Adds a schema mutation for a single field
@@ -306,7 +308,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
     await saveDefinition({
       ...$definition,
       schema: newSchema,
-    })
+    } as any)
     resetSchemaMutations()
   }
 

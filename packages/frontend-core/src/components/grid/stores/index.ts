@@ -62,9 +62,6 @@ export type Store = BaseStore &
   NonPlus.Store &
   Datasource.Store & {
     // TODO while typing the rest of stores
-    datasource: Writable<any> & { actions: any }
-    definition: Writable<any>
-    enrichedSchema: any
     fetch: Writable<any>
     filter: Writable<any>
     inlineFilters: Writable<any>
