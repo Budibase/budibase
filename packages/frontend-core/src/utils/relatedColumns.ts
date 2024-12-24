@@ -102,12 +102,14 @@ export function getRelatedTableValues(
   if (fromSingle) {
     result = row[field.related.field]?.[0]?.[field.related.subField]
   } else {
-    const parser = columnTypeManyParser[field.type] || ((value: any) => value)
+    const parser =
+      columnTypeManyParser[field.type as keyof typeof columnTypeManyParser] ||
+      ((value: any) => value)
     const value = row[field.related.field]
       ?.flatMap((r: Row) => r[field.related.subField])
       ?.filter((i: any) => i !== undefined && i !== null)
-    const parsed = parser(value || [], field)
-    result = parsed
+    const parsed = parser(value || [], field as any)
+    result = parsed as any
     if (
       [
         FieldType.STRING,
