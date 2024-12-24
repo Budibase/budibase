@@ -3,7 +3,23 @@ import {
   FieldSchema,
   FieldType,
   RelationSchemaField,
+  SortOrder,
+  UISearchFilter,
 } from "@budibase/types"
+
+export interface UITable {
+  type: string
+  name: string
+  id: string
+  tableId: string
+  primaryDisplay?: string
+  sort?: {
+    field: string
+    order: SortOrder
+  }
+  queryUI: UISearchFilter
+  schema: Record<string, UIFieldSchema>
+}
 
 export type UIFieldSchema = FieldSchema &
   BasicViewFieldMetadata & {
