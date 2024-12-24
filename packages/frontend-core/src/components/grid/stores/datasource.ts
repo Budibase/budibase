@@ -133,7 +133,11 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
         type = ($datasource as any).value?.datasource?.type
       }
       // Handle calculation views
-      if (type === "viewV2" && $definition?.type === ViewV2Type.CALCULATION) {
+      if (
+        type === "viewV2" &&
+        "type" in $definition &&
+        $definition?.type === ViewV2Type.CALCULATION
+      ) {
         return false
       }
       return ["table", "viewV2", "link"].includes(type)
@@ -167,6 +171,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   const getAPI = () => {
     const $datasource = get(datasource)
     const type = $datasource?.type
+    console.error({ type })
     if (!type) {
       return null
     }
@@ -338,7 +343,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
 
   // Checks if a certain datasource config is valid
   const isDatasourceValid = (datasource: UIDatasource) => {
-    return getAPI()?.actions.isDatasourceValid(datasource as any)
+    return getAPI()?.actions.isDatasourceValid(datasource)
   }
 
   // Checks if this datasource can use a specific column by name

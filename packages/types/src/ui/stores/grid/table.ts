@@ -8,7 +8,6 @@ import {
 } from "@budibase/types"
 
 export interface UITable {
-  type: string
   name: string
   id: string
   tableId: string
