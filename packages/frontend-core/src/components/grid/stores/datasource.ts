@@ -32,11 +32,15 @@ interface ActionDatasourceStore {
   datasource: DatasourceStore["definition"] & {
     actions: DatasourceActions<UpdateViewRequest | SaveTableRequest> & {
       refreshDefinition: () => Promise<void>
-      changePrimaryDisplay: any
-      addSchemaMutation: any
-      addSubSchemaMutation: any
-      saveSchemaMutations: any
-      resetSchemaMutations: any
+      changePrimaryDisplay: (column: string) => Promise<void>
+      addSchemaMutation: (field: string, mutation: UIFieldMutation) => void
+      addSubSchemaMutation: (
+        field: string,
+        fromField: string,
+        mutation: UIFieldMutation
+      ) => void
+      saveSchemaMutations: () => Promise<void>
+      resetSchemaMutations: () => void
     }
   }
 }
