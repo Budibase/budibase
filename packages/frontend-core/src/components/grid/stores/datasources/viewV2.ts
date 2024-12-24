@@ -168,7 +168,7 @@ export const initialise = (context: StoreContext) => {
               field: $sort.column,
               order: $sort.order || SortOrder.ASCENDING,
             },
-          })
+          } as never as UpdateViewRequest)
         }
 
         // Also update the fetch to ensure the new sort is respected.
@@ -198,7 +198,7 @@ export const initialise = (context: StoreContext) => {
           await datasource.actions.saveDefinition({
             ...$view,
             queryUI: $filter,
-          })
+          } as never as UpdateViewRequest)
 
           // Refresh data since view definition changed
           await rows.actions.refreshData()
