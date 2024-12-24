@@ -86,6 +86,7 @@ export type Store = BaseStore &
     selectedRowCount: Writable<any>
     selectedCellMap: Writable<any>
     selectedCellCount: Writable<any>
+    props: Writable<any>
   }
 
 export const attachStores = (context: Store): Store => {
