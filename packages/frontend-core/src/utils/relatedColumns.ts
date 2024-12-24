@@ -90,7 +90,7 @@ export function enrichSchemaWithRelColumns(
 
 export function getRelatedTableValues(
   row: Row,
-  field: UIFieldSchema,
+  field: UIFieldSchema & { related: { field: string; subField: string } },
   fromField: UIFieldSchema
 ) {
   const fromSingle =
