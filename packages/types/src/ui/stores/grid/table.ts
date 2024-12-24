@@ -4,12 +4,14 @@ import {
   FieldType,
   RelationSchemaField,
   SortOrder,
+  Table,
   UISearchFilter,
 } from "@budibase/types"
 
-export interface UITable {
+export interface UITable extends Omit<Table, "type"> {
   name: string
   id: string
+  type: string
   tableId: string
   primaryDisplay?: string
   sort?: {
