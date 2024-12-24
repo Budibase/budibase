@@ -1,13 +1,12 @@
 {
+  "extends": "../../tsconfig.build.json",
   "compilerOptions": {
     "target": "ESNext",
+    "module": "preserve",
     "moduleResolution": "bundler",
+    "outDir": "./dist",
     "skipLibCheck": true,
-    "paths": {
-      "@budibase/types": ["../types/src"],
-      "@budibase/shared-core": ["../shared-core/src"],
-      "@budibase/bbui": ["../bbui/src"]
-    }
+    "allowJs": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
