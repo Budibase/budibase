@@ -30,7 +30,7 @@ interface DerivedDatasourceStore {
 
 interface ActionDatasourceStore {
   datasource: DatasourceStore["definition"] & {
-    actions: DatasourceActions<UpdateViewRequest | SaveTableRequest> & {
+    actions: DatasourceActions & {
       refreshDefinition: () => Promise<void>
       changePrimaryDisplay: (column: string) => Promise<void>
       addSchemaMutation: (field: string, mutation: UIFieldMutation) => void
@@ -339,7 +339,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
 
   // Checks if a certain datasource config is valid
   const isDatasourceValid = (datasource: UIDatasource) => {
-    return getAPI()?.actions.isDatasourceValid(datasource)
+    return getAPI()?.actions.isDatasourceValid(datasource as any)
   }
 
   // Checks if this datasource can use a specific column by name

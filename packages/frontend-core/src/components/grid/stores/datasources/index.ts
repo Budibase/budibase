@@ -8,7 +8,7 @@ import {
   UpdateViewRequest,
 } from "@budibase/types"
 
-interface DatasourceActions<
+interface DatasourceBaseActions<
   TDatasource = UITable | UIView,
   TSaveDefinitionRequest = UpdateViewRequest | SaveTableRequest
 > {
@@ -22,10 +22,15 @@ interface DatasourceActions<
 }
 
 export interface DatasourceTableActions
-  extends DatasourceActions<UITable, SaveTableRequest> {}
+  extends DatasourceBaseActions<UITable, SaveTableRequest> {}
 
 export interface DatasourceViewActions
-  extends DatasourceActions<UIView, UpdateViewRequest> {}
+  extends DatasourceBaseActions<UIView, UpdateViewRequest> {}
 
 export interface DatasourceNonPlusActions
-  extends DatasourceActions<UIDatasource, never> {}
+  extends DatasourceBaseActions<UIDatasource, never> {}
+
+export type DatasourceActions =
+  | DatasourceTableActions
+  | DatasourceViewActions
+  | DatasourceNonPlusActions
