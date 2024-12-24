@@ -7,7 +7,7 @@ import {
 
 export type UIFieldSchema = FieldSchema &
   BasicViewFieldMetadata & {
-    related: { field: string; subField: string }
+    related?: { field: string; subField: string }
     columns?: Record<string, UIRelationSchemaField>
     cellRenderType?: string
   }
