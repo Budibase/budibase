@@ -1,6 +1,8 @@
 {
+  "extends": "../../tsconfig.build.json",
   "compilerOptions": {
     "target": "ESNext",
+    "module": "preserve",
     "moduleResolution": "bundler",
     "skipLibCheck": true,
     "paths": {
