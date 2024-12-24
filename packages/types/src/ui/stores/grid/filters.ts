@@ -1,17 +1,5 @@
-import { FieldType, UILogicalOperator } from "@budibase/types"
+import { LegacyFilter } from "@budibase/types"
 
-export interface UIFilter {
-  groups: {
-    logicalOperator: UILogicalOperator
-    filters: UIInlineFilter[]
-  }[]
-}
-
-export interface UIInlineFilter {
-  field: string
-  type: FieldType
-  value: number | string
-  operator: string
+export type UILegacyFilter = LegacyFilter & {
   id: string
-  valueType: string
 }
