@@ -9,7 +9,7 @@ export type UIColumn = FieldSchema & {
     subField: string
   }
   primaryDisplay?: boolean
-  schema?: {
+  schema: {
     disabled: boolean
     type: FieldType
     readonly: boolean
