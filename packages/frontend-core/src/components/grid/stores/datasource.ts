@@ -169,7 +169,6 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   const getAPI = () => {
     const $datasource = get(datasource)
     const type = $datasource?.type
-    console.error({ type })
     if (!type) {
       return null
     }
