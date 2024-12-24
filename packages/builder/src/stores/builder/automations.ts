@@ -91,7 +91,13 @@ const automationActions = (store: AutomationStore) => ({
    * @param {Object} destPath the destinationPart
    * @param {Object} automation the automaton to be mutated
    */
-  moveBlock: async (sourcePath: any, destPath: any, automation: Automation) => {
+  moveBlock: async (
+    sourcePath: BranchPath[],
+    destPath: BranchPath[],
+    automation: Automation
+  ) => {
+    console.log(sourcePath)
+    console.log(destPath)
     // The last part of the source node address, containing the id.
     const pathSource = sourcePath.at(-1)
 
@@ -99,13 +105,13 @@ const automationActions = (store: AutomationStore) => ({
     const pathEnd = destPath.at(-1)
 
     // Check if dragging a step into its own drag zone
-    const isOwnDragzone = pathSource.id === pathEnd.id
+    const isOwnDragzone = pathSource?.id === pathEnd?.id
 
     // Check if dragging the first branch step into the branch node drag zone
     const isFirstBranchStep =
-      pathEnd.branchStepId &&
-      pathEnd.branchIdx === pathSource.branchIdx &&
-      pathSource.stepIdx === 0
+      pathEnd?.branchStepId &&
+      pathEnd.branchIdx === pathSource?.branchIdx &&
+      pathSource?.stepIdx === 0
 
     // If dragging into an area that will not affect the tree structure
     // Ignore the drag and drop.
@@ -128,13 +134,15 @@ const automationActions = (store: AutomationStore) => ({
     let finalPath
     // If dropping in a branch-step dropzone you need to find
     // the updated parent step route then add the branch details again
-    if (pathEnd.branchStepId) {
+    if (pathEnd?.branchStepId) {
       const branchStepRef = newRefs[pathEnd.branchStepId]
       finalPath = branchStepRef.pathTo
       finalPath.push(pathEnd)
     } else {
       // Place the target 1 after the drop
-      finalPath = newRefs[pathEnd.id].pathTo
+      if (pathEnd?.id) {
+        finalPath = newRefs[pathEnd.id].pathTo
+      }
       finalPath.at(-1).stepIdx += 1
     }
 
@@ -742,7 +750,7 @@ const automationActions = (store: AutomationStore) => ({
     data: Record<string, any>
   ) => {
     // Create new modified block
-    let newBlock: any = {
+    let newBlock: AutomationStep & { inputs: any } = {
       ...block,
       inputs: {
         ...block.inputs,
