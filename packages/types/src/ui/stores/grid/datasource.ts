@@ -1,15 +1,16 @@
-import { SortOrder, UIFieldSchema } from "@budibase/types"
+import { SortOrder, UIFieldSchema, UISearchFilter } from "@budibase/types"
 
 export interface UIDatasource {
   type: string
+  name: string
   id: string
   tableId: string
   primaryDisplay?: string
   sort?: {
     field: string
-    order?: SortOrder
+    order: SortOrder
   }
-  queryUI: any // TODO
+  queryUI: UISearchFilter
   schema: Record<string, UIFieldSchema>
 }
 
