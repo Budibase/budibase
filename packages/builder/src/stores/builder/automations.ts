@@ -96,8 +96,6 @@ const automationActions = (store: AutomationStore) => ({
     destPath: BranchPath[],
     automation: Automation
   ) => {
-    console.log(sourcePath)
-    console.log(destPath)
     // The last part of the source node address, containing the id.
     const pathSource = sourcePath.at(-1)
 
