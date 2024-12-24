@@ -4,7 +4,9 @@
     "target": "ESNext",
     "module": "preserve",
     "moduleResolution": "bundler",
+    "outDir": "./dist",
     "skipLibCheck": true,
+    "allowJs": true,
     "paths": {
       "@budibase/types": ["../types/src"],
       "@budibase/shared-core": ["../shared-core/src"],
