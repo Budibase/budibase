@@ -3,13 +3,10 @@ import {
   SaveRowRequest,
   SaveTableRequest,
   UIDatasource,
-  UITable,
-  UIView,
   UpdateViewRequest,
 } from "@budibase/types"
 
 interface DatasourceBaseActions<
-  TDatasource = UITable | UIView,
   TSaveDefinitionRequest = UpdateViewRequest | SaveTableRequest
 > {
   saveDefinition: (newDefinition: TSaveDefinitionRequest) => Promise<void>
@@ -17,18 +14,18 @@ interface DatasourceBaseActions<
   updateRow: (row: SaveRowRequest) => Promise<Row | void>
   deleteRows: (rows: Row[]) => Promise<void>
   getRow: (id: string) => Promise<Row | void>
-  isDatasourceValid: (datasource: TDatasource) => boolean | void
+  isDatasourceValid: (datasource: UIDatasource) => boolean | void
   canUseColumn: (name: string) => boolean | void
 }
 
 export interface DatasourceTableActions
-  extends DatasourceBaseActions<UITable, SaveTableRequest> {}
+  extends DatasourceBaseActions<SaveTableRequest> {}
 
 export interface DatasourceViewActions
-  extends DatasourceBaseActions<UIView, UpdateViewRequest> {}
+  extends DatasourceBaseActions<UpdateViewRequest> {}
 
 export interface DatasourceNonPlusActions
-  extends DatasourceBaseActions<UIDatasource, never> {}
+  extends DatasourceBaseActions<never> {}
 
 export type DatasourceActions =
   | DatasourceTableActions & DatasourceViewActions & DatasourceNonPlusActions

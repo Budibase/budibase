@@ -1,16 +1,6 @@
-import { SortOrder, UISearchFilter } from "@budibase/types"
+import { ViewV2 } from "@budibase/types"
 import { UIFieldSchema } from "./table"
 
-export interface UIView {
-  type: string
-  version: 2
-  id: string
-  tableId: string
-  primaryDisplay?: string
+export interface UIView extends ViewV2 {
   schema: Record<string, UIFieldSchema>
-  sort?: {
-    field: string
-    order: SortOrder
-  }
-  queryUI: UISearchFilter
 }

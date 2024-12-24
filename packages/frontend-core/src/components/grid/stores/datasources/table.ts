@@ -4,7 +4,6 @@ import {
   SaveTableRequest,
   SortOrder,
   UIDatasource,
-  UITable,
 } from "@budibase/types"
 import { get } from "svelte/store"
 import { Store as StoreContext } from ".."
@@ -98,7 +97,7 @@ export const initialise = (context: StoreContext) => {
     // Clear previous subscriptions
     unsubscribers?.forEach(unsubscribe => unsubscribe())
     unsubscribers = []
-    if (!table.actions.isDatasourceValid($datasource as UITable)) {
+    if (!table.actions.isDatasourceValid($datasource)) {
       return
     }
 

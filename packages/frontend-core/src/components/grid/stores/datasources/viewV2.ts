@@ -3,6 +3,7 @@ import {
   Row,
   SaveRowRequest,
   SortOrder,
+  UIDatasource,
   UIView,
   UpdateViewRequest,
 } from "@budibase/types"
@@ -56,7 +57,7 @@ export const createActions = (context: StoreContext): ViewActions => {
     return res?.rows?.[0]
   }
 
-  const isDatasourceValid = (datasource: UIView) => {
+  const isDatasourceValid = (datasource: UIDatasource) => {
     return (
       datasource?.type === "viewV2" && !!datasource?.id && !!datasource?.tableId
     )
@@ -108,7 +109,7 @@ export const initialise = (context: StoreContext) => {
     // Clear previous subscriptions
     unsubscribers?.forEach(unsubscribe => unsubscribe())
     unsubscribers = []
-    if (!viewV2.actions.isDatasourceValid($datasource as UIView)) {
+    if (!viewV2.actions.isDatasourceValid($datasource)) {
       return
     }
 
@@ -168,7 +169,7 @@ export const initialise = (context: StoreContext) => {
               field: $sort.column,
               order: $sort.order || SortOrder.ASCENDING,
             },
-          } as never as UpdateViewRequest)
+          })
         }
 
         // Also update the fetch to ensure the new sort is respected.
