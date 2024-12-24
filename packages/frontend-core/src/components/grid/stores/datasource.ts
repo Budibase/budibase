@@ -18,13 +18,13 @@ import { DatasourceActions } from "./datasources"
 
 interface DatasourceStore {
   definition: Writable<UIDatasource>
-  schemaMutations: Writable<Record<string, {}>>
-  subSchemaMutations: Writable<Record<string, {}>>
+  schemaMutations: Writable<Record<string, UIFieldMutation>>
+  subSchemaMutations: Writable<Record<string, UIFieldMutation>>
 }
 
 interface DerivedDatasourceStore {
-  schema: Readable<Record<string, FieldSchema>>
-  enrichedSchema: Readable<Record<string, UIFieldSchema>>
+  schema: Readable<Record<string, FieldSchema> | null>
+  enrichedSchema: Readable<Record<string, UIFieldSchema> | null>
   hasBudibaseIdentifiers: Readable<boolean>
 }
 
@@ -100,9 +100,9 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
       const schemaWithRelatedColumns = enrichSchemaWithRelColumns($schema)
 
       const enrichedSchema: Record<string, UIFieldSchema> = {}
-      Object.keys(schemaWithRelatedColumns).forEach(field => {
+      Object.keys(schemaWithRelatedColumns || {}).forEach(field => {
         enrichedSchema[field] = {
-          ...schemaWithRelatedColumns[field],
+          ...schemaWithRelatedColumns?.[field],
           ...$schemaOverrides?.[field],
           ...$schemaMutations[field],
         }
@@ -197,7 +197,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
     // Update server
     if (get(config).canSaveSchema) {
       try {
-        await getAPI()?.actions.saveDefinition(newDefinition as any)
+        await getAPI()?.actions.saveDefinition(newDefinition)
 
         // Broadcast change so external state can be updated, as this change
         // will not be received by the builder websocket because we caused it
