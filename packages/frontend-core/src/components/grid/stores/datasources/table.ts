@@ -4,16 +4,17 @@ import {
   SaveTableRequest,
   SortOrder,
   UIDatasource,
+  UITable,
 } from "@budibase/types"
 import { get } from "svelte/store"
 import { Store as StoreContext } from ".."
-import { DatasourceActions } from "."
+import { DatasourceTableActions } from "."
 
 const SuppressErrors = true
 
 interface TableActions {
   table: {
-    actions: DatasourceActions<SaveTableRequest>
+    actions: DatasourceTableActions
   }
 }
 
@@ -97,7 +98,7 @@ export const initialise = (context: StoreContext) => {
     // Clear previous subscriptions
     unsubscribers?.forEach(unsubscribe => unsubscribe())
     unsubscribers = []
-    if (!table.actions.isDatasourceValid($datasource)) {
+    if (!table.actions.isDatasourceValid($datasource as UITable)) {
       return
     }
 

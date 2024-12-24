@@ -3,17 +3,17 @@ import {
   Row,
   SaveRowRequest,
   SortOrder,
-  UIDatasource,
+  UIView,
   UpdateViewRequest,
 } from "@budibase/types"
 import { Store as StoreContext } from ".."
-import { DatasourceActions } from "."
+import { DatasourceViewActions } from "."
 
 const SuppressErrors = true
 
 interface ViewActions {
   viewV2: {
-    actions: DatasourceActions<UpdateViewRequest>
+    actions: DatasourceViewActions
   }
 }
 
@@ -56,7 +56,7 @@ export const createActions = (context: StoreContext): ViewActions => {
     return res?.rows?.[0]
   }
 
-  const isDatasourceValid = (datasource: UIDatasource) => {
+  const isDatasourceValid = (datasource: UIView) => {
     return (
       datasource?.type === "viewV2" && !!datasource?.id && !!datasource?.tableId
     )
@@ -108,7 +108,7 @@ export const initialise = (context: StoreContext) => {
     // Clear previous subscriptions
     unsubscribers?.forEach(unsubscribe => unsubscribe())
     unsubscribers = []
-    if (!viewV2.actions.isDatasourceValid($datasource)) {
+    if (!viewV2.actions.isDatasourceValid($datasource as UIView)) {
       return
     }
 
@@ -147,7 +147,7 @@ export const initialise = (context: StoreContext) => {
     unsubscribers.push(
       sort.subscribe(async $sort => {
         // Ensure we're updating the correct view
-        const $view = get(definition)
+        const $view = get(definition) as UIView
         if ($view?.id !== $datasource.id) {
           return
         }
