@@ -85,7 +85,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
     // Certain datasources like queries use primitives.
     Object.keys(schema || {}).forEach(key => {
       if (typeof schema[key] !== "object") {
-        schema[key] = { type: schema[key] } as any // TODO
+        schema[key] = { name: key, type: schema[key] }
       }
     })
 
