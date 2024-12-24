@@ -1,8 +1,9 @@
 import { get, derived } from "svelte/store"
 import { FieldType, UILogicalOperator } from "@budibase/types"
+import { Store as StoreContext } from "."
 import { memo } from "../../../utils/memo"
 
-export const createStores = context => {
+export const createStores = (context: StoreContext) => {
   const { props } = context
 
   // Initialise to default props
@@ -15,7 +16,7 @@ export const createStores = context => {
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: StoreContext) => {
   const { filter, inlineFilters } = context
   const allFilters = derived(
     [filter, inlineFilters],
@@ -48,7 +49,7 @@ export const deriveStores = context => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext) => {
   const { filter, inlineFilters } = context
 
   const addInlineFilter = (column, value) => {
@@ -95,7 +96,7 @@ export const createActions = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const { filter, initialFilter } = context
 
   // Reset filter when initial filter prop changes
