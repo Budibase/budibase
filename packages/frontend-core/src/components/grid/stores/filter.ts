@@ -1,11 +1,16 @@
 import { get, derived, Writable } from "svelte/store"
-import { FieldType, UILogicalOperator } from "@budibase/types"
+import {
+  FieldType,
+  UIColumn,
+  UIInlineFilter,
+  UILogicalOperator,
+} from "@budibase/types"
 import { Store as StoreContext } from "."
 import { memo } from "../../../utils/memo"
 
 export interface FilterStore {
   filter: Writable<any>
-  inlineFilters: Writable<any>
+  inlineFilters: Writable<UIInlineFilter[]>
 }
 
 export interface FilterDerivedStore {
@@ -63,10 +68,10 @@ export const deriveStores = (context: StoreContext) => {
 export const createActions = (context: StoreContext) => {
   const { filter, inlineFilters } = context
 
-  const addInlineFilter = (column, value) => {
+  const addInlineFilter = (column: UIColumn, value: string) => {
     const filterId = `inline-${column.name}`
     const type = column.schema.type
-    let inlineFilter = {
+    const inlineFilter: UIInlineFilter = {
       field: column.name,
       id: filterId,
       operator: "string",
