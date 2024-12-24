@@ -3,7 +3,6 @@ import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
 import { enrichSchemaWithRelColumns, memo } from "../../../utils"
 import { cloneDeep } from "lodash"
 import {
-  FieldSchema,
   Row,
   SaveRowRequest,
   SaveTableRequest,
@@ -23,7 +22,7 @@ interface DatasourceStore {
 }
 
 interface DerivedDatasourceStore {
-  schema: Readable<Record<string, FieldSchema> | null>
+  schema: Readable<Record<string, UIFieldSchema> | null>
   enrichedSchema: Readable<Record<string, UIFieldSchema> | null>
   hasBudibaseIdentifiers: Readable<boolean>
 }
@@ -291,7 +290,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
       newSchema[column] = {
         ...$schema[column],
         ...$schemaMutations[column],
-      } as UIFieldSchema // TODO
+      }
       if ($subSchemaMutations[column]) {
         newSchema[column].columns ??= {}
         for (const fieldName of Object.keys($subSchemaMutations[column])) {
