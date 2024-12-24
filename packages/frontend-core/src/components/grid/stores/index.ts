@@ -61,7 +61,8 @@ export type Store = BaseStore &
   ViewV2.Store &
   NonPlus.Store &
   Datasource.Store &
-  Validation.Store & {
+  Validation.Store &
+  Users.Store & {
     // TODO while typing the rest of stores
     fetch: Writable<any>
     filter: Writable<any>
