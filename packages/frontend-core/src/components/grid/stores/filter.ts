@@ -1,9 +1,20 @@
-import { get, derived } from "svelte/store"
+import { get, derived, Writable } from "svelte/store"
 import { FieldType, UILogicalOperator } from "@budibase/types"
 import { Store as StoreContext } from "."
 import { memo } from "../../../utils/memo"
 
-export const createStores = (context: StoreContext) => {
+export interface FilterStore {
+  filter: Writable<any>
+  inlineFilters: Writable<any>
+}
+
+export interface FilterDerivedStore {
+  allFilters: Writable<any>
+}
+
+export type Store = FilterStore & FilterDerivedStore
+
+export const createStores = (context: StoreContext): FilterStore => {
   const { props } = context
 
   // Initialise to default props
