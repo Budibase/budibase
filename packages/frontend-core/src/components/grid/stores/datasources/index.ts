@@ -10,8 +10,8 @@ interface DatasourceBaseActions<
   TSaveDefinitionRequest = UpdateViewRequest | SaveTableRequest
 > {
   saveDefinition: (newDefinition: TSaveDefinitionRequest) => Promise<void>
-  addRow: (row: SaveRowRequest) => Promise<UIRow | void>
-  updateRow: (row: SaveRowRequest) => Promise<UIRow | void>
+  addRow: (row: SaveRowRequest) => Promise<UIRow | undefined>
+  updateRow: (row: SaveRowRequest) => Promise<UIRow | undefined>
   deleteRows: (rows: UIRow[]) => Promise<void>
   getRow: (id: string) => Promise<UIRow | void>
   isDatasourceValid: (datasource: UIDatasource) => boolean | void
