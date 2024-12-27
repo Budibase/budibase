@@ -85,7 +85,8 @@ export type Store = BaseStore &
     bounds: Readable<any>
     height: Readable<number>
   } & Rows.Store &
-  Reorder.Store
+  Reorder.Store &
+  Resize.Store
 
 export const attachStores = (context: Store): Store => {
   // Atomic store creation
