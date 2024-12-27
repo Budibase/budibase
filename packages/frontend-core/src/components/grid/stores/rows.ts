@@ -47,17 +47,17 @@ interface RowActionStore {
       duplicateRow: (row: UIRow) => Promise<UIRow | undefined>
       bulkDuplicate: (
         rowsToDupe: UIRow[],
-        progressCallback: (any: number) => void
+        progressCallback: (progressPercentage: number) => void
       ) => Promise<UIRow[]>
       updateValue: (params: {
         rowId: string
-        column: any
+        column: string
         value: any
         apply: boolean
       }) => Promise<void>
       applyRowChanges: (params: {
         rowId: string
-        changes?: any
+        changes?: Record<string, any>
         updateState?: boolean
         handleErrors?: boolean
       }) => Promise<UIRow | undefined>
@@ -68,8 +68,8 @@ interface RowActionStore {
       refreshData: () => void
       cleanRow: (row: UIRow) => Row
       bulkUpdate: (
-        changeMap: Record<string, any>,
-        progressCallback: (any: number) => void
+        changeMap: Record<string, Record<string, any>>,
+        progressCallback: (progressPercentage: number) => void
       ) => Promise<void>
     }
   }
@@ -413,7 +413,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
   // Duplicates multiple rows, inserting them after the last source row
   const bulkDuplicate = async (
     rowsToDupe: UIRow[],
-    progressCallback: (any: number) => void
+    progressCallback: (progressPercentage: number) => void
   ) => {
     // Find index of last row
     const $rowLookupMap = get(rowLookupMap)
@@ -557,7 +557,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     handleErrors = true,
   }: {
     rowId: string
-    changes?: any
+    changes?: Record<string, any> | null
     updateState?: boolean
     handleErrors?: boolean
   }) => {
@@ -627,7 +627,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     apply = true,
   }: {
     rowId: string
-    column: any
+    column: string
     value: any
     apply: boolean
   }) => {
@@ -638,8 +638,8 @@ export const createActions = (context: StoreContext): RowActionStore => {
   }
 
   const bulkUpdate = async (
-    changeMap: Record<string, any>,
-    progressCallback: (any: number) => void
+    changeMap: Record<string, Record<string, any>>,
+    progressCallback: (progressPercentage: number) => void
   ) => {
     const rowIds = Object.keys(changeMap || {})
     const count = rowIds.length
