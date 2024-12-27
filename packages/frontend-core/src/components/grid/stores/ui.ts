@@ -101,6 +101,10 @@ export const deriveStores = (context: StoreContext) => {
   const focusedRow = derived(
     [focusedRowId, rowLookupMap],
     ([$focusedRowId, $rowLookupMap]) => {
+      if ($focusedRowId === undefined) {
+        return
+      }
+
       if ($focusedRowId === NewRowID) {
         return { _id: NewRowID }
       }
@@ -152,8 +156,8 @@ export const deriveStores = (context: StoreContext) => {
       }
 
       // Row indices
-      const sourceRowIndex = $rowLookupMap[sourceInfo.rowId]?.__idx
-      const targetRowIndex = $rowLookupMap[targetInfo.rowId]?.__idx
+      const sourceRowIndex = $rowLookupMap[sourceInfo.rowId!]?.__idx
+      const targetRowIndex = $rowLookupMap[targetInfo.rowId!]?.__idx
       if (sourceRowIndex == null || targetRowIndex == null) {
         return []
       }
@@ -164,8 +168,8 @@ export const deriveStores = (context: StoreContext) => {
       upperRowIndex = Math.min(upperRowIndex, lowerRowIndex + 49)
 
       // Column indices
-      const sourceColIndex = $columnLookupMap[sourceInfo.field].__idx || 0
-      const targetColIndex = $columnLookupMap[targetInfo.field].__idx || 0
+      const sourceColIndex = $columnLookupMap[sourceInfo.field!].__idx || 0
+      const targetColIndex = $columnLookupMap[targetInfo.field!].__idx || 0
       const lowerColIndex = Math.min(sourceColIndex, targetColIndex)
       const upperColIndex = Math.max(sourceColIndex, targetColIndex)
 

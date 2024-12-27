@@ -69,7 +69,7 @@ export const createActions = (context: StoreContext): MenuActions => {
     let multiRowMode = false
     if (get(selectedRowCount) > 1) {
       const { rowId } = parseCellID(cellId)
-      if (get(selectedRows)[rowId]) {
+      if (rowId !== undefined && get(selectedRows)[rowId]) {
         multiRowMode = true
       }
     }
