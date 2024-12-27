@@ -1,8 +1,18 @@
-import { writable, get, derived } from "svelte/store"
+import { writable, get, derived, Writable, Readable } from "svelte/store"
 import { MinColumnWidth, DefaultColumnWidth } from "../lib/constants"
 import { parseEventLocation } from "../lib/utils"
+import { Store as StoreContext } from "."
 
-const initialState = {
+interface ResizeInitialStoreData {
+  initialMouseX: number | null
+  initialWidth: number | null
+  column: string | null
+  width: number
+  left: number
+  related?: any
+}
+
+const initialState: ResizeInitialStoreData = {
   initialMouseX: null,
   initialWidth: null,
   column: null,
@@ -10,7 +20,14 @@ const initialState = {
   left: 0,
 }
 
-export const createStores = () => {
+interface ResizeInitialStore {
+  resize: Writable<ResizeInitialStoreData>
+  isResizing: Readable<boolean>
+}
+
+export type Store = ResizeInitialStore
+
+export const createStores = (): ResizeInitialStore => {
   const resize = writable(initialState)
   const isResizing = derived(resize, $resize => $resize.column != null, false)
   return {
@@ -19,11 +36,11 @@ export const createStores = () => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext) => {
   const { resize, ui, datasource } = context
 
   // Starts resizing a certain column
-  const startResizing = (column, e) => {
+  const startResizing = (column: any, e: any) => {
     const { x } = parseEventLocation(e)
 
     // Prevent propagation to stop reordering triggering
@@ -50,11 +67,11 @@ export const createActions = context => {
   }
 
   // Handler for moving the mouse to resize columns
-  const onResizeMouseMove = e => {
+  const onResizeMouseMove = (e: any) => {
     const { initialMouseX, initialWidth, width, column, related } = get(resize)
     const { x } = parseEventLocation(e)
-    const dx = x - initialMouseX
-    const newWidth = Math.round(Math.max(MinColumnWidth, initialWidth + dx))
+    const dx = x - initialMouseX!
+    const newWidth = Math.round(Math.max(MinColumnWidth, initialWidth! + dx))
 
     // Ignore small changes
     if (Math.abs(width - newWidth) < 5) {
@@ -63,7 +80,7 @@ export const createActions = context => {
 
     // Update column state
     if (!related) {
-      datasource.actions.addSchemaMutation(column, { width })
+      datasource.actions.addSchemaMutation(column!, { width })
     } else {
       datasource.actions.addSubSchemaMutation(related.subField, related.field, {
         width,
@@ -95,7 +112,7 @@ export const createActions = context => {
   }
 
   // Resets a column size back to default
-  const resetSize = async column => {
+  const resetSize = async (column: { name: string }) => {
     datasource.actions.addSchemaMutation(column.name, {
       width: DefaultColumnWidth,
     })
