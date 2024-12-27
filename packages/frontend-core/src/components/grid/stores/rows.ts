@@ -18,11 +18,11 @@ interface RowStore {
   rows: Writable<any[]>
   fetch: Writable<any>
   loaded: Writable<any>
-  refreshing: Writable<any>
-  loading: Writable<any>
+  refreshing: Writable<boolean>
+  loading: Writable<boolean>
   rowChangeCache: Writable<any>
   inProgressChanges: Writable<any>
-  hasNextPage: Writable<any>
+  hasNextPage: Writable<boolean>
   error: Writable<any>
 }
 
