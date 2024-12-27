@@ -17,5 +17,6 @@ export type UIColumn = FieldSchema & {
   }
   calculationType: CalculationType
   __idx?: number
-  __left?: number
+  __left: number
+  width: number
 }
