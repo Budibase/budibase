@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
     "target": "ESNext",
+    "lib": ["ESNext"],
     "module": "preserve",
     "moduleResolution": "bundler",
     "outDir": "./dist",

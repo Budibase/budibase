@@ -423,7 +423,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     // Add to state
     if (saved.length) {
       rows.update(state => {
-        return state.splice(index + 1, 0, ...saved)
+        return state.toSpliced(index + 1, 0, ...saved)
       })
     }
 
