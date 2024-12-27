@@ -20,14 +20,14 @@ interface ScrollStore {
 }
 
 interface ScrollDerivedStore {
-  stickyWidth: Readable<any>
-  contentHeight: Readable<any>
-  contentWidth: Readable<any>
-  screenWidth: Readable<any>
-  maxScrollTop: Readable<any>
-  maxScrollLeft: Readable<any>
-  showHScrollbar: Readable<any>
-  showVScrollbar: Readable<any>
+  stickyWidth: Readable<number>
+  contentHeight: Readable<number>
+  contentWidth: Readable<number>
+  screenWidth: Readable<number>
+  maxScrollTop: Readable<number>
+  maxScrollLeft: Readable<number>
+  showHScrollbar: Readable<number>
+  showVScrollbar: Readable<number>
 }
 
 export type Store = ScrollStore & ScrollDerivedStore
