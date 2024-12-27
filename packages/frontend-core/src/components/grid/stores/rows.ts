@@ -225,7 +225,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     })
 
     // Subscribe to changes of this fetch model
-    unsubscribe = newFetch.subscribe(async ($fetch: any) => {
+    unsubscribe = newFetch.subscribe(async ($fetch: UIFetchAPI) => {
       if ($fetch.error) {
         // Present a helpful error to the user
         let message = "An unknown error occurred"
@@ -282,7 +282,15 @@ export const createActions = (context: StoreContext): RowActionStore => {
 
   // Handles validation errors from the rows API and updates local validation
   // state, storing error messages against relevant cells
-  const handleValidationError = (rowId: string, error: any) => {
+  const handleValidationError = (
+    rowId: string,
+    error:
+      | string
+      | {
+          message?: string
+          json: { validationErrors: Record<string, string | undefined> }
+        }
+  ) => {
     let errorString
     if (typeof error === "string") {
       errorString = error
@@ -292,7 +300,11 @@ export const createActions = (context: StoreContext): RowActionStore => {
 
     // If the server doesn't reply with a valid error, assume that the source
     // of the error is the focused cell's column
-    if (!error?.json?.validationErrors && errorString) {
+    if (
+      typeof error !== "string" &&
+      !error?.json?.validationErrors &&
+      errorString
+    ) {
       const { field: focusedColumn } = parseCellID(get(focusedCellId))
       if (focusedColumn) {
         error = {
@@ -304,7 +316,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
         }
       }
     }
-    if (error?.json?.validationErrors) {
+    if (typeof error !== "string" && error?.json?.validationErrors) {
       // Normal validation errors
       const keys = Object.keys(error.json.validationErrors)
       const $columns = get(columns)
@@ -319,11 +331,11 @@ export const createActions = (context: StoreContext): RowActionStore => {
           missingColumns.push(column)
         }
       }
-
+      const { json } = error
       // Process errors for columns that we have
       for (let column of erroredColumns) {
         // Ensure we have a valid error to display
-        let err = error.json.validationErrors[column]
+        let err = json.validationErrors[column]
         if (Array.isArray(err)) {
           err = err[0]
         }
@@ -384,7 +396,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
         get(notifications).success("Row created successfully")
       }
       return newRow
-    } catch (error) {
+    } catch (error: any) {
       if (bubble) {
         throw error
       } else {
@@ -408,7 +420,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
       })
       get(notifications).success("Duplicated 1 row")
       return duped
-    } catch (error) {
+    } catch (error: any) {
       handleValidationError(row._id, error)
       validation.actions.focusFirstRowError(row._id)
     }
@@ -608,7 +620,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
         })
         return state
       })
-    } catch (error) {
+    } catch (error: any) {
       if (handleErrors) {
         handleValidationError(rowId, error)
         validation.actions.focusFirstRowError(rowId)
@@ -728,7 +740,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
 
   // Local handler to process new rows inside the fetch, and append any new
   // rows to state that we haven't encountered before
-  const handleNewRows = (newRows: UIRow[], resetRows?: boolean) => {
+  const handleNewRows = (newRows: Row[], resetRows?: boolean) => {
     if (resetRows) {
       rowCacheMap = {}
     }
@@ -745,15 +757,15 @@ export const createActions = (context: StoreContext): RowActionStore => {
         newRow._id = generateRowID()
       }
 
-      if (!rowCacheMap[newRow._id]) {
-        rowCacheMap[newRow._id] = true
+      if (!rowCacheMap[newRow._id!]) {
+        rowCacheMap[newRow._id!] = true
         rowsToAppend.push(newRow)
       }
     }
     if (resetRows) {
-      rows.set(rowsToAppend)
+      rows.set(rowsToAppend as UIRow[])
     } else if (rowsToAppend.length) {
-      rows.update(state => [...state, ...rowsToAppend])
+      rows.update(state => [...state, ...(rowsToAppend as UIRow[])])
     }
   }
 
