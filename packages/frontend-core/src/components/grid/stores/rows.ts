@@ -21,13 +21,13 @@ interface IndexedUIRow extends UIRow {
 interface RowStore {
   rows: Writable<UIRow[]>
   fetch: Writable<any>
-  loaded: Writable<any>
+  loaded: Writable<boolean>
   refreshing: Writable<boolean>
   loading: Writable<boolean>
   rowChangeCache: Writable<any>
   inProgressChanges: Writable<any>
   hasNextPage: Writable<boolean>
-  error: Writable<any>
+  error: Writable<string | null>
 }
 
 interface RowDerivedStore {
