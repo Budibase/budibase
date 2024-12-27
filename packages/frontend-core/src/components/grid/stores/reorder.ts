@@ -64,11 +64,11 @@ export const createActions = (context: StoreContext) => {
     maxScrollLeft,
   } = context
   let latestX = 0
-  let autoScrollInterval: any
+  let autoScrollInterval: NodeJS.Timeout
   let isAutoScrolling: boolean
 
   // Callback when dragging on a colum header and starting reordering
-  const startReordering = (column: any, e: any) => {
+  const startReordering = (column: string, e: MouseEvent | TouchEvent) => {
     const $scrollableColumns = get(scrollableColumns)
     const $bounds = get(bounds)
     const $stickyWidth = get(stickyWidth)
@@ -113,7 +113,7 @@ export const createActions = (context: StoreContext) => {
   // Callback when moving the mouse when reordering columns
   const onReorderMouseMove = (e: MouseEvent | TouchEvent) => {
     // Immediately handle the current position
-    const { x } = parseEventLocation(e as any)
+    const { x } = parseEventLocation(e)
     latestX = x
     considerReorderPosition()
 
