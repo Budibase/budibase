@@ -1,4 +1,4 @@
-import { writable, get, derived, Writable } from "svelte/store"
+import { writable, get, derived, Writable, Readable } from "svelte/store"
 import { tick } from "svelte"
 import {
   DefaultRowHeight,
@@ -31,15 +31,15 @@ export interface UIStore {
 }
 
 export interface UIDerivedStore {
-  focusedRowId: Writable<string | null>
-  focusedRow: Writable<any>
-  contentLines: Writable<any>
-  compact: Writable<any>
-  selectedRowCount: Writable<any>
-  isSelectingCells: Writable<any>
-  selectedCells: Writable<any> & { actions: any }
-  selectedCellMap: Writable<any>
-  selectedCellCount: Writable<any>
+  focusedRowId: Readable<string | null>
+  focusedRow: Readable<string | undefined>
+  contentLines: Readable<3 | 2 | 1>
+  compact: Readable<boolean>
+  selectedRowCount: Readable<number>
+  isSelectingCells: Readable<boolean>
+  selectedCells: Readable<string[][]> & { actions: any }
+  selectedCellMap: Readable<Record<string, boolean>>
+  selectedCellCount: Readable<number>
 }
 
 export type Store = UIStore & UIDerivedStore
