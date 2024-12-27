@@ -34,8 +34,10 @@ export const createActions = (context: StoreContext): ViewActions => {
       tableId: $datasource?.tableId,
       _viewId: $datasource?.id,
     }
+    const newRow = await API.saveRow(row, SuppressErrors)
     return {
-      ...(await API.saveRow(row, SuppressErrors)),
+      ...newRow,
+      _id: newRow._id!,
       _viewId: row._viewId,
     }
   }
@@ -54,7 +56,12 @@ export const createActions = (context: StoreContext): ViewActions => {
       },
       paginate: false,
     })
-    return res?.rows?.[0]
+    const row = res?.rows?.[0]
+    if (!row) {
+      return
+    }
+
+    return { ...row, _id: row._id! }
   }
 
   const isDatasourceValid = (datasource: UIDatasource) => {
