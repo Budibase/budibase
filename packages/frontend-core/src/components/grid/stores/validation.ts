@@ -33,10 +33,12 @@ export const deriveStores = (context: StoreContext): DerivedValidationStore => {
       // Extract row ID from all errored cell IDs
       if (error) {
         const { rowId } = parseCellID(key)
-        if (!map[rowId]) {
-          map[rowId] = []
+        if (rowId !== undefined) {
+          if (!map[rowId]) {
+            map[rowId] = []
+          }
+          map[rowId].push(key)
         }
-        map[rowId].push(key)
       }
     })
     return map
