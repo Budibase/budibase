@@ -14,8 +14,12 @@ import { FieldType, Row, UIRow } from "@budibase/types"
 import { getRelatedTableValues } from "../../../utils"
 import { Store as StoreContext } from "."
 
+interface IndexedUIRow extends UIRow {
+  __idx: number
+}
+
 interface RowStore {
-  rows: Writable<any[]>
+  rows: Writable<UIRow[]>
   fetch: Writable<any>
   loaded: Writable<any>
   refreshing: Writable<boolean>
@@ -28,7 +32,7 @@ interface RowStore {
 
 interface RowDerivedStore {
   rows: RowStore["rows"]
-  rowLookupMap: Readable<any>
+  rowLookupMap: Readable<Record<string, IndexedUIRow>>
 }
 
 interface RowActionStore {
@@ -96,7 +100,7 @@ export const deriveStores = (context: StoreContext): RowDerivedStore => {
       const customColumns = Object.values($enrichedSchema || {}).filter(
         f => f.related
       )
-      return $rows.map((row, idx) => ({
+      return $rows.map<IndexedUIRow>((row, idx) => ({
         ...row,
         __idx: idx,
         ...customColumns.reduce((map: any, column: any) => {
@@ -110,7 +114,7 @@ export const deriveStores = (context: StoreContext): RowDerivedStore => {
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(enrichedRows, $enrichedRows => {
-    let map: Record<string, UIRow> = {}
+    let map: Record<string, IndexedUIRow> = {}
     for (let i = 0; i < $enrichedRows.length; i++) {
       map[$enrichedRows[i]._id] = $enrichedRows[i]
     }
@@ -560,7 +564,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
       if (savedRow?._id) {
         if (updateState) {
           rows.update(state => {
-            state[row.__idx] = savedRow
+            state[row.__idx] = savedRow!
             return state.slice()
           })
         }
