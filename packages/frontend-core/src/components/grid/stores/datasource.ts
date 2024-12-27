@@ -3,12 +3,12 @@ import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
 import { enrichSchemaWithRelColumns, memo } from "../../../utils"
 import { cloneDeep } from "lodash"
 import {
-  Row,
   SaveRowRequest,
   SaveTableRequest,
   UIDatasource,
   UIFieldMutation,
   UIFieldSchema,
+  UIRow,
   UpdateViewRequest,
   ViewV2Type,
 } from "@budibase/types"
@@ -331,7 +331,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   }
 
   // Deletes rows from the datasource
-  const deleteRows = async (rows: Row[]) => {
+  const deleteRows = async (rows: UIRow[]) => {
     return await getAPI()?.actions.deleteRows(rows)
   }
 
