@@ -11,7 +11,9 @@ import { Store as StoreContext } from "."
 
 export interface UIStore {
   focusedCellId: Writable<string | null>
-  focusedCellAPI: Writable<any>
+  focusedCellAPI: Writable<{
+    isReadonly: () => boolean
+  } | null>
   selectedRows: Writable<any>
   hoveredRowId: Writable<string | null>
   rowHeight: Writable<number>
