@@ -55,14 +55,22 @@ interface RowActionStore {
         value: any
         apply: boolean
       }) => Promise<void>
-      applyRowChanges: any
-      deleteRows: any
-      loadNextPage: any
-      refreshRow: any
-      replaceRow: any
-      refreshData: any
-      cleanRow: any
-      bulkUpdate: any
+      applyRowChanges: (params: {
+        rowId: string
+        changes?: any
+        updateState?: boolean
+        handleErrors?: boolean
+      }) => Promise<UIRow | undefined>
+      deleteRows: (rowsToDelete: UIRow[]) => Promise<void>
+      loadNextPage: () => void
+      refreshRow: (id: string) => Promise<void>
+      replaceRow: (id: string, row: UIRow | undefined) => void
+      refreshData: () => void
+      cleanRow: (row: UIRow) => Row
+      bulkUpdate: (
+        changeMap: Record<string, any>,
+        progressCallback: (any: number) => void
+      ) => Promise<void>
     }
   }
 }
@@ -763,8 +771,8 @@ export const createActions = (context: StoreContext): RowActionStore => {
 
   // Cleans a row by removing any internal grid metadata from it.
   // Call this before passing a row to any sort of external flow.
-  const cleanRow = (row: Row) => {
-    let clone = { ...row }
+  const cleanRow = (row: UIRow) => {
+    let clone: Row = { ...row }
     delete clone.__idx
     delete clone.__metadata
     if (!get(hasBudibaseIdentifiers) && isGeneratedRowID(clone._id!)) {
