@@ -14,7 +14,7 @@ export interface UIStore {
   focusedCellAPI: Writable<{
     isReadonly: () => boolean
   } | null>
-  selectedRows: Writable<any>
+  selectedRows: Writable<Record<string, boolean>>
   hoveredRowId: Writable<string | null>
   rowHeight: Writable<number>
   previousFocusedRowId: Writable<string | null>
