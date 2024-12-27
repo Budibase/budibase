@@ -16,8 +16,8 @@ interface ClipboardDerivedStore {
 interface ClipboardActions {
   clipboard: ClipboardStore["clipboard"] & {
     actions: {
-      copy: any
-      paste: any
+      copy: () => void
+      paste: (progressCallback: () => void) => Promise<void>
     }
   }
 }
