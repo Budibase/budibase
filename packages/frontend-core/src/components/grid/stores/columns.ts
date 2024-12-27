@@ -180,6 +180,7 @@ export const initialise = (context: StoreContext) => {
             conditions: fieldSchema.conditions,
             related: fieldSchema.related,
             calculationType: fieldSchema.calculationType,
+            __left: 0, // TODO
           }
           // Override a few properties for primary display
           if (field === primaryDisplay) {
