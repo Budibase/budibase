@@ -2,6 +2,7 @@ import { writable, get, derived, Writable, Readable } from "svelte/store"
 import { MinColumnWidth, DefaultColumnWidth } from "../lib/constants"
 import { parseEventLocation } from "../lib/utils"
 import { Store as StoreContext } from "."
+import { UIColumn } from "@budibase/types"
 
 interface ResizeInitialStoreData {
   initialMouseX: number | null
@@ -9,7 +10,7 @@ interface ResizeInitialStoreData {
   column: string | null
   width: number
   left: number
-  related?: any
+  related?: UIColumn["related"]
 }
 
 const initialState: ResizeInitialStoreData = {
@@ -40,7 +41,7 @@ export const createActions = (context: StoreContext) => {
   const { resize, ui, datasource } = context
 
   // Starts resizing a certain column
-  const startResizing = (column: any, e: any) => {
+  const startResizing = (column: UIColumn, e: MouseEvent | TouchEvent) => {
     const { x } = parseEventLocation(e)
 
     // Prevent propagation to stop reordering triggering
@@ -67,7 +68,7 @@ export const createActions = (context: StoreContext) => {
   }
 
   // Handler for moving the mouse to resize columns
-  const onResizeMouseMove = (e: any) => {
+  const onResizeMouseMove = (e: MouseEvent | TouchEvent) => {
     const { initialMouseX, initialWidth, width, column, related } = get(resize)
     const { x } = parseEventLocation(e)
     const dx = x - initialMouseX!
