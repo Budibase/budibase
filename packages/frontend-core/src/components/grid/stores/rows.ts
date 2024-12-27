@@ -10,7 +10,7 @@ import {
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
-import { FieldType, Row, UIRow } from "@budibase/types"
+import { FieldType, Row, UIFetchAPI, UIRow } from "@budibase/types"
 import { getRelatedTableValues } from "../../../utils"
 import { Store as StoreContext } from "."
 
@@ -20,7 +20,7 @@ interface IndexedUIRow extends UIRow {
 
 interface RowStore {
   rows: Writable<UIRow[]>
-  fetch: Writable<any>
+  fetch: Writable<UIFetchAPI | null>
   loaded: Writable<boolean>
   refreshing: Writable<boolean>
   loading: Writable<boolean>
