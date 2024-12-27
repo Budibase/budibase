@@ -24,8 +24,8 @@ interface RowStore {
   loaded: Writable<boolean>
   refreshing: Writable<boolean>
   loading: Writable<boolean>
-  rowChangeCache: Writable<Record<string, any>>
-  inProgressChanges: Writable<Record<string, any>>
+  rowChangeCache: Writable<Record<string, Record<string, any>>>
+  inProgressChanges: Writable<Record<string, number>>
   hasNextPage: Writable<boolean>
   error: Writable<string | null>
 }
