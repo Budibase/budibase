@@ -190,6 +190,7 @@ export const initialise = (context: StoreContext) => {
             related: fieldSchema.related,
             calculationType: fieldSchema.calculationType,
             __left: undefined as any, // TODO
+            __idx: undefined as any, // TODO
           }
           // Override a few properties for primary display
           if (field === primaryDisplay) {
