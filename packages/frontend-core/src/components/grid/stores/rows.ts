@@ -38,10 +38,23 @@ interface RowDerivedStore {
 interface RowActionStore {
   rows: RowStore["rows"] & {
     actions: {
-      addRow: any
-      duplicateRow: any
-      bulkDuplicate: any
-      updateValue: any
+      addRow: (params: {
+        row: Row
+        idx: number
+        bubble: boolean
+        notify: boolean
+      }) => Promise<UIRow | undefined>
+      duplicateRow: (row: UIRow) => Promise<UIRow | undefined>
+      bulkDuplicate: (
+        rowsToDupe: UIRow[],
+        progressCallback: (any: number) => void
+      ) => Promise<UIRow[]>
+      updateValue: (params: {
+        rowId: string
+        column: any
+        value: any
+        apply: boolean
+      }) => Promise<void>
       applyRowChanges: any
       deleteRows: any
       loadNextPage: any
