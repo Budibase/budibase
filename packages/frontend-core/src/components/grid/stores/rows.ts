@@ -124,9 +124,13 @@ export const deriveStores = (context: StoreContext): RowDerivedStore => {
       return $rows.map<IndexedUIRow>((row, idx) => ({
         ...row,
         __idx: idx,
-        ...customColumns.reduce((map: any, column: any) => {
+        ...customColumns.reduce<Record<string, string>>((map, column) => {
           const fromField = $enrichedSchema![column.related!.field]
-          map[column.name] = getRelatedTableValues(row, column, fromField)
+          map[column.name] = getRelatedTableValues(
+            row,
+            { ...column, related: column.related! },
+            fromField
+          )
           return map
         }, {}),
       }))
