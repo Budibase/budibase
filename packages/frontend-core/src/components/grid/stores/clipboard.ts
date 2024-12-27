@@ -4,8 +4,18 @@ import { parseCellID, getCellID } from "../lib/utils"
 import { NewRowID } from "../lib/constants"
 import { Store as StoreContext } from "."
 
+type ClipboardStoreData =
+  | {
+      value: string[][]
+      multiCellCopy: true
+    }
+  | {
+      value: string | null | undefined
+      multiCellCopy: false
+    }
+
 interface ClipboardStore {
-  clipboard: Writable<{ value: any; multiCellCopy: boolean }>
+  clipboard: Writable<ClipboardStoreData>
 }
 
 interface ClipboardDerivedStore {
@@ -25,7 +35,7 @@ interface ClipboardActions {
 export type Store = ClipboardStore & ClipboardDerivedStore & ClipboardActions
 
 export const createStores = (): ClipboardStore => {
-  const clipboard = writable({
+  const clipboard = writable<ClipboardStoreData>({
     value: null,
     multiCellCopy: false,
   })
@@ -218,11 +228,11 @@ export const createActions = (context: StoreContext): ClipboardActions => {
     } else {
       if (multiCellPaste) {
         // Single to multi - duplicate value to all selected cells
-        const newValue = get(selectedCells).map(row => row.map(() => value))
+        const newValue = get(selectedCells).map(row => row.map(() => value!))
         await pasteIntoSelectedCells(newValue, progressCallback)
       } else {
         // Single to single - just update the cell's value
-        get(focusedCellAPI)?.setValue(value)
+        get(focusedCellAPI)?.setValue(value ?? null)
       }
     }
   }
