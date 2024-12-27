@@ -209,7 +209,11 @@ export const createActions = (context: StoreContext) => {
     const { sourceColumn, targetColumn, insertAfter } = get(reorder)
     reorder.set(reorderInitialState)
     if (sourceColumn !== targetColumn) {
-      await moveColumn({ sourceColumn, targetColumn, insertAfter })
+      await moveColumn({
+        sourceColumn: sourceColumn!,
+        targetColumn: targetColumn!,
+        insertAfter,
+      })
     }
   }
 
@@ -219,7 +223,11 @@ export const createActions = (context: StoreContext) => {
     sourceColumn,
     targetColumn,
     insertAfter = false,
-  }: any) => {
+  }: {
+    sourceColumn: string
+    targetColumn: string
+    insertAfter?: boolean
+  }) => {
     // Find the indices in the overall columns array
     const $columns = get(columns)
     let sourceIdx = $columns.findIndex(col => col.name === sourceColumn)
