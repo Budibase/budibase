@@ -2,11 +2,17 @@ import { get, writable, derived, Writable, Readable } from "svelte/store"
 import { parseEventLocation } from "../lib/utils"
 import { Store as StoreContext } from "."
 
+interface Breakpoint {
+  x: number
+  column: string
+  insertAfter: boolean
+}
+
 interface ReorderInitialStoreData {
-  sourceColumn: any
-  targetColumn: any
+  sourceColumn: string | null
+  targetColumn: string | null
   insertAfter?: boolean
-  breakpoints: any[]
+  breakpoints: Breakpoint[]
   gridLeft: number
   width: number
   increment?: number
@@ -140,7 +146,7 @@ export const createActions = (context: StoreContext) => {
     const $scrollLeft = get(scrollLeft)
 
     // Compute the closest breakpoint to the current position
-    let breakpoint: any
+    let breakpoint: Breakpoint | undefined
     let minDistance = Number.MAX_SAFE_INTEGER
     const mouseX = latestX - $reorder.gridLeft + $scrollLeft
     $reorder.breakpoints.forEach(point => {
@@ -157,8 +163,8 @@ export const createActions = (context: StoreContext) => {
     ) {
       reorder.update(state => ({
         ...state,
-        targetColumn: breakpoint.column,
-        insertAfter: breakpoint.insertAfter,
+        targetColumn: breakpoint!.column,
+        insertAfter: breakpoint!.insertAfter,
       }))
     }
   }
