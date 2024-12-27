@@ -16,7 +16,7 @@ export type UIColumn = FieldSchema & {
     autocolumn: boolean
   }
   calculationType: CalculationType
-  __idx?: number
+  __idx: number
   __left: number
   width: number
 }
