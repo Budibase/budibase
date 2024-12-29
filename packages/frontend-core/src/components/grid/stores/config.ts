@@ -5,10 +5,10 @@ import { Store as StoreContext } from "."
 
 interface ConfigStore {
   datasource: UIDatasource
-  initialSortColumn: any
+  initialSortColumn: Readable<string>
   initialSortOrder: any
   initialFilter: any
-  fixedRowHeight: any
+  fixedRowHeight: Readable<number>
   schemaOverrides: any
   notifySuccess: any
   notifyError: any

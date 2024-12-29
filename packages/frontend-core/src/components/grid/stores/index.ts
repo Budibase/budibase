@@ -70,23 +70,19 @@ export type Store = BaseStore &
   Scroll.Store & {
     // TODO while typing the rest of stores
     sort: Writable<any>
-    initialFilter: Writable<any>
-    initialSortColumn: Writable<any>
-    initialSortOrder: Writable<any>
     subscribe: any
     config: Writable<any>
     dispatch: (event: string, data: any) => any
     notifications: Writable<any>
-    schemaOverrides: Writable<any>
     gridID: string
     props: Writable<any>
     width: Writable<number>
-    fixedRowHeight: Writable<number>
     bounds: Readable<any>
     height: Readable<number>
   } & Rows.Store &
   Reorder.Store &
-  Resize.Store
+  Resize.Store &
+  Config.Store
 
 export const attachStores = (context: Store): Store => {
   // Atomic store creation
