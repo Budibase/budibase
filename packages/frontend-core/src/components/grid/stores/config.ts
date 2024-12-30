@@ -1,10 +1,10 @@
 import { derivedMemo } from "../../../utils"
-import { derived, Readable } from "svelte/store"
+import { derived, Readable, Writable } from "svelte/store"
 import { UIDatasource, ViewV2Type } from "@budibase/types"
 import { Store as StoreContext } from "."
 
-interface ConfigStore {
-  datasource: UIDatasource
+export interface ConfigStore {
+  datasource: Writable<UIDatasource>
   initialSortColumn: Readable<string>
   initialSortOrder: any
   initialFilter: any
