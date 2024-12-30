@@ -47,7 +47,6 @@
   export let buttonsCollapsedText = null
   export let darkMode = false
   export let isCloud = null
-  export let rowConditions = null
   export let aiEnabled = false
 
   // Unique identifier for DOM nodes inside this instance
@@ -106,7 +105,6 @@
     darkMode,
     isCloud,
     aiEnabled,
-    rowConditions,
   })
 
   // Derive min height and make available in context
