@@ -19,8 +19,7 @@ export default class TableFetch extends DataFetch {
 
     // Search table
     try {
-      const res = await this.API.searchTable({
-        tableId,
+      const res = await this.API.searchTable(tableId, {
         query,
         limit,
         sort: sortColumn,

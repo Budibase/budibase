@@ -1,5 +1,5 @@
 import { get, derived } from "svelte/store"
-import BudiStore from "stores/BudiStore"
+import { BudiStore } from "stores/BudiStore"
 import { tables } from "./tables"
 import { viewsV2 } from "./viewsV2"
 import { automationStore } from "./automations"
@@ -55,15 +55,12 @@ export class RowActionStore extends BudiStore {
     }
 
     // Create the action
-    const res = await API.rowActions.create({
-      name,
-      tableId,
-    })
+    const res = await API.rowActions.create(tableId, name)
 
     // Enable action on this view if adding via a view
     if (viewId) {
       await Promise.all([
-        this.enableView(tableId, viewId, res.id),
+        this.enableView(tableId, res.id, viewId),
         automationStore.actions.fetch(),
       ])
     } else {
@@ -76,21 +73,13 @@ export class RowActionStore extends BudiStore {
     return res
   }
 
-  enableView = async (tableId, viewId, rowActionId) => {
-    await API.rowActions.enableView({
-      tableId,
-      viewId,
-      rowActionId,
-    })
+  enableView = async (tableId, rowActionId, viewId) => {
+    await API.rowActions.enableView(tableId, rowActionId, viewId)
     await this.refreshRowActions(tableId)
   }
 
-  disableView = async (tableId, viewId, rowActionId) => {
-    await API.rowActions.disableView({
-      tableId,
-      viewId,
-      rowActionId,
-    })
+  disableView = async (tableId, rowActionId, viewId) => {
+    await API.rowActions.disableView(tableId, rowActionId, viewId)
     await this.refreshRowActions(tableId)
   }
 
@@ -105,21 +94,14 @@ export class RowActionStore extends BudiStore {
   }
 
   delete = async (tableId, rowActionId) => {
-    await API.rowActions.delete({
-      tableId,
-      rowActionId,
-    })
+    await API.rowActions.delete(tableId, rowActionId)
     await this.refreshRowActions(tableId)
     // We don't need to refresh automations as we can only delete row actions
     // from the automations store, so we already handle the state update there
   }
 
   trigger = async (sourceId, rowActionId, rowId) => {
-    await API.rowActions.trigger({
-      sourceId,
-      rowActionId,
-      rowId,
-    })
+    await API.rowActions.trigger(sourceId, rowActionId, rowId)
   }
 }
 

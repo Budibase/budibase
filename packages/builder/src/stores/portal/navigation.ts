@@ -2,13 +2,13 @@ import { writable } from "svelte/store"
 
 type GotoFuncType = (path: string) => void
 
-interface Store {
+interface PortalNavigationStore {
   initialisated: boolean
   goto: GotoFuncType
 }
 
 export function createNavigationStore() {
-  const store = writable<Store>({
+  const store = writable<PortalNavigationStore>({
     initialisated: false,
     goto: undefined as any,
   })

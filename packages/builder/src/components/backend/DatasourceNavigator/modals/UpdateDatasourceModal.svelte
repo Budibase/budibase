@@ -33,7 +33,7 @@
       ...datasource,
       name,
     }
-    await datasources.update({
+    await datasources.save({
       datasource: updatedDatasource,
       integration: integrationForDatasource(get(integrations), datasource),
     })

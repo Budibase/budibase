@@ -62,7 +62,6 @@ export async function create(
 
   const createdAutomation = await sdk.automations.create(automation)
 
-  ctx.status = 200
   ctx.body = {
     message: "Automation created successfully",
     automation: createdAutomation,
@@ -84,7 +83,6 @@ export async function update(
 
   const updatedAutomation = await sdk.automations.update(automation)
 
-  ctx.status = 200
   ctx.body = {
     message: `Automation ${automation._id} updated successfully.`,
     automation: updatedAutomation,
