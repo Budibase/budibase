@@ -65,7 +65,7 @@ interface RowActionStore {
       loadNextPage: () => void
       refreshRow: (id: string) => Promise<void>
       replaceRow: (id: string, row: UIRow | undefined) => void
-      refreshData: () => void
+      refreshData: () => Promise<void>
       cleanRow: (row: UIRow) => Row
       bulkUpdate: (
         changeMap: Record<string, Record<string, any>>,
@@ -514,8 +514,8 @@ export const createActions = (context: StoreContext): RowActionStore => {
   }
 
   // Refreshes all data
-  const refreshData = () => {
-    get(fetch)?.getInitialData()
+  const refreshData = async () => {
+    await get(fetch)?.getInitialData()
   }
 
   // Checks if a changeset for a row actually mutates the row or not
