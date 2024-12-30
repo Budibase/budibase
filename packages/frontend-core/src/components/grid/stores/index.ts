@@ -67,12 +67,12 @@ export interface BaseStoreProps {
   > | null
   notifySuccess: (message: string) => void
   notifyError: (message: string) => void
-  canAddRows: boolean
-  canEditRows: boolean
-  canDeleteRows: boolean
-  canEditColumns: boolean
-  canExpandRows: boolean
-  canSaveSchema: boolean
+  canAddRows?: boolean
+  canEditRows?: boolean
+  canDeleteRows?: boolean
+  canEditColumns?: boolean
+  canExpandRows?: boolean
+  canSaveSchema?: boolean
 }
 
 export interface BaseStore {
