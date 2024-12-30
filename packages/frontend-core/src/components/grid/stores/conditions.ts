@@ -1,14 +1,19 @@
 import { writable, get, Writable, Readable } from "svelte/store"
 import { derivedMemo, QueryUtils } from "../../../utils"
-import { FieldType, EmptyFilterOption } from "@budibase/types"
+import {
+  FieldType,
+  EmptyFilterOption,
+  UIRow,
+  UICondition,
+} from "@budibase/types"
 import { Store as StoreContext } from "."
 
 interface ConditionStore {
-  metadata: Writable<any>
+  metadata: Writable<Record<string, any>>
 }
 
 interface ConditionDerivedStore {
-  conditions: Readable<any>
+  conditions: Readable<UICondition[]>
 }
 
 export type Store = ConditionStore & ConditionDerivedStore
@@ -49,7 +54,7 @@ export const initialise = (context: StoreContext) => {
 
   // Recompute all metadata if conditions change
   conditions.subscribe($conditions => {
-    let newMetadata = {}
+    let newMetadata: Record<string, any> = {}
     if ($conditions?.length) {
       for (let row of get(rows)) {
         newMetadata[row._id] = evaluateConditions(row, $conditions)
@@ -65,7 +70,7 @@ export const initialise = (context: StoreContext) => {
       return
     }
     const $metadata = get(metadata)
-    let metadataUpdates = {}
+    let metadataUpdates: Record<string, any> = {}
     for (let row of $rows) {
       if (!row._rev || $metadata[row._id]?.version !== row._rev) {
         metadataUpdates[row._id] = evaluateConditions(row, $conditions)
@@ -80,15 +85,15 @@ export const initialise = (context: StoreContext) => {
   })
 }
 
-const TypeCoercionMap = {
+const TypeCoercionMap: Partial<Record<FieldType, (val: string) => any>> = {
   [FieldType.NUMBER]: parseFloat,
-  [FieldType.DATETIME]: val => {
+  [FieldType.DATETIME]: (val: string) => {
     if (val) {
       return new Date(val).toISOString()
     }
     return null
   },
-  [FieldType.BOOLEAN]: val => {
+  [FieldType.BOOLEAN]: (val: string) => {
     if (`${val}`.toLowerCase().trim() === "true") {
       return true
     }
@@ -101,8 +106,12 @@ const TypeCoercionMap = {
 
 // Evaluates an array of cell conditions against a certain row and returns the
 // resultant metadata
-const evaluateConditions = (row, conditions) => {
-  let metadata = {
+const evaluateConditions = (row: UIRow, conditions: UICondition[]) => {
+  const metadata: {
+    version?: string
+    row: Record<string, string>
+    cell: Record<string, any>
+  } = {
     version: row._rev,
     row: {},
     cell: {},
