@@ -368,20 +368,22 @@
     const payload = [
       {
         email: newUserEmail,
-        builder: {
-          global: creationRoleType === Constants.BudibaseRoles.Admin,
-          creator: creationRoleType === Constants.BudibaseRoles.Creator,
+        userInfo: {
+          builder: {
+            global: creationRoleType === Constants.BudibaseRoles.Admin,
+            creator: creationRoleType === Constants.BudibaseRoles.Creator,
+          },
+          admin: { global: creationRoleType === Constants.BudibaseRoles.Admin },
         },
-        admin: { global: creationRoleType === Constants.BudibaseRoles.Admin },
       },
     ]
 
     const notCreatingAdmin = creationRoleType !== Constants.BudibaseRoles.Admin
     const isCreator = creationAccessType === Constants.Roles.CREATOR
     if (notCreatingAdmin && isCreator) {
-      payload[0].builder.apps = [prodAppId]
+      payload[0].userInfo.builder.apps = [prodAppId]
     } else if (notCreatingAdmin && !isCreator) {
-      payload[0].apps = { [prodAppId]: creationAccessType }
+      payload[0].userInfo.apps = { [prodAppId]: creationAccessType }
     }
 
     let userInviteResponse

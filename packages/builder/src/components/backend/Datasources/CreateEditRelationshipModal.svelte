@@ -41,7 +41,7 @@
         get(integrations),
         datasource
       )
-      await datasources.update({ datasource, integration })
+      await datasources.save({ datasource, integration })
 
       await afterSave({ datasource, action })
     } catch (err) {

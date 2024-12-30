@@ -1,8 +1,24 @@
-import { writable, get } from "svelte/store"
+import { writable, get, Writable } from "svelte/store"
+
+import { Store as StoreContext } from "."
 import { parseCellID } from "../lib/utils"
 
+interface MenuStoreData {
+  left: number
+  top: number
+  visible: boolean
+  multiRowMode: boolean
+  multiCellMode: boolean
+}
+
+interface MenuStore {
+  menu: Writable<MenuStoreData>
+}
+
+export type Store = MenuStore
+
 export const createStores = () => {
-  const menu = writable({
+  const menu = writable<MenuStoreData>({
     left: 0,
     top: 0,
     visible: false,
@@ -14,7 +30,7 @@ export const createStores = () => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext) => {
   const {
     menu,
     focusedCellId,
@@ -25,7 +41,7 @@ export const createActions = context => {
     selectedCellCount,
   } = context
 
-  const open = (cellId, e) => {
+  const open = (cellId: string, e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
 
@@ -37,7 +53,7 @@ export const createActions = context => {
     }
 
     // Compute bounds of cell relative to outer data node
-    const targetBounds = e.target.getBoundingClientRect()
+    const targetBounds = (e.target as HTMLElement).getBoundingClientRect()
     const dataBounds = dataNode.getBoundingClientRect()
 
     // Check if there are multiple rows selected, and if this is one of them

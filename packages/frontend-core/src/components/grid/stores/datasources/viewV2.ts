@@ -1,16 +1,33 @@
 import { get } from "svelte/store"
-import { SortOrder } from "@budibase/types"
+import {
+  Row,
+  SaveRowRequest,
+  SortOrder,
+  UIDatasource,
+  UIView,
+  UpdateViewRequest,
+} from "@budibase/types"
+import { Store as StoreContext } from ".."
+import { DatasourceViewActions } from "."
 
 const SuppressErrors = true
 
-export const createActions = context => {
+interface ViewActions {
+  viewV2: {
+    actions: DatasourceViewActions
+  }
+}
+
+export type Store = ViewActions
+
+export const createActions = (context: StoreContext): ViewActions => {
   const { API, datasource, columns } = context
 
-  const saveDefinition = async newDefinition => {
+  const saveDefinition = async (newDefinition: UpdateViewRequest) => {
     await API.viewV2.update(newDefinition)
   }
 
-  const saveRow = async row => {
+  const saveRow = async (row: SaveRowRequest) => {
     const $datasource = get(datasource)
     row = {
       ...row,
@@ -23,11 +40,11 @@ export const createActions = context => {
     }
   }
 
-  const deleteRows = async rows => {
+  const deleteRows = async (rows: Row[]) => {
     await API.deleteRows(get(datasource).id, rows)
   }
 
-  const getRow = async id => {
+  const getRow = async (id: string) => {
     const res = await API.viewV2.fetch(get(datasource).id, {
       limit: 1,
       query: {
@@ -40,13 +57,13 @@ export const createActions = context => {
     return res?.rows?.[0]
   }
 
-  const isDatasourceValid = datasource => {
+  const isDatasourceValid = (datasource: UIDatasource) => {
     return (
-      datasource?.type === "viewV2" && datasource?.id && datasource?.tableId
+      datasource?.type === "viewV2" && !!datasource?.id && !!datasource?.tableId
     )
   }
 
-  const canUseColumn = name => {
+  const canUseColumn = (name: string) => {
     return get(columns).some(col => col.name === name && col.visible)
   }
 
@@ -65,7 +82,7 @@ export const createActions = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const {
     definition,
     datasource,
@@ -85,7 +102,7 @@ export const initialise = context => {
 
   // Keep a list of subscriptions so that we can clear them when the datasource
   // config changes
-  let unsubscribers = []
+  let unsubscribers: any[] = []
 
   // Observe datasource changes and apply logic for view V2 datasources
   datasource.subscribe($datasource => {
@@ -131,7 +148,7 @@ export const initialise = context => {
     unsubscribers.push(
       sort.subscribe(async $sort => {
         // Ensure we're updating the correct view
-        const $view = get(definition)
+        const $view = get(definition) as UIView
         if ($view?.id !== $datasource.id) {
           return
         }
@@ -182,7 +199,7 @@ export const initialise = context => {
           await datasource.actions.saveDefinition({
             ...$view,
             queryUI: $filter,
-          })
+          } as never as UpdateViewRequest)
 
           // Refresh data since view definition changed
           await rows.actions.refreshData()
