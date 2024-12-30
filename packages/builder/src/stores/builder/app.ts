@@ -1,7 +1,54 @@
 import { API } from "api"
 import { BudiStore } from "../BudiStore"
+import {
+  App,
+  AppFeatures,
+  AppIcon,
+  AutomationSettings,
+  Plugin,
+} from "@budibase/types"
 
-export const INITIAL_APP_META_STATE = {
+interface ClientFeatures {
+  spectrumThemes: boolean
+  intelligentLoading: boolean
+  deviceAwareness: boolean
+  state: boolean
+  rowSelection: boolean
+  customThemes: boolean
+  devicePreview: boolean
+  messagePassing: boolean
+  continueIfAction: boolean
+  showNotificationAction: boolean
+  sidePanel: boolean
+}
+
+interface TypeSupportPresets {
+  [key: string]: any
+}
+
+interface AppMetaState {
+  appId: string
+  name: string
+  url: string
+  libraries: string[]
+  clientFeatures: ClientFeatures
+  typeSupportPresets: TypeSupportPresets
+  features: AppFeatures
+  clientLibPath: string
+  hasLock: boolean
+  appInstance: { _id: string } | null
+  initialised: boolean
+  hasAppPackage: boolean
+  usedPlugins: Plugin[] | null
+  automations: AutomationSettings
+  routes: { [key: string]: any }
+  version?: string
+  revertableVersion?: string
+  upgradableVersion?: string
+  icon?: AppIcon
+}
+
+export const INITIAL_APP_META_STATE: AppMetaState = {
   appId: "",
   name: "",
   url: "",
@@ -34,23 +81,27 @@ export const INITIAL_APP_META_STATE = {
   routes: {},
 }
 
-export class AppMetaStore extends BudiStore {
+export class AppMetaStore extends BudiStore<AppMetaState> {
   constructor() {
     super(INITIAL_APP_META_STATE)
   }
 
-  reset() {
+  reset(): void {
     this.store.set({ ...INITIAL_APP_META_STATE })
   }
 
-  syncAppPackage(pkg) {
+  syncAppPackage(pkg: {
+    application: App
+    clientLibPath: string
+    hasLock: boolean
+  }): void {
     const { application: app, clientLibPath, hasLock } = pkg
 
     this.update(state => ({
       ...state,
       name: app.name,
       appId: app.appId,
-      url: app.url,
+      url: app.url || "",
       hasLock,
       clientLibPath,
       libraries: app.componentLibraries,
@@ -58,8 +109,8 @@ export class AppMetaStore extends BudiStore {
       appInstance: app.instance,
       revertableVersion: app.revertableVersion,
       upgradableVersion: app.upgradableVersion,
-      usedPlugins: app.usedPlugins,
-      icon: app.icon || {},
+      usedPlugins: app.usedPlugins || null,
+      icon: app.icon,
       features: {
         ...INITIAL_APP_META_STATE.features,
         ...app.features,
@@ -70,7 +121,7 @@ export class AppMetaStore extends BudiStore {
     }))
   }
 
-  syncClientFeatures(features) {
+  syncClientFeatures(features: Partial<ClientFeatures>): void {
     this.update(state => ({
       ...state,
       clientFeatures: {
@@ -80,14 +131,14 @@ export class AppMetaStore extends BudiStore {
     }))
   }
 
-  syncClientTypeSupportPresets(typeSupportPresets) {
+  syncClientTypeSupportPresets(typeSupportPresets: TypeSupportPresets): void {
     this.update(state => ({
       ...state,
       typeSupportPresets,
     }))
   }
 
-  async syncAppRoutes() {
+  async syncAppRoutes(): Promise<void> {
     const resp = await API.fetchAppRoutes()
     this.update(state => ({
       ...state,
@@ -96,7 +147,7 @@ export class AppMetaStore extends BudiStore {
   }
 
   // Returned from socket
-  syncMetadata(metadata) {
+  syncMetadata(metadata: { name: string; url: string; icon?: AppIcon }): void {
     const { name, url, icon } = metadata
     this.update(state => ({
       ...state,
