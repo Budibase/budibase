@@ -60,7 +60,8 @@ export type Store = BaseStore &
   Table.Store &
   ViewV2.Store &
   NonPlus.Store &
-  Datasource.Store & {
+  Datasource.Store &
+  Validation.Store & {
     // TODO while typing the rest of stores
     fetch: Writable<any>
     filter: Writable<any>
@@ -76,6 +77,8 @@ export type Store = BaseStore &
     dispatch: (event: string, data: any) => any
     notifications: Writable<any>
     schemaOverrides: Writable<any>
+    focusedCellId: Writable<any>
+    previousFocusedRowId: Writable<string>
   }
 
 export const attachStores = (context: Store): Store => {
