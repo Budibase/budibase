@@ -1,40 +1,35 @@
 import { derivedMemo } from "../../../utils"
 import { derived, Readable } from "svelte/store"
-import {
-  SortOrder,
-  UIDatasource,
-  UISearchFilter,
-  ViewV2Type,
-} from "@budibase/types"
-import { Store as StoreContext } from "."
+import { ViewV2Type } from "@budibase/types"
+import { BaseStoreProps, Store as StoreContext } from "."
 
-export interface ConfigStore {
-  datasource: Readable<UIDatasource>
-  initialSortColumn: Readable<string | null>
-  initialSortOrder: Readable<SortOrder | null>
-  initialFilter: Readable<UISearchFilter | null>
-  fixedRowHeight: Readable<number | null>
-  schemaOverrides: Readable<Record<
-    string,
-    {
-      displayName?: string
-      disabled?: boolean
-    }
-  > | null>
-  notifySuccess: (message: string) => void
-  notifyError: (message: string) => void
+interface ConfigStore {
+  datasource: Readable<BaseStoreProps["datasource"]>
+  initialSortColumn: Readable<BaseStoreProps["initialSortColumn"]>
+  initialSortOrder: Readable<BaseStoreProps["initialSortOrder"]>
+  initialFilter: Readable<BaseStoreProps["initialFilter"]>
+  fixedRowHeight: Readable<BaseStoreProps["fixedRowHeight"]>
+  schemaOverrides: Readable<BaseStoreProps["schemaOverrides"]>
+  notifySuccess: Readable<BaseStoreProps["notifySuccess"]>
+  notifyError: Readable<BaseStoreProps["notifyError"]>
+  canAddRows?: Readable<BaseStoreProps["canAddRows"]>
+  canEditRows?: Readable<BaseStoreProps["canEditRows"]>
+  canDeleteRows?: Readable<BaseStoreProps["canDeleteRows"]>
+  canEditColumns?: Readable<BaseStoreProps["canEditColumns"]>
+  canExpandRows?: Readable<BaseStoreProps["canExpandRows"]>
+  canSaveSchema?: Readable<BaseStoreProps["canSaveSchema"]>
 }
 
-interface PropsContext {
-  props: Readable<ConfigStore>
+interface ConfigDerivedStore {
+  config: Readable<BaseStoreProps>
 }
 
-export type Store = ConfigStore
+export type Store = ConfigStore & ConfigDerivedStore
 
-export const createStores = (context: PropsContext): ConfigStore => {
+export const createStores = (context: StoreContext): ConfigStore => {
   const { props } = context
-  const getProp = <T extends keyof ConfigStore>(prop: T) =>
-    derivedMemo(props, ($props: ConfigStore) => $props[prop])
+  const getProp = <T extends keyof BaseStoreProps>(prop: T) =>
+    derivedMemo(props, $props => $props[prop])
 
   // Derive and memoize some props so that we can react to them in isolation
   const datasource = getProp("datasource")
@@ -58,7 +53,7 @@ export const createStores = (context: PropsContext): ConfigStore => {
   }
 }
 
-export const deriveStores = (context: StoreContext) => {
+export const deriveStores = (context: StoreContext): ConfigDerivedStore => {
   const { props, definition, hasNonAutoColumn } = context
 
   // Derive features

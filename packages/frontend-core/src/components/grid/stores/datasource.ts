@@ -12,9 +12,8 @@ import {
   UpdateViewRequest,
   ViewV2Type,
 } from "@budibase/types"
-import { Store as StoreContext } from "."
+import { Store as StoreContext, BaseStoreProps } from "."
 import { DatasourceActions } from "./datasources"
-import { ConfigStore } from "./config"
 
 interface DatasourceStore {
   definition: Writable<UIDatasource | null>
@@ -29,7 +28,7 @@ interface DerivedDatasourceStore {
 }
 
 interface ActionDatasourceStore {
-  datasource: ConfigStore["datasource"] & {
+  datasource: BaseStoreProps["datasource"] & {
     actions: DatasourceActions & {
       refreshDefinition: () => Promise<void>
       changePrimaryDisplay: (column: string) => Promise<void>
