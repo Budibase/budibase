@@ -1,4 +1,10 @@
-import { Row, UIDatasource } from "@budibase/types"
+import {
+  Row,
+  SortOrder,
+  UIDatasource,
+  UILegacyFilter,
+  UISearchFilter,
+} from "@budibase/types"
 
 export interface UIFetchAPI {
   definition: UIDatasource
@@ -14,4 +20,19 @@ export interface UIFetchAPI {
   nextPage: () => Promise<void>
 
   rows: Row[]
+
+  options?: {
+    datasource?: {
+      tableId: string
+      id: string
+    }
+  }
+  update: ({
+    sortOrder,
+    sortColumn,
+  }: {
+    sortOrder?: SortOrder
+    sortColumn?: string
+    filter?: UILegacyFilter[] | UISearchFilter
+  }) => any
 }
