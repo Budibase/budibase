@@ -1,8 +1,9 @@
 import { derived, get } from "svelte/store"
 import { memo } from "../../../utils"
 import { SortOrder } from "@budibase/types"
+import { Store as StoreContext } from "."
 
-export const createStores = context => {
+export const createStores = (context: StoreContext) => {
   const { props } = context
   const $props = get(props)
 
@@ -17,7 +18,7 @@ export const createStores = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const { sort, initialSortColumn, initialSortOrder, schema } = context
 
   // Reset sort when initial sort props change
