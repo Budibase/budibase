@@ -79,6 +79,8 @@ export interface BaseStore {
   API: APIClient
   gridID: string
   props: Writable<BaseStoreProps>
+  subscribe: any
+  dispatch: (event: string, data: any) => any
 }
 
 export type Store = BaseStore &
@@ -93,11 +95,8 @@ export type Store = BaseStore &
   Filter.Store &
   UI.Store &
   Clipboard.Store &
-  Scroll.Store & {
-    // TODO while typing the rest of stores
-    subscribe: any
-    dispatch: (event: string, data: any) => any
-  } & Rows.Store &
+  Scroll.Store &
+  Rows.Store &
   Reorder.Store &
   Resize.Store &
   Config.Store &
