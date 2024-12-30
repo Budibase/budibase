@@ -6,7 +6,7 @@ interface ViewportDerivedStore {
   scrolledRowCount: Readable<any>
   visualRowCapacity: Readable<any>
   renderedRows: Readable<any>
-  columnRenderMap: Readable<any>
+  columnRenderMap: Readable<Record<string, true>>
 }
 
 export const deriveStores = (context: StoreContext): ViewportDerivedStore => {
@@ -85,7 +85,7 @@ export const deriveStores = (context: StoreContext): ViewportDerivedStore => {
         leftEdge += $scrollableColumns[endColIdx].width
         endColIdx++
       }
-      let next = {}
+      let next: Record<string, true> = {}
       $scrollableColumns
         .slice(Math.max(0, startColIdx), endColIdx)
         .forEach(col => {
