@@ -1,5 +1,6 @@
 import { get } from "svelte/store"
 import { createBuilderWebsocket } from "./websocket.js"
+import { Socket } from "socket.io-client"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import { BudiStore } from "../BudiStore.js"
 import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
@@ -18,7 +19,7 @@ interface BuilderState {
   tourKey: string | null
   tourStepKey: string | null
   hoveredComponentId: string | null
-  websocket?: ReturnType<typeof createBuilderWebsocket>
+  websocket?: Socket
 }
 
 export const INITIAL_BUILDER_STATE: BuilderState = {
@@ -34,7 +35,7 @@ export const INITIAL_BUILDER_STATE: BuilderState = {
 }
 
 export class BuilderStore extends BudiStore<BuilderState> {
-  websocket?: ReturnType<typeof createBuilderWebsocket>
+  websocket?: Socket
 
   constructor() {
     super({ ...INITIAL_BUILDER_STATE })
