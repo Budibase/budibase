@@ -1,6 +1,12 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
+<<<<<<< HEAD
 import { SortedIntegrationStore } from "@/stores/builder/sortedIntegrations"
 import { DatasourceTypes } from "@/constants/backend"
+=======
+import { DatasourceTypes } from "@/constants/backend"
+import { SortedIntegrationStore } from "@/stores/builder/sortedIntegrations"
+
+>>>>>>> 094e337f0288652e71c7bebd1ed32003f62af90a
 import { derived } from "svelte/store"
 import { integrations } from "@/stores/builder/integrations"
 
