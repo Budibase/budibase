@@ -1,10 +1,21 @@
-import { writable, get, derived } from "svelte/store"
+import { writable, get, derived, Writable, Readable } from "svelte/store"
+import { Store as StoreContext } from "."
 import { parseCellID } from "../lib/utils"
+
+interface ValidationStore {
+  validation: Writable<Record<string, string>>
+}
+
+interface DerivedValidationStore {
+  validationRowLookupMap: Readable<Record<string, string[]>>
+}
+
+export type Store = ValidationStore & DerivedValidationStore
 
 // Normally we would break out actions into the explicit "createActions"
 // function, but for validation all these actions are pure so can go into
 // "createStores" instead to make dependency ordering simpler
-export const createStores = () => {
+export const createStores = (): ValidationStore => {
   const validation = writable({})
 
   return {
@@ -12,12 +23,12 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: StoreContext): DerivedValidationStore => {
   const { validation } = context
 
   // Derive which rows have errors so that we can use that info later
   const validationRowLookupMap = derived(validation, $validation => {
-    let map = {}
+    const map: Record<string, string[]> = {}
     Object.entries($validation).forEach(([key, error]) => {
       // Extract row ID from all errored cell IDs
       if (error) {
@@ -36,10 +47,10 @@ export const deriveStores = context => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext) => {
   const { validation, focusedCellId, validationRowLookupMap } = context
 
-  const setError = (cellId, error) => {
+  const setError = (cellId: string | undefined, error: string) => {
     if (!cellId) {
       return
     }
@@ -49,11 +60,11 @@ export const createActions = context => {
     }))
   }
 
-  const rowHasErrors = rowId => {
+  const rowHasErrors = (rowId: string) => {
     return get(validationRowLookupMap)[rowId]?.length > 0
   }
 
-  const focusFirstRowError = rowId => {
+  const focusFirstRowError = (rowId: string) => {
     const errorCells = get(validationRowLookupMap)[rowId]
     const cellId = errorCells?.[0]
     if (cellId) {
@@ -73,7 +84,7 @@ export const createActions = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const { validation, previousFocusedRowId, validationRowLookupMap } = context
 
   // Remove validation errors when changing rows
