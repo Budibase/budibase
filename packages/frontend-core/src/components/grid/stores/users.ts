@@ -1,7 +1,12 @@
 import { writable, get, derived, Writable, Readable } from "svelte/store"
 import { helpers } from "@budibase/shared-core"
 import { Store as StoreContext } from "."
-import { UIEnrichedUser, UIUser } from "@budibase/types"
+import { UIUser } from "@budibase/types"
+
+interface UIEnrichedUser extends UIUser {
+  color: string
+  label: string
+}
 
 interface UsersStore {
   users: Writable<UIUser[]>
