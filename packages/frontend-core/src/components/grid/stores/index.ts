@@ -24,6 +24,7 @@ import * as ViewV2 from "./datasources/viewV2"
 import * as NonPlus from "./datasources/nonPlus"
 import * as Cache from "./cache"
 import * as Conditions from "./conditions"
+import { UIDatasource } from "@budibase/types"
 
 const DependencyOrderedStores = [
   Sort,
@@ -53,6 +54,16 @@ const DependencyOrderedStores = [
 
 export interface BaseStore {
   API: APIClient
+  gridID: string
+  props: Writable<{
+    datasource: UIDatasource
+    canAddRows: boolean
+    canEditRows: boolean
+    canDeleteRows: boolean
+    canEditColumns: boolean
+    canExpandRows: boolean
+    canSaveSchema: boolean
+  }>
 }
 
 export type Store = BaseStore &
@@ -74,8 +85,6 @@ export type Store = BaseStore &
     config: Writable<any>
     dispatch: (event: string, data: any) => any
     notifications: Writable<any>
-    gridID: string
-    props: Writable<any>
     width: Writable<number>
     bounds: Readable<any>
     height: Readable<number>
