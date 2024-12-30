@@ -18,6 +18,11 @@ import {
 import { TableNames } from "@/constants"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 
+// when building the internal DS - seems to represent it slightly differently to the backend typing of a DS
+interface InternalDatasource extends Omit<Datasource, "entities"> {
+  entities: Table[]
+}
+
 class TableImportError extends Error {
   errors: Record<string, string>
 
