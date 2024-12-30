@@ -3,21 +3,8 @@ import { derived, Readable } from "svelte/store"
 import { ViewV2Type } from "@budibase/types"
 import { BaseStoreProps, Store as StoreContext } from "."
 
-interface ConfigStore {
-  datasource: Readable<BaseStoreProps["datasource"]>
-  initialSortColumn: Readable<BaseStoreProps["initialSortColumn"]>
-  initialSortOrder: Readable<BaseStoreProps["initialSortOrder"]>
-  initialFilter: Readable<BaseStoreProps["initialFilter"]>
-  fixedRowHeight: Readable<BaseStoreProps["fixedRowHeight"]>
-  schemaOverrides: Readable<BaseStoreProps["schemaOverrides"]>
-  notifySuccess: Readable<BaseStoreProps["notifySuccess"]>
-  notifyError: Readable<BaseStoreProps["notifyError"]>
-  canAddRows?: Readable<BaseStoreProps["canAddRows"]>
-  canEditRows?: Readable<BaseStoreProps["canEditRows"]>
-  canDeleteRows?: Readable<BaseStoreProps["canDeleteRows"]>
-  canEditColumns?: Readable<BaseStoreProps["canEditColumns"]>
-  canExpandRows?: Readable<BaseStoreProps["canExpandRows"]>
-  canSaveSchema?: Readable<BaseStoreProps["canSaveSchema"]>
+type ConfigStore = {
+  [key in keyof BaseStoreProps]: Readable<BaseStoreProps[key]>
 }
 
 interface ConfigDerivedStore {
