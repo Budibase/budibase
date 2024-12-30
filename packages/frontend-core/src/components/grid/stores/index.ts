@@ -25,6 +25,7 @@ import * as NonPlus from "./datasources/nonPlus"
 import * as Cache from "./cache"
 import * as Conditions from "./conditions"
 import { SortOrder, UIDatasource, UISearchFilter } from "@budibase/types"
+import * as Constants from "../lib/constants"
 
 const DependencyOrderedStores = [
   Sort,
@@ -73,6 +74,7 @@ export interface BaseStoreProps {
   canEditColumns?: boolean
   canExpandRows?: boolean
   canSaveSchema?: boolean
+  minHeight?: number
 }
 
 export interface BaseStore {
@@ -81,6 +83,7 @@ export interface BaseStore {
   props: Writable<BaseStoreProps>
   subscribe: any
   dispatch: (event: string, data: any) => any
+  Constants: typeof Constants
 }
 
 export type Store = BaseStore &
@@ -107,7 +110,7 @@ export type Store = BaseStore &
   Sort.Store &
   Bounds.Store
 
-export const attachStores = (context: Store): Store => {
+export const attachStores = (context: BaseStore): Store => {
   // Atomic store creation
   for (let store of DependencyOrderedStores) {
     if ("createStores" in store) {
