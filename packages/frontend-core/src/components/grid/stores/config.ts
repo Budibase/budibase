@@ -1,23 +1,26 @@
 import { derivedMemo } from "../../../utils"
-import { derived, Readable, Writable } from "svelte/store"
-import { UIDatasource, ViewV2Type } from "@budibase/types"
+import { derived, Readable } from "svelte/store"
+import {
+  SortOrder,
+  UIDatasource,
+  UISearchFilter,
+  ViewV2Type,
+} from "@budibase/types"
 import { Store as StoreContext } from "."
 
 export interface ConfigStore {
-  datasource: Writable<UIDatasource>
-  initialSortColumn: Readable<string>
-  initialSortOrder: any
-  initialFilter: any
-  fixedRowHeight: Readable<number>
-  schemaOverrides: Readable<
-    Record<
-      string,
-      {
-        displayName?: string
-        disabled?: boolean
-      }
-    >
-  >
+  datasource: Readable<UIDatasource>
+  initialSortColumn: Readable<string | null>
+  initialSortOrder: Readable<SortOrder | null>
+  initialFilter: Readable<UISearchFilter | null>
+  fixedRowHeight: Readable<number | null>
+  schemaOverrides: Readable<Record<
+    string,
+    {
+      displayName?: string
+      disabled?: boolean
+    }
+  > | null>
   notifySuccess: (message: string) => void
   notifyError: (message: string) => void
 }
@@ -30,7 +33,7 @@ export type Store = ConfigStore
 
 export const createStores = (context: PropsContext): ConfigStore => {
   const { props } = context
-  const getProp = <T extends keyof ConfigStore>(prop: T): ConfigStore[T] =>
+  const getProp = <T extends keyof ConfigStore>(prop: T) =>
     derivedMemo(props, ($props: ConfigStore) => $props[prop])
 
   // Derive and memoize some props so that we can react to them in isolation
