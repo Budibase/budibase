@@ -24,6 +24,7 @@ export class ComponentTreeNodesStore extends BudiStore<OpenNodesState> {
     this.baseStore.update((openNodes: OpenNodesState) => {
       openNodes[`nodeOpen-${componentId}`] =
         !openNodes[`nodeOpen-${componentId}`]
+
       return openNodes
     })
   }
@@ -33,6 +34,7 @@ export class ComponentTreeNodesStore extends BudiStore<OpenNodesState> {
       const newNodes = Object.fromEntries(
         componentIds.map(id => [`nodeOpen-${id}`, true])
       )
+
       return { ...openNodes, ...newNodes }
     })
   }
@@ -42,20 +44,24 @@ export class ComponentTreeNodesStore extends BudiStore<OpenNodesState> {
       const newNodes = Object.fromEntries(
         componentIds.map(id => [`nodeOpen-${id}`, false])
       )
+
       return { ...openNodes, ...newNodes }
     })
   }
 
   // Will ensure all parents of a node are expanded so that it is visible in the tree
   makeNodeVisible(componentId: string) {
-    const selectedScreen = get(selectedScreenStore) as Screen
+    const selectedScreen: Screen = get(selectedScreenStore)
+
     const path = findComponentPath(selectedScreen.props, componentId)
+
     const componentIds = path.map((component: Component) => component._id)
 
     this.baseStore.update((openNodes: OpenNodesState) => {
       const newNodes = Object.fromEntries(
         componentIds.map((id: string) => [`nodeOpen-${id}`, true])
       )
+
       return { ...openNodes, ...newNodes }
     })
   }
