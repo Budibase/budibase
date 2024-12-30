@@ -1,5 +1,11 @@
-export interface UIDatasource {
+import { UITable, UIView } from "@budibase/types"
+
+export type UIDatasource = (UITable | UIView) & {
   type: string
-  id: string
-  tableId: string
+}
+
+export interface UIFieldMutation {
+  visible?: boolean
+  readonly?: boolean
+  width?: number
 }
