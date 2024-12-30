@@ -10,6 +10,8 @@ interface ViewportDerivedStore {
   columnRenderMap: Readable<Record<string, true>>
 }
 
+export type Store = ViewportDerivedStore
+
 export const deriveStores = (context: StoreContext): ViewportDerivedStore => {
   const {
     rowHeight,

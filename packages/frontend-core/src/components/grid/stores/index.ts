@@ -107,7 +107,8 @@ export type Store = BaseStore &
   Resize.Store &
   Config.Store &
   Conditions.Store &
-  Cache.Store
+  Cache.Store &
+  Viewport.Store
 
 export const attachStores = (context: Store): Store => {
   // Atomic store creation
