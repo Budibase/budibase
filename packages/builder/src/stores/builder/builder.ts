@@ -54,7 +54,7 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.startBuilderOnboarding = this.startBuilderOnboarding.bind(this)
   }
 
-  init(app: App): void {
+  init(app: App) {
     if (!app?.appId) {
       console.error("BuilderStore: No appId supplied for websocket")
       return
@@ -64,46 +64,46 @@ export class BuilderStore extends BudiStore<BuilderState> {
     }
   }
 
-  refresh(): void {
+  refresh() {
     const currentState = get(this.store)
     this.store.set(currentState)
   }
 
-  reset(): void {
+  reset() {
     this.store.set({ ...INITIAL_BUILDER_STATE })
     this.websocket?.disconnect()
     this.websocket = undefined
   }
 
-  highlightSetting(key?: string, type?: string): void {
+  highlightSetting(key?: string, type?: string) {
     this.update(state => ({
       ...state,
       highlightedSetting: key ? { key, type: type || "info" } : null,
     }))
   }
 
-  propertyFocus(key: string | null): void {
+  propertyFocus(key: string | null) {
     this.update(state => ({
       ...state,
       propertyFocus: key,
     }))
   }
 
-  showBuilderSidePanel(): void {
+  showBuilderSidePanel() {
     this.update(state => ({
       ...state,
       builderSidePanel: true,
     }))
   }
 
-  hideBuilderSidePanel(): void {
+  hideBuilderSidePanel() {
     this.update(state => ({
       ...state,
       builderSidePanel: false,
     }))
   }
 
-  setPreviousTopNavPath(route: string, url: string): void {
+  setPreviousTopNavPath(route: string, url: string) {
     this.update(state => ({
       ...state,
       previousTopNavPath: {
@@ -113,13 +113,13 @@ export class BuilderStore extends BudiStore<BuilderState> {
     }))
   }
 
-  selectResource(id: string): void {
+  selectResource(id: string) {
     this.websocket?.emit(BuilderSocketEvent.SelectResource, {
       resourceId: id,
     })
   }
 
-  registerTourNode(tourStepKey: string, node: HTMLElement): void {
+  registerTourNode(tourStepKey: string, node: HTMLElement) {
     this.update(state => {
       const update = {
         ...state,
@@ -132,7 +132,7 @@ export class BuilderStore extends BudiStore<BuilderState> {
     })
   }
 
-  destroyTourNode(tourStepKey: string): void {
+  destroyTourNode(tourStepKey: string) {
     const store = get(this.store)
     if (store.tourNodes?.[tourStepKey]) {
       const nodes = { ...store.tourNodes }
@@ -144,7 +144,7 @@ export class BuilderStore extends BudiStore<BuilderState> {
     }
   }
 
-  startBuilderOnboarding(): void {
+  startBuilderOnboarding() {
     this.update(state => ({
       ...state,
       onboarding: true,
@@ -152,14 +152,14 @@ export class BuilderStore extends BudiStore<BuilderState> {
     }))
   }
 
-  endBuilderOnboarding(): void {
+  endBuilderOnboarding() {
     this.update(state => ({
       ...state,
       onboarding: false,
     }))
   }
 
-  setTour(tourKey?: string | null): void {
+  setTour(tourKey?: string | null) {
     this.update(state => ({
       ...state,
       tourStepKey: null,
