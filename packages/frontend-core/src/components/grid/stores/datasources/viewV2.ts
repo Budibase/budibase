@@ -173,7 +173,7 @@ export const initialise = (context: StoreContext) => {
           await datasource.actions.saveDefinition({
             ...$view,
             sort: {
-              field: $sort.column,
+              field: $sort.column!,
               order: $sort.order || SortOrder.ASCENDING,
             },
           })
