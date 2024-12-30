@@ -64,7 +64,7 @@
 
   const activateLicenseKey = async () => {
     try {
-      await API.activateLicenseKey({ licenseKey })
+      await API.activateLicenseKey(licenseKey)
       await auth.getSelf()
       await getLicenseKey()
       notifications.success("Successfully activated")
@@ -119,7 +119,7 @@
 
   async function activateOfflineLicense(offlineLicenseToken) {
     try {
-      await API.activateOfflineLicense({ offlineLicenseToken })
+      await API.activateOfflineLicense(offlineLicenseToken)
       await auth.getSelf()
       await getOfflineLicense()
       notifications.success("Successfully activated")

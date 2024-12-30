@@ -4,6 +4,7 @@ import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
   AddSSoUserRequest,
+  AddSSoUserResponse,
   BulkUserRequest,
   BulkUserResponse,
   CheckInviteResponse,
@@ -93,7 +94,9 @@ export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
   }
 }
 
-export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest, void>) => {
+export const addSsoSupport = async (
+  ctx: Ctx<AddSSoUserRequest, AddSSoUserResponse>
+) => {
   const { email, ssoId } = ctx.request.body
   try {
     // Status is changed to 404 from getUserDoc if user is not found
@@ -113,7 +116,7 @@ export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest, void>) => {
       email,
       ssoId,
     })
-    ctx.status = 200
+    ctx.body = { message: "SSO support added." }
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }

@@ -22,8 +22,10 @@ export const createLicensingStore = () => {
     backupsEnabled: false,
     brandingEnabled: false,
     scimEnabled: false,
+    environmentVariablesEnabled: false,
     budibaseAIEnabled: false,
     customAIConfigsEnabled: false,
+    auditLogsEnabled: false,
     // the currently used quotas from the db
     quotaUsage: undefined,
     // derived quota metrics for percentages used

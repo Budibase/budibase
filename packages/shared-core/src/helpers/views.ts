@@ -1,5 +1,6 @@
 import {
   BasicViewFieldMetadata,
+  View,
   ViewCalculationFieldMetadata,
   ViewFieldMetadata,
   ViewV2,
@@ -42,4 +43,8 @@ export function basicFields(view: UnsavedViewV2, opts?: { visible?: boolean }) {
   return pickBy(view.schema || {}, field => {
     return !isCalculationField(field) && (!visible || isVisible(field))
   })
+}
+
+export function isV2(view: View | ViewV2): view is ViewV2 {
+  return (view as ViewV2).version === 2
 }

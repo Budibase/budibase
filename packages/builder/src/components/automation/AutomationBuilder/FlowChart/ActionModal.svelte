@@ -49,7 +49,7 @@
   const disabled = () => {
     return {
       SEND_EMAIL_SMTP: {
-        disabled: !$admin.checklist.smtp.checked,
+        disabled: !$admin.checklist?.smtp?.checked,
         message: "Please configure SMTP",
       },
       COLLECT: {

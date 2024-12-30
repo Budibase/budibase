@@ -181,10 +181,14 @@ export async function externalTrigger(
       coercedFields[key] = coerce(params.fields[key], fields[key])
     }
     params.fields = coercedFields
-  } else if (sdk.automations.isRowAction(automation)) {
+  }
+  // row actions and webhooks flatten the fields down
+  else if (
+    sdk.automations.isRowAction(automation) ||
+    sdk.automations.isWebhookAction(automation)
+  ) {
     params = {
       ...params,
-      // Until we don't refactor all the types, we want to flatten the nested "fields" object
       ...params.fields,
       fields: {},
     }

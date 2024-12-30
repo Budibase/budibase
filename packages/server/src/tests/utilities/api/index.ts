@@ -16,6 +16,7 @@ import { TemplateAPI } from "./template"
 import { RowActionAPI } from "./rowAction"
 import { AutomationAPI } from "./automation"
 import { PluginAPI } from "./plugin"
+import { WebhookAPI } from "./webhook"
 
 export default class API {
   table: TableAPI
@@ -35,6 +36,7 @@ export default class API {
   rowAction: RowActionAPI
   automation: AutomationAPI
   plugin: PluginAPI
+  webhook: WebhookAPI
 
   constructor(config: TestConfiguration) {
     this.table = new TableAPI(config)
@@ -54,5 +56,6 @@ export default class API {
     this.rowAction = new RowActionAPI(config)
     this.automation = new AutomationAPI(config)
     this.plugin = new PluginAPI(config)
+    this.webhook = new WebhookAPI(config)
   }
 }

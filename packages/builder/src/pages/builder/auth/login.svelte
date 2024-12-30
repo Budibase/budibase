@@ -35,10 +35,7 @@
       return
     }
     try {
-      await auth.login({
-        username: formData?.username.trim(),
-        password: formData?.password,
-      })
+      await auth.login(formData?.username.trim(), formData?.password)
       if ($auth?.user?.forceResetPassword) {
         $goto("./reset")
       } else {
