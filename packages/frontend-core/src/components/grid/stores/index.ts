@@ -98,7 +98,6 @@ export type Store = BaseStore &
     sort: Writable<any>
     subscribe: any
     dispatch: (event: string, data: any) => any
-    notifications: Writable<any>
     width: Writable<number>
     bounds: Readable<any>
     height: Readable<number>
@@ -108,7 +107,8 @@ export type Store = BaseStore &
   Config.Store &
   Conditions.Store &
   Cache.Store &
-  Viewport.Store
+  Viewport.Store &
+  Notifications.Store
 
 export const attachStores = (context: Store): Store => {
   // Atomic store creation
