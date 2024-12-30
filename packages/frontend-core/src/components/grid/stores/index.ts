@@ -24,7 +24,7 @@ import * as ViewV2 from "./datasources/viewV2"
 import * as NonPlus from "./datasources/nonPlus"
 import * as Cache from "./cache"
 import * as Conditions from "./conditions"
-import { UIDatasource } from "@budibase/types"
+import { SortOrder, UIDatasource, UISearchFilter } from "@budibase/types"
 
 const DependencyOrderedStores = [
   Sort,
@@ -52,18 +52,33 @@ const DependencyOrderedStores = [
   Cache,
 ]
 
+export interface BaseStoreProps {
+  datasource: UIDatasource
+  initialSortColumn: string | null
+  initialSortOrder: SortOrder | null
+  initialFilter: UISearchFilter | null
+  fixedRowHeight: number | null
+  schemaOverrides: Record<
+    string,
+    {
+      displayName?: string
+      disabled?: boolean
+    }
+  > | null
+  notifySuccess: (message: string) => void
+  notifyError: (message: string) => void
+  canAddRows: boolean
+  canEditRows: boolean
+  canDeleteRows: boolean
+  canEditColumns: boolean
+  canExpandRows: boolean
+  canSaveSchema: boolean
+}
+
 export interface BaseStore {
   API: APIClient
   gridID: string
-  props: Writable<{
-    datasource: UIDatasource
-    canAddRows: boolean
-    canEditRows: boolean
-    canDeleteRows: boolean
-    canEditColumns: boolean
-    canExpandRows: boolean
-    canSaveSchema: boolean
-  }>
+  props: Writable<BaseStoreProps>
 }
 
 export type Store = BaseStore &
@@ -82,7 +97,6 @@ export type Store = BaseStore &
     // TODO while typing the rest of stores
     sort: Writable<any>
     subscribe: any
-    config: Writable<any>
     dispatch: (event: string, data: any) => any
     notifications: Writable<any>
     width: Writable<number>

@@ -6,5 +6,5 @@ declare module "./memo" {
   export function derivedMemo<TStore, TResult>(
     store: Readable<TStore>,
     derivation: (store: TStore) => TResult
-  ): TResult
+  ): Readable<TResult>
 }
