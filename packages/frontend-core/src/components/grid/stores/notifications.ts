@@ -1,7 +1,8 @@
 import { notifications as BBUINotifications } from "@budibase/bbui"
 import { derived } from "svelte/store"
+import { Store as StoreContext } from "."
 
-export const createStores = context => {
+export const createStores = (context: StoreContext) => {
   const { notifySuccess, notifyError } = context
 
   // Normally we would not derive a store in "createStores" as it should be
