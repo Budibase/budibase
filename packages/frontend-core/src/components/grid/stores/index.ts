@@ -62,7 +62,8 @@ export type Store = BaseStore &
   NonPlus.Store &
   Datasource.Store &
   Validation.Store &
-  Users.Store & {
+  Users.Store &
+  Menu.Store & {
     // TODO while typing the rest of stores
     fetch: Writable<any>
     filter: Writable<any>
@@ -80,6 +81,11 @@ export type Store = BaseStore &
     schemaOverrides: Writable<any>
     focusedCellId: Writable<any>
     previousFocusedRowId: Writable<string>
+    gridID: string
+    selectedRows: Writable<any>
+    selectedRowCount: Writable<any>
+    selectedCellMap: Writable<any>
+    selectedCellCount: Writable<any>
   }
 
 export const attachStores = (context: Store): Store => {
