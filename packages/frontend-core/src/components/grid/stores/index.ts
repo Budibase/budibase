@@ -1,4 +1,4 @@
-import { Readable, Writable } from "svelte/store"
+import { Writable } from "svelte/store"
 import type { APIClient } from "../../../api/types"
 
 import * as Bounds from "./bounds"
@@ -97,9 +97,6 @@ export type Store = BaseStore &
     // TODO while typing the rest of stores
     subscribe: any
     dispatch: (event: string, data: any) => any
-    width: Writable<number>
-    bounds: Readable<any>
-    height: Readable<number>
   } & Rows.Store &
   Reorder.Store &
   Resize.Store &
@@ -108,7 +105,8 @@ export type Store = BaseStore &
   Cache.Store &
   Viewport.Store &
   Notifications.Store &
-  Sort.Store
+  Sort.Store &
+  Bounds.Store
 
 export const attachStores = (context: Store): Store => {
   // Atomic store creation
