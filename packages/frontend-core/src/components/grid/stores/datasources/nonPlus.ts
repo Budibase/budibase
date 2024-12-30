@@ -1,18 +1,11 @@
 import { SortOrder, UIDatasource } from "@budibase/types"
 import { get } from "svelte/store"
 import { Store as StoreContext } from ".."
+import { DatasourceNonPlusActions } from "."
 
 interface NonPlusActions {
   nonPlus: {
-    actions: {
-      saveDefinition: () => Promise<void>
-      addRow: () => Promise<void>
-      updateRow: () => Promise<void>
-      deleteRows: () => Promise<void>
-      getRow: () => Promise<void>
-      isDatasourceValid: (datasource: UIDatasource) => boolean
-      canUseColumn: (name: string) => boolean
-    }
+    actions: DatasourceNonPlusActions
   }
 }
 
