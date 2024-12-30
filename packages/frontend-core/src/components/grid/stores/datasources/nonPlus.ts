@@ -106,7 +106,7 @@ export const initialise = (context: StoreContext) => {
         if (!isSameDatasource($fetch?.options?.datasource, $datasource)) {
           return
         }
-        $fetch.update({
+        $fetch?.update({
           filter: $allFilters,
         })
       })
@@ -120,7 +120,7 @@ export const initialise = (context: StoreContext) => {
         if (!isSameDatasource($fetch?.options?.datasource, $datasource)) {
           return
         }
-        $fetch.update({
+        $fetch?.update({
           sortOrder: $sort.order || SortOrder.ASCENDING,
           sortColumn: $sort.column,
         })
