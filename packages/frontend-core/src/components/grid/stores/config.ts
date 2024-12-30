@@ -18,9 +18,8 @@ interface ConfigStore {
       }
     >
   >
-  notifySuccess: any
-  notifyError: any
-  rowConditions: any
+  notifySuccess: (message: string) => void
+  notifyError: (message: string) => void
 }
 
 interface PropsContext {
@@ -43,7 +42,6 @@ export const createStores = (context: PropsContext): ConfigStore => {
   const schemaOverrides = getProp("schemaOverrides")
   const notifySuccess = getProp("notifySuccess")
   const notifyError = getProp("notifyError")
-  const rowConditions = getProp("rowConditions")
 
   return {
     datasource,
@@ -54,7 +52,6 @@ export const createStores = (context: PropsContext): ConfigStore => {
     schemaOverrides,
     notifySuccess,
     notifyError,
-    rowConditions,
   }
 }
 
