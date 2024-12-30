@@ -1,7 +1,15 @@
-import { derived } from "svelte/store"
+import { derived, Readable } from "svelte/store"
 import { MinColumnWidth } from "../lib/constants"
+import { Store as StoreContext } from "."
 
-export const deriveStores = context => {
+interface ViewportDerivedStore {
+  scrolledRowCount: Readable<any>
+  visualRowCapacity: Readable<any>
+  renderedRows: Readable<any>
+  columnRenderMap: Readable<any>
+}
+
+export const deriveStores = (context: StoreContext): ViewportDerivedStore => {
   const {
     rowHeight,
     scrollableColumns,
