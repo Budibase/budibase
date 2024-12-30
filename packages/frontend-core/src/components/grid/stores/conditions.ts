@@ -1,15 +1,26 @@
-import { writable, get } from "svelte/store"
+import { writable, get, Writable, Readable } from "svelte/store"
 import { derivedMemo, QueryUtils } from "../../../utils"
 import { FieldType, EmptyFilterOption } from "@budibase/types"
+import { Store as StoreContext } from "."
 
-export const createStores = () => {
+interface ConditionStore {
+  metadata: Writable<any>
+}
+
+interface ConditionDerivedStore {
+  conditions: Readable<any>
+}
+
+export type Store = ConditionStore & ConditionDerivedStore
+
+export const createStores = (): ConditionStore => {
   const metadata = writable({})
   return {
     metadata,
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
   const { columns } = context
 
   // Derive and memoize the cell conditions present in our columns so that we
@@ -33,7 +44,7 @@ export const deriveStores = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const { metadata, conditions, rows } = context
 
   // Recompute all metadata if conditions change
