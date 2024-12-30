@@ -121,7 +121,7 @@ export const initialise = (context: StoreContext) => {
     }
 
     // Reset state for new view
-    filter.set(get(initialFilter))
+    filter.set(get(initialFilter) ?? undefined)
     inlineFilters.set([])
     sort.set({
       column: get(initialSortColumn),
