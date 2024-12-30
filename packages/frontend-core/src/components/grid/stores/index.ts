@@ -59,11 +59,12 @@ export type Store = BaseStore &
   Columns.Store &
   Table.Store &
   ViewV2.Store &
-  NonPlus.Store & {
+  NonPlus.Store &
+  Datasource.Store &
+  Validation.Store &
+  Users.Store &
+  Menu.Store & {
     // TODO while typing the rest of stores
-    datasource: Writable<any> & { actions: any }
-    definition: Writable<any>
-    enrichedSchema: any
     fetch: Writable<any>
     filter: Writable<any>
     inlineFilters: Writable<any>
@@ -75,6 +76,16 @@ export type Store = BaseStore &
     rows: Writable<any> & { actions: any }
     subscribe: any
     config: Writable<any>
+    dispatch: (event: string, data: any) => any
+    notifications: Writable<any>
+    schemaOverrides: Writable<any>
+    focusedCellId: Writable<any>
+    previousFocusedRowId: Writable<string>
+    gridID: string
+    selectedRows: Writable<any>
+    selectedRowCount: Writable<any>
+    selectedCellMap: Writable<any>
+    selectedCellCount: Writable<any>
   }
 
 export const attachStores = (context: Store): Store => {
@@ -106,5 +117,5 @@ export const attachStores = (context: Store): Store => {
     }
   }
 
-  return context
+  return context as Store
 }
