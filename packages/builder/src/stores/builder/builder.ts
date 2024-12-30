@@ -1,10 +1,28 @@
 import { get } from "svelte/store"
 import { createBuilderWebsocket } from "./websocket.js"
+import { Socket } from "socket.io-client"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import { BudiStore } from "../BudiStore.js"
 import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
+import { App } from "@budibase/types"
 
-export const INITIAL_BUILDER_STATE = {
+interface BuilderState {
+  previousTopNavPath: Record<string, string>
+  highlightedSetting: {
+    key: string
+    type: "info" | string
+  } | null
+  propertyFocus: string | null
+  builderSidePanel: boolean
+  onboarding: boolean
+  tourNodes: Record<string, HTMLElement> | null
+  tourKey: string | null
+  tourStepKey: string | null
+  hoveredComponentId: string | null
+  websocket?: Socket
+}
+
+export const INITIAL_BUILDER_STATE: BuilderState = {
   previousTopNavPath: {},
   highlightedSetting: null,
   propertyFocus: null,
@@ -16,7 +34,9 @@ export const INITIAL_BUILDER_STATE = {
   hoveredComponentId: null,
 }
 
-export class BuilderStore extends BudiStore {
+export class BuilderStore extends BudiStore<BuilderState> {
+  websocket?: Socket
+
   constructor() {
     super({ ...INITIAL_BUILDER_STATE })
 
@@ -32,11 +52,9 @@ export class BuilderStore extends BudiStore {
     this.registerTourNode = this.registerTourNode.bind(this)
     this.destroyTourNode = this.destroyTourNode.bind(this)
     this.startBuilderOnboarding = this.startBuilderOnboarding.bind(this)
-
-    this.websocket
   }
 
-  init(app) {
+  init(app: App): void {
     if (!app?.appId) {
       console.error("BuilderStore: No appId supplied for websocket")
       return
@@ -46,45 +64,46 @@ export class BuilderStore extends BudiStore {
     }
   }
 
-  refresh() {
-    this.store.set(this.store.get())
+  refresh(): void {
+    const currentState = get(this.store)
+    this.store.set(currentState)
   }
 
-  reset() {
+  reset(): void {
     this.store.set({ ...INITIAL_BUILDER_STATE })
     this.websocket?.disconnect()
-    this.websocket = null
+    this.websocket = undefined
   }
 
-  highlightSetting(key, type) {
+  highlightSetting(key?: string, type?: string): void {
     this.update(state => ({
       ...state,
       highlightedSetting: key ? { key, type: type || "info" } : null,
     }))
   }
 
-  propertyFocus(key) {
+  propertyFocus(key: string | null): void {
     this.update(state => ({
       ...state,
       propertyFocus: key,
     }))
   }
 
-  showBuilderSidePanel() {
+  showBuilderSidePanel(): void {
     this.update(state => ({
       ...state,
       builderSidePanel: true,
     }))
   }
 
-  hideBuilderSidePanel() {
+  hideBuilderSidePanel(): void {
     this.update(state => ({
       ...state,
       builderSidePanel: false,
     }))
   }
 
-  setPreviousTopNavPath(route, url) {
+  setPreviousTopNavPath(route: string, url: string): void {
     this.update(state => ({
       ...state,
       previousTopNavPath: {
@@ -94,13 +113,13 @@ export class BuilderStore extends BudiStore {
     }))
   }
 
-  selectResource(id) {
-    this.websocket.emit(BuilderSocketEvent.SelectResource, {
+  selectResource(id: string): void {
+    this.websocket?.emit(BuilderSocketEvent.SelectResource, {
       resourceId: id,
     })
   }
 
-  registerTourNode(tourStepKey, node) {
+  registerTourNode(tourStepKey: string, node: HTMLElement): void {
     this.update(state => {
       const update = {
         ...state,
@@ -113,7 +132,7 @@ export class BuilderStore extends BudiStore {
     })
   }
 
-  destroyTourNode(tourStepKey) {
+  destroyTourNode(tourStepKey: string): void {
     const store = get(this.store)
     if (store.tourNodes?.[tourStepKey]) {
       const nodes = { ...store.tourNodes }
@@ -125,7 +144,7 @@ export class BuilderStore extends BudiStore {
     }
   }
 
-  startBuilderOnboarding() {
+  startBuilderOnboarding(): void {
     this.update(state => ({
       ...state,
       onboarding: true,
@@ -133,19 +152,19 @@ export class BuilderStore extends BudiStore {
     }))
   }
 
-  endBuilderOnboarding() {
+  endBuilderOnboarding(): void {
     this.update(state => ({
       ...state,
       onboarding: false,
     }))
   }
 
-  setTour(tourKey) {
+  setTour(tourKey?: string | null): void {
     this.update(state => ({
       ...state,
       tourStepKey: null,
       tourNodes: null,
-      tourKey: tourKey,
+      tourKey: tourKey || null,
     }))
   }
 }
