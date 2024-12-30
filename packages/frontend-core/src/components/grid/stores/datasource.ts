@@ -133,11 +133,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
         type = ($datasource as any).value?.datasource?.type
       }
       // Handle calculation views
-      if (
-        type === "viewV2" &&
-        "type" in $definition &&
-        $definition?.type === ViewV2Type.CALCULATION
-      ) {
+      if (type === "viewV2" && $definition?.type === ViewV2Type.CALCULATION) {
         return false
       }
       return ["table", "viewV2", "link"].includes(type)
