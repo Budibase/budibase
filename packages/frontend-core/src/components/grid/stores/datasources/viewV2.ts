@@ -4,23 +4,17 @@ import {
   SaveRowRequest,
   SortOrder,
   UIDatasource,
+  UIView,
   UpdateViewRequest,
 } from "@budibase/types"
 import { Store as StoreContext } from ".."
+import { DatasourceViewActions } from "."
 
 const SuppressErrors = true
 
 interface ViewActions {
   viewV2: {
-    actions: {
-      saveDefinition: (newDefinition: UpdateViewRequest) => Promise<void>
-      addRow: (row: SaveRowRequest) => Promise<Row>
-      updateRow: (row: SaveRowRequest) => Promise<Row>
-      deleteRows: (rows: (string | Row)[]) => Promise<void>
-      getRow: (id: string) => Promise<Row>
-      isDatasourceValid: (datasource: UIDatasource) => boolean
-      canUseColumn: (name: string) => boolean
-    }
+    actions: DatasourceViewActions
   }
 }
 
@@ -46,7 +40,7 @@ export const createActions = (context: StoreContext): ViewActions => {
     }
   }
 
-  const deleteRows = async (rows: (string | Row)[]) => {
+  const deleteRows = async (rows: Row[]) => {
     await API.deleteRows(get(datasource).id, rows)
   }
 
@@ -154,7 +148,7 @@ export const initialise = (context: StoreContext) => {
     unsubscribers.push(
       sort.subscribe(async $sort => {
         // Ensure we're updating the correct view
-        const $view = get(definition)
+        const $view = get(definition) as UIView
         if ($view?.id !== $datasource.id) {
           return
         }
@@ -205,7 +199,7 @@ export const initialise = (context: StoreContext) => {
           await datasource.actions.saveDefinition({
             ...$view,
             queryUI: $filter,
-          })
+          } as never as UpdateViewRequest)
 
           // Refresh data since view definition changed
           await rows.actions.refreshData()
