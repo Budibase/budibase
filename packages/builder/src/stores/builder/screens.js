@@ -274,7 +274,7 @@ export class ScreenStore extends BudiStore {
 
   /**
    * @param {function} patchFn
-   * @param {string} screenId
+   * @param {string | null} screenId
    * @returns
    */
   async patch(patchFn, screenId) {
