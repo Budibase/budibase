@@ -13,7 +13,7 @@
 
   async function saveDatasource({ config, name }) {
     try {
-      await datasources.update({
+      await datasources.save({
         integration,
         datasource: { ...datasource, config, name },
       })

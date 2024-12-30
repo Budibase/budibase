@@ -6,6 +6,7 @@
   export let value
   export let error
   export let config
+  export let placeholder
 </script>
 
 <div class="form-row">
@@ -17,6 +18,7 @@
     {type}
     value={value || undefined}
     {error}
+    {placeholder}
   />
 </div>
 

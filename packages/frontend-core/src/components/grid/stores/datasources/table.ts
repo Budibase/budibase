@@ -1,16 +1,32 @@
-import { SortOrder } from "@budibase/types"
+import {
+  Row,
+  SaveRowRequest,
+  SaveTableRequest,
+  SortOrder,
+  UIDatasource,
+} from "@budibase/types"
 import { get } from "svelte/store"
+import { Store as StoreContext } from ".."
+import { DatasourceTableActions } from "."
 
 const SuppressErrors = true
 
-export const createActions = context => {
+interface TableActions {
+  table: {
+    actions: DatasourceTableActions
+  }
+}
+
+export type Store = TableActions
+
+export const createActions = (context: StoreContext): TableActions => {
   const { API, datasource, columns } = context
 
-  const saveDefinition = async newDefinition => {
+  const saveDefinition = async (newDefinition: SaveTableRequest) => {
     await API.saveTable(newDefinition)
   }
 
-  const saveRow = async row => {
+  const saveRow = async (row: SaveRowRequest) => {
     row = {
       ...row,
       tableId: get(datasource)?.tableId,
@@ -18,15 +34,15 @@ export const createActions = context => {
     return await API.saveRow(row, SuppressErrors)
   }
 
-  const deleteRows = async rows => {
+  const deleteRows = async (rows: Row[]) => {
     await API.deleteRows(get(datasource).tableId, rows)
   }
 
-  const isDatasourceValid = datasource => {
-    return datasource?.type === "table" && datasource?.tableId
+  const isDatasourceValid = (datasource: UIDatasource) => {
+    return datasource?.type === "table" && !!datasource?.tableId
   }
 
-  const getRow = async id => {
+  const getRow = async (id: any) => {
     const res = await API.searchTable(get(datasource).tableId, {
       limit: 1,
       query: {
@@ -39,7 +55,7 @@ export const createActions = context => {
     return res?.rows?.[0]
   }
 
-  const canUseColumn = name => {
+  const canUseColumn = (name: string) => {
     return get(columns).some(col => col.name === name)
   }
 
@@ -58,7 +74,7 @@ export const createActions = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const {
     datasource,
     fetch,
@@ -74,7 +90,7 @@ export const initialise = context => {
 
   // Keep a list of subscriptions so that we can clear them when the datasource
   // config changes
-  let unsubscribers = []
+  let unsubscribers: any[] = []
 
   // Observe datasource changes and apply logic for table datasources
   datasource.subscribe($datasource => {
