@@ -1,6 +1,19 @@
-import { derived, writable } from "svelte/store"
+import { derived, Readable, Writable, writable } from "svelte/store"
 
-export const createStores = () => {
+interface BoundsStore {
+  bounds: Writable<{
+    left: number
+    top: number
+    width: number
+    height: number
+  }>
+  height: Readable<number>
+  width: Readable<number>
+}
+
+export type Store = BoundsStore
+
+export const createStores = (): BoundsStore => {
   const bounds = writable({
     left: 0,
     top: 0,
