@@ -9,7 +9,15 @@ interface ConfigStore {
   initialSortOrder: any
   initialFilter: any
   fixedRowHeight: Readable<number>
-  schemaOverrides: any
+  schemaOverrides: Readable<
+    Record<
+      string,
+      {
+        displayName?: string
+        disabled?: boolean
+      }
+    >
+  >
   notifySuccess: any
   notifyError: any
   rowConditions: any
