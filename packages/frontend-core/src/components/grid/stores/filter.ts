@@ -120,5 +120,7 @@ export const initialise = (context: StoreContext) => {
   const { filter, initialFilter } = context
 
   // Reset filter when initial filter prop changes
-  initialFilter.subscribe(filter.set)
+  initialFilter.subscribe($initialFilter =>
+    filter.set($initialFilter ?? undefined)
+  )
 }
