@@ -95,7 +95,6 @@ export type Store = BaseStore &
   Clipboard.Store &
   Scroll.Store & {
     // TODO while typing the rest of stores
-    sort: Writable<any>
     subscribe: any
     dispatch: (event: string, data: any) => any
     width: Writable<number>
@@ -108,7 +107,8 @@ export type Store = BaseStore &
   Conditions.Store &
   Cache.Store &
   Viewport.Store &
-  Notifications.Store
+  Notifications.Store &
+  Sort.Store
 
 export const attachStores = (context: Store): Store => {
   // Atomic store creation

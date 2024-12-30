@@ -1,9 +1,18 @@
-import { derived, get } from "svelte/store"
+import { derived, get, Writable } from "svelte/store"
 import { memo } from "../../../utils"
 import { SortOrder } from "@budibase/types"
 import { Store as StoreContext } from "."
 
-export const createStores = (context: StoreContext) => {
+interface SortStore {
+  sort: Writable<{
+    column: string | null | undefined
+    order: SortOrder
+  }>
+}
+
+export type Store = SortStore
+
+export const createStores = (context: StoreContext): SortStore => {
   const { props } = context
   const $props = get(props)
 
