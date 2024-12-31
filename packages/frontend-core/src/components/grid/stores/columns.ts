@@ -16,7 +16,16 @@ interface DerivedColumnStore {
   hasNonAutoColumn: Readable<boolean>
 }
 
-export type Store = ColumnStore & DerivedColumnStore
+interface ColumnActions {
+  columns: ColumnStore["columns"] & {
+    actions: {
+      changeAllColumnWidths: (width: number) => Promise<void>
+      isReadonly: (column: UIColumn) => boolean
+    }
+  }
+}
+
+export type Store = ColumnStore & DerivedColumnStore & ColumnActions
 
 export const createStores = (): ColumnStore => {
   const columns = writable<UIColumn[]>([])
@@ -95,7 +104,7 @@ export const deriveStores = (context: StoreContext): DerivedColumnStore => {
   }
 }
 
-export const createActions = (context: StoreContext) => {
+export const createActions = (context: StoreContext): ColumnActions => {
   const { columns, datasource } = context
 
   // Updates the width of all columns

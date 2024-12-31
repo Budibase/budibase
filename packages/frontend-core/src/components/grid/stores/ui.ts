@@ -40,12 +40,21 @@ export interface UIDerivedStore {
   compact: Readable<boolean>
   selectedRowCount: Readable<number>
   isSelectingCells: Readable<boolean>
-  selectedCells: Readable<string[][]> & { actions: any }
+  selectedCells: Readable<string[][]>
   selectedCellMap: Readable<Record<string, boolean>>
   selectedCellCount: Readable<number>
 }
 
-export type Store = UIStore & UIDerivedStore
+interface UIActionStore {
+  selectedCells: UIDerivedStore["selectedCells"] & {
+    actions: {
+      clear: () => void
+      selectRange: (source: string | null, target: string | null) => void
+    }
+  }
+}
+
+export type Store = UIStore & UIDerivedStore & UIActionStore
 
 export const createStores = (context: StoreContext): UIStore => {
   const { props } = context
@@ -82,7 +91,7 @@ export const createStores = (context: StoreContext): UIStore => {
   }
 }
 
-export const deriveStores = (context: StoreContext) => {
+export const deriveStores = (context: StoreContext): UIDerivedStore => {
   const {
     focusedCellId,
     rows,
@@ -97,14 +106,14 @@ export const deriveStores = (context: StoreContext) => {
 
   // Derive the current focused row ID
   const focusedRowId = derived(focusedCellId, $focusedCellId => {
-    return parseCellID($focusedCellId).rowId
+    return parseCellID($focusedCellId).rowId ?? null
   })
 
   // Derive the row that contains the selected cell
   const focusedRow = derived(
     [focusedRowId, rowLookupMap],
     ([$focusedRowId, $rowLookupMap]) => {
-      if ($focusedRowId === undefined) {
+      if ($focusedRowId === null) {
         return
       }
 
