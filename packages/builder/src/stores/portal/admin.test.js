@@ -20,7 +20,7 @@ vi.mock("svelte/store", () => {
   }
 })
 
-vi.mock("api", () => {
+vi.mock("@/api", () => {
   return {
     API: {
       getEnvironment: vi.fn(),

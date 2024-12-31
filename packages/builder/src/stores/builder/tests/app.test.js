@@ -10,7 +10,7 @@ import {
 } from "./fixtures"
 import { API } from "@/api"
 
-vi.mock("api", () => {
+vi.mock("@/api", () => {
   return {
     API: {
       fetchAppRoutes: vi.fn(),

@@ -57,7 +57,7 @@ vi.mock("@/stores/builder/components/utils", () => {
   }
 })
 
-vi.mock("api", () => {
+vi.mock("@/api", () => {
   return {
     API: {
       fetchAppPackage: vi.fn(),

@@ -7,7 +7,7 @@ import {
 } from "@/stores/builder/navigation"
 import { appStore } from "@/stores/builder"
 
-vi.mock("api", () => {
+vi.mock("@/api", () => {
   return {
     API: {
       saveAppMetadata: vi.fn(),
