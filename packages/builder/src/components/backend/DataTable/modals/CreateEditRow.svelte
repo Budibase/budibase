@@ -1,10 +1,10 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { tables } from "stores/builder"
+  import { tables } from "@/stores/builder"
   import { ModalContent, keepOpen, notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
-  import { API } from "api"
-  import { FIELDS } from "constants/backend"
+  import { API } from "@/api"
+  import { FIELDS } from "@/constants/backend"
 
   const FORMULA_TYPE = FIELDS.FORMULA.type
   const AI_TYPE = FIELDS.AI.type

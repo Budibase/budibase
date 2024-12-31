@@ -1,13 +1,13 @@
 <script>
   import { Select, Layout, Checkbox } from "@budibase/bbui"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { datasources, integrations, queries } from "stores/builder"
-  import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
-  import IntegrationQueryEditor from "components/integration/index.svelte"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
+  import { datasources, integrations, queries } from "@/stores/builder"
+  import BindingBuilder from "@/components/integration/QueryBindingBuilder.svelte"
+  import IntegrationQueryEditor from "@/components/integration/index.svelte"
   import {
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
-  } from "constants/backend"
+  } from "@/constants/backend"
 
   export let parameters
   export let bindings = []

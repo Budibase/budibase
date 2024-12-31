@@ -6,14 +6,14 @@
     userSelectedResourceMap,
     contextMenuStore,
     componentStore,
-  } from "stores/builder"
-  import NavItem from "components/common/NavItem.svelte"
+  } from "@/stores/builder"
+  import NavItem from "@/components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
-  import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
-  import sanitizeUrl from "helpers/sanitizeUrl"
-  import { makeComponentUnique } from "helpers/components"
-  import { capitalise } from "helpers"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import ScreenDetailsModal from "@/components/design/ScreenDetailsModal.svelte"
+  import sanitizeUrl from "@/helpers/sanitizeUrl"
+  import { makeComponentUnique } from "@/helpers/components"
+  import { capitalise } from "@/helpers"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   export let screen
 

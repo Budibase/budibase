@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 import { ensureValidTheme, DefaultAppTheme } from "@budibase/shared-core"
 
 export const createThemeStore = () => {

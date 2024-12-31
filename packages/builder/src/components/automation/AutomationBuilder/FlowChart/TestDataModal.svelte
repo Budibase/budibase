@@ -6,7 +6,7 @@
     notifications,
     ActionButton,
   } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "stores/builder"
+  import { automationStore, selectedAutomation } from "@/stores/builder"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
   import { AutomationEventType } from "@budibase/types"
