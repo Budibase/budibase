@@ -1,27 +1,25 @@
 import { get } from "svelte/store"
-import { createSessionStorageStore } from "@budibase/frontend-core"
 import { selectedScreen as selectedScreenStore } from "./screens"
 import { findComponentPath } from "helpers/components"
 import { Screen, Component } from "@budibase/types"
-import { BudiStore } from "stores/BudiStore"
+import { BudiStore, PersistenceType } from "stores/BudiStore"
 
 interface OpenNodesState {
   [key: string]: boolean
 }
 
 export class ComponentTreeNodesStore extends BudiStore<OpenNodesState> {
-  private baseStore = createSessionStorageStore(
-    "openNodes",
-    {} as OpenNodesState
-  )
-
   constructor() {
-    super({})
-    this.subscribe = this.baseStore.subscribe
+    super({} as OpenNodesState, {
+      persistence: {
+        type: PersistenceType.SESSION,
+        key: "openNodes",
+      },
+    })
   }
 
   toggleNode(componentId: string) {
-    this.baseStore.update((openNodes: OpenNodesState) => {
+    this.update((openNodes: OpenNodesState) => {
       openNodes[`nodeOpen-${componentId}`] =
         !openNodes[`nodeOpen-${componentId}`]
 
@@ -30,7 +28,7 @@ export class ComponentTreeNodesStore extends BudiStore<OpenNodesState> {
   }
 
   expandNodes(componentIds: string[]) {
-    this.baseStore.update((openNodes: OpenNodesState) => {
+    this.update((openNodes: OpenNodesState) => {
       const newNodes = Object.fromEntries(
         componentIds.map(id => [`nodeOpen-${id}`, true])
       )
@@ -40,7 +38,7 @@ export class ComponentTreeNodesStore extends BudiStore<OpenNodesState> {
   }
 
   collapseNodes(componentIds: string[]) {
-    this.baseStore.update((openNodes: OpenNodesState) => {
+    this.update((openNodes: OpenNodesState) => {
       const newNodes = Object.fromEntries(
         componentIds.map(id => [`nodeOpen-${id}`, false])
       )
@@ -57,7 +55,7 @@ export class ComponentTreeNodesStore extends BudiStore<OpenNodesState> {
 
     const componentIds = path.map((component: Component) => component._id)
 
-    this.baseStore.update((openNodes: OpenNodesState) => {
+    this.update((openNodes: OpenNodesState) => {
       const newNodes = Object.fromEntries(
         componentIds.map((id: string) => [`nodeOpen-${id}`, true])
       )
@@ -67,7 +65,7 @@ export class ComponentTreeNodesStore extends BudiStore<OpenNodesState> {
   }
 
   isNodeExpanded(componentId: string): boolean {
-    const openNodes = get(this.baseStore)
+    const openNodes = get(this)
     return !!openNodes[`nodeOpen-${componentId}`]
   }
 }
