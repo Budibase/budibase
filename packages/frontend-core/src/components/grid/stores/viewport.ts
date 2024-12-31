@@ -1,7 +1,18 @@
-import { derived } from "svelte/store"
+import { derived, Readable } from "svelte/store"
 import { MinColumnWidth } from "../lib/constants"
+import { Store as StoreContext } from "."
+import { Row } from "@budibase/types"
 
-export const deriveStores = context => {
+interface ViewportDerivedStore {
+  scrolledRowCount: Readable<number>
+  visualRowCapacity: Readable<number>
+  renderedRows: Readable<Row>
+  columnRenderMap: Readable<Record<string, true>>
+}
+
+export type Store = ViewportDerivedStore
+
+export const deriveStores = (context: StoreContext): ViewportDerivedStore => {
   const {
     rowHeight,
     scrollableColumns,
@@ -77,7 +88,7 @@ export const deriveStores = context => {
         leftEdge += $scrollableColumns[endColIdx].width
         endColIdx++
       }
-      let next = {}
+      let next: Record<string, true> = {}
       $scrollableColumns
         .slice(Math.max(0, startColIdx), endColIdx)
         .forEach(col => {
