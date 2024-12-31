@@ -1,7 +1,7 @@
 <script>
   import { Body } from "@budibase/bbui"
-  import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
-  import { IntegrationTypes } from "constants/backend"
+  import FontAwesomeIcon from "@/components/common/FontAwesomeIcon.svelte"
+  import { IntegrationTypes } from "@/constants/backend"
 
   export let datasource
   const getSubtitle = datasource => {

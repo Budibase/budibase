@@ -1,6 +1,6 @@
 <script>
   import { Body, ModalContent, notifications } from "@budibase/bbui"
-  import { plugins } from "stores/portal"
+  import { plugins } from "@/stores/portal"
   import { createEventDispatcher } from "svelte"
 
   export let plugin

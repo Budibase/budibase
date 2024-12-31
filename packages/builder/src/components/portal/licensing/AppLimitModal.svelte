@@ -1,6 +1,6 @@
 <script>
   import { Modal, ModalContent, Body } from "@budibase/bbui"
-  import { auth, admin } from "stores/portal"
+  import { auth, admin } from "@/stores/portal"
 
   export let onDismiss = () => {}
 

@@ -8,16 +8,16 @@
     appsStore,
     licensing,
     admin,
-  } from "stores/portal"
+  } from "@/stores/portal"
   import { onMount } from "svelte"
   import UpgradeButton from "./_components/UpgradeButton.svelte"
   import MobileMenu from "./_components/MobileMenu.svelte"
   import Logo from "./_components/Logo.svelte"
   import UserDropdown from "./_components/UserDropdown.svelte"
-  import HelpMenu from "components/common/HelpMenu.svelte"
-  import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
+  import HelpMenu from "@/components/common/HelpMenu.svelte"
+  import VerificationPromptBanner from "@/components/common/VerificationPromptBanner.svelte"
   import { sdk } from "@budibase/shared-core"
-  import EnterpriseBasicTrialBanner from "components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
+  import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { Constants } from "@budibase/frontend-core"
 
   let loaded = false

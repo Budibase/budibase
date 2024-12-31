@@ -6,8 +6,8 @@
     getSchemaForDatasource,
     getBindableProperties,
     getComponentBindableProperties,
-  } from "dataBinding"
-  import { selectedScreen, componentStore } from "stores/builder"
+  } from "@/dataBinding"
+  import { selectedScreen, componentStore } from "@/stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import FieldSetting from "./FieldSetting.svelte"

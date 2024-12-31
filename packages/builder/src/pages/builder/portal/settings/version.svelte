@@ -9,8 +9,8 @@
     Label,
     Link,
   } from "@budibase/bbui"
-  import { API } from "api"
-  import { auth, admin } from "stores/portal"
+  import { API } from "@/api"
+  import { auth, admin } from "@/stores/portal"
   import { redirect } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
 

@@ -7,7 +7,7 @@
     Detail,
     notifications,
   } from "@budibase/bbui"
-  import { API } from "api"
+  import { API } from "@/api"
   import { goto } from "@roxi/routify"
   import {
     automationStore,
@@ -19,8 +19,8 @@
     queries,
     tables,
     views,
-  } from "stores/builder"
-  import { themeStore } from "stores/portal"
+  } from "@/stores/builder"
+  import { themeStore } from "@/stores/portal"
   import { getContext } from "svelte"
   import { ThemeOptions } from "@budibase/shared-core"
 

@@ -9,9 +9,9 @@
     Icon,
     TextArea,
   } from "@budibase/bbui"
-  import { auth, admin } from "stores/portal"
+  import { auth, admin } from "@/stores/portal"
   import { redirect } from "@roxi/routify"
-  import { API } from "api"
+  import { API } from "@/api"
   import { onMount } from "svelte"
   import { sdk } from "@budibase/shared-core"
 
