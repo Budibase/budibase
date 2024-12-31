@@ -52,6 +52,11 @@ interface UIActionStore {
       selectRange: (source: string | null, target: string | null) => void
     }
   }
+  ui: {
+    actions: {
+      blur: () => void
+    }
+  }
 }
 
 export type Store = UIStore & UIDerivedStore & UIActionStore
