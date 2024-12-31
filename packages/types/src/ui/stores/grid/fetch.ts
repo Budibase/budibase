@@ -1,12 +1,14 @@
 import {
   Row,
   SortOrder,
+  Table,
   UIDatasource,
   UILegacyFilter,
   UISearchFilter,
 } from "@budibase/types"
 
 export interface UIFetchAPI {
+  fetchTableDefinition(tableId: string): Promise<Table>
   definition: UIDatasource
 
   getInitialData: () => Promise<void>
