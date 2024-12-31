@@ -8,6 +8,7 @@ import {
 } from "../lib/constants"
 import { getCellID, parseCellID } from "../lib/utils"
 import { Store as StoreContext } from "."
+import { Row } from "@budibase/types"
 
 export interface UIStore {
   focusedCellId: Writable<string | null>
@@ -34,7 +35,7 @@ export interface UIStore {
 
 export interface UIDerivedStore {
   focusedRowId: Readable<string | null>
-  focusedRow: Readable<string | undefined>
+  focusedRow: Readable<Row | undefined>
   contentLines: Readable<3 | 2 | 1>
   compact: Readable<boolean>
   selectedRowCount: Readable<number>

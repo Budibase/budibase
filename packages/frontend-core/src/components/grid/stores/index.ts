@@ -66,7 +66,8 @@ export type Store = BaseStore &
   Menu.Store &
   Filter.Store &
   UI.Store &
-  Clipboard.Store & {
+  Clipboard.Store &
+  Scroll.Store & {
     // TODO while typing the rest of stores
     fetch: Writable<any>
     sort: Writable<any>
@@ -85,6 +86,8 @@ export type Store = BaseStore &
     width: Writable<number>
     fixedRowHeight: Writable<number>
     rowChangeCache: Readable<any>
+    bounds: Readable<any>
+    height: Readable<number>
   }
 
 export const attachStores = (context: Store): Store => {
