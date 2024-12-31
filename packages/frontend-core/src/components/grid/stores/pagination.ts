@@ -1,6 +1,7 @@
 import { derived } from "svelte/store"
+import { Store as StoreContext } from "."
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const { scrolledRowCount, rows, visualRowCapacity } = context
 
   // Derive how many rows we have in total
