@@ -10,6 +10,9 @@ vi.mock("svelte/store", () => {
       subscribe: vi.fn(),
       update: vi.fn(),
     })),
+    derived: vi.fn(() => ({
+      subscribe: vi.fn(),
+    })),
   }
 })
 

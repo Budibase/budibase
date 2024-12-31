@@ -31,7 +31,12 @@ vi.mock("api", () => {
 })
 
 vi.mock("@budibase/bbui", () => {
-  return { banner: { showStatus: vi.fn() } }
+  return {
+    banner: { showStatus: vi.fn() },
+    Helpers: {
+      uuid: vi.fn(),
+    },
+  }
 })
 
 describe("admin store", () => {
