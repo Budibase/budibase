@@ -1,17 +1,17 @@
 import { derived, get } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
-import { createHistoryStore } from "stores/builder/history"
-import { licensing } from "stores/portal"
-import { tables } from "stores/builder"
+import { createHistoryStore } from "@/stores/builder/history"
+import { licensing } from "@/stores/portal"
+import { tables, appStore } from "@/stores/builder"
 import { notifications } from "@budibase/bbui"
 import {
   getEnvironmentBindings,
   migrateReferencesInObject,
   getUserBindings,
   getSettingBindings,
-} from "dataBinding"
+} from "@/dataBinding"
 import {
   AutomationTriggerStepId,
   AutomationEventType,
@@ -31,14 +31,13 @@ import {
   BranchPath,
   BlockDefinitions,
 } from "@budibase/types"
-import { ActionStepID } from "constants/backend/automations"
-import { FIELDS } from "constants/backend"
+import { ActionStepID } from "@/constants/backend/automations"
+import { FIELDS } from "@/constants/backend"
 import { sdk } from "@budibase/shared-core"
 import { rowActions } from "./rowActions"
-import { getNewStepName } from "helpers/automations/nameHelpers"
+import { getNewStepName } from "@/helpers/automations/nameHelpers"
 import { QueryUtils } from "@budibase/frontend-core"
-import { BudiStore, DerivedBudiStore } from "stores/BudiStore"
-import { appStore } from "stores/builder"
+import { BudiStore, DerivedBudiStore } from "@/stores/BudiStore"
 
 interface AutomationState {
   automations: Automation[]

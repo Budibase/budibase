@@ -1,23 +1,23 @@
 <script>
-  import Panel from "components/design/Panel.svelte"
+  import Panel from "@/components/design/Panel.svelte"
   import {
     selectedScreen,
     componentStore,
     selectedComponent,
-  } from "stores/builder"
+  } from "@/stores/builder"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
-  import { getComponentName } from "helpers/components"
+  import { getComponentName } from "@/helpers/components"
   import {
     getBindableProperties,
     getComponentBindableProperties,
-  } from "dataBinding"
+  } from "@/dataBinding"
   import { ActionButton, notifications } from "@budibase/bbui"
-  import { capitalise } from "helpers"
-  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
-  import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
+  import { capitalise } from "@/helpers"
+  import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
+  import { TOUR_STEP_KEYS } from "@/components/portal/onboarding/tours.js"
 
   const {
     BUILDER_FORM_CREATE_STEPS,

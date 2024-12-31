@@ -1,5 +1,5 @@
 <script>
-  import { datasources } from "stores/builder"
+  import { datasources } from "@/stores/builder"
   import { redirect } from "@roxi/routify"
   import { onMount } from "svelte"
 

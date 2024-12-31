@@ -1,6 +1,6 @@
 <script>
   import { redirect } from "@roxi/routify"
-  import { auth } from "stores/portal"
+  import { auth } from "@/stores/portal"
   import { sdk } from "@budibase/shared-core"
 
   auth.checkQueryString()
