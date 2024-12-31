@@ -1,6 +1,6 @@
 <script>
   import { Label, EnvDropdown } from "@budibase/bbui"
-  import { environment, licensing } from "stores/portal"
+  import { environment, licensing } from "@/stores/portal"
 
   export let type
   export let name

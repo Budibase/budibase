@@ -1,6 +1,6 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get } from "svelte/store"
-import { INITIAL_BUILDER_STATE, BuilderStore } from "stores/builder/builder"
+import { INITIAL_BUILDER_STATE, BuilderStore } from "@/stores/builder/builder"
 import { createBuilderWebsocket } from "../websocket.js"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 
@@ -65,7 +65,7 @@ describe("Builder store", () => {
     ctx.test.builderStore.reset()
     expect(disconnected).toBe(true)
     expect(ctx.test.store).toStrictEqual(INITIAL_BUILDER_STATE)
-    expect(ctx.test.builderStore.websocket).toBeNull()
+    expect(ctx.test.builderStore.websocket).toBeUndefined()
   })
 
   it("Attempt to emit a resource select event to the websocket on select", ctx => {

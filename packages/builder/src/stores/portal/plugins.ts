@@ -1,7 +1,7 @@
 import { writable } from "svelte/store"
-import { PluginSource } from "constants/index"
+import { PluginSource } from "@/constants/index"
 import { Plugin } from "@budibase/types"
-import { API } from "api"
+import { API } from "@/api"
 
 export function createPluginsStore() {
   const { subscribe, set, update } = writable<Plugin[]>([])

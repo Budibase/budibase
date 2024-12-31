@@ -9,10 +9,10 @@
     Layout,
     Icon,
   } from "@budibase/bbui"
-  import { groups, licensing } from "stores/portal"
+  import { groups, licensing } from "@/stores/portal"
   import { Constants } from "@budibase/frontend-core"
-  import { emailValidator } from "helpers/validation"
-  import { capitalise } from "helpers"
+  import { emailValidator } from "@/helpers/validation"
+  import { capitalise } from "@/helpers"
 
   export let showOnboardingTypeModal
 

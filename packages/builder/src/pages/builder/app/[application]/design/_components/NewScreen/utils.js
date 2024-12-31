@@ -1,4 +1,4 @@
-import * as format from "helpers/data/format"
+import * as format from "@/helpers/data/format"
 
 export const makeViewOption = view => ({
   icon: "Remove",

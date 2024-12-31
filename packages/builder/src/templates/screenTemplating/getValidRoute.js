@@ -1,4 +1,4 @@
-import sanitizeUrl from "helpers/sanitizeUrl"
+import sanitizeUrl from "@/helpers/sanitizeUrl"
 
 const arbitraryMax = 10000
 
