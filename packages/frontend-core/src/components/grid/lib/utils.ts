@@ -14,7 +14,9 @@ export const getCellID = (rowId: string, fieldName: string) => {
   return `${rowId}${CellIDSeparator}${fieldName}`
 }
 
-export const parseEventLocation = (e: MouseEvent & TouchEvent) => {
+export const parseEventLocation = (event: MouseEvent | TouchEvent) => {
+  const e = event as MouseEvent & TouchEvent
+
   return {
     x: e.clientX ?? e.touches?.[0]?.clientX,
     y: e.clientY ?? e.touches?.[0]?.clientY,
