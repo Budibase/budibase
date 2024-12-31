@@ -1,4 +1,4 @@
-import { writable, get, derived } from "svelte/store"
+import { writable, get, derived, Writable, Readable } from "svelte/store"
 import { tick } from "svelte"
 import {
   DefaultRowHeight,
@@ -7,8 +7,44 @@ import {
   NewRowID,
 } from "../lib/constants"
 import { getCellID, parseCellID } from "../lib/utils"
+import { Store as StoreContext } from "."
 
-export const createStores = context => {
+export interface UIStore {
+  focusedCellId: Writable<string | null>
+  focusedCellAPI: Writable<{
+    isReadonly: () => boolean
+  } | null>
+  selectedRows: Writable<Record<string, boolean>>
+  hoveredRowId: Writable<string | null>
+  rowHeight: Writable<number>
+  previousFocusedRowId: Writable<string | null>
+  previousFocusedCellId: Writable<string | null>
+  gridFocused: Writable<boolean>
+  keyboardBlocked: Writable<boolean>
+  isDragging: Writable<boolean>
+  buttonColumnWidth: Writable<number>
+  cellSelection: Writable<{
+    active: boolean
+    sourceCellId: string | null
+    targetCellId: string | null
+  }>
+}
+
+export interface UIDerivedStore {
+  focusedRowId: Readable<string | null>
+  focusedRow: Readable<string | undefined>
+  contentLines: Readable<3 | 2 | 1>
+  compact: Readable<boolean>
+  selectedRowCount: Readable<number>
+  isSelectingCells: Readable<boolean>
+  selectedCells: Readable<string[][]> & { actions: any }
+  selectedCellMap: Readable<Record<string, boolean>>
+  selectedCellCount: Readable<number>
+}
+
+export type Store = UIStore & UIDerivedStore
+
+export const createStores = (context: StoreContext): UIStore => {
   const { props } = context
   const focusedCellId = writable(null)
   const focusedCellAPI = writable(null)
@@ -43,7 +79,7 @@ export const createStores = context => {
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: StoreContext) => {
   const {
     focusedCellId,
     rows,
@@ -65,6 +101,10 @@ export const deriveStores = context => {
   const focusedRow = derived(
     [focusedRowId, rowLookupMap],
     ([$focusedRowId, $rowLookupMap]) => {
+      if ($focusedRowId === undefined) {
+        return
+      }
+
       if ($focusedRowId === NewRowID) {
         return { _id: NewRowID }
       }
@@ -116,8 +156,8 @@ export const deriveStores = context => {
       }
 
       // Row indices
-      const sourceRowIndex = $rowLookupMap[sourceInfo.rowId]?.__idx
-      const targetRowIndex = $rowLookupMap[targetInfo.rowId]?.__idx
+      const sourceRowIndex = $rowLookupMap[sourceInfo.rowId!]?.__idx
+      const targetRowIndex = $rowLookupMap[targetInfo.rowId!]?.__idx
       if (sourceRowIndex == null || targetRowIndex == null) {
         return []
       }
@@ -128,8 +168,8 @@ export const deriveStores = context => {
       upperRowIndex = Math.min(upperRowIndex, lowerRowIndex + 49)
 
       // Column indices
-      const sourceColIndex = $columnLookupMap[sourceInfo.field].__idx
-      const targetColIndex = $columnLookupMap[targetInfo.field].__idx
+      const sourceColIndex = $columnLookupMap[sourceInfo.field!].__idx || 0
+      const targetColIndex = $columnLookupMap[targetInfo.field!].__idx || 0
       const lowerColIndex = Math.min(sourceColIndex, targetColIndex)
       const upperColIndex = Math.max(sourceColIndex, targetColIndex)
 
@@ -151,7 +191,7 @@ export const deriveStores = context => {
 
   // Derive a quick lookup map of the selected cells
   const selectedCellMap = derived(selectedCells, $selectedCells => {
-    let map = {}
+    let map: Record<string, boolean> = {}
     for (let row of $selectedCells) {
       for (let cell of row) {
         map[cell] = true
@@ -178,7 +218,7 @@ export const deriveStores = context => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext) => {
   const {
     focusedCellId,
     hoveredRowId,
@@ -190,7 +230,7 @@ export const createActions = context => {
     selectedCells,
   } = context
   // Keep the last selected index to use with bulk selection
-  let lastSelectedIndex = null
+  let lastSelectedIndex: number | null = null
 
   // Callback when leaving the grid, deselecting all focussed or selected items
   const blur = () => {
@@ -200,7 +240,7 @@ export const createActions = context => {
   }
 
   // Toggles whether a certain row ID is selected or not
-  const toggleSelectedRow = id => {
+  const toggleSelectedRow = (id: string) => {
     selectedRows.update(state => {
       let newState = {
         ...state,
@@ -215,7 +255,7 @@ export const createActions = context => {
     })
   }
 
-  const bulkSelectRows = id => {
+  const bulkSelectRows = (id: string) => {
     if (!get(selectedRowCount)) {
       toggleSelectedRow(id)
       return
@@ -241,7 +281,7 @@ export const createActions = context => {
     })
   }
 
-  const startCellSelection = sourceCellId => {
+  const startCellSelection = (sourceCellId: string) => {
     cellSelection.set({
       active: true,
       sourceCellId,
@@ -249,7 +289,7 @@ export const createActions = context => {
     })
   }
 
-  const updateCellSelection = targetCellId => {
+  const updateCellSelection = (targetCellId: string) => {
     cellSelection.update(state => ({
       ...state,
       targetCellId,
@@ -263,7 +303,7 @@ export const createActions = context => {
     }))
   }
 
-  const selectCellRange = (source, target) => {
+  const selectCellRange = (source: string, target: string) => {
     cellSelection.set({
       active: false,
       sourceCellId: source,
@@ -305,7 +345,7 @@ export const createActions = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const {
     focusedRowId,
     previousFocusedRowId,
@@ -332,7 +372,7 @@ export const initialise = context => {
     const $focusedRowId = get(focusedRowId)
     const $selectedRows = get(selectedRows)
     const $hoveredRowId = get(hoveredRowId)
-    const hasRow = id => $rowLookupMap[id] != null
+    const hasRow = (id: string) => $rowLookupMap[id] != null
 
     // Check focused cell
     if ($focusedRowId && !hasRow($focusedRowId)) {
@@ -362,13 +402,13 @@ export const initialise = context => {
   })
 
   // Remember the last focused row ID so that we can store the previous one
-  let lastFocusedRowId = null
+  let lastFocusedRowId: string | null = null
   focusedRowId.subscribe(id => {
     previousFocusedRowId.set(lastFocusedRowId)
     lastFocusedRowId = id
   })
 
-  let lastFocusedCellId = null
+  let lastFocusedCellId: string | null = null
   focusedCellId.subscribe(id => {
     // Remember the last focused cell ID so that we can store the previous one
     previousFocusedCellId.set(lastFocusedCellId)

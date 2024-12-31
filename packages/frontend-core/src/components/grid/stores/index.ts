@@ -63,12 +63,11 @@ export type Store = BaseStore &
   Datasource.Store &
   Validation.Store &
   Users.Store &
-  Menu.Store & {
+  Menu.Store &
+  Filter.Store &
+  UI.Store & {
     // TODO while typing the rest of stores
     fetch: Writable<any>
-    filter: Writable<any>
-    inlineFilters: Writable<any>
-    allFilters: Writable<any>
     sort: Writable<any>
     initialFilter: Writable<any>
     initialSortColumn: Writable<any>
@@ -79,13 +78,11 @@ export type Store = BaseStore &
     dispatch: (event: string, data: any) => any
     notifications: Writable<any>
     schemaOverrides: Writable<any>
-    focusedCellId: Writable<any>
-    previousFocusedRowId: Writable<string>
     gridID: string
-    selectedRows: Writable<any>
-    selectedRowCount: Writable<any>
-    selectedCellMap: Writable<any>
-    selectedCellCount: Writable<any>
+    props: Writable<any>
+    rowLookupMap: Writable<any>
+    width: Writable<number>
+    fixedRowHeight: Writable<number>
   }
 
 export const attachStores = (context: Store): Store => {
