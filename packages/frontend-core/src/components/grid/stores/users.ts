@@ -3,6 +3,11 @@ import { helpers } from "@budibase/shared-core"
 import { Store as StoreContext } from "."
 import { UIUser } from "@budibase/types"
 
+interface UIEnrichedUser extends UIUser {
+  color: string
+  label: string
+}
+
 interface UsersStore {
   users: Writable<UIUser[]>
 }
@@ -12,21 +17,22 @@ interface DerivedUsersStore {
 }
 
 interface ActionUserStore {
-  users: UsersStore["users"] & {
-    actions: {
-      updateUser: (user: UIUser) => void
-      removeUser: (sessionId: string) => void
+  users: UsersStore["users"] &
+    Readable<UIEnrichedUser[]> & {
+      actions: {
+        updateUser: (user: UIUser) => void
+        removeUser: (sessionId: string) => void
+      }
     }
-  }
 }
 
-export type Store = UsersStore & DerivedUsersStore
+export type Store = DerivedUsersStore & ActionUserStore
 
 export const createStores = (): UsersStore => {
   const users = writable<UIUser[]>([])
 
   const enrichedUsers = derived(users, $users => {
-    return $users.map(user => ({
+    return $users.map<UIEnrichedUser>(user => ({
       ...user,
       color: helpers.getUserColor(user),
       label: helpers.getUserLabel(user),

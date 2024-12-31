@@ -12,7 +12,7 @@
     TextArea,
     Dropzone,
   } from "@budibase/bbui"
-  import { datasources, queries } from "stores/builder"
+  import { datasources, queries } from "@/stores/builder"
   import { writable } from "svelte/store"
 
   export let navigateDatasource = false

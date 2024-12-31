@@ -1,6 +1,6 @@
 <script>
   import { ActionButton, Popover, Heading, Body, Button } from "@budibase/bbui"
-  import { builderStore } from "stores/builder"
+  import { builderStore } from "@/stores/builder"
 
   let anchor
   let open = false

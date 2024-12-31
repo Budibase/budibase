@@ -7,7 +7,7 @@ import {
   findComponent,
   findComponentPath,
   getComponentContexts,
-} from "helpers/components"
+} from "@/helpers/components"
 import {
   componentStore,
   screenStore,
@@ -17,7 +17,7 @@ import {
   tables as tablesStore,
   roles as rolesStore,
   selectedScreen,
-} from "stores/builder"
+} from "@/stores/builder"
 import {
   makePropSafe,
   isJSBinding,
@@ -27,10 +27,10 @@ import {
 } from "@budibase/string-templates"
 import { TableNames } from "./constants"
 import { JSONUtils, Constants } from "@budibase/frontend-core"
-import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
-import { environment, licensing } from "stores/portal"
-import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
-import { FIELDS, DB_TYPE_INTERNAL } from "constants/backend"
+import ActionDefinitions from "@/components/design/settings/controls/ButtonActionEditor/manifest.json"
+import { environment, licensing } from "@/stores/portal"
+import { convertOldFieldFormat } from "@/components/design/settings/controls/FieldConfiguration/utils"
+import { FIELDS, DB_TYPE_INTERNAL } from "@/constants/backend"
 import { FieldType } from "@budibase/types"
 
 const { ContextScopes } = Constants
@@ -1507,7 +1507,12 @@ export const updateReferencesInObject = ({
 
 // Migrate references
 // Switch all bindings to reference their ids
-export const migrateReferencesInObject = ({ obj, label = "steps", steps }) => {
+export const migrateReferencesInObject = ({
+  obj,
+  label = "steps",
+  steps,
+  originalIndex,
+}) => {
   const stepIndexRegex = new RegExp(`{{\\s*${label}\\.(\\d+)\\.`, "g")
   const updateActionStep = (str, index, replaceWith) =>
     str.replace(`{{ ${label}.${index}.`, `{{ ${label}.${replaceWith}.`)
@@ -1528,6 +1533,7 @@ export const migrateReferencesInObject = ({ obj, label = "steps", steps }) => {
       migrateReferencesInObject({
         obj: obj[key],
         steps,
+        originalIndex,
       })
     }
   }

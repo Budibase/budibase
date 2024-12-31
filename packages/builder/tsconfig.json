@@ -5,14 +5,14 @@
     "lib": ["ESNext"],
     "baseUrl": ".",
     "paths": {
-      "assets/*": ["./assets/*"],
       "@budibase/*": [
         "../*/src/index.ts",
         "../*/src/index.js",
         "../*",
         "../../node_modules/@budibase/*"
       ],
-      "*": ["./src/*"]
+      "assets/*": ["assets/*"],
+      "@/*": ["src/*"]
     }
   }
 }

@@ -1,5 +1,5 @@
 import { string, mixed } from "yup"
-import { APP_NAME_REGEX, APP_URL_REGEX } from "constants"
+import { APP_NAME_REGEX, APP_URL_REGEX } from "@/constants"
 
 export const name = (validation, { apps, currentApp } = { apps: [] }) => {
   validation.addValidator(

@@ -1,7 +1,7 @@
 <script>
   import { Body, Button, Layout, notifications } from "@budibase/bbui"
   import Panel from "./Panel.svelte"
-  import { API } from "api"
+  import { API } from "@/api"
   import { downloadText } from "@budibase/frontend-core"
 
   export let datasource

@@ -1,9 +1,9 @@
 <script>
   import { url } from "@roxi/routify"
   import { Layout, Page } from "@budibase/bbui"
-  import TemplateDisplay from "components/common/TemplateDisplay.svelte"
-  import { templates } from "stores/portal"
-  import { Breadcrumbs, Breadcrumb, Header } from "components/portal/page"
+  import TemplateDisplay from "@/components/common/TemplateDisplay.svelte"
+  import { templates } from "@/stores/portal"
+  import { Breadcrumbs, Breadcrumb, Header } from "@/components/portal/page"
 </script>
 
 <Page>

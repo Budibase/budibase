@@ -1,9 +1,9 @@
 <script>
-  import { automationStore } from "stores/builder"
+  import { automationStore } from "@/stores/builder"
   import { ModalContent } from "@budibase/bbui"
   import { onMount } from "svelte"
   import WebhookDisplay from "../automation/Shared/WebhookDisplay.svelte"
-  import { TriggerStepID } from "constants/backend/automations"
+  import { TriggerStepID } from "@/constants/backend/automations"
 
   let webhookUrls = []
 

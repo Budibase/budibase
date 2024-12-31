@@ -1,5 +1,5 @@
 <script>
-  import Panel from "components/design/Panel.svelte"
+  import Panel from "@/components/design/Panel.svelte"
   import { goto } from "@roxi/routify"
   import { Layout, Search, Icon, Body, notifications } from "@budibase/bbui"
   import structure from "./componentStructure.json"
@@ -8,10 +8,10 @@
     selectedScreen,
     componentStore,
     selectedComponent,
-  } from "stores/builder"
+  } from "@/stores/builder"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
-  import { findComponentPath } from "helpers/components"
+  import { findComponentPath } from "@/helpers/components"
 
   let searchString
   let searchRef
