@@ -900,7 +900,7 @@ export const getSchemaForDatasourcePlus = (resourceId, options) => {
  *   optional and only needed for "provider" datasource types.
  * @param datasource the datasource definition
  * @param options options for generating the schema
- * @return {{schema: Object, table: Object}}
+ * @return {{schema: Object, table: Table}}
  */
 export const getSchemaForDatasource = (asset, datasource, options) => {
   options = options || {}
