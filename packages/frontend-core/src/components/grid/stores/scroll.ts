@@ -1,4 +1,4 @@
-import { writable, derived, get } from "svelte/store"
+import { writable, derived, get, Writable, Readable } from "svelte/store"
 import { tick } from "svelte"
 import {
   GutterWidth,
@@ -8,8 +8,31 @@ import {
   VPadding,
 } from "../lib/constants"
 import { parseCellID } from "../lib/utils"
+import { Store as StoreContext } from "."
 
-export const createStores = () => {
+interface ScrollStore {
+  scroll: Writable<{
+    left: number
+    top: number
+  }>
+  scrollTop: Readable<number>
+  scrollLeft: Readable<number>
+}
+
+interface ScrollDerivedStore {
+  stickyWidth: Readable<number>
+  contentHeight: Readable<number>
+  contentWidth: Readable<number>
+  screenWidth: Readable<number>
+  maxScrollTop: Readable<number>
+  maxScrollLeft: Readable<number>
+  showHScrollbar: Readable<number>
+  showVScrollbar: Readable<number>
+}
+
+export type Store = ScrollStore & ScrollDerivedStore
+
+export const createStores = (): ScrollStore => {
   const scroll = writable({
     left: 0,
     top: 0,
@@ -26,7 +49,7 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: StoreContext) => {
   const {
     rows,
     visibleColumns,
@@ -107,7 +130,7 @@ export const deriveStores = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const {
     focusedCellId,
     focusedRow,
@@ -189,7 +212,7 @@ export const initialise = context => {
     // Ensure horizontal position is viewable
     // Check horizontal position of columns next
     const { field } = parseCellID($focusedCellId)
-    const column = get(columnLookupMap)[field]
+    const column = get(columnLookupMap)[field!]
     if (!column || column.primaryDisplay) {
       return
     }
