@@ -1,4 +1,4 @@
-import { Readable, Writable } from "svelte/store"
+import { Writable } from "svelte/store"
 import type { APIClient } from "../../../api/types"
 
 import * as Bounds from "./bounds"
@@ -25,6 +25,7 @@ import * as NonPlus from "./datasources/nonPlus"
 import * as Cache from "./cache"
 import * as Conditions from "./conditions"
 import { SortOrder, UIDatasource, UISearchFilter } from "@budibase/types"
+import * as Constants from "../lib/constants"
 
 const DependencyOrderedStores = [
   Sort,
@@ -73,12 +74,16 @@ export interface BaseStoreProps {
   canEditColumns?: boolean
   canExpandRows?: boolean
   canSaveSchema?: boolean
+  minHeight?: number
 }
 
 export interface BaseStore {
   API: APIClient
   gridID: string
   props: Writable<BaseStoreProps>
+  subscribe: any
+  dispatch: (event: string, data: any) => any
+  Constants: typeof Constants
 }
 
 export type Store = BaseStore &
@@ -93,22 +98,19 @@ export type Store = BaseStore &
   Filter.Store &
   UI.Store &
   Clipboard.Store &
-  Scroll.Store & {
-    // TODO while typing the rest of stores
-    sort: Writable<any>
-    subscribe: any
-    dispatch: (event: string, data: any) => any
-    notifications: Writable<any>
-    width: Writable<number>
-    bounds: Readable<any>
-    height: Readable<number>
-  } & Rows.Store &
+  Scroll.Store &
+  Rows.Store &
   Reorder.Store &
   Resize.Store &
   Config.Store &
-  Conditions.Store
+  Conditions.Store &
+  Cache.Store &
+  Viewport.Store &
+  Notifications.Store &
+  Sort.Store &
+  Bounds.Store
 
-export const attachStores = (context: Store): Store => {
+export const attachStores = (context: BaseStore): Store => {
   // Atomic store creation
   for (let store of DependencyOrderedStores) {
     if ("createStores" in store) {
