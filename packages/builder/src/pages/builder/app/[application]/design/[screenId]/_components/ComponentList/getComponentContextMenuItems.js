@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import { componentStore } from "stores/builder"
+import { componentStore } from "@/stores/builder"
 
 const getContextMenuItems = (component, componentCollapsed) => {
   const definition = componentStore.getDefinition(component?._component)

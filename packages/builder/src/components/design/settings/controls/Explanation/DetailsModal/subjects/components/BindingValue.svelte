@@ -1,13 +1,13 @@
 <script>
   import { decodeJSBinding } from "@budibase/string-templates"
-  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import { EditorModes } from "components/common/CodeEditor"
+  import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
+  import { EditorModes } from "@/components/common/CodeEditor"
   import {
     runtimeToReadableBinding,
     getDatasourceForProvider,
-  } from "dataBinding"
-  import { tables, selectedScreen, selectedComponent } from "stores/builder"
-  import { getBindings } from "components/backend/DataTable/formula"
+  } from "@/dataBinding"
+  import { tables, selectedScreen, selectedComponent } from "@/stores/builder"
+  import { getBindings } from "@/components/backend/DataTable/formula"
 
   export let value
   $: datasource = getDatasourceForProvider($selectedScreen, $selectedComponent)

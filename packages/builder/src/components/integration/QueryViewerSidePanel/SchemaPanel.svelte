@@ -1,6 +1,6 @@
 <script>
   import KeyValueBuilder from "../KeyValueBuilder.svelte"
-  import { SchemaTypeOptionsExpanded } from "constants/backend"
+  import { SchemaTypeOptionsExpanded } from "@/constants/backend"
 
   export let schema
   export let onSchemaChange = () => {}

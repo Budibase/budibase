@@ -1,5 +1,5 @@
 <script>
-  import { admin } from "stores/portal"
+  import { admin } from "@/stores/portal"
   import {
     Modal,
     notifications,
@@ -9,10 +9,10 @@
     StatusLight,
     Link,
   } from "@budibase/bbui"
-  import { appStore, initialise } from "stores/builder"
-  import { API } from "api"
+  import { appStore, initialise } from "@/stores/builder"
+  import { API } from "@/api"
   import RevertModalVersionSelect from "./RevertModalVersionSelect.svelte"
-  import { ChangelogURL } from "constants"
+  import { ChangelogURL } from "@/constants"
 
   export function show() {
     updateModal.show()

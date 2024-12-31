@@ -9,11 +9,14 @@ export type UIColumn = FieldSchema & {
     subField: string
   }
   primaryDisplay?: boolean
-  schema?: {
+  schema: {
     disabled: boolean
     type: FieldType
     readonly: boolean
     autocolumn: boolean
   }
   calculationType: CalculationType
+  __idx: number
+  __left: number
+  width: number
 }

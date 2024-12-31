@@ -46,10 +46,7 @@ const columnTypeManyParser = {
 
 export function enrichSchemaWithRelColumns(
   schema: Record<string, UIFieldSchema>
-): Record<string, UIFieldSchema> | undefined {
-  if (!schema) {
-    return
-  }
+): Record<string, UIFieldSchema> {
   const result = Object.keys(schema).reduce<Record<string, UIFieldSchema>>(
     (result, fieldName) => {
       const field = schema[fieldName]

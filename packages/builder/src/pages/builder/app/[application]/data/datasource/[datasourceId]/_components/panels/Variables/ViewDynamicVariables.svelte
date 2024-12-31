@@ -1,6 +1,6 @@
 <script>
   import { Body, Table, BoldRenderer, CodeRenderer } from "@budibase/bbui"
-  import { queries } from "stores/builder"
+  import { queries } from "@/stores/builder"
   import { goto } from "@roxi/routify"
 
   export let datasource

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { setContext, onMount } from "svelte"
   import { writable, derived } from "svelte/store"
   import { fade } from "svelte/transition"
@@ -47,24 +47,22 @@
   export let buttonsCollapsedText = null
   export let darkMode = false
   export let isCloud = null
-  export let rowConditions = null
   export let aiEnabled = false
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
 
   // Store props in a store for reference in other stores
-  const props = writable($$props)
+  const props: any = writable($$props)
 
   // Build up context
-  let context = {
+  let context = attachStores({
     API: API || createAPIClient(),
     Constants,
     gridID,
     props,
-  }
-  context = { ...context, ...createEventManagers() }
-  context = attachStores(context)
+    ...createEventManagers(),
+  })
 
   // Reference some stores for local use
   const {
@@ -106,7 +104,6 @@
     darkMode,
     isCloud,
     aiEnabled,
-    rowConditions,
   })
 
   // Derive min height and make available in context

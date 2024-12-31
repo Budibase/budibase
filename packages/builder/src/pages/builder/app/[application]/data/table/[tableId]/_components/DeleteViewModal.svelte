@@ -1,6 +1,6 @@
 <script>
-  import { views, viewsV2 } from "stores/builder"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { views, viewsV2 } from "@/stores/builder"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { notifications } from "@budibase/bbui"
 
   export let view

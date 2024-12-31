@@ -3,7 +3,7 @@ import {
   runtimeToReadableBinding,
   readableToRuntimeBinding,
   updateReferencesInObject,
-} from "dataBinding"
+} from "@/dataBinding"
 
 describe("Builder dataBinding", () => {
   beforeEach(() => {

@@ -31,7 +31,8 @@ export const createActions = (context: StoreContext): TableActions => {
       ...row,
       tableId: get(datasource)?.tableId,
     }
-    return await API.saveRow(row, SuppressErrors)
+    const newRow = await API.saveRow(row, SuppressErrors)
+    return { ...newRow, _id: newRow._id! }
   }
 
   const deleteRows = async (rows: Row[]) => {
@@ -52,7 +53,12 @@ export const createActions = (context: StoreContext): TableActions => {
       },
       paginate: false,
     })
-    return res?.rows?.[0]
+    const row = res?.rows?.[0]
+    if (!row) {
+      return
+    }
+
+    return { ...row, _id: row._id! }
   }
 
   const canUseColumn = (name: string) => {
@@ -102,7 +108,7 @@ export const initialise = (context: StoreContext) => {
     }
 
     // Wipe state
-    filter.set(get(initialFilter))
+    filter.set(get(initialFilter) ?? undefined)
     inlineFilters.set([])
     sort.set({
       column: get(initialSortColumn),
@@ -133,7 +139,7 @@ export const initialise = (context: StoreContext) => {
         }
         $fetch.update({
           sortOrder: $sort.order || SortOrder.ASCENDING,
-          sortColumn: $sort.column,
+          sortColumn: $sort.column ?? undefined,
         })
       })
     )

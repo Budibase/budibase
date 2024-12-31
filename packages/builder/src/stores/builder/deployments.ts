@@ -1,5 +1,5 @@
 import { writable, type Writable } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 import { notifications } from "@budibase/bbui"
 import { DeploymentProgressResponse } from "@budibase/types"
 

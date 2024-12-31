@@ -12,7 +12,7 @@
     FancyInput,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { auth, organisation, oidc, admin } from "stores/portal"
+  import { auth, organisation, oidc, admin } from "@/stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
   import OIDCButton from "./_components/OIDCButton.svelte"
   import { handleError } from "./_components/utils"

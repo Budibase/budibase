@@ -1,10 +1,22 @@
 import { derivedMemo } from "../../../utils"
-import { derived } from "svelte/store"
+import { derived, Readable } from "svelte/store"
 import { ViewV2Type } from "@budibase/types"
+import { BaseStoreProps, Store as StoreContext } from "."
 
-export const createStores = context => {
+type ConfigStore = {
+  [key in keyof BaseStoreProps]: Readable<BaseStoreProps[key]>
+}
+
+interface ConfigDerivedStore {
+  config: Readable<BaseStoreProps>
+}
+
+export type Store = ConfigStore & ConfigDerivedStore
+
+export const createStores = (context: StoreContext): ConfigStore => {
   const { props } = context
-  const getProp = prop => derivedMemo(props, $props => $props[prop])
+  const getProp = <T extends keyof BaseStoreProps>(prop: T) =>
+    derivedMemo(props, $props => $props[prop])
 
   // Derive and memoize some props so that we can react to them in isolation
   const datasource = getProp("datasource")
@@ -15,7 +27,6 @@ export const createStores = context => {
   const schemaOverrides = getProp("schemaOverrides")
   const notifySuccess = getProp("notifySuccess")
   const notifyError = getProp("notifyError")
-  const rowConditions = getProp("rowConditions")
 
   return {
     datasource,
@@ -26,11 +37,10 @@ export const createStores = context => {
     schemaOverrides,
     notifySuccess,
     notifyError,
-    rowConditions,
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: StoreContext): ConfigDerivedStore => {
   const { props, definition, hasNonAutoColumn } = context
 
   // Derive features

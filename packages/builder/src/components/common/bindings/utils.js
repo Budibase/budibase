@@ -1,5 +1,5 @@
 import { decodeJSBinding } from "@budibase/string-templates"
-import { hbInsert, jsInsert } from "components/common/CodeEditor"
+import { hbInsert, jsInsert } from "@/components/common/CodeEditor"
 
 export const BindingType = {
   READABLE: "readableBinding",

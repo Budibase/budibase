@@ -1,5 +1,5 @@
 <script>
-  import { views, viewsV2 } from "stores/builder"
+  import { views, viewsV2 } from "@/stores/builder"
   import { cloneDeep } from "lodash/fp"
   import { notifications, Input, Modal, ModalContent } from "@budibase/bbui"
 
