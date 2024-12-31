@@ -173,7 +173,7 @@ export const initialise = (context: StoreContext) => {
           await datasource.actions.saveDefinition({
             ...$view,
             sort: {
-              field: $sort.column,
+              field: $sort.column!,
               order: $sort.order || SortOrder.ASCENDING,
             },
           })
@@ -187,7 +187,7 @@ export const initialise = (context: StoreContext) => {
         }
         $fetch.update({
           sortOrder: $sort.order,
-          sortColumn: $sort.column,
+          sortColumn: $sort.column ?? undefined,
         })
       })
     )

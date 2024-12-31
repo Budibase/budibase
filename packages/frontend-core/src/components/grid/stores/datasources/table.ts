@@ -139,7 +139,7 @@ export const initialise = (context: StoreContext) => {
         }
         $fetch.update({
           sortOrder: $sort.order || SortOrder.ASCENDING,
-          sortColumn: $sort.column,
+          sortColumn: $sort.column ?? undefined,
         })
       })
     )

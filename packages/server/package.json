@@ -122,7 +122,7 @@
     "server-destroy": "1.0.1",
     "snowflake-sdk": "^1.15.0",
     "socket.io": "4.8.1",
-    "svelte": "^4.2.10",
+    "svelte": "4.2.19",
     "tar": "6.2.1",
     "tmp": "0.2.3",
     "to-json-schema": "0.2.5",
