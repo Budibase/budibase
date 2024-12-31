@@ -8,4 +8,5 @@ export interface UIFieldMutation {
   visible?: boolean
   readonly?: boolean
   width?: number
+  order?: number
 }

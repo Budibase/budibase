@@ -15,7 +15,16 @@ interface MenuStore {
   menu: Writable<MenuStoreData>
 }
 
-export type Store = MenuStore
+interface MenuActions {
+  menu: MenuStore["menu"] & {
+    actions: {
+      open: (cellId: string, e: MouseEvent) => void
+      close: () => void
+    }
+  }
+}
+
+export type Store = MenuStore & MenuActions
 
 export const createStores = () => {
   const menu = writable<MenuStoreData>({
@@ -30,7 +39,7 @@ export const createStores = () => {
   }
 }
 
-export const createActions = (context: StoreContext) => {
+export const createActions = (context: StoreContext): MenuActions => {
   const {
     menu,
     focusedCellId,
@@ -60,7 +69,7 @@ export const createActions = (context: StoreContext) => {
     let multiRowMode = false
     if (get(selectedRowCount) > 1) {
       const { rowId } = parseCellID(cellId)
-      if (get(selectedRows)[rowId]) {
+      if (rowId !== undefined && get(selectedRows)[rowId]) {
         multiRowMode = true
       }
     }

@@ -11,8 +11,8 @@
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
-  import { screenStore } from "stores/builder"
-  import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
+  import { screenStore } from "@/stores/builder"
+  import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
 
   export let value = []
   export let onChange

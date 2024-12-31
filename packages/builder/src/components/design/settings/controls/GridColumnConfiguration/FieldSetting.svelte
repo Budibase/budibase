@@ -3,7 +3,7 @@
   import { Toggle, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { FIELDS } from "constants/backend"
+  import { FIELDS } from "@/constants/backend"
   import { Constants } from "@budibase/frontend-core"
   import { FieldType } from "@budibase/types"
 

@@ -1,13 +1,13 @@
 <script>
   import { Button, Table, notifications } from "@budibase/bbui"
-  import CreateEditRelationshipModal from "components/backend/Datasources/CreateEditRelationshipModal.svelte"
+  import CreateEditRelationshipModal from "@/components/backend/Datasources/CreateEditRelationshipModal.svelte"
   import {
     tables as tablesStore,
     integrations as integrationsStore,
     datasources as datasourcesStore,
-  } from "stores/builder"
+  } from "@/stores/builder"
   import { DatasourceFeature } from "@budibase/types"
-  import { API } from "api"
+  import { API } from "@/api"
   import Panel from "./Panel.svelte"
   import Tooltip from "./Tooltip.svelte"
 

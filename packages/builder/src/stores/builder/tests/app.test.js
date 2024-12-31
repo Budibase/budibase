@@ -1,6 +1,6 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get } from "svelte/store"
-import { INITIAL_APP_META_STATE, AppMetaStore } from "stores/builder/app"
+import { INITIAL_APP_META_STATE, AppMetaStore } from "@/stores/builder/app"
 import {
   clientFeaturesResp,
   generateAppPackage,
@@ -8,9 +8,9 @@ import {
   getScreenFixture,
   getScreenDocId,
 } from "./fixtures"
-import { API } from "api"
+import { API } from "@/api"
 
-vi.mock("api", () => {
+vi.mock("@/api", () => {
   return {
     API: {
       fetchAppRoutes: vi.fn(),

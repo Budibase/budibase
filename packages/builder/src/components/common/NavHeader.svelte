@@ -1,7 +1,7 @@
 <script>
   import { tick } from "svelte"
   import { Icon, Body } from "@budibase/bbui"
-  import { keyUtils } from "helpers/keyUtils"
+  import { keyUtils } from "@/helpers/keyUtils"
 
   export let title
   export let placeholder

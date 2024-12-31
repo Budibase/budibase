@@ -8,10 +8,10 @@
     Icon,
   } from "@budibase/bbui"
   import StatusRenderer from "./StatusRenderer.svelte"
-  import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
-  import TestDisplay from "components/automation/AutomationBuilder/TestDisplay.svelte"
+  import DateTimeRenderer from "@/components/common/renderers/DateTimeRenderer.svelte"
+  import TestDisplay from "@/components/automation/AutomationBuilder/TestDisplay.svelte"
   import { goto } from "@roxi/routify"
-  import { automationStore } from "stores/builder"
+  import { automationStore } from "@/stores/builder"
 
   export let history
   export let appId

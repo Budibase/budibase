@@ -5,7 +5,7 @@ import {
 } from "./datasourceCreation"
 import { get } from "svelte/store"
 
-vi.mock("stores/selectors", () => ({
+vi.mock("@/stores/selectors", () => ({
   shouldIntegrationFetchTableNames: vi.fn(),
 }))
 

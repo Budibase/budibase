@@ -1,7 +1,24 @@
-import { get, writable, derived } from "svelte/store"
+import { get, writable, derived, Writable, Readable } from "svelte/store"
 import { parseEventLocation } from "../lib/utils"
+import { Store as StoreContext } from "."
 
-const reorderInitialState = {
+interface Breakpoint {
+  x: number
+  column: string
+  insertAfter: boolean
+}
+
+interface ReorderInitialStoreData {
+  sourceColumn: string | null
+  targetColumn: string | null
+  insertAfter?: boolean
+  breakpoints: Breakpoint[]
+  gridLeft: number
+  width: number
+  increment?: number
+}
+
+const reorderInitialState: ReorderInitialStoreData = {
   sourceColumn: null,
   targetColumn: null,
   insertAfter: false,
@@ -11,7 +28,14 @@ const reorderInitialState = {
   increment: 0,
 }
 
-export const createStores = () => {
+interface ReorderInitialStore {
+  reorder: Writable<ReorderInitialStoreData>
+  isReordering: Readable<boolean>
+}
+
+export type Store = ReorderInitialStore
+
+export const createStores = (): ReorderInitialStore => {
   const reorder = writable(reorderInitialState)
   const isReordering = derived(
     reorder,
@@ -24,7 +48,7 @@ export const createStores = () => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext) => {
   const {
     reorder,
     columns,
@@ -40,11 +64,11 @@ export const createActions = context => {
     maxScrollLeft,
   } = context
   let latestX = 0
-  let autoScrollInterval
-  let isAutoScrolling
+  let autoScrollInterval: NodeJS.Timeout
+  let isAutoScrolling: boolean
 
   // Callback when dragging on a colum header and starting reordering
-  const startReordering = (column, e) => {
+  const startReordering = (column: string, e: MouseEvent | TouchEvent) => {
     const $scrollableColumns = get(scrollableColumns)
     const $bounds = get(bounds)
     const $stickyWidth = get(stickyWidth)
@@ -87,7 +111,7 @@ export const createActions = context => {
   }
 
   // Callback when moving the mouse when reordering columns
-  const onReorderMouseMove = e => {
+  const onReorderMouseMove = (e: MouseEvent | TouchEvent) => {
     // Immediately handle the current position
     const { x } = parseEventLocation(e)
     latestX = x
@@ -122,7 +146,7 @@ export const createActions = context => {
     const $scrollLeft = get(scrollLeft)
 
     // Compute the closest breakpoint to the current position
-    let breakpoint
+    let breakpoint: Breakpoint | undefined
     let minDistance = Number.MAX_SAFE_INTEGER
     const mouseX = latestX - $reorder.gridLeft + $scrollLeft
     $reorder.breakpoints.forEach(point => {
@@ -139,8 +163,8 @@ export const createActions = context => {
     ) {
       reorder.update(state => ({
         ...state,
-        targetColumn: breakpoint.column,
-        insertAfter: breakpoint.insertAfter,
+        targetColumn: breakpoint!.column,
+        insertAfter: breakpoint!.insertAfter,
       }))
     }
   }
@@ -157,7 +181,7 @@ export const createActions = context => {
       const { increment } = get(reorder)
       scroll.update(state => ({
         ...state,
-        left: Math.max(0, Math.min($maxLeft, state.left + increment)),
+        left: Math.max(0, Math.min($maxLeft, state.left + increment!)),
       }))
       considerReorderPosition()
     }, 10)
@@ -185,7 +209,11 @@ export const createActions = context => {
     const { sourceColumn, targetColumn, insertAfter } = get(reorder)
     reorder.set(reorderInitialState)
     if (sourceColumn !== targetColumn) {
-      await moveColumn({ sourceColumn, targetColumn, insertAfter })
+      await moveColumn({
+        sourceColumn: sourceColumn!,
+        targetColumn: targetColumn!,
+        insertAfter,
+      })
     }
   }
 
@@ -195,6 +223,10 @@ export const createActions = context => {
     sourceColumn,
     targetColumn,
     insertAfter = false,
+  }: {
+    sourceColumn: string
+    targetColumn: string
+    insertAfter?: boolean
   }) => {
     // Find the indices in the overall columns array
     const $columns = get(columns)
@@ -232,7 +264,7 @@ export const createActions = context => {
   }
 
   // Moves a column one place left (as appears visually)
-  const moveColumnLeft = async column => {
+  const moveColumnLeft = async (column: string) => {
     const $visibleColumns = get(visibleColumns)
     const $columnLookupMap = get(columnLookupMap)
     const sourceIdx = $columnLookupMap[column].__idx
@@ -243,7 +275,7 @@ export const createActions = context => {
   }
 
   // Moves a column one place right (as appears visually)
-  const moveColumnRight = async column => {
+  const moveColumnRight = async (column: string) => {
     const $visibleColumns = get(visibleColumns)
     const $columnLookupMap = get(columnLookupMap)
     const sourceIdx = $columnLookupMap[column].__idx

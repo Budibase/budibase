@@ -1,5 +1,5 @@
 <script>
-  import { runtimeToReadableBinding } from "dataBinding"
+  import { runtimeToReadableBinding } from "@/dataBinding"
   import EditNavItemPopover from "./EditNavItemPopover.svelte"
   import { Icon } from "@budibase/bbui"
 

@@ -1,12 +1,32 @@
-import { get, derived } from "svelte/store"
-import { FieldType, UILogicalOperator } from "@budibase/types"
+import { get, derived, Writable, Readable } from "svelte/store"
+import {
+  ArrayOperator,
+  BasicOperator,
+  FieldType,
+  UIColumn,
+  UILegacyFilter,
+  UILogicalOperator,
+  UISearchFilter,
+} from "@budibase/types"
+import { Store as StoreContext } from "."
 import { memo } from "../../../utils/memo"
 
-export const createStores = context => {
+export interface FilterStore {
+  filter: Writable<UISearchFilter | undefined>
+  inlineFilters: Writable<UILegacyFilter[]>
+}
+
+export interface FilterDerivedStore {
+  allFilters: Readable<UISearchFilter | undefined>
+}
+
+export type Store = FilterStore & FilterDerivedStore
+
+export const createStores = (context: StoreContext): FilterStore => {
   const { props } = context
 
   // Initialise to default props
-  const filter = memo(get(props).initialFilter)
+  const filter = memo(get(props).initialFilter ?? undefined)
   const inlineFilters = memo([])
 
   return {
@@ -15,7 +35,7 @@ export const createStores = context => {
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: StoreContext): FilterDerivedStore => {
   const { filter, inlineFilters } = context
   const allFilters = derived(
     [filter, inlineFilters],
@@ -24,7 +44,7 @@ export const deriveStores = context => {
       if (!$inlineFilters?.length) {
         return $filter
       }
-      let allFilters = {
+      const allFilters: UISearchFilter = {
         logicalOperator: UILogicalOperator.ALL,
         groups: [
           {
@@ -33,12 +53,13 @@ export const deriveStores = context => {
           },
         ],
       }
+
       // Just use inline if no filter
       if (!$filter?.groups?.length) {
         return allFilters
       }
       // Join them together if both
-      allFilters.groups = [...allFilters.groups, ...$filter.groups]
+      allFilters.groups = [...allFilters.groups!, ...$filter.groups]
       return allFilters
     }
   )
@@ -48,16 +69,16 @@ export const deriveStores = context => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext) => {
   const { filter, inlineFilters } = context
 
-  const addInlineFilter = (column, value) => {
+  const addInlineFilter = (column: UIColumn, value: string) => {
     const filterId = `inline-${column.name}`
     const type = column.schema.type
-    let inlineFilter = {
+    const inlineFilter: UILegacyFilter = {
       field: column.name,
       id: filterId,
-      operator: "string",
+      operator: BasicOperator.STRING,
       valueType: "value",
       type,
       value,
@@ -66,11 +87,11 @@ export const createActions = context => {
     // Add overrides specific so the certain column type
     if (type === FieldType.NUMBER) {
       inlineFilter.value = parseFloat(value)
-      inlineFilter.operator = "equal"
+      inlineFilter.operator = BasicOperator.EQUAL
     } else if (type === FieldType.BIGINT) {
-      inlineFilter.operator = "equal"
+      inlineFilter.operator = BasicOperator.EQUAL
     } else if (type === FieldType.ARRAY) {
-      inlineFilter.operator = "contains"
+      inlineFilter.operator = ArrayOperator.CONTAINS
     }
 
     inlineFilters.update($inlineFilters => {
@@ -95,9 +116,11 @@ export const createActions = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const { filter, initialFilter } = context
 
   // Reset filter when initial filter prop changes
-  initialFilter.subscribe(filter.set)
+  initialFilter.subscribe($initialFilter =>
+    filter.set($initialFilter ?? undefined)
+  )
 }

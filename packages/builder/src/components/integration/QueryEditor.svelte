@@ -2,7 +2,7 @@
   import CodeMirror from "./codemirror"
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
-  import { themeStore } from "stores/portal"
+  import { themeStore } from "@/stores/portal"
   import { Theme } from "@budibase/types"
 
   const dispatch = createEventDispatcher()
