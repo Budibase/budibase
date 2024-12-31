@@ -91,7 +91,7 @@ export const initialise = (context: StoreContext) => {
     }
 
     // Wipe state
-    filter.set(get(initialFilter))
+    filter.set(get(initialFilter) ?? undefined)
     inlineFilters.set([])
     sort.set({
       column: get(initialSortColumn),
@@ -106,7 +106,7 @@ export const initialise = (context: StoreContext) => {
         if (!isSameDatasource($fetch?.options?.datasource, $datasource)) {
           return
         }
-        $fetch.update({
+        $fetch?.update({
           filter: $allFilters,
         })
       })
@@ -120,9 +120,9 @@ export const initialise = (context: StoreContext) => {
         if (!isSameDatasource($fetch?.options?.datasource, $datasource)) {
           return
         }
-        $fetch.update({
+        $fetch?.update({
           sortOrder: $sort.order || SortOrder.ASCENDING,
-          sortColumn: $sort.column,
+          sortColumn: $sort.column ?? undefined,
         })
       })
     )

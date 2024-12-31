@@ -34,8 +34,10 @@ export const createActions = (context: StoreContext): ViewActions => {
       tableId: $datasource?.tableId,
       _viewId: $datasource?.id,
     }
+    const newRow = await API.saveRow(row, SuppressErrors)
     return {
-      ...(await API.saveRow(row, SuppressErrors)),
+      ...newRow,
+      _id: newRow._id!,
       _viewId: row._viewId,
     }
   }
@@ -54,7 +56,12 @@ export const createActions = (context: StoreContext): ViewActions => {
       },
       paginate: false,
     })
-    return res?.rows?.[0]
+    const row = res?.rows?.[0]
+    if (!row) {
+      return
+    }
+
+    return { ...row, _id: row._id! }
   }
 
   const isDatasourceValid = (datasource: UIDatasource) => {
@@ -114,7 +121,7 @@ export const initialise = (context: StoreContext) => {
     }
 
     // Reset state for new view
-    filter.set(get(initialFilter))
+    filter.set(get(initialFilter) ?? undefined)
     inlineFilters.set([])
     sort.set({
       column: get(initialSortColumn),
@@ -166,7 +173,7 @@ export const initialise = (context: StoreContext) => {
           await datasource.actions.saveDefinition({
             ...$view,
             sort: {
-              field: $sort.column,
+              field: $sort.column!,
               order: $sort.order || SortOrder.ASCENDING,
             },
           })
@@ -180,7 +187,7 @@ export const initialise = (context: StoreContext) => {
         }
         $fetch.update({
           sortOrder: $sort.order,
-          sortColumn: $sort.column,
+          sortColumn: $sort.column ?? undefined,
         })
       })
     )

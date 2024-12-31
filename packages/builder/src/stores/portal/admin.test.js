@@ -1,12 +1,11 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { createAdminStore } from "./admin"
-
 import { writable, get } from "svelte/store"
-import { API } from "api"
-import { auth } from "stores/portal"
+import { API } from "@/api"
+import { auth } from "@/stores/portal"
 import { banner } from "@budibase/bbui"
 
-vi.mock("stores/portal", () => {
+vi.mock("@/stores/portal", () => {
   return { auth: vi.fn() }
 })
 
@@ -21,7 +20,7 @@ vi.mock("svelte/store", () => {
   }
 })
 
-vi.mock("api", () => {
+vi.mock("@/api", () => {
   return {
     API: {
       getEnvironment: vi.fn(),
@@ -32,7 +31,12 @@ vi.mock("api", () => {
 })
 
 vi.mock("@budibase/bbui", () => {
-  return { banner: { showStatus: vi.fn() } }
+  return {
+    banner: { showStatus: vi.fn() },
+    Helpers: {
+      uuid: vi.fn(),
+    },
+  }
 })
 
 describe("admin store", () => {

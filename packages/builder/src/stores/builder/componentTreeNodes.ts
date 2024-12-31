@@ -1,8 +1,8 @@
 import { get } from "svelte/store"
 import { selectedScreen as selectedScreenStore } from "./screens"
-import { findComponentPath } from "helpers/components"
+import { findComponentPath } from "@/helpers/components"
 import { Screen, Component } from "@budibase/types"
-import { BudiStore, PersistenceType } from "stores/BudiStore"
+import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
 interface OpenNodesState {
   [key: string]: boolean

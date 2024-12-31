@@ -17,16 +17,16 @@
     Divider,
     ActionButton,
   } from "@budibase/bbui"
-  import { licensing, users, appsStore, auditLogs } from "stores/portal"
+  import { licensing, users, appsStore, auditLogs } from "@/stores/portal"
   import LockedFeature from "../../_components/LockedFeature.svelte"
-  import { createPaginationStore } from "helpers/pagination"
+  import { createPaginationStore } from "@/helpers/pagination"
   import { onMount, setContext } from "svelte"
   import ViewDetailsRenderer from "./_components/ViewDetailsRenderer.svelte"
   import UserRenderer from "./_components/UserRenderer.svelte"
   import TimeRenderer from "./_components/TimeRenderer.svelte"
   import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
   import { cloneDeep } from "lodash"
-  import DateRangePicker from "components/common/DateRangePicker.svelte"
+  import DateRangePicker from "@/components/common/DateRangePicker.svelte"
   import dayjs from "dayjs"
 
   const schema = {

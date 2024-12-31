@@ -1,6 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import { appsStore } from "stores/portal"
+  import { appsStore } from "@/stores/portal"
   import { sdk } from "@budibase/shared-core"
 
   export let value

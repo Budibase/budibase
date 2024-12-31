@@ -1,13 +1,16 @@
 <script>
   import { enrichSchemaWithRelColumns } from "@budibase/frontend-core"
-  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import { selectedScreen, componentStore } from "stores/builder"
+  import {
+    getDatasourceForProvider,
+    getSchemaForDatasource,
+  } from "@/dataBinding"
+  import { selectedScreen, componentStore } from "@/stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
   import getColumns from "./getColumns.js"
-  import InfoDisplay from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let value
   export let componentInstance
@@ -23,11 +26,13 @@
   const getSchema = (asset, datasource) => {
     const schema = getSchemaForDatasource(asset, datasource).schema
 
-    // Don't show ID and rev in tables
-    if (schema) {
-      delete schema._id
-      delete schema._rev
+    if (!schema) {
+      return
     }
+
+    // Don't show ID and rev in tables
+    delete schema._id
+    delete schema._rev
 
     const result = enrichSchemaWithRelColumns(schema)
     return result

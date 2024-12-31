@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import { componentStore } from "stores/builder"
+import { componentStore } from "@/stores/builder"
 import { notifications } from "@budibase/bbui"
 
 const getContextMenuItems = (component, showCopy) => {

@@ -3,11 +3,11 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "dataBinding"
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+  } from "@/dataBinding"
+  import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
-  import { builderStore } from "stores/builder"
+  import { builderStore } from "@/stores/builder"
 
   export let panel = ClientBindingPanel
   export let value = ""

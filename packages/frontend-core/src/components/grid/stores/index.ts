@@ -24,6 +24,8 @@ import * as ViewV2 from "./datasources/viewV2"
 import * as NonPlus from "./datasources/nonPlus"
 import * as Cache from "./cache"
 import * as Conditions from "./conditions"
+import { SortOrder, UIDatasource, UISearchFilter } from "@budibase/types"
+import * as Constants from "../lib/constants"
 
 const DependencyOrderedStores = [
   Sort,
@@ -51,8 +53,37 @@ const DependencyOrderedStores = [
   Cache,
 ]
 
+export interface BaseStoreProps {
+  datasource: UIDatasource
+  initialSortColumn: string | null
+  initialSortOrder: SortOrder | null
+  initialFilter: UISearchFilter | null
+  fixedRowHeight: number | null
+  schemaOverrides: Record<
+    string,
+    {
+      displayName?: string
+      disabled?: boolean
+    }
+  > | null
+  notifySuccess: (message: string) => void
+  notifyError: (message: string) => void
+  canAddRows?: boolean
+  canEditRows?: boolean
+  canDeleteRows?: boolean
+  canEditColumns?: boolean
+  canExpandRows?: boolean
+  canSaveSchema?: boolean
+  minHeight?: number
+}
+
 export interface BaseStore {
   API: APIClient
+  gridID: string
+  props: Writable<BaseStoreProps>
+  subscribe: any
+  dispatch: (event: string, data: any) => any
+  Constants: typeof Constants
 }
 
 export type Store = BaseStore &
@@ -63,32 +94,23 @@ export type Store = BaseStore &
   Datasource.Store &
   Validation.Store &
   Users.Store &
-  Menu.Store & {
-    // TODO while typing the rest of stores
-    fetch: Writable<any>
-    filter: Writable<any>
-    inlineFilters: Writable<any>
-    allFilters: Writable<any>
-    sort: Writable<any>
-    initialFilter: Writable<any>
-    initialSortColumn: Writable<any>
-    initialSortOrder: Writable<any>
-    rows: Writable<any> & { actions: any }
-    subscribe: any
-    config: Writable<any>
-    dispatch: (event: string, data: any) => any
-    notifications: Writable<any>
-    schemaOverrides: Writable<any>
-    focusedCellId: Writable<any>
-    previousFocusedRowId: Writable<string>
-    gridID: string
-    selectedRows: Writable<any>
-    selectedRowCount: Writable<any>
-    selectedCellMap: Writable<any>
-    selectedCellCount: Writable<any>
-  }
+  Menu.Store &
+  Filter.Store &
+  UI.Store &
+  Clipboard.Store &
+  Scroll.Store &
+  Rows.Store &
+  Reorder.Store &
+  Resize.Store &
+  Config.Store &
+  Conditions.Store &
+  Cache.Store &
+  Viewport.Store &
+  Notifications.Store &
+  Sort.Store &
+  Bounds.Store
 
-export const attachStores = (context: Store): Store => {
+export const attachStores = (context: BaseStore): Store => {
   // Atomic store creation
   for (let store of DependencyOrderedStores) {
     if ("createStores" in store) {
