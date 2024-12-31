@@ -31,7 +31,8 @@ export const createActions = (context: StoreContext): TableActions => {
       ...row,
       tableId: get(datasource)?.tableId,
     }
-    return await API.saveRow(row, SuppressErrors)
+    const newRow = await API.saveRow(row, SuppressErrors)
+    return { ...newRow, _id: newRow._id! }
   }
 
   const deleteRows = async (rows: Row[]) => {
@@ -52,7 +53,12 @@ export const createActions = (context: StoreContext): TableActions => {
       },
       paginate: false,
     })
-    return res?.rows?.[0]
+    const row = res?.rows?.[0]
+    if (!row) {
+      return
+    }
+
+    return { ...row, _id: row._id! }
   }
 
   const canUseColumn = (name: string) => {

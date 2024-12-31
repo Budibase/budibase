@@ -69,12 +69,10 @@ export type Store = BaseStore &
   Clipboard.Store &
   Scroll.Store & {
     // TODO while typing the rest of stores
-    fetch: Writable<any>
     sort: Writable<any>
     initialFilter: Writable<any>
     initialSortColumn: Writable<any>
     initialSortOrder: Writable<any>
-    rows: Writable<any> & { actions: any }
     subscribe: any
     config: Writable<any>
     dispatch: (event: string, data: any) => any
@@ -82,13 +80,11 @@ export type Store = BaseStore &
     schemaOverrides: Writable<any>
     gridID: string
     props: Writable<any>
-    rowLookupMap: Writable<any>
     width: Writable<number>
     fixedRowHeight: Writable<number>
-    rowChangeCache: Readable<any>
     bounds: Readable<any>
     height: Readable<number>
-  }
+  } & Rows.Store
 
 export const attachStores = (context: Store): Store => {
   // Atomic store creation

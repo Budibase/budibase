@@ -1,4 +1,4 @@
-import { writable, derived, get } from "svelte/store"
+import { writable, derived, get, Writable, Readable } from "svelte/store"
 import { fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import {
@@ -10,10 +10,74 @@ import {
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
-import { FieldType } from "@budibase/types"
+import { FieldType, Row, UIFetchAPI, UIRow } from "@budibase/types"
 import { getRelatedTableValues } from "../../../utils"
+import { Store as StoreContext } from "."
 
-export const createStores = () => {
+interface IndexedUIRow extends UIRow {
+  __idx: number
+}
+
+interface RowStore {
+  rows: Writable<UIRow[]>
+  fetch: Writable<UIFetchAPI | null>
+  loaded: Writable<boolean>
+  refreshing: Writable<boolean>
+  loading: Writable<boolean>
+  rowChangeCache: Writable<Record<string, Record<string, any>>>
+  inProgressChanges: Writable<Record<string, number>>
+  hasNextPage: Writable<boolean>
+  error: Writable<string | null>
+}
+
+interface RowDerivedStore {
+  rows: RowStore["rows"]
+  rowLookupMap: Readable<Record<string, IndexedUIRow>>
+}
+
+interface RowActionStore {
+  rows: RowStore["rows"] & {
+    actions: {
+      addRow: (params: {
+        row: Row
+        idx: number
+        bubble: boolean
+        notify: boolean
+      }) => Promise<UIRow | undefined>
+      duplicateRow: (row: UIRow) => Promise<UIRow | undefined>
+      bulkDuplicate: (
+        rowsToDupe: UIRow[],
+        progressCallback: (progressPercentage: number) => void
+      ) => Promise<UIRow[]>
+      updateValue: (params: {
+        rowId: string
+        column: string
+        value: any
+        apply: boolean
+      }) => Promise<void>
+      applyRowChanges: (params: {
+        rowId: string
+        changes?: Record<string, any>
+        updateState?: boolean
+        handleErrors?: boolean
+      }) => Promise<UIRow | undefined>
+      deleteRows: (rowsToDelete: UIRow[]) => Promise<void>
+      loadNextPage: () => void
+      refreshRow: (id: string) => Promise<void>
+      replaceRow: (id: string, row: UIRow | undefined) => void
+      refreshData: () => Promise<void>
+      cleanRow: (row: UIRow) => Row
+      bulkUpdate: (
+        changeMap: Record<string, Record<string, any>>,
+        progressCallback: (progressPercentage: number) => void
+      ) => Promise<void>
+    }
+  }
+}
+
+export type Store = RowStore & RowDerivedStore & RowActionStore
+
+export const createStores = (): RowStore => {
   const rows = writable([])
   const loading = writable(false)
   const loaded = writable(false)
@@ -47,7 +111,7 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: StoreContext): RowDerivedStore => {
   const { rows, enrichedSchema } = context
 
   // Enrich rows with an index property and any pending changes
@@ -57,12 +121,16 @@ export const deriveStores = context => {
       const customColumns = Object.values($enrichedSchema || {}).filter(
         f => f.related
       )
-      return $rows.map((row, idx) => ({
+      return $rows.map<IndexedUIRow>((row, idx) => ({
         ...row,
         __idx: idx,
-        ...customColumns.reduce((map, column) => {
-          const fromField = $enrichedSchema[column.related.field]
-          map[column.name] = getRelatedTableValues(row, column, fromField)
+        ...customColumns.reduce<Record<string, string>>((map, column) => {
+          const fromField = $enrichedSchema![column.related!.field]
+          map[column.name] = getRelatedTableValues(
+            row,
+            { ...column, related: column.related! },
+            fromField
+          )
           return map
         }, {}),
       }))
@@ -71,7 +139,7 @@ export const deriveStores = context => {
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(enrichedRows, $enrichedRows => {
-    let map = {}
+    let map: Record<string, IndexedUIRow> = {}
     for (let i = 0; i < $enrichedRows.length; i++) {
       map[$enrichedRows[i]._id] = $enrichedRows[i]
     }
@@ -87,7 +155,7 @@ export const deriveStores = context => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext): RowActionStore => {
   const {
     rows,
     rowLookupMap,
@@ -114,11 +182,11 @@ export const createActions = context => {
   const instanceLoaded = writable(false)
 
   // Local cache of row IDs to speed up checking if a row exists
-  let rowCacheMap = {}
+  let rowCacheMap: Record<string, boolean> = {}
 
   // Reset everything when datasource changes
-  let unsubscribe = null
-  let lastResetKey = null
+  let unsubscribe: (() => void) | null = null
+  let lastResetKey: string | null = null
   datasource.subscribe(async $datasource => {
     // Unsub from previous fetch if one exists
     unsubscribe?.()
@@ -157,7 +225,7 @@ export const createActions = context => {
     })
 
     // Subscribe to changes of this fetch model
-    unsubscribe = newFetch.subscribe(async $fetch => {
+    unsubscribe = newFetch.subscribe(async ($fetch: UIFetchAPI) => {
       if ($fetch.error) {
         // Present a helpful error to the user
         let message = "An unknown error occurred"
@@ -214,7 +282,15 @@ export const createActions = context => {
 
   // Handles validation errors from the rows API and updates local validation
   // state, storing error messages against relevant cells
-  const handleValidationError = (rowId, error) => {
+  const handleValidationError = (
+    rowId: string,
+    error:
+      | string
+      | {
+          message?: string
+          json: { validationErrors: Record<string, string | undefined> }
+        }
+  ) => {
     let errorString
     if (typeof error === "string") {
       errorString = error
@@ -224,7 +300,11 @@ export const createActions = context => {
 
     // If the server doesn't reply with a valid error, assume that the source
     // of the error is the focused cell's column
-    if (!error?.json?.validationErrors && errorString) {
+    if (
+      typeof error !== "string" &&
+      !error?.json?.validationErrors &&
+      errorString
+    ) {
       const { field: focusedColumn } = parseCellID(get(focusedCellId))
       if (focusedColumn) {
         error = {
@@ -236,7 +316,7 @@ export const createActions = context => {
         }
       }
     }
-    if (error?.json?.validationErrors) {
+    if (typeof error !== "string" && error?.json?.validationErrors) {
       // Normal validation errors
       const keys = Object.keys(error.json.validationErrors)
       const $columns = get(columns)
@@ -251,11 +331,11 @@ export const createActions = context => {
           missingColumns.push(column)
         }
       }
-
+      const { json } = error
       // Process errors for columns that we have
       for (let column of erroredColumns) {
         // Ensure we have a valid error to display
-        let err = error.json.validationErrors[column]
+        let err = json.validationErrors[column]
         if (Array.isArray(err)) {
           err = err[0]
         }
@@ -287,9 +367,19 @@ export const createActions = context => {
   }
 
   // Adds a new row
-  const addRow = async ({ row, idx, bubble = false, notify = true }) => {
+  const addRow = async ({
+    row,
+    idx,
+    bubble = false,
+    notify = true,
+  }: {
+    row: Row
+    idx: number
+    bubble: boolean
+    notify: boolean
+  }) => {
     try {
-      const newRow = await datasource.actions.addRow(row)
+      const newRow = (await datasource.actions.addRow(row))!
 
       // Update state
       if (idx != null) {
@@ -306,7 +396,7 @@ export const createActions = context => {
         get(notifications).success("Row created successfully")
       }
       return newRow
-    } catch (error) {
+    } catch (error: any) {
       if (bubble) {
         throw error
       } else {
@@ -317,7 +407,7 @@ export const createActions = context => {
   }
 
   // Duplicates a row, inserting the duplicate row after the existing one
-  const duplicateRow = async row => {
+  const duplicateRow = async (row: UIRow) => {
     let clone = cleanRow(row)
     delete clone._id
     delete clone._rev
@@ -330,17 +420,20 @@ export const createActions = context => {
       })
       get(notifications).success("Duplicated 1 row")
       return duped
-    } catch (error) {
+    } catch (error: any) {
       handleValidationError(row._id, error)
       validation.actions.focusFirstRowError(row._id)
     }
   }
 
   // Duplicates multiple rows, inserting them after the last source row
-  const bulkDuplicate = async (rowsToDupe, progressCallback) => {
+  const bulkDuplicate = async (
+    rowsToDupe: UIRow[],
+    progressCallback: (progressPercentage: number) => void
+  ) => {
     // Find index of last row
     const $rowLookupMap = get(rowLookupMap)
-    const indices = rowsToDupe.map(row => $rowLookupMap[row._id]?.__idx)
+    const indices = rowsToDupe.map(row => $rowLookupMap[row._id!]?.__idx)
     const index = Math.max(...indices)
     const count = rowsToDupe.length
 
@@ -357,8 +450,9 @@ export const createActions = context => {
     let failed = 0
     for (let i = 0; i < count; i++) {
       try {
-        saved.push(await datasource.actions.addRow(clones[i]))
-        rowCacheMap[saved._id] = true
+        const newRow = (await datasource.actions.addRow(clones[i]))!
+        saved.push(newRow)
+        rowCacheMap[newRow._id] = true
         await sleep(50) // Small sleep to ensure we avoid rate limiting
       } catch (error) {
         failed++
@@ -385,7 +479,7 @@ export const createActions = context => {
 
   // Replaces a row in state with the newly defined row, handling updates,
   // addition and deletion
-  const replaceRow = (id, row) => {
+  const replaceRow = (id: string, row: UIRow | undefined) => {
     // Get index of row to check if it exists
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
@@ -410,22 +504,22 @@ export const createActions = context => {
   }
 
   // Refreshes a specific row
-  const refreshRow = async id => {
+  const refreshRow = async (id: string) => {
     try {
       const row = await datasource.actions.getRow(id)
-      replaceRow(id, row)
+      replaceRow(id, row!)
     } catch {
       // Do nothing - we probably just don't support refreshing individual rows
     }
   }
 
   // Refreshes all data
-  const refreshData = () => {
-    get(fetch)?.getInitialData()
+  const refreshData = async () => {
+    await get(fetch)?.getInitialData()
   }
 
   // Checks if a changeset for a row actually mutates the row or not
-  const changesAreValid = (row, changes) => {
+  const changesAreValid = (row: UIRow, changes: Record<string, any>) => {
     const columns = Object.keys(changes || {})
     if (!row || !columns.length) {
       return false
@@ -437,7 +531,7 @@ export const createActions = context => {
 
   // Patches a row with some changes in local state, and returns whether a
   // valid pending change was made or not
-  const stashRowChanges = (rowId, changes) => {
+  const stashRowChanges = (rowId: string, changes: Record<string, any>) => {
     const $rowLookupMap = get(rowLookupMap)
     const $columnLookupMap = get(columnLookupMap)
     const row = $rowLookupMap[rowId]
@@ -477,13 +571,18 @@ export const createActions = context => {
     changes = null,
     updateState = true,
     handleErrors = true,
+  }: {
+    rowId: string
+    changes?: Record<string, any> | null
+    updateState?: boolean
+    handleErrors?: boolean
   }) => {
     const $rowLookupMap = get(rowLookupMap)
     const row = $rowLookupMap[rowId]
     if (row == null) {
       return
     }
-    let savedRow
+    let savedRow: UIRow | undefined = undefined
 
     // Save change
     try {
@@ -496,13 +595,13 @@ export const createActions = context => {
       // Update row
       const stashedChanges = get(rowChangeCache)[rowId]
       const newRow = { ...cleanRow(row), ...stashedChanges, ...changes }
-      savedRow = await datasource.actions.updateRow(newRow)
+      savedRow = (await datasource.actions.updateRow(newRow))!
 
       // Update row state after a successful change
       if (savedRow?._id) {
         if (updateState) {
           rows.update(state => {
-            state[row.__idx] = savedRow
+            state[row.__idx] = savedRow!
             return state.slice()
           })
         }
@@ -521,7 +620,7 @@ export const createActions = context => {
         })
         return state
       })
-    } catch (error) {
+    } catch (error: any) {
       if (handleErrors) {
         handleValidationError(rowId, error)
         validation.actions.focusFirstRowError(rowId)
@@ -537,14 +636,27 @@ export const createActions = context => {
   }
 
   // Updates a value of a row
-  const updateValue = async ({ rowId, column, value, apply = true }) => {
+  const updateValue = async ({
+    rowId,
+    column,
+    value,
+    apply = true,
+  }: {
+    rowId: string
+    column: string
+    value: any
+    apply: boolean
+  }) => {
     const success = stashRowChanges(rowId, { [column]: value })
     if (success && apply) {
       await applyRowChanges({ rowId })
     }
   }
 
-  const bulkUpdate = async (changeMap, progressCallback) => {
+  const bulkUpdate = async (
+    changeMap: Record<string, Record<string, any>>,
+    progressCallback: (progressPercentage: number) => void
+  ) => {
     const rowIds = Object.keys(changeMap || {})
     const count = rowIds.length
     if (!count) {
@@ -613,7 +725,7 @@ export const createActions = context => {
   }
 
   // Deletes an array of rows
-  const deleteRows = async rowsToDelete => {
+  const deleteRows = async (rowsToDelete: UIRow[]) => {
     if (!rowsToDelete?.length) {
       return
     }
@@ -628,7 +740,7 @@ export const createActions = context => {
 
   // Local handler to process new rows inside the fetch, and append any new
   // rows to state that we haven't encountered before
-  const handleNewRows = (newRows, resetRows) => {
+  const handleNewRows = (newRows: Row[], resetRows?: boolean) => {
     if (resetRows) {
       rowCacheMap = {}
     }
@@ -645,20 +757,20 @@ export const createActions = context => {
         newRow._id = generateRowID()
       }
 
-      if (!rowCacheMap[newRow._id]) {
-        rowCacheMap[newRow._id] = true
+      if (!rowCacheMap[newRow._id!]) {
+        rowCacheMap[newRow._id!] = true
         rowsToAppend.push(newRow)
       }
     }
     if (resetRows) {
-      rows.set(rowsToAppend)
+      rows.set(rowsToAppend as UIRow[])
     } else if (rowsToAppend.length) {
-      rows.update(state => [...state, ...rowsToAppend])
+      rows.update(state => [...state, ...(rowsToAppend as UIRow[])])
     }
   }
 
   // Local handler to remove rows from state
-  const handleRemoveRows = rowsToRemove => {
+  const handleRemoveRows = (rowsToRemove: UIRow[]) => {
     const deletedIds = rowsToRemove.map(row => row._id)
 
     // We deliberately do not remove IDs from the cache map as the data may
@@ -675,11 +787,11 @@ export const createActions = context => {
 
   // Cleans a row by removing any internal grid metadata from it.
   // Call this before passing a row to any sort of external flow.
-  const cleanRow = row => {
-    let clone = { ...row }
+  const cleanRow = (row: UIRow) => {
+    let clone: Row = { ...row }
     delete clone.__idx
     delete clone.__metadata
-    if (!get(hasBudibaseIdentifiers) && isGeneratedRowID(clone._id)) {
+    if (!get(hasBudibaseIdentifiers) && isGeneratedRowID(clone._id!)) {
       delete clone._id
     }
     return clone
@@ -706,7 +818,7 @@ export const createActions = context => {
   }
 }
 
-export const initialise = context => {
+export const initialise = (context: StoreContext) => {
   const {
     rowChangeCache,
     inProgressChanges,
@@ -733,7 +845,9 @@ export const initialise = context => {
     if (!id) {
       return
     }
-    const { rowId, field } = parseCellID(id)
+    let { rowId, field } = parseCellID(id)
+    rowId = rowId!
+    field = field!
     const hasChanges = field in (get(rowChangeCache)[rowId] || {})
     const hasErrors = validation.actions.rowHasErrors(rowId)
     const isSavingChanges = get(inProgressChanges)[rowId]
