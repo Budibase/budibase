@@ -7,15 +7,15 @@
     ModalContent,
     Dropzone,
   } from "@budibase/bbui"
-  import { initialise } from "stores/builder"
-  import { API } from "api"
-  import { appsStore, admin, auth } from "stores/portal"
+  import { initialise } from "@/stores/builder"
+  import { API } from "@/api"
+  import { appsStore, admin, auth } from "@/stores/portal"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import { createValidationStore } from "helpers/validation/yup"
-  import * as appValidation from "helpers/validation/yup/app"
-  import TemplateCard from "components/common/TemplateCard.svelte"
-  import { lowercase } from "helpers"
+  import { createValidationStore } from "@/helpers/validation/yup"
+  import * as appValidation from "@/helpers/validation/yup/app"
+  import TemplateCard from "@/components/common/TemplateCard.svelte"
+  import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
 
   export let template

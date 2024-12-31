@@ -1,8 +1,7 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { createBackupsStore } from "./backups"
-
 import { writable } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 
 vi.mock("svelte/store", () => {
   return {
@@ -10,10 +9,13 @@ vi.mock("svelte/store", () => {
       subscribe: vi.fn(),
       update: vi.fn(),
     })),
+    derived: vi.fn(() => ({
+      subscribe: vi.fn(),
+    })),
   }
 })
 
-vi.mock("api", () => {
+vi.mock("@/api", () => {
   return {
     API: {
       searchBackups: vi.fn(() => "searchBackupsReturn"),

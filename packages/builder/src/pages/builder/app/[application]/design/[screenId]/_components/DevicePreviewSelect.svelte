@@ -1,6 +1,6 @@
 <script>
   import { ActionGroup, ActionButton } from "@budibase/bbui"
-  import { previewStore } from "stores/builder"
+  import { previewStore } from "@/stores/builder"
 </script>
 
 <ActionGroup compact quiet>

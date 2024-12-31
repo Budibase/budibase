@@ -3,10 +3,10 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "dataBinding"
+  } from "@/dataBinding"
   import { FieldType } from "@budibase/types"
 
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+  import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding, findHBSBlocks } from "@budibase/string-templates"
 

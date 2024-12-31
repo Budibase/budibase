@@ -88,64 +88,13 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       dedupe: ["@roxi/routify"],
-      alias: [
-        {
-          find: "assets",
-          replacement: path.resolve("./assets"),
-        },
-        {
-          find: "components",
-          replacement: path.resolve("./src/components"),
-        },
-        {
-          find: "pages",
-          replacement: path.resolve("./src/pages"),
-        },
-        {
-          find: "templates",
-          replacement: path.resolve("./src/templates"),
-        },
-        {
-          find: "stores",
-          replacement: path.resolve("./src/stores"),
-        },
-        {
-          find: "dataBinding",
-          replacement: path.resolve("./src/dataBinding.js"),
-        },
-        {
-          find: "api",
-          replacement: path.resolve("./src/api.js"),
-        },
-        {
-          find: "constants",
-          replacement: path.resolve("./src/constants"),
-        },
-        {
-          find: "analytics",
-          replacement: path.resolve("./src/analytics"),
-        },
-        {
-          find: "actions",
-          replacement: path.resolve("./src/actions"),
-        },
-        {
-          find: "helpers",
-          replacement: path.resolve("./src/helpers"),
-        },
-        {
-          find: "@budibase/types",
-          replacement: path.resolve("../types/src"),
-        },
-        {
-          find: "@budibase/shared-core",
-          replacement: path.resolve("../shared-core/src"),
-        },
-        {
-          find: "@budibase/bbui",
-          replacement: path.resolve("../bbui/src"),
-        },
-      ],
+      alias: {
+        "@budibase/types": path.resolve(__dirname, "../types/src"),
+        "@budibase/shared-core": path.resolve(__dirname, "../shared-core/src"),
+        "@budibase/bbui": path.resolve(__dirname, "../bbui/src"),
+        "@": path.resolve(__dirname, "src"),
+        assets: path.resolve(__dirname, "assets"),
+      },
     },
   }
 })

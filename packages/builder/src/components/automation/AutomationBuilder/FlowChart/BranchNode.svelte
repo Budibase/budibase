@@ -1,5 +1,5 @@
 <script>
-  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
+  import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import {
     Drawer,
     DrawerContent,
@@ -14,11 +14,11 @@
     Modal,
     ModalContent,
   } from "@budibase/bbui"
-  import PropField from "components/automation/SetupPanel/PropField.svelte"
-  import AutomationBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
+  import PropField from "@/components/automation/SetupPanel/PropField.svelte"
+  import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import FlowItemActions from "./FlowItemActions.svelte"
-  import { automationStore, selectedAutomation } from "stores/builder"
+  import { automationStore, selectedAutomation } from "@/stores/builder"
   import { QueryUtils, Utils } from "@budibase/frontend-core"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher, getContext } from "svelte"

@@ -6,9 +6,9 @@
     auth,
     sideBarCollapsed,
     enrichedApps,
-  } from "stores/portal"
-  import AppContextMenuModals from "components/start/AppContextMenuModals.svelte"
-  import getAppContextMenuItems from "components/start/getAppContextMenuItems.js"
+  } from "@/stores/portal"
+  import AppContextMenuModals from "@/components/start/AppContextMenuModals.svelte"
+  import getAppContextMenuItems from "@/components/start/getAppContextMenuItems.js"
   import FavouriteAppButton from "../FavouriteAppButton.svelte"
   import {
     Link,
@@ -19,10 +19,10 @@
     TooltipType,
   } from "@budibase/bbui"
   import { sdk, getThemeClassNames } from "@budibase/shared-core"
-  import { API } from "api"
+  import { API } from "@/api"
   import ErrorSVG from "./ErrorSVG.svelte"
   import { ClientAppSkeleton } from "@budibase/frontend-core"
-  import { contextMenuStore } from "stores/builder"
+  import { contextMenuStore } from "@/stores/builder"
 
   $: app = $enrichedApps.find(app => app.appId === $params.appId)
   $: iframeUrl = getIframeURL(app)

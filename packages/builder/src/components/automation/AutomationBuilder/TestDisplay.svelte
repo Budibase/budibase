@@ -1,9 +1,9 @@
 <script>
   import { Icon, Divider, Tabs, Tab, Label } from "@budibase/bbui"
   import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
-  import { ActionStepID } from "constants/backend/automations"
+  import { ActionStepID } from "@/constants/backend/automations"
   import { JsonView } from "@zerodevx/svelte-json-view"
-  import { automationStore } from "stores/builder"
+  import { automationStore } from "@/stores/builder"
   import { AutomationActionStepId } from "@budibase/types"
 
   export let automation

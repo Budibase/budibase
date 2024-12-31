@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 import { update } from "lodash"
 import { licensing } from "."
 import { sdk } from "@budibase/shared-core"
