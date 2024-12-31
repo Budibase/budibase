@@ -24,6 +24,7 @@ import * as ViewV2 from "./datasources/viewV2"
 import * as NonPlus from "./datasources/nonPlus"
 import * as Cache from "./cache"
 import * as Conditions from "./conditions"
+import { SortOrder, UIDatasource, UISearchFilter } from "@budibase/types"
 
 const DependencyOrderedStores = [
   Sort,
@@ -51,8 +52,33 @@ const DependencyOrderedStores = [
   Cache,
 ]
 
+export interface BaseStoreProps {
+  datasource: UIDatasource
+  initialSortColumn: string | null
+  initialSortOrder: SortOrder | null
+  initialFilter: UISearchFilter | null
+  fixedRowHeight: number | null
+  schemaOverrides: Record<
+    string,
+    {
+      displayName?: string
+      disabled?: boolean
+    }
+  > | null
+  notifySuccess: (message: string) => void
+  notifyError: (message: string) => void
+  canAddRows?: boolean
+  canEditRows?: boolean
+  canDeleteRows?: boolean
+  canEditColumns?: boolean
+  canExpandRows?: boolean
+  canSaveSchema?: boolean
+}
+
 export interface BaseStore {
   API: APIClient
+  gridID: string
+  props: Writable<BaseStoreProps>
 }
 
 export type Store = BaseStore &
@@ -70,23 +96,16 @@ export type Store = BaseStore &
   Scroll.Store & {
     // TODO while typing the rest of stores
     sort: Writable<any>
-    initialFilter: Writable<any>
-    initialSortColumn: Writable<any>
-    initialSortOrder: Writable<any>
     subscribe: any
-    config: Writable<any>
     dispatch: (event: string, data: any) => any
     notifications: Writable<any>
-    schemaOverrides: Writable<any>
-    gridID: string
-    props: Writable<any>
     width: Writable<number>
-    fixedRowHeight: Writable<number>
     bounds: Readable<any>
     height: Readable<number>
   } & Rows.Store &
   Reorder.Store &
-  Resize.Store
+  Resize.Store &
+  Config.Store
 
 export const attachStores = (context: Store): Store => {
   // Atomic store creation

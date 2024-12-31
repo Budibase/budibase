@@ -26,7 +26,7 @@ export const createStores = (context: StoreContext): FilterStore => {
   const { props } = context
 
   // Initialise to default props
-  const filter = memo(get(props).initialFilter)
+  const filter = memo(get(props).initialFilter ?? undefined)
   const inlineFilters = memo([])
 
   return {
@@ -120,5 +120,7 @@ export const initialise = (context: StoreContext) => {
   const { filter, initialFilter } = context
 
   // Reset filter when initial filter prop changes
-  initialFilter.subscribe(filter.set)
+  initialFilter.subscribe($initialFilter =>
+    filter.set($initialFilter ?? undefined)
+  )
 }

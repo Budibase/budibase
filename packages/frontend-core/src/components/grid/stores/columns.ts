@@ -156,11 +156,11 @@ export const initialise = (context: StoreContext) => {
 
   // Merge new schema fields with existing schema in order to preserve widths
   const processColumns = ($enrichedSchema: any) => {
-    if (!$enrichedSchema) {
+    const $definition = get(definition)
+    if (!$enrichedSchema || !$definition) {
       columns.set([])
       return
     }
-    const $definition = get(definition)
     const $columns = get(columns)
     const $displayColumn = get(displayColumn)
 
