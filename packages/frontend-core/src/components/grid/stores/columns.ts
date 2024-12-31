@@ -161,7 +161,7 @@ export const initialise = (context: StoreContext) => {
       columns.set([])
       return
     }
-    const $columns = get(columns)
+
     const $displayColumn = get(displayColumn)
 
     // Find primary display
@@ -176,16 +176,15 @@ export const initialise = (context: StoreContext) => {
       Object.keys($enrichedSchema)
         .map(field => {
           const fieldSchema = $enrichedSchema[field]
-          const oldColumn = $columns?.find(col => col.name === field)
           const column: UIColumn = {
             type: fieldSchema.type,
             name: field,
             label: fieldSchema.displayName || field,
             schema: fieldSchema,
-            width: fieldSchema.width || oldColumn?.width || DefaultColumnWidth,
+            width: fieldSchema.width || DefaultColumnWidth,
             visible: fieldSchema.visible ?? true,
             readonly: fieldSchema.readonly,
-            order: fieldSchema.order ?? oldColumn?.order,
+            order: fieldSchema.order,
             conditions: fieldSchema.conditions,
             related: fieldSchema.related,
             calculationType: fieldSchema.calculationType,
