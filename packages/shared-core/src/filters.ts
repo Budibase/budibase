@@ -552,7 +552,7 @@ export function search<T extends Record<string, any>>(
  */
 export function runQuery<T extends Record<string, any>>(
   docs: T[],
-  query: SearchFilters
+  query: SearchFilters | null
 ): T[] {
   if (!docs || !Array.isArray(docs)) {
     return []
@@ -876,7 +876,7 @@ export function sort<T extends Record<string, any>>(
   docs: T[],
   sort: keyof T,
   sortOrder: SortOrder,
-  sortType = SortType.STRING
+  sortType: SortType | null = SortType.STRING
 ): T[] {
   if (!sort || !sortOrder || !sortType) {
     return docs
@@ -911,8 +911,8 @@ export function sort<T extends Record<string, any>>(
  * @param docs the data
  * @param limit the number of docs to limit to
  */
-export function limit<T>(docs: T[], limit: string): T[] {
-  const numLimit = parseFloat(limit)
+export function limit<T>(docs: T[], limit: string | number): T[] {
+  const numLimit = typeof limit === "number" ? limit : parseFloat(limit)
   if (isNaN(numLimit)) {
     return docs
   }
