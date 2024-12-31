@@ -1,10 +1,41 @@
-import { derived, writable, get } from "svelte/store"
+import { derived, writable, get, Writable, Readable } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 import { parseCellID, getCellID } from "../lib/utils"
 import { NewRowID } from "../lib/constants"
+import { Store as StoreContext } from "."
 
-export const createStores = () => {
-  const clipboard = writable({
+type ClipboardStoreData =
+  | {
+      value: any[][]
+      multiCellCopy: true
+    }
+  | {
+      value: any | null | undefined
+      multiCellCopy: false
+    }
+
+interface ClipboardStore {
+  clipboard: Writable<ClipboardStoreData>
+}
+
+interface ClipboardDerivedStore {
+  copyAllowed: Readable<boolean>
+  pasteAllowed: Readable<boolean>
+}
+
+interface ClipboardActions {
+  clipboard: ClipboardStore["clipboard"] & {
+    actions: {
+      copy: () => void
+      paste: (progressCallback: () => void) => Promise<void>
+    }
+  }
+}
+
+export type Store = ClipboardStore & ClipboardDerivedStore & ClipboardActions
+
+export const createStores = (): ClipboardStore => {
+  const clipboard = writable<ClipboardStoreData>({
     value: null,
     multiCellCopy: false,
   })
@@ -13,7 +44,7 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const deriveStores = (context: StoreContext): ClipboardDerivedStore => {
   const { clipboard, focusedCellAPI, selectedCellCount, config, focusedRowId } =
     context
 
@@ -60,7 +91,7 @@ export const deriveStores = context => {
   }
 }
 
-export const createActions = context => {
+export const createActions = (context: StoreContext): ClipboardActions => {
   const {
     clipboard,
     focusedCellAPI,
@@ -92,11 +123,11 @@ export const createActions = context => {
       const $rowChangeCache = get(rowChangeCache)
 
       // Extract value of each selected cell, accounting for the change cache
-      let value = []
-      for (let row of $selectedCells) {
+      const value = []
+      for (const row of $selectedCells) {
         const rowValues = []
-        for (let cellId of row) {
-          const { rowId, field } = parseCellID(cellId)
+        for (const cellId of row) {
+          const { rowId = "", field = "" } = parseCellID(cellId)
           const row = {
             ...$rowLookupMap[rowId],
             ...$rowChangeCache[rowId],
@@ -113,7 +144,7 @@ export const createActions = context => {
       })
     } else {
       // Single value to copy
-      const value = $focusedCellAPI.getValue()
+      const value = $focusedCellAPI?.getValue()
       clipboard.set({
         value,
         multiCellCopy,
@@ -130,7 +161,7 @@ export const createActions = context => {
   }
 
   // Pastes the previously copied value(s) into the selected cell(s)
-  const paste = async progressCallback => {
+  const paste = async (progressCallback: () => void) => {
     if (!get(pasteAllowed)) {
       return
     }
@@ -166,8 +197,8 @@ export const createActions = context => {
         const { rowId, field } = parseCellID($focusedCellId)
         const $rowLookupMap = get(rowLookupMap)
         const $columnLookupMap = get(columnLookupMap)
-        const rowIdx = $rowLookupMap[rowId].__idx
-        const colIdx = $columnLookupMap[field].__idx
+        const rowIdx = $rowLookupMap[rowId!].__idx
+        const colIdx = $columnLookupMap[field!].__idx || 0
 
         // Get limits of how many rows and columns we're able to paste into
         const $rows = get(rows)
@@ -187,7 +218,7 @@ export const createActions = context => {
         // Paste into target cell range
         if (targetCellId === $focusedCellId) {
           // Single cell edge case
-          get(focusedCellAPI).setValue(value[0][0])
+          get(focusedCellAPI)?.setValue(value[0][0])
         } else {
           // Select the new cells to paste into, then paste
           selectedCells.actions.selectRange($focusedCellId, targetCellId)
@@ -197,17 +228,20 @@ export const createActions = context => {
     } else {
       if (multiCellPaste) {
         // Single to multi - duplicate value to all selected cells
-        const newValue = get(selectedCells).map(row => row.map(() => value))
+        const newValue = get(selectedCells).map(row => row.map(() => value!))
         await pasteIntoSelectedCells(newValue, progressCallback)
       } else {
         // Single to single - just update the cell's value
-        get(focusedCellAPI).setValue(value)
+        get(focusedCellAPI)?.setValue(value ?? null)
       }
     }
   }
 
   // Paste the specified value into the currently selected cells
-  const pasteIntoSelectedCells = async (value, progressCallback) => {
+  const pasteIntoSelectedCells = async (
+    value: string[][],
+    progressCallback: () => any
+  ) => {
     const $selectedCells = get(selectedCells)
 
     // Find the extent at which we can paste
@@ -215,11 +249,13 @@ export const createActions = context => {
     const colExtent = Math.min(value[0].length, $selectedCells[0].length)
 
     // Build change map
-    let changeMap = {}
+    let changeMap: Record<string, Record<string, string>> = {}
     for (let rowIdx = 0; rowIdx < rowExtent; rowIdx++) {
       for (let colIdx = 0; colIdx < colExtent; colIdx++) {
         const cellId = $selectedCells[rowIdx][colIdx]
-        const { rowId, field } = parseCellID(cellId)
+        let { rowId, field } = parseCellID(cellId)
+        rowId = rowId!
+        field = field!
         if (!changeMap[rowId]) {
           changeMap[rowId] = {}
         }
