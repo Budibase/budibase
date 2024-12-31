@@ -10,6 +10,7 @@ import UserFetch from "./UserFetch.js"
 import GroupUserFetch from "./GroupUserFetch.js"
 import CustomFetch from "./CustomFetch.js"
 import QueryArrayFetch from "./QueryArrayFetch.js"
+import { UIDatasource, UIFetchAPI } from "@budibase/types"
 
 const DataFetchMap = {
   table: TableFetch,
@@ -29,15 +30,30 @@ const DataFetchMap = {
 }
 
 // Constructs a new fetch model for a certain datasource
-export const fetchData = ({ API, datasource, options }) => {
-  const Fetch = DataFetchMap[datasource?.type] || TableFetch
+export const fetchData = ({
+  API,
+  datasource,
+  options,
+}: {
+  API: UIFetchAPI
+  datasource: UIDatasource
+  options: {}
+}) => {
+  const Fetch =
+    DataFetchMap[datasource?.type as keyof typeof DataFetchMap] || TableFetch
   return new Fetch({ API, datasource, ...options })
 }
 
 // Creates an empty fetch instance with no datasource configured, so no data
 // will initially be loaded
-const createEmptyFetchInstance = ({ API, datasource }) => {
-  const handler = DataFetchMap[datasource?.type]
+const createEmptyFetchInstance = ({
+  API,
+  datasource,
+}: {
+  API: UIFetchAPI
+  datasource: UIDatasource
+}) => {
+  const handler = DataFetchMap[datasource?.type as keyof typeof DataFetchMap]
   if (!handler) {
     return null
   }
@@ -45,13 +61,27 @@ const createEmptyFetchInstance = ({ API, datasource }) => {
 }
 
 // Fetches the definition of any type of datasource
-export const getDatasourceDefinition = async ({ API, datasource }) => {
+export const getDatasourceDefinition = async ({
+  API,
+  datasource,
+}: {
+  API: UIFetchAPI
+  datasource: UIDatasource
+}) => {
   const instance = createEmptyFetchInstance({ API, datasource })
   return await instance?.getDefinition(datasource)
 }
 
 // Fetches the schema of any type of datasource
-export const getDatasourceSchema = ({ API, datasource, definition }) => {
+export const getDatasourceSchema = ({
+  API,
+  datasource,
+  definition,
+}: {
+  API: UIFetchAPI
+  datasource: UIDatasource
+  definition: {}
+}) => {
   const instance = createEmptyFetchInstance({ API, datasource })
   return instance?.getSchema(datasource, definition)
 }
