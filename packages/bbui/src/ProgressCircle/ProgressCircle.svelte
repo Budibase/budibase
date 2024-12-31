@@ -37,7 +37,7 @@
     }
   }
 
-  export let overBackground
+  export let overBackground = false
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
