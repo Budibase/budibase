@@ -26,11 +26,13 @@
   const getSchema = (asset, datasource) => {
     const schema = getSchemaForDatasource(asset, datasource).schema
 
-    // Don't show ID and rev in tables
-    if (schema) {
-      delete schema._id
-      delete schema._rev
+    if (!schema) {
+      return
     }
+
+    // Don't show ID and rev in tables
+    delete schema._id
+    delete schema._rev
 
     const result = enrichSchemaWithRelColumns(schema)
     return result

@@ -108,7 +108,7 @@ export const initialise = (context: StoreContext) => {
     }
 
     // Wipe state
-    filter.set(get(initialFilter))
+    filter.set(get(initialFilter) ?? undefined)
     inlineFilters.set([])
     sort.set({
       column: get(initialSortColumn),

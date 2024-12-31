@@ -12,11 +12,11 @@ import {
   UpdateViewRequest,
   ViewV2Type,
 } from "@budibase/types"
-import { Store as StoreContext } from "."
+import { Store as StoreContext, BaseStoreProps } from "."
 import { DatasourceActions } from "./datasources"
 
 interface DatasourceStore {
-  definition: Writable<UIDatasource>
+  definition: Writable<UIDatasource | null>
   schemaMutations: Writable<Record<string, UIFieldMutation>>
   subSchemaMutations: Writable<Record<string, Record<string, UIFieldMutation>>>
 }
@@ -28,7 +28,7 @@ interface DerivedDatasourceStore {
 }
 
 interface ActionDatasourceStore {
-  datasource: DatasourceStore["definition"] & {
+  datasource: BaseStoreProps["datasource"] & {
     actions: DatasourceActions & {
       refreshDefinition: () => Promise<void>
       changePrimaryDisplay: (column: string) => Promise<void>
@@ -218,7 +218,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
 
   // Updates the datasources primary display column
   const changePrimaryDisplay = async (column: string) => {
-    let newDefinition = cloneDeep(get(definition))
+    let newDefinition = cloneDeep(get(definition)!)
 
     // Update primary display
     newDefinition.primaryDisplay = column
