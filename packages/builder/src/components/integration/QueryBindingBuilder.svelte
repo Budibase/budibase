@@ -3,8 +3,8 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "dataBinding"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  } from "@/dataBinding"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()

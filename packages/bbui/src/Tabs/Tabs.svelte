@@ -124,8 +124,6 @@
   .spectrum-Tabs-selectionIndicator.emphasized {
     background-color: var(--spectrum-global-color-blue-400);
   }
-  .spectrum-Tabs--horizontal .spectrum-Tabs-selectionIndicator {
-  }
   .noHorizPadding {
     padding: 0;
   }

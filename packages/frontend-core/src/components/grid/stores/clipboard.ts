@@ -6,11 +6,11 @@ import { Store as StoreContext } from "."
 
 type ClipboardStoreData =
   | {
-      value: string[][]
+      value: any[][]
       multiCellCopy: true
     }
   | {
-      value: string | null | undefined
+      value: any | null | undefined
       multiCellCopy: false
     }
 

@@ -148,6 +148,7 @@ export interface Automation extends Document {
 
 interface BaseIOStructure {
   type?: AutomationIOType
+  subtype?: AutomationIOType
   customType?: AutomationCustomIOType
   title?: string
   description?: string
@@ -192,7 +193,7 @@ export enum AutomationStoppedReason {
 export interface AutomationResults {
   automationId?: string
   status?: AutomationStatus
-  trigger?: any
+  trigger?: AutomationTrigger
   steps: {
     stepId: AutomationTriggerStepId | AutomationActionStepId
     inputs: {

@@ -1,10 +1,10 @@
 import { get, derived } from "svelte/store"
-import { BudiStore } from "stores/BudiStore"
+import { BudiStore } from "@/stores/BudiStore"
 import { tables } from "./tables"
 import { viewsV2 } from "./viewsV2"
 import { automationStore } from "./automations"
-import { API } from "api"
-import { getSequentialName } from "helpers/duplicate"
+import { API } from "@/api"
+import { getSequentialName } from "@/helpers/duplicate"
 
 const initialState = {}
 

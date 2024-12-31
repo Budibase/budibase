@@ -3,7 +3,7 @@
   import { routes } from "../.routify/routes"
   import { NotificationDisplay, BannerDisplay } from "@budibase/bbui"
   import { parse, stringify } from "qs"
-  import LicensingOverlays from "components/portal/licensing/LicensingOverlays.svelte"
+  import LicensingOverlays from "@/components/portal/licensing/LicensingOverlays.svelte"
 
   const queryHandler = { parse, stringify }
 </script>

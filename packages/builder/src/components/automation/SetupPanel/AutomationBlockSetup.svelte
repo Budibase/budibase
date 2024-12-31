@@ -20,9 +20,9 @@
     Icon,
   } from "@budibase/bbui"
 
-  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, tables } from "stores/builder"
-  import { environment } from "stores/portal"
+  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
+  import { automationStore, tables } from "@/stores/builder"
+  import { environment } from "@/stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import {
     BindingSidePanel,
@@ -30,24 +30,27 @@
     DrawerBindableInput,
     ServerBindingPanel as AutomationBindingPanel,
     ModalBindableInput,
-  } from "components/common/bindings"
+  } from "@/components/common/bindings"
   import CodeEditorModal from "./CodeEditorModal.svelte"
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import AutomationSelector from "./AutomationSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
-  import Editor from "components/integration/QueryEditor.svelte"
-  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import { BindingHelpers, BindingType } from "components/common/bindings/utils"
+  import Editor from "@/components/integration/QueryEditor.svelte"
+  import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
+  import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
+  import {
+    BindingHelpers,
+    BindingType,
+  } from "@/components/common/bindings/utils"
   import {
     bindingsToCompletions,
     hbAutocomplete,
     EditorModes,
-  } from "components/common/CodeEditor"
-  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
+  } from "@/components/common/CodeEditor"
+  import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { QueryUtils, Utils, search, memo } from "@budibase/frontend-core"
-  import { getSchemaForDatasourcePlus } from "dataBinding"
-  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
+  import { getSchemaForDatasourcePlus } from "@/dataBinding"
+  import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
   import { onMount, createEventDispatcher } from "svelte"
   import { writable } from "svelte/store"
   import { cloneDeep } from "lodash/fp"
