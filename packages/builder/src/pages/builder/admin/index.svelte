@@ -9,8 +9,8 @@
     FancyInput,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { API } from "api"
-  import { admin, auth } from "stores/portal"
+  import { API } from "@/api"
+  import { admin, auth } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { passwordsMatch, handleError } from "../auth/_components/utils"

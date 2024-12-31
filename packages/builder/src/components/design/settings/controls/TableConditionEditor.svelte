@@ -14,7 +14,7 @@
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
   import ColorPicker from "./ColorPicker.svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import { QueryUtils, Constants, FilterUsers } from "@budibase/frontend-core"
   import { generate } from "shortid"
   import { FieldType, FormulaType } from "@budibase/types"

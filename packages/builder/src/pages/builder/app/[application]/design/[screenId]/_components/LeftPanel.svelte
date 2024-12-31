@@ -1,7 +1,7 @@
 <script>
   import ScreenList from "./ScreenList/index.svelte"
   import ComponentList from "./ComponentList/index.svelte"
-  import { getHorizontalResizeActions } from "components/common/resizable"
+  import { getHorizontalResizeActions } from "@/components/common/resizable"
 
   const [resizable, resizableHandle] = getHorizontalResizeActions()
 </script>
