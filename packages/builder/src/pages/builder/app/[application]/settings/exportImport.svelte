@@ -7,11 +7,11 @@
     ActionButton,
     Modal,
   } from "@budibase/bbui"
-  import { AppStatus } from "constants"
-  import { appsStore } from "stores/portal"
-  import { appStore } from "stores/builder"
-  import ExportAppModal from "components/start/ExportAppModal.svelte"
-  import ImportAppModal from "components/start/ImportAppModal.svelte"
+  import { AppStatus } from "@/constants"
+  import { appsStore } from "@/stores/portal"
+  import { appStore } from "@/stores/builder"
+  import ExportAppModal from "@/components/start/ExportAppModal.svelte"
+  import ImportAppModal from "@/components/start/ImportAppModal.svelte"
 
   $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}

@@ -1,7 +1,7 @@
 import { derived } from "svelte/store"
 import { admin } from "./admin"
 import { auth } from "./auth"
-import { isEnabled } from "helpers/featureFlags"
+import { isEnabled } from "@/helpers/featureFlags"
 import { sdk } from "@budibase/shared-core"
 import { FeatureFlag } from "@budibase/types"
 

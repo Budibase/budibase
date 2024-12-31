@@ -3,8 +3,8 @@
     automationStore,
     automationHistoryStore,
     selectedAutomation,
-  } from "stores/builder"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  } from "@/stores/builder"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import {
     notifications,
@@ -13,8 +13,8 @@
     Button,
     ActionButton,
   } from "@budibase/bbui"
-  import { ActionStepID } from "constants/backend/automations"
-  import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+  import { ActionStepID } from "@/constants/backend/automations"
+  import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import StepNode from "./StepNode.svelte"
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"

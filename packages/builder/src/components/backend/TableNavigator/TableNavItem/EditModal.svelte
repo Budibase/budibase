@@ -1,6 +1,6 @@
 <script>
   import { cloneDeep } from "lodash/fp"
-  import { tables, datasources } from "stores/builder"
+  import { tables, datasources } from "@/stores/builder"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
 
   export let table

@@ -3,7 +3,7 @@ import {
   CookieUtils,
   Constants,
 } from "@budibase/frontend-core"
-import { appStore } from "stores/builder"
+import { appStore } from "@/stores/builder"
 import { get } from "svelte/store"
 import { auth, navigation } from "./stores/portal"
 

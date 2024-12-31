@@ -1,4 +1,4 @@
-import { capitalise } from "helpers"
+import { capitalise } from "@/helpers"
 import { object, string, number } from "yup"
 import { writable, get } from "svelte/store"
 import { notifications } from "@budibase/bbui"

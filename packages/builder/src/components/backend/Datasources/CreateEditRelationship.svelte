@@ -2,7 +2,7 @@
   import {
     RelationshipType,
     PrettyRelationshipDefinitions,
-  } from "constants/backend"
+  } from "@/constants/backend"
   import {
     keepOpen,
     Button,
@@ -13,10 +13,10 @@
     Body,
     Helpers,
   } from "@budibase/bbui"
-  import { tables } from "stores/builder"
+  import { tables } from "@/stores/builder"
   import { RelationshipErrorChecker } from "./relationshipErrors"
   import { onMount } from "svelte"
-  import RelationshipSelector from "components/common/RelationshipSelector.svelte"
+  import RelationshipSelector from "@/components/common/RelationshipSelector.svelte"
 
   export let save
   export let datasource

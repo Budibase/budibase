@@ -9,13 +9,13 @@
     Icon,
     Body,
   } from "@budibase/bbui"
-  import { selectedScreen, componentStore } from "stores/builder"
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+  import { selectedScreen, componentStore } from "@/stores/builder"
+  import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import {
     getBindableProperties,
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "dataBinding"
+  } from "@/dataBinding"
 
   export let componentInstance
   export let componentDefinition

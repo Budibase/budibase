@@ -1,9 +1,9 @@
 <script>
   import { params, redirect } from "@roxi/routify"
-  import QueryViewer from "components/integration/QueryViewer.svelte"
-  import RestQueryViewer from "components/integration/RestQueryViewer.svelte"
-  import { IntegrationTypes } from "constants/backend"
-  import { datasources } from "stores/builder"
+  import QueryViewer from "@/components/integration/QueryViewer.svelte"
+  import RestQueryViewer from "@/components/integration/RestQueryViewer.svelte"
+  import { IntegrationTypes } from "@/constants/backend"
+  import { datasources } from "@/stores/builder"
 
   $: datasource = $datasources.list.find(ds => ds._id === $params.datasourceId)
   $: {
