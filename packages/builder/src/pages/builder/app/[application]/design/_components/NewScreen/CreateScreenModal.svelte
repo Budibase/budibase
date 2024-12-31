@@ -1,5 +1,5 @@
 <script>
-  import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
+  import ScreenDetailsModal from "@/components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
   import TypeModal from "./TypeModal.svelte"
   import tableTypes from "./tableTypes"
@@ -12,13 +12,13 @@
     builderStore,
     datasources,
     appStore,
-  } from "stores/builder"
-  import { auth } from "stores/portal"
+  } from "@/stores/builder"
+  import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
-  import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
-  import * as screenTemplating from "templates/screenTemplating"
-  import { Roles } from "constants/backend"
-  import { AutoScreenTypes } from "constants"
+  import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
+  import * as screenTemplating from "@/templates/screenTemplating"
+  import { Roles } from "@/constants/backend"
+  import { AutoScreenTypes } from "@/constants"
   import { makeTableOption, makeViewOption } from "./utils"
 
   let mode

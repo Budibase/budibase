@@ -1,6 +1,6 @@
 <script>
   import BindingPanel from "./BindingPanel.svelte"
-  import { snippets } from "stores/builder"
+  import { snippets } from "@/stores/builder"
 
   export let bindings = []
   export let value = ""

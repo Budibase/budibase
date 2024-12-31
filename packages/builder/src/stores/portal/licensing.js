@@ -1,8 +1,8 @@
 import { writable, get } from "svelte/store"
-import { API } from "api"
-import { auth, admin } from "stores/portal"
+import { API } from "@/api"
+import { auth, admin } from "@/stores/portal"
 import { Constants } from "@budibase/frontend-core"
-import { StripeStatus } from "components/portal/licensing/constants"
+import { StripeStatus } from "@/components/portal/licensing/constants"
 import { PlanModel } from "@budibase/types"
 
 const UNLIMITED = -1

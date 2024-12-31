@@ -27,6 +27,7 @@ export type UIFieldSchema = FieldSchema &
     related?: { field: string; subField: string }
     columns?: Record<string, UIRelationSchemaField>
     cellRenderType?: string
+    disabled?: boolean
   }
 
 interface UIRelationSchemaField extends RelationSchemaField {

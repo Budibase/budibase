@@ -10,7 +10,17 @@ interface DerivedValidationStore {
   validationRowLookupMap: Readable<Record<string, string[]>>
 }
 
-export type Store = ValidationStore & DerivedValidationStore
+interface ValidationActions {
+  validation: ValidationStore["validation"] & {
+    actions: {
+      setError: (cellId: string | undefined, error: string) => void
+      rowHasErrors: (rowId: string) => boolean
+      focusFirstRowError: (rowId: string) => void
+    }
+  }
+}
+
+export type Store = ValidationStore & DerivedValidationStore & ValidationActions
 
 // Normally we would break out actions into the explicit "createActions"
 // function, but for validation all these actions are pure so can go into
@@ -33,10 +43,12 @@ export const deriveStores = (context: StoreContext): DerivedValidationStore => {
       // Extract row ID from all errored cell IDs
       if (error) {
         const { rowId } = parseCellID(key)
-        if (!map[rowId]) {
-          map[rowId] = []
+        if (rowId !== undefined) {
+          if (!map[rowId]) {
+            map[rowId] = []
+          }
+          map[rowId].push(key)
         }
-        map[rowId].push(key)
       }
     })
     return map
@@ -47,7 +59,7 @@ export const deriveStores = (context: StoreContext): DerivedValidationStore => {
   }
 }
 
-export const createActions = (context: StoreContext) => {
+export const createActions = (context: StoreContext): ValidationActions => {
   const { validation, focusedCellId, validationRowLookupMap } = context
 
   const setError = (cellId: string | undefined, error: string) => {
