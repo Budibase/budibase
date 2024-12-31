@@ -28,7 +28,7 @@ import { makePropSafe as safe } from "@budibase/string-templates"
 // Could move to fixtures
 const COMP_PREFIX = "@budibase/standard-components"
 
-vi.mock("api", () => {
+vi.mock("@/api", () => {
   return {
     API: {
       fetchComponentLibDefinitions: vi.fn(),
