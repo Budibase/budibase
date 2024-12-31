@@ -1,4 +1,4 @@
-import { Writable } from "svelte/store"
+import { Readable, Writable } from "svelte/store"
 import type { APIClient } from "../../../api/types"
 
 import * as Bounds from "./bounds"
@@ -65,7 +65,8 @@ export type Store = BaseStore &
   Users.Store &
   Menu.Store &
   Filter.Store &
-  UI.Store & {
+  UI.Store &
+  Clipboard.Store & {
     // TODO while typing the rest of stores
     fetch: Writable<any>
     sort: Writable<any>
@@ -83,6 +84,7 @@ export type Store = BaseStore &
     rowLookupMap: Writable<any>
     width: Writable<number>
     fixedRowHeight: Writable<number>
+    rowChangeCache: Readable<any>
   }
 
 export const attachStores = (context: Store): Store => {
