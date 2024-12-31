@@ -182,7 +182,7 @@ export const initialise = (context: StoreContext) => {
             name: field,
             label: fieldSchema.displayName || field,
             schema: fieldSchema,
-            width: fieldSchema.width || oldColumn?.width || DefaultColumnWidth,
+            width: fieldSchema.width || DefaultColumnWidth,
             visible: fieldSchema.visible ?? true,
             readonly: fieldSchema.readonly,
             order: fieldSchema.order ?? oldColumn?.order,
