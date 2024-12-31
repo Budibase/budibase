@@ -1,8 +1,8 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { datasources } from "stores/builder"
+  import { datasources } from "@/stores/builder"
   import { notifications } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   export let datasource
 
