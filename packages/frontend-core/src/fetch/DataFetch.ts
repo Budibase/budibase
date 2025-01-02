@@ -8,7 +8,6 @@ import {
   SearchFilters,
   SortOrder,
   SortType,
-  Table,
   TableSchema,
   UIDatasource,
   UIFetchAPI,
@@ -18,7 +17,7 @@ import {
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
-interface DataFetchStore {
+interface DataFetchStore<T extends UIDatasource | null> {
   rows: UIRow[]
   info: null
   schema: TableSchema | null
@@ -30,9 +29,11 @@ interface DataFetchStore {
   cursors: any[]
   resetKey: number
   error: null
+  definition?: T | null
 }
 
-interface DataFetchDerivedStore extends DataFetchStore {
+interface DataFetchDerivedStore<T extends UIDatasource | null>
+  extends DataFetchStore<T> {
   hasNextPage: boolean
   hasPrevPage: boolean
   supportsSearch: boolean
@@ -69,8 +70,8 @@ export default abstract class DataFetch<T extends UIDatasource | null> {
     clientSideSorting: boolean
     clientSideLimiting: boolean
   }
-  store: Writable<DataFetchStore>
-  derivedStore: Readable<DataFetchDerivedStore>
+  store: Writable<DataFetchStore<T>>
+  derivedStore: Readable<DataFetchDerivedStore<T>>
 
   /**
    * Constructs a new DataFetch instance.
@@ -335,7 +336,7 @@ export default abstract class DataFetch<T extends UIDatasource | null> {
       return null
     }
     try {
-      return await this.API.fetchTableDefinition(datasource.tableId)
+      return (await this.API.fetchTableDefinition(datasource.tableId)) as T
     } catch (error: any) {
       this.store.update(state => ({
         ...state,
@@ -352,7 +353,10 @@ export default abstract class DataFetch<T extends UIDatasource | null> {
    * @param definition the datasource definition
    * @return {object} the schema
    */
-  getSchema(_datasource: UIDatasource | null, definition: Table | null) {
+  getSchema(
+    _datasource: UIDatasource | null,
+    definition: T | null
+  ): TableSchema | undefined {
     return definition?.schema
   }
 
@@ -412,7 +416,7 @@ export default abstract class DataFetch<T extends UIDatasource | null> {
    * Determine the feature flag for this datasource definition
    * @param definition
    */
-  determineFeatureFlags(_definition: Table | null) {
+  determineFeatureFlags(_definition: T | null) {
     return {
       supportsSearch: false,
       supportsSort: false,
@@ -495,7 +499,7 @@ export default abstract class DataFetch<T extends UIDatasource | null> {
    * @param state the current store state
    * @return {boolean} whether there is a next page of data or not
    */
-  hasNextPage(state: DataFetchStore): boolean {
+  hasNextPage(state: DataFetchStore<T>): boolean {
     return state.cursors[state.pageNumber + 1] != null
   }
 
