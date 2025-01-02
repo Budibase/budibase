@@ -9,6 +9,16 @@ import {
   UISearchFilter,
 } from "@budibase/types"
 
+interface SearchOptions {
+  query: SearchFilters | null
+  limit: number
+  sort: string | null
+  sortOrder: string
+  sortType: SortType | null
+  paginate: boolean
+  bookmark: null
+}
+
 export interface UIFetchAPI {
   fetchTableDefinition(tableId: string): Promise<Table>
   definition: UIDatasource
@@ -17,18 +27,7 @@ export interface UIFetchAPI {
   loading: any
   loaded: boolean
 
-  searchTable(
-    tableId: string,
-    arg1: {
-      query: SearchFilters | null
-      limit: number
-      sort: string | null
-      sortOrder: string
-      sortType: SortType | null
-      paginate: boolean
-      bookmark: null
-    }
-  ): any
+  searchTable(tableId: string, options: SearchOptions): any
 
   resetKey: string | null
   error: any

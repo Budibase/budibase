@@ -1,8 +1,8 @@
 import { get } from "svelte/store"
 import DataFetch from "./DataFetch.js"
-import { SortOrder } from "@budibase/types"
+import { SortOrder, UITable } from "@budibase/types"
 
-export default class TableFetch extends DataFetch {
+export default class TableFetch extends DataFetch<UITable> {
   determineFeatureFlags() {
     return {
       supportsSearch: true,
@@ -14,7 +14,7 @@ export default class TableFetch extends DataFetch {
   async getData() {
     const { datasource, limit, sortColumn, sortOrder, sortType, paginate } =
       this.options
-    const { tableId } = datasource!
+    const { tableId } = datasource
     const { cursor, query } = get(this.store)
 
     // Search table
