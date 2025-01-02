@@ -88,12 +88,12 @@
     })
     loading = true
     try {
-      const res = await API.externalUpload({
+      const res = await API.externalUpload(
         datasourceId,
         bucket,
-        key: processedFileKey,
-        data,
-      })
+        processedFileKey,
+        data
+      )
       notificationStore.actions.success("File uploaded successfully")
       loading = false
       return res
