@@ -1,12 +1,16 @@
 import { derived, get } from "svelte/store"
 import { componentStore } from "@/stores/builder"
 import { API } from "@/api"
-import { BudiStore } from "../BudiStore"
+import { BudiStore, DerivedBudiStore } from "../BudiStore"
 import { Layout } from "@budibase/types"
 
 interface LayoutState {
   layouts: Layout[]
   selectedLayoutId: string | null
+}
+
+interface DerivedLayoutState extends LayoutState {
+  selectedLayout: Layout | null
 }
 
 export const INITIAL_LAYOUT_STATE: LayoutState = {
@@ -62,10 +66,10 @@ export class LayoutStore extends BudiStore<LayoutState> {
   }
 
   async deleteLayout(layout: Layout) {
-    if (!layout?._id) {
+    if (!layout?._id || !layout?._rev) {
       return
     }
-    await API.deleteLayout(layout._id, layout._rev!)
+    await API.deleteLayout(layout._id, layout._rev)
     this.update(state => {
       state.layouts = state.layouts.filter(x => x._id !== layout._id)
       return state
@@ -75,6 +79,24 @@ export class LayoutStore extends BudiStore<LayoutState> {
 
 export const layoutStore = new LayoutStore()
 
-export const selectedLayout = derived(layoutStore, $store => {
-  return $store.layouts?.find(layout => layout._id === $store.selectedLayoutId)
-})
+export class SelectedLayoutStore extends DerivedBudiStore<
+  LayoutState,
+  DerivedLayoutState
+> {
+  constructor(layoutStore: LayoutStore) {
+    const makeDerivedStore = () => {
+      return derived(layoutStore, $store => {
+        return {
+          ...$store,
+          selectedLayout:
+            $store.layouts?.find(
+              layout => layout._id === $store.selectedLayoutId
+            ) || null,
+        }
+      })
+    }
+    super(INITIAL_LAYOUT_STATE, makeDerivedStore)
+  }
+}
+
+export const selectedLayout = new SelectedLayoutStore(layoutStore)
