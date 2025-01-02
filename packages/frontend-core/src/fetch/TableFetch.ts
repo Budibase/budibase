@@ -11,7 +11,7 @@ export default class TableFetch extends DataFetch<UITable, Table> {
     }
   }
 
-  async getDefinition(datasource: UITable | null) {
+  async getDefinition(datasource: UITable) {
     if (!datasource?.tableId) {
       return null
     }

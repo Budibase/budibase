@@ -321,7 +321,7 @@ export default abstract class DataFetch<
   abstract getData(): Promise<{
     rows: Row[]
     info?: any
-    hasNextPage: boolean
+    hasNextPage?: boolean
     cursor?: any
     error?: any
   }>
