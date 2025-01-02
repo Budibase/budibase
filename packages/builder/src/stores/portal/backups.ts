@@ -6,7 +6,7 @@ interface BackupState {
   selectedBackup?: string
 }
 
-class BackupStore extends BudiStore<BackupState> {
+export class BackupStore extends BudiStore<BackupState> {
   constructor() {
     super({})
   }
