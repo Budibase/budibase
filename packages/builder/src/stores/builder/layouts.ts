@@ -1,16 +1,12 @@
 import { derived, get } from "svelte/store"
 import { componentStore } from "@/stores/builder"
 import { API } from "@/api"
-import { BudiStore, DerivedBudiStore } from "../BudiStore"
+import { BudiStore } from "../BudiStore"
 import { Layout } from "@budibase/types"
 
 interface LayoutState {
   layouts: Layout[]
   selectedLayoutId: string | null
-}
-
-interface DerivedLayoutState extends LayoutState {
-  selectedLayout: Layout | null
 }
 
 export const INITIAL_LAYOUT_STATE: LayoutState = {
@@ -79,24 +75,6 @@ export class LayoutStore extends BudiStore<LayoutState> {
 
 export const layoutStore = new LayoutStore()
 
-export class SelectedLayoutStore extends DerivedBudiStore<
-  LayoutState,
-  DerivedLayoutState
-> {
-  constructor(layoutStore: LayoutStore) {
-    const makeDerivedStore = () => {
-      return derived(layoutStore, $store => {
-        return {
-          ...$store,
-          selectedLayout:
-            $store.layouts?.find(
-              layout => layout._id === $store.selectedLayoutId
-            ) || null,
-        }
-      })
-    }
-    super(INITIAL_LAYOUT_STATE, makeDerivedStore)
-  }
-}
-
-export const selectedLayout = new SelectedLayoutStore(layoutStore)
+export const selectedLayout = derived(layoutStore, $store => {
+  return $store.layouts?.find(layout => layout._id === $store.selectedLayoutId)
+})
