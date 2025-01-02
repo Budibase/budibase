@@ -14,6 +14,8 @@
   export let validation
   export let onChange
 
+  const context = getContext("context")
+
   let fieldState
   let fieldApi
   let localFiles = []
@@ -83,9 +85,7 @@
   }
 
   const upload = async () => {
-    const processedFileKey = processStringSync(key, {
-      [$component.id]: fieldState,
-    })
+    const processedFileKey = processStringSync(key, $context)
     loading = true
     try {
       const res = await API.externalUpload(
