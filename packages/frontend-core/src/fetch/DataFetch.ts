@@ -9,7 +9,6 @@ import {
   SortOrder,
   SortType,
   TableSchema,
-  UIDatasource,
   UIFetchAPI,
   UIRow,
   UISearchFilter,
@@ -46,8 +45,8 @@ interface DataFetchDerivedStore<T> extends DataFetchStore<T> {
  * For other types of datasource, this class is overridden and extended.
  */
 export default abstract class DataFetch<
-  TDatasource extends UIDatasource | null,
-  TDefinition extends { primaryDisplay?: string }
+  TDatasource extends {},
+  TDefinition extends {}
 > {
   API: UIFetchAPI
   features: {
@@ -337,7 +336,7 @@ export default abstract class DataFetch<
    * @return {object} the definition
    */
   abstract getDefinition(
-    datasource: UIDatasource | null
+    datasource: TDatasource | null
   ): Promise<TDefinition | null>
 
   /**
@@ -347,7 +346,7 @@ export default abstract class DataFetch<
    * @return {object} the schema
    */
   abstract getSchema(
-    datasource: UIDatasource | null,
+    datasource: TDatasource | null,
     definition: TDefinition | null
   ): any
 
