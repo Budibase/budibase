@@ -322,10 +322,10 @@ export default abstract class DataFetch {
 
   abstract getData(): Promise<{
     rows: UIRow[]
-    info: any
+    info?: any
     hasNextPage: boolean
-    cursor: any
-    error: any
+    cursor?: any
+    error?: any
   }>
 
   /**

@@ -14,7 +14,7 @@ export default class TableFetch extends DataFetch {
   async getData() {
     const { datasource, limit, sortColumn, sortOrder, sortType, paginate } =
       this.options
-    const { tableId } = datasource
+    const { tableId } = datasource!
     const { cursor, query } = get(this.store)
 
     // Search table
