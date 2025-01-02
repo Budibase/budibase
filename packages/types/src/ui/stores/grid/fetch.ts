@@ -10,10 +10,10 @@ import {
 } from "@budibase/types"
 
 interface SearchOptions {
-  query: SearchFilters | null
+  query?: SearchFilters | null | undefined
   limit: number
   sort: string | null
-  sortOrder: string
+  sortOrder: string | undefined
   sortType: SortType | null
   paginate: boolean
   bookmark: null
@@ -28,6 +28,11 @@ export interface UIFetchAPI {
   loaded: boolean
 
   searchTable(tableId: string, options: SearchOptions): any
+
+  viewV2: {
+    fetchDefinition: (datasourceId: string) => Promise<any>
+    fetch: (datasourceId: string, options: SearchOptions) => any
+  }
 
   resetKey: string | null
   error: any
