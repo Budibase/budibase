@@ -3399,7 +3399,7 @@ if (descriptions.length) {
                       type: FieldType.LINK,
                       relationshipType: RelationshipType.MANY_TO_ONE,
                       tableId: toRelateTableId,
-                      fieldName: "link",
+                      fieldName: "main",
                     },
                   })
 
@@ -3408,7 +3408,7 @@ if (descriptions.length) {
                   )
                   await config.api.table.save({
                     ...toRelateTable,
-                    primaryDisplay: "link",
+                    primaryDisplay: "name",
                   })
                   const relatedRows = await Promise.all([
                     config.api.row.save(toRelateTable._id!, {

@@ -8,9 +8,9 @@
     notifications,
   } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
-  import { flags } from "stores/builder"
-  import { featureFlags, licensing } from "stores/portal"
-  import { API } from "api"
+  import { flags } from "@/stores/builder"
+  import { featureFlags, licensing } from "@/stores/portal"
+  import { API } from "@/api"
   import MagicWand from "../../../../assets/MagicWand.svelte"
 
   import { helpers, REBOOT_CRON } from "@budibase/shared-core"
@@ -98,9 +98,7 @@
   async function generateAICronExpression() {
     loadingAICronExpression = true
     try {
-      const response = await API.generateCronExpression({
-        prompt: aiCronPrompt,
-      })
+      const response = await API.generateCronExpression(aiCronPrompt)
       cronExpression = response.message
       dispatch("change", response.message)
     } catch (err) {

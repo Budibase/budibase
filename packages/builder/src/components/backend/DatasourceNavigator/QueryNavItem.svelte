@@ -3,16 +3,16 @@
     customQueryIconText,
     customQueryIconColor,
     customQueryText,
-  } from "helpers/data/utils"
+  } from "@/helpers/data/utils"
   import { goto as gotoStore, isActive } from "@roxi/routify"
   import {
     datasources,
     queries,
     userSelectedResourceMap,
     contextMenuStore,
-  } from "stores/builder"
-  import NavItem from "components/common/NavItem.svelte"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  } from "@/stores/builder"
+  import NavItem from "@/components/common/NavItem.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { notifications, Icon } from "@budibase/bbui"
 
   export let datasource

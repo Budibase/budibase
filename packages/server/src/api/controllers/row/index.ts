@@ -71,7 +71,6 @@ export async function patch(
     if (!row) {
       ctx.throw(404, "Row not found")
     }
-    ctx.status = 200
 
     ctx.eventEmitter?.emitRow({
       eventName: EventType.ROW_UPDATE,
@@ -110,7 +109,6 @@ export const save = async (ctx: UserCtx<SaveRowRequest, SaveRowResponse>) => {
     : await quotas.addRow(() =>
         sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
       )
-  ctx.status = 200
 
   ctx.eventEmitter?.emitRow({
     eventName: EventType.ROW_SAVE,
@@ -223,7 +221,6 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
 
 export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
   let response, row
-  ctx.status = 200
 
   if (isDeleteRows(ctx.request.body)) {
     response = await deleteRows(ctx)
@@ -275,7 +272,6 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
     rows: undefined,
   }
 
-  ctx.status = 200
   ctx.body = await sdk.rows.search(searchParams)
 }
 

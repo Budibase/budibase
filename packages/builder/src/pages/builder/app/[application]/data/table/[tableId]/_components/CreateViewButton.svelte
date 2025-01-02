@@ -1,8 +1,8 @@
 <script>
-  import DetailPopover from "components/common/DetailPopover.svelte"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { Input, notifications, Button, Icon, ListItem } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { viewsV2 } from "stores/builder"
+  import { viewsV2 } from "@/stores/builder"
   import { ViewV2Type } from "@budibase/types"
 
   export let table

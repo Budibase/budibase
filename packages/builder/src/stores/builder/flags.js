@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 
 export function createFlagsStore() {
   const { subscribe, set } = writable({})
@@ -10,14 +10,11 @@ export function createFlagsStore() {
       set(flags)
     },
     updateFlag: async (flag, value) => {
-      await API.updateFlag({
-        flag,
-        value,
-      })
+      await API.updateFlag(flag, value)
       await actions.fetch()
     },
     toggleUiFeature: async feature => {
-      await API.toggleUiFeature({ value: feature })
+      await API.toggleUiFeature(feature)
     },
   }
 

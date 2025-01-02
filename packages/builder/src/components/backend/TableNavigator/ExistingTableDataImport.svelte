@@ -5,10 +5,10 @@
     SourceName,
   } from "@budibase/types"
   import { Select, Toggle, Multiselect, Label, Layout } from "@budibase/bbui"
-  import { DB_TYPE_INTERNAL } from "constants/backend"
-  import { API } from "api"
+  import { DB_TYPE_INTERNAL } from "@/constants/backend"
+  import { API } from "@/api"
   import { parseFile } from "./utils"
-  import { tables, datasources } from "stores/builder"
+  import { tables, datasources } from "@/stores/builder"
 
   let error = null
   let fileName = null
@@ -128,11 +128,7 @@
     allValid = false
 
     if (rows.length > 0) {
-      const response = await API.validateExistingTableImport({
-        rows,
-        tableId,
-      })
-
+      const response = await API.validateExistingTableImport(rows, tableId)
       validation = response.schemaValidation
       invalidColumns = response.invalidColumns
       allValid = response.allValid

@@ -1,6 +1,6 @@
 import { derived, writable, get } from "svelte/store"
 import { getValidatorFields } from "./validation"
-import { capitalise } from "helpers"
+import { capitalise } from "@/helpers"
 import { notifications } from "@budibase/bbui"
 import { object } from "yup"
 
@@ -114,6 +114,7 @@ export const createValidatedConfigStore = (integration, config) => {
           value: getValue(),
           error: $errorsStore[key],
           name: capitalise(properties.display || key),
+          placeholder: properties.placeholder,
           type: properties.type,
           hidden: properties.hidden,
           config: properties.config,

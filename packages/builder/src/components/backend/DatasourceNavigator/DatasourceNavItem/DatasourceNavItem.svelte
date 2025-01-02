@@ -1,12 +1,12 @@
 <script>
   import { isActive } from "@roxi/routify"
-  import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
-  import { contextMenuStore, userSelectedResourceMap } from "stores/builder"
-  import NavItem from "components/common/NavItem.svelte"
+  import { BUDIBASE_INTERNAL_DB_ID } from "@/constants/backend"
+  import { contextMenuStore, userSelectedResourceMap } from "@/stores/builder"
+  import NavItem from "@/components/common/NavItem.svelte"
 
-  import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
+  import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import { Icon } from "@budibase/bbui"
-  import UpdateDatasourceModal from "components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
+  import UpdateDatasourceModal from "@/components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
   import DeleteConfirmationModal from "./DeleteConfirmationModal.svelte"
 
   export let datasource

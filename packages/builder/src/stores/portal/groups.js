@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
-import { API } from "api"
-import { licensing } from "stores/portal"
+import { API } from "@/api"
+import { licensing } from "@/stores/portal"
 
 export function createGroupsStore() {
   const store = writable([])
@@ -46,10 +46,7 @@ export function createGroupsStore() {
     },
 
     delete: async group => {
-      await API.deleteGroup({
-        id: group._id,
-        rev: group._rev,
-      })
+      await API.deleteGroup(group._id, group._rev)
       store.update(state => {
         state = state.filter(state => state._id !== group._id)
         return state
@@ -89,11 +86,11 @@ export function createGroupsStore() {
     },
 
     addGroupAppBuilder: async (groupId, appId) => {
-      return await API.addGroupAppBuilder({ groupId, appId })
+      return await API.addGroupAppBuilder(groupId, appId)
     },
 
     removeGroupAppBuilder: async (groupId, appId) => {
-      return await API.removeGroupAppBuilder({ groupId, appId })
+      return await API.removeGroupAppBuilder(groupId, appId)
     },
   }
 

@@ -1,11 +1,12 @@
 <script>
   import { Label, EnvDropdown } from "@budibase/bbui"
-  import { environment, licensing } from "stores/portal"
+  import { environment, licensing } from "@/stores/portal"
 
   export let type
   export let name
   export let value
   export let error
+  export let placeholder
   export let showModal = () => {}
 
   async function handleUpgradePanel() {
@@ -22,6 +23,7 @@
     type={type === "port" ? "string" : type}
     {value}
     {error}
+    {placeholder}
     variables={$environment.variables}
     environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
     {showModal}

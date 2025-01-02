@@ -1,7 +1,7 @@
 <script>
   import { Line, InfoWord, DocumentationLink, Text } from "../typography"
   import { FieldType } from "@budibase/types"
-  import { FIELDS } from "constants/backend"
+  import { FIELDS } from "@/constants/backend"
   import subjects from "../subjects"
 
   export let schema

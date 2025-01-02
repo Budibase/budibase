@@ -1,7 +1,10 @@
 <script>
   import { Select, ContextTooltip } from "@budibase/bbui"
-  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import { selectedScreen } from "stores/builder"
+  import {
+    getDatasourceForProvider,
+    getSchemaForDatasource,
+  } from "@/dataBinding"
+  import { selectedScreen } from "@/stores/builder"
   import { createEventDispatcher } from "svelte"
   import { Explanation } from "./Explanation"
   import { debounce } from "lodash"

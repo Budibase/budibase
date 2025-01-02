@@ -1,17 +1,13 @@
 import { writable } from "svelte/store"
-import { PluginSource } from "constants/index"
-
-import { API } from "api"
-
-interface Plugin {
-  _id: string
-}
+import { PluginSource } from "@/constants/index"
+import { Plugin } from "@budibase/types"
+import { API } from "@/api"
 
 export function createPluginsStore() {
   const { subscribe, set, update } = writable<Plugin[]>([])
 
   async function load() {
-    const plugins = await API.getPlugins()
+    const plugins: Plugin[] = await API.getPlugins()
     set(plugins)
   }
 

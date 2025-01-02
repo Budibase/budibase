@@ -12,9 +12,9 @@
     Tag,
     Table,
   } from "@budibase/bbui"
-  import { backups, licensing, auth, admin } from "stores/portal"
-  import { appStore } from "stores/builder"
-  import { createPaginationStore } from "helpers/pagination"
+  import { backups, licensing, auth, admin } from "@/stores/portal"
+  import { appStore } from "@/stores/builder"
+  import { createPaginationStore } from "@/helpers/pagination"
   import TimeAgoRenderer from "./_components/TimeAgoRenderer.svelte"
   import AppSizeRenderer from "./_components/AppSizeRenderer.svelte"
   import ActionsRenderer from "./_components/ActionsRenderer.svelte"
@@ -22,9 +22,9 @@
   import StatusRenderer from "./_components/StatusRenderer.svelte"
   import TypeRenderer from "./_components/TypeRenderer.svelte"
   import BackupsDefault from "assets/backups-default.png"
-  import { BackupTrigger, BackupType } from "constants/backend/backups"
+  import { BackupTrigger, BackupType } from "@/constants/backend/backups"
   import { onMount } from "svelte"
-  import DateRangePicker from "components/common/DateRangePicker.svelte"
+  import DateRangePicker from "@/components/common/DateRangePicker.svelte"
 
   let loading = true
   let backupData = null
@@ -99,21 +99,18 @@
   }
 
   async function fetchBackups(filters, page, dateRange = []) {
-    const body = {
-      appId: $appStore.appId,
+    const opts = {
       ...filters,
       page,
     }
-
     const [startDate, endDate] = dateRange
     if (startDate) {
-      body.startDate = startDate
+      opts.startDate = startDate
     }
     if (endDate) {
-      body.endDate = endDate
+      opts.endDate = endDate
     }
-
-    const response = await backups.searchBackups(body)
+    const response = await backups.searchBackups($appStore.appId, opts)
     pageInfo.fetched(response.hasNextPage, response.nextPage)
 
     // flatten so we have an easier structure to use for the table schema
@@ -123,9 +120,7 @@
   async function createManualBackup() {
     try {
       loading = true
-      let response = await backups.createManualBackup({
-        appId: $appStore.appId,
-      })
+      let response = await backups.createManualBackup($appStore.appId)
       await fetchBackups(filterOpt, page)
       notifications.success(response.message)
     } catch (err) {
@@ -149,24 +144,14 @@
 
   async function handleButtonClick({ detail }) {
     if (detail.type === "backupDelete") {
-      await backups.deleteBackup({
-        appId: $appStore.appId,
-        backupId: detail.backupId,
-      })
+      await backups.deleteBackup($appStore.appId, detail.backupId)
       await fetchBackups(filterOpt, page)
     } else if (detail.type === "backupRestore") {
-      await backups.restoreBackup({
-        appId: $appStore.appId,
-        backupId: detail.backupId,
-        name: detail.restoreBackupName,
-      })
-      await fetchBackups(filterOpt, page)
-    } else if (detail.type === "backupUpdate") {
-      await backups.updateBackup({
-        appId: $appStore.appId,
-        backupId: detail.backupId,
-        name: detail.name,
-      })
+      await backups.restoreBackup(
+        $appStore.appId,
+        detail.backupId,
+        detail.restoreBackupName
+      )
       await fetchBackups(filterOpt, page)
     }
   }

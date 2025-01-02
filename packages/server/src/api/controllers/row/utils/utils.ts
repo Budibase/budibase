@@ -66,7 +66,7 @@ export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
     if (docIds.isViewId(sourceId)) {
       return {
         tableId: utils.extractViewInfoFromID(sourceId).tableId,
-        viewId: sourceId,
+        viewId: sql.utils.encodeViewId(sourceId),
       }
     }
     return { tableId: sql.utils.encodeTableId(ctx.params.sourceId) }
@@ -108,6 +108,21 @@ function fixBooleanFields(row: Row, table: Table) {
     }
   }
   return row
+}
+
+export function getSourceFields(source: Table | ViewV2): string[] {
+  const isView = sdk.views.isView(source)
+  if (isView) {
+    const fields = Object.keys(
+      helpers.views.basicFields(source, { visible: true })
+    )
+    return fields
+  }
+
+  const fields = Object.entries(source.schema)
+    .filter(([_, field]) => field.visible !== false)
+    .map(([columnName]) => columnName)
+  return fields
 }
 
 export async function sqlOutputProcessing(

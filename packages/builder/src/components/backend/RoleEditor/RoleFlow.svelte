@@ -23,9 +23,9 @@
   import { setContext, tick } from "svelte"
   import Controls from "./Controls.svelte"
   import { GridResolution, MaxAutoZoom, ZoomDuration } from "./constants"
-  import { roles } from "stores/builder"
-  import { Roles } from "constants/backend"
-  import { getSequentialName } from "helpers/duplicate"
+  import { roles } from "@/stores/builder"
+  import { Roles } from "@/constants/backend"
+  import { getSequentialName } from "@/helpers/duplicate"
   import { derivedMemo } from "@budibase/frontend-core"
 
   const flow = useSvelteFlow()

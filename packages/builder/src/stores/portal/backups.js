@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 
 export function createBackupsStore() {
   const store = writable({})
@@ -11,31 +11,20 @@ export function createBackupsStore() {
     })
   }
 
-  async function searchBackups({
-    appId,
-    trigger,
-    type,
-    page,
-    startDate,
-    endDate,
-  }) {
-    return API.searchBackups({ appId, trigger, type, page, startDate, endDate })
+  async function searchBackups(appId, opts) {
+    return API.searchBackups(appId, opts)
   }
 
-  async function restoreBackup({ appId, backupId, name }) {
-    return API.restoreBackup({ appId, backupId, name })
+  async function restoreBackup(appId, backupId, name) {
+    return API.restoreBackup(appId, backupId, name)
   }
 
-  async function deleteBackup({ appId, backupId }) {
-    return API.deleteBackup({ appId, backupId })
+  async function deleteBackup(appId, backupId) {
+    return API.deleteBackup(appId, backupId)
   }
 
   async function createManualBackup(appId) {
     return API.createManualBackup(appId)
-  }
-
-  async function updateBackup({ appId, backupId, name }) {
-    return API.updateBackup({ appId, backupId, name })
   }
 
   return {
@@ -44,7 +33,6 @@ export function createBackupsStore() {
     selectBackup,
     deleteBackup,
     restoreBackup,
-    updateBackup,
     subscribe: store.subscribe,
   }
 }

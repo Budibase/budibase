@@ -9,7 +9,7 @@
     FancyInput,
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { users, organisation, auth, admin } from "stores/portal"
+  import { users, organisation, auth, admin } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { onMount } from "svelte"
@@ -66,10 +66,7 @@
 
   async function login() {
     try {
-      await auth.login({
-        username: formData.email.trim(),
-        password: formData.password.trim(),
-      })
+      await auth.login(formData.email.trim(), formData.password.trim())
       notifications.success("Logged in successfully")
       $goto("../portal")
     } catch (err) {
