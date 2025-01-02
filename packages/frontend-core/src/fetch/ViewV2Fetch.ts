@@ -1,7 +1,7 @@
 import { SortOrder, UIView, ViewV2, ViewV2Type } from "@budibase/types"
 import DataFetch from "./DataFetch.js"
 import { get } from "svelte/store"
-import { isCalculationField } from "packages/shared-core/src/helpers/views.js"
+import { helpers } from "@budibase/shared-core"
 
 export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
   determineFeatureFlags() {
@@ -47,7 +47,9 @@ export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
     // If this is a calculation view and we have no calculations, return nothing
     if (
       definition?.type === ViewV2Type.CALCULATION &&
-      !Object.values(definition.schema || {}).some(isCalculationField)
+      !Object.values(definition.schema || {}).some(
+        helpers.views.isCalculationField
+      )
     ) {
       return {
         rows: [],
@@ -72,7 +74,7 @@ export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
         limit,
         bookmark: cursor,
         sort: sortColumn,
-        sortOrder: sortOrder?.toLowerCase(),
+        sortOrder: sortOrder,
         sortType,
       })
       return {

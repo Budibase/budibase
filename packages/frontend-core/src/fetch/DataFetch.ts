@@ -5,19 +5,19 @@ import { convertJSONSchemaToTableSchema } from "../utils/json"
 import {
   FieldType,
   LegacyFilter,
+  Row,
   SearchFilters,
   SortOrder,
   SortType,
   TableSchema,
-  UIFetchAPI,
-  UIRow,
   UISearchFilter,
 } from "@budibase/types"
+import { APIClient } from "../api/types"
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
 interface DataFetchStore<T> {
-  rows: UIRow[]
+  rows: Row[]
   info: null
   schema: TableSchema | null
   loading: boolean
@@ -48,7 +48,7 @@ export default abstract class DataFetch<
   TDatasource extends {},
   TDefinition extends {}
 > {
-  API: UIFetchAPI
+  API: APIClient
   features: {
     supportsSearch: boolean
     supportsSort: boolean
@@ -78,11 +78,7 @@ export default abstract class DataFetch<
    * Constructs a new DataFetch instance.
    * @param opts the fetch options
    */
-  constructor(opts: {
-    API: UIFetchAPI
-    datasource: TDatasource
-    options?: {}
-  }) {
+  constructor(opts: { API: APIClient; datasource: TDatasource; options?: {} }) {
     // Feature flags
     this.features = {
       supportsSearch: false,
@@ -323,7 +319,7 @@ export default abstract class DataFetch<
   }
 
   abstract getData(): Promise<{
-    rows: UIRow[]
+    rows: Row[]
     info?: any
     hasNextPage: boolean
     cursor?: any
