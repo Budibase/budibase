@@ -151,6 +151,35 @@ export const initialise = (context: StoreContext) => {
       })
     )
 
+    function sortHasChanged(
+      newSort: {
+        column: string | null | undefined
+        order: SortOrder
+      },
+      existingSort?: {
+        field: string
+        order?: SortOrder
+      }
+    ) {
+      const newColumn = newSort.column ?? null
+      const existingColumn = existingSort?.field ?? null
+      if (newColumn !== existingColumn) {
+        return true
+      }
+
+      if (!newColumn) {
+        return false
+      }
+
+      const newOrder = newSort.order ?? null
+      const existingOrder = existingSort?.order ?? null
+      if (newOrder !== existingOrder) {
+        return true
+      }
+
+      return false
+    }
+
     // When sorting changes, ensure view definition is kept up to date
     unsubscribers.push(
       sort.subscribe(async $sort => {
@@ -161,10 +190,7 @@ export const initialise = (context: StoreContext) => {
         }
 
         // Skip if nothing actually changed
-        if (
-          $sort?.column === $view.sort?.field &&
-          $sort?.order === $view.sort?.order
-        ) {
+        if (!sortHasChanged($sort, $view.sort)) {
           return
         }
 
