@@ -5,7 +5,7 @@
 
   onMount(async () => {
     try {
-      await email.templates.fetch()
+      await email.fetchTemplates()
     } catch (error) {
       notifications.error("Error fetching email templates")
     }
