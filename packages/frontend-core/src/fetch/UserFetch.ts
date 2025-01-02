@@ -2,10 +2,11 @@ import { get } from "svelte/store"
 import DataFetch from "./DataFetch.js"
 import { TableNames } from "../constants"
 import { utils } from "@budibase/shared-core"
-import { Table, UIFetchAPI } from "@budibase/types"
+import { BasicOperator, SearchUsersRequest, Table } from "@budibase/types"
+import { APIClient } from "../api/types.js"
 
 export default class UserFetch extends DataFetch<{ tableId: string }, {}> {
-  constructor(opts: { API: UIFetchAPI; datasource: Table; options?: {} }) {
+  constructor(opts: { API: APIClient; datasource: Table; options?: {} }) {
     super({
       ...opts,
       datasource: {
@@ -40,12 +41,12 @@ export default class UserFetch extends DataFetch<{ tableId: string }, {}> {
     const { appId, paginated, ...rest } = query || ({} as any) // TODO
     const finalQuery = utils.isSupportedUserSearch(rest)
       ? query
-      : { string: { email: null } }
+      : { [BasicOperator.EMPTY]: { email: true } } // TODO: check
 
     try {
       const opts = {
-        bookmark: cursor,
-        query: finalQuery,
+        bookmark: cursor ?? undefined,
+        query: finalQuery ?? undefined,
         appId: appId,
         paginate: paginated || paginate,
         limit,
