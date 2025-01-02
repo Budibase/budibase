@@ -1,6 +1,8 @@
 import {
   Row,
+  SearchFilters,
   SortOrder,
+  SortType,
   Table,
   UIDatasource,
   UILegacyFilter,
@@ -14,6 +16,19 @@ export interface UIFetchAPI {
   getInitialData: () => Promise<void>
   loading: any
   loaded: boolean
+
+  searchTable(
+    tableId: string,
+    arg1: {
+      query: SearchFilters | null
+      limit: number
+      sort: string | null
+      sortOrder: string
+      sortType: SortType | null
+      paginate: boolean
+      bookmark: null
+    }
+  ): any
 
   resetKey: string | null
   error: any
