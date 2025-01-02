@@ -31,10 +31,10 @@
         let attachRequest = new FormData()
         attachRequest.append("file", signatureFile)
 
-        const resp = await API.uploadAttachment({
-          data: attachRequest,
-          tableId: formContext?.dataSource?.tableId,
-        })
+        const resp = await API.uploadAttachment(
+          formContext?.dataSource?.tableId,
+          attachRequest
+        )
         const [signatureAttachment] = resp
         updateValue = signatureAttachment
       } else {

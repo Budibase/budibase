@@ -2,7 +2,7 @@
   import { Updating } from "@budibase/frontend-core"
   import { redirect, params } from "@roxi/routify"
 
-  import { API } from "api"
+  import { API } from "@/api"
 
   async function isMigrationDone() {
     const response = await API.getMigrationStatus()

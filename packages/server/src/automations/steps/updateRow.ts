@@ -166,7 +166,7 @@ export async function run({
       response: ctx.message,
       id: ctx.body._id,
       revision: ctx.body._rev,
-      success: ctx.status === 200,
+      success: !!ctx.body._id,
     }
   } catch (err) {
     return {

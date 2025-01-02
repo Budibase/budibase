@@ -149,6 +149,7 @@ export async function create(ctx: Ctx<CreateViewRequest, CreateViewResponse>) {
     sort: view.sort,
     schema,
     primaryDisplay: view.primaryDisplay,
+    rowHeight: view.rowHeight,
   }
   const result = await sdk.views.create(tableId, parsedView)
 
@@ -229,6 +230,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, UpdateViewResponse>) {
     sort: view.sort,
     schema,
     primaryDisplay: view.primaryDisplay,
+    rowHeight: view.rowHeight,
   }
 
   const { view: result, existingView } = await sdk.views.update(

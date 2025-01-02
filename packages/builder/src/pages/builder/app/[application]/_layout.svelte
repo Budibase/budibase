@@ -7,8 +7,8 @@
     previewStore,
     userStore,
     deploymentStore,
-  } from "stores/builder"
-  import { auth, appsStore } from "stores/portal"
+  } from "@/stores/builder"
+  import { auth, appsStore } from "@/stores/portal"
   import {
     Icon,
     Tabs,
@@ -18,21 +18,21 @@
     notifications,
     TooltipPosition,
   } from "@budibase/bbui"
-  import AppActions from "components/deploy/AppActions.svelte"
-  import { API } from "api"
+  import AppActions from "@/components/deploy/AppActions.svelte"
+  import { API } from "@/api"
   import { isActive, url, goto, layout, redirect } from "@roxi/routify"
-  import { capitalise } from "helpers"
+  import { capitalise } from "@/helpers"
   import { onMount, onDestroy } from "svelte"
-  import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
-  import CommandPalette from "components/commandPalette/CommandPalette.svelte"
-  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
-  import TourPopover from "components/portal/onboarding/TourPopover.svelte"
+  import VerificationPromptBanner from "@/components/common/VerificationPromptBanner.svelte"
+  import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
+  import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
+  import TourPopover from "@/components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import { UserAvatars } from "@budibase/frontend-core"
-  import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
+  import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
-  import EnterpriseBasicTrialModal from "components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
-  import UpdateAppTopNav from "components/common/UpdateAppTopNav.svelte"
+  import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
+  import UpdateAppTopNav from "@/components/common/UpdateAppTopNav.svelte"
 
   export let application
 
@@ -105,9 +105,6 @@
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
-        // check if user has beta access
-        // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
-        // betaAccess = betaResponse.access
       } catch (error) {
         notifications.error("Failed to sync with production database")
       }

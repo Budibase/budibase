@@ -1,8 +1,8 @@
 <script>
   import { keepOpen, Modal, notifications } from "@budibase/bbui"
-  import { integrationForDatasource } from "stores/selectors"
-  import { datasources, integrations } from "stores/builder"
-  import DatasourceConfigEditor from "components/backend/Datasources/ConfigEditor/index.svelte"
+  import { integrationForDatasource } from "@/stores/selectors"
+  import { datasources, integrations } from "@/stores/builder"
+  import DatasourceConfigEditor from "@/components/backend/Datasources/ConfigEditor/index.svelte"
   import EditDatasourceConfigButton from "./EditDatasourceConfigButton.svelte"
 
   export let datasource
@@ -13,7 +13,7 @@
 
   async function saveDatasource({ config, name }) {
     try {
-      await datasources.update({
+      await datasources.save({
         integration,
         datasource: { ...datasource, config, name },
       })

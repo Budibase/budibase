@@ -7,11 +7,11 @@
     Icon,
     Body,
   } from "@budibase/bbui"
-  import { themeStore, appStore } from "stores/builder"
-  import { DefaultAppTheme } from "constants"
+  import { themeStore, appStore } from "@/stores/builder"
+  import { DefaultAppTheme } from "@/constants"
   import AppThemeSelect from "./AppThemeSelect.svelte"
   import ButtonRoundnessSelect from "./ButtonRoundnessSelect.svelte"
-  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
+  import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
 
   $: customTheme = $themeStore.customTheme || {}
 

@@ -9,8 +9,8 @@ import {
   EmptyStateID,
 } from "./constants"
 import { getNodesBounds, Position } from "@xyflow/svelte"
-import { Roles } from "constants/backend"
-import { roles } from "stores/builder"
+import { Roles } from "@/constants/backend"
+import { roles } from "@/stores/builder"
 import { get } from "svelte/store"
 
 // Calculates the bounds of all custom nodes

@@ -13,11 +13,11 @@
     CopyInput,
     File,
   } from "@budibase/bbui"
-  import { auth, admin } from "stores/portal"
+  import { auth, admin } from "@/stores/portal"
   import { redirect } from "@roxi/routify"
   import { processStringSync } from "@budibase/string-templates"
-  import DeleteLicenseKeyModal from "components/portal/licensing/DeleteLicenseKeyModal.svelte"
-  import { API } from "api"
+  import DeleteLicenseKeyModal from "@/components/portal/licensing/DeleteLicenseKeyModal.svelte"
+  import { API } from "@/api"
   import { onMount } from "svelte"
   import { sdk } from "@budibase/shared-core"
 
@@ -64,7 +64,7 @@
 
   const activateLicenseKey = async () => {
     try {
-      await API.activateLicenseKey({ licenseKey })
+      await API.activateLicenseKey(licenseKey)
       await auth.getSelf()
       await getLicenseKey()
       notifications.success("Successfully activated")
@@ -119,7 +119,7 @@
 
   async function activateOfflineLicense(offlineLicenseToken) {
     try {
-      await API.activateOfflineLicense({ offlineLicenseToken })
+      await API.activateOfflineLicense(offlineLicenseToken)
       await auth.getSelf()
       await getOfflineLicense()
       notifications.success("Successfully activated")

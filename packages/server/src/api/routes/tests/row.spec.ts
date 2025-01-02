@@ -1333,6 +1333,62 @@ if (descriptions.length) {
           expect(resp.relationship.length).toBe(1)
         })
 
+        it("should be able to keep linked data when updating from views that trims links from the main table", async () => {
+          let row = await config.api.row.save(table._id!, {
+            name: "main",
+            description: "main description",
+          })
+          const row2 = await config.api.row.save(otherTable._id!, {
+            name: "link",
+            description: "link description",
+            relationship: [row._id],
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: "view",
+            schema: {
+              name: { visible: true },
+            },
+          })
+          const resp = await config.api.row.patch(view.id, {
+            _id: row._id!,
+            _rev: row._rev!,
+            tableId: row.tableId!,
+            name: "test2",
+            relationship: [row2._id],
+          })
+          expect(resp.relationship).toBeUndefined()
+
+          const updatedRow = await config.api.row.get(table._id!, row._id!)
+          expect(updatedRow.relationship.length).toBe(1)
+        })
+
+        it("should be able to keep linked data when updating from views that trims links from the foreign table", async () => {
+          let row = await config.api.row.save(table._id!, {
+            name: "main",
+            description: "main description",
+          })
+          const row2 = await config.api.row.save(otherTable._id!, {
+            name: "link",
+            description: "link description",
+            relationship: [row._id],
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: otherTable._id!,
+            name: "view",
+          })
+          await config.api.row.patch(view.id, {
+            _id: row2._id!,
+            _rev: row2._rev!,
+            tableId: row2.tableId!,
+          })
+
+          const updatedRow = await config.api.row.get(table._id!, row._id!)
+          expect(updatedRow.relationship.length).toBe(1)
+        })
+
         !isInternal &&
           // MSSQL needs a setting called IDENTITY_INSERT to be set to ON to allow writing
           // to identity columns. This is not something Budibase does currently.

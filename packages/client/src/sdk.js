@@ -41,6 +41,7 @@ import {
   memo,
   derivedMemo,
 } from "@budibase/frontend-core"
+import { createValidatorFromConstraints } from "components/app/forms/validation"
 
 export default {
   API,
@@ -81,6 +82,7 @@ export default {
   generateGoldenSample: RowUtils.generateGoldenSample,
   memo,
   derivedMemo,
+  createValidatorFromConstraints,
 
   // Components
   Provider,

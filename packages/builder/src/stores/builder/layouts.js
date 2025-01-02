@@ -1,7 +1,7 @@
 import { derived, get } from "svelte/store"
-import { componentStore } from "stores/builder"
-import BudiStore from "../BudiStore"
-import { API } from "api"
+import { componentStore } from "@/stores/builder"
+import { API } from "@/api"
+import { BudiStore } from "../BudiStore"
 
 export const INITIAL_LAYOUT_STATE = {
   layouts: [],
@@ -59,10 +59,7 @@ export class LayoutStore extends BudiStore {
     if (!layout?._id) {
       return
     }
-    await API.deleteLayout({
-      layoutId: layout._id,
-      layoutRev: layout._rev,
-    })
+    await API.deleteLayout(layout._id, layout._rev)
     this.update(state => {
       state.layouts = state.layouts.filter(x => x._id !== layout._id)
       return state

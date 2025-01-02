@@ -1,8 +1,8 @@
 <script>
-  import { sideBarCollapsed, enrichedApps } from "stores/portal"
+  import { sideBarCollapsed, enrichedApps } from "@/stores/portal"
   import { params, goto } from "@roxi/routify"
-  import NavItem from "components/common/NavItem.svelte"
-  import NavHeader from "components/common/NavHeader.svelte"
+  import NavItem from "@/components/common/NavItem.svelte"
+  import NavHeader from "@/components/common/NavHeader.svelte"
   import AppNavItem from "./AppNavItem.svelte"
 
   let searchString

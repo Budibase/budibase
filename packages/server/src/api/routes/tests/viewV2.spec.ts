@@ -55,7 +55,7 @@ if (descriptions.length) {
       let datasource: Datasource | undefined
 
       function saveTableRequest(
-        ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
+        ...overrides: Partial<SaveTableRequest>[]
       ): SaveTableRequest {
         const req: SaveTableRequest = {
           name: generator.guid().replaceAll("-", "").substring(0, 16),
@@ -162,6 +162,7 @@ if (descriptions.length) {
                     visible: true,
                   },
                 },
+                rowHeight: generator.integer(),
               }
             const res = await config.api.viewV2.create(newView)
 
@@ -224,6 +225,7 @@ if (descriptions.length) {
                   visible: true,
                 },
               },
+              rowHeight: generator.integer(),
             }
             const res = await config.api.viewV2.create(newView)
             expect(events.view.created).toHaveBeenCalledTimes(1)
@@ -1069,6 +1071,7 @@ if (descriptions.length) {
                   readonly: true,
                 },
               },
+              rowHeight: generator.integer(),
             }
             await config.api.viewV2.update(updatedData)
 
@@ -1897,6 +1900,36 @@ if (descriptions.length) {
               ],
             }
             expect(view.queryUI).toEqual(expected)
+          })
+
+          it("tables and views can contain whitespaces", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                name: `table with spaces ${generator.hash()}`,
+                schema: {
+                  name: {
+                    type: FieldType.STRING,
+                    name: "name",
+                  },
+                },
+              })
+            )
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: `view name with spaces`,
+              schema: {
+                name: { visible: true },
+              },
+            })
+
+            expect(await getDelegate(view)).toEqual({
+              ...view,
+              schema: {
+                id: { ...table.schema["id"], visible: false },
+                name: { ...table.schema["name"], visible: true },
+              },
+            })
           })
         })
 

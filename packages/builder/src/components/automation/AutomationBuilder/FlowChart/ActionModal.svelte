@@ -10,10 +10,10 @@
     Tag,
   } from "@budibase/bbui"
   import { AutomationActionStepId } from "@budibase/types"
-  import { automationStore, selectedAutomation } from "stores/builder"
-  import { admin, licensing } from "stores/portal"
+  import { automationStore, selectedAutomation } from "@/stores/builder"
+  import { admin, licensing } from "@/stores/portal"
   import { externalActions } from "./ExternalActions"
-  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
+  import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
 
   export let block
   export let modal
@@ -49,7 +49,7 @@
   const disabled = () => {
     return {
       SEND_EMAIL_SMTP: {
-        disabled: !$admin.checklist.smtp.checked,
+        disabled: !$admin.checklist?.smtp?.checked,
         message: "Please configure SMTP",
       },
       COLLECT: {
