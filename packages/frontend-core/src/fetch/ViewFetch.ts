@@ -1,7 +1,25 @@
+import { Table, View } from "@budibase/types"
 import DataFetch from "./DataFetch.js"
 
-export default class ViewFetch extends DataFetch {
-  getSchema(datasource, definition) {
+type ViewV1 = View & { name: string }
+
+export default class ViewFetch extends DataFetch<ViewV1, Table> {
+  async getDefinition(datasource: ViewV1) {
+    if (!datasource?.tableId) {
+      return null
+    }
+    try {
+      return await this.API.fetchTableDefinition(datasource.tableId)
+    } catch (error: any) {
+      this.store.update(state => ({
+        ...state,
+        error,
+      }))
+      return null
+    }
+  }
+
+  getSchema(datasource: ViewV1, definition: Table) {
     return definition?.views?.[datasource.name]?.schema
   }
 
