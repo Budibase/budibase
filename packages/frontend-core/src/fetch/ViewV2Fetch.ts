@@ -1,9 +1,9 @@
-import { SortOrder, UIView, ViewV2Type } from "@budibase/types"
+import { SortOrder, UIView, ViewV2, ViewV2Type } from "@budibase/types"
 import DataFetch from "./DataFetch.js"
 import { get } from "svelte/store"
 import { isCalculationField } from "packages/shared-core/src/helpers/views.js"
 
-export default class ViewV2Fetch extends DataFetch<UIView> {
+export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
   determineFeatureFlags() {
     return {
       supportsSearch: true,
@@ -12,11 +12,11 @@ export default class ViewV2Fetch extends DataFetch<UIView> {
     }
   }
 
-  getSchema(_datasource: UIView | null, definition: UIView | null) {
+  getSchema(_datasource: UIView, definition: ViewV2) {
     return definition?.schema
   }
 
-  async getDefinition(datasource: UIView | null): Promise<UIView | null> {
+  async getDefinition(datasource: UIView | null): Promise<ViewV2 | null> {
     if (!datasource?.id) {
       return null
     }
