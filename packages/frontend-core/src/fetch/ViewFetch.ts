@@ -1,5 +1,5 @@
 import { Table, View } from "@budibase/types"
-import DataFetch from "./DataFetch.js"
+import DataFetch from "./DataFetch"
 
 type ViewV1 = View & { name: string }
 

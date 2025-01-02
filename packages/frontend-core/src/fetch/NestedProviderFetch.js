@@ -1,4 +1,4 @@
-import DataFetch from "./DataFetch.js"
+import DataFetch from "./DataFetch"
 
 export default class NestedProviderFetch extends DataFetch {
   async getDefinition(datasource) {

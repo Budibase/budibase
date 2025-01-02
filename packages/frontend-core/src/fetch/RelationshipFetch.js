@@ -1,4 +1,4 @@
-import DataFetch from "./DataFetch.js"
+import DataFetch from "./DataFetch"
 
 export default class RelationshipFetch extends DataFetch {
   async getData() {
