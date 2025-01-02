@@ -17,7 +17,7 @@ import {
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
-interface DataFetchStore<T extends UIDatasource | null> {
+interface DataFetchStore<T> {
   rows: UIRow[]
   info: null
   schema: TableSchema | null
@@ -32,8 +32,7 @@ interface DataFetchStore<T extends UIDatasource | null> {
   definition?: T | null
 }
 
-interface DataFetchDerivedStore<T extends UIDatasource | null>
-  extends DataFetchStore<T> {
+interface DataFetchDerivedStore<T> extends DataFetchStore<T> {
   hasNextPage: boolean
   hasPrevPage: boolean
   supportsSearch: boolean
@@ -46,7 +45,10 @@ interface DataFetchDerivedStore<T extends UIDatasource | null>
  * internal table or datasource plus.
  * For other types of datasource, this class is overridden and extended.
  */
-export default abstract class DataFetch<T extends UIDatasource | null> {
+export default abstract class DataFetch<
+  TDatasource extends UIDatasource | null,
+  TDefinition extends { primaryDisplay?: string }
+> {
   API: UIFetchAPI
   features: {
     supportsSearch: boolean
@@ -54,7 +56,7 @@ export default abstract class DataFetch<T extends UIDatasource | null> {
     supportsPagination: boolean
   }
   options: {
-    datasource: T
+    datasource: TDatasource
     limit: number
     // Search config
     filter: UISearchFilter | LegacyFilter[] | null
@@ -70,14 +72,18 @@ export default abstract class DataFetch<T extends UIDatasource | null> {
     clientSideSorting: boolean
     clientSideLimiting: boolean
   }
-  store: Writable<DataFetchStore<T>>
-  derivedStore: Readable<DataFetchDerivedStore<T>>
+  store: Writable<DataFetchStore<TDefinition>>
+  derivedStore: Readable<DataFetchDerivedStore<TDefinition>>
 
   /**
    * Constructs a new DataFetch instance.
    * @param opts the fetch options
    */
-  constructor(opts: { API: UIFetchAPI; datasource: T; options?: {} }) {
+  constructor(opts: {
+    API: UIFetchAPI
+    datasource: TDatasource
+    options?: {}
+  }) {
     // Feature flags
     this.features = {
       supportsSearch: false,
@@ -327,38 +333,23 @@ export default abstract class DataFetch<T extends UIDatasource | null> {
 
   /**
    * Gets the definition for this datasource.
-   * Defaults to fetching a table definition.
    * @param datasource
    * @return {object} the definition
    */
-  async getDefinition(datasource: UIDatasource | null) {
-    if (!datasource?.tableId) {
-      return null
-    }
-    try {
-      return (await this.API.fetchTableDefinition(datasource.tableId)) as T
-    } catch (error: any) {
-      this.store.update(state => ({
-        ...state,
-        error,
-      }))
-      return null
-    }
-  }
+  abstract getDefinition(
+    datasource: UIDatasource | null
+  ): Promise<TDefinition | null>
 
   /**
    * Gets the schema definition for a datasource.
-   * Defaults to getting the "schema" property of the definition.
-   * @param _datasource the datasource
+   * @param datasource the datasource
    * @param definition the datasource definition
    * @return {object} the schema
    */
-  getSchema(
-    _datasource: UIDatasource | null,
-    definition: T | null
-  ): TableSchema | undefined {
-    return definition?.schema
-  }
+  abstract getSchema(
+    datasource: UIDatasource | null,
+    definition: TDefinition | null
+  ): any
 
   /**
    * Enriches a datasource schema with nested fields and ensures the structure
@@ -416,7 +407,7 @@ export default abstract class DataFetch<T extends UIDatasource | null> {
    * Determine the feature flag for this datasource definition
    * @param definition
    */
-  determineFeatureFlags(_definition: T | null) {
+  determineFeatureFlags(_definition: TDefinition | null) {
     return {
       supportsSearch: false,
       supportsSort: false,
@@ -499,7 +490,7 @@ export default abstract class DataFetch<T extends UIDatasource | null> {
    * @param state the current store state
    * @return {boolean} whether there is a next page of data or not
    */
-  hasNextPage(state: DataFetchStore<T>): boolean {
+  hasNextPage(state: DataFetchStore<TDefinition>): boolean {
     return state.cursors[state.pageNumber + 1] != null
   }
 
