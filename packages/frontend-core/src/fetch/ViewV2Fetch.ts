@@ -68,7 +68,7 @@ export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
     }
 
     try {
-      const res = await this.API.viewV2.fetch(datasource.id, {
+      const request = {
         ...(query ? { query } : {}),
         paginate,
         limit,
@@ -76,11 +76,27 @@ export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
         sort: sortColumn,
         sortOrder: sortOrder,
         sortType,
-      })
-      return {
-        rows: res?.rows || [],
-        hasNextPage: res?.hasNextPage || false,
-        cursor: res?.bookmark || null,
+      }
+      if (paginate) {
+        const res = await this.API.viewV2.fetch(datasource.id, {
+          ...request,
+          paginate,
+        })
+        return {
+          rows: res?.rows || [],
+          hasNextPage: res?.hasNextPage || false,
+          cursor: res?.bookmark || null,
+        }
+      } else {
+        const res = await this.API.viewV2.fetch(datasource.id, {
+          ...request,
+          paginate,
+        })
+        return {
+          rows: res?.rows || [],
+          hasNextPage: false,
+          cursor: null,
+        }
       }
     } catch (error) {
       return {
