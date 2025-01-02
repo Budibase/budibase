@@ -26,7 +26,7 @@
         : RelationshipType.MANY_TO_MANY,
   }
 
-  async function searchFunction(searchParams) {
+  async function searchFunction(_tableId, searchParams) {
     if (
       subtype !== BBReferenceFieldSubType.USER &&
       subtype !== BBReferenceFieldSubType.USERS
