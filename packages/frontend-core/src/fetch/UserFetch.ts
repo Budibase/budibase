@@ -2,7 +2,7 @@ import { get } from "svelte/store"
 import DataFetch from "./DataFetch.js"
 import { TableNames } from "../constants"
 import { utils } from "@budibase/shared-core"
-import { BasicOperator, SearchUsersRequest, Table } from "@budibase/types"
+import { BasicOperator, Table } from "@budibase/types"
 import { APIClient } from "../api/types.js"
 
 export default class UserFetch extends DataFetch<{ tableId: string }, {}> {
