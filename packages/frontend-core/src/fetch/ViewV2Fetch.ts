@@ -1,5 +1,5 @@
 import { SortOrder, UIView, ViewV2, ViewV2Type } from "@budibase/types"
-import DataFetch from "./DataFetch.js"
+import DataFetch from "./DataFetch"
 import { get } from "svelte/store"
 import { helpers } from "@budibase/shared-core"
 
