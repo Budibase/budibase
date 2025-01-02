@@ -45,7 +45,7 @@ interface DataFetchDerivedStore extends DataFetchStore {
  * internal table or datasource plus.
  * For other types of datasource, this class is overridden and extended.
  */
-export default abstract class DataFetch {
+export default abstract class DataFetch<T extends UIDatasource | null> {
   API: UIFetchAPI
   features: {
     supportsSearch: boolean
@@ -53,7 +53,7 @@ export default abstract class DataFetch {
     supportsPagination: boolean
   }
   options: {
-    datasource: UIDatasource | null
+    datasource: T
     limit: number
     // Search config
     filter: UISearchFilter | LegacyFilter[] | null
@@ -76,11 +76,7 @@ export default abstract class DataFetch {
    * Constructs a new DataFetch instance.
    * @param opts the fetch options
    */
-  constructor(opts: {
-    API: UIFetchAPI
-    datasource?: UIDatasource
-    options?: {}
-  }) {
+  constructor(opts: { API: UIFetchAPI; datasource: T; options?: {} }) {
     // Feature flags
     this.features = {
       supportsSearch: false,
@@ -90,7 +86,7 @@ export default abstract class DataFetch {
 
     // Config
     this.options = {
-      datasource: null,
+      datasource: opts.datasource,
       limit: 10,
 
       // Search config
@@ -182,7 +178,7 @@ export default abstract class DataFetch {
   getDefaultSortColumn(
     definition: { primaryDisplay?: string } | null,
     schema: Record<string, any>
-  ) {
+  ): string | null {
     if (definition?.primaryDisplay && schema[definition.primaryDisplay]) {
       return definition.primaryDisplay
     } else {
