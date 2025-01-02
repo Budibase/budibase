@@ -1,4 +1,4 @@
-import DataFetch from "./DataFetch.js"
+import DataFetch from "./DataFetch"
 
 export default class CustomFetch extends DataFetch {
   // Gets the correct Budibase type for a JS value

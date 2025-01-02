@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import DataFetch from "./DataFetch.js"
+import DataFetch from "./DataFetch"
 import { SortOrder, Table, UITable } from "@budibase/types"
 
 export default class TableFetch extends DataFetch<UITable, Table> {
