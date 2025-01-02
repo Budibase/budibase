@@ -19,20 +19,41 @@ interface SearchOptions {
   bookmark: null
 }
 
-export interface UIFetchAPI {
+interface TableAPI {
   fetchTableDefinition(tableId: string): Promise<Table>
+  searchTable(tableId: string, options: SearchOptions): any
+}
+
+interface ViewV2API {
+  fetchDefinition: (datasourceId: string) => Promise<any>
+  fetch: (datasourceId: string, options: SearchOptions) => any
+}
+
+interface UserAPI {
+  searchUsers: (opts: {
+    bookmark: null
+    query:
+      | SearchFilters
+      | {
+          string: {
+            email: null
+          }
+        }
+      | null
+    appId: string
+    paginate: boolean
+    limit: number
+  }) => Promise<any>
+}
+
+export interface UIFetchAPI extends TableAPI, UserAPI {
   definition: UIDatasource
 
   getInitialData: () => Promise<void>
   loading: any
   loaded: boolean
 
-  searchTable(tableId: string, options: SearchOptions): any
-
-  viewV2: {
-    fetchDefinition: (datasourceId: string) => Promise<any>
-    fetch: (datasourceId: string, options: SearchOptions) => any
-  }
+  viewV2: ViewV2API
 
   resetKey: string | null
   error: any
