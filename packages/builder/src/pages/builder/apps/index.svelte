@@ -53,7 +53,7 @@
       }
       if (!Object.keys(user?.roles).length && user?.userGroups) {
         return userGroups.find(group => {
-          return groups.actions
+          return groups
             .getGroupAppIds(group)
             .map(role => appsStore.extractAppId(role))
             .includes(app.appId)
@@ -86,7 +86,7 @@
     try {
       await organisation.init()
       await appsStore.load()
-      await groups.actions.init()
+      await groups.init()
     } catch (error) {
       notifications.error("Error loading apps")
     }

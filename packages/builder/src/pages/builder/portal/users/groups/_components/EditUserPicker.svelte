@@ -50,11 +50,11 @@
     selected={group.users?.map(user => user._id)}
     list={$users.data}
     on:select={async e => {
-      await groups.actions.addUser(groupId, e.detail)
+      await groups.addUser(groupId, e.detail)
       onUsersUpdated()
     }}
     on:deselect={async e => {
-      await groups.actions.removeUser(groupId, e.detail)
+      await groups.removeUser(groupId, e.detail)
       onUsersUpdated()
     }}
   />

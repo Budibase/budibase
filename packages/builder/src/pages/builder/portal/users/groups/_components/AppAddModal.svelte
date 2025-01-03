@@ -23,7 +23,7 @@
 
       return keepOpen
     } else {
-      await groups.actions.addApp(group._id, prodAppId, selectedRoleId)
+      await groups.addApp(group._id, prodAppId, selectedRoleId)
     }
   }
 </script>

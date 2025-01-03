@@ -1,4 +1,8 @@
-import { SearchUserGroupResponse, UserGroup } from "@budibase/types"
+import {
+  SearchGroupResponse,
+  SearchUserGroupResponse,
+  UserGroup,
+} from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface GroupEndpoints {
@@ -64,9 +68,10 @@ export const buildGroupsEndpoints = (API: BaseAPIClient): GroupEndpoints => {
      * Gets all the user groups
      */
     getGroups: async () => {
-      return await API.get({
+      const res = await API.get<SearchGroupResponse>({
         url: "/api/global/groups",
       })
+      return res.data
     },
 
     /**
