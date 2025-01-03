@@ -3,31 +3,18 @@ import { BudiStore } from "../BudiStore"
 import { UIUser } from "@budibase/types"
 
 export class UserStore extends BudiStore<UIUser[]> {
-  actions: {
-    init: (users: UIUser[]) => void
-    updateUser: (user: UIUser) => void
-    removeUser: (sessionId: string) => void
-    reset: () => void
-  }
-
   constructor() {
     super([])
-    this.actions = {
-      init: this.init.bind(this),
-      updateUser: this.updateUser.bind(this),
-      removeUser: this.removeUser.bind(this),
-      reset: this.reset.bind(this),
-    }
   }
 
   init(users: UIUser[]) {
-    this.store.set(users)
+    this.set(users)
   }
 
   updateUser(user: UIUser) {
-    const $users = get(this.store)
+    const $users = get(this)
     if (!$users.some(x => x.sessionId === user.sessionId)) {
-      this.store.set([...$users, user])
+      this.set([...$users, user])
     } else {
       this.update(state => {
         const index = state.findIndex(x => x.sessionId === user.sessionId)
@@ -44,7 +31,7 @@ export class UserStore extends BudiStore<UIUser[]> {
   }
 
   reset() {
-    this.store.set([])
+    this.set([])
   }
 }
 
