@@ -1,12 +1,18 @@
-import { io } from "socket.io-client"
+import { io, Socket } from "socket.io-client"
 import { SocketEvent, SocketSessionTTL } from "@budibase/shared-core"
 import { APISessionID } from "../api"
 
 const DefaultOptions = {
   heartbeat: true,
 }
+export interface ExtendedSocket extends Socket {
+  onOther: (event: string, callback: (data: any) => void) => void
+}
 
-export const createWebsocket = (path, options = DefaultOptions) => {
+export const createWebsocket = (
+  path: string,
+  options = DefaultOptions
+): ExtendedSocket => {
   if (!path) {
     throw "A websocket path must be provided"
   }
@@ -32,10 +38,10 @@ export const createWebsocket = (path, options = DefaultOptions) => {
     // Disable polling and rely on websocket only, as HTTP transport
     // will only work with sticky sessions which we don't have
     transports: ["websocket"],
-  })
+  }) as ExtendedSocket
 
   // Set up a heartbeat that's half of the session TTL
-  let interval
+  let interval: NodeJS.Timeout | undefined
   if (heartbeat) {
     interval = setInterval(() => {
       socket.emit(SocketEvent.Heartbeat)
@@ -48,7 +54,7 @@ export const createWebsocket = (path, options = DefaultOptions) => {
 
   // Helper utility to ignore events that were triggered due to API
   // changes made by us
-  socket.onOther = (event, callback) => {
+  socket.onOther = (event: string, callback: (data: any) => void) => {
     socket.on(event, data => {
       if (data?.apiSessionId !== APISessionID) {
         callback(data)
