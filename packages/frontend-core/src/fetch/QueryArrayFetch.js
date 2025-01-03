@@ -1,4 +1,4 @@
-import FieldFetch from "./FieldFetch.js"
+import FieldFetch from "./FieldFetch"
 import {
   getJSONArrayDatasourceSchema,
   generateQueryArraySchemas,
