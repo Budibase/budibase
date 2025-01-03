@@ -1,5 +1,5 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
-import { createBackupsStore } from "./backups"
+import { BackupStore } from "./backups"
 import { writable } from "svelte/store"
 import { API } from "@/api"
 
@@ -33,7 +33,7 @@ describe("backups store", () => {
     ctx.writableReturn = { update: vi.fn(), subscribe: vi.fn() }
     writable.mockReturnValue(ctx.writableReturn)
 
-    ctx.returnedStore = createBackupsStore()
+    ctx.returnedStore = new BackupStore()
   })
 
   it("inits the writable store with the default config", () => {
