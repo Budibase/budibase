@@ -53,17 +53,24 @@ export class BudiStore<T> {
   }
 }
 
-export class DerivedBudiStore<T, DerivedT extends T> extends BudiStore<T> {
+// This deliberately does not extend a BudiStore as doing so imposes a requirement that
+// DerivedT must extend T, which is not desirable, due to the type of the subscribe property.
+export class DerivedBudiStore<T, DerivedT> {
+  store: BudiStore<T>
   derivedStore: Readable<DerivedT>
   subscribe: Readable<DerivedT>["subscribe"]
+  update: Writable<T>["update"]
+  set: Writable<T>["set"]
 
   constructor(
     init: T,
     makeDerivedStore: (store: Writable<T>) => Readable<DerivedT>,
     opts?: BudiStoreOpts
   ) {
-    super(init, opts)
+    this.store = new BudiStore(init, opts)
     this.derivedStore = makeDerivedStore(this.store)
     this.subscribe = this.derivedStore.subscribe
+    this.update = this.store.update
+    this.set = this.store.set
   }
 }
