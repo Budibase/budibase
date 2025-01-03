@@ -20,7 +20,7 @@ interface BudiStoreOpts {
 
 export class BudiStore<T> {
   store: Writable<T>
-  subscribe: Readable<T>["subscribe"]
+  subscribe: Writable<T>["subscribe"]
   update: Writable<T>["update"]
   set: Writable<T>["set"]
 
