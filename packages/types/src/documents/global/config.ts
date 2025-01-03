@@ -127,6 +127,9 @@ export interface AIInnerConfig {
 
 export interface AIConfig extends Config<AIInnerConfig> {}
 
+export const isConfig = (config: Object): config is Config =>
+  "type" in config && "config" in config
+
 export const isSettingsConfig = (config: Config): config is SettingsConfig =>
   config.type === ConfigType.SETTINGS
 
