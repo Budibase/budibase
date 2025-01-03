@@ -24,7 +24,7 @@
         promises.push(templates.load())
       }
 
-      promises.push(groups.actions.init())
+      promises.push(groups.init())
 
       // Always load latest
       await Promise.all(promises)

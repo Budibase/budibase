@@ -247,7 +247,7 @@
     try {
       bulkSaveResponse = await users.create(await removingDuplicities(userData))
       notifications.success("Successfully created user")
-      await groups.actions.init()
+      await groups.init()
       passwordModal.show()
       await fetch.refresh()
     } catch (error) {
@@ -317,7 +317,7 @@
 
   onMount(async () => {
     try {
-      await groups.actions.init()
+      await groups.init()
       groupsLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
