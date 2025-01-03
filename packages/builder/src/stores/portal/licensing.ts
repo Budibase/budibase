@@ -4,6 +4,7 @@ import { auth, admin } from "@/stores/portal"
 import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "@/components/portal/licensing/constants"
 import {
+  License,
   MonthlyQuotaName,
   PlanModel,
   QuotaUsage,
@@ -16,12 +17,13 @@ const ONE_DAY_MILLIS = 86400000
 
 type MonthlyMetrics = { [key in MonthlyQuotaName]?: number }
 type StaticMetrics = { [key in StaticQuotaName]?: number }
+type UsageMetrics = MonthlyMetrics & StaticMetrics
 
 interface LicensingState {
   goToUpgradePage: () => void
   goToPricingPage: () => void
   // the top level license
-  license: any
+  license?: License
   isFreePlan: boolean
   isEnterprisePlan: boolean
   isBusinessPlan: boolean
@@ -37,18 +39,18 @@ interface LicensingState {
   // the currently used quotas from the db
   quotaUsage?: QuotaUsage
   // derived quota metrics for percentages used
-  usageMetrics: any
+  usageMetrics?: UsageMetrics
   // quota reset
-  quotaResetDaysRemaining: any
-  quotaResetDate: any
+  quotaResetDaysRemaining?: number
+  quotaResetDate?: Date
   // failed payments
-  accountPastDue: any
-  pastDueEndDate: any
-  pastDueDaysRemaining: any
-  accountDowngraded: any
+  accountPastDue: boolean
+  pastDueEndDate?: Date
+  pastDueDaysRemaining?: number
+  accountDowngraded: boolean
   // user limits
-  userCount: any
-  userLimit: any
+  userCount?: number
+  userLimit?: number
   userLimitReached: boolean
   errUserLimit: boolean
 }
@@ -81,10 +83,10 @@ class LicensingStore extends BudiStore<LicensingState> {
       quotaResetDaysRemaining: undefined,
       quotaResetDate: undefined,
       // failed payments
-      accountPastDue: undefined,
+      accountPastDue: false,
       pastDueEndDate: undefined,
       pastDueDaysRemaining: undefined,
-      accountDowngraded: undefined,
+      accountDowngraded: false,
       // user limits
       userCount: undefined,
       userLimit: undefined,
@@ -93,21 +95,15 @@ class LicensingStore extends BudiStore<LicensingState> {
     })
   }
 
-  usersLimitReached(
-    userCount: number,
-    userLimit: number = get(this.store).userLimit
-  ) {
-    if (userLimit === UNLIMITED) {
+  usersLimitReached(userCount: number, userLimit = get(this.store).userLimit) {
+    if (userLimit === UNLIMITED || userLimit === undefined) {
       return false
     }
     return userCount >= userLimit
   }
 
-  usersLimitExceeded(
-    userCount: number,
-    userLimit: number = get(this.store).userLimit
-  ) {
-    if (userLimit === UNLIMITED) {
+  usersLimitExceeded(userCount: number, userLimit = get(this.store).userLimit) {
+    if (userLimit === UNLIMITED || userLimit === undefined) {
       return false
     }
     return userCount > userLimit
@@ -257,7 +253,7 @@ class LicensingStore extends BudiStore<LicensingState> {
     const quotaResetDaysRemaining = getDaysBetween(now, quotaResetDate)
 
     const accountDowngraded =
-      license.billing?.subscription?.downgradeAt &&
+      !!license.billing?.subscription?.downgradeAt &&
       license.billing?.subscription?.downgradeAt <= now.getTime() &&
       license.billing?.subscription?.status === StripeStatus.PAST_DUE &&
       license.plan.type === Constants.PlanType.FREE
