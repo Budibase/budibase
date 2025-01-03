@@ -219,12 +219,12 @@
   }
 
   const addGroup = async groupId => {
-    await groups.actions.addUser(groupId, userId)
+    await groups.addUser(groupId, userId)
     await fetchUser()
   }
 
   const removeGroup = async groupId => {
-    await groups.actions.removeUser(groupId, userId)
+    await groups.removeUser(groupId, userId)
     await fetchUser()
   }
 
@@ -234,7 +234,7 @@
 
   onMount(async () => {
     try {
-      await Promise.all([fetchUser(), groups.actions.init(), roles.fetch()])
+      await Promise.all([fetchUser(), groups.init(), roles.fetch()])
       loaded = true
     } catch (error) {
       notifications.error("Error getting user groups")
