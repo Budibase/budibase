@@ -27,7 +27,7 @@ export const createBuilderWebsocket = (appId: string) => {
       BuilderSocketEvent.SelectApp,
       { appId },
       ({ users }: { users: UIUser[] }) => {
-        userStore.actions.init(users)
+        userStore.init(users)
       }
     )
   })
@@ -35,17 +35,17 @@ export const createBuilderWebsocket = (appId: string) => {
     console.error("Failed to connect to builder websocket:", err.message)
   })
   socket.on("disconnect", () => {
-    userStore.actions.reset()
+    userStore.reset()
   })
 
   // User events
   socket.onOther(SocketEvent.UserUpdate, ({ user }: { user: UIUser }) => {
-    userStore.actions.updateUser(user)
+    userStore.updateUser(user)
   })
   socket.onOther(
     SocketEvent.UserDisconnect,
     ({ sessionId }: { sessionId: string }) => {
-      userStore.actions.removeUser(sessionId)
+      userStore.removeUser(sessionId)
     }
   )
   socket.onOther(
