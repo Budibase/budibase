@@ -1,4 +1,4 @@
-import DataFetch from "./DataFetch.js"
+import DataFetch from "./DataFetch"
 import { Helpers } from "@budibase/bbui"
 import { get } from "svelte/store"
 

@@ -1,10 +1,12 @@
 import { get } from "svelte/store"
-import DataFetch from "./DataFetch.js"
+import DataFetch from "./DataFetch"
 import { TableNames } from "../constants"
 import { utils } from "@budibase/shared-core"
+import { BasicOperator, Table } from "@budibase/types"
+import { APIClient } from "../api/types.js"
 
-export default class UserFetch extends DataFetch {
-  constructor(opts) {
+export default class UserFetch extends DataFetch<{ tableId: string }, {}> {
+  constructor(opts: { API: APIClient; datasource: Table; options?: {} }) {
     super({
       ...opts,
       datasource: {
@@ -27,20 +29,24 @@ export default class UserFetch extends DataFetch {
     }
   }
 
+  getSchema(_datasource: any, definition: Table | null) {
+    return definition?.schema
+  }
+
   async getData() {
     const { limit, paginate } = this.options
     const { cursor, query } = get(this.store)
 
     // Convert old format to new one - we now allow use of the lucene format
-    const { appId, paginated, ...rest } = query || {}
+    const { appId, paginated, ...rest } = query || ({} as any) // TODO
     const finalQuery = utils.isSupportedUserSearch(rest)
       ? query
-      : { string: { email: null } }
+      : { [BasicOperator.EMPTY]: { email: true } } // TODO: check
 
     try {
       const opts = {
-        bookmark: cursor,
-        query: finalQuery,
+        bookmark: cursor ?? undefined,
+        query: finalQuery ?? undefined,
         appId: appId,
         paginate: paginated || paginate,
         limit,

@@ -1,25 +1,84 @@
-import { writable, derived, get } from "svelte/store"
+import { writable, derived, get, Writable, Readable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
-import { FieldType, SortOrder, SortType } from "@budibase/types"
+import {
+  FieldType,
+  LegacyFilter,
+  Row,
+  SearchFilters,
+  SortOrder,
+  SortType,
+  TableSchema,
+  UISearchFilter,
+} from "@budibase/types"
+import { APIClient } from "../api/types"
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
+
+interface DataFetchStore<T> {
+  rows: Row[]
+  info: null
+  schema: TableSchema | null
+  loading: boolean
+  loaded: boolean
+  query: SearchFilters | null
+  pageNumber: number
+  cursor: null
+  cursors: any[]
+  resetKey: number
+  error: null
+  definition?: T | null
+}
+
+interface DataFetchDerivedStore<T> extends DataFetchStore<T> {
+  hasNextPage: boolean
+  hasPrevPage: boolean
+  supportsSearch: boolean
+  supportsSort: boolean
+  supportsPagination: boolean
+}
 
 /**
  * Parent class which handles the implementation of fetching data from an
  * internal table or datasource plus.
  * For other types of datasource, this class is overridden and extended.
  */
-export default class DataFetch {
+export default abstract class DataFetch<
+  TDatasource extends {},
+  TDefinition extends {}
+> {
+  API: APIClient
+  features: {
+    supportsSearch: boolean
+    supportsSort: boolean
+    supportsPagination: boolean
+  }
+  options: {
+    datasource: TDatasource
+    limit: number
+    // Search config
+    filter: UISearchFilter | LegacyFilter[] | null
+    query: SearchFilters | null
+    // Sorting config
+    sortColumn: string | null
+    sortOrder: SortOrder
+    sortType: SortType | null
+    // Pagination config
+    paginate: boolean
+    // Client side feature customisation
+    clientSideSearching: boolean
+    clientSideSorting: boolean
+    clientSideLimiting: boolean
+  }
+  store: Writable<DataFetchStore<TDefinition>>
+  derivedStore: Readable<DataFetchDerivedStore<TDefinition>>
+
   /**
    * Constructs a new DataFetch instance.
    * @param opts the fetch options
    */
-  constructor(opts) {
-    // API client
-    this.API = null
-
+  constructor(opts: { API: APIClient; datasource: TDatasource; options?: {} }) {
     // Feature flags
     this.features = {
       supportsSearch: false,
@@ -29,7 +88,7 @@ export default class DataFetch {
 
     // Config
     this.options = {
-      datasource: null,
+      datasource: opts.datasource,
       limit: 10,
 
       // Search config
@@ -118,7 +177,10 @@ export default class DataFetch {
   /**
    * Gets the default sort column for this datasource
    */
-  getDefaultSortColumn(definition, schema) {
+  getDefaultSortColumn(
+    definition: { primaryDisplay?: string } | null,
+    schema: Record<string, any>
+  ): string | null {
     if (definition?.primaryDisplay && schema[definition.primaryDisplay]) {
       return definition.primaryDisplay
     } else {
@@ -144,7 +206,7 @@ export default class DataFetch {
     }
 
     // Fetch and enrich schema
-    let schema = this.getSchema(datasource, definition)
+    let schema = this.getSchema(datasource, definition) ?? null
     schema = this.enrichSchema(schema)
     if (!schema) {
       return
@@ -172,7 +234,7 @@ export default class DataFetch {
       if (
         fieldSchema?.type === FieldType.NUMBER ||
         fieldSchema?.type === FieldType.BIGINT ||
-        fieldSchema?.calculationType
+        ("calculationType" in fieldSchema && fieldSchema?.calculationType)
       ) {
         this.options.sortType = SortType.NUMBER
       }
@@ -185,7 +247,7 @@ export default class DataFetch {
     // Build the query
     let query = this.options.query
     if (!query) {
-      query = buildQuery(filter)
+      query = buildQuery(filter ?? undefined)
     }
 
     // Update store
@@ -239,7 +301,7 @@ export default class DataFetch {
 
     // If we don't support sorting, do a client-side sort
     if (!this.features.supportsSort && clientSideSorting) {
-      rows = sort(rows, sortColumn, sortOrder, sortType)
+      rows = sort(rows, sortColumn as any, sortOrder, sortType)
     }
 
     // If we don't support pagination, do a client-side limit
@@ -256,50 +318,33 @@ export default class DataFetch {
     }
   }
 
-  /**
-   * Fetches a single page of data from the remote resource.
-   * Must be overridden by a datasource specific child class.
-   */
-  async getData() {
-    return {
-      rows: [],
-      info: null,
-      hasNextPage: false,
-      cursor: null,
-    }
-  }
+  abstract getData(): Promise<{
+    rows: Row[]
+    info?: any
+    hasNextPage?: boolean
+    cursor?: any
+    error?: any
+  }>
 
   /**
    * Gets the definition for this datasource.
-   * Defaults to fetching a table definition.
    * @param datasource
    * @return {object} the definition
    */
-  async getDefinition(datasource) {
-    if (!datasource?.tableId) {
-      return null
-    }
-    try {
-      return await this.API.fetchTableDefinition(datasource.tableId)
-    } catch (error) {
-      this.store.update(state => ({
-        ...state,
-        error,
-      }))
-      return null
-    }
-  }
+  abstract getDefinition(
+    datasource: TDatasource | null
+  ): Promise<TDefinition | null>
 
   /**
    * Gets the schema definition for a datasource.
-   * Defaults to getting the "schema" property of the definition.
    * @param datasource the datasource
    * @param definition the datasource definition
    * @return {object} the schema
    */
-  getSchema(datasource, definition) {
-    return definition?.schema
-  }
+  abstract getSchema(
+    datasource: TDatasource | null,
+    definition: TDefinition | null
+  ): any
 
   /**
    * Enriches a datasource schema with nested fields and ensures the structure
@@ -307,44 +352,48 @@ export default class DataFetch {
    * @param schema the datasource schema
    * @return {object} the enriched datasource schema
    */
-  enrichSchema(schema) {
+  enrichSchema(schema: TableSchema | null): TableSchema | null {
     if (schema == null) {
       return null
     }
 
     // Check for any JSON fields so we can add any top level properties
-    let jsonAdditions = {}
-    Object.keys(schema).forEach(fieldKey => {
+    let jsonAdditions: Record<string, { type: string; nestedJSON: true }> = {}
+    for (const fieldKey of Object.keys(schema)) {
       const fieldSchema = schema[fieldKey]
       if (fieldSchema?.type === FieldType.JSON) {
         const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
           squashObjects: true,
-        })
-        Object.keys(jsonSchema).forEach(jsonKey => {
-          jsonAdditions[`${fieldKey}.${jsonKey}`] = {
-            type: jsonSchema[jsonKey].type,
-            nestedJSON: true,
+        }) as Record<string, { type: string }> | null // TODO: remove when convertJSONSchemaToTableSchema is typed
+        if (jsonSchema) {
+          for (const jsonKey of Object.keys(jsonSchema)) {
+            jsonAdditions[`${fieldKey}.${jsonKey}`] = {
+              type: jsonSchema[jsonKey].type,
+              nestedJSON: true,
+            }
           }
-        })
+        }
       }
-    })
-    schema = { ...schema, ...jsonAdditions }
+    }
 
     // Ensure schema is in the correct structure
-    let enrichedSchema = {}
-    Object.entries(schema).forEach(([fieldName, fieldSchema]) => {
-      if (typeof fieldSchema === "string") {
-        enrichedSchema[fieldName] = {
-          type: fieldSchema,
-          name: fieldName,
-        }
-      } else {
-        enrichedSchema[fieldName] = {
-          ...fieldSchema,
-          name: fieldName,
+    let enrichedSchema: TableSchema = {}
+    Object.entries({ ...schema, ...jsonAdditions }).forEach(
+      ([fieldName, fieldSchema]) => {
+        if (typeof fieldSchema === "string") {
+          enrichedSchema[fieldName] = {
+            type: fieldSchema,
+            name: fieldName,
+          }
+        } else {
+          enrichedSchema[fieldName] = {
+            ...fieldSchema,
+            type: fieldSchema.type as any, // TODO: check type union definition conflicts
+            name: fieldName,
+          }
         }
       }
-    })
+    )
 
     return enrichedSchema
   }
@@ -353,7 +402,7 @@ export default class DataFetch {
    * Determine the feature flag for this datasource definition
    * @param definition
    */
-  determineFeatureFlags(_definition) {
+  determineFeatureFlags(_definition: TDefinition | null) {
     return {
       supportsSearch: false,
       supportsSort: false,
@@ -365,12 +414,11 @@ export default class DataFetch {
    * Resets the data set and updates options
    * @param newOptions any new options
    */
-  async update(newOptions) {
+  async update(newOptions: any) {
     // Check if any settings have actually changed
     let refresh = false
-    const entries = Object.entries(newOptions || {})
-    for (let [key, value] of entries) {
-      const oldVal = this.options[key] == null ? null : this.options[key]
+    for (const [key, value] of Object.entries(newOptions || {})) {
+      const oldVal = this.options[key as keyof typeof this.options] ?? null
       const newVal = value == null ? null : value
       if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
         refresh = true
@@ -437,7 +485,7 @@ export default class DataFetch {
    * @param state the current store state
    * @return {boolean} whether there is a next page of data or not
    */
-  hasNextPage(state) {
+  hasNextPage(state: DataFetchStore<TDefinition>): boolean {
     return state.cursors[state.pageNumber + 1] != null
   }
 
@@ -447,7 +495,7 @@ export default class DataFetch {
    * @param state the current store state
    * @return {boolean} whether there is a previous page of data or not
    */
-  hasPrevPage(state) {
+  hasPrevPage(state: { pageNumber: number }): boolean {
     return state.pageNumber > 0
   }
 

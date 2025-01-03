@@ -1,8 +1,6 @@
 import { UITable, UIView } from "@budibase/types"
 
-export type UIDatasource = (UITable | UIView) & {
-  type: string
-}
+export type UIDatasource = UITable | UIView
 
 export interface UIFieldMutation {
   visible?: boolean

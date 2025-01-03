@@ -1,8 +1,9 @@
-import { ViewV2Type } from "@budibase/types"
-import DataFetch from "./DataFetch.js"
+import { SortOrder, UIView, ViewV2, ViewV2Type } from "@budibase/types"
+import DataFetch from "./DataFetch"
 import { get } from "svelte/store"
+import { helpers } from "@budibase/shared-core"
 
-export default class ViewV2Fetch extends DataFetch {
+export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
   determineFeatureFlags() {
     return {
       supportsSearch: true,
@@ -11,18 +12,18 @@ export default class ViewV2Fetch extends DataFetch {
     }
   }
 
-  getSchema(datasource, definition) {
+  getSchema(_datasource: UIView, definition: ViewV2) {
     return definition?.schema
   }
 
-  async getDefinition(datasource) {
+  async getDefinition(datasource: UIView | null): Promise<ViewV2 | null> {
     if (!datasource?.id) {
       return null
     }
     try {
       const res = await this.API.viewV2.fetchDefinition(datasource.id)
       return res?.data
-    } catch (error) {
+    } catch (error: any) {
       this.store.update(state => ({
         ...state,
         error,
@@ -31,7 +32,10 @@ export default class ViewV2Fetch extends DataFetch {
     }
   }
 
-  getDefaultSortColumn() {
+  getDefaultSortColumn(
+    _definition: { primaryDisplay?: string } | null,
+    _schema: Record<string, any>
+  ) {
     return null
   }
 
@@ -42,8 +46,10 @@ export default class ViewV2Fetch extends DataFetch {
 
     // If this is a calculation view and we have no calculations, return nothing
     if (
-      definition.type === ViewV2Type.CALCULATION &&
-      !Object.values(definition.schema || {}).some(x => x.calculationType)
+      definition?.type === ViewV2Type.CALCULATION &&
+      !Object.values(definition.schema || {}).some(
+        helpers.views.isCalculationField
+      )
     ) {
       return {
         rows: [],
@@ -56,25 +62,41 @@ export default class ViewV2Fetch extends DataFetch {
     // If sort/filter params are not defined, update options to store the
     // params built in to this view. This ensures that we can accurately
     // compare old and new params and skip a redundant API call.
-    if (!sortColumn && definition.sort?.field) {
+    if (!sortColumn && definition?.sort?.field) {
       this.options.sortColumn = definition.sort.field
-      this.options.sortOrder = definition.sort.order
+      this.options.sortOrder = definition.sort.order || SortOrder.ASCENDING
     }
 
     try {
-      const res = await this.API.viewV2.fetch(datasource.id, {
+      const request = {
         ...(query ? { query } : {}),
         paginate,
         limit,
         bookmark: cursor,
         sort: sortColumn,
-        sortOrder: sortOrder?.toLowerCase(),
+        sortOrder: sortOrder,
         sortType,
-      })
-      return {
-        rows: res?.rows || [],
-        hasNextPage: res?.hasNextPage || false,
-        cursor: res?.bookmark || null,
+      }
+      if (paginate) {
+        const res = await this.API.viewV2.fetch(datasource.id, {
+          ...request,
+          paginate,
+        })
+        return {
+          rows: res?.rows || [],
+          hasNextPage: res?.hasNextPage || false,
+          cursor: res?.bookmark || null,
+        }
+      } else {
+        const res = await this.API.viewV2.fetch(datasource.id, {
+          ...request,
+          paginate,
+        })
+        return {
+          rows: res?.rows || [],
+          hasNextPage: false,
+          cursor: null,
+        }
       }
     } catch (error) {
       return {

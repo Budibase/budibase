@@ -3,7 +3,7 @@ import { BaseAPIClient } from "./types"
 
 export interface ViewEndpoints {
   // Missing request or response types
-  fetchViewData: (name: string, opts: any) => Promise<Row[]>
+  fetchViewData: (name: string, opts?: any) => Promise<Row[]>
   exportView: (name: string, format: string) => Promise<any>
   saveView: (view: any) => Promise<any>
   deleteView: (name: string) => Promise<any>

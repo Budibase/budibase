@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import DataFetch from "./DataFetch.js"
+import DataFetch from "./DataFetch"
 import { TableNames } from "../constants"
 
 export default class GroupUserFetch extends DataFetch {
