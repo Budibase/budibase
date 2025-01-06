@@ -4,15 +4,7 @@ import { RoleUtils } from "@budibase/frontend-core"
 import { BudiStore } from "../BudiStore"
 import { Role } from "@budibase/types"
 
-interface RoleWithMetadata extends Role {
-  uiMetadata?: {
-    displayName?: string
-    color?: string
-    description?: string
-  }
-}
-
-export class RoleStore extends BudiStore<RoleWithMetadata[]> {
+export class RoleStore extends BudiStore<Role[]> {
   constructor() {
     super([])
   }
@@ -30,7 +22,7 @@ export class RoleStore extends BudiStore<RoleWithMetadata[]> {
     }))
   })
 
-  private setRoles = (roles: RoleWithMetadata[]) => {
+  private setRoles = (roles: Role[]) => {
     this.set(
       roles.sort((a, b) => {
         // Ensure we have valid IDs for priority comparison
@@ -56,7 +48,7 @@ export class RoleStore extends BudiStore<RoleWithMetadata[]> {
     this.setRoles(roles)
   }
 
-  delete = async (role: RoleWithMetadata) => {
+  delete = async (role: Role) => {
     if (!role._id || !role._rev) {
       return
     }
@@ -64,13 +56,13 @@ export class RoleStore extends BudiStore<RoleWithMetadata[]> {
     await this.fetch()
   }
 
-  save = async (role: RoleWithMetadata) => {
+  save = async (role: Role) => {
     const savedRole = await API.saveRole(role)
     await this.fetch()
     return savedRole
   }
 
-  replace = (roleId: string, role?: RoleWithMetadata) => {
+  replace = (roleId: string, role?: Role) => {
     // Handles external updates of roles
     if (!roleId) {
       return
