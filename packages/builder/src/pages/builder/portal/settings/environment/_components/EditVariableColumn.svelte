@@ -10,7 +10,8 @@
   let deleteDialog
 
   const save = async data => {
-    await environment.updateVariable(data)
+    const { name, ...rest } = data
+    await environment.updateVariable(name, rest)
     editVariableModal.hide()
   }
 </script>
