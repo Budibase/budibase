@@ -12,6 +12,18 @@ describe("global", () => {
         testEnv.singleTenant()
       })
 
+      it("gets url with embedded minio", async () => {
+        testEnv.withMinio()
+        const url = await getGlobalFileUrl()
+        expect(url).toBe("/files/signed/global/settings/logoUrl")
+      })
+
+      it("gets url with custom S3", async () => {
+        testEnv.withS3()
+        const url = await getGlobalFileUrl()
+        expect(url).toBe("http://s3.example.com/global/settings/logoUrl")
+      })
+
       it("gets url with cloudfront + s3", async () => {
         testEnv.withCloudfront()
         const url = await getGlobalFileUrl()
@@ -25,6 +37,24 @@ describe("global", () => {
     describe("multi tenant", () => {
       beforeAll(() => {
         testEnv.multiTenant()
+      })
+
+      it("gets url with embedded minio", async () => {
+        testEnv.withMinio()
+        await testEnv.withTenant(async tenantId => {
+          const url = await getGlobalFileUrl()
+          expect(url).toBe(`/files/signed/global/${tenantId}/settings/logoUrl`)
+        })
+      })
+
+      it("gets url with custom S3", async () => {
+        testEnv.withS3()
+        await testEnv.withTenant(async tenantId => {
+          const url = await getGlobalFileUrl()
+          expect(url).toBe(
+            `http://s3.example.com/global/${tenantId}/settings/logoUrl`
+          )
+        })
       })
 
       it("gets url with cloudfront + s3", async () => {
