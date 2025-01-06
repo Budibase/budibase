@@ -20,7 +20,7 @@ export type ContextMap = {
     clients: Record<string, GoogleSpreadsheet>
   }
   featureFlagCache?: {
-    [key: string]: Record<string, any>
+    [key: string]: Record<string, boolean>
   }
   viewToTableCache?: Record<string, Table>
 }
