@@ -1,5 +1,5 @@
 import { IdentityContext, IdentityType } from "@budibase/types"
-import { Flag, FlagSet, FlagValues, init, shutdown } from "../"
+import { FlagSet, init, shutdown } from "../"
 import * as context from "../../context"
 import environment, { withEnv } from "../../environment"
 import nodeFetch from "node-fetch"
@@ -7,10 +7,8 @@ import nock from "nock"
 import * as crypto from "crypto"
 
 const schema = {
-  TEST_BOOLEAN: Flag.boolean(false),
-  TEST_STRING: Flag.string("default value"),
-  TEST_NUMBER: Flag.number(0),
-  TEST_BOOLEAN_DEFAULT_TRUE: Flag.boolean(true),
+  TEST_BOOLEAN: false,
+  TEST_BOOLEAN_DEFAULT_TRUE: true,
 }
 const flags = new FlagSet(schema)
 
@@ -19,7 +17,7 @@ interface TestCase {
   identity?: Partial<IdentityContext>
   environmentFlags?: string
   posthogFlags?: PostHogFlags
-  expected?: Partial<FlagValues<typeof schema>>
+  expected?: Partial<typeof schema>
   errorMessage?: string | RegExp
 }
 
@@ -82,22 +80,6 @@ describe("feature flags", () => {
         featureFlags: { TEST_BOOLEAN: true },
       },
       expected: { TEST_BOOLEAN: true },
-    },
-    {
-      it: "should be able to read string flags from PostHog",
-      posthogFlags: {
-        featureFlags: { TEST_STRING: true },
-        featureFlagPayloads: { TEST_STRING: "test" },
-      },
-      expected: { TEST_STRING: "test" },
-    },
-    {
-      it: "should be able to read numeric flags from PostHog",
-      posthogFlags: {
-        featureFlags: { TEST_NUMBER: true },
-        featureFlagPayloads: { TEST_NUMBER: "123" },
-      },
-      expected: { TEST_NUMBER: 123 },
     },
     {
       it: "should not be able to override a negative environment flag from PostHog",
@@ -177,7 +159,7 @@ describe("feature flags", () => {
             expect(values).toMatchObject(expected)
 
             for (const [key, expectedValue] of Object.entries(expected)) {
-              const value = await flags.get(key as keyof typeof schema)
+              const value = await flags.isEnabled(key as keyof typeof schema)
               expect(value).toBe(expectedValue)
             }
           } else {
