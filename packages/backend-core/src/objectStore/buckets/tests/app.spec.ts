@@ -93,6 +93,22 @@ describe("app", () => {
         testEnv.multiTenant()
       })
 
+      it("gets url with embedded minio", async () => {
+        testEnv.withMinio()
+        const url = await getAppFileUrl()
+        expect(url).toBe(
+          "/files/signed/prod-budi-app-assets/app_123/attachments/image.jpeg"
+        )
+      })
+
+      it("gets url with custom S3", async () => {
+        testEnv.withS3()
+        const url = await getAppFileUrl()
+        expect(url).toBe(
+          "http://s3.example.com/prod-budi-app-assets/app_123/attachments/image.jpeg"
+        )
+      })
+
       it("gets url with cloudfront + s3", async () => {
         testEnv.withCloudfront()
         const url = await getAppFileUrl()
@@ -106,6 +122,26 @@ describe("app", () => {
     describe("multi tenant", () => {
       beforeAll(() => {
         testEnv.multiTenant()
+      })
+
+      it("gets url with embedded minio", async () => {
+        testEnv.withMinio()
+        await testEnv.withTenant(async () => {
+          const url = await getAppFileUrl()
+          expect(url).toBe(
+            "/files/signed/prod-budi-app-assets/app_123/attachments/image.jpeg"
+          )
+        })
+      })
+
+      it("gets url with custom S3", async () => {
+        testEnv.withS3()
+        await testEnv.withTenant(async () => {
+          const url = await getAppFileUrl()
+          expect(url).toBe(
+            "http://s3.example.com/prod-budi-app-assets/app_123/attachments/image.jpeg"
+          )
+        })
       })
 
       it("gets url with cloudfront + s3", async () => {

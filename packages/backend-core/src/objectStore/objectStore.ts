@@ -23,6 +23,7 @@ import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
 import { ReadableStream } from "stream/web"
+import { NodeJsRuntimeStreamingBlobPayloadOutputTypes } from "@smithy/types"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -194,17 +195,17 @@ export async function upload({
   }
 
   let contentType = type
-  if (!contentType) {
-    contentType = extension
-      ? CONTENT_TYPE_MAP[extension.toLowerCase()]
-      : CONTENT_TYPE_MAP.txt
-  }
+  const finalContentType = contentType
+    ? contentType
+    : extension
+    ? CONTENT_TYPE_MAP[extension.toLowerCase()]
+    : CONTENT_TYPE_MAP.txt
   const config: PutObjectCommandInput = {
     // windows file paths need to be converted to forward slashes for s3
     Bucket: sanitizeBucket(bucketName),
     Key: sanitizeKey(filename),
     Body: fileBytes as stream.Readable | Buffer,
-    ContentType: contentType!,
+    ContentType: finalContentType,
   }
   if (metadata && typeof metadata === "object") {
     // remove any nullish keys from the metadata object, as these may be considered invalid
@@ -310,11 +311,13 @@ export async function retrieve(
   if (!response.Body) {
     throw new Error("Unable to retrieve object")
   }
+  const nodeResponse =
+    response.Body as NodeJsRuntimeStreamingBlobPayloadOutputTypes
   // currently these are all strings
   if (STRING_CONTENT_TYPES.includes(response.ContentType)) {
-    return response.Body.toString()
+    return nodeResponse.toString()
   } else {
-    return response.Body as stream.Readable
+    return nodeResponse
   }
 }
 
