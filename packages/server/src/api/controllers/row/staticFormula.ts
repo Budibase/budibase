@@ -163,9 +163,9 @@ export async function finaliseRow(
     contextRows: [enrichedRow],
   })
   const aiEnabled =
-    ((await features.flags.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
+    ((await features.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
       (await pro.features.isBudibaseAIEnabled())) ||
-    ((await features.flags.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS)) &&
+    ((await features.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS)) &&
       (await pro.features.isAICustomConfigsEnabled()))
   if (aiEnabled) {
     row = await processAIColumns(table, row, {
