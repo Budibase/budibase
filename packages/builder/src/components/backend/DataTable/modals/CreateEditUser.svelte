@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { tables, roles } from "stores/builder"
+  import { tables, roles } from "@/stores/builder"
   import {
     notifications,
     keepOpen,
@@ -9,8 +9,8 @@
     Link,
   } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
-  import { API } from "api"
-  import ErrorsBox from "components/common/ErrorsBox.svelte"
+  import { API } from "@/api"
+  import ErrorsBox from "@/components/common/ErrorsBox.svelte"
   import { goto } from "@roxi/routify"
 
   export let row = {}

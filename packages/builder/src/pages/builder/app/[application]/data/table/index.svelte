@@ -1,8 +1,8 @@
 <script>
   import { onMount } from "svelte"
-  import { datasources, tables } from "stores/builder"
+  import { datasources, tables } from "@/stores/builder"
   import { redirect } from "@roxi/routify"
-  import { TableNames } from "constants"
+  import { TableNames } from "@/constants"
 
   onMount(() => {
     if ($tables.selected) {

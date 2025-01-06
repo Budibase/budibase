@@ -1,8 +1,8 @@
 <script>
   import { keepOpen, Body, ModalContent, Select } from "@budibase/bbui"
-  import { appsStore, groups } from "stores/portal"
-  import { roles } from "stores/builder"
-  import RoleSelect from "components/common/RoleSelect.svelte"
+  import { appsStore, groups } from "@/stores/portal"
+  import { roles } from "@/stores/builder"
+  import RoleSelect from "@/components/common/RoleSelect.svelte"
 
   export let group
 

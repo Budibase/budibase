@@ -1,8 +1,8 @@
 <script>
   import { Label, notifications } from "@budibase/bbui"
-  import { permissions } from "stores/builder"
+  import { permissions } from "@/stores/builder"
   import { Constants } from "@budibase/frontend-core"
-  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
+  import RoleSelect from "@/components/design/settings/controls/RoleSelect.svelte"
 
   export let query
   export let label

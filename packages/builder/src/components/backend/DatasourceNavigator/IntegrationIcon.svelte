@@ -1,6 +1,6 @@
 <script>
   import { getIcon } from "./icons"
-  import CustomSVG from "components/common/CustomSVG.svelte"
+  import CustomSVG from "@/components/common/CustomSVG.svelte"
 
   export let integrationType
   export let schema

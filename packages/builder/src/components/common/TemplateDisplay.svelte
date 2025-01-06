@@ -1,9 +1,9 @@
 <script>
   import { Layout, Detail, Button, Modal } from "@budibase/bbui"
-  import TemplateCard from "components/common/TemplateCard.svelte"
-  import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import { licensing } from "stores/portal"
-  import { Content, SideNav, SideNavItem } from "components/portal/page"
+  import TemplateCard from "@/components/common/TemplateCard.svelte"
+  import CreateAppModal from "@/components/start/CreateAppModal.svelte"
+  import { licensing } from "@/stores/portal"
+  import { Content, SideNav, SideNavItem } from "@/components/portal/page"
 
   export let templates
 

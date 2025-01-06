@@ -1,6 +1,6 @@
 <script>
   import { ModalContent } from "@budibase/bbui"
-  import { licensing } from "stores/portal"
+  import { licensing } from "@/stores/portal"
 
   export let isOwner
 </script>

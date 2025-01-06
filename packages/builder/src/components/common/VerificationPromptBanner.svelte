@@ -1,6 +1,6 @@
 <script>
   import { notifications, Button, Icon, Body } from "@budibase/bbui"
-  import { admin, auth } from "stores/portal"
+  import { admin, auth } from "@/stores/portal"
 
   $: user = $auth.user
   let loading = false

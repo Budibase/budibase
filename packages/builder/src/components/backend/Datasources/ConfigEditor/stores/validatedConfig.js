@@ -1,6 +1,6 @@
 import { derived, writable, get } from "svelte/store"
 import { getValidatorFields } from "./validation"
-import { capitalise } from "helpers"
+import { capitalise } from "@/helpers"
 import { notifications } from "@budibase/bbui"
 import { object } from "yup"
 

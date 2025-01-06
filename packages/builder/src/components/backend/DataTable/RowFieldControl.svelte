@@ -1,5 +1,5 @@
 <script>
-  import { API } from "api"
+  import { API } from "@/api"
   import {
     Input,
     Select,
@@ -13,12 +13,12 @@
     ActionButton,
     notifications,
   } from "@budibase/bbui"
-  import Dropzone from "components/common/Dropzone.svelte"
-  import { capitalise } from "helpers"
-  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
+  import Dropzone from "@/components/common/Dropzone.svelte"
+  import { capitalise } from "@/helpers"
+  import LinkedRowSelector from "@/components/common/LinkedRowSelector.svelte"
   import Editor from "../../integration/QueryEditor.svelte"
   import { SignatureModal } from "@budibase/frontend-core/src/components"
-  import { themeStore } from "stores/portal"
+  import { themeStore } from "@/stores/portal"
 
   export let meta
   export let value

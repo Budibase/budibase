@@ -2,16 +2,16 @@ import { derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { Helpers } from "@budibase/bbui"
 import { RoleUtils, Utils } from "@budibase/frontend-core"
-import { findAllMatchingComponents } from "helpers/components"
+import { findAllMatchingComponents } from "@/helpers/components"
 import {
   layoutStore,
   appStore,
   componentStore,
   navigationStore,
   selectedComponent,
-} from "stores/builder"
-import { createHistoryStore } from "stores/builder/history"
-import { API } from "api"
+} from "@/stores/builder"
+import { createHistoryStore } from "@/stores/builder/history"
+import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 
 export const INITIAL_SCREENS_STATE = {
@@ -274,7 +274,7 @@ export class ScreenStore extends BudiStore {
 
   /**
    * @param {function} patchFn
-   * @param {string} screenId
+   * @param {string | null} screenId
    * @returns
    */
   async patch(patchFn, screenId) {

@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Label } from "@budibase/bbui"
-  import DetailPopover from "components/common/DetailPopover.svelte"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
 
   const {
     Constants,

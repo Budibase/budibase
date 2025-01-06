@@ -1,6 +1,6 @@
 <script>
   import { ModalContent, Select } from "@budibase/bbui"
-  import { themeStore } from "stores/portal"
+  import { themeStore } from "@/stores/portal"
   import { ThemeOptions } from "@budibase/shared-core"
 </script>
 

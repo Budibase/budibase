@@ -1,5 +1,5 @@
 <script>
-  import Table from "components/backend/DataTable/Table.svelte"
+  import Table from "@/components/backend/DataTable/Table.svelte"
   import { cloneDeep } from "lodash/fp"
 
   export let schema = {}
