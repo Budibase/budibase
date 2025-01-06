@@ -19,10 +19,7 @@ export class ThemeStore extends BudiStore<ThemeState> {
 
   syncAppTheme = (app: App) => {
     this.update(state => {
-      const theme = ensureValidTheme(
-        app.theme as Theme | undefined,
-        DefaultAppTheme
-      ) as Theme
+      const theme = ensureValidTheme(app.theme, DefaultAppTheme)
       return {
         ...state,
         theme,
@@ -35,10 +32,7 @@ export class ThemeStore extends BudiStore<ThemeState> {
     const app = await API.saveAppMetadata(appId, { theme })
     this.update(state => ({
       ...state,
-      theme: ensureValidTheme(
-        app.theme as Theme | undefined,
-        DefaultAppTheme
-      ) as Theme,
+      theme: ensureValidTheme(app.theme, DefaultAppTheme),
     }))
   }
 
@@ -55,10 +49,7 @@ export class ThemeStore extends BudiStore<ThemeState> {
     const { theme, customTheme } = metadata
     this.update(state => ({
       ...state,
-      theme: ensureValidTheme(
-        theme as Theme | undefined,
-        DefaultAppTheme
-      ) as Theme,
+      theme: ensureValidTheme(theme, DefaultAppTheme),
       customTheme: customTheme || {},
     }))
   }
