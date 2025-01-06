@@ -291,8 +291,8 @@ const automationActions = (store: AutomationStore) => ({
     let result: (AutomationStep | AutomationTrigger)[] = []
     pathWay.forEach(path => {
       const { stepIdx, branchIdx } = path
-      let last = result ? result[result.length - 1] : []
-      if (!result) {
+      let last = result.length ? result[result.length - 1] : []
+      if (!result.length) {
         // Preceeding steps.
         result = steps.slice(0, stepIdx + 1)
         return
