@@ -2,27 +2,22 @@ import { get } from "svelte/store"
 import { API } from "@/api"
 import { appStore } from "@/stores/builder"
 import { BudiStore } from "../BudiStore"
+import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
+
+interface BuilderNavigationStore extends AppNavigation {}
 
 export const INITIAL_NAVIGATION_STATE = {
   navigation: "Top",
   links: [],
-  title: null,
-  sticky: null,
-  hideLogo: null,
-  logoUrl: null,
-  hideTitle: null,
   textAlign: "Left",
-  navBackground: null,
-  navWidth: null,
-  navTextColor: null,
 }
 
-export class NavigationStore extends BudiStore {
+export class NavigationStore extends BudiStore<BuilderNavigationStore> {
   constructor() {
     super(INITIAL_NAVIGATION_STATE)
   }
 
-  syncAppNavigation(nav) {
+  syncAppNavigation(nav: AppNavigation) {
     this.update(state => ({
       ...state,
       ...nav,
@@ -33,15 +28,17 @@ export class NavigationStore extends BudiStore {
     this.store.set({ ...INITIAL_NAVIGATION_STATE })
   }
 
-  async save(navigation) {
+  async save(navigation: AppNavigation) {
     const appId = get(appStore).appId
     const app = await API.saveAppMetadata(appId, { navigation })
-    this.syncAppNavigation(app.navigation)
+    if (app.navigation) {
+      this.syncAppNavigation(app.navigation)
+    }
   }
 
-  async saveLink(url, title, roleId) {
+  async saveLink(url: string, title: string, roleId: string) {
     const navigation = get(this.store)
-    let links = [...(navigation?.links ?? [])]
+    let links: AppNavigationLink[] = [...(navigation?.links ?? [])]
 
     // Skip if we have an identical link
     if (links.find(link => link.url === url && link.text === title)) {
@@ -60,7 +57,7 @@ export class NavigationStore extends BudiStore {
     })
   }
 
-  async deleteLink(urls) {
+  async deleteLink(urls: string[] | string) {
     const navigation = get(this.store)
     let links = navigation?.links
     if (!links?.length) {
@@ -86,7 +83,7 @@ export class NavigationStore extends BudiStore {
     })
   }
 
-  syncMetadata(metadata) {
+  syncMetadata(metadata: UIObject) {
     const { navigation } = metadata
     this.syncAppNavigation(navigation)
   }
