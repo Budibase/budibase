@@ -105,13 +105,13 @@ if (env.SELF_HOSTED) {
 export async function getActionDefinitions(): Promise<
   Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
 > {
-  if (await features.flags.isEnabled(FeatureFlag.AUTOMATION_BRANCHING)) {
+  if (await features.isEnabled(FeatureFlag.AUTOMATION_BRANCHING)) {
     BUILTIN_ACTION_DEFINITIONS["BRANCH"] = branch.definition
   }
   if (
     env.SELF_HOSTED ||
-    (await features.flags.isEnabled(FeatureFlag.BUDIBASE_AI)) ||
-    (await features.flags.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS))
+    (await features.isEnabled(FeatureFlag.BUDIBASE_AI)) ||
+    (await features.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS))
   ) {
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = openai.definition
   }
