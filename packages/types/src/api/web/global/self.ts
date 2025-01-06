@@ -1,4 +1,4 @@
-import { FeatureFlags } from "packages/types/src/sdk"
+import { FeatureFlags } from "@budibase/types"
 import { DevInfo, User } from "../../../documents"
 
 export interface GenerateAPIKeyRequest {
