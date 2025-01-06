@@ -1,6 +1,6 @@
 <script>
   import { redirect } from "@roxi/routify"
-  import { automationStore } from "stores/builder"
+  import { automationStore } from "@/stores/builder"
 
   $: {
     if ($automationStore.automations?.length) {

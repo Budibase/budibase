@@ -1,9 +1,9 @@
 <script>
   import { Icon, Popover, Layout } from "@budibase/bbui"
-  import { componentStore } from "stores/builder"
+  import { componentStore } from "@/stores/builder"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher, getContext } from "svelte"
-  import ComponentSettingsSection from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
+  import ComponentSettingsSection from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
 
   export let anchor
   export let componentInstance

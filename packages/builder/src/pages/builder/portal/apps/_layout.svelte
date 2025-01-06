@@ -7,7 +7,7 @@
     licensing,
     groups,
     auth,
-  } from "stores/portal"
+  } from "@/stores/portal"
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"

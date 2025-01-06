@@ -8,9 +8,9 @@
     Body,
     notifications,
   } from "@budibase/bbui"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import { plugins } from "stores/portal"
-  import { PluginSource } from "constants"
+  import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
+  import { plugins } from "@/stores/portal"
+  import { PluginSource } from "@/constants"
 
   function opt(name, optional) {
     if (optional) {

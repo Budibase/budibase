@@ -1,6 +1,6 @@
 <script>
-  import { syncURLToState } from "helpers/urlStateSync"
-  import { tables, builderStore } from "stores/builder"
+  import { syncURLToState } from "@/helpers/urlStateSync"
+  import { tables, builderStore } from "@/stores/builder"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import ViewNavBar from "./_components/ViewNavBar.svelte"

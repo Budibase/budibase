@@ -11,14 +11,14 @@
     Toggle,
     notifications,
   } from "@budibase/bbui"
-  import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
+  import DateTimeRenderer from "@/components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./_components/StatusRenderer.svelte"
   import HistoryDetailsPanel from "./_components/HistoryDetailsPanel.svelte"
-  import { automationStore, appStore } from "stores/builder"
-  import { createPaginationStore } from "helpers/pagination"
+  import { automationStore, appStore } from "@/stores/builder"
+  import { createPaginationStore } from "@/helpers/pagination"
   import { getContext, onDestroy, onMount } from "svelte"
   import dayjs from "dayjs"
-  import { auth, licensing, admin, appsStore } from "stores/portal"
+  import { auth, licensing, admin, appsStore } from "@/stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import Portal from "svelte-portal"
 

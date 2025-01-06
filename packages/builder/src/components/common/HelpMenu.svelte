@@ -1,9 +1,9 @@
 <script>
   import FontAwesomeIcon from "./FontAwesomeIcon.svelte"
   import { Popover, Heading, Body } from "@budibase/bbui"
-  import { licensing } from "stores/portal"
-  import { isPremiumOrAbove } from "helpers/planTitle"
-  import { ChangelogURL } from "constants"
+  import { licensing } from "@/stores/portal"
+  import { isPremiumOrAbove } from "@/helpers/planTitle"
+  import { ChangelogURL } from "@/constants"
 
   $: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license?.plan?.type)
 

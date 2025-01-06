@@ -7,8 +7,8 @@ import {
 import { SWITCHABLE_TYPES } from "@budibase/shared-core"
 import { get, derived, Writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { API } from "api"
-import { DerivedBudiStore } from "stores/BudiStore"
+import { API } from "@/api"
+import { DerivedBudiStore } from "@/stores/BudiStore"
 
 interface BuilderTableStore {
   list: Table[]

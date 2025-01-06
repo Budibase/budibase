@@ -1,17 +1,17 @@
 <script>
   import { Heading, Body, Layout, Button, Modal } from "@budibase/bbui"
-  import AutomationPanel from "components/automation/AutomationPanel/AutomationPanel.svelte"
-  import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
-  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import TestPanel from "components/automation/AutomationBuilder/TestPanel.svelte"
+  import AutomationPanel from "@/components/automation/AutomationPanel/AutomationPanel.svelte"
+  import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
+  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
+  import TestPanel from "@/components/automation/AutomationBuilder/TestPanel.svelte"
   import { onDestroy, onMount } from "svelte"
-  import { syncURLToState } from "helpers/urlStateSync"
+  import { syncURLToState } from "@/helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import {
     builderStore,
     automationStore,
     selectedAutomation,
-  } from "stores/builder"
+  } from "@/stores/builder"
 
   $: automationId = $selectedAutomation?.data?._id
   $: builderStore.selectResource(automationId)

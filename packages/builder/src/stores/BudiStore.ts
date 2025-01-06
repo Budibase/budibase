@@ -1,7 +1,21 @@
 import { writable, Writable, Readable } from "svelte/store"
+import {
+  createLocalStorageStore,
+  createSessionStorageStore,
+} from "@budibase/frontend-core"
+
+export enum PersistenceType {
+  NONE = "none",
+  LOCAL = "local",
+  SESSION = "session",
+}
 
 interface BudiStoreOpts {
   debug?: boolean
+  persistence?: {
+    type: PersistenceType
+    key: string
+  }
 }
 
 export class BudiStore<T> {
@@ -11,7 +25,21 @@ export class BudiStore<T> {
   set: Writable<T>["set"]
 
   constructor(init: T, opts?: BudiStoreOpts) {
-    this.store = writable<T>(init)
+    if (opts?.persistence) {
+      switch (opts.persistence.type) {
+        case PersistenceType.LOCAL:
+          this.store = createLocalStorageStore(opts.persistence.key, init)
+          break
+        case PersistenceType.SESSION:
+          this.store = createSessionStorageStore(opts.persistence.key, init)
+          break
+        default:
+          this.store = writable<T>(init)
+      }
+    } else {
+      this.store = writable<T>(init)
+    }
+
     this.subscribe = this.store.subscribe
     this.update = this.store.update
     this.set = this.store.set

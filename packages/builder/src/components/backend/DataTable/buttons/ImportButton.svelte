@@ -1,9 +1,9 @@
 <script>
   import { ActionButton, Button, Body, notifications } from "@budibase/bbui"
-  import DetailPopover from "components/common/DetailPopover.svelte"
-  import ExistingTableDataImport from "components/backend/TableNavigator/ExistingTableDataImport.svelte"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
+  import ExistingTableDataImport from "@/components/backend/TableNavigator/ExistingTableDataImport.svelte"
   import { createEventDispatcher } from "svelte"
-  import { API } from "api"
+  import { API } from "@/api"
 
   export let tableId
   export let tableType
