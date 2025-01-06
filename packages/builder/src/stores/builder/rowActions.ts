@@ -66,7 +66,7 @@ export class RowActionStore extends BudiStore<RowActionState> {
     }
 
     if (!name) {
-      return
+      throw new Error("Failed to generate a unique name for the row action")
     }
 
     // Create the action
