@@ -80,9 +80,7 @@ export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
         requestUser.email,
       ])
       if (accountMetadata?.length > 0) {
-        {
-          throw Error("Cannot set role of account holder")
-        }
+        throw Error("Cannot set role of account holder")
       }
     }
 
