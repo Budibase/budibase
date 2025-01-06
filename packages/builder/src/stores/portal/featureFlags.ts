@@ -1,18 +1,12 @@
 import { derived, Readable } from "svelte/store"
 import { auth } from "@/stores/portal"
+import { FeatureFlags, FeatureFlagDefaults } from "@budibase/types"
 
-export const INITIAL_FEATUREFLAG_STATE = {
-  SQS: false,
-  DEFAULT_VALUES: false,
-  BUDIBASE_AI: false,
-  AI_CUSTOM_CONFIGS: false,
-}
-
-export const featureFlags: Readable<Record<string, any>> = derived(
+export const featureFlags: Readable<FeatureFlags> = derived(
   [auth],
   ([$auth]) => {
     return {
-      ...INITIAL_FEATUREFLAG_STATE,
+      ...FeatureFlagDefaults,
       ...($auth?.user?.flags || {}),
     }
   }

@@ -100,10 +100,10 @@ export async function run({
   try {
     let response
     const customConfigsEnabled =
-      (await features.flags.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS)) &&
+      (await features.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS)) &&
       (await pro.features.isAICustomConfigsEnabled())
     const budibaseAIEnabled =
-      (await features.flags.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
+      (await features.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
       (await pro.features.isBudibaseAIEnabled())
 
     let llmWrapper
