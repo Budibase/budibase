@@ -18,6 +18,7 @@ import {
   DeleteScreenResponse,
   Screen,
   Component,
+  SaveScreenResponse,
 } from "@budibase/types"
 import { ComponentDefinition } from "./components"
 
@@ -51,7 +52,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
     this.deleteScreen = this.deleteScreen.bind(this)
     this.syncScreenData = this.syncScreenData.bind(this)
     this.updateSetting = this.updateSetting.bind(this)
-    // TODO review this behaviour
     this.sequentialScreenPatch = this.sequentialScreenPatch.bind(this)
     this.removeCustomLayout = this.removeCustomLayout.bind(this)
 
@@ -84,7 +84,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
   /**
    * Replace ALL store screens with application package screens
-   * @param {object} pkg
+   * @param {FetchAppPackageResponse} pkg
    */
   syncAppScreens(pkg: FetchAppPackageResponse) {
     this.update(state => ({
@@ -123,7 +123,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * Recursively parses the entire screen doc and checks for components
    * violating illegal child configurations.
    *
-   * @param {object} screen
+   * @param {Screen} screen
    * @throws Will throw an error containing the name of the component causing
    * the invalid screen state
    */
@@ -206,8 +206,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * Core save method. If creating a new screen, the store will sync the target
    * screen id to ensure that it is selected in the builder
    *
-   * @param {object} screen
-   * @returns {object}
+   * @param {Screen} screen The screen being modified/created
    */
   async saveScreen(screen: Screen) {
     const appState = get(appStore)
@@ -254,7 +253,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
   /**
    * After saving a screen, sync plugins and routes to the appStore
-   * @param {object} savedScreen
+   * @param {Screen} savedScreen
    */
   async syncScreenData(savedScreen: Screen) {
     const appState = get(appStore)
@@ -282,27 +281,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * This is slightly better than just a traditional "patch" endpoint and this
    * supports deeply mutating the current doc rather than just appending data.
    */
-  // sequentialScreenPatch = (
-  //   patchFn: (screen: Screen) => any,
-  //   screenId: string
-  // ) => {
-  //   return Utils.sequential(async () => {
-  //     const state = get(this.store)
-  //     const screen = state.screens.find(screen => screen._id === screenId)
-  //     if (!screen) {
-  //       return
-  //     }
-  //     let clone = cloneDeep(screen)
-  //     const result = patchFn(clone)
-
-  //     // An explicit false result means skip this change
-  //     if (result === false) {
-  //       return
-  //     }
-  //     return this.save(clone)
-  //   })
-  // }
-
   sequentialScreenPatch = Utils.sequential(
     async (patchFn: (screen: Screen) => any, screenId: string) => {
       const state = get(this.store)
@@ -322,11 +300,13 @@ export class ScreenStore extends BudiStore<ScreenState> {
   )
 
   /**
-   * @param {function} patchFn
+   * @param {Function} patchFn the patch action to be applied
    * @param {string | null} screenId
-   * @returns
    */
-  async patch(patchFn: (screen: Screen) => any, screenId?: string | null) {
+  async patch(
+    patchFn: (screen: Screen) => any,
+    screenId?: string | null
+  ): Promise<SaveScreenResponse | void> {
     // Default to the currently selected screen
     if (!screenId) {
       const state = get(this.store)
@@ -343,9 +323,9 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * the screen supplied. If no screen is provided, the target has
    * been removed by another user and will be filtered from the store.
    * Used to marshal updates for the websocket
-   * @param {string} screenId
-   * @param {object} screen
-   * @returns
+   *
+   * @param {string} screenId the target screen id
+   * @param {Screen} screen the replacement screen
    */
   async replace(screenId: string, screen: Screen) {
     if (!screenId) {
@@ -383,10 +363,9 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * Any deleted screens will then have their routes/links purged
    *
    * Wrapped by {@link delete}
-   * @param {object | array} screens
-   * @returns
+   * @param {Screen | Screen[]} screens
    */
-  async deleteScreen(screens: Screen[]) {
+  async deleteScreen(screens: Screen | Screen[]) {
     const screensToDelete = Array.isArray(screens) ? screens : [screens]
     // Build array of promises to speed up bulk deletions
     let promises: Promise<DeleteScreenResponse>[] = []
@@ -435,7 +414,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
       return state
     })
-    return null
   }
 
   /**
@@ -444,10 +422,9 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * After a successful update, this method ensures that there is only
    * ONE home screen per user Role.
    *
-   * @param {object} screen
+   * @param {Screen} screen
    * @param {string} name e.g "routing.homeScreen" or "showNavigation"
    * @param {any} value
-   * @returns
    */
   async updateSetting(screen: Screen, name: string, value: any) {
     if (!screen || !name) {
@@ -506,7 +483,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
   /**
    * Parse the entire screen component tree and ensure settings are valid
    * and up-to-date. Ensures stability after a product update.
-   * @param {object} screen
+   * @param {Screen} screen
    */
   async enrichEmptySettings(screen: Screen) {
     // Flatten the recursive component tree
