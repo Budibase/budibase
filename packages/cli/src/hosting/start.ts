@@ -3,6 +3,8 @@ import { info, success } from "../utils"
 import * as makeFiles from "./makeFiles"
 import compose from "docker-compose"
 import fs from "fs"
+import { confirmation } from "../questions"
+const open = require("open")
 
 export async function start() {
   await checkDockerConfigured()
@@ -22,6 +24,9 @@ export async function start() {
     // need to log as it makes it more clear
     await compose.upAll({ cwd: "./", log: true })
   })
+  if (await confirmation(`Do you wish to open http://localhost:${port} ?`)) {
+    await open(`http://localhost:${port}`)
+  }
   console.log(
     success(
       `Services started, please go to http://localhost:${port} for next steps.`
