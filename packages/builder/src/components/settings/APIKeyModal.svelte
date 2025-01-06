@@ -6,7 +6,7 @@
     notifications,
     CopyInput,
   } from "@budibase/bbui"
-  import { auth } from "stores/portal"
+  import { auth } from "@/stores/portal"
   import { onMount } from "svelte"
 
   let apiKey = null

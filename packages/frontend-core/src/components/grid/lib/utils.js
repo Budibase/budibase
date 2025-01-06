@@ -1,3 +1,5 @@
+// TODO: remove when all stores are typed
+
 import { GeneratedIDPrefix, CellIDSeparator } from "./constants"
 import { Helpers } from "@budibase/bbui"
 

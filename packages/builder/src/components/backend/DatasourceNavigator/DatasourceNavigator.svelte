@@ -8,12 +8,12 @@
     views,
     viewsV2,
     userSelectedResourceMap,
-  } from "stores/builder"
+  } from "@/stores/builder"
   import QueryNavItem from "./QueryNavItem.svelte"
-  import NavItem from "components/common/NavItem.svelte"
-  import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
+  import NavItem from "@/components/common/NavItem.svelte"
+  import TableNavigator from "@/components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavItem from "./DatasourceNavItem/DatasourceNavItem.svelte"
-  import { TableNames } from "constants"
+  import { TableNames } from "@/constants"
   import { enrichDatasources } from "./datasourceUtils"
   import { onMount } from "svelte"
 

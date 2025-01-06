@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
-import { API } from "api"
-import { auth } from "stores/portal"
+import { API } from "@/api"
+import { auth } from "@/stores/portal"
 import _ from "lodash"
 
 const DEFAULT_CONFIG = {

@@ -1,7 +1,10 @@
 <script>
   import { FancyForm, FancyInput } from "@budibase/bbui"
-  import { createValidationStore, requiredValidator } from "helpers/validation"
-  import { admin } from "stores/portal"
+  import {
+    createValidationStore,
+    requiredValidator,
+  } from "@/helpers/validation"
+  import { admin } from "@/stores/portal"
 
   export let password
   export let passwordForm

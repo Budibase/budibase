@@ -162,6 +162,7 @@ if (descriptions.length) {
                     visible: true,
                   },
                 },
+                rowHeight: generator.integer(),
               }
             const res = await config.api.viewV2.create(newView)
 
@@ -224,6 +225,7 @@ if (descriptions.length) {
                   visible: true,
                 },
               },
+              rowHeight: generator.integer(),
             }
             const res = await config.api.viewV2.create(newView)
             expect(events.view.created).toHaveBeenCalledTimes(1)
@@ -1069,6 +1071,7 @@ if (descriptions.length) {
                   readonly: true,
                 },
               },
+              rowHeight: generator.integer(),
             }
             await config.api.viewV2.update(updatedData)
 

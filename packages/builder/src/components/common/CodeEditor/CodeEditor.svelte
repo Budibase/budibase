@@ -43,7 +43,7 @@
   import { Compartment, EditorState } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
-  import { themeStore } from "stores/portal"
+  import { themeStore } from "@/stores/portal"
 
   export let label
   export let completions = []

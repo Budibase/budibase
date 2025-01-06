@@ -12,9 +12,9 @@
     Tag,
     Table,
   } from "@budibase/bbui"
-  import { backups, licensing, auth, admin } from "stores/portal"
-  import { appStore } from "stores/builder"
-  import { createPaginationStore } from "helpers/pagination"
+  import { backups, licensing, auth, admin } from "@/stores/portal"
+  import { appStore } from "@/stores/builder"
+  import { createPaginationStore } from "@/helpers/pagination"
   import TimeAgoRenderer from "./_components/TimeAgoRenderer.svelte"
   import AppSizeRenderer from "./_components/AppSizeRenderer.svelte"
   import ActionsRenderer from "./_components/ActionsRenderer.svelte"
@@ -22,9 +22,9 @@
   import StatusRenderer from "./_components/StatusRenderer.svelte"
   import TypeRenderer from "./_components/TypeRenderer.svelte"
   import BackupsDefault from "assets/backups-default.png"
-  import { BackupTrigger, BackupType } from "constants/backend/backups"
+  import { BackupTrigger, BackupType } from "@/constants/backend/backups"
   import { onMount } from "svelte"
-  import DateRangePicker from "components/common/DateRangePicker.svelte"
+  import DateRangePicker from "@/components/common/DateRangePicker.svelte"
 
   let loading = true
   let backupData = null

@@ -4,12 +4,12 @@
     userSelectedResourceMap,
     automationStore,
     contextMenuStore,
-  } from "stores/builder"
+  } from "@/stores/builder"
   import { notifications, Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import UpdateAutomationModal from "components/automation/AutomationPanel/UpdateAutomationModal.svelte"
-  import NavItem from "components/common/NavItem.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import UpdateAutomationModal from "@/components/automation/AutomationPanel/UpdateAutomationModal.svelte"
+  import NavItem from "@/components/common/NavItem.svelte"
 
   export let automation
   export let icon

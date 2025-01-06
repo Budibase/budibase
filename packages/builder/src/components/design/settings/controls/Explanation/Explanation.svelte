@@ -16,7 +16,7 @@
     DateAsNumber,
   } from "./lines"
   import subjects from "./subjects"
-  import { appStore } from "stores/builder"
+  import { appStore } from "@/stores/builder"
 
   export let tableHref = () => {}
   export let schema

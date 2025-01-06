@@ -1,5 +1,5 @@
 import { derived, writable, get } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 import { RoleUtils } from "@budibase/frontend-core"
 
 export function createRolesStore() {
