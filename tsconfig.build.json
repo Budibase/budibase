@@ -19,7 +19,8 @@
       "@budibase/pro": ["./packages/pro/src"],
       "@budibase/string-templates": ["./packages/string-templates/src"],
       "@budibase/string-templates/*": ["./packages/string-templates/*"],
-      "@budibase/frontend-core": ["./packages/frontend-core/src"]
+      "@budibase/frontend-core": ["./packages/frontend-core/src"],
+      "@budibase/bbui": ["./packages/bbui/src"]
     }
   },
   "exclude": []

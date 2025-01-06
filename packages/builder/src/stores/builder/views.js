@@ -1,6 +1,6 @@
 import { writable, derived } from "svelte/store"
 import { tables } from "./tables"
-import { API } from "api"
+import { API } from "@/api"
 
 export function createViewsStore() {
   const store = writable({

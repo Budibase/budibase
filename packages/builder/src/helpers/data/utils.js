@@ -1,4 +1,4 @@
-import { IntegrationTypes } from "constants/backend"
+import { IntegrationTypes } from "@/constants/backend"
 import { findHBSBlocks } from "@budibase/string-templates"
 
 export function breakQueryString(qs) {

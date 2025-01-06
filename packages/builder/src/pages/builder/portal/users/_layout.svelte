@@ -1,9 +1,9 @@
 <script>
   import { Page, notifications } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { SideNav, SideNavItem, Content } from "components/portal/page"
+  import { SideNav, SideNavItem, Content } from "@/components/portal/page"
   import { isActive, goto } from "@roxi/routify"
-  import { menu, features } from "stores/portal"
+  import { menu, features } from "@/stores/portal"
 
   $: wide = $isActive("./users/index") || $isActive("./groups/index")
   $: pages = $menu.find(x => x.title === "Users")?.subPages || []

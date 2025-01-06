@@ -456,7 +456,7 @@ export function filterAutomation(appId: string, tableId?: string): Automation {
         icon: "Icon",
         id: "a",
         type: AutomationStepType.TRIGGER,
-        event: "row:save",
+        event: AutomationEventType.ROW_SAVE,
         stepId: AutomationTriggerStepId.ROW_SAVED,
         inputs: {
           tableId: tableId!,
@@ -498,7 +498,7 @@ export function updateRowAutomationWithFilters(
         icon: "Icon",
         id: "a",
         type: AutomationStepType.TRIGGER,
-        event: "row:update",
+        event: AutomationEventType.ROW_UPDATE,
         stepId: AutomationTriggerStepId.ROW_UPDATED,
         inputs: { tableId },
         schema: TRIGGER_DEFINITIONS.ROW_UPDATED.schema,
@@ -513,7 +513,7 @@ export function basicAutomationResults(
   return {
     automationId,
     status: AutomationStatus.SUCCESS,
-    trigger: "trigger",
+    trigger: "trigger" as any,
     steps: [
       {
         stepId: AutomationActionStepId.SERVER_LOG,

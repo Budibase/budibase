@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
-import { API } from "api"
-import { licensing } from "stores/portal"
+import { API } from "@/api"
+import { licensing } from "@/stores/portal"
 
 export function createGroupsStore() {
   const store = writable([])

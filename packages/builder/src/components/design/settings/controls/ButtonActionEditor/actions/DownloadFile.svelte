@@ -1,9 +1,9 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import { FieldType } from "@budibase/types"
-  import { tables, viewsV2 } from "stores/builder"
+  import { tables, viewsV2 } from "@/stores/builder"
 
   export let parameters
   export let bindings = []

@@ -1,14 +1,14 @@
 <script>
   import { Heading, Body, Button, Icon } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
-  import { auth } from "stores/portal"
+  import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
   import { UserAvatars } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import AppContextMenuModals from "./AppContextMenuModals.svelte"
   import getAppContextMenuItems from "./getAppContextMenuItems.js"
-  import FavouriteAppButton from "pages/builder/portal/apps/FavouriteAppButton.svelte"
-  import { contextMenuStore } from "stores/builder"
+  import FavouriteAppButton from "@/pages/builder/portal/apps/FavouriteAppButton.svelte"
+  import { contextMenuStore } from "@/stores/builder"
 
   export let app
   export let lockedAction

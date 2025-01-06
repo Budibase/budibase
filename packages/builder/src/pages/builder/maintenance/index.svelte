@@ -1,7 +1,7 @@
 <script>
   import { MaintenanceType } from "@budibase/types"
   import { Heading, Body, Button, Layout } from "@budibase/bbui"
-  import { admin } from "stores/portal"
+  import { admin } from "@/stores/portal"
   import BudibaseLogo from "../portal/_components/BudibaseLogo.svelte"
 
   $: {

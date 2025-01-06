@@ -1,8 +1,8 @@
 <script>
   import { ActionButton, Modal } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { environment } from "stores/portal"
-  import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { environment } from "@/stores/portal"
+  import CreateEditVariableModal from "@/components/portal/environment/CreateEditVariableModal.svelte"
 
   export let row
 
@@ -10,7 +10,8 @@
   let deleteDialog
 
   const save = async data => {
-    await environment.updateVariable(data)
+    const { name, ...rest } = data
+    await environment.updateVariable(name, rest)
     editVariableModal.hide()
   }
 </script>

@@ -19,12 +19,12 @@
     groups,
     licensing,
     enrichedApps,
-  } from "stores/portal"
+  } from "@/stores/portal"
   import { goto } from "@roxi/routify"
-  import { AppStatus } from "constants"
-  import { gradient } from "actions"
-  import ProfileModal from "components/settings/ProfileModal.svelte"
-  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
+  import { AppStatus } from "@/constants"
+  import { gradient } from "@/actions"
+  import ProfileModal from "@/components/settings/ProfileModal.svelte"
+  import ChangePasswordModal from "@/components/settings/ChangePasswordModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
   import Spaceman from "assets/bb-space-man.svg"
   import Logo from "assets/bb-emblem.svg"

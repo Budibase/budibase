@@ -1,5 +1,5 @@
-import { getAllComponentContexts } from "dataBinding"
-import { capitalise } from "helpers"
+import { getAllComponentContexts } from "@/dataBinding"
+import { capitalise } from "@/helpers"
 
 // Generates bindings for all components that provider "datasource like"
 // contexts. This includes "form" contexts and "schema" contexts. This is used
