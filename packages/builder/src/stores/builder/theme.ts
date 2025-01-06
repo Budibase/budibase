@@ -12,7 +12,7 @@ interface ThemeState {
 export class ThemeStore extends BudiStore<ThemeState> {
   constructor() {
     super({
-      theme: DefaultAppTheme as Theme,
+      theme: DefaultAppTheme,
       customTheme: {},
     })
   }
