@@ -87,6 +87,7 @@
   let popover
   let user, tenantOwner
   let loaded = false
+  let userFieldsToUpdate = {}
 
   $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
 
@@ -164,40 +165,45 @@
     return label
   }
 
-  async function updateUserFirstName(evt) {
+  async function saveUser() {
     try {
-      await users.save({ ...user, firstName: evt.target.value })
+      await users.save({ ...user, ...userFieldsToUpdate })
+      userFieldsToUpdate = {}
       await fetchUser()
     } catch (error) {
       notifications.error("Error updating user")
     }
+  }
+
+  async function updateUserFirstName(evt) {
+    userFieldsToUpdate = { ...userFieldsToUpdate, firstName: evt.target.value }
   }
 
   async function updateUserLastName(evt) {
-    try {
-      await users.save({ ...user, lastName: evt.target.value })
-      await fetchUser()
-    } catch (error) {
-      notifications.error("Error updating user")
-    }
+    userFieldsToUpdate = { ...userFieldsToUpdate, lastName: evt.target.value }
   }
 
   async function updateUserRole({ detail }) {
+    let flags = {}
     if (detail === Constants.BudibaseRoles.Developer) {
-      toggleFlags({ admin: { global: false }, builder: { global: true } })
+      flags = { admin: { global: false }, builder: { global: true } }
     } else if (detail === Constants.BudibaseRoles.Admin) {
-      toggleFlags({ admin: { global: true }, builder: { global: true } })
+      flags = { admin: { global: true }, builder: { global: true } }
     } else if (detail === Constants.BudibaseRoles.AppUser) {
-      toggleFlags({ admin: { global: false }, builder: { global: false } })
+      flags = { admin: { global: false }, builder: { global: false } }
     } else if (detail === Constants.BudibaseRoles.Creator) {
-      toggleFlags({
+      flags = {
         admin: { global: false },
         builder: {
           global: false,
           creator: true,
           apps: user?.builder?.apps || [],
         },
-      })
+      }
+    }
+    userFieldsToUpdate = {
+      ...userFieldsToUpdate,
+      ...flags,
     }
   }
 
@@ -207,15 +213,6 @@
       $goto("./")
     }
     tenantOwner = await users.getAccountHolder()
-  }
-
-  async function toggleFlags(detail) {
-    try {
-      await users.save({ ...user, ...detail })
-      await fetchUser()
-    } catch (error) {
-      notifications.error("Error updating user")
-    }
   }
 
   const addGroup = async groupId => {
@@ -296,7 +293,7 @@
           <Input
             disabled={readonly}
             value={user?.firstName}
-            on:blur={updateUserFirstName}
+            on:input={updateUserFirstName}
           />
         </div>
         <div class="field">
@@ -304,7 +301,7 @@
           <Input
             disabled={readonly}
             value={user?.lastName}
-            on:blur={updateUserLastName}
+            on:input={updateUserLastName}
           />
         </div>
         <!-- don't let a user remove the privileges that let them be here -->
@@ -325,6 +322,13 @@
         {/if}
       </div>
     </Layout>
+    <div>
+      <Button
+        cta
+        disabled={Object.keys(userFieldsToUpdate).length === 0}
+        on:click={saveUser}>Save</Button
+      >
+    </div>
 
     {#if $licensing.groupsEnabled}
       <!-- User groups -->
