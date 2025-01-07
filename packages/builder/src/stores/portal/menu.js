@@ -1,9 +1,7 @@
 import { derived } from "svelte/store"
 import { admin } from "./admin"
 import { auth } from "./auth"
-import { isEnabled } from "@/helpers/featureFlags"
 import { sdk } from "@budibase/shared-core"
-import { FeatureFlag } from "@budibase/types"
 
 export const menu = derived([admin, auth], ([$admin, $auth]) => {
   const user = $auth?.user
@@ -63,13 +61,11 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
         title: "Environment",
         href: "/builder/portal/settings/environment",
       },
-    ]
-    if (isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS)) {
-      settingsSubPages.push({
+      {
         title: "AI",
         href: "/builder/portal/settings/ai",
-      })
-    }
+      },
+    ]
 
     if (!cloud) {
       settingsSubPages.push({
