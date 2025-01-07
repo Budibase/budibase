@@ -10,7 +10,7 @@ import UserFetch from "./UserFetch.js"
 import GroupUserFetch from "./GroupUserFetch"
 import CustomFetch from "./CustomFetch"
 import QueryArrayFetch from "./QueryArrayFetch.js"
-import { Table, UIDatasource } from "@budibase/types"
+import { TableSchema, UIDatasource } from "@budibase/types"
 import { APIClient } from "../api/types.js"
 
 const DataFetchMap = {
@@ -73,7 +73,7 @@ export const getDatasourceSchema = ({
 }: {
   API: APIClient
   datasource: UIDatasource
-  definition: Table
+  definition?: { schema?: TableSchema }
 }) => {
   const instance = createEmptyFetchInstance({ API, datasource })
   return instance?.getSchema(datasource, definition)

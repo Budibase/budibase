@@ -74,7 +74,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
     let schema: Record<string, UIFieldSchema> = getDatasourceSchema({
       API,
       datasource: get(datasource),
-      definition: $definition,
+      definition: $definition ?? undefined,
     })
     if (!schema) {
       return null
@@ -136,7 +136,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
       if (type === "viewV2" && $definition?.type === ViewV2Type.CALCULATION) {
         return false
       }
-      return ["table", "viewV2", "link"].includes(type)
+      return !!type && ["table", "viewV2", "link"].includes(type)
     }
   )
 
@@ -186,7 +186,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
       API,
       datasource: get(datasource),
     })
-    definition.set(def)
+    definition.set((def as any) ?? null)
   }
 
   // Saves the datasource definition
