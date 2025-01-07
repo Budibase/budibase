@@ -10,9 +10,10 @@ import {
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
-import { FieldType, Row, UIFetchAPI, UIRow } from "@budibase/types"
+import { FieldType, Row, UIRow } from "@budibase/types"
 import { getRelatedTableValues } from "../../../utils"
 import { Store as StoreContext } from "."
+import DataFetch from "../../../fetch/DataFetch"
 
 interface IndexedUIRow extends UIRow {
   __idx: number
@@ -20,7 +21,7 @@ interface IndexedUIRow extends UIRow {
 
 interface RowStore {
   rows: Writable<UIRow[]>
-  fetch: Writable<UIFetchAPI | null>
+  fetch: Writable<DataFetch<any, any, any> | null>
   loaded: Writable<boolean>
   refreshing: Writable<boolean>
   loading: Writable<boolean>
@@ -225,7 +226,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     })
 
     // Subscribe to changes of this fetch model
-    unsubscribe = newFetch.subscribe(async ($fetch: UIFetchAPI) => {
+    unsubscribe = newFetch.subscribe(async $fetch => {
       if ($fetch.error) {
         // Present a helpful error to the user
         let message = "An unknown error occurred"

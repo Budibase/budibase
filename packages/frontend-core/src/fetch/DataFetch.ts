@@ -26,8 +26,11 @@ interface DataFetchStore<TDefinition, TQuery> {
   pageNumber: number
   cursor: null
   cursors: any[]
-  resetKey: number
-  error: null
+  resetKey: string
+  error: {
+    message: string
+    status: number
+  } | null
   definition?: TDefinition | null
 }
 
@@ -132,7 +135,7 @@ export default abstract class DataFetch<
       pageNumber: 0,
       cursor: null,
       cursors: [],
-      resetKey: Math.random(),
+      resetKey: Math.random().toString(),
       error: null,
     })
 
@@ -284,7 +287,7 @@ export default abstract class DataFetch<
       info: page.info,
       cursors: paginate && page.hasNextPage ? [null, page.cursor] : [null],
       error: page.error,
-      resetKey: Math.random(),
+      resetKey: Math.random().toString(),
     }))
   }
 
