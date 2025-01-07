@@ -1,28 +1,30 @@
-import { derived, get } from "svelte/store"
+import { derived, get, type Writable } from "svelte/store"
 import { API } from "@/api"
 import { RoleUtils } from "@budibase/frontend-core"
-import { BudiStore } from "../BudiStore"
+import { DerivedBudiStore } from "../BudiStore"
 import { Role } from "@budibase/types"
 
-export class RoleStore extends BudiStore<Role[]> {
+export class RoleStore extends DerivedBudiStore<Role[], Role[]> {
   constructor() {
-    super([])
+    const makeDerivedStore = (store: Writable<Role[]>) =>
+      derived(store, $store => {
+        return $store.map((role: Role) => ({
+          ...role,
+          // Ensure we have new metadata for all roles
+          uiMetadata: {
+            displayName: role.uiMetadata?.displayName || role.name,
+            color:
+              role.uiMetadata?.color ||
+              "var(--spectrum-global-color-magenta-400)",
+            description: role.uiMetadata?.description || "Custom role",
+          },
+        }))
+      })
+
+    super([], makeDerivedStore)
   }
 
-  enriched = derived(this, $store => {
-    return $store.map(role => ({
-      ...role,
-      // Ensure we have new metadata for all roles
-      uiMetadata: {
-        displayName: role.uiMetadata?.displayName || role.name,
-        color:
-          role.uiMetadata?.color || "var(--spectrum-global-color-magenta-400)",
-        description: role.uiMetadata?.description || "Custom role",
-      },
-    }))
-  })
-
-  private setRoles = (roles: Role[]) => {
+  setRoles = (roles: Role[]) => {
     this.set(
       roles.sort((a, b) => {
         // Ensure we have valid IDs for priority comparison
@@ -89,8 +91,4 @@ export class RoleStore extends BudiStore<Role[]> {
   }
 }
 
-const store = new RoleStore()
-export const roles = {
-  ...store,
-  subscribe: store.enriched.subscribe,
-}
+export const roles = new RoleStore()
