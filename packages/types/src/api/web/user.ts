@@ -124,7 +124,7 @@ export interface AcceptUserInviteRequest {
   inviteCode: string
   password: string
   firstName: string
-  lastName: string
+  lastName?: string
 }
 
 export interface AcceptUserInviteResponse {

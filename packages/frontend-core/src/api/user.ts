@@ -60,7 +60,7 @@ export interface UserEndpoints {
   getAccountHolder: () => Promise<LookupAccountHolderResponse>
   searchUsers: (data: SearchUsersRequest) => Promise<SearchUsersResponse>
   createUsers: (
-    users: User[],
+    users: Omit<User, "tenantId">[],
     groups: any[]
   ) => Promise<BulkUserCreated | undefined>
   updateUserInvite: (
