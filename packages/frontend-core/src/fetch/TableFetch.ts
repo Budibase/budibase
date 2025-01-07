@@ -42,7 +42,7 @@ export default class TableFetch extends DataFetch<UITable, Table> {
         query: query ?? undefined,
         limit,
         sort: sortColumn,
-        sortOrder: sortOrder?.toLowerCase() ?? SortOrder.ASCENDING,
+        sortOrder: sortOrder ?? SortOrder.ASCENDING,
         sortType,
         paginate,
         bookmark: cursor,
