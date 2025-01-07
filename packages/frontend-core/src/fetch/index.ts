@@ -10,7 +10,8 @@ import UserFetch from "./UserFetch.js"
 import GroupUserFetch from "./GroupUserFetch"
 import CustomFetch from "./CustomFetch.js"
 import QueryArrayFetch from "./QueryArrayFetch.js"
-import { Table, UIDatasource, UIFetchAPI } from "@budibase/types"
+import { Table, UIDatasource } from "@budibase/types"
+import { APIClient } from "../api/types.js"
 
 const DataFetchMap = {
   table: TableFetch,
@@ -30,15 +31,7 @@ const DataFetchMap = {
 }
 
 // Constructs a new fetch model for a certain datasource
-export const fetchData = ({
-  API,
-  datasource,
-  options,
-}: {
-  API: UIFetchAPI
-  datasource: UIDatasource
-  options: {}
-}) => {
+export const fetchData = ({ API, datasource, options }: any) => {
   const Fetch =
     DataFetchMap[datasource?.type as keyof typeof DataFetchMap] || TableFetch
   return new Fetch({ API, datasource, ...options })
@@ -50,14 +43,14 @@ const createEmptyFetchInstance = ({
   API,
   datasource,
 }: {
-  API: UIFetchAPI
-  datasource: UIDatasource
+  API: APIClient
+  datasource: any
 }) => {
   const handler = DataFetchMap[datasource?.type as keyof typeof DataFetchMap]
   if (!handler) {
     return null
   }
-  return new handler({ API })
+  return new handler({ API, datasource: null as any, query: null as any })
 }
 
 // Fetches the definition of any type of datasource
@@ -65,7 +58,7 @@ export const getDatasourceDefinition = async ({
   API,
   datasource,
 }: {
-  API: UIFetchAPI
+  API: APIClient
   datasource: UIDatasource
 }) => {
   const instance = createEmptyFetchInstance({ API, datasource })
@@ -78,7 +71,7 @@ export const getDatasourceSchema = ({
   datasource,
   definition,
 }: {
-  API: UIFetchAPI
+  API: APIClient
   datasource: UIDatasource
   definition: Table
 }) => {
