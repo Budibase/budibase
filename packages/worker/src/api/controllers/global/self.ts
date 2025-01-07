@@ -114,11 +114,7 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
   const sessionAttributes = getUserSessionAttributes(ctx)
 
   // add the feature flags for this tenant
-<<<<<<< HEAD
   const flags = await features.flags.fetch()
-=======
-  ctx.body.flags = await features.flags.fetch()
->>>>>>> 55685be0814403644bc25d82b3218e27f6590490
 
   ctx.body = {
     ...enrichedUser,
