@@ -253,9 +253,14 @@ export default abstract class DataFetch<
       ) {
         this.options.sortType = SortType.NUMBER
       }
+
       // If no sort order, default to ascending
       if (!this.options.sortOrder) {
         this.options.sortOrder = SortOrder.ASCENDING
+      } else {
+        // Ensure sortOrder matches the enum
+        this.options.sortOrder =
+          this.options.sortOrder.toLowerCase() as SortOrder
       }
     }
 
