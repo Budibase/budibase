@@ -40,7 +40,10 @@ interface DataFetchDerivedStore<TDefinition, TQuery>
   supportsPagination: boolean
 }
 
-interface DataFetchParams<TDatasource, TQuery = SearchFilters | undefined> {
+export interface DataFetchParams<
+  TDatasource,
+  TQuery = SearchFilters | undefined
+> {
   API: APIClient
   datasource: TDatasource
   query: TQuery
@@ -411,7 +414,11 @@ export default abstract class DataFetch<
    * Determine the feature flag for this datasource definition
    * @param definition
    */
-  determineFeatureFlags(_definition: TDefinition | null) {
+  determineFeatureFlags(_definition: TDefinition | null): {
+    supportsPagination: boolean
+    supportsSearch?: boolean
+    supportsSort?: boolean
+  } {
     return {
       supportsSearch: false,
       supportsSort: false,
