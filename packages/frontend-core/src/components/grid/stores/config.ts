@@ -69,7 +69,7 @@ export const deriveStores = (context: StoreContext): ConfigDerivedStore => {
       }
 
       // Disable features for non DS+
-      if (!["table", "viewV2"].includes(type)) {
+      if (type && !["table", "viewV2"].includes(type)) {
         config.canAddRows = false
         config.canEditRows = false
         config.canDeleteRows = false
