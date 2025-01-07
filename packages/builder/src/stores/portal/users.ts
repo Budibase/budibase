@@ -1,41 +1,68 @@
-import { writable } from "svelte/store"
 import { API } from "@/api"
-import { update } from "lodash"
 import { licensing } from "."
 import { sdk } from "@budibase/shared-core"
 import { Constants } from "@budibase/frontend-core"
+import {
+  DeleteInviteUsersRequest,
+  InviteUsersRequest,
+  SearchUsersRequest,
+  SearchUsersResponse,
+  UpdateInviteRequest,
+  User,
+} from "@budibase/types"
+import { BudiStore } from "../BudiStore"
 
-export function createUsersStore() {
-  const { subscribe, set } = writable({})
+type UserState = SearchUsersResponse & SearchUsersRequest
 
-  // opts can contain page and search params
-  async function search(opts = {}) {
+class UserStore extends BudiStore<UserState> {
+  constructor() {
+    super({
+      data: [],
+    })
+
+    // Update quotas after any add or remove operation
+    this.create = this.refreshUsage(this.create)
+    this.save = this.refreshUsage(this.save)
+    this.delete = this.refreshUsage(this.delete)
+    this.bulkDelete = this.refreshUsage(this.bulkDelete)
+  }
+
+  async search(opts: SearchUsersRequest = {}) {
     const paged = await API.searchUsers(opts)
-    set({
+    this.set({
       ...paged,
       ...opts,
     })
     return paged
   }
 
-  async function get(userId) {
+  async get(userId: string) {
     try {
       return await API.getUser(userId)
     } catch (err) {
       return null
     }
   }
-  const fetch = async () => {
+
+  async fetch() {
     return await API.getUsers()
   }
 
-  // One or more users.
-  async function onboard(payload) {
+  async onboard(payload: InviteUsersRequest) {
     return await API.onboardUsers(payload)
   }
 
-  async function invite(payload) {
-    const users = payload.map(user => {
+  async invite(
+    payload: {
+      admin?: boolean
+      builder?: boolean
+      creator?: boolean
+      email: string
+      apps?: any[]
+      groups?: any[]
+    }[]
+  ) {
+    const users: InviteUsersRequest = payload.map(user => {
       let builder = undefined
       if (user.admin || user.builder) {
         builder = { global: true }
@@ -55,11 +82,16 @@ export function createUsersStore() {
     return API.inviteUsers(users)
   }
 
-  async function removeInvites(payload) {
+  async removeInvites(payload: DeleteInviteUsersRequest) {
     return API.removeUserInvites(payload)
   }
 
-  async function acceptInvite(inviteCode, password, firstName, lastName) {
+  async acceptInvite(
+    inviteCode: string,
+    password: string,
+    firstName: string,
+    lastName?: string
+  ) {
     return API.acceptInvite({
       inviteCode,
       password,
@@ -68,21 +100,25 @@ export function createUsersStore() {
     })
   }
 
-  async function fetchInvite(inviteCode) {
+  async fetchInvite(inviteCode: string) {
     return API.getUserInvite(inviteCode)
   }
 
-  async function getInvites() {
+  async getInvites() {
     return API.getUserInvites()
   }
 
-  async function updateInvite(invite) {
-    return API.updateUserInvite(invite.code, invite)
+  async updateInvite(code: string, invite: UpdateInviteRequest) {
+    return API.updateUserInvite(code, invite)
   }
 
-  async function create(data) {
-    let mappedUsers = data.users.map(user => {
-      const body = {
+  async getUserCountByApp(appId: string) {
+    return await API.getUserCountByApp(appId)
+  }
+
+  async create(data: any) {
+    let mappedUsers: Omit<User, "tenantId">[] = data.users.map((user: any) => {
+      const body: Omit<User, "tenantId"> = {
         email: user.email,
         password: user.password,
         roles: {},
@@ -113,41 +149,44 @@ export function createUsersStore() {
     const response = await API.createUsers(mappedUsers, data.groups)
 
     // re-search from first page
-    await search()
+    await this.search()
     return response
   }
 
-  async function del(id) {
+  async delete(id: string) {
     await API.deleteUser(id)
-    update(users => users.filter(user => user._id !== id))
   }
 
-  async function getUserCountByApp(appId) {
-    return await API.getUserCountByApp(appId)
-  }
-
-  async function bulkDelete(users) {
+  async bulkDelete(
+    users: Array<{
+      userId: string
+      email: string
+    }>
+  ) {
     return API.deleteUsers(users)
   }
 
-  async function save(user) {
+  async save(user: User) {
     return await API.saveUser(user)
   }
 
-  async function addAppBuilder(userId, appId) {
+  async addAppBuilder(userId: string, appId: string) {
     return await API.addAppBuilder(userId, appId)
   }
 
-  async function removeAppBuilder(userId, appId) {
+  async removeAppBuilder(userId: string, appId: string) {
     return await API.removeAppBuilder(userId, appId)
   }
 
-  async function getAccountHolder() {
+  async getAccountHolder() {
     return await API.getAccountHolder()
   }
 
-  const getUserRole = user => {
-    if (user && user.email === user.tenantOwnerEmail) {
+  getUserRole(user?: User & { tenantOwnerEmail?: string }) {
+    if (!user) {
+      return Constants.BudibaseRoles.AppUser
+    }
+    if (user.email === user.tenantOwnerEmail) {
       return Constants.BudibaseRoles.Owner
     } else if (sdk.users.isAdmin(user)) {
       return Constants.BudibaseRoles.Admin
@@ -160,37 +199,16 @@ export function createUsersStore() {
     }
   }
 
-  const refreshUsage =
-    fn =>
-    async (...args) => {
+  foo = this.refreshUsage(this.create)
+  bar = this.refreshUsage(this.save)
+
+  refreshUsage<T extends any[], U>(fn: (...args: T) => Promise<U>) {
+    return async function (...args: T) {
       const response = await fn(...args)
       await licensing.setQuotaUsage()
       return response
     }
-
-  return {
-    subscribe,
-    search,
-    get,
-    getUserRole,
-    fetch,
-    invite,
-    onboard,
-    fetchInvite,
-    getInvites,
-    removeInvites,
-    updateInvite,
-    getUserCountByApp,
-    addAppBuilder,
-    removeAppBuilder,
-    // any operation that adds or deletes users
-    acceptInvite,
-    create: refreshUsage(create),
-    save: refreshUsage(save),
-    bulkDelete: refreshUsage(bulkDelete),
-    delete: refreshUsage(del),
-    getAccountHolder,
   }
 }
 
-export const users = createUsersStore()
+export const users = new UserStore()
