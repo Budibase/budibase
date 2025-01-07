@@ -1,8 +1,12 @@
 import DataFetch from "./DataFetch"
 
-export default class CustomFetch extends DataFetch {
+export default class CustomFetch extends DataFetch<any, any> {
+  getSchema(_datasource: any, definition: any) {
+    return definition?.schema
+  }
+
   // Gets the correct Budibase type for a JS value
-  getType(value) {
+  getType(value: any) {
     if (value == null) {
       return "string"
     }
@@ -22,7 +26,7 @@ export default class CustomFetch extends DataFetch {
   }
 
   // Parses the custom data into an array format
-  parseCustomData(data) {
+  parseCustomData(data: any) {
     if (!data) {
       return []
     }
@@ -55,7 +59,7 @@ export default class CustomFetch extends DataFetch {
   }
 
   // Enriches the custom data to ensure the structure and format is usable
-  enrichCustomData(data) {
+  enrichCustomData(data: any[]) {
     if (!data?.length) {
       return []
     }
@@ -72,7 +76,7 @@ export default class CustomFetch extends DataFetch {
       // Try parsing strings
       if (typeof value === "string") {
         const split = value.split(",").map(x => x.trim())
-        let obj = {}
+        let obj: Record<string, string> = {}
         for (let i = 0; i < split.length; i++) {
           const suffix = i === 0 ? "" : ` ${i + 1}`
           const key = `Value${suffix}`
@@ -87,13 +91,13 @@ export default class CustomFetch extends DataFetch {
   }
 
   // Extracts and parses the custom data from the datasource definition
-  getCustomData(datasource) {
+  getCustomData(datasource: { data: any }) {
     return this.enrichCustomData(this.parseCustomData(datasource?.data))
   }
 
-  async getDefinition(datasource) {
+  async getDefinition(datasource: any) {
     // Try and work out the schema from the array provided
-    let schema = {}
+    let schema: any = {}
     const data = this.getCustomData(datasource)
     if (!data?.length) {
       return { schema }
@@ -107,7 +111,7 @@ export default class CustomFetch extends DataFetch {
         }
         if (!schema[key]) {
           let type = this.getType(datum[key])
-          let constraints = {}
+          let constraints: any = {}
 
           // Determine whether we should render text columns as options instead
           if (type === "string") {
