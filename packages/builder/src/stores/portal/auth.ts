@@ -4,14 +4,14 @@ import { admin } from "@/stores/portal"
 import analytics from "@/analytics"
 import { BudiStore } from "@/stores/BudiStore"
 import {
+  GetGlobalSelfResponse,
   isSSOUser,
   SetInitInfoRequest,
   UpdateSelfRequest,
-  User,
 } from "@budibase/types"
 
 interface PortalAuthStore {
-  user?: User
+  user?: GetGlobalSelfResponse
   initInfo?: Record<string, any>
   accountPortalAccess: boolean
   loaded: boolean
@@ -33,7 +33,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     })
   }
 
-  setUser(user?: User) {
+  setUser(user?: GetGlobalSelfResponse) {
     this.set({
       loaded: true,
       user: user,
