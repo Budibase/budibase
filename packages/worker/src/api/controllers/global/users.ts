@@ -72,12 +72,14 @@ export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
     const requestUser = ctx.request.body
 
     // Do not allow the account holder role to be changed
-    const accountMetadata = await users.getExistingAccounts([requestUser.email])
-    if (accountMetadata?.length > 0) {
-      if (
-        requestUser.admin?.global !== true ||
-        requestUser.builder?.global !== true
-      ) {
+    if (
+      requestUser.admin?.global !== true ||
+      requestUser.builder?.global !== true
+    ) {
+      const accountMetadata = await users.getExistingAccounts([
+        requestUser.email,
+      ])
+      if (accountMetadata?.length > 0) {
         throw Error("Cannot set role of account holder")
       }
     }
@@ -441,7 +443,6 @@ export const checkInvite = async (ctx: UserCtx<void, CheckInviteResponse>) => {
   } catch (e) {
     console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
-    return
   }
   ctx.body = {
     email: invite.email,
@@ -472,7 +473,6 @@ export const updateInvite = async (
     invite = await cache.invite.getCode(code)
   } catch (e) {
     ctx.throw(400, "There was a problem with the invite")
-    return
   }
 
   let updated = {
