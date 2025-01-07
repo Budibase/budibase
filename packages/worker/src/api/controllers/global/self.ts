@@ -84,15 +84,15 @@ export async function fetchAPIKey(ctx: UserCtx<void, FetchAPIKeyResponse>) {
 }
 
 /**
- * Add the attributes that are session based to the current user.
+ *
  */
-const addSessionAttributesToUser = (ctx: any) => {
-  ctx.body.account = ctx.user.account
-  ctx.body.license = ctx.user.license
-  ctx.body.budibaseAccess = !!ctx.user.budibaseAccess
-  ctx.body.accountPortalAccess = !!ctx.user.accountPortalAccess
-  ctx.body.csrfToken = ctx.user.csrfToken
-}
+const getUserSessionAttributes = (ctx: any) => ({
+  account: ctx.user.account,
+  license: ctx.user.license,
+  budibaseAccess: !!ctx.user.budibaseAccess,
+  accountPortalAccess: !!ctx.user.accountPortalAccess,
+  csrfToken: ctx.user.csrfToken,
+})
 
 export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
   if (!ctx.user) {
@@ -108,12 +108,19 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
 
   // get the main body of the user
   const user = await userSdk.db.getUser(userId)
-  ctx.body = await groups.enrichUserRolesFromGroups(user)
+  const enrichedUser = await groups.enrichUserRolesFromGroups(user)
+
+  // add the attributes that are session based to the current user
+  const sessionAttributes = getUserSessionAttributes(ctx)
 
   // add the feature flags for this tenant
-  ctx.body.flags = await features.flags.fetch()
+  const flags = await features.flags.fetch()
 
-  addSessionAttributesToUser(ctx)
+  ctx.body = {
+    ...enrichedUser,
+    ...sessionAttributes,
+    flags,
+  }
 }
 
 export const syncAppFavourites = async (processedAppIds: string[]) => {
