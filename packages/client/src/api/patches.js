@@ -84,9 +84,9 @@ export const patchAPI = API => {
     }
   }
   const fetchViewData = API.fetchViewData
-  API.fetchViewData = async params => {
+  API.fetchViewData = async (viewName, params) => {
     const tableId = params?.tableId
-    const rows = await fetchViewData(params)
+    const rows = await fetchViewData(viewName, params)
     return await enrichRows(rows, tableId)
   }
 
