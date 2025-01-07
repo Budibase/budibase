@@ -83,7 +83,7 @@ export default class QueryFetch extends DataFetch<QueryDatasource, Query> {
       if (paginate && supportsPagination) {
         if (type === "page") {
           // For "page number" pagination, increment the existing page number
-          nextCursor = queryPayload.pagination.page + 1
+          nextCursor = queryPayload.pagination!.page! + 1
           hasNextPage = data?.length === limit && limit > 0
         } else {
           // For "cursor" pagination, the cursor should be in the response
