@@ -5,7 +5,7 @@ import QueryFetch from "@budibase/frontend-core/src/fetch/QueryFetch"
 import RelationshipFetch from "@budibase/frontend-core/src/fetch/RelationshipFetch"
 import NestedProviderFetch from "@budibase/frontend-core/src/fetch/NestedProviderFetch.js"
 import FieldFetch from "@budibase/frontend-core/src/fetch/FieldFetch"
-import JSONArrayFetch from "@budibase/frontend-core/src/fetch/JSONArrayFetch.js"
+import JSONArrayFetch from "@budibase/frontend-core/src/fetch/JSONArrayFetch"
 import ViewV2Fetch from "@budibase/frontend-core/src/fetch/ViewV2Fetch"
 import QueryArrayFetch from "@budibase/frontend-core/src/fetch/QueryArrayFetch"
 
