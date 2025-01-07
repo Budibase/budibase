@@ -176,11 +176,11 @@
   }
 
   async function updateUserFirstName(evt) {
-    userFieldsToUpdate = { ...userFieldsToUpdate, firstName: evt.target.value }
+    userFieldsToUpdate.firstName = evt.target.value
   }
 
   async function updateUserLastName(evt) {
-    userFieldsToUpdate = { ...userFieldsToUpdate, lastName: evt.target.value }
+    userFieldsToUpdate.lastName = evt.target.value
   }
 
   async function updateUserRole({ detail }) {
