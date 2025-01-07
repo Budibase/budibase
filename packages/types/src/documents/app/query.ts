@@ -14,6 +14,7 @@ export interface Query extends Document {
   fields: RestQueryFields | any
   transformer: string | null
   schema: Record<string, QuerySchema | string>
+  nestedSchemaFields: Record<string, Record<string, QuerySchema | string>>
   readable: boolean
   queryVerb: string
   // flag to state whether the default bindings are empty strings (old behaviour) or null
