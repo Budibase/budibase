@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { Row } from "./row"
 
 export interface QuerySchema {
   name?: string
@@ -29,7 +30,7 @@ export interface QueryParameter {
 }
 
 export interface QueryResponse {
-  rows: any[]
+  rows: Row[]
   keys: string[]
   info: any
   extra: any
