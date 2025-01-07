@@ -1,7 +1,7 @@
 import { API } from "api"
 import TableFetch from "@budibase/frontend-core/src/fetch/TableFetch"
 import ViewFetch from "@budibase/frontend-core/src/fetch/ViewFetch"
-import QueryFetch from "@budibase/frontend-core/src/fetch/QueryFetch.js"
+import QueryFetch from "@budibase/frontend-core/src/fetch/QueryFetch"
 import RelationshipFetch from "@budibase/frontend-core/src/fetch/RelationshipFetch"
 import NestedProviderFetch from "@budibase/frontend-core/src/fetch/NestedProviderFetch.js"
 import FieldFetch from "@budibase/frontend-core/src/fetch/FieldFetch"
