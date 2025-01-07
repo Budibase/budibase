@@ -7,13 +7,17 @@ export interface FieldDatasource {
   value: string[] | Row[]
 }
 
+export interface FieldDefinition {
+  schema?: Record<string, { type: string }> | null
+}
+
 function isArrayOfStrings(value: string[] | Row[]): value is string[] {
   return Array.isArray(value) && !!value[0] && typeof value[0] !== "object"
 }
 
 export default class FieldFetch extends DataFetch<
   FieldDatasource,
-  { schema?: Record<string, { type: string }> }
+  FieldDefinition
 > {
   getSchema(
     _datasource: FieldDatasource,
@@ -22,9 +26,11 @@ export default class FieldFetch extends DataFetch<
     return definition?.schema
   }
 
-  async getDefinition(datasource: FieldDatasource) {
+  async getDefinition(
+    datasource: FieldDatasource
+  ): Promise<FieldDefinition | null> {
     // Field sources have their schema statically defined
-    let schema: Record<string, { type: string }> | undefined
+    let schema
     if (datasource.fieldType === "attachment") {
       schema = {
         url: {
