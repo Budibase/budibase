@@ -1,7 +1,8 @@
 import { Row, TableSchema } from "@budibase/types"
 import DataFetch from "./DataFetch"
 
-interface FieldDatasource {
+export interface FieldDatasource {
+  tableId: string
   fieldType: "attachment" | "array"
   value: string[] | Row[]
 }
