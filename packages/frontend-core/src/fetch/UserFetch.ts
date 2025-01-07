@@ -2,11 +2,30 @@ import { get } from "svelte/store"
 import DataFetch from "./DataFetch"
 import { TableNames } from "../constants"
 import { utils } from "@budibase/shared-core"
-import { BasicOperator, Table } from "@budibase/types"
+import {
+  BasicOperator,
+  SearchFilters,
+  SearchUsersRequest,
+  Table,
+} from "@budibase/types"
 import { APIClient } from "../api/types.js"
 
-export default class UserFetch extends DataFetch<{ tableId: string }, {}> {
-  constructor(opts: { API: APIClient; datasource: Table; options?: {} }) {
+interface UserFetchQuery {
+  appId: string
+  paginated: boolean
+}
+
+export default class UserFetch extends DataFetch<
+  { tableId: string },
+  {},
+  UserFetchQuery
+> {
+  constructor(opts: {
+    API: APIClient
+    datasource: Table
+    options?: {}
+    query: UserFetchQuery
+  }) {
     super({
       ...opts,
       datasource: {
@@ -38,13 +57,14 @@ export default class UserFetch extends DataFetch<{ tableId: string }, {}> {
     const { cursor, query } = get(this.store)
 
     // Convert old format to new one - we now allow use of the lucene format
-    const { appId, paginated, ...rest } = query || ({} as any) // TODO
-    const finalQuery = utils.isSupportedUserSearch(rest)
-      ? query
-      : { [BasicOperator.EMPTY]: { email: true } } // TODO: check
+    const { appId, paginated, ...rest } = query || {}
+
+    const finalQuery: SearchFilters = utils.isSupportedUserSearch(rest)
+      ? rest
+      : { [BasicOperator.EMPTY]: { email: true } }
 
     try {
-      const opts = {
+      const opts: SearchUsersRequest = {
         bookmark: cursor ?? undefined,
         query: finalQuery ?? undefined,
         appId: appId,
