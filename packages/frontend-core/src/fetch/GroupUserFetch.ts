@@ -26,10 +26,6 @@ export default class GroupUserFetch extends DataFetch<
     })
   }
 
-  getSchema(_datasource: any, definition: any) {
-    return definition?.schema
-  }
-
   determineFeatureFlags() {
     return {
       supportsSearch: true,

@@ -1,10 +1,6 @@
 import DataFetch from "./DataFetch"
 
 export default class CustomFetch extends DataFetch<any, any> {
-  getSchema(_datasource: any, definition: any) {
-    return definition?.schema
-  }
-
   // Gets the correct Budibase type for a JS value
   getType(value: any) {
     if (value == null) {

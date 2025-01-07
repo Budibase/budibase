@@ -48,10 +48,6 @@ export default class UserFetch extends DataFetch<
     }
   }
 
-  getSchema(_datasource: any, definition: Table | null) {
-    return definition?.schema
-  }
-
   async getData() {
     const { limit, paginate } = this.options
     const { cursor, query } = get(this.store)

@@ -1,4 +1,4 @@
-import { Row, TableSchema } from "@budibase/types"
+import { Row } from "@budibase/types"
 import DataFetch from "./DataFetch"
 
 export interface FieldDatasource {
@@ -19,13 +19,6 @@ export default class FieldFetch extends DataFetch<
   FieldDatasource,
   FieldDefinition
 > {
-  getSchema(
-    _datasource: FieldDatasource,
-    definition: { schema?: TableSchema }
-  ) {
-    return definition?.schema
-  }
-
   async getDefinition(
     datasource: FieldDatasource
   ): Promise<FieldDefinition | null> {

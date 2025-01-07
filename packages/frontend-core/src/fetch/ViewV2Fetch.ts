@@ -12,10 +12,6 @@ export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
     }
   }
 
-  getSchema(_datasource: UIView, definition: ViewV2) {
-    return definition?.schema
-  }
-
   async getDefinition(datasource: UIView | null): Promise<ViewV2 | null> {
     if (!datasource?.id) {
       return null

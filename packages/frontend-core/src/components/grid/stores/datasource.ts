@@ -71,7 +71,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
   } = context
 
   const schema = derived(definition, $definition => {
-    let schema: Record<string, UIFieldSchema> = getDatasourceSchema({
+    const schema: Record<string, any> | null | undefined = getDatasourceSchema({
       API,
       datasource: get(datasource),
       definition: $definition ?? undefined,
@@ -82,7 +82,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
 
     // Ensure schema is configured as objects.
     // Certain datasources like queries use primitives.
-    Object.keys(schema || {}).forEach(key => {
+    Object.keys(schema).forEach(key => {
       if (typeof schema[key] !== "object") {
         schema[key] = { name: key, type: schema[key] }
       }

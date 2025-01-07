@@ -12,10 +12,6 @@ export default class RelationshipFetch extends DataFetch<
   RelationshipDatasource,
   Table
 > {
-  getSchema(_datasource: any, definition: any) {
-    return definition?.schema
-  }
-
   async getDefinition(datasource: RelationshipDatasource) {
     if (!datasource?.tableId) {
       return null

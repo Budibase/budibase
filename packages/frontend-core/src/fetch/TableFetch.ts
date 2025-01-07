@@ -26,10 +26,6 @@ export default class TableFetch extends DataFetch<UITable, Table> {
     }
   }
 
-  getSchema(_datasource: UITable | null, definition: Table | null) {
-    return definition?.schema
-  }
-
   async getData() {
     const { datasource, limit, sortColumn, sortOrder, sortType, paginate } =
       this.options

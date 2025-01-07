@@ -1,10 +1,6 @@
 import DataFetch from "./DataFetch"
 
 export default class NestedProviderFetch extends DataFetch<any, any> {
-  getSchema(_datasource: any, definition: any) {
-    return definition?.schema
-  }
-
   async getDefinition(datasource: any) {
     // Nested providers should already have exposed their own schema
     return {
