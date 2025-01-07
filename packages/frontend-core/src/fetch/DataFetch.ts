@@ -16,27 +16,35 @@ import { APIClient } from "../api/types"
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
-interface DataFetchStore<T> {
+interface DataFetchStore<TDefinition, TQuery> {
   rows: Row[]
   info: null
   schema: TableSchema | null
   loading: boolean
   loaded: boolean
-  query: SearchFilters | null
+  query: TQuery
   pageNumber: number
   cursor: null
   cursors: any[]
   resetKey: number
   error: null
-  definition?: T | null
+  definition?: TDefinition | null
 }
 
-interface DataFetchDerivedStore<T> extends DataFetchStore<T> {
+interface DataFetchDerivedStore<TDefinition, TQuery>
+  extends DataFetchStore<TDefinition, TQuery> {
   hasNextPage: boolean
   hasPrevPage: boolean
   supportsSearch: boolean
   supportsSort: boolean
   supportsPagination: boolean
+}
+
+interface DataFetchParams<TDatasource, TQuery = SearchFilters | undefined> {
+  API: APIClient
+  datasource: TDatasource
+  query: TQuery
+  options?: {}
 }
 
 /**
@@ -46,7 +54,8 @@ interface DataFetchDerivedStore<T> extends DataFetchStore<T> {
  */
 export default abstract class DataFetch<
   TDatasource extends {},
-  TDefinition extends {}
+  TDefinition extends {},
+  TQuery extends {} = SearchFilters
 > {
   API: APIClient
   features: {
@@ -59,7 +68,7 @@ export default abstract class DataFetch<
     limit: number
     // Search config
     filter: UISearchFilter | LegacyFilter[] | null
-    query: SearchFilters | null
+    query: TQuery
     // Sorting config
     sortColumn: string | null
     sortOrder: SortOrder
@@ -71,14 +80,14 @@ export default abstract class DataFetch<
     clientSideSorting: boolean
     clientSideLimiting: boolean
   }
-  store: Writable<DataFetchStore<TDefinition>>
-  derivedStore: Readable<DataFetchDerivedStore<TDefinition>>
+  store: Writable<DataFetchStore<TDefinition, TQuery>>
+  derivedStore: Readable<DataFetchDerivedStore<TDefinition, TQuery>>
 
   /**
    * Constructs a new DataFetch instance.
    * @param opts the fetch options
    */
-  constructor(opts: { API: APIClient; datasource: TDatasource; options?: {} }) {
+  constructor(opts: DataFetchParams<TDatasource, TQuery>) {
     // Feature flags
     this.features = {
       supportsSearch: false,
@@ -93,7 +102,7 @@ export default abstract class DataFetch<
 
       // Search config
       filter: null,
-      query: null,
+      query: opts.query,
 
       // Sorting config
       sortColumn: null,
@@ -116,7 +125,7 @@ export default abstract class DataFetch<
       schema: null,
       loading: false,
       loaded: false,
-      query: null,
+      query: opts.query,
       pageNumber: 0,
       cursor: null,
       cursors: [],
@@ -247,7 +256,7 @@ export default abstract class DataFetch<
     // Build the query
     let query = this.options.query
     if (!query) {
-      query = buildQuery(filter ?? undefined)
+      query = buildQuery(filter ?? undefined) as TQuery
     }
 
     // Update store
@@ -485,7 +494,7 @@ export default abstract class DataFetch<
    * @param state the current store state
    * @return {boolean} whether there is a next page of data or not
    */
-  hasNextPage(state: DataFetchStore<TDefinition>): boolean {
+  hasNextPage(state: DataFetchStore<TDefinition, TQuery>): boolean {
     return state.cursors[state.pageNumber + 1] != null
   }
 
