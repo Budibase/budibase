@@ -60,7 +60,10 @@ export interface DataFetchParams<
  */
 export default abstract class DataFetch<
   TDatasource extends {},
-  TDefinition extends {},
+  TDefinition extends {
+    schema?: Record<string, any> | null
+    primaryDisplay?: string
+  },
   TQuery extends {} = SearchFilters
 > {
   API: APIClient
@@ -361,10 +364,9 @@ export default abstract class DataFetch<
    * @param definition the datasource definition
    * @return {object} the schema
    */
-  abstract getSchema(
-    datasource: TDatasource | null,
-    definition: TDefinition | null
-  ): any
+  getSchema(_datasource: TDatasource | null, definition: TDefinition | null) {
+    return definition?.schema
+  }
 
   /**
    * Enriches a datasource schema with nested fields and ensures the structure
