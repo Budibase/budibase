@@ -22,6 +22,8 @@ export interface UserDetails {
   password?: string
 }
 
+export type UnsavedUser = Omit<User, "tenantId">
+
 export interface BulkUserRequest {
   delete?: {
     users: Array<{
@@ -31,7 +33,7 @@ export interface BulkUserRequest {
   }
   create?: {
     roles?: any[]
-    users: User[]
+    users: UnsavedUser[]
     groups: any[]
   }
 }
