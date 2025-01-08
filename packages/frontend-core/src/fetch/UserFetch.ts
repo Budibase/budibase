@@ -23,7 +23,6 @@ export default class UserFetch extends DataFetch<
   constructor(opts: {
     API: APIClient
     datasource: Table
-    options?: {}
     query: UserFetchQuery
   }) {
     super({
@@ -43,9 +42,7 @@ export default class UserFetch extends DataFetch<
   }
 
   async getDefinition() {
-    return {
-      schema: {},
-    }
+    return { schema: {} }
   }
 
   async getData() {
@@ -53,7 +50,7 @@ export default class UserFetch extends DataFetch<
     const { cursor, query } = get(this.store)
 
     // Convert old format to new one - we now allow use of the lucene format
-    const { appId, paginated, ...rest } = query || {}
+    const { appId, paginated, ...rest } = query
 
     const finalQuery: SearchFilters = utils.isSupportedUserSearch(rest)
       ? rest
