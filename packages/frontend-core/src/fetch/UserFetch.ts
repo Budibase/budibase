@@ -52,7 +52,7 @@ export default class UserFetch extends DataFetch<
 
     const finalQuery: SearchFilters = utils.isSupportedUserSearch(rest)
       ? rest
-      : { [BasicOperator.EMPTY]: { email: true } }
+      : { [BasicOperator.EMPTY]: { email: null } }
 
     try {
       const opts: SearchUsersRequest = {
