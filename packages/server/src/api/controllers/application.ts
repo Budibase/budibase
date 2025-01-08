@@ -6,8 +6,8 @@ import {
 } from "../../db/views/staticViews"
 import {
   backupClientLibrary,
-  createApp,
-  deleteApp,
+  uploadAppFiles,
+  deleteAppFiles,
   revertClientLibrary,
   updateClientLibrary,
 } from "../../utilities/fileSystem"
@@ -377,9 +377,8 @@ async function performAppCreate(
     const response = await db.put(newApplication, { force: true })
     newApplication._rev = response.rev
 
-    /* istanbul ignore next */
-    if (!env.isTest()) {
-      await createApp(appId)
+    if (!env.USE_LOCAL_COMPONENT_LIBS) {
+      await uploadAppFiles(appId)
     }
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
@@ -665,7 +664,7 @@ async function destroyApp(ctx: UserCtx) {
   await events.app.deleted(app)
 
   if (!env.isTest()) {
-    await deleteApp(appId)
+    await deleteAppFiles(appId)
   }
 
   await removeAppFromUserRoles(ctx, appId)

@@ -16,7 +16,7 @@ export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
  * @param appId The ID of the app which is being created.
  * @return once promise completes app resources should be ready in object store.
  */
-export const createApp = async (appId: string) => {
+export const uploadAppFiles = async (appId: string) => {
   await updateClientLibrary(appId)
 }
 
@@ -25,7 +25,7 @@ export const createApp = async (appId: string) => {
  * @param appId The ID of the app which is being deleted.
  * @return once promise completes the app resources will be removed from object store.
  */
-export const deleteApp = async (appId: string) => {
+export const deleteAppFiles = async (appId: string) => {
   await objectStore.deleteFolder(ObjectStoreBuckets.APPS, `${appId}/`)
 }
 
