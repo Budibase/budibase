@@ -1,6 +1,6 @@
 import DataFetch from "./DataFetch"
 import { Helpers } from "@budibase/bbui"
-import { Query } from "@budibase/types"
+import { ExecuteQueryRequest, Query } from "@budibase/types"
 import { get } from "svelte/store"
 
 interface QueryDatasource {
@@ -12,7 +12,7 @@ interface QueryDatasource {
       pageParam: string
     }
   }
-  queryParams: Record<string, string>
+  queryParams?: Record<string, string>
   parameters: { name: string; default: string }[]
 }
 
@@ -55,7 +55,7 @@ export default class QueryFetch extends DataFetch<QueryDatasource, Query> {
     const type = definition?.fields?.pagination?.type
 
     // Set the default query params
-    const parameters = Helpers.cloneDeep(datasource.queryParams)
+    const parameters = Helpers.cloneDeep(datasource.queryParams || {})
     for (const param of datasource?.parameters || []) {
       if (!parameters[param.name]) {
         parameters[param.name] = param.default
@@ -63,13 +63,7 @@ export default class QueryFetch extends DataFetch<QueryDatasource, Query> {
     }
 
     // Add pagination to query if supported
-    const queryPayload: {
-      parameters: any
-      pagination?: {
-        page: number | null
-        limit: number
-      }
-    } = { parameters }
+    const queryPayload: ExecuteQueryRequest = { parameters }
     if (paginate && supportsPagination) {
       const requestCursor = type === "page" ? parseInt(cursor || "1") : cursor
       queryPayload.pagination = { page: requestCursor, limit }
