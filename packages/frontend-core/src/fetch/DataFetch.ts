@@ -223,12 +223,12 @@ export default abstract class DataFetch<
       supportsPagination: paginate && !!features?.supportsPagination,
     }
 
-    // Fetch and enrich schema
-    let schema = this.getSchema(datasource, definition) ?? null
-    schema = this.enrichSchema(schema)
-    if (!schema) {
+    if (!definition?.schema) {
       return
     }
+
+    // Fetch and enrich schema
+    const schema = this.enrichSchema(definition.schema)
 
     // If an invalid sort column is specified, delete it
     if (this.options.sortColumn && !schema[this.options.sortColumn]) {
@@ -374,11 +374,7 @@ export default abstract class DataFetch<
    * @param schema the datasource schema
    * @return {object} the enriched datasource schema
    */
-  enrichSchema(schema: TableSchema | null): TableSchema | null {
-    if (schema == null) {
-      return null
-    }
-
+  private enrichSchema(schema: TableSchema): TableSchema {
     // Check for any JSON fields so we can add any top level properties
     let jsonAdditions: Record<string, { type: string; nestedJSON: true }> = {}
     for (const fieldKey of Object.keys(schema)) {
@@ -510,7 +506,7 @@ export default abstract class DataFetch<
    * @param state the current store state
    * @return {boolean} whether there is a next page of data or not
    */
-  hasNextPage(state: DataFetchStore<TDefinition, TQuery>): boolean {
+  private hasNextPage(state: DataFetchStore<TDefinition, TQuery>): boolean {
     return state.cursors[state.pageNumber + 1] != null
   }
 
@@ -520,7 +516,7 @@ export default abstract class DataFetch<
    * @param state the current store state
    * @return {boolean} whether there is a previous page of data or not
    */
-  hasPrevPage(state: { pageNumber: number }): boolean {
+  private hasPrevPage(state: { pageNumber: number }): boolean {
     return state.pageNumber > 0
   }
 
