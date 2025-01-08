@@ -28,10 +28,7 @@ export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
     }
   }
 
-  getDefaultSortColumn(
-    _definition: { primaryDisplay?: string } | null,
-    _schema: Record<string, any>
-  ) {
+  getDefaultSortColumn() {
     return null
   }
 
