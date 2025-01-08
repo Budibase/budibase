@@ -11,7 +11,8 @@ interface QueryDatasource {
 }
 
 export default class QueryFetch extends DataFetch<QueryDatasource, Query> {
-  determineFeatureFlags(definition: Query) {
+  async determineFeatureFlags() {
+    const definition = await this.getDefinition(this.options.datasource)
     const supportsPagination =
       !!definition?.fields?.pagination?.type &&
       !!definition?.fields?.pagination?.location &&

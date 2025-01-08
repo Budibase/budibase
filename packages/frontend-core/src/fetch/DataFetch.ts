@@ -216,7 +216,7 @@ export default abstract class DataFetch<
     const definition = await this.getDefinition(datasource)
 
     // Determine feature flags
-    const features = this.determineFeatureFlags(definition)
+    const features = await this.determineFeatureFlags()
     this.features = {
       supportsSearch: !!features?.supportsSearch,
       supportsSort: !!features?.supportsSort,
@@ -421,14 +421,13 @@ export default abstract class DataFetch<
   }
 
   /**
-   * Determine the feature flag for this datasource definition
-   * @param definition
+   * Determine the feature flag for this datasource
    */
-  determineFeatureFlags(_definition: TDefinition | null): {
+  async determineFeatureFlags(): Promise<{
     supportsPagination: boolean
     supportsSearch?: boolean
     supportsSort?: boolean
-  } {
+  }> {
     return {
       supportsSearch: false,
       supportsSort: false,

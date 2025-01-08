@@ -3,7 +3,7 @@ import DataFetch from "./DataFetch"
 import { SortOrder, Table, UITable } from "@budibase/types"
 
 export default class TableFetch extends DataFetch<UITable, Table> {
-  determineFeatureFlags() {
+  async determineFeatureFlags() {
     return {
       supportsSearch: true,
       supportsSort: true,
