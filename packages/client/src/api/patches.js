@@ -66,10 +66,9 @@ export const patchAPI = API => {
     }
   }
   const fetchRelationshipData = API.fetchRelationshipData
-  API.fetchRelationshipData = async params => {
-    const tableId = params?.tableId
-    const rows = await fetchRelationshipData(params)
-    return await enrichRows(rows, tableId)
+  API.fetchRelationshipData = async (sourceId, rowId, fieldName) => {
+    const rows = await fetchRelationshipData(sourceId, rowId, fieldName)
+    return await enrichRows(rows, sourceId)
   }
   const fetchTableData = API.fetchTableData
   API.fetchTableData = async tableId => {
@@ -85,9 +84,9 @@ export const patchAPI = API => {
     }
   }
   const fetchViewData = API.fetchViewData
-  API.fetchViewData = async params => {
+  API.fetchViewData = async (viewName, params) => {
     const tableId = params?.tableId
-    const rows = await fetchViewData(params)
+    const rows = await fetchViewData(viewName, params)
     return await enrichRows(rows, tableId)
   }
 
