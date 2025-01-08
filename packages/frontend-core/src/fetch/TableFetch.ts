@@ -37,7 +37,7 @@ export default class TableFetch extends DataFetch<UITable, Table> {
     // Search table
     try {
       const res = await this.API.searchTable(tableId, {
-        query: query ?? undefined,
+        query,
         limit,
         sort: sortColumn,
         sortOrder: sortOrder ?? SortOrder.ASCENDING,

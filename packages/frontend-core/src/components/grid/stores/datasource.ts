@@ -71,7 +71,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
   } = context
 
   const schema = derived(definition, $definition => {
-    const schema: Record<string, any> | null | undefined = getDatasourceSchema({
+    const schema: Record<string, any> | undefined = getDatasourceSchema({
       API,
       datasource: get(datasource) as any,
       definition: $definition ?? undefined,
@@ -186,7 +186,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
       API,
       datasource: get(datasource) as any,
     })
-    definition.set((def as any) ?? null)
+    definition.set(def as any)
   }
 
   // Saves the datasource definition
