@@ -62,7 +62,7 @@ export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
 
     try {
       const request = {
-        ...(query ? { query } : {}),
+        query,
         paginate,
         limit,
         bookmark: cursor,
