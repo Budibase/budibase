@@ -118,58 +118,15 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
   responseType?: FormulaResponseType
 }
 
-interface AITranslateFieldMetadata extends BaseFieldSchema {
+export interface AIFieldMetadata extends BaseFieldSchema {
   type: FieldType.AI
-  operation: AIOperationEnum.TRANSLATE
-  column: string
-  language: string
+  operation: AIOperationEnum
+  columns?: string[]
+  column?: string
+  categories?: string
+  prompt?: string
+  language?: string
 }
-
-interface AICleanDataFieldMetadata extends BaseFieldSchema {
-  type: FieldType.AI
-  operation: AIOperationEnum.CLEAN_DATA
-  column: string
-}
-
-interface AICategoriseTextFieldMetadata extends BaseFieldSchema {
-  type: FieldType.AI
-  operation: AIOperationEnum.CATEGORISE_TEXT
-  columns: string[]
-  categories: string
-}
-
-interface AISentimentAnalysisFieldMetadata extends BaseFieldSchema {
-  type: FieldType.AI
-  operation: AIOperationEnum.SENTIMENT_ANALYSIS
-  column: string
-}
-
-interface AISearchWebFieldMetadata extends BaseFieldSchema {
-  type: FieldType.AI
-  operation: AIOperationEnum.SEARCH_WEB
-  columns: string[]
-}
-
-interface AIPromptFieldMetadata extends BaseFieldSchema {
-  type: FieldType.AI
-  operation: AIOperationEnum.PROMPT
-  prompt: string
-}
-
-interface AISummariseTextFieldMetadata extends BaseFieldSchema {
-  type: FieldType.AI
-  operation: AIOperationEnum.SUMMARISE_TEXT
-  columns: string[]
-}
-
-export type AIFieldMetadata =
-  | AITranslateFieldMetadata
-  | AICleanDataFieldMetadata
-  | AICategoriseTextFieldMetadata
-  | AISentimentAnalysisFieldMetadata
-  | AIPromptFieldMetadata
-  | AISearchWebFieldMetadata
-  | AISummariseTextFieldMetadata
 
 export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
