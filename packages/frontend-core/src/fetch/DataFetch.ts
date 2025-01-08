@@ -19,14 +19,14 @@ const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
 interface DataFetchStore<TDefinition, TQuery> {
   rows: Row[]
-  info: null
+  info: any
   schema: TableSchema | null
   loading: boolean
   loaded: boolean
   query: TQuery
   pageNumber: number
-  cursor: null
-  cursors: any[]
+  cursor: string | null
+  cursors: string[]
   resetKey: string
   error: {
     message: string
