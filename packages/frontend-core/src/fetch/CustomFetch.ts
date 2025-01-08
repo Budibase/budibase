@@ -1,6 +1,15 @@
 import DataFetch from "./DataFetch"
 
-export default class CustomFetch extends DataFetch<any, any> {
+interface CustomDatasource {
+  data: any
+}
+
+type CustomDefinition = Record<string, any>
+
+export default class CustomFetch extends DataFetch<
+  CustomDatasource,
+  CustomDefinition
+> {
   // Gets the correct Budibase type for a JS value
   getType(value: any) {
     if (value == null) {
@@ -55,7 +64,7 @@ export default class CustomFetch extends DataFetch<any, any> {
   }
 
   // Enriches the custom data to ensure the structure and format is usable
-  enrichCustomData(data: any[]) {
+  enrichCustomData(data: (string | any)[]) {
     if (!data?.length) {
       return []
     }
@@ -72,7 +81,7 @@ export default class CustomFetch extends DataFetch<any, any> {
       // Try parsing strings
       if (typeof value === "string") {
         const split = value.split(",").map(x => x.trim())
-        let obj: Record<string, string> = {}
+        const obj: Record<string, string> = {}
         for (let i = 0; i < split.length; i++) {
           const suffix = i === 0 ? "" : ` ${i + 1}`
           const key = `Value${suffix}`
@@ -87,27 +96,27 @@ export default class CustomFetch extends DataFetch<any, any> {
   }
 
   // Extracts and parses the custom data from the datasource definition
-  getCustomData(datasource: { data: any }) {
+  getCustomData(datasource: CustomDatasource) {
     return this.enrichCustomData(this.parseCustomData(datasource?.data))
   }
 
-  async getDefinition(datasource: any) {
+  async getDefinition(datasource: CustomDatasource) {
     // Try and work out the schema from the array provided
-    let schema: any = {}
+    const schema: CustomDefinition = {}
     const data = this.getCustomData(datasource)
     if (!data?.length) {
       return { schema }
     }
 
     // Go through every object and extract all valid keys
-    for (let datum of data) {
-      for (let key of Object.keys(datum)) {
+    for (const datum of data) {
+      for (const key of Object.keys(datum)) {
         if (key === "_id") {
           continue
         }
         if (!schema[key]) {
           let type = this.getType(datum[key])
-          let constraints: any = {}
+          const constraints: any = {}
 
           // Determine whether we should render text columns as options instead
           if (type === "string") {
