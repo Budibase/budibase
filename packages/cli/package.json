@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@budibase/backend-core": "*",
+    "@budibase/pouchdb-replication-stream": "1.2.11",
     "@budibase/string-templates": "*",
     "@budibase/types": "*",
     "chalk": "4.1.0",
@@ -28,9 +29,9 @@
     "inquirer": "8.0.0",
     "lookpath": "1.1.0",
     "node-fetch": "2.6.7",
+    "open": "8.4.2",
     "posthog-node": "4.0.1",
     "pouchdb": "7.3.0",
-    "@budibase/pouchdb-replication-stream": "1.2.11",
     "randomstring": "1.1.5",
     "tar": "6.2.1",
     "yaml": "^2.1.1"

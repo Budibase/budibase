@@ -2,13 +2,19 @@ import { derived, get } from "svelte/store"
 import { componentStore } from "@/stores/builder"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
+import { Layout } from "@budibase/types"
 
-export const INITIAL_LAYOUT_STATE = {
+interface LayoutState {
+  layouts: Layout[]
+  selectedLayoutId: string | null
+}
+
+export const INITIAL_LAYOUT_STATE: LayoutState = {
   layouts: [],
   selectedLayoutId: null,
 }
 
-export class LayoutStore extends BudiStore {
+export class LayoutStore extends BudiStore<LayoutState> {
   constructor() {
     super(INITIAL_LAYOUT_STATE)
 
@@ -22,14 +28,14 @@ export class LayoutStore extends BudiStore {
     this.store.set({ ...INITIAL_LAYOUT_STATE })
   }
 
-  syncAppLayouts(pkg) {
+  syncAppLayouts(pkg: { layouts: Layout[] }) {
     this.update(state => ({
       ...state,
       layouts: [...pkg.layouts],
     }))
   }
 
-  select(layoutId) {
+  select(layoutId: string) {
     // Check this layout exists
     const state = get(this.store)
     const componentState = get(componentStore)
@@ -48,15 +54,15 @@ export class LayoutStore extends BudiStore {
 
     // Select new layout
     this.update(state => {
-      state.selectedLayoutId = layout._id
+      state.selectedLayoutId = layout._id!
       return state
     })
 
     componentStore.select(layout.props?._id)
   }
 
-  async deleteLayout(layout) {
-    if (!layout?._id) {
+  async deleteLayout(layout: Layout) {
+    if (!layout?._id || !layout?._rev) {
       return
     }
     await API.deleteLayout(layout._id, layout._rev)
