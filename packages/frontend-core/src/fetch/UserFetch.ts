@@ -1,30 +1,28 @@
 import { get } from "svelte/store"
-import DataFetch from "./DataFetch"
+import DataFetch, { DataFetchParams } from "./DataFetch"
 import { TableNames } from "../constants"
 import { utils } from "@budibase/shared-core"
 import {
   BasicOperator,
   SearchFilters,
   SearchUsersRequest,
-  Table,
 } from "@budibase/types"
-import { APIClient } from "../api/types.js"
 
 interface UserFetchQuery {
   appId: string
   paginated: boolean
 }
 
+interface UserDatasource {
+  tableId: string
+}
+
 export default class UserFetch extends DataFetch<
-  { tableId: string },
+  UserDatasource,
   {},
   UserFetchQuery
 > {
-  constructor(opts: {
-    API: APIClient
-    datasource: Table
-    query: UserFetchQuery
-  }) {
+  constructor(opts: DataFetchParams<UserDatasource, UserFetchQuery>) {
     super({
       ...opts,
       datasource: {
