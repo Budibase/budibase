@@ -1,9 +1,24 @@
-import DataFetch from "./DataFetch.js"
+import DataFetch from "./DataFetch"
 import { Helpers } from "@budibase/bbui"
+import { ExecuteQueryRequest, Query } from "@budibase/types"
 import { get } from "svelte/store"
 
-export default class QueryFetch extends DataFetch {
-  determineFeatureFlags(definition) {
+interface QueryDatasource {
+  _id: string
+  fields: Record<string, any> & {
+    pagination?: {
+      type: string
+      location: string
+      pageParam: string
+    }
+  }
+  queryParams?: Record<string, string>
+  parameters: { name: string; default: string }[]
+}
+
+export default class QueryFetch extends DataFetch<QueryDatasource, Query> {
+  async determineFeatureFlags() {
+    const definition = await this.getDefinition()
     const supportsPagination =
       !!definition?.fields?.pagination?.type &&
       !!definition?.fields?.pagination?.location &&
@@ -11,7 +26,9 @@ export default class QueryFetch extends DataFetch {
     return { supportsPagination }
   }
 
-  async getDefinition(datasource) {
+  async getDefinition() {
+    const { datasource } = this.options
+
     if (!datasource?._id) {
       return null
     }
@@ -40,17 +57,17 @@ export default class QueryFetch extends DataFetch {
     const type = definition?.fields?.pagination?.type
 
     // Set the default query params
-    let parameters = Helpers.cloneDeep(datasource?.queryParams || {})
-    for (let param of datasource?.parameters || {}) {
+    const parameters = Helpers.cloneDeep(datasource.queryParams || {})
+    for (const param of datasource?.parameters || []) {
       if (!parameters[param.name]) {
         parameters[param.name] = param.default
       }
     }
 
     // Add pagination to query if supported
-    let queryPayload = { parameters }
+    const queryPayload: ExecuteQueryRequest = { parameters }
     if (paginate && supportsPagination) {
-      const requestCursor = type === "page" ? parseInt(cursor || 1) : cursor
+      const requestCursor = type === "page" ? parseInt(cursor || "1") : cursor
       queryPayload.pagination = { page: requestCursor, limit }
     }
 
@@ -65,7 +82,7 @@ export default class QueryFetch extends DataFetch {
       if (paginate && supportsPagination) {
         if (type === "page") {
           // For "page number" pagination, increment the existing page number
-          nextCursor = queryPayload.pagination.page + 1
+          nextCursor = queryPayload.pagination!.page! + 1
           hasNextPage = data?.length === limit && limit > 0
         } else {
           // For "cursor" pagination, the cursor should be in the response

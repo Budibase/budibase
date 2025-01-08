@@ -3,7 +3,10 @@ import { Datasource, Row, Query } from "@budibase/types"
 export type WorkerCallback = (error: any, response?: any) => void
 
 export interface QueryEvent
-  extends Omit<Query, "datasourceId" | "name" | "parameters" | "readable"> {
+  extends Omit<
+    Query,
+    "datasourceId" | "name" | "parameters" | "readable" | "nestedSchemaFields"
+  > {
   appId?: string
   datasource: Datasource
   pagination?: any
