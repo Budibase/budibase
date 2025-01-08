@@ -254,7 +254,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
 
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
-          definition.set($fetch.definition)
+          definition.set($fetch.definition as any)
         }
 
         // Reset scroll state when data changes
