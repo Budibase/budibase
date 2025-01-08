@@ -4,7 +4,7 @@ import { get } from "svelte/store"
 import { helpers } from "@budibase/shared-core"
 
 export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
-  determineFeatureFlags() {
+  async determineFeatureFlags() {
     return {
       supportsSearch: true,
       supportsSort: true,

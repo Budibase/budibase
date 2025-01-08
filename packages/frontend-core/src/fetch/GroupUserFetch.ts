@@ -26,7 +26,7 @@ export default class GroupUserFetch extends DataFetch<
     })
   }
 
-  determineFeatureFlags() {
+  async determineFeatureFlags() {
     return {
       supportsSearch: true,
       supportsSort: false,

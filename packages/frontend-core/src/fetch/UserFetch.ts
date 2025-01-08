@@ -34,7 +34,7 @@ export default class UserFetch extends DataFetch<
     })
   }
 
-  determineFeatureFlags() {
+  async determineFeatureFlags() {
     return {
       supportsSearch: true,
       supportsSort: false,
