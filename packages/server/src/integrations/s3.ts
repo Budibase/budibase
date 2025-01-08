@@ -7,9 +7,8 @@ import {
   ConnectionInfo,
 } from "@budibase/types"
 
-import { S3 } from "@aws-sdk/client-s3"
+import AWS from "aws-sdk"
 import csv from "csvtojson"
-import stream from "stream"
 
 interface S3Config {
   region: string
@@ -168,7 +167,7 @@ class S3Integration implements IntegrationBase {
       delete this.config.endpoint
     }
 
-    this.client = new S3(this.config)
+    this.client = new AWS.S3(this.config)
   }
 
   async testConnection() {
@@ -176,7 +175,7 @@ class S3Integration implements IntegrationBase {
       connected: false,
     }
     try {
-      await this.client.listBuckets()
+      await this.client.listBuckets().promise()
       response.connected = true
     } catch (e: any) {
       response.error = e.message as string
@@ -210,7 +209,7 @@ class S3Integration implements IntegrationBase {
         LocationConstraint: query.location,
       }
     }
-    return await this.client.createBucket(params)
+    return await this.client.createBucket(params).promise()
   }
 
   async read(query: {
@@ -221,39 +220,37 @@ class S3Integration implements IntegrationBase {
     maxKeys: number
     prefix: string
   }) {
-    const response = await this.client.listObjects({
-      Bucket: query.bucket,
-      Delimiter: query.delimiter,
-      Marker: query.marker,
-      MaxKeys: query.maxKeys,
-      Prefix: query.prefix,
-    })
+    const response = await this.client
+      .listObjects({
+        Bucket: query.bucket,
+        Delimiter: query.delimiter,
+        Marker: query.marker,
+        MaxKeys: query.maxKeys,
+        Prefix: query.prefix,
+      })
+      .promise()
     return response.Contents
   }
 
   async readCsv(query: { bucket: string; key: string }) {
-    const response = await this.client.getObject({
-      Bucket: query.bucket,
-      Key: query.key,
-    })
-
-    const fileStream = response.Body?.transformToWebStream()
-
-    if (!fileStream || !(fileStream instanceof stream.Readable)) {
-      throw new Error("Unable to retrieve CSV - invalid stream")
-    }
+    const stream = this.client
+      .getObject({
+        Bucket: query.bucket,
+        Key: query.key,
+      })
+      .createReadStream()
 
     let csvError = false
     return new Promise((resolve, reject) => {
-      fileStream.on("error", (err: Error) => {
+      stream.on("error", (err: Error) => {
         reject(err)
       })
       const response = csv()
-        .fromStream(fileStream)
+        .fromStream(stream)
         .on("error", () => {
           csvError = true
         })
-      fileStream.on("finish", () => {
+      stream.on("finish", () => {
         resolve(response)
       })
     }).catch(err => {
@@ -266,10 +263,12 @@ class S3Integration implements IntegrationBase {
   }
 
   async delete(query: { bucket: string; delete: string }) {
-    return await this.client.deleteObjects({
-      Bucket: query.bucket,
-      Delete: JSON.parse(query.delete),
-    })
+    return await this.client
+      .deleteObjects({
+        Bucket: query.bucket,
+        Delete: JSON.parse(query.delete),
+      })
+      .promise()
   }
 }
 
