@@ -1,5 +1,5 @@
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import * as setup from "./utilities"
 
 describe("/component", () => {
   let request = setup.getRequest()
