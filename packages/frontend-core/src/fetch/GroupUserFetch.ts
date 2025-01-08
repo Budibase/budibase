@@ -1,7 +1,6 @@
 import { get } from "svelte/store"
-import DataFetch from "./DataFetch"
+import DataFetch, { DataFetchParams } from "./DataFetch"
 import { TableNames } from "../constants"
-import { APIClient } from "../api/types"
 
 interface GroupUserQuery {
   groupId: string
@@ -17,7 +16,7 @@ export default class GroupUserFetch extends DataFetch<
   {},
   GroupUserQuery
 > {
-  constructor(opts: { API: APIClient; query: GroupUserQuery }) {
+  constructor(opts: DataFetchParams<GroupUserDatasource, GroupUserQuery>) {
     super({
       ...opts,
       datasource: {
