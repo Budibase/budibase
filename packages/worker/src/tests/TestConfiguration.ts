@@ -35,7 +35,6 @@ import {
 } from "@budibase/types"
 import API from "./api"
 import jwt, { Secret } from "jsonwebtoken"
-import cloneDeep from "lodash/fp/cloneDeep"
 
 class TestConfiguration {
   server: any
