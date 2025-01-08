@@ -324,8 +324,8 @@ export async function update(
   return pickApi(tableId).update(tableId, view)
 }
 
-export function isV2(view: View | ViewV2): view is ViewV2 {
-  return (view as ViewV2).version === 2
+export function isV2(view: View | ViewV2) {
+  return helpers.views.isV2(view)
 }
 
 export async function remove(viewId: string): Promise<ViewV2> {

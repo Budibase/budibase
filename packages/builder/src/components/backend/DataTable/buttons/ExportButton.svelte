@@ -7,9 +7,9 @@
     Button,
   } from "@budibase/bbui"
   import download from "downloadjs"
-  import { API } from "api"
-  import { ROW_EXPORT_FORMATS } from "constants/backend"
-  import DetailPopover from "components/common/DetailPopover.svelte"
+  import { API } from "@/api"
+  import { ROW_EXPORT_FORMATS } from "@/constants/backend"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
 
   export let view
   export let sorting

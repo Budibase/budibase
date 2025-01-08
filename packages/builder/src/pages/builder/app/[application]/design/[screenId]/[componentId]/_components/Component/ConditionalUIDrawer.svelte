@@ -11,11 +11,11 @@
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import { QueryUtils, Constants } from "@budibase/frontend-core"
-  import { selectedComponent, componentStore } from "stores/builder"
-  import { getComponentForSetting } from "components/design/settings/componentSettings"
-  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
+  import { selectedComponent, componentStore } from "@/stores/builder"
+  import { getComponentForSetting } from "@/components/design/settings/componentSettings"
+  import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
 
   export let conditions = []
   export let bindings = []

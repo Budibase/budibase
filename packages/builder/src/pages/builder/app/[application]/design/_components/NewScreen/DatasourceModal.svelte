@@ -1,8 +1,8 @@
 <script>
   import { Body, ModalContent, Layout } from "@budibase/bbui"
-  import { datasources as datasourcesStore } from "stores/builder"
-  import ICONS from "components/backend/DatasourceNavigator/icons"
-  import { IntegrationNames } from "constants"
+  import { datasources as datasourcesStore } from "@/stores/builder"
+  import ICONS from "@/components/backend/DatasourceNavigator/icons"
+  import { IntegrationNames } from "@/constants"
   import { createEventDispatcher } from "svelte"
   import TableOrViewOption from "./TableOrViewOption.svelte"
   import { makeTableOption, makeViewOption } from "./utils"

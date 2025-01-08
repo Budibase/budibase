@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { Button } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   export let selectedRows
   export let deleteRows

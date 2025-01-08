@@ -1,5 +1,5 @@
 <script>
-  import Editor from "components/integration/QueryEditor.svelte"
+  import Editor from "@/components/integration/QueryEditor.svelte"
   import {
     ModalContent,
     Tabs,
@@ -12,8 +12,8 @@
     ActionButton,
   } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
-  import { FIELDS } from "constants/backend"
-  import { generate } from "helpers/schemaGenerator"
+  import { FIELDS } from "@/constants/backend"
+  import { generate } from "@/helpers/schemaGenerator"
 
   export let schema = {}
   export let json

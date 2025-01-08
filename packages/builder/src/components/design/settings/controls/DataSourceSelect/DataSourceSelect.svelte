@@ -2,7 +2,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "dataBinding"
+  } from "@/dataBinding"
   import {
     Button,
     Popover,
@@ -26,15 +26,15 @@
     componentStore,
     datasources,
     integrations,
-  } from "stores/builder"
-  import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
-  import IntegrationQueryEditor from "components/integration/index.svelte"
+  } from "@/stores/builder"
+  import BindingBuilder from "@/components/integration/QueryBindingBuilder.svelte"
+  import IntegrationQueryEditor from "@/components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
-  import { findAllComponents } from "helpers/components"
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
-  import { API } from "api"
-  import { datasourceSelect as format } from "helpers/data/format"
+  import { findAllComponents } from "@/helpers/components"
+  import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
+  import DataSourceCategory from "@/components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
+  import { API } from "@/api"
+  import { datasourceSelect as format } from "@/helpers/data/format"
 
   export let value = {}
   export let otherSources

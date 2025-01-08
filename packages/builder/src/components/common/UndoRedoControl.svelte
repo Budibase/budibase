@@ -1,7 +1,7 @@
 <script>
   import { Icon, ActionButton } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { isBuilderInputFocused } from "helpers"
+  import { isBuilderInputFocused } from "@/helpers"
 
   export let store
   export let showButtonGroup = false

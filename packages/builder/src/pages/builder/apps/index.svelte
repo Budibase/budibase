@@ -19,12 +19,12 @@
     groups,
     licensing,
     enrichedApps,
-  } from "stores/portal"
+  } from "@/stores/portal"
   import { goto } from "@roxi/routify"
-  import { AppStatus } from "constants"
-  import { gradient } from "actions"
-  import ProfileModal from "components/settings/ProfileModal.svelte"
-  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
+  import { AppStatus } from "@/constants"
+  import { gradient } from "@/actions"
+  import ProfileModal from "@/components/settings/ProfileModal.svelte"
+  import ChangePasswordModal from "@/components/settings/ChangePasswordModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
   import Spaceman from "assets/bb-space-man.svg"
   import Logo from "assets/bb-emblem.svg"
@@ -53,7 +53,7 @@
       }
       if (!Object.keys(user?.roles).length && user?.userGroups) {
         return userGroups.find(group => {
-          return groups.actions
+          return groups
             .getGroupAppIds(group)
             .map(role => appsStore.extractAppId(role))
             .includes(app.appId)
@@ -86,7 +86,7 @@
     try {
       await organisation.init()
       await appsStore.load()
-      await groups.actions.init()
+      await groups.init()
     } catch (error) {
       notifications.error("Error loading apps")
     }

@@ -12,8 +12,8 @@
     Tags,
     Tag,
   } from "@budibase/bbui"
-  import { admin, licensing, featureFlags } from "stores/portal"
-  import { API } from "api"
+  import { admin, licensing, featureFlags } from "@/stores/portal"
+  import { API } from "@/api"
   import AIConfigModal from "./ConfigModal.svelte"
   import AIConfigTile from "./AIConfigTile.svelte"
 

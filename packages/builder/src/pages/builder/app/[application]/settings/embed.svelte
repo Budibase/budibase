@@ -9,9 +9,9 @@
     Icon,
     notifications,
   } from "@budibase/bbui"
-  import { AppStatus } from "constants"
-  import { appsStore } from "stores/portal"
-  import { appStore } from "stores/builder"
+  import { AppStatus } from "@/constants"
+  import { appsStore } from "@/stores/portal"
+  import { appStore } from "@/stores/builder"
 
   $: filteredApps = $appsStore.apps.filter(app => app.devId == $appStore.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}
