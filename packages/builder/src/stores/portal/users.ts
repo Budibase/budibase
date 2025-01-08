@@ -9,8 +9,17 @@ import {
   SearchUsersResponse,
   UpdateInviteRequest,
   User,
+  UserIdentifier,
+  UnsavedUser,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+
+interface UserInfo {
+  email: string
+  password: string
+  forceResetPassword?: boolean
+  role: keyof typeof Constants.BudibaseRoles
+}
 
 type UserState = SearchUsersResponse & SearchUsersRequest
 
@@ -116,9 +125,9 @@ class UserStore extends BudiStore<UserState> {
     return await API.getUserCountByApp(appId)
   }
 
-  async create(data: any) {
-    let mappedUsers: Omit<User, "tenantId">[] = data.users.map((user: any) => {
-      const body: Omit<User, "tenantId"> = {
+  async create(data: { users: UserInfo[]; groups: any[] }) {
+    let mappedUsers: UnsavedUser[] = data.users.map((user: any) => {
+      const body: UnsavedUser = {
         email: user.email,
         password: user.password,
         roles: {},
@@ -128,17 +137,17 @@ class UserStore extends BudiStore<UserState> {
       }
 
       switch (user.role) {
-        case "appUser":
+        case Constants.BudibaseRoles.AppUser:
           body.builder = { global: false }
           body.admin = { global: false }
           break
-        case "developer":
+        case Constants.BudibaseRoles.Developer:
           body.builder = { global: true }
           break
-        case "creator":
+        case Constants.BudibaseRoles.Creator:
           body.builder = { creator: true, global: false }
           break
-        case "admin":
+        case Constants.BudibaseRoles.Admin:
           body.admin = { global: true }
           body.builder = { global: true }
           break
@@ -157,12 +166,7 @@ class UserStore extends BudiStore<UserState> {
     await API.deleteUser(id)
   }
 
-  async bulkDelete(
-    users: Array<{
-      userId: string
-      email: string
-    }>
-  ) {
+  async bulkDelete(users: UserIdentifier[]) {
     return API.deleteUsers(users)
   }
 
@@ -199,9 +203,8 @@ class UserStore extends BudiStore<UserState> {
     }
   }
 
-  foo = this.refreshUsage(this.create)
-  bar = this.refreshUsage(this.save)
-
+  // Wrapper function to refresh quota usage after an operation,
+  // persisting argument and return types
   refreshUsage<T extends any[], U>(fn: (...args: T) => Promise<U>) {
     return async function (...args: T) {
       const response = await fn(...args)
