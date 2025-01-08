@@ -1,7 +1,27 @@
-import DataFetch from "./DataFetch.js"
+import { Row } from "@budibase/types"
+import DataFetch from "./DataFetch"
 
-export default class FieldFetch extends DataFetch {
-  async getDefinition(datasource) {
+export interface FieldDatasource {
+  tableId: string
+  fieldType: "attachment" | "array"
+  value: string[] | Row[]
+}
+
+export interface FieldDefinition {
+  schema?: Record<string, { type: string }> | null
+}
+
+function isArrayOfStrings(value: string[] | Row[]): value is string[] {
+  return Array.isArray(value) && !!value[0] && typeof value[0] !== "object"
+}
+
+export default class FieldFetch extends DataFetch<
+  FieldDatasource,
+  FieldDefinition
+> {
+  async getDefinition(): Promise<FieldDefinition | null> {
+    const { datasource } = this.options
+
     // Field sources have their schema statically defined
     let schema
     if (datasource.fieldType === "attachment") {
@@ -28,8 +48,8 @@ export default class FieldFetch extends DataFetch {
 
     // These sources will be available directly from context
     const data = datasource?.value || []
-    let rows
-    if (Array.isArray(data) && data[0] && typeof data[0] !== "object") {
+    let rows: Row[]
+    if (isArrayOfStrings(data)) {
       rows = data.map(value => ({ value }))
     } else {
       rows = data

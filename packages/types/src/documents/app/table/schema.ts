@@ -227,6 +227,7 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.OPTIONS
     | FieldType.BOOLEAN
     | FieldType.BIGINT
+    | FieldType.JSON
   >
 }
 
