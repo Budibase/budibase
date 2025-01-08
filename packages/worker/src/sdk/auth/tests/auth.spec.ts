@@ -21,9 +21,7 @@ describe("auth", () => {
 
         const persistedUser = await config.getUser(user.email)
         expect(persistedUser.password).not.toBe(previousPassword)
-        expect(
-          await utils.compare(newPassword, persistedUser.password!)
-        ).toBeTruthy()
+        expect(newPassword).toEqual(persistedUser.password)
       })
     })
 
