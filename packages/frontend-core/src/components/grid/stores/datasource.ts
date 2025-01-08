@@ -73,7 +73,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
   const schema = derived(definition, $definition => {
     const schema: Record<string, any> | null | undefined = getDatasourceSchema({
       API,
-      datasource: get(datasource),
+      datasource: get(datasource) as any,
       definition: $definition ?? undefined,
     })
     if (!schema) {
@@ -184,7 +184,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   const refreshDefinition = async () => {
     const def = await getDatasourceDefinition({
       API,
-      datasource: get(datasource),
+      datasource: get(datasource) as any,
     })
     definition.set((def as any) ?? null)
   }
