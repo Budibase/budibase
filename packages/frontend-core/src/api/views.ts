@@ -3,7 +3,15 @@ import { BaseAPIClient } from "./types"
 
 export interface ViewEndpoints {
   // Missing request or response types
-  fetchViewData: (name: string, opts: any) => Promise<Row[]>
+  fetchViewData: (
+    name: string,
+    opts: {
+      calculation?: string
+      field?: string
+      groupBy?: string
+      tableId: string
+    }
+  ) => Promise<Row[]>
   exportView: (name: string, format: string) => Promise<any>
   saveView: (view: any) => Promise<any>
   deleteView: (name: string) => Promise<any>
@@ -20,7 +28,9 @@ export const buildViewEndpoints = (API: BaseAPIClient): ViewEndpoints => ({
   fetchViewData: async (name, { field, groupBy, calculation }) => {
     const params = new URLSearchParams()
     if (calculation) {
-      params.set("field", field)
+      if (field) {
+        params.set("field", field)
+      }
       params.set("calculation", calculation)
     }
     if (groupBy) {

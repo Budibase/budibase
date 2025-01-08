@@ -355,7 +355,7 @@ async function execute(
     ExecuteQueryRequest,
     ExecuteV2QueryResponse | ExecuteV1QueryResponse
   >,
-  opts: any = { rowsOnly: false, isAutomation: false }
+  opts = { rowsOnly: false, isAutomation: false }
 ) {
   const db = context.getAppDB()
 
@@ -416,7 +416,7 @@ export async function executeV1(
 export async function executeV2(
   ctx: UserCtx<ExecuteQueryRequest, ExecuteV2QueryResponse>
 ) {
-  return execute(ctx, { rowsOnly: false })
+  return execute(ctx, { rowsOnly: false, isAutomation: false })
 }
 
 export async function executeV2AsAutomation(
