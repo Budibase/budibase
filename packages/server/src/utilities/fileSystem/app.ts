@@ -36,11 +36,11 @@ export const getComponentLibraryManifest = async (library: string) => {
   const appId = context.getAppId()
   const filename = "manifest.json"
 
-  if (env.isDev() || env.isTest()) {
+  if (env.USE_LOCAL_COMPONENT_LIBS) {
     const db = context.getAppDB()
     const app = await db.get<App>(DocumentType.APP_METADATA)
 
-    if (shouldServeLocally(app.version) || env.isTest()) {
+    if (shouldServeLocally(app.version) || env.USE_LOCAL_COMPONENT_LIBS) {
       const paths = [
         join(TOP_LEVEL_PATH, "packages/client", filename),
         join(process.cwd(), "client", filename),

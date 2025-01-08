@@ -23,7 +23,7 @@ import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
 import { ReadableStream } from "stream/web"
-import { NodeJsRuntimeStreamingBlobPayloadOutputTypes } from "@smithy/types"
+import { NodeJsClient } from "@smithy/types"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -126,7 +126,7 @@ export function ObjectStore(
     }
   }
 
-  return new S3(config)
+  return new S3(config) as NodeJsClient<S3>
 }
 
 /**
@@ -311,13 +311,15 @@ export async function retrieve(
   if (!response.Body) {
     throw new Error("Unable to retrieve object")
   }
-  const nodeResponse =
-    response.Body as NodeJsRuntimeStreamingBlobPayloadOutputTypes
-  // currently these are all strings
   if (STRING_CONTENT_TYPES.includes(response.ContentType)) {
-    return nodeResponse.toString()
+    return response.Body.transformToString()
   } else {
-    return nodeResponse
+    // this typecast is required - for some reason the AWS SDK V3 defines its own "ReadableStream"
+    // found in the @aws-sdk/types package which is meant to be the Node type, but due to the SDK
+    // supporting both the browser and Nodejs it is a polyfill which causes a type class with Node.
+    const readableStream =
+      response.Body.transformToWebStream() as ReadableStream
+    return stream.Readable.fromWeb(readableStream)
   }
 }
 
