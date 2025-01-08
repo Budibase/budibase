@@ -81,7 +81,9 @@ export const resetUpdate = async (resetCode: string, password: string) => {
 
   let user = await userSdk.db.getUser(userId)
   user.password = password
-  user = await userSdk.db.save(user)
+  user = await userSdk.db.save(user, {
+    hashPassword: false,
+  })
 
   await cache.passwordReset.invalidateCode(resetCode)
   await sessions.invalidateSessions(userId)
