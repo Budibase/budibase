@@ -162,6 +162,12 @@ export async function finaliseRow(
     dynamic: false,
     contextRows: [enrichedRow],
   })
+
+  const flag1 = await features.isEnabled(FeatureFlag.BUDIBASE_AI)
+  const flag2 = await pro.features.isBudibaseAIEnabled()
+  const flag3 = await features.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS)
+  const flag4 = await pro.features.isAICustomConfigsEnabled()
+
   const aiEnabled =
     ((await features.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
       (await pro.features.isBudibaseAIEnabled())) ||
