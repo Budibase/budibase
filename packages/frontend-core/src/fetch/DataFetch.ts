@@ -324,7 +324,7 @@ export default abstract class DataFetch<
     }
 
     // If we don't support sorting, do a client-side sort
-    if (!this.features.supportsSort && clientSideSorting) {
+    if (!this.features.supportsSort && clientSideSorting && sortType) {
       rows = sort(rows, sortColumn as any, sortOrder, sortType)
     }
 
