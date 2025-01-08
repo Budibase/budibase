@@ -54,6 +54,7 @@ export async function searchView(
     rows: result.rows,
     bookmark: result.bookmark,
     hasNextPage: result.hasNextPage,
+    totalRows: result.totalRows,
   }
 }
 
