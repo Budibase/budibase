@@ -5,11 +5,7 @@ import * as cloudfront from "../cloudfront"
 
 // URLs
 
-export const getGlobalFileUrl = async (
-  type: string,
-  name: string,
-  etag?: string
-) => {
+export const getGlobalFileUrl = (type: string, name: string, etag?: string) => {
   let file = getGlobalFileS3Key(type, name)
   if (env.CLOUDFRONT_CDN) {
     if (etag) {
@@ -17,7 +13,7 @@ export const getGlobalFileUrl = async (
     }
     return cloudfront.getPresignedUrl(file)
   } else {
-    return await objectStore.getPresignedUrl(env.GLOBAL_BUCKET_NAME, file)
+    return objectStore.getPresignedUrl(env.GLOBAL_BUCKET_NAME, file)
   }
 }
 

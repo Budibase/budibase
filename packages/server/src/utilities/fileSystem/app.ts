@@ -78,7 +78,7 @@ export const getComponentLibraryManifest = async (library: string) => {
     resp = await objectStore.retrieve(ObjectStoreBuckets.APPS, path)
   }
   if (typeof resp !== "string") {
-    resp = resp.toString()
+    resp = resp.toString("utf8")
   }
   return JSON.parse(resp)
 }
