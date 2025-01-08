@@ -1,11 +1,13 @@
-import FieldFetch, { FieldDatasource } from "./FieldFetch"
+import FieldFetch from "./FieldFetch"
 import {
   getJSONArrayDatasourceSchema,
   generateQueryArraySchemas,
 } from "../utils/json"
 
 export default class QueryArrayFetch extends FieldFetch {
-  async getDefinition(datasource: FieldDatasource) {
+  async getDefinition() {
+    const { datasource } = this.options
+
     if (!datasource?.tableId) {
       return null
     }

@@ -19,9 +19,9 @@ export default class FieldFetch extends DataFetch<
   FieldDatasource,
   FieldDefinition
 > {
-  async getDefinition(
-    datasource: FieldDatasource
-  ): Promise<FieldDefinition | null> {
+  async getDefinition(): Promise<FieldDefinition | null> {
+    const { datasource } = this.options
+
     // Field sources have their schema statically defined
     let schema
     if (datasource.fieldType === "attachment") {

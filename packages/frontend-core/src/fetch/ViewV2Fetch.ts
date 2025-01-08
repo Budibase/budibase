@@ -12,7 +12,9 @@ export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
     }
   }
 
-  async getDefinition(datasource: UIView) {
+  async getDefinition() {
+    const { datasource } = this.options
+
     try {
       const res = await this.API.viewV2.fetchDefinition(datasource.id)
       return res?.data

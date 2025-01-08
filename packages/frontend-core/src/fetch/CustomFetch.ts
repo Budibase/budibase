@@ -100,7 +100,9 @@ export default class CustomFetch extends DataFetch<
     return this.enrichCustomData(this.parseCustomData(datasource?.data))
   }
 
-  async getDefinition(datasource: CustomDatasource) {
+  async getDefinition() {
+    const { datasource } = this.options
+
     // Try and work out the schema from the array provided
     const schema: CustomDefinition = {}
     const data = this.getCustomData(datasource)

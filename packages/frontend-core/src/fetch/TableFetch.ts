@@ -11,7 +11,9 @@ export default class TableFetch extends DataFetch<UITable, Table> {
     }
   }
 
-  async getDefinition(datasource: UITable) {
+  async getDefinition() {
+    const { datasource } = this.options
+
     if (!datasource?.tableId) {
       return null
     }

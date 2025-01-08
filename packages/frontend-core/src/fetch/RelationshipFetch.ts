@@ -12,7 +12,9 @@ export default class RelationshipFetch extends DataFetch<
   RelationshipDatasource,
   Table
 > {
-  async getDefinition(datasource: RelationshipDatasource) {
+  async getDefinition() {
+    const { datasource } = this.options
+
     if (!datasource?.tableId) {
       return null
     }

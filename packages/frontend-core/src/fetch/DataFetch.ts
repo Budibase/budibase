@@ -11,6 +11,7 @@ import {
   SortType,
   TableSchema,
   UISearchFilter,
+  ViewSchema,
 } from "@budibase/types"
 import { APIClient } from "../api/types"
 
@@ -210,10 +211,10 @@ export default abstract class DataFetch<
    * Fetches a fresh set of data from the server, resetting pagination
    */
   async getInitialData() {
-    const { datasource, filter, paginate } = this.options
+    const { filter, paginate } = this.options
 
     // Fetch datasource definition and extract sort properties if configured
-    const definition = await this.getDefinition(datasource)
+    const definition = await this.getDefinition()
 
     // Determine feature flags
     const features = await this.determineFeatureFlags()
@@ -351,19 +352,19 @@ export default abstract class DataFetch<
 
   /**
    * Gets the definition for this datasource.
-   * @param datasource
+
    * @return {object} the definition
    */
-  abstract getDefinition(
-    datasource: TDatasource | null
-  ): Promise<TDefinition | null>
+  abstract getDefinition(): Promise<TDefinition | null>
 
   /**
    * Gets the schema definition for a datasource.
    * @param definition the datasource definition
    * @return {object} the schema
    */
-  getSchema(definition: TDefinition | null): Record<string, any> | undefined {
+  getSchema(
+    definition: TDefinition | null
+  ): ViewSchema | Record<string, any> | undefined {
     return definition?.schema ?? undefined
   }
 

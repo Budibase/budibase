@@ -17,7 +17,9 @@ export default class NestedProviderFetch extends DataFetch<
   NestedProviderDatasource,
   NestedProviderDefinition
 > {
-  async getDefinition(datasource: NestedProviderDatasource) {
+  async getDefinition() {
+    const { datasource } = this.options
+
     // Nested providers should already have exposed their own schema
     return {
       schema: datasource?.value?.schema,

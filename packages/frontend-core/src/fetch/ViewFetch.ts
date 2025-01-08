@@ -4,7 +4,9 @@ import DataFetch from "./DataFetch"
 type ViewV1 = View & { name: string }
 
 export default class ViewFetch extends DataFetch<ViewV1, Table> {
-  async getDefinition(datasource: ViewV1) {
+  async getDefinition() {
+    const { datasource } = this.options
+
     if (!datasource?.tableId) {
       return null
     }
