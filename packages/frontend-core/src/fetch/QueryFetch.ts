@@ -5,9 +5,15 @@ import { get } from "svelte/store"
 
 interface QueryDatasource {
   _id: string
-  fields: any
-  queryParams: any
-  parameters: any
+  fields: Record<string, any> & {
+    pagination?: {
+      type: string
+      location: string
+      pageParam: string
+    }
+  }
+  queryParams: Record<string, string>
+  parameters: { name: string; default: string }[]
 }
 
 export default class QueryFetch extends DataFetch<QueryDatasource, Query> {
@@ -49,8 +55,8 @@ export default class QueryFetch extends DataFetch<QueryDatasource, Query> {
     const type = definition?.fields?.pagination?.type
 
     // Set the default query params
-    let parameters = Helpers.cloneDeep(datasource?.queryParams || {})
-    for (let param of datasource?.parameters || {}) {
+    const parameters = Helpers.cloneDeep(datasource.queryParams)
+    for (const param of datasource?.parameters || []) {
       if (!parameters[param.name]) {
         parameters[param.name] = param.default
       }
