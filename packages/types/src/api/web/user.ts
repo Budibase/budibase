@@ -1,4 +1,4 @@
-import { AccountMetadata, PlatformUser, User } from "../../documents"
+import { AccountMetadata, BaseUser, PlatformUser, User } from "../../documents"
 import { SearchFilters } from "../../sdk"
 
 export interface Invite {
@@ -31,7 +31,7 @@ export interface BulkUserRequest {
   }
   create?: {
     roles?: any[]
-    users: User[]
+    users: BaseUser[]
     groups: any[]
   }
 }

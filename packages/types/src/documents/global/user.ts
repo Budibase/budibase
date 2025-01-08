@@ -32,7 +32,7 @@ export interface UserSSO {
 
 export type SSOUser = User & UserSSO
 
-export function isSSOUser(user: User): user is SSOUser {
+export function isSSOUser(user: BaseUser): user is SSOUser {
   return !!(user as SSOUser).providerType
 }
 
@@ -43,8 +43,7 @@ export interface UserIdentifier {
   email: string
 }
 
-export interface User extends Document {
-  tenantId: string
+export interface BaseUser extends Document {
   email: string
   userId?: string
   firstName?: string
@@ -72,6 +71,10 @@ export interface User extends Document {
   appSort?: string
   budibaseAccess?: boolean
   accountPortalAccess?: boolean
+}
+
+export interface User extends BaseUser {
+  tenantId: string
 }
 
 export interface UserBindings extends Document {

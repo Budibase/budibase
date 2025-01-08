@@ -5,6 +5,7 @@ import {
   AcceptUserInviteResponse,
   AddSSoUserRequest,
   AddSSoUserResponse,
+  BaseUser,
   BulkUserRequest,
   BulkUserResponse,
   CheckInviteResponse,
@@ -132,7 +133,10 @@ const bulkDelete = async (
   return await userSdk.db.bulkDelete(users)
 }
 
-const bulkCreate = async (users: User[], groupIds: string[]) => {
+const bulkCreate = async (
+  users: Omit<User, "tenantId">[],
+  groupIds: string[]
+) => {
   if (!env.SELF_HOSTED && users.length > MAX_USERS_UPLOAD_LIMIT) {
     throw new Error(
       "Max limit for upload is 1000 users. Please reduce file size and try again."
@@ -366,7 +370,7 @@ export const onboardUsers = async (
   }
 
   let createdPasswords: Record<string, string> = {}
-  const users: User[] = ctx.request.body.map(invite => {
+  const users: BaseUser[] = ctx.request.body.map(invite => {
     const password = generatePassword(12)
     createdPasswords[invite.email] = password
 
@@ -377,7 +381,6 @@ export const onboardUsers = async (
       roles: invite.userInfo.apps,
       admin: invite.userInfo.admin,
       builder: invite.userInfo.builder,
-      tenantId: tenancy.getTenantId(),
     }
   })
 
@@ -441,7 +444,6 @@ export const checkInvite = async (ctx: UserCtx<void, CheckInviteResponse>) => {
   } catch (e) {
     console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
-    return
   }
   ctx.body = {
     email: invite.email,
@@ -472,7 +474,6 @@ export const updateInvite = async (
     invite = await cache.invite.getCode(code)
   } catch (e) {
     ctx.throw(400, "There was a problem with the invite")
-    return
   }
 
   let updated = {

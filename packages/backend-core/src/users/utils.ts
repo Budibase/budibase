@@ -1,4 +1,4 @@
-import { ContextUser, User, UserGroup, UserIdentifier } from "@budibase/types"
+import { BaseUser, UserGroup, UserIdentifier } from "@budibase/types"
 import * as accountSdk from "../accounts"
 import env from "../environment"
 import { getExistingAccounts, getFirstPlatformUser } from "./lookup"
@@ -16,7 +16,7 @@ export const hasAdminPermissions = sdk.users.hasAdminPermissions
 export const hasBuilderPermissions = sdk.users.hasBuilderPermissions
 export const hasAppBuilderPermissions = sdk.users.hasAppBuilderPermissions
 
-export async function isCreator(user?: User | ContextUser) {
+export async function isCreator(user?: BaseUser) {
   const isCreatorByUserDefinition = sdk.users.isCreator(user)
   if (!isCreatorByUserDefinition && user) {
     return await isCreatorByGroupMembership(user)
@@ -24,7 +24,7 @@ export async function isCreator(user?: User | ContextUser) {
   return isCreatorByUserDefinition
 }
 
-async function isCreatorByGroupMembership(user?: User | ContextUser) {
+async function isCreatorByGroupMembership(user?: BaseUser) {
   const userGroups = user?.userGroups || []
   if (userGroups.length > 0) {
     const db = context.getGlobalDB()

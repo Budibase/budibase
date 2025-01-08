@@ -22,6 +22,7 @@ import {
   PlatformUserBySsoId,
   PlatformUserById,
   AnyDocument,
+  BaseUser,
 } from "@budibase/types"
 import {
   getAccountHolderFromUsers,
@@ -82,7 +83,7 @@ export class UserDB {
     UserDB.features = featureFns
   }
 
-  static async isPreventPasswordActions(user: User, account?: Account) {
+  static async isPreventPasswordActions(user: BaseUser, account?: Account) {
     // when in maintenance mode we allow sso users with the admin role
     // to perform any password action - this prevents lockout
     if (env.ENABLE_SSO_MAINTENANCE_MODE && isAdmin(user)) {
@@ -107,7 +108,7 @@ export class UserDB {
   }
 
   static async buildUser(
-    user: User,
+    user: BaseUser,
     opts: SaveUserOpts = {
       hashPassword: true,
       requirePassword: true,
@@ -323,23 +324,23 @@ export class UserDB {
   }
 
   static async bulkCreate(
-    newUsersRequested: User[],
+    newUsersRequested: BaseUser[],
     groups?: string[]
   ): Promise<BulkUserCreated> {
     const tenantId = getTenantId()
 
-    let usersToSave: any[] = []
-    let newUsers: any[] = []
+    let usersToSave: Promise<User>[] = []
+    let newUsers: BaseUser[] = []
     let newCreators: any[] = []
 
-    const emails = newUsersRequested.map((user: User) => user.email)
+    const emails = newUsersRequested.map(user => user.email)
     const existingEmails = await searchExistingEmails(emails)
     const unsuccessful: { email: string; reason: string }[] = []
 
     for (const newUser of newUsersRequested) {
       if (
         newUsers.find(
-          (x: User) => x.email.toLowerCase() === newUser.email.toLowerCase()
+          x => x.email.toLowerCase() === newUser.email.toLowerCase()
         ) ||
         existingEmails.includes(newUser.email.toLowerCase())
       ) {
@@ -362,13 +363,13 @@ export class UserDB {
       newCreators.length,
       async () => {
         // create the promises array that will be called by bulkDocs
-        newUsers.forEach((user: any) => {
+        newUsers.forEach(user => {
           usersToSave.push(
             UserDB.buildUser(
               user,
               {
                 hashPassword: true,
-                requirePassword: user.requirePassword,
+                requirePassword: false,
               },
               tenantId,
               undefined, // no dbUser
@@ -384,13 +385,13 @@ export class UserDB {
         for (const user of usersToBulkSave) {
           // TODO: Refactor to bulk insert users into the info db
           // instead of relying on looping tenant creation
-          await platform.users.addUser(tenantId, user._id, user.email)
+          await platform.users.addUser(tenantId, user._id!, user.email)
           await eventHelpers.handleSaveEvents(user, undefined)
         }
 
         const saved = usersToBulkSave.map(user => {
           return {
-            _id: user._id,
+            _id: user._id!,
             email: user.email,
           }
         })
