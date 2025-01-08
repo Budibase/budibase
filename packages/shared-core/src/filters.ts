@@ -552,7 +552,7 @@ export function search<T extends Record<string, any>>(
  */
 export function runQuery<T extends Record<string, any>>(
   docs: T[],
-  query: SearchFilters | null
+  query: SearchFilters
 ): T[] {
   if (!docs || !Array.isArray(docs)) {
     return []
@@ -876,7 +876,7 @@ export function sort<T extends Record<string, any>>(
   docs: T[],
   sort: keyof T,
   sortOrder: SortOrder,
-  sortType: SortType | null = SortType.STRING
+  sortType = SortType.STRING
 ): T[] {
   if (!sort || !sortOrder || !sortType) {
     return docs
