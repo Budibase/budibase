@@ -1,7 +1,7 @@
 <script>
   import { processStringSync } from "@budibase/string-templates"
   import { get } from "lodash/fp"
-  import { tables } from "stores/builder"
+  import { tables } from "@/stores/builder"
 
   export let block
 

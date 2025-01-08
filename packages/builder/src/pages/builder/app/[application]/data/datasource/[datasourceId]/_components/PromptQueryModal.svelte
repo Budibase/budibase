@@ -1,7 +1,7 @@
 <script>
   import { goto as gotoStore, params as paramsStore } from "@roxi/routify"
   import { Modal, ModalContent, Body, Heading } from "@budibase/bbui"
-  import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
+  import FontAwesomeIcon from "@/components/common/FontAwesomeIcon.svelte"
 
   const handleOpen = (modal, params) => {
     if (params["?promptQuery"] && modal?.show) {

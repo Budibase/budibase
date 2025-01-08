@@ -99,6 +99,7 @@ export interface ViewV2 {
     type?: SortType
   }
   schema?: ViewV2Schema
+  rowHeight?: number
 }
 
 export interface PublicAPIView extends Omit<ViewV2, "query" | "queryUI"> {

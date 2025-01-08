@@ -10,9 +10,9 @@
     ModalContent,
     Input,
   } from "@budibase/bbui"
-  import DetailPopover from "components/common/DetailPopover.svelte"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { getContext } from "svelte"
-  import { appStore, rowActions } from "stores/builder"
+  import { appStore, rowActions } from "@/stores/builder"
   import { goto, url } from "@roxi/routify"
   import { derived } from "svelte/store"
 

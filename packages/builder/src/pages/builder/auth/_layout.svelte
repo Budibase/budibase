@@ -1,5 +1,5 @@
 <script>
-  import { auth, admin } from "stores/portal"
+  import { auth, admin } from "@/stores/portal"
   import { redirect } from "@roxi/routify"
   import { CookieUtils } from "@budibase/frontend-core"
 

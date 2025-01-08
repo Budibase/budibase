@@ -1,5 +1,5 @@
 <script>
-  import Panel from "components/design/Panel.svelte"
+  import Panel from "@/components/design/Panel.svelte"
   import { ActionButton } from "@budibase/bbui"
   import JSONPanel from "./JSONPanel.svelte"
   import SchemaPanel from "./SchemaPanel.svelte"

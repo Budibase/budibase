@@ -1,11 +1,11 @@
 <script>
   import { ActionButton } from "@budibase/bbui"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+  import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import {
     getRestBindings,
     readableToRuntimeBinding,
     runtimeToReadableMap,
-  } from "dataBinding"
+  } from "@/dataBinding"
   import { cloneDeep } from "lodash/fp"
   import SaveDatasourceButton from "./SaveDatasourceButton.svelte"
   import Panel from "./Panel.svelte"

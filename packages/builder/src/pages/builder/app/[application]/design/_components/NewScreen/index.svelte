@@ -1,11 +1,11 @@
 <script>
   import { Body } from "@budibase/bbui"
-  import CreationPage from "components/common/CreationPage.svelte"
+  import CreationPage from "@/components/common/CreationPage.svelte"
   import blank from "./images/blank.svg"
   import table from "./images/tableInline.svg"
   import form from "./images/formUpdate.svg"
   import CreateScreenModal from "./CreateScreenModal.svelte"
-  import { screenStore } from "stores/builder"
+  import { screenStore } from "@/stores/builder"
 
   export let onClose = null
 

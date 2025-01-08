@@ -14,7 +14,7 @@
     Button,
     FancySelect,
   } from "@budibase/bbui"
-  import { builderStore, appStore, roles, appPublished } from "stores/builder"
+  import { builderStore, appStore, roles, appPublished } from "@/stores/builder"
   import {
     groups,
     licensing,
@@ -22,7 +22,7 @@
     users,
     auth,
     admin,
-  } from "stores/portal"
+  } from "@/stores/portal"
   import {
     fetchData,
     Constants,
@@ -30,11 +30,11 @@
     RoleUtils,
   } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
-  import { API } from "api"
+  import { API } from "@/api"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
-  import RoleSelect from "components/common/RoleSelect.svelte"
-  import UpgradeModal from "components/common/users/UpgradeModal.svelte"
-  import { emailValidator } from "helpers/validation"
+  import RoleSelect from "@/components/common/RoleSelect.svelte"
+  import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import { emailValidator } from "@/helpers/validation"
   import { fly } from "svelte/transition"
   import InfoDisplay from "../design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
@@ -236,13 +236,13 @@
     }
 
     if (!role) {
-      await groups.actions.removeApp(target._id, prodAppId)
+      await groups.removeApp(target._id, prodAppId)
     } else {
-      await groups.actions.addApp(target._id, prodAppId, role)
+      await groups.addApp(target._id, prodAppId, role)
     }
 
     await usersFetch.refresh()
-    await groups.actions.init()
+    await groups.init()
   }
 
   const onUpdateGroup = async (group, role) => {
@@ -268,7 +268,7 @@
       if (!group.roles) {
         return false
       }
-      return groups.actions.getGroupAppIds(group).includes(appId)
+      return groups.getGroupAppIds(group).includes(appId)
     })
   }
 
@@ -299,7 +299,7 @@
       role: group?.builder?.apps.includes(prodAppId)
         ? Constants.Roles.CREATOR
         : group.roles?.[
-            groups.actions.getGroupAppIds(group).find(x => x === prodAppId)
+            groups.getGroupAppIds(group).find(x => x === prodAppId)
           ],
     }
   }
@@ -485,12 +485,12 @@
   }
 
   const removeGroupAppBuilder = async groupId => {
-    await groups.actions.removeGroupAppBuilder(groupId, prodAppId)
+    await groups.removeGroupAppBuilder(groupId, prodAppId)
   }
 
   const initSidePanel = async sidePaneOpen => {
     if (sidePaneOpen === true) {
-      await groups.actions.init()
+      await groups.init()
     }
     loaded = true
   }

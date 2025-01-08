@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import ToggleActionButtonGroup from "components/common/ToggleActionButtonGroup.svelte"
+  import ToggleActionButtonGroup from "@/components/common/ToggleActionButtonGroup.svelte"
   import { helpers } from "@budibase/shared-core"
   import { SchemaUtils } from "@budibase/frontend-core"
   import { Icon, notifications, ActionButton, Popover } from "@budibase/bbui"

@@ -3,10 +3,10 @@ import {
   IntegrationTypes,
   DEFAULT_BB_DATASOURCE_ID,
   BUDIBASE_INTERNAL_DB_ID,
-} from "constants/backend"
+} from "@/constants/backend"
 import { tables } from "./tables"
 import { queries } from "./queries"
-import { API } from "api"
+import { API } from "@/api"
 import {
   DatasourceFeature,
   Datasource,
@@ -15,9 +15,13 @@ import {
   UIIntegration,
   SourceName,
 } from "@budibase/types"
-// @ts-ignore
-import { TableNames } from "constants"
-import { DerivedBudiStore } from "stores/BudiStore"
+import { TableNames } from "@/constants"
+import { DerivedBudiStore } from "@/stores/BudiStore"
+
+// when building the internal DS - seems to represent it slightly differently to the backend typing of a DS
+interface InternalDatasource extends Omit<Datasource, "entities"> {
+  entities: Table[]
+}
 
 class TableImportError extends Error {
   errors: Record<string, string>

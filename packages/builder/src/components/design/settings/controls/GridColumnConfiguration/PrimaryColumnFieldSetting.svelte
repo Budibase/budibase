@@ -4,7 +4,7 @@
   import { setContext } from "svelte"
   import { writable } from "svelte/store"
   import { FieldTypeToComponentMap } from "../FieldConfiguration/utils"
-  import { componentStore } from "stores/builder"
+  import { componentStore } from "@/stores/builder"
 
   export let item
   export let anchor

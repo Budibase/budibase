@@ -1,7 +1,7 @@
 <script>
   import { Icon, Divider } from "@budibase/bbui"
   import TestDisplay from "./TestDisplay.svelte"
-  import { automationStore, selectedAutomation } from "stores/builder"
+  import { automationStore, selectedAutomation } from "@/stores/builder"
 
   export let automation
 </script>

@@ -1,5 +1,5 @@
 <script>
-  import { automationStore } from "stores/builder"
+  import { automationStore } from "@/stores/builder"
   import {
     notifications,
     Icon,

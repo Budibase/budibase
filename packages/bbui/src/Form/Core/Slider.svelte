@@ -39,6 +39,7 @@
     padding: 0;
     margin: 0;
     -webkit-appearance: none;
+    appearance: none;
     background: transparent;
   }
   input::-webkit-slider-thumb {
