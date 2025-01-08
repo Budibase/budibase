@@ -3,7 +3,6 @@ import fs from "fs"
 import { join } from "path"
 import { TEMP_DIR, MINIO_DIR } from "./utils"
 import { progressBar } from "../utils"
-import * as stream from "node:stream"
 
 const {
   ObjectStoreBuckets,
@@ -21,21 +20,15 @@ export async function exportObjects() {
   let fullList: any[] = []
   let errorCount = 0
   for (let bucket of bucketList) {
-    const client = ObjectStore()
+    const client = ObjectStore(bucket)
     try {
-      await client.headBucket({
-        Bucket: bucket,
-      })
+      await client.headBucket().promise()
     } catch (err) {
       errorCount++
       continue
     }
-    const list = await client.listObjectsV2({
-      Bucket: bucket,
-    })
-    fullList = fullList.concat(
-      list.Contents?.map(el => ({ ...el, bucket })) || []
-    )
+    const list = (await client.listObjectsV2().promise()) as { Contents: any[] }
+    fullList = fullList.concat(list.Contents.map(el => ({ ...el, bucket })))
   }
   if (errorCount === bucketList.length) {
     throw new Error("Unable to access MinIO/S3 - check environment config.")
@@ -50,13 +43,7 @@ export async function exportObjects() {
       const dirs = possiblePath.slice(0, possiblePath.length - 1)
       fs.mkdirSync(join(path, object.bucket, ...dirs), { recursive: true })
     }
-    if (data instanceof stream.Readable) {
-      data.pipe(
-        fs.createWriteStream(join(path, object.bucket, ...possiblePath))
-      )
-    } else {
-      fs.writeFileSync(join(path, object.bucket, ...possiblePath), data)
-    }
+    fs.writeFileSync(join(path, object.bucket, ...possiblePath), data)
     bar.update(++count)
   }
   bar.stop()
@@ -73,7 +60,7 @@ export async function importObjects() {
   const bar = progressBar(total)
   let count = 0
   for (let bucket of buckets) {
-    const client = ObjectStore()
+    const client = ObjectStore(bucket)
     await createBucketIfNotExists(client, bucket)
     const files = await uploadDirectory(bucket, join(path, bucket), "/")
     count += files.length
