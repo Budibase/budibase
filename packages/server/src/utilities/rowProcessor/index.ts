@@ -359,9 +359,9 @@ export async function coreOutputProcessing(
         if (row[property] == null) {
           continue
         }
-        const process = async (attachment: RowAttachment) => {
+        const process = (attachment: RowAttachment) => {
           if (!attachment.url && attachment.key) {
-            attachment.url = await objectStore.getAppFileUrl(attachment.key)
+            attachment.url = objectStore.getAppFileUrl(attachment.key)
           }
           return attachment
         }
@@ -369,13 +369,11 @@ export async function coreOutputProcessing(
           row[property] = JSON.parse(row[property])
         }
         if (Array.isArray(row[property])) {
-          await Promise.all(
-            row[property].map((attachment: RowAttachment) =>
-              process(attachment)
-            )
-          )
+          row[property].forEach((attachment: RowAttachment) => {
+            process(attachment)
+          })
         } else {
-          await process(row[property])
+          process(row[property])
         }
       }
     } else if (

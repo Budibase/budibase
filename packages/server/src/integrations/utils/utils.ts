@@ -430,7 +430,7 @@ export async function handleFileResponse(
         size = details.ContentLength
       }
     }
-    presignedUrl = await objectStore.getPresignedUrl(bucket, key)
+    presignedUrl = objectStore.getPresignedUrl(bucket, key)
     return {
       data: {
         size,

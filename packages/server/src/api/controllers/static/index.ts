@@ -18,8 +18,7 @@ import {
   objectStore,
   utils,
 } from "@budibase/backend-core"
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
-import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
+import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
@@ -129,9 +128,9 @@ export const uploadFile = async function (
       return {
         size: file.size,
         name: file.name,
-        url: await objectStore.getAppFileUrl(s3Key),
+        url: objectStore.getAppFileUrl(s3Key),
         extension,
-        key: response.Key!,
+        key: response.Key,
       }
     })
   )
@@ -211,11 +210,11 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         usedPlugins: plugins,
         favicon:
           branding.faviconUrl !== ""
-            ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
+            ? objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
         logo:
           config?.logoUrl !== ""
-            ? await objectStore.getGlobalFileUrl("settings", "logoUrl")
+            ? objectStore.getGlobalFileUrl("settings", "logoUrl")
             : "",
         appMigrating: needMigrations,
         nonce: ctx.state.nonce,
@@ -244,7 +243,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         metaDescription: branding?.metaDescription || "",
         favicon:
           branding.faviconUrl !== ""
-            ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
+            ? objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
       })
 
@@ -335,17 +334,16 @@ export const getSignedUploadURL = async function (
       ctx.throw(400, "bucket and key values are required")
     }
     try {
-      const s3 = new S3({
+      const s3 = new AWS.S3({
         region: awsRegion,
         endpoint: datasource?.config?.endpoint || undefined,
-
-        credentials: {
-          accessKeyId: datasource?.config?.accessKeyId as string,
-          secretAccessKey: datasource?.config?.secretAccessKey as string,
-        },
+        accessKeyId: datasource?.config?.accessKeyId as string,
+        secretAccessKey: datasource?.config?.secretAccessKey as string,
+        apiVersion: "2006-03-01",
+        signatureVersion: "v4",
       })
       const params = { Bucket: bucket, Key: key }
-      signedUrl = await getSignedUrl(s3, new PutObjectCommand(params))
+      signedUrl = s3.getSignedUrl("putObject", params)
       if (datasource?.config?.endpoint) {
         publicUrl = `${datasource.config.endpoint}/${bucket}/${key}`
       } else {
