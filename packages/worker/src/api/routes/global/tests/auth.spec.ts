@@ -15,6 +15,7 @@ import { Response } from "superagent"
 import * as userSdk from "../../../../sdk/users"
 import nock from "nock"
 import * as jwt from "jsonwebtoken"
+import { utils } from "@budibase/backend-core"
 
 function getAuthCookie(response: Response) {
   return response.headers["set-cookie"]
@@ -203,7 +204,7 @@ describe("/api/global/auth", () => {
         )
         delete user.password
 
-        const newPassword = "newpassword1"
+        const newPassword = await utils.hash("newpassword1")
         const res = await config.api.auth.updatePassword(code!, newPassword)
 
         user = (await config.getUser(user.email))!
@@ -214,7 +215,7 @@ describe("/api/global/auth", () => {
         expect(events.user.passwordReset).toHaveBeenCalledWith(user)
 
         // login using new password
-        await config.api.auth.login(user.tenantId, user.email, newPassword)
+        await config.api.auth.login(user.tenantId, user.email, "newpassword1")
       })
 
       describe("sso user", () => {
