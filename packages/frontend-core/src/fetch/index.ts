@@ -10,7 +10,6 @@ import UserFetch from "./UserFetch.js"
 import GroupUserFetch from "./GroupUserFetch"
 import CustomFetch from "./CustomFetch"
 import QueryArrayFetch from "./QueryArrayFetch.js"
-import { UIDatasource } from "@budibase/types"
 import { APIClient } from "../api/types.js"
 
 const DataFetchMap = {
@@ -39,12 +38,16 @@ export const fetchData = ({ API, datasource, options }: any) => {
 
 // Creates an empty fetch instance with no datasource configured, so no data
 // will initially be loaded
-const createEmptyFetchInstance = ({
+const createEmptyFetchInstance = <
+  TDatasource extends {
+    type: keyof typeof DataFetchMap
+  }
+>({
   API,
   datasource,
 }: {
   API: APIClient
-  datasource: any
+  datasource: TDatasource
 }) => {
   const handler = DataFetchMap[datasource?.type as keyof typeof DataFetchMap]
   if (!handler) {
@@ -54,25 +57,33 @@ const createEmptyFetchInstance = ({
 }
 
 // Fetches the definition of any type of datasource
-export const getDatasourceDefinition = async ({
+export const getDatasourceDefinition = async <
+  TDatasource extends {
+    type: keyof typeof DataFetchMap
+  }
+>({
   API,
   datasource,
 }: {
   API: APIClient
-  datasource: any
+  datasource: TDatasource
 }) => {
   const instance = createEmptyFetchInstance({ API, datasource })
-  return await instance?.getDefinition(datasource)
+  return await instance?.getDefinition()
 }
 
 // Fetches the schema of any type of datasource
-export const getDatasourceSchema = ({
+export const getDatasourceSchema = <
+  TDatasource extends {
+    type: keyof typeof DataFetchMap
+  }
+>({
   API,
   datasource,
   definition,
 }: {
   API: APIClient
-  datasource: UIDatasource
+  datasource: TDatasource
   definition?: any
 }) => {
   const instance = createEmptyFetchInstance({ API, datasource })
