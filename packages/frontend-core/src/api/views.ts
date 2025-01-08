@@ -28,7 +28,9 @@ export const buildViewEndpoints = (API: BaseAPIClient): ViewEndpoints => ({
   fetchViewData: async (name, { field, groupBy, calculation }) => {
     const params = new URLSearchParams()
     if (calculation) {
-      params.set("field", field!)
+      if (field) {
+        params.set("field", field)
+      }
       params.set("calculation", calculation)
     }
     if (groupBy) {
