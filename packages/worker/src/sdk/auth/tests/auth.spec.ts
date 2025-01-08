@@ -1,4 +1,4 @@
-import { cache, context, sessions, utils } from "@budibase/backend-core"
+import { cache, context, sessions } from "@budibase/backend-core"
 import { loginUser, resetUpdate } from "../auth"
 import { generator, structures } from "@budibase/backend-core/tests"
 import { TestConfiguration } from "../../../tests"
