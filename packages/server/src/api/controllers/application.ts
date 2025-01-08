@@ -230,7 +230,7 @@ export async function fetchAppPackage(
   const license = await licensing.cache.getCachedLicense()
 
   // Enrich plugin URLs
-  application.usedPlugins = objectStore.enrichPluginURLs(
+  application.usedPlugins = await objectStore.enrichPluginURLs(
     application.usedPlugins
   )
 
