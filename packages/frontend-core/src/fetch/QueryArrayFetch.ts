@@ -14,12 +14,12 @@ export default class QueryArrayFetch extends FieldFetch {
     try {
       const table = await this.API.fetchQueryDefinition(datasource.tableId)
       const schema = generateQueryArraySchemas(
-        table?.schema,
-        table?.nestedSchemaFields
+        table.schema,
+        table.nestedSchemaFields
       )
-      const result: {
-        schema: Record<string, any> | null
-      } = { schema: getJSONArrayDatasourceSchema(schema, datasource) }
+      const result = {
+        schema: getJSONArrayDatasourceSchema(schema, datasource),
+      }
 
       return result
     } catch (error) {
