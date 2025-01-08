@@ -19,7 +19,8 @@ export default class ViewFetch extends DataFetch<ViewV1, Table> {
     }
   }
 
-  getSchema(datasource: ViewV1, definition: Table) {
+  getSchema(definition: Table) {
+    const { datasource } = this.options
     return definition?.views?.[datasource.name]?.schema
   }
 

@@ -360,12 +360,11 @@ export default abstract class DataFetch<
 
   /**
    * Gets the schema definition for a datasource.
-   * @param datasource the datasource
    * @param definition the datasource definition
    * @return {object} the schema
    */
-  getSchema(_datasource: TDatasource | null, definition: TDefinition | null) {
-    return definition?.schema
+  getSchema(definition: TDefinition | null): Record<string, any> | undefined {
+    return definition?.schema ?? undefined
   }
 
   /**

@@ -76,5 +76,5 @@ export const getDatasourceSchema = ({
   definition?: { schema?: TableSchema }
 }) => {
   const instance = createEmptyFetchInstance({ API, datasource })
-  return instance?.getSchema(datasource, definition)
+  return instance?.getSchema(definition)
 }
