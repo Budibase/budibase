@@ -1,7 +1,23 @@
+import { Row, TableSchema } from "@budibase/types"
 import DataFetch from "./DataFetch"
 
-export default class NestedProviderFetch extends DataFetch<any, any> {
-  async getDefinition(datasource: any) {
+interface NestedProviderDatasource {
+  value?: {
+    schema: TableSchema
+    primaryDisplay: string
+    rows: Row[]
+  }
+}
+
+interface NestedProviderDefinition {
+  schema?: TableSchema
+  primaryDisplay?: string
+}
+export default class NestedProviderFetch extends DataFetch<
+  NestedProviderDatasource,
+  NestedProviderDefinition
+> {
+  async getDefinition(datasource: NestedProviderDatasource) {
     // Nested providers should already have exposed their own schema
     return {
       schema: datasource?.value?.schema,
