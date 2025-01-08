@@ -21,7 +21,7 @@ interface IndexedUIRow extends UIRow {
 
 interface RowStore {
   rows: Writable<UIRow[]>
-  fetch: Writable<DataFetch<any, any, any> | null>
+  fetch: Writable<DataFetch<any, any, any> | null> // TODO: type this properly, having a union of all the possible options
   loaded: Writable<boolean>
   refreshing: Writable<boolean>
   loading: Writable<boolean>
