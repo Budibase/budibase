@@ -254,7 +254,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
 
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
-          definition.set($fetch.definition as any)
+          definition.set($fetch.definition as any) // TODO: datasource and defitions are unions of the different implementations. At this point, the datasource does not know what type is being used, and the assignations will cause TS exceptions. Casting it "as any" for now. This should be fixed improving the type usages.
         }
 
         // Reset scroll state when data changes
