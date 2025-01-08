@@ -6,25 +6,23 @@ import { Plugin } from "@budibase/types"
 
 // URLS
 
-export async function enrichPluginURLs(plugins?: Plugin[]): Promise<Plugin[]> {
+export function enrichPluginURLs(plugins?: Plugin[]): Plugin[] {
   if (!plugins || !plugins.length) {
     return []
   }
-  return await Promise.all(
-    plugins.map(async plugin => {
-      const jsUrl = await getPluginJSUrl(plugin)
-      const iconUrl = await getPluginIconUrl(plugin)
-      return { ...plugin, jsUrl, iconUrl }
-    })
-  )
+  return plugins.map(plugin => {
+    const jsUrl = getPluginJSUrl(plugin)
+    const iconUrl = getPluginIconUrl(plugin)
+    return { ...plugin, jsUrl, iconUrl }
+  })
 }
 
-async function getPluginJSUrl(plugin: Plugin) {
+function getPluginJSUrl(plugin: Plugin) {
   const s3Key = getPluginJSKey(plugin)
   return getPluginUrl(s3Key)
 }
 
-async function getPluginIconUrl(plugin: Plugin) {
+function getPluginIconUrl(plugin: Plugin): string | undefined {
   const s3Key = getPluginIconKey(plugin)
   if (!s3Key) {
     return
@@ -32,11 +30,11 @@ async function getPluginIconUrl(plugin: Plugin) {
   return getPluginUrl(s3Key)
 }
 
-async function getPluginUrl(s3Key: string) {
+function getPluginUrl(s3Key: string) {
   if (env.CLOUDFRONT_CDN) {
     return cloudfront.getPresignedUrl(s3Key)
   } else {
-    return await objectStore.getPresignedUrl(env.PLUGIN_BUCKET_NAME, s3Key)
+    return objectStore.getPresignedUrl(env.PLUGIN_BUCKET_NAME, s3Key)
   }
 }
 
