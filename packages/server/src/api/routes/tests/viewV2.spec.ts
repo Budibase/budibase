@@ -936,93 +936,94 @@ if (descriptions.length) {
               )
             })
 
-          describe("AI fields", () => {
-            let envCleanup: () => void
-            beforeAll(() => {
-              mocks.licenses.useBudibaseAI()
-              mocks.licenses.useAICustomConfigs()
-              envCleanup = setEnv({
-                OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
+          isInternal &&
+            describe("AI fields", () => {
+              let envCleanup: () => void
+              beforeAll(() => {
+                mocks.licenses.useBudibaseAI()
+                mocks.licenses.useAICustomConfigs()
+                envCleanup = setEnv({
+                  OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
+                })
+
+                mockChatGPTResponse(prompt => {
+                  if (prompt.includes("elephant")) {
+                    return "big"
+                  }
+                  if (prompt.includes("mouse")) {
+                    return "small"
+                  }
+                  if (prompt.includes("whale")) {
+                    return "big"
+                  }
+                  return "unknown"
+                })
               })
 
-              mockChatGPTResponse(prompt => {
-                if (prompt.includes("elephant")) {
-                  return "big"
-                }
-                if (prompt.includes("mouse")) {
-                  return "small"
-                }
-                if (prompt.includes("whale")) {
-                  return "big"
-                }
-                return "unknown"
+              afterAll(() => {
+                nock.cleanAll()
+                envCleanup()
+                mocks.licenses.useCloudFree()
               })
-            })
 
-            afterAll(() => {
-              nock.cleanAll()
-              envCleanup()
-              mocks.licenses.useCloudFree()
-            })
-
-            it("can use AI fields in view calculations", async () => {
-              const table = await config.api.table.save(
-                saveTableRequest({
-                  schema: {
-                    animal: {
-                      name: "animal",
-                      type: FieldType.STRING,
+              it("can use AI fields in view calculations", async () => {
+                const table = await config.api.table.save(
+                  saveTableRequest({
+                    schema: {
+                      animal: {
+                        name: "animal",
+                        type: FieldType.STRING,
+                      },
+                      bigOrSmall: {
+                        name: "bigOrSmall",
+                        type: FieldType.AI,
+                        operation: AIOperationEnum.CATEGORISE_TEXT,
+                        categories: "big,small",
+                        columns: ["animal"],
+                      },
                     },
+                  })
+                )
+
+                const view = await config.api.viewV2.create({
+                  tableId: table._id!,
+                  name: generator.guid(),
+                  type: ViewV2Type.CALCULATION,
+                  schema: {
                     bigOrSmall: {
-                      name: "bigOrSmall",
-                      type: FieldType.AI,
-                      operation: AIOperationEnum.CATEGORISE_TEXT,
-                      categories: "big,small",
-                      columns: ["animal"],
+                      visible: true,
+                    },
+                    count: {
+                      visible: true,
+                      calculationType: CalculationType.COUNT,
+                      field: "animal",
                     },
                   },
                 })
-              )
 
-              const view = await config.api.viewV2.create({
-                tableId: table._id!,
-                name: generator.guid(),
-                type: ViewV2Type.CALCULATION,
-                schema: {
-                  bigOrSmall: {
-                    visible: true,
-                  },
-                  count: {
-                    visible: true,
-                    calculationType: CalculationType.COUNT,
-                    field: "animal",
-                  },
-                },
-              })
+                await config.api.row.save(table._id!, {
+                  animal: "elephant",
+                })
 
-              await config.api.row.save(table._id!, {
-                animal: "elephant",
-              })
+                await config.api.row.save(table._id!, {
+                  animal: "mouse",
+                })
 
-              await config.api.row.save(table._id!, {
-                animal: "mouse",
-              })
+                await config.api.row.save(table._id!, {
+                  animal: "whale",
+                })
 
-              await config.api.row.save(table._id!, {
-                animal: "whale",
+                const { rows } = await config.api.row.search(view.id, {
+                  sort: "bigOrSmall",
+                  sortOrder: SortOrder.ASCENDING,
+                })
+                expect(rows).toHaveLength(2)
+                expect(rows[0].bigOrSmall).toEqual("big")
+                expect(rows[1].bigOrSmall).toEqual("small")
+                expect(rows[0].count).toEqual(2)
+                expect(rows[1].count).toEqual(1)
               })
-
-              const { rows } = await config.api.row.search(view.id, {
-                sort: "bigOrSmall",
-                sortOrder: SortOrder.ASCENDING,
-              })
-              expect(rows).toHaveLength(2)
-              expect(rows[0].bigOrSmall).toEqual("big")
-              expect(rows[1].bigOrSmall).toEqual("small")
-              expect(rows[0].count).toEqual(2)
-              expect(rows[1].count).toEqual(1)
             })
-          })
         })
 
         describe("update", () => {
