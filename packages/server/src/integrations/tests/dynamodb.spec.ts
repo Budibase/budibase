@@ -1,20 +1,4 @@
-jest.mock("@aws-sdk/lib-dynamodb", () => ({
-  DynamoDBDocument: {
-    from: jest.fn(() => ({
-      update: jest.fn(),
-      put: jest.fn(),
-      query: jest.fn(() => ({
-        Items: [],
-      })),
-      scan: jest.fn(() => ({
-        Items: [],
-      })),
-      delete: jest.fn(),
-      get: jest.fn(),
-    })),
-  },
-}))
-jest.mock("@aws-sdk/client-dynamodb")
+jest.mock("aws-sdk", () => require("./aws-sdk.mock"))
 import { default as DynamoDBIntegration } from "../dynamodb"
 
 class TestConfiguration {
@@ -73,7 +57,11 @@ describe("DynamoDB Integration", () => {
       TableName: tableName,
       IndexName: indexName,
     })
-    expect(response).toEqual([])
+    expect(response).toEqual([
+      {
+        Name: "test",
+      },
+    ])
   })
 
   it("calls the get method with the correct params", async () => {

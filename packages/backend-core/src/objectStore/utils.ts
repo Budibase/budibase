@@ -2,10 +2,7 @@ import path, { join } from "path"
 import { tmpdir } from "os"
 import fs from "fs"
 import env from "../environment"
-import {
-  LifecycleRule,
-  PutBucketLifecycleConfigurationCommandInput,
-} from "@aws-sdk/client-s3"
+import { PutBucketLifecycleConfigurationRequest } from "aws-sdk/clients/s3"
 import * as objectStore from "./objectStore"
 import {
   AutomationAttachment,
@@ -46,8 +43,8 @@ export function budibaseTempDir() {
 export const bucketTTLConfig = (
   bucketName: string,
   days: number
-): PutBucketLifecycleConfigurationCommandInput => {
-  const lifecycleRule: LifecycleRule = {
+): PutBucketLifecycleConfigurationRequest => {
+  const lifecycleRule = {
     ID: `${bucketName}-ExpireAfter${days}days`,
     Prefix: "",
     Status: "Enabled",
