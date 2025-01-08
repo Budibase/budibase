@@ -32,8 +32,8 @@ export const Cookies = {
 }
 
 // Table names
-export const TableNames = {
-  USERS: "ta_users",
+export const enum TableNames {
+  USERS = "ta_users",
 }
 
 export const BudibaseRoles = {

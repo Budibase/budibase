@@ -8,16 +8,16 @@ interface GroupUserQuery {
   emailSearch: string
 }
 
+interface GroupUserDatasource {
+  tableId: TableNames.USERS
+}
+
 export default class GroupUserFetch extends DataFetch<
-  any,
-  any,
+  GroupUserDatasource,
+  {},
   GroupUserQuery
 > {
-  constructor(opts: {
-    API: APIClient
-    datasource: any
-    query: GroupUserQuery
-  }) {
+  constructor(opts: { API: APIClient; query: GroupUserQuery }) {
     super({
       ...opts,
       datasource: {
