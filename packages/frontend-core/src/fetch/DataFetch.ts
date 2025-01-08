@@ -11,7 +11,6 @@ import {
   SortType,
   TableSchema,
   UISearchFilter,
-  ViewSchema,
 } from "@budibase/types"
 import { APIClient } from "../api/types"
 
@@ -224,12 +223,12 @@ export default abstract class DataFetch<
       supportsPagination: paginate && !!features?.supportsPagination,
     }
 
-    if (!definition?.schema) {
+    // Fetch and enrich schema
+    let schema = this.getSchema(definition)
+    if (!schema) {
       return
     }
-
-    // Fetch and enrich schema
-    const schema = this.enrichSchema(definition.schema)
+    schema = this.enrichSchema(schema)
 
     // If an invalid sort column is specified, delete it
     if (this.options.sortColumn && !schema[this.options.sortColumn]) {
@@ -362,9 +361,7 @@ export default abstract class DataFetch<
    * @param definition the datasource definition
    * @return {object} the schema
    */
-  getSchema(
-    definition: TDefinition | null
-  ): ViewSchema | Record<string, any> | undefined {
+  getSchema(definition: TDefinition | null): Record<string, any> | undefined {
     return definition?.schema ?? undefined
   }
 
@@ -379,7 +376,7 @@ export default abstract class DataFetch<
     let jsonAdditions: Record<string, { type: string; nestedJSON: true }> = {}
     for (const fieldKey of Object.keys(schema)) {
       const fieldSchema = schema[fieldKey]
-      if (fieldSchema?.type === FieldType.JSON) {
+      if (fieldSchema.type === FieldType.JSON) {
         const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
           squashObjects: true,
         }) as Record<string, { type: string }> | null // TODO: remove when convertJSONSchemaToTableSchema is typed
