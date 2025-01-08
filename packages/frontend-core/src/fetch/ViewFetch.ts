@@ -34,7 +34,7 @@ export default class ViewFetch extends DataFetch<ViewV1, Table> {
       })
       return { rows: res || [] }
     } catch (error) {
-      console.error(error)
+      console.error(error, { datasource })
       return { rows: [] }
     }
   }
