@@ -316,7 +316,7 @@ export async function retrieve(
   } else {
     // this typecast is required - for some reason the AWS SDK V3 defines its own "ReadableStream"
     // found in the @aws-sdk/types package which is meant to be the Node type, but due to the SDK
-    // supporting both the browser and Nodejs it is a polyfill which causes a type class with Node.
+    // supporting both the browser and Nodejs it is a polyfill which causes a type clash with Node.
     const readableStream =
       response.Body.transformToWebStream() as ReadableStream
     return stream.Readable.fromWeb(readableStream)
