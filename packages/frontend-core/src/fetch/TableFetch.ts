@@ -1,13 +1,30 @@
 import { get } from "svelte/store"
-import DataFetch from "./DataFetch.js"
-import { SortOrder } from "@budibase/types"
+import DataFetch from "./DataFetch"
+import { SortOrder, Table, UITable } from "@budibase/types"
 
-export default class TableFetch extends DataFetch {
-  determineFeatureFlags() {
+export default class TableFetch extends DataFetch<UITable, Table> {
+  async determineFeatureFlags() {
     return {
       supportsSearch: true,
       supportsSort: true,
       supportsPagination: true,
+    }
+  }
+
+  async getDefinition() {
+    const { datasource } = this.options
+
+    if (!datasource?.tableId) {
+      return null
+    }
+    try {
+      return await this.API.fetchTableDefinition(datasource.tableId)
+    } catch (error: any) {
+      this.store.update(state => ({
+        ...state,
+        error,
+      }))
+      return null
     }
   }
 
@@ -23,7 +40,7 @@ export default class TableFetch extends DataFetch {
         query,
         limit,
         sort: sortColumn,
-        sortOrder: sortOrder?.toLowerCase() ?? SortOrder.ASCENDING,
+        sortOrder: sortOrder ?? SortOrder.ASCENDING,
         sortType,
         paginate,
         bookmark: cursor,

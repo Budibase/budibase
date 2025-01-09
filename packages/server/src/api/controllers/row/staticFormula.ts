@@ -155,6 +155,7 @@ export async function finaliseRow(
     dynamic: false,
     contextRows: [enrichedRow],
   })
+
   const aiEnabled =
     (await pro.features.isBudibaseAIEnabled()) ||
     (await pro.features.isAICustomConfigsEnabled())
@@ -175,11 +176,6 @@ export async function finaliseRow(
   enrichedRow = await processFormulas(table, enrichedRow, {
     dynamic: false,
   })
-  if (aiEnabled) {
-    enrichedRow = await processAIColumns(table, enrichedRow, {
-      contextRows: [enrichedRow],
-    })
-  }
 
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
