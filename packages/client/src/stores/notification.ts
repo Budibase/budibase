@@ -25,7 +25,6 @@ const createNotificationStore = () => {
       return
     }
 
-    // @ts-expect-error
     if (get(routeStore).queryParams?.peek) {
       window.parent.postMessage({
         type: "notification",
