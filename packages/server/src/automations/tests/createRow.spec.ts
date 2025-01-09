@@ -154,12 +154,11 @@ describe("test the create row action", () => {
     expect(result.steps[1].outputs.row.file_attachment[0]).toHaveProperty("key")
     let s3Key = result.steps[1].outputs.row.file_attachment[0].key
 
-    const client = objectStore.ObjectStore()
+    const client = objectStore.ObjectStore(objectStore.ObjectStoreBuckets.APPS)
 
-    const objectData = await client.headObject({
-      Bucket: objectStore.ObjectStoreBuckets.APPS,
-      Key: s3Key,
-    })
+    const objectData = await client
+      .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
+      .promise()
 
     expect(objectData).toBeDefined()
     expect(objectData.ContentLength).toBeGreaterThan(0)
@@ -230,12 +229,11 @@ describe("test the create row action", () => {
     )
     let s3Key = result.steps[1].outputs.row.single_file_attachment.key
 
-    const client = objectStore.ObjectStore()
+    const client = objectStore.ObjectStore(objectStore.ObjectStoreBuckets.APPS)
 
-    const objectData = await client.headObject({
-      Bucket: objectStore.ObjectStoreBuckets.APPS,
-      Key: s3Key,
-    })
+    const objectData = await client
+      .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
+      .promise()
 
     expect(objectData).toBeDefined()
     expect(objectData.ContentLength).toBeGreaterThan(0)
