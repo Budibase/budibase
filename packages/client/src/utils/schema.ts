@@ -1,13 +1,5 @@
 import { API } from "api"
-import TableFetch from "@budibase/frontend-core/src/fetch/TableFetch"
-import ViewFetch from "@budibase/frontend-core/src/fetch/ViewFetch"
-import QueryFetch from "@budibase/frontend-core/src/fetch/QueryFetch"
-import RelationshipFetch from "@budibase/frontend-core/src/fetch/RelationshipFetch"
-import NestedProviderFetch from "@budibase/frontend-core/src/fetch/NestedProviderFetch"
-import FieldFetch from "@budibase/frontend-core/src/fetch/FieldFetch"
-import JSONArrayFetch from "@budibase/frontend-core/src/fetch/JSONArrayFetch"
-import ViewV2Fetch from "@budibase/frontend-core/src/fetch/ViewV2Fetch"
-import QueryArrayFetch from "@budibase/frontend-core/src/fetch/QueryArrayFetch"
+import { DataFetchMap } from "@budibase/frontend-core"
 
 /**
  * Constructs a fetch instance for a given datasource.
@@ -16,18 +8,8 @@ import QueryArrayFetch from "@budibase/frontend-core/src/fetch/QueryArrayFetch"
  * @param datasource the datasource
  * @returns
  */
-const getDatasourceFetchInstance = datasource => {
-  const handler = {
-    table: TableFetch,
-    view: ViewFetch,
-    viewV2: ViewV2Fetch,
-    query: QueryFetch,
-    link: RelationshipFetch,
-    provider: NestedProviderFetch,
-    field: FieldFetch,
-    jsonarray: JSONArrayFetch,
-    queryarray: QueryArrayFetch,
-  }[datasource?.type]
+const getDatasourceFetchInstance = (datasource: { type: string }) => {
+  const handler = DataFetchMap[datasource?.type]
   if (!handler) {
     return null
   }
