@@ -1,4 +1,4 @@
-import { API } from "./api.js"
+import { API } from "./api.ts"
 import { patchAPI } from "./patches.js"
 
 // Certain endpoints which return rows need patched so that they transform
