@@ -1,18 +1,18 @@
-import TableFetch from "./TableFetch.js"
-import ViewFetch from "./ViewFetch.js"
-import ViewV2Fetch from "./ViewV2Fetch.js"
+import TableFetch from "./TableFetch"
+import ViewFetch from "./ViewFetch"
+import ViewV2Fetch from "./ViewV2Fetch"
 import QueryFetch from "./QueryFetch"
 import RelationshipFetch from "./RelationshipFetch"
 import NestedProviderFetch from "./NestedProviderFetch"
 import FieldFetch from "./FieldFetch"
 import JSONArrayFetch from "./JSONArrayFetch"
-import UserFetch from "./UserFetch.js"
+import UserFetch from "./UserFetch"
 import GroupUserFetch from "./GroupUserFetch"
 import CustomFetch from "./CustomFetch"
-import QueryArrayFetch from "./QueryArrayFetch.js"
-import { APIClient } from "../api/types.js"
+import QueryArrayFetch from "./QueryArrayFetch"
+import { APIClient } from "../api/types"
 
-const DataFetchMap = {
+export const DataFetchMap = {
   table: TableFetch,
   view: ViewFetch,
   viewV2: ViewV2Fetch,
