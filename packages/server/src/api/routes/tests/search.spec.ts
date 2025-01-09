@@ -1684,109 +1684,148 @@ if (descriptions.length) {
               })
 
             describe.only("datetime - date only", () => {
-              const JAN_1ST = "2020-01-01"
-              const JAN_10TH = "2020-01-10"
-              const JAN_30TH = "2020-01-30"
-              const UNEXISTING_DATE = "2020-01-03"
-              const NULL_DATE__ID = `null_date__id`
+              describe.each([true, false])(
+                "saved with timestamp: %s",
+                saveWithTimestamp => {
+                  describe.each([true, false])(
+                    "search with timestamp: %s",
+                    searchWithTimestamp => {
+                      const SAVE_SUFFIX = saveWithTimestamp
+                        ? "T00:00:00.000Z"
+                        : ""
+                      const SEARCH_SUFFIX = searchWithTimestamp
+                        ? "T00:00:00.000Z"
+                        : ""
 
-              beforeAll(async () => {
-                tableOrViewId = await createTableOrView({
-                  dateid: { name: "dateid", type: FieldType.STRING },
-                  date: {
-                    name: "date",
-                    type: FieldType.DATETIME,
-                    dateOnly: true,
-                  },
-                })
+                      const JAN_1ST = `2020-01-01`
+                      const JAN_10TH = `2020-01-10`
+                      const JAN_30TH = `2020-01-30`
+                      const UNEXISTING_DATE = `2020-01-03`
+                      const NULL_DATE__ID = `null_date__id`
 
-                await createRows([
-                  { dateid: NULL_DATE__ID, date: null },
-                  { date: JAN_1ST },
-                  { date: `${JAN_10TH}T00:00:00.000Z` },
-                ])
-              })
+                      beforeAll(async () => {
+                        tableOrViewId = await createTableOrView({
+                          dateid: { name: "dateid", type: FieldType.STRING },
+                          date: {
+                            name: "date",
+                            type: FieldType.DATETIME,
+                            dateOnly: true,
+                          },
+                        })
 
-              describe("equal", () => {
-                it("successfully finds a row", async () => {
-                  await expectQuery({
-                    equal: { date: JAN_1ST },
-                  }).toContainExactly([{ date: JAN_1ST }])
-                })
+                        await createRows([
+                          { dateid: NULL_DATE__ID, date: null },
+                          { date: `${JAN_1ST}${SAVE_SUFFIX}` },
+                          { date: `${JAN_10TH}${SAVE_SUFFIX}` },
+                        ])
+                      })
 
-                it("successfully finds an ISO8601 row", async () => {
-                  await expectQuery({
-                    equal: { date: JAN_10TH },
-                  }).toContainExactly([{ date: JAN_10TH }])
-                })
+                      describe("equal", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            equal: { date: `${JAN_1ST}${SEARCH_SUFFIX}` },
+                          }).toContainExactly([{ date: JAN_1ST }])
+                        })
 
-                it("finds a row with ISO8601 timestamp", async () => {
-                  await expectQuery({
-                    equal: { date: `${JAN_1ST}T00:00:00.000Z` },
-                  }).toContainExactly([{ date: JAN_1ST }])
-                })
+                        it("successfully finds an ISO8601 row", async () => {
+                          await expectQuery({
+                            equal: { date: `${JAN_10TH}${SEARCH_SUFFIX}` },
+                          }).toContainExactly([{ date: JAN_10TH }])
+                        })
 
-                it("fails to find nonexistent row", async () => {
-                  await expectQuery({
-                    equal: { date: UNEXISTING_DATE },
-                  }).toFindNothing()
-                })
-              })
+                        it("finds a row with ISO8601 timestamp", async () => {
+                          await expectQuery({
+                            equal: { date: `${JAN_1ST}${SEARCH_SUFFIX}` },
+                          }).toContainExactly([{ date: JAN_1ST }])
+                        })
 
-              describe("notEqual", () => {
-                it("successfully finds a row", async () => {
-                  await expectQuery({
-                    notEqual: { date: JAN_1ST },
-                  }).toContainExactly([
-                    { date: JAN_10TH },
-                    { dateid: NULL_DATE__ID },
-                  ])
-                })
+                        it("fails to find nonexistent row", async () => {
+                          await expectQuery({
+                            equal: {
+                              date: `${UNEXISTING_DATE}${SEARCH_SUFFIX}`,
+                            },
+                          }).toFindNothing()
+                        })
+                      })
 
-                it("fails to find nonexistent row", async () => {
-                  await expectQuery({
-                    notEqual: { date: JAN_30TH },
-                  }).toContainExactly([
-                    { date: JAN_1ST },
-                    { date: JAN_10TH },
-                    { dateid: NULL_DATE__ID },
-                  ])
-                })
-              })
+                      describe("notEqual", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            notEqual: { date: `${JAN_1ST}${SEARCH_SUFFIX}` },
+                          }).toContainExactly([
+                            { date: JAN_10TH },
+                            { dateid: NULL_DATE__ID },
+                          ])
+                        })
 
-              describe("oneOf", () => {
-                it("successfully finds a row", async () => {
-                  await expectQuery({
-                    oneOf: { date: [JAN_1ST] },
-                  }).toContainExactly([{ date: JAN_1ST }])
-                })
+                        it("fails to find nonexistent row", async () => {
+                          await expectQuery({
+                            notEqual: { date: `${JAN_30TH}${SEARCH_SUFFIX}` },
+                          }).toContainExactly([
+                            { date: JAN_1ST },
+                            { date: JAN_10TH },
+                            { dateid: NULL_DATE__ID },
+                          ])
+                        })
+                      })
 
-                it("fails to find nonexistent row", async () => {
-                  await expectQuery({
-                    oneOf: { date: [UNEXISTING_DATE] },
-                  }).toFindNothing()
-                })
-              })
+                      describe("oneOf", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            oneOf: { date: [`${JAN_1ST}${SEARCH_SUFFIX}`] },
+                          }).toContainExactly([{ date: JAN_1ST }])
+                        })
 
-              describe("range", () => {
-                it("successfully finds a row", async () => {
-                  await expectQuery({
-                    range: { date: { low: JAN_1ST, high: JAN_1ST } },
-                  }).toContainExactly([{ date: JAN_1ST }])
-                })
+                        it("fails to find nonexistent row", async () => {
+                          await expectQuery({
+                            oneOf: {
+                              date: [`${UNEXISTING_DATE}${SEARCH_SUFFIX}`],
+                            },
+                          }).toFindNothing()
+                        })
+                      })
 
-                it("successfully finds multiple rows", async () => {
-                  await expectQuery({
-                    range: { date: { low: JAN_1ST, high: JAN_10TH } },
-                  }).toContainExactly([{ date: JAN_1ST }, { date: JAN_10TH }])
-                })
+                      describe("range", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            range: {
+                              date: {
+                                low: `${JAN_1ST}${SEARCH_SUFFIX}`,
+                                high: `${JAN_1ST}${SEARCH_SUFFIX}`,
+                              },
+                            },
+                          }).toContainExactly([{ date: JAN_1ST }])
+                        })
 
-                it("successfully finds no rows", async () => {
-                  await expectQuery({
-                    range: { date: { low: JAN_30TH, high: JAN_30TH } },
-                  }).toFindNothing()
-                })
-              })
+                        it("successfully finds multiple rows", async () => {
+                          await expectQuery({
+                            range: {
+                              date: {
+                                low: `${JAN_1ST}${SEARCH_SUFFIX}`,
+                                high: `${JAN_10TH}${SEARCH_SUFFIX}`,
+                              },
+                            },
+                          }).toContainExactly([
+                            { date: JAN_1ST },
+                            { date: JAN_10TH },
+                          ])
+                        })
+
+                        it("successfully finds no rows", async () => {
+                          await expectQuery({
+                            range: {
+                              date: {
+                                low: `${JAN_30TH}${SEARCH_SUFFIX}`,
+                                high: `${JAN_30TH}${SEARCH_SUFFIX}`,
+                              },
+                            },
+                          }).toFindNothing()
+                        })
+                      })
+                    }
+                  )
+                }
+              )
             })
 
             isInternal &&
