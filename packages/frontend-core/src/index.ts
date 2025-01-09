@@ -1,5 +1,5 @@
 export { createAPIClient } from "./api"
-export { fetchData } from "./fetch"
+export { fetchData, DataFetchMap } from "./fetch"
 export * as Constants from "./constants"
 export * from "./stores"
 export * from "./utils"
