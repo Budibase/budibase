@@ -68,7 +68,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   ): Promise<APIError> => {
     // Try to read a message from the error
     let message = response.statusText
-    let json: any = null
+    let json = null
     try {
       json = await response.json()
       if (json?.message) {
