@@ -226,7 +226,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
         return await handler(callConfig)
       } catch (error) {
         if (config?.onError) {
-          config.onError(error)
+          config.onError(error as APIError)
         }
         throw error
       }
