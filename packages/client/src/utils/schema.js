@@ -31,7 +31,7 @@ const getDatasourceFetchInstance = datasource => {
   if (!handler) {
     return null
   }
-  return new handler({ API, datasource })
+  return new handler({ API })
 }
 
 /**
@@ -52,7 +52,7 @@ export const fetchDatasourceSchema = async (
   // Get the normal schema as long as we aren't wanting a form schema
   let schema
   if (datasource?.type !== "query" || !options?.formSchema) {
-    schema = instance.getSchema(definition)
+    schema = instance.getSchema(datasource, definition)
   } else if (definition.parameters?.length) {
     schema = {}
     definition.parameters.forEach(param => {
