@@ -31,7 +31,7 @@ const getDatasourceFetchInstance = datasource => {
   if (!handler) {
     return null
   }
-  return new handler({ API })
+  return new handler({ API, datasource })
 }
 
 /**
