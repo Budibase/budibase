@@ -16,7 +16,7 @@ import { BaseAPIClient } from "./types"
 export interface ConfigEndpoints {
   getConfig: (type: ConfigType) => Promise<FindConfigResponse>
   getTenantConfig: (tentantId: string) => Promise<GetPublicSettingsResponse>
-  getOIDCConfig: (tenantId: string) => Promise<GetPublicOIDCConfigResponse>
+  getOIDCConfigs: (tenantId: string) => Promise<GetPublicOIDCConfigResponse>
   getOIDCLogos: () => Promise<Config<OIDCLogosConfig>>
   saveConfig: (config: SaveConfigRequest) => Promise<SaveConfigResponse>
   deleteConfig: (id: string, rev: string) => Promise<DeleteConfigResponse>
@@ -73,7 +73,7 @@ export const buildConfigEndpoints = (API: BaseAPIClient): ConfigEndpoints => ({
    * Gets the OIDC config for a certain tenant.
    * @param tenantId the tenant ID to get the config for
    */
-  getOIDCConfig: async tenantId => {
+  getOIDCConfigs: async tenantId => {
     return await API.get({
       url: `/api/global/configs/public/oidc?tenantId=${tenantId}`,
     })
