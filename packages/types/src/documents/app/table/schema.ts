@@ -123,7 +123,7 @@ export interface AIFieldMetadata extends BaseFieldSchema {
   operation: AIOperationEnum
   columns?: string[]
   column?: string
-  categories?: string[]
+  categories?: string
   prompt?: string
   language?: string
 }
@@ -227,6 +227,7 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.OPTIONS
     | FieldType.BOOLEAN
     | FieldType.BIGINT
+    | FieldType.JSON
   >
 }
 

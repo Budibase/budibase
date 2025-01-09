@@ -1,6 +1,7 @@
 import {
   CreateViewRequest,
   CreateViewResponse,
+  PaginatedSearchRowResponse,
   SearchRowResponse,
   SearchViewRowRequest,
   UpdateViewRequest,
@@ -13,10 +14,14 @@ export interface ViewV2Endpoints {
   fetchDefinition: (viewId: string) => Promise<ViewResponseEnriched>
   create: (view: CreateViewRequest) => Promise<CreateViewResponse>
   update: (view: UpdateViewRequest) => Promise<UpdateViewResponse>
-  fetch: (
+  fetch: <T extends SearchViewRowRequest>(
     viewId: string,
-    opts: SearchViewRowRequest
-  ) => Promise<SearchRowResponse>
+    opts: T
+  ) => Promise<
+    T extends { paginate: true }
+      ? PaginatedSearchRowResponse
+      : SearchRowResponse
+  >
   delete: (viewId: string) => Promise<void>
 }
 
@@ -59,7 +64,7 @@ export const buildViewV2Endpoints = (API: BaseAPIClient): ViewV2Endpoints => ({
    * @param viewId the id of the view
    * @param opts the search options
    */
-  fetch: async (viewId, opts) => {
+  fetch: async (viewId, opts: SearchViewRowRequest) => {
     return await API.post({
       url: `/api/v2/views/${encodeURIComponent(viewId)}/search`,
       body: opts,

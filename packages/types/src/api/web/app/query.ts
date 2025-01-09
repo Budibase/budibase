@@ -40,6 +40,10 @@ export interface ExecuteQueryRequest {
 export type ExecuteV1QueryResponse = Record<string, any>[]
 export interface ExecuteV2QueryResponse {
   data: Record<string, any>[]
+  pagination?: {
+    page: number
+    cursor: string
+  }
 }
 
 export interface DeleteQueryResponse {
