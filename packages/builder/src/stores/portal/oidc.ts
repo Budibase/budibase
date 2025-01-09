@@ -11,14 +11,10 @@ class OIDCStore extends BudiStore<PublicOIDCConfig> {
 
   async init() {
     const tenantId = get(auth).tenantId
-    const config = await API.getOIDCConfig(tenantId)
-    if (Object.keys(config || {}).length) {
-      // Just use the first config for now.
-      // We will be support multiple logins buttons later on.
-      this.set(config[0])
-    } else {
-      this.set({})
-    }
+    const configs = await API.getOIDCConfigs(tenantId)
+    // Just use the first config for now.
+    // We will be support multiple logins buttons later on.
+    this.set(configs[0] || {})
   }
 }
 

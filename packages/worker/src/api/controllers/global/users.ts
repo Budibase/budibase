@@ -75,12 +75,14 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
     const requestUser: User = { ...ctx.request.body, tenantId }
 
     // Do not allow the account holder role to be changed
-    const accountMetadata = await users.getExistingAccounts([requestUser.email])
-    if (accountMetadata?.length > 0) {
-      if (
-        requestUser.admin?.global !== true ||
-        requestUser.builder?.global !== true
-      ) {
+    if (
+      requestUser.admin?.global !== true ||
+      requestUser.builder?.global !== true
+    ) {
+      const accountMetadata = await users.getExistingAccounts([
+        requestUser.email,
+      ])
+      if (accountMetadata?.length > 0) {
         throw Error("Cannot set role of account holder")
       }
     }
