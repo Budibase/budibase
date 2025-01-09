@@ -18,7 +18,7 @@ const createNotificationStore = () => {
     type = "info",
     icon: string,
     autoDismiss = true,
-    duration: number,
+    duration?: number,
     count = 1
   ) => {
     if (block) {
@@ -77,13 +77,13 @@ const createNotificationStore = () => {
     subscribe: store.subscribe,
     actions: {
       send,
-      info: (msg: string, autoDismiss: boolean, duration: number) =>
+      info: (msg: string, autoDismiss?: boolean, duration?: number) =>
         send(msg, "info", "Info", autoDismiss ?? true, duration),
-      success: (msg: string, autoDismiss: boolean, duration: number) =>
+      success: (msg: string, autoDismiss?: boolean, duration?: number) =>
         send(msg, "success", "CheckmarkCircle", autoDismiss ?? true, duration),
-      warning: (msg: string, autoDismiss: boolean, duration: number) =>
+      warning: (msg: string, autoDismiss?: boolean, duration?: number) =>
         send(msg, "warning", "Alert", autoDismiss ?? true, duration),
-      error: (msg: string, autoDismiss: boolean, duration: number) =>
+      error: (msg: string, autoDismiss?: boolean, duration?: number) =>
         send(msg, "error", "Alert", autoDismiss ?? false, duration),
       blockNotifications,
       dismiss,
