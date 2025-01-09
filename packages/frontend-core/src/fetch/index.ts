@@ -33,7 +33,12 @@ const DataFetchMap = {
 export const fetchData = ({ API, datasource, options }: any) => {
   const Fetch =
     DataFetchMap[datasource?.type as keyof typeof DataFetchMap] || TableFetch
-  return new Fetch({ API, datasource, ...options })
+  const fetch = new Fetch({ API, datasource, ...options })
+
+  // Initially fetch data but don't bother waiting for the result
+  fetch.getInitialData()
+
+  return fetch
 }
 
 // Creates an empty fetch instance with no datasource configured, so no data
