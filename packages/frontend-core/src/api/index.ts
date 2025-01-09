@@ -74,7 +74,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       if (json?.message) {
         message = json.message
       } else if (json?.error) {
-        message = json.error
+        message = JSON.stringify(json.error)
       }
     } catch (error) {
       // Do nothing
