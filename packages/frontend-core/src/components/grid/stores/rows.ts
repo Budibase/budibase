@@ -10,9 +10,10 @@ import {
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
-import { FieldType, Row, UIFetchAPI, UIRow } from "@budibase/types"
+import { FieldType, Row, UIRow } from "@budibase/types"
 import { getRelatedTableValues } from "../../../utils"
 import { Store as StoreContext } from "."
+import DataFetch from "../../../fetch/DataFetch"
 
 interface IndexedUIRow extends UIRow {
   __idx: number
@@ -20,7 +21,7 @@ interface IndexedUIRow extends UIRow {
 
 interface RowStore {
   rows: Writable<UIRow[]>
-  fetch: Writable<UIFetchAPI | null>
+  fetch: Writable<DataFetch<any, any, any> | null> // TODO: type this properly, having a union of all the possible options
   loaded: Writable<boolean>
   refreshing: Writable<boolean>
   loading: Writable<boolean>
@@ -225,7 +226,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     })
 
     // Subscribe to changes of this fetch model
-    unsubscribe = newFetch.subscribe(async ($fetch: UIFetchAPI) => {
+    unsubscribe = newFetch.subscribe(async $fetch => {
       if ($fetch.error) {
         // Present a helpful error to the user
         let message = "An unknown error occurred"
@@ -253,7 +254,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
 
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
-          definition.set($fetch.definition)
+          definition.set($fetch.definition as any) // TODO: datasource and defitions are unions of the different implementations. At this point, the datasource does not know what type is being used, and the assignations will cause TS exceptions. Casting it "as any" for now. This should be fixed improving the type usages.
         }
 
         // Reset scroll state when data changes
