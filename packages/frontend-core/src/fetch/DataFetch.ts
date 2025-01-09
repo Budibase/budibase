@@ -13,6 +13,7 @@ import {
   UISearchFilter,
 } from "@budibase/types"
 import { APIClient } from "../api/types"
+import { DataFetchType } from "."
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
@@ -59,7 +60,7 @@ export interface DataFetchParams<
  * For other types of datasource, this class is overridden and extended.
  */
 export default abstract class DataFetch<
-  TDatasource extends {},
+  TDatasource extends { type: DataFetchType },
   TDefinition extends {
     schema?: Record<string, any> | null
     primaryDisplay?: string

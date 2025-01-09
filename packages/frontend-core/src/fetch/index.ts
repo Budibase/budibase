@@ -26,7 +26,7 @@ export const DataFetchMap = {
 
   // Client specific datasource types
   provider: NestedProviderFetch,
-  field: FieldFetch,
+  field: FieldFetch<"field">,
   jsonarray: JSONArrayFetch,
   queryarray: QueryArrayFetch,
 }
@@ -55,7 +55,11 @@ const createEmptyFetchInstance = <TDatasource extends { type: DataFetchType }>({
   if (!handler) {
     return null
   }
-  return new handler({ API, datasource: null as any, query: null as any })
+  return new handler({
+    API,
+    datasource: null as never,
+    query: null as any,
+  })
 }
 
 // Fetches the definition of any type of datasource
