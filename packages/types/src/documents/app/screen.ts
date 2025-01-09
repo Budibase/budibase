@@ -36,7 +36,6 @@ export type ScreenRoutingJson = Record<
     subpaths: Record<
       string,
       {
-        screenId: string
         screens: Record<string, string>
       }
     >
