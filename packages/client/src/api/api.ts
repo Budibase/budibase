@@ -1,5 +1,5 @@
 import { createAPIClient } from "@budibase/frontend-core"
-import { authStore } from "../stores/auth.js"
+import { authStore } from "../stores/auth"
 import {
   notificationStore,
   devToolsEnabled,
