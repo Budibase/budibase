@@ -236,13 +236,13 @@
     }
 
     if (!role) {
-      await groups.actions.removeApp(target._id, prodAppId)
+      await groups.removeApp(target._id, prodAppId)
     } else {
-      await groups.actions.addApp(target._id, prodAppId, role)
+      await groups.addApp(target._id, prodAppId, role)
     }
 
     await usersFetch.refresh()
-    await groups.actions.init()
+    await groups.init()
   }
 
   const onUpdateGroup = async (group, role) => {
@@ -268,7 +268,7 @@
       if (!group.roles) {
         return false
       }
-      return groups.actions.getGroupAppIds(group).includes(appId)
+      return groups.getGroupAppIds(group).includes(appId)
     })
   }
 
@@ -299,7 +299,7 @@
       role: group?.builder?.apps.includes(prodAppId)
         ? Constants.Roles.CREATOR
         : group.roles?.[
-            groups.actions.getGroupAppIds(group).find(x => x === prodAppId)
+            groups.getGroupAppIds(group).find(x => x === prodAppId)
           ],
     }
   }
@@ -485,12 +485,12 @@
   }
 
   const removeGroupAppBuilder = async groupId => {
-    await groups.actions.removeGroupAppBuilder(groupId, prodAppId)
+    await groups.removeGroupAppBuilder(groupId, prodAppId)
   }
 
   const initSidePanel = async sidePaneOpen => {
     if (sidePaneOpen === true) {
-      await groups.actions.init()
+      await groups.init()
     }
     loaded = true
   }

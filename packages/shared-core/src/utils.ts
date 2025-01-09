@@ -109,7 +109,9 @@ export function trimOtherProps(object: any, allowedProps: string[]) {
   return result
 }
 
-export function isSupportedUserSearch(query: SearchFilters) {
+export function isSupportedUserSearch(
+  query: SearchFilters
+): query is SearchFilters {
   const allowed = [
     { op: BasicOperator.STRING, key: "email" },
     { op: BasicOperator.EQUAL, key: "_id" },
