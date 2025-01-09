@@ -1,6 +1,6 @@
 export { authStore } from "./auth"
 export { appStore } from "./app"
-export { notificationStore } from "./notification"
+export { notificationStore } from "./notification.ts"
 export { routeStore } from "./routes"
 export { screenStore } from "./screens"
 export { builderStore } from "./builder"
