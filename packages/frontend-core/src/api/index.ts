@@ -93,7 +93,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   // Generates an error object from a string
   const makeError = (
     message: string,
-    url?: string,
+    url: string,
     method?: HTTPMethod
   ): APIError => {
     return {
@@ -239,13 +239,9 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     patch: requestApiCall(HTTPMethod.PATCH),
     delete: requestApiCall(HTTPMethod.DELETE),
     put: requestApiCall(HTTPMethod.PUT),
-    error: (message: string) => {
-      throw makeError(message)
-    },
     invalidateCache: () => {
       cache = {}
     },
-
     // Generic utility to extract the current app ID. Assumes that any client
     // that exists in an app context will be attaching our app ID header.
     getAppID: (): string => {

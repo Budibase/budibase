@@ -86,14 +86,13 @@ export type BaseAPIClient = {
   patch: <RequestT = null, ResponseT = void>(
     params: APICallParams<RequestT, ResponseT>
   ) => Promise<ResponseT>
-  error: (message: string) => void
   invalidateCache: () => void
   getAppID: () => string
 }
 
 export type APIError = {
   message?: string
-  url?: string
+  url: string
   method?: HTTPMethod
   json: any
   status: number
