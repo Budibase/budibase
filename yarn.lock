@@ -2131,9 +2131,9 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "3.2.28"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.2.28.tgz#59b5b37225715bb8fbf5b1c5c989140b10b58710"
-  integrity sha512-eDPeZpYFRZYQhCulcQAUwFoPk68c8+K9mIsB6QD3oMHmHTDA1P2ZcXvLNqDTIqHB94DqnWinqDf4hTuGYApgPA==
+  version "3.2.32"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.2.32.tgz#f6abcd5a5524e7f33d958acb6e610e29995427bb"
+  integrity sha512-bF0pd17IjYugjll2yKYmb0RM+tfKZcCmRBc4XG2NZ4f/I47QaOovm9RqSw6tfqCFuzRewxR3SWmtmSseUc/e0w==
   dependencies:
     "@anthropic-ai/sdk" "^0.27.3"
     "@budibase/backend-core" "*"
@@ -15600,15 +15600,7 @@ only@~0.0.2:
   resolved "https://registry.yarnpkg.com/only/-/only-0.0.2.tgz#2afde84d03e50b9a8edc444e30610a70295edfb4"
   integrity sha512-Fvw+Jemq5fjjyWz6CpKx6w9s7xxqo3+JCyM0WXWeCSOboZ8ABkyvP8ID4CZuChA/wxSx+XSJmdOm8rGVyJ1hdQ==
 
-open@^7.3.1:
-  version "7.4.2"
-  resolved "https://registry.yarnpkg.com/open/-/open-7.4.2.tgz#b8147e26dcf3e426316c730089fd71edd29c2321"
-  integrity sha512-MVHddDVweXZF3awtlAS+6pgKLlm/JgxZ90+/NBurBoQctVOOB/zDdVjcyPzQ+0laDGbsWgrRkflI65sQeOgT9Q==
-  dependencies:
-    is-docker "^2.0.0"
-    is-wsl "^2.1.1"
-
-open@^8.0.0, open@^8.4.0, open@~8.4.0:
+open@8.4.2, open@^8.0.0, open@^8.4.0, open@~8.4.0:
   version "8.4.2"
   resolved "https://registry.yarnpkg.com/open/-/open-8.4.2.tgz#5b5ffe2a8f793dcd2aad73e550cb87b59cb084f9"
   integrity sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==
@@ -15616,6 +15608,14 @@ open@^8.0.0, open@^8.4.0, open@~8.4.0:
     define-lazy-prop "^2.0.0"
     is-docker "^2.1.1"
     is-wsl "^2.2.0"
+
+open@^7.3.1:
+  version "7.4.2"
+  resolved "https://registry.yarnpkg.com/open/-/open-7.4.2.tgz#b8147e26dcf3e426316c730089fd71edd29c2321"
+  integrity sha512-MVHddDVweXZF3awtlAS+6pgKLlm/JgxZ90+/NBurBoQctVOOB/zDdVjcyPzQ+0laDGbsWgrRkflI65sQeOgT9Q==
+  dependencies:
+    is-docker "^2.0.0"
+    is-wsl "^2.1.1"
 
 openai@4.59.0:
   version "4.59.0"
