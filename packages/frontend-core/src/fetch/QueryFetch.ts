@@ -4,6 +4,7 @@ import { ExecuteQueryRequest, Query } from "@budibase/types"
 import { get } from "svelte/store"
 
 interface QueryDatasource {
+  type: "query"
   _id: string
   fields: Record<string, any> & {
     pagination?: {
