@@ -27,11 +27,9 @@ import {
   Hosting,
   ActionImplementation,
   AutomationStepDefinition,
-  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
-import { features } from "@budibase/backend-core"
 
 type ActionImplType = ActionImplementations<
   typeof env.SELF_HOSTED extends "true" ? Hosting.SELF : Hosting.CLOUD
@@ -78,6 +76,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   LOOP: loop.definition,
   COLLECT: collect.definition,
   TRIGGER_AUTOMATION_RUN: triggerAutomationRun.definition,
+  BRANCH: branch.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.definition,
   slack: slack.definition,
@@ -105,14 +104,7 @@ if (env.SELF_HOSTED) {
 export async function getActionDefinitions(): Promise<
   Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
 > {
-  if (await features.isEnabled(FeatureFlag.AUTOMATION_BRANCHING)) {
-    BUILTIN_ACTION_DEFINITIONS["BRANCH"] = branch.definition
-  }
-  if (
-    env.SELF_HOSTED ||
-    (await features.isEnabled(FeatureFlag.BUDIBASE_AI)) ||
-    (await features.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS))
-  ) {
+  if (env.SELF_HOSTED) {
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = openai.definition
   }
 
