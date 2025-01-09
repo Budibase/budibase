@@ -6,8 +6,8 @@ describe("plugins", () => {
   describe("enrichPluginURLs", () => {
     const plugin = structures.plugins.plugin()
 
-    async function getEnrichedPluginUrls() {
-      const enriched = (await plugins.enrichPluginURLs([plugin]))[0]
+    function getEnrichedPluginUrls() {
+      const enriched = plugins.enrichPluginURLs([plugin])[0]
       return {
         jsUrl: enriched.jsUrl!,
         iconUrl: enriched.iconUrl!,
@@ -19,9 +19,9 @@ describe("plugins", () => {
         testEnv.singleTenant()
       })
 
-      it("gets url with embedded minio", async () => {
+      it("gets url with embedded minio", () => {
         testEnv.withMinio()
-        const urls = await getEnrichedPluginUrls()
+        const urls = getEnrichedPluginUrls()
         expect(urls.jsUrl).toBe(
           `/files/signed/plugins/${plugin.name}/plugin.min.js`
         )
@@ -30,9 +30,9 @@ describe("plugins", () => {
         )
       })
 
-      it("gets url with custom S3", async () => {
+      it("gets url with custom S3", () => {
         testEnv.withS3()
-        const urls = await getEnrichedPluginUrls()
+        const urls = getEnrichedPluginUrls()
         expect(urls.jsUrl).toBe(
           `http://s3.example.com/plugins/${plugin.name}/plugin.min.js`
         )
@@ -41,9 +41,9 @@ describe("plugins", () => {
         )
       })
 
-      it("gets url with cloudfront + s3", async () => {
+      it("gets url with cloudfront + s3", () => {
         testEnv.withCloudfront()
-        const urls = await getEnrichedPluginUrls()
+        const urls = getEnrichedPluginUrls()
         // omit rest of signed params
         expect(
           urls.jsUrl.includes(
@@ -65,8 +65,8 @@ describe("plugins", () => {
 
       it("gets url with embedded minio", async () => {
         testEnv.withMinio()
-        await testEnv.withTenant(async tenantId => {
-          const urls = await getEnrichedPluginUrls()
+        await testEnv.withTenant(tenantId => {
+          const urls = getEnrichedPluginUrls()
           expect(urls.jsUrl).toBe(
             `/files/signed/plugins/${tenantId}/${plugin.name}/plugin.min.js`
           )
@@ -78,8 +78,8 @@ describe("plugins", () => {
 
       it("gets url with custom S3", async () => {
         testEnv.withS3()
-        await testEnv.withTenant(async tenantId => {
-          const urls = await getEnrichedPluginUrls()
+        await testEnv.withTenant(tenantId => {
+          const urls = getEnrichedPluginUrls()
           expect(urls.jsUrl).toBe(
             `http://s3.example.com/plugins/${tenantId}/${plugin.name}/plugin.min.js`
           )
@@ -91,8 +91,8 @@ describe("plugins", () => {
 
       it("gets url with cloudfront + s3", async () => {
         testEnv.withCloudfront()
-        await testEnv.withTenant(async tenantId => {
-          const urls = await getEnrichedPluginUrls()
+        await testEnv.withTenant(tenantId => {
+          const urls = getEnrichedPluginUrls()
           // omit rest of signed params
           expect(
             urls.jsUrl.includes(
