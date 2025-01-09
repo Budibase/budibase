@@ -216,11 +216,11 @@ const deleteRowHandler = async action => {
 const triggerAutomationHandler = async action => {
   const { fields, notificationOverride, timeout } = action.parameters
   try {
-    const result = await API.triggerAutomation({
-      automationId: action.parameters.automationId,
+    const result = await API.triggerAutomation(
+      action.parameters.automationId,
       fields,
-      timeout,
-    })
+      timeout
+    )
 
     // Value will exist if automation is synchronous, so return it.
     if (result.value) {
