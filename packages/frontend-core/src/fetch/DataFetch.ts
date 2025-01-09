@@ -369,7 +369,7 @@ export default abstract class DataFetch<
    * @param schema the datasource schema
    * @return {object} the enriched datasource schema
    */
-  private enrichSchema(schema: TableSchema): TableSchema {
+  enrichSchema(schema: TableSchema): TableSchema {
     // Check for any JSON fields so we can add any top level properties
     let jsonAdditions: Record<string, { type: string; nestedJSON: true }> = {}
     for (const fieldKey of Object.keys(schema)) {
