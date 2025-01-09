@@ -1683,7 +1683,7 @@ if (descriptions.length) {
                 })
               })
 
-            describe.only("datetime - date only", () => {
+            describe("datetime - date only", () => {
               describe.each([true, false])(
                 "saved with timestamp: %s",
                 saveWithTimestamp => {
