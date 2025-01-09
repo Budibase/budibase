@@ -47,9 +47,12 @@ class GroupStore extends BudiStore<UserGroup[]> {
 
   async delete(group: UserGroup) {
     await API.deleteGroup(group._id!, group._rev!)
-    this.update(state => {
-      state = state.filter(state => state._id !== group._id)
-      return state
+    this.update(groups => {
+      const index = groups.findIndex(g => g._id === group._id)
+      if (index !== -1) {
+        groups.splice(index, 1)
+      }
+      return groups
     })
   }
 

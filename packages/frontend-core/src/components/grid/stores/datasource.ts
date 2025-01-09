@@ -1,3 +1,5 @@
+// TODO: datasource and defitions are unions of the different implementations. At this point, the datasource does not know what type is being used, and the assignations will cause TS exceptions. Casting it "as any" for now. This should be fixed improving the type usages.
+
 import { derived, get, Readable, Writable } from "svelte/store"
 import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
 import { enrichSchemaWithRelColumns, memo } from "../../../utils"
@@ -71,10 +73,10 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
   } = context
 
   const schema = derived(definition, $definition => {
-    let schema: Record<string, UIFieldSchema> = getDatasourceSchema({
+    const schema: Record<string, any> | undefined = getDatasourceSchema({
       API,
-      datasource: get(datasource),
-      definition: $definition,
+      datasource: get(datasource) as any, // TODO: see line 1
+      definition: $definition ?? undefined,
     })
     if (!schema) {
       return null
@@ -82,7 +84,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
 
     // Ensure schema is configured as objects.
     // Certain datasources like queries use primitives.
-    Object.keys(schema || {}).forEach(key => {
+    Object.keys(schema).forEach(key => {
       if (typeof schema[key] !== "object") {
         schema[key] = { name: key, type: schema[key] }
       }
@@ -130,13 +132,13 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
     ([$datasource, $definition]) => {
       let type = $datasource?.type
       if (type === "provider") {
-        type = ($datasource as any).value?.datasource?.type
+        type = ($datasource as any).value?.datasource?.type // TODO: see line 1
       }
       // Handle calculation views
       if (type === "viewV2" && $definition?.type === ViewV2Type.CALCULATION) {
         return false
       }
-      return ["table", "viewV2", "link"].includes(type)
+      return !!type && ["table", "viewV2", "link"].includes(type)
     }
   )
 
@@ -184,9 +186,9 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   const refreshDefinition = async () => {
     const def = await getDatasourceDefinition({
       API,
-      datasource: get(datasource),
+      datasource: get(datasource) as any, // TODO: see line 1
     })
-    definition.set(def)
+    definition.set(def as any) // TODO: see line 1
   }
 
   // Saves the datasource definition
@@ -231,7 +233,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
     if ("default" in newDefinition.schema[column]) {
       delete newDefinition.schema[column].default
     }
-    return await saveDefinition(newDefinition as any)
+    return await saveDefinition(newDefinition as any) // TODO: see line 1
   }
 
   // Adds a schema mutation for a single field
@@ -307,7 +309,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
     await saveDefinition({
       ...$definition,
       schema: newSchema,
-    } as any)
+    } as any) // TODO: see line 1
     resetSchemaMutations()
   }
 

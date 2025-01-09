@@ -227,7 +227,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       MonthlyQuotaName.AUTOMATIONS,
     ].reduce((acc: MonthlyMetrics, key) => {
       const limit = license.quotas.usage.monthly[key].value
-      const used = (usage.monthly.current?.[key] || 0 / limit) * 100
+      const used = ((usage.monthly.current?.[key] || 0) / limit) * 100
       acc[key] = limit > -1 ? Math.floor(used) : -1
       return acc
     }, {})
@@ -236,7 +236,7 @@ class LicensingStore extends BudiStore<LicensingState> {
     const staticMetrics = [StaticQuotaName.APPS, StaticQuotaName.ROWS].reduce(
       (acc: StaticMetrics, key) => {
         const limit = license.quotas.usage.static[key].value
-        const used = (usage.usageQuota[key] || 0 / limit) * 100
+        const used = ((usage.usageQuota[key] || 0) / limit) * 100
         acc[key] = limit > -1 ? Math.floor(used) : -1
         return acc
       },

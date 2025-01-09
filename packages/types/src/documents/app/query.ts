@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { Row } from "./row"
 
 export interface QuerySchema {
   name?: string
@@ -13,6 +14,7 @@ export interface Query extends Document {
   fields: RestQueryFields | any
   transformer: string | null
   schema: Record<string, QuerySchema | string>
+  nestedSchemaFields?: Record<string, Record<string, QuerySchema | string>>
   readable: boolean
   queryVerb: string
   // flag to state whether the default bindings are empty strings (old behaviour) or null
@@ -29,7 +31,7 @@ export interface QueryParameter {
 }
 
 export interface QueryResponse {
-  rows: any[]
+  rows: Row[]
   keys: string[]
   info: any
   extra: any
