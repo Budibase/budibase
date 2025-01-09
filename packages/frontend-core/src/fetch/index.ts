@@ -12,6 +12,8 @@ import CustomFetch from "./CustomFetch"
 import QueryArrayFetch from "./QueryArrayFetch"
 import { APIClient } from "../api/types"
 
+export type DataFetchType = keyof typeof DataFetchMap
+
 export const DataFetchMap = {
   table: TableFetch,
   view: ViewFetch,
@@ -31,8 +33,7 @@ export const DataFetchMap = {
 
 // Constructs a new fetch model for a certain datasource
 export const fetchData = ({ API, datasource, options }: any) => {
-  const Fetch =
-    DataFetchMap[datasource?.type as keyof typeof DataFetchMap] || TableFetch
+  const Fetch = DataFetchMap[datasource?.type as DataFetchType] || TableFetch
   const fetch = new Fetch({ API, datasource, ...options })
 
   // Initially fetch data but don't bother waiting for the result
@@ -43,18 +44,14 @@ export const fetchData = ({ API, datasource, options }: any) => {
 
 // Creates an empty fetch instance with no datasource configured, so no data
 // will initially be loaded
-const createEmptyFetchInstance = <
-  TDatasource extends {
-    type: keyof typeof DataFetchMap
-  }
->({
+const createEmptyFetchInstance = <TDatasource extends { type: DataFetchType }>({
   API,
   datasource,
 }: {
   API: APIClient
   datasource: TDatasource
 }) => {
-  const handler = DataFetchMap[datasource?.type as keyof typeof DataFetchMap]
+  const handler = DataFetchMap[datasource?.type as DataFetchType]
   if (!handler) {
     return null
   }
@@ -63,9 +60,7 @@ const createEmptyFetchInstance = <
 
 // Fetches the definition of any type of datasource
 export const getDatasourceDefinition = async <
-  TDatasource extends {
-    type: keyof typeof DataFetchMap
-  }
+  TDatasource extends { type: DataFetchType }
 >({
   API,
   datasource,
@@ -79,9 +74,7 @@ export const getDatasourceDefinition = async <
 
 // Fetches the schema of any type of datasource
 export const getDatasourceSchema = <
-  TDatasource extends {
-    type: keyof typeof DataFetchMap
-  }
+  TDatasource extends { type: DataFetchType }
 >({
   API,
   datasource,
