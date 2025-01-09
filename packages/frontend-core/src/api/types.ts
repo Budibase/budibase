@@ -46,7 +46,7 @@ export type Headers = Record<string, string>
 export type APIClientConfig = {
   enableCaching?: boolean
   attachHeaders?: (headers: Headers) => void
-  onError?: (error: any) => void
+  onError?: (error: APIError) => void
   onMigrationDetected?: (migration: string) => void
 }
 
