@@ -8,7 +8,13 @@ import {
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
-import { context, InternalTable, tenancy, utils } from "@budibase/backend-core"
+import {
+  context,
+  setEnv,
+  InternalTable,
+  tenancy,
+  utils,
+} from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AIOperationEnum,
@@ -42,19 +48,8 @@ import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
 import { JsTimeoutError } from "@budibase/string-templates"
 import { isDate } from "../../../utilities"
-
-jest.mock("@budibase/pro", () => ({
-  ...jest.requireActual("@budibase/pro"),
-  ai: {
-    LargeLanguageModel: {
-      forCurrentTenant: async () => ({
-        llm: {},
-        run: jest.fn(() => `Mock LLM Response`),
-        buildPromptFromAIOperation: jest.fn(),
-      }),
-    },
-  },
-}))
+import nock from "nock"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -99,6 +94,8 @@ if (descriptions.length) {
         const ds = await dsProvider()
         datasource = ds.datasource
         client = ds.client
+
+        mocks.licenses.useCloudFree()
       })
 
       afterAll(async () => {
@@ -171,10 +168,6 @@ if (descriptions.length) {
           ...overrides
         )
       }
-
-      beforeEach(async () => {
-        mocks.licenses.useCloudFree()
-      })
 
       const getRowUsage = async () => {
         const { total } = await config.doInContext(undefined, () =>
@@ -3224,10 +3217,17 @@ if (descriptions.length) {
       isInternal &&
         describe("AI fields", () => {
           let table: Table
+          let envCleanup: () => void
 
           beforeAll(async () => {
             mocks.licenses.useBudibaseAI()
             mocks.licenses.useAICustomConfigs()
+            envCleanup = setEnv({
+              OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
+            })
+
+            mockChatGPTResponse("Mock LLM Response")
+
             table = await config.api.table.save(
               saveTableRequest({
                 schema: {
@@ -3251,7 +3251,9 @@ if (descriptions.length) {
           })
 
           afterAll(() => {
-            jest.unmock("@budibase/pro")
+            nock.cleanAll()
+            envCleanup()
+            mocks.licenses.useCloudFree()
           })
 
           it("should be able to save a row with an AI column", async () => {

@@ -1,11 +1,9 @@
 export enum FeatureFlag {
-  AUTOMATION_BRANCHING = "AUTOMATION_BRANCHING",
-  AI_CUSTOM_CONFIGS = "AI_CUSTOM_CONFIGS",
-  DEFAULT_VALUES = "DEFAULT_VALUES",
-  BUDIBASE_AI = "BUDIBASE_AI",
   USE_ZOD_VALIDATOR = "USE_ZOD_VALIDATOR",
 }
 
-export interface TenantFeatureFlags {
-  [key: string]: FeatureFlag[]
+export const FeatureFlagDefaults = {
+  [FeatureFlag.USE_ZOD_VALIDATOR]: false,
 }
+
+export type FeatureFlags = typeof FeatureFlagDefaults

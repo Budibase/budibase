@@ -154,6 +154,7 @@ export const GroupByTypes = [
   FieldType.BOOLEAN,
   FieldType.DATETIME,
   FieldType.BIGINT,
+  FieldType.AI,
 ]
 
 export function canGroupBy(type: FieldType) {

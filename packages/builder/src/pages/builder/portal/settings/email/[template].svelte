@@ -34,7 +34,7 @@
   async function saveTemplate() {
     try {
       // Save your template config
-      await email.templates.save(selectedTemplate)
+      await email.saveTemplate(selectedTemplate)
       notifications.success("Template saved")
     } catch (error) {
       notifications.error("Failed to update template settings")

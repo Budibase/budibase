@@ -174,7 +174,9 @@ class QueryRunner {
     }
 
     // needs to an array for next step
-    if (!Array.isArray(rows)) {
+    if (rows === null) {
+      rows = []
+    } else if (!Array.isArray(rows)) {
       rows = [rows]
     }
 
