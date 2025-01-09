@@ -911,8 +911,8 @@ export function sort<T extends Record<string, any>>(
  * @param docs the data
  * @param limit the number of docs to limit to
  */
-export function limit<T>(docs: T[], limit: string): T[] {
-  const numLimit = parseFloat(limit)
+export function limit<T>(docs: T[], limit: string | number): T[] {
+  const numLimit = typeof limit === "number" ? limit : parseFloat(limit)
   if (isNaN(numLimit)) {
     return docs
   }

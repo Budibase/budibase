@@ -1,11 +1,13 @@
-import FieldFetch from "./FieldFetch.js"
+import FieldFetch from "./FieldFetch"
 import {
   getJSONArrayDatasourceSchema,
   generateQueryArraySchemas,
 } from "../utils/json"
 
 export default class QueryArrayFetch extends FieldFetch {
-  async getDefinition(datasource) {
+  async getDefinition() {
+    const { datasource } = this.options
+
     if (!datasource?.tableId) {
       return null
     }
@@ -14,10 +16,14 @@ export default class QueryArrayFetch extends FieldFetch {
     try {
       const table = await this.API.fetchQueryDefinition(datasource.tableId)
       const schema = generateQueryArraySchemas(
-        table?.schema,
-        table?.nestedSchemaFields
+        table.schema,
+        table.nestedSchemaFields
       )
-      return { schema: getJSONArrayDatasourceSchema(schema, datasource) }
+      const result = {
+        schema: getJSONArrayDatasourceSchema(schema, datasource),
+      }
+
+      return result
     } catch (error) {
       return null
     }

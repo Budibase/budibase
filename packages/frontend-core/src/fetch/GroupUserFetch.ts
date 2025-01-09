@@ -1,9 +1,22 @@
 import { get } from "svelte/store"
-import DataFetch from "./DataFetch.js"
+import DataFetch, { DataFetchParams } from "./DataFetch"
 import { TableNames } from "../constants"
 
-export default class GroupUserFetch extends DataFetch {
-  constructor(opts) {
+interface GroupUserQuery {
+  groupId: string
+  emailSearch: string
+}
+
+interface GroupUserDatasource {
+  tableId: TableNames.USERS
+}
+
+export default class GroupUserFetch extends DataFetch<
+  GroupUserDatasource,
+  {},
+  GroupUserQuery
+> {
+  constructor(opts: DataFetchParams<GroupUserDatasource, GroupUserQuery>) {
     super({
       ...opts,
       datasource: {
@@ -12,7 +25,7 @@ export default class GroupUserFetch extends DataFetch {
     })
   }
 
-  determineFeatureFlags() {
+  async determineFeatureFlags() {
     return {
       supportsSearch: true,
       supportsSort: false,
@@ -28,11 +41,12 @@ export default class GroupUserFetch extends DataFetch {
 
   async getData() {
     const { query, cursor } = get(this.store)
+
     try {
       const res = await this.API.getGroupUsers({
         id: query.groupId,
         emailSearch: query.emailSearch,
-        bookmark: cursor,
+        bookmark: cursor ?? undefined,
       })
 
       return {
