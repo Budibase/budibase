@@ -56,7 +56,7 @@ export default class UserFetch extends DataFetch<
 
     const finalQuery: SearchFilters = utils.isSupportedUserSearch(rest)
       ? rest
-      : { [BasicOperator.STRING]: { email: null as any } }
+      : { [BasicOperator.STRING]: { email: null as any } } // TODO: chech. Left as any to not change the behaviour it had when it was js
 
     try {
       const opts: SearchUsersRequest = {
