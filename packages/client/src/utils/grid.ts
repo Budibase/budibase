@@ -2,6 +2,26 @@ import { GridSpacing, GridRowHeight } from "@/constants"
 import { builderStore } from "stores"
 import { buildStyleString } from "utils/styleable.js"
 
+interface GridMetadata {
+  id: string
+  styles: Record<string, string | number> & {
+    "--default-width"?: number
+    "--default-height"?: number
+  }
+  interactive: boolean
+  errored: boolean
+  definition?: {
+    size?: {
+      width: number
+      height: number
+    }
+    grid?: { hAlign: string; vAlign: string }
+  }
+  draggable: boolean
+  insideGrid: boolean
+  ignoresLayout: boolean
+}
+
 /**
  * We use CSS variables on components to control positioning and layout of
  * components inside grids.
@@ -62,11 +82,11 @@ export const isGridEvent = (e: Event & { target: HTMLElement }): boolean => {
 
 // Svelte action to apply required class names and styles to our component
 // wrappers
-export const gridLayout = (node: HTMLDivElement, metadata: any) => {
+export const gridLayout = (node: HTMLDivElement, metadata: GridMetadata) => {
   let selectComponent: any
 
   // Applies the required listeners, CSS and classes to a component DOM node
-  const applyMetadata = (metadata: any) => {
+  const applyMetadata = (metadata: GridMetadata) => {
     const {
       id,
       styles,
@@ -103,7 +123,7 @@ export const gridLayout = (node: HTMLDivElement, metadata: any) => {
     }
     width += 2 * GridSpacing
     height += 2 * GridSpacing
-    const vars: Record<string, string> = {
+    const vars: Record<string, string | number> = {
       "--default-width": width,
       "--default-height": height,
     }
@@ -180,7 +200,7 @@ export const gridLayout = (node: HTMLDivElement, metadata: any) => {
   applyMetadata(metadata)
 
   return {
-    update(newMetadata: any) {
+    update(newMetadata: GridMetadata) {
       removeListeners()
       applyMetadata(newMetadata)
     },
