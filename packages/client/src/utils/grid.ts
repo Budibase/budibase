@@ -1,4 +1,4 @@
-import { GridSpacing, GridRowHeight } from "constants"
+import { GridSpacing, GridRowHeight } from "@/constants"
 import { builderStore } from "stores"
 import { buildStyleString } from "utils/styleable.js"
 
@@ -44,10 +44,11 @@ export const GridDragModes = {
 }
 
 // Builds a CSS variable name for a certain piece of grid metadata
-export const getGridVar = (device, param) => `--grid-${device}-${param}`
+export const getGridVar = (device: string, param: string) =>
+  `--grid-${device}-${param}`
 
 // Determines whether a JS event originated from immediately within a grid
-export const isGridEvent = e => {
+export const isGridEvent = (e: any) => {
   return (
     e.target.dataset?.indicator === "true" ||
     e.target
@@ -59,11 +60,11 @@ export const isGridEvent = e => {
 
 // Svelte action to apply required class names and styles to our component
 // wrappers
-export const gridLayout = (node, metadata) => {
-  let selectComponent
+export const gridLayout = (node: HTMLDivElement, metadata: any) => {
+  let selectComponent: any
 
   // Applies the required listeners, CSS and classes to a component DOM node
-  const applyMetadata = metadata => {
+  const applyMetadata = (metadata: any) => {
     const {
       id,
       styles,
@@ -86,7 +87,7 @@ export const gridLayout = (node, metadata) => {
     }
 
     // Callback to select the component when clicking on the wrapper
-    selectComponent = e => {
+    selectComponent = (e: Event) => {
       e.stopPropagation()
       builderStore.actions.selectComponent(id)
     }
@@ -100,7 +101,7 @@ export const gridLayout = (node, metadata) => {
     }
     width += 2 * GridSpacing
     height += 2 * GridSpacing
-    let vars = {
+    let vars: any = {
       "--default-width": width,
       "--default-height": height,
     }
@@ -135,7 +136,7 @@ export const gridLayout = (node, metadata) => {
     }
 
     // Apply some metadata to data attributes to speed up lookups
-    const addDataTag = (tagName, device, param) => {
+    const addDataTag = (tagName: string, device: string, param: string) => {
       const val = `${vars[getGridVar(device, param)]}`
       if (node.dataset[tagName] !== val) {
         node.dataset[tagName] = val
@@ -147,11 +148,12 @@ export const gridLayout = (node, metadata) => {
     addDataTag("gridMobileHAlign", Devices.Mobile, GridParams.HAlign)
     addDataTag("gridDesktopVAlign", Devices.Desktop, GridParams.VAlign)
     addDataTag("gridMobileVAlign", Devices.Mobile, GridParams.VAlign)
-    if (node.dataset.insideGrid !== true) {
-      node.dataset.insideGrid = true
+    if (node.dataset.insideGrid !== "true") {
+      node.dataset.insideGrid = "true"
     }
 
     // Apply all CSS variables to the wrapper
+    // @ts-expect-error TODO
     node.style = buildStyleString(vars)
 
     // Add a listener to select this node on click
@@ -160,7 +162,7 @@ export const gridLayout = (node, metadata) => {
     }
 
     // Add draggable attribute
-    node.setAttribute("draggable", !!draggable)
+    node.setAttribute("draggable", (!!draggable).toString())
   }
 
   // Removes the previously set up listeners
@@ -176,7 +178,7 @@ export const gridLayout = (node, metadata) => {
   applyMetadata(metadata)
 
   return {
-    update(newMetadata) {
+    update(newMetadata: any) {
       removeListeners()
       applyMetadata(newMetadata)
     },
