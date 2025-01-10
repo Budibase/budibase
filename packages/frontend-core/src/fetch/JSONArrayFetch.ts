@@ -1,7 +1,7 @@
 import FieldFetch from "./FieldFetch"
 import { getJSONArrayDatasourceSchema } from "../utils/json"
 
-export default class JSONArrayFetch extends FieldFetch {
+export default class JSONArrayFetch extends FieldFetch<"jsonarray"> {
   async getDefinition() {
     const { datasource } = this.options
 
