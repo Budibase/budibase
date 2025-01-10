@@ -5,7 +5,7 @@
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
-  import { enrichSearchColumns, enrichFilter } from "utils/blocks.js"
+  import { enrichSearchColumns, enrichFilter } from "utils/blocks"
   import { Utils } from "@budibase/frontend-core"
 
   export let title
