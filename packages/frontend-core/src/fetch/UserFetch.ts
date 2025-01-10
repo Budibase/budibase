@@ -14,18 +14,22 @@ interface UserFetchQuery {
 }
 
 interface UserDatasource {
-  tableId: string
+  type: "user"
+  tableId: TableNames.USERS
 }
+
+interface UserDefinition {}
 
 export default class UserFetch extends DataFetch<
   UserDatasource,
-  {},
+  UserDefinition,
   UserFetchQuery
 > {
   constructor(opts: DataFetchParams<UserDatasource, UserFetchQuery>) {
     super({
       ...opts,
       datasource: {
+        type: "user",
         tableId: TableNames.USERS,
       },
     })

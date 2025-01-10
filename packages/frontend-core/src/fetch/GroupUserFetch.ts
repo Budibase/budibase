@@ -8,6 +8,7 @@ interface GroupUserQuery {
 }
 
 interface GroupUserDatasource {
+  type: "groupUser"
   tableId: TableNames.USERS
 }
 
@@ -20,6 +21,7 @@ export default class GroupUserFetch extends DataFetch<
     super({
       ...opts,
       datasource: {
+        type: "groupUser",
         tableId: TableNames.USERS,
       },
     })

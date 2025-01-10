@@ -1,6 +1,7 @@
 import DataFetch from "./DataFetch"
 
 interface CustomDatasource {
+  type: "custom"
   data: any
 }
 
