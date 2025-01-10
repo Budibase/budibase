@@ -1,6 +1,10 @@
 import { createAPIClient } from "@budibase/frontend-core"
-import { authStore } from "../stores/auth.js"
-import { notificationStore, devToolsEnabled, devToolsStore } from "../stores/"
+import { authStore } from "../stores/auth"
+import {
+  notificationStore,
+  devToolsEnabled,
+  devToolsStore,
+} from "../stores/index"
 import { get } from "svelte/store"
 
 export const API = createAPIClient({
