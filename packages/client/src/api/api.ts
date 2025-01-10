@@ -4,7 +4,7 @@ import {
   notificationStore,
   devToolsEnabled,
   devToolsStore,
-} from "../stores/index.js"
+} from "../stores/index"
 import { get } from "svelte/store"
 
 export const API = createAPIClient({
