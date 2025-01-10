@@ -1,7 +1,7 @@
 import { Table } from "@budibase/types"
 import DataFetch from "./DataFetch"
 
-type ViewV1 = {
+type ViewV1Datasource = {
   type: "view"
   name: string
   tableId: string
@@ -10,7 +10,7 @@ type ViewV1 = {
   groupBy: string
 }
 
-export default class ViewFetch extends DataFetch<ViewV1, Table> {
+export default class ViewFetch extends DataFetch<ViewV1Datasource, Table> {
   async getDefinition() {
     const { datasource } = this.options
 
