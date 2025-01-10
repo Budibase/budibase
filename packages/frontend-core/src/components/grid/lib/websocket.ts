@@ -1,12 +1,14 @@
 import { get } from "svelte/store"
 import { createWebsocket } from "../../../utils"
 import { SocketEvent, GridSocketEvent } from "@budibase/shared-core"
+import { Store } from "../stores"
+import { UIDatasource } from "@budibase/types"
 
-export const createGridWebsocket = context => {
+export const createGridWebsocket = (context: Store) => {
   const { rows, datasource, users, focusedCellId, definition, API } = context
   const socket = createWebsocket("/socket/grid")
 
-  const connectToDatasource = datasource => {
+  const connectToDatasource = (datasource: UIDatasource) => {
     if (!socket.connected) {
       return
     }
@@ -65,7 +67,7 @@ export const createGridWebsocket = context => {
     GridSocketEvent.DatasourceChange,
     ({ datasource: newDatasource }) => {
       // Listen builder renames, as these aren't handled otherwise
-      if (newDatasource?.name !== get(definition).name) {
+      if (newDatasource?.name !== get(definition)?.name) {
         definition.set(newDatasource)
       }
     }
