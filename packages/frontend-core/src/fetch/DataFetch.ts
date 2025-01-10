@@ -179,9 +179,6 @@ export default abstract class DataFetch<
       this.store.update($store => ({ ...$store, loaded: true }))
       return
     }
-
-    // Initially fetch data but don't bother waiting for the result
-    this.getInitialData()
   }
 
   /**
