@@ -1,9 +1,17 @@
-import { SortOrder, UIView, ViewV2, ViewV2Type } from "@budibase/types"
+import { SortOrder, ViewV2Enriched, ViewV2Type } from "@budibase/types"
 import DataFetch from "./DataFetch"
 import { get } from "svelte/store"
 import { helpers } from "@budibase/shared-core"
 
-export default class ViewV2Fetch extends DataFetch<UIView, ViewV2> {
+interface ViewDatasource {
+  type: "viewV2"
+  id: string
+}
+
+export default class ViewV2Fetch extends DataFetch<
+  ViewDatasource,
+  ViewV2Enriched
+> {
   async determineFeatureFlags() {
     return {
       supportsSearch: true,
