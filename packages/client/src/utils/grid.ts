@@ -48,11 +48,13 @@ export const getGridVar = (device: string, param: string) =>
   `--grid-${device}-${param}`
 
 // Determines whether a JS event originated from immediately within a grid
-export const isGridEvent = (e: any) => {
+export const isGridEvent = (e: Event & { target: HTMLElement }): boolean => {
   return (
     e.target.dataset?.indicator === "true" ||
+    // @ts-expect-error: api is not properly typed
     e.target
       .closest?.(".component")
+      // @ts-expect-error
       ?.parentNode.closest(".component")
       ?.childNodes[0]?.classList?.contains("grid")
   )
@@ -101,7 +103,7 @@ export const gridLayout = (node: HTMLDivElement, metadata: any) => {
     }
     width += 2 * GridSpacing
     height += 2 * GridSpacing
-    let vars: any = {
+    const vars: Record<string, string> = {
       "--default-width": width,
       "--default-height": height,
     }
