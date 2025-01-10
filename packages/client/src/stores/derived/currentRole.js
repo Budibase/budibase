@@ -1,7 +1,7 @@
 import { derived } from "svelte/store"
 import { Constants } from "@budibase/frontend-core"
 import { devToolsStore } from "../devTools.js"
-import { authStore } from "../auth.js"
+import { authStore } from "../auth"
 import { devToolsEnabled } from "./devToolsEnabled.js"
 
 // Derive the current role of the logged-in user
