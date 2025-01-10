@@ -1,4 +1,4 @@
-import { FieldType } from "@budibase/types"
+import { FieldType, UIColumn } from "@budibase/types"
 
 import OptionsCell from "../cells/OptionsCell.svelte"
 import DateCell from "../cells/DateCell.svelte"
@@ -40,13 +40,23 @@ const TypeComponentMap = {
   // Custom types for UI only
   role: RoleCell,
 }
-export const getCellRenderer = column => {
+
+function getCellRendererByType(type: FieldType | "role" | undefined) {
+  if (!type) {
+    return
+  }
+
+  return TypeComponentMap[type as keyof typeof TypeComponentMap]
+}
+
+export const getCellRenderer = (column: UIColumn) => {
   if (column.calculationType) {
     return NumberCell
   }
+
   return (
-    TypeComponentMap[column?.schema?.cellRenderType] ||
-    TypeComponentMap[column?.schema?.type] ||
+    getCellRendererByType(column.schema?.cellRenderType) ||
+    getCellRendererByType(column.schema?.type) ||
     TextCell
   )
 }
