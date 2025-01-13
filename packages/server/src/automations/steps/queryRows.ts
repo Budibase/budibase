@@ -122,9 +122,10 @@ export async function run({
     sortType =
       fieldType === FieldType.NUMBER ? FieldType.NUMBER : FieldType.STRING
   }
+  // when passing the tableId in the Ctx it needs to be decoded
   const ctx = buildCtx(appId, null, {
     params: {
-      tableId,
+      tableId: decodeURIComponent(tableId),
     },
     body: {
       sortType,
