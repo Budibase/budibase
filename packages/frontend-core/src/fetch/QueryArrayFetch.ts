@@ -4,7 +4,7 @@ import {
   generateQueryArraySchemas,
 } from "../utils/json"
 
-export default class QueryArrayFetch extends FieldFetch {
+export default class QueryArrayFetch extends FieldFetch<"queryarray"> {
   async getDefinition() {
     const { datasource } = this.options
 

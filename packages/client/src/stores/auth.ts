@@ -2,7 +2,9 @@ import { API } from "api"
 import { writable } from "svelte/store"
 
 const createAuthStore = () => {
-  const store = writable(null)
+  const store = writable<{
+    csrfToken?: string
+  } | null>(null)
 
   // Fetches the user object if someone is logged in and has reloaded the page
   const fetchUser = async () => {
