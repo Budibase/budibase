@@ -1,5 +1,5 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
-import { createAdminStore } from "./admin"
+import { AdminStore } from "./admin"
 import { writable, get } from "svelte/store"
 import { API } from "@/api"
 import { auth } from "@/stores/portal"
@@ -46,7 +46,7 @@ describe("admin store", () => {
     ctx.writableReturn = { update: vi.fn(), subscribe: vi.fn() }
     writable.mockReturnValue(ctx.writableReturn)
 
-    ctx.returnedStore = createAdminStore()
+    ctx.returnedStore = new AdminStore()
   })
 
   it("returns the created store", ctx => {

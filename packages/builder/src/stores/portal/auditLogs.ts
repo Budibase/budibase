@@ -13,7 +13,7 @@ interface PortalAuditLogsStore {
   logs?: SearchAuditLogsResponse
 }
 
-export class AuditLogsStore extends BudiStore<PortalAuditLogsStore> {
+class AuditLogsStore extends BudiStore<PortalAuditLogsStore> {
   constructor() {
     super({})
   }
