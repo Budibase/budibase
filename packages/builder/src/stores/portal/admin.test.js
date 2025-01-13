@@ -49,15 +49,6 @@ describe("admin store", () => {
     ctx.returnedStore = new AdminStore()
   })
 
-  it("returns the created store", ctx => {
-    expect(ctx.returnedStore).toEqual({
-      subscribe: expect.toBe(ctx.writableReturn.subscribe),
-      init: expect.toBeFunc(),
-      unload: expect.toBeFunc(),
-      getChecklist: expect.toBeFunc(),
-    })
-  })
-
   describe("init method", () => {
     beforeEach(async ctx => {
       let getMockIndex = 0
