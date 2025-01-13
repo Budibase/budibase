@@ -29,13 +29,11 @@ class UserStore extends BudiStore<UserState> {
       data: [],
     })
 
-    this.search = this.search.bind(this)
-
     // Update quotas after any add or remove operation
-    this.create = this.refreshUsage(this.create)
-    this.save = this.refreshUsage(this.save)
-    this.delete = this.refreshUsage(this.delete)
-    this.bulkDelete = this.refreshUsage(this.bulkDelete)
+    this.create = this.refreshUsage(this.create.bind(this))
+    this.save = this.refreshUsage(this.save.bind(this))
+    this.delete = this.refreshUsage(this.delete.bind(this))
+    this.bulkDelete = this.refreshUsage(this.bulkDelete.bind(this))
   }
 
   async search(opts: SearchUsersRequest = {}) {
