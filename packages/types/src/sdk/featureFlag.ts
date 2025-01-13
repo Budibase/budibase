@@ -1,17 +1,15 @@
 export enum FeatureFlag {
-  AUTOMATION_BRANCHING = "AUTOMATION_BRANCHING",
-  AI_CUSTOM_CONFIGS = "AI_CUSTOM_CONFIGS",
-  DEFAULT_VALUES = "DEFAULT_VALUES",
-  BUDIBASE_AI = "BUDIBASE_AI",
   USE_ZOD_VALIDATOR = "USE_ZOD_VALIDATOR",
+
+  // Account-portal
+  DIRECT_LOGIN_TO_ACCOUNT_PORTAL = "DIRECT_LOGIN_TO_ACCOUNT_PORTAL",
 }
 
 export const FeatureFlagDefaults = {
-  [FeatureFlag.DEFAULT_VALUES]: true,
-  [FeatureFlag.AUTOMATION_BRANCHING]: true,
-  [FeatureFlag.AI_CUSTOM_CONFIGS]: true,
-  [FeatureFlag.BUDIBASE_AI]: true,
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
+
+  // Account-portal
+  [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,
 }
 
 export type FeatureFlags = typeof FeatureFlagDefaults
