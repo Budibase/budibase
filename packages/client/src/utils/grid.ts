@@ -83,7 +83,7 @@ export const isGridEvent = (e: Event & { target: HTMLElement }): boolean => {
 // Svelte action to apply required class names and styles to our component
 // wrappers
 export const gridLayout = (node: HTMLDivElement, metadata: GridMetadata) => {
-  let selectComponent: any
+  let selectComponent: ((e: Event) => void) | null
 
   // Applies the required listeners, CSS and classes to a component DOM node
   const applyMetadata = (metadata: GridMetadata) => {
