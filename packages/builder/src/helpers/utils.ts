@@ -1,12 +1,20 @@
-import { AutoFieldSubType, Automation, FieldType } from "@budibase/types"
+import {
+  AutoFieldSubType,
+  Automation,
+  DateFieldMetadata,
+  FieldType,
+  NumberFieldMetadata,
+  RelationshipFieldMetadata,
+  RelationshipType,
+} from "@budibase/types"
 import { ActionStepID } from "@/constants/backend/automations"
 import { TableNames } from "@/constants"
 import {
   AUTO_COLUMN_DISPLAY_NAMES,
   AUTO_COLUMN_SUB_TYPES,
   FIELDS,
-  isAutoColumnUserRelationship,
 } from "@/constants/backend"
+import { utils } from "@budibase/shared-core"
 
 type AutoColumnInformation = Partial<
   Record<AutoFieldSubType, { enabled: boolean; name: string }>
@@ -38,44 +46,47 @@ export function buildAutoColumn(
   tableName: string,
   name: string,
   subtype: AutoFieldSubType
-) {
-  let type, constraints
+): RelationshipFieldMetadata | NumberFieldMetadata | DateFieldMetadata {
+  const base = {
+    name,
+    icon: "ri-magic-line",
+    autocolumn: true,
+  }
+
   switch (subtype) {
     case AUTO_COLUMN_SUB_TYPES.UPDATED_BY:
     case AUTO_COLUMN_SUB_TYPES.CREATED_BY:
-      type = FieldType.LINK
-      constraints = FIELDS.LINK.constraints
-      break
+      return {
+        ...base,
+        type: FieldType.LINK,
+        subtype,
+        constraints: FIELDS.LINK.constraints,
+        tableId: TableNames.USERS,
+        fieldName: `${tableName}-${name}`,
+        relationshipType: RelationshipType.MANY_TO_ONE,
+      }
+
     case AUTO_COLUMN_SUB_TYPES.AUTO_ID:
-      type = FieldType.NUMBER
-      constraints = FIELDS.NUMBER.constraints
-      break
+      return {
+        ...base,
+        type: FieldType.NUMBER,
+        subtype,
+        constraints: FIELDS.NUMBER.constraints,
+      }
     case AUTO_COLUMN_SUB_TYPES.UPDATED_AT:
     case AUTO_COLUMN_SUB_TYPES.CREATED_AT:
-      type = FieldType.DATETIME
-      constraints = FIELDS.DATETIME.constraints
-      break
+      return {
+        ...base,
+        type: FieldType.DATETIME,
+        subtype,
+        constraints: FIELDS.DATETIME.constraints,
+      }
+
     default:
-      type = FieldType.STRING
-      constraints = FIELDS.STRING.constraints
-      break
+      throw utils.unreachable(subtype, {
+        message: "Cannot build auto column with supplied subtype",
+      })
   }
-  if (Object.values(AUTO_COLUMN_SUB_TYPES).indexOf(subtype) === -1) {
-    throw "Cannot build auto column with supplied subtype"
-  }
-  const base = {
-    name,
-    type,
-    subtype,
-    icon: "ri-magic-line",
-    autocolumn: true,
-    constraints,
-  }
-  if (isAutoColumnUserRelationship(subtype)) {
-    base.tableId = TableNames.USERS
-    base.fieldName = `${tableName}-${name}`
-  }
-  return base
 }
 
 export function checkForCollectStep(automation: Automation) {

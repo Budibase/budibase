@@ -4,7 +4,6 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
   AutoFieldSubType,
   Hosting,
-  FieldSubType,
 } from "@budibase/types"
 import { Constants } from "@budibase/frontend-core"
 
@@ -211,13 +210,6 @@ export const Roles = {
   BASIC: "BASIC",
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
-}
-
-export function isAutoColumnUserRelationship(subtype: FieldSubType) {
-  return (
-    subtype === AUTO_COLUMN_SUB_TYPES.CREATED_BY ||
-    subtype === AUTO_COLUMN_SUB_TYPES.UPDATED_BY
-  )
 }
 
 export const PrettyRelationshipDefinitions = {
