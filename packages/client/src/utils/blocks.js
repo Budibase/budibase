@@ -1,5 +1,5 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
-import { API } from "../api/index.js"
+import { API } from "../api"
 import { UILogicalOperator } from "@budibase/types"
 import { Constants } from "@budibase/frontend-core"
 
