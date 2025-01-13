@@ -91,13 +91,14 @@ export const patchAPI = (API: APIClient) => {
     return await enrichRows(rows, tableId)
   }
 
-  // Wipe any HBS formulae from table definitions, as these interfere with
+  // Wipe any HBS formulas from table definitions, as these interfere with
   // handlebars enrichment
   const fetchTableDefinition = API.fetchTableDefinition
   API.fetchTableDefinition = async tableId => {
     const definition = await fetchTableDefinition(tableId)
     Object.keys(definition?.schema || {}).forEach(field => {
       if (definition.schema[field]?.type === "formula") {
+        // @ts-expect-error TODO check what use case removing that would break
         delete definition.schema[field].formula
       }
     })
