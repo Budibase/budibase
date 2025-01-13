@@ -68,13 +68,13 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   ): Promise<APIError> => {
     // Try to read a message from the error
     let message = response.statusText
-    let json: any = null
+    let json = null
     try {
       json = await response.json()
       if (json?.message) {
         message = json.message
       } else if (json?.error) {
-        message = json.error
+        message = JSON.stringify(json.error)
       }
     } catch (error) {
       // Do nothing
@@ -93,7 +93,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   // Generates an error object from a string
   const makeError = (
     message: string,
-    url?: string,
+    url: string,
     method?: HTTPMethod
   ): APIError => {
     return {
@@ -226,7 +226,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
         return await handler(callConfig)
       } catch (error) {
         if (config?.onError) {
-          config.onError(error)
+          config.onError(error as APIError)
         }
         throw error
       }
@@ -239,13 +239,9 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     patch: requestApiCall(HTTPMethod.PATCH),
     delete: requestApiCall(HTTPMethod.DELETE),
     put: requestApiCall(HTTPMethod.PUT),
-    error: (message: string) => {
-      throw makeError(message)
-    },
     invalidateCache: () => {
       cache = {}
     },
-
     // Generic utility to extract the current app ID. Assumes that any client
     // that exists in an app context will be attaching our app ID header.
     getAppID: (): string => {

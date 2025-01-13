@@ -2,6 +2,7 @@ import { Row, TableSchema } from "@budibase/types"
 import DataFetch from "./DataFetch"
 
 interface NestedProviderDatasource {
+  type: "provider"
   value?: {
     schema: TableSchema
     primaryDisplay: string
