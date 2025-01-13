@@ -15,7 +15,7 @@ interface AdminState extends GetEnvironmentResponse {
   status?: SystemStatusResponse
 }
 
-class AdminStore extends BudiStore<AdminState> {
+export class AdminStore extends BudiStore<AdminState> {
   constructor() {
     super({
       loaded: false,
