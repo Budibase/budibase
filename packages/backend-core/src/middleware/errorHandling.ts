@@ -32,8 +32,12 @@ export async function errorHandling(ctx: any, next: any) {
     }
 
     if (environment.isTest() && ctx.headers["x-budibase-include-stacktrace"]) {
+      let rootErr = err
+      while (rootErr.cause) {
+        rootErr = rootErr.cause
+      }
       // @ts-ignore
-      error.stack = err.stack
+      error.stack = rootErr.stack
     }
 
     ctx.body = error

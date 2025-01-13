@@ -802,14 +802,29 @@ class InternalBuilder {
         filters.oneOf,
         ArrayOperator.ONE_OF,
         (q, key: string, array) => {
+          const schema = this.getFieldSchema(key)
+          const values = Array.isArray(array) ? array : [array]
           if (shouldOr) {
             q = q.or
           }
           if (this.client === SqlClient.ORACLE) {
             // @ts-ignore
             key = this.convertClobs(key)
+          } else if (
+            this.client === SqlClient.SQL_LITE &&
+            schema?.type === FieldType.DATETIME &&
+            schema.dateOnly
+          ) {
+            for (const value of values) {
+              if (value != null) {
+                q = q.or.whereLike(key, `${value.toISOString().slice(0, 10)}%`)
+              } else {
+                q = q.or.whereNull(key)
+              }
+            }
+            return q
           }
-          return q.whereIn(key, Array.isArray(array) ? array : [array])
+          return q.whereIn(key, values)
         },
         (q, key: string[], array) => {
           if (shouldOr) {
@@ -868,6 +883,19 @@ class InternalBuilder {
         let high = value.high
         let low = value.low
 
+        if (
+          this.client === SqlClient.SQL_LITE &&
+          schema?.type === FieldType.DATETIME &&
+          schema.dateOnly
+        ) {
+          if (high != null) {
+            high = `${high.toISOString().slice(0, 10)}T23:59:59.999Z`
+          }
+          if (low != null) {
+            low = low.toISOString().slice(0, 10)
+          }
+        }
+
         if (this.client === SqlClient.ORACLE) {
           rawKey = this.convertClobs(key)
         } else if (
@@ -900,6 +928,7 @@ class InternalBuilder {
     }
     if (filters.equal) {
       iterate(filters.equal, BasicOperator.EQUAL, (q, key, value) => {
+        const schema = this.getFieldSchema(key)
         if (shouldOr) {
           q = q.or
         }
@@ -914,6 +943,16 @@ class InternalBuilder {
             // @ts-expect-error knex types are wrong, raw is fine here
             subq.whereNotNull(identifier).andWhere(identifier, value)
           )
+        } else if (
+          this.client === SqlClient.SQL_LITE &&
+          schema?.type === FieldType.DATETIME &&
+          schema.dateOnly
+        ) {
+          if (value != null) {
+            return q.whereLike(key, `${value.toISOString().slice(0, 10)}%`)
+          } else {
+            return q.whereNull(key)
+          }
         } else {
           return q.whereRaw(`COALESCE(?? = ?, FALSE)`, [
             this.rawQuotedIdentifier(key),
@@ -924,6 +963,7 @@ class InternalBuilder {
     }
     if (filters.notEqual) {
       iterate(filters.notEqual, BasicOperator.NOT_EQUAL, (q, key, value) => {
+        const schema = this.getFieldSchema(key)
         if (shouldOr) {
           q = q.or
         }
@@ -945,6 +985,18 @@ class InternalBuilder {
               // @ts-expect-error knex types are wrong, raw is fine here
               .or.whereNull(identifier)
           )
+        } else if (
+          this.client === SqlClient.SQL_LITE &&
+          schema?.type === FieldType.DATETIME &&
+          schema.dateOnly
+        ) {
+          if (value != null) {
+            return q.not
+              .whereLike(key, `${value.toISOString().slice(0, 10)}%`)
+              .or.whereNull(key)
+          } else {
+            return q.not.whereNull(key)
+          }
         } else {
           return q.whereRaw(`COALESCE(?? != ?, TRUE)`, [
             this.rawQuotedIdentifier(key),

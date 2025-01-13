@@ -6,7 +6,7 @@ const DEFAULT_NOTIFICATION_TIMEOUT = 3000
 const createNotificationStore = () => {
   let block = false
 
-  const store = writable([])
+  const store = writable<{ id: string; message: string; count: number }[]>([])
 
   const blockNotifications = (timeout = 1000) => {
     block = true
@@ -14,11 +14,11 @@ const createNotificationStore = () => {
   }
 
   const send = (
-    message,
+    message: string,
     type = "info",
-    icon,
+    icon: string,
     autoDismiss = true,
-    duration,
+    duration?: number,
     count = 1
   ) => {
     if (block) {
@@ -66,7 +66,7 @@ const createNotificationStore = () => {
     }
   }
 
-  const dismiss = id => {
+  const dismiss = (id: string) => {
     store.update(state => {
       return state.filter(n => n.id !== id)
     })
@@ -76,13 +76,13 @@ const createNotificationStore = () => {
     subscribe: store.subscribe,
     actions: {
       send,
-      info: (msg, autoDismiss, duration) =>
+      info: (msg: string, autoDismiss?: boolean, duration?: number) =>
         send(msg, "info", "Info", autoDismiss ?? true, duration),
-      success: (msg, autoDismiss, duration) =>
+      success: (msg: string, autoDismiss?: boolean, duration?: number) =>
         send(msg, "success", "CheckmarkCircle", autoDismiss ?? true, duration),
-      warning: (msg, autoDismiss, duration) =>
+      warning: (msg: string, autoDismiss?: boolean, duration?: number) =>
         send(msg, "warning", "Alert", autoDismiss ?? true, duration),
-      error: (msg, autoDismiss, duration) =>
+      error: (msg: string, autoDismiss?: boolean, duration?: number) =>
         send(msg, "error", "Alert", autoDismiss ?? false, duration),
       blockNotifications,
       dismiss,
