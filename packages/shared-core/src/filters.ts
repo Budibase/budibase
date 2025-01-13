@@ -699,7 +699,27 @@ export function runQuery<T extends Record<string, any>>(
       return docValue._id === testValue
     }
 
-    return docValue === testValue
+    if (docValue === testValue) {
+      return true
+    }
+
+    if (docValue == null && testValue != null) {
+      return false
+    }
+
+    if (docValue != null && testValue == null) {
+      return false
+    }
+
+    const leftDate = dayjs(docValue)
+    if (leftDate.isValid()) {
+      const rightDate = dayjs(testValue)
+      if (rightDate.isValid()) {
+        return leftDate.isSame(rightDate)
+      }
+    }
+
+    return false
   }
 
   const not =
