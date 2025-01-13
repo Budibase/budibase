@@ -28,12 +28,6 @@ class UserStore extends BudiStore<UserState> {
     super({
       data: [],
     })
-
-    // Update quotas after any add or remove operation
-    this.create = this.refreshUsage(this.create.bind(this))
-    this.save = this.refreshUsage(this.save.bind(this))
-    this.delete = this.refreshUsage(this.delete.bind(this))
-    this.bulkDelete = this.refreshUsage(this.bulkDelete.bind(this))
   }
 
   async search(opts: SearchUsersRequest = {}) {
@@ -156,6 +150,7 @@ class UserStore extends BudiStore<UserState> {
       return body
     })
     const response = await API.createUsers(mappedUsers, data.groups)
+    licensing.setQuotaUsage()
 
     // re-search from first page
     await this.search()
@@ -164,14 +159,19 @@ class UserStore extends BudiStore<UserState> {
 
   async delete(id: string) {
     await API.deleteUser(id)
+    licensing.setQuotaUsage()
   }
 
   async bulkDelete(users: UserIdentifier[]) {
-    return API.deleteUsers(users)
+    const res = API.deleteUsers(users)
+    licensing.setQuotaUsage()
+    return res
   }
 
   async save(user: User) {
-    return await API.saveUser(user)
+    const res = await API.saveUser(user)
+    licensing.setQuotaUsage()
+    return res
   }
 
   async addAppBuilder(userId: string, appId: string) {
@@ -200,16 +200,6 @@ class UserStore extends BudiStore<UserState> {
       return Constants.BudibaseRoles.Creator
     } else {
       return Constants.BudibaseRoles.AppUser
-    }
-  }
-
-  // Wrapper function to refresh quota usage after an operation,
-  // persisting argument and return types
-  refreshUsage<T extends any[], U>(fn: (...args: T) => Promise<U>) {
-    return async function (...args: T) {
-      const response = await fn(...args)
-      await licensing.setQuotaUsage()
-      return response
     }
   }
 }
