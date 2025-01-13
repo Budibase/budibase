@@ -2341,7 +2341,7 @@ if (descriptions.length) {
               [FieldType.ARRAY]: ["options 2", "options 4"],
               [FieldType.NUMBER]: generator.natural(),
               [FieldType.BOOLEAN]: generator.bool(),
-              [FieldType.DATETIME]: generator.date().toISOString(),
+              [FieldType.DATETIME]: generator.date().toISOString().slice(0, 10),
               [FieldType.ATTACHMENTS]: [setup.structures.basicAttachment()],
               [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
               [FieldType.FORMULA]: undefined, // generated field

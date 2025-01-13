@@ -21,11 +21,12 @@ import {
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
+  UnsavedUser,
   UpdateInviteRequest,
   UpdateInviteResponse,
   UpdateSelfMetadataRequest,
   UpdateSelfMetadataResponse,
-  User,
+  UserIdentifier,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -38,14 +39,9 @@ export interface UserEndpoints {
   createAdminUser: (
     user: CreateAdminUserRequest
   ) => Promise<CreateAdminUserResponse>
-  saveUser: (user: User) => Promise<SaveUserResponse>
+  saveUser: (user: UnsavedUser) => Promise<SaveUserResponse>
   deleteUser: (userId: string) => Promise<DeleteUserResponse>
-  deleteUsers: (
-    users: Array<{
-      userId: string
-      email: string
-    }>
-  ) => Promise<BulkUserDeleted | undefined>
+  deleteUsers: (users: UserIdentifier[]) => Promise<BulkUserDeleted | undefined>
   onboardUsers: (data: InviteUsersRequest) => Promise<InviteUsersResponse>
   getUserInvite: (code: string) => Promise<CheckInviteResponse>
   getUserInvites: () => Promise<GetUserInvitesResponse>
@@ -60,7 +56,7 @@ export interface UserEndpoints {
   getAccountHolder: () => Promise<LookupAccountHolderResponse>
   searchUsers: (data: SearchUsersRequest) => Promise<SearchUsersResponse>
   createUsers: (
-    users: User[],
+    users: UnsavedUser[],
     groups: any[]
   ) => Promise<BulkUserCreated | undefined>
   updateUserInvite: (

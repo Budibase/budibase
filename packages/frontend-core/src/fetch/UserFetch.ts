@@ -2,11 +2,7 @@ import { get } from "svelte/store"
 import DataFetch, { DataFetchParams } from "./DataFetch"
 import { TableNames } from "../constants"
 import { utils } from "@budibase/shared-core"
-import {
-  BasicOperator,
-  SearchFilters,
-  SearchUsersRequest,
-} from "@budibase/types"
+import { SearchFilters, SearchUsersRequest } from "@budibase/types"
 
 interface UserFetchQuery {
   appId: string
@@ -56,7 +52,7 @@ export default class UserFetch extends DataFetch<
 
     const finalQuery: SearchFilters = utils.isSupportedUserSearch(rest)
       ? rest
-      : { [BasicOperator.EMPTY]: { email: null } }
+      : {}
 
     try {
       const opts: SearchUsersRequest = {
