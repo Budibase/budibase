@@ -176,8 +176,6 @@
       notifications.error("Error getting init info")
     }
   })
-
-  $: console.log(automationErrors)
 </script>
 
 <Page>
