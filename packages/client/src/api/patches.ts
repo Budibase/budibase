@@ -55,7 +55,7 @@ export const patchAPI = (API: APIClient) => {
   const fetchSelf = API.fetchSelf
   API.fetchSelf = async () => {
     const user = await fetchSelf()
-    if (user && user._id) {
+    if (user && "_id" in user && user._id) {
       if (user.roleId === "PUBLIC") {
         // Don't try to enrich a public user as it will 403
         return user
