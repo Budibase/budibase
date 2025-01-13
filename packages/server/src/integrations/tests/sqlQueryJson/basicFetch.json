@@ -1,0 +1,137 @@
+{
+  "operation": "READ",
+  "resource": {
+    "fields": [
+      "a.year",
+      "a.firstname",
+      "a.personid",
+      "a.age",
+      "a.type",
+      "a.lastname"
+    ]
+  },
+  "filters": {},
+  "sort": {
+    "firstname": {
+      "direction": "ascending"
+    }
+  },
+  "paginate": {
+    "limit": 100,
+    "page": 1
+  },
+  "relationships": [],
+  "extra": {
+    "idFilter": {}
+  },
+  "table": {
+    "type": "table",
+    "_id": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__persons",
+    "primary": ["personid"],
+    "name": "persons",
+    "schema": {
+      "year": {
+        "type": "number",
+        "externalType": "integer",
+        "autocolumn": false,
+        "name": "year",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "firstname": {
+        "type": "string",
+        "externalType": "character varying",
+        "autocolumn": false,
+        "name": "firstname",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "personid": {
+        "type": "number",
+        "externalType": "integer",
+        "autocolumn": true,
+        "name": "personid",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "address": {
+        "type": "string",
+        "externalType": "character varying",
+        "autocolumn": false,
+        "name": "address",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "age": {
+        "type": "number",
+        "externalType": "integer",
+        "autocolumn": false,
+        "name": "age",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "type": {
+        "type": "options",
+        "externalType": "USER-DEFINED",
+        "autocolumn": false,
+        "name": "type",
+        "constraints": {
+          "presence": false,
+          "inclusion": ["support", "designer", "programmer", "qa"]
+        }
+      },
+      "city": {
+        "type": "string",
+        "externalType": "character varying",
+        "autocolumn": false,
+        "name": "city",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "lastname": {
+        "type": "string",
+        "externalType": "character varying",
+        "autocolumn": false,
+        "name": "lastname",
+        "constraints": {
+          "presence": false
+        }
+      },
+      "QA": {
+        "tableId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__tasks",
+        "name": "QA",
+        "relationshipType": "many-to-one",
+        "fieldName": "qaid",
+        "type": "link",
+        "main": true,
+        "_id": "ccb68481c80c34217a4540a2c6c27fe46",
+        "foreignKey": "personid"
+      },
+      "executor": {
+        "tableId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__tasks",
+        "name": "executor",
+        "relationshipType": "many-to-one",
+        "fieldName": "executorid",
+        "type": "link",
+        "main": true,
+        "_id": "c89530b9770d94bec851e062b5cff3001",
+        "foreignKey": "personid",
+        "tableName": "persons"
+      }
+    },
+    "sourceId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
+    "sourceType": "external",
+    "primaryDisplay": "firstname",
+    "views": {}
+  },
+  "tableAliases": {
+    "persons": "a",
+    "tasks": "b"
+  }
+}

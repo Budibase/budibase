@@ -55,30 +55,42 @@ const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
 const MISSING_TABLE_REGX = new RegExp(`no such table: .+`)
 const DUPLICATE_COLUMN_REGEX = new RegExp(`duplicate column name: .+`)
 
-async function buildInternalFieldList(
+export async function buildInternalFieldList(
   source: Table | ViewV2,
   tables: Table[],
-  opts?: { relationships?: RelationshipsJson[]; allowedFields?: string[] }
+  opts?: {
+    relationships?: RelationshipsJson[]
+    allowedFields?: string[]
+    includeHiddenFields?: boolean
+  }
 ) {
-  const { relationships, allowedFields } = opts || {}
+  const { relationships, allowedFields, includeHiddenFields } = opts || {}
   let schemaFields: string[] = []
-  if (sdk.views.isView(source)) {
-    schemaFields = Object.keys(helpers.views.basicFields(source))
-  } else {
-    schemaFields = Object.keys(source.schema).filter(
-      key => source.schema[key].visible !== false
-    )
-  }
 
-  if (allowedFields) {
-    schemaFields = schemaFields.filter(field => allowedFields.includes(field))
-  }
-
+  const isView = sdk.views.isView(source)
   let table: Table
-  if (sdk.views.isView(source)) {
+  if (isView) {
     table = await sdk.views.getTable(source.id)
   } else {
     table = source
+  }
+
+  if (isView) {
+    schemaFields = Object.keys(helpers.views.basicFields(source))
+  } else {
+    schemaFields = Object.keys(source.schema).filter(
+      key => includeHiddenFields || source.schema[key].visible !== false
+    )
+  }
+
+  const containsFormula = schemaFields.some(
+    f => table.schema[f]?.type === FieldType.FORMULA
+  )
+  // If are requesting for a formula field, we need to retrieve all fields
+  if (containsFormula) {
+    schemaFields = Object.keys(table.schema)
+  } else if (allowedFields) {
+    schemaFields = schemaFields.filter(field => allowedFields.includes(field))
   }
 
   let fieldList: string[] = []
@@ -101,10 +113,12 @@ async function buildInternalFieldList(
   }
   for (let key of schemaFields) {
     const col = table.schema[key]
+
     const isRelationship = col.type === FieldType.LINK
     if (!relationships && isRelationship) {
       continue
     }
+
     if (!isRelationship) {
       fieldList.push(`${table._id}.${mapToUserColumn(key)}`)
     } else {
@@ -113,8 +127,17 @@ async function buildInternalFieldList(
       if (!relatedTable) {
         continue
       }
+
+      // a quirk of how junction documents work in Budibase, refer to the "LinkDocument" type to see the full
+      // structure - essentially all relationships between two tables will be inserted into a single "table"
+      // we don't use an independent junction table ID for each separate relationship between two tables. For
+      // example if we have table A and B, with two relationships between them, all the junction documents will
+      // end up in the same junction table ID. We need to retrieve the field name property of the junction documents
+      // as part of the relationship to tell us which relationship column the junction is related to.
       const relatedFields = (
-        await buildInternalFieldList(relatedTable, tables)
+        await buildInternalFieldList(relatedTable, tables, {
+          includeHiddenFields: containsFormula,
+        })
       ).concat(
         getJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
       )
@@ -125,6 +148,13 @@ async function buildInternalFieldList(
       fieldList = fieldList.concat(relatedFields)
     }
   }
+
+  if (!isView || !helpers.views.isCalculationView(source)) {
+    for (const field of PROTECTED_INTERNAL_COLUMNS) {
+      fieldList.push(`${table._id}.${field}`)
+    }
+  }
+
   return [...new Set(fieldList)]
 }
 
@@ -323,8 +353,9 @@ export async function search(
   }
 
   let aggregations: Aggregation[] = []
-  if (sdk.views.isView(source)) {
+  if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
     const calculationFields = helpers.views.calculationFields(source)
+
     for (const [key, field] of Object.entries(calculationFields)) {
       if (options.fields && !options.fields.includes(key)) {
         continue
