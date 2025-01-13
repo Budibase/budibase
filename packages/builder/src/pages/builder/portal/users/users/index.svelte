@@ -251,6 +251,7 @@
       passwordModal.show()
       await fetch.refresh()
     } catch (error) {
+      console.error(error)
       notifications.error("Error creating user")
     }
   }
