@@ -97,7 +97,7 @@ export async function run({
   const ctx: any = buildCtx(appId, emitter, {
     body: inputs.row,
     params: {
-      tableId: inputs.row.tableId,
+      tableId: decodeURIComponent(inputs.row.tableId),
     },
   })
   try {

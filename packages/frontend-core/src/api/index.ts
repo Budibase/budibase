@@ -46,6 +46,8 @@ import { buildLogsEndpoints } from "./logs"
 import { buildMigrationEndpoints } from "./migrations"
 import { buildRowActionEndpoints } from "./rowActions"
 
+export type { APIClient } from "./types"
+
 /**
  * Random identifier to uniquely identify a session in a tab. This is
  * used to determine the originator of calls to the API, which is in

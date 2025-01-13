@@ -85,7 +85,7 @@ export async function run({
       _rev: inputs.revision,
     },
     params: {
-      tableId: inputs.tableId,
+      tableId: decodeURIComponent(inputs.tableId),
     },
   })
 
