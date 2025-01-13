@@ -17,7 +17,10 @@ export {
 
 export const AUTO_COLUMN_SUB_TYPES = AutoFieldSubType
 
-export const AUTO_COLUMN_DISPLAY_NAMES = {
+export const AUTO_COLUMN_DISPLAY_NAMES: Record<
+  keyof typeof AUTO_COLUMN_SUB_TYPES,
+  string
+> = {
   AUTO_ID: "Auto ID",
   CREATED_BY: "Created By",
   CREATED_AT: "Created At",
