@@ -45,6 +45,9 @@ export async function handleRequest<T extends Operation>(
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const source = await utils.getSource(ctx)
 
+  const { viewId, tableId } = utils.getSourceId(ctx)
+  const sourceId = viewId || tableId
+
   if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
     ctx.throw(400, "Cannot update rows through a calculation view")
   }
@@ -86,7 +89,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   // The id might have been changed, so the refetching would fail. Recalculating the id just in case
   const updatedId =
     generateIdForRow({ ...beforeRow, ...dataToUpdate }, table) || _id
-  const row = await sdk.rows.external.getRow(table._id!, updatedId, {
+  const row = await sdk.rows.external.getRow(sourceId, updatedId, {
     relationships: true,
   })
 
