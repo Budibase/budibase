@@ -1,13 +1,55 @@
 import * as jsonpatch from "fast-json-patch/index.mjs"
 import { writable, derived, get } from "svelte/store"
+import { DerivedBudiStore } from "@/stores/BudiStore"
 
 export const Operations = {
   Add: "Add",
   Delete: "Delete",
   Change: "Change",
+} as const
+
+interface HistoryDocument {
+  _id: string
+  _rev?: string
+  [key: string]: any
 }
 
-export const initialState = {
+interface HistoryOperation {
+  id?: string | number | undefined
+  type: (typeof Operations)[keyof typeof Operations]
+  doc: HistoryDocument
+  forwardPatch?: any[]
+  backwardsPatch?: any[]
+}
+
+interface HistoryState {
+  history: HistoryOperation[]
+  position: number
+  loading?: boolean
+}
+
+interface DerivedHistoryState extends HistoryState {
+  canUndo: boolean
+  canRedo: boolean
+}
+
+interface HistoryStoreOptions {
+  getDoc: (id: string) => HistoryDocument | undefined
+  selectDoc?: (id: string) => void
+  beforeAction?: (operation: HistoryOperation) => void | Promise<void>
+  afterAction?: (operation: HistoryOperation) => void | Promise<void>
+}
+
+type SaveFn = (
+  doc: HistoryDocument,
+  operationId?: string | number
+) => Promise<HistoryDocument>
+type DeleteFn = (
+  doc: HistoryDocument,
+  operationId?: string | number
+) => Promise<void>
+
+export const initialState: HistoryState = {
   history: [],
   position: 0,
   loading: false,
@@ -18,9 +60,9 @@ export const createHistoryStore = ({
   selectDoc,
   beforeAction,
   afterAction,
-}) => {
+}: HistoryStoreOptions) => {
   // Use a derived store to check if we are able to undo or redo any operations
-  const store = writable(initialState)
+  const store = writable<HistoryState>(initialState)
   const derivedStore = derived(store, $store => {
     return {
       ...$store,
@@ -31,8 +73,8 @@ export const createHistoryStore = ({
 
   // Wrapped versions of essential functions which we call ourselves when using
   // undo and redo
-  let saveFn
-  let deleteFn
+  let saveFn: SaveFn
+  let deleteFn: DeleteFn
 
   /**
    * Internal util to set the loading flag
@@ -66,7 +108,7 @@ export const createHistoryStore = ({
    * For internal use only.
    * @param operation the operation to save
    */
-  const saveOperation = operation => {
+  const saveOperation = (operation: HistoryOperation) => {
     store.update(state => {
       // Update history
       let history = state.history
@@ -93,7 +135,7 @@ export const createHistoryStore = ({
    * @param fn the save function
    * @returns {function} a wrapped version of the save function
    */
-  const wrapSaveDoc = fn => {
+  const wrapSaveDoc = (fn: SaveFn): SaveFn => {
     saveFn = async (doc, operationId) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
@@ -141,7 +183,7 @@ export const createHistoryStore = ({
    * @param fn the delete function
    * @returns {function} a wrapped version of the delete function
    */
-  const wrapDeleteDoc = fn => {
+  const wrapDeleteDoc = (fn: DeleteFn): DeleteFn => {
     deleteFn = async (doc, operationId) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
