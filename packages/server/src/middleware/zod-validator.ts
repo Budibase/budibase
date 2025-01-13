@@ -7,7 +7,7 @@ import { fromZodError } from "zod-validation-error"
 function validate(schema: AnyZodObject, property: "body" | "params") {
   // Return a Koa middleware function
   return async (ctx: Ctx, next: any) => {
-    if (!(await features.flags.isEnabled(FeatureFlag.USE_ZOD_VALIDATOR))) {
+    if (!(await features.isEnabled(FeatureFlag.USE_ZOD_VALIDATOR))) {
       return next()
     }
 

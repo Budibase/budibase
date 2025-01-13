@@ -24,4 +24,5 @@ export interface PaginationRequest extends BasicPaginationRequest {
 export interface PaginationResponse {
   bookmark: string | number | undefined
   hasNextPage?: boolean
+  totalRows?: number
 }

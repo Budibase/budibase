@@ -160,7 +160,7 @@ export async function processAIColumns<T extends Row | Row[]>(
 
           return tracer.trace("processAIColumn", {}, async span => {
             span?.addTags({ table_id: table._id, column })
-            const llmResponse = await llmWrapper.run(prompt!)
+            const llmResponse = await llmWrapper.run(prompt)
             return {
               ...row,
               [column]: llmResponse,
