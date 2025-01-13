@@ -33,6 +33,7 @@ import {
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
+  UnsavedUser,
   UpdateInviteRequest,
   UpdateInviteResponse,
   User,
@@ -49,6 +50,7 @@ import {
   tenancy,
   db,
   locks,
+  context,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
@@ -66,10 +68,11 @@ const generatePassword = (length: number) => {
     .slice(0, length)
 }
 
-export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
+export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
   try {
     const currentUserId = ctx.user?._id
-    const requestUser = ctx.request.body
+    const tenantId = context.getTenantId()
+    const requestUser: User = { ...ctx.request.body, tenantId }
 
     // Do not allow the account holder role to be changed
     if (
@@ -151,7 +154,12 @@ export const bulkUpdate = async (
   let created, deleted
   try {
     if (input.create) {
-      created = await bulkCreate(input.create.users, input.create.groups)
+      const tenantId = context.getTenantId()
+      const users: User[] = input.create.users.map(user => ({
+        ...user,
+        tenantId,
+      }))
+      created = await bulkCreate(users, input.create.groups)
     }
     if (input.delete) {
       deleted = await bulkDelete(input.delete.users, currentUserId)

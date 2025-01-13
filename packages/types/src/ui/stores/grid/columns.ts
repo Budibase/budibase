@@ -14,6 +14,7 @@ export type UIColumn = FieldSchema & {
     type: FieldType
     readonly: boolean
     autocolumn: boolean
+    cellRenderType?: FieldType | "role"
   }
   calculationType: CalculationType
   __idx: number
