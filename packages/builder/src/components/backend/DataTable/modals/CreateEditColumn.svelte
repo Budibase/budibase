@@ -49,7 +49,6 @@
   import { RowUtils, canBeDisplayColumn } from "@budibase/frontend-core"
   import ServerBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import OptionsEditor from "./OptionsEditor.svelte"
-  import { isEnabled } from "@/helpers/featureFlags"
   import { getUserBindings } from "@/dataBinding"
 
   export let field
