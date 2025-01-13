@@ -191,8 +191,14 @@
           ? "View errors"
           : "View error"}
         on:dismiss={async () => {
-          await automationStore.actions.clearLogErrors({ appId })
-          await appsStore.load()
+          const automationId = Object.keys(automationErrors[appId] || {})[0]
+          if (automationId) {
+            await automationStore.actions.clearLogErrors({
+              appId,
+              automationId,
+            })
+            await appsStore.load()
+          }
         }}
         message={automationErrorMessage(appId)}
       />

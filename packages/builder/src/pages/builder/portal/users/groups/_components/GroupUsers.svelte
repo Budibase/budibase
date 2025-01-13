@@ -52,7 +52,7 @@
   ]
 
   const removeUser = async id => {
-    await groups.actions.removeUser(groupId, id)
+    await groups.removeUser(groupId, id)
     fetchGroupUsers.refresh()
   }
 
