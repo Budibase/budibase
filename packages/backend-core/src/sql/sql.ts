@@ -313,8 +313,6 @@ class InternalBuilder {
         // Time gets returned as timestamp from mssql, not matching the expected
         // HH:mm format
 
-        // TODO: figure out how to express this safely without string
-        // interpolation.
         return this.knex.raw(`CONVERT(varchar, ??, 108) as ??`, [
           this.rawQuotedIdentifier(field),
           this.knex.raw(this.quote(field)),
