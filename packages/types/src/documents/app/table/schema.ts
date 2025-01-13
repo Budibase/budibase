@@ -109,6 +109,7 @@ export interface LongFormFieldMetadata extends BaseFieldSchema {
 export interface StringFieldMetadata extends BaseFieldSchema {
   type: FieldType.STRING
   default?: string
+  subtype?: never
 }
 
 export interface FormulaFieldMetadata extends BaseFieldSchema {
