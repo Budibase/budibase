@@ -2,6 +2,7 @@ import { Table } from "@budibase/types"
 import DataFetch from "./DataFetch"
 
 interface RelationshipDatasource {
+  type: "link"
   tableId: string
   rowId: string
   rowTableId: string

@@ -29,7 +29,7 @@ import { ActionTypes } from "./constants"
 import {
   fetchDatasourceSchema,
   fetchDatasourceDefinition,
-} from "./utils/schema.js"
+} from "./utils/schema"
 import { getAPIKey } from "./utils/api.js"
 import { enrichButtonActions } from "./utils/buttonActions.js"
 import { processStringSync, makePropSafe } from "@budibase/string-templates"

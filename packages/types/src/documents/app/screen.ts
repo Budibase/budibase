@@ -33,11 +33,6 @@ export interface ScreenRoutesViewOutput extends Document {
 export type ScreenRoutingJson = Record<
   string,
   {
-    subpaths: Record<
-      string,
-      {
-        screens: Record<string, string>
-      }
-    >
+    subpaths: Record<string, any>
   }
 >

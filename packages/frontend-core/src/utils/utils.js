@@ -209,6 +209,9 @@ export const buildFormBlockButtonConfig = props => {
     {
       "##eventHandlerType": "Close Side Panel",
     },
+    {
+      "##eventHandlerType": "Close Modal",
+    },
 
     ...(actionUrl
       ? [
