@@ -1,4 +1,4 @@
-import { FieldType } from "@budibase/types"
+import { AutoFieldSubType, Automation, FieldType } from "@budibase/types"
 import { ActionStepID } from "@/constants/backend/automations"
 import { TableNames } from "@/constants"
 import {
@@ -8,8 +8,14 @@ import {
   isAutoColumnUserRelationship,
 } from "@/constants/backend"
 
-export function getAutoColumnInformation(enabled = true) {
-  let info = {}
+type AutoColumnInformation = Partial<
+  Record<AutoFieldSubType, { enabled: boolean; name: string }>
+>
+
+export function getAutoColumnInformation(
+  enabled = true
+): AutoColumnInformation {
+  const info: AutoColumnInformation = {}
   for (const [key, subtype] of Object.entries(AUTO_COLUMN_SUB_TYPES)) {
     // Because it's possible to replicate the functionality of CREATED_AT and
     // CREATED_BY columns with user column default values, we disable their creation
@@ -19,13 +25,20 @@ export function getAutoColumnInformation(enabled = true) {
     ) {
       continue
     }
-
-    info[subtype] = { enabled, name: AUTO_COLUMN_DISPLAY_NAMES[key] }
+    const typedKey = key as keyof typeof AUTO_COLUMN_SUB_TYPES
+    info[subtype] = {
+      enabled,
+      name: AUTO_COLUMN_DISPLAY_NAMES[typedKey],
+    }
   }
   return info
 }
 
-export function buildAutoColumn(tableName, name, subtype) {
+export function buildAutoColumn(
+  tableName: string,
+  name: string,
+  subtype: AutoFieldSubType
+) {
   let type, constraints
   switch (subtype) {
     case AUTO_COLUMN_SUB_TYPES.UPDATED_BY:
@@ -65,7 +78,7 @@ export function buildAutoColumn(tableName, name, subtype) {
   return base
 }
 
-export function checkForCollectStep(automation) {
+export function checkForCollectStep(automation: Automation) {
   return automation.definition.steps.some(
     step => step.stepId === ActionStepID.COLLECT
   )
