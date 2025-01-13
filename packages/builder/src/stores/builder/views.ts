@@ -55,7 +55,7 @@ export class ViewsStore extends DerivedBudiStore<
 
   delete = async (view: View) => {
     if (!view.name) {
-      return
+      throw new Error("View name is required")
     }
     await API.deleteView(view.name)
 
@@ -71,7 +71,7 @@ export class ViewsStore extends DerivedBudiStore<
 
   save = async (view: View & { originalName?: string }) => {
     if (!view.name) {
-      return
+      throw new Error("View name is required")
     }
 
     const savedView = await API.saveView(view)
