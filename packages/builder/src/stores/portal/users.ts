@@ -29,6 +29,8 @@ class UserStore extends BudiStore<UserState> {
       data: [],
     })
 
+    this.search = this.search.bind(this)
+
     // Update quotas after any add or remove operation
     this.create = this.refreshUsage(this.create)
     this.save = this.refreshUsage(this.save)
