@@ -272,17 +272,6 @@ class InternalBuilder {
     return parts.join(".")
   }
 
-  private isFullSelectStatementRequired(): boolean {
-    for (let column of Object.values(this.table.schema)) {
-      if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(column)) {
-        return true
-      } else if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(column)) {
-        return true
-      }
-    }
-    return false
-  }
-
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
     const { table, resource } = this.query
 
@@ -292,11 +281,9 @@ class InternalBuilder {
 
     const alias = this.getTableName(table)
     const schema = this.table.schema
-    if (!this.isFullSelectStatementRequired()) {
-      return [this.knex.raw("??", [`${alias}.*`])]
-    }
+
     // get just the fields for this table
-    return resource.fields
+    const tableFields = resource.fields
       .map(field => {
         const parts = field.split(/\./g)
         let table: string | undefined = undefined
@@ -311,34 +298,33 @@ class InternalBuilder {
         return { table, column, field }
       })
       .filter(({ table }) => !table || table === alias)
-      .map(({ table, column, field }) => {
-        const columnSchema = schema[column]
 
-        if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(columnSchema)) {
-          return this.knex.raw(`??::money::numeric as ??`, [
-            this.rawQuotedIdentifier([table, column].join(".")),
-            this.knex.raw(this.quote(field)),
-          ])
-        }
+    return tableFields.map(({ table, column, field }) => {
+      const columnSchema = schema[column]
 
-        if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(columnSchema)) {
-          // Time gets returned as timestamp from mssql, not matching the expected
-          // HH:mm format
+      if (this.SPECIAL_SELECT_CASES.POSTGRES_MONEY(columnSchema)) {
+        return this.knex.raw(`??::money::numeric as ??`, [
+          this.rawQuotedIdentifier([table, column].join(".")),
+          this.knex.raw(this.quote(field)),
+        ])
+      }
 
-          // TODO: figure out how to express this safely without string
-          // interpolation.
-          return this.knex.raw(`CONVERT(varchar, ??, 108) as ??`, [
-            this.rawQuotedIdentifier(field),
-            this.knex.raw(this.quote(field)),
-          ])
-        }
+      if (this.SPECIAL_SELECT_CASES.MSSQL_DATES(columnSchema)) {
+        // Time gets returned as timestamp from mssql, not matching the expected
+        // HH:mm format
 
-        if (table) {
-          return this.rawQuotedIdentifier(`${table}.${column}`)
-        } else {
-          return this.rawQuotedIdentifier(field)
-        }
-      })
+        return this.knex.raw(`CONVERT(varchar, ??, 108) as ??`, [
+          this.rawQuotedIdentifier(field),
+          this.knex.raw(this.quote(field)),
+        ])
+      }
+
+      if (table) {
+        return this.rawQuotedIdentifier(`${table}.${column}`)
+      } else {
+        return this.rawQuotedIdentifier(field)
+      }
+    })
   }
 
   // OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
@@ -1291,6 +1277,7 @@ class InternalBuilder {
       if (!toTable || !fromTable) {
         continue
       }
+
       const relatedTable = tables[toTable]
       if (!relatedTable) {
         throw new Error(`related table "${toTable}" not found in datasource`)
@@ -1319,6 +1306,10 @@ class InternalBuilder {
       const fieldList = relationshipFields.map(field =>
         this.buildJsonField(relatedTable, field)
       )
+      if (!fieldList.length) {
+        continue
+      }
+
       const fieldListFormatted = fieldList
         .map(f => {
           const separator = this.client === SqlClient.ORACLE ? " VALUE " : ","
@@ -1359,7 +1350,9 @@ class InternalBuilder {
       )
 
       const standardWrap = (select: Knex.Raw): Knex.QueryBuilder => {
-        subQuery = subQuery.select(`${toAlias}.*`).limit(getRelationshipLimit())
+        subQuery = subQuery
+          .select(relationshipFields)
+          .limit(getRelationshipLimit())
         // @ts-ignore - the from alias syntax isn't in Knex typing
         return knex.select(select).from({
           [toAlias]: subQuery,
@@ -1589,11 +1582,12 @@ class InternalBuilder {
       limits?: { base: number; query: number }
     } = {}
   ): Knex.QueryBuilder {
-    let { operation, filters, paginate, relationships, table } = this.query
+    const { operation, filters, paginate, relationships, table } = this.query
     const { limits } = opts
 
     // start building the query
     let query = this.qualifiedKnex()
+
     // handle pagination
     let foundOffset: number | null = null
     let foundLimit = limits?.query || limits?.base
@@ -1642,7 +1636,7 @@ class InternalBuilder {
       const mainTable = this.query.tableAliases?.[table.name] || table.name
       const cte = this.addSorting(
         this.knex
-          .with("paginated", query)
+          .with("paginated", query.clone().clearSelect().select("*"))
           .select(this.generateSelectStatement())
           .from({
             [mainTable]: "paginated",
