@@ -163,13 +163,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
         } else if (parseResponse) {
           return await parseResponse(response)
         } else {
-          const text = await response.text()
-          // If the response has no body at all e.g s3.put
-          if (!text) {
-            // Empty response
-            return {} as ResponseT
-          }
-          return JSON.parse(text) as ResponseT
+          return (await response.json()) as ResponseT
         }
       } catch (error) {
         delete cache[url]
