@@ -11,6 +11,7 @@ import GroupUserFetch from "./GroupUserFetch"
 import CustomFetch from "./CustomFetch"
 import QueryArrayFetch from "./QueryArrayFetch"
 import { APIClient } from "../api/types"
+import { Table, ViewV2Enriched } from "@budibase/types"
 
 export type DataFetchType = keyof typeof DataFetchMap
 
@@ -44,6 +45,14 @@ export type DataFetch =
   | FieldFetch<"field">
   | JSONArrayFetch
   | QueryArrayFetch
+
+export type DataFetchDefinition =
+  | Table
+  | ViewV2Enriched
+  | {
+      schema?: Record<string, any> | null
+      primaryDisplay?: string
+    }
 
 // Constructs a new fetch model for a certain datasource
 export const fetchData = <TDatasource extends { type: DataFetchType }>({
