@@ -14,6 +14,7 @@ import { APIClient } from "../api/types"
 import { Table, ViewV2Enriched } from "@budibase/types"
 
 export type DataFetchType = keyof typeof DataFetchMap
+export type { DataFetchOptions } from "./DataFetch"
 
 export const DataFetchMap = {
   table: TableFetch,
