@@ -1,6 +1,16 @@
 import { writable } from "svelte/store"
 
-function defaultValue() {
+interface PaginationStore {
+  nextPage: string | null | undefined
+  page: string | null | undefined
+  hasPrevPage: boolean
+  hasNextPage: boolean
+  loading: boolean
+  pageNumber: number
+  pages: string[]
+}
+
+function defaultValue(): PaginationStore {
   return {
     nextPage: null,
     page: undefined,
@@ -29,13 +39,13 @@ export function createPaginationStore() {
     update(state => {
       state.pageNumber++
       state.page = state.nextPage
-      state.pages.push(state.page)
+      state.pages.push(state.page!)
       state.hasPrevPage = state.pageNumber > 1
       return state
     })
   }
 
-  function fetched(hasNextPage, nextPage) {
+  function fetched(hasNextPage: boolean, nextPage: string) {
     update(state => {
       state.hasNextPage = hasNextPage
       state.nextPage = nextPage
