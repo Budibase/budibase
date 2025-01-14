@@ -70,10 +70,16 @@ export const duplicateName = (name: string, allNames: string[]) => {
  * @param getName optional function to extract the name for an item, if not a
  *  flat array of strings
  */
-export const getSequentialName = (
-  items: string[],
+export const getSequentialName = <T extends string | object>(
+  items: T[],
   prefix: string,
-  { getName = (x: string) => x, numberFirstItem = false } = {}
+  {
+    getName,
+    numberFirstItem,
+  }: {
+    getName: (item: T) => string
+    numberFirstItem?: boolean
+  }
 ) => {
   if (!prefix?.length || !getName) {
     return null
