@@ -37,7 +37,9 @@
     SidePanel,
     BindingCompletion,
     Snippet,
+    Helper,
   } from "@budibase/types"
+  import { CompletionContext } from "@codemirror/autocomplete"
 
   const dispatch = createEventDispatcher()
 
@@ -53,8 +55,8 @@
   export let placeholder = null
   export let showTabBar = true
 
-  let mode: BindingMode
-  let sidePanel: SidePanel
+  let mode: BindingMode | null
+  let sidePanel: SidePanel | null
   let initialValueJS = value?.startsWith?.("{{ js ")
   let jsValue = initialValueJS ? value : null
   let hbsValue = initialValueJS ? null : value
@@ -109,19 +111,19 @@
     snippets: Snippet[] | null,
     useSnippets?: boolean
   ) => {
-    const completions = [
+    const completions: ((_: CompletionContext) => any)[] = [
       jsAutocomplete([
         ...bindingCompletions,
         ...getHelperCompletions(EditorModes.JS),
       ]),
     ]
-    if (useSnippets) {
+    if (useSnippets && snippets) {
       completions.push(snippetAutoComplete(snippets))
     }
     return completions
   }
 
-  const getModeOptions = (allowHBS, allowJS) => {
+  const getModeOptions = (allowHBS: boolean, allowJS: boolean) => {
     let options = []
     if (allowHBS) {
       options.push(BindingMode.Text)
@@ -132,7 +134,12 @@
     return options
   }
 
-  const getSidePanelOptions = (bindings, context, useSnippets, mode) => {
+  const getSidePanelOptions = (
+    bindings: EnrichedBinding[],
+    context: any,
+    useSnippets: boolean,
+    mode: BindingMode | null
+  ) => {
     let options = []
     if (bindings?.length) {
       options.push(SidePanel.Bindings)
@@ -146,32 +153,39 @@
     return options
   }
 
-  const debouncedEval = Utils.debounce((expression, context, snippets) => {
-    try {
-      expressionError = null
-      expressionResult = processStringSync(
-        expression || "",
-        {
-          ...context,
-          snippets,
-        },
-        {
-          noThrow: false,
-        }
-      )
-    } catch (err) {
-      expressionResult = null
-      expressionError = err
-    }
-    evaluating = false
-  }, 260)
+  const debouncedEval = Utils.debounce(
+    (expression: string | null, context: any, snippets: Snippet[]) => {
+      try {
+        expressionError = null
+        expressionResult = processStringSync(
+          expression || "",
+          {
+            ...context,
+            snippets,
+          },
+          {
+            noThrow: false,
+          }
+        )
+      } catch (err: any) {
+        expressionResult = null
+        expressionError = err
+      }
+      evaluating = false
+    },
+    260
+  )
 
-  const requestEval = (expression, context, snippets) => {
+  const requestEval = (
+    expression: string | null,
+    context: any,
+    snippets: Snippet[] | null
+  ) => {
     evaluating = true
     debouncedEval(expression, context, snippets)
   }
 
-  const highlightJSON = json => {
+  const highlightJSON = (json: object | string) => {
     return JsonFormatter.format(json, {
       keyColor: "#e06c75",
       numberColor: "#e5c07b",
@@ -182,7 +196,11 @@
     })
   }
 
-  const enrichBindings = (bindings, context, snippets) => {
+  const enrichBindings = (
+    bindings: EnrichedBinding[],
+    context: any,
+    snippets: Snippet[] | null
+  ) => {
     // Create a single big array to enrich in one go
     const bindingStrings = bindings.map(binding => {
       if (binding.runtimeBinding.startsWith('trim "')) {
@@ -193,17 +211,18 @@
         return `{{ literal ${binding.runtimeBinding} }}`
       }
     })
-    const bindingEvauations = processObjectSync(bindingStrings, {
+    const bindingEvaluations = processObjectSync(bindingStrings, {
       ...context,
       snippets,
     })
 
     // Enrich bindings with evaluations and highlighted HTML
     return bindings.map((binding, idx) => {
-      if (!context) {
+      if (!context || typeof bindingEvaluations !== "object") {
         return binding
       }
-      const value = JSON.stringify(bindingEvauations[idx], null, 2)
+      const evalObj: Record<any, any> = bindingEvaluations
+      const value = JSON.stringify(evalObj[idx], null, 2)
       return {
         ...binding,
         value,
@@ -212,29 +231,38 @@
     })
   }
 
-  const updateValue = val => {
+  const updateValue = (val: any) => {
     const runtimeExpression = readableToRuntimeBinding(enrichedBindings, val)
     dispatch("change", val)
     requestEval(runtimeExpression, context, snippets)
   }
 
-  const onSelectHelper = (helper, js) => {
-    bindingHelpers.onSelectHelper(js ? jsValue : hbsValue, helper, { js })
+  const onSelectHelper = (helper: Helper, js?: boolean) => {
+    bindingHelpers.onSelectHelper(js ? jsValue : hbsValue, helper, {
+      js,
+      dontDecode: undefined,
+    })
   }
 
-  const onSelectBinding = (binding, { forceJS } = {}) => {
+  const onSelectBinding = (
+    binding: EnrichedBinding,
+    { forceJS }: { forceJS?: boolean } = {}
+  ) => {
     const js = usingJS || forceJS
-    bindingHelpers.onSelectBinding(js ? jsValue : hbsValue, binding, { js })
+    bindingHelpers.onSelectBinding(js ? jsValue : hbsValue, binding, {
+      js,
+      dontDecode: undefined,
+    })
   }
 
-  const changeMode = newMode => {
+  const changeMode = (newMode: BindingMode) => {
     if (targetMode || newMode === mode) {
       return
     }
 
     // Get the raw editor value to see if we are abandoning changes
     let rawValue = editorValue
-    if (mode === BindingMode.JavaScript) {
+    if (mode === BindingMode.JavaScript && rawValue) {
       rawValue = decodeJSBinding(rawValue)
     }
 
@@ -253,16 +281,16 @@
     targetMode = null
   }
 
-  const changeSidePanel = newSidePanel => {
+  const changeSidePanel = (newSidePanel: SidePanel) => {
     sidePanel = newSidePanel === sidePanel ? null : newSidePanel
   }
 
-  const onChangeHBSValue = e => {
+  const onChangeHBSValue = (e: { detail: string }) => {
     hbsValue = e.detail
     updateValue(hbsValue)
   }
 
-  const onChangeJSValue = e => {
+  const onChangeJSValue = (e: { detail: string }) => {
     jsValue = encodeJSBinding(e.detail)
     if (!e.detail?.trim()) {
       // Don't bother saving empty values as JS
