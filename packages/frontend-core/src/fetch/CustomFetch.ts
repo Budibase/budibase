@@ -1,4 +1,4 @@
-import DataFetch from "./DataFetch"
+import BaseDataFetch from "./DataFetch"
 
 interface CustomDatasource {
   type: "custom"
@@ -7,7 +7,7 @@ interface CustomDatasource {
 
 type CustomDefinition = Record<string, any>
 
-export default class CustomFetch extends DataFetch<
+export default class CustomFetch extends BaseDataFetch<
   CustomDatasource,
   CustomDefinition
 > {

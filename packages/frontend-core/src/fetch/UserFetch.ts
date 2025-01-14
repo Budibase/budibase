@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import DataFetch, { DataFetchParams } from "./DataFetch"
+import BaseDataFetch, { DataFetchParams } from "./DataFetch"
 import { TableNames } from "../constants"
 import { utils } from "@budibase/shared-core"
 import { SearchFilters, SearchUsersRequest } from "@budibase/types"
@@ -16,7 +16,7 @@ interface UserDatasource {
 
 interface UserDefinition {}
 
-export default class UserFetch extends DataFetch<
+export default class UserFetch extends BaseDataFetch<
   UserDatasource,
   UserDefinition,
   UserFetchQuery

@@ -1,4 +1,4 @@
-import DataFetch from "./DataFetch"
+import BaseDataFetch from "./DataFetch"
 import { Helpers } from "@budibase/bbui"
 import { ExecuteQueryRequest, Query } from "@budibase/types"
 import { get } from "svelte/store"
@@ -17,7 +17,7 @@ interface QueryDatasource {
   parameters: { name: string; default: string }[]
 }
 
-export default class QueryFetch extends DataFetch<QueryDatasource, Query> {
+export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {
   async determineFeatureFlags() {
     const definition = await this.getDefinition()
     const supportsPagination =
