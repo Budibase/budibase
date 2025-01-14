@@ -3,7 +3,7 @@ import { Helpers } from "@budibase/bbui"
 import { ExecuteQueryRequest, Query } from "@budibase/types"
 import { get } from "svelte/store"
 
-interface QueryDatasource {
+export interface QueryDatasource {
   type: "query"
   _id: string
   fields: Record<string, any> & {

@@ -7,14 +7,19 @@ interface GroupUserQuery {
   emailSearch: string
 }
 
-interface GroupUserDatasource {
+export interface GroupUserDatasource {
   type: "groupUser"
   tableId: TableNames.USERS
 }
 
+interface GroupUserDefinition {
+  schema?: Record<string, any> | null
+  primaryDisplay?: string
+}
+
 export default class GroupUserFetch extends BaseDataFetch<
   GroupUserDatasource,
-  {},
+  GroupUserDefinition,
   GroupUserQuery
 > {
   constructor(opts: DataFetchParams<GroupUserDatasource, GroupUserQuery>) {

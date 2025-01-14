@@ -1,6 +1,6 @@
 import BaseDataFetch from "./DataFetch"
 
-interface CustomDatasource {
+export interface CustomDatasource {
   type: "custom"
   data: any
 }

@@ -2,7 +2,7 @@ import { get } from "svelte/store"
 import BaseDataFetch from "./DataFetch"
 import { SortOrder, Table } from "@budibase/types"
 
-interface TableDatasource {
+export interface TableDatasource {
   type: "table"
   tableId: string
 }
