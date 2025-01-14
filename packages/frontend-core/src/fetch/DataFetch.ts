@@ -51,7 +51,19 @@ export interface DataFetchParams<
   API: APIClient
   datasource: TDatasource
   query: TQuery
-  options?: {}
+  options?: Partial<DataFetchOptions<TQuery>>
+}
+
+export interface DataFetchOptions<TQuery = SearchFilters | undefined> {
+  // Search config
+  filter: UISearchFilter | LegacyFilter[] | null
+  query: TQuery
+  // Sorting config
+  sortColumn: string | null
+  sortOrder: SortOrder
+  // Pagination config
+  limit: number
+  paginate: boolean
 }
 
 /**
@@ -73,18 +85,11 @@ export default abstract class DataFetch<
     supportsSort: boolean
     supportsPagination: boolean
   }
-  options: {
+  options: DataFetchOptions<TQuery> & {
     datasource: TDatasource
-    limit: number
-    // Search config
-    filter: UISearchFilter | LegacyFilter[] | null
-    query: TQuery
-    // Sorting config
-    sortColumn: string | null
-    sortOrder: SortOrder
+
     sortType: SortType | null
-    // Pagination config
-    paginate: boolean
+
     // Client side feature customisation
     clientSideSearching: boolean
     clientSideSorting: boolean

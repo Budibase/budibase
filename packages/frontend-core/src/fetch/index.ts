@@ -32,7 +32,15 @@ export const DataFetchMap = {
 }
 
 // Constructs a new fetch model for a certain datasource
-export const fetchData = ({ API, datasource, options }: any) => {
+export const fetchData = <TDatasource extends { type: DataFetchType }>({
+  API,
+  datasource,
+  options,
+}: {
+  API: APIClient
+  datasource: TDatasource
+  options: any
+}) => {
   const Fetch = DataFetchMap[datasource?.type as DataFetchType] || TableFetch
   const fetch = new Fetch({ API, datasource, ...options })
 
