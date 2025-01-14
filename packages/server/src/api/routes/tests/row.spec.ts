@@ -2130,13 +2130,10 @@ if (descriptions.length) {
               ],
             },
             {
-              // This isn't ideal atm because it doesn't line up with datetime
-              // and date only error messages, but there's a check earlier in
-              // the stack than when those errors happen that produces this one,
-              // and it's not easy to bypass. The key is that this fails.
-              status: 500,
+              status: 400,
               body: {
-                message: 'Invalid date value: "3pm"',
+                message:
+                  'Invalid format for field "time": "3pm". Time-only fields must be in the format "HH:MM:SS".',
               },
             }
           )

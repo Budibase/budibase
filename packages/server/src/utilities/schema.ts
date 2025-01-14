@@ -175,11 +175,7 @@ export function parse(rows: Rows, table: Table): Rows {
       if ([FieldType.NUMBER].includes(columnType)) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
-      } else if (
-        columnType === FieldType.DATETIME &&
-        !columnSchema.timeOnly &&
-        !columnSchema.dateOnly
-      ) {
+      } else if (columnType === FieldType.DATETIME) {
         if (columnData && !columnSchema.timeOnly) {
           if (!sql.utils.isValidISODateString(columnData)) {
             let message = `Invalid format for field "${columnName}": "${columnData}".`
