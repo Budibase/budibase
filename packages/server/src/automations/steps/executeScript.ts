@@ -15,6 +15,7 @@ import { EventEmitter } from "events"
 
 export const definition: AutomationStepDefinition = {
   name: "JS Scripting",
+  deprecated: true,
   tagline: "Execute JavaScript Code",
   icon: "Code",
   description: "Run a piece of JavaScript code in your automation",

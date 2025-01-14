@@ -12,12 +12,13 @@ import {
 import { processStringSync } from "@budibase/string-templates"
 
 export const definition: AutomationStepDefinition = {
-  name: "JS Scripting V2",
+  name: "JS Scripting",
   tagline: "Execute JavaScript Code",
   icon: "Code",
   description: "Run a piece of JavaScript code in your automation",
   type: AutomationStepType.ACTION,
   internal: true,
+  new: true,
   stepId: AutomationActionStepId.EXECUTE_SCRIPT_V2,
   inputs: {},
   features: {
@@ -57,11 +58,24 @@ export async function run({
   inputs: ExecuteScriptStepInputs
   context: Record<string, any>
 }): Promise<ExecuteScriptStepOutputs> {
-  if (inputs.code == null) {
+  let { code } = inputs
+
+  if (code == null) {
     return {
       success: false,
       response: {
         message: "Invalid inputs",
+      },
+    }
+  }
+
+  code = code.trim()
+
+  if (!code.startsWith("{{ js ")) {
+    return {
+      success: false,
+      response: {
+        message: "Expected code to be a {{ js }} template block",
       },
     }
   }

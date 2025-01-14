@@ -154,6 +154,7 @@ export interface AutomationStepSchemaBase {
   type: AutomationStepType
   internal?: boolean
   deprecated?: boolean
+  new?: boolean
   blockToLoop?: string
   schema: {
     inputs: InputOutputBlock

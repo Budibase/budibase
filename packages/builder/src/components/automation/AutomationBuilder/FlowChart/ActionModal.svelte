@@ -186,6 +186,12 @@
               </div>
             {:else if isDisabled}
               <Icon name="Help" tooltip={disabled()[idx].message} />
+            {:else if action.new}
+              <div class="tag-color">
+                <Tags>
+                  <Tag>New</Tag>
+                </Tags>
+              </div>
             {/if}
           </div>
         </div>
