@@ -15,7 +15,7 @@ export default function (url: string) {
   async function get() {
     store.update(u => ({ ...u, status: "LOADING" }))
     try {
-      const data = await API.get<any>({ url })
+      const data = await API.get<object>({ url })
       store.set({ data, status: "SUCCESS" })
     } catch (e) {
       store.set({ data: {}, error: e, status: "ERROR" })
