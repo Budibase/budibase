@@ -676,7 +676,10 @@ const automationActions = (store: AutomationStore) => ({
       runtimeName = `loop.${name}`
     } else if (idx === 0) {
       runtimeName = `trigger.${name}`
-    } else if (currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT) {
+    } else if (
+      currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT ||
+      currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT_V2
+    ) {
       const stepId = pathSteps[idx].id
       if (!stepId) {
         notifications.error("Error generating binding: Step ID not found.")
