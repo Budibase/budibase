@@ -4,11 +4,12 @@ import { Readable } from "svelte/store"
 
 export interface SDK {
   API: APIClient
-  styleable: unknown
-  Provider: unknown
+  styleable: any
+  Provider: any
   ActionTypes: typeof ActionTypes
 }
 
 export type Component = Readable<{
   id: string
+  styles: any
 }>

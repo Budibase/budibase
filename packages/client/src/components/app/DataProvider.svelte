@@ -11,6 +11,7 @@
     EmptyFilterOption,
     TableSchema,
     SortOrder,
+    SearchFilters,
   } from "@budibase/types"
   import { SDK, Component } from "../../index"
 
@@ -26,7 +27,7 @@
   const component = getContext<Component>("component")
 
   let interval: NodeJS.Timeout
-  let queryExtensions = {}
+  let queryExtensions: Record<string, any> = {}
 
   $: defaultQuery = QueryUtils.buildQuery(filter)
 
@@ -79,6 +80,7 @@
       },
     },
   ]
+
   $: dataContext = {
     rows: $fetch.rows,
     info: $fetch.info,
@@ -91,14 +93,12 @@
     id: $component?.id,
     state: {
       query: $fetch.query,
-      sortColumn: $fetch.sortColumn,
-      sortOrder: $fetch.sortOrder,
     },
     limit,
-    primaryDisplay: $fetch.definition?.primaryDisplay,
+    primaryDisplay: ($fetch.definition as any)?.primaryDisplay,
   }
 
-  const createFetch = datasource => {
+  const createFetch = (datasource: any) => {
     return fetchData({
       API,
       datasource,
@@ -125,7 +125,7 @@
     return cloned
   }
 
-  const addQueryExtension = (key: string, extension) => {
+  const addQueryExtension = (key: string, extension: any) => {
     if (!key || !extension) {
       return
     }
@@ -141,11 +141,14 @@
     queryExtensions = newQueryExtensions
   }
 
-  const extendQuery = (defaultQuery, extensions) => {
+  const extendQuery = (
+    defaultQuery: SearchFilters,
+    extensions: Record<string, any>
+  ): SearchFilters => {
     if (!Object.keys(extensions).length) {
       return defaultQuery
     }
-    const extended = {
+    const extended: SearchFilters = {
       [LogicalOperator.AND]: {
         conditions: [
           ...(defaultQuery ? [defaultQuery] : []),
@@ -156,9 +159,9 @@
     }
 
     // If there are no conditions applied at all, clear the request.
-    return extended[LogicalOperator.AND]?.conditions?.length > 0
+    return (extended[LogicalOperator.AND]?.conditions?.length ?? 0) > 0
       ? extended
-      : null
+      : {}
   }
 
   const setUpAutoRefresh = (autoRefresh: number) => {
