@@ -31,6 +31,20 @@ export const DataFetchMap = {
   queryarray: QueryArrayFetch,
 }
 
+export type DataFetch =
+  | TableFetch
+  | ViewFetch
+  | ViewV2Fetch
+  | QueryFetch
+  | RelationshipFetch
+  | UserFetch
+  | GroupUserFetch
+  | CustomFetch
+  | NestedProviderFetch
+  | FieldFetch<"field">
+  | JSONArrayFetch
+  | QueryArrayFetch
+
 // Constructs a new fetch model for a certain datasource
 export const fetchData = <TDatasource extends { type: DataFetchType }>({
   API,
