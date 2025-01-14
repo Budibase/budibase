@@ -86,8 +86,10 @@ const loadBudibase = async () => {
         dndStore.actions.reset()
       }
     } else if (type === "request-context") {
-      const { selectedComponentInstance } = get(componentStore)
-      const context = selectedComponentInstance?.getDataContext()
+      const { selectedComponentInstance, screenslotInstance } =
+        get(componentStore)
+      const instance = selectedComponentInstance || screenslotInstance
+      const context = instance?.getDataContext()
       let stringifiedContext = null
       try {
         stringifiedContext = JSON.stringify(context)
