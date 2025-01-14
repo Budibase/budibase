@@ -1,8 +1,18 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte"
   import { Pagination, ProgressCircle } from "@budibase/bbui"
-  import { fetchData, QueryUtils } from "@budibase/frontend-core"
-  import { LogicalOperator, EmptyFilterOption } from "@budibase/types"
+  import {
+    fetchData,
+    QueryUtils,
+    DataFetchOptions,
+  } from "@budibase/frontend-core"
+  import {
+    LogicalOperator,
+    EmptyFilterOption,
+    TableSchema,
+    SortOrder,
+  } from "@budibase/types"
+  import { SDK, Component } from "../../index"
 
   export let dataSource
   export let filter
@@ -12,10 +22,10 @@
   export let paginate
   export let autoRefresh
 
-  const { styleable, Provider, ActionTypes, API } = getContext("sdk")
-  const component = getContext("component")
+  const { styleable, Provider, ActionTypes, API } = getContext<SDK>("sdk")
+  const component = getContext<Component>("component")
 
-  let interval
+  let interval: NodeJS.Timeout
   let queryExtensions = {}
 
   $: defaultQuery = QueryUtils.buildQuery(filter)
@@ -49,8 +59,14 @@
     },
     {
       type: ActionTypes.SetDataProviderSorting,
-      callback: ({ column, order }) => {
-        let newOptions = {}
+      callback: ({
+        column,
+        order,
+      }: {
+        column: string
+        order: SortOrder | undefined
+      }) => {
+        let newOptions: Partial<DataFetchOptions<never>> = {}
         if (column) {
           newOptions.sortColumn = column
         }
@@ -96,7 +112,7 @@
     })
   }
 
-  const sanitizeSchema = schema => {
+  const sanitizeSchema = (schema: TableSchema | null) => {
     if (!schema) {
       return schema
     }
@@ -109,14 +125,14 @@
     return cloned
   }
 
-  const addQueryExtension = (key, extension) => {
+  const addQueryExtension = (key: string, extension) => {
     if (!key || !extension) {
       return
     }
     queryExtensions = { ...queryExtensions, [key]: extension }
   }
 
-  const removeQueryExtension = key => {
+  const removeQueryExtension = (key: string) => {
     if (!key) {
       return
     }
@@ -145,7 +161,7 @@
       : null
   }
 
-  const setUpAutoRefresh = autoRefresh => {
+  const setUpAutoRefresh = (autoRefresh: number) => {
     clearInterval(interval)
     if (autoRefresh) {
       interval = setInterval(fetch.refresh, Math.max(10000, autoRefresh * 1000))
