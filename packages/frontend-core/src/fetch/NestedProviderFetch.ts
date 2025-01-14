@@ -1,5 +1,5 @@
 import { Row, TableSchema } from "@budibase/types"
-import DataFetch from "./DataFetch"
+import BaseDataFetch from "./DataFetch"
 
 interface NestedProviderDatasource {
   type: "provider"
@@ -14,7 +14,7 @@ interface NestedProviderDefinition {
   schema?: TableSchema
   primaryDisplay?: string
 }
-export default class NestedProviderFetch extends DataFetch<
+export default class NestedProviderFetch extends BaseDataFetch<
   NestedProviderDatasource,
   NestedProviderDefinition
 > {

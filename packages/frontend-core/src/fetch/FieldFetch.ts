@@ -1,5 +1,5 @@
 import { Row } from "@budibase/types"
-import DataFetch from "./DataFetch"
+import BaseDataFetch from "./DataFetch"
 
 type Types = "field" | "queryarray" | "jsonarray"
 
@@ -18,7 +18,7 @@ function isArrayOfStrings(value: string[] | Row[]): value is string[] {
   return Array.isArray(value) && !!value[0] && typeof value[0] !== "object"
 }
 
-export default class FieldFetch<TType extends Types> extends DataFetch<
+export default class FieldFetch<TType extends Types> extends BaseDataFetch<
   FieldDatasource<TType>,
   FieldDefinition
 > {

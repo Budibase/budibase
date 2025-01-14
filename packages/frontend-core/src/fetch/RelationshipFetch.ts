@@ -1,5 +1,5 @@
 import { Table } from "@budibase/types"
-import DataFetch from "./DataFetch"
+import BaseDataFetch from "./DataFetch"
 
 interface RelationshipDatasource {
   type: "link"
@@ -9,7 +9,7 @@ interface RelationshipDatasource {
   fieldName: string
 }
 
-export default class RelationshipFetch extends DataFetch<
+export default class RelationshipFetch extends BaseDataFetch<
   RelationshipDatasource,
   Table
 > {

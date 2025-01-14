@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import DataFetch, { DataFetchParams } from "./DataFetch"
+import BaseDataFetch, { DataFetchParams } from "./DataFetch"
 import { TableNames } from "../constants"
 
 interface GroupUserQuery {
@@ -12,7 +12,7 @@ interface GroupUserDatasource {
   tableId: TableNames.USERS
 }
 
-export default class GroupUserFetch extends DataFetch<
+export default class GroupUserFetch extends BaseDataFetch<
   GroupUserDatasource,
   {},
   GroupUserQuery

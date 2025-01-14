@@ -71,7 +71,7 @@ export interface DataFetchOptions<TQuery = SearchFilters | undefined> {
  * internal table or datasource plus.
  * For other types of datasource, this class is overridden and extended.
  */
-export default abstract class DataFetch<
+export default abstract class BaseDataFetch<
   TDatasource extends { type: DataFetchType },
   TDefinition extends {
     schema?: Record<string, any> | null
