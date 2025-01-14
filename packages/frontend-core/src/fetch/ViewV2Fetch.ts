@@ -3,7 +3,7 @@ import BaseDataFetch from "./DataFetch"
 import { get } from "svelte/store"
 import { helpers } from "@budibase/shared-core"
 
-interface ViewDatasource {
+export interface ViewDatasource {
   type: "viewV2"
   id: string
 }

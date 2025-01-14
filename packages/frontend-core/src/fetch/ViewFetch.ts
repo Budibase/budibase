@@ -1,7 +1,7 @@
 import { Table } from "@budibase/types"
 import BaseDataFetch from "./DataFetch"
 
-type ViewV1Datasource = {
+export type ViewV1Datasource = {
   type: "view"
   name: string
   tableId: string

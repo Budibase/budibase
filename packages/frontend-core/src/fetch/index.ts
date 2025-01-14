@@ -1,14 +1,16 @@
-import TableFetch from "./TableFetch"
-import ViewFetch from "./ViewFetch"
-import ViewV2Fetch from "./ViewV2Fetch"
-import QueryFetch from "./QueryFetch"
-import RelationshipFetch from "./RelationshipFetch"
-import NestedProviderFetch from "./NestedProviderFetch"
-import FieldFetch from "./FieldFetch"
+import TableFetch, { TableDatasource } from "./TableFetch"
+import ViewFetch, { ViewV1Datasource } from "./ViewFetch"
+import ViewV2Fetch, { ViewDatasource } from "./ViewV2Fetch"
+import QueryFetch, { QueryDatasource } from "./QueryFetch"
+import RelationshipFetch, { RelationshipDatasource } from "./RelationshipFetch"
+import NestedProviderFetch, {
+  NestedProviderDatasource,
+} from "./NestedProviderFetch"
+import FieldFetch, { FieldDatasource } from "./FieldFetch"
 import JSONArrayFetch from "./JSONArrayFetch"
-import UserFetch from "./UserFetch"
-import GroupUserFetch from "./GroupUserFetch"
-import CustomFetch from "./CustomFetch"
+import UserFetch, { UserDatasource } from "./UserFetch"
+import GroupUserFetch, { GroupUserDatasource } from "./GroupUserFetch"
+import CustomFetch, { CustomDatasource } from "./CustomFetch"
 import QueryArrayFetch from "./QueryArrayFetch"
 import { APIClient } from "../api/types"
 import { Table, ViewV2Enriched } from "@budibase/types"
@@ -47,6 +49,20 @@ export type DataFetch =
   | JSONArrayFetch
   | QueryArrayFetch
 
+export type DataFetchDatasource =
+  | TableDatasource
+  | ViewV1Datasource
+  | ViewDatasource
+  | QueryDatasource
+  | RelationshipDatasource
+  | UserDatasource
+  | GroupUserDatasource
+  | CustomDatasource
+  | NestedProviderDatasource
+  | FieldDatasource<"field" | "queryarray" | "jsonarray">
+// | FieldDatasource<"field" | "queryarray" | "jsonarray">
+// | FieldDatasource<"field" | "queryarray" | "jsonarray">
+
 export type DataFetchDefinition =
   | Table
   | ViewV2Enriched
@@ -56,16 +72,16 @@ export type DataFetchDefinition =
     }
 
 // Constructs a new fetch model for a certain datasource
-export const fetchData = <TDatasource extends { type: DataFetchType }>({
+export const fetchData = ({
   API,
   datasource,
   options,
 }: {
   API: APIClient
-  datasource: TDatasource
+  datasource: DataFetchDatasource
   options: any
 }) => {
-  const Fetch = DataFetchMap[datasource?.type as DataFetchType] || TableFetch
+  const Fetch = DataFetchMap[datasource?.type] || TableFetch
   const fetch = new Fetch({ API, datasource, ...options })
 
   // Initially fetch data but don't bother waiting for the result
@@ -76,14 +92,14 @@ export const fetchData = <TDatasource extends { type: DataFetchType }>({
 
 // Creates an empty fetch instance with no datasource configured, so no data
 // will initially be loaded
-const createEmptyFetchInstance = <TDatasource extends { type: DataFetchType }>({
+const createEmptyFetchInstance = ({
   API,
   datasource,
 }: {
   API: APIClient
-  datasource: TDatasource
+  datasource: DataFetchDatasource
 }) => {
-  const handler = DataFetchMap[datasource?.type as DataFetchType]
+  const handler = DataFetchMap[datasource?.type]
   if (!handler) {
     return null
   }
@@ -95,29 +111,25 @@ const createEmptyFetchInstance = <TDatasource extends { type: DataFetchType }>({
 }
 
 // Fetches the definition of any type of datasource
-export const getDatasourceDefinition = async <
-  TDatasource extends { type: DataFetchType }
->({
+export const getDatasourceDefinition = async ({
   API,
   datasource,
 }: {
   API: APIClient
-  datasource: TDatasource
+  datasource: DataFetchDatasource
 }) => {
   const instance = createEmptyFetchInstance({ API, datasource })
   return await instance?.getDefinition()
 }
 
 // Fetches the schema of any type of datasource
-export const getDatasourceSchema = <
-  TDatasource extends { type: DataFetchType }
->({
+export const getDatasourceSchema = ({
   API,
   datasource,
   definition,
 }: {
   API: APIClient
-  datasource: TDatasource
+  datasource: DataFetchDatasource
   definition?: any
 }) => {
   const instance = createEmptyFetchInstance({ API, datasource })

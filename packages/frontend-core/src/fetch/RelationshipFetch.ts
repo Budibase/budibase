@@ -1,7 +1,7 @@
 import { Table } from "@budibase/types"
 import BaseDataFetch from "./DataFetch"
 
-interface RelationshipDatasource {
+export interface RelationshipDatasource {
   type: "link"
   tableId: string
   rowId: string

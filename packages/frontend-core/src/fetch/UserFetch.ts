@@ -9,12 +9,15 @@ interface UserFetchQuery {
   paginated: boolean
 }
 
-interface UserDatasource {
+export interface UserDatasource {
   type: "user"
   tableId: TableNames.USERS
 }
 
-interface UserDefinition {}
+interface UserDefinition {
+  schema?: Record<string, any> | null
+  primaryDisplay?: string
+}
 
 export default class UserFetch extends BaseDataFetch<
   UserDatasource,
