@@ -100,6 +100,7 @@ export const buildAttachmentEndpoints = (
         body: data,
         json: false,
         external: true,
+        parseResponse: response => response as any,
       })
       return { publicUrl }
     },

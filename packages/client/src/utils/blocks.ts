@@ -1,10 +1,16 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
-import { API } from "../api/index.js"
-import { UILogicalOperator } from "@budibase/types"
+import { API } from "../api"
+import {
+  BasicOperator,
+  LegacyFilter,
+  UIColumn,
+  UILogicalOperator,
+  UISearchFilter,
+} from "@budibase/types"
 import { Constants } from "@budibase/frontend-core"
 
 // Map of data types to component types for search fields inside blocks
-const schemaComponentMap = {
+const schemaComponentMap: Record<string, string> = {
   string: "stringfield",
   options: "optionsfield",
   number: "numberfield",
@@ -19,7 +25,16 @@ const schemaComponentMap = {
  * @param searchColumns the search columns to use
  * @param schema the datasource schema
  */
-export const enrichSearchColumns = async (searchColumns, schema) => {
+export const enrichSearchColumns = async (
+  searchColumns: string[],
+  schema: Record<
+    string,
+    {
+      tableId: string
+      type: string
+    }
+  >
+) => {
   if (!searchColumns?.length || !schema) {
     return []
   }
@@ -61,12 +76,16 @@ export const enrichSearchColumns = async (searchColumns, schema) => {
  * @param columns the enriched search column structure
  * @param formId the ID of the form containing the search fields
  */
-export const enrichFilter = (filter, columns, formId) => {
+export const enrichFilter = (
+  filter: UISearchFilter,
+  columns: UIColumn[],
+  formId: string
+) => {
   if (!columns?.length) {
     return filter
   }
 
-  let newFilters = []
+  const newFilters: LegacyFilter[] = []
   columns?.forEach(column => {
     const safePath = column.name.split(".").map(safe).join(".")
     const stringType = column.type === "string" || column.type === "formula"
@@ -99,7 +118,7 @@ export const enrichFilter = (filter, columns, formId) => {
       newFilters.push({
         field: column.name,
         type: column.type,
-        operator: stringType ? "string" : "equal",
+        operator: stringType ? BasicOperator.STRING : BasicOperator.EQUAL,
         valueType: "Binding",
         value: `{{ ${binding} }}`,
       })
