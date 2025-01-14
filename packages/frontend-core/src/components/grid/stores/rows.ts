@@ -1,5 +1,5 @@
 import { writable, derived, get, Writable, Readable } from "svelte/store"
-import { fetchData } from "../../../fetch"
+import { DataFetch, fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import {
   generateRowID,
@@ -13,7 +13,6 @@ import { sleep } from "../../../utils/utils"
 import { FieldType, Row, UIRow } from "@budibase/types"
 import { getRelatedTableValues } from "../../../utils"
 import { Store as StoreContext } from "."
-import DataFetch from "../../../fetch/DataFetch"
 
 interface IndexedUIRow extends UIRow {
   __idx: number
@@ -21,7 +20,7 @@ interface IndexedUIRow extends UIRow {
 
 interface RowStore {
   rows: Writable<UIRow[]>
-  fetch: Writable<DataFetch<any, any, any> | null> // TODO: type this properly, having a union of all the possible options
+  fetch: Writable<DataFetch | null>
   loaded: Writable<boolean>
   refreshing: Writable<boolean>
   loading: Writable<boolean>
