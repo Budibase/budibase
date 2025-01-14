@@ -4,12 +4,13 @@ import { groupBy } from "lodash"
 import {
   BindingCompletion,
   BindingMode,
+  EditorModesMap,
   Helper,
   Snippet,
 } from "@budibase/types"
 import { CompletionContext } from "@codemirror/autocomplete"
 
-export const EditorModes = {
+export const EditorModes: EditorModesMap = {
   JS: {
     name: "javascript",
     json: false,
