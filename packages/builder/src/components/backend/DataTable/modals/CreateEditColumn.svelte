@@ -49,7 +49,6 @@
   import { RowUtils, canBeDisplayColumn } from "@budibase/frontend-core"
   import ServerBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import OptionsEditor from "./OptionsEditor.svelte"
-  import { isEnabled } from "@/helpers/featureFlags"
   import { getUserBindings } from "@/dataBinding"
 
   export let field
@@ -168,7 +167,6 @@
   // used to select what different options can be displayed for column type
   $: canBeDisplay =
     canBeDisplayColumn(editableColumn) && !editableColumn.autocolumn
-  $: defaultValuesEnabled = isEnabled("DEFAULT_VALUES")
   $: canHaveDefault = !required && canHaveDefaultColumn(editableColumn.type)
   $: canBeRequired =
     editableColumn?.type !== FieldType.LINK &&
@@ -300,7 +298,7 @@
     }
 
     // Ensure we don't have a default value if we can't have one
-    if (!canHaveDefault || !defaultValuesEnabled) {
+    if (!canHaveDefault) {
       delete saveColumn.default
     }
 
@@ -848,51 +846,49 @@
     </div>
   {/if}
 
-  {#if defaultValuesEnabled}
-    {#if editableColumn.type === FieldType.OPTIONS}
-      <Select
-        disabled={!canHaveDefault}
-        options={editableColumn.constraints?.inclusion || []}
-        label="Default value"
-        value={editableColumn.default}
-        on:change={e => (editableColumn.default = e.detail)}
-        placeholder="None"
-      />
-    {:else if editableColumn.type === FieldType.ARRAY}
-      <Multiselect
-        disabled={!canHaveDefault}
-        options={editableColumn.constraints?.inclusion || []}
-        label="Default value"
-        value={editableColumn.default}
-        on:change={e =>
-          (editableColumn.default = e.detail?.length ? e.detail : undefined)}
-        placeholder="None"
-      />
-    {:else if editableColumn.subtype === BBReferenceFieldSubType.USER}
-      {@const defaultValue =
-        editableColumn.type === FieldType.BB_REFERENCE_SINGLE
-          ? SingleUserDefault
-          : MultiUserDefault}
-      <Toggle
-        disabled={!canHaveDefault}
-        text="Default to current user"
-        value={editableColumn.default === defaultValue}
-        on:change={e =>
-          (editableColumn.default = e.detail ? defaultValue : undefined)}
-      />
-    {:else}
-      <ModalBindableInput
-        disabled={!canHaveDefault}
-        panel={ServerBindingPanel}
-        title="Default value"
-        label="Default value"
-        placeholder="None"
-        value={editableColumn.default}
-        on:change={e => (editableColumn.default = e.detail)}
-        bindings={defaultValueBindings}
-        allowJS
-      />
-    {/if}
+  {#if editableColumn.type === FieldType.OPTIONS}
+    <Select
+      disabled={!canHaveDefault}
+      options={editableColumn.constraints?.inclusion || []}
+      label="Default value"
+      value={editableColumn.default}
+      on:change={e => (editableColumn.default = e.detail)}
+      placeholder="None"
+    />
+  {:else if editableColumn.type === FieldType.ARRAY}
+    <Multiselect
+      disabled={!canHaveDefault}
+      options={editableColumn.constraints?.inclusion || []}
+      label="Default value"
+      value={editableColumn.default}
+      on:change={e =>
+        (editableColumn.default = e.detail?.length ? e.detail : undefined)}
+      placeholder="None"
+    />
+  {:else if editableColumn.subtype === BBReferenceFieldSubType.USER}
+    {@const defaultValue =
+      editableColumn.type === FieldType.BB_REFERENCE_SINGLE
+        ? SingleUserDefault
+        : MultiUserDefault}
+    <Toggle
+      disabled={!canHaveDefault}
+      text="Default to current user"
+      value={editableColumn.default === defaultValue}
+      on:change={e =>
+        (editableColumn.default = e.detail ? defaultValue : undefined)}
+    />
+  {:else}
+    <ModalBindableInput
+      disabled={!canHaveDefault}
+      panel={ServerBindingPanel}
+      title="Default value"
+      label="Default value"
+      placeholder="None"
+      value={editableColumn.default}
+      on:change={e => (editableColumn.default = e.detail)}
+      bindings={defaultValueBindings}
+      allowJS
+    />
   {/if}
 </Layout>
 

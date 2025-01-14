@@ -1,19 +1,20 @@
-import { Constants } from "@budibase/frontend-core"
+import { Constants, APIClient } from "@budibase/frontend-core"
 import { FieldTypes } from "../constants"
+import { Row, Table } from "@budibase/types"
 
-export const patchAPI = API => {
+export const patchAPI = (API: APIClient) => {
   /**
    * Enriches rows which contain certain field types so that they can
    * be properly displayed.
    * The ability to create these bindings has been removed, but they will still
    * exist in client apps to support backwards compatibility.
    */
-  const enrichRows = async (rows, tableId) => {
+  const enrichRows = async (rows: Row[], tableId: string) => {
     if (!Array.isArray(rows)) {
       return []
     }
     if (rows.length) {
-      const tables = {}
+      const tables: Record<string, Table> = {}
       for (let row of rows) {
         // Fall back to passed in tableId if row doesn't have it specified
         let rowTableId = row.tableId || tableId
@@ -54,7 +55,7 @@ export const patchAPI = API => {
   const fetchSelf = API.fetchSelf
   API.fetchSelf = async () => {
     const user = await fetchSelf()
-    if (user && user._id) {
+    if (user && "_id" in user && user._id) {
       if (user.roleId === "PUBLIC") {
         // Don't try to enrich a public user as it will 403
         return user
@@ -90,13 +91,14 @@ export const patchAPI = API => {
     return await enrichRows(rows, tableId)
   }
 
-  // Wipe any HBS formulae from table definitions, as these interfere with
+  // Wipe any HBS formulas from table definitions, as these interfere with
   // handlebars enrichment
   const fetchTableDefinition = API.fetchTableDefinition
   API.fetchTableDefinition = async tableId => {
     const definition = await fetchTableDefinition(tableId)
     Object.keys(definition?.schema || {}).forEach(field => {
       if (definition.schema[field]?.type === "formula") {
+        // @ts-expect-error TODO check what use case removing that would break
         delete definition.schema[field].formula
       }
     })
