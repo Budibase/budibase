@@ -90,6 +90,8 @@ export async function run({
     }
   }
   const tableId = inputs.row.tableId
+    ? decodeURIComponent(inputs.row.tableId)
+    : inputs.row.tableId
 
   // Base update
   let rowUpdate: Record<string, any>
@@ -157,7 +159,7 @@ export async function run({
       },
       params: {
         rowId: inputs.rowId,
-        tableId,
+        tableId: tableId,
       },
     })
     await rowController.patch(ctx)

@@ -2,6 +2,7 @@ import { EmptyFilterOption, SortOrder, Table } from "@budibase/types"
 import * as setup from "./utilities"
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 import * as automation from "../index"
+import { basicTable } from "../../tests/utilities/structures"
 
 const NAME = "Test"
 
@@ -13,6 +14,7 @@ describe("Test a query step automation", () => {
     await automation.init()
     await config.init()
     table = await config.createTable()
+
     const row = {
       name: NAME,
       description: "original description",
@@ -152,5 +154,33 @@ describe("Test a query step automation", () => {
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
     expect(result.steps[0].outputs.rows.length).toBe(2)
+  })
+
+  it("return rows when querying a table with a space in the name", async () => {
+    const tableWithSpaces = await config.createTable({
+      ...basicTable(),
+      name: "table with spaces",
+    })
+    await config.createRow({
+      name: NAME,
+      tableId: tableWithSpaces._id,
+    })
+    const result = await createAutomationBuilder({
+      name: "Return All Test",
+      config,
+    })
+      .appAction({ fields: {} })
+      .queryRows(
+        {
+          tableId: tableWithSpaces._id!,
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+          filters: {},
+        },
+        { stepName: "Query table with spaces" }
+      )
+      .run()
+    expect(result.steps[0].outputs.success).toBe(true)
+    expect(result.steps[0].outputs.rows).toBeDefined()
+    expect(result.steps[0].outputs.rows.length).toBe(1)
   })
 })
