@@ -66,12 +66,10 @@ export async function run({
     }
   }
 
-  const js = Buffer.from(inputs.code, "utf-8").toString("base64")
-
   try {
     return {
       success: true,
-      value: processStringSync(`{{ js "${js}" }}`, context),
+      value: processStringSync(inputs.code, context),
     }
   } catch (err) {
     return {
