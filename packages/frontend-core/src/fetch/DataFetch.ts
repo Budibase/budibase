@@ -435,7 +435,7 @@ export default abstract class BaseDataFetch<
    * Resets the data set and updates options
    * @param newOptions any new options
    */
-  async update(newOptions: any) {
+  async update(newOptions: DataFetchOptions<never>) {
     // Check if any settings have actually changed
     let refresh = false
     for (const [key, value] of Object.entries(newOptions || {})) {
