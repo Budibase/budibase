@@ -4,8 +4,24 @@ import { API } from "api"
 import { peekStore } from "./peek"
 import { builderStore } from "./builder"
 
+interface Route {
+  path: string
+  screenId: string
+}
+
+interface StoreType {
+  routes: Route[]
+  routeParams: {}
+  activeRoute?: Route | null
+  routeSessionId: number
+  routerLoaded: boolean
+  queryParams?: {
+    peek?: boolean
+  }
+}
+
 const createRouteStore = () => {
-  const initialState = {
+  const initialState: StoreType = {
     routes: [],
     routeParams: {},
     activeRoute: null,
@@ -22,7 +38,7 @@ const createRouteStore = () => {
     } catch (error) {
       routeConfig = null
     }
-    let routes = []
+    const routes: Route[] = []
     Object.values(routeConfig?.routes || {}).forEach(route => {
       Object.entries(route.subpaths || {}).forEach(([path, config]) => {
         routes.push({
@@ -43,13 +59,13 @@ const createRouteStore = () => {
       return state
     })
   }
-  const setRouteParams = routeParams => {
+  const setRouteParams = (routeParams: StoreType["routeParams"]) => {
     store.update(state => {
       state.routeParams = routeParams
       return state
     })
   }
-  const setQueryParams = queryParams => {
+  const setQueryParams = (queryParams: { peek?: boolean }) => {
     store.update(state => {
       state.queryParams = {
         ...queryParams,
@@ -60,13 +76,13 @@ const createRouteStore = () => {
       return state
     })
   }
-  const setActiveRoute = route => {
+  const setActiveRoute = (route: string) => {
     store.update(state => {
       state.activeRoute = state.routes.find(x => x.path === route)
       return state
     })
   }
-  const navigate = (url, peek, externalNewTab) => {
+  const navigate = (url: string, peek: boolean, externalNewTab: boolean) => {
     if (get(builderStore).inBuilder) {
       return
     }
@@ -93,7 +109,7 @@ const createRouteStore = () => {
   const setRouterLoaded = () => {
     store.update(state => ({ ...state, routerLoaded: true }))
   }
-  const createFullURL = relativeURL => {
+  const createFullURL = (relativeURL: string) => {
     if (!relativeURL?.startsWith("/")) {
       return relativeURL
     }

@@ -442,13 +442,11 @@
 
   const onUpdateUserInvite = async (invite, role) => {
     let updateBody = {
-      code: invite.code,
       apps: {
         ...invite.apps,
         [prodAppId]: role,
       },
     }
-
     if (role === Constants.Roles.CREATOR) {
       updateBody.builder = updateBody.builder || {}
       updateBody.builder.apps = [...(updateBody.builder.apps ?? []), prodAppId]
@@ -456,7 +454,7 @@
     } else if (role !== Constants.Roles.CREATOR && invite?.builder?.apps) {
       invite.builder.apps = []
     }
-    await users.updateInvite(updateBody)
+    await users.updateInvite(invite.code, updateBody)
     await filterInvites(query)
   }
 
@@ -470,8 +468,7 @@
     let updated = { ...invite }
     delete updated.info.apps[prodAppId]
 
-    return await users.updateInvite({
-      code: updated.code,
+    return await users.updateInvite(updated.code, {
       apps: updated.apps,
     })
   }
