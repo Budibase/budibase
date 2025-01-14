@@ -1,5 +1,5 @@
 <script>
-  import formatHighlight from "json-format-highlight"
+  import { JsonFormatter } from "@budibase/frontend-core"
   import { Icon, ProgressCircle, notifications } from "@budibase/bbui"
   import { copyToClipboard } from "@budibase/bbui/helpers"
   import { fade } from "svelte/transition"
@@ -34,7 +34,7 @@
       // Ignore
     }
 
-    return formatHighlight(json, {
+    return JsonFormatter.format(json, {
       keyColor: "#e06c75",
       numberColor: "#e5c07b",
       stringColor: "#98c379",
