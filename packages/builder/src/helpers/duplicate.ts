@@ -70,18 +70,18 @@ export const duplicateName = (name: string, allNames: string[]) => {
  * @param getName optional function to extract the name for an item, if not a
  *  flat array of strings
  */
-export const getSequentialName = <T extends string | object>(
-  items: T[],
-  prefix: string,
+export const getSequentialName = <T extends any>(
+  items: T[] | null,
+  prefix: string | null,
   {
     getName,
     numberFirstItem,
   }: {
-    getName: (item: T) => string
+    getName?: (item: T) => string
     numberFirstItem?: boolean
-  }
+  } = {}
 ) => {
-  if (!prefix?.length || !getName) {
+  if (!prefix?.length) {
     return null
   }
   const trimmedPrefix = prefix.trim()
@@ -91,7 +91,7 @@ export const getSequentialName = <T extends string | object>(
   }
   let max = 0
   items.forEach(item => {
-    const name = getName(item)
+    const name = getName?.(item) ?? item
     if (typeof name !== "string" || !name.startsWith(trimmedPrefix)) {
       return
     }
