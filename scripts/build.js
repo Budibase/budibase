@@ -128,10 +128,12 @@ async function runBuild(entry, outfile) {
 
   await Promise.all([hbsFiles, mainBuild, oldClientVersions])
 
-  fs.writeFileSync(
-    `dist/${path.basename(outfile)}.meta.json`,
-    JSON.stringify((await mainBuild).metafile)
-  )
+  if (isDev) {
+    fs.writeFileSync(
+      `dist/${path.basename(outfile)}.meta.json`,
+      JSON.stringify((await mainBuild).metafile)
+    )
+  }
 
   console.log(
     "\x1b[32m%s\x1b[0m",
