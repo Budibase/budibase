@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
@@ -12,7 +12,6 @@
     completionStatus,
   } from "@codemirror/autocomplete"
   import {
-    EditorView,
     lineNumbers,
     keymap,
     highlightSpecialChars,
@@ -25,6 +24,7 @@
     MatchDecorator,
     ViewPlugin,
     Decoration,
+    EditorView,
   } from "@codemirror/view"
   import {
     bracketMatching,
@@ -44,12 +44,14 @@
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
+  import type { EditorMode } from "@budibase/types"
 
-  export let label
-  export let completions = []
-  export let mode = EditorModes.Handlebars
-  export let value = ""
-  export let placeholder = null
+  export let label: string | undefined = undefined
+  // TODO: work out what best type fits this
+  export let completions: any[] = []
+  export let mode: EditorMode = EditorModes.Handlebars
+  export let value: string | null = ""
+  export let placeholder: string | null = null
   export let autocompleteEnabled = true
   export let autofocus = false
   export let jsBindingWrapping = true
@@ -58,8 +60,8 @@
 
   const dispatch = createEventDispatcher()
 
-  let textarea
-  let editor
+  let textarea: HTMLDivElement | undefined
+  let editor: EditorView | undefined
   let mounted = false
   let isEditorInitialised = false
   let queuedRefresh = false
@@ -71,7 +73,7 @@
 
   $: {
     if (autofocus && isEditorInitialised) {
-      editor.focus()
+      editor?.focus()
     }
   }
 
@@ -88,7 +90,7 @@
       isDark = !currentTheme.includes("light")
 
       // Issue theme compartment update
-      editor.dispatch({
+      editor?.dispatch({
         effects: themeConfig.reconfigure([...(isDark ? [oneDark] : [])]),
       })
     }
@@ -100,17 +102,24 @@
   /**
    * Will refresh the editor contents only after
    * it has been fully initialised
-   * @param value {string} the editor value
    */
-  const refresh = (value, initialised, mounted) => {
+  const refresh = (
+    value: string | null,
+    initialised?: boolean,
+    mounted?: boolean
+  ) => {
     if (!initialised || !mounted) {
       queuedRefresh = true
       return
     }
 
-    if (editor.state.doc.toString() !== value || queuedRefresh) {
+    if (
+      editor &&
+      value &&
+      (editor.state.doc.toString() !== value || queuedRefresh)
+    ) {
       editor.dispatch({
-        changes: { from: 0, to: editor.state.doc.length, insert: value },
+        changes: { from: 0, to: editor.state.doc.length, insert: value! },
       })
       queuedRefresh = false
     }
@@ -118,17 +127,22 @@
 
   // Export a function to expose caret position
   export const getCaretPosition = () => {
-    const selection_range = editor.state.selection.ranges[0]
+    const selection_range = editor?.state.selection.ranges[0]
     return {
-      start: selection_range.from,
-      end: selection_range.to,
+      start: selection_range?.from,
+      end: selection_range?.to,
     }
   }
 
-  export const insertAtPos = opts => {
+  export const insertAtPos = (opts: {
+    start: number
+    end?: number
+    value: string
+    cursor: { anchor: number }
+  }) => {
     // Updating the value inside.
     // Retain focus
-    editor.dispatch({
+    editor?.dispatch({
       changes: {
         from: opts.start || editor.state.doc.length,
         to: opts.end || editor.state.doc.length,
@@ -192,7 +206,7 @@
 
   const indentWithTabCustom = {
     key: "Tab",
-    run: view => {
+    run: (view: EditorView) => {
       if (completionStatus(view.state) === "active") {
         acceptCompletion(view)
         return true
@@ -200,7 +214,7 @@
       indentMore(view)
       return true
     },
-    shift: view => {
+    shift: (view: EditorView) => {
       indentLess(view)
       return true
     },
@@ -232,7 +246,8 @@
 
   // None of this is reactive, but it never has been, so we just assume most
   // config flags aren't changed at runtime
-  const buildExtensions = base => {
+  // TODO: work out type for base
+  const buildExtensions = (base: any[]) => {
     let complete = [...base]
 
     if (autocompleteEnabled) {
@@ -242,7 +257,7 @@
           closeOnBlur: true,
           icons: false,
           optionClass: completion =>
-            completion.simple
+            "simple" in completion && completion.simple
               ? "autocomplete-option-simple"
               : "autocomplete-option",
         })
@@ -308,7 +323,7 @@
         keymap.of(buildKeymap()),
         EditorView.domEventHandlers({
           blur: () => {
-            dispatch("blur", editor.state.doc.toString())
+            dispatch("blur", editor?.state.doc.toString())
           },
         }),
         EditorView.updateListener.of(v => {
@@ -347,7 +362,7 @@
 
 {#if label}
   <div>
-    <Label small>{label}</Label>
+    <Label size="S">{label}</Label>
   </div>
 {/if}
 

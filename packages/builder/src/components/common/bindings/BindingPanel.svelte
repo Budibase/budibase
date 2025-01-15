@@ -31,20 +31,21 @@
   import { capitalise } from "@/helpers"
   import { Utils, JsonFormatter } from "@budibase/frontend-core"
   import { licensing } from "@/stores/portal"
-  import {
+  import { BindingMode, EditorMode, SidePanel } from "@budibase/types"
+  import type {
     EnrichedBinding,
-    BindingMode,
-    SidePanel,
     BindingCompletion,
     Snippet,
     Helper,
+    CaretPositionFn,
+    InsertAtPositionFn,
   } from "@budibase/types"
-  import { CompletionContext } from "@codemirror/autocomplete"
+  import type { CompletionContext } from "@codemirror/autocomplete"
 
   const dispatch = createEventDispatcher()
 
   export let bindings: EnrichedBinding[] = []
-  export let value = ""
+  export let value: string = ""
   export let allowHBS = true
   export let allowJS = false
   export let allowHelpers = true
@@ -58,14 +59,10 @@
   let mode: BindingMode | null
   let sidePanel: SidePanel | null
   let initialValueJS = value?.startsWith?.("{{ js ")
-  let jsValue = initialValueJS ? value : null
-  let hbsValue = initialValueJS ? null : value
-  let getCaretPosition: () => { start: number; end: number } | undefined
-  let insertAtPos: (_: {
-    start: number
-    end: number
-    value: string
-  }) => void | undefined
+  let jsValue: string | null = initialValueJS ? value : null
+  let hbsValue: string | null = initialValueJS ? null : value
+  let getCaretPosition: CaretPositionFn | undefined
+  let insertAtPos: InsertAtPositionFn | undefined
   let targetMode: BindingMode | null = null
   let expressionResult: string | undefined | null
   let expressionError: string | undefined | null
@@ -83,7 +80,9 @@
   $: usingJS = mode === BindingMode.JavaScript
   $: editorMode =
     mode === BindingMode.JavaScript ? EditorModes.JS : EditorModes.Handlebars
-  $: editorValue = editorMode === EditorModes.JS ? jsValue : hbsValue
+  $: editorValue = (editorMode === EditorModes.JS ? jsValue : hbsValue) as
+    | string
+    | null
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: requestEval(runtimeExpression, context, snippets)
   $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
@@ -300,6 +299,9 @@
     }
   }
 
+  const addSnippet = (snippet: Snippet) =>
+    bindingHelpers.onSelectSnippet(snippet)
+
   onMount(() => {
     // Set the initial mode appropriately
     const initialValueMode = initialValueJS
@@ -365,7 +367,7 @@
         {:else if mode === BindingMode.JavaScript}
           {#key jsCompletions}
             <CodeEditor
-              value={decodeJSBinding(jsValue)}
+              value={jsValue ? decodeJSBinding(jsValue) : jsValue}
               on:change={onChangeJSValue}
               completions={jsCompletions}
               mode={EditorModes.JS}
@@ -419,13 +421,10 @@
           {expressionResult}
           {expressionError}
           {evaluating}
-          expression={editorValue}
+          expression={editorValue ? editorValue : ""}
         />
       {:else if sidePanel === SidePanel.Snippets}
-        <SnippetSidePanel
-          addSnippet={snippet => bindingHelpers.onSelectSnippet(snippet)}
-          {snippets}
-        />
+        <SnippetSidePanel {addSnippet} {snippets} />
       {/if}
     </div>
   </div>
