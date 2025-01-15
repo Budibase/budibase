@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/popover/dist/index-vars.css"
   import Portal from "svelte-portal"
   import { createEventDispatcher, getContext, onDestroy } from "svelte"
@@ -9,24 +9,24 @@
 
   const dispatch = createEventDispatcher()
 
-  export let anchor
-  export let align = "right"
-  export let portalTarget
-  export let minWidth
-  export let maxWidth
-  export let maxHeight
-  export let open = false
-  export let useAnchorWidth = false
-  export let dismissible = true
-  export let offset = 4
-  export let customHeight
-  export let animate = true
-  export let customZindex
-  export let handlePostionUpdate
-  export let showPopover = true
-  export let clickOutsideOverride = false
-  export let resizable = true
-  export let wrap = false
+  export let anchor: any | undefined = undefined
+  export let align: string | undefined = "right"
+  export let portalTarget: any | undefined = undefined
+  export let minWidth: number | undefined = undefined
+  export let maxWidth: number | undefined = undefined
+  export let maxHeight: number | undefined = undefined
+  export let open: boolean | undefined = false
+  export let useAnchorWidth: boolean | undefined = false
+  export let dismissible: boolean | undefined = true
+  export let offset: number | undefined = 4
+  export let customHeight: number | undefined = undefined
+  export let animate: boolean | undefined = true
+  export let customZindex: number | undefined = undefined
+  export let handlePostionUpdate: () => void | undefined = undefined
+  export let showPopover: boolean | undefined = true
+  export let clickOutsideOverride: boolean | undefined = false
+  export let resizable: boolean | undefined = true
+  export let wrap: boolean | undefined = false
 
   const animationDuration = 260
 
