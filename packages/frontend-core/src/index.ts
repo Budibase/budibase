@@ -4,7 +4,9 @@ export { fetchData, DataFetchMap } from "./fetch"
 export type {
   DataFetchType,
   DataFetchOptions,
-  ProviderDatasource,
+  DataFetchDatasource,
+  UserDatasource,
+  GroupUserDatasource,
 } from "./fetch"
 export * as Constants from "./constants"
 export * from "./stores"
