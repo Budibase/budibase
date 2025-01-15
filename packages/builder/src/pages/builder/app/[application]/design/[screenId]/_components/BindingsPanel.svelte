@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ActionButton, Modal, ModalContent } from "@budibase/bbui"
+  import { ActionButton, Modal, ModalContent, Helpers } from "@budibase/bbui"
   import {
     previewStore,
     selectedScreen,
@@ -7,14 +7,8 @@
     snippets,
   } from "@/stores/builder"
   import { getBindableProperties } from "@/dataBinding"
-  import { processObjectSync } from "@budibase/string-templates"
   import BindingNode from "./BindingExplorer/BindingNode.svelte"
-
-  enum ValueType {
-    Object = "Object",
-    Array = "Array",
-    Primitive = "Primitive",
-  }
+  import { processObjectSync } from "@budibase/string-templates"
 
   // Minimal typing for the real data binding structure, as none exists
   type DataBinding = {
@@ -23,45 +17,21 @@
     readableBinding: string
   }
 
-  type BindingEntry = {
-    readableBinding: string
-    runtimeBinding: string | null
-    value: any
-    valueType: ValueType
-  }
-
-  type BindingMap = {
-    [key: string]: BindingEntry
-  }
-
   let modal: any
 
-  $: context = {
-    ...($previewStore.selectedComponentContext || {}),
-    date: new Date(),
-    string: "foo",
-    number: 1234,
-    undefined: undefined,
-    null: null,
-    true: true,
-    false: false,
-    array: [1, 2, 3],
-    object: { foo: "bar" },
-    error: new Error(),
-  }
+  $: previewContext = $previewStore.selectedComponentContext || {}
   $: selectedComponentId = $componentStore.selectedComponentId
+  $: context = makeContext(previewContext, bindings)
   $: bindings = getBindableProperties($selectedScreen, selectedComponentId)
-  $: enrichedBindings = enrichBindings(bindings, context, $snippets)
 
   const show = () => {
     previewStore.requestComponentContext()
     modal.show()
   }
 
-  const enrichBindings = (
-    bindings: DataBinding[],
-    context: Record<string, any>,
-    snippets: any
+  const makeContext = (
+    previewContext: Record<string, any>,
+    bindings: DataBinding[]
   ) => {
     // Create a single big array to enrich in one go
     const bindingStrings = bindings.map(binding => {
@@ -74,17 +44,36 @@
       }
     })
     const bindingEvauations = processObjectSync(bindingStrings, {
-      ...context,
-      snippets,
+      ...previewContext,
+      snippets: $snippets,
     }) as any[]
 
     // Enrich bindings with evaluations and highlighted HTML
-    const flatBindings = bindings.map((binding, idx) => ({
-      ...binding,
-      value: bindingEvauations[idx],
-    }))
+    const enrichedBindings: any[] = bindings.map((binding, idx) => {
+      return {
+        ...binding,
+        value: bindingEvauations[idx],
+      }
+    })
 
-    return flatBindings
+    let context = {
+      _dataTypes: {
+        date: new Date(),
+        string: "foo",
+        number: 1234,
+        undefined: undefined,
+        null: null,
+        true: true,
+        false: false,
+        array: [1, 2, 3],
+        object: { foo: "bar" },
+        error: new Error(),
+      },
+    }
+    for (let binding of enrichedBindings) {
+      Helpers.deepSet(context, binding.readableBinding, binding.value)
+    }
+    return context
   }
 </script>
 
