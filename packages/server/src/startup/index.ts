@@ -15,7 +15,6 @@ import { watch } from "../watch"
 import * as automations from "../automations"
 import * as fileSystem from "../utilities/fileSystem"
 import { default as eventEmitter, init as eventInit } from "../events"
-import * as migrations from "../migrations"
 import * as bullboard from "../automations/bullboard"
 import * as appMigrations from "../appMigrations/queue"
 import * as pro from "@budibase/pro"
@@ -104,18 +103,6 @@ export async function startup(
   if (app && server) {
     console.log("Initialising websockets")
     initialiseWebsockets(app, server)
-  }
-
-  // run migrations on startup if not done via http
-  // not recommended in a clustered environment
-  if (!env.HTTP_MIGRATIONS && !env.isTest()) {
-    console.log("Running migrations")
-    try {
-      await migrations.migrate()
-    } catch (e) {
-      logging.logAlert("Error performing migrations. Exiting.", e)
-      shutdown(server)
-    }
   }
 
   // monitor plugin directory if required
