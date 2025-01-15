@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from "svelte"
   import { ActionButton, Modal, ModalContent, Combobox } from "@budibase/bbui"
   import { getAllStateVariables } from "@/dataBinding"
   import {
@@ -13,7 +14,7 @@
   } from "@budibase/string-templates"
 
   let modal: Modal
-  let selectedKey = ""
+  let selectedKey: string | null = null
   let componentsUsingState: Array<{
     id: string
     name: string
@@ -75,7 +76,9 @@
 
   function handleKeySelect(event: CustomEvent) {
     selectedKey = event.detail
-
+    if (!selectedKey) {
+      throw new Error("No state key selected")
+    }
     if ($selectedScreen?.props) {
       componentsUsingState = findComponentsUsingState(
         $selectedScreen.props,
@@ -90,20 +93,29 @@
     settings: string[]
   }) {
     componentStore.select(component.id)
-    // Delay highlighting until after component selection and re-render
+
+    // Delay highlighting until after component selection and re-render (i know this is disgusting)
     setTimeout(() => {
       component.settings.forEach(setting => {
         builderStore.highlightSetting(setting)
       })
     }, 100)
   }
+
+  onDestroy(() => {
+    builderStore.highlightSetting(undefined)
+  })
 </script>
 
 <ActionButton on:click={modal.show}>State</ActionButton>
 
 <Modal bind:this={modal}>
   <ModalContent title="State" showConfirmButton={false} cancelText="Close">
-    <Combobox options={keyOptions} on:change={handleKeySelect} />
+    <Combobox
+      value={selectedKey}
+      options={keyOptions}
+      on:change={handleKeySelect}
+    />
     {#if componentsUsingState.length > 0}
       <div class="components-list">
         <h4>Components using this state:</h4>
