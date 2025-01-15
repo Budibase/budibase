@@ -44,17 +44,14 @@ interface DataFetchDerivedStore<TDefinition, TQuery>
   supportsPagination: boolean
 }
 
-export interface DataFetchParams<
-  TDatasource,
-  TQuery = SearchFilters | undefined
-> {
+export interface DataFetchParams<TDatasource, TQuery = SearchFilters> {
   API: APIClient
   datasource: TDatasource
   query: TQuery
   options?: Partial<DataFetchOptions<TQuery>>
 }
 
-export interface DataFetchOptions<TQuery = SearchFilters | undefined> {
+export interface DataFetchOptions<TQuery = SearchFilters> {
   // Search config
   filter: UISearchFilter | LegacyFilter[] | null
   query: TQuery
@@ -272,6 +269,7 @@ export default abstract class BaseDataFetch<
 
     // Build the query
     let query = this.options.query
+
     if (!query) {
       query = buildQuery(filter ?? undefined) as TQuery
     }
@@ -435,7 +433,7 @@ export default abstract class BaseDataFetch<
    * Resets the data set and updates options
    * @param newOptions any new options
    */
-  async update(newOptions: Partial<DataFetchOptions<never>>) {
+  async update(newOptions: Partial<DataFetchOptions<TQuery>>) {
     // Check if any settings have actually changed
     let refresh = false
     for (const [key, value] of Object.entries(newOptions || {})) {
