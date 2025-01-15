@@ -47,6 +47,9 @@ let { argv } = require("yargs")
 
 async function runBuild(entry, outfile) {
   const isDev = process.env.NODE_ENV !== "production"
+
+  console.log(`Building in mode ${process.env.NODE_ENV}`)
+
   const tsconfig = argv["p"] || `tsconfig.build.json`
 
   const { data: tsconfigPathPluginContent } = loadTsConfig(
