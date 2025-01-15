@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onDestroy } from "svelte"
   import { ActionButton, Modal, ModalContent, Combobox } from "@budibase/bbui"
   import { getAllStateVariables } from "@/dataBinding"
   import {
@@ -94,17 +93,10 @@
   }) {
     componentStore.select(component.id)
 
-    // Delay highlighting until after component selection and re-render (i know this is disgusting)
-    setTimeout(() => {
-      component.settings.forEach(setting => {
-        builderStore.highlightSetting(setting)
-      })
-    }, 100)
+    component.settings.forEach(setting => {
+      builderStore.highlightSetting(setting)
+    })
   }
-
-  onDestroy(() => {
-    builderStore.highlightSetting(undefined)
-  })
 </script>
 
 <ActionButton on:click={modal.show}>State</ActionButton>

@@ -5,7 +5,6 @@
     runtimeToReadableBinding,
   } from "@/dataBinding"
   import { builderStore } from "@/stores/builder"
-  import { onDestroy } from "svelte"
 
   export let label = ""
   export let labelHidden = false
@@ -79,12 +78,6 @@
       ? defaultValue
       : enriched
   }
-
-  onDestroy(() => {
-    if (highlightedSettings) {
-      builderStore.highlightSetting(null)
-    }
-  })
 </script>
 
 <div
