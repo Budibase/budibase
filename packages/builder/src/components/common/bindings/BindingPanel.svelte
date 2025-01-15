@@ -39,6 +39,7 @@
     Helper,
     CaretPositionFn,
     InsertAtPositionFn,
+    JSONValue,
   } from "@budibase/types"
   import type { CompletionContext } from "@codemirror/autocomplete"
 
@@ -184,7 +185,7 @@
     debouncedEval(expression, context, snippets)
   }
 
-  const highlightJSON = (json: object | string) => {
+  const highlightJSON = (json: JSONValue) => {
     return JsonFormatter.format(json, {
       keyColor: "#e06c75",
       numberColor: "#e5c07b",
