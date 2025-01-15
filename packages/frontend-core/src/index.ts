@@ -3,6 +3,9 @@ export type { APIClient } from "./api"
 export { fetchData, DataFetchMap } from "./fetch"
 export type {
   DataFetchType,
+  TableFetch,
+  ViewFetch,
+  ViewV2Fetch,
   DataFetchOptions,
   DataFetchDatasource,
   UserDatasource,
