@@ -17,6 +17,8 @@ import { Table, ViewV2Enriched } from "@budibase/types"
 
 export type DataFetchType = keyof typeof DataFetchMap
 export type { DataFetchOptions } from "./DataFetch"
+export type { UserDatasource } from "./UserFetch"
+export type { GroupUserDatasource } from "./GroupUserFetch"
 
 export const DataFetchMap = {
   table: TableFetch,
@@ -77,11 +79,6 @@ export type DataFetchDatasource =
   | CustomDatasource
   | NestedProviderDatasource
   | FieldDatasource<"field" | "queryarray" | "jsonarray">
-
-export type ProviderDatasource = Exclude<
-  DataFetchDatasource,
-  UserDatasource | GroupUserDatasource
->
 
 export type DataFetchDefinition =
   | Table

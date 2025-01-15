@@ -5,7 +5,9 @@
     fetchData,
     QueryUtils,
     DataFetchOptions,
-    ProviderDatasource,
+    DataFetchDatasource,
+    UserDatasource,
+    GroupUserDatasource,
   } from "@budibase/frontend-core"
   import {
     LogicalOperator,
@@ -15,6 +17,11 @@
     SearchFilters,
   } from "@budibase/types"
   import { SDK, Component } from "../../index"
+
+  type ProviderDatasource = Exclude<
+    DataFetchDatasource,
+    UserDatasource | GroupUserDatasource
+  >
 
   export let dataSource: ProviderDatasource
   export let filter
