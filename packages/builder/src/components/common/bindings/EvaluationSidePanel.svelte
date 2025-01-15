@@ -5,8 +5,8 @@
   import { fade } from "svelte/transition"
   import { UserScriptError } from "@budibase/string-templates"
 
-  export let expressionResult
-  export let expressionError
+  export let expressionResult: string | undefined = undefined
+  export let expressionError: string | undefined = undefined
   export let evaluating = false
   export let expression: string | null = null
 
