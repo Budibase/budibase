@@ -16,6 +16,11 @@ import { APIClient } from "../api/types"
 import { Table, ViewV2Enriched } from "@budibase/types"
 
 export type DataFetchType = keyof typeof DataFetchMap
+
+export type { default as TableFetch } from "./TableFetch"
+export type { default as ViewFetch } from "./ViewFetch"
+export type { default as ViewV2Fetch } from "./ViewV2Fetch"
+
 export type { DataFetchOptions } from "./DataFetch"
 export type { UserDatasource } from "./UserFetch"
 export type { GroupUserDatasource } from "./GroupUserFetch"
@@ -86,6 +91,8 @@ export type DataFetchDefinition =
   | {
       schema?: Record<string, any> | null
       primaryDisplay?: string
+      rowHeight?: number
+      type?: string
     }
 
 // Constructs a new fetch model for a certain datasource
