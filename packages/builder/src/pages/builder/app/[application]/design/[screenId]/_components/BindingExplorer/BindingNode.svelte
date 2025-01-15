@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Icon } from "@budibase/bbui"
+  import { isBoolean } from "lodash"
 
   export let label: string | undefined
   export let value: any
@@ -7,24 +8,37 @@
   export let path: (string | number)[] = []
 
   const Colors = {
-    Undefined: "var(--spectrum-global-color-gray-600)",
-    Null: "purple",
-    String: "orange",
-    Number: "blue",
-    True: "green",
-    False: "red",
-    Date: "pink",
+    Array: "var(--spectrum-global-color-gray-600)",
+    Object: "var(--spectrum-global-color-gray-600)",
+    Other: "var(--spectrum-global-color-indigo-600)",
+    Undefined: "var(--spectrum-global-color-gray-500)",
+    Null: "var(--spectrum-global-color-magenta-600)",
+    String: "var(--spectrum-global-color-orange-600)",
+    Number: "var(--spectrum-global-color-blue-600)",
+    True: "var(--spectrum-global-color-green-600)",
+    False: "var(--spectrum-global-color-red-600)",
+    Date: "var(--spectrum-global-color-green-600)",
   }
 
   let expanded = false
 
   $: isArray = Array.isArray(value)
   $: isObject = value?.toString?.() === "[object Object]"
-  $: keys = isArray || isObject ? Object.keys(value).sort() : []
+  $: keys = getKeys(isArray, isObject, value)
   $: expandable = keys.length > 0
   $: displayValue = getDisplayValue(isArray, isObject, keys, value)
-  $: style = getStyle(expandable, value)
+  $: style = getStyle(isArray, isObject, value)
   $: readableBinding = `{{ ${path.join(".")} }}`
+
+  const getKeys = (isArray: boolean, isObject: boolean, value: any) => {
+    if (isArray) {
+      return [...value.keys()]
+    }
+    if (isObject) {
+      return Object.keys(value).sort()
+    }
+    return []
+  }
 
   const pluralise = (text: string, number: number) => {
     return number === 1 ? text : text + "s"
@@ -43,24 +57,22 @@
       return `{} ${keys.length} ${pluralise("key", keys.length)}`
     }
     if (typeof value === "object" && typeof value?.toString === "function") {
-      return JSON.stringify(value.toString(), null, 2)
+      return value.toString()
     } else {
       return JSON.stringify(value, null, 2)
     }
   }
 
-  const getStyle = (expandable: boolean, value: any) => {
-    let style = ""
-    const color = getColor(expandable, value)
-    if (color) {
-      style += `color:${color};`
-    }
-    return style
+  const getStyle = (isArray: boolean, isObject: boolean, value: any) => {
+    return `color:${getColor(isArray, isObject, value)};`
   }
 
-  const getColor = (expandable: boolean, value: any) => {
-    if (expandable) {
-      return
+  const getColor = (isArray: boolean, isObject: boolean, value: any) => {
+    if (isArray) {
+      return Colors.Array
+    }
+    if (isObject) {
+      return Colors.Object
     }
     switch (value) {
       case undefined:
@@ -81,13 +93,12 @@
     if (value instanceof Date) {
       return Colors.Date
     }
+    return Colors.Other
   }
-
-  $: console.log(path)
 </script>
 
 <div class="binding-node">
-  {#if label}
+  {#if label != null}
     <div class="binding-text" title={readableBinding}>
       <div class="binding-arrow">
         {#if expandable}
@@ -107,7 +118,7 @@
       </div>
     </div>
   {/if}
-  {#if expandable && (expanded || !label)}
+  {#if expandable && (expanded || label == null)}
     <div class="binding-children" class:root>
       {#each keys as key}
         <svelte:self
@@ -169,7 +180,6 @@
   }
   .binding-value {
     flex: 1 1 auto;
-    color: var(--spectrum-global-color-gray-600);
   }
   .binding-label.expandable {
     flex: 0 1 auto;
