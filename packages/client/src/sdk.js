@@ -29,7 +29,7 @@ import { ActionTypes } from "./constants"
 import {
   fetchDatasourceSchema,
   fetchDatasourceDefinition,
-} from "./utils/schema.js"
+} from "./utils/schema"
 import { getAPIKey } from "./utils/api.js"
 import { enrichButtonActions } from "./utils/buttonActions.js"
 import { processStringSync, makePropSafe } from "@budibase/string-templates"
@@ -74,6 +74,7 @@ export default {
   fetchData,
   QueryUtils,
   ContextScopes: Constants.ContextScopes,
+  // This is not used internally but exposed to users to be used in plugins
   getAPIKey,
   enrichButtonActions,
   processStringSync,

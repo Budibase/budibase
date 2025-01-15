@@ -13,6 +13,7 @@ import {
   UISearchFilter,
 } from "@budibase/types"
 import { APIClient } from "../api/types"
+import { DataFetchType } from "."
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
@@ -59,7 +60,7 @@ export interface DataFetchParams<
  * For other types of datasource, this class is overridden and extended.
  */
 export default abstract class DataFetch<
-  TDatasource extends {},
+  TDatasource extends { type: DataFetchType },
   TDefinition extends {
     schema?: Record<string, any> | null
     primaryDisplay?: string
@@ -179,9 +180,6 @@ export default abstract class DataFetch<
       this.store.update($store => ({ ...$store, loaded: true }))
       return
     }
-
-    // Initially fetch data but don't bother waiting for the result
-    this.getInitialData()
   }
 
   /**
@@ -371,7 +369,7 @@ export default abstract class DataFetch<
    * @param schema the datasource schema
    * @return {object} the enriched datasource schema
    */
-  private enrichSchema(schema: TableSchema): TableSchema {
+  enrichSchema(schema: TableSchema): TableSchema {
     // Check for any JSON fields so we can add any top level properties
     let jsonAdditions: Record<string, { type: string; nestedJSON: true }> = {}
     for (const fieldKey of Object.keys(schema)) {
