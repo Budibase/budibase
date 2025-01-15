@@ -1,40 +1,42 @@
-<script>
+<script lang="ts">
   import { JsonFormatter } from "@budibase/frontend-core"
   import { Icon, ProgressCircle, notifications } from "@budibase/bbui"
-  import { copyToClipboard } from "@budibase/bbui/helpers"
+  import { Helpers } from "@budibase/bbui"
   import { fade } from "svelte/transition"
   import { UserScriptError } from "@budibase/string-templates"
 
   export let expressionResult
   export let expressionError
   export let evaluating = false
-  export let expression = null
+  export let expression: string | null = null
 
   $: error = expressionError != null
   $: empty = expression == null || expression?.trim() === ""
   $: success = !error && !empty
   $: highlightedResult = highlight(expressionResult)
 
-  const formatError = err => {
+  const formatError = (err: any) => {
     if (err.code === UserScriptError.code) {
       return err.userScriptError.toString()
     }
     return err.toString()
   }
 
-  const highlight = json => {
+  const highlight = (json: string | null) => {
     if (json == null) {
       return ""
     }
 
     // Attempt to parse and then stringify, in case this is valid result
+    let jsonString: string
     try {
-      json = JSON.stringify(JSON.parse(json), null, 2)
+      jsonString = JSON.stringify(JSON.parse(json), null, 2)
     } catch (err) {
       // Ignore
+      jsonString = ""
     }
 
-    return JsonFormatter.format(json, {
+    return JsonFormatter.format(jsonString, {
       keyColor: "#e06c75",
       numberColor: "#e5c07b",
       stringColor: "#98c379",
@@ -49,7 +51,7 @@
     if (typeof clipboardVal === "object") {
       clipboardVal = JSON.stringify(clipboardVal, null, 2)
     }
-    copyToClipboard(clipboardVal)
+    Helpers.copyToClipboard(clipboardVal)
     notifications.success("Value copied to clipboard")
   }
 </script>
