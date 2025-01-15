@@ -31,7 +31,7 @@
   import { capitalise } from "@/helpers"
   import { Utils, JsonFormatter } from "@budibase/frontend-core"
   import { licensing } from "@/stores/portal"
-  import { BindingMode, EditorMode, SidePanel } from "@budibase/types"
+  import { BindingMode, SidePanel } from "@budibase/types"
   import type {
     EnrichedBinding,
     BindingCompletion,
@@ -64,8 +64,8 @@
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
   let targetMode: BindingMode | null = null
-  let expressionResult: string | undefined | null
-  let expressionError: string | undefined | null
+  let expressionResult: string | undefined
+  let expressionError: string | undefined
   let evaluating = false
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
@@ -155,7 +155,7 @@
   const debouncedEval = Utils.debounce(
     (expression: string | null, context: any, snippets: Snippet[]) => {
       try {
-        expressionError = null
+        expressionError = undefined
         expressionResult = processStringSync(
           expression || "",
           {
@@ -167,7 +167,7 @@
           }
         )
       } catch (err: any) {
-        expressionResult = null
+        expressionResult = undefined
         expressionError = err
       }
       evaluating = false
