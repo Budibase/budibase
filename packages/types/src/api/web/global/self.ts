@@ -15,5 +15,5 @@ export interface GetGlobalSelfResponse extends User {
   license: License
   budibaseAccess: boolean
   accountPortalAccess: boolean
-  csrfToken: boolean
+  csrfToken: string
 }
