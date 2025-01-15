@@ -83,7 +83,7 @@ export async function run({
   try {
     return {
       success: true,
-      value: processStringSync(inputs.code, context),
+      value: processStringSync(inputs.code, context, { noThrow: false }),
     }
   } catch (err) {
     return {
