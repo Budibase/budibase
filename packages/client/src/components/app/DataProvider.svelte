@@ -15,6 +15,7 @@
     TableSchema,
     SortOrder,
     SearchFilters,
+    UISearchFilter,
   } from "@budibase/types"
   import { SDK, Component } from "../../index"
 
@@ -24,12 +25,12 @@
   >
 
   export let dataSource: ProviderDatasource
-  export let filter
-  export let sortColumn
-  export let sortOrder
-  export let limit
-  export let paginate
-  export let autoRefresh
+  export let filter: UISearchFilter
+  export let sortColumn: string
+  export let sortOrder: SortOrder
+  export let limit: number
+  export let paginate: boolean
+  export let autoRefresh: number
 
   const { styleable, Provider, ActionTypes, API } = getContext<SDK>("sdk")
   const component = getContext<Component>("component")
