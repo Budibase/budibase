@@ -3,7 +3,6 @@ import sanitizeHtml from "sanitize-html"
 import { groupBy } from "lodash"
 import {
   BindingCompletion,
-  BindingMode,
   EditorModesMap,
   Helper,
   Snippet,
