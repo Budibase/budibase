@@ -11,11 +11,16 @@
   export let expressionError: string | undefined = undefined
   export let evaluating = false
   export let expression: string | null = null
+  export let logging: { log: string; line?: number }[] = []
 
   $: error = expressionError != null
   $: empty = expression == null || expression?.trim() === ""
   $: success = !error && !empty
   $: highlightedResult = highlight(expressionResult)
+  $: highlightedLogs = logging.map(l => ({
+    log: highlight(l.log),
+    line: l.line,
+  }))
 
   const formatError = (err: any) => {
     if (err.code === UserScriptError.code) {
@@ -25,14 +30,14 @@
   }
 
   // json can be any primitive type
-  const highlight = (json?: any | null) => {
+  const highlight = (json?: JSONValue | null) => {
     if (json == null) {
       return ""
     }
 
     // Attempt to parse and then stringify, in case this is valid result
     try {
-      json = JSON.stringify(JSON.parse(json), null, 2)
+      json = JSON.stringify(JSON.parse(json as any), null, 2)
     } catch (err) {
       // couldn't parse/stringify, just treat it as the raw input
     }
@@ -90,8 +95,21 @@
     {:else if error}
       {formatError(expressionError)}
     {:else}
-      <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-      {@html highlightedResult}
+      <div class="output-lines">
+        {#each highlightedLogs as logLine}
+          <div class="line">
+            <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+            <span>{@html logLine.log}</span>
+            {#if logLine.line}
+              <span style="color: var(--blue)">line {logLine.line}</span>
+            {/if}
+          </div>
+        {/each}
+        <div class="line">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+          {@html highlightedResult}
+        </div>
+      </div>
     {/if}
   </div>
 </div>
@@ -142,8 +160,21 @@
     font-size: 12px;
     overflow-y: scroll;
     overflow-x: hidden;
-    white-space: pre-wrap;
+    white-space: pre-line;
     word-wrap: break-word;
     height: 0;
+  }
+  .output-lines {
+    display: flex;
+    gap: var(--spacing-s);
+    flex-direction: column;
+  }
+  .line {
+    border-bottom: var(--border-light);
+    padding-bottom: var(--spacing-s);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: end;
   }
 </style>
