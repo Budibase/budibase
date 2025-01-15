@@ -46,9 +46,9 @@ const svelteCompilePlugin = {
 let { argv } = require("yargs")
 
 async function runBuild(entry, outfile) {
-  const isDev = process.env.NODE_ENV !== "production"
+  const isDev = !process.env.CI
 
-  console.log(`Building in mode ${process.env.NODE_ENV}`)
+  console.log(`Building in mode dev mode: ${isDev}`)
 
   const tsconfig = argv["p"] || `tsconfig.build.json`
 
