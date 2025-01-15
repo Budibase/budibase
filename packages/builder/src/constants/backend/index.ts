@@ -16,7 +16,10 @@ export {
 
 export const AUTO_COLUMN_SUB_TYPES = AutoFieldSubType
 
-export const AUTO_COLUMN_DISPLAY_NAMES = {
+export const AUTO_COLUMN_DISPLAY_NAMES: Record<
+  keyof typeof AUTO_COLUMN_SUB_TYPES,
+  string
+> = {
   AUTO_ID: "Auto ID",
   CREATED_BY: "Created By",
   CREATED_AT: "Created At",
@@ -207,13 +210,6 @@ export const Roles = {
   BASIC: "BASIC",
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
-}
-
-export function isAutoColumnUserRelationship(subtype) {
-  return (
-    subtype === AUTO_COLUMN_SUB_TYPES.CREATED_BY ||
-    subtype === AUTO_COLUMN_SUB_TYPES.UPDATED_BY
-  )
 }
 
 export const PrettyRelationshipDefinitions = {

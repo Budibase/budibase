@@ -1,4 +1,4 @@
-export const suppressWarnings = warnings => {
+export const suppressWarnings = (warnings: string[]) => {
   if (!warnings?.length) {
     return
   }
