@@ -89,10 +89,12 @@ export type DataFetchDefinition =
   | Table
   | ViewV2Enriched
   | {
+      // These fields are added to allow checking these fields on definition usages without requiring constant castings
       schema?: Record<string, any> | null
       primaryDisplay?: string
       rowHeight?: number
       type?: string
+      name?: string
     }
 
 // Constructs a new fetch model for a certain datasource
