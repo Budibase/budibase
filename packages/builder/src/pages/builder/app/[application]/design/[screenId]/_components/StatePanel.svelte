@@ -1,7 +1,11 @@
 <script lang="ts">
   import { ActionButton, Modal, ModalContent, Combobox } from "@budibase/bbui"
   import { getAllStateVariables } from "@/dataBinding"
-  import { appStore, selectedComponent, componentStore } from "@/stores/builder"
+  import {
+    componentStore,
+    selectedScreen,
+    builderStore,
+  } from "@/stores/builder"
   import {
     decodeJSBinding,
     findHBSBlocks,
@@ -10,33 +14,50 @@
 
   let modal: Modal
   let selectedKey = ""
-  let stateValue = ""
-  let componentsUsingState: Array<{ id: string; name: string }> = []
+  let componentsUsingState: Array<{
+    id: string
+    name: string
+    settings: string[]
+  }> = []
   const keyOptions = getAllStateVariables()
 
   function findComponentsUsingState(
     component: any,
     stateKey: string
-  ): Array<{ id: string; name: string }> {
-    let componentsUsingState: Array<{ id: string; name: string }> = []
+  ): Array<{ id: string; name: string; settings: string[] }> {
+    let componentsUsingState: Array<{
+      id: string
+      name: string
+      settings: string[]
+    }> = []
 
-    const { _children, ...componentWithoutChildren } = component
-    const componentStr = JSON.stringify(componentWithoutChildren)
+    const { _children, ...componentSettings } = component
 
-    const bindings = findHBSBlocks(componentStr).map(binding => {
-      let sanitizedBinding = binding.replace(/\\"/g, '"')
-      if (isJSBinding(sanitizedBinding)) {
-        return decodeJSBinding(sanitizedBinding)
-      } else {
-        return sanitizedBinding
+    let settingsWithState: string[] = []
+
+    for (const [setting, value] of Object.entries(componentSettings)) {
+      if (typeof value === "string") {
+        const bindings = findHBSBlocks(value).map(binding => {
+          let sanitizedBinding = binding.replace(/\\"/g, '"')
+          if (isJSBinding(sanitizedBinding)) {
+            return decodeJSBinding(sanitizedBinding)
+          } else {
+            return sanitizedBinding
+          }
+        })
+        const bindingString = bindings.join(" ")
+
+        if (bindingString.includes(stateKey)) {
+          settingsWithState.push(setting)
+        }
       }
-    })
-    const bindingString = bindings.join(" ")
+    }
 
-    if (bindingString.includes(stateKey)) {
+    if (settingsWithState.length > 0) {
       componentsUsingState.push({
         id: component._id,
-        name: component._instanceName || "Unnamed Component",
+        name: component._instanceName,
+        settings: settingsWithState,
       })
     }
 
@@ -54,16 +75,27 @@
 
   function handleKeySelect(event: CustomEvent) {
     selectedKey = event.detail
-    const localStorageKey = `${$appStore.appId}.state`
-    const state = JSON.parse(localStorage.getItem(localStorageKey) || "{}")
-    stateValue = state[selectedKey]
 
-    if ($selectedComponent) {
+    if ($selectedScreen?.props) {
       componentsUsingState = findComponentsUsingState(
-        $selectedComponent,
+        $selectedScreen.props,
         selectedKey
       )
     }
+  }
+
+  function onClickComponentLink(component: {
+    id: string
+    name: string
+    settings: string[]
+  }) {
+    componentStore.select(component.id)
+    // Delay highlighting until after component selection and re-render
+    setTimeout(() => {
+      component.settings.forEach(setting => {
+        builderStore.highlightSetting(setting)
+      })
+    }, 100)
   }
 </script>
 
@@ -72,19 +104,15 @@
 <Modal bind:this={modal}>
   <ModalContent title="State" showConfirmButton={false} cancelText="Close">
     <Combobox options={keyOptions} on:change={handleKeySelect} />
-    <div class="state-value helper">
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-      <pre>{@html JSON.stringify(stateValue, null, 2)}</pre>
-    </div>
     {#if componentsUsingState.length > 0}
       <div class="components-list">
         <h4>Components using this state:</h4>
         {#each componentsUsingState as component}
           <button
             class="component-link"
-            on:click={() => componentStore.select(component.id)}
+            on:click={() => onClickComponentLink(component)}
           >
-            {component.name}
+            {component.name} ({component.settings.join(", ")})
           </button>
         {/each}
       </div>
@@ -93,36 +121,6 @@
 </Modal>
 
 <style>
-  .state-value {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-    padding: var(--spacing-m);
-    background-color: var(--spectrum-global-color-gray-50);
-  }
-  .state-value pre {
-    padding: 0;
-    margin: 0;
-    font-size: 12px;
-    white-space: pre;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
-  .state-value.helper pre {
-    color: var(--spectrum-global-color-blue-700);
-  }
-  .state-value pre :global(span) {
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-  .state-value :global(p) {
-    padding: 0;
-    margin: 0;
-  }
-  .state-value.helper :global(code) {
-    font-size: 12px;
-  }
   .components-list {
     margin-top: var(--spacing-m);
     padding: var(--spacing-m);
