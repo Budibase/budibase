@@ -5,7 +5,8 @@
   import { fade } from "svelte/transition"
   import { UserScriptError } from "@budibase/string-templates"
 
-  export let expressionResult: string | undefined = undefined
+  export let expressionResult: string | { result: string } | undefined =
+    undefined
   export let expressionError: string | undefined = undefined
   export let evaluating = false
   export let expression: string | null = null
@@ -13,7 +14,11 @@
   $: error = expressionError != null
   $: empty = expression == null || expression?.trim() === ""
   $: success = !error && !empty
-  $: highlightedResult = highlight(expressionResult)
+  $: highlightedResult = highlight(
+    expressionResult && typeof expressionResult === "object"
+      ? expressionResult.result
+      : expressionResult
+  )
 
   const formatError = (err: any) => {
     if (err.code === UserScriptError.code) {
@@ -22,7 +27,7 @@
     return err.toString()
   }
 
-  const highlight = (json: string | null) => {
+  const highlight = (json?: string | null) => {
     if (json == null) {
       return ""
     }
@@ -47,7 +52,10 @@
   }
 
   const copy = () => {
-    let clipboardVal = expressionResult.result
+    let clipboardVal =
+      expressionResult && typeof expressionResult === "object"
+        ? expressionResult.result
+        : expressionResult
     if (typeof clipboardVal === "object") {
       clipboardVal = JSON.stringify(clipboardVal, null, 2)
     }
