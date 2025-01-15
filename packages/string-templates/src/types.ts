@@ -8,3 +8,8 @@ export interface ProcessOptions {
   onlyFound?: boolean
   disabledHelpers?: string[]
 }
+
+export interface Log {
+  log: string
+  line?: number
+}

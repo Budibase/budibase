@@ -4,6 +4,7 @@ import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
 import { JsTimeoutError, UserScriptError } from "../errors"
 import { cloneDeep } from "lodash/fp"
+import { Log } from "../types"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
@@ -96,10 +97,9 @@ export function processJS(handlebars: string, context: any) {
       clonedContext = cloneDeep(context)
     }
 
-    const sandboxContext = {
+    const sandboxContext: Record<string, any> = {
       $: (path: string) => getContextValue(path, clonedContext),
       helpers: getJsHelperList(),
-
       // Proxy to evaluate snippets when running in the browser
       snippets: new Proxy(
         {},
@@ -114,8 +114,24 @@ export function processJS(handlebars: string, context: any) {
       ),
     }
 
+    const logs: Log[] = []
+    // logging only supported on frontend
+    if (!isBackendService()) {
+      const log = (log: string) => logs.push({ log })
+      sandboxContext.console = {
+        log: log,
+        info: log,
+        debug: log,
+        warn: log,
+        error: log,
+        // two below may need special cases
+        trace: log,
+        table: log,
+      }
+    }
+
     // Create a sandbox with our context and run the JS
-    const res = { data: runJS(js, sandboxContext) }
+    const res = { data: runJS(js, sandboxContext), logs }
     return `{{${LITERAL_MARKER} js_result-${JSON.stringify(res)}}}`
   } catch (error: any) {
     onErrorLog && onErrorLog(error)
