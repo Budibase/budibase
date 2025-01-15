@@ -1,3 +1,5 @@
+import { JSONValue } from "@budibase/types"
+
 export type ColorsOptions = {
   keyColor?: string
   numberColor?: string
@@ -32,15 +34,10 @@ function escapeHtml(html: string) {
   })
 }
 
-export function format(json: string | object, colorOptions = {}) {
+export function format(json: JSONValue, colorOptions: ColorsOptions = {}) {
   const valueType = typeof json
-  if (valueType !== "string") {
-    json = JSON.stringify(json, null, 2) || valueType
-  }
-  let jsonString: string =
-    valueType !== "string"
-      ? JSON.stringify(json, null, 2) || valueType
-      : (json as string)
+  let jsonString =
+    typeof json === "string" ? json : JSON.stringify(json, null, 2) || valueType
   let colors = Object.assign({}, defaultColors, colorOptions)
   jsonString = jsonString
     .replace(/&/g, "&")
@@ -48,7 +45,7 @@ export function format(json: string | object, colorOptions = {}) {
     .replace(/>/g, ">")
   return jsonString.replace(
     /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+]?\d+)?)/g,
-    match => {
+    (match: string) => {
       let color = colors.numberColor
       let style = ""
       if (/^"/.test(match)) {

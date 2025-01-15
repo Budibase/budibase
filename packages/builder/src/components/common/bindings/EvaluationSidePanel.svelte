@@ -4,10 +4,10 @@
   import { Helpers } from "@budibase/bbui"
   import { fade } from "svelte/transition"
   import { UserScriptError } from "@budibase/string-templates"
+  import type { JSONValue } from "@budibase/types"
 
   // this can be essentially any primitive response from the JS function
-  export let expressionResult: string | boolean | object | number | undefined =
-    undefined
+  export let expressionResult: JSONValue | undefined = undefined
   export let expressionError: string | undefined = undefined
   export let evaluating = false
   export let expression: string | null = null
@@ -24,21 +24,20 @@
     return err.toString()
   }
 
+  // json can be any primitive type
   const highlight = (json?: any | null) => {
     if (json == null) {
       return ""
     }
 
     // Attempt to parse and then stringify, in case this is valid result
-    let jsonString: string
     try {
-      jsonString = JSON.stringify(JSON.parse(json), null, 2)
+      json = JSON.stringify(JSON.parse(json), null, 2)
     } catch (err) {
-      // Ignore
-      jsonString = json
+      // couldn't parse/stringify, just treat it as the raw input
     }
 
-    return JsonFormatter.format(jsonString, {
+    return JsonFormatter.format(json, {
       keyColor: "#e06c75",
       numberColor: "#e5c07b",
       stringColor: "#98c379",
