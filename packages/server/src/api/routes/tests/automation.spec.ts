@@ -20,7 +20,6 @@ import {
 } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { FilterConditions } from "../../../automations/steps/filter"
-import { removeDeprecated } from "../../../automations/utils"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 
 const MAX_RETRIES = 4
@@ -76,15 +75,11 @@ describe("/automations", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      let definitionsLength = Object.keys(
-        removeDeprecated(BUILTIN_ACTION_DEFINITIONS)
-      ).length
-
       expect(Object.keys(res.body.action).length).toBeGreaterThanOrEqual(
-        definitionsLength
+        Object.keys(BUILTIN_ACTION_DEFINITIONS).length
       )
       expect(Object.keys(res.body.trigger).length).toEqual(
-        Object.keys(removeDeprecated(TRIGGER_DEFINITIONS)).length
+        Object.keys(TRIGGER_DEFINITIONS).length
       )
     })
   })

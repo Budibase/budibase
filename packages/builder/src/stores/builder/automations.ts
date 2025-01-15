@@ -30,6 +30,8 @@ import {
   AutomationTriggerSchema,
   BranchPath,
   BlockDefinitions,
+  GetAutomationTriggerDefinitionsResponse,
+  GetAutomationActionDefinitionsResponse,
 } from "@budibase/types"
 import { ActionStepID } from "@/constants/backend/automations"
 import { FIELDS } from "@/constants/backend"
@@ -65,16 +67,19 @@ const initialAutomationState: AutomationState = {
 }
 
 const getFinalDefinitions = (
-  triggers: Record<string, any>,
-  actions: Record<string, any>
+  triggers: GetAutomationTriggerDefinitionsResponse,
+  actions: GetAutomationActionDefinitionsResponse
 ): BlockDefinitions => {
-  const creatable: Record<string, any> = {}
-  Object.entries(triggers).forEach(entry => {
-    if (entry[0] === AutomationTriggerStepId.ROW_ACTION) {
-      return
+  const creatable: Partial<GetAutomationTriggerDefinitionsResponse> = {}
+  for (const [key, trigger] of Object.entries(triggers)) {
+    if (key === AutomationTriggerStepId.ROW_ACTION) {
+      continue
     }
-    creatable[entry[0]] = entry[1]
-  })
+    if (trigger.deprecated === true) {
+      continue
+    }
+    creatable[key as keyof GetAutomationTriggerDefinitionsResponse] = trigger
+  }
   return {
     TRIGGER: triggers,
     CREATABLE_TRIGGER: creatable,

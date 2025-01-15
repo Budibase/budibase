@@ -12,9 +12,9 @@ import {
 import { processStringSync } from "@budibase/string-templates"
 
 export const definition: AutomationStepDefinition = {
-  name: "JS Scripting",
+  name: "JavaScript",
   tagline: "Execute JavaScript Code",
-  icon: "Code",
+  icon: "Brackets",
   description: "Run a piece of JavaScript code in your automation",
   type: AutomationStepType.ACTION,
   internal: true,
