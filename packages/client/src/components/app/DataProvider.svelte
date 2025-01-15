@@ -34,7 +34,7 @@
   const { styleable, Provider, ActionTypes, API } = getContext<SDK>("sdk")
   const component = getContext<Component>("component")
 
-  let interval: NodeJS.Timeout
+  let interval: ReturnType<typeof setInterval>
   let queryExtensions: Record<string, any> = {}
 
   $: defaultQuery = QueryUtils.buildQuery(filter)
