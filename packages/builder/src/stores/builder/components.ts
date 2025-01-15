@@ -20,6 +20,7 @@ import {
   previewStore,
   tables,
   componentTreeNodesStore,
+  builderStore,
 } from "@/stores/builder"
 import { buildFormSchema, getSchemaForDatasource } from "@/dataBinding"
 import {
@@ -716,6 +717,11 @@ export class ComponentStore extends BudiStore<ComponentState> {
    * @param {string} componentId
    */
   select(componentId: string) {
+    builderStore.update(state => {
+      state.highlightedSettings = null
+      return state
+    })
+
     this.update(state => {
       state.selectedComponentId = componentId
       return state
