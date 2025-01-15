@@ -1705,7 +1705,10 @@ if (descriptions.length) {
 
                       beforeAll(async () => {
                         tableOrViewId = await createTableOrView({
-                          dateid: { name: "dateid", type: FieldType.STRING },
+                          dateid: {
+                            name: "dateid",
+                            type: FieldType.STRING,
+                          },
                           date: {
                             name: "date",
                             type: FieldType.DATETIME,
@@ -1751,7 +1754,9 @@ if (descriptions.length) {
                       describe("notEqual", () => {
                         it("successfully finds a row", async () => {
                           await expectQuery({
-                            notEqual: { date: `${JAN_1ST}${SEARCH_SUFFIX}` },
+                            notEqual: {
+                              date: `${JAN_1ST}${SEARCH_SUFFIX}`,
+                            },
                           }).toContainExactly([
                             { date: JAN_10TH },
                             { dateid: NULL_DATE__ID },
@@ -1760,7 +1765,9 @@ if (descriptions.length) {
 
                         it("fails to find nonexistent row", async () => {
                           await expectQuery({
-                            notEqual: { date: `${JAN_30TH}${SEARCH_SUFFIX}` },
+                            notEqual: {
+                              date: `${JAN_30TH}${SEARCH_SUFFIX}`,
+                            },
                           }).toContainExactly([
                             { date: JAN_1ST },
                             { date: JAN_10TH },
@@ -1820,6 +1827,60 @@ if (descriptions.length) {
                               },
                             },
                           }).toFindNothing()
+                        })
+                      })
+
+                      describe("sort", () => {
+                        it("sorts ascending", async () => {
+                          await expectSearch({
+                            query: {},
+                            sort: "date",
+                            sortOrder: SortOrder.ASCENDING,
+                          }).toMatchExactly([
+                            { dateid: NULL_DATE__ID },
+                            { date: JAN_1ST },
+                            { date: JAN_10TH },
+                          ])
+                        })
+
+                        it("sorts descending", async () => {
+                          await expectSearch({
+                            query: {},
+                            sort: "date",
+                            sortOrder: SortOrder.DESCENDING,
+                          }).toMatchExactly([
+                            { date: JAN_10TH },
+                            { date: JAN_1ST },
+                            { dateid: NULL_DATE__ID },
+                          ])
+                        })
+
+                        describe("sortType STRING", () => {
+                          it("sorts ascending", async () => {
+                            await expectSearch({
+                              query: {},
+                              sort: "date",
+                              sortType: SortType.STRING,
+                              sortOrder: SortOrder.ASCENDING,
+                            }).toMatchExactly([
+                              { dateid: NULL_DATE__ID },
+                              { date: JAN_1ST },
+                              { date: JAN_10TH },
+                            ])
+                          })
+
+                          it("sorts descending", async () => {
+                            await expectSearch({
+                              query: {},
+                              sort: "date",
+                              sortType: SortType.STRING,
+                              sortOrder: SortOrder.DESCENDING,
+                            }).toMatchExactly([
+                              { date: JAN_10TH },
+                              { date: JAN_1ST },
+                              { dateid: NULL_DATE__ID },
+                            ])
+                          })
                         })
                       })
                     }
