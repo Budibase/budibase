@@ -5,6 +5,7 @@
     fetchData,
     QueryUtils,
     DataFetchOptions,
+    ProviderDatasource,
   } from "@budibase/frontend-core"
   import {
     LogicalOperator,
@@ -15,7 +16,7 @@
   } from "@budibase/types"
   import { SDK, Component } from "../../index"
 
-  export let dataSource
+  export let dataSource: ProviderDatasource
   export let filter
   export let sortColumn
   export let sortOrder
@@ -98,7 +99,7 @@
     primaryDisplay: ($fetch.definition as any)?.primaryDisplay,
   }
 
-  const createFetch = (datasource: any) => {
+  const createFetch = (datasource: ProviderDatasource) => {
     return fetchData({
       API,
       datasource,

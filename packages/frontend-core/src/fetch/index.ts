@@ -35,6 +35,23 @@ export const DataFetchMap = {
   queryarray: QueryArrayFetch,
 }
 
+export interface DataFetchClassMap {
+  table: TableFetch
+  view: ViewFetch
+  viewV2: ViewV2Fetch
+  query: QueryFetch
+  link: RelationshipFetch
+  user: UserFetch
+  groupUser: GroupUserFetch
+  custom: CustomFetch
+
+  // Client specific datasource types
+  provider: NestedProviderFetch
+  field: FieldFetch<"field">
+  jsonarray: JSONArrayFetch
+  queryarray: QueryArrayFetch
+}
+
 export type DataFetch =
   | TableFetch
   | ViewFetch
@@ -60,8 +77,11 @@ export type DataFetchDatasource =
   | CustomDatasource
   | NestedProviderDatasource
   | FieldDatasource<"field" | "queryarray" | "jsonarray">
-// | FieldDatasource<"field" | "queryarray" | "jsonarray">
-// | FieldDatasource<"field" | "queryarray" | "jsonarray">
+
+export type ProviderDatasource = Exclude<
+  DataFetchDatasource,
+  UserDatasource | GroupUserDatasource
+>
 
 export type DataFetchDefinition =
   | Table
@@ -72,22 +92,27 @@ export type DataFetchDefinition =
     }
 
 // Constructs a new fetch model for a certain datasource
-export const fetchData = ({
+export const fetchData = <
+  T extends DataFetchDatasource,
+  Type extends T["type"] = T["type"]
+>({
   API,
   datasource,
   options,
 }: {
   API: APIClient
-  datasource: DataFetchDatasource
+  datasource: T
   options: any
-}) => {
+}): Type extends keyof DataFetchClassMap
+  ? DataFetchClassMap[Type]
+  : TableFetch => {
   const Fetch = DataFetchMap[datasource?.type] || TableFetch
   const fetch = new Fetch({ API, datasource, ...options })
 
   // Initially fetch data but don't bother waiting for the result
   fetch.getInitialData()
 
-  return fetch
+  return fetch as any
 }
 
 // Creates an empty fetch instance with no datasource configured, so no data
