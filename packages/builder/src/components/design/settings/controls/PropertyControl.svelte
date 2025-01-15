@@ -27,14 +27,18 @@
 
   let highlightType
 
-  $: highlightedProp = $builderStore.highlightedSetting
+  $: highlightedSettings = $builderStore.highlightedSettings
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
 
   $: if (!Array.isArray(value)) {
-    highlightType =
-      highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
+    const highlightedSetting = highlightedSettings?.find(
+      setting => setting.key === key
+    )
+    highlightType = highlightedSetting
+      ? `highlighted-${highlightedSetting.type}`
+      : ""
   }
 
   const getAllBindings = (bindings, componentBindings, nested) => {
@@ -77,7 +81,7 @@
   }
 
   onDestroy(() => {
-    if (highlightedProp) {
+    if (highlightedSettings) {
       builderStore.highlightSetting(null)
     }
   })
