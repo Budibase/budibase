@@ -30,7 +30,7 @@ const entityMap = {
 
 function escapeHtml(html: string) {
   return String(html).replace(/[&<>"'`=]/g, function (s) {
-    return entityMap[s]
+    return entityMap[s as keyof typeof entityMap]
   })
 }
 
