@@ -4,20 +4,21 @@
   import { Helpers } from "@budibase/bbui"
   import { fade } from "svelte/transition"
   import { UserScriptError } from "@budibase/string-templates"
+  import type { Log } from "@budibase/string-templates"
   import type { JSONValue } from "@budibase/types"
 
   // this can be essentially any primitive response from the JS function
   export let expressionResult: JSONValue | undefined = undefined
   export let expressionError: string | undefined = undefined
+  export let expressionLogs: Log[] = []
   export let evaluating = false
   export let expression: string | null = null
-  export let logging: { log: string; line?: number }[] = []
 
   $: error = expressionError != null
   $: empty = expression == null || expression?.trim() === ""
   $: success = !error && !empty
   $: highlightedResult = highlight(expressionResult)
-  $: highlightedLogs = logging.map(l => ({
+  $: highlightedLogs = expressionLogs.map(l => ({
     log: highlight(l.log),
     line: l.line,
   }))
