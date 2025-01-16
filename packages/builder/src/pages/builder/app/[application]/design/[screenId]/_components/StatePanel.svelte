@@ -12,14 +12,56 @@
     isJSBinding,
   } from "@budibase/string-templates"
 
-  let modal: Modal
-  let selectedKey: string | null = null
-  let componentsUsingState: Array<{
+  type ComponentUsingState = {
     id: string
     name: string
     settings: string[]
-  }> = []
+  }[]
+
+  let modal: Modal
+  let selectedKey: string | null = null
+  let componentsUsingState: ComponentUsingState = []
+  let componentsUpdatingState: ComponentUsingState = []
+
   const keyOptions = getAllStateVariables()
+
+  function findComponentsUpdatingState(
+    component: any,
+    stateKey: string
+  ): ComponentUsingState {
+    let foundComponents: ComponentUsingState = []
+
+    const eventHandlerProps = ["onClick", "onChange"]
+
+    eventHandlerProps.forEach(eventType => {
+      const handlers = component[eventType]
+      if (Array.isArray(handlers)) {
+        handlers.forEach(handler => {
+          if (
+            handler["##eventHandlerType"] === "Update State" &&
+            handler.parameters?.key === stateKey
+          ) {
+            foundComponents.push({
+              id: component._id,
+              name: component._instanceName,
+              settings: [eventType],
+            })
+          }
+        })
+      }
+    })
+
+    if (component._children) {
+      for (let child of component._children) {
+        foundComponents = [
+          ...foundComponents,
+          ...findComponentsUpdatingState(child, stateKey),
+        ]
+      }
+    }
+
+    return foundComponents
+  }
 
   function findComponentsUsingState(
     component: any,
@@ -32,7 +74,6 @@
     }> = []
 
     const { _children, ...componentSettings } = component
-
     let settingsWithState: string[] = []
 
     for (const [setting, value] of Object.entries(componentSettings)) {
@@ -83,6 +124,10 @@
         $selectedScreen.props,
         selectedKey
       )
+      componentsUpdatingState = findComponentsUpdatingState(
+        $selectedScreen.props,
+        selectedKey
+      )
     }
   }
 
@@ -92,7 +137,6 @@
     settings: string[]
   }) {
     componentStore.select(component.id)
-
     component.settings.forEach(setting => {
       builderStore.highlightSetting(setting)
     })
@@ -117,6 +161,24 @@
             on:click={() => onClickComponentLink(component)}
           >
             {component.name} ({component.settings.join(", ")})
+          </button>
+        {/each}
+      </div>
+    {/if}
+    {#if componentsUpdatingState.length > 0}
+      <div class="components-list">
+        <h4>Components updating this state:</h4>
+        {#each componentsUpdatingState as component}
+          <button
+            class="component-link"
+            on:click={() =>
+              onClickComponentLink({
+                id: component.id,
+                name: component.name,
+                settings: component.settings,
+              })}
+          >
+            {component.name} (via {component.settings.join(", ")})
           </button>
         {/each}
       </div>
