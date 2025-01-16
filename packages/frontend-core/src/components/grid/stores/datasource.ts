@@ -1,7 +1,11 @@
 // TODO: datasource and defitions are unions of the different implementations. At this point, the datasource does not know what type is being used, and the assignations will cause TS exceptions. Casting it "as any" for now. This should be fixed improving the type usages.
 
 import { derived, get, Readable, Writable } from "svelte/store"
-import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
+import {
+  DataFetchDefinition,
+  getDatasourceDefinition,
+  getDatasourceSchema,
+} from "../../../fetch"
 import { enrichSchemaWithRelColumns, memo } from "../../../utils"
 import { cloneDeep } from "lodash"
 import {
@@ -18,7 +22,7 @@ import { Store as StoreContext, BaseStoreProps } from "."
 import { DatasourceActions } from "./datasources"
 
 interface DatasourceStore {
-  definition: Writable<UIDatasource | null>
+  definition: Writable<DataFetchDefinition | null>
   schemaMutations: Writable<Record<string, UIFieldMutation>>
   subSchemaMutations: Writable<Record<string, Record<string, UIFieldMutation>>>
 }
@@ -131,11 +135,17 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
     [datasource, definition],
     ([$datasource, $definition]) => {
       let type = $datasource?.type
+      // @ts-expect-error
       if (type === "provider") {
         type = ($datasource as any).value?.datasource?.type // TODO: see line 1
       }
       // Handle calculation views
-      if (type === "viewV2" && $definition?.type === ViewV2Type.CALCULATION) {
+      if (
+        type === "viewV2" &&
+        $definition &&
+        "type" in $definition &&
+        $definition.type === ViewV2Type.CALCULATION
+      ) {
         return false
       }
       return !!type && ["table", "viewV2", "link"].includes(type)
@@ -197,7 +207,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   ) => {
     // Update local state
     const originalDefinition = get(definition)
-    definition.set(newDefinition as UIDatasource)
+    definition.set(newDefinition)
 
     // Update server
     if (get(config).canSaveSchema) {
@@ -225,13 +235,15 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
     // Update primary display
     newDefinition.primaryDisplay = column
 
-    // Sanitise schema to ensure field is required and has no default value
-    if (!newDefinition.schema[column].constraints) {
-      newDefinition.schema[column].constraints = {}
-    }
-    newDefinition.schema[column].constraints.presence = { allowEmpty: false }
-    if ("default" in newDefinition.schema[column]) {
-      delete newDefinition.schema[column].default
+    if (newDefinition.schema) {
+      // Sanitise schema to ensure field is required and has no default value
+      if (!newDefinition.schema[column].constraints) {
+        newDefinition.schema[column].constraints = {}
+      }
+      newDefinition.schema[column].constraints.presence = { allowEmpty: false }
+      if ("default" in newDefinition.schema[column]) {
+        delete newDefinition.schema[column].default
+      }
     }
     return await saveDefinition(newDefinition as any) // TODO: see line 1
   }
