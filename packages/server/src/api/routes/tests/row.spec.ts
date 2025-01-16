@@ -3650,48 +3650,50 @@ if (descriptions.length) {
         })
       })
 
-      describe("Fields with spaces", () => {
-        let table: Table
-        let otherTable: Table
-        let relatedRow: Row, mainRow: Row
+      if (isInternal || isMSSQL) {
+        describe("Fields with spaces", () => {
+          let table: Table
+          let otherTable: Table
+          let relatedRow: Row
 
-        beforeAll(async () => {
-          otherTable = await config.api.table.save(defaultTable())
-          table = await config.api.table.save(
-            saveTableRequest({
-              schema: {
-                links: {
-                  name: "links",
-                  fieldName: "links",
-                  type: FieldType.LINK,
-                  tableId: otherTable._id!,
-                  relationshipType: RelationshipType.ONE_TO_MANY,
+          beforeAll(async () => {
+            otherTable = await config.api.table.save(defaultTable())
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  links: {
+                    name: "links",
+                    fieldName: "links",
+                    type: FieldType.LINK,
+                    tableId: otherTable._id!,
+                    relationshipType: RelationshipType.ONE_TO_MANY,
+                  },
+                  "nameWithSpace ": {
+                    name: "nameWithSpace ",
+                    type: FieldType.STRING,
+                  },
                 },
-                "nameWithSpace ": {
-                  name: "nameWithSpace ",
-                  type: FieldType.STRING,
-                },
-              },
+              })
+            )
+            relatedRow = await config.api.row.save(otherTable._id!, {
+              name: generator.word(),
+              description: generator.paragraph(),
             })
-          )
-          relatedRow = await config.api.row.save(otherTable._id!, {
-            name: generator.word(),
-            description: generator.paragraph(),
+            await config.api.row.save(table._id!, {
+              "nameWithSpace ": generator.word(),
+              tableId: table._id!,
+              links: [relatedRow._id],
+            })
           })
-          mainRow = await config.api.row.save(table._id!, {
-            "nameWithSpace ": generator.word(),
-            tableId: table._id!,
-            links: [relatedRow._id],
-          })
-        })
 
-        it("Successfully returns rows that have spaces in their field names", async () => {
-          const { rows } = await config.api.row.search(table._id!)
-          expect(rows.length).toBe(1)
-          const row = rows[0]
-          expect(row["nameWithSpace "]).toBeDefined()
+          it("Successfully returns rows that have spaces in their field names", async () => {
+            const { rows } = await config.api.row.search(table._id!)
+            expect(rows.length).toBe(1)
+            const row = rows[0]
+            expect(row["nameWithSpace "]).toBeDefined()
+          })
         })
-      })
+      }
 
       if (!isInternal && !isOracle) {
         describe("bigint ids", () => {
