@@ -3,14 +3,13 @@ import { cloneDeep } from "lodash/fp"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
 import {
+  DataFetchOptions,
   FieldType,
-  LegacyFilter,
   Row,
   SearchFilters,
   SortOrder,
   SortType,
   TableSchema,
-  UISearchFilter,
 } from "@budibase/types"
 import { APIClient } from "../api/types"
 import { DataFetchType } from "."
@@ -44,14 +43,11 @@ interface DataFetchDerivedStore<TDefinition, TQuery>
   supportsPagination: boolean
 }
 
-export interface DataFetchParams<
-  TDatasource,
-  TQuery = SearchFilters | undefined
-> {
+export interface DataFetchParams<TDatasource, TQuery = SearchFilters> {
   API: APIClient
   datasource: TDatasource
   query: TQuery
-  options?: {}
+  options?: Partial<DataFetchOptions<TQuery>>
 }
 
 /**
@@ -59,7 +55,7 @@ export interface DataFetchParams<
  * internal table or datasource plus.
  * For other types of datasource, this class is overridden and extended.
  */
-export default abstract class DataFetch<
+export default abstract class BaseDataFetch<
   TDatasource extends { type: DataFetchType },
   TDefinition extends {
     schema?: Record<string, any> | null
@@ -73,18 +69,11 @@ export default abstract class DataFetch<
     supportsSort: boolean
     supportsPagination: boolean
   }
-  options: {
+  options: DataFetchOptions<TQuery> & {
     datasource: TDatasource
-    limit: number
-    // Search config
-    filter: UISearchFilter | LegacyFilter[] | null
-    query: TQuery
-    // Sorting config
-    sortColumn: string | null
-    sortOrder: SortOrder
+
     sortType: SortType | null
-    // Pagination config
-    paginate: boolean
+
     // Client side feature customisation
     clientSideSearching: boolean
     clientSideSorting: boolean
@@ -267,6 +256,7 @@ export default abstract class DataFetch<
 
     // Build the query
     let query = this.options.query
+
     if (!query) {
       query = buildQuery(filter ?? undefined) as TQuery
     }
@@ -430,7 +420,7 @@ export default abstract class DataFetch<
    * Resets the data set and updates options
    * @param newOptions any new options
    */
-  async update(newOptions: any) {
+  async update(newOptions: Partial<DataFetchOptions<TQuery>>) {
     // Check if any settings have actually changed
     let refresh = false
     for (const [key, value] of Object.entries(newOptions || {})) {

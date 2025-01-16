@@ -1,13 +1,8 @@
 import { get } from "svelte/store"
-import DataFetch from "./DataFetch"
-import { SortOrder, Table } from "@budibase/types"
+import BaseDataFetch from "./DataFetch"
+import { SortOrder, Table, TableDatasource } from "@budibase/types"
 
-interface TableDatasource {
-  type: "table"
-  tableId: string
-}
-
-export default class TableFetch extends DataFetch<TableDatasource, Table> {
+export default class TableFetch extends BaseDataFetch<TableDatasource, Table> {
   async determineFeatureFlags() {
     return {
       supportsSearch: true,
