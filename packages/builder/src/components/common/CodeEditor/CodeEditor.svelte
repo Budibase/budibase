@@ -60,8 +60,8 @@
 
   const dispatch = createEventDispatcher()
 
-  let textarea: HTMLDivElement | undefined
-  let editor: EditorView | undefined
+  let textarea: HTMLDivElement
+  let editor: EditorView
   let mounted = false
   let isEditorInitialised = false
   let queuedRefresh = false
@@ -73,7 +73,7 @@
 
   $: {
     if (autofocus && isEditorInitialised) {
-      editor?.focus()
+      editor.focus()
     }
   }
 
@@ -90,7 +90,7 @@
       isDark = !currentTheme.includes("light")
 
       // Issue theme compartment update
-      editor?.dispatch({
+      editor.dispatch({
         effects: themeConfig.reconfigure([...(isDark ? [oneDark] : [])]),
       })
     }
@@ -119,7 +119,7 @@
       (editor.state.doc.toString() !== value || queuedRefresh)
     ) {
       editor.dispatch({
-        changes: { from: 0, to: editor.state.doc.length, insert: value! },
+        changes: { from: 0, to: editor.state.doc.length, insert: value },
       })
       queuedRefresh = false
     }
@@ -127,7 +127,7 @@
 
   // Export a function to expose caret position
   export const getCaretPosition = () => {
-    const selection_range = editor?.state.selection.ranges[0]
+    const selection_range = editor.state.selection.ranges[0]
     return {
       start: selection_range?.from,
       end: selection_range?.to,
@@ -142,7 +142,7 @@
   }) => {
     // Updating the value inside.
     // Retain focus
-    editor?.dispatch({
+    editor.dispatch({
       changes: {
         from: opts.start || editor.state.doc.length,
         to: opts.end || editor.state.doc.length,
@@ -323,7 +323,7 @@
         keymap.of(buildKeymap()),
         EditorView.domEventHandlers({
           blur: () => {
-            dispatch("blur", editor?.state.doc.toString())
+            dispatch("blur", editor.state.doc.toString())
           },
         }),
         EditorView.updateListener.of(v => {
