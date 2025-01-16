@@ -86,3 +86,20 @@ export const prefixStrings = (
   const regexPattern = new RegExp(`\\b(${escapedStrings.join("|")})\\b`, "g")
   return baseString.replace(regexPattern, `${prefix}$1`)
 }
+
+export function frontendWrapJS(js: string) {
+  return `
+        result = {
+          result: null,
+          error: null,
+        };
+
+        try {
+          result.result = ${js};
+        } catch (e) {
+          result.error = e;
+        }
+
+        result;
+      `
+}

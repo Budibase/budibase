@@ -8,6 +8,7 @@ import {
   FIND_ANY_HBS_REGEX,
   FIND_HBS_REGEX,
   findDoubleHbsInstances,
+  frontendWrapJS,
   isBackendService,
   prefixStrings,
 } from "./utilities"
@@ -511,20 +512,7 @@ export function browserJSSetup() {
   setJSRunner((js: string, context: Record<string, any>) => {
     createContext(context)
 
-    const wrappedJs = `
-        result = {
-          result: null,
-          error: null,
-        };
-
-        try {
-          result.result = ${js};
-        } catch (e) {
-          result.error = e;
-        }
-
-        result;
-      `
+    const wrappedJs = frontendWrapJS(js)
 
     const result = runInNewContext(wrappedJs, context, { timeout: 1000 })
     if (result.error) {
