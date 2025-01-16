@@ -1162,20 +1162,14 @@ class InternalBuilder {
         const direction =
           value.direction === SortOrder.ASCENDING ? "asc" : "desc"
 
-        // TODO: figure out a way to remove this conditional, not relying on
-        // the defaults of each datastore.
-        let nulls: "first" | "last" | undefined = undefined
-        if (
-          this.client === SqlClient.POSTGRES ||
-          this.client === SqlClient.ORACLE
-        ) {
-          nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
-        }
+        let nulls: "first" | "last" =
+          value.direction === SortOrder.ASCENDING ? "first" : "last"
 
         if (this.isAggregateField(key)) {
-          query = query.orderByRaw(`?? ??`, [
+          query = query.orderByRaw(`?? ?? nulls ??`, [
             this.rawQuotedIdentifier(key),
             this.knex.raw(direction),
+            this.knex.raw(nulls as string),
           ])
         } else {
           let composite = `${aliased}.${key}`
@@ -1186,9 +1180,10 @@ class InternalBuilder {
               this.knex.raw(nulls as string),
             ])
           } else {
-            query = query.orderByRaw(`?? ??`, [
+            query = query.orderByRaw(`?? ?? nulls ??`, [
               this.rawQuotedIdentifier(composite),
               this.knex.raw(direction),
+              this.knex.raw(nulls as string),
             ])
           }
         }
