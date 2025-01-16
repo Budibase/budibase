@@ -276,6 +276,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           encrypt,
           enableArithAbort: true,
           requestTimeout: env.QUERY_THREAD_TIMEOUT,
+          connectTimeout: env.QUERY_THREAD_TIMEOUT,
         },
       }
       if (encrypt) {

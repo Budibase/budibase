@@ -1162,31 +1162,32 @@ class InternalBuilder {
         const direction =
           value.direction === SortOrder.ASCENDING ? "asc" : "desc"
 
-        let nulls: "first" | "last" =
-          value.direction === SortOrder.ASCENDING ? "first" : "last"
+        // TODO: figure out a way to remove this conditional, not relying on
+        // the defaults of each datastore.
+        let nulls: "first" | "last" | undefined = undefined
+        if (
+          this.client === SqlClient.POSTGRES ||
+          this.client === SqlClient.ORACLE
+        ) {
+          nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
+        }
+
+        const composite = `${aliased}.${key}`
+        let identifier
 
         if (this.isAggregateField(key)) {
-          query = query.orderByRaw(`?? ?? nulls ??`, [
-            this.rawQuotedIdentifier(key),
-            this.knex.raw(direction),
-            this.knex.raw(nulls as string),
-          ])
+          identifier = this.rawQuotedIdentifier(key)
+        } else if (this.client === SqlClient.ORACLE) {
+          identifier = this.convertClobs(composite)
         } else {
-          let composite = `${aliased}.${key}`
-          if (this.client === SqlClient.ORACLE) {
-            query = query.orderByRaw(`?? ?? nulls ??`, [
-              this.convertClobs(composite),
-              this.knex.raw(direction),
-              this.knex.raw(nulls as string),
-            ])
-          } else {
-            query = query.orderByRaw(`?? ?? nulls ??`, [
-              this.rawQuotedIdentifier(composite),
-              this.knex.raw(direction),
-              this.knex.raw(nulls as string),
-            ])
-          }
+          identifier = this.rawQuotedIdentifier(composite)
         }
+
+        query = query.orderByRaw(`?? ?? ${nulls ? "nulls ??" : ""}`, [
+          identifier,
+          this.knex.raw(direction),
+          ...(nulls ? [this.knex.raw(nulls as string)] : []),
+        ])
       }
     }
 
