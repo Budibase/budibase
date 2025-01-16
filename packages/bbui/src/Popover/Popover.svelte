@@ -9,7 +9,7 @@
 
   const dispatch = createEventDispatcher()
 
-  export let anchor: any | undefined = undefined
+  export let anchor: HTMLElement | undefined = undefined
   export let align: string | undefined = "right"
   export let portalTarget: any | undefined = undefined
   export let minWidth: number | undefined = undefined

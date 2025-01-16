@@ -73,7 +73,7 @@
     return componentsUsingState
   }
 
-  function handleKeySelect(event: CustomEvent) {
+  function handleStateKeySelect(event: CustomEvent) {
     selectedKey = event.detail
     if (!selectedKey) {
       throw new Error("No state key selected")
@@ -106,7 +106,7 @@
     <Combobox
       value={selectedKey}
       options={keyOptions}
-      on:change={handleKeySelect}
+      on:change={handleStateKeySelect}
     />
     {#if componentsUsingState.length > 0}
       <div class="components-list">
