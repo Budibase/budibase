@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 import { Store as StoreContext } from ".."
 import { DatasourceViewActions } from "."
-import { ViewV2Fetch } from "@budibase/frontend-core"
+import ViewV2Fetch from "../../../../fetch/ViewV2Fetch"
 
 const SuppressErrors = true
 
