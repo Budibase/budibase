@@ -43,7 +43,7 @@
         return `{{ literal ${binding.runtimeBinding} }}`
       }
     })
-    const bindingEvauations = processObjectSync(bindingStrings, {
+    const bindingEvaluations = processObjectSync(bindingStrings, {
       ...previewContext,
       snippets: $snippets,
     }) as any[]
@@ -52,7 +52,7 @@
     const enrichedBindings: any[] = bindings.map((binding, idx) => {
       return {
         ...binding,
-        value: bindingEvauations[idx],
+        value: bindingEvaluations[idx],
       }
     })
 

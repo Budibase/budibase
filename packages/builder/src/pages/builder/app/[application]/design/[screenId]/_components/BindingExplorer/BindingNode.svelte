@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { Icon } from "@budibase/bbui"
-  import { isBoolean } from "lodash"
+  import { AbsTooltip, Icon, TooltipPosition } from "@budibase/bbui"
 
-  export let label: string | undefined
-  export let value: any
+  export let label: string | undefined = undefined
+  export let value: any = undefined
   export let root: boolean = true
   export let path: (string | number)[] = []
 
@@ -99,23 +98,33 @@
 
 <div class="binding-node">
   {#if label != null}
-    <div class="binding-text" title={readableBinding}>
+    <div class="binding-text">
       <div class="binding-arrow">
         {#if expandable}
           <Icon
             name={expanded ? "ChevronDown" : "ChevronRight"}
             hoverable
             color="var(--spectrum-global-color-gray-600)"
+            hoverColor="var(--spectrum-global-color-gray-900)"
             on:click={() => (expanded = !expanded)}
           />
         {/if}
       </div>
-      <div class="binding-label" class:expandable>
+      <div
+        class="binding-label"
+        class:expandable
+        on:click={() => (expanded = !expanded)}
+      >
         {label}
       </div>
-      <div class="binding-value" class:expandable {style}>
-        {displayValue}
-      </div>
+      <AbsTooltip
+        text={isArray || isObject ? null : displayValue}
+        position={TooltipPosition.Right}
+      >
+        <div class="binding-value" class:expandable {style}>
+          {displayValue}
+        </div>
+      </AbsTooltip>
     </div>
   {/if}
   {#if expandable && (expanded || label == null)}
@@ -177,9 +186,14 @@
     flex: 0 0 auto;
     max-width: 50%;
     margin-right: 8px;
+    transition: color 130ms ease-out;
+  }
+  .binding-label.expandable:hover {
+    cursor: pointer;
+    color: var(--spectrum-global-color-gray-900);
   }
   .binding-value {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
   }
   .binding-label.expandable {
     flex: 0 1 auto;
