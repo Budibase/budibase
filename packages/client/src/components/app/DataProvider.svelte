@@ -29,7 +29,8 @@
   export let paginate: boolean
   export let autoRefresh: number
 
-  const { styleable, Provider, ActionTypes, API } = getContext<SDK>("sdk")
+  const { styleable, Provider, ActionTypes, API, builderStore } =
+    getContext<SDK>("sdk")
   const component = getContext<Component>("component")
 
   let interval: ReturnType<typeof setInterval>
@@ -178,7 +179,11 @@
   }
 </script>
 
-<div use:styleable={$component.styles} class="container">
+<div
+  use:styleable={$component.styles}
+  class="container"
+  class:error={$builderStore.inBuilder && !!$fetch.error}
+>
   <Provider {actions} data={dataContext}>
     {#if !$fetch.loaded}
       <div class="loading">
@@ -221,5 +226,9 @@
     justify-content: flex-end;
     align-items: center;
     margin-top: var(--spacing-xl);
+  }
+  .error {
+    border: 1px solid red;
+    background-color: rgba(255, 0, 0, 0.2);
   }
 </style>

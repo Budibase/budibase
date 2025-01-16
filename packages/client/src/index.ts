@@ -7,6 +7,7 @@ export interface SDK {
   styleable: any
   Provider: any
   ActionTypes: typeof ActionTypes
+  builderStore: any
 }
 
 export type Component = Readable<{
