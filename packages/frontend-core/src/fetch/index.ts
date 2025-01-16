@@ -1,29 +1,19 @@
-import TableFetch, { TableDatasource } from "./TableFetch"
-import ViewFetch, { ViewV1Datasource } from "./ViewFetch"
-import ViewV2Fetch, { ViewDatasource } from "./ViewV2Fetch"
-import QueryFetch, { QueryDatasource } from "./QueryFetch"
-import RelationshipFetch, { RelationshipDatasource } from "./RelationshipFetch"
-import NestedProviderFetch, {
-  NestedProviderDatasource,
-} from "./NestedProviderFetch"
-import FieldFetch, { FieldDatasource } from "./FieldFetch"
+import TableFetch from "./TableFetch"
+import ViewFetch from "./ViewFetch"
+import ViewV2Fetch from "./ViewV2Fetch"
+import QueryFetch from "./QueryFetch"
+import RelationshipFetch from "./RelationshipFetch"
+import NestedProviderFetch from "./NestedProviderFetch"
+import FieldFetch from "./FieldFetch"
 import JSONArrayFetch from "./JSONArrayFetch"
-import UserFetch, { UserDatasource } from "./UserFetch"
-import GroupUserFetch, { GroupUserDatasource } from "./GroupUserFetch"
-import CustomFetch, { CustomDatasource } from "./CustomFetch"
+import UserFetch from "./UserFetch"
+import GroupUserFetch from "./GroupUserFetch"
+import CustomFetch from "./CustomFetch"
 import QueryArrayFetch from "./QueryArrayFetch"
 import { APIClient } from "../api/types"
-import { Table, ViewV2Enriched } from "@budibase/types"
+import { DataFetchDatasource, Table, ViewV2Enriched } from "@budibase/types"
 
 export type DataFetchType = keyof typeof DataFetchMap
-
-export type { default as TableFetch } from "./TableFetch"
-export type { default as ViewFetch } from "./ViewFetch"
-export type { default as ViewV2Fetch } from "./ViewV2Fetch"
-
-export type { DataFetchOptions } from "./DataFetch"
-export type { UserDatasource } from "./UserFetch"
-export type { GroupUserDatasource } from "./GroupUserFetch"
 
 export const DataFetchMap = {
   table: TableFetch,
@@ -37,7 +27,7 @@ export const DataFetchMap = {
 
   // Client specific datasource types
   provider: NestedProviderFetch,
-  field: FieldFetch<"field">,
+  field: FieldFetch,
   jsonarray: JSONArrayFetch,
   queryarray: QueryArrayFetch,
 }
@@ -54,7 +44,7 @@ export interface DataFetchClassMap {
 
   // Client specific datasource types
   provider: NestedProviderFetch
-  field: FieldFetch<"field">
+  field: FieldFetch
   jsonarray: JSONArrayFetch
   queryarray: QueryArrayFetch
 }
@@ -69,21 +59,9 @@ export type DataFetch =
   | GroupUserFetch
   | CustomFetch
   | NestedProviderFetch
-  | FieldFetch<"field">
+  | FieldFetch
   | JSONArrayFetch
   | QueryArrayFetch
-
-export type DataFetchDatasource =
-  | TableDatasource
-  | ViewV1Datasource
-  | ViewDatasource
-  | QueryDatasource
-  | RelationshipDatasource
-  | UserDatasource
-  | GroupUserDatasource
-  | CustomDatasource
-  | NestedProviderDatasource
-  | FieldDatasource<"field" | "queryarray" | "jsonarray">
 
 export type DataFetchDefinition =
   | Table

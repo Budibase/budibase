@@ -8,7 +8,7 @@ import {
 import { get } from "svelte/store"
 import { Store as StoreContext } from ".."
 import { DatasourceTableActions } from "."
-import { TableFetch } from "@budibase/frontend-core"
+import TableFetch from "../../../../fetch/TableFetch"
 
 const SuppressErrors = true
 

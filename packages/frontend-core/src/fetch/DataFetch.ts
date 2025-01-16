@@ -3,14 +3,13 @@ import { cloneDeep } from "lodash/fp"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
 import {
+  DataFetchOptions,
   FieldType,
-  LegacyFilter,
   Row,
   SearchFilters,
   SortOrder,
   SortType,
   TableSchema,
-  UISearchFilter,
 } from "@budibase/types"
 import { APIClient } from "../api/types"
 import { DataFetchType } from "."
@@ -49,18 +48,6 @@ export interface DataFetchParams<TDatasource, TQuery = SearchFilters> {
   datasource: TDatasource
   query: TQuery
   options?: Partial<DataFetchOptions<TQuery>>
-}
-
-export interface DataFetchOptions<TQuery = SearchFilters> {
-  // Search config
-  filter: UISearchFilter | LegacyFilter[] | null
-  query: TQuery
-  // Sorting config
-  sortColumn: string | null
-  sortOrder: SortOrder
-  // Pagination config
-  limit: number
-  paginate: boolean
 }
 
 /**

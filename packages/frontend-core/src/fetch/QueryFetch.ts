@@ -1,21 +1,7 @@
 import BaseDataFetch from "./DataFetch"
 import { Helpers } from "@budibase/bbui"
-import { ExecuteQueryRequest, Query } from "@budibase/types"
+import { ExecuteQueryRequest, Query, QueryDatasource } from "@budibase/types"
 import { get } from "svelte/store"
-
-export interface QueryDatasource {
-  type: "query"
-  _id: string
-  fields: Record<string, any> & {
-    pagination?: {
-      type: string
-      location: string
-      pageParam: string
-    }
-  }
-  queryParams?: Record<string, string>
-  parameters: { name: string; default: string }[]
-}
 
 export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {
   async determineFeatureFlags() {

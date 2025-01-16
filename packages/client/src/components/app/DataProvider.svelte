@@ -1,14 +1,7 @@
 <script lang="ts">
   import { getContext } from "svelte"
   import { Pagination, ProgressCircle } from "@budibase/bbui"
-  import {
-    fetchData,
-    QueryUtils,
-    DataFetchOptions,
-    DataFetchDatasource,
-    UserDatasource,
-    GroupUserDatasource,
-  } from "@budibase/frontend-core"
+  import { fetchData, QueryUtils } from "@budibase/frontend-core"
   import {
     LogicalOperator,
     EmptyFilterOption,
@@ -16,6 +9,10 @@
     SortOrder,
     SearchFilters,
     UISearchFilter,
+    DataFetchDatasource,
+    UserDatasource,
+    GroupUserDatasource,
+    DataFetchOptions,
   } from "@budibase/types"
   import { SDK, Component } from "../../index"
 
@@ -76,7 +73,7 @@
         column: string
         order: SortOrder | undefined
       }) => {
-        let newOptions: Partial<DataFetchOptions<never>> = {}
+        let newOptions: Partial<DataFetchOptions> = {}
         if (column) {
           newOptions.sortColumn = column
         }

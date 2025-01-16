@@ -1,14 +1,5 @@
-import { Table } from "@budibase/types"
+import { Table, ViewV1Datasource } from "@budibase/types"
 import BaseDataFetch from "./DataFetch"
-
-export type ViewV1Datasource = {
-  type: "view"
-  name: string
-  tableId: string
-  calculation: string
-  field: string
-  groupBy: string
-}
 
 export default class ViewFetch extends BaseDataFetch<ViewV1Datasource, Table> {
   async getDefinition() {
