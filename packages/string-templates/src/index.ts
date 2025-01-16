@@ -1,7 +1,7 @@
 import { createContext, runInNewContext } from "vm"
 import { create, TemplateDelegate } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
-import { postprocess, preprocess } from "./processors"
+import { postprocess, postprocessWithLogs, preprocess } from "./processors"
 import {
   atob,
   btoa,
@@ -15,7 +15,7 @@ import { convertHBSBlock } from "./conversion"
 import { removeJSRunner, setJSRunner } from "./helpers/javascript"
 
 import manifest from "./manifest.json"
-import { ProcessOptions } from "./types"
+import { Log, ProcessOptions } from "./types"
 import { UserScriptError } from "./errors"
 
 export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
@@ -187,23 +187,27 @@ export function processObjectSync(
   return object
 }
 
-/**
- * This will process a single handlebars containing string. If the string passed in has no valid handlebars statements
- * then nothing will occur. This is a pure sync call and therefore does not have the full functionality of the async call.
- * @param {string} string The template string which is the filled from the context object.
- * @param {object} context An object of information which will be used to enrich the string.
- * @param {object|undefined} [opts] optional - specify some options for processing.
- * @returns {string} The enriched string, all templates should have been replaced if they can be.
- */
-export function processStringSync(
+// keep the logging function internal, don't want to add this to the process options directly
+// as it can't be used for object processing etc.
+function processStringSyncInternal(
+  str: string,
+  context?: object,
+  opts?: ProcessOptions & { logging: false }
+): string
+function processStringSyncInternal(
+  str: string,
+  context?: object,
+  opts?: ProcessOptions & { logging: true }
+): { result: string; logs: Log[] }
+function processStringSyncInternal(
   string: string,
   context?: object,
-  opts?: ProcessOptions
-): string {
+  opts?: ProcessOptions & { logging: boolean }
+): string | { result: string; logs: Log[] } {
   // Take a copy of input in case of error
   const input = string
   if (typeof string !== "string") {
-    throw "Cannot process non-string types."
+    throw new Error("Cannot process non-string types.")
   }
   function process(stringPart: string) {
     // context is needed to check for overlap between helpers and context
@@ -217,16 +221,24 @@ export function processStringSync(
       },
       ...context,
     })
-    return postprocess(processedString)
+    return opts?.logging
+      ? postprocessWithLogs(processedString)
+      : postprocess(processedString)
   }
   try {
     if (opts && opts.onlyFound) {
+      let logs: Log[] = []
       const blocks = findHBSBlocks(string)
       for (let block of blocks) {
         const outcome = process(block)
-        string = string.replace(block, outcome)
+        if (typeof outcome === "object" && "result" in outcome) {
+          logs = logs.concat(outcome.logs || [])
+          string = string.replace(block, outcome.result)
+        } else {
+          string = string.replace(block, outcome)
+        }
       }
-      return string
+      return opts?.logging ? string : { result: string, logs }
     } else {
       return process(string)
     }
@@ -237,6 +249,42 @@ export function processStringSync(
     }
     throw err
   }
+}
+
+/**
+ * This will process a single handlebars containing string. If the string passed in has no valid handlebars statements
+ * then nothing will occur. This is a pure sync call and therefore does not have the full functionality of the async call.
+ * @param {string} string The template string which is the filled from the context object.
+ * @param {object} context An object of information which will be used to enrich the string.
+ * @param {object|undefined} [opts] optional - specify some options for processing.
+ * @returns {string} The enriched string, all templates should have been replaced if they can be.
+ */
+export function processStringSync(
+  string: string,
+  context?: object,
+  opts?: ProcessOptions
+): string {
+  return processStringSyncInternal(string, context, {
+    ...opts,
+    logging: false,
+  })
+}
+
+/**
+ * Same as function above, but allows logging to be returned - this is only for JS bindings.
+ */
+export function processStringWithLogsSync(
+  string: string,
+  context?: object,
+  opts?: ProcessOptions
+): { result: string; logs: Log[] } {
+  if (isBackendService()) {
+    throw new Error("Logging disabled for backend bindings")
+  }
+  return processStringSyncInternal(string, context, {
+    ...opts,
+    logging: true,
+  })
 }
 
 /**
