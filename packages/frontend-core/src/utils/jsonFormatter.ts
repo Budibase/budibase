@@ -18,7 +18,7 @@ const defaultColors: ColorsOptions = {
   nullColor: "cornflowerblue",
 }
 
-const entityMap: Record<string, string> = {
+const entityMap = {
   "&": "&amp;",
   "<": "&lt;",
   ">": "&gt;",
