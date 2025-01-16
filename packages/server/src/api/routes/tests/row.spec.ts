@@ -2043,6 +2043,101 @@ if (descriptions.length) {
             expect(rows[0].name).toEqual("Clare updated")
             expect(rows[1].name).toEqual("Jeff updated")
           })
+
+        it("should reject bulkImport date only fields with wrong format", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  type: FieldType.DATETIME,
+                  dateOnly: true,
+                  name: "date",
+                },
+              },
+            })
+          )
+
+          await config.api.row.bulkImport(
+            table._id!,
+            {
+              rows: [
+                {
+                  date: "01.02.2024",
+                },
+              ],
+            },
+            {
+              status: 400,
+              body: {
+                message:
+                  'Invalid format for field "date": "01.02.2024". Date-only fields must be in the format "YYYY-MM-DD".',
+              },
+            }
+          )
+        })
+
+        it("should reject bulkImport date time fields with wrong format", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  type: FieldType.DATETIME,
+                  name: "date",
+                },
+              },
+            })
+          )
+
+          await config.api.row.bulkImport(
+            table._id!,
+            {
+              rows: [
+                {
+                  date: "01.02.2024",
+                },
+              ],
+            },
+            {
+              status: 400,
+              body: {
+                message:
+                  'Invalid format for field "date": "01.02.2024". Datetime fields must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SSZ".',
+              },
+            }
+          )
+        })
+
+        it("should reject bulkImport time fields with wrong format", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                time: {
+                  type: FieldType.DATETIME,
+                  timeOnly: true,
+                  name: "time",
+                },
+              },
+            })
+          )
+
+          await config.api.row.bulkImport(
+            table._id!,
+            {
+              rows: [
+                {
+                  time: "3pm",
+                },
+              ],
+            },
+            {
+              status: 400,
+              body: {
+                message:
+                  'Invalid format for field "time": "3pm". Time-only fields must be in the format "HH:MM:SS".',
+              },
+            }
+          )
+        })
       })
 
       describe("enrich", () => {

@@ -39,7 +39,7 @@
     getActionContextKey,
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
-  import { gridLayout } from "utils/grid.js"
+  import { gridLayout } from "utils/grid"
 
   export let instance = {}
   export let parent = null
