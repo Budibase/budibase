@@ -48,6 +48,7 @@
   export let darkMode = false
   export let isCloud = null
   export let aiEnabled = false
+  export let inBuilder = false
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -140,6 +141,7 @@
   class:is-reordering={$isReordering}
   class:stripe={stripeRows}
   class:quiet
+  class:error={inBuilder && !!$error}
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
   style="--row-height:{$rowHeight}px; --default-row-height:{Constants.DefaultRowHeight}px; --gutter-width:{Constants.GutterWidth}px; --max-cell-render-overflow:{Constants.MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{$minHeight}px; --controls-height:{Constants.ControlsHeight}px; --scroll-bar-size:{Constants.ScrollBarSize}px;"
@@ -358,5 +360,10 @@
   }
   .grid.quiet :global(.sticky-column:before) {
     display: none;
+  }
+
+  .error {
+    border: 1px solid red;
+    background-color: rgba(255, 0, 0, 0.2);
   }
 </style>

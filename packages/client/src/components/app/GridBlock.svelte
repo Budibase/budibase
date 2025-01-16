@@ -192,6 +192,7 @@
     isCloud={$environmentStore.cloud}
     aiEnabled={$featuresStore.aiEnabled}
     on:rowclick={e => onRowClick?.({ row: e.detail })}
+    inBuilder={$builderStore.inBuilder}
   />
 </div>
 
