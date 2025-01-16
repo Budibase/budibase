@@ -1,12 +1,14 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte"
   import InnerFormBlock from "./InnerFormBlock.svelte"
   import { Utils } from "@budibase/frontend-core"
   import FormBlockWrapper from "./FormBlockWrapper.svelte"
   import { get } from "svelte/store"
+  import { Component, Context, SDK } from "../../../../index"
+  import { TableSchema, UIDatasource } from "@budibase/types"
 
   export let actionType
-  export let dataSource
+  export let dataSource: UIDatasource
   export let size
   export let disabled
   export let fields
@@ -27,11 +29,11 @@
   export let saveButtonLabel
   export let deleteButtonLabel
 
-  const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
-  const component = getContext("component")
-  const context = getContext("context")
+  const { fetchDatasourceSchema, generateGoldenSample } = getContext<SDK>("sdk")
+  const component = getContext<Component>("component")
+  const context = getContext<Context>("context")
 
-  let schema
+  let schema: TableSchema
 
   $: fetchSchema(dataSource)
   $: id = $component.id
@@ -61,11 +63,11 @@
     }
   }
 
-  const convertOldFieldFormat = fields => {
+  const convertOldFieldFormat = (fields: any[]) => {
     if (!fields) {
       return []
     }
-    return fields.map(field => {
+    return fields.map((field: any) => {
       if (typeof field === "string") {
         // existed but was a string
         return {
@@ -82,11 +84,14 @@
     })
   }
 
-  const getDefaultFields = (fields, schema) => {
+  const getDefaultFields = (
+    fields: { name: string; active: boolean }[],
+    schema: TableSchema
+  ) => {
     if (!schema) {
       return []
     }
-    let defaultFields = []
+    let defaultFields: { name: string; active: boolean }[] = []
 
     if (!fields || fields.length === 0) {
       Object.values(schema)
@@ -101,15 +106,14 @@
     return [...fields, ...defaultFields].filter(field => field.active)
   }
 
-  const fetchSchema = async () => {
-    schema = (await fetchDatasourceSchema(dataSource)) || {}
+  const fetchSchema = async (datasource: UIDatasource) => {
+    schema = (await fetchDatasourceSchema(datasource)) || {}
   }
 </script>
 
 <FormBlockWrapper {actionType} {dataSource} {rowId} {noRowsMessage}>
   <InnerFormBlock
     {dataSource}
-    {actionUrl}
     {actionType}
     {size}
     {disabled}
@@ -117,7 +121,6 @@
     {title}
     {description}
     {schema}
-    {notificationOverride}
     buttons={buttonsOrDefault}
     buttonPosition={buttons ? buttonPosition : "top"}
     {buttonsCollapsed}
