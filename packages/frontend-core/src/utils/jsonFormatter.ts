@@ -18,7 +18,7 @@ const defaultColors: ColorsOptions = {
   nullColor: "cornflowerblue",
 }
 
-const entityMap: Record<string, string> = {
+const entityMap = {
   "&": "&amp;",
   "<": "&lt;",
   ">": "&gt;",
@@ -30,7 +30,7 @@ const entityMap: Record<string, string> = {
 
 function escapeHtml(html: string) {
   return String(html).replace(/[&<>"'`=]/g, function (s) {
-    return entityMap[s]
+    return entityMap[s as keyof typeof entityMap]
   })
 }
 
