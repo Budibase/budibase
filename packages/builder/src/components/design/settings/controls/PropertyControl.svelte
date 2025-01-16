@@ -31,7 +31,7 @@
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
 
-  $: if (!Array.isArray(value)) {
+  $: if (value) {
     const highlightedSetting = highlightedSettings?.find(
       setting => setting.key === key
     )
