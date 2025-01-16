@@ -27,10 +27,10 @@
   export let buttonsCollapsedText: string
 
   // Legacy
-  export let showDeleteButton
-  export let showSaveButton
-  export let saveButtonLabel
-  export let deleteButtonLabel
+  export let showDeleteButton: boolean
+  export let showSaveButton: boolean
+  export let saveButtonLabel: boolean
+  export let deleteButtonLabel: boolean
 
   const { fetchDatasourceSchema, generateGoldenSample } = getContext<SDK>("sdk")
   const component = getContext<Component>("component")
