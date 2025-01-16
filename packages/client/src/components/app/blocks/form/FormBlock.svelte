@@ -7,21 +7,24 @@
   import { Component, Context, SDK } from "../../../../index"
   import { TableSchema, UIDatasource } from "@budibase/types"
 
-  export let actionType
+  export let actionType: string
   export let dataSource: UIDatasource
-  export let size
-  export let disabled
+  export let size: string
+  export let disabled: boolean
   export let fields
-  export let buttons
-  export let buttonPosition
-  export let title
-  export let description
-  export let rowId
-  export let actionUrl
-  export let noRowsMessage
-  export let notificationOverride
-  export let buttonsCollapsed
-  export let buttonsCollapsedText
+  export let buttons: {
+    "##eventHandlerType": string
+    parameters: Record<string, string>
+  }[]
+  export let buttonPosition: "top" | "bottom"
+  export let title: string
+  export let description: string
+  export let rowId: string
+  export let actionUrl: string
+  export let noRowsMessage: string
+  export let notificationOverride: boolean
+  export let buttonsCollapsed: boolean
+  export let buttonsCollapsedText: string
 
   // Legacy
   export let showDeleteButton
