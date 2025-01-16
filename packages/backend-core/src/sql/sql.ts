@@ -1191,7 +1191,7 @@ class InternalBuilder {
             query = query.orderByRaw(`?? ?? nulls ??`, [
               this.rawQuotedIdentifier(composite),
               this.knex.raw(direction),
-              this.knex.raw(nulls as string)
+              this.knex.raw(nulls as string),
             ])
           }
         }
