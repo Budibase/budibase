@@ -1,34 +1,24 @@
-const { Curl } = require("../../curl")
-const fs = require("fs")
-const path = require("path")
+import { Curl } from "../../curl"
+import { readFileSync } from "fs"
+import { join } from "path"
 
-const getData = file => {
-  return fs.readFileSync(path.join(__dirname, `./data/${file}.txt`), "utf8")
+const getData = (file: string) => {
+  return readFileSync(join(__dirname, `./data/${file}.txt`), "utf8")
 }
 
 describe("Curl Import", () => {
-  let curl
+  let curl: Curl
 
   beforeEach(() => {
     curl = new Curl()
   })
 
   it("validates unsupported data", async () => {
-    let data
-    let supported
-
-    // JSON
-    data = "{}"
-    supported = await curl.isSupported(data)
-    expect(supported).toBe(false)
-
-    // Empty
-    data = ""
-    supported = await curl.isSupported(data)
-    expect(supported).toBe(false)
+    expect(await curl.isSupported("{}")).toBe(false)
+    expect(await curl.isSupported("")).toBe(false)
   })
 
-  const init = async file => {
+  const init = async (file: string) => {
     await curl.isSupported(getData(file))
   }
 
@@ -39,14 +29,14 @@ describe("Curl Import", () => {
   })
 
   describe("Returns queries", () => {
-    const getQueries = async file => {
+    const getQueries = async (file: string) => {
       await init(file)
-      const queries = await curl.getQueries()
+      const queries = await curl.getQueries("fake_datasource_id")
       expect(queries.length).toBe(1)
       return queries
     }
 
-    const testVerb = async (file, verb) => {
+    const testVerb = async (file: string, verb: string) => {
       const queries = await getQueries(file)
       expect(queries[0].queryVerb).toBe(verb)
     }
@@ -59,7 +49,7 @@ describe("Curl Import", () => {
       await testVerb("patch", "patch")
     })
 
-    const testPath = async (file, urlPath) => {
+    const testPath = async (file: string, urlPath: string) => {
       const queries = await getQueries(file)
       expect(queries[0].fields.path).toBe(urlPath)
     }
@@ -69,7 +59,10 @@ describe("Curl Import", () => {
       await testPath("path", "http://example.com/paths/abc")
     })
 
-    const testHeaders = async (file, headers) => {
+    const testHeaders = async (
+      file: string,
+      headers: Record<string, string>
+    ) => {
       const queries = await getQueries(file)
       expect(queries[0].fields.headers).toStrictEqual(headers)
     }
@@ -82,7 +75,7 @@ describe("Curl Import", () => {
       })
     })
 
-    const testQuery = async (file, queryString) => {
+    const testQuery = async (file: string, queryString: string) => {
       const queries = await getQueries(file)
       expect(queries[0].fields.queryString).toBe(queryString)
     }
@@ -91,7 +84,7 @@ describe("Curl Import", () => {
       await testQuery("query", "q1=v1&q1=v2")
     })
 
-    const testBody = async (file, body) => {
+    const testBody = async (file: string, body?: Record<string, any>) => {
       const queries = await getQueries(file)
       expect(queries[0].fields.requestBody).toStrictEqual(
         JSON.stringify(body, null, 2)
