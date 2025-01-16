@@ -1,4 +1,9 @@
-import { atob, isBackendService, isJSAllowed } from "../utilities"
+import {
+  atob,
+  frontendWrapJS,
+  isBackendService,
+  isJSAllowed,
+} from "../utilities"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
@@ -117,7 +122,21 @@ export function processJS(handlebars: string, context: any) {
     const logs: Log[] = []
     // logging only supported on frontend
     if (!isBackendService()) {
-      const log = (log: string) => logs.push({ log })
+      // this counts the lines in the wrapped JS *before* the user's code, so that we can minus it
+      const jsLineCount = frontendWrapJS(js).split(js)[0].split("\n").length
+      const log = (log: string) => {
+        // quick way to find out what line this is being called from
+        // its an anonymous function and we look for the overall length to find the
+        // line number we care about (from the users function)
+        // JS stack traces are in the format function:line:column
+        const lineNumber = new Error().stack?.match(
+          /<anonymous>:(\d+):\d+/
+        )?.[1]
+        logs.push({
+          log,
+          line: lineNumber ? parseInt(lineNumber) - jsLineCount : undefined,
+        })
+      }
       sandboxContext.console = {
         log: log,
         info: log,

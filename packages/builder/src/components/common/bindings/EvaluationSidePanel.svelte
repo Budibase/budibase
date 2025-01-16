@@ -102,7 +102,7 @@
             <!-- eslint-disable-next-line svelte/no-at-html-tags-->
             <span>{@html logLine.log}</span>
             {#if logLine.line}
-              <span style="color: var(--blue)">line {logLine.line}</span>
+              <span style="color: var(--blue)">:{logLine.line}</span>
             {/if}
           </div>
         {/each}
