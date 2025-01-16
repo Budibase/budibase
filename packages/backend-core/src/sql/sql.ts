@@ -1167,17 +1167,15 @@ class InternalBuilder {
         let nulls: "first" | "last" | undefined = undefined
         if (
           this.client === SqlClient.POSTGRES ||
-          this.client === SqlClient.ORACLE ||
-          this.client === SqlClient.SQL_LITE
+          this.client === SqlClient.ORACLE
         ) {
           nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
         }
 
         if (this.isAggregateField(key)) {
-          query = query.orderByRaw(`?? ?? nulls ??`, [
+          query = query.orderByRaw(`?? ??`, [
             this.rawQuotedIdentifier(key),
             this.knex.raw(direction),
-            this.knex.raw(nulls as string),
           ])
         } else {
           let composite = `${aliased}.${key}`
@@ -1188,10 +1186,9 @@ class InternalBuilder {
               this.knex.raw(nulls as string),
             ])
           } else {
-            query = query.orderByRaw(`?? ?? nulls ??`, [
+            query = query.orderByRaw(`?? ??`, [
               this.rawQuotedIdentifier(composite),
               this.knex.raw(direction),
-              this.knex.raw(nulls as string),
             ])
           }
         }
