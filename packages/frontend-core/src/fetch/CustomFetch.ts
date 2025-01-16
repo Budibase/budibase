@@ -1,13 +1,9 @@
-import DataFetch from "./DataFetch"
-
-interface CustomDatasource {
-  type: "custom"
-  data: any
-}
+import { CustomDatasource } from "@budibase/types"
+import BaseDataFetch from "./DataFetch"
 
 type CustomDefinition = Record<string, any>
 
-export default class CustomFetch extends DataFetch<
+export default class CustomFetch extends BaseDataFetch<
   CustomDatasource,
   CustomDefinition
 > {

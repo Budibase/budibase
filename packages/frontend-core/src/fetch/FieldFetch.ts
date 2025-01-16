@@ -1,14 +1,10 @@
-import { Row } from "@budibase/types"
-import DataFetch from "./DataFetch"
-
-type Types = "field" | "queryarray" | "jsonarray"
-
-export interface FieldDatasource<TType extends Types> {
-  type: TType
-  tableId: string
-  fieldType: "attachment" | "array"
-  value: string[] | Row[]
-}
+import {
+  FieldDatasource,
+  JSONArrayFieldDatasource,
+  QueryArrayFieldDatasource,
+  Row,
+} from "@budibase/types"
+import BaseDataFetch from "./DataFetch"
 
 export interface FieldDefinition {
   schema?: Record<string, { type: string }> | null
@@ -18,10 +14,12 @@ function isArrayOfStrings(value: string[] | Row[]): value is string[] {
   return Array.isArray(value) && !!value[0] && typeof value[0] !== "object"
 }
 
-export default class FieldFetch<TType extends Types> extends DataFetch<
-  FieldDatasource<TType>,
-  FieldDefinition
-> {
+export default class FieldFetch<
+  TDatasource extends
+    | FieldDatasource
+    | QueryArrayFieldDatasource
+    | JSONArrayFieldDatasource = FieldDatasource
+> extends BaseDataFetch<TDatasource, FieldDefinition> {
   async getDefinition(): Promise<FieldDefinition | null> {
     const { datasource } = this.options
 
