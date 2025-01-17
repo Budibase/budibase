@@ -1,10 +1,4 @@
-/**
- * Valid alignment options are
- * - left
- * - right
- * - left-outside
- * - right-outside
- **/
+import { PopoverAlignment } from "../Popover/Popover.svelte"
 
 // Strategies are defined as [Popover]To[Anchor].
 // They can apply for both horizontal and vertical alignment.
@@ -149,20 +143,29 @@ export default function positionDropdown(element, opts) {
       }
 
       // Determine X strategy
-      if (align === "right") {
+      if (align === PopoverAlignment.Right) {
         applyXStrategy(Strategies.EndToEnd)
-      } else if (align === "right-outside" || align === "right-context-menu") {
+      } else if (
+        align === PopoverAlignment.RightOutside ||
+        align === PopoverAlignment.RightContextMenu
+      ) {
         applyXStrategy(Strategies.StartToEnd)
-      } else if (align === "left-outside" || align === "left-context-menu") {
+      } else if (
+        align === PopoverAlignment.LeftOutside ||
+        align === PopoverAlignment.LeftContextMenu
+      ) {
         applyXStrategy(Strategies.EndToStart)
-      } else if (align === "center") {
+      } else if (align === PopoverAlignment.Center) {
         applyXStrategy(Strategies.MidPoint)
       } else {
         applyXStrategy(Strategies.StartToStart)
       }
 
       // Determine Y strategy
-      if (align === "right-outside" || align === "left-outside") {
+      if (
+        align === PopoverAlignment.RightOutside ||
+        align === PopoverAlignment.LeftOutside
+      ) {
         applyYStrategy(Strategies.MidPoint)
       } else if (
         align === "right-context-menu" ||
