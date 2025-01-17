@@ -81,17 +81,6 @@
     color: var(--spectrum-global-color-gray-500) !important;
     pointer-events: none !important;
   }
-
-  .tooltip {
-    position: absolute;
-    pointer-events: none;
-    left: 50%;
-    bottom: calc(100% + 4px);
-    transform: translateX(-50%);
-    text-align: center;
-    z-index: 1;
-  }
-
   .spectrum-Icon--sizeXS {
     width: var(--spectrum-global-dimension-size-150);
     height: var(--spectrum-global-dimension-size-150);
