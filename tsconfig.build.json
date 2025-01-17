@@ -11,6 +11,7 @@
     "declaration": true,
     "isolatedModules": true,
     "baseUrl": ".",
+    "sourceMap": true,
     "paths": {
       "@budibase/types": ["./packages/types/src"],
       "@budibase/backend-core": ["./packages/backend-core/src"],

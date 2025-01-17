@@ -8,10 +8,9 @@ import {
   UISearchFilter,
 } from "@budibase/types"
 
-export interface UITable extends Omit<Table, "type"> {
+export interface UITable extends Table {
   name: string
   id: string
-  type: string
   tableId: string
   primaryDisplay?: string
   sort?: {
