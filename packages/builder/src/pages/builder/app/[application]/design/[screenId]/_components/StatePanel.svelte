@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ActionButton, Modal, ModalContent, Combobox } from "@budibase/bbui"
+  import { ActionButton, Popover, Divider, Icon, Select } from "@budibase/bbui"
   import { getAllStateVariables } from "@/dataBinding"
   import {
     componentStore,
@@ -11,25 +11,33 @@
     findHBSBlocks,
     isJSBinding,
   } from "@budibase/string-templates"
+  import { onMount } from "svelte"
 
   type ComponentUsingState = {
     id: string
     name: string
     settings: string[]
-  }[]
-
-  let modal: Modal
-  let selectedKey: string | null = null
-  let componentsUsingState: ComponentUsingState = []
-  let componentsUpdatingState: ComponentUsingState = []
+  }
 
   const keyOptions = getAllStateVariables()
+
+  let popoverAnchor: any
+  let popover: any
+  let selectedKey: string | null
+  let componentsUsingState: ComponentUsingState[] = []
+  let componentsUpdatingState: ComponentUsingState[] = []
+
+  onMount(() => {
+    if (selectedKey) {
+      searchComponents(selectedKey)
+    }
+  })
 
   function findComponentsUpdatingState(
     component: any,
     stateKey: string
-  ): ComponentUsingState {
-    let foundComponents: ComponentUsingState = []
+  ): ComponentUsingState[] {
+    let foundComponents: ComponentUsingState[] = []
 
     const eventHandlerProps = ["onClick", "onChange"]
 
@@ -66,12 +74,8 @@
   function findComponentsUsingState(
     component: any,
     stateKey: string
-  ): Array<{ id: string; name: string; settings: string[] }> {
-    let componentsUsingState: Array<{
-      id: string
-      name: string
-      settings: string[]
-    }> = []
+  ): ComponentUsingState[] {
+    let componentsUsingState: ComponentUsingState[] = []
 
     const { _children, ...componentSettings } = component
     let settingsWithState: string[] = []
@@ -114,61 +118,83 @@
     return componentsUsingState
   }
 
+  function searchComponents(stateKey: string) {
+    if (!stateKey || !$selectedScreen?.props) {
+      return
+    }
+    componentsUsingState = findComponentsUsingState(
+      $selectedScreen.props,
+      stateKey
+    )
+    componentsUpdatingState = findComponentsUpdatingState(
+      $selectedScreen.props,
+      stateKey
+    )
+  }
+
   function handleStateKeySelect(event: CustomEvent) {
     selectedKey = event.detail
     if (!selectedKey) {
       throw new Error("No state key selected")
     }
-    if ($selectedScreen?.props) {
-      componentsUsingState = findComponentsUsingState(
-        $selectedScreen.props,
-        selectedKey
-      )
-      componentsUpdatingState = findComponentsUpdatingState(
-        $selectedScreen.props,
-        selectedKey
-      )
-    }
+    searchComponents(selectedKey)
   }
 
-  function onClickComponentLink(component: {
-    id: string
-    name: string
-    settings: string[]
-  }) {
+  function onClickComponentLink(component: ComponentUsingState) {
     componentStore.select(component.id)
     component.settings.forEach(setting => {
       builderStore.highlightSetting(setting)
     })
+    popover.hide()
   }
 </script>
 
-<ActionButton on:click={modal.show}>State</ActionButton>
+<div bind:this={popoverAnchor}>
+  <ActionButton on:click={popover.show}>State</ActionButton>
+</div>
 
-<Modal bind:this={modal}>
-  <ModalContent title="State" showConfirmButton={false} cancelText="Close">
-    <Combobox
-      value={selectedKey}
-      options={keyOptions}
-      on:change={handleStateKeySelect}
-    />
+<Popover bind:this={popover} anchor={popoverAnchor} align="right">
+  <div class="state-panel">
+    <div class="split-title">
+      <div>State</div>
+      <div>
+        <Icon size="S" hoverable name="Close" on:click={popover.hide} />
+      </div>
+    </div>
+    <div>
+      Showing state variables for {$selectedScreen?.routing?.route.split(
+        "/"
+      )[1]}:
+    </div>
+    <div class="section">
+      <Select
+        value={selectedKey}
+        placeholder="Type here..."
+        options={keyOptions}
+        on:change={handleStateKeySelect}
+      />
+    </div>
+    <Divider />
+    <div class="section">state inspector here</div>
+    <Divider />
+
     {#if componentsUsingState.length > 0}
-      <div class="components-list">
-        <h4>Components using this state:</h4>
-        {#each componentsUsingState as component}
+      <div class="section">
+        <span class="text">Updates:</span>
+        {#each componentsUsingState as component, i}
           <button
             class="component-link"
             on:click={() => onClickComponentLink(component)}
           >
-            {component.name} ({component.settings.join(", ")})
+            {component.name}{i < componentsUsingState.length - 1 ? ", " : ""}
           </button>
         {/each}
       </div>
     {/if}
     {#if componentsUpdatingState.length > 0}
-      <div class="components-list">
-        <h4>Components updating this state:</h4>
-        {#each componentsUpdatingState as component}
+      <div class="section">
+        <span class="text">Updated by:</span>
+        {#each componentsUpdatingState as component, i}
           <button
             class="component-link"
             on:click={() =>
@@ -178,38 +204,48 @@
                 settings: component.settings,
               })}
           >
-            {component.name} (via {component.settings.join(", ")})
+            {component.name}{i < componentsUpdatingState.length - 1 ? ", " : ""}
           </button>
         {/each}
       </div>
     {/if}
-  </ModalContent>
-</Modal>
+  </div>
+</Popover>
 
 <style>
-  .components-list {
-    margin-top: var(--spacing-m);
+  .state-panel {
+    background-color: var(--spectrum-alias-background-color-primary);
+    max-width: 300px;
+    min-width: 300px;
     padding: var(--spacing-m);
-    background-color: var(--spectrum-global-color-gray-50);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
   }
-  .components-list h4 {
-    margin: 0 0 var(--spacing-s) 0;
-    font-size: 14px;
+  .section {
+    gap: var(--spacing-s);
+  }
+  .text {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-font-size-75);
   }
   .component-link {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding: var(--spacing-xs) var(--spacing-s);
-    margin: 2px 0;
+    display: inline;
     border: none;
     background: none;
-    color: var(--spectrum-global-color-blue-700);
+    text-decoration: underline;
+    color: var(--spectrum-global-color-white);
     cursor: pointer;
-    font-size: 12px;
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    padding: 0;
   }
   .component-link:hover {
-    background-color: var(--spectrum-global-color-gray-200);
-    border-radius: 4px;
+    text-decoration: underline;
+  }
+
+  .split-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 </style>

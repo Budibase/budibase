@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
   import "@spectrum-css/inputgroup/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
@@ -6,12 +6,12 @@
   import clickOutside from "../../Actions/click_outside"
   import Popover from "../../Popover/Popover.svelte"
 
-  export let value: string | null = null
-  export let id: string | null = null
-  export let placeholder: string = "Choose an option or type"
-  export let disabled: boolean = false
-  export let readonly: boolean = false
-  export let options: any[] = []
+  export let value = null
+  export let id = null
+  export let placeholder = "Choose an option or type"
+  export let disabled = false
+  export let readonly = false
+  export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
 
