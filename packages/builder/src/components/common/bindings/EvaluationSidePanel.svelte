@@ -21,6 +21,7 @@
   $: highlightedLogs = expressionLogs.map(l => ({
     log: highlight(l.log.join(", ")),
     line: l.line,
+    type: l.type,
   }))
 
   const formatError = (err: any) => {
@@ -67,7 +68,7 @@
   <div class="header" class:success class:error>
     <div class="header-content">
       {#if error}
-        <Icon name="Alert" color="var(--spectrum-global-color-red-600)" />
+        <Icon name="Alert" color="var(--error-content)" />
         <div>Error</div>
         {#if evaluating}
           <div transition:fade|local={{ duration: 130 }}>
@@ -98,9 +99,24 @@
     {:else}
       <div class="output-lines">
         {#each highlightedLogs as logLine}
-          <div class="line">
-            <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-            <span>{@html logLine.log}</span>
+          <div
+            class="line"
+            class:error-log={logLine.type === "error"}
+            class:warn-log={logLine.type === "warn"}
+          >
+            <div class="icon-log">
+              {#if logLine.type === "error"}
+                <Icon
+                  size="XS"
+                  name="CloseCircle"
+                  color="var(--error-content)"
+                />
+              {:else if logLine.type === "warn"}
+                <Icon size="XS" name="Alert" color="var(--warning-content)" />
+              {/if}
+              <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+              <span>{@html logLine.log}</span>
+            </div>
             {#if logLine.line}
               <span style="color: var(--blue)">:{logLine.line}</span>
             {/if}
@@ -149,10 +165,9 @@
     height: 100%;
     z-index: 1;
     position: absolute;
-    opacity: 10%;
   }
   .header.error::before {
-    background: var(--spectrum-global-color-red-400);
+    background: var(--error-bg);
   }
   .body {
     flex: 1 1 auto;
@@ -167,15 +182,20 @@
   }
   .output-lines {
     display: flex;
-    gap: var(--spacing-s);
     flex-direction: column;
+    gap: var(--spacing-xs);
   }
   .line {
     border-bottom: var(--border-light);
-    padding-bottom: var(--spacing-s);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: end;
+    padding: var(--spacing-s);
+  }
+  .icon-log {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: start;
   }
 </style>

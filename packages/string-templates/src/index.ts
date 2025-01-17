@@ -19,7 +19,7 @@ import manifest from "./manifest.json"
 import { Log, ProcessOptions } from "./types"
 import { UserScriptError } from "./errors"
 
-export type { Log } from "./types"
+export type { Log, LogType } from "./types"
 export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
 export { FIND_ANY_HBS_REGEX } from "./utilities"
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"

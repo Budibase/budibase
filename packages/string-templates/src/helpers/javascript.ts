@@ -9,7 +9,7 @@ import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
 import { JsTimeoutError, UserScriptError } from "../errors"
 import { cloneDeep } from "lodash/fp"
-import { Log } from "../types"
+import { Log, LogType } from "../types"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
@@ -124,9 +124,7 @@ export function processJS(handlebars: string, context: any) {
     if (!isBackendService()) {
       // this counts the lines in the wrapped JS *before* the user's code, so that we can minus it
       const jsLineCount = frontendWrapJS(js).split(js)[0].split("\n").length
-      const buildLogResponse = (
-        type: "log" | "info" | "debug" | "warn" | "error" | "trace" | "table"
-      ) => {
+      const buildLogResponse = (type: LogType) => {
         return (...props: any[]) => {
           console[type](...props)
           props.forEach((prop, index) => {
@@ -144,6 +142,7 @@ export function processJS(handlebars: string, context: any) {
           logs.push({
             log: props,
             line: lineNumber ? parseInt(lineNumber) - jsLineCount : undefined,
+            type,
           })
         }
       }
@@ -153,8 +152,8 @@ export function processJS(handlebars: string, context: any) {
         debug: buildLogResponse("debug"),
         warn: buildLogResponse("warn"),
         error: buildLogResponse("error"),
-        // two below may need special cases
-        trace: buildLogResponse("trace"),
+        // table should be treated differently, but works the same
+        // as the rest of the logs for now
         table: buildLogResponse("table"),
       }
     }
