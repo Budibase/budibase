@@ -5,22 +5,19 @@
     TooltipType,
   } from "../Tooltip/AbsTooltip.svelte"
 
-  type TooltipPositionType =
-    (typeof TooltipPosition)[keyof typeof TooltipPosition]
-
-  export let name: string = "Add"
-  export let hidden: boolean = false
-  export let size: string = "M"
-  export let hoverable: boolean = false
-  export let disabled: boolean = false
-  export let color: string | undefined = undefined
-  export let hoverColor: string | undefined = undefined
-  export let tooltip: string | undefined = undefined
-  export let tooltipPosition: TooltipPositionType = TooltipPosition.Bottom
-  export let tooltipType: TooltipPositionType = TooltipType.Default
-  export let tooltipColor: string | undefined = undefined
-  export let tooltipWrap: boolean = true
-  export let newStyles: boolean = false
+  export let name = "Add"
+  export let hidden = false
+  export let size = "M"
+  export let hoverable = false
+  export let disabled = false
+  export let color = undefined
+  export let hoverColor = undefined
+  export let tooltip = undefined
+  export let tooltipPosition = TooltipPosition.Bottom
+  export let tooltipType = TooltipType.Default
+  export let tooltipColor = undefined
+  export let tooltipWrap = true
+  export let newStyles = false
 </script>
 
 <AbsTooltip

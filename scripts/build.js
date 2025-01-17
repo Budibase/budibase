@@ -46,7 +46,10 @@ const svelteCompilePlugin = {
 let { argv } = require("yargs")
 
 async function runBuild(entry, outfile) {
-  const isDev = process.env.NODE_ENV !== "production"
+  const isDev = !process.env.CI
+
+  console.log(`Building in mode dev mode: ${isDev}`)
+
   const tsconfig = argv["p"] || `tsconfig.build.json`
 
   const { data: tsconfigPathPluginContent } = loadTsConfig(
@@ -58,7 +61,7 @@ async function runBuild(entry, outfile) {
     entryPoints: [entry],
     bundle: true,
     minify: !isDev,
-    sourcemap: isDev,
+    sourcemap: tsconfigPathPluginContent.compilerOptions.sourceMap,
     tsconfig,
     plugins: [
       svelteCompilePlugin,
@@ -125,10 +128,12 @@ async function runBuild(entry, outfile) {
 
   await Promise.all([hbsFiles, mainBuild, oldClientVersions])
 
-  fs.writeFileSync(
-    `dist/${path.basename(outfile)}.meta.json`,
-    JSON.stringify((await mainBuild).metafile)
-  )
+  if (isDev) {
+    fs.writeFileSync(
+      `dist/${path.basename(outfile)}.meta.json`,
+      JSON.stringify((await mainBuild).metafile)
+    )
+  }
 
   console.log(
     "\x1b[32m%s\x1b[0m",
