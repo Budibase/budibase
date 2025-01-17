@@ -124,28 +124,38 @@ export function processJS(handlebars: string, context: any) {
     if (!isBackendService()) {
       // this counts the lines in the wrapped JS *before* the user's code, so that we can minus it
       const jsLineCount = frontendWrapJS(js).split(js)[0].split("\n").length
-      const log = (log: string) => {
-        // quick way to find out what line this is being called from
-        // its an anonymous function and we look for the overall length to find the
-        // line number we care about (from the users function)
-        // JS stack traces are in the format function:line:column
-        const lineNumber = new Error().stack?.match(
-          /<anonymous>:(\d+):\d+/
-        )?.[1]
-        logs.push({
-          log,
-          line: lineNumber ? parseInt(lineNumber) - jsLineCount : undefined,
-        })
+      const buildLogResponse = (
+        type: "log" | "info" | "debug" | "warn" | "error" | "trace" | "table"
+      ) => {
+        return (...props: any[]) => {
+          console[type](...props)
+          props.forEach((prop, index) => {
+            if (typeof prop === "object") {
+              props[index] = JSON.stringify(prop)
+            }
+          })
+          // quick way to find out what line this is being called from
+          // its an anonymous function and we look for the overall length to find the
+          // line number we care about (from the users function)
+          // JS stack traces are in the format function:line:column
+          const lineNumber = new Error().stack?.match(
+            /<anonymous>:(\d+):\d+/
+          )?.[1]
+          logs.push({
+            log: props,
+            line: lineNumber ? parseInt(lineNumber) - jsLineCount : undefined,
+          })
+        }
       }
       sandboxContext.console = {
-        log: log,
-        info: log,
-        debug: log,
-        warn: log,
-        error: log,
+        log: buildLogResponse("log"),
+        info: buildLogResponse("info"),
+        debug: buildLogResponse("debug"),
+        warn: buildLogResponse("warn"),
+        error: buildLogResponse("error"),
         // two below may need special cases
-        trace: log,
-        table: log,
+        trace: buildLogResponse("trace"),
+        table: buildLogResponse("table"),
       }
     }
 

@@ -10,6 +10,6 @@ export interface ProcessOptions {
 }
 
 export interface Log {
-  log: string
+  log: any[]
   line?: number
 }
