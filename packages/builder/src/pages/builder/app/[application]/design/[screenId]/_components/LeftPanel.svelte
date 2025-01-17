@@ -1,15 +1,41 @@
-<script>
+<script lang="ts">
   import ScreenList from "./ScreenList/index.svelte"
   import ComponentList from "./ComponentList/index.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
+  import { ActionButton } from "@budibase/bbui"
 
   const [resizable, resizableHandle] = getHorizontalResizeActions()
+
+  enum Tabs {
+    Components = "Components",
+    Bindings = "Bindings",
+    State = "State",
+  }
+
+  let activeTab = Tabs.Components
 </script>
 
 <div class="panel" use:resizable>
   <div class="content">
     <ScreenList />
-    <ComponentList />
+    <div class="tabs">
+      {#each Object.values(Tabs) as tab}
+        <ActionButton
+          quiet
+          selected={activeTab === tab}
+          on:click={() => (activeTab = tab)}
+        >
+          {tab}
+        </ActionButton>
+      {/each}
+    </div>
+    {#if activeTab === Tabs.Components}
+      <ComponentList />
+    {:else if activeTab === Tabs.Bindings}
+      <div class="tab-content">Bindings</div>
+    {:else if activeTab === Tabs.State}
+      <div class="tab-content">State</div>
+    {/if}
   </div>
   <div class="divider">
     <div class="dividerClickExtender" role="separator" use:resizableHandle />
@@ -34,6 +60,17 @@
     position: relative;
   }
 
+  .tabs {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: var(--spacing-m) var(--spacing-l);
+    border-bottom: var(--border-light);
+  }
+  .tab-content {
+    padding: var(--spacing-l);
+  }
+
   .divider {
     position: relative;
     height: 100%;
@@ -45,7 +82,6 @@
     background: var(--spectrum-global-color-gray-300);
     cursor: row-resize;
   }
-
   .dividerClickExtender {
     position: absolute;
     cursor: col-resize;
