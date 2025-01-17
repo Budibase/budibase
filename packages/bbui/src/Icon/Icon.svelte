@@ -10,12 +10,12 @@
   export let size = "M"
   export let hoverable: boolean = false
   export let disabled: boolean = false
-  export let color: string = undefined
-  export let hoverColor: string = undefined
-  export let tooltip: string = undefined
+  export let color: string | undefined = undefined
+  export let hoverColor: string | undefined = undefined
+  export let tooltip: string | undefined = undefined
   export let tooltipPosition = TooltipPosition.Bottom
   export let tooltipType = TooltipType.Default
-  export let tooltipColor: string = undefined
+  export let tooltipColor: string | undefined = undefined
   export let tooltipWrap: boolean = true
   export let newStyles: boolean = false
 </script>
