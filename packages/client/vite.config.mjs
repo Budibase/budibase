@@ -68,6 +68,10 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve("./src/constants"),
         },
         {
+          find: "@/constants",
+          replacement: path.resolve("./src/constants"),
+        },
+        {
           find: "sdk",
           replacement: path.resolve("./src/sdk"),
         },
