@@ -5,6 +5,14 @@
     "outDir": "./dist",
     "lib": ["ESNext"],
     "baseUrl": ".",
+    "paths": {
+      "@budibase/*": [
+        "../*/src/index.ts",
+        "../*/src/index.js",
+        "../*",
+        "../../node_modules/@budibase/*"
+      ]
+    }
   },
   "include": ["./src/**/*"],
   "exclude": ["node_modules", "**/*.json", "**/*.spec.ts", "**/*.spec.js"]
