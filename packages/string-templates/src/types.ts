@@ -9,7 +9,10 @@ export interface ProcessOptions {
   disabledHelpers?: string[]
 }
 
+export type LogType = "log" | "info" | "debug" | "warn" | "error" | "table"
+
 export interface Log {
   log: any[]
   line?: number
+  type?: LogType
 }
