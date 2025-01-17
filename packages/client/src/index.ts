@@ -17,7 +17,7 @@ export interface SDK {
 export type Component = Writable<{
   id: string
   styles: any
-  errorState: string
+  errorState: boolean
 }>
 
 export type Context = Readable<any>
