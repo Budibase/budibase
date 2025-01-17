@@ -45,7 +45,11 @@ export { default as ClearButton } from "./ClearButton/ClearButton.svelte"
 export { default as Icon } from "./Icon/Icon.svelte"
 export { default as IconAvatar } from "./Icon/IconAvatar.svelte"
 export { default as DetailSummary } from "./DetailSummary/DetailSummary.svelte"
-export { default as Popover } from "./Popover/Popover.svelte"
+export {
+  default as Popover,
+  PopoverAlignment,
+  type PopoverAPI,
+} from "./Popover/Popover.svelte"
 export { default as ProgressBar } from "./ProgressBar/ProgressBar.svelte"
 export { default as ProgressCircle } from "./ProgressCircle/ProgressCircle.svelte"
 export { default as Label } from "./Label/Label.svelte"

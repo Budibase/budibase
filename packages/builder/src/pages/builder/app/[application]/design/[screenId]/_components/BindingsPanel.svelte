@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ActionButton, Modal, ModalContent, Helpers } from "@budibase/bbui"
+  import { ActionButton, Helpers, PopoverAlignment } from "@budibase/bbui"
   import {
     previewStore,
     selectedScreen,
@@ -9,6 +9,7 @@
   import { getBindableProperties } from "@/dataBinding"
   import BindingNode from "./BindingExplorer/BindingNode.svelte"
   import { processObjectSync } from "@budibase/string-templates"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
 
   // Minimal typing for the real data binding structure, as none exists
   type DataBinding = {
@@ -17,17 +18,10 @@
     readableBinding: string
   }
 
-  let modal: any
-
   $: previewContext = $previewStore.selectedComponentContext || {}
   $: selectedComponentId = $componentStore.selectedComponentId
   $: context = makeContext(previewContext, bindings)
   $: bindings = getBindableProperties($selectedScreen, selectedComponentId)
-
-  const show = () => {
-    previewStore.requestComponentContext()
-    modal.show()
-  }
 
   const makeContext = (
     previewContext: Record<string, any>,
@@ -77,15 +71,32 @@
   }
 </script>
 
-<ActionButton on:click={show}>Bindings</ActionButton>
-
-<Modal bind:this={modal}>
-  <ModalContent
-    title="Bindings"
-    showConfirmButton={false}
-    cancelText="Close"
-    size="M"
-  >
+<DetailPopover
+  title="Data context"
+  subtitle="Showing all bindable data context available on the /employees screen."
+  align={PopoverAlignment.Right}
+>
+  <svelte:fragment slot="anchor" let:open>
+    <ActionButton
+      icon="Code"
+      quiet
+      selected={open}
+      on:click={previewStore.requestComponentContext}
+    >
+      Data context
+    </ActionButton>
+  </svelte:fragment>
+  <div class="bindings">
     <BindingNode value={context} />
-  </ModalContent>
-</Modal>
+  </div>
+</DetailPopover>
+
+<style>
+  .bindings {
+    margin: calc(-1 * var(--spacing-xl));
+    padding: 20px 12px;
+    background: var(--spectrum-global-color-gray-50);
+    overflow-y: auto;
+    max-height: 600px;
+  }
+</style>

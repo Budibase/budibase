@@ -1,4 +1,21 @@
-<script>
+<script context="module" lang="ts">
+  export enum PopoverAlignment {
+    Left = "left",
+    Right = "right",
+    LeftOutside = "left-outside",
+    RightOutside = "right-outside",
+    Center = "center",
+    RightContextMenu = "right-context-menu",
+    LeftContextMenu = "left-context-menu",
+  }
+
+  export interface PopoverAPI {
+    show: () => void
+    hide: () => void
+  }
+</script>
+
+<script lang="ts">
   import "@spectrum-css/popover/dist/index-vars.css"
   import Portal from "svelte-portal"
   import { createEventDispatcher, getContext, onDestroy } from "svelte"
@@ -9,31 +26,35 @@
 
   const dispatch = createEventDispatcher()
 
-  export let anchor
-  export let align = "right"
-  export let portalTarget
-  export let minWidth
-  export let maxWidth
-  export let maxHeight
-  export let open = false
-  export let useAnchorWidth = false
-  export let dismissible = true
-  export let offset = 4
-  export let customHeight
-  export let animate = true
-  export let customZindex
-  export let handlePostionUpdate
-  export let showPopover = true
-  export let clickOutsideOverride = false
-  export let resizable = true
-  export let wrap = false
+  export let anchor: HTMLElement | undefined = undefined
+  export let align: PopoverAlignment = PopoverAlignment.Right
+  export let portalTarget: string | undefined = undefined
+  export let minWidth: number | undefined = undefined
+  export let maxWidth: number | undefined = undefined
+  export let maxHeight: number | undefined = undefined
+  export let open: boolean = false
+  export let useAnchorWidth: boolean = false
+  export let dismissible: boolean = true
+  export let offset: number = 4
+  export let customHeight: string | undefined = undefined
+  export let animate: boolean = true
+  export let customZIndex: number | undefined = undefined
+  export let handlePositionUpdate: Function | undefined = undefined
+  export let showPopover: boolean = true
+  export let clickOutsideOverride: boolean = false
+  export let resizable: boolean = true
+  export let wrap: boolean = false
 
   const animationDuration = 260
 
-  let timeout
+  let timeout: ReturnType<typeof setTimeout> | undefined
   let blockPointerEvents = false
 
-  $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
+  // Portal library lacks types, so we have to type this as any even though it's
+  // actually a string
+  $: target = (portalTarget ||
+    getContext(Context.PopoverRoot) ||
+    ".spectrum") as any
   $: {
     // Disable pointer events for the initial part of the animation, because we
     // fly from top to bottom and initially can be positioned under the cursor,
@@ -113,7 +134,7 @@
         minWidth,
         useAnchorWidth,
         offset,
-        customUpdate: handlePostionUpdate,
+        customUpdate: handlePositionUpdate,
         resizable,
         wrap,
       }}
@@ -123,11 +144,11 @@
       }}
       on:keydown={handleEscape}
       class="spectrum-Popover is-open"
-      class:customZindex
+      class:customZIndex
       class:hidden={!showPopover}
       class:blockPointerEvents
       role="presentation"
-      style="height: {customHeight}; --customZindex: {customZindex};"
+      style="height: {customHeight}; --customZIndex: {customZIndex};"
       transition:fly|local={{
         y: -20,
         duration: animate ? animationDuration : 0,
@@ -157,7 +178,7 @@
     opacity: 0;
     pointer-events: none;
   }
-  .customZindex {
-    z-index: var(--customZindex) !important;
+  .customZIndex {
+    z-index: var(--customZIndex) !important;
   }
 </style>
