@@ -19,7 +19,7 @@
   $: success = !error && !empty
   $: highlightedResult = highlight(expressionResult)
   $: highlightedLogs = expressionLogs.map(l => ({
-    log: highlight(l.log),
+    log: highlight(l.log.join(", ")),
     line: l.line,
   }))
 
