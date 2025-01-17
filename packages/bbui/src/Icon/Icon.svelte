@@ -10,7 +10,7 @@
   export let size = "M"
   export let hoverable = false
   export let disabled = false
-  export let color: string
+  export let color: string = undefined
   export let hoverColor = undefined
   export let tooltip = undefined
   export let tooltipPosition = TooltipPosition.Bottom
