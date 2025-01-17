@@ -27,8 +27,6 @@ export const capitalise = (string?: string | null): string => {
 
 /**
  * Computes a short hash of a string
- * @param string the string to compute a hash of
- * @return {string} the hash string
  */
 export const hashString = (string?: string | null): string => {
   if (!string) {
@@ -80,7 +78,6 @@ export const deepSet = (
 
 /**
  * Deeply clones an object. Functions are not supported.
- * @param obj the object to clone
  */
 export const cloneDeep = <T>(obj: T): T => {
   if (!obj) {
@@ -91,9 +88,8 @@ export const cloneDeep = <T>(obj: T): T => {
 
 /**
  * Copies a value to the clipboard
- * @param value the value to copy
  */
-export const copyToClipboard = (value: string): Promise<void> => {
+export const copyToClipboard = (value: any): Promise<void> => {
   return new Promise(res => {
     if (navigator.clipboard && window.isSecureContext) {
       // Try using the clipboard API first
