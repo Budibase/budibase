@@ -4,7 +4,7 @@
 
   export let size = "M"
   export let tooltip = ""
-  export let muted
+  export let muted = undefined
 </script>
 
 <TooltipWrapper {tooltip} {size}>
