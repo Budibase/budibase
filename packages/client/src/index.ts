@@ -1,6 +1,6 @@
 import { APIClient } from "@budibase/frontend-core"
 import type { ActionTypes } from "./constants"
-import { Readable, Writable } from "svelte/store"
+import { Readable } from "svelte/store"
 
 export interface SDK {
   API: APIClient
@@ -14,7 +14,7 @@ export interface SDK {
   }>
 }
 
-export type Component = Writable<{
+export type Component = Readable<{
   id: string
   styles: any
   errorState: boolean
