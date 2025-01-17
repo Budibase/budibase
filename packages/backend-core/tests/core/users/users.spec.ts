@@ -1,17 +1,17 @@
-const _ = require("lodash/fp")
-const { structures } = require("../../../tests")
+import { range } from "lodash/fp"
+import { structures } from "../.."
 
 jest.mock("../../../src/context")
 jest.mock("../../../src/db")
 
-const context = require("../../../src/context")
-const db = require("../../../src/db")
+import * as context from "../../../src/context"
+import * as db from "../../../src/db"
 
-const { getCreatorCount } = require("../../../src/users/users")
+import { getCreatorCount } from "../../../src/users/users"
 
 describe("Users", () => {
-  let getGlobalDBMock
-  let paginationMock
+  let getGlobalDBMock: jest.SpyInstance
+  let paginationMock: jest.SpyInstance
 
   beforeEach(() => {
     jest.resetAllMocks()
@@ -22,11 +22,10 @@ describe("Users", () => {
     jest.spyOn(db, "getGlobalUserParams")
   })
 
-  it("Retrieves the number of creators", async () => {
-    const getUsers = (offset, limit, creators = false) => {
-      const range = _.range(offset, limit)
+  it("retrieves the number of creators", async () => {
+    const getUsers = (offset: number, limit: number, creators = false) => {
       const opts = creators ? { builder: { global: true } } : undefined
-      return range.map(() => structures.users.user(opts))
+      return range(offset, limit).map(() => structures.users.user(opts))
     }
     const page1Data = getUsers(0, 8)
     const page2Data = getUsers(8, 12, true)

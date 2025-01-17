@@ -1,20 +1,20 @@
 import { get } from "svelte/store"
-import DataFetch, { DataFetchParams } from "./DataFetch"
-import { TableNames } from "../constants"
+import BaseDataFetch, { DataFetchParams } from "./DataFetch"
+import { GroupUserDatasource, InternalTable } from "@budibase/types"
 
 interface GroupUserQuery {
   groupId: string
   emailSearch: string
 }
 
-interface GroupUserDatasource {
-  type: "groupUser"
-  tableId: TableNames.USERS
+interface GroupUserDefinition {
+  schema?: Record<string, any> | null
+  primaryDisplay?: string
 }
 
-export default class GroupUserFetch extends DataFetch<
+export default class GroupUserFetch extends BaseDataFetch<
   GroupUserDatasource,
-  {},
+  GroupUserDefinition,
   GroupUserQuery
 > {
   constructor(opts: DataFetchParams<GroupUserDatasource, GroupUserQuery>) {
@@ -22,7 +22,7 @@ export default class GroupUserFetch extends DataFetch<
       ...opts,
       datasource: {
         type: "groupUser",
-        tableId: TableNames.USERS,
+        tableId: InternalTable.USER_METADATA,
       },
     })
   }

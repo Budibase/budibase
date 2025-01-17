@@ -2043,6 +2043,101 @@ if (descriptions.length) {
             expect(rows[0].name).toEqual("Clare updated")
             expect(rows[1].name).toEqual("Jeff updated")
           })
+
+        it("should reject bulkImport date only fields with wrong format", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  type: FieldType.DATETIME,
+                  dateOnly: true,
+                  name: "date",
+                },
+              },
+            })
+          )
+
+          await config.api.row.bulkImport(
+            table._id!,
+            {
+              rows: [
+                {
+                  date: "01.02.2024",
+                },
+              ],
+            },
+            {
+              status: 400,
+              body: {
+                message:
+                  'Invalid format for field "date": "01.02.2024". Date-only fields must be in the format "YYYY-MM-DD".',
+              },
+            }
+          )
+        })
+
+        it("should reject bulkImport date time fields with wrong format", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  type: FieldType.DATETIME,
+                  name: "date",
+                },
+              },
+            })
+          )
+
+          await config.api.row.bulkImport(
+            table._id!,
+            {
+              rows: [
+                {
+                  date: "01.02.2024",
+                },
+              ],
+            },
+            {
+              status: 400,
+              body: {
+                message:
+                  'Invalid format for field "date": "01.02.2024". Datetime fields must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SSZ".',
+              },
+            }
+          )
+        })
+
+        it("should reject bulkImport time fields with wrong format", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                time: {
+                  type: FieldType.DATETIME,
+                  timeOnly: true,
+                  name: "time",
+                },
+              },
+            })
+          )
+
+          await config.api.row.bulkImport(
+            table._id!,
+            {
+              rows: [
+                {
+                  time: "3pm",
+                },
+              ],
+            },
+            {
+              status: 400,
+              body: {
+                message:
+                  'Invalid format for field "time": "3pm". Time-only fields must be in the format "HH:MM:SS".',
+              },
+            }
+          )
+        })
       })
 
       describe("enrich", () => {
@@ -3554,6 +3649,51 @@ if (descriptions.length) {
           )
         })
       })
+
+      if (isInternal || isMSSQL) {
+        describe("Fields with spaces", () => {
+          let table: Table
+          let otherTable: Table
+          let relatedRow: Row
+
+          beforeAll(async () => {
+            otherTable = await config.api.table.save(defaultTable())
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  links: {
+                    name: "links",
+                    fieldName: "links",
+                    type: FieldType.LINK,
+                    tableId: otherTable._id!,
+                    relationshipType: RelationshipType.ONE_TO_MANY,
+                  },
+                  "nameWithSpace ": {
+                    name: "nameWithSpace ",
+                    type: FieldType.STRING,
+                  },
+                },
+              })
+            )
+            relatedRow = await config.api.row.save(otherTable._id!, {
+              name: generator.word(),
+              description: generator.paragraph(),
+            })
+            await config.api.row.save(table._id!, {
+              "nameWithSpace ": generator.word(),
+              tableId: table._id!,
+              links: [relatedRow._id],
+            })
+          })
+
+          it("Successfully returns rows that have spaces in their field names", async () => {
+            const { rows } = await config.api.row.search(table._id!)
+            expect(rows.length).toBe(1)
+            const row = rows[0]
+            expect(row["nameWithSpace "]).toBeDefined()
+          })
+        })
+      }
 
       if (!isInternal && !isOracle) {
         describe("bigint ids", () => {

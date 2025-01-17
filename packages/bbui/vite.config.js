@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: !isProduction,
       lib: {
-        entry: "src/index.js",
+        entry: "src/index.ts",
         formats: ["es"],
       },
     },

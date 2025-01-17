@@ -1,28 +1,31 @@
-<script>
-  import formatHighlight from "json-format-highlight"
+<script lang="ts">
+  import { JsonFormatter } from "@budibase/frontend-core"
   import { Icon, ProgressCircle, notifications } from "@budibase/bbui"
-  import { copyToClipboard } from "@budibase/bbui/helpers"
+  import { Helpers } from "@budibase/bbui"
   import { fade } from "svelte/transition"
   import { UserScriptError } from "@budibase/string-templates"
+  import type { JSONValue } from "@budibase/types"
 
-  export let expressionResult
-  export let expressionError
+  // this can be essentially any primitive response from the JS function
+  export let expressionResult: JSONValue | undefined = undefined
+  export let expressionError: string | undefined = undefined
   export let evaluating = false
-  export let expression = null
+  export let expression: string | null = null
 
   $: error = expressionError != null
   $: empty = expression == null || expression?.trim() === ""
   $: success = !error && !empty
   $: highlightedResult = highlight(expressionResult)
 
-  const formatError = err => {
+  const formatError = (err: any) => {
     if (err.code === UserScriptError.code) {
       return err.userScriptError.toString()
     }
     return err.toString()
   }
 
-  const highlight = json => {
+  // json can be any primitive type
+  const highlight = (json?: any | null) => {
     if (json == null) {
       return ""
     }
@@ -31,10 +34,10 @@
     try {
       json = JSON.stringify(JSON.parse(json), null, 2)
     } catch (err) {
-      // Ignore
+      // couldn't parse/stringify, just treat it as the raw input
     }
 
-    return formatHighlight(json, {
+    return JsonFormatter.format(json, {
       keyColor: "#e06c75",
       numberColor: "#e5c07b",
       stringColor: "#98c379",
@@ -45,11 +48,11 @@
   }
 
   const copy = () => {
-    let clipboardVal = expressionResult.result
+    let clipboardVal = expressionResult
     if (typeof clipboardVal === "object") {
       clipboardVal = JSON.stringify(clipboardVal, null, 2)
     }
-    copyToClipboard(clipboardVal)
+    Helpers.copyToClipboard(clipboardVal)
     notifications.success("Value copied to clipboard")
   }
 </script>

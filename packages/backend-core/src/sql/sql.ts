@@ -1172,20 +1172,22 @@ class InternalBuilder {
           nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
         }
 
+        const composite = `${aliased}.${key}`
+        let identifier
+
         if (this.isAggregateField(key)) {
-          query = query.orderBy(key, direction, nulls)
+          identifier = this.rawQuotedIdentifier(key)
+        } else if (this.client === SqlClient.ORACLE) {
+          identifier = this.convertClobs(composite)
         } else {
-          let composite = `${aliased}.${key}`
-          if (this.client === SqlClient.ORACLE) {
-            query = query.orderByRaw(`?? ?? nulls ??`, [
-              this.convertClobs(composite),
-              this.knex.raw(direction),
-              this.knex.raw(nulls as string),
-            ])
-          } else {
-            query = query.orderBy(composite, direction, nulls)
-          }
+          identifier = this.rawQuotedIdentifier(composite)
         }
+
+        query = query.orderByRaw(`?? ?? ${nulls ? "nulls ??" : ""}`, [
+          identifier,
+          this.knex.raw(direction),
+          ...(nulls ? [this.knex.raw(nulls as string)] : []),
+        ])
       }
     }
 
@@ -1344,14 +1346,16 @@ class InternalBuilder {
 
       // add the correlation to the overall query
       subQuery = subQuery.where(
-        correlatedTo,
+        this.rawQuotedIdentifier(correlatedTo),
         "=",
         this.rawQuotedIdentifier(correlatedFrom)
       )
 
       const standardWrap = (select: Knex.Raw): Knex.QueryBuilder => {
         subQuery = subQuery
-          .select(relationshipFields)
+          .select(
+            relationshipFields.map(field => this.rawQuotedIdentifier(field))
+          )
           .limit(getRelationshipLimit())
         // @ts-ignore - the from alias syntax isn't in Knex typing
         return knex.select(select).from({

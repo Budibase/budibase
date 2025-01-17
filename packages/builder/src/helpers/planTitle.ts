@@ -1,6 +1,6 @@
 import { PlanType } from "@budibase/types"
 
-export function getFormattedPlanName(userPlanType) {
+export function getFormattedPlanName(userPlanType: PlanType) {
   let planName
   switch (userPlanType) {
     case PlanType.PRO:
@@ -29,6 +29,6 @@ export function getFormattedPlanName(userPlanType) {
   return `${planName} Plan`
 }
 
-export function isPremiumOrAbove(userPlanType) {
+export function isPremiumOrAbove(userPlanType: PlanType) {
   return ![PlanType.PRO, PlanType.TEAM, PlanType.FREE].includes(userPlanType)
 }
