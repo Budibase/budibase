@@ -1,4 +1,4 @@
-import { ViewFilter, ViewTemplateOpts, DBView } from "@budibase/types"
+import { ViewFilter, DBView } from "@budibase/types"
 
 const TOKEN_MAP: Record<string, string> = {
   EQUALS: "===",
@@ -120,7 +120,7 @@ function parseFilterExpression(filters: ViewFilter[]) {
  * @param groupBy - field to group calculation results on, if any
  */
 function parseEmitExpression(field: string, groupBy: string) {
-  return `emit(doc["${groupBy || "_id"}"], doc["${field}"]);`
+  return `emit(doc["${groupBy}"], doc["${field}"]);`
 }
 
 /**
@@ -135,7 +135,19 @@ function parseEmitExpression(field: string, groupBy: string) {
  * calculation: an optional calculation to be performed over the view data.
  */
 export default function (
-  { field, tableId, groupBy, filters = [], calculation }: ViewTemplateOpts,
+  {
+    field,
+    tableId,
+    groupBy,
+    filters = [],
+    calculation,
+  }: {
+    field: string
+    tableId: string
+    groupBy?: string
+    filters?: ViewFilter[]
+    calculation?: string
+  },
   groupByMulti?: boolean
 ): DBView {
   // first filter can't have a conjunction
@@ -168,7 +180,7 @@ export default function (
   const parsedFilters = parseFilterExpression(filters)
   const filterExpression = parsedFilters ? `&& (${parsedFilters})` : ""
 
-  const emitExpression = parseEmitExpression(field, groupBy)
+  const emitExpression = parseEmitExpression(field, groupBy || "_id")
   const tableExpression = `doc.tableId === "${tableId}"`
   const coreExpression = statFilter
     ? `(${tableExpression} && ${statFilter})`
