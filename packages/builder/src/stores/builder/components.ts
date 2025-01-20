@@ -41,6 +41,7 @@ interface ComponentDefinition {
   settings?: ComponentSetting[]
   features?: Record<string, boolean>
   typeSupportPresets?: Record<string, any>
+  illegalChildren?: string[]
 }
 
 interface ComponentSetting {

@@ -27,6 +27,9 @@ export const INITIAL_SCREENS_STATE: ScreenState = {
 }
 
 export class ScreenStore extends BudiStore<ScreenState> {
+  save: (doc: Screen) => Promise<Screen>
+  delete: (doc: Screen) => Promise<void>
+
   constructor() {
     super(INITIAL_SCREENS_STATE)
 
@@ -120,7 +123,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       component: Component,
       illegalChildren: string[] = [],
       legalDirectChildren: string[] = []
-    ) => {
+    ): string | undefined => {
       const type = component._component
 
       if (illegalChildren.includes(type)) {
@@ -145,13 +148,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
       }
 
       const definition = componentStore.getDefinition(component._component)
-      // Reset whitelist for direct children
-      legalDirectChildren = []
-      if (definition?.legalDirectChildren?.length) {
-        legalDirectChildren = definition.legalDirectChildren.map(x => {
-          return `@budibase/standard-components/${x}`
-        })
-      }
 
       // Append blacklisted components and remove duplicates
       if (definition?.illegalChildren?.length) {
@@ -264,7 +260,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * supports deeply mutating the current doc rather than just appending data.
    */
   sequentialScreenPatch = Utils.sequential(
-    async (patchFn: (screen: Screen) => any, screenId: string) => {
+    async (
+      patchFn: (screen: Screen) => any,
+      screenId: string
+    ): Promise<Screen | undefined> => {
       const state = get(this.store)
       const screen = state.screens.find(screen => screen._id === screenId)
       if (!screen) {
@@ -286,7 +285,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {string | null} screenId
    * @returns
    */
-  async patch(patchFn, screenId: string) {
+  async patch(
+    patchFn: (screen: Screen) => void,
+    screenId: string | undefined | null
+  ) {
     // Default to the currently selected screen
     if (!screenId) {
       const state = get(this.store)
@@ -346,8 +348,8 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {object | array} screens
    * @returns
    */
-  async deleteScreen(screens: Screen[]) {
-    const screensToDelete = Array.isArray(screens) ? screens : [screens]
+  async deleteScreen(screen: Screen) {
+    const screensToDelete = [screen]
     // Build array of promises to speed up bulk deletions
     let promises: Promise<any>[] = []
     let deleteUrls: string[] = []
@@ -387,7 +389,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
       return state
     })
-    return null
+    return
   }
 
   /**
