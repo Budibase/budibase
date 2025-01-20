@@ -57,7 +57,7 @@ interface ComponentSetting {
 interface ComponentState {
   components: Record<string, ComponentDefinition>
   customComponents: string[]
-  selectedComponentId: string | null
+  selectedComponentId: string | null | undefined
   componentToPaste?: Component | null
   settingsCache: Record<string, ComponentSetting[]>
   selectedScreenId?: string | null
@@ -478,10 +478,11 @@ export class ComponentStore extends BudiStore<ComponentState> {
       extras._children = []
     }
 
+    const $selectedScreen = get(selectedScreen)
     // Add step name to form steps
-    if (componentName.endsWith("/formstep")) {
+    if (componentName.endsWith("/formstep") && $selectedScreen) {
       const parentForm = findClosestMatchingComponent(
-        get(selectedScreen).props,
+        $selectedScreen.props,
         get(selectedComponent)._id,
         (component: Component) => component._component.endsWith("/form")
       )
@@ -608,7 +609,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
   async patch(
     patchFn: (component: Component, screen: Screen) => any,
     componentId?: string,
-    screenId?: string
+    screenId?: string | null
   ) {
     // Use selected component by default
     if (!componentId || !screenId) {
@@ -840,7 +841,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
   getPrevious() {
     const state = get(this.store)
     const componentId = state.selectedComponentId
-    const screen = get(selectedScreen)
+    const screen = get(selectedScreen)!
     const parent = findComponentParent(screen.props, componentId)
     const index = parent?._children.findIndex(
       (x: Component) => x._id === componentId
@@ -889,7 +890,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     const state = get(this.store)
     const component = get(selectedComponent)
     const componentId = component?._id
-    const screen = get(selectedScreen)
+    const screen = get(selectedScreen)!
     const parent = findComponentParent(screen.props, componentId)
     const index = parent?._children.findIndex(
       (x: Component) => x._id === componentId

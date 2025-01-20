@@ -13,11 +13,11 @@ import {
 import { createHistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
-import { Screen } from "@budibase/types"
+import { Component, Screen } from "@budibase/types"
 
 interface ScreenState {
   screens: Screen[]
-  selectedScreenId: string | null
+  selectedScreenId: string | null | undefined
 }
 
 export const INITIAL_SCREENS_STATE: ScreenState = {
@@ -43,7 +43,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
     this.sequentialScreenPatch = this.sequentialScreenPatch.bind(this)
     this.removeCustomLayout = this.removeCustomLayout.bind(this)
 
-    this.history = createHistoryStore({
+    const history = createHistoryStore({
       getDoc: id => get(this.store).screens?.find(screen => screen._id === id),
       selectDoc: this.select,
       afterAction: () => {
@@ -57,8 +57,8 @@ export class ScreenStore extends BudiStore<ScreenState> {
       },
     })
 
-    this.delete = this.history.wrapDeleteDoc(this.deleteScreen)
-    this.save = this.history.wrapSaveDoc(this.saveScreen)
+    this.delete = history.wrapDeleteDoc(this.deleteScreen)
+    this.save = history.wrapSaveDoc(this.saveScreen)
   }
 
   /**
@@ -72,7 +72,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * Replace ALL store screens with application package screens
    * @param {object} pkg
    */
-  syncAppScreens(pkg) {
+  syncAppScreens(pkg: { screens: Screen[] }) {
     this.update(state => ({
       ...state,
       screens: [...pkg.screens],
@@ -85,7 +85,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {string} screenId
    * @returns
    */
-  select(screenId) {
+  select(screenId: string) {
     // Check this screen exists
     const state = get(this.store)
     const screen = state.screens.find(screen => screen._id === screenId)
@@ -113,12 +113,12 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @throws Will throw an error containing the name of the component causing
    * the invalid screen state
    */
-  validate(screen) {
+  validate(screen: Screen) {
     // Recursive function to find any illegal children in component trees
     const findIllegalChild = (
-      component,
-      illegalChildren = [],
-      legalDirectChildren = []
+      component: Component,
+      illegalChildren: string[] = [],
+      legalDirectChildren: string[] = []
     ) => {
       const type = component._component
 
@@ -178,7 +178,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
     const illegalChild = findIllegalChild(screen.props)
     if (illegalChild) {
       const def = componentStore.getDefinition(illegalChild)
-      throw `You can't place a ${def.name} here`
+      throw `You can't place a ${def?.name} here`
     }
   }
 
@@ -189,7 +189,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {object} screen
    * @returns {object}
    */
-  async saveScreen(screen) {
+  async saveScreen(screen: Screen): Promise<Screen> {
     const appState = get(appStore)
 
     // Validate screen structure if the app supports it
@@ -236,7 +236,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * After saving a screen, sync plugins and routes to the appStore
    * @param {object} savedScreen
    */
-  async syncScreenData(savedScreen) {
+  async syncScreenData(savedScreen: Screen) {
     const appState = get(appStore)
     // If plugins changed we need to fetch the latest app metadata
     let usedPlugins = appState.usedPlugins
@@ -262,21 +262,23 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * This is slightly better than just a traditional "patch" endpoint and this
    * supports deeply mutating the current doc rather than just appending data.
    */
-  sequentialScreenPatch = Utils.sequential(async (patchFn, screenId) => {
-    const state = get(this.store)
-    const screen = state.screens.find(screen => screen._id === screenId)
-    if (!screen) {
-      return
-    }
-    let clone = cloneDeep(screen)
-    const result = patchFn(clone)
+  sequentialScreenPatch = Utils.sequential(
+    async (patchFn: (screen: Screen) => any, screenId: string) => {
+      const state = get(this.store)
+      const screen = state.screens.find(screen => screen._id === screenId)
+      if (!screen) {
+        return
+      }
+      let clone = cloneDeep(screen)
+      const result = patchFn(clone)
 
-    // An explicit false result means skip this change
-    if (result === false) {
-      return
+      // An explicit false result means skip this change
+      if (result === false) {
+        return
+      }
+      return this.save(clone)
     }
-    return this.save(clone)
-  })
+  )
 
   /**
    * @param {function} patchFn
@@ -304,7 +306,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {object} screen
    * @returns
    */
-  async replace(screenId, screen) {
+  async replace(screenId: string, screen: Screen) {
     if (!screenId) {
       return
     }
@@ -343,14 +345,14 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {object | array} screens
    * @returns
    */
-  async deleteScreen(screens) {
+  async deleteScreen(screens: Screen[]) {
     const screensToDelete = Array.isArray(screens) ? screens : [screens]
     // Build array of promises to speed up bulk deletions
-    let promises = []
-    let deleteUrls = []
+    let promises: Promise<any>[] = []
+    let deleteUrls: string[] = []
     screensToDelete.forEach(screen => {
       // Delete the screen
-      promises.push(API.deleteScreen(screen._id, screen._rev))
+      promises.push(API.deleteScreen(screen._id!, screen._rev!))
       // Remove links to this screen
       deleteUrls.push(screen.routing.route)
     })
@@ -365,7 +367,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
       })
 
       // Deselect the current screen if it was deleted
-      if (deletedIds.includes(state.selectedScreenId)) {
+      if (
+        state.selectedScreenId &&
+        deletedIds.includes(state.selectedScreenId)
+      ) {
         state.selectedScreenId = null
         componentStore.update(state => ({
           ...state,
@@ -395,13 +400,13 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {any} value
    * @returns
    */
-  async updateSetting(screen, name, value) {
+  async updateSetting(screen: Screen, name: string, value: string) {
     if (!screen || !name) {
       return
     }
 
     // Apply setting update
-    const patchFn = screen => {
+    const patchFn = (screen: Screen) => {
       if (!screen) {
         return false
       }
@@ -428,7 +433,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       )
     })
     if (otherHomeScreens.length && updatedScreen.routing.homeScreen) {
-      const patchFn = screen => {
+      const patchFn = (screen: Screen) => {
         screen.routing.homeScreen = false
       }
       for (let otherHomeScreen of otherHomeScreens) {
@@ -438,11 +443,11 @@ export class ScreenStore extends BudiStore<ScreenState> {
   }
 
   // Move to layouts store
-  async removeCustomLayout(screen) {
+  async removeCustomLayout(screen: Screen) {
     // Pull relevant settings from old layout, if required
     const layout = get(layoutStore).layouts.find(x => x._id === screen.layoutId)
-    const patchFn = screen => {
-      screen.layoutId = null
+    const patchFn = (screen: Screen) => {
+      delete screen.layoutId
       screen.showNavigation = layout?.props.navigation !== "None"
       screen.width = layout?.props.width || "Large"
     }
@@ -454,9 +459,9 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * and up-to-date. Ensures stability after a product update.
    * @param {object} screen
    */
-  async enrichEmptySettings(screen) {
+  async enrichEmptySettings(screen: Screen) {
     // Flatten the recursive component tree
-    const components = findAllMatchingComponents(screen.props, x => x)
+    const components = findAllMatchingComponents(screen.props, (x: string) => x)
 
     // Iterate over all components and run checks
     components.forEach(component => {
