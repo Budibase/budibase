@@ -14,10 +14,10 @@ export interface SDK {
   }>
 }
 
-export type Component = Readable<{
+export type Component = {
   id: string
   styles: any
   errorState: boolean
-}>
+}
 
-export type Context = Readable<any>
+export type Context = {}
