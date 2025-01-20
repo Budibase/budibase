@@ -40,7 +40,9 @@ export async function get(viewId: string): Promise<ViewV2> {
   return pickApi(tableId).get(viewId)
 }
 
-export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
+export async function getEnriched(
+  viewId: string
+): Promise<ViewV2Enriched | undefined> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
   return pickApi(tableId).getEnriched(viewId)
 }

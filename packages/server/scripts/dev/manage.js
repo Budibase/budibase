@@ -43,7 +43,6 @@ async function init() {
     BB_ADMIN_USER_EMAIL: "",
     BB_ADMIN_USER_PASSWORD: "",
     PLUGINS_DIR: "",
-    HTTP_MIGRATIONS: "0",
     HTTP_LOGGING: "0",
     VERSION: "0.0.0+local",
     PASSWORD_MIN_LENGTH: "1",
