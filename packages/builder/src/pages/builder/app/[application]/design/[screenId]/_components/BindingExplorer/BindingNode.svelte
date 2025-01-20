@@ -156,8 +156,8 @@
     overflow: hidden;
   }
   .binding-arrow {
-    margin: -3px 2px -2px 0;
-    flex: 0 0 18px;
+    margin: -3px 6px -2px 4px;
+    flex: 0 0 9px;
     transition: transform 130ms ease-out;
   }
   .binding-arrow :global(svg) {
