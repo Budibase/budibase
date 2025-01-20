@@ -1,6 +1,6 @@
 import { Document } from "@budibase/types"
 import * as jsonpatch from "fast-json-patch"
-import { writable, derived, get } from "svelte/store"
+import { writable, derived, get, Readable } from "svelte/store"
 
 export const enum Operations {
   Add = "Add",
@@ -9,7 +9,7 @@ export const enum Operations {
 }
 
 interface Operator<T extends Document> {
-  id: string
+  id?: string
   type: Operations
   doc: T
   forwardPatch?: jsonpatch.Operation[]
@@ -28,6 +28,25 @@ export const initialState: HistoryState<never> = {
   loading: false,
 }
 
+export interface HistoryStore<T extends Document>
+  extends Readable<
+    HistoryState<T> & {
+      canUndo: boolean
+      canRedo: boolean
+    }
+  > {
+  wrapSaveDoc: (
+    fn: (doc: T) => Promise<T>
+  ) => (doc: T, operationId?: string) => Promise<T>
+  wrapDeleteDoc: (
+    fn: (doc: T) => Promise<void>
+  ) => (doc: T, operationId?: string) => Promise<void>
+
+  reset: () => void
+  undo: () => Promise<void>
+  redo: () => Promise<void>
+}
+
 export const createHistoryStore = <T extends Document>({
   getDoc,
   selectDoc,
@@ -38,7 +57,7 @@ export const createHistoryStore = <T extends Document>({
   selectDoc: (id: string) => void
   beforeAction?: (operation?: Operator<T>) => void
   afterAction?: (operation?: Operator<T>) => void
-}) => {
+}): HistoryStore<T> => {
   // Use a derived store to check if we are able to undo or redo any operations
   const store = writable<HistoryState<T>>(initialState)
   const derivedStore = derived(store, $store => {
@@ -51,8 +70,8 @@ export const createHistoryStore = <T extends Document>({
 
   // Wrapped versions of essential functions which we call ourselves when using
   // undo and redo
-  let saveFn: (doc: T, operationId: string) => Promise<T>
-  let deleteFn: (doc: T, operationId: string) => Promise<void>
+  let saveFn: (doc: T, operationId?: string) => Promise<T>
+  let deleteFn: (doc: T, operationId?: string) => Promise<void>
 
   /**
    * Internal util to set the loading flag
@@ -113,8 +132,8 @@ export const createHistoryStore = <T extends Document>({
    * @param fn the save function
    * @returns {function} a wrapped version of the save function
    */
-  const wrapSaveDoc = (fn: (doc: T) => Promise<void>) => {
-    saveFn = async (doc: T, operationId: string) => {
+  const wrapSaveDoc = (fn: (doc: T) => Promise<T>) => {
+    saveFn = async (doc: T, operationId?: string) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
         return
@@ -162,7 +181,7 @@ export const createHistoryStore = <T extends Document>({
    * @returns {function} a wrapped version of the delete function
    */
   const wrapDeleteDoc = (fn: (doc: T) => Promise<void>) => {
-    deleteFn = async (doc: T, operationId: string) => {
+    deleteFn = async (doc: T, operationId?: string) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
         return
