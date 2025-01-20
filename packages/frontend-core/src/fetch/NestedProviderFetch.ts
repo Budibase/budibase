@@ -1,20 +1,11 @@
-import { Row, TableSchema } from "@budibase/types"
-import DataFetch from "./DataFetch"
-
-interface NestedProviderDatasource {
-  type: "provider"
-  value?: {
-    schema: TableSchema
-    primaryDisplay: string
-    rows: Row[]
-  }
-}
+import { NestedProviderDatasource, TableSchema } from "@budibase/types"
+import BaseDataFetch from "./DataFetch"
 
 interface NestedProviderDefinition {
   schema?: TableSchema
   primaryDisplay?: string
 }
-export default class NestedProviderFetch extends DataFetch<
+export default class NestedProviderFetch extends BaseDataFetch<
   NestedProviderDatasource,
   NestedProviderDefinition
 > {

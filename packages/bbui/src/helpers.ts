@@ -6,9 +6,8 @@ export const deepGet = helpers.deepGet
 /**
  * Generates a DOM safe UUID.
  * Starting with a letter is important to make it DOM safe.
- * @return {string} a random DOM safe UUID
  */
-export function uuid() {
+export function uuid(): string {
   return "cxxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx".replace(/[xy]/g, c => {
     const r = (Math.random() * 16) | 0
     const v = c === "x" ? r : (r & 0x3) | 0x8
@@ -18,22 +17,18 @@ export function uuid() {
 
 /**
  * Capitalises a string
- * @param string the string to capitalise
- * @return {string} the capitalised string
  */
-export const capitalise = string => {
+export const capitalise = (string?: string | null): string => {
   if (!string) {
-    return string
+    return ""
   }
   return string.substring(0, 1).toUpperCase() + string.substring(1)
 }
 
 /**
  * Computes a short hash of a string
- * @param string the string to compute a hash of
- * @return {string} the hash string
  */
-export const hashString = string => {
+export const hashString = (string?: string | null): string => {
   if (!string) {
     return "0"
   }
@@ -54,11 +49,12 @@ export const hashString = string => {
  * will override the value "foo" rather than "bar".
  * If a deep path is specified and the parent keys don't exist then these will
  * be created.
- * @param obj the object
- * @param key the key
- * @param value the value
  */
-export const deepSet = (obj, key, value) => {
+export const deepSet = (
+  obj: Record<string, any> | null,
+  key: string | null,
+  value: any
+): void => {
   if (!obj || !key) {
     return
   }
@@ -82,9 +78,8 @@ export const deepSet = (obj, key, value) => {
 
 /**
  * Deeply clones an object. Functions are not supported.
- * @param obj the object to clone
  */
-export const cloneDeep = obj => {
+export const cloneDeep = <T>(obj: T): T => {
   if (!obj) {
     return obj
   }
@@ -93,9 +88,8 @@ export const cloneDeep = obj => {
 
 /**
  * Copies a value to the clipboard
- * @param value the value to copy
  */
-export const copyToClipboard = value => {
+export const copyToClipboard = (value: any): Promise<void> => {
   return new Promise(res => {
     if (navigator.clipboard && window.isSecureContext) {
       // Try using the clipboard API first
@@ -117,9 +111,12 @@ export const copyToClipboard = value => {
   })
 }
 
-// Parsed a date value. This is usually an ISO string, but can be a
+// Parse a date value. This is usually an ISO string, but can be a
 // bunch of different formats and shapes depending on schema flags.
-export const parseDate = (value, { enableTime = true }) => {
+export const parseDate = (
+  value: string | dayjs.Dayjs | null,
+  { enableTime = true }
+): dayjs.Dayjs | null => {
   // If empty then invalid
   if (!value) {
     return null
@@ -128,7 +125,7 @@ export const parseDate = (value, { enableTime = true }) => {
   // Certain string values need transformed
   if (typeof value === "string") {
     // Check for time only values
-    if (!isNaN(new Date(`0-${value}`))) {
+    if (!isNaN(new Date(`0-${value}`).valueOf())) {
       value = `0-${value}`
     }
 
@@ -153,9 +150,9 @@ export const parseDate = (value, { enableTime = true }) => {
 // Stringifies a dayjs object to create an ISO string that respects the various
 // schema flags
 export const stringifyDate = (
-  value,
+  value: null | dayjs.Dayjs,
   { enableTime = true, timeOnly = false, ignoreTimezones = false } = {}
-) => {
+): string | null => {
   if (!value) {
     return null
   }
@@ -192,7 +189,7 @@ export const stringifyDate = (
 }
 
 // Determine the dayjs-compatible format of the browser's default locale
-const getPatternForPart = part => {
+const getPatternForPart = (part: Intl.DateTimeFormatPart): string => {
   switch (part.type) {
     case "day":
       return "D".repeat(part.value.length)
@@ -214,9 +211,9 @@ const localeDateFormat = new Intl.DateTimeFormat()
 
 // Formats a dayjs date according to schema flags
 export const getDateDisplayValue = (
-  value,
+  value: dayjs.Dayjs | null,
   { enableTime = true, timeOnly = false } = {}
-) => {
+): string => {
   if (!value?.isValid()) {
     return ""
   }
@@ -229,7 +226,7 @@ export const getDateDisplayValue = (
   }
 }
 
-export const hexToRGBA = (color, opacity) => {
+export const hexToRGBA = (color: string, opacity: number): string => {
   if (color.includes("#")) {
     color = color.replace("#", "")
   }
