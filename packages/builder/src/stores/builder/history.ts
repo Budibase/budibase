@@ -1,3 +1,4 @@
+import { Document } from "@budibase/types"
 import * as jsonpatch from "fast-json-patch"
 import { writable, derived, get } from "svelte/store"
 
@@ -7,7 +8,7 @@ export const enum Operations {
   Change = "Change",
 }
 
-interface Operator<T> {
+interface Operator<T extends Document> {
   id: string
   type: Operations
   doc: T
@@ -15,19 +16,19 @@ interface Operator<T> {
   backwardsPatch?: jsonpatch.Operation[]
 }
 
-interface HistoryState {
-  history: any[]
+interface HistoryState<T extends Document> {
+  history: Operator<T>[]
   position: number
   loading?: boolean
 }
 
-export const initialState: HistoryState = {
+export const initialState: HistoryState<never> = {
   history: [],
   position: 0,
   loading: false,
 }
 
-export const createHistoryStore = <T extends {}>({
+export const createHistoryStore = <T extends Document>({
   getDoc,
   selectDoc,
   beforeAction,
@@ -39,7 +40,7 @@ export const createHistoryStore = <T extends {}>({
   afterAction?: (operation?: Operator<T>) => void
 }) => {
   // Use a derived store to check if we are able to undo or redo any operations
-  const store = writable(initialState)
+  const store = writable<HistoryState<T>>(initialState)
   const derivedStore = derived(store, $store => {
     return {
       ...$store,
@@ -220,7 +221,7 @@ export const createHistoryStore = <T extends {}>({
       // Undo ADD
       if (operation.type === Operations.Add) {
         // Try to get the latest doc version to delete
-        const latestDoc = getDoc(operation.doc._id)
+        const latestDoc = getDoc(operation.doc._id!)
         const doc = latestDoc || operation.doc
         await deleteFn(doc, operation.id)
       }
@@ -238,7 +239,7 @@ export const createHistoryStore = <T extends {}>({
       // Undo CHANGE
       else {
         // Get the current doc and apply the backwards patch on top of it
-        let doc = jsonpatch.deepClone(getDoc(operation.doc._id))
+        let doc = jsonpatch.deepClone(getDoc(operation.doc._id!))
         if (doc) {
           jsonpatch.applyPatch(
             doc,
@@ -302,7 +303,7 @@ export const createHistoryStore = <T extends {}>({
       // Redo DELETE
       else if (operation.type === Operations.Delete) {
         // Try to get the latest doc version to delete
-        const latestDoc = getDoc(operation.doc._id)
+        const latestDoc = getDoc(operation.doc._id!)
         const doc = latestDoc || operation.doc
         await deleteFn(doc, operation.id)
       }
@@ -310,7 +311,7 @@ export const createHistoryStore = <T extends {}>({
       // Redo CHANGE
       else {
         // Get the current doc and apply the forwards patch on top of it
-        let doc = jsonpatch.deepClone(getDoc(operation.doc._id))
+        let doc = jsonpatch.deepClone(getDoc(operation.doc._id!))
         if (doc) {
           jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.forwardPatch))
           await saveFn(doc, operation.id)
