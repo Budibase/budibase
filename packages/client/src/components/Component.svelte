@@ -23,6 +23,7 @@
     appStore,
     dndComponentPath,
     dndIsDragging,
+    componentErrors,
   } from "stores"
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
@@ -40,7 +41,6 @@
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
   import { gridLayout } from "utils/grid"
-  import { validateComponentSetting } from "utils/componentsValidator"
 
   export let instance = {}
   export let parent = null
@@ -344,21 +344,6 @@
       return missing
     })
 
-    // Check for invalid settings
-    invalidSettings = settingsDefinition.reduce((invalidSettings, setting) => {
-      if (setting.validator) {
-        const error = validateComponentSetting(
-          setting.validator,
-          instance[setting.key]
-        )
-        if (error) {
-          invalidSettings.push(error)
-        }
-      }
-
-      return invalidSettings
-    }, [])
-
     // When considering bindings we can ignore children, so we remove that
     // before storing the reference stringified version
     const noChildren = JSON.stringify({ ...instance, _children: null })
@@ -388,6 +373,9 @@
       unobserve = context.actions.observeChanges(handleContextChange)
     }
   }
+
+  // Check for invalid settings
+  $: invalidSettings = $componentErrors[id]
 
   // Extracts a map of all context keys which are required by action settings
   // to provide the functions to evaluate at runtime. This needs done manually
