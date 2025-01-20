@@ -77,7 +77,12 @@
   <Layout noPadding gap="S">
     <div class="text">
       <Body size="S">Showing all available bindings.</Body>
-      <Link href="/">Learn more.</Link>
+      <Link
+        target="_blank"
+        href="https://docs.budibase.com/docs/introduction-to-bindings"
+      >
+        Learn more.
+      </Link>
     </div>
     <BindingNode value={context} />
   </Layout>
