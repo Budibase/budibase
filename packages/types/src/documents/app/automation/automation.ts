@@ -205,6 +205,14 @@ export interface AutomationResults {
   }[]
 }
 
+export interface DidNotTriggerResponse {
+  outputs: {
+    success: false
+    status: AutomationStatus.STOPPED
+  }
+  message: AutomationStoppedReason.TRIGGER_FILTER_NOT_MET
+}
+
 export interface AutomationLog extends AutomationResults, Document {
   automationName: string
   _rev?: string
