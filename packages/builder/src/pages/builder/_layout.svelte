@@ -18,7 +18,7 @@
 
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
 
-  navigation.actions.init($redirect)
+  navigation.init($redirect)
 
   const validateTenantId = async () => {
     const host = window.location.host

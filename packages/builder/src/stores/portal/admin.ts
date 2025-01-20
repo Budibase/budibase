@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store"
+import { get } from "svelte/store"
 import { API } from "@/api"
 import { auth } from "@/stores/portal"
 import { banner } from "@budibase/bbui"
@@ -7,42 +7,44 @@ import {
   GetEnvironmentResponse,
   SystemStatusResponse,
 } from "@budibase/types"
+import { BudiStore } from "../BudiStore"
 
-interface PortalAdminStore extends GetEnvironmentResponse {
+interface AdminState extends GetEnvironmentResponse {
   loaded: boolean
   checklist?: ConfigChecklistResponse
   status?: SystemStatusResponse
 }
 
-export function createAdminStore() {
-  const admin = writable<PortalAdminStore>({
-    loaded: false,
-    multiTenancy: false,
-    cloud: false,
-    isDev: false,
-    disableAccountPortal: false,
-    offlineMode: false,
-    maintenance: [],
-  })
+export class AdminStore extends BudiStore<AdminState> {
+  constructor() {
+    super({
+      loaded: false,
+      multiTenancy: false,
+      cloud: false,
+      isDev: false,
+      disableAccountPortal: false,
+      offlineMode: false,
+      maintenance: [],
+    })
+  }
 
-  async function init() {
-    await getChecklist()
-    await getEnvironment()
+  async init() {
+    await this.getChecklist()
+    await this.getEnvironment()
     // enable system status checks in the cloud
-    if (get(admin).cloud) {
-      await getSystemStatus()
-      checkStatus()
+    if (get(this.store).cloud) {
+      await this.getSystemStatus()
+      this.checkStatus()
     }
-
-    admin.update(store => {
+    this.update(store => {
       store.loaded = true
       return store
     })
   }
 
-  async function getEnvironment() {
+  async getEnvironment() {
     const environment = await API.getEnvironment()
-    admin.update(store => {
+    this.update(store => {
       store.multiTenancy = environment.multiTenancy
       store.cloud = environment.cloud
       store.disableAccountPortal = environment.disableAccountPortal
@@ -56,43 +58,36 @@ export function createAdminStore() {
     })
   }
 
-  const checkStatus = async () => {
-    const health = get(admin)?.status?.health
+  async checkStatus() {
+    const health = get(this.store).status?.health
     if (!health?.passing) {
       await banner.showStatus()
     }
   }
 
-  async function getSystemStatus() {
+  async getSystemStatus() {
     const status = await API.getSystemStatus()
-    admin.update(store => {
+    this.update(store => {
       store.status = status
       return store
     })
   }
 
-  async function getChecklist() {
+  async getChecklist() {
     const tenantId = get(auth).tenantId
     const checklist = await API.getChecklist(tenantId)
-    admin.update(store => {
+    this.update(store => {
       store.checklist = checklist
       return store
     })
   }
 
-  function unload() {
-    admin.update(store => {
+  unload() {
+    this.update(store => {
       store.loaded = false
       return store
     })
   }
-
-  return {
-    subscribe: admin.subscribe,
-    init,
-    unload,
-    getChecklist,
-  }
 }
 
-export const admin = createAdminStore()
+export const admin = new AdminStore()
