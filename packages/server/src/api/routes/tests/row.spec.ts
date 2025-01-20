@@ -50,11 +50,9 @@ import { JsTimeoutError } from "@budibase/string-templates"
 import { isDate } from "../../../utilities"
 import nock from "nock"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
-import { setTestingBackendJS } from "@budibase/string-templates"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
-setTestingBackendJS()
 interface WaitOptions {
   name: string
   matchFn?: (event: any) => boolean
