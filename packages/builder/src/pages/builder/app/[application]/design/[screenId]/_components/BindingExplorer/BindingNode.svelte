@@ -75,6 +75,9 @@
     if (isObject) {
       return Colors.Object
     }
+    if (value instanceof Date) {
+      return Colors.Date
+    }
     switch (value) {
       case undefined:
         return Colors.Undefined
@@ -91,15 +94,12 @@
       case "number":
         return Colors.Number
     }
-    if (value instanceof Date) {
-      return Colors.Date
-    }
     return Colors.Other
   }
 
-  const copyValue = () => {
-    Helpers.copyToClipboard(JSON.stringify(value))
-    notifications.success("Value copied to clipboard")
+  const copyBinding = () => {
+    Helpers.copyToClipboard(readableBinding)
+    notifications.success("Binding copied to clipboard")
   }
 </script>
 
@@ -143,7 +143,7 @@
           hoverable
           color="var(--spectrum-global-color-gray-600)"
           hoverColor="var(--spectrum-global-color-gray-900)"
-          on:click={copyValue}
+          on:click={copyBinding}
         />
       </div>
     </div>
