@@ -3,7 +3,7 @@
   "description": "A UI solution used in the different Budibase projects.",
   "version": "0.0.0",
   "license": "MPL-2.0",
-  "svelte": "src/index.js",
+  "svelte": "src/index.ts",
   "module": "dist/bbui.mjs",
   "exports": {
     ".": {
@@ -14,7 +14,8 @@
     "./spectrum-icons-vite.js": "./src/spectrum-icons-vite.js"
   },
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "dev": "vite build --watch --mode=dev"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "1.4.0",
