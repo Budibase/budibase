@@ -43,7 +43,6 @@
   export let showDataProviders = true
 
   const dispatch = createEventDispatcher()
-  const arrayTypes = ["attachment", "array"]
 
   let anchorRight, dropdownRight
   let drawer
@@ -116,8 +115,11 @@
       }
     })
   $: fields = bindings
-    .filter(x => arrayTypes.includes(x.fieldSchema?.type))
-    .filter(x => x.fieldSchema?.tableId != null)
+    .filter(
+      x =>
+        x.fieldSchema?.type === "attachment" ||
+        (x.fieldSchema?.type === "array" && x.tableId)
+    )
     .map(binding => {
       const { providerId, readableBinding, runtimeBinding } = binding
       const { name, type, tableId } = binding.fieldSchema

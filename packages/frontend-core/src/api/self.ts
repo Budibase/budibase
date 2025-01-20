@@ -13,7 +13,7 @@ export interface SelfEndpoints {
   generateAPIKey: () => Promise<string | undefined>
   fetchDeveloperInfo: () => Promise<FetchAPIKeyResponse>
   fetchBuilderSelf: () => Promise<GetGlobalSelfResponse>
-  fetchSelf: () => Promise<AppSelfResponse>
+  fetchSelf: () => Promise<AppSelfResponse | null>
 }
 
 export const buildSelfEndpoints = (API: BaseAPIClient): SelfEndpoints => ({

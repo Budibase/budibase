@@ -8,6 +8,7 @@ import {
 import { get } from "svelte/store"
 import { Store as StoreContext } from ".."
 import { DatasourceTableActions } from "."
+import TableFetch from "../../../../fetch/TableFetch"
 
 const SuppressErrors = true
 
@@ -119,7 +120,7 @@ export const initialise = (context: StoreContext) => {
     unsubscribers.push(
       allFilters.subscribe($allFilters => {
         // Ensure we're updating the correct fetch
-        const $fetch = get(fetch)
+        const $fetch = get(fetch) as TableFetch | null
         if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
           return
         }
@@ -133,7 +134,7 @@ export const initialise = (context: StoreContext) => {
     unsubscribers.push(
       sort.subscribe($sort => {
         // Ensure we're updating the correct fetch
-        const $fetch = get(fetch)
+        const $fetch = get(fetch) as TableFetch | null
         if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
           return
         }

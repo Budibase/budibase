@@ -43,7 +43,7 @@ export const sequential = fn => {
  * invocations is enforced.
  * @param callback an async function to run
  * @param minDelay the minimum delay between invocations
- * @returns {Promise} a debounced version of the callback
+ * @returns a debounced version of the callback
  */
 export const debounce = (callback, minDelay = 1000) => {
   let timeout
@@ -208,6 +208,9 @@ export const buildFormBlockButtonConfig = props => {
     },
     {
       "##eventHandlerType": "Close Side Panel",
+    },
+    {
+      "##eventHandlerType": "Close Modal",
     },
 
     ...(actionUrl

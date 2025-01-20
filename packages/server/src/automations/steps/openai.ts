@@ -7,9 +7,8 @@ import {
   AutomationIOType,
   OpenAIStepInputs,
   OpenAIStepOutputs,
-  FeatureFlag,
 } from "@budibase/types"
-import { env, features } from "@budibase/backend-core"
+import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
 import * as pro from "@budibase/pro"
 
@@ -99,12 +98,8 @@ export async function run({
 
   try {
     let response
-    const customConfigsEnabled =
-      (await features.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS)) &&
-      (await pro.features.isAICustomConfigsEnabled())
-    const budibaseAIEnabled =
-      (await features.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
-      (await pro.features.isBudibaseAIEnabled())
+    const customConfigsEnabled = await pro.features.isAICustomConfigsEnabled()
+    const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
 
     let llmWrapper
     if (budibaseAIEnabled || customConfigsEnabled) {

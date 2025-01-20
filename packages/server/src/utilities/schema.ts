@@ -7,7 +7,7 @@ import {
   Table,
 } from "@budibase/types"
 import { ValidColumnNameRegex, helpers, utils } from "@budibase/shared-core"
-import { db } from "@budibase/backend-core"
+import { db, HTTPError, sql } from "@budibase/backend-core"
 
 type Rows = Array<Row>
 
@@ -175,15 +175,27 @@ export function parse(rows: Rows, table: Table): Rows {
       if ([FieldType.NUMBER].includes(columnType)) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
-      } else if (
-        columnType === FieldType.DATETIME &&
-        !columnSchema.timeOnly &&
-        !columnSchema.dateOnly
-      ) {
-        // If provided must be a valid date
+      } else if (columnType === FieldType.DATETIME) {
+        if (columnData && !columnSchema.timeOnly) {
+          if (!sql.utils.isValidISODateString(columnData)) {
+            let message = `Invalid format for field "${columnName}": "${columnData}".`
+            if (columnSchema.dateOnly) {
+              message += ` Date-only fields must be in the format "YYYY-MM-DD".`
+            } else {
+              message += ` Datetime fields must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SSZ".`
+            }
+            throw new HTTPError(message, 400)
+          }
+        }
+        if (columnData && columnSchema.timeOnly) {
+          if (!sql.utils.isValidTime(columnData)) {
+            throw new HTTPError(
+              `Invalid format for field "${columnName}": "${columnData}". Time-only fields must be in the format "HH:MM:SS".`,
+              400
+            )
+          }
+        }
         parsedRow[columnName] = columnData
-          ? new Date(columnData).toISOString()
-          : columnData
       } else if (
         columnType === FieldType.JSON &&
         typeof columnData === "string"

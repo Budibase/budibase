@@ -33,6 +33,7 @@ import {
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
+  UnsavedUser,
   UpdateInviteRequest,
   UpdateInviteResponse,
   User,
@@ -49,6 +50,7 @@ import {
   tenancy,
   db,
   locks,
+  context,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
@@ -66,18 +68,21 @@ const generatePassword = (length: number) => {
     .slice(0, length)
 }
 
-export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
+export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
   try {
     const currentUserId = ctx.user?._id
-    const requestUser = ctx.request.body
+    const tenantId = context.getTenantId()
+    const requestUser: User = { ...ctx.request.body, tenantId }
 
     // Do not allow the account holder role to be changed
-    const accountMetadata = await users.getExistingAccounts([requestUser.email])
-    if (accountMetadata?.length > 0) {
-      if (
-        requestUser.admin?.global !== true ||
-        requestUser.builder?.global !== true
-      ) {
+    if (
+      requestUser.admin?.global !== true ||
+      requestUser.builder?.global !== true
+    ) {
+      const accountMetadata = await users.getExistingAccounts([
+        requestUser.email,
+      ])
+      if (accountMetadata?.length > 0) {
         throw Error("Cannot set role of account holder")
       }
     }
@@ -149,7 +154,12 @@ export const bulkUpdate = async (
   let created, deleted
   try {
     if (input.create) {
-      created = await bulkCreate(input.create.users, input.create.groups)
+      const tenantId = context.getTenantId()
+      const users: User[] = input.create.users.map(user => ({
+        ...user,
+        tenantId,
+      }))
+      created = await bulkCreate(users, input.create.groups)
     }
     if (input.delete) {
       deleted = await bulkDelete(input.delete.users, currentUserId)
@@ -441,7 +451,6 @@ export const checkInvite = async (ctx: UserCtx<void, CheckInviteResponse>) => {
   } catch (e) {
     console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
-    return
   }
   ctx.body = {
     email: invite.email,
@@ -472,7 +481,6 @@ export const updateInvite = async (
     invite = await cache.invite.getCode(code)
   } catch (e) {
     ctx.throw(400, "There was a problem with the invite")
-    return
   }
 
   let updated = {

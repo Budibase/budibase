@@ -62,7 +62,7 @@ export class RowActionStore extends BudiStore<RowActionState> {
       const existingRowActions = get(this)[tableId] || []
       name = getSequentialName(existingRowActions, "New row action ", {
         getName: x => x.name,
-      })
+      })!
     }
 
     if (!name) {

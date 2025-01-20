@@ -26,13 +26,11 @@ export interface SMTPConfig extends Config<SMTPInnerConfig> {}
 export interface SettingsBrandingConfig {
   faviconUrl?: string
   faviconUrlEtag?: string
-
   emailBrandingEnabled?: boolean
   testimonialsEnabled?: boolean
   platformTitle?: string
   loginHeading?: string
   loginButton?: string
-
   metaDescription?: string
   metaImageUrl?: string
   metaTitle?: string
@@ -42,6 +40,7 @@ export interface SettingsInnerConfig {
   platformUrl?: string
   company?: string
   logoUrl?: string // Populated on read
+  docsUrl?: string
   logoUrlEtag?: string
   uniqueTenantId?: string
   analyticsEnabled?: boolean
