@@ -1,5 +1,7 @@
 import * as setup from "./utilities"
-import { FilterConditions } from "../steps/filter"
+import { automations } from "@budibase/shared-core"
+
+const FilterConditions = automations.steps.filter.FilterConditions
 
 describe("test the filter logic", () => {
   const config = setup.getConfig()
