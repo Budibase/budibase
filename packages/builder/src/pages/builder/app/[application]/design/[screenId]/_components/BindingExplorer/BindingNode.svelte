@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Icon } from "@budibase/bbui"
+  import { Icon, notifications, Helpers } from "@budibase/bbui"
 
   export let label: string | undefined = undefined
   export let value: any = undefined
@@ -96,6 +96,11 @@
     }
     return Colors.Other
   }
+
+  const copyValue = () => {
+    Helpers.copyToClipboard(JSON.stringify(value))
+    notifications.success("Value copied to clipboard")
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -131,6 +136,16 @@
       >
         {displayValue}
       </div>
+      <div class="copy-value-icon">
+        <Icon
+          name="Copy"
+          size="XS"
+          hoverable
+          color="var(--spectrum-global-color-gray-600)"
+          hoverColor="var(--spectrum-global-color-gray-900)"
+          on:click={copyValue}
+        />
+      </div>
     </div>
   {/if}
   {#if expandable && (expanded || label == null)}
@@ -155,6 +170,8 @@
     gap: 8px;
     overflow: hidden;
   }
+
+  /* Expand arrow */
   .binding-arrow {
     margin: -3px 6px -2px 4px;
     flex: 0 0 9px;
@@ -166,6 +183,8 @@
   .binding-arrow.expanded {
     transform: rotate(90deg);
   }
+
+  /* Main text wrapper */
   .binding-text {
     display: flex;
     flex-direction: row;
@@ -173,21 +192,6 @@
     font-size: 12px;
     align-items: flex-start;
     width: 100%;
-  }
-  .binding-children {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    /*padding-left: 18px;*/
-
-    border-left: 1px solid var(--spectrum-global-color-gray-400);
-    margin-left: 20px;
-    padding-left: 3px;
-  }
-  .binding-children.root {
-    border-left: none;
-    margin-left: 0;
-    padding-left: 0;
   }
 
   /* Size label and value according to type */
@@ -209,6 +213,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     transition: filter 130ms ease-out;
+    user-select: none;
   }
   .binding-value.primitive:hover {
     filter: brightness(1.25);
@@ -218,7 +223,6 @@
     word-break: break-all;
     white-space: wrap;
   }
-
   .binding-label.primitive {
     flex: 0 0 auto;
     max-width: 50%;
@@ -232,5 +236,29 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+  }
+
+  /* Copy icon for value */
+  .copy-value-icon {
+    display: none;
+    margin-left: 8px;
+  }
+  .binding-text:hover .copy-value-icon {
+    display: block;
+  }
+
+  /* Children wrapper */
+  .binding-children {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-left: 1px solid var(--spectrum-global-color-gray-400);
+    margin-left: 20px;
+    padding-left: 3px;
+  }
+  .binding-children.root {
+    border-left: none;
+    margin-left: 0;
+    padding-left: 0;
   }
 </style>
