@@ -7206,7 +7206,8 @@
       {
         "type": "table",
         "label": "Data",
-        "key": "dataSource"
+        "key": "dataSource",
+        "validator": "checkValidDatasource"
       },
       {
         "type": "radio",
