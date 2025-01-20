@@ -68,6 +68,9 @@
       port: window.location.port,
     },
     snippets: $snippets,
+    componentErrors: {
+      c5ea93132725c48b2a365fcc1facaee86: ["Ups...!"],
+    }, // TODO
   }
 
   // Refresh the preview when required
