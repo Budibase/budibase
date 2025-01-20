@@ -1,6 +1,5 @@
 <script>
-  import { notifications, Icon, Body } from "@budibase/bbui"
-  import { isActive, goto } from "@roxi/routify"
+  import { notifications, Icon } from "@budibase/bbui"
   import {
     selectedScreen,
     screenStore,
@@ -17,18 +16,8 @@
   import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
   import getScreenContextMenuItems from "./getScreenContextMenuItems"
 
-  let scrolling = false
-
   $: screenComponentId = `${$screenStore.selectedScreenId}-screen`
   $: navComponentId = `${$screenStore.selectedScreenId}-navigation`
-
-  const toNewComponentRoute = () => {
-    if ($isActive(`./:componentId/new`)) {
-      $goto(`./:componentId`)
-    } else {
-      $goto(`./:componentId/new`)
-    }
-  }
 
   const onDrop = async () => {
     try {
@@ -37,10 +26,6 @@
       console.error(error)
       notifications.error("Error saving component")
     }
-  }
-
-  const handleScroll = e => {
-    scrolling = e.target.scrollTop !== 0
   }
 
   const hover = hoverStore.hover
@@ -72,17 +57,9 @@
   }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="components">
-  <div class="header" class:scrolling>
-    <Body size="S">Components</Body>
-    <div on:click={toNewComponentRoute} class="addButton">
-      <Icon name="Add" />
-    </div>
-  </div>
   <div class="list-panel">
-    <ComponentScrollWrapper on:scroll={handleScroll}>
+    <ComponentScrollWrapper>
       <ul
         class="componentTree"
         on:contextmenu={e => openScreenContextMenu(e, false)}
@@ -168,33 +145,11 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-  }
-
-  .header {
-    height: 50px;
-    box-sizing: border-box;
-    padding: var(--spacing-l);
-    display: flex;
-    align-items: center;
-    border-bottom: 2px solid transparent;
-    transition: border-bottom 130ms ease-out;
-  }
-  .header.scrolling {
-    border-bottom: var(--border-light);
+    padding-top: var(--spacing-l);
   }
 
   .components :global(.nav-item) {
     padding-right: 8px !important;
-  }
-
-  .addButton {
-    margin-left: auto;
-    color: var(--grey-7);
-    cursor: pointer;
-  }
-
-  .addButton:hover {
-    color: var(--ink);
   }
 
   .list-panel {
