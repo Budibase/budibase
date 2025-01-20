@@ -15,6 +15,7 @@
   import {
     appsStore,
     organisation,
+    admin,
     auth,
     groups,
     licensing,
@@ -42,6 +43,7 @@
     app => app.status === AppStatus.DEPLOYED
   )
   $: userApps = getUserApps(publishedApps, userGroups, $auth.user)
+  $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   function getUserApps(publishedApps, userGroups, user) {
     if (sdk.users.isAdmin(user)) {
@@ -111,7 +113,13 @@
               </MenuItem>
               <MenuItem
                 icon="LockClosed"
-                on:click={() => changePasswordModal.show()}
+                on:click={() => {
+                  if (isOwner) {
+                    window.location.href = `${$admin.accountPortalUrl}/portal/account`
+                  } else {
+                    changePasswordModal.show()
+                  }
+                }}
               >
                 Update password
               </MenuItem>
