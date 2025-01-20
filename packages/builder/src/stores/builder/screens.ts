@@ -13,13 +13,19 @@ import {
 import { createHistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
+import { Screen } from "@budibase/types"
 
-export const INITIAL_SCREENS_STATE = {
+interface ScreenState {
+  screens: Screen[]
+  selectedScreenId: string | null
+}
+
+export const INITIAL_SCREENS_STATE: ScreenState = {
   screens: [],
   selectedScreenId: null,
 }
 
-export class ScreenStore extends BudiStore {
+export class ScreenStore extends BudiStore<ScreenState> {
   constructor() {
     super(INITIAL_SCREENS_STATE)
 
