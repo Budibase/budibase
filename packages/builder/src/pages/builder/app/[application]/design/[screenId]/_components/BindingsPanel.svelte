@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ActionButton, Helpers, PopoverAlignment } from "@budibase/bbui"
+  import { Link, Body, Helpers, Layout } from "@budibase/bbui"
   import {
     previewStore,
     selectedScreen,
@@ -9,7 +9,7 @@
   import { getBindableProperties } from "@/dataBinding"
   import BindingNode from "./BindingExplorer/BindingNode.svelte"
   import { processObjectSync } from "@budibase/string-templates"
-  import DetailPopover from "@/components/common/DetailPopover.svelte"
+  import { onMount } from "svelte"
 
   // Minimal typing for the real data binding structure, as none exists
   type DataBinding = {
@@ -69,34 +69,32 @@
     }
     return context
   }
+
+  onMount(previewStore.requestComponentContext)
 </script>
 
-<DetailPopover
-  title="Data context"
-  subtitle="Showing all bindable data context available on the /employees screen."
-  align={PopoverAlignment.Right}
->
-  <svelte:fragment slot="anchor" let:open>
-    <ActionButton
-      icon="Code"
-      quiet
-      selected={open}
-      on:click={previewStore.requestComponentContext}
-    >
-      Data context
-    </ActionButton>
-  </svelte:fragment>
-  <div class="bindings">
+<div class="bindings-panel">
+  <Layout noPadding gap="S">
+    <div class="text">
+      <Body size="S">Showing all available bindings.</Body>
+      <Link href="/">Learn more.</Link>
+    </div>
     <BindingNode value={context} />
-  </div>
-</DetailPopover>
+  </Layout>
+</div>
 
 <style>
-  .bindings {
-    margin: calc(-1 * var(--spacing-xl));
-    padding: 20px 12px;
-    background: var(--spectrum-global-color-gray-50);
+  .bindings-panel {
+    flex: 1 1 auto;
+    height: 0;
     overflow-y: auto;
-    max-height: 600px;
+    overflow-x: hidden;
+    padding: var(--spacing-l);
+  }
+  .text {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    flex-wrap: wrap;
   }
 </style>
