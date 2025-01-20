@@ -1,6 +1,6 @@
 import Router from "@koa/router"
 import * as controller from "../controllers/automation"
-import authorized from "../../middleware/authorized"
+import authorized, { authorizedResource } from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { bodyResource, paramResource } from "../../middleware/resourceId"
 import {
@@ -81,6 +81,16 @@ router
       permissions.PermissionLevel.EXECUTE
     ),
     controller.test
+  )
+  .post(
+    "/api/automations/:id/step/:stepId/test",
+    appInfoMiddleware({ appType: AppType.DEV }),
+    authorizedResource(
+      permissions.PermissionType.AUTOMATION,
+      permissions.PermissionLevel.EXECUTE,
+      "id"
+    ),
+    controller.testStep
   )
 
 export default router
