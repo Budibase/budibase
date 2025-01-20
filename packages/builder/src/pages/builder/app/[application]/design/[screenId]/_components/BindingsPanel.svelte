@@ -42,28 +42,14 @@
       snippets: $snippets,
     }) as any[]
 
-    // Enrich bindings with evaluations and highlighted HTML
+    // Deeply set values for all readable bindings
     const enrichedBindings: any[] = bindings.map((binding, idx) => {
       return {
         ...binding,
         value: bindingEvaluations[idx],
       }
     })
-
-    let context = {
-      _dataTypes: {
-        date: new Date(),
-        string: "foo",
-        number: 1234,
-        undefined: undefined,
-        null: null,
-        true: true,
-        false: false,
-        array: [1, 2, 3],
-        object: { foo: "bar" },
-        error: new Error(),
-      },
-    }
+    let context = {}
     for (let binding of enrichedBindings) {
       Helpers.deepSet(context, binding.readableBinding, binding.value)
     }
