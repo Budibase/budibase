@@ -10,6 +10,7 @@ import { iifeWrapper } from "../iife"
 import { JsTimeoutError, UserScriptError } from "../errors"
 import { cloneDeep } from "lodash/fp"
 import { Log, LogType } from "../types"
+import { isTest } from "../environment"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
@@ -126,7 +127,9 @@ export function processJS(handlebars: string, context: any) {
       const jsLineCount = frontendWrapJS(js).split(js)[0].split("\n").length
       const buildLogResponse = (type: LogType) => {
         return (...props: any[]) => {
-          console[type](...props)
+          if (!isTest()) {
+            console[type](...props)
+          }
           props.forEach((prop, index) => {
             if (typeof prop === "object") {
               props[index] = JSON.stringify(prop)

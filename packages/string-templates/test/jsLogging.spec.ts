@@ -43,4 +43,11 @@ describe("Javascript", () => {
     expect(output.logs[0].line).toEqual(1)
     expect(output.logs[0].type).toEqual("warn")
   })
+
+  it("should return the type working with error", () => {
+    const output = processJS(`console.error("error"); return 1`)
+    expect(output.logs[0].log).toEqual(["error"])
+    expect(output.logs[0].line).toEqual(1)
+    expect(output.logs[0].type).toEqual("error")
+  })
 })
