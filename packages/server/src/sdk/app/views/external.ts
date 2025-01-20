@@ -22,7 +22,9 @@ export async function get(viewId: string): Promise<ViewV2> {
   return ensureQueryUISet(found)
 }
 
-export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
+export async function getEnriched(
+  viewId: string
+): Promise<ViewV2Enriched | undefined> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
 
   const { datasourceId, tableName } = breakExternalTableId(tableId)
@@ -32,7 +34,7 @@ export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
   const views = Object.values(table.views!).filter(isV2)
   const found = views.find(v => v.id === viewId)
   if (!found) {
-    throw new Error("No view found")
+    return
   }
   return await enrichSchema(ensureQueryUISet(found), table.schema)
 }
