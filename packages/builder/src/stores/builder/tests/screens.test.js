@@ -544,7 +544,7 @@ describe("Screens store", () => {
     await bb.screenStore.delete(existingScreens[2].json())
 
     expect(bb.store.screens.length).toBe(2)
-    expect(get(componentStore).selectedComponentId).toBeNull()
+    expect(get(componentStore).selectedComponentId).toBeUndefined()
     expect(bb.store.selectedScreenId).toBeUndefined()
   })
 

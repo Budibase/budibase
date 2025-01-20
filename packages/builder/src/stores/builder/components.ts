@@ -36,8 +36,8 @@ import { utils } from "@budibase/shared-core"
 export interface ComponentState {
   components: Record<string, ComponentDefinition>
   customComponents: string[]
-  selectedComponentId?: string | null
-  componentToPaste?: Component | null
+  selectedComponentId?: string
+  componentToPaste?: Component
   settingsCache: Record<string, ComponentSetting[]>
   selectedScreenId?: string | null
 }
@@ -68,8 +68,6 @@ export interface ComponentSetting {
 export const INITIAL_COMPONENTS_STATE: ComponentState = {
   components: {},
   customComponents: [],
-  selectedComponentId: null,
-  componentToPaste: null,
   settingsCache: {},
 }
 
@@ -443,7 +441,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
    */
   createInstance(componentName: string, presetProps: any, parent: any) {
     const screen = get(selectedScreen)
-    if (!screen || !selectedScreen) {
+    if (!screen) {
       throw "A valid screen must be selected"
     }
 
@@ -548,7 +546,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
         // Find the selected component
         let selectedComponentId = state.selectedComponentId
         if (selectedComponentId?.startsWith(`${screen._id}-`)) {
-          selectedComponentId = screen.props._id || null
+          selectedComponentId = screen.props._id
         }
         const currentComponent = findComponent(
           screen.props,
@@ -659,7 +657,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Determine the next component to select, and select it before deletion
     // to avoid an intermediate state of no component selection
     const state = get(this.store)
-    let nextId: string | null = ""
+    let nextId: string = ""
     if (state.selectedComponentId === component._id) {
       nextId = this.getNext()
       if (!nextId) {
@@ -746,7 +744,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     if (!state.componentToPaste) {
       return
     }
-    let newComponentId: string | null = ""
+    let newComponentId: string = ""
 
     // Remove copied component if cutting, regardless if pasting works
     let componentToPaste = cloneDeep(state.componentToPaste)
@@ -1169,7 +1167,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
   }
 
   async handleEjectBlock(componentId: string, ejectedDefinition: Component) {
-    let nextSelectedComponentId: string | null = null
+    let nextSelectedComponentId: string | undefined
 
     await screenStore.patch((screen: Screen) => {
       const block = findComponent(screen.props, componentId)
@@ -1205,7 +1203,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
         (x: Component) => x._id === componentId
       )
       parent._children[index] = ejectedDefinition
-      nextSelectedComponentId = ejectedDefinition._id ?? null
+      nextSelectedComponentId = ejectedDefinition._id
     }, null)
 
     // Select new root component

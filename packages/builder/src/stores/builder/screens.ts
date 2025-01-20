@@ -25,7 +25,6 @@ import { ComponentDefinition } from "./components"
 interface ScreenState {
   screens: Screen[]
   selectedScreenId?: string
-  selected?: Screen
 }
 
 export const initialScreenState: ScreenState = {
@@ -65,7 +64,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
         if (!get(selectedComponent)) {
           this.update(state => ({
             ...state,
-            selectedComponentId: get(this.store).selected?.props._id,
+            selectedComponentId: get(selectedScreen)?.props._id,
           }))
         }
       },
@@ -400,10 +399,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
         deletedIds.includes(state.selectedScreenId)
       ) {
         delete state.selectedScreenId
-        componentStore.update(state => ({
-          ...state,
-          selectedComponentId: null,
-        }))
+        componentStore.update(state => {
+          delete state.selectedComponentId
+          return state
+        })
       }
 
       // Update routing
