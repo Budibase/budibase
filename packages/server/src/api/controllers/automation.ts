@@ -2,6 +2,7 @@ import * as triggers from "../../automations/triggers"
 import { sdk as coreSdk } from "@budibase/shared-core"
 import { DocumentType } from "../../db/utils"
 import { updateTestHistory, removeDeprecated } from "../../automations/utils"
+import { withTestFlag } from "../../utilities/redis"
 import { context, cache, events, db as dbCore } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
 import {
@@ -245,15 +246,17 @@ export async function test(
   const { request, appId } = ctx
   const { body } = request
 
-  const occurredAt = new Date().getTime()
-  await updateTestHistory(appId, automation, { ...body, occurredAt })
+  ctx.body = await withTestFlag(automation._id!, async () => {
+    const occurredAt = new Date().getTime()
+    await updateTestHistory(appId, automation, { ...body, occurredAt })
 
-  const user = sdk.users.getUserContextBindings(ctx.user)
-  ctx.body = await triggers.externalTrigger(
-    automation,
-    { ...prepareTestInput(body), appId, user },
-    { getResponses: true }
-  )
+    const user = sdk.users.getUserContextBindings(ctx.user)
+    return await triggers.externalTrigger(
+      automation,
+      { ...prepareTestInput(body), appId, user },
+      { getResponses: true }
+    )
+  })
 
   await events.automation.tested(automation)
 }
@@ -268,7 +271,7 @@ export async function testStep(
     ctx.throw(404, `Automation ${ctx.params.id} not found`)
   }
 
-  const step = automation.definition.steps.find(s => s.id === stepId)
+  const step = automation.definition.steps.find(s => s.stepId === stepId)
   if (!step) {
     ctx.throw(404, `Step ${stepId} not found on automation ${id}`)
   }
@@ -287,10 +290,16 @@ export async function testStep(
     ctx.throw(400, `Step ${stepId} is not a valid step`)
   }
 
-  ctx.body = await fn({
-    inputs: body.inputs,
-    context: await enrichBaseContext(body.context),
-    appId: ctx.appId,
-    emitter: new NoopEmitter(),
-  })
+  const output = await withTestFlag(
+    automation._id!,
+    async () =>
+      await fn({
+        inputs: body.inputs,
+        context: await enrichBaseContext(body.context),
+        appId: ctx.appId,
+        emitter: new NoopEmitter(),
+      })
+  )
+
+  ctx.body = output
 }
