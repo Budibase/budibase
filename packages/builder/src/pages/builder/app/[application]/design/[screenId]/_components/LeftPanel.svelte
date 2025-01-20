@@ -7,10 +7,10 @@
 
   const [resizable, resizableHandle] = getHorizontalResizeActions()
 
-  enum Tabs {
-    Components = "Components",
-    Bindings = "Bindings",
-    State = "State",
+  const Tabs = {
+    Components: "Components",
+    Bindings: "Bindings",
+    State: "State",
   }
 
   let activeTab = Tabs.Components

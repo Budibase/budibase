@@ -1,7 +1,6 @@
 <script>
   import { ActionButton, Modal, ModalContent } from "@budibase/bbui"
 
-  let visible = false
   let modal
 </script>
 
