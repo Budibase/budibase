@@ -7,10 +7,10 @@ export const enum Operations {
   Change = "Change",
 }
 
-interface Operator {
+interface Operator<T> {
   id: string
   type: Operations
-  doc: any
+  doc: T
   forwardPatch?: jsonpatch.Operation[]
   backwardsPatch?: jsonpatch.Operation[]
 }
@@ -27,16 +27,16 @@ export const initialState: HistoryState = {
   loading: false,
 }
 
-export const createHistoryStore = ({
+export const createHistoryStore = <T extends {}>({
   getDoc,
   selectDoc,
   beforeAction,
   afterAction,
 }: {
-  getDoc: any
-  selectDoc: any
-  beforeAction: any
-  afterAction: any
+  getDoc: (id: string) => T | undefined
+  selectDoc: (id: string) => void
+  beforeAction?: (operation?: Operator<T>) => void
+  afterAction?: (operation?: Operator<T>) => void
 }) => {
   // Use a derived store to check if we are able to undo or redo any operations
   const store = writable(initialState)
@@ -85,7 +85,7 @@ export const createHistoryStore = ({
    * For internal use only.
    * @param operation the operation to save
    */
-  const saveOperation = (operation: Operator) => {
+  const saveOperation = (operation: Operator<T>) => {
     store.update(state => {
       // Update history
       let history = state.history

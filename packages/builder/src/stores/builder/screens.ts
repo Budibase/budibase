@@ -18,6 +18,7 @@ import { Component, Screen } from "@budibase/types"
 interface ScreenState {
   screens: Screen[]
   selectedScreenId: string | null | undefined
+  selected?: Screen
 }
 
 export const INITIAL_SCREENS_STATE: ScreenState = {
@@ -285,7 +286,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {string | null} screenId
    * @returns
    */
-  async patch(patchFn, screenId) {
+  async patch(patchFn, screenId: string) {
     // Default to the currently selected screen
     if (!screenId) {
       const state = get(this.store)

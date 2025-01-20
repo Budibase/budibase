@@ -1434,7 +1434,7 @@ class AutomationStore extends BudiStore<AutomationState> {
   constructor() {
     super(initialAutomationState)
     this.actions = automationActions(this)
-    this.history = createHistoryStore({
+    this.history = createHistoryStore<Automation>({
       getDoc: this.actions.getDefinition.bind(this),
       selectDoc: this.actions.select.bind(this),
       beforeAction: () => {},
