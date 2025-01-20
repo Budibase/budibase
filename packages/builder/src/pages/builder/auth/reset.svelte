@@ -30,10 +30,16 @@
     try {
       loading = true
       if (forceResetPassword) {
+        const email = $auth.user.email
+        const tenantId = $auth.user.tenantId
         await auth.updateSelf({
           password,
           forceResetPassword: false,
         })
+        if (!$auth.user) {
+          // Update self will clear the platform user, so need to login
+          await auth.login(email, password, tenantId)
+        }
         $goto("../portal/")
       } else {
         await auth.resetPassword(password, resetCode)
