@@ -127,15 +127,15 @@ export const domDebounce = (callback: Function) => {
  * @param {any} props
  * */
 export const buildFormBlockButtonConfig = (props?: {
-  _id: string
-  actionType: string
-  dataSource: { resourceId: string }
-  notificationOverride: boolean
-  actionUrl: string
-  showDeleteButton: boolean
-  deleteButtonLabel: string
-  showSaveButton: boolean
-  saveButtonLabel: string
+  _id?: string
+  actionType?: string
+  dataSource?: { resourceId: string }
+  notificationOverride?: boolean
+  actionUrl?: string
+  showDeleteButton?: boolean
+  deleteButtonLabel?: string
+  showSaveButton?: boolean
+  saveButtonLabel?: string
 }) => {
   const {
     _id,
