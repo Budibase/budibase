@@ -1,8 +1,10 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
 import { cloneDeep } from "lodash"
+import { SearchFilterGroup, UISearchFilter } from "@budibase/types"
 
-export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+export const sleep = (ms: number) =>
+  new Promise(resolve => setTimeout(resolve, ms))
 
 /**
  * Utility to wrap an async function and ensure all invocations happen
@@ -10,10 +12,15 @@ export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
  * @param fn the async function to run
  * @return {Promise} a sequential version of the function
  */
-export const sequential = fn => {
-  let queue = []
-  return (...params) => {
-    return new Promise((resolve, reject) => {
+export const sequential = <
+  TReturn,
+  TFunction extends (...args: any[]) => Promise<TReturn>
+>(
+  fn: TFunction
+): ((...args: Parameters<TFunction>) => Promise<TReturn | undefined>) => {
+  let queue: any[] = []
+  return (...params: Parameters<TFunction>) => {
+    return new Promise<TReturn | undefined>((resolve, reject) => {
       queue.push(async () => {
         let data, error
         try {
@@ -45,9 +52,9 @@ export const sequential = fn => {
  * @param minDelay the minimum delay between invocations
  * @returns a debounced version of the callback
  */
-export const debounce = (callback, minDelay = 1000) => {
-  let timeout
-  return async (...params) => {
+export const debounce = (callback: Function, minDelay = 1000) => {
+  let timeout: NodeJS.Timeout
+  return async (...params: any[]) => {
     return new Promise(resolve => {
       if (timeout) {
         clearTimeout(timeout)
@@ -70,11 +77,11 @@ export const debounce = (callback, minDelay = 1000) => {
  * @param minDelay
  * @returns {Function} a throttled version function
  */
-export const throttle = (callback, minDelay = 1000) => {
-  let lastParams
+export const throttle = (callback: Function, minDelay = 1000) => {
+  let lastParams: any[]
   let stalled = false
   let pending = false
-  const invoke = (...params) => {
+  const invoke = (...params: any[]) => {
     lastParams = params
     if (stalled) {
       pending = true
@@ -98,10 +105,10 @@ export const throttle = (callback, minDelay = 1000) => {
  * @param callback the function to run
  * @returns {Function}
  */
-export const domDebounce = callback => {
+export const domDebounce = (callback: Function) => {
   let active = false
-  let lastParams
-  return (...params) => {
+  let lastParams: any[]
+  return (...params: any[]) => {
     lastParams = params
     if (!active) {
       active = true
@@ -119,7 +126,17 @@ export const domDebounce = callback => {
  *
  * @param {any} props
  * */
-export const buildFormBlockButtonConfig = props => {
+export const buildFormBlockButtonConfig = (props?: {
+  _id: string
+  actionType: string
+  dataSource: { resourceId: string }
+  notificationOverride: boolean
+  actionUrl: string
+  showDeleteButton: boolean
+  deleteButtonLabel: string
+  showSaveButton: boolean
+  saveButtonLabel: string
+}) => {
   const {
     _id,
     actionType,
@@ -227,7 +244,11 @@ export const buildFormBlockButtonConfig = props => {
 
   const defaultButtons = []
 
-  if (["Update", "Create"].includes(actionType) && showSaveButton !== false) {
+  if (
+    actionType &&
+    ["Update", "Create"].includes(actionType) &&
+    showSaveButton !== false
+  ) {
     defaultButtons.push({
       text: saveText || "Save",
       _id: Helpers.uuid(),
@@ -251,7 +272,13 @@ export const buildFormBlockButtonConfig = props => {
   return defaultButtons
 }
 
-export const buildMultiStepFormBlockDefaultProps = props => {
+export const buildMultiStepFormBlockDefaultProps = (props?: {
+  _id: string
+  stepCount: number
+  currentStep: number
+  actionType: string
+  dataSource: { resourceId: string }
+}) => {
   const { _id, stepCount, currentStep, actionType, dataSource } = props || {}
 
   // Sanity check
@@ -361,7 +388,7 @@ export const buildMultiStepFormBlockDefaultProps = props => {
  * @param {Object} filter UI filter
  * @returns {Object} parsed filter
  */
-export function parseFilter(filter) {
+export function parseFilter(filter: UISearchFilter) {
   if (!filter?.groups) {
     return filter
   }
@@ -369,13 +396,13 @@ export function parseFilter(filter) {
   const update = cloneDeep(filter)
 
   update.groups = update.groups
-    .map(group => {
-      group.filters = group.filters.filter(filter => {
+    ?.map(group => {
+      group.filters = group.filters?.filter((filter: any) => {
         return filter.field && filter.operator
       })
-      return group.filters.length ? group : null
+      return group.filters?.length ? group : null
     })
-    .filter(group => group)
+    .filter((group): group is SearchFilterGroup => !!group)
 
   return update
 }
