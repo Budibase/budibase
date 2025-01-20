@@ -2,10 +2,10 @@
   import "@spectrum-css/typography/dist/index-vars.css"
 
   // Sizes
-  export let size = "M"
-  export let textAlign = undefined
-  export let noPadding = false
-  export let weight = "default" // light, heavy, default
+  export let size: "XS" | "S" | "M" | "L" = "M"
+  export let textAlign: string | undefined = undefined
+  export let noPadding: boolean = false
+  export let weight: "light" | "heavy" | "default" = "default"
 </script>
 
 <h1

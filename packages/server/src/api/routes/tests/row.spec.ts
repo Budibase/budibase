@@ -8,7 +8,13 @@ import {
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
-import { context, InternalTable, tenancy, utils } from "@budibase/backend-core"
+import {
+  context,
+  setEnv,
+  InternalTable,
+  tenancy,
+  utils,
+} from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AIOperationEnum,
@@ -42,19 +48,8 @@ import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
 import { JsTimeoutError } from "@budibase/string-templates"
 import { isDate } from "../../../utilities"
-
-jest.mock("@budibase/pro", () => ({
-  ...jest.requireActual("@budibase/pro"),
-  ai: {
-    LargeLanguageModel: {
-      forCurrentTenant: async () => ({
-        llm: {},
-        run: jest.fn(() => `Mock LLM Response`),
-        buildPromptFromAIOperation: jest.fn(),
-      }),
-    },
-  },
-}))
+import nock from "nock"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -99,6 +94,8 @@ if (descriptions.length) {
         const ds = await dsProvider()
         datasource = ds.datasource
         client = ds.client
+
+        mocks.licenses.useCloudFree()
       })
 
       afterAll(async () => {
@@ -171,10 +168,6 @@ if (descriptions.length) {
           ...overrides
         )
       }
-
-      beforeEach(async () => {
-        mocks.licenses.useCloudFree()
-      })
 
       const getRowUsage = async () => {
         const { total } = await config.doInContext(undefined, () =>
@@ -2050,6 +2043,101 @@ if (descriptions.length) {
             expect(rows[0].name).toEqual("Clare updated")
             expect(rows[1].name).toEqual("Jeff updated")
           })
+
+        it("should reject bulkImport date only fields with wrong format", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  type: FieldType.DATETIME,
+                  dateOnly: true,
+                  name: "date",
+                },
+              },
+            })
+          )
+
+          await config.api.row.bulkImport(
+            table._id!,
+            {
+              rows: [
+                {
+                  date: "01.02.2024",
+                },
+              ],
+            },
+            {
+              status: 400,
+              body: {
+                message:
+                  'Invalid format for field "date": "01.02.2024". Date-only fields must be in the format "YYYY-MM-DD".',
+              },
+            }
+          )
+        })
+
+        it("should reject bulkImport date time fields with wrong format", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  type: FieldType.DATETIME,
+                  name: "date",
+                },
+              },
+            })
+          )
+
+          await config.api.row.bulkImport(
+            table._id!,
+            {
+              rows: [
+                {
+                  date: "01.02.2024",
+                },
+              ],
+            },
+            {
+              status: 400,
+              body: {
+                message:
+                  'Invalid format for field "date": "01.02.2024". Datetime fields must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SSZ".',
+              },
+            }
+          )
+        })
+
+        it("should reject bulkImport time fields with wrong format", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                time: {
+                  type: FieldType.DATETIME,
+                  timeOnly: true,
+                  name: "time",
+                },
+              },
+            })
+          )
+
+          await config.api.row.bulkImport(
+            table._id!,
+            {
+              rows: [
+                {
+                  time: "3pm",
+                },
+              ],
+            },
+            {
+              status: 400,
+              body: {
+                message:
+                  'Invalid format for field "time": "3pm". Time-only fields must be in the format "HH:MM:SS".',
+              },
+            }
+          )
+        })
       })
 
       describe("enrich", () => {
@@ -2348,7 +2436,7 @@ if (descriptions.length) {
               [FieldType.ARRAY]: ["options 2", "options 4"],
               [FieldType.NUMBER]: generator.natural(),
               [FieldType.BOOLEAN]: generator.bool(),
-              [FieldType.DATETIME]: generator.date().toISOString(),
+              [FieldType.DATETIME]: generator.date().toISOString().slice(0, 10),
               [FieldType.ATTACHMENTS]: [setup.structures.basicAttachment()],
               [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
               [FieldType.FORMULA]: undefined, // generated field
@@ -3224,10 +3312,17 @@ if (descriptions.length) {
       isInternal &&
         describe("AI fields", () => {
           let table: Table
+          let envCleanup: () => void
 
           beforeAll(async () => {
             mocks.licenses.useBudibaseAI()
             mocks.licenses.useAICustomConfigs()
+            envCleanup = setEnv({
+              OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
+            })
+
+            mockChatGPTResponse("Mock LLM Response")
+
             table = await config.api.table.save(
               saveTableRequest({
                 schema: {
@@ -3251,7 +3346,9 @@ if (descriptions.length) {
           })
 
           afterAll(() => {
-            jest.unmock("@budibase/pro")
+            nock.cleanAll()
+            envCleanup()
+            mocks.licenses.useCloudFree()
           })
 
           it("should be able to save a row with an AI column", async () => {
@@ -3552,6 +3649,51 @@ if (descriptions.length) {
           )
         })
       })
+
+      if (isInternal || isMSSQL) {
+        describe("Fields with spaces", () => {
+          let table: Table
+          let otherTable: Table
+          let relatedRow: Row
+
+          beforeAll(async () => {
+            otherTable = await config.api.table.save(defaultTable())
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  links: {
+                    name: "links",
+                    fieldName: "links",
+                    type: FieldType.LINK,
+                    tableId: otherTable._id!,
+                    relationshipType: RelationshipType.ONE_TO_MANY,
+                  },
+                  "nameWithSpace ": {
+                    name: "nameWithSpace ",
+                    type: FieldType.STRING,
+                  },
+                },
+              })
+            )
+            relatedRow = await config.api.row.save(otherTable._id!, {
+              name: generator.word(),
+              description: generator.paragraph(),
+            })
+            await config.api.row.save(table._id!, {
+              "nameWithSpace ": generator.word(),
+              tableId: table._id!,
+              links: [relatedRow._id],
+            })
+          })
+
+          it("Successfully returns rows that have spaces in their field names", async () => {
+            const { rows } = await config.api.row.search(table._id!)
+            expect(rows.length).toBe(1)
+            const row = rows[0]
+            expect(row["nameWithSpace "]).toBeDefined()
+          })
+        })
+      }
 
       if (!isInternal && !isOracle) {
         describe("bigint ids", () => {

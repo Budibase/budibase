@@ -1,5 +1,5 @@
 import { writable, derived, get, Writable, Readable } from "svelte/store"
-import { fetchData } from "../../../fetch"
+import { DataFetch, fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import {
   generateRowID,
@@ -10,7 +10,7 @@ import {
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
-import { FieldType, Row, UIFetchAPI, UIRow } from "@budibase/types"
+import { FieldType, Row, UIRow } from "@budibase/types"
 import { getRelatedTableValues } from "../../../utils"
 import { Store as StoreContext } from "."
 
@@ -20,7 +20,7 @@ interface IndexedUIRow extends UIRow {
 
 interface RowStore {
   rows: Writable<UIRow[]>
-  fetch: Writable<UIFetchAPI | null>
+  fetch: Writable<DataFetch | null>
   loaded: Writable<boolean>
   refreshing: Writable<boolean>
   loading: Writable<boolean>
@@ -225,7 +225,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     })
 
     // Subscribe to changes of this fetch model
-    unsubscribe = newFetch.subscribe(async ($fetch: UIFetchAPI) => {
+    unsubscribe = newFetch.subscribe(async $fetch => {
       if ($fetch.error) {
         // Present a helpful error to the user
         let message = "An unknown error occurred"
@@ -253,7 +253,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
 
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
-          definition.set($fetch.definition)
+          definition.set($fetch.definition ?? null)
         }
 
         // Reset scroll state when data changes

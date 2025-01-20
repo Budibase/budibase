@@ -236,13 +236,13 @@
     }
 
     if (!role) {
-      await groups.actions.removeApp(target._id, prodAppId)
+      await groups.removeApp(target._id, prodAppId)
     } else {
-      await groups.actions.addApp(target._id, prodAppId, role)
+      await groups.addApp(target._id, prodAppId, role)
     }
 
     await usersFetch.refresh()
-    await groups.actions.init()
+    await groups.init()
   }
 
   const onUpdateGroup = async (group, role) => {
@@ -268,7 +268,7 @@
       if (!group.roles) {
         return false
       }
-      return groups.actions.getGroupAppIds(group).includes(appId)
+      return groups.getGroupAppIds(group).includes(appId)
     })
   }
 
@@ -299,7 +299,7 @@
       role: group?.builder?.apps.includes(prodAppId)
         ? Constants.Roles.CREATOR
         : group.roles?.[
-            groups.actions.getGroupAppIds(group).find(x => x === prodAppId)
+            groups.getGroupAppIds(group).find(x => x === prodAppId)
           ],
     }
   }
@@ -442,13 +442,11 @@
 
   const onUpdateUserInvite = async (invite, role) => {
     let updateBody = {
-      code: invite.code,
       apps: {
         ...invite.apps,
         [prodAppId]: role,
       },
     }
-
     if (role === Constants.Roles.CREATOR) {
       updateBody.builder = updateBody.builder || {}
       updateBody.builder.apps = [...(updateBody.builder.apps ?? []), prodAppId]
@@ -456,7 +454,7 @@
     } else if (role !== Constants.Roles.CREATOR && invite?.builder?.apps) {
       invite.builder.apps = []
     }
-    await users.updateInvite(updateBody)
+    await users.updateInvite(invite.code, updateBody)
     await filterInvites(query)
   }
 
@@ -470,8 +468,7 @@
     let updated = { ...invite }
     delete updated.info.apps[prodAppId]
 
-    return await users.updateInvite({
-      code: updated.code,
+    return await users.updateInvite(updated.code, {
       apps: updated.apps,
     })
   }
@@ -485,12 +482,12 @@
   }
 
   const removeGroupAppBuilder = async groupId => {
-    await groups.actions.removeGroupAppBuilder(groupId, prodAppId)
+    await groups.removeGroupAppBuilder(groupId, prodAppId)
   }
 
   const initSidePanel = async sidePaneOpen => {
     if (sidePaneOpen === true) {
-      await groups.actions.init()
+      await groups.init()
     }
     loaded = true
   }

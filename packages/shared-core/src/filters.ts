@@ -699,7 +699,27 @@ export function runQuery<T extends Record<string, any>>(
       return docValue._id === testValue
     }
 
-    return docValue === testValue
+    if (docValue === testValue) {
+      return true
+    }
+
+    if (docValue == null && testValue != null) {
+      return false
+    }
+
+    if (docValue != null && testValue == null) {
+      return false
+    }
+
+    const leftDate = dayjs(docValue)
+    if (leftDate.isValid()) {
+      const rightDate = dayjs(testValue)
+      if (rightDate.isValid()) {
+        return leftDate.isSame(rightDate)
+      }
+    }
+
+    return false
   }
 
   const not =
@@ -911,8 +931,8 @@ export function sort<T extends Record<string, any>>(
  * @param docs the data
  * @param limit the number of docs to limit to
  */
-export function limit<T>(docs: T[], limit: string): T[] {
-  const numLimit = parseFloat(limit)
+export function limit<T>(docs: T[], limit: string | number): T[] {
+  const numLimit = typeof limit === "number" ? limit : parseFloat(limit)
   if (isNaN(numLimit)) {
     return docs
   }
