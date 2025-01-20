@@ -33,7 +33,16 @@ import { Utils } from "@budibase/frontend-core"
 import { Component, FieldType, Screen, Table } from "@budibase/types"
 import { utils } from "@budibase/shared-core"
 
-interface ComponentDefinition {
+export interface ComponentState {
+  components: Record<string, ComponentDefinition>
+  customComponents: string[]
+  selectedComponentId?: string
+  componentToPaste?: Component
+  settingsCache: Record<string, ComponentSetting[]>
+  selectedScreenId?: string | null
+}
+
+export interface ComponentDefinition {
   component: string
   name: string
   friendlyName?: string
@@ -41,9 +50,11 @@ interface ComponentDefinition {
   settings?: ComponentSetting[]
   features?: Record<string, boolean>
   typeSupportPresets?: Record<string, any>
+  legalDirectChildren: string[]
+  illegalChildren: string[]
 }
 
-interface ComponentSetting {
+export interface ComponentSetting {
   key: string
   type: string
   section?: string
@@ -54,20 +65,9 @@ interface ComponentSetting {
   settings?: ComponentSetting[]
 }
 
-interface ComponentState {
-  components: Record<string, ComponentDefinition>
-  customComponents: string[]
-  selectedComponentId: string | null
-  componentToPaste?: Component | null
-  settingsCache: Record<string, ComponentSetting[]>
-  selectedScreenId?: string | null
-}
-
 export const INITIAL_COMPONENTS_STATE: ComponentState = {
   components: {},
   customComponents: [],
-  selectedComponentId: null,
-  componentToPaste: null,
   settingsCache: {},
 }
 
@@ -440,6 +440,11 @@ export class ComponentStore extends BudiStore<ComponentState> {
    * @returns
    */
   createInstance(componentName: string, presetProps: any, parent: any) {
+    const screen = get(selectedScreen)
+    if (!screen) {
+      throw "A valid screen must be selected"
+    }
+
     const definition = this.getDefinition(componentName)
     if (!definition) {
       return null
@@ -461,7 +466,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Standard post processing
     this.enrichEmptySettings(instance, {
       parent,
-      screen: get(selectedScreen),
+      screen,
       useDefaultValues: true,
     })
 
@@ -481,7 +486,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Add step name to form steps
     if (componentName.endsWith("/formstep")) {
       const parentForm = findClosestMatchingComponent(
-        get(selectedScreen).props,
+        screen.props,
         get(selectedComponent)._id,
         (component: Component) => component._component.endsWith("/form")
       )
@@ -541,7 +546,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
         // Find the selected component
         let selectedComponentId = state.selectedComponentId
         if (selectedComponentId?.startsWith(`${screen._id}-`)) {
-          selectedComponentId = screen.props._id || null
+          selectedComponentId = screen.props._id
         }
         const currentComponent = findComponent(
           screen.props,
@@ -652,7 +657,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Determine the next component to select, and select it before deletion
     // to avoid an intermediate state of no component selection
     const state = get(this.store)
-    let nextId: string | null = ""
+    let nextId = ""
     if (state.selectedComponentId === component._id) {
       nextId = this.getNext()
       if (!nextId) {
@@ -739,7 +744,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     if (!state.componentToPaste) {
       return
     }
-    let newComponentId: string | null = ""
+    let newComponentId = ""
 
     // Remove copied component if cutting, regardless if pasting works
     let componentToPaste = cloneDeep(state.componentToPaste)
@@ -841,6 +846,9 @@ export class ComponentStore extends BudiStore<ComponentState> {
     const state = get(this.store)
     const componentId = state.selectedComponentId
     const screen = get(selectedScreen)
+    if (!screen) {
+      throw "A valid screen must be selected"
+    }
     const parent = findComponentParent(screen.props, componentId)
     const index = parent?._children.findIndex(
       (x: Component) => x._id === componentId
@@ -890,6 +898,9 @@ export class ComponentStore extends BudiStore<ComponentState> {
     const component = get(selectedComponent)
     const componentId = component?._id
     const screen = get(selectedScreen)
+    if (!screen) {
+      throw "A valid screen must be selected"
+    }
     const parent = findComponentParent(screen.props, componentId)
     const index = parent?._children.findIndex(
       (x: Component) => x._id === componentId
@@ -1156,7 +1167,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
   }
 
   async handleEjectBlock(componentId: string, ejectedDefinition: Component) {
-    let nextSelectedComponentId: string | null = null
+    let nextSelectedComponentId: string | undefined
 
     await screenStore.patch((screen: Screen) => {
       const block = findComponent(screen.props, componentId)
@@ -1192,7 +1203,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
         (x: Component) => x._id === componentId
       )
       parent._children[index] = ejectedDefinition
-      nextSelectedComponentId = ejectedDefinition._id ?? null
+      nextSelectedComponentId = ejectedDefinition._id
     }, null)
 
     // Select new root component
