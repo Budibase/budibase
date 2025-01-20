@@ -82,11 +82,7 @@ async function queueRelevantRowAutomations(
       // don't queue events which are for dev apps, only way to test automations is
       // running tests on them, in production the test flag will never
       // be checked due to lazy evaluation (first always false)
-      if (
-        !env.ALLOW_DEV_AUTOMATIONS &&
-        isDevAppID(event.appId) &&
-        !(await checkTestFlag(automation._id!))
-      ) {
+      if (!env.ALLOW_DEV_AUTOMATIONS && isDevAppID(event.appId)) {
         continue
       }
 
@@ -170,10 +166,7 @@ export async function externalTrigger(
     throw new Error("Automation is disabled")
   }
 
-  if (
-    sdk.automations.isAppAction(automation) &&
-    !(await checkTestFlag(automation._id!))
-  ) {
+  if (sdk.automations.isAppAction(automation) && !isDevAppID(params.appId)) {
     // values are likely to be submitted as strings, so we shall convert to correct type
     const coercedFields: any = {}
     const fields = automation.definition.trigger.inputs.fields
