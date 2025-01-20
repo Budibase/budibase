@@ -12,7 +12,7 @@
     decodeJSBinding,
     encodeJSBinding,
     processObjectSync,
-    processStringSync,
+    processStringWithLogsSync,
   } from "@budibase/string-templates"
   import { readableToRuntimeBinding } from "@/dataBinding"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
@@ -41,6 +41,7 @@
     InsertAtPositionFn,
     JSONValue,
   } from "@budibase/types"
+  import type { Log } from "@budibase/string-templates"
   import type { CompletionContext } from "@codemirror/autocomplete"
 
   const dispatch = createEventDispatcher()
@@ -66,6 +67,7 @@
   let insertAtPos: InsertAtPositionFn | undefined
   let targetMode: BindingMode | null = null
   let expressionResult: string | undefined
+  let expressionLogs: Log[] | undefined
   let expressionError: string | undefined
   let evaluating = false
 
@@ -157,7 +159,7 @@
     (expression: string | null, context: any, snippets: Snippet[]) => {
       try {
         expressionError = undefined
-        expressionResult = processStringSync(
+        const output = processStringWithLogsSync(
           expression || "",
           {
             ...context,
@@ -167,6 +169,8 @@
             noThrow: false,
           }
         )
+        expressionResult = output.result
+        expressionLogs = output.logs
       } catch (err: any) {
         expressionResult = undefined
         expressionError = err
@@ -421,6 +425,7 @@
         <EvaluationSidePanel
           {expressionResult}
           {expressionError}
+          {expressionLogs}
           {evaluating}
           expression={editorValue ? editorValue : ""}
         />

@@ -1,9 +1,16 @@
-import { atob, isBackendService, isJSAllowed } from "../utilities"
+import {
+  atob,
+  frontendWrapJS,
+  isBackendService,
+  isJSAllowed,
+} from "../utilities"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
 import { JsTimeoutError, UserScriptError } from "../errors"
 import { cloneDeep } from "lodash/fp"
+import { Log, LogType } from "../types"
+import { isTest } from "../environment"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
@@ -81,7 +88,7 @@ export function processJS(handlebars: string, context: any) {
 
     let clonedContext: Record<string, any>
     if (isBackendService()) {
-      // On the backned, values are copied across the isolated-vm boundary and
+      // On the backend, values are copied across the isolated-vm boundary and
       // so we don't need to do any cloning here. This does create a fundamental
       // difference in how JS executes on the frontend vs the backend, e.g.
       // consider this snippet:
@@ -96,10 +103,9 @@ export function processJS(handlebars: string, context: any) {
       clonedContext = cloneDeep(context)
     }
 
-    const sandboxContext = {
+    const sandboxContext: Record<string, any> = {
       $: (path: string) => getContextValue(path, clonedContext),
       helpers: getJsHelperList(),
-
       // Proxy to evaluate snippets when running in the browser
       snippets: new Proxy(
         {},
@@ -114,8 +120,49 @@ export function processJS(handlebars: string, context: any) {
       ),
     }
 
+    const logs: Log[] = []
+    // logging only supported on frontend
+    if (!isBackendService()) {
+      // this counts the lines in the wrapped JS *before* the user's code, so that we can minus it
+      const jsLineCount = frontendWrapJS(js).split(js)[0].split("\n").length
+      const buildLogResponse = (type: LogType) => {
+        return (...props: any[]) => {
+          if (!isTest()) {
+            console[type](...props)
+          }
+          props.forEach((prop, index) => {
+            if (typeof prop === "object") {
+              props[index] = JSON.stringify(prop)
+            }
+          })
+          // quick way to find out what line this is being called from
+          // its an anonymous function and we look for the overall length to find the
+          // line number we care about (from the users function)
+          // JS stack traces are in the format function:line:column
+          const lineNumber = new Error().stack?.match(
+            /<anonymous>:(\d+):\d+/
+          )?.[1]
+          logs.push({
+            log: props,
+            line: lineNumber ? parseInt(lineNumber) - jsLineCount : undefined,
+            type,
+          })
+        }
+      }
+      sandboxContext.console = {
+        log: buildLogResponse("log"),
+        info: buildLogResponse("info"),
+        debug: buildLogResponse("debug"),
+        warn: buildLogResponse("warn"),
+        error: buildLogResponse("error"),
+        // table should be treated differently, but works the same
+        // as the rest of the logs for now
+        table: buildLogResponse("table"),
+      }
+    }
+
     // Create a sandbox with our context and run the JS
-    const res = { data: runJS(js, sandboxContext) }
+    const res = { data: runJS(js, sandboxContext), logs }
     return `{{${LITERAL_MARKER} js_result-${JSON.stringify(res)}}}`
   } catch (error: any) {
     onErrorLog && onErrorLog(error)

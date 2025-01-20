@@ -1,9 +1,16 @@
 import { FIND_HBS_REGEX } from "../utilities"
 import * as preprocessor from "./preprocessor"
+import type { Preprocessor } from "./preprocessor"
 import * as postprocessor from "./postprocessor"
-import { ProcessOptions } from "../types"
+import type { Postprocessor } from "./postprocessor"
+import { Log, ProcessOptions } from "../types"
 
-function process(output: string, processors: any[], opts?: ProcessOptions) {
+function process(
+  output: string,
+  processors: (Preprocessor | Postprocessor)[],
+  opts?: ProcessOptions
+) {
+  let logs: Log[] = []
   for (let processor of processors) {
     // if a literal statement has occurred stop
     if (typeof output !== "string") {
@@ -16,10 +23,18 @@ function process(output: string, processors: any[], opts?: ProcessOptions) {
       continue
     }
     for (let match of matches) {
-      output = processor.process(output, match, opts)
+      const res = processor.process(output, match, opts || {})
+      if (typeof res === "object") {
+        if ("logs" in res && res.logs) {
+          logs = logs.concat(res.logs)
+        }
+        output = res.result
+      } else {
+        output = res as string
+      }
     }
   }
-  return output
+  return { result: output, logs }
 }
 
 export function preprocess(string: string, opts: ProcessOptions) {
@@ -30,8 +45,13 @@ export function preprocess(string: string, opts: ProcessOptions) {
     )
   }
 
-  return process(string, processors, opts)
+  return process(string, processors, opts).result
 }
+
 export function postprocess(string: string) {
+  return process(string, postprocessor.processors).result
+}
+
+export function postprocessWithLogs(string: string) {
   return process(string, postprocessor.processors)
 }
