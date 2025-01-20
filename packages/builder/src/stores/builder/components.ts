@@ -657,7 +657,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Determine the next component to select, and select it before deletion
     // to avoid an intermediate state of no component selection
     const state = get(this.store)
-    let nextId: string = ""
+    let nextId = ""
     if (state.selectedComponentId === component._id) {
       nextId = this.getNext()
       if (!nextId) {
@@ -744,7 +744,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     if (!state.componentToPaste) {
       return
     }
-    let newComponentId: string = ""
+    let newComponentId = ""
 
     // Remove copied component if cutting, regardless if pasting works
     let componentToPaste = cloneDeep(state.componentToPaste)
