@@ -18,6 +18,7 @@ import * as queryRow from "./steps/queryRows"
 import * as collect from "./steps/collect"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import * as openai from "./steps/openai"
+import * as bash from "./steps/bash"
 import env from "../environment"
 import {
   PluginType,
@@ -88,9 +89,8 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
 // the fact this isn't included in any definitions means it cannot be
 // ran at all
 if (env.SELF_HOSTED) {
-  // @ts-ignore
-  ACTION_IMPLS["EXECUTE_BASH"] = automations.steps.bash.run
-  // @ts-ignore
+  // @ts-expect-error
+  ACTION_IMPLS["EXECUTE_BASH"] = bash.run
   BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = automations.steps.bash.definition
 
   if (env.isTest()) {
