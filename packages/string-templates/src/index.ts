@@ -240,7 +240,7 @@ function processStringSyncInternal(
           string = string.replace(block, outcome)
         }
       }
-      return opts?.logging ? string : { result: string, logs }
+      return !opts?.logging ? string : { result: string, logs }
     } else {
       return process(string)
     }
