@@ -1,6 +1,13 @@
 <script>
   import { automationStore, selectedAutomation } from "@/stores/builder"
-  import { Icon, Body, AbsTooltip, StatusLight } from "@budibase/bbui"
+  import {
+    Icon,
+    Body,
+    AbsTooltip,
+    StatusLight,
+    Tags,
+    Tag,
+  } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
   import { Features } from "@/constants/backend/automations"
@@ -24,6 +31,7 @@
   $: blockRefs = $selectedAutomation?.blockRefs || {}
   $: stepNames = automation?.definition.stepNames || {}
   $: allSteps = automation?.definition.steps || []
+  $: blockDefinition = $automationStore.blockDefinitions.ACTION[block.stepId]
   $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult)
@@ -135,7 +143,16 @@
         {#if isHeaderTrigger}
           <Body size="XS"><b>Trigger</b></Body>
         {:else}
-          <Body size="XS"><b>{isBranch ? "Branch" : "Step"}</b></Body>
+          <Body size="XS">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <b>{isBranch ? "Branch" : "Step"}</b>
+              {#if blockDefinition.deprecated}
+                <Tags>
+                  <Tag invalid>Deprecated</Tag>
+                </Tags>
+              {/if}
+            </div>
+          </Body>
         {/if}
 
         {#if enableNaming}

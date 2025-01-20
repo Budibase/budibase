@@ -1,3 +1,8 @@
+import {
+  GetAutomationActionDefinitionsResponse,
+  GetAutomationTriggerDefinitionsResponse,
+} from "../../api"
+
 export interface BranchPath {
   stepIdx: number
   branchIdx: number
@@ -6,7 +11,7 @@ export interface BranchPath {
 }
 
 export interface BlockDefinitions {
-  TRIGGER: Record<string, any>
-  CREATABLE_TRIGGER: Record<string, any>
-  ACTION: Record<string, any>
+  TRIGGER: Partial<GetAutomationTriggerDefinitionsResponse>
+  CREATABLE_TRIGGER: Partial<GetAutomationTriggerDefinitionsResponse>
+  ACTION: Partial<GetAutomationActionDefinitionsResponse>
 }

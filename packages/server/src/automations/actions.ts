@@ -3,6 +3,7 @@ import * as createRow from "./steps/createRow"
 import * as updateRow from "./steps/updateRow"
 import * as deleteRow from "./steps/deleteRow"
 import * as executeScript from "./steps/executeScript"
+import * as executeScriptV2 from "./steps/executeScriptV2"
 import * as executeQuery from "./steps/executeQuery"
 import * as outgoingWebhook from "./steps/outgoingWebhook"
 import * as serverLog from "./steps/serverLog"
@@ -42,6 +43,7 @@ const ACTION_IMPLS: ActionImplType = {
   DELETE_ROW: deleteRow.run,
   OUTGOING_WEBHOOK: outgoingWebhook.run,
   EXECUTE_SCRIPT: executeScript.run,
+  EXECUTE_SCRIPT_V2: executeScriptV2.run,
   EXECUTE_QUERY: executeQuery.run,
   SERVER_LOG: serverLog.run,
   DELAY: delay.run,
@@ -68,6 +70,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   DELETE_ROW: deleteRow.definition,
   OUTGOING_WEBHOOK: outgoingWebhook.definition,
   EXECUTE_SCRIPT: executeScript.definition,
+  EXECUTE_SCRIPT_V2: executeScriptV2.definition,
   EXECUTE_QUERY: executeQuery.definition,
   SERVER_LOG: serverLog.definition,
   DELAY: delay.definition,

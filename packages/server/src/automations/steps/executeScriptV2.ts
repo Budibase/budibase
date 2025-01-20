@@ -1,5 +1,3 @@
-import * as scriptController from "../../api/controllers/script"
-import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
@@ -11,17 +9,17 @@ import {
   ExecuteScriptStepInputs,
   ExecuteScriptStepOutputs,
 } from "@budibase/types"
-import { EventEmitter } from "events"
+import { processStringSync } from "@budibase/string-templates"
 
 export const definition: AutomationStepDefinition = {
-  name: "JS Scripting",
-  deprecated: true,
+  name: "JavaScript",
   tagline: "Execute JavaScript Code",
-  icon: "Code",
+  icon: "Brackets",
   description: "Run a piece of JavaScript code in your automation",
   type: AutomationStepType.ACTION,
   internal: true,
-  stepId: AutomationActionStepId.EXECUTE_SCRIPT,
+  new: true,
+  stepId: AutomationActionStepId.EXECUTE_SCRIPT_V2,
   inputs: {},
   features: {
     [AutomationFeature.LOOPING]: true,
@@ -55,16 +53,14 @@ export const definition: AutomationStepDefinition = {
 
 export async function run({
   inputs,
-  appId,
   context,
-  emitter,
 }: {
   inputs: ExecuteScriptStepInputs
-  appId: string
-  context: object
-  emitter: EventEmitter
+  context: Record<string, any>
 }): Promise<ExecuteScriptStepOutputs> {
-  if (inputs.code == null) {
+  let { code } = inputs
+
+  if (code == null) {
     return {
       success: false,
       response: {
@@ -73,18 +69,21 @@ export async function run({
     }
   }
 
-  const ctx: any = buildCtx(appId, emitter, {
-    body: {
-      script: inputs.code,
-      context,
-    },
-  })
+  code = code.trim()
+
+  if (!code.startsWith("{{ js ")) {
+    return {
+      success: false,
+      response: {
+        message: "Expected code to be a {{ js }} template block",
+      },
+    }
+  }
 
   try {
-    await scriptController.execute(ctx)
     return {
       success: true,
-      value: ctx.body,
+      value: processStringSync(inputs.code, context, { noThrow: false }),
     }
   } catch (err) {
     return {

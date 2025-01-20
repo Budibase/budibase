@@ -23,9 +23,8 @@
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let selectedAction
   let actions = Object.entries($automationStore.blockDefinitions.ACTION).filter(
-    entry => {
-      const [key] = entry
-      return key !== AutomationActionStepId.BRANCH
+    ([key, action]) => {
+      return key !== AutomationActionStepId.BRANCH && action.deprecated !== true
     }
   )
   let lockedFeatures = [
@@ -186,6 +185,10 @@
               </div>
             {:else if isDisabled}
               <Icon name="Help" tooltip={disabled()[idx].message} />
+            {:else if action.new}
+              <Tags>
+                <Tag emphasized>New</Tag>
+              </Tags>
             {/if}
           </div>
         </div>
@@ -227,6 +230,10 @@
     grid-gap: var(--spectrum-alias-grid-baseline);
   }
 
+  .item :global(.spectrum-Tags-itemLabel) {
+    cursor: pointer;
+  }
+
   .item {
     cursor: pointer;
     grid-gap: var(--spectrum-alias-grid-margin-xsmall);
@@ -237,6 +244,8 @@
     border-radius: 5px;
     box-sizing: border-box;
     border-width: 2px;
+    min-height: 3.5rem;
+    display: flex;
   }
   .item:not(.disabled):hover,
   .selected {
