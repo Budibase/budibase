@@ -1,4 +1,4 @@
-import * as jsonpatch from "fast-json-patch/index.mjs"
+import * as jsonpatch from "fast-json-patch"
 import { writable, derived, get } from "svelte/store"
 
 export const Operations = {
