@@ -28,7 +28,6 @@ import {
   LockType,
   LookupAccountHolderResponse,
   LookupTenantUserResponse,
-  MigrationType,
   PlatformUserByEmail,
   SaveUserResponse,
   SearchUsersRequest,
@@ -45,7 +44,6 @@ import {
   cache,
   ErrorCode,
   events,
-  migrations,
   platform,
   tenancy,
   db,
@@ -187,10 +185,6 @@ export const adminUser = async (
   if (env.MULTI_TENANCY) {
     // store the new tenant record in the platform db
     await platform.tenants.addTenant(tenantId)
-    await migrations.backPopulateMigrations({
-      type: MigrationType.GLOBAL,
-      tenantId,
-    })
   }
 
   await tenancy.doInTenant(tenantId, async () => {
