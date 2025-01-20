@@ -88,7 +88,7 @@ export function processJS(handlebars: string, context: any) {
 
     let clonedContext: Record<string, any>
     if (isBackendService()) {
-      // On the backned, values are copied across the isolated-vm boundary and
+      // On the backend, values are copied across the isolated-vm boundary and
       // so we don't need to do any cloning here. This does create a fundamental
       // difference in how JS executes on the frontend vs the backend, e.g.
       // consider this snippet:

@@ -1,9 +1,5 @@
 import { validate as isValidUUID } from "uuid"
-import {
-  processStringSync,
-  encodeJSBinding,
-  setTestingBackendJS,
-} from "@budibase/string-templates"
+import { processStringSync, encodeJSBinding } from "@budibase/string-templates"
 
 import { runJsHelpersTests } from "@budibase/string-templates/test/utils"
 
@@ -11,7 +7,6 @@ import tk from "timekeeper"
 import { init } from ".."
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 
-setTestingBackendJS()
 const DATE = "2021-01-21T12:00:00"
 tk.freeze(DATE)
 

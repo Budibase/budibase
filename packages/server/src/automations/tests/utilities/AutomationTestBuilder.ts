@@ -43,6 +43,7 @@ import {
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
 import { automations } from "@budibase/shared-core"
+import { setTestingBackendJS } from "@budibase/string-templates"
 
 type TriggerOutputs =
   | RowCreatedTriggerOutputs
