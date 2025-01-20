@@ -1,4 +1,11 @@
-import { Automation, FetchAutomationResponse } from "@budibase/types"
+import {
+  Automation,
+  FetchAutomationResponse,
+  TestAutomationRequest,
+  TestAutomationResponse,
+  TestAutomationStepRequest,
+  TestAutomationStepResponse,
+} from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
 export class AutomationAPI extends TestAPI {
@@ -32,5 +39,34 @@ export class AutomationAPI extends TestAPI {
       expectations,
     })
     return result
+  }
+
+  test = async (
+    id: string,
+    body: TestAutomationRequest,
+    expectations?: Expectations
+  ): Promise<TestAutomationResponse> => {
+    return await this._post<TestAutomationResponse>(
+      `/api/automations/${id}/test`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  testStep = async (
+    id: string,
+    stepId: string,
+    body: TestAutomationStepRequest,
+    expectations?: Expectations
+  ): Promise<TestAutomationStepResponse> => {
+    return await this._post<TestAutomationStepResponse>(
+      `/api/automations/${id}/steps/${stepId}/test`,
+      {
+        body,
+        expectations,
+      }
+    )
   }
 }
