@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { onMount } from "svelte"
   import { Link, Body, Helpers, Layout } from "@budibase/bbui"
+  import { processObjectSync } from "@budibase/string-templates"
   import {
     previewStore,
     selectedScreen,
@@ -7,9 +9,7 @@
     snippets,
   } from "@/stores/builder"
   import { getBindableProperties } from "@/dataBinding"
-  import BindingNode from "./BindingExplorer/BindingNode.svelte"
-  import { processObjectSync } from "@budibase/string-templates"
-  import { onMount } from "svelte"
+  import BindingNode from "./BindingNode.svelte"
 
   // Minimal typing for the real data binding structure, as none exists
   type DataBinding = {
