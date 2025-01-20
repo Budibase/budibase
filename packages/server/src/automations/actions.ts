@@ -88,12 +88,10 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
 // the fact this isn't included in any definitions means it cannot be
 // ran at all
 if (env.SELF_HOSTED) {
-  const bash = require("./steps/bash")
-
   // @ts-ignore
-  ACTION_IMPLS["EXECUTE_BASH"] = bash.run
+  ACTION_IMPLS["EXECUTE_BASH"] = automations.steps.bash.run
   // @ts-ignore
-  BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
+  BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = automations.steps.bash.definition
 
   if (env.isTest()) {
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
