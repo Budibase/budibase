@@ -14,7 +14,6 @@
     GroupUserDatasource,
     DataFetchOptions,
   } from "@budibase/types"
-  import { SDK, Component } from "../../index"
 
   type ProviderDatasource = Exclude<
     DataFetchDatasource,
@@ -29,8 +28,8 @@
   export let paginate: boolean
   export let autoRefresh: number
 
-  const { styleable, Provider, ActionTypes, API } = getContext<SDK>("sdk")
-  const component = getContext<Component>("component")
+  const { styleable, Provider, ActionTypes, API } = getContext("sdk")
+  const component = getContext("component")
 
   let interval: ReturnType<typeof setInterval>
   let queryExtensions: Record<string, any> = {}
