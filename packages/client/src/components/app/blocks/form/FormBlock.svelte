@@ -7,11 +7,13 @@
   import { Component, Context, SDK } from "../../../../index"
   import { TableSchema, UIDatasource } from "@budibase/types"
 
+  type Field = { name: string; active: boolean }
+
   export let actionType: string
   export let dataSource: UIDatasource
   export let size: string
   export let disabled: boolean
-  export let fields
+  export let fields: (Field | string)[]
   export let buttons: {
     "##eventHandlerType": string
     parameters: Record<string, string>
@@ -66,11 +68,11 @@
     }
   }
 
-  const convertOldFieldFormat = (fields: any[]) => {
+  const convertOldFieldFormat = (fields: (Field | string)[]): Field[] => {
     if (!fields) {
       return []
     }
-    return fields.map((field: any) => {
+    return fields.map(field => {
       if (typeof field === "string") {
         // existed but was a string
         return {
@@ -87,14 +89,11 @@
     })
   }
 
-  const getDefaultFields = (
-    fields: { name: string; active: boolean }[],
-    schema: TableSchema
-  ) => {
+  const getDefaultFields = (fields: Field[], schema: TableSchema) => {
     if (!schema) {
       return []
     }
-    let defaultFields: { name: string; active: boolean }[] = []
+    let defaultFields: Field[] = []
 
     if (!fields || fields.length === 0) {
       Object.values(schema)
