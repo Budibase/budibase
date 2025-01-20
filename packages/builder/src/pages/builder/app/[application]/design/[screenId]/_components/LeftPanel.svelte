@@ -3,6 +3,7 @@
   import ComponentList from "./ComponentList/index.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
   import { ActionButton } from "@budibase/bbui"
+  import BindingsPanel from "./BindingsPanel.svelte"
 
   const [resizable, resizableHandle] = getHorizontalResizeActions()
 
@@ -32,7 +33,7 @@
     {#if activeTab === Tabs.Components}
       <ComponentList />
     {:else if activeTab === Tabs.Bindings}
-      <div class="tab-content">Bindings</div>
+      <BindingsPanel />
     {:else if activeTab === Tabs.State}
       <div class="tab-content">State</div>
     {/if}
@@ -68,6 +69,10 @@
     border-bottom: var(--border-light);
   }
   .tab-content {
+    flex: 1 1 auto;
+    height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--spacing-l);
   }
 

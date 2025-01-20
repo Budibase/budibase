@@ -96,8 +96,8 @@
       maxWidth={300}
       dismissible={false}
       offset={12}
-      handlePostionUpdate={tourStep?.positionHandler}
-      customZindex={3}
+      handlePositionUpdate={tourStep?.positionHandler}
+      customZIndex={3}
     >
       <div class="tour-content">
         <Layout noPadding gap="M">

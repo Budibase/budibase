@@ -30,7 +30,7 @@
     if (id === `${$screenStore.selectedScreenId}-screen`) return true
     if (id === `${$screenStore.selectedScreenId}-navigation`) return true
 
-    return !!findComponent($selectedScreen.props, id)
+    return !!findComponent($selectedScreen?.props, id)
   }
 
   // Keep URL and state in sync for selected component ID
