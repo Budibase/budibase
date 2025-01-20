@@ -1,7 +1,8 @@
+import { Readable } from "svelte/store"
 import { Component, Context, SDK } from "."
 
 declare module "svelte" {
-  function getContext(name: "sdk"): SDK
-  function getContext(name: "component"): Component
-  function getContext(name: "context"): Context
+  export function getContext(key: "sdk"): SDK
+  export function getContext(key: "component"): Readable<Component>
+  export function getContext(key: "context"): Readable<Context>
 }
