@@ -9,6 +9,7 @@
     | { key: string; label: string }[]
     | undefined
   export let missingRequiredAncestors: string[] | undefined
+  export let invalidSettings: string[] | undefined
 
   const component = getContext<Component>("component")
   const { styleable, builderStore } = getContext<SDK>("sdk")
@@ -16,6 +17,7 @@
   $: styles = { ...$component.styles, normal: {}, custom: null, empty: true }
   $: requiredSetting = missingRequiredSettings?.[0]
   $: requiredAncestor = missingRequiredAncestors?.[0]
+  $: invalidSetting = invalidSettings?.[0]
 </script>
 
 {#if $builderStore.inBuilder}
@@ -24,6 +26,8 @@
       <Icon name="Alert" color="var(--spectrum-global-color-static-red-600)" />
       {#if requiredAncestor}
         <MissingRequiredAncestor {requiredAncestor} />
+      {:else if invalidSetting}
+        {invalidSetting}
       {:else if requiredSetting}
         <MissingRequiredSetting {requiredSetting} />
       {/if}

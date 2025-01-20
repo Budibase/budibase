@@ -40,6 +40,7 @@
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
   import { gridLayout } from "utils/grid"
+  import { validateComponentSetting } from "utils/componentsValidator"
 
   export let instance = {}
   export let parent = null
@@ -103,6 +104,7 @@
   let settingsDefinition
   let settingsDefinitionMap
   let missingRequiredSettings = false
+  let invalidSettings = false
 
   // Temporary styles which can be added in the app preview for things like
   // DND. We clear these whenever a new instance is received.
@@ -141,12 +143,16 @@
   $: showEmptyState = definition?.showEmptyState !== false
   $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
   $: editable = !!definition?.editable && !hasMissingRequiredSettings
+  $: hasInvalidSettings = invalidSettings?.length > 0
   $: requiredAncestors = definition?.requiredAncestors || []
   $: missingRequiredAncestors = requiredAncestors.filter(
     ancestor => !$component.ancestors.includes(`${BudibasePrefix}${ancestor}`)
   )
   $: hasMissingRequiredAncestors = missingRequiredAncestors?.length > 0
-  $: errorState = hasMissingRequiredSettings || hasMissingRequiredAncestors
+  $: errorState =
+    hasMissingRequiredSettings ||
+    hasMissingRequiredAncestors ||
+    hasInvalidSettings
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
@@ -337,6 +343,21 @@
 
       return missing
     })
+
+    // Check for invalid settings
+    invalidSettings = settingsDefinition.reduce((invalidSettings, setting) => {
+      if (setting.validator) {
+        const error = validateComponentSetting(
+          setting.validator,
+          instance[setting.key]
+        )
+        if (error) {
+          invalidSettings.push(error)
+        }
+      }
+
+      return invalidSettings
+    }, [])
 
     // When considering bindings we can ignore children, so we remove that
     // before storing the reference stringified version
@@ -692,6 +713,7 @@
       <ComponentErrorState
         {missingRequiredSettings}
         {missingRequiredAncestors}
+        {invalidSettings}
       />
     {:else}
       <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
