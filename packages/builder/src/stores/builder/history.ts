@@ -1,13 +1,27 @@
 import * as jsonpatch from "fast-json-patch"
 import { writable, derived, get } from "svelte/store"
 
-export const Operations = {
-  Add: "Add",
-  Delete: "Delete",
-  Change: "Change",
+export const enum Operations {
+  Add = "Add",
+  Delete = "Delete",
+  Change = "Change",
 }
 
-export const initialState = {
+interface Operator {
+  id: string
+  type: Operations
+  doc: any
+  forwardPatch?: jsonpatch.Operation[]
+  backwardsPatch?: jsonpatch.Operation[]
+}
+
+interface HistoryState {
+  history: any[]
+  position: number
+  loading?: boolean
+}
+
+export const initialState: HistoryState = {
   history: [],
   position: 0,
   loading: false,
@@ -18,6 +32,11 @@ export const createHistoryStore = ({
   selectDoc,
   beforeAction,
   afterAction,
+}: {
+  getDoc: any
+  selectDoc: any
+  beforeAction: any
+  afterAction: any
 }) => {
   // Use a derived store to check if we are able to undo or redo any operations
   const store = writable(initialState)
@@ -31,8 +50,8 @@ export const createHistoryStore = ({
 
   // Wrapped versions of essential functions which we call ourselves when using
   // undo and redo
-  let saveFn
-  let deleteFn
+  let saveFn: any
+  let deleteFn: any
 
   /**
    * Internal util to set the loading flag
@@ -66,14 +85,14 @@ export const createHistoryStore = ({
    * For internal use only.
    * @param operation the operation to save
    */
-  const saveOperation = operation => {
+  const saveOperation = (operation: Operator) => {
     store.update(state => {
       // Update history
       let history = state.history
       let position = state.position
       if (!operation.id) {
         // Every time a new operation occurs we discard any redo potential
-        operation.id = Math.random()
+        operation.id = Math.random().toString()
         history = [...history.slice(0, state.position), operation]
         position += 1
       } else {
@@ -93,8 +112,8 @@ export const createHistoryStore = ({
    * @param fn the save function
    * @returns {function} a wrapped version of the save function
    */
-  const wrapSaveDoc = fn => {
-    saveFn = async (doc, operationId) => {
+  const wrapSaveDoc = (fn: (doc: any) => Promise<void>) => {
+    saveFn = async (doc: any, operationId: string) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
         return
@@ -141,8 +160,8 @@ export const createHistoryStore = ({
    * @param fn the delete function
    * @returns {function} a wrapped version of the delete function
    */
-  const wrapDeleteDoc = fn => {
-    deleteFn = async (doc, operationId) => {
+  const wrapDeleteDoc = (fn: (doc: any) => Promise<void>) => {
+    deleteFn = async (doc: any, operationId: string) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
         return
