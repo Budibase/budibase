@@ -6,10 +6,10 @@ import { DBView, SearchFilters } from "../../sdk"
 export type ViewTemplateOpts = {
   field: string
   tableId: string
-  groupBy: string
+  groupBy?: string
   filters: ViewFilter[]
   schema: any
-  calculation: string
+  calculation?: string
   groupByMulti?: boolean
 }
 
