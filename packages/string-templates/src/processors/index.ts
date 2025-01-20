@@ -24,8 +24,10 @@ function process(
     }
     for (let match of matches) {
       const res = processor.process(output, match, opts || {})
-      if (typeof res === "object" && "logs" in res && res.logs) {
-        logs = logs.concat(res.logs)
+      if (typeof res === "object") {
+        if ("logs" in res && res.logs) {
+          logs = logs.concat(res.logs)
+        }
         output = res.result
       } else {
         output = res as string
