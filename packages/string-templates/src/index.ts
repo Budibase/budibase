@@ -20,6 +20,7 @@ import { Log, ProcessOptions } from "./types"
 import { UserScriptError } from "./errors"
 
 export type { Log, LogType } from "./types"
+export { setTestingBackendJS } from "./environment"
 export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
 export { FIND_ANY_HBS_REGEX } from "./utilities"
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"
