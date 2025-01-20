@@ -1,4 +1,5 @@
 import { TestConfiguration } from "../../../../tests"
+import { withEnv } from "../../../../environment"
 
 jest.unmock("node-fetch")
 
@@ -32,7 +33,7 @@ describe("/api/system/environment", () => {
     })
 
     it("returns the expected environment for self hosters", async () => {
-      await config.withEnv({ SELF_HOSTED: true }, async () => {
+      await withEnv({ SELF_HOSTED: true }, async () => {
         const env = await config.api.environment.getEnvironment()
         expect(env.body).toEqual({
           cloud: false,

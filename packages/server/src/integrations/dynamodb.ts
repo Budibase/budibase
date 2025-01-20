@@ -7,9 +7,15 @@ import {
   ConnectionInfo,
 } from "@budibase/types"
 
-import AWS from "aws-sdk"
+import {
+  DynamoDBDocument,
+  PutCommandInput,
+  GetCommandInput,
+  UpdateCommandInput,
+  DeleteCommandInput,
+} from "@aws-sdk/lib-dynamodb"
+import { DynamoDB } from "@aws-sdk/client-dynamodb"
 import { AWS_REGION } from "../constants"
-import { DocumentClient } from "aws-sdk/clients/dynamodb"
 
 interface DynamoDBConfig {
   region: string
@@ -151,7 +157,7 @@ class DynamoDBIntegration implements IntegrationBase {
       region: config.region || AWS_REGION,
       endpoint: config.endpoint || undefined,
     }
-    this.client = new AWS.DynamoDB.DocumentClient(this.config)
+    this.client = DynamoDBDocument.from(new DynamoDB(this.config))
   }
 
   async testConnection() {
@@ -159,8 +165,8 @@ class DynamoDBIntegration implements IntegrationBase {
       connected: false,
     }
     try {
-      const scanRes = await new AWS.DynamoDB(this.config).listTables().promise()
-      response.connected = !!scanRes.$response
+      const scanRes = await new DynamoDB(this.config).listTables()
+      response.connected = !!scanRes.$metadata
     } catch (e: any) {
       response.error = e.message as string
     }
@@ -169,13 +175,13 @@ class DynamoDBIntegration implements IntegrationBase {
 
   async create(query: {
     table: string
-    json: Omit<DocumentClient.PutItemInput, "TableName">
+    json: Omit<PutCommandInput, "TableName">
   }) {
     const params = {
       TableName: query.table,
       ...query.json,
     }
-    return this.client.put(params).promise()
+    return this.client.put(params)
   }
 
   async read(query: { table: string; json: object; index: null | string }) {
@@ -184,7 +190,7 @@ class DynamoDBIntegration implements IntegrationBase {
       IndexName: query.index ? query.index : undefined,
       ...query.json,
     }
-    const response = await this.client.query(params).promise()
+    const response = await this.client.query(params)
     if (response.Items) {
       return response.Items
     }
@@ -197,7 +203,7 @@ class DynamoDBIntegration implements IntegrationBase {
       IndexName: query.index ? query.index : undefined,
       ...query.json,
     }
-    const response = await this.client.scan(params).promise()
+    const response = await this.client.scan(params)
     if (response.Items) {
       return response.Items
     }
@@ -208,40 +214,40 @@ class DynamoDBIntegration implements IntegrationBase {
     const params = {
       TableName: query.table,
     }
-    return new AWS.DynamoDB(this.config).describeTable(params).promise()
+    return new DynamoDB(this.config).describeTable(params)
   }
 
   async get(query: {
     table: string
-    json: Omit<DocumentClient.GetItemInput, "TableName">
+    json: Omit<GetCommandInput, "TableName">
   }) {
     const params = {
       TableName: query.table,
       ...query.json,
     }
-    return this.client.get(params).promise()
+    return this.client.get(params)
   }
 
   async update(query: {
     table: string
-    json: Omit<DocumentClient.UpdateItemInput, "TableName">
+    json: Omit<UpdateCommandInput, "TableName">
   }) {
     const params = {
       TableName: query.table,
       ...query.json,
     }
-    return this.client.update(params).promise()
+    return this.client.update(params)
   }
 
   async delete(query: {
     table: string
-    json: Omit<DocumentClient.DeleteItemInput, "TableName">
+    json: Omit<DeleteCommandInput, "TableName">
   }) {
     const params = {
       TableName: query.table,
       ...query.json,
     }
-    return this.client.delete(params).promise()
+    return this.client.delete(params)
   }
 }
 

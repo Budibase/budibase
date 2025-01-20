@@ -1,6 +1,7 @@
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
 import { join } from "path"
+import cloneDeep from "lodash/cloneDeep"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.WORKER)
 
@@ -90,6 +91,32 @@ if (!environment.APPS_URL) {
   environment.APPS_URL = coreEnv.isDev()
     ? "http://localhost:4001"
     : "http://app-service:4002"
+}
+
+export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
+  const oldEnv = cloneDeep(environment)
+
+  let key: keyof typeof newEnvVars
+  for (key in newEnvVars) {
+    environment._set(key, newEnvVars[key])
+  }
+
+  return () => {
+    for (const [key, value] of Object.entries(oldEnv)) {
+      environment._set(key, value)
+    }
+  }
+}
+
+export function withEnv<T>(envVars: Partial<typeof environment>, f: () => T) {
+  const cleanup = setEnv(envVars)
+  const result = f()
+  if (result instanceof Promise) {
+    return result.finally(cleanup)
+  } else {
+    cleanup()
+    return result
+  }
 }
 
 // clean up any environment variable edge cases

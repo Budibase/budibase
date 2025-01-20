@@ -1,6 +1,15 @@
 const sanitize = require("sanitize-s3-objectkey")
 
-import AWS from "aws-sdk"
+import {
+  HeadObjectCommandOutput,
+  PutObjectCommandInput,
+  S3,
+  S3ClientConfig,
+  GetObjectCommand,
+  _Object as S3Object,
+} from "@aws-sdk/client-s3"
+import { Upload } from "@aws-sdk/lib-storage"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import stream, { Readable } from "stream"
 import fetch from "node-fetch"
 import tar from "tar-fs"
@@ -13,8 +22,8 @@ import { bucketTTLConfig, budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
-import { HeadObjectOutput } from "aws-sdk/clients/s3"
 import { ReadableStream } from "stream/web"
+import { NodeJsClient } from "@smithy/types"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -84,26 +93,24 @@ export function sanitizeBucket(input: string) {
  * @constructor
  */
 export function ObjectStore(
-  bucket: string,
   opts: { presigning: boolean } = { presigning: false }
 ) {
-  const config: AWS.S3.ClientConfiguration = {
-    s3ForcePathStyle: true,
-    signatureVersion: "v4",
-    apiVersion: "2006-03-01",
-    accessKeyId: env.MINIO_ACCESS_KEY,
-    secretAccessKey: env.MINIO_SECRET_KEY,
+  const config: S3ClientConfig = {
+    forcePathStyle: true,
+    credentials: {
+      accessKeyId: env.MINIO_ACCESS_KEY!,
+      secretAccessKey: env.MINIO_SECRET_KEY!,
+    },
     region: env.AWS_REGION,
-  }
-  if (bucket) {
-    config.params = {
-      Bucket: sanitizeBucket(bucket),
-    }
   }
 
   // for AWS Credentials using temporary session token
   if (!env.MINIO_ENABLED && env.AWS_SESSION_TOKEN) {
-    config.sessionToken = env.AWS_SESSION_TOKEN
+    config.credentials = {
+      accessKeyId: env.MINIO_ACCESS_KEY!,
+      secretAccessKey: env.MINIO_SECRET_KEY!,
+      sessionToken: env.AWS_SESSION_TOKEN,
+    }
   }
 
   // custom S3 is in use i.e. minio
@@ -113,13 +120,13 @@ export function ObjectStore(
       // Normally a signed url will need to be generated with a specified host in mind.
       // To support dynamic hosts, e.g. some unknown self-hosted installation url,
       // use a predefined host. The host 'minio-service' is also forwarded to minio requests via nginx
-      config.endpoint = "minio-service"
+      config.endpoint = "http://minio-service"
     } else {
       config.endpoint = env.MINIO_URL
     }
   }
 
-  return new AWS.S3(config)
+  return new S3(config) as NodeJsClient<S3>
 }
 
 /**
@@ -132,26 +139,25 @@ export async function createBucketIfNotExists(
 ): Promise<{ created: boolean; exists: boolean }> {
   bucketName = sanitizeBucket(bucketName)
   try {
-    await client
-      .headBucket({
-        Bucket: bucketName,
-      })
-      .promise()
+    await client.headBucket({
+      Bucket: bucketName,
+    })
     return { created: false, exists: true }
   } catch (err: any) {
-    const promises: any = STATE.bucketCreationPromises
-    const doesntExist = err.statusCode === 404,
-      noAccess = err.statusCode === 403
+    const statusCode = err.statusCode || err.$response?.statusCode
+    const promises: Record<string, Promise<any> | undefined> =
+      STATE.bucketCreationPromises
+    const doesntExist = statusCode === 404,
+      noAccess = statusCode === 403
     if (promises[bucketName]) {
       await promises[bucketName]
       return { created: false, exists: true }
     } else if (doesntExist || noAccess) {
       if (doesntExist) {
-        promises[bucketName] = client
-          .createBucket({
-            Bucket: bucketName,
-          })
-          .promise()
+        promises[bucketName] = client.createBucket({
+          Bucket: bucketName,
+        })
+
         await promises[bucketName]
         delete promises[bucketName]
         return { created: true, exists: false }
@@ -180,25 +186,26 @@ export async function upload({
 
   const fileBytes = path ? (await fsp.open(path)).createReadStream() : body
 
-  const objectStore = ObjectStore(bucketName)
+  const objectStore = ObjectStore()
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
   if (ttl && bucketCreated.created) {
     let ttlConfig = bucketTTLConfig(bucketName, ttl)
-    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+    await objectStore.putBucketLifecycleConfiguration(ttlConfig)
   }
 
   let contentType = type
-  if (!contentType) {
-    contentType = extension
-      ? CONTENT_TYPE_MAP[extension.toLowerCase()]
-      : CONTENT_TYPE_MAP.txt
-  }
-  const config: any = {
+  const finalContentType = contentType
+    ? contentType
+    : extension
+    ? CONTENT_TYPE_MAP[extension.toLowerCase()]
+    : CONTENT_TYPE_MAP.txt
+  const config: PutObjectCommandInput = {
     // windows file paths need to be converted to forward slashes for s3
+    Bucket: sanitizeBucket(bucketName),
     Key: sanitizeKey(filename),
-    Body: fileBytes,
-    ContentType: contentType,
+    Body: fileBytes as stream.Readable | Buffer,
+    ContentType: finalContentType,
   }
   if (metadata && typeof metadata === "object") {
     // remove any nullish keys from the metadata object, as these may be considered invalid
@@ -207,10 +214,15 @@ export async function upload({
         delete metadata[key]
       }
     }
-    config.Metadata = metadata
+    config.Metadata = metadata as Record<string, string>
   }
 
-  return objectStore.upload(config).promise()
+  const upload = new Upload({
+    client: objectStore,
+    params: config,
+  })
+
+  return upload.done()
 }
 
 /**
@@ -229,12 +241,12 @@ export async function streamUpload({
     throw new Error("Stream to upload is invalid/undefined")
   }
   const extension = filename.split(".").pop()
-  const objectStore = ObjectStore(bucketName)
+  const objectStore = ObjectStore()
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
   if (ttl && bucketCreated.created) {
     let ttlConfig = bucketTTLConfig(bucketName, ttl)
-    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+    await objectStore.putBucketLifecycleConfiguration(ttlConfig)
   }
 
   // Set content type for certain known extensions
@@ -267,13 +279,15 @@ export async function streamUpload({
     ...extra,
   }
 
-  const details = await objectStore.upload(params).promise()
-  const headDetails = await objectStore
-    .headObject({
-      Bucket: bucket,
-      Key: objKey,
-    })
-    .promise()
+  const upload = new Upload({
+    client: objectStore,
+    params,
+  })
+  const details = await upload.done()
+  const headDetails = await objectStore.headObject({
+    Bucket: bucket,
+    Key: objKey,
+  })
   return {
     ...details,
     ContentLength: headDetails.ContentLength,
@@ -284,35 +298,46 @@ export async function streamUpload({
  * retrieves the contents of a file from the object store, if it is a known content type it
  * will be converted, otherwise it will be returned as a buffer stream.
  */
-export async function retrieve(bucketName: string, filepath: string) {
-  const objectStore = ObjectStore(bucketName)
+export async function retrieve(
+  bucketName: string,
+  filepath: string
+): Promise<string | stream.Readable> {
+  const objectStore = ObjectStore()
   const params = {
     Bucket: sanitizeBucket(bucketName),
     Key: sanitizeKey(filepath),
   }
-  const response: any = await objectStore.getObject(params).promise()
-  // currently these are all strings
+  const response = await objectStore.getObject(params)
+  if (!response.Body) {
+    throw new Error("Unable to retrieve object")
+  }
   if (STRING_CONTENT_TYPES.includes(response.ContentType)) {
-    return response.Body.toString("utf8")
+    return response.Body.transformToString()
   } else {
-    return response.Body
+    // this typecast is required - for some reason the AWS SDK V3 defines its own "ReadableStream"
+    // found in the @aws-sdk/types package which is meant to be the Node type, but due to the SDK
+    // supporting both the browser and Nodejs it is a polyfill which causes a type clash with Node.
+    const readableStream =
+      response.Body.transformToWebStream() as ReadableStream
+    return stream.Readable.fromWeb(readableStream)
   }
 }
 
-export async function listAllObjects(bucketName: string, path: string) {
-  const objectStore = ObjectStore(bucketName)
+export async function listAllObjects(
+  bucketName: string,
+  path: string
+): Promise<S3Object[]> {
+  const objectStore = ObjectStore()
   const list = (params: ListParams = {}) => {
-    return objectStore
-      .listObjectsV2({
-        ...params,
-        Bucket: sanitizeBucket(bucketName),
-        Prefix: sanitizeKey(path),
-      })
-      .promise()
+    return objectStore.listObjectsV2({
+      ...params,
+      Bucket: sanitizeBucket(bucketName),
+      Prefix: sanitizeKey(path),
+    })
   }
   let isTruncated = false,
     token,
-    objects: AWS.S3.Types.Object[] = []
+    objects: Object[] = []
   do {
     let params: ListParams = {}
     if (token) {
@@ -331,18 +356,19 @@ export async function listAllObjects(bucketName: string, path: string) {
 /**
  * Generate a presigned url with a default TTL of 1 hour
  */
-export function getPresignedUrl(
+export async function getPresignedUrl(
   bucketName: string,
   key: string,
   durationSeconds = 3600
 ) {
-  const objectStore = ObjectStore(bucketName, { presigning: true })
+  const objectStore = ObjectStore({ presigning: true })
   const params = {
     Bucket: sanitizeBucket(bucketName),
     Key: sanitizeKey(key),
-    Expires: durationSeconds,
   }
-  const url = objectStore.getSignedUrl("getObject", params)
+  const url = await getSignedUrl(objectStore, new GetObjectCommand(params), {
+    expiresIn: durationSeconds,
+  })
 
   if (!env.MINIO_ENABLED) {
     // return the full URL to the client
@@ -366,7 +392,11 @@ export async function retrieveToTmp(bucketName: string, filepath: string) {
   filepath = sanitizeKey(filepath)
   const data = await retrieve(bucketName, filepath)
   const outputPath = join(budibaseTempDir(), v4())
-  fs.writeFileSync(outputPath, data)
+  if (data instanceof stream.Readable) {
+    data.pipe(fs.createWriteStream(outputPath))
+  } else {
+    fs.writeFileSync(outputPath, data)
+  }
   return outputPath
 }
 
@@ -408,17 +438,17 @@ export async function retrieveDirectory(bucketName: string, path: string) {
  * Delete a single file.
  */
 export async function deleteFile(bucketName: string, filepath: string) {
-  const objectStore = ObjectStore(bucketName)
+  const objectStore = ObjectStore()
   await createBucketIfNotExists(objectStore, bucketName)
   const params = {
     Bucket: bucketName,
     Key: sanitizeKey(filepath),
   }
-  return objectStore.deleteObject(params).promise()
+  return objectStore.deleteObject(params)
 }
 
 export async function deleteFiles(bucketName: string, filepaths: string[]) {
-  const objectStore = ObjectStore(bucketName)
+  const objectStore = ObjectStore()
   await createBucketIfNotExists(objectStore, bucketName)
   const params = {
     Bucket: bucketName,
@@ -426,7 +456,7 @@ export async function deleteFiles(bucketName: string, filepaths: string[]) {
       Objects: filepaths.map((path: any) => ({ Key: sanitizeKey(path) })),
     },
   }
-  return objectStore.deleteObjects(params).promise()
+  return objectStore.deleteObjects(params)
 }
 
 /**
@@ -438,13 +468,13 @@ export async function deleteFolder(
 ): Promise<any> {
   bucketName = sanitizeBucket(bucketName)
   folder = sanitizeKey(folder)
-  const client = ObjectStore(bucketName)
+  const client = ObjectStore()
   const listParams = {
     Bucket: bucketName,
     Prefix: folder,
   }
 
-  const existingObjectsResponse = await client.listObjects(listParams).promise()
+  const existingObjectsResponse = await client.listObjects(listParams)
   if (existingObjectsResponse.Contents?.length === 0) {
     return
   }
@@ -459,7 +489,7 @@ export async function deleteFolder(
     deleteParams.Delete.Objects.push({ Key: content.Key })
   })
 
-  const deleteResponse = await client.deleteObjects(deleteParams).promise()
+  const deleteResponse = await client.deleteObjects(deleteParams)
   // can only empty 1000 items at once
   if (deleteResponse.Deleted?.length === 1000) {
     return deleteFolder(bucketName, folder)
@@ -534,29 +564,33 @@ export async function getReadStream(
 ): Promise<Readable> {
   bucketName = sanitizeBucket(bucketName)
   path = sanitizeKey(path)
-  const client = ObjectStore(bucketName)
+  const client = ObjectStore()
   const params = {
     Bucket: bucketName,
     Key: path,
   }
-  return client.getObject(params).createReadStream()
+  const response = await client.getObject(params)
+  if (!response.Body || !(response.Body instanceof stream.Readable)) {
+    throw new Error("Unable to retrieve stream - invalid response")
+  }
+  return response.Body
 }
 
 export async function getObjectMetadata(
   bucket: string,
   path: string
-): Promise<HeadObjectOutput> {
+): Promise<HeadObjectCommandOutput> {
   bucket = sanitizeBucket(bucket)
   path = sanitizeKey(path)
 
-  const client = ObjectStore(bucket)
+  const client = ObjectStore()
   const params = {
     Bucket: bucket,
     Key: path,
   }
 
   try {
-    return await client.headObject(params).promise()
+    return await client.headObject(params)
   } catch (err: any) {
     throw new Error("Unable to retrieve metadata from object")
   }
