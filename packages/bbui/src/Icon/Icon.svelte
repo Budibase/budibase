@@ -1,9 +1,6 @@
 <script lang="ts">
-  import {
-    default as AbsTooltip,
-    TooltipPosition,
-    TooltipType,
-  } from "../Tooltip/AbsTooltip.svelte"
+  import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
+  import { TooltipPosition, TooltipType } from "../constants"
 
   export let name: string = "Add"
   export let hidden: boolean = false

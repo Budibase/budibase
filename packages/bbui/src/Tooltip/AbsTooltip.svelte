@@ -1,23 +1,9 @@
-<script context="module" lang="ts">
-  export enum TooltipPosition {
-    Top = "top",
-    Right = "right",
-    Bottom = "bottom",
-    Left = "left",
-  }
-  export enum TooltipType {
-    Default = "default",
-    Info = "info",
-    Positive = "positive",
-    Negative = "negative",
-  }
-</script>
-
 <script lang="ts">
   import Portal from "svelte-portal"
   import { fade } from "svelte/transition"
   import "@spectrum-css/tooltip/dist/index-vars.css"
   import { onDestroy } from "svelte"
+  import { TooltipPosition, TooltipType } from "../constants"
 
   export let position: TooltipPosition = TooltipPosition.Top
   export let type: TooltipType = TooltipType.Default
