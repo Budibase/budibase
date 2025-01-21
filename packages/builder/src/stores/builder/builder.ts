@@ -8,6 +8,7 @@ import { App } from "@budibase/types"
 import { datasourceSelect as format } from "@/helpers/data/format"
 import { tables } from "./tables.js"
 import { datasources } from "./datasources.js"
+import { viewsV2 } from "./viewsV2.js"
 
 interface BuilderState {
   previousTopNavPath: Record<string, string>
@@ -38,10 +39,16 @@ export const INITIAL_BUILDER_STATE: BuilderState = {
 }
 
 interface DerivedBuilderState {
-  formatedTableNames: {
-    label: string
-    tableId: string
-  }[]
+  formatedDatasourceNames: {
+    tables: {
+      label: string
+      resourceId: string
+    }[]
+    viewsV2: {
+      label: string
+      resourceId: string
+    }[]
+  }
 }
 
 export class BuilderStore extends DerivedBudiStore<
@@ -52,21 +59,33 @@ export class BuilderStore extends DerivedBudiStore<
 
   constructor() {
     const makeDerivedStore = () => {
-      return derived([tables, datasources], ([$tables, $datasources]) => ({
-        formatedTableNames: $tables.list
-          .map(table => format.table(table, $datasources.list))
-          .sort((a, b) => {
-            // sort tables alphabetically, grouped by datasource
-            const dsA = a.datasourceName ?? ""
-            const dsB = b.datasourceName ?? ""
+      return derived(
+        [tables, datasources, viewsV2],
+        ([$tables, $datasources, $viewsV2]) => ({
+          formatedDatasourceNames: {
+            tables: $tables.list
+              .map(table => ({
+                ...format.table(table, $datasources.list),
+                resourceId: table._id!,
+              }))
+              .sort((a, b) => {
+                // sort tables alphabetically, grouped by datasource
+                const dsA = a.datasourceName ?? ""
+                const dsB = b.datasourceName ?? ""
 
-            const dsComparison = dsA.localeCompare(dsB)
-            if (dsComparison !== 0) {
-              return dsComparison
-            }
-            return a.label.localeCompare(b.label)
-          }),
-      }))
+                const dsComparison = dsA.localeCompare(dsB)
+                if (dsComparison !== 0) {
+                  return dsComparison
+                }
+                return a.label.localeCompare(b.label)
+              }),
+            viewsV2: $viewsV2.list.map(view => ({
+              ...format.viewV2(view),
+              resourceId: view.id,
+            })),
+          },
+        })
+      )
     }
 
     super({ ...INITIAL_BUILDER_STATE }, makeDerivedStore)
