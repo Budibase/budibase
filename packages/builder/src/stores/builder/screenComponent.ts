@@ -1,5 +1,5 @@
 import { derived } from "svelte/store"
-import { tables, selectedScreen } from "@/stores/builder"
+import { tables, selectedScreen, viewsV2 } from "@/stores/builder"
 import { DerivedBudiStore } from "../BudiStore"
 import { findComponentsBySettingsType } from "@/helpers/screen"
 import { Screen } from "@budibase/types"
@@ -17,16 +17,25 @@ export class ScreenComponentStore extends DerivedBudiStore<
   constructor() {
     const makeDerivedStore = () => {
       return derived(
-        [selectedScreen, tables],
-        ([$selectedScreen, $tables]): DerivedScreenComponentStore => {
+        [selectedScreen, tables, viewsV2],
+        ([$selectedScreen, $tables, $viewsV2]): DerivedScreenComponentStore => {
           function getErrors() {
-            const datasources = $tables.list.reduce(
-              (list, table) => ({
-                ...list,
-                [table._id!]: table,
-              }),
-              {}
-            )
+            const datasources = {
+              ...$tables.list.reduce(
+                (list, table) => ({
+                  ...list,
+                  [table._id!]: table,
+                }),
+                {}
+              ),
+              ...$viewsV2.list.reduce(
+                (list, view) => ({
+                  ...list,
+                  [view.id]: view,
+                }),
+                {}
+              ),
+            }
             return {
               ...getInvalidDatasources($selectedScreen, datasources),
             }
