@@ -1,11 +1,24 @@
+<script context="module" lang="ts">
+  export interface JSONViewerClickEvent {
+    detail: {
+      label: string | undefined
+      value: any
+      path: (string | number)[]
+    }
+  }
+</script>
+
 <script lang="ts">
-  import { Icon, notifications, Helpers } from "@budibase/bbui"
+  import { Icon } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
 
   export let label: string | undefined = undefined
   export let value: any = undefined
   export let root: boolean = true
   export let path: (string | number)[] = []
+  export let showCopyIcon: boolean = false
 
+  const dispatch = createEventDispatcher()
   const Colors = {
     Array: "var(--spectrum-global-color-gray-600)",
     Object: "var(--spectrum-global-color-gray-600)",
@@ -21,6 +34,7 @@
 
   let expanded = false
   let valueExpanded = false
+  let clickContext: JSONViewerClickContext
 
   $: isArray = Array.isArray(value)
   $: isObject = value?.toString?.() === "[object Object]"
@@ -29,7 +43,7 @@
   $: expandable = keys.length > 0
   $: displayValue = getDisplayValue(isArray, isObject, keys, value)
   $: style = getStyle(isArray, isObject, value)
-  $: readableBinding = `{{ ${path.join(".")} }}`
+  $: clickContext = { value, label, path }
 
   const getKeys = (isArray: boolean, isObject: boolean, value: any) => {
     if (isArray) {
@@ -96,11 +110,6 @@
     }
     return Colors.Other
   }
-
-  const copyBinding = () => {
-    Helpers.copyToClipboard(readableBinding)
-    notifications.success("Binding copied to clipboard")
-  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -124,6 +133,7 @@
         class:primitive
         class:expandable
         on:click={() => (expanded = !expanded)}
+        on:click={() => dispatch("click-label", clickContext)}
       >
         {label}
       </div>
@@ -133,19 +143,22 @@
         class:expanded={valueExpanded}
         {style}
         on:click={() => (valueExpanded = !valueExpanded)}
+        on:click={() => dispatch("click-value", clickContext)}
       >
         {displayValue}
       </div>
-      <div class="copy-value-icon">
-        <Icon
-          name="Copy"
-          size="XS"
-          hoverable
-          color="var(--spectrum-global-color-gray-600)"
-          hoverColor="var(--spectrum-global-color-gray-900)"
-          on:click={copyBinding}
-        />
-      </div>
+      {#if showCopyIcon}
+        <div class="copy-value-icon">
+          <Icon
+            name="Copy"
+            size="XS"
+            hoverable
+            color="var(--spectrum-global-color-gray-600)"
+            hoverColor="var(--spectrum-global-color-gray-900)"
+            on:click={() => dispatch("click-copy", clickContext)}
+          />
+        </div>
+      {/if}
     </div>
   {/if}
   {#if expandable && (expanded || label == null)}
@@ -156,6 +169,10 @@
           value={value[key]}
           root={false}
           path={[...path, key]}
+          {showCopyIcon}
+          on:click-label
+          on:click-value
+          on:click-copy
         />
       {/each}
     </div>
