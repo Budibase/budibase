@@ -19,7 +19,6 @@
   import { createEventDispatcher } from "svelte"
   import {
     queries as queriesStore,
-    viewsV2 as viewsV2Store,
     views as viewsStore,
     selectedScreen,
     componentStore,
@@ -34,7 +33,6 @@
   import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "@/components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "@/api"
-  import { datasourceSelect as format } from "@/helpers/data/format"
 
   export let value = {}
   export let otherSources
@@ -51,13 +49,13 @@
   let modal
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = $builderStore.formatedTableNames
+  $: tables = $builderStore.formatedDatasourceNames.tables
   $: viewsV1 = $viewsStore.list.map(view => ({
     ...view,
     label: view.name,
     type: "view",
   }))
-  $: viewsV2 = $viewsV2Store.list.map(format.viewV2)
+  $: viewsV2 = $builderStore.formatedDatasourceNames.viewsV2
   $: views = [...(viewsV1 || []), ...(viewsV2 || [])]
   $: queries = $queriesStore.list
     .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
