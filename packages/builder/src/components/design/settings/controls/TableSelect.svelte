@@ -1,22 +1,30 @@
 <script>
-  import { Select } from "@budibase/bbui"
+  import { Popover, Select } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
-  import { tables as tablesStore, viewsV2 } from "@/stores/builder"
+  import { datasources, tables as tablesStore, viewsV2 } from "@/stores/builder"
   import { tableSelect as format } from "@/helpers/data/format"
+  import DataSourceCategory from "./DataSourceSelect/DataSourceCategory.svelte"
 
   export let value
 
+  let anchorRight, dropdownRight
+
   const dispatch = createEventDispatcher()
 
-  $: tables = $tablesStore.list.map(format.table)
+  $: tables = $tablesStore.list.map(table =>
+    format.table(table, $datasources.list)
+  )
   $: views = $viewsV2.list.map(format.viewV2)
   $: options = [...(tables || []), ...(views || [])]
+
+  $: text = value?.label ?? "Choose an option"
 
   const onChange = e => {
     dispatch(
       "change",
-      options.find(x => x.resourceId === e.detail)
+      options.find(x => x.resourceId === e.resourceId)
     )
+    dropdownRight.hide()
   }
 
   onMount(() => {
@@ -29,10 +37,30 @@
   })
 </script>
 
-<Select
-  on:change={onChange}
-  value={value?.resourceId}
-  {options}
-  getOptionValue={x => x.resourceId}
-  getOptionLabel={x => x.label}
-/>
+<div class="container" bind:this={anchorRight}>
+  <Select
+    readonly
+    value={text}
+    options={[text]}
+    on:click={dropdownRight.show}
+  />
+</div>
+<Popover bind:this={dropdownRight} anchor={anchorRight}>
+  <div class="dropdown">
+    <DataSourceCategory
+      heading="Tables"
+      dataSet={tables}
+      {value}
+      onSelect={onChange}
+    />
+    {#if views?.length}
+      <DataSourceCategory
+        dividerState={true}
+        heading="Views"
+        dataSet={views}
+        {value}
+        onSelect={onChange}
+      />
+    {/if}
+  </div>
+</Popover>
