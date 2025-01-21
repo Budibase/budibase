@@ -23,7 +23,7 @@
   export let type = TooltipType.Default
   export let text = ""
   export let fixed = false
-  export let color = null
+  export let color = ""
   export let noWrap = false
 
   let wrapper

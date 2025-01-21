@@ -4,11 +4,11 @@ import {
   SaveRowRequest,
   SortOrder,
   UIDatasource,
-  UIView,
   UpdateViewRequest,
 } from "@budibase/types"
 import { Store as StoreContext } from ".."
 import { DatasourceViewActions } from "."
+import ViewV2Fetch from "../../../../fetch/ViewV2Fetch"
 
 const SuppressErrors = true
 
@@ -134,6 +134,9 @@ export const initialise = (context: StoreContext) => {
         if (!get(config).canSaveSchema) {
           return
         }
+        if (!$definition || !("id" in $definition)) {
+          return
+        }
         if ($definition?.id !== $datasource.id) {
           return
         }
@@ -184,7 +187,10 @@ export const initialise = (context: StoreContext) => {
     unsubscribers.push(
       sort.subscribe(async $sort => {
         // Ensure we're updating the correct view
-        const $view = get(definition) as UIView
+        const $view = get(definition)
+        if (!$view || !("id" in $view)) {
+          return
+        }
         if ($view?.id !== $datasource.id) {
           return
         }
@@ -207,7 +213,7 @@ export const initialise = (context: StoreContext) => {
 
         // Also update the fetch to ensure the new sort is respected.
         // Ensure we're updating the correct fetch.
-        const $fetch = get(fetch)
+        const $fetch = get(fetch) as ViewV2Fetch | null
         if ($fetch?.options?.datasource?.id !== $datasource.id) {
           return
         }
@@ -225,6 +231,9 @@ export const initialise = (context: StoreContext) => {
           return
         }
         const $view = get(definition)
+        if (!$view || !("id" in $view)) {
+          return
+        }
         if ($view?.id !== $datasource.id) {
           return
         }
@@ -246,7 +255,7 @@ export const initialise = (context: StoreContext) => {
         if (!get(config).canSaveSchema) {
           return
         }
-        const $fetch = get(fetch)
+        const $fetch = get(fetch) as ViewV2Fetch | null
         if ($fetch?.options?.datasource?.id !== $datasource.id) {
           return
         }
@@ -262,7 +271,7 @@ export const initialise = (context: StoreContext) => {
         if (get(config).canSaveSchema) {
           return
         }
-        const $fetch = get(fetch)
+        const $fetch = get(fetch) as ViewV2Fetch | null
         if ($fetch?.options?.datasource?.id !== $datasource.id) {
           return
         }
