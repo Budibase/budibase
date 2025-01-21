@@ -32,8 +32,6 @@ import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
 import { appPublished } from "./published"
 
-import { friendlyNamesStore } from "./friendlyNames"
-
 export {
   componentTreeNodesStore,
   layoutStore,
@@ -69,7 +67,6 @@ export {
   snippets,
   rowActions,
   appPublished,
-  friendlyNamesStore,
 }
 
 export const reset = () => {

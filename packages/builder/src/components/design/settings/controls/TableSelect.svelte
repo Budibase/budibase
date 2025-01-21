@@ -1,8 +1,13 @@
 <script>
   import { Popover, Select } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
-  import { friendlyNamesStore } from "@/stores/builder"
+  import {
+    tables as tableStore,
+    datasources as datasourceStore,
+    viewsV2 as viewsV2Store,
+  } from "@/stores/builder"
   import DataSourceCategory from "./DataSourceSelect/DataSourceCategory.svelte"
+  import { sortAndFormat } from "@/helpers/data/format"
 
   export let value
 
@@ -10,8 +15,8 @@
 
   const dispatch = createEventDispatcher()
 
-  $: tables = $friendlyNamesStore.tables
-  $: views = $friendlyNamesStore.viewsV2
+  $: tables = sortAndFormat.tables($tableStore.list, $datasourceStore.list)
+  $: views = sortAndFormat.viewsV2($viewsV2Store.list, $datasourceStore.list)
   $: options = [...(tables || []), ...(views || [])]
 
   $: text = value?.label ?? "Choose an option"

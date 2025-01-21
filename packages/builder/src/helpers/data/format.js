@@ -38,3 +38,39 @@ export const tableSelect = {
     resourceId: view.id,
   }),
 }
+
+export const sortAndFormat = {
+  tables: (tables, datasources) => {
+    return tables
+      .map(table => {
+        const formatted = datasourceSelect.table(table, datasources)
+        return {
+          ...formatted,
+          label: formatted.label,
+          datasourceName: formatted.datasourceName,
+          resourceId: table._id,
+        }
+      })
+      .sort((a, b) => {
+        // sort tables alphabetically, grouped by datasource
+        const dsA = a.datasourceName ?? ""
+        const dsB = b.datasourceName ?? ""
+
+        const dsComparison = dsA.localeCompare(dsB)
+        if (dsComparison !== 0) {
+          return dsComparison
+        }
+        return a.label.localeCompare(b.label)
+      })
+  },
+  viewsV2: (views, datasources) => {
+    return views.map(view => {
+      const formatted = datasourceSelect.viewV2(view, datasources)
+      return {
+        label: formatted.label,
+        datasourceName: formatted.datasourceName,
+        resourceId: view.id,
+      }
+    })
+  },
+}

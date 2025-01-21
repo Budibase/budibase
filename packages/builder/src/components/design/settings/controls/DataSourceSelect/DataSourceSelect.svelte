@@ -18,13 +18,14 @@
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import {
+    tables as tablesStore,
     queries as queriesStore,
+    viewsV2 as viewsV2Store,
     views as viewsStore,
     selectedScreen,
     componentStore,
     datasources,
     integrations,
-    friendlyNamesStore,
   } from "@/stores/builder"
   import BindingBuilder from "@/components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "@/components/integration/index.svelte"
@@ -33,6 +34,7 @@
   import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "@/components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "@/api"
+  import { sortAndFormat } from "@/helpers/data/format"
 
   export let value = {}
   export let otherSources
@@ -49,13 +51,13 @@
   let modal
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = $friendlyNamesStore.tables
+  $: tables = sortAndFormat.tables($tablesStore.list, $datasources.list)
   $: viewsV1 = $viewsStore.list.map(view => ({
     ...view,
     label: view.name,
     type: "view",
   }))
-  $: viewsV2 = $friendlyNamesStore.viewsV2
+  $: viewsV2 = sortAndFormat.viewsV2($viewsV2Store.list, $datasources.list)
   $: views = [...(viewsV1 || []), ...(viewsV2 || [])]
   $: queries = $queriesStore.list
     .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
