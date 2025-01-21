@@ -1,14 +1,10 @@
-import { derived, get } from "svelte/store"
+import { get } from "svelte/store"
 import { createBuilderWebsocket } from "./websocket.js"
 import { Socket } from "socket.io-client"
 import { BuilderSocketEvent } from "@budibase/shared-core"
-import { DerivedBudiStore } from "../BudiStore.js"
+import { BudiStore } from "../BudiStore.js"
 import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
 import { App } from "@budibase/types"
-import { datasourceSelect as format } from "@/helpers/data/format"
-import { tables } from "./tables.js"
-import { datasources } from "./datasources.js"
-import { viewsV2 } from "./viewsV2.js"
 
 interface BuilderState {
   previousTopNavPath: Record<string, string>
@@ -38,67 +34,11 @@ export const INITIAL_BUILDER_STATE: BuilderState = {
   hoveredComponentId: null,
 }
 
-interface DerivedBuilderState {
-  formatedDatasourceNames: {
-    tables: {
-      label: string
-      resourceId: string
-      datasourceName: string
-    }[]
-    viewsV2: {
-      label: string
-      resourceId: string
-      datasourceName: string
-    }[]
-  }
-}
-
-export class BuilderStore extends DerivedBudiStore<
-  BuilderState,
-  DerivedBuilderState
-> {
+export class BuilderStore extends BudiStore<BuilderState> {
   websocket?: Socket
 
   constructor() {
-    const makeDerivedStore = () => {
-      return derived(
-        [tables, datasources, viewsV2],
-        ([$tables, $datasources, $viewsV2]) => ({
-          formatedDatasourceNames: {
-            tables: $tables.list
-              .map(table => {
-                const formatted = format.table(table, $datasources.list)
-                return {
-                  label: formatted.label,
-                  datasourceName: formatted.datasourceName,
-                  resourceId: table._id!,
-                }
-              })
-              .sort((a, b) => {
-                // sort tables alphabetically, grouped by datasource
-                const dsA = a.datasourceName ?? ""
-                const dsB = b.datasourceName ?? ""
-
-                const dsComparison = dsA.localeCompare(dsB)
-                if (dsComparison !== 0) {
-                  return dsComparison
-                }
-                return a.label.localeCompare(b.label)
-              }),
-            viewsV2: $viewsV2.list.map(view => {
-              const formatted = format.viewV2(view, $datasources.list)
-              return {
-                label: formatted.label,
-                datasourceName: formatted.datasourceName,
-                resourceId: view.id,
-              }
-            }),
-          },
-        })
-      )
-    }
-
-    super({ ...INITIAL_BUILDER_STATE }, makeDerivedStore)
+    super({ ...INITIAL_BUILDER_STATE })
 
     this.init = this.init.bind(this)
     this.refresh = this.refresh.bind(this)

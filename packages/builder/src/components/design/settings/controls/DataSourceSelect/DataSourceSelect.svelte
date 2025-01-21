@@ -24,7 +24,7 @@
     componentStore,
     datasources,
     integrations,
-    builderStore,
+    friendlyNamesStore,
   } from "@/stores/builder"
   import BindingBuilder from "@/components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "@/components/integration/index.svelte"
@@ -49,13 +49,13 @@
   let modal
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = $builderStore.formatedDatasourceNames.tables
+  $: tables = $friendlyNamesStore.tables
   $: viewsV1 = $viewsStore.list.map(view => ({
     ...view,
     label: view.name,
     type: "view",
   }))
-  $: viewsV2 = $builderStore.formatedDatasourceNames.viewsV2
+  $: viewsV2 = $friendlyNamesStore.viewsV2
   $: views = [...(viewsV1 || []), ...(viewsV2 || [])]
   $: queries = $queriesStore.list
     .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
