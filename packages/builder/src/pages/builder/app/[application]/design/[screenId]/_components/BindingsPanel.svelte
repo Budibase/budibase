@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte"
-  import { Link, Body, Helpers, Layout } from "@budibase/bbui"
+  import { Link, Body, Helpers, Layout, notifications } from "@budibase/bbui"
   import { processObjectSync } from "@budibase/string-templates"
   import {
     previewStore,
@@ -9,7 +9,9 @@
     snippets,
   } from "@/stores/builder"
   import { getBindableProperties } from "@/dataBinding"
-  import BindingNode from "./BindingNode.svelte"
+  import JSONViewer, {
+    type JSONViewerClickEvent,
+  } from "@/components/common/JSONViewer.svelte"
 
   // Minimal typing for the real data binding structure, as none exists
   type DataBinding = {
@@ -56,6 +58,12 @@
     return context
   }
 
+  const copyBinding = (e: JSONViewerClickEvent) => {
+    const readableBinding = `{{ ${e.detail.path.join(".")} }}`
+    Helpers.copyToClipboard(readableBinding)
+    notifications.success("Binding copied to clipboard")
+  }
+
   onMount(previewStore.requestComponentContext)
 </script>
 
@@ -70,7 +78,7 @@
         Learn more.
       </Link>
     </div>
-    <BindingNode value={context} />
+    <JSONViewer value={context} showCopyIcon on:click-copy={copyBinding} />
   </Layout>
 </div>
 
