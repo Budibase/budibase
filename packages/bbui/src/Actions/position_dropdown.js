@@ -1,4 +1,4 @@
-import { PopoverAlignment } from "../Popover/Popover.svelte"
+import { PopoverAlignment } from "../constants"
 
 // Strategies are defined as [Popover]To[Anchor].
 // They can apply for both horizontal and vertical alignment.

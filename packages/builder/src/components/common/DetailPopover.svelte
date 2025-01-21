@@ -2,8 +2,8 @@
   import {
     Popover,
     PopoverAlignment,
-    type PopoverAPI,
     Icon,
+    type PopoverAPI,
   } from "@budibase/bbui"
 
   export let title: string = ""

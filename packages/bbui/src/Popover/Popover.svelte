@@ -1,14 +1,4 @@
 <script context="module" lang="ts">
-  export enum PopoverAlignment {
-    Left = "left",
-    Right = "right",
-    LeftOutside = "left-outside",
-    RightOutside = "right-outside",
-    Center = "center",
-    RightContextMenu = "right-context-menu",
-    LeftContextMenu = "left-context-menu",
-  }
-
   export interface PopoverAPI {
     show: () => void
     hide: () => void
@@ -23,6 +13,7 @@
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
   import Context from "../context"
+  import { PopoverAlignment } from "../constants"
 
   const dispatch = createEventDispatcher()
 
@@ -86,13 +77,13 @@
     }
   }
 
-  const handleOutsideClick = e => {
+  const handleOutsideClick = (e: MouseEvent) => {
     if (clickOutsideOverride) {
       return
     }
     if (open) {
       // Stop propagation if the source is the anchor
-      let node = e.target
+      let node = e.target as Node
       let fromAnchor = false
       while (!fromAnchor && node && node.parentNode) {
         fromAnchor = node === anchor
@@ -107,7 +98,7 @@
     }
   }
 
-  function handleEscape(e) {
+  function handleEscape(e: KeyboardEvent) {
     if (!clickOutsideOverride) {
       return
     }
