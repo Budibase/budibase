@@ -6,9 +6,11 @@ import {
   DatabaseName,
   datasourceDescribe,
 } from "../../../integrations/tests/utils"
-import { FilterConditions } from "../../../automations/steps/filter"
 import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
+import { automations } from "@budibase/shared-core"
+
+const FilterConditions = automations.steps.filter.FilterConditions
 
 describe("Automation Scenarios", () => {
   let config = setup.getConfig()
