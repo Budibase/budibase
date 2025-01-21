@@ -9,7 +9,7 @@ export const enum Operations {
 }
 
 interface Operator<T extends Document> {
-  id?: string
+  id?: number
   type: Operations
   doc: T
   forwardPatch?: jsonpatch.Operation[]
@@ -22,7 +22,7 @@ interface HistoryState<T extends Document> {
   loading?: boolean
 }
 
-export const initialState: HistoryState<never> = {
+export const initialState = {
   history: [],
   position: 0,
   loading: false,
@@ -37,10 +37,10 @@ export interface HistoryStore<T extends Document>
   > {
   wrapSaveDoc: (
     fn: (doc: T) => Promise<T>
-  ) => (doc: T, operationId?: string) => Promise<T>
+  ) => (doc: T, operationId?: number) => Promise<T>
   wrapDeleteDoc: (
     fn: (doc: T) => Promise<void>
-  ) => (doc: T, operationId?: string) => Promise<void>
+  ) => (doc: T, operationId?: number) => Promise<void>
 
   reset: () => void
   undo: () => Promise<void>
@@ -70,8 +70,8 @@ export const createHistoryStore = <T extends Document>({
 
   // Wrapped versions of essential functions which we call ourselves when using
   // undo and redo
-  let saveFn: (doc: T, operationId?: string) => Promise<T>
-  let deleteFn: (doc: T, operationId?: string) => Promise<void>
+  let saveFn: (doc: T, operationId?: number) => Promise<T>
+  let deleteFn: (doc: T, operationId?: number) => Promise<void>
 
   /**
    * Internal util to set the loading flag
@@ -112,7 +112,7 @@ export const createHistoryStore = <T extends Document>({
       let position = state.position
       if (!operation.id) {
         // Every time a new operation occurs we discard any redo potential
-        operation.id = Math.random().toString()
+        operation.id = Math.random()
         history = [...history.slice(0, state.position), operation]
         position += 1
       } else {
@@ -133,7 +133,7 @@ export const createHistoryStore = <T extends Document>({
    * @returns {function} a wrapped version of the save function
    */
   const wrapSaveDoc = (fn: (doc: T) => Promise<T>) => {
-    saveFn = async (doc: T, operationId?: string) => {
+    saveFn = async (doc: T, operationId?: number) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
         return
@@ -181,7 +181,7 @@ export const createHistoryStore = <T extends Document>({
    * @returns {function} a wrapped version of the delete function
    */
   const wrapDeleteDoc = (fn: (doc: T) => Promise<void>) => {
-    deleteFn = async (doc: T, operationId?: string) => {
+    deleteFn = async (doc: T, operationId?: number) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
         return
