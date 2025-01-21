@@ -243,7 +243,7 @@
   }
   .binding-label.primitive {
     flex: 0 0 auto;
-    max-width: 50%;
+    max-width: 75%;
   }
   .binding-value.primitive {
     flex: 0 1 auto;
