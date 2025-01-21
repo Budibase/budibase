@@ -610,14 +610,14 @@ export class ComponentStore extends BudiStore<ComponentState> {
   async patch(
     patchFn: (component: Component, screen: Screen) => any,
     componentId?: string,
-    screenId?: string | null
+    screenId?: string
   ) {
     // Use selected component by default
     if (!componentId || !screenId) {
       const state = get(this.store)
       componentId = componentId ?? state.selectedComponentId ?? undefined
       const screenState = get(screenStore)
-      screenId = screenId || screenState.selectedScreenId
+      screenId = (screenId || screenState.selectedScreenId) ?? undefined
     }
     if (!componentId || !screenId || !patchFn) {
       return
