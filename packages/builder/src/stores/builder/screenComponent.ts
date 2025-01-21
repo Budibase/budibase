@@ -65,7 +65,7 @@ function getInvalidDatasources(
       const friendlyTypeName =
         friendlyNameByType[type as keyof typeof friendlyNameByType]
       result[component._id!] = [
-        `The ${friendlyTypeName} named "${label}" was removed`,
+        `The ${friendlyTypeName} named "${label}" does not exist`,
       ]
     }
   }
