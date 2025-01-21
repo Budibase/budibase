@@ -5,6 +5,7 @@
     componentStore,
     selectedScreen,
     builderStore,
+    previewStore,
   } from "@/stores/builder"
   import {
     decodeJSBinding,
@@ -12,7 +13,7 @@
     isJSBinding,
   } from "@budibase/string-templates"
   import { onMount } from "svelte"
-
+  import CodeMirrorEditor from "@/components/common/CodeMirrorEditor.svelte"
   type ComponentUsingState = {
     id: string
     name: string
@@ -21,18 +22,29 @@
 
   const keyOptions = getAllStateVariables()
 
-  let popoverAnchor: any
-  let popover: any
-  let selectedKey: string | null
+  let selectedKey: string | undefined = undefined
   let componentsUsingState: ComponentUsingState[] = []
   let componentsUpdatingState: ComponentUsingState[] = []
+  let editorValue: string = ""
 
   onMount(() => {
     if (selectedKey) {
       searchComponents(selectedKey)
     }
+    previewStore.requestComponentContext()
   })
 
+  $: {
+    let previewContext = $previewStore.selectedComponentContext || {}
+
+    if (selectedKey && previewContext.state) {
+      // It's unlikely value will ever be populated immediately as state is never populated automatically in preview
+      const value = previewContext.state[selectedKey] ?? null
+      editorValue = JSON.stringify(value, null, 2)
+    } else {
+      editorValue = ""
+    }
+  }
   function findComponentsUpdatingState(
     component: any,
     stateKey: string
@@ -145,78 +157,92 @@
     component.settings.forEach(setting => {
       builderStore.highlightSetting(setting)
     })
-    popover.hide()
+  }
+
+  function handleStateInspectorChange(e: CustomEvent) {
+    if (!selectedKey || !$previewStore.selectedComponentContext) {
+      throw new Error("No state key selected")
+    }
+
+    if (!e.detail) {
+      return
+    }
+
+    const value = JSON.parse(e.detail)
+    const stateUpdate = { [selectedKey]: value }
+
+    previewStore.updateState(stateUpdate)
+
+    previewStore.setSelectedComponentContext({
+      ...$previewStore.selectedComponentContext,
+      state: stateUpdate,
+    })
+
+    previewStore.requestComponentContext()
   }
 </script>
 
-<div bind:this={popoverAnchor}>
-  <ActionButton on:click={popover.show}>State</ActionButton>
-</div>
-
-<Popover bind:this={popover} anchor={popoverAnchor} align="right">
-  <div class="state-panel">
-    <div class="split-title">
-      <div>State</div>
-      <div>
-        <Icon size="S" hoverable name="Close" on:click={popover.hide} />
-      </div>
-    </div>
-    <div>
-      Showing state variables for {$selectedScreen?.routing?.route.split(
-        "/"
-      )[1]}:
-    </div>
-    <div class="section">
-      <Select
-        value={selectedKey}
-        placeholder="Type here..."
-        options={keyOptions}
-        on:change={handleStateKeySelect}
-      />
-    </div>
-    <Divider />
-    <div class="section">state inspector here</div>
-    <Divider />
-
-    {#if componentsUsingState.length > 0}
-      <div class="section">
-        <span class="text">Updates:</span>
-        {#each componentsUsingState as component, i}
-          <button
-            class="component-link"
-            on:click={() => onClickComponentLink(component)}
-          >
-            {component.name}{i < componentsUsingState.length - 1 ? ", " : ""}
-          </button>
-        {/each}
-      </div>
-    {/if}
-    {#if componentsUpdatingState.length > 0}
-      <div class="section">
-        <span class="text">Updated by:</span>
-        {#each componentsUpdatingState as component, i}
-          <button
-            class="component-link"
-            on:click={() =>
-              onClickComponentLink({
-                id: component.id,
-                name: component.name,
-                settings: component.settings,
-              })}
-          >
-            {component.name}{i < componentsUpdatingState.length - 1 ? ", " : ""}
-          </button>
-        {/each}
-      </div>
-    {/if}
+<div class="state-panel">
+  <div>State</div>
+  <div>
+    Showing state variables for {$selectedScreen?.routing?.route.split("/")[1]}:
   </div>
-</Popover>
+  <div class="section">
+    <Select
+      value={selectedKey}
+      placeholder="Type here..."
+      options={keyOptions}
+      on:change={handleStateKeySelect}
+    />
+  </div>
+  <Divider />
+  <div class="section">
+    <CodeMirrorEditor
+      height={200}
+      value={editorValue}
+      resize="vertical"
+      label="State Inspector"
+      on:change={handleStateInspectorChange}
+    />
+  </div>
+  <Divider />
+
+  {#if componentsUsingState.length > 0}
+    <div class="section">
+      <span class="text">Updates:</span>
+      {#each componentsUsingState as component, i}
+        <button
+          class="component-link"
+          on:click={() => onClickComponentLink(component)}
+        >
+          {component.name}{i < componentsUsingState.length - 1 ? ", " : ""}
+        </button>
+      {/each}
+    </div>
+  {/if}
+  {#if componentsUpdatingState.length > 0}
+    <div class="section">
+      <span class="text">Updated by:</span>
+      {#each componentsUpdatingState as component, i}
+        <button
+          class="component-link"
+          on:click={() =>
+            onClickComponentLink({
+              id: component.id,
+              name: component.name,
+              settings: component.settings,
+            })}
+        >
+          {component.name}{i < componentsUpdatingState.length - 1 ? ", " : ""}
+        </button>
+      {/each}
+    </div>
+  {/if}
+</div>
 
 <style>
   .state-panel {
     background-color: var(--spectrum-alias-background-color-primary);
-    max-width: 300px;
-    min-width: 300px;
     padding: var(--spacing-m);
     display: flex;
     flex-direction: column;
