@@ -1,16 +1,23 @@
 <script>
   import { isActive, redirect, goto, url } from "@roxi/routify"
   import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
-  import { organisation, auth, menu, appsStore, licensing } from "stores/portal"
+  import {
+    organisation,
+    auth,
+    menu,
+    appsStore,
+    licensing,
+    admin,
+  } from "@/stores/portal"
   import { onMount } from "svelte"
   import UpgradeButton from "./_components/UpgradeButton.svelte"
   import MobileMenu from "./_components/MobileMenu.svelte"
   import Logo from "./_components/Logo.svelte"
   import UserDropdown from "./_components/UserDropdown.svelte"
-  import HelpMenu from "components/common/HelpMenu.svelte"
-  import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
+  import HelpMenu from "@/components/common/HelpMenu.svelte"
+  import VerificationPromptBanner from "@/components/common/VerificationPromptBanner.svelte"
   import { sdk } from "@budibase/shared-core"
-  import EnterpriseBasicTrialBanner from "components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
+  import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { Constants } from "@budibase/frontend-core"
 
   let loaded = false
@@ -20,6 +27,7 @@
   $: $url(), updateActiveTab($menu)
   $: isOnboarding =
     !$appsStore.apps.length && sdk.users.hasBuilderPermissions($auth.user)
+  $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   const updateActiveTab = menu => {
     for (let entry of menu) {
@@ -38,8 +46,7 @@
   const showFreeTrialBanner = () => {
     return (
       $licensing.license?.plan?.type ===
-        Constants.PlanType.ENTERPRISE_BASIC_TRIAL &&
-      sdk.users.isAdmin($auth.user)
+        Constants.PlanType.ENTERPRISE_BASIC_TRIAL && isOwner
     )
   }
 

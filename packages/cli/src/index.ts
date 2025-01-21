@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-process.env.DISABLE_PINO_LOGGER = "1"
+// have to import this before anything else
 import "./environment"
 import { getCommands } from "./options"
 import { Command } from "commander"

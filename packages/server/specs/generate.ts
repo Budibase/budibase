@@ -20,19 +20,15 @@ const options = {
       {
         url: "https://budibase.app/api/public/v1",
         description: "Budibase Cloud API",
-      },
-      {
-        url: "{protocol}://{hostname}/api/public/v1",
-        description: "Budibase self hosted API",
         variables: {
-          protocol: {
-            default: "http",
-            description:
-              "Whether HTTP or HTTPS should be used to communicate with your Budibase instance.",
+          apiKey: {
+            default: "<user API key>",
+            description: "The API key of the user to assume for API call.",
           },
-          hostname: {
-            default: "localhost:10000",
-            description: "The URL of your Budibase instance.",
+          appId: {
+            default: "<App ID>",
+            description:
+              "The ID of the app the calls will be executed within the context of, this should start with app_ (production) or app_dev (development).",
           },
         },
       },

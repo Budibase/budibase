@@ -10,12 +10,12 @@
     TooltipWrapper,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { admin, auth, licensing } from "stores/portal"
+  import { admin, auth, licensing } from "@/stores/portal"
   import { Constants } from "@budibase/frontend-core"
-  import { DashCard, Usage } from "components/usage"
-  import { PlanModel } from "constants"
+  import { DashCard, Usage } from "@/components/usage"
+  import { PlanModel } from "@/constants"
   import { sdk } from "@budibase/shared-core"
-  import { getFormattedPlanName } from "helpers/planTitle"
+  import { getFormattedPlanName } from "@/helpers/planTitle"
 
   let staticUsage = []
   let monthlyUsage = []
@@ -28,16 +28,13 @@
   const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
   const manageUrl = `${$admin.accountPortalUrl}/portal/billing`
 
-  const WARN_USAGE = ["Queries", "Automations", "Rows", "Day Passes", "Users"]
+  const WARN_USAGE = ["Queries", "Automations", "Rows", "Users"]
   const oneDayInSeconds = 86400
 
   const EXCLUDE_QUOTAS = {
     Queries: () => true,
     Users: license => {
       return license.plan.model !== PlanModel.PER_USER
-    },
-    "Day Passes": license => {
-      return license.plan.model !== PlanModel.DAY_PASS
     },
   }
 

@@ -1,9 +1,13 @@
 <script>
   import { get } from "svelte/store"
   import { getContext, onDestroy } from "svelte"
-  import { ModalContent, Modal } from "@budibase/bbui"
-  import FilterModal from "./FilterModal.svelte"
-  import { LuceneUtils } from "@budibase/frontend-core"
+  import { ModalContent, Modal, Helpers } from "@budibase/bbui"
+  import {
+    QueryUtils,
+    Constants,
+    CoreFilterBuilder,
+    Utils,
+  } from "@budibase/frontend-core"
   import Button from "../Button.svelte"
 
   export let dataProvider
@@ -15,13 +19,15 @@
     getContext("sdk")
 
   let modal
-  let tmpFilters = []
-  let filters = []
+  let editableFilters
+  let filters
   let schemaLoaded = false,
     schema
 
   $: dataProviderId = dataProvider?.id
   $: datasource = dataProvider?.datasource
+  $: isDSPlus = ["table", "link", "viewV2"].includes(datasource?.type)
+
   $: addExtension = getAction(
     dataProviderId,
     ActionTypes.AddDataProviderQueryExtension
@@ -33,10 +39,15 @@
   $: fetchSchema(datasource)
   $: schemaFields = getSchemaFields(schema, allowedFields)
 
-  // Add query extension to data provider
+  $: filterCount = filters?.groups?.reduce((acc, group) => {
+    acc += group?.filters?.length || 0
+    return acc
+  }, 0)
+
   $: {
-    if (filters?.length) {
-      const queryExtension = LuceneUtils.buildLuceneQuery(filters)
+    if (filterCount) {
+      const queryExtension = QueryUtils.buildQuery(filters)
+      delete queryExtension.onEmptyFilter
       addExtension?.($component.id, queryExtension)
     } else {
       removeExtension?.($component.id)
@@ -69,19 +80,23 @@
         }
       })
     }
+
     return Object.values(clonedSchema || {})
+      .filter(field => !Constants.BannedSearchTypes.includes(field.type))
+      .concat(isDSPlus ? [{ name: "_id", type: "string" }] : [])
   }
 
   const openEditor = () => {
     if (get(builderStore).inBuilder) {
       return
     }
-    tmpFilters = [...filters]
+    editableFilters = filters ? Helpers.cloneDeep(filters) : null
+
     modal.show()
   }
 
   const updateQuery = () => {
-    filters = [...tmpFilters]
+    filters = Utils.parseFilter(editableFilters)
   }
 
   onDestroy(() => {
@@ -94,15 +109,23 @@
     onClick={openEditor}
     icon="ri-filter-3-line"
     text="Filter"
-    size="XL"
+    {size}
     type="secondary"
     quiet
-    active={filters?.length > 0}
+    active={filters?.groups?.length > 0}
   />
 
   <Modal bind:this={modal}>
     <ModalContent title="Edit filters" size="XL" onConfirm={updateQuery}>
-      <FilterModal bind:filters={tmpFilters} {schemaFields} {datasource} />
+      <CoreFilterBuilder
+        on:change={e => {
+          editableFilters = e.detail
+        }}
+        filters={editableFilters}
+        {schemaFields}
+        {datasource}
+        filtersLabel={null}
+      />
     </ModalContent>
   </Modal>
 {/if}

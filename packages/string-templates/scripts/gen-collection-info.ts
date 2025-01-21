@@ -1,29 +1,24 @@
-const HELPER_LIBRARY = "@budibase/handlebars-helpers"
-const helpers = require(HELPER_LIBRARY)
-const { HelperFunctionBuiltin } = require("../src/helpers/constants")
-const fs = require("fs")
+import {
+  HelperFunctionBuiltin,
+  EXTERNAL_FUNCTION_COLLECTIONS,
+} from "../src/helpers/constants"
+import { readFileSync, writeFileSync } from "fs"
+import { marked } from "marked"
+import { join, dirname } from "path"
+
+const helpers = require("@budibase/handlebars-helpers")
 const doctrine = require("doctrine")
-const marked = require("marked")
 
-/**
- * full list of supported helpers can be found here:
- * https://github.com/budibase/handlebars-helpers
- */
-const { join } = require("path")
-const path = require("path")
+type HelperInfo = {
+  acceptsInline?: boolean
+  acceptsBlock?: boolean
+  example?: string
+  description: string
+  tags?: any[]
+}
 
-const COLLECTIONS = [
-  "math",
-  "array",
-  "number",
-  "url",
-  "string",
-  "comparison",
-  "object",
-  "uuid",
-]
 const FILENAME = join(__dirname, "..", "src", "manifest.json")
-const outputJSON = {}
+const outputJSON: any = {}
 const ADDED_HELPERS = {
   date: {
     date: {
@@ -43,7 +38,7 @@ const ADDED_HELPERS = {
   },
 }
 
-function fixSpecialCases(name, obj) {
+function fixSpecialCases(name: string, obj: any) {
   const args = obj.args
   if (name === "ifNth") {
     args[0] = "a"
@@ -61,7 +56,7 @@ function fixSpecialCases(name, obj) {
   return obj
 }
 
-function lookForward(lines, funcLines, idx) {
+function lookForward(lines: string[], funcLines: string[], idx: number) {
   const funcLen = funcLines.length
   for (let i = idx, j = 0; i < idx + funcLen; ++i, j++) {
     if (!lines[i].includes(funcLines[j])) {
@@ -71,7 +66,7 @@ function lookForward(lines, funcLines, idx) {
   return true
 }
 
-function getCommentInfo(file, func) {
+function getCommentInfo(file: string, func: string): HelperInfo {
   const lines = file.split("\n")
   const funcLines = func.split("\n")
   let comment = null
@@ -98,7 +93,13 @@ function getCommentInfo(file, func) {
   if (comment == null) {
     return { description: "" }
   }
-  const docs = doctrine.parse(comment, { unwrap: true })
+  const docs: {
+    acceptsInline?: boolean
+    acceptsBlock?: boolean
+    example: string
+    description: string
+    tags: any[]
+  } = doctrine.parse(comment, { unwrap: true })
   // some hacky fixes
   docs.description = docs.description.replace(/\n/g, " ")
   docs.description = docs.description.replace(/[ ]{2,}/g, " ")
@@ -120,19 +121,21 @@ function getCommentInfo(file, func) {
   return docs
 }
 
-const excludeFunctions = { string: ["raw"] }
+const excludeFunctions: Record<string, string[]> = { string: ["raw"] }
 
 /**
  * This script is very specific to purpose, parsing the handlebars-helpers files to attempt to get information about them.
  */
 function run() {
   const foundNames: string[] = []
-  for (let collection of COLLECTIONS) {
-    const collectionFile = fs.readFileSync(
-      `${path.dirname(require.resolve(HELPER_LIBRARY))}/lib/${collection}.js`,
+  for (let collection of EXTERNAL_FUNCTION_COLLECTIONS) {
+    const collectionFile = readFileSync(
+      `${dirname(
+        require.resolve("@budibase/handlebars-helpers")
+      )}/lib/${collection}.js`,
       "utf8"
     )
-    const collectionInfo = {}
+    const collectionInfo: any = {}
     // collect information about helper
     let hbsHelperInfo = helpers[collection]()
     for (let entry of Object.entries(hbsHelperInfo)) {
@@ -181,7 +184,7 @@ function run() {
       helper.description = marked.parse(helper.description)
     }
   }
-  fs.writeFileSync(FILENAME, JSON.stringify(outputJSON, null, 2))
+  writeFileSync(FILENAME, JSON.stringify(outputJSON, null, 2))
 }
 
 run()

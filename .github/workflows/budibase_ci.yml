@@ -25,12 +25,12 @@ env:
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   NX_BASE_BRANCH: origin/${{ github.base_ref }}
-  USE_NX_AFFECTED: ${{ github.event_name == 'pull_request' }}
+  ONLY_AFFECTED_TASKS: ${{ github.event_name == 'pull_request' }}
   IS_OSS_CONTRIBUTOR: ${{ inputs.run_as_oss == true || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase') }}
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -47,7 +47,7 @@ jobs:
       - run: yarn lint
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -64,22 +64,19 @@ jobs:
       - run: yarn --frozen-lockfile
 
       # Run build all the projects
-      - name: Build OSS
-        run: yarn build:oss
-      - name: Build account portal
-        run: yarn build:account-portal
-        if: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
+      - name: Build
+        run: yarn build
       # Check the types of the projects built via esbuild
       - name: Check types
         run: |
-          if ${{ env.USE_NX_AFFECTED }}; then
+          if ${{ env.ONLY_AFFECTED_TASKS }}; then
             yarn check:types --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn check:types
           fi
 
   helm-lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -91,7 +88,7 @@ jobs:
       - run: cd charts/budibase && helm lint .
 
   test-libraries:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -108,7 +105,7 @@ jobs:
       - name: Pull testcontainers images
         run: |
           docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.2.1-sql &
+          docker pull budibase/couchdb:v3.3.3-sqs-v2.1.1 &
           docker pull redis &
 
           wait $(jobs -p)
@@ -116,14 +113,16 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
-          if ${{ env.USE_NX_AFFECTED }}; then
-            yarn test --ignore=@budibase/worker --ignore=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
+          if ${{ env.ONLY_AFFECTED_TASKS }}; then
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --scope=@budibase/builder --since=${{ env.NX_BASE_BRANCH }}
           else
-            yarn test --ignore=@budibase/worker --ignore=@budibase/server
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --no-prefix -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --scope=@budibase/builder --no-prefix
           fi
 
   test-worker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -140,14 +139,23 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Test worker
         run: |
-          if ${{ env.USE_NX_AFFECTED }}; then
-            yarn test --scope=@budibase/worker --since=${{ env.NX_BASE_BRANCH }}
-          else
-            yarn test --scope=@budibase/worker
+          if ${{ env.ONLY_AFFECTED_TASKS }}; then
+            AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/worker)
+            if [ -z "$AFFECTED" ]; then
+              echo "No affected tests to run"
+              exit 0
+            fi
           fi
 
+          cd packages/worker
+          yarn test --verbose --reporters=default --reporters=github-actions
+
   test-server:
-    runs-on: budi-tubby-tornado-quad-core-150gb
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        datasource:
+          [mssql, mysql, postgres, postgres_legacy, mongodb, mariadb, oracle, sqs, none]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -162,31 +170,74 @@ jobs:
           node-version: 20.x
           cache: yarn
 
+      - name: Load dotenv
+        id: dotenv
+        uses: falti/dotenv-action@v1.1.3
+        with:
+          path: ./packages/server/datasource-sha.env
+
       - name: Pull testcontainers images
         run: |
-          docker pull mcr.microsoft.com/mssql/server:2022-latest &
-          docker pull mysql:8.3 &
-          docker pull postgres:16.1-bullseye &
-          docker pull mongo:7.0-jammy &
-          docker pull mariadb:lts &
-          docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.2.1-sql &
+          if [ "${{ matrix.datasource }}" == "mssql" ]; then
+            docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}
+          elif [ "${{ matrix.datasource }}" == "mysql" ]; then
+            docker pull mysql@${{ steps.dotenv.outputs.MYSQL_SHA }}
+          elif [ "${{ matrix.datasource }}" == "postgres" ]; then
+            docker pull postgres@${{ steps.dotenv.outputs.POSTGRES_SHA }}
+          elif [ "${{ matrix.datasource }}" == "mongodb" ]; then
+            docker pull mongo@${{ steps.dotenv.outputs.MONGODB_SHA }}
+          elif [ "${{ matrix.datasource }}" == "mariadb" ]; then
+            docker pull mariadb@${{ steps.dotenv.outputs.MARIADB_SHA }}
+          elif [ "${{ matrix.datasource }}" == "oracle" ]; then
+            docker pull budibase/oracle-database:23.2-slim-faststart
+          elif [ "${{ matrix.datasource }}" == "postgres_legacy" ]; then
+            docker pull postgres:9.5.25
+          fi
+          docker pull minio/minio &
           docker pull redis &
+          docker pull testcontainers/ryuk:0.5.1 &
+          docker pull budibase/couchdb:v3.3.3-sqs-v2.1.1 &
 
           wait $(jobs -p)
 
       - run: yarn --frozen-lockfile
 
-      - name: Test server
+      - name: Set up PostgreSQL 16
+        if: matrix.datasource == 'postgres'
         run: |
-          if ${{ env.USE_NX_AFFECTED }}; then
-            yarn test --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
-          else
-            yarn test --scope=@budibase/server
+          sudo systemctl stop postgresql
+          sudo apt-get remove --purge -y postgresql* libpq-dev
+          sudo rm -rf /etc/postgresql /var/lib/postgresql
+          sudo apt-get autoremove -y
+          sudo apt-get autoclean
+
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16
+
+      - name: Test server
+        env:
+          DATASOURCE: ${{ matrix.datasource }}
+        run: |
+          if ${{ env.ONLY_AFFECTED_TASKS }}; then
+            AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
+            if [ -z "$AFFECTED" ]; then
+              echo "No affected tests to run"
+              exit 0
+            fi
           fi
 
+          FILTER="./src/tests/filters/datasource-tests.js"
+          if [ "${{ matrix.datasource }}" == "none" ]; then
+            FILTER="./src/tests/filters/non-datasource-tests.js"
+          fi
+
+          cd packages/server
+          yarn test --filter $FILTER --verbose --reporters=default --reporters=github-actions
+
   check-pro-submodule:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
     steps:
       - name: Checkout repo and submodules
@@ -213,6 +264,7 @@ jobs:
             echo "pro_commit=$pro_commit"
             echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
             echo "base_commit=$base_commit"
+            echo "base_commit=$base_commit" >> "$GITHUB_OUTPUT"
 
             base_commit_excluding_merges=$(git log --no-merges -n 1 --format=format:%H $base_commit)
             echo "base_commit_excluding_merges=$base_commit_excluding_merges"
@@ -225,12 +277,13 @@ jobs:
         if: ${{ steps.get_pro_commits.outputs.base_commit_excluding_merges != '' }}
         run: |
           cd packages/pro
+          base_commit='${{ steps.get_pro_commits.outputs.base_commit }}'
           base_commit_excluding_merges='${{ steps.get_pro_commits.outputs.base_commit_excluding_merges }}'
           pro_commit='${{ steps.get_pro_commits.outputs.pro_commit }}'
 
           any_commit=$(git log --no-merges $base_commit_excluding_merges...$pro_commit)
 
-          if [ -n "$any_commit" ]; then
+          if [ -n "$any_commit" ] && [ "$base_commit" != "$pro_commit" ]; then
             echo $any_commit
 
             echo "An error occurred: <error_message>"
@@ -242,60 +295,27 @@ jobs:
             echo 'All good, the submodule had been merged and setup correctly!'
           fi
 
-  check-accountportal-submodule:
-    runs-on: ubuntu-latest
+  check-lockfile:
+    runs-on: ubuntu-22.04
     if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
 
-      - uses: dorny/paths-filter@v3
-        id: changes
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          filters: |
-            src:
-              - packages/account-portal/**
-
-      - if: steps.changes.outputs.src == 'true'
-        name: Check account portal commit
-        id: get_accountportal_commits
+          node-version: 20.x
+          cache: yarn
+      - run: yarn install
+      - name: Check for yarn.lock changes
         run: |
-          cd packages/account-portal
-          accountportal_commit=$(git rev-parse HEAD)
-
-          branch="${{ github.base_ref || github.ref_name  }}"
-          echo "Running on branch '$branch' (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
-
-          base_commit=$(git rev-parse origin/master)
-
-          if [[ ! -z $base_commit ]]; then
-            echo "target_branch=$branch"
-            echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
-            echo "accountportal_commit=$accountportal_commit"
-            echo "accountportal_commit=$accountportal_commit" >> "$GITHUB_OUTPUT"
-            echo "base_commit=$base_commit"
-            echo "base_commit=$base_commit" >> "$GITHUB_OUTPUT"
+          if [[ $(git status --porcelain) == *"yarn.lock"* ]]; then
+            echo "yarn.lock file needs to be modified. Please update it locally and commit the changes."
+            exit 1
           else
-            echo "Nothing to do - branch to branch merge."
+            echo "yarn.lock file is unchanged."
           fi
-
-      - name: Check submodule merged to base branch
-        if: ${{ steps.get_accountportal_commits.outputs.base_commit != '' }}
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const submoduleCommit = '${{ steps.get_accountportal_commits.outputs.accountportal_commit }}';
-            const baseCommit = '${{ steps.get_accountportal_commits.outputs.base_commit }}';
-
-            if (submoduleCommit !== baseCommit) {
-              console.error('Submodule commit does not match the latest commit on the "${{ steps.get_accountportal_commits.outputs.target_branch }}" branch.');
-              console.error('Refer to the account portal repo to merge your changes: https://github.com/Budibase/account-portal/blob/master/docs/index.md')
-              process.exit(1);
-            } else {
-              console.log('All good, the submodule had been merged and setup correctly!')
-            }

@@ -2,6 +2,12 @@
 
 import { AppMigration } from "."
 
+import m20240604153647_initial_sqs from "./migrations/20240604153647_initial_sqs"
+
+// Migrations will be executed sorted by ID
 export const MIGRATIONS: AppMigration[] = [
-  // Migrations will be executed sorted by id
+  {
+    id: "20240604153647_initial_sqs",
+    func: m20240604153647_initial_sqs,
+  },
 ]

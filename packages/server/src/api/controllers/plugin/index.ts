@@ -1,20 +1,38 @@
 import { npmUpload, urlUpload, githubUpload } from "./uploaders"
 import { plugins as pluginCore } from "@budibase/backend-core"
-import { PluginType, FileType, PluginSource } from "@budibase/types"
+import {
+  PluginType,
+  PluginSource,
+  CreatePluginRequest,
+  CreatePluginResponse,
+  UserCtx,
+  UploadPluginRequest,
+  Plugin,
+  UploadPluginResponse,
+  FetchPluginResponse,
+  DeletePluginResponse,
+} from "@budibase/types"
 import env from "../../../environment"
 import { clientAppSocket } from "../../../websockets"
 import sdk from "../../../sdk"
 import { sdk as pro } from "@budibase/pro"
 
-export async function upload(ctx: any) {
-  const plugins: FileType[] =
-    ctx.request.files.file.length > 1
-      ? Array.from(ctx.request.files.file)
-      : [ctx.request.files.file]
+export async function upload(
+  ctx: UserCtx<UploadPluginRequest, UploadPluginResponse>
+) {
+  const files = ctx.request.files
+  const plugins =
+    files && Array.isArray(files.file) && files.file.length > 1
+      ? Array.from(files.file)
+      : [files?.file]
+
   try {
-    let docs = []
+    let docs: Plugin[] = []
     // can do single or multiple plugins
     for (let plugin of plugins) {
+      if (!plugin || Array.isArray(plugin)) {
+        continue
+      }
       const doc = await sdk.plugins.processUploaded(plugin, PluginSource.FILE)
       docs.push(doc)
     }
@@ -29,7 +47,9 @@ export async function upload(ctx: any) {
   }
 }
 
-export async function create(ctx: any) {
+export async function create(
+  ctx: UserCtx<CreatePluginRequest, CreatePluginResponse>
+) {
   const { source, url, headers, githubToken } = ctx.request.body
 
   try {
@@ -75,23 +95,18 @@ export async function create(ctx: any) {
     const doc = await pro.plugins.storePlugin(metadata, directory, source)
 
     clientAppSocket?.emit("plugins-update", { name, hash: doc.hash })
-    ctx.body = {
-      message: "Plugin uploaded successfully",
-      plugins: [doc],
-    }
     ctx.body = { plugin: doc }
   } catch (err: any) {
     const errMsg = err?.message ? err?.message : err
-
     ctx.throw(400, `Failed to import plugin: ${errMsg}`)
   }
 }
 
-export async function fetch(ctx: any) {
+export async function fetch(ctx: UserCtx<void, FetchPluginResponse>) {
   ctx.body = await sdk.plugins.fetch()
 }
 
-export async function destroy(ctx: any) {
+export async function destroy(ctx: UserCtx<void, DeletePluginResponse>) {
   const { pluginId } = ctx.params
 
   try {

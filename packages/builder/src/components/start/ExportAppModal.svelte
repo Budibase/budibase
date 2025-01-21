@@ -9,7 +9,7 @@
     notifications,
   } from "@budibase/bbui"
   import { downloadFile } from "@budibase/frontend-core"
-  import { createValidationStore } from "helpers/validation/yup"
+  import { createValidationStore } from "@/helpers/validation/yup"
 
   export let app
   export let published
@@ -18,7 +18,7 @@
 
   let password = null
   const validation = createValidationStore()
-  validation.addValidatorType("password", "password", true, { minLength: 8 })
+  validation.addValidatorType("password", "password", true, { minLength: 12 })
   $: validation.observe("password", password)
 
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }

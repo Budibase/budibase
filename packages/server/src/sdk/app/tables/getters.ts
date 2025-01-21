@@ -9,40 +9,59 @@ import {
   Database,
   INTERNAL_TABLE_SOURCE_ID,
   Table,
-  TableResponse,
+  FindTableResponse,
   TableSourceType,
   TableViewsResponse,
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
+import { ensureQueryUISet } from "../views/utils"
+import { isV2 } from "../views"
 
-export function processTable(table: Table): Table {
+export async function processTable(table: Table): Promise<Table> {
   if (!table) {
     return table
   }
+
+  table = { ...table }
+  if (table.views) {
+    for (const [key, view] of Object.entries(table.views)) {
+      if (!isV2(view)) {
+        continue
+      }
+      table.views[key] = ensureQueryUISet(view)
+    }
+  }
   if (table._id && isExternalTableID(table._id)) {
+    // Old created external tables via Budibase might have a missing field name breaking some UI such as filters
+    if (table.schema["id"] && !table.schema["id"].name) {
+      table.schema["id"].name = "id"
+    }
     return {
       ...table,
       type: "table",
       sourceType: TableSourceType.EXTERNAL,
     }
   } else {
-    return {
+    const processed: Table = {
       ...table,
       type: "table",
+      primary: ["_id"], // internal tables must always use _id as primary key
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
+      sql: true,
     }
+    return processed
   }
 }
 
-export function processTables(tables: Table[]): Table[] {
-  return tables.map(table => processTable(table))
+export async function processTables(tables: Table[]): Promise<Table[]> {
+  return await Promise.all(tables.map(table => processTable(table)))
 }
 
-function processEntities(tables: Record<string, Table>) {
+async function processEntities(tables: Record<string, Table>) {
   for (let key of Object.keys(tables)) {
-    tables[key] = processTable(tables[key])
+    tables[key] = await processTable(tables[key])
   }
   return tables
 }
@@ -56,19 +75,22 @@ export async function getAllInternalTables(db?: Database): Promise<Table[]> {
       include_docs: true,
     })
   )
-  return processTables(internalTables.rows.map(row => row.doc!))
+  return await processTables(internalTables.rows.map(row => row.doc!))
 }
 
 async function getAllExternalTables(): Promise<Table[]> {
+  // this is all datasources, we'll need to filter out internal
   const datasources = await sdk.datasources.fetch({ enriched: true })
-  const allEntities = datasources.map(datasource => datasource.entities)
+  const allEntities = datasources
+    .filter(datasource => datasource._id !== INTERNAL_TABLE_SOURCE_ID)
+    .map(datasource => datasource.entities)
   let final: Table[] = []
   for (let entities of allEntities) {
     if (entities) {
       final = final.concat(Object.values(entities))
     }
   }
-  return processTables(final)
+  return await processTables(final)
 }
 
 export async function getExternalTable(
@@ -79,21 +101,34 @@ export async function getExternalTable(
   if (!entities[tableName]) {
     throw new Error(`Unable to find table named "${tableName}"`)
   }
-  return processTable(entities[tableName])
+  const table = await processTable(entities[tableName])
+  if (!table.sourceId) {
+    table.sourceId = datasourceId
+  }
+  return table
 }
 
 export async function getTable(tableId: string): Promise<Table> {
   const db = context.getAppDB()
   let output: Table
-  if (isExternalTableID(tableId)) {
+  if (tableId && isExternalTableID(tableId)) {
     let { datasourceId, tableName } = breakExternalTableId(tableId)
-    const datasource = await datasources.get(datasourceId!)
-    const table = await getExternalTable(datasourceId!, tableName!)
+    const datasource = await datasources.get(datasourceId)
+    const table = await getExternalTable(datasourceId, tableName)
     output = { ...table, sql: isSQL(datasource) }
   } else {
     output = await db.get<Table>(tableId)
   }
-  return processTable(output)
+  return await processTable(output)
+}
+
+export async function doesTableExist(tableId: string): Promise<boolean> {
+  try {
+    const table = await getTable(tableId)
+    return !!table
+  } catch (err) {
+    return false
+  }
 }
 
 export async function getAllTables() {
@@ -101,7 +136,7 @@ export async function getAllTables() {
     getAllInternalTables(),
     getAllExternalTables(),
   ])
-  return processTables([...internal, ...external])
+  return await processTables([...internal, ...external])
 }
 
 export async function getExternalTablesInDatasource(
@@ -111,7 +146,7 @@ export async function getExternalTablesInDatasource(
   if (!datasource || !datasource.entities) {
     throw new Error("Datasource is not configured fully.")
   }
-  return processEntities(datasource.entities)
+  return await processEntities(datasource.entities)
 }
 
 export async function getTables(tableIds: string[]): Promise<Table[]> {
@@ -135,19 +170,24 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
     })
     tables = tables.concat(internalTables)
   }
-  return processTables(tables)
+  return await processTables(tables)
 }
 
-export function enrichViewSchemas(table: Table): TableResponse {
+export async function enrichViewSchemas(
+  table: Table
+): Promise<FindTableResponse> {
+  const views = []
+  for (const view of Object.values(table.views ?? [])) {
+    if (sdk.views.isV2(view)) {
+      views.push(await sdk.views.enrichSchema(view, table.schema))
+    } else views.push(view)
+  }
+
   return {
     ...table,
-    views: Object.values(table.views ?? [])
-      .map(v =>
-        sdk.views.isV2(v) ? sdk.views.enrichSchema(v, table.schema) : v
-      )
-      .reduce((p, v) => {
-        p[v.name!] = v
-        return p
-      }, {} as TableViewsResponse),
+    views: views.reduce((p, v) => {
+      p[v.name!] = v
+      return p
+    }, {} as TableViewsResponse),
   }
 }

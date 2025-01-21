@@ -12,23 +12,35 @@ import {
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {
+  AIConfig,
+  AIInnerConfig,
   Config,
+  ConfigChecklistResponse,
   ConfigType,
   Ctx,
+  DeleteConfigResponse,
+  FindConfigResponse,
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
   GoogleInnerConfig,
+  isAIConfig,
   isGoogleConfig,
   isOIDCConfig,
   isSettingsConfig,
   isSMTPConfig,
   OIDCConfigs,
+  OIDCLogosConfig,
+  PASSWORD_REPLACEMENT,
+  QuotaUsageType,
+  SaveConfigRequest,
+  SaveConfigResponse,
   SettingsBrandingConfig,
   SettingsInnerConfig,
   SSOConfig,
   SSOConfigType,
+  StaticQuotaName,
+  UploadConfigFileResponse,
   UserCtx,
-  OIDCLogosConfig,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
 
@@ -38,6 +50,9 @@ const getEventFns = async (config: Config, existing?: Config) => {
   if (!existing) {
     if (isSMTPConfig(config)) {
       fns.push(events.email.SMTPCreated)
+    } else if (isAIConfig(config)) {
+      fns.push(() => events.ai.AIConfigCreated)
+      fns.push(() => pro.quotas.addCustomAIConfig())
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
       if (config.config.activated) {
@@ -74,6 +89,14 @@ const getEventFns = async (config: Config, existing?: Config) => {
   } else {
     if (isSMTPConfig(config)) {
       fns.push(events.email.SMTPUpdated)
+    } else if (isAIConfig(config)) {
+      fns.push(() => events.ai.AIConfigUpdated)
+      if (
+        Object.keys(existing.config).length > Object.keys(config.config).length
+      ) {
+        fns.push(() => pro.quotas.removeCustomAIConfig())
+      }
+      fns.push(() => pro.quotas.addCustomAIConfig())
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOUpdated(ConfigType.GOOGLE))
       if (!existing.config.activated && config.config.activated) {
@@ -122,7 +145,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
       }
     }
   }
-
   return fns
 }
 
@@ -197,7 +219,21 @@ async function verifyOIDCConfig(config: OIDCConfigs) {
   await verifySSOConfig(ConfigType.OIDC, config.configs[0])
 }
 
-export async function save(ctx: UserCtx<Config>) {
+export async function verifyAIConfig(
+  configToSave: AIInnerConfig,
+  existingConfig: AIConfig
+) {
+  // ensure that the redacted API keys are not overwritten in the DB
+  for (const uuid in existingConfig.config) {
+    if (configToSave[uuid]?.apiKey === PASSWORD_REPLACEMENT) {
+      configToSave[uuid].apiKey = existingConfig.config[uuid].apiKey
+    }
+  }
+}
+
+export async function save(
+  ctx: UserCtx<SaveConfigRequest, SaveConfigResponse>
+) {
   const body = ctx.request.body
   const type = body.type
   const config = body.config
@@ -223,6 +259,11 @@ export async function save(ctx: UserCtx<Config>) {
         break
       case ConfigType.OIDC:
         await verifyOIDCConfig(config)
+        break
+      case ConfigType.AI:
+        if (existingConfig) {
+          await verifyAIConfig(config, existingConfig)
+        }
         break
     }
   } catch (err: any) {
@@ -304,23 +345,47 @@ function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
   )
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: UserCtx<void, FindConfigResponse>) {
   try {
     // Find the config with the most granular scope based on context
     const type = ctx.params.type
     let scopedConfig = await configs.getConfig(type)
 
     if (scopedConfig) {
-      if (type === ConfigType.OIDC_LOGOS) {
-        enrichOIDCLogos(scopedConfig)
-      }
-      ctx.body = scopedConfig
+      await handleConfigType(type, scopedConfig)
+    } else if (type === ConfigType.AI) {
+      scopedConfig = { config: {} } as AIConfig
+      await handleAIConfig(scopedConfig)
     } else {
-      // don't throw an error, there simply is nothing to return
+      // If no config found and not AI type, just return an empty body
       ctx.body = {}
+      return
     }
+
+    ctx.body = scopedConfig
   } catch (err: any) {
     ctx.throw(err?.status || 400, err)
+  }
+}
+
+async function handleConfigType(type: ConfigType, config: Config) {
+  if (type === ConfigType.OIDC_LOGOS) {
+    enrichOIDCLogos(config)
+  } else if (type === ConfigType.AI) {
+    await handleAIConfig(config)
+  }
+}
+
+async function handleAIConfig(config: AIConfig) {
+  await pro.sdk.ai.enrichAIConfig(config)
+  stripApiKeys(config)
+}
+
+function stripApiKeys(config: AIConfig) {
+  for (const key in config?.config) {
+    if (config.config[key].apiKey) {
+      config.config[key].apiKey = PASSWORD_REPLACEMENT
+    }
   }
 }
 
@@ -416,7 +481,7 @@ export async function publicSettings(
   }
 }
 
-export async function upload(ctx: UserCtx) {
+export async function upload(ctx: UserCtx<void, UploadConfigFileResponse>) {
   if (ctx.request.files == null || Array.isArray(ctx.request.files.file)) {
     ctx.throw(400, "One file must be uploaded.")
   }
@@ -461,26 +526,33 @@ export async function upload(ctx: UserCtx) {
   }
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: UserCtx<void, DeleteConfigResponse>) {
   const db = tenancy.getGlobalDB()
   const { id, rev } = ctx.params
   try {
     await db.remove(id, rev)
     await cache.destroy(cache.CacheKey.CHECKLIST)
+    if (id === configs.generateConfigID(ConfigType.AI)) {
+      await pro.quotas.set(
+        StaticQuotaName.AI_CUSTOM_CONFIGS,
+        QuotaUsageType.STATIC,
+        0
+      )
+    }
     ctx.body = { message: "Config deleted successfully" }
   } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }
 
-export async function configChecklist(ctx: Ctx) {
+export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
   const tenantId = tenancy.getTenantId()
 
   try {
     ctx.body = await cache.withCache(
       cache.CacheKey.CHECKLIST,
       env.CHECKLIST_CACHE_TTL,
-      async () => {
+      async (): Promise<ConfigChecklistResponse> => {
         let apps = []
         if (!env.MULTI_TENANCY || tenantId) {
           // Apps exist

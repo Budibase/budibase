@@ -1,4 +1,3 @@
-import TestConfiguration from "../../TestConfiguration"
 import { TestAPI } from "../base"
 
 const defaultConfig: RequestSettings = {
@@ -14,10 +13,6 @@ export type RequestSettings = {
 }
 
 export abstract class ScimTestAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   call = (
     url: string,
     method: "get" | "post" | "patch" | "delete",

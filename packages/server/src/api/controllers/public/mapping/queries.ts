@@ -1,6 +1,7 @@
 import { Query, ExecuteQuery } from "./types"
+import { RequiredKeys } from "@budibase/types"
 
-function query(body: any): Query {
+function query(body: any): RequiredKeys<Query> {
   return {
     _id: body._id,
     datasourceId: body.datasourceId,

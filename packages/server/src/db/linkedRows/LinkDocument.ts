@@ -59,6 +59,9 @@ class LinkDocumentImpl implements LinkDocument {
     this.doc1 = docA.tableId > docB.tableId ? docA : docB
     this.doc2 = docA.tableId > docB.tableId ? docB : docA
   }
+  _rev?: string | undefined
+  createdAt?: string | number | undefined
+  updatedAt?: string | undefined
 }
 
 export default LinkDocumentImpl

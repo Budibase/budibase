@@ -77,6 +77,13 @@ export enum FieldType {
    */
   AUTO = "auto",
   /**
+   * A complex type, called an AI column within Budibase. This type is only supported against internal tables
+   * and calculates the output based on a chosen operation (summarise text, translation etc) which passes to
+   * the configured Budibase Large Language Model to retrieve the output and write it back into the row.
+   * AI fields function in a similar fashion to static formulas, and possess many of the same characteristics.
+   */
+  AI = "ai",
+  /**
    * a JSON type, called JSON within Budibase. This type allows any arbitrary JSON to be input to this column
    * type, which will be represented as a JSON object in the row. This type depends on a schema being
    * provided to make the JSON searchable/bindable, the JSON cannot be fully dynamic.
@@ -94,26 +101,71 @@ export enum FieldType {
    */
   BARCODEQR = "barcodeqr",
   /**
+   * a JSON type, called Signature within Budibase. This type functions much the same as ATTACHMENTS but restricted
+   * only to signatures.
+   */
+  SIGNATURE_SINGLE = "signature_single",
+  /**
    * a string type, this allows representing very large integers, but they are held/managed within Budibase as
    * strings. When stored in external databases Budibase will attempt to use a real big integer type and depend
    * on the database parsing the string to this type as part of saving.
    */
   BIGINT = "bigint",
   /**
-   * a JSON type, called User within Budibase. This type is used to represent a link to an internal Budibase
+   * a JSON type, called Users within Budibase. It will hold an array of strings. This type is used to represent a link to an internal Budibase
    * resource, like a user or group, today only users are supported. This type will be represented as an
    * array of internal resource IDs (e.g. user IDs) within the row - this ID list will be enriched with
    * the full resources when rows are returned from the API. The full resources can be input to the API, or
    * an array of resource IDs, the API will squash these down and validate them before saving the row.
    */
   BB_REFERENCE = "bb_reference",
+  /**
+   * a string type, called User within Budibase. Same logic as `bb_reference`, storing a single id as string instead of an array
+   */
+  BB_REFERENCE_SINGLE = "bb_reference_single",
+}
+
+export const JsonTypes = [
+  FieldType.ATTACHMENT_SINGLE,
+  FieldType.ATTACHMENTS,
+  // only BB_REFERENCE is JSON, it's an array, BB_REFERENCE_SINGLE is a string type
+  FieldType.BB_REFERENCE,
+  FieldType.JSON,
+  FieldType.ARRAY,
+]
+
+export type FormulaResponseType =
+  | FieldType.STRING
+  | FieldType.NUMBER
+  | FieldType.BOOLEAN
+  | FieldType.DATETIME
+
+export const NumericTypes = [FieldType.NUMBER, FieldType.BIGINT]
+
+export function isNumeric(type: FieldType) {
+  return NumericTypes.includes(type)
+}
+
+export const GroupByTypes = [
+  FieldType.STRING,
+  FieldType.LONGFORM,
+  FieldType.OPTIONS,
+  FieldType.NUMBER,
+  FieldType.BOOLEAN,
+  FieldType.DATETIME,
+  FieldType.BIGINT,
+  FieldType.AI,
+]
+
+export function canGroupBy(type: FieldType) {
+  return GroupByTypes.includes(type)
 }
 
 export interface RowAttachment {
   size: number
   name: string
   extension: string
-  key: string
+  key?: string
   // Populated on read
   url?: string
 }

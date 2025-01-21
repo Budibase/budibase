@@ -15,7 +15,7 @@ const createRowSelectionStore = () => {
     const componentId = Object.keys(selection).find(
       componentId => componentId === tableComponentId
     )
-    return selection[componentId] || {}
+    return selection[componentId]
   }
 
   return {

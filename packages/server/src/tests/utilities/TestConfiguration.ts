@@ -26,6 +26,7 @@ import {
   roles,
   sessions,
   tenancy,
+  utils,
 } from "@budibase/backend-core"
 import {
   app as appController,
@@ -40,7 +41,6 @@ import {
 } from "./controllers"
 
 import { cleanup } from "../../utilities/fileSystem"
-import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
@@ -70,9 +70,10 @@ import {
 } from "@budibase/types"
 
 import API from "./api"
-import { cloneDeep } from "lodash"
 import jwt, { Secret } from "jsonwebtoken"
 import { Server } from "http"
+
+const newid = utils.newid
 
 mocks.licenses.init(pro)
 
@@ -80,6 +81,12 @@ mocks.licenses.init(pro)
 mocks.licenses.useUnlimited()
 
 dbInit()
+
+export interface CreateAppRequest {
+  appName: string
+  url?: string
+  snippets?: any[]
+}
 
 export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
@@ -103,6 +110,7 @@ export default class TestConfiguration {
   tenantId?: string
   api: API
   csrfToken?: string
+  temporaryHeaders?: Record<string, string | string[]>
 
   constructor(openServer = true) {
     if (openServer) {
@@ -229,6 +237,7 @@ export default class TestConfiguration {
     if (!this) {
       return
     }
+
     if (this.server) {
       this.server.close()
     } else {
@@ -239,65 +248,6 @@ export default class TestConfiguration {
     }
   }
 
-  async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {
-    let cleanup = this.setEnv(newEnvVars)
-    try {
-      await f()
-    } finally {
-      cleanup()
-    }
-  }
-
-  /*
-   * Sets the environment variables to the given values and returns a function
-   * that can be called to reset the environment variables to their original values.
-   */
-  setEnv(newEnvVars: Partial<typeof env>): () => void {
-    const oldEnv = cloneDeep(env)
-
-    let key: keyof typeof newEnvVars
-    for (key in newEnvVars) {
-      env._set(key, newEnvVars[key])
-    }
-
-    return () => {
-      for (const [key, value] of Object.entries(oldEnv)) {
-        env._set(key, value)
-      }
-    }
-  }
-
-  async withCoreEnv(
-    newEnvVars: Partial<typeof coreEnv>,
-    f: () => Promise<void>
-  ) {
-    let cleanup = this.setCoreEnv(newEnvVars)
-    try {
-      await f()
-    } finally {
-      cleanup()
-    }
-  }
-
-  /*
-   * Sets the environment variables to the given values and returns a function
-   * that can be called to reset the environment variables to their original values.
-   */
-  setCoreEnv(newEnvVars: Partial<typeof coreEnv>): () => void {
-    const oldEnv = cloneDeep(env)
-
-    let key: keyof typeof newEnvVars
-    for (key in newEnvVars) {
-      coreEnv._set(key, newEnvVars[key])
-    }
-
-    return () => {
-      for (const [key, value] of Object.entries(oldEnv)) {
-        coreEnv._set(key, value)
-      }
-    }
-  }
-
   async withUser(user: User, f: () => Promise<void>) {
     const oldUser = this.user
     this.user = user
@@ -305,6 +255,16 @@ export default class TestConfiguration {
       return await f()
     } finally {
       this.user = oldUser
+    }
+  }
+
+  async withApp(app: App | string, f: () => Promise<void>) {
+    const oldAppId = this.appId
+    this.appId = typeof app === "string" ? app : app.appId
+    try {
+      return await f()
+    } finally {
+      this.appId = oldAppId
     }
   }
 
@@ -375,6 +335,7 @@ export default class TestConfiguration {
       sessionId: this.sessionIdForUser(_id),
       tenantId: this.getTenantId(),
       csrfToken: this.csrfToken,
+      email,
     })
     const resp = await db.put(user)
     await cache.user.invalidateUser(_id)
@@ -438,16 +399,17 @@ export default class TestConfiguration {
       }
       // make sure the user exists in the global DB
       if (roleId !== roles.BUILTIN_ROLE_IDS.PUBLIC) {
-        await this.globalUser({
+        const user = await this.globalUser({
           _id: userId,
           builder: { global: builder },
           roles: { [appId]: roleId || roles.BUILTIN_ROLE_IDS.BASIC },
         })
+        await sessions.createASession(userId, {
+          sessionId: this.sessionIdForUser(userId),
+          tenantId: this.getTenantId(),
+          email: user.email,
+        })
       }
-      await sessions.createASession(userId, {
-        sessionId: this.sessionIdForUser(userId),
-        tenantId: this.getTenantId(),
-      })
       // have to fake this
       const authObj = {
         userId,
@@ -462,11 +424,44 @@ export default class TestConfiguration {
         Accept: "application/json",
         Cookie: [`${constants.Cookie.Auth}=${authToken}`],
         [constants.Header.APP_ID]: appId,
+        ...this.temporaryHeaders,
       }
     })
   }
 
   // HEADERS
+
+  // sets the role for the headers, for the period of a callback
+  async loginAsRole(roleId: string, cb: () => Promise<unknown>) {
+    const roleUser = await this.createUser({
+      roles: {
+        [this.getProdAppId()]: roleId,
+      },
+      builder: { global: false },
+      admin: { global: false },
+    })
+    await this.login({
+      roleId,
+      userId: roleUser._id!,
+      builder: false,
+      prodApp: true,
+    })
+    await this.withUser(roleUser, async () => {
+      await cb()
+    })
+  }
+
+  async withHeaders(
+    headers: Record<string, string | string[]>,
+    cb: () => Promise<unknown>
+  ) {
+    this.temporaryHeaders = headers
+    try {
+      await cb()
+    } finally {
+      this.temporaryHeaders = undefined
+    }
+  }
 
   defaultHeaders(extras = {}, prodApp = false) {
     const tenantId = this.getTenantId()
@@ -491,7 +486,10 @@ export default class TestConfiguration {
     } else if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
-    return headers
+    return {
+      ...headers,
+      ...this.temporaryHeaders,
+    }
   }
 
   publicHeaders({ prodApp = true } = {}) {
@@ -499,6 +497,7 @@ export default class TestConfiguration {
 
     const headers: any = {
       Accept: "application/json",
+      Cookie: "",
     }
     if (appId) {
       headers[constants.Header.APP_ID] = appId
@@ -506,7 +505,10 @@ export default class TestConfiguration {
 
     headers[constants.Header.TENANT_ID] = this.getTenantId()
 
-    return headers
+    return {
+      ...headers,
+      ...this.temporaryHeaders,
+    }
   }
 
   async basicRoleHeaders() {
@@ -525,6 +527,10 @@ export default class TestConfiguration {
     prodApp = true,
   } = {}) {
     return this.login({ userId: email, roleId, builder, prodApp })
+  }
+
+  browserUserAgent() {
+    return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
   }
 
   // TENANCY
@@ -580,8 +586,6 @@ export default class TestConfiguration {
 
   // APP
   async createApp(appName: string, url?: string): Promise<App> {
-    // create dev app
-    // clear any old app
     this.appId = undefined
     this.app = await context.doInTenant(
       this.tenantId!,
@@ -592,6 +596,7 @@ export default class TestConfiguration {
         })) as App
     )
     this.appId = this.app.appId
+
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
       this.prodApp = await this.publish()
@@ -616,7 +621,7 @@ export default class TestConfiguration {
   }
 
   async unpublish() {
-    const response = await this._req(appController.unpublish, {
+    const response = await this._req(appController.unpublish, undefined, {
       appId: this.appId,
     })
     this.prodAppId = undefined

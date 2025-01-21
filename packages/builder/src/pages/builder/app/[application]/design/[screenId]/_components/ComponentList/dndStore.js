@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
-import { findComponentParent, findComponentPath } from "helpers/components"
-import { selectedScreen, componentStore } from "stores/builder"
+import { findComponentParent, findComponentPath } from "@/helpers/components"
+import { selectedScreen, componentStore } from "@/stores/builder"
 
 export const DropPosition = {
   ABOVE: "above",

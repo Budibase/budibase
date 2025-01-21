@@ -1,24 +1,11 @@
 import { context } from "@budibase/backend-core"
-import { migrate as migrationImpl, MIGRATIONS } from "../../migrations"
-import { Ctx } from "@budibase/types"
+import { Ctx, GetMigrationStatus } from "@budibase/types"
 import {
   getAppMigrationVersion,
-  getLatestMigrationId,
+  getLatestEnabledMigrationId,
 } from "../../appMigrations"
 
-export async function migrate(ctx: Ctx) {
-  const options = ctx.request.body
-  // don't await as can take a while, just return
-  migrationImpl(options)
-  ctx.status = 200
-}
-
-export async function fetchDefinitions(ctx: Ctx) {
-  ctx.body = MIGRATIONS
-  ctx.status = 200
-}
-
-export async function getMigrationStatus(ctx: Ctx) {
+export async function getMigrationStatus(ctx: Ctx<void, GetMigrationStatus>) {
   const appId = context.getAppId()
 
   if (!appId) {
@@ -27,8 +14,9 @@ export async function getMigrationStatus(ctx: Ctx) {
 
   const latestAppliedMigration = await getAppMigrationVersion(appId)
 
-  const migrated = latestAppliedMigration === getLatestMigrationId()
+  const latestMigrationId = getLatestEnabledMigrationId()
+  const migrated =
+    !latestMigrationId || latestAppliedMigration >= latestMigrationId
 
   ctx.body = { migrated }
-  ctx.status = 200
 }

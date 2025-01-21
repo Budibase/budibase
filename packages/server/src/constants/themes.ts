@@ -1,5 +1,9 @@
-export const getThemeVariables = (theme: string) => {
-  if (theme === "spectrum--lightest") {
+import { ensureValidTheme } from "@budibase/shared-core"
+import { Theme } from "@budibase/types"
+
+export const getThemeVariables = (theme: Theme) => {
+  theme = ensureValidTheme(theme, Theme.LIGHT)
+  if (theme === Theme.LIGHTEST) {
     return `
       --spectrum-global-color-gray-50: rgb(255, 255, 255);
       --spectrum-global-color-gray-200: rgb(244, 244, 244);
@@ -7,16 +11,15 @@ export const getThemeVariables = (theme: string) => {
       --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-50);
     `
   }
-  if (theme === "spectrum--light") {
+  if (theme === Theme.LIGHT) {
     return `
     --spectrum-global-color-gray-50: rgb(255, 255, 255);
     --spectrum-global-color-gray-200: rgb(234, 234, 234);
     --spectrum-global-color-gray-300: rgb(225, 225, 225);
     --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-50);
-
     `
   }
-  if (theme === "spectrum--dark") {
+  if (theme === Theme.DARK) {
     return `
     --spectrum-global-color-gray-100: rgb(50, 50, 50);
     --spectrum-global-color-gray-200: rgb(62, 62, 62);
@@ -24,7 +27,7 @@ export const getThemeVariables = (theme: string) => {
     --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
     `
   }
-  if (theme === "spectrum--darkest") {
+  if (theme === Theme.DARKEST) {
     return `
   --spectrum-global-color-gray-100: rgb(30, 30, 30);
   --spectrum-global-color-gray-200: rgb(44, 44, 44);
@@ -32,7 +35,7 @@ export const getThemeVariables = (theme: string) => {
   --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
     `
   }
-  if (theme === "spectrum--nord") {
+  if (theme === Theme.NORD) {
     return `
     --spectrum-global-color-gray-100: #3b4252;
 
@@ -41,7 +44,7 @@ export const getThemeVariables = (theme: string) => {
   --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
     `
   }
-  if (theme === "spectrum--midnight") {
+  if (theme === Theme.MIDNIGHT) {
     return `
     --hue: 220;
     --sat: 10%;

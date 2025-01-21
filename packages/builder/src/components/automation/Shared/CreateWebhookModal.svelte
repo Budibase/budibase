@@ -1,6 +1,6 @@
 <script>
   import { Icon, notifications, ModalContent } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "stores/builder"
+  import { automationStore, selectedAutomation } from "@/stores/builder"
   import WebhookDisplay from "./WebhookDisplay.svelte"
   import { onMount, onDestroy } from "svelte"
 
@@ -11,7 +11,7 @@
   let schemaURL
   let propCount = 0
 
-  $: automation = $selectedAutomation
+  $: automation = $selectedAutomation?.data
 
   onMount(async () => {
     if (!automation?.definition?.trigger?.inputs.schemaUrl) {

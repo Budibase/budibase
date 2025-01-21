@@ -13,6 +13,8 @@ export interface PlatformUserByEmail extends Document {
  */
 export interface PlatformUserById extends Document {
   tenantId: string
+  email?: string
+  ssoId?: string
 }
 
 /**
@@ -22,6 +24,7 @@ export interface PlatformUserBySsoId extends Document {
   tenantId: string
   userId: string
   email: string
+  ssoId?: string
 }
 
 export type PlatformUser =

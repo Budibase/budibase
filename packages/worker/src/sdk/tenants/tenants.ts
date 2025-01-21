@@ -48,10 +48,13 @@ async function removeTenantUsers(tenantId: string) {
   try {
     const allUsers = await getTenantUsers(tenantId)
     const allEmails = allUsers.rows.map((row: any) => row.doc.email)
+    const allSsoIds = allUsers.rows
+      .map((row: any) => row.doc.ssoId)
+      .filter(id => !!id)
 
     // get the id and email doc ids
     let keys = allUsers.rows.map((row: any) => row.id)
-    keys = keys.concat(allEmails)
+    keys = keys.concat(allEmails).concat(allSsoIds)
 
     const platformDb = platform.getPlatformDB()
 

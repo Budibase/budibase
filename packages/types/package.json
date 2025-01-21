@@ -3,24 +3,25 @@
   "version": "0.0.0",
   "description": "Budibase types",
   "main": "dist/index.js",
-  "types": "src/index.ts",
+  "types": "dist/index.d.ts",
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
     "prebuild": "rimraf dist/",
     "build": "node ../../scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null"
   },
   "jest": {},
   "devDependencies": {
     "@budibase/nano": "10.1.5",
+    "@types/json-schema": "^7.0.15",
     "@types/koa": "2.13.4",
-    "@types/pouchdb": "6.4.0",
     "@types/redlock": "4.0.7",
+    "koa-useragent": "^4.1.0",
     "rimraf": "3.0.2",
-    "typescript": "5.2.2"
+    "typescript": "5.7.2",
+    "zod": "^3.23.8"
   },
   "dependencies": {
     "scim-patch": "^0.8.1"

@@ -483,3 +483,37 @@ describe("uuid", () => {
     expect(output).toMatch(UUID_REGEX)
   })
 })
+
+describe("helper overlap", () => {
+  it("should use context over helpers (regex test helper)", async () => {
+    const output = await processString("{{ test }}", { test: "a" })
+    expect(output).toEqual("a")
+  })
+
+  it("should use helper if no sum in context, return the context value otherwise", async () => {
+    const hbs = "{{ sum 1 2 }}"
+    const output = await processString(hbs, {})
+    expect(output).toEqual("3")
+    const secondaryOutput = await processString(hbs, { sum: "a" })
+    expect(secondaryOutput).toEqual("a")
+  })
+
+  it("should handle multiple cases", async () => {
+    const output = await processString("{{ literal (split test sum) }}", {
+      test: "a-b",
+      sum: "-",
+    })
+    expect(output).toEqual(["a", "b"])
+  })
+
+  it("should work as expected when no helpers are set", async () => {
+    const output = await processString(
+      "{{ sum }}",
+      {
+        sum: "a",
+      },
+      { noHelpers: true }
+    )
+    expect(output).toEqual("a")
+  })
+})

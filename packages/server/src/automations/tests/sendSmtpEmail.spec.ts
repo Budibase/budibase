@@ -18,7 +18,7 @@ function generateResponse(to: string, from: string) {
   }
 }
 
-const setup = require("./utilities")
+import * as setup from "./utilities"
 
 describe("test the outgoing webhook action", () => {
   let inputs
@@ -58,6 +58,7 @@ describe("test the outgoing webhook action", () => {
     }
     let resp = generateResponse(inputs.to, inputs.from)
     const res = await setup.runStep(
+      config,
       setup.actions.SEND_EMAIL_SMTP.stepId,
       inputs
     )

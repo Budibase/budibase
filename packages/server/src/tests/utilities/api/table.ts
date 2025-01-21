@@ -1,11 +1,16 @@
 import {
   BulkImportRequest,
   BulkImportResponse,
-  MigrateRequest,
-  MigrateResponse,
+  CsvToJsonRequest,
+  CsvToJsonResponse,
+  MigrateTableRequest,
+  MigrateTableResponse,
   SaveTableRequest,
   SaveTableResponse,
   Table,
+  ValidateNewTableImportRequest,
+  ValidateTableImportRequest,
+  ValidateTableImportResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -33,13 +38,16 @@ export class TableAPI extends TestAPI {
 
   migrate = async (
     tableId: string,
-    data: MigrateRequest,
+    data: MigrateTableRequest,
     expectations?: Expectations
-  ): Promise<MigrateResponse> => {
-    return await this._post<MigrateResponse>(`/api/tables/${tableId}/migrate`, {
-      body: data,
-      expectations,
-    })
+  ): Promise<MigrateTableResponse> => {
+    return await this._post<MigrateTableResponse>(
+      `/api/tables/${tableId}/migrate`,
+      {
+        body: data,
+        expectations,
+      }
+    )
   }
 
   import = async (
@@ -61,7 +69,43 @@ export class TableAPI extends TestAPI {
     revId: string,
     expectations?: Expectations
   ): Promise<void> => {
-    return await this._delete<void>(`/api/tables/${tableId}/${revId}`, {
+    return await this._delete(`/api/tables/${tableId}/${revId}`, {
+      expectations,
+    })
+  }
+
+  validateNewTableImport = async (
+    body: ValidateNewTableImportRequest,
+    expectations?: Expectations
+  ): Promise<ValidateTableImportResponse> => {
+    return await this._post<ValidateTableImportResponse>(
+      `/api/tables/validateNewTableImport`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  validateExistingTableImport = async (
+    body: ValidateTableImportRequest,
+    expectations?: Expectations
+  ): Promise<ValidateTableImportResponse> => {
+    return await this._post<ValidateTableImportResponse>(
+      `/api/tables/validateExistingTableImport`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  csvToJson = async (
+    body: CsvToJsonRequest,
+    expectations?: Expectations
+  ): Promise<CsvToJsonResponse> => {
+    return await this._post<CsvToJsonResponse>(`/api/convert/csvToJson`, {
+      body,
       expectations,
     })
   }

@@ -17,8 +17,8 @@ export class ApplicationAPI extends TestAPI {
     app: CreateAppRequest,
     expectations?: Expectations
   ): Promise<App> => {
-    const files = app.templateFile ? { templateFile: app.templateFile } : {}
-    delete app.templateFile
+    const files = app.fileToImport ? { fileToImport: app.fileToImport } : {}
+    delete app.fileToImport
     return await this._post<App>("/api/applications", {
       fields: app,
       files,
@@ -48,7 +48,7 @@ export class ApplicationAPI extends TestAPI {
 
   unpublish = async (appId: string): Promise<void> => {
     await this._post(`/api/applications/${appId}/unpublish`, {
-      expectations: { status: 204 },
+      expectations: { status: 200 },
     })
   }
 
@@ -148,5 +148,9 @@ export class ApplicationAPI extends TestAPI {
     return await this._get<App[]>("/api/applications", {
       query: { status },
     })
+  }
+
+  addSampleData = async (appId: string): Promise<void> => {
+    await this._post(`/api/applications/${appId}/sample`)
   }
 }

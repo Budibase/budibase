@@ -49,5 +49,6 @@
   /* Custom additions */
   --modal-background: var(--spectrum-global-color-gray-50);
   --drop-shadow: rgba(0, 0, 0, 0.15) !important;
-  --spectrum-global-color-blue-100: rgb(56, 65, 84) !important;
+  --spectrum-global-color-blue-100: hsl(213, 36%, 30%) !important;
+  --translucent-grey: hsla(213, 36%, 80%, 0.11) !important;
 }

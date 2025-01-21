@@ -5,8 +5,6 @@ import { getCachedVariable } from "../../../../threads/utils"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
 
-jest.unmock("node-fetch")
-
 describe("rest", () => {
   let config: TestConfiguration
   let datasource: Datasource
@@ -64,13 +62,11 @@ describe("rest", () => {
     cached = await getCachedVariable(basedOnQuery._id!, "foo")
     expect(cached).toBeNull()
 
-    nock("http://one.example.com")
-      .get("/")
-      .reply(200, [{ name: "one" }])
+    const body1 = [{ name: "one" }]
+    const body2 = [{ name: "two" }]
+    nock("http://one.example.com").get("/").reply(200, body1)
     nock("http://two.example.com").get("/?test=one").reply(500)
-    nock("http://two.example.com")
-      .get("/?test=one")
-      .reply(200, [{ name: "two" }])
+    nock("http://two.example.com").get("/?test=one").reply(200, body2)
 
     const res = await config.api.query.preview({
       datasourceId: datasource._id!,
@@ -92,6 +88,61 @@ describe("rest", () => {
     cached = await getCachedVariable(basedOnQuery._id!, "foo")
     expect(cached.rows.length).toEqual(1)
     expect(cached.rows[0].name).toEqual("one")
+  })
+
+  it("should update schema when structure changes from JSON to array", async () => {
+    const datasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {},
+    })
+
+    nock("http://www.example.com")
+      .get("/")
+      .reply(200, [{ obj: {}, id: "1" }])
+
+    const firstResponse = await config.api.query.preview({
+      datasourceId: datasource._id!,
+      name: "test query",
+      parameters: [],
+      queryVerb: "read",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+      },
+    })
+
+    expect(firstResponse.schema).toEqual({
+      obj: { type: "json", name: "obj" },
+      id: { type: "string", name: "id" },
+    })
+
+    nock.cleanAll()
+
+    nock("http://www.example.com")
+      .get("/")
+      .reply(200, [{ obj: [], id: "1" }])
+
+    const secondResponse = await config.api.query.preview({
+      datasourceId: datasource._id!,
+      name: "test query",
+      parameters: [],
+      queryVerb: "read",
+      transformer: "",
+      schema: firstResponse.schema,
+      readable: true,
+      fields: {
+        path: "www.example.com",
+      },
+    })
+
+    expect(secondResponse.schema).toEqual({
+      obj: { type: "array", name: "obj" },
+      id: { type: "string", name: "id" },
+    })
   })
 
   it("should parse global and query level header mappings", async () => {

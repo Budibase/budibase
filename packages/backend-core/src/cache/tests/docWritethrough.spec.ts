@@ -1,7 +1,12 @@
 import tk from "timekeeper"
 
 import _ from "lodash"
-import { DBTestConfiguration, generator, structures } from "../../../tests"
+import {
+  DBTestConfiguration,
+  generator,
+  structures,
+  utils,
+} from "../../../tests"
 import { getDB } from "../../db"
 
 import {
@@ -10,14 +15,13 @@ import {
   init,
 } from "../docWritethrough"
 
-import InMemoryQueue from "../../queue/inMemoryQueue"
-
 const initialTime = Date.now()
 
 async function waitForQueueCompletion() {
-  const queue: InMemoryQueue = DocWritethroughProcessor.queue as never
-  await queue.waitForCompletion()
+  await utils.queue.processMessages(DocWritethroughProcessor.queue)
 }
+
+beforeAll(() => utils.queue.useRealQueues())
 
 describe("docWritethrough", () => {
   beforeAll(() => {
@@ -67,7 +71,7 @@ describe("docWritethrough", () => {
         const patch3 = generatePatchObject(3)
         await docWritethrough.patch(patch3)
 
-        expect(await db.get(documentId)).toEqual({
+        expect(await db.tryGet(documentId)).toEqual({
           _id: documentId,
           ...patch1,
           ...patch2,
@@ -92,7 +96,7 @@ describe("docWritethrough", () => {
 
         await waitForQueueCompletion()
 
-        expect(await db.get(documentId)).toEqual(
+        expect(await db.tryGet(documentId)).toEqual(
           expect.objectContaining({
             _id: documentId,
             ...patch1,
@@ -117,7 +121,7 @@ describe("docWritethrough", () => {
         await waitForQueueCompletion()
 
         expect(date1).not.toEqual(date2)
-        expect(await db.get(documentId)).toEqual(
+        expect(await db.tryGet(documentId)).toEqual(
           expect.objectContaining({
             createdAt: date1.toISOString(),
             updatedAt: date2.toISOString(),
@@ -135,7 +139,7 @@ describe("docWritethrough", () => {
         await docWritethrough.patch(patch2)
 
         const keyToOverride = _.sample(Object.keys(patch1))!
-        expect(await db.get(documentId)).toEqual(
+        expect(await db.tryGet(documentId)).toEqual(
           expect.objectContaining({
             [keyToOverride]: patch1[keyToOverride],
           })
@@ -150,7 +154,7 @@ describe("docWritethrough", () => {
         await docWritethrough.patch(patch3)
         await waitForQueueCompletion()
 
-        expect(await db.get(documentId)).toEqual(
+        expect(await db.tryGet(documentId)).toEqual(
           expect.objectContaining({
             ...patch1,
             ...patch2,
@@ -180,14 +184,14 @@ describe("docWritethrough", () => {
         await secondDocWritethrough.patch(doc2Patch2)
         await waitForQueueCompletion()
 
-        expect(await db.get(docWritethrough.docId)).toEqual(
+        expect(await db.tryGet(docWritethrough.docId)).toEqual(
           expect.objectContaining({
             ...doc1Patch,
             ...doc1Patch2,
           })
         )
 
-        expect(await db.get(secondDocWritethrough.docId)).toEqual(
+        expect(await db.tryGet(secondDocWritethrough.docId)).toEqual(
           expect.objectContaining({
             ...doc2Patch,
             ...doc2Patch2,
@@ -203,7 +207,7 @@ describe("docWritethrough", () => {
         await docWritethrough.patch(initialPatch)
         await waitForQueueCompletion()
 
-        expect(await db.get(documentId)).toEqual(
+        expect(await db.tryGet(documentId)).toEqual(
           expect.objectContaining(initialPatch)
         )
 
@@ -214,10 +218,10 @@ describe("docWritethrough", () => {
         await docWritethrough.patch(extraPatch)
         await waitForQueueCompletion()
 
-        expect(await db.get(documentId)).toEqual(
+        expect(await db.tryGet(documentId)).toEqual(
           expect.objectContaining(extraPatch)
         )
-        expect(await db.get(documentId)).not.toEqual(
+        expect(await db.tryGet(documentId)).not.toEqual(
           expect.objectContaining(initialPatch)
         )
       })
@@ -242,7 +246,7 @@ describe("docWritethrough", () => {
         expect(queueMessageSpy).toHaveBeenCalledTimes(5)
 
         await waitForQueueCompletion()
-        expect(await db.get(documentId)).toEqual(
+        expect(await db.tryGet(documentId)).toEqual(
           expect.objectContaining(patches)
         )
 
@@ -250,7 +254,7 @@ describe("docWritethrough", () => {
         expect(queueMessageSpy).toHaveBeenCalledTimes(45)
 
         await waitForQueueCompletion()
-        expect(await db.get(documentId)).toEqual(
+        expect(await db.tryGet(documentId)).toEqual(
           expect.objectContaining(patches)
         )
 
@@ -258,20 +262,18 @@ describe("docWritethrough", () => {
         expect(queueMessageSpy).toHaveBeenCalledTimes(55)
 
         await waitForQueueCompletion()
-        expect(await db.get(documentId)).toEqual(
+        expect(await db.tryGet(documentId)).toEqual(
           expect.objectContaining(patches)
         )
       })
     })
 
-    // This is not yet supported
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip("patches will execute in order", async () => {
+    it("patches will execute in order", async () => {
       let incrementalValue = 0
       const keyToOverride = generator.word()
       async function incrementalPatches(count: number) {
         for (let i = 0; i < count; i++) {
-          await docWritethrough.patch({ [keyToOverride]: incrementalValue++ })
+          await docWritethrough.patch({ [keyToOverride]: ++incrementalValue })
         }
       }
 
@@ -279,13 +281,13 @@ describe("docWritethrough", () => {
         await incrementalPatches(5)
 
         await waitForQueueCompletion()
-        expect(await db.get(documentId)).toEqual(
+        expect(await db.tryGet(documentId)).toEqual(
           expect.objectContaining({ [keyToOverride]: 5 })
         )
 
         await incrementalPatches(40)
         await waitForQueueCompletion()
-        expect(await db.get(documentId)).toEqual(
+        expect(await db.tryGet(documentId)).toEqual(
           expect.objectContaining({ [keyToOverride]: 45 })
         )
       })

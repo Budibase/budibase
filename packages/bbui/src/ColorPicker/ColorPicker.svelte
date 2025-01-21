@@ -6,6 +6,11 @@
   import Icon from "../Icon/Icon.svelte"
   import Input from "../Form/Input.svelte"
   import { capitalise } from "../helpers"
+  import {
+    ensureValidTheme,
+    getThemeClassNames,
+    DefaultAppTheme,
+  } from "@budibase/shared-core"
 
   export let value
   export let size = "M"
@@ -18,6 +23,7 @@
 
   $: customValue = getCustomValue(value)
   $: checkColor = getCheckColor(value)
+  $: themeClasses = getThemeClasses(spectrumTheme)
 
   const dispatch = createEventDispatcher()
   const categories = [
@@ -40,6 +46,15 @@
     {
       label: "Colors",
       colors: [
+        "red-100",
+        "orange-100",
+        "yellow-100",
+        "green-100",
+        "seafoam-100",
+        "blue-100",
+        "indigo-100",
+        "magenta-100",
+
         "red-400",
         "orange-400",
         "yellow-400",
@@ -82,6 +97,14 @@
     },
   ]
 
+  const getThemeClasses = theme => {
+    if (!theme) {
+      return ""
+    }
+    theme = ensureValidTheme(theme, DefaultAppTheme)
+    return getThemeClassNames(theme)
+  }
+
   const onChange = value => {
     dispatch("change", value)
     dropdown.hide()
@@ -108,10 +131,15 @@
 
   const getCheckColor = value => {
     // Use dynamic color for theme grays
-    if (value?.includes("gray")) {
+    if (value?.includes("-gray-")) {
       return /^.*(gray-(50|75|100|200|300|400|500))\)$/.test(value)
         ? "var(--spectrum-global-color-gray-900)"
         : "var(--spectrum-global-color-gray-50)"
+    }
+
+    // Use contrasating check for the dim colours
+    if (value?.includes("-100")) {
+      return "var(--spectrum-global-color-gray-900)"
     }
 
     // Use black check for static white
@@ -133,7 +161,7 @@
   }}
 >
   <div
-    class="fill {spectrumTheme || ''}"
+    class="fill {themeClasses}"
     style={value ? `background: ${value};` : ""}
     class:placeholder={!value}
   />
@@ -157,7 +185,7 @@
                 title={prettyPrint(color)}
               >
                 <div
-                  class="fill {spectrumTheme || ''}"
+                  class="fill {themeClasses}"
                   style="background: var(--spectrum-global-color-{color}); color: {checkColor};"
                 >
                   {#if value === `var(--spectrum-global-color-${color})`}

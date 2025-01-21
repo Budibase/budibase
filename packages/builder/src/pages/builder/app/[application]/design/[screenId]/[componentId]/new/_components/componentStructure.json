@@ -14,7 +14,7 @@
   {
     "name": "Layout",
     "icon": "ClassicGridView",
-    "children": ["container", "section", "sidepanel"]
+    "children": ["container", "sidepanel", "modal"]
   },
   {
     "name": "Data",
@@ -71,6 +71,8 @@
       "multifieldselect",
       "fileupload",
       "codescanner",
+      "signaturesinglefield",
+      "bbreferencesinglefield",
       "bbreferencefield"
     ]
   },

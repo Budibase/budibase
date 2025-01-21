@@ -4,7 +4,14 @@ export const FIND_HBS_REGEX = /{{([^{].*?)}}/g
 export const FIND_ANY_HBS_REGEX = /{?{{([^{].*?)}}}?/g
 export const FIND_TRIPLE_HBS_REGEX = /{{{([^{].*?)}}}/g
 
+const isJest = () => typeof jest !== "undefined"
+
 export const isBackendService = () => {
+  // We consider the tests for string-templates to be frontend, so that they
+  // test the frontend JS functionality.
+  if (isJest()) {
+    return false
+  }
   return typeof window === "undefined"
 }
 
@@ -65,4 +72,17 @@ export const btoa = (plainText: string) => {
 
 export const atob = (base64: string) => {
   return Buffer.from(base64, "base64").toString("utf-8")
+}
+
+export const prefixStrings = (
+  baseString: string,
+  strings: string[],
+  prefix: string
+) => {
+  // Escape any special characters in the strings to avoid regex errors
+  const escapedStrings = strings.map(str =>
+    str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  )
+  const regexPattern = new RegExp(`\\b(${escapedStrings.join("|")})\\b`, "g")
+  return baseString.replace(regexPattern, `${prefix}$1`)
 }

@@ -1,78 +1,123 @@
 <script>
-  import { getContext, onMount, createEventDispatcher } from "svelte"
+  import { getContext, onDestroy, createEventDispatcher } from "svelte"
   import Portal from "svelte-portal"
 
   export let title
   export let icon = ""
   export let id
+  export let href = "#"
+  export let link = false
 
   const dispatch = createEventDispatcher()
   let selected = getContext("tab")
-  let tab_internal
-  let tabInfo
+  let observer
+  let ref
 
-  const setTabInfo = () => {
-    // If the tabs are being rendered inside a component which uses
-    // a svelte transition to enter, then this initial getBoundingClientRect
-    // will return an incorrect position.
-    // We just need to get this off the main thread to fix this, by using
-    // a 0ms timeout.
-    setTimeout(() => {
-      tabInfo = tab_internal?.getBoundingClientRect()
-      if (tabInfo && $selected.title === title) {
-        $selected.info = tabInfo
-      }
-    }, 0)
+  $: isSelected = $selected.title === title
+  $: {
+    if (isSelected && ref) {
+      observe()
+    } else {
+      stopObserving()
+    }
   }
 
-  onMount(() => {
-    setTabInfo()
-  })
-
-  //Ensure that the underline is in the correct location
-  $: {
-    if ($selected.title === title && tab_internal) {
-      if ($selected.info?.left !== tab_internal.getBoundingClientRect().left) {
-        setTabInfo()
-      }
+  const setTabInfo = () => {
+    const tabInfo = ref?.getBoundingClientRect()
+    if (tabInfo) {
+      $selected.info = tabInfo
     }
+  }
+
+  const onAnchorClick = e => {
+    if (e.metaKey || e.shiftKey || e.altKey || e.ctrlKey) return
+
+    e.preventDefault()
+    $selected = {
+      ...$selected,
+      title,
+      info: ref.getBoundingClientRect(),
+    }
+    dispatch("click")
   }
 
   const onClick = () => {
     $selected = {
       ...$selected,
       title,
-      info: tab_internal.getBoundingClientRect(),
+      info: ref.getBoundingClientRect(),
     }
-    dispatch("click")
   }
+
+  const observe = () => {
+    if (!observer) {
+      observer = new ResizeObserver(setTabInfo)
+      observer.observe(ref)
+    }
+  }
+
+  const stopObserving = () => {
+    if (observer) {
+      observer.unobserve(ref)
+      observer = null
+    }
+  }
+
+  onDestroy(stopObserving)
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<div
-  {id}
-  bind:this={tab_internal}
-  on:click={onClick}
-  class:is-selected={$selected.title === title}
-  class="spectrum-Tabs-item"
-  class:emphasized={$selected.title === title && $selected.emphasized}
-  tabindex="0"
->
-  {#if icon}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeM"
-      focusable="false"
-      aria-hidden="true"
-      aria-label="Folder"
-    >
-      <use xlink:href="#spectrum-icon-18-{icon}" />
-    </svg>
-  {/if}
-  <span class="spectrum-Tabs-itemLabel">{title}</span>
-</div>
-{#if $selected.title === title}
+{#if link}
+  <a
+    {href}
+    {id}
+    bind:this={ref}
+    on:click={onAnchorClick}
+    class="spectrum-Tabs-item link"
+    class:is-selected={isSelected}
+    class:emphasized={isSelected && $selected.emphasized}
+    tabindex="0"
+  >
+    {#if icon}
+      <svg
+        class="spectrum-Icon spectrum-Icon--sizeM"
+        focusable="false"
+        aria-hidden="true"
+        aria-label="Folder"
+      >
+        <use xlink:href="#spectrum-icon-18-{icon}" />
+      </svg>
+    {/if}
+    <span class="spectrum-Tabs-itemLabel">{title}</span>
+  </a>
+{:else}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+  <div
+    {id}
+    bind:this={ref}
+    on:click={onClick}
+    on:click
+    class="spectrum-Tabs-item"
+    class:is-selected={isSelected}
+    class:emphasized={isSelected && $selected.emphasized}
+    tabindex="0"
+  >
+    {#if icon}
+      <svg
+        class="spectrum-Icon spectrum-Icon--sizeM"
+        focusable="false"
+        aria-hidden="true"
+        aria-label="Folder"
+      >
+        <use xlink:href="#spectrum-icon-18-{icon}" />
+      </svg>
+    {/if}
+    <span class="spectrum-Tabs-itemLabel">{title}</span>
+  </div>
+{/if}
+
+{#if isSelected}
   <Portal target=".spectrum-Tabs-content-{$selected.id}">
     <slot />
   </Portal>
@@ -88,5 +133,8 @@
   .spectrum-Tabs-item.is-selected,
   .spectrum-Tabs-item:hover {
     color: var(--spectrum-global-color-gray-900);
+  }
+  .link {
+    user-select: none;
   }
 </style>

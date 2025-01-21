@@ -3,12 +3,11 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "dataBinding"
-
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+  } from "@/dataBinding"
+  import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
-  import { builderStore } from "stores/builder"
+  import { builderStore } from "@/stores/builder"
 
   export let panel = ClientBindingPanel
   export let value = ""
@@ -17,6 +16,7 @@
   export let placeholder
   export let label
   export let disabled = false
+  export let allowHBS = true
   export let allowJS = true
   export let allowHelpers = true
   export let updateOnChange = true
@@ -24,6 +24,7 @@
   export let disableBindings = false
   export let forceModal = false
   export let context = null
+  export let autocomplete
 
   const dispatch = createEventDispatcher()
 
@@ -72,6 +73,7 @@
     on:blur={onBlur}
     {placeholder}
     {updateOnChange}
+    {autocomplete}
   />
   {#if !disabled && !disableBindings}
     <div
@@ -99,6 +101,7 @@
     value={readableValue}
     on:change={event => (tempValue = event.detail)}
     {bindings}
+    {allowHBS}
     {allowJS}
     {allowHelpers}
     {context}

@@ -2,17 +2,17 @@
   import { onMount, getContext } from "svelte"
   import { Dropzone } from "@budibase/bbui"
   import GridPopover from "../overlays/GridPopover.svelte"
+  import { FieldType } from "@budibase/types"
 
   export let value
   export let focused = false
   export let onChange
   export let readonly = false
   export let api
-  export let invertX = false
   export let schema
   export let maximum
 
-  const { API, notifications } = getContext("grid")
+  const { API, notifications, props } = getContext("grid")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
 
   let isOpen = false
@@ -82,7 +82,12 @@
 >
   {#each value || [] as attachment}
     {#if isImage(attachment.extension)}
-      <img src={attachment.url} alt={attachment.extension} />
+      <img
+        class:light={!$props?.darkMode &&
+          schema.type === FieldType.SIGNATURE_SINGLE}
+        src={attachment.url}
+        alt={attachment.extension}
+      />
     {:else}
       <div class="file" title={attachment.name}>
         {attachment.extension}
@@ -92,13 +97,7 @@
 </div>
 
 {#if isOpen}
-  <GridPopover
-    open={isOpen}
-    {anchor}
-    {invertX}
-    maxHeight={null}
-    on:close={close}
-  >
+  <GridPopover open={isOpen} {anchor} maxHeight={null} on:close={close}>
     <div class="dropzone">
       <Dropzone
         {value}
@@ -106,7 +105,7 @@
         on:change={e => onChange(e.detail)}
         maximum={maximum || schema.constraints?.length?.maximum}
         {processFiles}
-        {handleFileTooLarge}
+        handleFileTooLarge={$props.isCloud ? handleFileTooLarge : null}
       />
     </div>
   </GridPopover>
@@ -146,5 +145,10 @@
     background: var(--grid-background-alt);
     width: 320px;
     padding: var(--cell-padding);
+  }
+
+  .attachment-cell img.light {
+    -webkit-filter: invert(100%);
+    filter: invert(100%);
   }
 </style>

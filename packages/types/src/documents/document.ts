@@ -39,6 +39,18 @@ export enum DocumentType {
   AUDIT_LOG = "al",
   APP_MIGRATION_METADATA = "_design/migrations",
   SCIM_LOG = "scimlog",
+  ROW_ACTIONS = "ra",
+}
+
+// Because DocumentTypes can overlap, we need to make sure that we search
+// longest first to ensure we get the correct type.
+const sortedDocumentTypes = Object.values(DocumentType).sort(
+  (a, b) => b.length - a.length // descending
+)
+export function getDocumentType(id: string): DocumentType | undefined {
+  return sortedDocumentTypes.find(docType =>
+    id.startsWith(`${docType}${SEPARATOR}`)
+  )
 }
 
 // these are the core documents that make up the data, design
@@ -68,6 +80,20 @@ export enum InternalTable {
 // documents or enriched into existence as part of get requests
 export enum VirtualDocumentType {
   VIEW = "view",
+  ROW_ACTION = "row_action",
+}
+
+// Because VirtualDocumentTypes can overlap, we need to make sure that we search
+// longest first to ensure we get the correct type.
+const sortedVirtualDocumentTypes = Object.values(VirtualDocumentType).sort(
+  (a, b) => b.length - a.length // descending
+)
+export function getVirtualDocumentType(
+  id: string
+): VirtualDocumentType | undefined {
+  return sortedVirtualDocumentTypes.find(docType =>
+    id.startsWith(`${docType}${SEPARATOR}`)
+  )
 }
 
 export interface Document {

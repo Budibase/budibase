@@ -35,6 +35,7 @@ export interface StaticUsage {
   [StaticQuotaName.CREATORS]: number
   [StaticQuotaName.USER_GROUPS]: number
   [StaticQuotaName.ROWS]: number
+  [StaticQuotaName.AI_CUSTOM_CONFIGS]: number
   triggers: {
     [key in StaticQuotaName]?: QuotaTriggers
   }
@@ -43,7 +44,7 @@ export interface StaticUsage {
 export interface MonthlyUsage {
   [MonthlyQuotaName.QUERIES]: number
   [MonthlyQuotaName.AUTOMATIONS]: number
-  [MonthlyQuotaName.DAY_PASSES]: number
+  [MonthlyQuotaName.BUDIBASE_AI_CREDITS]: number
   triggers: {
     [key in MonthlyQuotaName]?: QuotaTriggers
   }

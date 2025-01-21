@@ -1,4 +1,6 @@
-import { Row, TableSchema } from "@budibase/types"
+import { Row, RowExportFormat, TableSchema } from "@budibase/types"
+
+export { RowExportFormat as Format } from "@budibase/types"
 
 function getHeaders(
   headers: string[],
@@ -7,29 +9,33 @@ function getHeaders(
   return headers.map(header => `"${customHeaders[header] || header}"`)
 }
 
+function escapeCsvString(str: string) {
+  return str.replace(/"/g, '""')
+}
+
 export function csv(
   headers: string[],
   rows: Row[],
-  delimiter: string = ",",
+  delimiter = ",",
   customHeaders: { [key: string]: string } = {}
 ) {
-  let csv = getHeaders(headers, customHeaders).join(delimiter)
+  let csvRows = [getHeaders(headers, customHeaders)]
 
   for (let row of rows) {
-    csv = `${csv}\n${headers
-      .map(header => {
-        let val = row[header]
-        val =
-          typeof val === "object" && !(val instanceof Date)
-            ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
-            : val !== undefined
-            ? `"${val}"`
-            : ""
-        return val.trim()
+    csvRows.push(
+      headers.map(header => {
+        const val = row[header]
+        if (typeof val === "object" && !(val instanceof Date)) {
+          return `"${JSON.stringify(val).replace(/"/g, "'")}"`
+        }
+        if (val !== undefined) {
+          return `"${escapeCsvString(val.toString())}"`
+        }
+        return ""
       })
-      .join(delimiter)}`
+    )
   }
-  return csv
+  return csvRows.map(row => row.join(delimiter)).join("\n")
 }
 
 export function json(rows: Row[]) {
@@ -46,16 +52,6 @@ export function jsonWithSchema(schema: TableSchema, rows: Row[]) {
   return JSON.stringify({ schema: newSchema, rows }, undefined, 2)
 }
 
-export enum Format {
-  CSV = "csv",
-  JSON = "json",
-  JSON_WITH_SCHEMA = "jsonWithSchema",
-}
-
-export function isFormat(format: any): format is Format {
-  return Object.values(Format).includes(format as Format)
-}
-
-export function parseCsvExport<T>(value: string) {
-  return JSON.parse(value?.replace(/'/g, '"')) as T
+export function isFormat(format: any): format is RowExportFormat {
+  return Object.values(RowExportFormat).includes(format as RowExportFormat)
 }

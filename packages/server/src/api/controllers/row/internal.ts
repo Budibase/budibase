@@ -8,7 +8,7 @@ import {
 } from "../../../utilities/rowProcessor"
 import * as utils from "./utils"
 import { cloneDeep } from "lodash/fp"
-import { context } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
 import {
   FieldType,
@@ -22,18 +22,26 @@ import {
 import sdk from "../../../sdk"
 import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
 import { flatten } from "lodash"
+import { findRow } from "../../../sdk/app/rows/internal"
+import { helpers } from "@budibase/shared-core"
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
+  const source = await utils.getSource(ctx)
+
+  if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
+    ctx.throw(400, "Cannot update rows through a calculation view")
+  }
+
+  const table = sdk.views.isView(source)
+    ? await sdk.views.getTable(source.id)
+    : source
+
   const inputs = ctx.request.body
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
-  const dbTable = await sdk.tables.getTable(tableId)
   try {
-    oldRow = await outputProcessing(
-      dbTable,
-      await utils.findRow(ctx, tableId, inputs._id!)
-    )
+    oldRow = await outputProcessing(source, await findRow(tableId, inputs._id!))
   } catch (err) {
     if (isUserTable) {
       // don't include the rev, it'll be the global rev
@@ -49,22 +57,15 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   // need to build up full patch fields before coerce
   let combinedRow: any = cloneDeep(oldRow)
   for (let key of Object.keys(inputs)) {
-    if (!dbTable.schema[key]) continue
+    if (!table.schema[key]) continue
     combinedRow[key] = inputs[key]
   }
 
-  // need to copy the table so it can be differenced on way out
-  const tableClone = cloneDeep(dbTable)
-
   // this returns the table and row incase they have been updated
-  let { table, row } = await inputProcessing(
-    ctx.user?._id,
-    tableClone,
-    combinedRow
-  )
+  let row = await inputProcessing(ctx.user?._id, source, combinedRow)
   const validateResult = await sdk.rows.utils.validate({
     row,
-    table,
+    source,
   })
 
   if (!validateResult.valid) {
@@ -85,35 +86,38 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row as any
     await userController.updateMetadata(ctx as any)
-    return { row: ctx.body as Row, table }
+    return { row: ctx.body as Row, table, oldRow }
   }
 
-  return finaliseRow(table, row, {
-    oldTable: dbTable,
+  const result = await finaliseRow(source, row, {
     updateFormula: true,
   })
-}
 
-export async function find(ctx: UserCtx): Promise<Row> {
-  const tableId = utils.getTableId(ctx),
-    rowId = ctx.params.rowId
-  const table = await sdk.tables.getTable(tableId)
-  let row = await utils.findRow(ctx, tableId, rowId)
-  row = await outputProcessing(table, row)
-  return row
+  return { ...result, oldRow }
 }
 
 export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
-  const tableId = utils.getTableId(ctx)
+  const source = await utils.getSource(ctx)
+
+  if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
+    throw new HTTPError("Cannot delete rows through a calculation view", 400)
+  }
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
+
   const { _id } = ctx.request.body
   let row = await db.get<Row>(_id)
   let _rev = ctx.request.body._rev || row._rev
 
-  if (row.tableId !== tableId) {
+  if (row.tableId !== table._id) {
     throw "Supplied tableId doesn't match the row's tableId"
   }
-  const table = await sdk.tables.getTable(tableId)
   // update the row to include full relationships before deleting them
   row = await outputProcessing(table, row, {
     squash: false,
@@ -123,7 +127,7 @@ export async function destroy(ctx: UserCtx) {
   await linkRows.updateLinks({
     eventType: linkRows.EventType.ROW_DELETE,
     row,
-    tableId,
+    tableId: table._id!,
   })
   // remove any attachments that were on the row from object storage
   await AttachmentCleanup.rowDelete(table, [row])
@@ -131,7 +135,7 @@ export async function destroy(ctx: UserCtx) {
   await updateRelatedFormula(table, row)
 
   let response
-  if (tableId === InternalTables.USER_METADATA) {
+  if (table._id === InternalTables.USER_METADATA) {
     ctx.params = {
       id: _id,
     }
@@ -144,7 +148,7 @@ export async function destroy(ctx: UserCtx) {
 }
 
 export async function bulkDestroy(ctx: UserCtx) {
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const table = await sdk.tables.getTable(tableId)
   let { rows } = ctx.request.body
 
@@ -186,14 +190,14 @@ export async function bulkDestroy(ctx: UserCtx) {
 export async function fetchEnrichedRow(ctx: UserCtx) {
   const fieldName = ctx.request.query.field as string | undefined
   const db = context.getAppDB()
-  const tableId = utils.getTableId(ctx)
+  const { tableId } = utils.getSourceId(ctx)
   const rowId = ctx.params.rowId as string
   // need table to work out where links go in row, as well as the link docs
   const [table, links] = await Promise.all([
     sdk.tables.getTable(tableId),
     linkRows.getLinkDocuments({ tableId, rowId, fieldName }),
   ])
-  let row = await utils.findRow(ctx, tableId, rowId)
+  let row = await findRow(tableId, rowId)
   row = await outputProcessing(table, row)
   const linkVals = links as LinkDocumentValue[]
 
@@ -204,7 +208,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   )
 
   // get the linked tables
-  const linkTableIds = getLinkedTableIDs(table as Table)
+  const linkTableIds = getLinkedTableIDs(table.schema)
   const linkTables = await sdk.tables.getTables(linkTableIds)
 
   // perform output processing

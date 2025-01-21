@@ -13,6 +13,8 @@
   export let description
   export let buttons
   export let buttonPosition = "bottom"
+  export let buttonsCollapsed
+  export let buttonsCollapsedText
   export let schema
 
   const context = getContext("context")
@@ -81,6 +83,8 @@
                 type="buttongroup"
                 props={{
                   buttons,
+                  collapsed: buttonsCollapsed,
+                  collapsedText: buttonsCollapsedText,
                 }}
                 order={0}
               />
@@ -91,25 +95,25 @@
       {#if description}
         <BlockComponent type="text" props={{ text: description }} order={1} />
       {/if}
-      {#key fields}
-        <BlockComponent type="container">
-          <div class="form-block fields" class:mobile={$context.device.mobile}>
-            {#each fields as field, idx}
-              <FormBlockComponent {field} {schema} order={idx} />
-            {/each}
-          </div>
-        </BlockComponent>
-      {/key}
+      <BlockComponent type="container">
+        <div class="form-block fields" class:mobile={$context.device.mobile}>
+          {#each fields as field, idx}
+            <FormBlockComponent {field} {schema} order={idx} />
+          {/each}
+        </div>
+      </BlockComponent>
     </BlockComponent>
     {#if buttonPosition === "bottom"}
       <BlockComponent
         type="buttongroup"
         props={{
           buttons,
+          collapsed: buttonsCollapsed,
+          collapsedText: buttonsCollapsedText,
         }}
         styles={{
           normal: {
-            "margin-top": "16",
+            "margin-top": "24",
           },
         }}
         order={1}

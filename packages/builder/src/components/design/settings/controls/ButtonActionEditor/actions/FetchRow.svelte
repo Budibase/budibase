@@ -1,7 +1,7 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { tables, viewsV2 } from "stores/builder"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { tables, viewsV2 } from "@/stores/builder"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
   export let bindings = []

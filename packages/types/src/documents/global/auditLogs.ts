@@ -2,6 +2,7 @@ import { Document } from "../document"
 import { Event } from "../../sdk"
 
 export const AuditLogSystemUser = "SYSTEM"
+export const AUDIT_LOG_TYPE = "auditLog"
 
 export type FallbackInfo = {
   appName?: string
@@ -15,5 +16,6 @@ export interface AuditLogDoc extends Document {
   timestamp: string
   metadata: any
   name: string
+  type?: "auditLog"
   fallback?: FallbackInfo
 }

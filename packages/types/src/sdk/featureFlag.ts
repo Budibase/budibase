@@ -1,9 +1,15 @@
 export enum FeatureFlag {
-  LICENSING = "LICENSING",
-  PER_CREATOR_PER_USER_PRICE = "PER_CREATOR_PER_USER_PRICE",
-  PER_CREATOR_PER_USER_PRICE_ALERT = "PER_CREATOR_PER_USER_PRICE_ALERT",
+  USE_ZOD_VALIDATOR = "USE_ZOD_VALIDATOR",
+
+  // Account-portal
+  DIRECT_LOGIN_TO_ACCOUNT_PORTAL = "DIRECT_LOGIN_TO_ACCOUNT_PORTAL",
 }
 
-export interface TenantFeatureFlags {
-  [key: string]: FeatureFlag[]
+export const FeatureFlagDefaults = {
+  [FeatureFlag.USE_ZOD_VALIDATOR]: false,
+
+  // Account-portal
+  [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,
 }
+
+export type FeatureFlags = typeof FeatureFlagDefaults

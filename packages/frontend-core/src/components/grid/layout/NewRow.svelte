@@ -7,11 +7,12 @@
   import { GutterWidth, NewRowID } from "../lib/constants"
   import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
+  import { getCellID } from "../lib/utils"
 
   const {
     hoveredRowId,
     focusedCellId,
-    stickyColumn,
+    displayColumn,
     scroll,
     dispatch,
     rows,
@@ -19,12 +20,10 @@
     datasource,
     subscribe,
     renderedRows,
-    visibleColumns,
+    scrollableColumns,
     rowHeight,
     hasNextPage,
     maxScrollTop,
-    rowVerticalInversionIndex,
-    columnHorizontalInversionIndex,
     selectedRows,
     loaded,
     refreshing,
@@ -32,6 +31,8 @@
     filter,
     inlineFilters,
     columnRenderMap,
+    visibleColumns,
+    scrollTop,
   } = getContext("grid")
 
   let visible = false
@@ -39,18 +40,25 @@
   let newRow
   let offset = 0
 
-  $: firstColumn = $stickyColumn || $visibleColumns[0]
-  $: width = GutterWidth + ($stickyColumn?.width || 0)
+  $: firstColumn = $visibleColumns[0]
+  $: width = GutterWidth + ($displayColumn?.width || 0)
   $: $datasource, (visible = false)
-  $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
   $: selectedRowCount = Object.values($selectedRows).length
   $: hasNoRows = !$rows.length
+  $: renderedRowCount = $renderedRows.length
+  $: offset = getOffset($hasNextPage, renderedRowCount, $rowHeight, $scrollTop)
 
-  const shouldInvertY = (offset, inversionIndex, rows) => {
-    if (offset === 0) {
-      return false
+  const getOffset = (hasNextPage, rowCount, rowHeight, scrollTop) => {
+    // If we have a next page of data then we aren't truly at the bottom, so we
+    // render the add row component at the top
+    if (hasNextPage) {
+      return 0
     }
-    return rows.length >= inversionIndex
+    offset = rowCount * rowHeight - (scrollTop % rowHeight)
+    if (rowCount !== 0) {
+      offset -= 1
+    }
+    return offset
   }
 
   const addRow = async () => {
@@ -63,14 +71,17 @@
     const newRowIndex = offset ? undefined : 0
     let rowToCreate = { ...newRow }
     delete rowToCreate._isNewRow
-    const savedRow = await rows.actions.addRow(rowToCreate, newRowIndex)
+    const savedRow = await rows.actions.addRow({
+      row: rowToCreate,
+      idx: newRowIndex,
+    })
     if (savedRow) {
       // Reset state
       clear()
 
       // Select the first cell if possible
       if (firstColumn) {
-        $focusedCellId = `${savedRow._id}-${firstColumn.name}`
+        $focusedCellId = getCellID(savedRow._id, firstColumn.name)
       }
     }
     isAdding = false
@@ -94,23 +105,13 @@
       return
     }
 
-    // If we have a next page of data then we aren't truly at the bottom, so we
-    // render the add row component at the top
-    if ($hasNextPage) {
-      offset = 0
-    }
-
     // If we don't have a next page then we're at the bottom and can scroll to
     // the max available offset
-    else {
+    if (!$hasNextPage) {
       scroll.update(state => ({
         ...state,
         top: $maxScrollTop,
       }))
-      offset = $renderedRows.length * $rowHeight - ($maxScrollTop % $rowHeight)
-      if ($renderedRows.length !== 0) {
-        offset -= 1
-      }
     }
 
     // Update state and select initial cell
@@ -118,7 +119,7 @@
     visible = true
     $hoveredRowId = NewRowID
     if (firstColumn) {
-      $focusedCellId = `${NewRowID}-${firstColumn.name}`
+      $focusedCellId = getCellID(NewRowID, firstColumn.name)
     }
 
     // Attach key listener
@@ -170,7 +171,7 @@
       class="new-row-fab"
       on:click={() => dispatch("add-row-inline")}
       transition:fade|local={{ duration: 130 }}
-      class:offset={!$stickyColumn}
+      class:offset={!$displayColumn}
     >
       <Icon name="Add" size="S" />
     </div>
@@ -180,46 +181,47 @@
 <!-- Only show new row functionality if we have any columns -->
 {#if visible}
   <div
-    class="container"
+    class="new-row"
     class:floating={offset > 0}
     style="--offset:{offset}px; --sticky-width:{width}px;"
   >
     <div class="underlay sticky" transition:fade|local={{ duration: 130 }} />
     <div class="underlay" transition:fade|local={{ duration: 130 }} />
     <div class="sticky-column" transition:fade|local={{ duration: 130 }}>
-      <GutterCell expandable on:expand={addViaModal} rowHovered>
-        <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
-        {#if isAdding}
-          <div in:fade={{ duration: 130 }} class="loading-overlay" />
-        {/if}
-      </GutterCell>
-      {#if $stickyColumn}
-        {@const cellId = `${NewRowID}-${$stickyColumn.name}`}
-        <DataCell
-          {cellId}
-          rowFocused
-          column={$stickyColumn}
-          row={newRow}
-          focused={$focusedCellId === cellId}
-          width={$stickyColumn.width}
-          {updateValue}
-          topRow={offset === 0}
-          {invertY}
-        >
-          {#if $stickyColumn?.schema?.autocolumn}
-            <div class="readonly-overlay">Can't edit auto column</div>
-          {/if}
+      <div class="row">
+        <GutterCell expandable on:expand={addViaModal} rowHovered>
+          <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
           {#if isAdding}
             <div in:fade={{ duration: 130 }} class="loading-overlay" />
           {/if}
-        </DataCell>
-      {/if}
+        </GutterCell>
+        {#if $displayColumn}
+          {@const cellId = getCellID(NewRowID, $displayColumn.name)}
+          <DataCell
+            {cellId}
+            rowFocused
+            column={$displayColumn}
+            row={newRow}
+            focused={$focusedCellId === cellId}
+            width={$displayColumn.width}
+            {updateValue}
+            topRow={offset === 0}
+          >
+            {#if $displayColumn?.schema?.autocolumn}
+              <div class="readonly-overlay">Can't edit auto column</div>
+            {/if}
+            {#if isAdding}
+              <div in:fade={{ duration: 130 }} class="loading-overlay" />
+            {/if}
+          </DataCell>
+        {/if}
+      </div>
     </div>
     <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
       <GridScrollWrapper scrollHorizontally attachHandlers>
         <div class="row">
-          {#each $visibleColumns as column, columnIdx}
-            {@const cellId = `new-${column.name}`}
+          {#each $scrollableColumns as column}
+            {@const cellId = getCellID(NewRowID, column.name)}
             <DataCell
               {cellId}
               {column}
@@ -229,8 +231,6 @@
               focused={$focusedCellId === cellId}
               width={column.width}
               topRow={offset === 0}
-              invertX={columnIdx >= $columnHorizontalInversionIndex}
-              {invertY}
               hidden={!$columnRenderMap[column.name]}
             >
               {#if column?.schema?.autocolumn}
@@ -282,7 +282,7 @@
     margin-left: -6px;
   }
 
-  .container {
+  .new-row {
     position: absolute;
     top: var(--default-row-height);
     left: 0;
@@ -292,10 +292,10 @@
     flex-direction: row;
     align-items: stretch;
   }
-  .container :global(.cell) {
+  .new-row :global(.cell) {
     --cell-background: var(--spectrum-global-color-gray-75) !important;
   }
-  .container.floating :global(.cell) {
+  .new-row.floating :global(.cell) {
     height: calc(var(--row-height) + 1px);
     border-top: var(--cell-border);
   }
@@ -324,8 +324,10 @@
     pointer-events: all;
     z-index: 3;
     position: absolute;
-    top: calc(var(--row-height) + var(--offset) + 24px);
-    left: 18px;
+    top: calc(
+      var(--row-height) + var(--offset) + var(--default-row-height) / 2
+    );
+    left: calc(var(--default-row-height) / 2);
   }
   .button-with-keys {
     display: flex;

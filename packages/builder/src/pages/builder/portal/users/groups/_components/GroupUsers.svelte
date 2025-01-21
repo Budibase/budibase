@@ -4,8 +4,8 @@
   import { Heading, Pagination, Table, Search } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
   import { goto } from "@roxi/routify"
-  import { API } from "api"
-  import { groups } from "stores/portal"
+  import { API } from "@/api"
+  import { groups } from "@/stores/portal"
   import { setContext } from "svelte"
 
   import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
@@ -52,7 +52,7 @@
   ]
 
   const removeUser = async id => {
-    await groups.actions.removeUser(groupId, id)
+    await groups.removeUser(groupId, id)
     fetchGroupUsers.refresh()
   }
 

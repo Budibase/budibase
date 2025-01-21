@@ -5,17 +5,17 @@ import { Helpers } from "@budibase/bbui"
 /**
  * Creates a validation function from a combination of schema-level constraints
  * and custom validation rules
- * @param schemaConstraints any schema level constraints from the table
+ * @param schemaConstraints any schema level constraints from the datasource
  * @param customRules any custom validation rules
  * @param field the field name we are evaluating
- * @param table the definition of the table we are evaluating
+ * @param definition the definition of the datasource we are evaluating
  * @returns {function} a validator function which accepts test values
  */
 export const createValidatorFromConstraints = (
   schemaConstraints,
   customRules,
   field,
-  table
+  definition
 ) => {
   let rules = []
 
@@ -23,7 +23,7 @@ export const createValidatorFromConstraints = (
   if (schemaConstraints) {
     // Required constraint
     if (
-      field === table?.primaryDisplay ||
+      field === definition?.primaryDisplay ||
       schemaConstraints.presence?.allowEmpty === false ||
       schemaConstraints.presence === true
     ) {
@@ -200,6 +200,17 @@ const parseType = (value, type) => {
     return value
   }
 
+  // Parse attachment/signature single, treating no key as null
+  if (
+    type === FieldTypes.ATTACHMENT_SINGLE ||
+    type === FieldTypes.SIGNATURE_SINGLE
+  ) {
+    if (!value?.key) {
+      return null
+    }
+    return value
+  }
+
   // Parse links, treating no elements as null
   if (type === FieldTypes.LINK) {
     if (!Array.isArray(value) || !value.length) {
@@ -246,10 +257,8 @@ const maxLengthHandler = (value, rule) => {
 // Evaluates a max file size (MB) constraint
 const maxFileSizeHandler = (value, rule) => {
   const limit = parseType(rule.value, "number")
-  return (
-    value == null ||
-    !value.some(attachment => attachment.size / 1000000 > limit)
-  )
+  const check = attachment => attachment.size / 1000000 > limit
+  return value == null || !(value?.key ? check(value) : value.some(check))
 }
 
 // Evaluates a max total upload size (MB) constraint
@@ -257,8 +266,11 @@ const maxUploadSizeHandler = (value, rule) => {
   const limit = parseType(rule.value, "number")
   return (
     value == null ||
-    value.reduce((acc, currentItem) => acc + currentItem.size, 0) / 1000000 <=
-      limit
+    (value?.key
+      ? value.size / 1000000 <= limit
+      : value.reduce((acc, currentItem) => acc + currentItem.size, 0) /
+          1000000 <=
+        limit)
   )
 }
 

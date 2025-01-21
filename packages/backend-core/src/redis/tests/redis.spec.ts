@@ -1,7 +1,8 @@
 import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { generator, structures } from "../../../tests"
-import RedisWrapper from "../redis"
-import { env } from "../.."
+import RedisWrapper, { closeAll } from "../redis"
+import env from "../../environment"
+import { randomUUID } from "crypto"
 
 jest.setTimeout(30000)
 
@@ -10,7 +11,7 @@ describe("redis", () => {
   let container: StartedTestContainer
 
   beforeAll(async () => {
-    const container = await new GenericContainer("redis")
+    container = await new GenericContainer("redis")
       .withExposedPorts(6379)
       .start()
 
@@ -22,7 +23,10 @@ describe("redis", () => {
     env._set("REDIS_PASSWORD", 0)
   })
 
-  afterAll(() => container?.stop())
+  afterAll(() => {
+    container?.stop()
+    closeAll()
+  })
 
   beforeEach(async () => {
     redis = new RedisWrapper(structures.db.id())
@@ -52,10 +56,10 @@ describe("redis", () => {
   describe("bulkStore", () => {
     function createRandomObject(
       keyLength: number,
-      valueGenerator: () => any = () => generator.word()
+      valueGenerator: () => any = () => randomUUID()
     ) {
       return generator
-        .unique(() => generator.word(), keyLength)
+        .unique(() => randomUUID(), keyLength)
         .reduce((acc, key) => {
           acc[key] = valueGenerator()
           return acc

@@ -2,7 +2,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "dataBinding"
+  } from "@/dataBinding"
   import {
     Button,
     Popover,
@@ -26,14 +26,15 @@
     componentStore,
     datasources,
     integrations,
-  } from "stores/builder"
-  import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
-  import IntegrationQueryEditor from "components/integration/index.svelte"
+  } from "@/stores/builder"
+  import BindingBuilder from "@/components/integration/QueryBindingBuilder.svelte"
+  import IntegrationQueryEditor from "@/components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
-  import { findAllComponents } from "helpers/components"
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
-  import { API } from "api"
+  import { findAllComponents } from "@/helpers/components"
+  import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
+  import DataSourceCategory from "@/components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
+  import { API } from "@/api"
+  import { datasourceSelect as format } from "@/helpers/data/format"
 
   export let value = {}
   export let otherSources
@@ -42,7 +43,6 @@
   export let showDataProviders = true
 
   const dispatch = createEventDispatcher()
-  const arrayTypes = ["attachment", "array"]
 
   let anchorRight, dropdownRight
   let drawer
@@ -51,21 +51,25 @@
   let modal
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = $tablesStore.list.map(m => ({
-    label: m.name,
-    tableId: m._id,
-    type: "table",
-  }))
+  $: tables = $tablesStore.list
+    .map(table => format.table(table, $datasources.list))
+    .sort((a, b) => {
+      // sort tables alphabetically, grouped by datasource
+      const dsA = a.datasourceName ?? ""
+      const dsB = b.datasourceName ?? ""
+
+      const dsComparison = dsA.localeCompare(dsB)
+      if (dsComparison !== 0) {
+        return dsComparison
+      }
+      return a.label.localeCompare(b.label)
+    })
   $: viewsV1 = $viewsStore.list.map(view => ({
     ...view,
     label: view.name,
     type: "view",
   }))
-  $: viewsV2 = $viewsV2Store.list.map(view => ({
-    ...view,
-    label: view.name,
-    type: "viewV2",
-  }))
+  $: viewsV2 = $viewsV2Store.list.map(format.viewV2)
   $: views = [...(viewsV1 || []), ...(viewsV2 || [])]
   $: queries = $queriesStore.list
     .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
@@ -111,7 +115,11 @@
       }
     })
   $: fields = bindings
-    .filter(x => arrayTypes.includes(x.fieldSchema?.type))
+    .filter(
+      x =>
+        x.fieldSchema?.type === "attachment" ||
+        (x.fieldSchema?.type === "array" && x.tableId)
+    )
     .map(binding => {
       const { providerId, readableBinding, runtimeBinding } = binding
       const { name, type, tableId } = binding.fieldSchema
@@ -309,7 +317,7 @@
     {#if links?.length}
       <DataSourceCategory
         dividerState={true}
-        heading="Links"
+        heading="Relationships"
         dataSet={links}
         {value}
         onSelect={handleSelected}

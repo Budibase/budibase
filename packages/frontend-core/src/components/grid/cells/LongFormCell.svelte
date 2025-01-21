@@ -8,7 +8,6 @@
   export let onChange
   export let readonly = false
   export let api
-  export let invertX = false
 
   let textarea
   let isOpen = false
@@ -67,7 +66,7 @@
 </div>
 
 {#if isOpen}
-  <GridPopover {anchor} {invertX} on:close={close}>
+  <GridPopover {anchor} on:close={close}>
     <textarea
       bind:this={textarea}
       value={value || ""}
@@ -94,6 +93,7 @@
   .value {
     display: -webkit-box;
     -webkit-line-clamp: var(--content-lines);
+    line-clamp: var(--content-lines);
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 20px;

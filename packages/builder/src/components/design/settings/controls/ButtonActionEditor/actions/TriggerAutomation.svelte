@@ -1,8 +1,8 @@
 <script>
   import { Select, Label, Input, Checkbox, Icon, Body } from "@budibase/bbui"
-  import { automationStore } from "stores/builder"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
+  import { automationStore } from "@/stores/builder"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
+  import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
 
   export let parameters = {}
   export let bindings = []
@@ -24,7 +24,9 @@
     parameters
   }
   $: automations = $automationStore.automations
-    .filter(a => a.definition.trigger?.stepId === TriggerStepID.APP)
+    .filter(
+      a => a.definition.trigger?.stepId === TriggerStepID.APP && !a.disabled
+    )
     .map(automation => {
       const schema = Object.entries(
         automation.definition.trigger.inputs.fields || {}

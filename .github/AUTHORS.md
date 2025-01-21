@@ -9,3 +9,4 @@ Contributors
 * Michael Drury - [@mike12345567](https://github.com/mike12345567)
 * Peter Clement - [@PClmnt](https://github.com/PClmnt)
 * Rory Powell - [@Rory-Powell](https://github.com/Rory-Powell)
+* Michaël St-Georges [@CSLTech](https://github.com/CSLTech)

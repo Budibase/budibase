@@ -136,21 +136,23 @@ class QueryRunner {
       pagination = output.pagination
     }
 
-    // transform as required
-    if (transformer) {
+    // We avoid invoking the transformer if it's trivial because there is a cost
+    // to passing data in and out of the isolate, especially for MongoDB where
+    // we have to bson serialise/deserialise the data.
+    const hasTransformer =
+      transformer != null &&
+      transformer.length > 0 &&
+      transformer.trim() !== "return data" &&
+      transformer.trim() !== "return data;"
+
+    if (transformer && hasTransformer) {
       transformer = iifeWrapper(transformer)
       let vm = new IsolatedVM()
       if (datasource.source === SourceName.MONGODB) {
         vm = vm.withParsingBson(rows)
       }
-
-      const ctx = {
-        data: rows,
-        params: enrichedParameters,
-      }
-      if (transformer != null) {
-        rows = vm.withContext(ctx, () => vm.execute(transformer!))
-      }
+      const ctx = { data: rows, params: enrichedParameters }
+      rows = vm.withContext(ctx, () => vm.execute(transformer!))
     }
 
     // if the request fails we retry once, invalidating the cached value
@@ -172,7 +174,9 @@ class QueryRunner {
     }
 
     // needs to an array for next step
-    if (!Array.isArray(rows)) {
+    if (rows === null) {
+      rows = []
+    } else if (!Array.isArray(rows)) {
       rows = [rows]
     }
 
@@ -196,12 +200,22 @@ class QueryRunner {
     return { rows, keys, info, extra, pagination }
   }
 
-  async runAnotherQuery(queryId: string, parameters: any) {
+  async runAnotherQuery(
+    queryId: string,
+    currentParameters: Record<string, any>
+  ) {
     const db = context.getAppDB()
     const query = await db.get<Query>(queryId)
     const datasource = await sdk.datasources.get(query.datasourceId, {
       enriched: true,
     })
+    // enrich parameters with dynamic queries defaults
+    const defaultParams = query.parameters || []
+    for (let param of defaultParams) {
+      if (!currentParameters[param.name]) {
+        currentParameters[param.name] = param.default
+      }
+    }
     return new QueryRunner(
       {
         schema: query.schema,
@@ -210,7 +224,7 @@ class QueryRunner {
         transformer: query.transformer,
         nullDefaultSupport: query.nullDefaultSupport,
         ctx: this.ctx,
-        parameters,
+        parameters: currentParameters,
         datasource,
         queryId,
       },
@@ -237,7 +251,9 @@ class QueryRunner {
     if (!resp.err) {
       const globalUserId = getGlobalIDFromUserMetadataID(_id)
       await auth.updateUserOAuth(globalUserId, resp)
-      this.ctx.user = await cache.user.getUser(globalUserId)
+      this.ctx.user = await cache.user.getUser({
+        userId: globalUserId,
+      })
     } else {
       // In this event the user may have oAuth issues that
       // could require re-authenticating with their provider.

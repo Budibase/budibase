@@ -102,8 +102,12 @@ export const useAppBuilders = () => {
   return useFeature(Feature.APP_BUILDERS)
 }
 
-export const useViewPermissions = () => {
-  return useFeature(Feature.VIEW_PERMISSIONS)
+export const useBudibaseAI = () => {
+  return useFeature(Feature.BUDIBASE_AI)
+}
+
+export const useAICustomConfigs = () => {
+  return useFeature(Feature.AI_CUSTOM_CONFIGS)
 }
 
 // QUOTAS

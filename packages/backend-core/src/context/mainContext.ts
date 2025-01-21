@@ -10,7 +10,7 @@ import {
   StaticDatabases,
   DEFAULT_TENANT_ID,
 } from "../constants"
-import { Database, IdentityContext, Snippet, App } from "@budibase/types"
+import { Database, IdentityContext, Snippet, App, Table } from "@budibase/types"
 import { ContextMap } from "./types"
 
 let TEST_APP_ID: string | null = null
@@ -253,6 +253,11 @@ export function getAppId(): string | undefined {
   }
 }
 
+export function getIP(): string | undefined {
+  const context = Context.get()
+  return context?.ip
+}
+
 export const getProdAppId = () => {
   const appId = getAppId()
   if (!appId) {
@@ -281,7 +286,11 @@ export function doInScimContext(task: any) {
   return newContext(updates, task)
 }
 
-export async function ensureSnippetContext() {
+export function doInIPContext(ip: string, task: any) {
+  return newContext({ ip }, task)
+}
+
+export async function ensureSnippetContext(enabled = !env.isTest()) {
   const ctx = getCurrentContext()
 
   // If we've already added snippets to context, continue
@@ -292,7 +301,7 @@ export async function ensureSnippetContext() {
   // Otherwise get snippets for this app and update context
   let snippets: Snippet[] | undefined
   const db = getAppDB()
-  if (db && !env.isTest()) {
+  if (db && enabled) {
     const app = await db.get<App>(DocumentType.APP_METADATA)
     snippets = app.snippets
   }
@@ -374,4 +383,40 @@ export function getCurrentContext(): ContextMap | undefined {
   } catch (e) {
     return undefined
   }
+}
+
+export function getFeatureFlags(
+  key: string
+): Record<string, boolean> | undefined {
+  const context = getCurrentContext()
+  if (!context) {
+    return undefined
+  }
+  return context.featureFlagCache?.[key]
+}
+
+export function setFeatureFlags(key: string, value: Record<string, boolean>) {
+  const context = getCurrentContext()
+  if (!context) {
+    return
+  }
+  context.featureFlagCache ??= {}
+  context.featureFlagCache[key] = value
+}
+
+export function getTableForView(viewId: string): Table | undefined {
+  const context = getCurrentContext()
+  if (!context) {
+    return
+  }
+  return context.viewToTableCache?.[viewId]
+}
+
+export function setTableForView(viewId: string, table: Table) {
+  const context = getCurrentContext()
+  if (!context) {
+    return
+  }
+  context.viewToTableCache ??= {}
+  context.viewToTableCache[viewId] = table
 }

@@ -1,15 +1,15 @@
-const setup = require("./utilities")
+import { getConfig, afterAll as _afterAll } from "./utilities"
+import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import { OpenAI } from "openai"
+import { setEnv as setCoreEnv } from "@budibase/backend-core"
+import * as pro from "@budibase/pro"
+import { Model } from "@budibase/types"
 
-import environment from "../../environment"
-import openai from "openai"
-
-jest.mock(
-  "openai",
-  jest.fn(() => ({
-    Configuration: jest.fn(),
-    OpenAIApi: jest.fn(() => ({
-      createChatCompletion: jest.fn(() => ({
-        data: {
+jest.mock("openai", () => ({
+  OpenAI: jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: jest.fn(() => ({
           choices: [
             {
               message: {
@@ -17,80 +17,149 @@ jest.mock(
               },
             },
           ],
-        },
+        })),
+      },
+    },
+  })),
+}))
+jest.mock("@budibase/pro", () => ({
+  ...jest.requireActual("@budibase/pro"),
+  ai: {
+    LargeLanguageModel: {
+      forCurrentTenant: jest.fn().mockImplementation(() => ({
+        llm: {},
+        init: jest.fn(),
+        run: jest.fn(),
       })),
-    })),
-  }))
-)
+    },
+  },
+  features: {
+    isAICustomConfigsEnabled: jest.fn(),
+    isBudibaseAIEnabled: jest.fn(),
+  },
+}))
 
-const mockedOpenAIApi = openai.OpenAIApi as jest.MockedClass<
-  typeof openai.OpenAIApi
->
+const mockedPro = jest.mocked(pro)
+const mockedOpenAI = OpenAI as jest.MockedClass<typeof OpenAI>
 
 const OPENAI_PROMPT = "What is the meaning of life?"
 
 describe("test the openai action", () => {
-  let config = setup.getConfig()
+  let config = getConfig()
+  let resetEnv: () => void | undefined
 
   beforeAll(async () => {
+    setCoreEnv({ SELF_HOSTED: true })
     await config.init()
   })
 
   beforeEach(() => {
-    environment.OPENAI_API_KEY = "abc123"
+    resetEnv = setCoreEnv({ OPENAI_API_KEY: "abc123" })
   })
 
-  afterAll(setup.afterAll)
-
-  it("should present the correct error message when the OPENAI_API_KEY variable isn't set", async () => {
-    delete environment.OPENAI_API_KEY
-
-    let res = await setup.runStep("OPENAI", {
-      prompt: OPENAI_PROMPT,
-    })
-    expect(res.response).toEqual(
-      "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable."
-    )
-    expect(res.success).toBeFalsy()
+  afterEach(() => {
+    resetEnv()
+    jest.clearAllMocks()
   })
+
+  afterAll(_afterAll)
 
   it("should be able to receive a response from ChatGPT given a prompt", async () => {
-    const res = await setup.runStep("OPENAI", {
-      prompt: OPENAI_PROMPT,
+    setCoreEnv({ SELF_HOSTED: true })
+
+    const result = await createAutomationBuilder({
+      name: "Test OpenAI Response",
+      config,
     })
-    expect(res.response).toEqual("This is a test")
-    expect(res.success).toBeTruthy()
+      .appAction({ fields: {} })
+      .openai(
+        { prompt: OPENAI_PROMPT, model: Model.GPT_4O_MINI },
+        { stepName: "Basic OpenAI Query" }
+      )
+      .run()
+
+    expect(result.steps[0].outputs.response).toEqual("This is a test")
+    expect(result.steps[0].outputs.success).toBeTruthy()
   })
 
   it("should present the correct error message when a prompt is not provided", async () => {
-    const res = await setup.runStep("OPENAI", {
-      prompt: null,
+    const result = await createAutomationBuilder({
+      name: "Test OpenAI No Prompt",
+      config,
     })
-    expect(res.response).toEqual(
+      .appAction({ fields: {} })
+      .openai(
+        { prompt: "", model: Model.GPT_4O_MINI },
+        { stepName: "Empty Prompt Query" }
+      )
+      .run()
+
+    expect(result.steps[0].outputs.response).toEqual(
       "Budibase OpenAI Automation Failed: No prompt supplied"
     )
-    expect(res.success).toBeFalsy()
+    expect(result.steps[0].outputs.success).toBeFalsy()
   })
 
   it("should present the correct error message when an error is thrown from the createChatCompletion call", async () => {
-    mockedOpenAIApi.mockImplementation(
+    mockedOpenAI.mockImplementation(
       () =>
         ({
-          createChatCompletion: jest.fn(() => {
-            throw new Error(
-              "An error occurred while calling createChatCompletion"
-            )
-          }),
+          chat: {
+            completions: {
+              create: jest.fn(() => {
+                throw new Error(
+                  "An error occurred while calling createChatCompletion"
+                )
+              }),
+            },
+          },
         } as any)
     )
 
-    const res = await setup.runStep("OPENAI", {
-      prompt: OPENAI_PROMPT,
+    const result = await createAutomationBuilder({
+      name: "Test OpenAI Error",
+      config,
     })
+      .appAction({ fields: {} })
+      .openai(
+        { prompt: OPENAI_PROMPT, model: Model.GPT_4O_MINI },
+        { stepName: "Error Producing Query" }
+      )
+      .run()
 
-    expect(res.response).toEqual(
+    expect(result.steps[0].outputs.response).toEqual(
       "Error: An error occurred while calling createChatCompletion"
     )
-    expect(res.success).toBeFalsy()
+    expect(result.steps[0].outputs.success).toBeFalsy()
+  })
+
+  it("should ensure that the pro AI module is called when the budibase AI features are enabled", async () => {
+    jest.spyOn(pro.features, "isBudibaseAIEnabled").mockResolvedValue(true)
+    jest.spyOn(pro.features, "isAICustomConfigsEnabled").mockResolvedValue(true)
+
+    const prompt = "What is the meaning of life?"
+    await createAutomationBuilder({
+      name: "Test OpenAI Pro Features",
+      config,
+    })
+      .appAction({ fields: {} })
+      .openai(
+        {
+          model: Model.GPT_4O_MINI,
+          prompt,
+        },
+        { stepName: "Pro Features Query" }
+      )
+      .run()
+
+    expect(pro.ai.LargeLanguageModel.forCurrentTenant).toHaveBeenCalledWith(
+      "gpt-4o-mini"
+    )
+
+    const llmInstance =
+      mockedPro.ai.LargeLanguageModel.forCurrentTenant.mock.results[0].value
+    // init does not appear to be called currently
+    // expect(llmInstance.init).toHaveBeenCalled()
+    expect(llmInstance.run).toHaveBeenCalledWith(prompt)
   })
 })

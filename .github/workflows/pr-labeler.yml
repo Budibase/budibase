@@ -1,0 +1,39 @@
+name: PR labeler
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  size-labeler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: codelytv/pr-size-labeler@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_max_size: "10"
+          s_max_size: "100"
+          m_max_size: "500"
+          l_max_size: "1000"
+          fail_if_xl: "false"
+          files_to_ignore: "yarn.lock"
+          message_if_xl: ""
+
+  team-labeler:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.action == 'opened' }}
+    steps:
+      - uses: rodrigoarias/auto-label-per-user@v1.0.0
+        with:
+          git-token: ${{ secrets.GITHUB_TOKEN }}
+          user-team-map: |
+            {
+                "adrinr": "firestorm",
+                "samwho": "firestorm",
+                "PClmnt": "firestorm",
+                "mike12345567": "firestorm"
+            }

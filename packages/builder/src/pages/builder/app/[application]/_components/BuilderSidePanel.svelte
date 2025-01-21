@@ -14,7 +14,7 @@
     Button,
     FancySelect,
   } from "@budibase/bbui"
-  import { builderStore, appStore, roles } from "stores/builder"
+  import { builderStore, appStore, roles, appPublished } from "@/stores/builder"
   import {
     groups,
     licensing,
@@ -22,7 +22,7 @@
     users,
     auth,
     admin,
-  } from "stores/portal"
+  } from "@/stores/portal"
   import {
     fetchData,
     Constants,
@@ -30,12 +30,13 @@
     RoleUtils,
   } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
-  import { API } from "api"
+  import { API } from "@/api"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
-  import RoleSelect from "components/common/RoleSelect.svelte"
-  import UpgradeModal from "components/common/users/UpgradeModal.svelte"
-  import { emailValidator } from "helpers/validation"
+  import RoleSelect from "@/components/common/RoleSelect.svelte"
+  import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import { emailValidator } from "@/helpers/validation"
   import { fly } from "svelte/transition"
+  import InfoDisplay from "../design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   let query = null
   let loaded = false
@@ -235,13 +236,13 @@
     }
 
     if (!role) {
-      await groups.actions.removeApp(target._id, prodAppId)
+      await groups.removeApp(target._id, prodAppId)
     } else {
-      await groups.actions.addApp(target._id, prodAppId, role)
+      await groups.addApp(target._id, prodAppId, role)
     }
 
     await usersFetch.refresh()
-    await groups.actions.init()
+    await groups.init()
   }
 
   const onUpdateGroup = async (group, role) => {
@@ -267,7 +268,7 @@
       if (!group.roles) {
         return false
       }
-      return groups.actions.getGroupAppIds(group).includes(appId)
+      return groups.getGroupAppIds(group).includes(appId)
     })
   }
 
@@ -298,7 +299,7 @@
       role: group?.builder?.apps.includes(prodAppId)
         ? Constants.Roles.CREATOR
         : group.roles?.[
-            groups.actions.getGroupAppIds(group).find(x => x === prodAppId)
+            groups.getGroupAppIds(group).find(x => x === prodAppId)
           ],
     }
   }
@@ -367,20 +368,22 @@
     const payload = [
       {
         email: newUserEmail,
-        builder: {
-          global: creationRoleType === Constants.BudibaseRoles.Admin,
-          creator: creationRoleType === Constants.BudibaseRoles.Creator,
+        userInfo: {
+          builder: {
+            global: creationRoleType === Constants.BudibaseRoles.Admin,
+            creator: creationRoleType === Constants.BudibaseRoles.Creator,
+          },
+          admin: { global: creationRoleType === Constants.BudibaseRoles.Admin },
         },
-        admin: { global: creationRoleType === Constants.BudibaseRoles.Admin },
       },
     ]
 
     const notCreatingAdmin = creationRoleType !== Constants.BudibaseRoles.Admin
     const isCreator = creationAccessType === Constants.Roles.CREATOR
     if (notCreatingAdmin && isCreator) {
-      payload[0].builder.apps = [prodAppId]
+      payload[0].userInfo.builder.apps = [prodAppId]
     } else if (notCreatingAdmin && !isCreator) {
-      payload[0].apps = { [prodAppId]: creationAccessType }
+      payload[0].userInfo.apps = { [prodAppId]: creationAccessType }
     }
 
     let userInviteResponse
@@ -439,13 +442,11 @@
 
   const onUpdateUserInvite = async (invite, role) => {
     let updateBody = {
-      code: invite.code,
       apps: {
         ...invite.apps,
         [prodAppId]: role,
       },
     }
-
     if (role === Constants.Roles.CREATOR) {
       updateBody.builder = updateBody.builder || {}
       updateBody.builder.apps = [...(updateBody.builder.apps ?? []), prodAppId]
@@ -453,7 +454,7 @@
     } else if (role !== Constants.Roles.CREATOR && invite?.builder?.apps) {
       invite.builder.apps = []
     }
-    await users.updateInvite(updateBody)
+    await users.updateInvite(invite.code, updateBody)
     await filterInvites(query)
   }
 
@@ -467,8 +468,7 @@
     let updated = { ...invite }
     delete updated.info.apps[prodAppId]
 
-    return await users.updateInvite({
-      code: updated.code,
+    return await users.updateInvite(updated.code, {
       apps: updated.apps,
     })
   }
@@ -482,12 +482,12 @@
   }
 
   const removeGroupAppBuilder = async groupId => {
-    await groups.actions.removeGroupAppBuilder(groupId, prodAppId)
+    await groups.removeGroupAppBuilder(groupId, prodAppId)
   }
 
   const initSidePanel = async sidePaneOpen => {
     if (sidePaneOpen === true) {
-      await groups.actions.init()
+      await groups.init()
     }
     loaded = true
   }
@@ -608,6 +608,17 @@
     </div>
 
     <div class="body">
+      {#if !$appPublished}
+        <div class="alert">
+          <InfoDisplay
+            icon="AlertCircleFilled"
+            warning
+            title="App unpublished"
+            body="Users won't be able to access your app until you've published it"
+          />
+        </div>
+      {/if}
+
       {#if promptInvite && !userOnboardResponse}
         <Layout gap="S" paddingX="XL">
           <div class="invite-header">
@@ -623,7 +634,7 @@
       {/if}
 
       {#if !promptInvite}
-        <Layout gap="L" noPadding>
+        <Layout gap="M" noPadding>
           {#if filteredInvites?.length}
             <Layout noPadding gap="XS">
               <div class="auth-entity-header">
@@ -926,7 +937,7 @@
   .auth-entity,
   .auth-entity-header {
     display: grid;
-    grid-template-columns: 1fr 180px;
+    grid-template-columns: 1fr 220px;
     align-items: center;
     gap: var(--spacing-xl);
   }
@@ -957,7 +968,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     position: absolute;
-    width: 440px;
+    width: 480px;
     right: 0;
     height: 100%;
     box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
@@ -1033,5 +1044,8 @@
     flex-direction: column;
     gap: var(--spacing-xl);
     padding: var(--spacing-xl) 0;
+  }
+  .alert {
+    padding: 0 var(--spacing-xl);
   }
 </style>

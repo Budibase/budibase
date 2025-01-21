@@ -1,71 +1,61 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte"
   import InnerFormBlock from "./InnerFormBlock.svelte"
   import { Utils } from "@budibase/frontend-core"
   import FormBlockWrapper from "./FormBlockWrapper.svelte"
   import { get } from "svelte/store"
+  import { TableSchema, UIDatasource } from "@budibase/types"
 
-  export let actionType
-  export let dataSource
-  export let size
-  export let disabled
-  export let fields
-  export let buttons
-  export let buttonPosition
-  export let title
-  export let description
-  export let rowId
-  export let actionUrl
-  export let noRowsMessage
-  export let notificationOverride
+  type Field = { name: string; active: boolean }
+
+  export let actionType: string
+  export let dataSource: UIDatasource
+  export let size: string
+  export let disabled: boolean
+  export let fields: (Field | string)[]
+  export let buttons: {
+    "##eventHandlerType": string
+    parameters: Record<string, string>
+  }[]
+  export let buttonPosition: "top" | "bottom"
+  export let title: string
+  export let description: string
+  export let rowId: string
+  export let actionUrl: string
+  export let noRowsMessage: string
+  export let notificationOverride: boolean
+  export let buttonsCollapsed: boolean
+  export let buttonsCollapsedText: string
 
   // Legacy
-  export let showDeleteButton
-  export let showSaveButton
-  export let saveButtonLabel
-  export let deleteButtonLabel
+  export let showDeleteButton: boolean
+  export let showSaveButton: boolean
+  export let saveButtonLabel: boolean
+  export let deleteButtonLabel: boolean
 
   const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
   const component = getContext("component")
   const context = getContext("context")
 
-  let schema
+  let schema: TableSchema
 
-  $: formattedFields = convertOldFieldFormat(fields)
-  $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
   $: fetchSchema(dataSource)
   $: id = $component.id
-  // We could simply spread $$props into the inner form and append our
-  // additions, but that would create svelte warnings about unused props and
-  // make maintenance in future more confusing as we typically always have a
-  // proper mapping of schema settings to component exports, without having to
-  // search multiple files
-  $: innerProps = {
-    dataSource,
-    actionUrl,
-    actionType,
-    size,
-    disabled,
-    fields: fieldsOrDefault,
-    title,
-    description,
-    schema,
-    notificationOverride,
-    buttons:
-      buttons ||
-      Utils.buildFormBlockButtonConfig({
-        _id: id,
-        showDeleteButton,
-        showSaveButton,
-        saveButtonLabel,
-        deleteButtonLabel,
-        notificationOverride,
-        actionType,
-        actionUrl,
-        dataSource,
-      }),
-    buttonPosition: buttons ? buttonPosition : "top",
-  }
+  $: formattedFields = convertOldFieldFormat(fields)
+  $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
+  $: buttonsOrDefault =
+    buttons ||
+    Utils.buildFormBlockButtonConfig({
+      _id: id,
+      showDeleteButton,
+      showSaveButton,
+      saveButtonLabel,
+      deleteButtonLabel,
+      notificationOverride,
+      actionType,
+      actionUrl,
+      dataSource,
+    })
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
@@ -77,7 +67,7 @@
     }
   }
 
-  const convertOldFieldFormat = fields => {
+  const convertOldFieldFormat = (fields: (Field | string)[]): Field[] => {
     if (!fields) {
       return []
     }
@@ -98,11 +88,11 @@
     })
   }
 
-  const getDefaultFields = (fields, schema) => {
+  const getDefaultFields = (fields: Field[], schema: TableSchema) => {
     if (!schema) {
       return []
     }
-    let defaultFields = []
+    let defaultFields: Field[] = []
 
     if (!fields || fields.length === 0) {
       Object.values(schema)
@@ -117,11 +107,24 @@
     return [...fields, ...defaultFields].filter(field => field.active)
   }
 
-  const fetchSchema = async () => {
-    schema = (await fetchDatasourceSchema(dataSource)) || {}
+  const fetchSchema = async (datasource: UIDatasource) => {
+    schema = (await fetchDatasourceSchema(datasource)) || {}
   }
 </script>
 
 <FormBlockWrapper {actionType} {dataSource} {rowId} {noRowsMessage}>
-  <InnerFormBlock {...innerProps} />
+  <InnerFormBlock
+    {dataSource}
+    {actionType}
+    {size}
+    {disabled}
+    fields={fieldsOrDefault}
+    {title}
+    {description}
+    {schema}
+    buttons={buttonsOrDefault}
+    buttonPosition={buttons ? buttonPosition : "top"}
+    {buttonsCollapsed}
+    {buttonsCollapsedText}
+  />
 </FormBlockWrapper>

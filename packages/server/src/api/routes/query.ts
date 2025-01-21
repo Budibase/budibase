@@ -56,7 +56,7 @@ router
     "/api/v2/queries/:queryId",
     paramResource("queryId"),
     authorized(PermissionType.QUERY, PermissionLevel.WRITE),
-    queryController.executeV2 as any
+    queryController.executeV2
   )
 
 export default router

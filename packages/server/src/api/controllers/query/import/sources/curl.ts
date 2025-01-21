@@ -4,7 +4,7 @@ import { URL } from "url"
 
 const curlconverter = require("curlconverter")
 
-const parseCurl = (data: string): any => {
+const parseCurl = (data: string): Promise<any> => {
   const curlJson = curlconverter.toJsonString(data)
   return JSON.parse(curlJson)
 }
@@ -53,8 +53,7 @@ export class Curl extends ImportSource {
 
   isSupported = async (data: string): Promise<boolean> => {
     try {
-      const curl = parseCurl(data)
-      this.curl = curl
+      this.curl = parseCurl(data)
     } catch (err) {
       return false
     }

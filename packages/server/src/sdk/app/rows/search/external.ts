@@ -1,14 +1,15 @@
 import {
-  SortJson,
-  SortDirection,
+  IncludeRelationship,
   Operation,
   PaginationJson,
-  IncludeRelationship,
   Row,
-  SearchFilters,
   RowSearchParams,
+  SearchFilters,
   SearchResponse,
+  SortJson,
+  SortOrder,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import { handleRequest } from "../../../../api/controllers/row/external"
@@ -16,44 +17,73 @@ import {
   breakExternalTableId,
   breakRowIdField,
 } from "../../../../integrations/utils"
-import { utils } from "@budibase/shared-core"
+import { utils, PROTECTED_EXTERNAL_COLUMNS } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "./types"
-import { HTTPError, db } from "@budibase/backend-core"
+import { HTTPError } from "@budibase/backend-core"
 import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import sdk from "../../../"
+import { isSearchingByRowID } from "./utils"
+
+function getPaginationAndLimitParameters(
+  filters: SearchFilters,
+  paginate: boolean | undefined,
+  bookmark: number | undefined,
+  limit: number | undefined
+): PaginationJson | undefined {
+  let paginateObj: PaginationJson | undefined
+
+  // only try set limits/pagination if we aren't doing a row ID search
+  if (isSearchingByRowID(filters)) {
+    return
+  }
+
+  if (paginate && !limit) {
+    throw new Error("Cannot paginate query without a limit")
+  }
+
+  if (paginate && limit) {
+    paginateObj = {
+      // add one so we can track if there is another page
+      limit: limit + 1,
+    }
+    if (bookmark) {
+      paginateObj.offset = bookmark
+    }
+  } else if (limit) {
+    paginateObj = {
+      limit: limit,
+    }
+  }
+
+  return paginateObj
+}
 
 export async function search(
   options: RowSearchParams,
-  table: Table
+  source: Table | ViewV2
 ): Promise<SearchResponse<Row>> {
-  const { tableId } = options
-  const { paginate, query, ...params } = options
+  const { countRows, paginate, query, ...params } = options
   const { limit } = params
   let bookmark =
     (params.bookmark && parseInt(params.bookmark as string)) || undefined
   if (paginate && !bookmark) {
-    bookmark = 1
+    bookmark = 0
   }
-  let paginateObj = {}
 
-  if (paginate) {
-    paginateObj = {
-      // add one so we can track if there is another page
-      limit: limit,
-      page: bookmark,
-    }
-  } else if (params && limit) {
-    paginateObj = {
-      limit: limit,
-    }
-  }
+  let paginateObj = getPaginationAndLimitParameters(
+    query,
+    paginate,
+    bookmark,
+    limit
+  )
+
   let sort: SortJson | undefined
   if (params.sort) {
     const direction =
       params.sortOrder === "descending"
-        ? SortDirection.DESCENDING
-        : SortDirection.ASCENDING
+        ? SortOrder.DESCENDING
+        : SortOrder.ASCENDING
     sort = {
       [params.sort]: { direction },
     }
@@ -69,42 +99,59 @@ export async function search(
   }
 
   try {
-    let rows = await handleRequest(Operation.READ, tableId, {
+    const parameters = {
       filters: query,
       sort,
       paginate: paginateObj as PaginationJson,
       includeSqlRelationships: IncludeRelationship.INCLUDE,
-    })
-    let hasNextPage = false
-    if (paginate && rows.length === limit) {
-      const nextRows = await handleRequest(Operation.READ, tableId, {
-        filters: query,
-        sort,
-        paginate: {
-          limit: 1,
-          page: bookmark! * limit + 1,
-        },
-        includeSqlRelationships: IncludeRelationship.INCLUDE,
-      })
-      hasNextPage = nextRows.length > 0
     }
+    const [{ rows, rawResponseSize }, totalRows] = await Promise.all([
+      handleRequest(Operation.READ, source, parameters),
+      countRows
+        ? handleRequest(Operation.COUNT, source, parameters)
+        : Promise.resolve(undefined),
+    ])
 
-    if (options.fields) {
-      const fields = [...options.fields, ...db.CONSTANT_EXTERNAL_ROW_COLS]
-      rows = rows.map((r: any) => pick(r, fields))
-    }
-
-    rows = await outputProcessing<Row[]>(table, rows, {
+    let processed = await outputProcessing(source, rows, {
       preserveLinks: true,
       squash: true,
     })
 
+    let hasNextPage = false
+    // if the raw rows is greater than the limit then we likely need to paginate
+    if (paginate && limit && rawResponseSize > limit) {
+      hasNextPage = true
+      // processed rows has merged relationships down, this might not be more than limit
+      if (processed.length > limit) {
+        processed.pop()
+      }
+    }
+
+    const visibleFields =
+      options.fields ||
+      Object.keys(source.schema || {}).filter(
+        key => source.schema?.[key].visible !== false
+      )
+    const allowedFields = [...visibleFields, ...PROTECTED_EXTERNAL_COLUMNS]
+    processed = processed.map((r: any) => pick(r, allowedFields))
+
     // need wrapper object for bookmarks etc when paginating
-    return { rows, hasNextPage, bookmark: bookmark && bookmark + 1 }
+    const response: SearchResponse<Row> = { rows: processed, hasNextPage }
+    if (hasNextPage && bookmark != null) {
+      response.bookmark = bookmark + processed.length
+    }
+    if (totalRows != null) {
+      response.totalRows = totalRows
+    }
+    if (paginate && !hasNextPage) {
+      response.hasNextPage = false
+    }
+    return response
   } catch (err: any) {
     if (err.message && err.message.includes("does not exist")) {
       throw new Error(
-        `Table updated externally, please re-fetch - ${err.message}`
+        `Table updated externally, please re-fetch - ${err.message}`,
+        { cause: err }
       )
     } else {
       throw err
@@ -126,6 +173,10 @@ export async function exportRows(
     delimiter,
     customHeaders,
   } = options
+
+  if (!tableId) {
+    throw new HTTPError("No table ID for search provided.", 400)
+  }
   const { datasourceId, tableName } = breakExternalTableId(tableId)
 
   let requestQuery: SearchFilters = {}
@@ -135,10 +186,7 @@ export async function exportRows(
         _id: rowIds.map((row: string) => {
           const ids = breakRowIdField(row)
           if (ids.length > 1) {
-            throw new HTTPError(
-              "Export data does not support composite keys.",
-              400
-            )
+            return ids
           }
           return ids[0]
         }),
@@ -148,22 +196,18 @@ export async function exportRows(
     requestQuery = query || {}
   }
 
-  const datasource = await sdk.datasources.get(datasourceId!)
+  const datasource = await sdk.datasources.get(datasourceId)
   const table = await sdk.tables.getTable(tableId)
   if (!datasource || !datasource.entities) {
     throw new HTTPError("Datasource has not been configured for plus API.", 400)
   }
 
   let result = await search(
-    { tableId, query: requestQuery, sort, sortOrder },
+    { tableId: table._id!, query: requestQuery, sort, sortOrder },
     table
   )
   let rows: Row[] = []
   let headers
-
-  if (!tableName) {
-    throw new HTTPError("Could not find table name.", 400)
-  }
 
   // Filter data to only specified columns if required
   if (columns && columns.length) {
@@ -215,30 +259,20 @@ export async function exportRows(
 }
 
 export async function fetch(tableId: string): Promise<Row[]> {
-  const response = await handleRequest<Operation.READ>(
-    Operation.READ,
-    tableId,
-    {
-      includeSqlRelationships: IncludeRelationship.INCLUDE,
-    }
-  )
   const table = await sdk.tables.getTable(tableId)
-  return await outputProcessing<Row[]>(table, response, {
+  const response = await handleRequest(Operation.READ, table, {
+    includeSqlRelationships: IncludeRelationship.INCLUDE,
+  })
+  return await outputProcessing(table, response.rows, {
     preserveLinks: true,
     squash: true,
   })
 }
 
 export async function fetchRaw(tableId: string): Promise<Row[]> {
-  return await handleRequest<Operation.READ>(Operation.READ, tableId, {
+  const table = await sdk.tables.getTable(tableId)
+  const response = await handleRequest(Operation.READ, table, {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
-}
-
-export async function fetchView(viewName: string) {
-  // there are no views in external datasources, shouldn't ever be called
-  // for now just fetch
-  const split = viewName.split("all_")
-  const tableId = split[1] ? split[1] : split[0]
-  return fetch(tableId)
+  return response.rows
 }

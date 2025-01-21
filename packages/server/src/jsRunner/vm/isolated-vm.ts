@@ -7,14 +7,12 @@ import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
 import { Snippet, VM } from "@budibase/types"
-import { iifeWrapper } from "@budibase/string-templates"
+import { iifeWrapper, UserScriptError } from "@budibase/string-templates"
 import environment from "../../environment"
 
-class ExecutionTimeoutError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "ExecutionTimeoutError"
-  }
+export class JsRequestTimeoutError extends Error {
+  static code = "JS_REQUEST_TIMEOUT_ERROR"
+  code = JsRequestTimeoutError.code
 }
 
 export class IsolatedVM implements VM {
@@ -29,6 +27,7 @@ export class IsolatedVM implements VM {
 
   private readonly resultKey = "results"
   private runResultKey: string
+  private runErrorKey: string
 
   constructor({
     memoryLimit,
@@ -47,6 +46,7 @@ export class IsolatedVM implements VM {
     this.jail.setSync("global", this.jail.derefInto())
 
     this.runResultKey = crypto.randomUUID()
+    this.runErrorKey = crypto.randomUUID()
     this.addToContext({
       [this.resultKey]: { [this.runResultKey]: "" },
     })
@@ -72,7 +72,7 @@ export class IsolatedVM implements VM {
 
     this.addToContext({
       helpersStripProtocol: new ivm.Callback((str: string) => {
-        var parsed = url.parse(str) as any
+        let parsed = url.parse(str) as any
         parsed.protocol = ""
         return parsed.format()
       }),
@@ -86,6 +86,7 @@ export class IsolatedVM implements VM {
         }
       }`
     const helpersSource = loadBundle(BundleType.HELPERS)
+
     const script = this.isolate.compileScriptSync(
       `${injectedRequire};${helpersSource};helpers=helpers.default`
     )
@@ -110,6 +111,19 @@ export class IsolatedVM implements VM {
       const snippetCache = {};
       ${snippetsSource};
       snippets = snippets.default;
+    `)
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
+    new Promise(() => {
+      script.release()
+    })
+    return this
+  }
+
+  withBuffer() {
+    const bufferSource = loadBundle(BundleType.BUFFER)
+    const script = this.isolate.compileScriptSync(`
+      ${bufferSource};
+      const Buffer = buffer.default;
     `)
     script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
     new Promise(() => {
@@ -196,13 +210,19 @@ export class IsolatedVM implements VM {
     if (this.isolateAccumulatedTimeout) {
       const cpuMs = Number(this.isolate.cpuTime) / 1e6
       if (cpuMs > this.isolateAccumulatedTimeout) {
-        throw new ExecutionTimeoutError(
+        throw new JsRequestTimeoutError(
           `CPU time limit exceeded (${cpuMs}ms > ${this.isolateAccumulatedTimeout}ms)`
         )
       }
     }
 
-    code = `results['${this.runResultKey}']=${this.codeWrapper(code)}`
+    code = `
+      try {
+        results['${this.runResultKey}']=${this.codeWrapper(code)}
+      } catch (e) {
+        results['${this.runErrorKey}']=e
+      }
+    `
 
     const script = this.isolate.compileScriptSync(code)
 
@@ -213,6 +233,9 @@ export class IsolatedVM implements VM {
 
     // We can't rely on the script run result as it will not work for non-transferable values
     const result = this.getFromContext(this.resultKey)
+    if (result[this.runErrorKey]) {
+      throw new UserScriptError(result[this.runErrorKey])
+    }
     return result[this.runResultKey]
   }
 

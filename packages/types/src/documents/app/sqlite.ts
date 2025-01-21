@@ -20,6 +20,7 @@ export type SQLiteTables = Record<
 
 export interface SQLiteDefinition {
   _id: string
+  _rev: string
   language: string
   sql: {
     tables: SQLiteTables
@@ -27,4 +28,9 @@ export interface SQLiteDefinition {
       table_name: string
     }
   }
+}
+
+export interface PreSaveSQLiteDefinition
+  extends Omit<SQLiteDefinition, "_rev"> {
+  _rev?: string
 }

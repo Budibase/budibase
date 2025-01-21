@@ -1,13 +1,14 @@
 <script>
-  import { tables } from "stores/builder"
+  import { tables } from "@/stores/builder"
   import { Select } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { TableNames } from "constants"
+  import { TableNames } from "@/constants"
 
   const dispatch = createEventDispatcher()
 
   export let value
   export let isTrigger
+  export let disabled = false
 
   $: filteredTables = $tables.list.filter(table => {
     return !isTrigger || table._id !== TableNames.USERS
@@ -25,4 +26,5 @@
   options={filteredTables}
   getOptionLabel={table => table.name}
   getOptionValue={table => table._id}
+  {disabled}
 />

@@ -19,6 +19,8 @@
   export let searchTerm = null
   export let customPopoverHeight
   export let helpText = null
+  export let onOptionMouseenter = () => {}
+  export let onOptionMouseleave = () => {}
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -41,6 +43,8 @@
     {autoWidth}
     {autocomplete}
     {customPopoverHeight}
+    {onOptionMouseenter}
+    {onOptionMouseleave}
     bind:searchTerm
     on:change={onChange}
     on:click

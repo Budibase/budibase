@@ -1,11 +1,6 @@
-import TestConfiguration from "../TestConfiguration"
 import { TestAPI, TestAPIOpts } from "./base"
 
 export class AuthAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   updatePassword = (
     resetCode: string,
     password: string,

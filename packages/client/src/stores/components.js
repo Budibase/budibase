@@ -6,7 +6,7 @@ import { screenStore } from "./screens"
 import { builderStore } from "./builder"
 import Router from "../components/Router.svelte"
 import * as AppComponents from "../components/app/index.js"
-import { ScreenslotType } from "../constants.js"
+import { ScreenslotType } from "../constants"
 
 export const BudibasePrefix = "@budibase/standard-components/"
 
@@ -142,9 +142,6 @@ const createComponentStore = () => {
   }
 
   const getComponentInstance = id => {
-    if (!id) {
-      return null
-    }
     return derived(store, $store => $store.mountedComponents[id])
   }
 

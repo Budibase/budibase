@@ -1,9 +1,5 @@
 {
   "extends": "./tsconfig.build.json",
-  "compilerOptions": {
-    "composite": true,
-    "baseUrl": "."
-  },
   "ts-node": {
     "require": ["tsconfig-paths/register"],
     "swc": true

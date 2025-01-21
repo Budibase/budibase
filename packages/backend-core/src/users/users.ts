@@ -17,8 +17,6 @@ import {
   ContextUser,
   CouchFindOptions,
   DatabaseQueryOpts,
-  SearchFilters,
-  SearchFilterOperator,
   SearchUsersRequest,
   User,
 } from "@budibase/types"
@@ -26,6 +24,7 @@ import * as context from "../context"
 import { getGlobalDB } from "../context"
 import { isCreator } from "./utils"
 import { UserDB } from "./db"
+import { dataFilters } from "@budibase/shared-core"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -42,32 +41,6 @@ function removeUserPassword(users: User | User[]) {
     return users
   }
   return users
-}
-
-export function isSupportedUserSearch(query: SearchFilters) {
-  const allowed = [
-    { op: SearchFilterOperator.STRING, key: "email" },
-    { op: SearchFilterOperator.EQUAL, key: "_id" },
-    { op: SearchFilterOperator.ONE_OF, key: "_id" },
-  ]
-  for (let [key, operation] of Object.entries(query)) {
-    if (typeof operation !== "object") {
-      return false
-    }
-    const fields = Object.keys(operation || {})
-    // this filter doesn't contain options - ignore
-    if (fields.length === 0) {
-      continue
-    }
-    const allowedOperation = allowed.find(
-      allow =>
-        allow.op === key && fields.length === 1 && fields[0] === allow.key
-    )
-    if (!allowedOperation) {
-      return false
-    }
-  }
-  return true
 }
 
 export async function bulkGetGlobalUsersById(
@@ -95,6 +68,17 @@ export async function getAllUserIds() {
     endkey: `${startKey}${UNICODE_MAX}`,
   })
   return response.rows.map(row => row.id)
+}
+
+export async function getAllUsers(): Promise<User[]> {
+  const db = getGlobalDB()
+  const startKey = `${DocumentType.USER}${SEPARATOR}`
+  const response = await db.allDocs({
+    startkey: startKey,
+    endkey: `${startKey}${UNICODE_MAX}`,
+    include_docs: true,
+  })
+  return response.rows.map(row => row.doc) as User[]
 }
 
 export async function bulkUpdateGlobalUsers(users: User[]) {
@@ -290,10 +274,17 @@ export async function paginatedUsers({
     userList = await bulkGetGlobalUsersById(query?.oneOf?._id, {
       cleanup: true,
     })
+  } else if (query) {
+    // TODO: this should use SQS search, but the logic is built in the 'server' package. Using the in-memory filtering to get this working meanwhile
+    const response = await db.allDocs<User>(
+      getGlobalUserParams(null, { ...opts, limit: undefined })
+    )
+    userList = response.rows.map(row => row.doc!)
+    userList = dataFilters.search(userList, { query, limit: opts.limit }).rows
   } else {
     // no search, query allDocs
-    const response = await db.allDocs(getGlobalUserParams(null, opts))
-    userList = response.rows.map((row: any) => row.doc)
+    const response = await db.allDocs<User>(getGlobalUserParams(null, opts))
+    userList = response.rows.map(row => row.doc!)
   }
   return pagination(userList, pageSize, {
     paginate: true,

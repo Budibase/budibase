@@ -1,19 +1,13 @@
 <script>
   import { goto, url } from "@roxi/routify"
-  import { tables, datasources } from "stores/builder"
-  import {
-    notifications,
-    Input,
-    Label,
-    ModalContent,
-    Layout,
-  } from "@budibase/bbui"
+  import { tables, datasources } from "@/stores/builder"
+  import { notifications, Input, ModalContent } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import {
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
     DB_TYPE_INTERNAL,
-  } from "constants/backend"
+  } from "@/constants/backend"
 
   $: tableNames = $tables.list.map(table => table.name)
   $: selectedSource = $datasources.list.find(
@@ -78,7 +72,7 @@
       await datasources.fetch()
       await afterSave(table)
     } catch (e) {
-      notifications.error(e)
+      notifications.error(e.message || e)
       // reload in case the table was created
       await tables.fetch()
     }
@@ -92,6 +86,7 @@
   disabled={error ||
     !name ||
     (rows.length && (!allValid || displayColumn == null))}
+  size="M"
 >
   <Input
     thin
@@ -100,18 +95,11 @@
     bind:value={name}
     {error}
   />
-  <div>
-    <Layout gap="XS" noPadding>
-      <Label grey extraSmall
-        >Create a Table from a CSV or JSON file (Optional)</Label
-      >
-      <TableDataImport
-        {promptUpload}
-        bind:rows
-        bind:schema
-        bind:allValid
-        bind:displayColumn
-      />
-    </Layout>
-  </div>
+  <TableDataImport
+    {promptUpload}
+    bind:rows
+    bind:schema
+    bind:allValid
+    bind:displayColumn
+  />
 </ModalContent>

@@ -8,6 +8,7 @@
   export let onConfirm = undefined
   export let buttonText = ""
   export let cta = false
+
   $: icon = selectIcon(type)
   // if newlines used, convert them to different elements
   $: split = message.split("\n")
@@ -36,9 +37,11 @@
     <use xlink:href="#spectrum-icon-18-{icon}" />
   </svg>
   <div class="spectrum-InLineAlert-header">{header}</div>
-  {#each split as splitMsg}
-    <div class="spectrum-InLineAlert-content">{splitMsg}</div>
-  {/each}
+  <slot>
+    {#each split as splitMsg}
+      <div class="spectrum-InLineAlert-content">{splitMsg}</div>
+    {/each}
+  </slot>
   {#if onConfirm}
     <div class="spectrum-InLineAlert-footer button">
       <Button {cta} secondary={cta ? false : true} on:click={onConfirm}

@@ -5,7 +5,7 @@
   const {
     rowHeight,
     scroll,
-    focusedCellId,
+    ui,
     renderedRows,
     maxScrollTop,
     maxScrollLeft,
@@ -13,22 +13,25 @@
     hoveredRowId,
     menu,
     focusedCellAPI,
+    scrollTop,
+    scrollLeft,
   } = getContext("grid")
 
   export let scrollVertically = false
   export let scrollHorizontally = false
   export let attachHandlers = false
+  export let ref
 
   // Used for tracking touch events
   let initialTouchX
   let initialTouchY
 
-  $: style = generateStyle($scroll, $rowHeight)
+  $: style = generateStyle($scrollLeft, $scrollTop, $rowHeight)
 
-  const generateStyle = (scroll, rowHeight) => {
-    const offsetX = scrollHorizontally ? -1 * scroll.left : 0
-    const offsetY = scrollVertically ? -1 * (scroll.top % rowHeight) : 0
-    return `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
+  const generateStyle = (scrollLeft, scrollTop, rowHeight) => {
+    const offsetX = scrollHorizontally ? -1 * scrollLeft : 0
+    const offsetY = scrollVertically ? -1 * (scrollTop % rowHeight) : 0
+    return `transform: translate(${offsetX}px, ${offsetY}px);`
   }
 
   // Handles a mouse wheel event and updates scroll state
@@ -107,9 +110,9 @@
   on:wheel={attachHandlers ? handleWheel : null}
   on:touchstart={attachHandlers ? handleTouchStart : null}
   on:touchmove={attachHandlers ? handleTouchMove : null}
-  on:click|self={() => ($focusedCellId = null)}
+  on:click|self={ui.actions.blur}
 >
-  <div {style} class="inner">
+  <div {style} class="inner" bind:this={ref}>
     <slot />
   </div>
 </div>

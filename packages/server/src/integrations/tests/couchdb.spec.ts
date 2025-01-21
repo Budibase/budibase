@@ -6,7 +6,6 @@ jest.mock("@budibase/backend-core", () => {
       ...core.db,
       DatabaseWithConnection: function () {
         return {
-          post: jest.fn(),
           allDocs: jest.fn().mockReturnValue({ rows: [] }),
           put: jest.fn(),
           get: jest.fn().mockReturnValue({ _rev: "a" }),
@@ -43,7 +42,7 @@ describe("CouchDB Integration", () => {
     await config.integration.create({
       json: JSON.stringify(doc),
     })
-    expect(config.integration.client.post).toHaveBeenCalledWith(doc)
+    expect(config.integration.client.put).toHaveBeenCalledWith(doc)
   })
 
   it("calls the read method with the correct params", async () => {
@@ -80,7 +79,6 @@ describe("CouchDB Integration", () => {
   it("calls the delete method with the correct params", async () => {
     const id = "1234"
     await config.integration.delete({ id })
-    expect(config.integration.client.get).toHaveBeenCalledWith(id)
-    expect(config.integration.client.remove).toHaveBeenCalled()
+    expect(config.integration.client.remove).toHaveBeenCalledWith(id)
   })
 })

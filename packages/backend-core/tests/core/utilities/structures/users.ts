@@ -21,11 +21,10 @@ export const user = (userProps?: Partial<Omit<User, "userId">>): User => {
     _id: userId,
     userId,
     email: newEmail(),
-    password: "password",
+    password: "password123!",
     roles: { app_test: "admin" },
     firstName: generator.first(),
     lastName: generator.last(),
-    pictureUrl: "http://example.com",
     tenantId: tenant.id(),
     ...userProps,
   }
@@ -86,9 +85,5 @@ export function ssoUser(
     oauth2: opts.details?.oauth2,
     provider: opts.details?.provider!,
     providerType: opts.details?.providerType!,
-    thirdPartyProfile: {
-      email: base.email,
-      picture: base.pictureUrl,
-    },
   }
 }

@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
-import { builderStore } from "stores/builder"
-import { auth } from "stores/portal"
-import analytics from "analytics"
+import { builderStore } from "@/stores/builder"
+import { auth } from "@/stores/portal"
+import analytics from "@/analytics"
 import {
   OnboardingData,
   OnboardingDesign,
@@ -9,8 +9,7 @@ import {
   NewViewUpdateFormRowId,
   NewFormSteps,
 } from "./steps"
-import { API } from "api"
-import { customPositionHandler } from "components/design/settings/controls/EditComponentPopover"
+import { API } from "@/api"
 
 const ONBOARDING_EVENT_PREFIX = "onboarding"
 
@@ -187,7 +186,6 @@ const getTours = () => {
             tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_CREATE_STEPS)
             builderStore.highlightSetting("steps", "info")
           },
-          positionHandler: customPositionHandler,
           align: "left-outside",
         },
       ],
@@ -203,7 +201,6 @@ const getTours = () => {
             tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_ROW_ID)
             builderStore.highlightSetting("rowId", "info")
           },
-          positionHandler: customPositionHandler,
           align: "left-outside",
         },
         {
@@ -219,7 +216,6 @@ const getTours = () => {
             tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_VIEW_UPDATE_STEPS)
             builderStore.highlightSetting("steps", "info")
           },
-          positionHandler: customPositionHandler,
           align: "left-outside",
           scrollIntoView: true,
         },

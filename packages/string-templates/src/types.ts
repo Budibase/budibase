@@ -3,6 +3,8 @@ export interface ProcessOptions {
   noEscaping?: boolean
   noHelpers?: boolean
   noFinalise?: boolean
+  noThrow?: boolean
   escapeNewlines?: boolean
   onlyFound?: boolean
+  disabledHelpers?: string[]
 }

@@ -1,9 +1,9 @@
 <script>
   import { Input, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { appsStore } from "stores/portal"
-  import { API } from "api"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { appsStore } from "@/stores/portal"
+  import { API } from "@/api"
 
   export let appId
   export let appName
@@ -38,6 +38,7 @@
       await API.deleteApp(appId)
       appsStore.load()
       notifications.success("App deleted successfully")
+      deleting = false
       onDeleteSuccess()
     } catch (err) {
       notifications.error("Error deleting app")

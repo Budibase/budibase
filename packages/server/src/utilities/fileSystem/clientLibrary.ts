@@ -1,3 +1,4 @@
+import semver from "semver"
 import path, { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
 import fs from "fs"
@@ -182,4 +183,20 @@ export async function revertClientLibrary(appId: string) {
   await Promise.all([manifestSrc, manifestUpload, clientUpload])
 
   return JSON.parse(await manifestSrc)
+}
+
+export function shouldServeLocally(version: string) {
+  if (env.isProd() || !env.isDev()) {
+    return false
+  }
+
+  if (version === "0.0.0") {
+    return true
+  }
+
+  const parsedSemver = semver.parse(version)
+  if (parsedSemver?.build?.[0] === "local") {
+    return true
+  }
+  return false
 }

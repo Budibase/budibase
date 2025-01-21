@@ -58,12 +58,9 @@ if (apiEnabled()) {
       })
     )
     .use(pro.licensing())
-    // @ts-ignore
     .use(currentApp)
     .use(auth.auditLog)
-    // @ts-ignore
     .use(migrations)
-    // @ts-ignore
     .use(cleanup)
 
   // authenticated routes

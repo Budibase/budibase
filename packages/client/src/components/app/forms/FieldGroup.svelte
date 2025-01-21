@@ -1,6 +1,6 @@
 <script>
   import { getContext, setContext } from "svelte"
-  import Section from "../Section.svelte"
+  import Section from "../deprecated/Section.svelte"
 
   export let labelPosition = "above"
   export let type = "oneColumn"

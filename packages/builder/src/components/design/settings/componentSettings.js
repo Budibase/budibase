@@ -1,5 +1,5 @@
 import { Checkbox, Select, RadioGroup, Stepper, Input } from "@budibase/bbui"
-import { licensing } from "stores/portal"
+import { licensing } from "@/stores/portal"
 import { get } from "svelte/store"
 import DataSourceSelect from "./controls/DataSourceSelect/DataSourceSelect.svelte"
 import ObjectStoreSelect from "./controls/ObjectStoreSelect.svelte"
@@ -19,7 +19,7 @@ import URLSelect from "./controls/URLSelect.svelte"
 import OptionsEditor from "./controls/OptionsEditor/OptionsEditor.svelte"
 import FormFieldSelect from "./controls/FormFieldSelect.svelte"
 import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelte"
-import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
 import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
 import GridColumnEditor from "./controls/GridColumnConfiguration/GridColumnConfiguration.svelte"
@@ -30,6 +30,7 @@ import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte
 import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
 import FormStepControls from "./controls/FormStepControls.svelte"
 import PaywalledSetting from "./controls/PaywalledSetting.svelte"
+import TableConditionEditor from "./controls/TableConditionEditor.svelte"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -61,6 +62,7 @@ const componentMap = {
   columns: ColumnEditor,
   "columns/basic": BasicColumnEditor,
   "columns/grid": GridColumnEditor,
+  tableConditions: TableConditionEditor,
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
@@ -77,7 +79,9 @@ const componentMap = {
   "field/array": FormFieldSelect,
   "field/json": FormFieldSelect,
   "field/barcodeqr": FormFieldSelect,
+  "field/signature_single": FormFieldSelect,
   "field/bb_reference": FormFieldSelect,
+  "field/bb_reference_single": FormFieldSelect,
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,
@@ -86,6 +90,8 @@ const componentMap = {
   "validation/boolean": ValidationEditor,
   "validation/datetime": ValidationEditor,
   "validation/attachment": ValidationEditor,
+  "validation/attachment_single": ValidationEditor,
+  "validation/signature_single": ValidationEditor,
   "validation/link": ValidationEditor,
   "validation/bb_reference": ValidationEditor,
 }

@@ -1,21 +1,22 @@
 <script>
   import CreateAutomationModal from "./CreateAutomationModal.svelte"
   import { Modal, notifications, Layout } from "@budibase/bbui"
-  import NavHeader from "components/common/NavHeader.svelte"
+  import NavHeader from "@/components/common/NavHeader.svelte"
   import { onMount } from "svelte"
-  import {
-    automationStore,
-    selectedAutomation,
-    userSelectedResourceMap,
-  } from "stores/builder"
-  import NavItem from "components/common/NavItem.svelte"
-  import EditAutomationPopover from "./EditAutomationPopover.svelte"
+  import { automationStore, tables } from "@/stores/builder"
+  import AutomationNavItem from "./AutomationNavItem.svelte"
+  import { TriggerStepID } from "@/constants/backend/automations"
 
   export let modal
   export let webhookModal
   let searchString
 
-  $: selectedAutomationId = $selectedAutomation?._id
+  const dsTriggers = [
+    TriggerStepID.ROW_SAVED,
+    TriggerStepID.ROW_UPDATED,
+    TriggerStepID.ROW_DELETED,
+    TriggerStepID.ROW_ACTION,
+  ]
 
   $: filteredAutomations = $automationStore.automations
     .filter(automation => {
@@ -30,7 +31,46 @@
       return lowerA > lowerB ? 1 : -1
     })
 
+  $: groupedAutomations = groupAutomations(filteredAutomations)
+
   $: showNoResults = searchString && !filteredAutomations.length
+
+  const groupAutomations = automations => {
+    let groups = {}
+
+    for (let auto of automations) {
+      let category = null
+      let dataTrigger = false
+
+      // Group by datasource if possible
+      if (dsTriggers.includes(auto.definition?.trigger?.stepId)) {
+        if (auto.definition.trigger.inputs?.tableId) {
+          const tableId = auto.definition.trigger.inputs?.tableId
+          category = $tables.list.find(x => x._id === tableId)?.name
+        }
+      }
+      // Otherwise group by trigger
+      if (!category) {
+        category = auto.definition?.trigger?.name || "No Trigger"
+      } else {
+        dataTrigger = true
+      }
+      groups[category] ??= {
+        icon: auto.definition?.trigger?.icon || "AlertCircle",
+        name: category.toUpperCase(),
+        entries: [],
+        dataTrigger,
+      }
+      groups[category].entries.push(auto)
+    }
+
+    return Object.values(groups).sort((a, b) => {
+      if (a.dataTrigger === b.dataTrigger) {
+        return a.name < b.name ? -1 : 1
+      }
+      return a.dataTrigger ? -1 : 1
+    })
+  }
 
   onMount(async () => {
     try {
@@ -39,10 +79,6 @@
       notifications.error("Error getting automations list")
     }
   })
-
-  function selectAutomation(id) {
-    automationStore.actions.select(id)
-  }
 </script>
 
 <div class="side-bar">
@@ -55,15 +91,15 @@
     />
   </div>
   <div class="side-bar-nav">
-    {#each filteredAutomations as automation}
-      <NavItem
-        text={automation.name}
-        selected={automation._id === selectedAutomationId}
-        on:click={() => selectAutomation(automation._id)}
-        selectedBy={$userSelectedResourceMap[automation._id]}
-      >
-        <EditAutomationPopover {automation} />
-      </NavItem>
+    {#each Object.values(groupedAutomations || {}) as triggerGroup}
+      <div class="nav-group">
+        <div class="nav-group-header" title={triggerGroup?.name}>
+          {triggerGroup?.name}
+        </div>
+        {#each triggerGroup.entries as automation}
+          <AutomationNavItem {automation} icon={triggerGroup.icon} />
+        {/each}
+      </div>
     {/each}
 
     {#if showNoResults}
@@ -81,6 +117,23 @@
 </Modal>
 
 <style>
+  .nav-group {
+    padding-top: 24px;
+  }
+  .nav-group:first-child {
+    padding-top: var(--spacing-s);
+  }
+  .nav-group-header {
+    color: var(--spectrum-global-color-gray-600);
+    padding: 0px calc(var(--spacing-l) + 4px);
+    padding-bottom: var(--spacing-m);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
   .side-bar {
     flex: 0 0 260px;
     display: flex;
@@ -103,7 +156,7 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-l);
-    padding: 0 var(--spacing-l);
+    padding: 0 calc(var(--spacing-l) + 4px);
   }
   .side-bar-nav {
     flex: 1 1 auto;

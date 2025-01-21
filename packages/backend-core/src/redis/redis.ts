@@ -111,6 +111,10 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   CLIENTS[selectDb] = client
 }
 
+export function closeAll() {
+  Object.values(CLIENTS).forEach(client => client.disconnect())
+}
+
 function waitForConnection(selectDb: number = DEFAULT_SELECT_DB) {
   return new Promise(resolve => {
     if (pickClient(selectDb) == null) {

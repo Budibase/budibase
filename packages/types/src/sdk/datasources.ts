@@ -1,5 +1,5 @@
 import { Table, Row } from "../documents"
-import { QueryJson } from "./search"
+import { EnrichedQueryJson } from "./search"
 
 export const PASSWORD_REPLACEMENT = "--secret-value--"
 
@@ -8,7 +8,9 @@ export enum Operation {
   READ = "READ",
   UPDATE = "UPDATE",
   DELETE = "DELETE",
+  COUNT = "COUNT",
   BULK_CREATE = "BULK_CREATE",
+  BULK_UPSERT = "BULK_UPSERT",
   CREATE_TABLE = "CREATE_TABLE",
   UPDATE_TABLE = "UPDATE_TABLE",
   DELETE_TABLE = "DELETE_TABLE",
@@ -20,12 +22,8 @@ export const RowOperations = [
   Operation.UPDATE,
   Operation.DELETE,
   Operation.BULK_CREATE,
+  Operation.BULK_UPSERT,
 ]
-
-export enum SortDirection {
-  ASCENDING = "ASCENDING",
-  DESCENDING = "DESCENDING",
-}
 
 export enum QueryType {
   SQL = "sql",
@@ -122,6 +120,7 @@ interface DatasourceBasicFieldConfig {
   default?: any
   deprecated?: boolean
   hidden?: string
+  placeholder?: string
 }
 
 interface DatasourceSelectFieldConfig extends DatasourceBasicFieldConfig {
@@ -192,7 +191,7 @@ export interface Schema {
 }
 
 // return these when an operation occurred but we got no response
-enum DSPlusOperation {
+export enum DSPlusOperation {
   CREATE = "create",
   READ = "read",
   UPDATE = "update",
@@ -202,6 +201,7 @@ enum DSPlusOperation {
 export type DatasourcePlusQueryResponse =
   | Row[]
   | Record<DSPlusOperation, boolean>[]
+  | { total: number }[]
   | void
 
 export interface DatasourcePlus extends IntegrationBase {
@@ -209,7 +209,7 @@ export interface DatasourcePlus extends IntegrationBase {
   // this returns the format of the identifier
   getBindingIdentifier(): string
   getStringConcat(parts: string[]): string
-  query(json: QueryJson): Promise<DatasourcePlusQueryResponse>
+  query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse>
   buildSchema(
     datasourceId: string,
     entities: Record<string, Table>

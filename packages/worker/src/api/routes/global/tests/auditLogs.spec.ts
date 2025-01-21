@@ -12,7 +12,7 @@ const BASE_IDENTITY = {
 const USER_AUDIT_LOG_COUNT = 3
 const APP_ID = "app_1"
 
-describe("/api/global/auditlogs", () => {
+describe("/api/global/auditlogs (%s)", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {

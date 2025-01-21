@@ -25,6 +25,11 @@ export async function getUserDoc(emailOrId: string): Promise<PlatformUser> {
   return db.get(emailOrId)
 }
 
+export async function updateUserDoc(platformUser: PlatformUserById) {
+  const db = getPlatformDB()
+  await db.put(platformUser)
+}
+
 // CREATE
 
 function newUserIdDoc(id: string, tenantId: string): PlatformUserById {
@@ -113,15 +118,12 @@ export async function addUser(
 export async function removeUser(user: User) {
   const db = getPlatformDB()
   const keys = [user._id!, user.email]
-  const userDocs = await db.allDocs({
+  const userDocs = await db.allDocs<User>({
     keys,
     include_docs: true,
   })
-  const toDelete = userDocs.rows.map((row: any) => {
-    return {
-      ...row.doc,
-      _deleted: true,
-    }
-  })
-  await db.bulkDocs(toDelete)
+  await db.bulkRemove(
+    userDocs.rows.map(row => row.doc!),
+    { silenceErrors: true }
+  )
 }

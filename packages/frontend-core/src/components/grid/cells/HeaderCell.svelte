@@ -1,12 +1,12 @@
 <script>
   import { getContext, onMount, tick } from "svelte"
-  import { canBeDisplayColumn, canBeSortColumn } from "@budibase/shared-core"
+  import { canBeSortColumn, canBeDisplayColumn } from "@budibase/frontend-core"
   import { Icon, Menu, MenuItem, Modal } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
-  import { getColumnIcon } from "../lib/utils"
+  import { getColumnIcon } from "../../../utils/schema"
   import MigrationModal from "../controls/MigrationModal.svelte"
   import { debounce } from "../../../utils/utils"
-  import { FieldType, FormulaType } from "@budibase/types"
+  import { FieldType, FormulaType, SortOrder } from "@budibase/types"
   import { TableNames } from "../../../constants"
   import GridPopover from "../overlays/GridPopover.svelte"
 
@@ -18,18 +18,18 @@
     isReordering,
     isResizing,
     sort,
-    visibleColumns,
+    scrollableColumns,
     dispatch,
     subscribe,
     config,
     ui,
-    columns,
     definition,
     datasource,
     schema,
     focusedCellId,
     filter,
     inlineFilters,
+    keyboardBlocked,
   } = getContext("grid")
 
   const searchableTypes = [
@@ -51,21 +51,29 @@
 
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
-  $: canMoveRight = orderable && idx < $visibleColumns.length - 1
-  $: sortingLabels = getSortingLabels(column.schema?.type)
+  $: canMoveRight = orderable && idx < $scrollableColumns.length - 1
+  $: sortingLabels = getSortingLabels(column)
   $: searchable = isColumnSearchable(column)
   $: resetSearchValue(column.name)
   $: searching = searchValue != null
   $: debouncedUpdateFilter(searchValue)
   $: orderable = !column.primaryDisplay
+  $: editable = $config.canEditColumns && !column.schema.disabled
+  $: keyboardBlocked.set(open)
 
   const close = () => {
     open = false
     editIsOpen = false
   }
 
-  const getSortingLabels = type => {
-    switch (type) {
+  const getSortingLabels = column => {
+    if (column.calculationType) {
+      return {
+        ascending: "low-high",
+        descending: "high-low",
+      }
+    }
+    switch (column?.schema?.type) {
       case FieldType.NUMBER:
       case FieldType.BIGINT:
         return {
@@ -93,7 +101,8 @@
     const { type, formulaType } = col.schema
     return (
       searchableTypes.includes(type) ||
-      (type === FieldType.FORMULA && formulaType === FormulaType.STATIC)
+      (type === FieldType.FORMULA && formulaType === FormulaType.STATIC) ||
+      type === FieldType.AI
     )
   }
 
@@ -134,7 +143,7 @@
   const sortAscending = () => {
     sort.set({
       column: column.name,
-      order: "ascending",
+      order: SortOrder.ASCENDING,
     })
     open = false
   }
@@ -142,7 +151,7 @@
   const sortDescending = () => {
     sort.set({
       column: column.name,
-      order: "descending",
+      order: SortOrder.DESCENDING,
     })
     open = false
   }
@@ -158,17 +167,23 @@
   }
 
   const makeDisplayColumn = () => {
-    columns.actions.changePrimaryDisplay(column.name)
+    datasource.actions.changePrimaryDisplay(column.name)
     open = false
   }
 
   const hideColumn = () => {
-    columns.update(state => {
-      const index = state.findIndex(col => col.name === column.name)
-      state[index].visible = false
-      return state.slice()
-    })
-    columns.actions.saveChanges()
+    const { related } = column
+    const mutation = { visible: false }
+    if (!related) {
+      datasource.actions.addSchemaMutation(column.name, mutation)
+    } else {
+      datasource.actions.addSubSchemaMutation(
+        related.subField,
+        related.field,
+        mutation
+      )
+    }
+    datasource.actions.saveSchemaMutations()
     open = false
   }
 
@@ -236,6 +251,14 @@
   }
   const debouncedUpdateFilter = debounce(updateFilter, 250)
 
+  const handleDoubleClick = () => {
+    if (!editable || searching) {
+      return
+    }
+    open = true
+    editColumn()
+  }
+
   onMount(() => subscribe("close-edit-column", close))
 </script>
 
@@ -246,14 +269,15 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
+  bind:this={anchor}
   class="header-cell"
+  style="flex: 0 0 {column.width}px;"
   class:open
   class:searchable
   class:searching
-  style="flex: 0 0 {column.width}px;"
-  bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
   class:sticky={idx === "sticky"}
+  on:dblclick={handleDoubleClick}
 >
   <GridCell
     on:mousedown={onMouseDown}
@@ -263,7 +287,7 @@
     on:touchcancel={onMouseUp}
     on:contextmenu={onContextMenu}
     width={column.width}
-    left={column.left}
+    left={column.__left}
     defaultHeight
     center
   >
@@ -300,7 +324,7 @@
           <Icon
             hoverable
             size="S"
-            name={$sort.order === "descending"
+            name={$sort.order === SortOrder.DESCENDING
               ? "SortOrderDown"
               : "SortOrderUp"}
           />
@@ -316,7 +340,7 @@
 {#if open}
   <GridPopover
     {anchor}
-    align="right"
+    align="left"
     on:close={close}
     maxHeight={null}
     resizable
@@ -327,11 +351,7 @@
       </div>
     {:else}
       <Menu>
-        <MenuItem
-          icon="Edit"
-          on:click={editColumn}
-          disabled={!$config.canEditColumns || column.schema.disabled}
-        >
+        <MenuItem icon="Edit" on:click={editColumn} disabled={!editable}>
           Edit column
         </MenuItem>
         <MenuItem
@@ -344,24 +364,25 @@
         <MenuItem
           icon="Label"
           on:click={makeDisplayColumn}
-          disabled={column.primaryDisplay ||
-            !canBeDisplayColumn(column.schema.type)}
+          disabled={column.primaryDisplay || !canBeDisplayColumn(column.schema)}
         >
           Use as display column
         </MenuItem>
         <MenuItem
           icon="SortOrderUp"
           on:click={sortAscending}
-          disabled={!canBeSortColumn(column.schema.type) ||
-            (column.name === $sort.column && $sort.order === "ascending")}
+          disabled={!canBeSortColumn(column.schema) ||
+            (column.name === $sort.column &&
+              $sort.order === SortOrder.ASCENDING)}
         >
           Sort {sortingLabels.ascending}
         </MenuItem>
         <MenuItem
           icon="SortOrderDown"
           on:click={sortDescending}
-          disabled={!canBeSortColumn(column.schema.type) ||
-            (column.name === $sort.column && $sort.order === "descending")}
+          disabled={!canBeSortColumn(column.schema) ||
+            (column.name === $sort.column &&
+              $sort.order === SortOrder.DESCENDING)}
         >
           Sort {sortingLabels.descending}
         </MenuItem>
@@ -386,7 +407,7 @@
         >
           Hide column
         </MenuItem>
-        {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS}
+        {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS && !column.schema.autocolumn}
           <MenuItem icon="User" on:click={openMigrationModal}>
             Migrate to user column
           </MenuItem>

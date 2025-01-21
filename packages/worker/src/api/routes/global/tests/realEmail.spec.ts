@@ -1,11 +1,10 @@
 jest.unmock("node-fetch")
-jest.unmock("aws-sdk")
 import { TestConfiguration } from "../../../../tests"
-import { EmailTemplatePurpose } from "../../../../constants"
-import { objectStoreTestProviders } from "@budibase/backend-core/tests"
 import { objectStore } from "@budibase/backend-core"
+import { helpers } from "@budibase/shared-core"
+
 import tk from "timekeeper"
-import { EmailAttachment } from "@budibase/types"
+import { EmailAttachment, EmailTemplatePurpose } from "@budibase/types"
 
 const fetch = require("node-fetch")
 
@@ -19,12 +18,10 @@ describe("/api/global/email", () => {
 
   beforeAll(async () => {
     tk.reset()
-    await objectStoreTestProviders.minio.start()
     await config.beforeAll()
   })
 
   afterAll(async () => {
-    await objectStoreTestProviders.minio.stop()
     await config.afterAll()
   })
 
@@ -34,19 +31,8 @@ describe("/api/global/email", () => {
   ) {
     let response, text
     try {
-      const timeout = () =>
-        new Promise((resolve, reject) =>
-          setTimeout(
-            () =>
-              reject({
-                status: 301,
-                errno: "ETIME",
-              }),
-            20000
-          )
-        )
-      await Promise.race([config.saveEtherealSmtpConfig(), timeout()])
-      await Promise.race([config.saveSettingsConfig(), timeout()])
+      await helpers.withTimeout(20000, config.saveEtherealSmtpConfig())
+      await helpers.withTimeout(20000, config.saveSettingsConfig())
       let res
       if (attachments) {
         res = await config.api.emails

@@ -54,8 +54,31 @@ INSERT INTO Persons (FirstName, LastName, Address, City, Type, Year) VALUES ('Mi
 INSERT INTO Persons (FirstName, LastName, Address, City, Type, Year) VALUES ('John', 'Smith', '64 Updown Road', 'Dublin', 'programmer', 1996);
 INSERT INTO Persons (FirstName, LastName, Address, City, Type, Age, Year) VALUES ('Foo', 'Bar', 'Foo Street', 'Bartown', 'support', 0, 1993);
 INSERT INTO Persons (FirstName, LastName, Address, City, Type) VALUES ('Jonny', 'Muffin', 'Muffin Street', 'Cork', 'support');
-INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed) VALUES (1, 2, 'assembling', TRUE);
-INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed) VALUES (2, 1, 'processing', FALSE);
+INSERT INTO Persons (FirstName, LastName, Address, City, Type, Age, Year) VALUES ('Dave', 'Bar', '2 Foo Street', 'Bartown', 'support', 0, 1993);
+INSERT INTO Persons (FirstName, LastName, Address, City, Type, Age, Year) VALUES ('James', 'Bar', '3 Foo Street', 'Bartown', 'support', 0, 1993);
+INSERT INTO Persons (FirstName, LastName, Address, City, Type, Age, Year) VALUES ('Jenny', 'Bar', '4 Foo Street', 'Bartown', 'support', 0, 1993);
+INSERT INTO Persons (FirstName, LastName, Address, City, Type, Age, Year) VALUES ('Grace', 'Bar', '5 Foo Street', 'Bartown', 'support', 0, 1993);
+INSERT INTO Persons (FirstName, LastName, Address, City, Type, Age, Year) VALUES ('Sarah', 'Bar', '6 Foo Street', 'Bartown', 'support', 0, 1993);
+INSERT INTO Persons (FirstName, LastName, Address, City, Type, Age, Year) VALUES ('Kelly', 'Bar', '7 Foo Street', 'Bartown', 'support', 0, 1993);
+
+-- insert a lot of tasks for testing
+WITH RECURSIVE generate_series AS (
+  SELECT 1 AS n
+  UNION ALL
+  SELECT n + 1 FROM generate_series WHERE n < 6000
+),
+random_data AS (
+  SELECT
+    n,
+    (random() * 9 + 1)::int AS ExecutorID,
+    (random() * 9 + 1)::int AS QaID,
+    'assembling' AS TaskName,
+    (random() < 0.5) AS Completed
+  FROM generate_series
+)
+INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed)
+SELECT ExecutorID, QaID, TaskName, Completed
+FROM random_data;
 INSERT INTO Products (ProductName) VALUES ('Computers');
 INSERT INTO Products (ProductName) VALUES ('Laptops');
 INSERT INTO Products (ProductName) VALUES ('Chairs');

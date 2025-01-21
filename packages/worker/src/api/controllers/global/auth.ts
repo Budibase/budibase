@@ -16,8 +16,17 @@ import {
   PasswordResetUpdateRequest,
   GoogleInnerConfig,
   DatasourceAuthCookie,
+  LogoutResponse,
+  UserCtx,
+  SetInitInfoRequest,
+  GetInitInfoResponse,
+  PasswordResetResponse,
+  PasswordResetUpdateResponse,
+  SetInitInfoResponse,
+  LoginResponse,
 } from "@budibase/types"
 import env from "../../../environment"
+import { Next } from "koa"
 
 import * as authSdk from "../../../sdk/auth"
 import * as userSdk from "../../../sdk/users"
@@ -52,7 +61,10 @@ async function passportCallback(
   ctx.set(Header.TOKEN, token)
 }
 
-export const login = async (ctx: Ctx<LoginRequest>, next: any) => {
+export const login = async (
+  ctx: Ctx<LoginRequest, LoginResponse>,
+  next: Next
+) => {
   const email = ctx.request.body.username
 
   const user = await userSdk.db.getUserByEmail(email)
@@ -67,12 +79,15 @@ export const login = async (ctx: Ctx<LoginRequest>, next: any) => {
       await context.identity.doInUserContext(user, ctx, async () => {
         await events.auth.login("local", user.email)
       })
-      ctx.status = 200
+      ctx.body = {
+        message: "Login successful",
+        userId: user.userId,
+      }
     }
   )(ctx, next)
 }
 
-export const logout = async (ctx: any) => {
+export const logout = async (ctx: UserCtx<void, LogoutResponse>) => {
   if (ctx.user && ctx.user._id) {
     await authSdk.logout({ ctx, userId: ctx.user._id })
   }
@@ -81,13 +96,17 @@ export const logout = async (ctx: any) => {
 
 // INIT
 
-export const setInitInfo = (ctx: any) => {
+export const setInitInfo = (
+  ctx: UserCtx<SetInitInfoRequest, SetInitInfoResponse>
+) => {
   const initInfo = ctx.request.body
   setCookie(ctx, initInfo, Cookie.Init)
-  ctx.status = 200
+  ctx.body = {
+    message: "Init info updated.",
+  }
 }
 
-export const getInitInfo = (ctx: any) => {
+export const getInitInfo = (ctx: UserCtx<void, GetInitInfoResponse>) => {
   try {
     ctx.body = getCookie(ctx, Cookie.Init) || {}
   } catch (err) {
@@ -101,7 +120,9 @@ export const getInitInfo = (ctx: any) => {
 /**
  * Reset the user password, used as part of a forgotten password flow.
  */
-export const reset = async (ctx: Ctx<PasswordResetRequest>) => {
+export const reset = async (
+  ctx: Ctx<PasswordResetRequest, PasswordResetResponse>
+) => {
   const { email } = ctx.request.body
 
   await authSdk.reset(email)
@@ -114,7 +135,9 @@ export const reset = async (ctx: Ctx<PasswordResetRequest>) => {
 /**
  * Perform the user password update if the provided reset code is valid.
  */
-export const resetUpdate = async (ctx: Ctx<PasswordResetUpdateRequest>) => {
+export const resetUpdate = async (
+  ctx: Ctx<PasswordResetUpdateRequest, PasswordResetUpdateResponse>
+) => {
   const { resetCode, password } = ctx.request.body
   try {
     await authSdk.resetUpdate(resetCode, password)
@@ -130,7 +153,10 @@ export const resetUpdate = async (ctx: Ctx<PasswordResetUpdateRequest>) => {
 
 // DATASOURCE
 
-export const datasourcePreAuth = async (ctx: any, next: any) => {
+export const datasourcePreAuth = async (
+  ctx: UserCtx<void, void>,
+  next: Next
+) => {
   const provider = ctx.params.provider
   const { middleware } = require(`@budibase/backend-core`)
   const handler = middleware.datasource[provider]
@@ -147,7 +173,7 @@ export const datasourcePreAuth = async (ctx: any, next: any) => {
   return handler.preAuth(passport, ctx, next)
 }
 
-export const datasourceAuth = async (ctx: any, next: any) => {
+export const datasourceAuth = async (ctx: UserCtx<void, void>, next: Next) => {
   const authStateCookie = getCookie<DatasourceAuthCookie>(
     ctx,
     Cookie.DatasourceAuth
@@ -171,7 +197,7 @@ export async function googleCallbackUrl(config?: GoogleInnerConfig) {
  * The initial call that google authentication makes to take you to the google login screen.
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
-export const googlePreAuth = async (ctx: any, next: any) => {
+export const googlePreAuth = async (ctx: Ctx<void, void>, next: Next) => {
   const config = await configs.getGoogleConfig()
   if (!config) {
     return ctx.throw(400, "Google config not found")
@@ -190,7 +216,7 @@ export const googlePreAuth = async (ctx: any, next: any) => {
   })(ctx, next)
 }
 
-export const googleCallback = async (ctx: any, next: any) => {
+export const googleCallback = async (ctx: Ctx<void, void>, next: Next) => {
   const config = await configs.getGoogleConfig()
   if (!config) {
     return ctx.throw(400, "Google config not found")
@@ -241,7 +267,7 @@ export const oidcStrategyFactory = async (ctx: any) => {
  * The initial call that OIDC authentication makes to take you to the configured OIDC login screen.
  * On a successful login, you will be redirected to the oidcAuth callback route.
  */
-export const oidcPreAuth = async (ctx: Ctx, next: any) => {
+export const oidcPreAuth = async (ctx: Ctx<void, void>, next: Next) => {
   const { configId } = ctx.params
   if (!configId) {
     ctx.throw(400, "OIDC config id is required")
@@ -266,7 +292,7 @@ export const oidcPreAuth = async (ctx: Ctx, next: any) => {
   })(ctx, next)
 }
 
-export const oidcCallback = async (ctx: any, next: any) => {
+export const oidcCallback = async (ctx: Ctx<void, void>, next: Next) => {
   const strategy = await oidcStrategyFactory(ctx)
 
   return passport.authenticate(

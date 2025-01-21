@@ -9,7 +9,7 @@ on:
 jobs:
   ensure-is-master-tag:
     name: Ensure is a master tag
-    runs-on: qa-arc-runner-set
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v4

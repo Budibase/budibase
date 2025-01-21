@@ -1,9 +1,6 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "baseUrl": "..",
-    "rootDir": "src",
-    "composite": true,
     "types": ["node", "jest"]
   },
   "exclude": ["node_modules", "dist"]

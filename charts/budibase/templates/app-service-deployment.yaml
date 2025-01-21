@@ -42,6 +42,12 @@ spec:
           {{ else }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
           {{ end }}
+        - name: COUCH_DB_SQL_URL
+          {{ if .Values.globals.sqs.url }}
+          value: {{ .Values.globals.sqs.url | quote }}
+          {{ else }}
+          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.globals.sqs.port }}
+          {{ end }}
         {{ if .Values.services.couchdb.enabled }}
         - name: COUCH_DB_USER
           valueFrom:
@@ -57,7 +63,10 @@ spec:
         - name: ENABLE_ANALYTICS
           value: {{ .Values.globals.enableAnalytics | quote }}
         - name: API_ENCRYPTION_KEY
-          value: {{ .Values.globals.apiEncryptionKey | quote }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: apiEncryptionKey
         - name: HTTP_LOGGING
           value: {{ .Values.services.apps.httpLogging | quote }}
         - name: INTERNAL_API_KEY
@@ -153,7 +162,10 @@ spec:
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
         - name: ENCRYPTION_KEY
-          value: {{ .Values.globals.bbEncryptionKey | quote }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: bbEncryptionKey
         {{ if .Values.globals.bbAdminUserEmail }}
         - name: BB_ADMIN_USER_EMAIL
           value: {{ .Values.globals.bbAdminUserEmail | quote }}
@@ -169,6 +181,10 @@ spec:
         {{ if .Values.services.apps.nodeDebug }}
         - name: NODE_DEBUG
           value: {{ .Values.services.apps.nodeDebug | quote }}
+        {{ end }}
+        {{ if .Values.services.apps.xssSafeMode }}
+        - name: XSS_SAFE_MODE
+          value: {{ .Values.services.apps.xssSafeMode | quote }}
         {{ end }}
         {{ if .Values.globals.datadogApmEnabled }}
         - name: DD_LOGS_INJECTION
@@ -202,7 +218,14 @@ spec:
         - name: {{ .name }}
           value: {{ .value | quote }}
         {{- end }}
-        image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
+        {{- range .Values.services.apps.extraEnvFromSecret}}
+        - name: {{ .name }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .secretName }}
+              key: {{ .secretKey | quote }}
+        {{- end}}
+        image: {{ .Values.globals.dockerRegistry }}budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         {{- if .Values.services.apps.startupProbe }}
         {{- with .Values.services.apps.startupProbe }}

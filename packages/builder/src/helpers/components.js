@@ -1,4 +1,4 @@
-import { componentStore } from "stores/builder"
+import { componentStore } from "@/stores/builder"
 import { get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 import {
@@ -6,7 +6,7 @@ import {
   encodeJSBinding,
   findHBSBlocks,
 } from "@budibase/string-templates"
-import { capitalise } from "helpers"
+import { capitalise } from "@/helpers"
 import { Constants } from "@budibase/frontend-core"
 
 const { ContextScopes } = Constants
@@ -213,7 +213,7 @@ export const getComponentText = component => {
     return component._instanceName
   }
   const type =
-    component._component.replace("@budibase/standard-components/", "") ||
+    component._component?.replace("@budibase/standard-components/", "") ||
     "component"
   return capitalise(type)
 }
@@ -226,6 +226,25 @@ export const getComponentName = component => {
   const components = get(componentStore)?.components || {}
   const componentDefinition = components[component._component] || {}
   return componentDefinition.friendlyName || componentDefinition.name || ""
+}
+
+// Gets all contexts exposed by a certain component type, including actions
+export const getComponentContexts = component => {
+  const def = componentStore.getDefinition(component)
+  let contexts = []
+  if (def?.context) {
+    contexts = Array.isArray(def.context) ? [...def.context] : [def.context]
+  }
+  if (def?.actions) {
+    contexts.push({
+      type: "action",
+      scope: ContextScopes.Global,
+
+      // Ensure all actions are their verbose object versions
+      actions: def.actions.map(x => (typeof x === "string" ? { type: x } : x)),
+    })
+  }
+  return contexts
 }
 
 /**
@@ -243,10 +262,9 @@ export const buildContextTree = (
   }
 
   // Process this component's contexts
-  const def = componentStore.getDefinition(rootComponent._component)
-  if (def?.context) {
+  const contexts = getComponentContexts(rootComponent._component)
+  if (contexts.length) {
     tree[currentBranch].push(rootComponent._id)
-    const contexts = Array.isArray(def.context) ? def.context : [def.context]
 
     // If we provide local context, start a new branch for our children
     if (contexts.some(context => context.scope === ContextScopes.Local)) {

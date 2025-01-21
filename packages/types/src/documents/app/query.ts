@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { Row } from "./row"
 
 export interface QuerySchema {
   name?: string
@@ -13,6 +14,7 @@ export interface Query extends Document {
   fields: RestQueryFields | any
   transformer: string | null
   schema: Record<string, QuerySchema | string>
+  nestedSchemaFields?: Record<string, Record<string, QuerySchema | string>>
   readable: boolean
   queryVerb: string
   // flag to state whether the default bindings are empty strings (old behaviour) or null
@@ -29,38 +31,46 @@ export interface QueryParameter {
 }
 
 export interface QueryResponse {
-  rows: any[]
+  rows: Row[]
   keys: string[]
   info: any
   extra: any
   pagination: any
 }
 
+export enum BodyType {
+  NONE = "none",
+  FORM_DATA = "form",
+  XML = "xml",
+  ENCODED = "encoded",
+  JSON = "json",
+  TEXT = "text",
+}
+
 export interface RestQueryFields {
-  path: string
+  path?: string
   queryString?: string
-  headers: { [key: string]: any }
-  disabledHeaders: { [key: string]: any }
-  requestBody: any
-  bodyType: string
-  json: object
-  method: string
-  authConfigId: string
-  pagination: PaginationConfig | null
-  paginationValues: PaginationValues | null
+  headers?: { [key: string]: any }
+  disabledHeaders?: { [key: string]: any }
+  requestBody?: any
+  bodyType?: BodyType
+  method?: string
+  authConfigId?: string
+  pagination?: PaginationConfig
+  paginationValues?: PaginationValues
 }
 
 export interface PaginationConfig {
   type: string
   location: string
   pageParam: string
-  sizeParam: string | null
-  responseParam: string | null
+  sizeParam?: string
+  responseParam?: string
 }
 
 export interface PaginationValues {
-  page: string | number | null
-  limit: number | null
+  page?: string | number
+  limit?: number
 }
 
 export enum HttpMethod {

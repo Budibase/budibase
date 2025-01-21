@@ -1,5 +1,5 @@
 import events from "events"
-import { newid, timeout } from "../utils"
+import { newid } from "../utils"
 import { Queue, QueueOptions, JobOptions } from "./queue"
 
 interface JobMessage {
@@ -63,12 +63,12 @@ class InMemoryQueue implements Partial<Queue> {
    * Same callback API as Bull, each callback passed to this will consume messages as they are
    * available. Please note this is a queue service, not a notification service, so each
    * consumer will receive different messages.
-   * @param func The callback function which will return a "Job", the same
    * as the Bull API, within this job the property "data" contains the JSON message. Please
    * note this is incredibly limited compared to Bull as in reality the Job would contain
    * a lot more information about the queue and current status of Bull cluster.
    */
-  async process(func: any) {
+  async process(concurrencyOrFunc: number | any, func?: any) {
+    func = typeof concurrencyOrFunc === "number" ? func : concurrencyOrFunc
     this._emitter.on("message", async () => {
       if (this._messages.length <= 0) {
         return
@@ -141,7 +141,7 @@ class InMemoryQueue implements Partial<Queue> {
     } else {
       pushMessage()
     }
-    return {} as any
+    return { id: jobId } as any
   }
 
   /**
@@ -183,16 +183,6 @@ class InMemoryQueue implements Partial<Queue> {
   on() {
     // do nothing
     return this as any
-  }
-
-  async waitForCompletion() {
-    do {
-      await timeout(50)
-    } while (this.hasRunningJobs())
-  }
-
-  hasRunningJobs() {
-    return this._addCount > this._runCount
   }
 }
 

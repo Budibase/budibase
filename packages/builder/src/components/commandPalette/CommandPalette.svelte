@@ -7,7 +7,7 @@
     Detail,
     notifications,
   } from "@budibase/bbui"
-  import { API } from "api"
+  import { API } from "@/api"
   import { goto } from "@roxi/routify"
   import {
     automationStore,
@@ -19,10 +19,10 @@
     queries,
     tables,
     views,
-  } from "stores/builder"
-  import { themeStore } from "stores/portal"
+  } from "@/stores/builder"
+  import { themeStore } from "@/stores/portal"
   import { getContext } from "svelte"
-  import { Constants } from "@budibase/frontend-core"
+  import { ThemeOptions } from "@budibase/shared-core"
 
   const modalContext = getContext(Context.Modal)
   const commands = [
@@ -141,13 +141,13 @@
       icon: "ShareAndroid",
       action: () => $goto(`./automation/${automation._id}`),
     })) ?? []),
-    ...Constants.Themes.map(theme => ({
+    ...ThemeOptions.map(themeMeta => ({
       type: "Change Builder Theme",
-      name: theme.name,
+      name: themeMeta.name,
       icon: "ColorPalette",
       action: () =>
         themeStore.update(state => {
-          state.theme = theme.class
+          state.theme = themeMeta.id
           return state
         }),
     })),

@@ -2,56 +2,15 @@ import { execSync } from "child_process"
 import { processStringSync } from "@budibase/string-templates"
 import * as automationUtils from "../automationUtils"
 import environment from "../../environment"
-import {
-  AutomationActionStepId,
-  AutomationCustomIOType,
-  AutomationFeature,
-  AutomationIOType,
-  AutomationStepInput,
-  AutomationStepSchema,
-  AutomationStepType,
-} from "@budibase/types"
+import { BashStepInputs, BashStepOutputs } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
-  name: "Bash Scripting",
-  tagline: "Execute a bash command",
-  icon: "JourneyEvent",
-  description: "Run a bash script",
-  type: AutomationStepType.ACTION,
-  internal: true,
-  features: {
-    [AutomationFeature.LOOPING]: true,
-  },
-  stepId: AutomationActionStepId.EXECUTE_BASH,
-  inputs: {},
-  schema: {
-    inputs: {
-      properties: {
-        code: {
-          type: AutomationIOType.STRING,
-          customType: AutomationCustomIOType.CODE,
-          title: "Code",
-        },
-      },
-      required: ["code"],
-    },
-    outputs: {
-      properties: {
-        stdout: {
-          type: AutomationIOType.STRING,
-          description: "Standard output of your bash command or script",
-        },
-        success: {
-          type: AutomationIOType.BOOLEAN,
-          description: "Whether the command was successful",
-        },
-      },
-      required: ["stdout"],
-    },
-  },
-}
-
-export async function run({ inputs, context }: AutomationStepInput) {
+export async function run({
+  inputs,
+  context,
+}: {
+  inputs: BashStepInputs
+  context: object
+}): Promise<BashStepOutputs> {
   if (inputs.code == null) {
     return {
       stdout: "Budibase bash automation failed: Invalid inputs",

@@ -1,6 +1,6 @@
 <script>
   import { Label, Button } from "@budibase/bbui"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+  import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
 
   export let name
   export let value

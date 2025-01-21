@@ -79,11 +79,6 @@
           "preset": true
         },
         {
-          "name": "WATCHTOWER_PORT",
-          "default": "6161",
-          "preset": true
-        },
-        {
           "name": "BUDIBASE_ENVIRONMENT",
           "default": "PRODUCTION",
           "preset": true

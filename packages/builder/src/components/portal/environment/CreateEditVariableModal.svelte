@@ -8,8 +8,8 @@
     notifications,
     Context,
   } from "@budibase/bbui"
-  import { environment } from "stores/portal"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { environment } from "@/stores/portal"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { getContext } from "svelte"
 
   const modalContext = getContext(Context.Modal)

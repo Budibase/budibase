@@ -1,10 +1,11 @@
-import { structures, mocks } from "../../../../../tests"
+import { structures } from "../../../../../tests"
 import { testEnv } from "../../../../../tests/extra"
 import { SSOAuthDetails, User } from "@budibase/types"
 
 import { HTTPError } from "../../../../errors"
 import * as sso from "../sso"
 import * as context from "../../../../context"
+import nock from "nock"
 
 const mockDone = jest.fn()
 const mockSaveUser = jest.fn()
@@ -23,6 +24,7 @@ describe("sso", () => {
     beforeEach(() => {
       jest.clearAllMocks()
       testEnv.singleTenant()
+      nock.cleanAll()
     })
 
     describe("validation", () => {
@@ -51,15 +53,6 @@ describe("sso", () => {
       })
     })
 
-    function mockGetProfilePicture() {
-      mocks.fetch.mockReturnValueOnce(
-        Promise.resolve({
-          status: 200,
-          headers: { get: () => "image/" },
-        })
-      )
-    }
-
     describe("when the user doesn't exist", () => {
       let user: User
       let details: SSOAuthDetails
@@ -68,7 +61,10 @@ describe("sso", () => {
         users.getById.mockImplementationOnce(() => {
           throw new HTTPError("", 404)
         })
-        mockGetProfilePicture()
+
+        nock("http://example.com").get("/").reply(200, undefined, {
+          "Content-Type": "image/png",
+        })
 
         user = structures.users.user()
         delete user._rev
@@ -131,7 +127,9 @@ describe("sso", () => {
         existingUser = structures.users.user()
         existingUser._id = structures.uuid()
         details = structures.sso.authDetails(existingUser)
-        mockGetProfilePicture()
+        nock("http://example.com").get("/").reply(200, undefined, {
+          "Content-Type": "image/png",
+        })
       })
 
       describe("exists by email", () => {

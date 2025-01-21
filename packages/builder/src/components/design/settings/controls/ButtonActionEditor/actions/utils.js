@@ -1,5 +1,5 @@
-import { getComponentContexts } from "dataBinding"
-import { capitalise } from "helpers"
+import { getAllComponentContexts } from "@/dataBinding"
+import { capitalise } from "@/helpers"
 
 // Generates bindings for all components that provider "datasource like"
 // contexts. This includes "form" contexts and "schema" contexts. This is used
@@ -7,7 +7,7 @@ import { capitalise } from "helpers"
 // Some examples are saving rows or duplicating rows.
 export const getDatasourceLikeProviders = ({ asset, componentId, nested }) => {
   // Get all form context providers
-  const formComponentContexts = getComponentContexts(
+  const formComponentContexts = getAllComponentContexts(
     asset,
     componentId,
     "form",
@@ -16,7 +16,7 @@ export const getDatasourceLikeProviders = ({ asset, componentId, nested }) => {
     }
   )
   // Get all schema context providers
-  const schemaComponentContexts = getComponentContexts(
+  const schemaComponentContexts = getAllComponentContexts(
     asset,
     componentId,
     "schema",

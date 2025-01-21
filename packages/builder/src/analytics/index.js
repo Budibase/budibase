@@ -1,4 +1,4 @@
-import { API } from "api"
+import { API } from "@/api"
 import PosthogClient from "./PosthogClient"
 import { Events, EventSource } from "./constants"
 

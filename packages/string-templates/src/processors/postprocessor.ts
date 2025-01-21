@@ -1,19 +1,21 @@
 import { LITERAL_MARKER } from "../helpers/constants"
 
-export const PostProcessorNames = {
-  CONVERT_LITERALS: "convert-literals",
+export enum PostProcessorNames {
+  CONVERT_LITERALS = "convert-literals",
 }
 
-class Postprocessor {
-  name: string
-  private fn: any
+type PostprocessorFn = (statement: string) => string
 
-  constructor(name: string, fn: any) {
+class Postprocessor {
+  name: PostProcessorNames
+  private readonly fn: PostprocessorFn
+
+  constructor(name: PostProcessorNames, fn: PostprocessorFn) {
     this.name = name
     this.fn = fn
   }
 
-  process(statement: any) {
+  process(statement: string) {
     return this.fn(statement)
   }
 }

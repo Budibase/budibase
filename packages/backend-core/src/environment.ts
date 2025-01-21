@@ -1,5 +1,7 @@
 import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
+import { cloneDeep } from "lodash"
+import { createSecretKey } from "crypto"
 
 function isTest() {
   return isJest()
@@ -15,6 +17,12 @@ function isJest() {
 
 function isDev() {
   return process.env.NODE_ENV !== "production"
+}
+
+function parseIntSafe(number?: string) {
+  if (number) {
+    return parseInt(number)
+  }
 }
 
 let LOADED = false
@@ -53,30 +61,46 @@ function getPackageJsonFields(): {
   VERSION: string
   SERVICE_NAME: string
 } {
-  function findFileInAncestors(
-    fileName: string,
-    currentDir: string
-  ): string | null {
-    const filePath = `${currentDir}/${fileName}`
-    if (existsSync(filePath)) {
-      return filePath
+  function getParentFile(file: string) {
+    function findFileInAncestors(
+      fileName: string,
+      currentDir: string
+    ): string | null {
+      const filePath = `${currentDir}/${fileName}`
+      if (existsSync(filePath)) {
+        return filePath
+      }
+
+      const parentDir = `${currentDir}/..`
+      if (parentDir === currentDir) {
+        // reached root directory
+        return null
+      }
+
+      return findFileInAncestors(fileName, parentDir)
     }
 
-    const parentDir = `${currentDir}/..`
-    if (parentDir === currentDir) {
-      // reached root directory
-      return null
-    }
+    const packageJsonFile = findFileInAncestors(file, process.cwd())
+    const content = readFileSync(packageJsonFile!, "utf-8")
+    const parsedContent = JSON.parse(content)
+    return parsedContent
+  }
 
-    return findFileInAncestors(fileName, parentDir)
+  let localVersion: string | undefined
+  if (isDev() && !isTest()) {
+    try {
+      const lerna = getParentFile("lerna.json")
+      localVersion = `${lerna.version}+local`
+    } catch {
+      //
+    }
   }
 
   try {
-    const packageJsonFile = findFileInAncestors("package.json", process.cwd())
-    const content = readFileSync(packageJsonFile!, "utf-8")
-    const parsedContent = JSON.parse(content)
+    const parsedContent = getParentFile("package.json")
     return {
-      VERSION: process.env.BUDIBASE_VERSION || parsedContent.version,
+      VERSION:
+        localVersion || process.env.BUDIBASE_VERSION || parsedContent.version,
       SERVICE_NAME: parsedContent.name,
     }
   } catch {
@@ -93,22 +117,32 @@ function isApps() {
   return environment.SERVICE_TYPE === ServiceType.APPS
 }
 
+function isQA() {
+  return environment.BUDIBASE_ENVIRONMENT === "QA"
+}
+
 const environment = {
   isTest,
   isJest,
   isDev,
   isWorker,
   isApps,
+  isQA,
   isProd: () => {
     return !isDev()
   },
+  BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   JS_BCRYPT: process.env.JS_BCRYPT,
-  JWT_SECRET: process.env.JWT_SECRET,
-  JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK,
+  JWT_SECRET: process.env.JWT_SECRET
+    ? createSecretKey(process.env.JWT_SECRET, "utf8")
+    : undefined,
+  JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK
+    ? createSecretKey(process.env.JWT_SECRET_FALLBACK, "utf8")
+    : undefined,
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
-  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL || "http://localhost:4006",
+  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL,
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -119,6 +153,7 @@ const environment = {
   REDIS_CLUSTERED: process.env.REDIS_CLUSTERED,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
+  AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN,
   AWS_REGION: process.env.AWS_REGION,
   MINIO_URL: process.env.MINIO_URL,
   MINIO_ENABLED: process.env.MINIO_ENABLED || 1,
@@ -133,6 +168,9 @@ const environment = {
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL || "",
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
+  POSTHOG_PERSONAL_TOKEN: process.env.POSTHOG_PERSONAL_TOKEN,
+  POSTHOG_API_HOST: process.env.POSTHOG_API_HOST || "https://us.i.posthog.com",
+  POSTHOG_FEATURE_FLAGS_ENABLED: process.env.POSTHOG_FEATURE_FLAGS_ENABLED,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
   CLOUDFRONT_CDN: process.env.CLOUDFRONT_CDN,
@@ -158,6 +196,10 @@ const environment = {
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
   HTTP_LOGGING: httpLogging(),
   ENABLE_AUDIT_LOG_IP_ADDR: process.env.ENABLE_AUDIT_LOG_IP_ADDR,
+  // Couch/search
+  SQL_LOGGING_ENABLE: process.env.SQL_LOGGING_ENABLE,
+  SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
+  SQL_MAX_RELATED_ROWS: process.env.MAX_RELATED_ROWS,
   // smtp
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
   SMTP_USER: process.env.SMTP_USER,
@@ -189,7 +231,57 @@ const environment = {
   },
   ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "10M",
   DISABLE_SCIM_CALLS: process.env.DISABLE_SCIM_CALLS,
+  BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
+  BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  MIN_VERSION_WITHOUT_POWER_ROLE:
+    process.env.MIN_VERSION_WITHOUT_POWER_ROLE || "3.0.0",
+  DISABLE_CONTENT_SECURITY_POLICY: process.env.DISABLE_CONTENT_SECURITY_POLICY,
+  BSON_BUFFER_SIZE: parseIntSafe(process.env.BSON_BUFFER_SIZE),
 }
+
+export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
+  const oldEnv = cloneDeep(environment)
+
+  let key: keyof typeof newEnvVars
+  for (key in newEnvVars) {
+    environment._set(key, newEnvVars[key])
+  }
+
+  return () => {
+    for (const [key, value] of Object.entries(oldEnv)) {
+      environment._set(key, value)
+    }
+  }
+}
+
+export function withEnv<T>(envVars: Partial<typeof environment>, f: () => T) {
+  const cleanup = setEnv(envVars)
+  const result = f()
+  if (result instanceof Promise) {
+    return result.finally(cleanup)
+  } else {
+    cleanup()
+    return result
+  }
+}
+
+type EnvironmentKey = keyof typeof environment
+export const SECRETS: EnvironmentKey[] = [
+  "API_ENCRYPTION_KEY",
+  "BB_ADMIN_USER_PASSWORD",
+  "COUCH_DB_PASSWORD",
+  "COUCH_DB_SQL_URL",
+  "COUCH_DB_URL",
+  "GOOGLE_CLIENT_SECRET",
+  "INTERNAL_API_KEY_FALLBACK",
+  "INTERNAL_API_KEY",
+  "JWT_SECRET",
+  "MINIO_ACCESS_KEY",
+  "MINIO_SECRET_KEY",
+  "OPENAI_API_KEY",
+  "REDIS_PASSWORD",
+]
 
 // clean up any environment variable edge cases
 for (let [key, value] of Object.entries(environment)) {

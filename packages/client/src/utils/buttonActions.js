@@ -12,6 +12,7 @@ import {
   uploadStore,
   rowSelectionStore,
   sidePanelStore,
+  modalStore,
 } from "stores"
 import { API } from "api"
 import { ActionTypes } from "constants"
@@ -146,7 +147,7 @@ const fetchRowHandler = async action => {
 
   if (tableId && rowId) {
     try {
-      const row = await API.fetchRow({ tableId, rowId })
+      const row = await API.fetchRow(tableId, rowId)
 
       return { row }
     } catch (error) {
@@ -191,7 +192,7 @@ const deleteRowHandler = async action => {
         return false
       }
 
-      const resp = await API.deleteRows({ tableId, rows: requestConfig })
+      const resp = await API.deleteRows(tableId, requestConfig)
 
       if (!notificationOverride) {
         notificationStore.actions.success(
@@ -215,11 +216,11 @@ const deleteRowHandler = async action => {
 const triggerAutomationHandler = async action => {
   const { fields, notificationOverride, timeout } = action.parameters
   try {
-    const result = await API.triggerAutomation({
-      automationId: action.parameters.automationId,
+    const result = await API.triggerAutomation(
+      action.parameters.automationId,
       fields,
-      timeout,
-    })
+      timeout
+    )
 
     // Value will exist if automation is synchronous, so return it.
     if (result.value) {
@@ -238,23 +239,26 @@ const triggerAutomationHandler = async action => {
   }
 }
 const navigationHandler = action => {
-  const { url, peek, externalNewTab } = action.parameters
+  let { url, peek, externalNewTab, type } = action.parameters
+
+  // Ensure in-app navigation starts with a slash
+  if (type === "screen" && url && !url.startsWith("/")) {
+    url = `/${url}`
+  }
+
   routeStore.actions.navigate(url, peek, externalNewTab)
   closeSidePanelHandler()
 }
 
 const queryExecutionHandler = async action => {
-  const { datasourceId, queryId, queryParams, notificationOverride } =
-    action.parameters
+  const { queryId, queryParams, notificationOverride } = action.parameters
   try {
     const query = await API.fetchQueryDefinition(queryId)
     if (query?.datasourceId == null) {
       notificationStore.actions.error("That query couldn't be found")
       return false
     }
-    const result = await API.executeQuery({
-      datasourceId,
-      queryId,
+    const result = await API.executeQuery(queryId, {
       parameters: queryParams,
     })
 
@@ -333,31 +337,57 @@ const uploadHandler = async action => {
   }
 }
 
+/**
+ * For new configs, "rows" is defined and enriched to be the array of rows to
+ * export. For old configs it will be undefined and we need to use the legacy
+ * row selection store in combination with the tableComponentId parameter.
+ */
 const exportDataHandler = async action => {
-  let selection = rowSelectionStore.actions.getSelection(
-    action.parameters.tableComponentId
-  )
-  if (selection.selectedRows && selection.selectedRows.length > 0) {
+  let { tableComponentId, rows, type, columns, delimiter, customHeaders } =
+    action.parameters
+  let tableId
+
+  // Handle legacy configs using the row selection store
+  if (!rows?.length) {
+    const selection = rowSelectionStore.actions.getSelection(tableComponentId)
+    if (selection?.selectedRows?.length) {
+      rows = selection.selectedRows
+      tableId = selection.tableId
+    }
+  }
+
+  // Get table ID from first row if needed
+  if (!tableId) {
+    tableId = rows?.[0]?.tableId
+  }
+
+  // Handle no rows selected
+  if (!rows?.length) {
+    notificationStore.actions.error("Please select at least one row")
+  }
+  // Handle case where we're not using a DS+
+  else if (!tableId) {
+    notificationStore.actions.error(
+      "You can only export data from table datasources"
+    )
+  }
+  // Happy path when we have both rows and table ID
+  else {
     try {
-      const data = await API.exportRows({
-        tableId: selection.tableId,
-        rows: selection.selectedRows,
-        format: action.parameters.type,
-        columns: action.parameters.columns?.map(
-          column => column.name || column
-        ),
-        delimiter: action.parameters.delimiter,
-        customHeaders: action.parameters.customHeaders,
+      // Flatten rows if required
+      if (typeof rows[0] !== "string") {
+        rows = rows.map(row => row._id)
+      }
+      const data = await API.exportRows(tableId, type, {
+        rows,
+        columns: columns?.map(column => column.name || column),
+        delimiter,
+        customHeaders,
       })
-      download(
-        new Blob([data], { type: "text/plain" }),
-        `${selection.tableId}.${action.parameters.type}`
-      )
+      download(new Blob([data], { type: "text/plain" }), `${tableId}.${type}`)
     } catch (error) {
       notificationStore.actions.error("There was an error exporting the data")
     }
-  } else {
-    notificationStore.actions.error("Please select at least one row")
   }
 }
 
@@ -382,11 +412,11 @@ const continueIfHandler = action => {
 }
 
 const showNotificationHandler = action => {
-  const { message, type, autoDismiss } = action.parameters
+  const { message, type, autoDismiss, duration } = action.parameters
   if (!message || !type) {
     return
   }
-  notificationStore.actions[type]?.(message, autoDismiss)
+  notificationStore.actions[type]?.(message, autoDismiss, duration)
 }
 
 const promptUserHandler = () => {}
@@ -402,18 +432,24 @@ const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
+const openModalHandler = action => {
+  const { id } = action.parameters
+  if (id) {
+    modalStore.actions.open(id)
+  }
+}
+
+const closeModalHandler = () => {
+  modalStore.actions.close()
+}
+
 const downloadFileHandler = async action => {
   const { url, fileName } = action.parameters
   try {
     const { type } = action.parameters
     if (type === "attachment") {
       const { tableId, rowId, attachmentColumn } = action.parameters
-      const res = await API.downloadAttachment(
-        tableId,
-        rowId,
-        attachmentColumn,
-        { suppressErrors: true }
-      )
+      const res = await API.downloadAttachment(tableId, rowId, attachmentColumn)
       await downloadStream(res)
       return
     }
@@ -447,6 +483,15 @@ const downloadFileHandler = async action => {
   }
 }
 
+const rowActionHandler = async action => {
+  const { resourceId, rowId, rowActionId } = action.parameters
+  await API.rowActions.trigger(resourceId, rowActionId, rowId)
+  // Refresh related datasources
+  await dataSourceStore.actions.invalidateDataSource(resourceId, {
+    invalidateRelationships: true,
+  })
+}
+
 const handlerMap = {
   ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
@@ -465,7 +510,10 @@ const handlerMap = {
   ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: openSidePanelHandler,
   ["Close Side Panel"]: closeSidePanelHandler,
+  ["Open Modal"]: openModalHandler,
+  ["Close Modal"]: closeModalHandler,
   ["Download File"]: downloadFileHandler,
+  ["Row Action"]: rowActionHandler,
 }
 
 const confirmTextMap = {
@@ -474,6 +522,7 @@ const confirmTextMap = {
   ["Execute Query"]: "Are you sure you want to execute this query?",
   ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
   ["Prompt User"]: "Are you sure you want to continue?",
+  ["Duplicate Row"]: "Are you sure you want to duplicate this row?",
 }
 
 /**
@@ -534,6 +583,11 @@ export const enrichButtonActions = (actions, context) => {
             const defaultTitleText = action["##eventHandlerType"]
             const customTitleText =
               action.parameters?.customTitleText || defaultTitleText
+            const cancelButtonText =
+              action.parameters?.cancelButtonText || "Cancel"
+            const confirmButtonText =
+              action.parameters?.confirmButtonText || "Confirm"
+
             confirmationStore.actions.showConfirmation(
               customTitleText,
               confirmText,
@@ -564,7 +618,9 @@ export const enrichButtonActions = (actions, context) => {
               },
               () => {
                 resolve(false)
-              }
+              },
+              confirmButtonText,
+              cancelButtonText
             )
           })
         }

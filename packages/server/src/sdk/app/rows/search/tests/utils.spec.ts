@@ -19,7 +19,7 @@ const tableWithUserCol: Table = {
   schema: {
     user: {
       name: "user",
-      type: FieldType.BB_REFERENCE,
+      type: FieldType.BB_REFERENCE_SINGLE,
       subtype: BBReferenceFieldSubType.USER,
     },
   },
@@ -35,7 +35,7 @@ const tableWithUsersCol: Table = {
     user: {
       name: "user",
       type: FieldType.BB_REFERENCE,
-      subtype: BBReferenceFieldSubType.USERS,
+      subtype: BBReferenceFieldSubType.USER,
     },
   },
 }
@@ -90,10 +90,8 @@ describe.each([tableWithUserCol, tableWithUsersCol])(
     })
 
     it("shouldn't error if no query supplied", () => {
-      const params: any = {
-        tableId,
-      }
-      const output = searchInputMapping(col, params)
+      // @ts-expect-error - intentionally passing in a bad type
+      const output = searchInputMapping(col, { tableId })
       expect(output.query).toBeUndefined()
     })
   }

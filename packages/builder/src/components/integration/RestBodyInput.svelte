@@ -1,10 +1,10 @@
 <script>
   import { Body } from "@budibase/bbui"
-  import { RawRestBodyTypes } from "constants/backend"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+  import { RawRestBodyTypes } from "@/constants/backend"
+  import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import CodeMirrorEditor, {
     EditorModes,
-  } from "components/common/CodeMirrorEditor.svelte"
+  } from "@/components/common/CodeMirrorEditor.svelte"
 
   const objectTypes = [RawRestBodyTypes.FORM, RawRestBodyTypes.ENCODED]
   const textTypes = [

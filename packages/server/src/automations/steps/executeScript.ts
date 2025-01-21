@@ -2,60 +2,22 @@ import * as scriptController from "../../api/controllers/script"
 import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
-  AutomationActionStepId,
-  AutomationCustomIOType,
-  AutomationFeature,
-  AutomationIOType,
-  AutomationStepInput,
-  AutomationStepSchema,
-  AutomationStepType,
+  ExecuteScriptStepInputs,
+  ExecuteScriptStepOutputs,
 } from "@budibase/types"
-
-export const definition: AutomationStepSchema = {
-  name: "JS Scripting",
-  tagline: "Execute JavaScript Code",
-  icon: "Code",
-  description: "Run a piece of JavaScript code in your automation",
-  type: AutomationStepType.ACTION,
-  internal: true,
-  stepId: AutomationActionStepId.EXECUTE_SCRIPT,
-  inputs: {},
-  features: {
-    [AutomationFeature.LOOPING]: true,
-  },
-  schema: {
-    inputs: {
-      properties: {
-        code: {
-          type: AutomationIOType.STRING,
-          customType: AutomationCustomIOType.CODE,
-          title: "Code",
-        },
-      },
-      required: ["code"],
-    },
-    outputs: {
-      properties: {
-        value: {
-          type: AutomationIOType.STRING,
-          description: "The result of the return statement",
-        },
-        success: {
-          type: AutomationIOType.BOOLEAN,
-          description: "Whether the action was successful",
-        },
-      },
-      required: ["success"],
-    },
-  },
-}
+import { EventEmitter } from "events"
 
 export async function run({
   inputs,
   appId,
   context,
   emitter,
-}: AutomationStepInput) {
+}: {
+  inputs: ExecuteScriptStepInputs
+  appId: string
+  context: object
+  emitter: EventEmitter
+}): Promise<ExecuteScriptStepOutputs> {
   if (inputs.code == null) {
     return {
       success: false,

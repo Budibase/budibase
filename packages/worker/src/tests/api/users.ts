@@ -9,14 +9,9 @@ import {
 } from "@budibase/types"
 import structures from "../structures"
 import { generator } from "@budibase/backend-core/tests"
-import TestConfiguration from "../TestConfiguration"
 import { TestAPI, TestAPIOpts } from "./base"
 
 export class UserAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   // INVITE
 
   sendUserInvite = async (sendMailMock: any, email: string, status = 200) => {
@@ -48,7 +43,7 @@ export class UserAPI extends TestAPI {
     return this.request
       .post(`/api/global/users/invite/accept`)
       .send({
-        password: "newpassword",
+        password: "newpassword1",
         inviteCode: code,
         firstName: "Ted",
       })
@@ -81,8 +76,14 @@ export class UserAPI extends TestAPI {
     return res.body as BulkUserResponse
   }
 
-  bulkDeleteUsers = async (userIds: string[], status?: number) => {
-    const body: BulkUserRequest = { delete: { userIds } }
+  bulkDeleteUsers = async (
+    users: Array<{
+      userId: string
+      email: string
+    }>,
+    status?: number
+  ) => {
+    const body: BulkUserRequest = { delete: { users } }
     const res = await this.request
       .post(`/api/global/users/bulk`)
       .send(body)
@@ -101,7 +102,7 @@ export class UserAPI extends TestAPI {
     if (!request) {
       request = {
         email: structures.email(),
-        password: generator.string({ length: 8 }),
+        password: generator.string({ length: 12 }),
         tenantId: structures.tenant.id(),
       }
     }
@@ -172,11 +173,7 @@ export class UserAPI extends TestAPI {
       .expect(opts?.status ? opts.status : 200)
   }
 
-  grantBuilderToApp = (
-    userId: string,
-    appId: string,
-    statusCode: number = 200
-  ) => {
+  grantBuilderToApp = (userId: string, appId: string, statusCode = 200) => {
     return this.request
       .post(`/api/global/users/${userId}/app/${appId}/builder`)
       .set(this.config.defaultHeaders())

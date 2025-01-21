@@ -3,8 +3,8 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "dataBinding"
-  import { builderStore } from "stores/builder"
+  } from "@/dataBinding"
+  import { builderStore } from "@/stores/builder"
   import { onDestroy } from "svelte"
 
   export let label = ""

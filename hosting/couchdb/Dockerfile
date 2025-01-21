@@ -96,10 +96,13 @@ EXPOSE 5984 4369 9100
 CMD ["/opt/couchdb/bin/couchdb"]
 
 FROM base as runner
+ARG TARGETARCH
+ENV TARGETARCH $TARGETARCH
 
 ENV COUCHDB_USER admin
 ENV COUCHDB_PASSWORD admin
 EXPOSE 5984
+EXPOSE 4984
 
 RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common wget unzip curl && \
     wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | apt-key add - && \
@@ -125,7 +128,12 @@ ADD clouseau/log4j.properties clouseau/clouseau.ini ./
 WORKDIR /opt/couchdb
 ADD couch/vm.args couch/local.ini ./etc/
 
+# setup SQS
+WORKDIR /opt/sqs
+ADD sqs ./
+RUN chmod +x ./install.sh && ./install.sh
+
 WORKDIR /
 ADD runner.sh ./bbcouch-runner.sh
-RUN chmod +x ./bbcouch-runner.sh /opt/clouseau/bin/clouseau
+RUN chmod +x ./bbcouch-runner.sh /opt/clouseau/bin/clouseau /opt/sqs/sqs
 CMD ["./bbcouch-runner.sh"]

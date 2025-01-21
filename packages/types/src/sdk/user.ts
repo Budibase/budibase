@@ -3,4 +3,5 @@ export interface SaveUserOpts {
   requirePassword?: boolean
   currentUserId?: string
   skipPasswordValidation?: boolean
+  allowChangingEmail?: boolean
 }

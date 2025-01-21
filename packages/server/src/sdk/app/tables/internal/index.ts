@@ -5,32 +5,71 @@ import {
   ViewStatisticsSchema,
   ViewV2,
   Row,
-  ContextUser,
+  TableSourceType,
 } from "@budibase/types"
 import {
   hasTypeChanged,
   TableSaveFunctions,
+  internalTableCleanup,
 } from "../../../../api/controllers/table/utils"
 import { EventType, updateLinks } from "../../../../db/linkedRows"
 import { cloneDeep } from "lodash/fp"
 import isEqual from "lodash/isEqual"
 import { runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFormula"
-import { context } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
+import { findDuplicateInternalColumns } from "@budibase/shared-core"
 import { getTable } from "../getters"
 import { checkAutoColumns } from "./utils"
 import * as viewsSdk from "../../views"
-import { getRowParams } from "../../../../db/utils"
+import { generateTableID, getRowParams } from "../../../../db/utils"
 import { quotas } from "@budibase/pro"
-import env from "../../../../environment"
-import { AttachmentCleanup } from "../../../../utilities/rowProcessor"
+
+export async function create(
+  table: Omit<Table, "_id" | "_rev">,
+  rows?: Row[],
+  userId?: string
+) {
+  const tableId = generateTableID()
+
+  let tableToSave: Table = {
+    _id: tableId,
+    ...table,
+    // Ensure these fields are populated, even if not sent in the request
+    type: table.type || "table",
+    sourceType: TableSourceType.INTERNAL,
+  }
+
+  const isImport = !!rows
+
+  if (!tableToSave.views) {
+    tableToSave.views = {}
+  }
+
+  try {
+    const { table } = await save(tableToSave, {
+      userId,
+      rowsToImport: rows,
+      isImport,
+    })
+
+    return table
+  } catch (err: any) {
+    if (err instanceof Error) {
+      throw new HTTPError(err.message, 400)
+    } else {
+      throw new HTTPError(err.message || err, err.status || 500)
+    }
+  }
+}
 
 export async function save(
   table: Table,
   opts?: {
-    user?: ContextUser
+    userId?: string
     tableId?: string
     rowsToImport?: Row[]
     renaming?: RenameColumn
+    isImport?: boolean
   }
 ) {
   const db = context.getAppDB()
@@ -45,13 +84,24 @@ export async function save(
   if (hasTypeChanged(table, oldTable)) {
     throw new Error("A column type has changed.")
   }
+
+  // check for case sensitivity - we don't want to allow duplicated columns
+  const duplicateColumn = findDuplicateInternalColumns(table)
+  if (duplicateColumn.length) {
+    throw new Error(
+      `Column(s) "${duplicateColumn.join(
+        ", "
+      )}" are duplicated - check for other columns with these name (case in-sensitive)`
+    )
+  }
+
   // check that subtypes have been maintained
   table = checkAutoColumns(table, oldTable)
 
   // saving a table is a complex operation, involving many different steps, this
   // has been broken out into a utility to make it more obvious/easier to manipulate
   const tableSaveFunctions = new TableSaveFunctions({
-    user: opts?.user,
+    userId: opts?.userId,
     oldTable,
     importRows: opts?.rowsToImport,
   })
@@ -121,23 +171,27 @@ export async function save(
   }
   // has to run after, make sure it has _id
   await runStaticFormulaChecks(table, { oldTable, deletion: false })
-  return { table }
+  return { table, oldTable }
 }
 
 export async function destroy(table: Table) {
   const db = context.getAppDB()
   const tableId = table._id!
 
-  // Delete all rows for that table
-  const rowsData = await db.allDocs(
-    getRowParams(tableId, null, {
-      include_docs: true,
-    })
-  )
-  await db.bulkDocs(
-    rowsData.rows.map((row: any) => ({ ...row.doc, _deleted: true }))
-  )
-  await quotas.removeRows(rowsData.rows.length, {
+  // Delete all rows for that table - we have to retrieve the full rows for
+  // attachment cleanup, this may be worth investigating if there is a better
+  // way - we could delete all rows without the `include_docs` which would be faster
+  const rows = (
+    await db.allDocs<Row>(
+      getRowParams(tableId, null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(data => data.doc!)
+  await db.bulkDocs(rows.map((row: Row) => ({ ...row, _deleted: true })))
+
+  // remove rows from quota
+  await quotas.removeRows(rows.length, {
     tableId,
   })
 
@@ -150,25 +204,8 @@ export async function destroy(table: Table) {
   // don't remove the table itself until very end
   await db.remove(tableId, table._rev)
 
-  // remove table search index
-  if (!env.isTest() || env.COUCH_DB_URL) {
-    const currentIndexes = await db.getIndexes()
-    const existingIndex = currentIndexes.indexes.find(
-      (existing: any) => existing.name === `search:${tableId}`
-    )
-    if (existingIndex) {
-      await db.deleteIndex(existingIndex)
-    }
-  }
-
-  // has to run after, make sure it has _id
-  await runStaticFormulaChecks(table, {
-    deletion: true,
-  })
-  await AttachmentCleanup.tableDelete(
-    table,
-    rowsData.rows.map((row: any) => row.doc)
-  )
+  // final cleanup, attachments, indexes, SQS
+  await internalTableCleanup(table, rows)
 
   return { table }
 }

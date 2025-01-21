@@ -13,7 +13,7 @@
     Search,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth, licensing, admin } from "stores/portal"
+  import { groups, auth, licensing, admin } from "@/stores/portal"
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import { cloneDeep } from "lodash/fp"
@@ -60,7 +60,7 @@
 
   async function saveGroup(group) {
     try {
-      group = await groups.actions.save(group)
+      group = await groups.save(group)
       $goto(`./${group._id}`)
       notifications.success(`User group created successfully`)
     } catch (error) {
@@ -83,7 +83,7 @@
     try {
       // always load latest
       await licensing.init()
-      await groups.actions.init()
+      await groups.init()
     } catch (error) {
       notifications.error("Error getting user groups")
     }

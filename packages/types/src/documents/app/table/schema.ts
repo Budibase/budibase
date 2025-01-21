@@ -1,6 +1,6 @@
 // all added by grid/table when defining the
 // column size, position and whether it can be viewed
-import { FieldType } from "../row"
+import { FieldType, FormulaResponseType } from "../row"
 import {
   AutoFieldSubType,
   AutoReason,
@@ -9,6 +9,7 @@ import {
   JsonFieldSubType,
   RelationshipType,
 } from "./constants"
+import { AIOperationEnum } from "../../../sdk/ai"
 
 export interface UIFieldMetadata {
   order?: number
@@ -64,7 +65,7 @@ export interface AutoColumnFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.AUTO
   autocolumn: true
-  subtype?: AutoFieldSubType
+  subtype: AutoFieldSubType
   lastID?: number
   // if the column was turned to an auto-column for SQL, explains why (primary, foreign etc)
   autoReason?: AutoReason
@@ -81,11 +82,13 @@ export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
     toTable: string
     toKey: string
   }
+  default?: string
 }
 
 export interface JsonFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.JSON
   subtype?: JsonFieldSubType.ARRAY
+  default?: string
 }
 
 export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
@@ -94,24 +97,49 @@ export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   timeOnly?: boolean
   dateOnly?: boolean
   subtype?: AutoFieldSubType.CREATED_AT | AutoFieldSubType.UPDATED_AT
+  default?: string
 }
 
 export interface LongFormFieldMetadata extends BaseFieldSchema {
   type: FieldType.LONGFORM
   useRichText?: boolean | null
+  default?: string
+}
+
+export interface StringFieldMetadata extends BaseFieldSchema {
+  type: FieldType.STRING
+  default?: string
 }
 
 export interface FormulaFieldMetadata extends BaseFieldSchema {
   type: FieldType.FORMULA
   formula: string
   formulaType?: FormulaType
+  responseType?: FormulaResponseType
+}
+
+export interface AIFieldMetadata extends BaseFieldSchema {
+  type: FieldType.AI
+  operation: AIOperationEnum
+  columns?: string[]
+  column?: string
+  categories?: string
+  prompt?: string
+  language?: string
 }
 
 export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE
-  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
+  subtype: BBReferenceFieldSubType
   relationshipType?: RelationshipType
+  default?: string[]
+}
+export interface BBReferenceSingleFieldMetadata
+  extends Omit<BaseFieldSchema, "subtype"> {
+  type: FieldType.BB_REFERENCE_SINGLE
+  subtype: Exclude<BBReferenceFieldSubType, BBReferenceFieldSubType.USERS>
+  default?: string
 }
 
 export interface AttachmentFieldMetadata extends BaseFieldSchema {
@@ -142,6 +170,33 @@ export interface FieldConstraints {
   }
 }
 
+export interface OptionsFieldMetadata extends BaseFieldSchema {
+  type: FieldType.OPTIONS
+  constraints: FieldConstraints & {
+    inclusion: string[]
+  }
+  default?: string
+}
+
+export interface ArrayFieldMetadata extends BaseFieldSchema {
+  type: FieldType.ARRAY
+  constraints: FieldConstraints & {
+    type: JsonFieldSubType.ARRAY
+    inclusion: string[]
+  }
+  default?: string[]
+}
+
+export interface BooleanFieldMetadata extends BaseFieldSchema {
+  type: FieldType.BOOLEAN
+  default?: string
+}
+
+export interface BigIntFieldMetadata extends BaseFieldSchema {
+  type: FieldType.BIGINT
+  default?: string
+}
+
 interface BaseFieldSchema extends UIFieldMetadata {
   type: FieldType
   name: string
@@ -161,10 +216,18 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.LINK
     | FieldType.AUTO
     | FieldType.FORMULA
+    | FieldType.AI
     | FieldType.NUMBER
     | FieldType.LONGFORM
     | FieldType.BB_REFERENCE
+    | FieldType.BB_REFERENCE_SINGLE
     | FieldType.ATTACHMENTS
+    | FieldType.STRING
+    | FieldType.ARRAY
+    | FieldType.OPTIONS
+    | FieldType.BOOLEAN
+    | FieldType.BIGINT
+    | FieldType.JSON
   >
 }
 
@@ -174,11 +237,18 @@ export type FieldSchema =
   | RelationshipFieldMetadata
   | AutoColumnFieldMetadata
   | FormulaFieldMetadata
+  | AIFieldMetadata
   | NumberFieldMetadata
   | LongFormFieldMetadata
+  | StringFieldMetadata
   | BBReferenceFieldMetadata
   | JsonFieldMetadata
   | AttachmentFieldMetadata
+  | BBReferenceSingleFieldMetadata
+  | ArrayFieldMetadata
+  | OptionsFieldMetadata
+  | BooleanFieldMetadata
+  | BigIntFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema
@@ -206,16 +276,4 @@ export function isManyToOne(
   field: RelationshipFieldMetadata
 ): field is ManyToOneRelationshipFieldMetadata {
   return field.relationshipType === RelationshipType.MANY_TO_ONE
-}
-
-export function isBBReferenceField(
-  field: FieldSchema
-): field is BBReferenceFieldMetadata {
-  return field.type === FieldType.BB_REFERENCE
-}
-
-export function isAttachmentField(
-  field: FieldSchema
-): field is AttachmentFieldMetadata {
-  return field.type === FieldType.ATTACHMENTS
 }

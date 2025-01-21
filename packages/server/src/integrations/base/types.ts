@@ -104,6 +104,37 @@ export interface OracleColumnsResponse {
   SEARCH_CONDITION: null | string
 }
 
+export enum TriggeringEvent {
+  INSERT = "INSERT",
+  DELETE = "DELETE",
+  UPDATE = "UPDATE",
+  LOGON = "LOGON",
+  LOGOFF = "LOGOFF",
+  STARTUP = "STARTUP",
+  SHUTDOWN = "SHUTDOWN",
+  SERVERERROR = "SERVERERROR",
+  SCHEMA = "SCHEMA",
+  ALTER = "ALTER",
+  DROP = "DROP",
+}
+
+export enum TriggerType {
+  BEFORE_EACH_ROW = "BEFORE EACH ROW",
+  AFTER_EACH_ROW = "AFTER EACH ROW",
+  BEFORE_STATEMENT = "BEFORE STATEMENT",
+  AFTER_STATEMENT = "AFTER STATEMENT",
+  INSTEAD_OF = "INSTEAD OF",
+  COMPOUND = "COMPOUND",
+}
+
+export interface OracleTriggersResponse {
+  TABLE_NAME: string
+  TRIGGER_NAME: string
+  TRIGGER_TYPE: TriggerType
+  TRIGGERING_EVENT: TriggeringEvent
+  TRIGGER_BODY: string
+}
+
 /**
  * An oracle constraint
  */

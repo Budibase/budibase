@@ -83,3 +83,32 @@ export const getUserLabel = (user: User) => {
     return email
   }
 }
+
+export function cancelableTimeout(
+  timeout: number
+): [Promise<unknown>, () => void] {
+  let timeoutId: NodeJS.Timeout
+  return [
+    new Promise((resolve, reject) => {
+      timeoutId = setTimeout(() => {
+        reject({
+          status: 301,
+          errno: "ETIME",
+        })
+      }, timeout)
+    }),
+    () => {
+      clearTimeout(timeoutId)
+    },
+  ]
+}
+
+export async function withTimeout<T>(
+  timeout: number,
+  promise: Promise<T>
+): Promise<T> {
+  const [timeoutPromise, cancel] = cancelableTimeout(timeout)
+  const result = (await Promise.race([promise, timeoutPromise])) as T
+  cancel()
+  return result
+}

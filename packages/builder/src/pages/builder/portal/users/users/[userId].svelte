@@ -18,14 +18,14 @@
     Table,
   } from "@budibase/bbui"
   import { onMount, setContext } from "svelte"
-  import { users, auth, groups, appsStore, licensing } from "stores/portal"
-  import { roles } from "stores/builder"
+  import { users, auth, groups, appsStore, licensing } from "@/stores/portal"
+  import { roles } from "@/stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
-  import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
+  import UserGroupPicker from "@/components/settings/UserGroupPicker.svelte"
   import DeleteUserModal from "./_components/DeleteUserModal.svelte"
   import GroupIcon from "../groups/_components/GroupIcon.svelte"
   import { Constants, UserAvatar } from "@budibase/frontend-core"
-  import { Breadcrumbs, Breadcrumb } from "components/portal/page"
+  import { Breadcrumbs, Breadcrumb } from "@/components/portal/page"
   import RemoveGroupTableRenderer from "./_components/RemoveGroupTableRenderer.svelte"
   import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
@@ -85,8 +85,9 @@
   let popoverAnchor
   let searchTerm = ""
   let popover
-  let user
+  let user, tenantOwner
   let loaded = false
+  let userFieldsToUpdate = {}
 
   $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
 
@@ -104,6 +105,7 @@
     })
   })
   $: globalRole = users.getUserRole(user)
+  $: isTenantOwner = tenantOwner?.email && tenantOwner.email === user?.email
 
   const getAvailableApps = (appList, privileged, roles) => {
     let availableApps = appList.slice()
@@ -163,40 +165,45 @@
     return label
   }
 
-  async function updateUserFirstName(evt) {
+  async function saveUser() {
     try {
-      await users.save({ ...user, firstName: evt.target.value })
+      await users.save({ ...user, ...userFieldsToUpdate })
+      userFieldsToUpdate = {}
       await fetchUser()
     } catch (error) {
       notifications.error("Error updating user")
     }
+  }
+
+  async function updateUserFirstName(evt) {
+    userFieldsToUpdate.firstName = evt.target.value
   }
 
   async function updateUserLastName(evt) {
-    try {
-      await users.save({ ...user, lastName: evt.target.value })
-      await fetchUser()
-    } catch (error) {
-      notifications.error("Error updating user")
-    }
+    userFieldsToUpdate.lastName = evt.target.value
   }
 
   async function updateUserRole({ detail }) {
+    let flags = {}
     if (detail === Constants.BudibaseRoles.Developer) {
-      toggleFlags({ admin: { global: false }, builder: { global: true } })
+      flags = { admin: { global: false }, builder: { global: true } }
     } else if (detail === Constants.BudibaseRoles.Admin) {
-      toggleFlags({ admin: { global: true }, builder: { global: true } })
+      flags = { admin: { global: true }, builder: { global: true } }
     } else if (detail === Constants.BudibaseRoles.AppUser) {
-      toggleFlags({ admin: { global: false }, builder: { global: false } })
+      flags = { admin: { global: false }, builder: { global: false } }
     } else if (detail === Constants.BudibaseRoles.Creator) {
-      toggleFlags({
+      flags = {
         admin: { global: false },
         builder: {
           global: false,
           creator: true,
           apps: user?.builder?.apps || [],
         },
-      })
+      }
+    }
+    userFieldsToUpdate = {
+      ...userFieldsToUpdate,
+      ...flags,
     }
   }
 
@@ -205,24 +212,16 @@
     if (!user?._id) {
       $goto("./")
     }
-  }
-
-  async function toggleFlags(detail) {
-    try {
-      await users.save({ ...user, ...detail })
-      await fetchUser()
-    } catch (error) {
-      notifications.error("Error updating user")
-    }
+    tenantOwner = await users.getAccountHolder()
   }
 
   const addGroup = async groupId => {
-    await groups.actions.addUser(groupId, userId)
+    await groups.addUser(groupId, userId)
     await fetchUser()
   }
 
   const removeGroup = async groupId => {
-    await groups.actions.removeUser(groupId, userId)
+    await groups.removeUser(groupId, userId)
     await fetchUser()
   }
 
@@ -232,7 +231,7 @@
 
   onMount(async () => {
     try {
-      await Promise.all([fetchUser(), groups.actions.init(), roles.fetch()])
+      await Promise.all([fetchUser(), groups.init(), roles.fetch()])
       loaded = true
     } catch (error) {
       notifications.error("Error getting user groups")
@@ -268,9 +267,11 @@
                 Force password reset
               </MenuItem>
             {/if}
-            <MenuItem on:click={deleteModal.show} icon="Delete">
-              Delete
-            </MenuItem>
+            {#if !isTenantOwner}
+              <MenuItem on:click={deleteModal.show} icon="Delete">
+                Delete
+              </MenuItem>
+            {/if}
           </ActionMenu>
         </div>
       {/if}
@@ -292,7 +293,7 @@
           <Input
             disabled={readonly}
             value={user?.firstName}
-            on:blur={updateUserFirstName}
+            on:input={updateUserFirstName}
           />
         </div>
         <div class="field">
@@ -300,7 +301,7 @@
           <Input
             disabled={readonly}
             value={user?.lastName}
-            on:blur={updateUserLastName}
+            on:input={updateUserLastName}
           />
         </div>
         <!-- don't let a user remove the privileges that let them be here -->
@@ -310,15 +311,24 @@
             <Label size="L">Role</Label>
             <Select
               placeholder={null}
-              disabled={!sdk.users.isAdmin($auth.user)}
-              value={globalRole}
-              options={Constants.BudibaseRoleOptions}
+              disabled={!sdk.users.isAdmin($auth.user) || isTenantOwner}
+              value={isTenantOwner ? "owner" : globalRole}
+              options={isTenantOwner
+                ? Constants.ExtendedBudibaseRoleOptions
+                : Constants.BudibaseRoleOptions}
               on:change={updateUserRole}
             />
           </div>
         {/if}
       </div>
     </Layout>
+    <div>
+      <Button
+        cta
+        disabled={Object.keys(userFieldsToUpdate).length === 0}
+        on:click={saveUser}>Save</Button
+      >
+    </div>
 
     {#if $licensing.groupsEnabled}
       <!-- User groups -->

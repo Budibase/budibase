@@ -8,26 +8,30 @@
   import { GutterWidth, BlankRowID } from "../lib/constants"
   import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
+  import { getCellID } from "../lib/utils"
 
   const {
     rows,
     selectedRows,
-    stickyColumn,
+    displayColumn,
     renderedRows,
     focusedCellId,
     hoveredRowId,
     config,
     selectedCellMap,
+    userCellMap,
     focusedRow,
     scrollLeft,
     dispatch,
     contentLines,
     isDragging,
+    isSelectingCells,
+    selectedCellCount,
   } = getContext("grid")
 
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).length
-  $: width = GutterWidth + ($stickyColumn?.width || 0)
+  $: width = GutterWidth + ($displayColumn?.width || 0)
 
   const selectAll = () => {
     const allSelected = selectedRowCount === rowCount
@@ -56,8 +60,8 @@
       rowSelected={selectedRowCount && selectedRowCount === rowCount}
       disabled={!$renderedRows.length}
     />
-    {#if $stickyColumn}
-      <HeaderCell column={$stickyColumn} orderable={false} idx="sticky">
+    {#if $displayColumn}
+      <HeaderCell column={$displayColumn} orderable={false} idx="sticky">
         <slot name="edit-column" />
       </HeaderCell>
     {/if}
@@ -65,62 +69,62 @@
 
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
-    <GridScrollWrapper scrollVertically attachHandlers>
-      {#each $renderedRows as row, idx}
-        {@const rowSelected = !!$selectedRows[row._id]}
-        {@const rowHovered = $hoveredRowId === row._id}
-        {@const rowFocused = $focusedRow?._id === row._id}
-        {@const cellId = `${row._id}-${$stickyColumn?.name}`}
-        <div
-          class="row"
-          on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
-          on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
-          on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
-        >
-          <GutterCell {row} {rowFocused} {rowHovered} {rowSelected} />
-          {#if $stickyColumn}
-            <DataCell
-              {row}
-              {cellId}
-              {rowFocused}
-              selected={rowSelected}
-              highlighted={rowHovered || rowFocused}
-              rowIdx={row.__idx}
-              topRow={idx === 0}
-              focused={$focusedCellId === cellId}
-              selectedUser={$selectedCellMap[cellId]}
-              width={$stickyColumn.width}
-              column={$stickyColumn}
-              contentLines={$contentLines}
-            />
-          {/if}
-        </div>
-      {/each}
-      {#if $config.canAddRows}
-        <div
-          class="row new"
-          on:mouseenter={$isDragging
-            ? null
-            : () => ($hoveredRowId = BlankRowID)}
-          on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
-          on:click={() => dispatch("add-row-inline")}
-        >
-          <GutterCell rowHovered={$hoveredRowId === BlankRowID}>
-            <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
-          </GutterCell>
-          {#if $stickyColumn}
-            <GridCell
-              width={$stickyColumn.width}
-              highlighted={$hoveredRowId === BlankRowID}
-            >
-              <KeyboardShortcut padded keybind="Ctrl+Enter" />
-            </GridCell>
-          {/if}
-        </div>
-      {/if}
-    </GridScrollWrapper>
-  </div>
+  <GridScrollWrapper scrollVertically attachHandlers>
+    {#each $renderedRows as row, idx}
+      {@const rowSelected = !!$selectedRows[row._id]}
+      {@const rowHovered =
+        $hoveredRowId === row._id &&
+        (!$selectedCellCount || !$isSelectingCells)}
+      {@const rowFocused = $focusedRow?._id === row._id}
+      {@const cellId = getCellID(row._id, $displayColumn?.name)}
+      <div
+        class="row"
+        on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
+        on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
+        on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
+      >
+        <GutterCell {row} {rowFocused} {rowHovered} {rowSelected} />
+        {#if $displayColumn}
+          <DataCell
+            {row}
+            {cellId}
+            {rowFocused}
+            {rowSelected}
+            cellSelected={$selectedCellMap[cellId]}
+            highlighted={rowHovered || rowFocused}
+            rowIdx={row.__idx}
+            topRow={idx === 0}
+            focused={$focusedCellId === cellId}
+            selectedUser={$userCellMap[cellId]}
+            width={$displayColumn.width}
+            column={$displayColumn}
+            contentLines={$contentLines}
+            isSelectingCells={$isSelectingCells}
+          />
+        {/if}
+      </div>
+    {/each}
+    {#if $config.canAddRows}
+      <div
+        class="row blank"
+        on:mouseenter={$isDragging ? null : () => ($hoveredRowId = BlankRowID)}
+        on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
+        on:click={() => dispatch("add-row-inline")}
+      >
+        <GutterCell rowHovered={$hoveredRowId === BlankRowID}>
+          <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
+        </GutterCell>
+        {#if $displayColumn}
+          <GridCell
+            width={$displayColumn.width}
+            highlighted={$hoveredRowId === BlankRowID}
+          >
+            <KeyboardShortcut padded keybind="Ctrl+Enter" />
+          </GridCell>
+        {/if}
+      </div>
+    {/if}
+  </GridScrollWrapper>
 </div>
 
 <style>
@@ -158,7 +162,7 @@
 
   /* Don't show borders between cells in the sticky column */
   .sticky-column :global(.cell:not(:last-child)) {
-    border-right: none;
+    border-right-color: transparent;
   }
 
   .header {
@@ -167,17 +171,16 @@
   .header :global(.cell) {
     background: var(--grid-background-alt);
   }
+  .header :global(.cell::before) {
+    display: none;
+  }
   .row {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
   }
-  .content {
-    position: relative;
-    flex: 1 1 auto;
-  }
-  .row.new :global(*:hover) {
+  .blank :global(.cell:hover) {
     cursor: pointer;
   }
 </style>

@@ -1,5 +1,3 @@
-import vm from "vm"
-
 jest.mock("@budibase/handlebars-helpers/lib/math", () => {
   const actual = jest.requireActual("@budibase/handlebars-helpers/lib/math")
 
@@ -17,7 +15,7 @@ jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
   }
 })
 
-import { processString, setJSRunner } from "../src/index"
+import { defaultJSSetup, processString } from "../src/index"
 
 import tk from "timekeeper"
 import { getParsedManifest, runJsHelpersTests } from "./utils"
@@ -32,9 +30,7 @@ describe("manifest", () => {
   const manifest = getParsedManifest()
 
   beforeAll(() => {
-    setJSRunner((js, context) => {
-      return vm.runInNewContext(js, context, { timeout: 1000 })
-    })
+    defaultJSSetup()
   })
 
   describe("examples are valid", () => {

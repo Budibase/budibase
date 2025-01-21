@@ -21,7 +21,6 @@ export interface UserSSO {
   provider: string // the individual provider e.g. Okta, Auth0, Google
   providerType: SSOProviderType
   oauth2?: OAuth2
-  thirdPartyProfile?: SSOProfileJson
   profile?: {
     displayName?: string
     name?: {
@@ -39,13 +38,17 @@ export function isSSOUser(user: User): user is SSOUser {
 
 // USER
 
+export interface UserIdentifier {
+  userId: string
+  email: string
+}
+
 export interface User extends Document {
   tenantId: string
   email: string
   userId?: string
   firstName?: string
   lastName?: string
-  pictureUrl?: string
   forceResetPassword?: boolean
   roles: UserRoles
   builder?: {
@@ -59,7 +62,6 @@ export interface User extends Document {
   password?: string
   status?: UserStatus
   createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
-  dayPassRecordedAt?: string
   userGroups?: string[]
   onboardedAt?: string
   freeTrialConfirmedAt?: string
@@ -67,6 +69,19 @@ export interface User extends Document {
   scimInfo?: { isSync: true } & Record<string, any>
   appFavourites?: string[]
   ssoId?: string
+  appSort?: string
+  budibaseAccess?: boolean
+  accountPortalAccess?: boolean
+}
+
+export interface UserBindings extends Document {
+  firstName?: string
+  lastName?: string
+  email?: string
+  status?: string
+  roleId?: string | null
+  globalId?: string
+  userId?: string
 }
 
 export enum UserStatus {
@@ -74,9 +89,8 @@ export enum UserStatus {
   INACTIVE = "inactive",
 }
 
-export interface UserRoles {
-  [key: string]: string
-}
+// specifies a map of app ID to role ID
+export type UserRoles = Record<string, string>
 
 // UTILITY TYPES
 

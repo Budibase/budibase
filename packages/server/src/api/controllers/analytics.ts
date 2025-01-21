@@ -1,17 +1,27 @@
-import { events, context } from "@budibase/backend-core"
-import { AnalyticsPingRequest, App, PingSource } from "@budibase/types"
+import { context, events } from "@budibase/backend-core"
+import {
+  AnalyticsEnabledResponse,
+  AnalyticsPingRequest,
+  AnalyticsPingResponse,
+  App,
+  Ctx,
+  PingSource,
+} from "@budibase/types"
 import { DocumentType, isDevAppID } from "../../db/utils"
 
-export const isEnabled = async (ctx: any) => {
+export const isEnabled = async (ctx: Ctx<void, AnalyticsEnabledResponse>) => {
   const enabled = await events.analytics.enabled()
   ctx.body = {
     enabled,
   }
 }
 
-export const ping = async (ctx: any) => {
-  const body = ctx.request.body as AnalyticsPingRequest
+export const ping = async (
+  ctx: Ctx<AnalyticsPingRequest, AnalyticsPingResponse>
+) => {
+  const body = ctx.request.body
 
+  let pingType: PingSource | undefined
   switch (body.source) {
     case PingSource.APP: {
       const db = context.getAppDB({ skip_setup: true })
@@ -23,13 +33,18 @@ export const ping = async (ctx: any) => {
       } else {
         await events.serve.servedApp(appInfo, body.timezone, body.embedded)
       }
+      pingType = PingSource.APP
       break
     }
     case PingSource.BUILDER: {
       await events.serve.servedBuilder(body.timezone)
+      pingType = PingSource.BUILDER
       break
     }
   }
 
-  ctx.status = 200
+  ctx.body = {
+    message: "pong",
+    source: pingType,
+  }
 }

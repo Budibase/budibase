@@ -1,14 +1,21 @@
 import {
+  DatasourcePlusQueryResponse,
+  DSPlusOperation,
   FieldType,
+  isManyToOne,
+  isOneToMany,
   ManyToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
   RelationshipsJson,
   Row,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import { breakExternalTableId } from "../../../../integrations/utils"
-import { basicProcessing } from "./basic"
 import { generateJunctionTableID } from "../../../../db/utils"
+import sdk from "../../../../sdk"
+import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
+import { sql } from "@budibase/backend-core"
 
 type TableMap = Record<string, Table>
 
@@ -16,68 +23,6 @@ export function isManyToMany(
   field: RelationshipFieldMetadata
 ): field is ManyToManyRelationshipFieldMetadata {
   return !!(field as ManyToManyRelationshipFieldMetadata).through
-}
-
-/**
- * This iterates through the returned rows and works out what elements of the rows
- * actually match up to another row (based on primary keys) - this is pretty specific
- * to SQL and the way that SQL relationships are returned based on joins.
- * This is complicated, but the idea is that when a SQL query returns all the relations
- * will be separate rows, with all of the data in each row. We have to decipher what comes
- * from where (which tables) and how to convert that into budibase columns.
- */
-export async function updateRelationshipColumns(
-  table: Table,
-  tables: TableMap,
-  row: Row,
-  rows: { [key: string]: Row },
-  relationships: RelationshipsJson[],
-  opts?: { sqs?: boolean }
-) {
-  const columns: { [key: string]: any } = {}
-  for (let relationship of relationships) {
-    const linkedTable = tables[relationship.tableName]
-    if (!linkedTable) {
-      continue
-    }
-    const fromColumn = `${table.name}.${relationship.from}`
-    const toColumn = `${linkedTable.name}.${relationship.to}`
-    // this is important when working with multiple relationships
-    // between the same tables, don't want to overlap/multiply the relations
-    if (
-      !relationship.through &&
-      row[fromColumn]?.toString() !== row[toColumn]?.toString()
-    ) {
-      continue
-    }
-
-    let linked = basicProcessing({
-      row,
-      table: linkedTable,
-      isLinked: true,
-      sqs: opts?.sqs,
-    })
-    if (!linked._id) {
-      continue
-    }
-    columns[relationship.column] = linked
-  }
-  for (let [column, related] of Object.entries(columns)) {
-    if (!row._id) {
-      continue
-    }
-    const rowId: string = row._id
-    if (!Array.isArray(rows[rowId][column])) {
-      rows[rowId][column] = []
-    }
-    // make sure relationship hasn't been found already
-    if (
-      !rows[rowId][column].find((relation: Row) => relation._id === related._id)
-    ) {
-      rows[rowId][column].push(related)
-    }
-  }
-  return rows
 }
 
 /**
@@ -91,12 +36,12 @@ export function buildExternalRelationships(
 ): RelationshipsJson[] {
   const relationships = []
   for (let [fieldName, field] of Object.entries(table.schema)) {
-    if (field.type !== FieldType.LINK) {
+    if (field.type !== FieldType.LINK || !field.tableId) {
       continue
     }
     const { tableName: linkTableName } = breakExternalTableId(field.tableId)
     // no table to link to, this is not a valid relationships
-    if (!linkTableName || !tables[linkTableName]) {
+    if (!tables[linkTableName]) {
       continue
     }
     const linkTable = tables[linkTableName]
@@ -108,7 +53,7 @@ export function buildExternalRelationships(
       // need to specify where to put this back into
       column: fieldName,
     }
-    if (isManyToMany(field)) {
+    if (isManyToMany(field) && field.through) {
       const { tableName: throughTableName } = breakExternalTableId(
         field.through
       )
@@ -118,7 +63,7 @@ export function buildExternalRelationships(
       definition.to = field.throughFrom || linkTable.primary[0]
       definition.fromPrimary = table.primary[0]
       definition.toPrimary = linkTable.primary[0]
-    } else {
+    } else if (isManyToOne(field) || isOneToMany(field)) {
       // if no foreign key specified then use the name of the field in other table
       definition.from = field.foreignKey || table.primary[0]
       definition.to = field.fieldName
@@ -128,7 +73,10 @@ export function buildExternalRelationships(
   return relationships
 }
 
-export function buildInternalRelationships(table: Table): RelationshipsJson[] {
+export function buildInternalRelationships(
+  table: Table,
+  allTables: Table[]
+): RelationshipsJson[] {
   const relationships: RelationshipsJson[] = []
   const links = Object.values(table.schema).filter(
     column => column.type === FieldType.LINK
@@ -141,6 +89,10 @@ export function buildInternalRelationships(table: Table): RelationshipsJson[] {
     const linkTableId = link.tableId!
     const junctionTableId = generateJunctionTableID(tableId, linkTableId)
     const isFirstTable = tableId > linkTableId
+    // skip relationships with missing table definitions
+    if (!allTables.find(table => table._id === linkTableId)) {
+      continue
+    }
     relationships.push({
       through: junctionTableId,
       column: link.name,
@@ -161,34 +113,147 @@ export function buildInternalRelationships(table: Table): RelationshipsJson[] {
  * Creating the specific list of fields that we desire, and excluding the ones that are no use to us
  * is more performant and has the added benefit of protecting against this scenario.
  */
-export function buildSqlFieldList(
-  table: Table,
+export async function buildSqlFieldList(
+  source: Table | ViewV2,
   tables: TableMap,
   opts?: { relationships: boolean }
 ) {
+  const { relationships } = opts || {}
+
+  const nonMappedColumns = [FieldType.LINK, FieldType.FORMULA, FieldType.AI]
+
   function extractRealFields(table: Table, existing: string[] = []) {
     return Object.entries(table.schema)
       .filter(
-        column =>
-          column[1].type !== FieldType.LINK &&
-          column[1].type !== FieldType.FORMULA &&
-          !existing.find((field: string) => field === column[0])
+        ([columnName, column]) =>
+          !nonMappedColumns.includes(column.type) &&
+          !existing.find((field: string) => field === columnName)
       )
-      .map(column => `${table.name}.${column[0]}`)
+      .map(([columnName]) => columnName)
   }
-  let fields = extractRealFields(table)
-  for (let field of Object.values(table.schema)) {
-    if (field.type !== FieldType.LINK || !opts?.relationships) {
+
+  function getRequiredFields(table: Table, existing: string[] = []) {
+    const requiredFields: string[] = []
+    if (table.primary) {
+      requiredFields.push(...table.primary)
+    }
+    if (table.primaryDisplay) {
+      requiredFields.push(table.primaryDisplay)
+    }
+
+    if (!sql.utils.isExternalTable(table)) {
+      requiredFields.push(...PROTECTED_INTERNAL_COLUMNS)
+    }
+
+    return requiredFields.filter(
+      column =>
+        !existing.find((field: string) => field === column) &&
+        table.schema[column] &&
+        !nonMappedColumns.includes(table.schema[column].type)
+    )
+  }
+
+  let fields: string[] = []
+
+  const isView = sdk.views.isView(source)
+
+  let table: Table
+  if (isView) {
+    table = await sdk.views.getTable(source.id)
+
+    fields = Object.keys(helpers.views.basicFields(source)).filter(
+      f => table.schema[f].type !== FieldType.LINK
+    )
+  } else {
+    table = source
+    fields = extractRealFields(source).filter(
+      f => table.schema[f].visible !== false
+    )
+  }
+
+  const containsFormula = (isView ? fields : Object.keys(table.schema)).some(
+    f => table.schema[f]?.type === FieldType.FORMULA
+  )
+  // If are requesting for a formula field, we need to retrieve all fields
+  if (containsFormula) {
+    fields = extractRealFields(table)
+  }
+
+  if (!isView || !helpers.views.isCalculationView(source)) {
+    fields.push(
+      ...getRequiredFields(
+        {
+          ...table,
+          primaryDisplay: source.primaryDisplay || table.primaryDisplay,
+        },
+        fields
+      )
+    )
+  }
+
+  fields = fields.map(c => `${table.name}.${c}`)
+
+  for (const field of Object.values(table.schema)) {
+    if (field.type !== FieldType.LINK || !relationships || !field.tableId) {
       continue
     }
-    const { tableName: linkTableName } = breakExternalTableId(field.tableId)
-    if (linkTableName) {
-      const linkTable = tables[linkTableName]
-      if (linkTable) {
-        const linkedFields = extractRealFields(linkTable, fields)
-        fields = fields.concat(linkedFields)
+
+    if (
+      isView &&
+      (!source.schema?.[field.name] ||
+        !helpers.views.isVisible(source.schema[field.name])) &&
+      !containsFormula
+    ) {
+      continue
+    }
+
+    const { tableName } = breakExternalTableId(field.tableId)
+    const relatedTable = tables[tableName]
+    if (!relatedTable) {
+      continue
+    }
+
+    const viewFields = new Set<string>()
+    if (containsFormula) {
+      extractRealFields(relatedTable).forEach(f => viewFields.add(f))
+    } else {
+      relatedTable.primary?.forEach(f => viewFields.add(f))
+      if (relatedTable.primaryDisplay) {
+        viewFields.add(relatedTable.primaryDisplay)
+      }
+
+      if (isView) {
+        Object.entries(source.schema?.[field.name]?.columns || {})
+          .filter(
+            ([columnName, columnConfig]) =>
+              relatedTable.schema[columnName] &&
+              helpers.views.isVisible(columnConfig) &&
+              ![FieldType.LINK, FieldType.FORMULA].includes(
+                relatedTable.schema[columnName].type
+              )
+          )
+          .forEach(([field]) => viewFields.add(field))
       }
     }
+
+    const fieldsToAdd = Array.from(viewFields)
+      .filter(f => !nonMappedColumns.includes(relatedTable.schema[f].type))
+      .map(f => `${relatedTable.name}.${f}`)
+      .filter(f => !fields.includes(f))
+    fields.push(...fieldsToAdd)
   }
-  return fields
+
+  return [...new Set(fields)]
+}
+
+export function isKnexEmptyReadResponse(resp: DatasourcePlusQueryResponse) {
+  return (
+    !Array.isArray(resp) ||
+    resp.length === 0 ||
+    (DSPlusOperation.READ in resp[0] && resp[0].read === true)
+  )
+}
+
+export function isKnexRows(resp: DatasourcePlusQueryResponse): resp is Row[] {
+  return !isKnexEmptyReadResponse(resp)
 }

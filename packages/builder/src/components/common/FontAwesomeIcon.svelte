@@ -23,6 +23,7 @@
     faQuestionCircle,
     faCircleCheck,
     faGear,
+    faRectangleList,
   } from "@fortawesome/free-solid-svg-icons"
   import { faGithub, faDiscord } from "@fortawesome/free-brands-svg-icons"
 
@@ -37,6 +38,7 @@
     faFileArrowUp,
     faChevronLeft,
     faCircleInfo,
+    faRectangleList,
 
     // -- Required for easyMDE use in the builder.
     faBold,

@@ -75,7 +75,7 @@ describe("table sdk", () => {
       const view1 = getTable()
       const view2 = getTable()
       const view3 = getTable()
-      const res = sdk.tables.enrichViewSchemas({
+      const res = await sdk.tables.enrichViewSchemas({
         ...basicTable,
         views: {
           [view1.name]: view1,

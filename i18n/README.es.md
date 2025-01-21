@@ -144,7 +144,7 @@ del sistema. Budibase API ofrece:
 
 Puedes aprender mas acerca de Budibase API en los siguientes documentos:
 - [Documentacion general](https://docs.budibase.com/docs/public-api) : Como optener tu clave para la API, usar Insomnia y Postman
-- [API Interactiva](https://docs.budibase.com/reference/post_applications) : Aprende como trabajar con la API
+- [API Interactiva](https://docs.budibase.com/reference/appcreate) : Aprende como trabajar con la API
 
 #### Guias
 

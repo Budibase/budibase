@@ -1,3 +1,4 @@
+ARG BASEIMG=budibase/couchdb:v3.3.3-sqs-v2.1.1
 FROM node:20-slim as build
 
 # install node-gyp dependencies
@@ -21,7 +22,8 @@ RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
 
 RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
 RUN ./scripts/removeWorkspaceDependencies.sh package.json
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production --frozen-lockfile
+ARG TARGETPLATFORM
+RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} yarn install --production --frozen-lockfile
 
 # copy the actual code
 COPY packages/server/dist packages/server/dist
@@ -32,7 +34,7 @@ COPY packages/worker/dist packages/worker/dist
 COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
 
 
-FROM budibase/couchdb:v3.3.3 as runner
+FROM $BASEIMG as runner
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
@@ -63,15 +65,13 @@ RUN mkdir -p /var/log/nginx && \
   touch /var/run/nginx.pid && \
   usermod -a -G tty www-data
 
-WORKDIR /
-RUN mkdir -p scripts/integrations/oracle
-COPY packages/server/scripts/integrations/oracle scripts/integrations/oracle
-RUN /bin/bash -e ./scripts/integrations/oracle/instantclient/linux/install.sh
-
 # setup minio
 WORKDIR /minio
 COPY scripts/install-minio.sh ./install.sh
 RUN chmod +x install.sh && ./install.sh
+
+# setup redis
+COPY hosting/single/redis.conf /etc/redis/redis.conf
 
 # setup runner file
 WORKDIR /

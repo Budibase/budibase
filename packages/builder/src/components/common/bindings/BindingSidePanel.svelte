@@ -2,7 +2,7 @@
   import groupBy from "lodash/fp/groupBy"
   import { convertToJS } from "@budibase/string-templates"
   import { Input, Layout, Icon, Popover } from "@budibase/bbui"
-  import { handlebarsCompletions } from "constants/completions"
+  import { handlebarsCompletions } from "@/constants/completions"
 
   export let addHelper
   export let addBinding
@@ -75,13 +75,6 @@
     if (!context || !binding.value || binding.value === "") {
       return
     }
-
-    // Roles have always been broken for JS. We need to exclude them from
-    // showing a popover as it will show "Error while executing JS".
-    if (binding.category === "Role") {
-      return
-    }
-
     stopHidingPopover()
     popoverAnchor = target
     hoverTarget = {

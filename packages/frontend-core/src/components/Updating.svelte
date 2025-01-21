@@ -1,33 +1,31 @@
 <script>
   export let isMigrationDone
   export let onMigrationDone
-  export let timeoutSeconds = 10 // 3 minutes
+  export let timeoutSeconds = 60 // 1 minute
 
-  const loadTime = Date.now()
   let timedOut = false
 
   async function checkMigrationsFinished() {
-    setTimeout(async () => {
+    let totalWaitMs = 0
+    while (true) {
+      const waitForMs = 5000 + Math.random() * 5000
+      await new Promise(resolve => setTimeout(resolve, waitForMs))
+      totalWaitMs += waitForMs
+
       const isMigrated = await isMigrationDone()
-
-      const timeoutMs = timeoutSeconds * 1000
-      if (!isMigrated) {
-        if (loadTime + timeoutMs > Date.now()) {
-          return checkMigrationsFinished()
-        }
-
-        return migrationTimeout()
+      if (isMigrated) {
+        onMigrationDone()
+        return
       }
 
-      onMigrationDone()
-    }, 1000)
+      if (totalWaitMs > timeoutSeconds * 1000) {
+        timedOut = true
+        return
+      }
+    }
   }
 
   checkMigrationsFinished()
-
-  function migrationTimeout() {
-    timedOut = true
-  }
 </script>
 
 <div class="loading" class:timeout={timedOut}>
@@ -41,6 +39,11 @@
   <span class="subtext">
     {#if !timedOut}
       Please wait and we will be back in a second!
+      <br />
+      Checkout the
+      <a href="https://docs.budibase.com/docs/app-migrations" target="_blank"
+        >documentation</a
+      > on app migrations.
     {:else}
       An error occurred, please try again later.
       <br />

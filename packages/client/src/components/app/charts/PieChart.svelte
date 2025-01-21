@@ -1,6 +1,6 @@
 <script>
-  import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
+  import { formatters, parsePalette } from "./utils"
 
   export let title
   export let dataProvider
@@ -8,84 +8,91 @@
   export let valueColumn
   export let height
   export let width
-  export let dataLabels
   export let animate
+  export let dataLabels
   export let legend
-  export let donut
   export let palette
   export let c1, c2, c3, c4, c5
 
-  $: options = setUpChart(
-    title,
-    dataProvider,
-    labelColumn,
-    valueColumn,
-    height,
-    width,
-    dataLabels,
-    animate,
-    legend,
-    donut,
-    palette,
-    c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null,
-    customColor
-  )
+  $: labelType =
+    dataProvider?.schema?.[labelColumn]?.type === "datetime"
+      ? "datetime"
+      : "category"
+  $: series = getSeries(dataProvider, valueColumn)
+  $: labels = getLabels(dataProvider, labelColumn, labelType)
 
-  $: customColor = palette === "Custom"
+  $: options = {
+    series,
+    labels,
+    colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
+    theme: {
+      palette: parsePalette(palette),
+    },
+    legend: {
+      show: legend,
+      position: "right",
+      horizontalAlign: "right",
+      showForSingleSeries: true,
+      showForNullSeries: true,
+      showForZeroSeries: true,
+    },
+    title: {
+      text: title,
+    },
+    dataLabels: {
+      enabled: dataLabels,
+    },
+    chart: {
+      height: height == null || height === "" ? "auto" : height,
+      width: width == null || width === "" ? "100%" : width,
+      type: "pie",
+      animations: {
+        enabled: animate,
+      },
+      toolbar: {
+        show: false,
+      },
+      zoom: {
+        enabled: false,
+      },
+    },
+  }
 
-  const setUpChart = (
-    title,
-    dataProvider,
-    labelColumn,
-    valueColumn,
-    height,
-    width,
-    dataLabels,
-    animate,
-    legend,
-    donut,
-    palette,
-    colors,
-    customColor
-  ) => {
-    if (
-      !dataProvider ||
-      !dataProvider.rows?.length ||
-      !labelColumn ||
-      !valueColumn
-    ) {
-      return null
-    }
+  const getSeries = (dataProvider, valueColumn) => {
+    const rows = dataProvider.rows ?? []
 
-    // Fetch, filter and sort data
-    const { schema, rows } = dataProvider
-    const data = rows
-      .filter(row => row[labelColumn] != null && row[valueColumn] != null)
-      .slice(0, 100)
-    if (!schema || !data.length) {
-      return null
-    }
+    return rows.map(row => {
+      const value = row?.[valueColumn]
 
-    // Initialise default chart
-    let builder = new ApexOptionsBuilder()
-      .title(title)
-      .type(donut ? "donut" : "pie")
-      .width(width)
-      .height(height)
-      .dataLabels(dataLabels)
-      .animate(animate)
-      .legend(legend)
-      .legendPosition("right")
-      .palette(palette)
-      .colors(customColor ? colors : null)
+      if (dataProvider?.schema?.[valueColumn]?.type === "datetime" && value) {
+        return Date.parse(value)
+      }
 
-    // Add data if valid datasource
-    const series = data.map(row => parseFloat(row[valueColumn]))
-    const labels = data.map(row => row[labelColumn])
-    builder = builder.series(series).labels(labels)
+      // This chart doesn't automatically parse strings into numbers
+      const numValue = parseFloat(value)
+      if (isNaN(numValue)) {
+        return 0
+      }
 
-    // Build chart options
-    return builder.getOptions()
+      return numValue
+    })
+  }
+
+  const getLabels = (dataProvider, labelColumn, labelType) => {
+    const rows = dataProvider.rows ?? []
+
+    return rows.map(row => {
+      const value = row?.[labelColumn]
+
+      // If a nullish or non-scalar type, replace it with an empty string
+      if (!["string", "number", "boolean"].includes(typeof value)) {
+        return ""
+      } else if (labelType === "datetime") {
+        return formatters["Datetime"](value)
+      }
+
+      return value
+    })
   }
 </script>
 

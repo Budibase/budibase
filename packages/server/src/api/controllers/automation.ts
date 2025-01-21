@@ -1,16 +1,7 @@
 import * as triggers from "../../automations/triggers"
-import {
-  getAutomationParams,
-  generateAutomationID,
-  DocumentType,
-} from "../../db/utils"
-import {
-  checkForWebhooks,
-  updateTestHistory,
-  removeDeprecated,
-} from "../../automations/utils"
-import { deleteEntityMetadata } from "../../utilities"
-import { MetadataTypes } from "../../constants"
+import { sdk as coreSdk } from "@budibase/shared-core"
+import { DocumentType } from "../../db/utils"
+import { updateTestHistory, removeDeprecated } from "../../automations/utils"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
 import { context, cache, events, db as dbCore } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
@@ -18,9 +9,25 @@ import {
   App,
   Automation,
   AutomationActionStepId,
-  AutomationResults,
   UserCtx,
   DeleteAutomationResponse,
+  FetchAutomationResponse,
+  GetAutomationTriggerDefinitionsResponse,
+  GetAutomationStepDefinitionsResponse,
+  GetAutomationActionDefinitionsResponse,
+  FindAutomationResponse,
+  UpdateAutomationRequest,
+  UpdateAutomationResponse,
+  CreateAutomationRequest,
+  CreateAutomationResponse,
+  SearchAutomationLogsRequest,
+  SearchAutomationLogsResponse,
+  ClearAutomationLogRequest,
+  ClearAutomationLogResponse,
+  TriggerAutomationRequest,
+  TriggerAutomationResponse,
+  TestAutomationRequest,
+  TestAutomationResponse,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
@@ -41,42 +48,9 @@ function getTriggerDefinitions() {
  *                       *
  *************************/
 
-async function cleanupAutomationMetadata(automationId: string) {
-  await deleteEntityMetadata(MetadataTypes.AUTOMATION_TEST_INPUT, automationId)
-  await deleteEntityMetadata(
-    MetadataTypes.AUTOMATION_TEST_HISTORY,
-    automationId
-  )
-}
-
-function cleanAutomationInputs(automation: Automation) {
-  if (automation == null) {
-    return automation
-  }
-  let steps = automation.definition.steps
-  let trigger = automation.definition.trigger
-  let allSteps = [...steps, trigger]
-  // live is not a property used anymore
-  if (automation.live != null) {
-    delete automation.live
-  }
-  for (let step of allSteps) {
-    if (step == null) {
-      continue
-    }
-    for (let inputName of Object.keys(step.inputs)) {
-      if (!step.inputs[inputName] || step.inputs[inputName] === "") {
-        delete step.inputs[inputName]
-      }
-    }
-  }
-  return automation
-}
-
 export async function create(
-  ctx: UserCtx<Automation, { message: string; automation: Automation }>
+  ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
-  const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
 
@@ -86,66 +60,18 @@ export async function create(
     return
   }
 
-  // Respect existing IDs if recreating a deleted automation
-  if (!automation._id) {
-    automation._id = generateAutomationID()
-  }
+  const createdAutomation = await sdk.automations.create(automation)
 
-  automation.type = "automation"
-  automation = cleanAutomationInputs(automation)
-  automation = await checkForWebhooks({
-    newAuto: automation,
-  })
-  const response = await db.put(automation)
-  await events.automation.created(automation)
-  for (let step of automation.definition.steps) {
-    await events.automation.stepCreated(automation, step)
-  }
-  automation._rev = response.rev
-
-  ctx.status = 200
   ctx.body = {
     message: "Automation created successfully",
-    automation: {
-      ...automation,
-      ...response,
-    },
+    automation: createdAutomation,
   }
   builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
-export function getNewSteps(oldAutomation: Automation, automation: Automation) {
-  const oldStepIds = oldAutomation.definition.steps.map(s => s.id)
-  return automation.definition.steps.filter(s => !oldStepIds.includes(s.id))
-}
-
-export function getDeletedSteps(
-  oldAutomation: Automation,
-  automation: Automation
+export async function update(
+  ctx: UserCtx<UpdateAutomationRequest, UpdateAutomationResponse>
 ) {
-  const stepIds = automation.definition.steps.map(s => s.id)
-  return oldAutomation.definition.steps.filter(s => !stepIds.includes(s.id))
-}
-
-export async function handleStepEvents(
-  oldAutomation: Automation,
-  automation: Automation
-) {
-  // new steps
-  const newSteps = getNewSteps(oldAutomation, automation)
-  for (let step of newSteps) {
-    await events.automation.stepCreated(automation, step)
-  }
-
-  // old steps
-  const deletedSteps = getDeletedSteps(oldAutomation, automation)
-  for (let step of deletedSteps) {
-    await events.automation.stepDeleted(automation, step)
-  }
-}
-
-export async function update(ctx: UserCtx) {
-  const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
 
@@ -155,80 +81,45 @@ export async function update(ctx: UserCtx) {
     return
   }
 
-  const oldAutomation = await db.get<Automation>(automation._id)
-  automation = cleanAutomationInputs(automation)
-  automation = await checkForWebhooks({
-    oldAuto: oldAutomation,
-    newAuto: automation,
-  })
-  const response = await db.put(automation)
-  automation._rev = response.rev
+  const updatedAutomation = await sdk.automations.update(automation)
 
-  const oldAutoTrigger =
-    oldAutomation && oldAutomation.definition.trigger
-      ? oldAutomation.definition.trigger
-      : undefined
-  const newAutoTrigger =
-    automation && automation.definition.trigger
-      ? automation.definition.trigger
-      : {}
-  // trigger has been updated, remove the test inputs
-  if (oldAutoTrigger && oldAutoTrigger.id !== newAutoTrigger.id) {
-    await events.automation.triggerUpdated(automation)
-    await deleteEntityMetadata(
-      MetadataTypes.AUTOMATION_TEST_INPUT,
-      automation._id!
-    )
-  }
-
-  await handleStepEvents(oldAutomation, automation)
-
-  ctx.status = 200
   ctx.body = {
     message: `Automation ${automation._id} updated successfully.`,
-    automation: {
-      ...automation,
-      _rev: response.rev,
-      _id: response.id,
-    },
+    automation: updatedAutomation,
   }
   builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
-export async function fetch(ctx: UserCtx) {
-  const db = context.getAppDB()
-  const response = await db.allDocs(
-    getAutomationParams(null, {
-      include_docs: true,
-    })
-  )
-  ctx.body = response.rows.map(row => row.doc)
+export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {
+  const automations = await sdk.automations.fetch()
+  ctx.body = { automations }
 }
 
-export async function find(ctx: UserCtx) {
-  const db = context.getAppDB()
-  ctx.body = await db.get(ctx.params.id)
+export async function find(ctx: UserCtx<void, FindAutomationResponse>) {
+  ctx.body = await sdk.automations.get(ctx.params.id)
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
-  const db = context.getAppDB()
   const automationId = ctx.params.id
-  const oldAutomation = await db.get<Automation>(automationId)
-  await checkForWebhooks({
-    oldAuto: oldAutomation,
-  })
-  // delete metadata first
-  await cleanupAutomationMetadata(automationId)
-  ctx.body = await db.remove(automationId, ctx.params.rev)
-  await events.automation.deleted(oldAutomation)
+
+  const automation = await sdk.automations.get(ctx.params.id)
+  if (coreSdk.automations.isRowAction(automation)) {
+    ctx.throw("Row actions automations cannot be deleted", 422)
+  }
+
+  ctx.body = await sdk.automations.remove(automationId, ctx.params.rev)
   builderSocket?.emitAutomationDeletion(ctx, automationId)
 }
 
-export async function logSearch(ctx: UserCtx) {
+export async function logSearch(
+  ctx: UserCtx<SearchAutomationLogsRequest, SearchAutomationLogsResponse>
+) {
   ctx.body = await automations.logs.logSearch(ctx.request.body)
 }
 
-export async function clearLogError(ctx: UserCtx) {
+export async function clearLogError(
+  ctx: UserCtx<ClearAutomationLogRequest, ClearAutomationLogResponse>
+) {
   const { automationId, appId } = ctx.request.body
   await context.doInAppContext(appId, async () => {
     const db = context.getProdAppDB()
@@ -247,15 +138,21 @@ export async function clearLogError(ctx: UserCtx) {
   })
 }
 
-export async function getActionList(ctx: UserCtx) {
+export async function getActionList(
+  ctx: UserCtx<void, GetAutomationActionDefinitionsResponse>
+) {
   ctx.body = await getActionDefinitions()
 }
 
-export async function getTriggerList(ctx: UserCtx) {
+export async function getTriggerList(
+  ctx: UserCtx<void, GetAutomationTriggerDefinitionsResponse>
+) {
   ctx.body = getTriggerDefinitions()
 }
 
-export async function getDefinitionList(ctx: UserCtx) {
+export async function getDefinitionList(
+  ctx: UserCtx<void, GetAutomationStepDefinitionsResponse>
+) {
   ctx.body = {
     trigger: getTriggerDefinitions(),
     action: await getActionDefinitions(),
@@ -268,27 +165,41 @@ export async function getDefinitionList(ctx: UserCtx) {
  *                   *
  *********************/
 
-export async function trigger(ctx: UserCtx) {
+export async function trigger(
+  ctx: UserCtx<TriggerAutomationRequest, TriggerAutomationResponse>
+) {
   const db = context.getAppDB()
   let automation = await db.get<Automation>(ctx.params.id)
 
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
   if (hasCollectStep && (await features.isSyncAutomationsEnabled())) {
-    const response: AutomationResults = await triggers.externalTrigger(
-      automation,
-      {
-        fields: ctx.request.body.fields,
-        timeout:
-          ctx.request.body.timeout * 1000 ||
-          env.getDefaults().AUTOMATION_SYNC_TIMEOUT,
-      },
-      { getResponses: true }
-    )
+    try {
+      const response = await triggers.externalTrigger(
+        automation,
+        {
+          fields: ctx.request.body.fields,
+          user: sdk.users.getUserContextBindings(ctx.user),
+          timeout:
+            ctx.request.body.timeout * 1000 || env.AUTOMATION_THREAD_TIMEOUT,
+        },
+        { getResponses: true }
+      )
 
-    let collectedValue = response.steps.find(
-      step => step.stepId === AutomationActionStepId.COLLECT
-    )
-    ctx.body = collectedValue?.outputs
+      if (!("steps" in response)) {
+        ctx.throw(400, "Unable to collect response")
+      }
+
+      let collectedValue = response.steps.find(
+        step => step.stepId === AutomationActionStepId.COLLECT
+      )
+      ctx.body = collectedValue?.outputs
+    } catch (err: any) {
+      if (err.message) {
+        ctx.throw(400, err.message)
+      } else {
+        throw err
+      }
+    }
   } else {
     if (ctx.appId && !dbCore.isProdAppID(ctx.appId)) {
       ctx.throw(400, "Only apps in production support this endpoint")
@@ -296,6 +207,7 @@ export async function trigger(ctx: UserCtx) {
     await triggers.externalTrigger(automation, {
       ...ctx.request.body,
       appId: ctx.appId,
+      user: sdk.users.getUserContextBindings(ctx.user),
     })
     ctx.body = {
       message: `Automation ${automation._id} has been triggered.`,
@@ -304,7 +216,7 @@ export async function trigger(ctx: UserCtx) {
   }
 }
 
-function prepareTestInput(input: any) {
+function prepareTestInput(input: TestAutomationRequest) {
   // prepare the test parameters
   if (input.id && input.row) {
     input.row._id = input.id
@@ -315,7 +227,9 @@ function prepareTestInput(input: any) {
   return input
 }
 
-export async function test(ctx: UserCtx) {
+export async function test(
+  ctx: UserCtx<TestAutomationRequest, TestAutomationResponse>
+) {
   const db = context.getAppDB()
   let automation = await db.get<Automation>(ctx.params.id)
   await setTestFlag(automation._id!)
@@ -325,6 +239,7 @@ export async function test(ctx: UserCtx) {
     {
       ...testInput,
       appId: ctx.appId,
+      user: sdk.users.getUserContextBindings(ctx.user),
     },
     { getResponses: true }
   )

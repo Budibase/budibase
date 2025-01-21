@@ -2,11 +2,12 @@ import { InvalidFileExtensions } from "@budibase/shared-core"
 import AppComponent from "./templates/BudibaseApp.svelte"
 import { join } from "../../../utilities/centralPath"
 import * as uuid from "uuid"
-import { devClientVersion, ObjectStoreBuckets } from "../../../constants"
+import { ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
   loadHandlebarsFile,
   NODE_MODULES_PATH,
+  shouldServeLocally,
   TOP_LEVEL_PATH,
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
@@ -32,18 +33,26 @@ import {
   Ctx,
   DocumentType,
   Feature,
+  GetSignedUploadUrlRequest,
+  GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
+  ServeAppResponse,
+  ServeBuilderPreviewResponse,
+  ServeClientLibraryResponse,
+  ToggleBetaFeatureResponse,
   UserCtx,
 } from "@budibase/types"
 import {
   getAppMigrationVersion,
-  getLatestMigrationId,
+  getLatestEnabledMigrationId,
 } from "../../../appMigrations"
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
 
-export const toggleBetaUiFeature = async function (ctx: Ctx) {
+export const toggleBetaUiFeature = async function (
+  ctx: Ctx<void, ToggleBetaFeatureResponse>
+) {
   const cookieName = `beta:${ctx.params.feature}`
 
   if (ctx.cookies.get(cookieName)) {
@@ -71,13 +80,13 @@ export const toggleBetaUiFeature = async function (ctx: Ctx) {
   }
 }
 
-export const serveBuilder = async function (ctx: Ctx) {
+export const serveBuilder = async function (ctx: Ctx<void, void>) {
   const builderPath = join(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
 }
 
 export const uploadFile = async function (
-  ctx: Ctx<{}, ProcessAttachmentResponse>
+  ctx: Ctx<void, ProcessAttachmentResponse>
 ) {
   const file = ctx.request?.files?.file
   if (!file) {
@@ -139,7 +148,7 @@ const requiresMigration = async (ctx: Ctx) => {
     ctx.throw("AppId could not be found")
   }
 
-  const latestMigration = getLatestMigrationId()
+  const latestMigration = getLatestEnabledMigrationId()
   if (!latestMigration) {
     return false
   }
@@ -149,7 +158,17 @@ const requiresMigration = async (ctx: Ctx) => {
   return latestMigrationApplied !== latestMigration
 }
 
-export const serveApp = async function (ctx: UserCtx) {
+export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
+  if (ctx.url.includes("apple-touch-icon.png")) {
+    ctx.redirect("/builder/bblogo.png")
+    return
+  }
+  // no app ID found, cannot serve - return message instead
+  if (!context.getAppId()) {
+    ctx.body = "No content found - requires app ID"
+    return
+  }
+
   const needMigrations = await requiresMigration(ctx)
 
   const bbHeaderEmbed =
@@ -204,6 +223,7 @@ export const serveApp = async function (ctx: UserCtx) {
             ? objectStore.getGlobalFileUrl("settings", "logoUrl")
             : "",
         appMigrating: needMigrations,
+        nonce: ctx.state.nonce,
       })
       const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
@@ -212,6 +232,7 @@ export const serveApp = async function (ctx: UserCtx) {
         css: `:root{${themeVariables}} ${css.code}`,
         appId,
         embedded: bbHeaderEmbed,
+        nonce: ctx.state.nonce,
       })
     } else {
       // just return the app info for jest to assert on
@@ -242,7 +263,9 @@ export const serveApp = async function (ctx: UserCtx) {
   }
 }
 
-export const serveBuilderPreview = async function (ctx: Ctx) {
+export const serveBuilderPreview = async function (
+  ctx: Ctx<void, ServeBuilderPreviewResponse>
+) {
   const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get<App>(DocumentType.APP_METADATA)
 
@@ -253,6 +276,7 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
     const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
     ctx.body = await processString(previewHbs, {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
+      nonce: ctx.state.nonce,
     })
   } else {
     // just return the app info for jest to assert on
@@ -260,32 +284,40 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
   }
 }
 
-export const serveClientLibrary = async function (ctx: Ctx) {
+export const serveClientLibrary = async function (
+  ctx: Ctx<void, ServeClientLibraryResponse>
+) {
   const version = ctx.request.query.version
+
+  if (Array.isArray(version)) {
+    ctx.throw(400)
+  }
 
   const appId = context.getAppId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
-  if (env.isProd() || (env.isDev() && version !== devClientVersion)) {
+
+  const serveLocally = shouldServeLocally(version || "")
+  if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       objectStore.clientLibraryPath(appId!)
     )
     ctx.set("Content-Type", "application/javascript")
-  } else if (env.isDev() && version === devClientVersion) {
+  } else {
     // incase running from TS directly
     const tsPath = join(require.resolve("@budibase/client"), "..")
     return send(ctx, "budibase-client.js", {
       root: !fs.existsSync(rootPath) ? tsPath : rootPath,
     })
-  } else {
-    ctx.throw(500, "Unable to retrieve client library.")
   }
 }
 
-export const getSignedUploadURL = async function (ctx: Ctx) {
+export const getSignedUploadURL = async function (
+  ctx: Ctx<GetSignedUploadUrlRequest, GetSignedUploadUrlResponse>
+) {
   // Ensure datasource is valid
   let datasource
   try {
@@ -296,11 +328,6 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     }
   } catch (error) {
     ctx.throw(400, "The specified datasource could not be found")
-  }
-
-  // Ensure we aren't using a custom endpoint
-  if (datasource?.config?.endpoint) {
-    ctx.throw(400, "S3 datasources with custom endpoints are not supported")
   }
 
   // Determine type of datasource and generate signed URL
@@ -315,6 +342,7 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     try {
       const s3 = new AWS.S3({
         region: awsRegion,
+        endpoint: datasource?.config?.endpoint || undefined,
         accessKeyId: datasource?.config?.accessKeyId as string,
         secretAccessKey: datasource?.config?.secretAccessKey as string,
         apiVersion: "2006-03-01",
@@ -322,7 +350,11 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
       })
       const params = { Bucket: bucket, Key: key }
       signedUrl = s3.getSignedUrl("putObject", params)
-      publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
+      if (datasource?.config?.endpoint) {
+        publicUrl = `${datasource.config.endpoint}/${bucket}/${key}`
+      } else {
+        publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
+      }
     } catch (error: any) {
       ctx.throw(400, error)
     }

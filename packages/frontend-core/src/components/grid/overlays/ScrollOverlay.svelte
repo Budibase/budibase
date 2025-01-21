@@ -119,7 +119,7 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="v-scrollbar"
-    style="--size:{ScrollBarSize}px; top:{barTop}px; height:{barHeight}px;"
+    style="top:{barTop}px; height:{barHeight}px;"
     on:mousedown={startVDragging}
     on:touchstart={startVDragging}
     class:dragging={isDraggingV}
@@ -129,7 +129,7 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="h-scrollbar"
-    style="--size:{ScrollBarSize}px; left:{barLeft}px; width:{barWidth}px;"
+    style="left:{barLeft}px; width:{barWidth}px;"
     on:mousedown={startHDragging}
     on:touchstart={startHDragging}
     class:dragging={isDraggingH}
@@ -149,11 +149,11 @@
     opacity: 1;
   }
   .v-scrollbar {
-    width: var(--size);
-    right: var(--size);
+    width: var(--scroll-bar-size);
+    right: var(--scroll-bar-size);
   }
   .h-scrollbar {
-    height: var(--size);
-    bottom: var(--size);
+    height: var(--scroll-bar-size);
+    bottom: var(--scroll-bar-size);
   }
 </style>

@@ -25,7 +25,7 @@
   let fieldState
   let fieldApi
 
-  const { API, notificationStore } = getContext("sdk")
+  const { API, notificationStore, environmentStore } = getContext("sdk")
   const formContext = getContext("form")
   const BYTES_IN_MB = 1000000
 
@@ -49,10 +49,7 @@
       data.append("file", fileList[i])
     }
     try {
-      return await API.uploadAttachment({
-        data,
-        tableId: formContext?.dataSource?.tableId,
-      })
+      return await API.uploadAttachment(formContext?.dataSource?.tableId, data)
     } catch (error) {
       return []
     }
@@ -87,7 +84,7 @@
       error={fieldState.error}
       on:change={handleChange}
       {processFiles}
-      {handleFileTooLarge}
+      handleFileTooLarge={$environmentStore.cloud ? handleFileTooLarge : null}
       {handleTooManyFiles}
       {maximum}
       {extensions}

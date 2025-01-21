@@ -1,7 +1,7 @@
 <script>
   import NavItemConfiguration from "./NavItemConfiguration.svelte"
   import { get } from "svelte/store"
-  import Panel from "components/design/Panel.svelte"
+  import Panel from "@/components/design/Panel.svelte"
   import {
     Toggle,
     DetailSummary,
@@ -15,14 +15,14 @@
     screenStore,
     componentStore,
     navigationStore as nav,
-  } from "stores/builder"
-  import { DefaultAppTheme } from "constants"
-  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
-  import BarButtonList from "components/design/settings/controls/BarButtonList.svelte"
-  import ColorPicker from "components/design/settings/controls/ColorPicker.svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
-  import { getBindableProperties } from "dataBinding"
+  } from "@/stores/builder"
+  import { DefaultAppTheme } from "@/constants"
+  import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
+  import BarButtonList from "@/components/design/settings/controls/BarButtonList.svelte"
+  import ColorPicker from "@/components/design/settings/controls/ColorPicker.svelte"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
+  import { getBindableProperties } from "@/dataBinding"
 
   const positionOptions = [
     { value: "Top", barIcon: "PaddingTop" },
@@ -124,7 +124,7 @@
           <PropertyControl
             label="Text align"
             control={BarButtonList}
-            onChange={align => nav.syncAppNavigation({ textAlign: align })}
+            onChange={align => update("textAlign", align)}
             value={$nav.textAlign}
             props={{
               options: alignmentOptions,

@@ -1,10 +1,10 @@
 <script>
   import { Select, Label, Combobox } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { selectedScreen, componentStore } from "stores/builder"
-  import { getActionProviders, buildFormSchema } from "dataBinding"
-  import { findComponent } from "helpers/components"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
+  import { selectedScreen, componentStore } from "@/stores/builder"
+  import { getActionProviders, buildFormSchema } from "@/dataBinding"
+  import { findComponent } from "@/helpers/components"
 
   export let parameters
   export let bindings = []

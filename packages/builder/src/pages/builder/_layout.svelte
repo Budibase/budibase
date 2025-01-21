@@ -1,10 +1,11 @@
 <script>
   import { isActive, redirect, params } from "@roxi/routify"
-  import { admin, auth, licensing, navigation } from "stores/portal"
+  import { admin, auth, licensing, navigation } from "@/stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
-  import { API } from "api"
+  import { API } from "@/api"
   import Branding from "./Branding.svelte"
+  import ContextMenu from "@/components/ContextMenu.svelte"
 
   let loaded = false
 
@@ -160,6 +161,7 @@
 
 <!--Portal branding overrides -->
 <Branding />
+<ContextMenu />
 
 {#if loaded}
   <slot />

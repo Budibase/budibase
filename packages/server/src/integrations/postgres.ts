@@ -3,7 +3,6 @@ import {
   Integration,
   DatasourceFieldType,
   QueryType,
-  QueryJson,
   SqlQuery,
   Table,
   DatasourcePlus,
@@ -13,17 +12,17 @@ import {
   Schema,
   TableSourceType,
   DatasourcePlusQueryResponse,
+  SqlClient,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import {
   getSqlQuery,
   buildExternalTableId,
   generateColumnDefinition,
   finaliseExternalTables,
-  SqlClient,
   checkExternalTables,
   HOST_ADDRESS,
 } from "./utils"
-import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
@@ -31,7 +30,7 @@ import { Client, ClientConfig, types } from "pg"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import { exec } from "child_process"
 import { storeTempFile } from "../utilities/fileSystem"
-import { env } from "@budibase/backend-core"
+import { env, sql } from "@budibase/backend-core"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -42,7 +41,8 @@ if (types) {
   types.setTypeParser(1184, (val: any) => val) // timestampz
 }
 
-const JSON_REGEX = /'{.*}'::json/s
+const JSON_REGEX = /'{\s*.*?\s*}'::json/gs
+const Sql = sql.Sql
 
 interface PostgresConfig {
   host: string
@@ -149,7 +149,7 @@ const SCHEMA: Integration = {
 class PostgresIntegration extends Sql implements DatasourcePlus {
   private readonly client: Client
   private readonly config: PostgresConfig
-  private index: number = 1
+  private index = 1
   private open: boolean
 
   PRIMARY_KEYS_SQL = () => `
@@ -173,8 +173,13 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   `
 
   COLUMNS_SQL = () => `
-    select * from information_schema.columns where table_schema = ANY(current_schemas(false)) 
-      AND pg_table_is_visible(to_regclass(format('%I.%I', table_schema, table_name)));
+  SELECT columns.*
+  FROM information_schema.columns columns
+  JOIN pg_class pg_class ON pg_class.relname = columns.table_name
+  JOIN pg_namespace name_space ON name_space.oid = pg_class.relnamespace
+  WHERE columns.table_schema = ANY(current_schemas(false))
+    AND columns.table_schema = name_space.nspname
+    AND pg_table_is_visible(pg_class.oid);
   `
 
   constructor(config: PostgresConfig) {
@@ -252,7 +257,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     })
   }
 
-  async internalQuery(query: SqlQuery, close: boolean = true) {
+  async internalQuery(query: SqlQuery, close = true) {
     if (!this.open) {
       await this.openConnection()
     }
@@ -329,14 +334,12 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
       // Fetch enum values
       const enumsResponse = await this.client.query(this.ENUM_VALUES())
+      // output array, allows for more than 1 single-select to be used at a time
       const enumValues = enumsResponse.rows?.reduce((acc, row) => {
-        if (!acc[row.typname]) {
-          return {
-            [row.typname]: [row.enumlabel],
-          }
+        return {
+          ...acc,
+          [row.typname]: [...(acc[row.typname] || []), row.enumlabel],
         }
-        acc[row.typname].push(row.enumlabel)
-        return acc
       }, {})
 
       for (let column of columnsResponse.rows) {
@@ -421,7 +424,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     return response.rows.length ? response.rows : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
+  async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const operation = this._operation(json).toLowerCase()
     const input = this._query(json) as SqlQuery
     if (Array.isArray(input)) {
@@ -478,21 +481,15 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       this.config.password
     }" pg_dump --schema-only "${dumpCommandParts.join(" ")}"`
 
-    return new Promise<string>((res, rej) => {
+    return new Promise<string>((resolve, reject) => {
       exec(dumpCommand, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error generating dump: ${error.message}`)
-          rej(error.message)
+        if (error || stderr) {
+          console.error(stderr)
+          reject(new Error(stderr))
           return
         }
 
-        if (stderr) {
-          console.error(`pg_dump error: ${stderr}`)
-          rej(stderr)
-          return
-        }
-
-        res(stdout)
+        resolve(stdout)
         console.log("SQL dump generated successfully!")
       })
     })

@@ -1,8 +1,7 @@
 <script>
-  import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
+  import { formatters, parsePalette } from "./utils"
 
-  // Common props
   export let title
   export let dataProvider
   export let labelColumn
@@ -19,118 +18,116 @@
   export let palette
   export let c1, c2, c3, c4, c5
 
-  // Area specific props
-  export let area
-  export let stacked
-  export let gradient
+  $: series = getSeries(dataProvider, valueColumns)
+  $: categories = getCategories(dataProvider, labelColumn)
 
-  $: options = setUpChart(
-    title,
-    dataProvider,
-    labelColumn,
-    valueColumns,
-    xAxisLabel,
-    yAxisLabel,
-    height,
-    width,
-    animate,
-    dataLabels,
-    curve,
-    legend,
-    yAxisUnits,
-    palette,
-    area,
-    stacked,
-    gradient,
-    c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null,
-    customColor
-  )
+  $: labelType =
+    dataProvider?.schema?.[labelColumn]?.type === "datetime"
+      ? "datetime"
+      : "category"
+  $: xAxisFormatter = getFormatter(labelType, yAxisUnits, "x")
+  $: yAxisFormatter = getFormatter(labelType, yAxisUnits, "y")
 
-  $: customColor = palette === "Custom"
+  $: options = {
+    series,
+    stroke: {
+      curve: curve.toLowerCase(),
+    },
+    colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
+    theme: {
+      palette: parsePalette(palette),
+    },
+    legend: {
+      show: legend,
+      position: "top",
+      horizontalAlign: "right",
+      showForSingleSeries: true,
+      showForNullSeries: true,
+      showForZeroSeries: true,
+    },
+    title: {
+      text: title,
+    },
+    dataLabels: {
+      enabled: dataLabels,
+    },
+    chart: {
+      height: height == null || height === "" ? "auto" : height,
+      width: width == null || width === "" ? "100%" : width,
+      type: "line",
+      animations: {
+        enabled: animate,
+      },
+      toolbar: {
+        show: false,
+      },
+      zoom: {
+        enabled: false,
+      },
+    },
+    xaxis: {
+      categories,
+      labels: {
+        formatter: xAxisFormatter,
+      },
+      title: {
+        text: xAxisLabel,
+      },
+    },
+    yaxis: {
+      labels: {
+        formatter: yAxisFormatter,
+      },
+      title: {
+        text: yAxisLabel,
+      },
+    },
+  }
 
-  const setUpChart = (
-    title,
-    dataProvider,
-    labelColumn,
-    valueColumns,
-    xAxisLabel,
-    yAxisLabel,
-    height,
-    width,
-    animate,
-    dataLabels,
-    curve,
-    legend,
-    yAxisUnits,
-    palette,
-    area,
-    stacked,
-    gradient,
-    colors,
-    customColor
-  ) => {
-    const allCols = [labelColumn, ...(valueColumns || [null])]
-    if (
-      !dataProvider ||
-      !dataProvider.rows?.length ||
-      allCols.find(x => x == null)
-    ) {
-      return null
-    }
+  const getSeries = (dataProvider, valueColumns = []) => {
+    const rows = dataProvider.rows ?? []
 
-    // Fetch, filter and sort data
-    const { schema, rows } = dataProvider
-    const reducer = row => (valid, column) => valid && row[column] != null
-    const hasAllColumns = row => allCols.reduce(reducer(row), true)
-    const data = rows.filter(row => hasAllColumns(row))
-    if (!schema || !data.length) {
-      return null
-    }
-
-    // Initialise default chart
-    let builder = new ApexOptionsBuilder()
-      .title(title)
-      .type(area ? "area" : "line")
-      .width(width)
-      .height(height)
-      .xLabel(xAxisLabel)
-      .yLabel(yAxisLabel)
-      .dataLabels(dataLabels)
-      .animate(animate)
-      .curve(curve.toLowerCase())
-      .gradient(gradient)
-      .stacked(stacked)
-      .legend(legend)
-      .yUnits(yAxisUnits)
-      .palette(palette)
-      .colors(customColor ? colors : null)
-
-    // Add data
-    let useDates = false
-    if (schema[labelColumn]) {
-      const labelFieldType = schema[labelColumn].type
-      builder = builder.xType(labelFieldType)
-      useDates = labelFieldType === "datetime"
-    }
-    const series = valueColumns.map(column => ({
+    return valueColumns.map(column => ({
       name: column,
-      data: data.map(row => {
-        if (!useDates) {
-          return row[column]
-        } else {
-          return [row[labelColumn], row[column]]
+      data: rows.map(row => {
+        const value = row?.[column]
+
+        if (dataProvider?.schema?.[column]?.type === "datetime" && value) {
+          return Date.parse(value)
         }
+
+        return value
       }),
     }))
-    builder = builder.series(series)
-    if (!useDates) {
-      builder = builder.xCategories(data.map(row => row[labelColumn]))
-    } else {
-      builder = builder.clearXFormatter()
+  }
+
+  const getCategories = (dataProvider, labelColumn) => {
+    const rows = dataProvider.rows ?? []
+
+    return rows.map(row => {
+      const value = row?.[labelColumn]
+
+      // If a nullish or non-scalar type, replace it with an empty string
+      if (!["string", "number", "boolean"].includes(typeof value)) {
+        return ""
+      }
+
+      return value
+    })
+  }
+
+  const getFormatter = (labelType, yAxisUnits, axis) => {
+    const isLabelAxis = axis === "x"
+
+    if (labelType === "datetime" && isLabelAxis) {
+      return formatters["Datetime"]
     }
 
-    // Build chart options
-    return builder.getOptions()
+    if (isLabelAxis) {
+      return formatters["Default"]
+    }
+
+    return formatters[yAxisUnits]
   }
 </script>
 

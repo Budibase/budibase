@@ -1,12 +1,14 @@
 <script>
   import { Select } from "@budibase/bbui"
-  import { builderStore, componentStore } from "stores"
+  import { builderStore } from "stores"
 
   export let prop
   export let options
   export let label
+  export let component
+  export let disabled = false
 
-  $: currentValue = $componentStore.selectedComponent?.[prop]
+  $: currentValue = component?.[prop]
 </script>
 
 <div>
@@ -15,6 +17,7 @@
     autoWidth
     placeholder={label}
     {options}
+    {disabled}
     value={currentValue}
     on:change={e => {
       if (prop) {

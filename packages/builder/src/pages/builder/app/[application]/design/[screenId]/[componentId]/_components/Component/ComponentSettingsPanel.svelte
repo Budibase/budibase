@@ -1,23 +1,23 @@
 <script>
-  import Panel from "components/design/Panel.svelte"
+  import Panel from "@/components/design/Panel.svelte"
   import {
     selectedScreen,
     componentStore,
     selectedComponent,
-  } from "stores/builder"
+  } from "@/stores/builder"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
-  import { getComponentName } from "helpers/components"
+  import { getComponentName } from "@/helpers/components"
   import {
     getBindableProperties,
     getComponentBindableProperties,
-  } from "dataBinding"
+  } from "@/dataBinding"
   import { ActionButton, notifications } from "@budibase/bbui"
-  import { capitalise } from "helpers"
-  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
-  import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
+  import { capitalise } from "@/helpers"
+  import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
+  import { TOUR_STEP_KEYS } from "@/components/portal/onboarding/tours.js"
 
   const {
     BUILDER_FORM_CREATE_STEPS,
@@ -70,7 +70,7 @@
         <input
           class="input"
           value={title}
-          {title}
+          title={componentName}
           placeholder={componentName}
           on:keypress={e => {
             if (e.key.toLowerCase() === "enter") {
@@ -158,7 +158,32 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    position: relative;
+    padding: 5px;
+    right: 6px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    transition: 150ms background-color, 150ms border-color, 150ms color;
   }
+
+  .input:hover,
+  .input:focus {
+    cursor: text;
+    background-color: var(
+      --spectrum-textfield-m-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    border: 1px solid white;
+    border-color: var(
+      --spectrum-textfield-m-border-color,
+      var(--spectrum-alias-border-color)
+    );
+    color: var(
+      --spectrum-textfield-m-text-color,
+      var(--spectrum-alias-text-color)
+    );
+  }
+
   .panel-title-content {
     display: contents;
   }

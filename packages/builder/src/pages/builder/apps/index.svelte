@@ -15,16 +15,17 @@
   import {
     appsStore,
     organisation,
+    admin,
     auth,
     groups,
     licensing,
     enrichedApps,
-  } from "stores/portal"
+  } from "@/stores/portal"
   import { goto } from "@roxi/routify"
-  import { AppStatus } from "constants"
-  import { gradient } from "actions"
-  import ProfileModal from "components/settings/ProfileModal.svelte"
-  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
+  import { AppStatus } from "@/constants"
+  import { gradient } from "@/actions"
+  import ProfileModal from "@/components/settings/ProfileModal.svelte"
+  import ChangePasswordModal from "@/components/settings/ChangePasswordModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
   import Spaceman from "assets/bb-space-man.svg"
   import Logo from "assets/bb-emblem.svg"
@@ -42,6 +43,7 @@
     app => app.status === AppStatus.DEPLOYED
   )
   $: userApps = getUserApps(publishedApps, userGroups, $auth.user)
+  $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   function getUserApps(publishedApps, userGroups, user) {
     if (sdk.users.isAdmin(user)) {
@@ -53,7 +55,7 @@
       }
       if (!Object.keys(user?.roles).length && user?.userGroups) {
         return userGroups.find(group => {
-          return groups.actions
+          return groups
             .getGroupAppIds(group)
             .map(role => appsStore.extractAppId(role))
             .includes(app.appId)
@@ -86,7 +88,7 @@
     try {
       await organisation.init()
       await appsStore.load()
-      await groups.actions.init()
+      await groups.init()
     } catch (error) {
       notifications.error("Error loading apps")
     }
@@ -111,7 +113,13 @@
               </MenuItem>
               <MenuItem
                 icon="LockClosed"
-                on:click={() => changePasswordModal.show()}
+                on:click={() => {
+                  if (isOwner) {
+                    window.location.href = `${$admin.accountPortalUrl}/portal/account`
+                  } else {
+                    changePasswordModal.show()
+                  }
+                }}
               >
                 Update password
               </MenuItem>
@@ -136,7 +144,7 @@
             </Body>
           </Layout>
           <Divider />
-          {#if $licensing.usageMetrics?.dayPasses >= 100 || $licensing.errUserLimit}
+          {#if $licensing.errUserLimit}
             <div>
               <Layout gap="S" justifyItems="center">
                 <img class="spaceman" alt="spaceman" src={Spaceman} />

@@ -1,7 +1,7 @@
 import { serializeError } from "serialize-error"
 import env from "../environment"
 import {
-  JsErrorTimeout,
+  JsTimeoutError,
   setJSRunner,
   setOnErrorLog,
 } from "@budibase/string-templates"
@@ -23,6 +23,7 @@ export function init() {
             isolateAccumulatedTimeout: env.JS_PER_REQUEST_TIMEOUT_MS,
           })
             .withHelpers()
+            .withBuffer()
             .withSnippets(bbCtx?.snippets)
 
         // Persist isolate in context so we can reuse it
@@ -39,7 +40,7 @@ export function init() {
         return vm.withContext(rest, () => vm.execute(js))
       } catch (error: any) {
         if (error.message === "Script execution timed out.") {
-          throw new JsErrorTimeout()
+          throw new JsTimeoutError()
         }
         throw error
       }

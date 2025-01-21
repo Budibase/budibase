@@ -1,7 +1,6 @@
 <script>
   import { goto, isActive, params } from "@roxi/routify"
   import { Layout } from "@budibase/bbui"
-  import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
   import {
     datasources,
     queries,
@@ -9,18 +8,12 @@
     views,
     viewsV2,
     userSelectedResourceMap,
-  } from "stores/builder"
-  import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
-  import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
-  import NavItem from "components/common/NavItem.svelte"
-  import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
-  import {
-    customQueryIconText,
-    customQueryIconColor,
-    customQueryText,
-  } from "helpers/data/utils"
-  import IntegrationIcon from "./IntegrationIcon.svelte"
-  import { TableNames } from "constants"
+  } from "@/stores/builder"
+  import QueryNavItem from "./QueryNavItem.svelte"
+  import NavItem from "@/components/common/NavItem.svelte"
+  import TableNavigator from "@/components/backend/TableNavigator/TableNavigator.svelte"
+  import DatasourceNavItem from "./DatasourceNavItem/DatasourceNavItem.svelte"
+  import { TableNames } from "@/constants"
   import { enrichDatasources } from "./datasourceUtils"
   import { onMount } from "svelte"
 
@@ -46,9 +39,7 @@
 
   const selectTable = tableId => {
     tables.select(tableId)
-    if (!$isActive("./table/:tableId")) {
-      $goto(`./table/${tableId}`)
-    }
+    $goto(`./table/${tableId}`)
   }
 
   function openNode(datasource) {
@@ -85,45 +76,23 @@
       selectedBy={$userSelectedResourceMap[TableNames.USERS]}
     />
   {/if}
+  <NavItem
+    icon="UserAdmin"
+    text="Manage roles"
+    selected={$isActive("./roles")}
+    on:click={() => $goto("./roles")}
+    selectedBy={$userSelectedResourceMap.roles}
+  />
   {#each enrichedDataSources.filter(ds => ds.show) as datasource}
-    <NavItem
-      border
-      text={datasource.name}
-      opened={datasource.open}
-      selected={$isActive("./datasource") && datasource.selected}
-      withArrow={true}
+    <DatasourceNavItem
+      {datasource}
       on:click={() => selectDatasource(datasource)}
       on:iconClick={() => toggleNode(datasource)}
-      selectedBy={$userSelectedResourceMap[datasource._id]}
-    >
-      <div class="datasource-icon" slot="icon">
-        <IntegrationIcon
-          integrationType={datasource.source}
-          schema={datasource.schema}
-          size="18"
-        />
-      </div>
-      {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
-        <EditDatasourcePopover {datasource} />
-      {/if}
-    </NavItem>
-
+    />
     {#if datasource.open}
       <TableNavigator tables={datasource.tables} {selectTable} />
       {#each datasource.queries as query}
-        <NavItem
-          indentLevel={1}
-          icon="SQLQuery"
-          iconText={customQueryIconText(datasource, query)}
-          iconColor={customQueryIconColor(datasource, query)}
-          text={customQueryText(datasource, query)}
-          selected={$isActive("./query/:queryId") &&
-            $queries.selectedQueryId === query._id}
-          on:click={() => $goto(`./query/${query._id}`)}
-          selectedBy={$userSelectedResourceMap[query._id]}
-        >
-          <EditQueryPopover {query} />
-        </NavItem>
+        <QueryNavItem {datasource} {query} />
       {/each}
     {/if}
   {/each}
@@ -139,11 +108,6 @@
 <style>
   .hierarchy-items-container {
     margin: 0 calc(-1 * var(--spacing-l));
-  }
-  .datasource-icon {
-    display: grid;
-    place-items: center;
-    flex: 0 0 24px;
   }
 
   .no-results {

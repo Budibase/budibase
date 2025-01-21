@@ -6,7 +6,6 @@ import {
   Database,
   FieldSchema,
   FieldType,
-  LinkDocumentValue,
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
@@ -172,6 +171,11 @@ class LinkController {
       const rowField = row[fieldName]
       const field = table.schema[fieldName]
       if (field.type === FieldType.LINK && rowField != null) {
+        // Expects an array of docs with at least their _id
+        if (!Array.isArray(rowField)) {
+          throw new Error("Relationship Error: Invalid value")
+        }
+
         // check which links actual pertain to the update in this row
         const thisFieldLinkDocs = linkDocs.filter(
           linkDoc =>
@@ -208,19 +212,24 @@ class LinkController {
             linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY
           ) {
             let links = (
-              (await getLinkDocuments({
+              await getLinkDocuments({
                 tableId: field.tableId,
                 rowId: linkId,
-                includeDocs: IncludeDocs.EXCLUDE,
-              })) as LinkDocumentValue[]
+              })
             ).filter(
               link =>
                 link.id !== row._id && link.fieldName === linkedSchema.name
             )
 
+            // check all the related rows exist
+            const foundRecords = await this._db.getMultiple(
+              links.map(l => l.id),
+              { allowMissing: true, excludeDocs: true }
+            )
+
             // The 1 side of 1:N is already related to something else
             // You must remove the existing relationship
-            if (links.length > 0) {
+            if (foundRecords.length > 0) {
               throw new Error(
                 `1:N Relationship Error: Record already linked to another.`
               )
@@ -290,13 +299,7 @@ class LinkController {
     if (linkDocs.length === 0) {
       return null
     }
-    const toDelete = linkDocs.map(doc => {
-      return {
-        ...doc,
-        _deleted: true,
-      }
-    })
-    await this._db.bulkDocs(toDelete)
+    await this._db.bulkRemove(linkDocs, { silenceErrors: true })
     return row
   }
 
@@ -316,14 +319,8 @@ class LinkController {
           : linkDoc.doc2.fieldName
       return correctFieldName === fieldName
     })
-    await this._db.bulkDocs(
-      toDelete.map(doc => {
-        return {
-          ...doc,
-          _deleted: true,
-        }
-      })
-    )
+    await this._db.bulkRemove(toDelete, { silenceErrors: true })
+
     try {
       // remove schema from other table, if it exists
       let linkedTable = await this._db.get<Table>(field.tableId)
@@ -448,13 +445,7 @@ class LinkController {
       return null
     }
     // get link docs for this table and configure for deletion
-    const toDelete = linkDocs.map(doc => {
-      return {
-        ...doc,
-        _deleted: true,
-      }
-    })
-    await this._db.bulkDocs(toDelete)
+    await this._db.bulkRemove(linkDocs, { silenceErrors: true })
     return table
   }
 }

@@ -1,60 +1,12 @@
 import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
-import {
-  AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
-  AutomationStepType,
-  AutomationIOType,
-  AutomationFeature,
-} from "@budibase/types"
+import { ExternalAppStepOutputs, SlackStepInputs } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
-  name: "Slack Message",
-  tagline: "Send a message to Slack",
-  description: "Send a message to Slack",
-  icon: "ri-slack-line",
-  stepId: AutomationActionStepId.slack,
-  type: AutomationStepType.ACTION,
-  internal: false,
-  features: {
-    [AutomationFeature.LOOPING]: true,
-  },
-  inputs: {},
-  schema: {
-    inputs: {
-      properties: {
-        url: {
-          type: AutomationIOType.STRING,
-          title: "Incoming Webhook URL",
-        },
-        text: {
-          type: AutomationIOType.STRING,
-          title: "Message",
-        },
-      },
-      required: ["url", "text"],
-    },
-    outputs: {
-      properties: {
-        httpStatus: {
-          type: AutomationIOType.NUMBER,
-          description: "The HTTP status code of the request",
-        },
-        success: {
-          type: AutomationIOType.BOOLEAN,
-          description: "Whether the message sent successfully",
-        },
-        response: {
-          type: AutomationIOType.STRING,
-          description: "The response from the Slack Webhook",
-        },
-      },
-    },
-  },
-}
-
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: SlackStepInputs
+}): Promise<ExternalAppStepOutputs> {
   let { url, text } = inputs
   if (!url?.trim()?.length) {
     return {

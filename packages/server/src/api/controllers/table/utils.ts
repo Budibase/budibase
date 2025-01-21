@@ -1,38 +1,38 @@
-import { parse, isSchema, isRows } from "../../../utilities/schema"
-import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
+import { isRows, isSchema, parse } from "../../../utilities/schema"
+import { generateRowID, getRowParams, InternalTables } from "../../../db/utils"
 import isEqual from "lodash/isEqual"
 import {
-  GOOGLE_SHEETS_PRIMARY_KEY,
-  USERS_TABLE_SCHEMA,
-  SwitchableTypes,
   CanSwitchTypes,
+  GOOGLE_SHEETS_PRIMARY_KEY,
+  SwitchableTypes,
+  USERS_TABLE_SCHEMA,
 } from "../../../constants"
 import {
-  inputProcessing,
   AttachmentCleanup,
+  inputProcessing,
 } from "../../../utilities/rowProcessor"
 import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { events, context } from "@budibase/backend-core"
+import { context, events, HTTPError } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
-  ContextUser,
+  Database,
   Datasource,
+  FieldSchema,
+  FieldType,
+  NumberFieldMetadata,
+  RelationshipFieldMetadata,
+  RenameColumn,
   Row,
   SourceName,
   Table,
-  Database,
-  RenameColumn,
-  NumberFieldMetadata,
-  FieldSchema,
   View,
-  RelationshipFieldMetadata,
-  FieldType,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import env from "../../../environment"
+import { runStaticFormulaChecks } from "./bulkFormula"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
   const db = context.getAppDB()
@@ -121,36 +121,43 @@ export function makeSureTableUpToDate(table: Table, tableToSave: Table) {
 export async function importToRows(
   data: Row[],
   table: Table,
-  user?: ContextUser
+  userId?: string,
+  opts?: { keepCouchId: boolean }
 ) {
-  let originalTable = table
-  let finalData: any = []
+  const originalTable = table
+  const finalData: Row[] = []
+  const keepCouchId = !!opts?.keepCouchId
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
-    row._id = generateRowID(table._id!)
+    row._id = (keepCouchId && row._id) || generateRowID(table._id!)
     row.type = "row"
     row.tableId = table._id
 
     // We use a reference to table here and update it after input processing,
     // so that we can auto increment auto IDs in imported data properly
-    const processed = await inputProcessing(user?._id, table, row, {
+    row = await inputProcessing(userId, table, row, {
       noAutoRelationships: true,
     })
-    row = processed.row
-    table = processed.table
 
     // However here we must reference the original table, as we want to mutate
     // the real schema of the table passed in, not the clone used for
     // incrementing auto IDs
     for (const [fieldName, schema] of Object.entries(originalTable.schema)) {
-      const rowVal = Array.isArray(row[fieldName])
-        ? row[fieldName]
-        : [row[fieldName]]
+      if (schema.type === FieldType.LINK && data.find(row => row[fieldName])) {
+        throw new HTTPError(
+          `Can't bulk import relationship fields for internal databases, found value in field "${fieldName}"`,
+          400
+        )
+      }
+
       if (
         (schema.type === FieldType.OPTIONS ||
           schema.type === FieldType.ARRAY) &&
         row[fieldName]
       ) {
+        const rowVal = Array.isArray(row[fieldName])
+          ? row[fieldName]
+          : [row[fieldName]]
         let merged = [...schema.constraints!.inclusion!, ...rowVal]
         let superSet = new Set(merged)
         schema.constraints!.inclusion = Array.from(superSet)
@@ -165,11 +172,10 @@ export async function importToRows(
 
 export async function handleDataImport(
   table: Table,
-  opts?: { identifierFields?: string[]; user?: ContextUser; importRows?: Row[] }
+  opts?: { identifierFields?: string[]; userId?: string; importRows?: Row[] }
 ) {
   const schema = table.schema
   const identifierFields = opts?.identifierFields || []
-  const user = opts?.user
   const importRows = opts?.importRows
 
   if (!importRows || !isRows(importRows) || !isSchema(schema)) {
@@ -177,9 +183,13 @@ export async function handleDataImport(
   }
 
   const db = context.getAppDB()
-  const data = parse(importRows, schema)
+  const data = parse(importRows, table)
 
-  let finalData: any = await importToRows(data, table, user)
+  const finalData = await importToRows(data, table, opts?.userId, {
+    keepCouchId: identifierFields.includes("_id"),
+  })
+
+  let newRowCount = finalData.length
 
   //Set IDs of finalData to match existing row if an update is expected
   if (identifierFields.length > 0) {
@@ -202,12 +212,14 @@ export async function handleDataImport(
           if (match) {
             finalItem._id = doc._id
             finalItem._rev = doc._rev
+
+            newRowCount--
           }
         })
       })
   }
 
-  await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
+  await quotas.addRows(newRowCount, () => db.bulkDocs(finalData), {
     tableId: table._id,
   })
 
@@ -274,22 +286,22 @@ export function checkStaticTables(table: Table) {
 
 class TableSaveFunctions {
   db: Database
-  user?: ContextUser
+  userId?: string
   oldTable?: Table
   importRows?: Row[]
   rows: Row[]
 
   constructor({
-    user,
+    userId,
     oldTable,
     importRows,
   }: {
-    user?: ContextUser
+    userId?: string
     oldTable?: Table
     importRows?: Row[]
   }) {
     this.db = context.getAppDB()
-    this.user = user
+    this.userId = userId
     this.oldTable = oldTable
     this.importRows = importRows
     // any rows that need updated
@@ -321,11 +333,10 @@ class TableSaveFunctions {
     table = await handleSearchIndexes(table)
     table = await handleDataImport(table, {
       importRows: this.importRows,
-      user: this.user,
+      userId: this.userId,
     })
-    if (env.SQS_SEARCH_ENABLE) {
-      await sdk.tables.sqs.addTableToSqlite(table)
-    }
+
+    await sdk.tables.sqs.addTable(table)
     return table
   }
 
@@ -494,6 +505,31 @@ export function setStaticSchemas(datasource: Datasource, table: Table) {
     delete table.schema?.id
   }
   return table
+}
+
+export async function internalTableCleanup(table: Table, rows?: Row[]) {
+  const db = context.getAppDB()
+  const tableId = table._id!
+  // remove table search index
+  if (!env.isTest() || env.COUCH_DB_URL) {
+    const currentIndexes = await db.getIndexes()
+    const existingIndex = currentIndexes.indexes.find(
+      (existing: any) => existing.name === `search:${tableId}`
+    )
+    if (existingIndex) {
+      await db.deleteIndex(existingIndex)
+    }
+  }
+
+  // has to run after, make sure it has _id
+  await runStaticFormulaChecks(table, {
+    deletion: true,
+  })
+  if (rows) {
+    await AttachmentCleanup.tableDelete(table, rows)
+  }
+
+  await sdk.tables.sqs.removeTable(table)
 }
 
 const _TableSaveFunctions = TableSaveFunctions

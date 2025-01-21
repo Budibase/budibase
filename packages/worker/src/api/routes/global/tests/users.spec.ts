@@ -343,7 +343,7 @@ describe("/api/global/users", () => {
     })
 
     it("should not allow a user to update their own admin/builder status", async () => {
-      const user = (await config.api.users.getUser(config.user?._id!))
+      const user = (await config.api.users.getUser(config.user!._id!))
         .body as User
       await config.api.users.saveUser({
         ...user,
@@ -570,54 +570,20 @@ describe("/api/global/users", () => {
 
   describe("POST /api/global/users/bulk (delete)", () => {
     it("should not be able to bulk delete current user", async () => {
-      const user = await config.user!
+      const user = config.user!
 
-      const response = await config.api.users.bulkDeleteUsers([user._id!], 400)
+      const response = await config.api.users.bulkDeleteUsers(
+        [
+          {
+            userId: user._id!,
+            email: "test@example.com",
+          },
+        ],
+        400
+      )
 
       expect(response.message).toBe("Unable to delete self.")
       expect(events.user.deleted).not.toHaveBeenCalled()
-    })
-
-    it("should not be able to bulk delete account owner", async () => {
-      const user = await config.createUser()
-      const account = structures.accounts.cloudAccount()
-      account.budibaseUserId = user._id!
-      accounts.getAccountByTenantId.mockReturnValue(Promise.resolve(account))
-
-      const response = await config.api.users.bulkDeleteUsers([user._id!])
-
-      expect(response.deleted?.successful.length).toBe(0)
-      expect(response.deleted?.unsuccessful.length).toBe(1)
-      expect(response.deleted?.unsuccessful[0].reason).toBe(
-        "Account holder cannot be deleted"
-      )
-      expect(response.deleted?.unsuccessful[0]._id).toBe(user._id)
-      expect(events.user.deleted).not.toHaveBeenCalled()
-    })
-
-    it("should be able to bulk delete users", async () => {
-      const account = structures.accounts.cloudAccount()
-      accounts.getAccountByTenantId.mockReturnValue(Promise.resolve(account))
-
-      const builder = structures.users.builderUser()
-      const admin = structures.users.adminUser()
-      const user = structures.users.user()
-      const createdUsers = await config.api.users.bulkCreateUsers([
-        builder,
-        admin,
-        user,
-      ])
-
-      const toDelete = createdUsers.created?.successful.map(
-        u => u._id!
-      ) as string[]
-      const response = await config.api.users.bulkDeleteUsers(toDelete)
-
-      expect(response.deleted?.successful.length).toBe(3)
-      expect(response.deleted?.unsuccessful.length).toBe(0)
-      expect(events.user.deleted).toHaveBeenCalledTimes(3)
-      expect(events.user.permissionAdminRemoved).toHaveBeenCalledTimes(1)
-      expect(events.user.permissionBuilderRemoved).toHaveBeenCalledTimes(2)
     })
   })
 
@@ -718,6 +684,25 @@ describe("/api/global/users", () => {
 
     it("should throw an error if public query performed", async () => {
       await config.api.users.searchUsers({}, { status: 403, noHeaders: true })
+    })
+
+    it("should be able to search using logical conditions", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: {
+          $and: {
+            conditions: [
+              {
+                $and: {
+                  conditions: [{ string: { email: user.email } }],
+                },
+              },
+            ],
+          },
+        },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(user.email)
     })
   })
 

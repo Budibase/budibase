@@ -1,29 +1,32 @@
 <script>
   import { getContext } from "svelte"
   import DataCell from "../cells/DataCell.svelte"
+  import { getCellID } from "../lib/utils"
 
   export let row
   export let top = false
-  export let invertY = false
 
   const {
     focusedCellId,
     reorder,
     selectedRows,
-    visibleColumns,
+    scrollableColumns,
     hoveredRowId,
-    selectedCellMap,
     focusedRow,
-    columnHorizontalInversionIndex,
     contentLines,
     isDragging,
     dispatch,
     rows,
     columnRenderMap,
+    userCellMap,
+    isSelectingCells,
+    selectedCellMap,
+    selectedCellCount,
   } = getContext("grid")
 
   $: rowSelected = !!$selectedRows[row._id]
-  $: rowHovered = $hoveredRowId === row._id
+  $: rowHovered =
+    $hoveredRowId === row._id && (!$selectedCellCount || !$isSelectingCells)
   $: rowFocused = $focusedRow?._id === row._id
   $: reorderSource = $reorder.sourceColumn
 </script>
@@ -37,24 +40,24 @@
   on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
   on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
 >
-  {#each $visibleColumns as column, columnIdx}
-    {@const cellId = `${row._id}-${column.name}`}
+  {#each $scrollableColumns as column}
+    {@const cellId = getCellID(row._id, column.name)}
     <DataCell
       {cellId}
       {column}
       {row}
-      {invertY}
       {rowFocused}
-      invertX={columnIdx >= $columnHorizontalInversionIndex}
+      {rowSelected}
+      cellSelected={$selectedCellMap[cellId]}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
-      selected={rowSelected}
       rowIdx={row.__idx}
       topRow={top}
       focused={$focusedCellId === cellId}
-      selectedUser={$selectedCellMap[cellId]}
+      selectedUser={$userCellMap[cellId]}
       width={column.width}
       contentLines={$contentLines}
       hidden={!$columnRenderMap[column.name]}
+      isSelectingCells={$isSelectingCells}
     />
   {/each}
 </div>
