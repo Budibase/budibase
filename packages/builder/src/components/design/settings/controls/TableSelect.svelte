@@ -66,3 +66,20 @@
     {/if}
   </div>
 </Popover>
+
+<style>
+  .container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .container :global(:first-child) {
+    flex: 1 1 auto;
+  }
+
+  .dropdown {
+    padding: var(--spacing-m) 0;
+    z-index: 99999999;
+  }
+</style>
