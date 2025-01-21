@@ -28,18 +28,11 @@ import {
   TriggerAutomationResponse,
   TestAutomationRequest,
   TestAutomationResponse,
-  TestAutomationStepRequest,
-  TestAutomationStepResponse,
 } from "@budibase/types"
-import {
-  getActionDefinitions as actionDefs,
-  getAction,
-} from "../../automations/actions"
+import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import env from "../../environment"
-import { NoopEmitter } from "../../events"
-import { enrichBaseContext } from "../../threads/automation"
 
 async function getActionDefinitions() {
   return removeDeprecated(await actionDefs())
@@ -259,47 +252,4 @@ export async function test(
   })
 
   await events.automation.tested(automation)
-}
-
-export async function testStep(
-  ctx: UserCtx<TestAutomationStepRequest, TestAutomationStepResponse>
-) {
-  const { id, stepId } = ctx.params
-  const db = context.getAppDB()
-  const automation = await db.tryGet<Automation>(id)
-  if (!automation) {
-    ctx.throw(404, `Automation ${ctx.params.id} not found`)
-  }
-
-  const step = automation.definition.steps.find(s => s.stepId === stepId)
-  if (!step) {
-    ctx.throw(404, `Step ${stepId} not found on automation ${id}`)
-  }
-
-  if (step.stepId === AutomationActionStepId.BRANCH) {
-    ctx.throw(400, "Branch steps cannot be tested directly")
-  }
-  if (step.stepId === AutomationActionStepId.LOOP) {
-    ctx.throw(400, "Loop steps cannot be tested directly")
-  }
-
-  const { body } = ctx.request
-
-  const fn = await getAction(step.stepId)
-  if (!fn) {
-    ctx.throw(400, `Step ${stepId} is not a valid step`)
-  }
-
-  const output = await withTestFlag(
-    automation._id!,
-    async () =>
-      await fn({
-        inputs: body.inputs,
-        context: await enrichBaseContext(body.context),
-        appId: ctx.appId,
-        emitter: new NoopEmitter(),
-      })
-  )
-
-  ctx.body = output
 }

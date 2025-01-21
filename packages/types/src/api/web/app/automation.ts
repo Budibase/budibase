@@ -83,10 +83,3 @@ export function isDidNotTriggerResponse(
 ): response is DidNotTriggerResponse {
   return !!("message" in response && response.message)
 }
-
-export interface TestAutomationStepRequest {
-  inputs: Record<string, any>
-  context: Record<string, any>
-}
-
-export type TestAutomationStepResponse = any

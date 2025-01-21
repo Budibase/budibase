@@ -5,8 +5,11 @@ import {
   sendAutomationAttachmentsToStorage,
 } from "../automationUtils"
 import { buildCtx } from "./utils"
-import { CreateRowStepInputs, CreateRowStepOutputs } from "@budibase/types"
-import { EventEmitter } from "events"
+import {
+  ContextEmitter,
+  CreateRowStepInputs,
+  CreateRowStepOutputs,
+} from "@budibase/types"
 
 export async function run({
   inputs,
@@ -15,7 +18,7 @@ export async function run({
 }: {
   inputs: CreateRowStepInputs
   appId: string
-  emitter: EventEmitter
+  emitter: ContextEmitter
 }): Promise<CreateRowStepOutputs> {
   if (inputs.row == null || inputs.row.tableId == null) {
     return {
