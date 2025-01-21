@@ -43,10 +43,12 @@ interface DerivedBuilderState {
     tables: {
       label: string
       resourceId: string
+      datasourceName: string
     }[]
     viewsV2: {
       label: string
       resourceId: string
+      datasourceName: string
     }[]
   }
 }
@@ -64,10 +66,14 @@ export class BuilderStore extends DerivedBudiStore<
         ([$tables, $datasources, $viewsV2]) => ({
           formatedDatasourceNames: {
             tables: $tables.list
-              .map(table => ({
-                ...format.table(table, $datasources.list),
-                resourceId: table._id!,
-              }))
+              .map(table => {
+                const formatted = format.table(table, $datasources.list)
+                return {
+                  label: formatted.label,
+                  datasourceName: formatted.datasourceName,
+                  resourceId: table._id!,
+                }
+              })
               .sort((a, b) => {
                 // sort tables alphabetically, grouped by datasource
                 const dsA = a.datasourceName ?? ""
@@ -79,10 +85,14 @@ export class BuilderStore extends DerivedBudiStore<
                 }
                 return a.label.localeCompare(b.label)
               }),
-            viewsV2: $viewsV2.list.map(view => ({
-              ...format.viewV2(view),
-              resourceId: view.id,
-            })),
+            viewsV2: $viewsV2.list.map(view => {
+              const formatted = format.viewV2(view, $datasources.list)
+              return {
+                label: formatted.label,
+                datasourceName: formatted.datasourceName,
+                resourceId: view.id,
+              }
+            }),
           },
         })
       )

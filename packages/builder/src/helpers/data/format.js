@@ -9,11 +9,18 @@ export const datasourceSelect = {
       datasourceName: datasource?.name,
     }
   },
-  viewV2: view => ({
-    ...view,
-    label: view.name,
-    type: "viewV2",
-  }),
+  viewV2: (view, datasources) => {
+    const datasource = datasources
+      .filter(f => f.entities)
+      .flatMap(d => d.entities)
+      .find(ds => ds._id === view.tableId)
+    return {
+      ...view,
+      label: view.name,
+      type: "viewV2",
+      datasourceName: datasource?.name,
+    }
+  },
 }
 
 export const tableSelect = {
