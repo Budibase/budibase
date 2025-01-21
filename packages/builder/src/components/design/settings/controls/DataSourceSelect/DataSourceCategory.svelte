@@ -21,7 +21,7 @@
   {#each dataSet as data}
     <li
       class="spectrum-Menu-item"
-      class:is-selected={value?.label === data.label &&
+      class:is-selected={value?.resourceId === data.resourceId &&
         value?.type === data.type}
       role="option"
       aria-selected="true"
