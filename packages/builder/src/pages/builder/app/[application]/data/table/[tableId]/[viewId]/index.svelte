@@ -1,6 +1,6 @@
 <script>
   import { viewsV2, rowActions } from "@/stores/builder"
-  import { admin, themeStore, featureFlags } from "@/stores/portal"
+  import { admin, themeStore, licensing } from "@/stores/portal"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { notifications } from "@budibase/bbui"
@@ -53,7 +53,7 @@
   {buttons}
   allowAddRows
   allowDeleteRows
-  aiEnabled={$featureFlags.BUDIBASE_AI || $featureFlags.AI_CUSTOM_CONFIGS}
+  aiEnabled={$licensing.customAIConfigsEnabled || $licensing.budibaseAiEnabled}
   showAvatars={false}
   on:updatedatasource={handleGridViewUpdate}
   isCloud={$admin.cloud}
