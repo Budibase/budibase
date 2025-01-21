@@ -1,10 +1,13 @@
-import { get } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { createBuilderWebsocket } from "./websocket.js"
 import { Socket } from "socket.io-client"
 import { BuilderSocketEvent } from "@budibase/shared-core"
-import { BudiStore } from "../BudiStore.js"
+import { DerivedBudiStore } from "../BudiStore.js"
 import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
 import { App } from "@budibase/types"
+import { datasourceSelect as format } from "@/helpers/data/format"
+import { tables } from "./tables.js"
+import { datasources } from "./datasources.js"
 
 interface BuilderState {
   previousTopNavPath: Record<string, string>
@@ -34,11 +37,39 @@ export const INITIAL_BUILDER_STATE: BuilderState = {
   hoveredComponentId: null,
 }
 
-export class BuilderStore extends BudiStore<BuilderState> {
+interface DerivedBuilderState {
+  formatedTableNames: {
+    label: string
+    tableId: string
+  }[]
+}
+
+export class BuilderStore extends DerivedBudiStore<
+  BuilderState,
+  DerivedBuilderState
+> {
   websocket?: Socket
 
   constructor() {
-    super({ ...INITIAL_BUILDER_STATE })
+    const makeDerivedStore = () => {
+      return derived([tables, datasources], ([$tables, $datasources]) => ({
+        formatedTableNames: $tables.list
+          .map(table => format.table(table, $datasources.list))
+          .sort((a, b) => {
+            // sort tables alphabetically, grouped by datasource
+            const dsA = a.datasourceName ?? ""
+            const dsB = b.datasourceName ?? ""
+
+            const dsComparison = dsA.localeCompare(dsB)
+            if (dsComparison !== 0) {
+              return dsComparison
+            }
+            return a.label.localeCompare(b.label)
+          }),
+      }))
+    }
+
+    super({ ...INITIAL_BUILDER_STATE }, makeDerivedStore)
 
     this.init = this.init.bind(this)
     this.refresh = this.refresh.bind(this)
