@@ -10,7 +10,7 @@ import {
   navigationStore,
   selectedComponent,
 } from "@/stores/builder"
-import { createHistoryStore } from "@/stores/builder/history"
+import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import { Component, Screen } from "@budibase/types"
@@ -27,6 +27,7 @@ export const INITIAL_SCREENS_STATE: ScreenState = {
 }
 
 export class ScreenStore extends BudiStore<ScreenState> {
+  history: HistoryStore<Screen>
   save: (doc: Screen) => Promise<Screen>
   delete: (doc: Screen) => Promise<void>
 
@@ -47,7 +48,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
     this.sequentialScreenPatch = this.sequentialScreenPatch.bind(this)
     this.removeCustomLayout = this.removeCustomLayout.bind(this)
 
-    const history = createHistoryStore({
+    this.history = createHistoryStore({
       getDoc: id => get(this.store).screens?.find(screen => screen._id === id),
       selectDoc: this.select,
       afterAction: () => {
@@ -61,8 +62,8 @@ export class ScreenStore extends BudiStore<ScreenState> {
       },
     })
 
-    this.delete = history.wrapDeleteDoc(this.deleteScreen)
-    this.save = history.wrapSaveDoc(this.saveScreen)
+    this.delete = this.history.wrapDeleteDoc(this.deleteScreen)
+    this.save = this.history.wrapSaveDoc(this.saveScreen)
   }
 
   /**
