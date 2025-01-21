@@ -2778,9 +2778,9 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "3.2.32"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.2.32.tgz#f6abcd5a5524e7f33d958acb6e610e29995427bb"
-  integrity sha512-bF0pd17IjYugjll2yKYmb0RM+tfKZcCmRBc4XG2NZ4f/I47QaOovm9RqSw6tfqCFuzRewxR3SWmtmSseUc/e0w==
+  version "3.2.44"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.2.44.tgz#90367bb2167aafd8c809e000a57d349e5dc4bb78"
+  integrity sha512-Zv2PBVUZUS6/psOpIRIDlW3jrOHWWPhpQXzCk00kIQJaqjkdcvuTXSedQ70u537sQmLu8JsSWbui9MdfF8ksVw==
   dependencies:
     "@anthropic-ai/sdk" "^0.27.3"
     "@budibase/backend-core" "*"
@@ -6964,6 +6964,13 @@
   version "0.12.5"
   resolved "https://registry.yarnpkg.com/@types/retry/-/retry-0.12.5.tgz#f090ff4bd8d2e5b940ff270ab39fd5ca1834a07e"
   integrity sha512-3xSjTp3v03X/lSQLkczaN9UIEwJMoMCA1+Nb5HfbJEQWogdeQIyVtTvxPXDQjZ5zws8rFQfVfRdz03ARihPJgw==
+
+"@types/sanitize-html@^2.13.0":
+  version "2.13.0"
+  resolved "https://registry.yarnpkg.com/@types/sanitize-html/-/sanitize-html-2.13.0.tgz#ac3620e867b7c68deab79c72bd117e2049cdd98e"
+  integrity sha512-X31WxbvW9TjIhZZNyNBZ/p5ax4ti7qsNDBDEnH4zAgmEh35YnFD1UiS6z9Cd34kKm0LslFW0KPmTQzu/oGtsqQ==
+  dependencies:
+    htmlparser2 "^8.0.0"
 
 "@types/semver@7.3.7":
   version "7.3.7"
@@ -14323,11 +14330,6 @@ json-buffer@3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
-
-json-format-highlight@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/json-format-highlight/-/json-format-highlight-1.0.4.tgz#2e44277edabcec79a3d2c84e984c62e2258037b9"
-  integrity sha512-RqenIjKr1I99XfXPAml9G7YlEZg/GnsH7emWyWJh2yuGXqHW8spN7qx6/ME+MoIBb35/fxrMC9Jauj6nvGe4Mg==
 
 json-parse-better-errors@^1.0.1:
   version "1.0.2"
