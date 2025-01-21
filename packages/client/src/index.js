@@ -9,6 +9,7 @@ import {
   dndStore,
   eventStore,
   hoverStore,
+  stateStore,
 } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
 import { get } from "svelte/store"
@@ -103,6 +104,9 @@ const loadBudibase = async () => {
       hoverStore.actions.hoverComponent(data, false)
     } else if (type === "builder-meta") {
       builderStore.actions.setMetadata(data)
+    } else if (type === "builder-state") {
+      const [[key, value]] = Object.entries(data)
+      stateStore.actions.setValue(key, value)
     }
   }
 

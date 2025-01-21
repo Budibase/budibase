@@ -5,7 +5,6 @@
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import { ActionButton } from "@budibase/bbui"
   import BindingsPanel from "./BindingsPanel.svelte"
-  import StatePanel from "./StatePanel.svelte"
 </script>
 
 <div class="app-panel">
@@ -19,7 +18,6 @@
     </div>
     <div class="header-right">
       <BindingsPanel />
-      <StatePanel />
     </div>
   </div>
   <div class="content">
