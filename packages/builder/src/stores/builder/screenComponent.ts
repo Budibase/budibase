@@ -2,7 +2,7 @@ import { derived } from "svelte/store"
 import { tables, selectedScreen, viewsV2 } from "@/stores/builder"
 import { DerivedBudiStore } from "../BudiStore"
 import { findComponentsBySettingsType } from "@/helpers/screen"
-import { Screen } from "@budibase/types"
+import { Screen, Table, ViewV2 } from "@budibase/types"
 
 interface BuilderScreenComponentStore {}
 
@@ -20,22 +20,10 @@ export class ScreenComponentStore extends DerivedBudiStore<
         [selectedScreen, tables, viewsV2],
         ([$selectedScreen, $tables, $viewsV2]): DerivedScreenComponentStore => {
           function getErrors() {
-            const datasources = {
-              ...$tables.list.reduce(
-                (list, table) => ({
-                  ...list,
-                  [table._id!]: table,
-                }),
-                {}
-              ),
-              ...$viewsV2.list.reduce(
-                (list, view) => ({
-                  ...list,
-                  [view.id]: view,
-                }),
-                {}
-              ),
-            }
+            const datasources = flattenTablesAndViews(
+              $tables.list,
+              $viewsV2.list
+            )
             return {
               ...getInvalidDatasources($selectedScreen, datasources),
             }
@@ -54,10 +42,35 @@ export class ScreenComponentStore extends DerivedBudiStore<
 
 export const screenComponentStore = new ScreenComponentStore()
 
+function flattenTablesAndViews(tables: Table[], views: ViewV2[]) {
+  return {
+    ...tables.reduce(
+      (list, table) => ({
+        ...list,
+        [table._id!]: table,
+      }),
+      {}
+    ),
+    ...views.reduce(
+      (list, view) => ({
+        ...list,
+        [view.id]: view,
+      }),
+      {}
+    ),
+  }
+}
+
 function getInvalidDatasources(
   screen: Screen,
   datasources: Record<string, any>
 ) {
+  const friendlyNameByType = {
+    table: "table",
+    view: "view",
+    viewV2: "view",
+  }
+
   const result: Record<string, string[]> = {}
   for (const component of findComponentsBySettingsType(screen, "table")) {
     const { resourceId, type, label } = component.dataSource
@@ -71,10 +84,4 @@ function getInvalidDatasources(
   }
 
   return result
-}
-
-const friendlyNameByType = {
-  table: "table",
-  view: "view",
-  viewV2: "view",
 }
