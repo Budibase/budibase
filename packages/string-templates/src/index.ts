@@ -1,4 +1,4 @@
-import { createContext, runInNewContext } from "vm"
+import vm from "@budibase/vm-browserify"
 import { create, TemplateDelegate } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
 import { postprocess, postprocessWithLogs, preprocess } from "./processors"
@@ -511,11 +511,11 @@ export function browserJSSetup() {
    * Use polyfilled vm to run JS scripts in a browser Env
    */
   setJSRunner((js: string, context: Record<string, any>) => {
-    createContext(context)
+    vm.createContext(context)
 
     const wrappedJs = frontendWrapJS(js)
 
-    const result = runInNewContext(wrappedJs, context, { timeout: 1000 })
+    const result = vm.runInNewContext(wrappedJs, context)
     if (result.error) {
       throw new UserScriptError(result.error)
     }
