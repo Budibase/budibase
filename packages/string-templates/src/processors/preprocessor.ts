@@ -11,9 +11,12 @@ export enum PreprocessorNames {
   NORMALIZE_SPACES = "normalize-spaces",
 }
 
-type PreprocessorFn = (statement: string, opts?: ProcessOptions) => string
+export type PreprocessorFn = (
+  statement: string,
+  opts?: ProcessOptions
+) => string
 
-class Preprocessor {
+export class Preprocessor {
   name: string
   private readonly fn: PreprocessorFn
 
