@@ -174,7 +174,7 @@
     padding: var(--spacing-m) var(--spacing-l);
     font-family: var(--font-mono);
     font-size: 12px;
-    overflow-y: scroll;
+    overflow-y: auto;
     overflow-x: hidden;
     white-space: pre-line;
     word-wrap: break-word;
