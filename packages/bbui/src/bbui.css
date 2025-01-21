@@ -45,6 +45,11 @@
   --purple: #806fde;
   --purple-dark: #130080;
 
+  --error-bg: rgba(226, 109, 105, 0.3);
+  --warning-bg: rgba(255, 210, 106, 0.3);
+  --error-content: rgba(226, 109, 105, 0.6);
+  --warning-content: rgba(255, 210, 106, 0.6);
+
   --rounded-small: 4px;
   --rounded-medium: 8px;
   --rounded-large: 16px;
