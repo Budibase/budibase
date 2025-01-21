@@ -46,8 +46,6 @@ export const sortAndFormat = {
         const formatted = datasourceSelect.table(table, datasources)
         return {
           ...formatted,
-          label: formatted.label,
-          datasourceName: formatted.datasourceName,
           resourceId: table._id,
         }
       })
@@ -67,8 +65,7 @@ export const sortAndFormat = {
     return views.map(view => {
       const formatted = datasourceSelect.viewV2(view, datasources)
       return {
-        label: formatted.label,
-        datasourceName: formatted.datasourceName,
+        ...formatted,
         resourceId: view.id,
       }
     })
