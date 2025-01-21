@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ActionButton, Popover, Divider, Icon, Select } from "@budibase/bbui"
+  import { Divider, Select, Heading } from "@budibase/bbui"
   import { getAllStateVariables } from "@/dataBinding"
   import {
     componentStore,
@@ -14,6 +14,7 @@
   } from "@budibase/string-templates"
   import { onMount } from "svelte"
   import CodeMirrorEditor from "@/components/common/CodeMirrorEditor.svelte"
+
   type ComponentUsingState = {
     id: string
     name: string
@@ -26,6 +27,7 @@
   let componentsUsingState: ComponentUsingState[] = []
   let componentsUpdatingState: ComponentUsingState[] = []
   let editorValue: string = ""
+  let editorError: string | null = null
 
   onMount(() => {
     if (selectedKey) {
@@ -35,16 +37,19 @@
   })
 
   $: {
-    let previewContext = $previewStore.selectedComponentContext || {}
+    const previewContext = $previewStore.selectedComponentContext || {}
 
     if (selectedKey && previewContext.state) {
       // It's unlikely value will ever be populated immediately as state is never populated automatically in preview
       const value = previewContext.state[selectedKey] ?? null
       editorValue = JSON.stringify(value, null, 2)
+      editorError = null
     } else {
       editorValue = ""
+      editorError = null
     }
   }
+
   function findComponentsUpdatingState(
     component: any,
     stateKey: string
@@ -79,7 +84,6 @@
         ]
       }
     }
-
     return foundComponents
   }
 
@@ -168,25 +172,30 @@
       return
     }
 
-    const value = JSON.parse(e.detail)
-    const stateUpdate = { [selectedKey]: value }
+    try {
+      const value = JSON.parse(e.detail)
+      const stateUpdate = { [selectedKey]: value }
+      editorError = null
 
-    previewStore.updateState(stateUpdate)
+      previewStore.updateState(stateUpdate)
+      previewStore.updateState(stateUpdate)
 
-    previewStore.setSelectedComponentContext({
-      ...$previewStore.selectedComponentContext,
-      state: stateUpdate,
-    })
+      previewStore.updateState(stateUpdate)
 
-    previewStore.requestComponentContext()
+      previewStore.setSelectedComponentContext({
+        ...$previewStore.selectedComponentContext,
+        state: stateUpdate,
+      })
+      previewStore.requestComponentContext()
+    } catch (err) {
+      editorError = "Invalid JSON value"
+    }
   }
 </script>
 
 <div class="state-panel">
-  <div>State</div>
-  <div>
-    Showing state variables for {$selectedScreen?.routing?.route.split("/")[1]}:
-  </div>
+  <Heading size="S">State</Heading>
+  <div>Showing state variables for this screen</div>
   <div class="section">
     <Select
       value={selectedKey}
@@ -204,6 +213,9 @@
       label="State Inspector"
       on:change={handleStateInspectorChange}
     />
+    {#if editorError}
+      <div class="error">{editorError}</div>
+    {/if}
   </div>
   <Divider />
 
@@ -211,29 +223,26 @@
     <div class="section">
       <span class="text">Updates:</span>
       {#each componentsUsingState as component, i}
+        {#if i > 0}{", "}{/if}
         <button
           class="component-link"
           on:click={() => onClickComponentLink(component)}
         >
-          {component.name}{i < componentsUsingState.length - 1 ? ", " : ""}
+          {component.name}
         </button>
       {/each}
     </div>
   {/if}
   {#if componentsUpdatingState.length > 0}
     <div class="section">
-      <span class="text">Updated by:</span>
+      <span class="text">Controlled by:</span>
       {#each componentsUpdatingState as component, i}
+        {#if i > 0}{", "}{/if}
         <button
           class="component-link"
-          on:click={() =>
-            onClickComponentLink({
-              id: component.id,
-              name: component.name,
-              settings: component.settings,
-            })}
+          on:click={() => onClickComponentLink(component)}
         >
-          {component.name}{i < componentsUpdatingState.length - 1 ? ", " : ""}
+          {component.name}
         </button>
       {/each}
     </div>
@@ -255,6 +264,14 @@
     color: var(--spectrum-global-color-gray-700);
     font-size: var(--spectrum-global-dimension-font-size-75);
   }
+  .error {
+    color: var(
+      --spectrum-semantic-negative-color-default,
+      var(--spectrum-global-color-red-500)
+    );
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    margin-top: var(--spectrum-global-dimension-size-75);
+  }
   .component-link {
     display: inline;
     border: none;
@@ -267,11 +284,5 @@
   }
   .component-link:hover {
     text-decoration: underline;
-  }
-
-  .split-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
 </style>
