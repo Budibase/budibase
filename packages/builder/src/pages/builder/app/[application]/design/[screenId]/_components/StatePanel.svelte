@@ -178,10 +178,6 @@
       editorError = null
 
       previewStore.updateState(stateUpdate)
-      previewStore.updateState(stateUpdate)
-
-      previewStore.updateState(stateUpdate)
-
       previewStore.setSelectedComponentContext({
         ...$previewStore.selectedComponentContext,
         state: stateUpdate,
