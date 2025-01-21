@@ -53,9 +53,19 @@ function getInvalidDatasources(
   for (const component of findComponentsBySettingsType(screen, "table")) {
     const { resourceId, type, label } = component.dataSource
     if (!datasources[resourceId]) {
-      result[component._id!] = [`The ${type} named "${label}" was removed`]
+      const friendlyTypeName =
+        friendlyNameByType[type as keyof typeof friendlyNameByType]
+      result[component._id!] = [
+        `The ${friendlyTypeName} named "${label}" was removed`,
+      ]
     }
   }
 
   return result
+}
+
+const friendlyNameByType = {
+  table: "table",
+  view: "view",
+  viewV2: "view",
 }
