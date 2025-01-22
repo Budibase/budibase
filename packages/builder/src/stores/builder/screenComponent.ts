@@ -40,7 +40,7 @@ export const screenComponentErrors = derived(
       const result: Record<string, string[]> = {}
       for (const { component, setting } of findComponentsBySettingsType(
         screen,
-        "table"
+        ["table", "dataSource"]
       )) {
         const { resourceId, type, label } = component[setting.key]
         if (!datasources[resourceId]) {
