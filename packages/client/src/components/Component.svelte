@@ -138,7 +138,7 @@
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
-  $: invalidSettings = $builderStore.componentErrors[instance._id]
+  $: invalidSettings = instance?._meta?.errors
   $: hasChildren = !!definition?.hasChildren
   $: showEmptyState = definition?.showEmptyState !== false
   $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
