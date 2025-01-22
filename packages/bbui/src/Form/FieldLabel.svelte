@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   import TooltipWrapper from "../Tooltip/TooltipWrapper.svelte"
 
   import "@spectrum-css/fieldlabel/dist/index-vars.css"
 
-  export let forId
-  export let label
+  export let forId: string | undefined = undefined
+  export let label: string | undefined = undefined
   export let position = "above"
   export let tooltip = ""
 

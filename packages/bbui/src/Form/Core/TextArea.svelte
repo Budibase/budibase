@@ -1,14 +1,14 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
 
   export let value = ""
-  export let placeholder = null
+  export let placeholder: string | undefined = undefined
   export let disabled = false
   export let readonly = false
-  export let id = null
-  export let height = null
-  export let minHeight = null
+  export let id: string | undefined = undefined
+  export let height: number | string | undefined = undefined
+  export let minHeight: number | string | undefined = undefined
   export const getCaretPosition = () => ({
     start: textarea.selectionStart,
     end: textarea.selectionEnd,
@@ -16,18 +16,23 @@
   export let align = null
 
   let focus = false
-  let textarea
+  let textarea: HTMLTextAreaElement
   const dispatch = createEventDispatcher()
-  const onChange = event => {
-    dispatch("change", event.target.value)
+  const onChange = (event: FocusEvent) => {
+    const target: HTMLTextAreaElement | null =
+      event.target as HTMLTextAreaElement
+    dispatch("change", target?.value)
     focus = false
   }
 
-  const getStyleString = (attribute, value) => {
+  const getStyleString = (
+    attribute: string,
+    value?: number | string
+  ): string => {
     if (!attribute || value == null) {
       return ""
     }
-    if (isNaN(value)) {
+    if (typeof value === "number" && isNaN(value)) {
       return `${attribute}:${value};`
     }
     return `${attribute}:${value}px;`

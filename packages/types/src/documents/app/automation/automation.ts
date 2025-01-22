@@ -37,6 +37,7 @@ export enum AutomationCustomIOType {
   AUTOMATION_FIELDS = "automationFields",
   MULTI_ATTACHMENTS = "multi_attachments",
   TRIGGER_FILTER = "trigger_filter",
+  FIELDS = "fields",
 }
 
 export enum AutomationTriggerStepId {
@@ -120,6 +121,16 @@ export const AutomationStepIdArray = [
   ...Object.values(AutomationTriggerStepId),
 ]
 
+export interface AutomationTestData {
+  row?: Row
+  meta: {
+    [key: string]: unknown
+  }
+  id: string
+  revision: string
+  oldRow?: Row
+}
+
 export interface Automation extends Document {
   definition: {
     steps: AutomationStep[]
@@ -135,15 +146,7 @@ export interface Automation extends Document {
   internal?: boolean
   type?: string
   disabled?: boolean
-  testData?: {
-    row?: Row
-    meta: {
-      [key: string]: unknown
-    }
-    id: string
-    revision: string
-    oldRow?: Row
-  }
+  testData?: AutomationTestData
 }
 
 interface BaseIOStructure {

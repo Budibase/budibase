@@ -1,18 +1,24 @@
-<script>
+<script lang="ts">
   import { tick } from "svelte"
   import {
     ModalContent,
     TextArea,
     notifications,
     ActionButton,
+    CoreSelect,
   } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
-  import { AutomationEventType } from "@budibase/types"
+  import {
+    AutomationCustomIOType,
+    AutomationEventType,
+    AutomationTestData,
+    AutomationTrigger,
+  } from "@budibase/types"
 
-  let failedParse = null
-  let trigger = {}
+  let failedParse: string | undefined = undefined
+  let trigger: AutomationTrigger | undefined = undefined
   let schemaProperties = {}
 
   const rowTriggers = [
@@ -22,21 +28,22 @@
     AutomationEventType.ROW_ACTION,
   ]
 
+  const isRowTrigger = () => {
+    const event = $selectedAutomation.data?.definition?.trigger?.event
+    if (!event) return false
+    return rowTriggers.includes(event)
+  }
+
   /**
    * Parses the automation test data and ensures it is valid
-   * @param {object} testData contains all config for the test
-   * @returns {object} valid testData
    * @todo Parse *all* data for each trigger type and relay adequate feedback
    */
-  const parseTestData = testData => {
-    const autoTrigger = $selectedAutomation.data?.definition?.trigger
-    const { tableId } = autoTrigger?.inputs || {}
+  const parseTestData = (testData: AutomationTestData): AutomationTestData => {
+    const { tableId } =
+      $selectedAutomation.data?.definition?.trigger?.inputs || {}
 
     // Ensure the tableId matches the trigger table for row trigger automations
-    if (
-      rowTriggers.includes(autoTrigger?.event) &&
-      testData?.row?.tableId !== tableId
-    ) {
+    if (isRowTrigger() && testData?.row?.tableId !== tableId) {
       return {
         // Reset Core fields
         row: { tableId },
@@ -52,23 +59,27 @@
 
   /**
    * Before executing a test run, relay if an automation is in a valid state
-   * @param {object} trigger The automation trigger config
-   * @returns {boolean} validation status
    * @todo Parse *all* trigger types relay adequate feedback
    */
-  const isTriggerValid = trigger => {
-    if (rowTriggers.includes(trigger?.event) && !trigger?.inputs?.tableId) {
+  const isTriggerValid = (trigger: AutomationTrigger): boolean => {
+    if (
+      trigger.event &&
+      rowTriggers.includes(trigger.event) &&
+      !trigger?.inputs?.tableId
+    ) {
       return false
     }
     return true
   }
 
-  $: currentTestData = $selectedAutomation.data.testData
+  $: currentTestData = $selectedAutomation.data?.testData
 
   // Can be updated locally to avoid race condition when testing
-  $: testData = parseTestData(currentTestData)
+  $: testData = currentTestData ? parseTestData(currentTestData) : undefined
 
   $: {
+    if (!$selectedAutomation.data) return
+
     // clone the trigger so we're not mutating the reference
     trigger = cloneDeep($selectedAutomation.data.definition.trigger)
 
@@ -76,30 +87,31 @@
     let schema = Object.entries(trigger.schema?.outputs?.properties || {})
 
     if (trigger?.event === AutomationEventType.APP_TRIGGER) {
-      schema = [["fields", { customType: "fields" }]]
+      schema = [["fields", { customType: AutomationCustomIOType.FIELDS }]]
     }
     schemaProperties = schema
   }
 
   // Check the schema to see if required fields have been entered
   $: isError =
-    !isTriggerValid(trigger) ||
-    !(trigger.schema.outputs.required || []).every(
-      required => testData?.[required] || required !== "row"
+    (trigger && !isTriggerValid(trigger)) ||
+    !(trigger?.schema.outputs.required || []).every(
+      required =>
+        testData?.[required as keyof typeof testData] || required !== "row"
     )
 
-  async function parseTestJSON(e) {
+  async function parseTestJSON(e: { detail: string }) {
     let jsonUpdate
 
     try {
       jsonUpdate = JSON.parse(e.detail)
-      failedParse = null
+      failedParse = undefined
     } catch (e) {
       failedParse = "Invalid JSON"
       return false
     }
 
-    if (rowTriggers.includes(trigger?.event)) {
+    if (trigger?.event && rowTriggers.includes(trigger.event)) {
       const tableId = trigger?.inputs?.tableId
 
       // Reset the tableId as it must match the trigger
@@ -110,10 +122,16 @@
 
     const updatedAuto =
       automationStore.actions.addTestDataToAutomation(jsonUpdate)
-    await automationStore.actions.save(updatedAuto)
+    if (updatedAuto) {
+      await automationStore.actions.save(updatedAuto)
+    }
   }
 
   const testAutomation = async () => {
+    if (!$selectedAutomation.data) {
+      return
+    }
+
     // Ensure testData reactiveness is processed
     await tick()
     try {
@@ -166,7 +184,7 @@
       />
     </div>
   {/if}
-  {#if selectedJSON}
+  {#if selectedJSON && $selectedAutomation.data}
     <div class="text-area-container">
       <TextArea
         value={JSON.stringify($selectedAutomation.data.testData, null, 2)}
