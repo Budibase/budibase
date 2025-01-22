@@ -34,7 +34,7 @@
   import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "@/components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "@/api"
-  import { datasourceSelect as format } from "@/helpers/data/format"
+  import { sortAndFormat } from "@/helpers/data/format"
 
   export let value = {}
   export let otherSources
@@ -51,25 +51,13 @@
   let modal
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = $tablesStore.list
-    .map(table => format.table(table, $datasources.list))
-    .sort((a, b) => {
-      // sort tables alphabetically, grouped by datasource
-      const dsA = a.datasourceName ?? ""
-      const dsB = b.datasourceName ?? ""
-
-      const dsComparison = dsA.localeCompare(dsB)
-      if (dsComparison !== 0) {
-        return dsComparison
-      }
-      return a.label.localeCompare(b.label)
-    })
+  $: tables = sortAndFormat.tables($tablesStore.list, $datasources.list)
   $: viewsV1 = $viewsStore.list.map(view => ({
     ...view,
     label: view.name,
     type: "view",
   }))
-  $: viewsV2 = $viewsV2Store.list.map(format.viewV2)
+  $: viewsV2 = sortAndFormat.viewsV2($viewsV2Store.list, $datasources.list)
   $: views = [...(viewsV1 || []), ...(viewsV2 || [])]
   $: queries = $queriesStore.list
     .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
