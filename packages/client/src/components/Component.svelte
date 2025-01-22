@@ -23,7 +23,6 @@
     appStore,
     dndComponentPath,
     dndIsDragging,
-    componentErrors,
   } from "stores"
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
@@ -139,7 +138,7 @@
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
-  $: invalidSettings = $componentErrors[instance._id]
+  $: invalidSettings = $builderStore.componentErrors[instance._id]
   $: hasChildren = !!definition?.hasChildren
   $: showEmptyState = definition?.showEmptyState !== false
   $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
