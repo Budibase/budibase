@@ -20,4 +20,4 @@ export type Component = Readable<{
   errorState: boolean
 }>
 
-export type Context = Readable<any>
+export type Context = Readable<{}>

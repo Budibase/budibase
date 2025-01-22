@@ -4,7 +4,6 @@
   import { Utils } from "@budibase/frontend-core"
   import FormBlockWrapper from "./FormBlockWrapper.svelte"
   import { get } from "svelte/store"
-  import { Component, Context, SDK } from "../../../../index"
   import { TableSchema, UIDatasource } from "@budibase/types"
 
   type Field = { name: string; active: boolean }
@@ -34,9 +33,9 @@
   export let saveButtonLabel: boolean
   export let deleteButtonLabel: boolean
 
-  const { fetchDatasourceSchema, generateGoldenSample } = getContext<SDK>("sdk")
-  const component = getContext<Component>("component")
-  const context = getContext<Context>("context")
+  const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
+  const component = getContext("component")
+  const context = getContext("context")
 
   let schema: TableSchema
 
