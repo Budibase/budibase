@@ -42,7 +42,22 @@
   $: screen = $selectedScreen
 
   // Determine selected component ID
-  $: selectedComponentId = $componentStore.selectedComponentId
+  $: selectedComponentId = getSelectedComponentId(
+    screen,
+    $componentStore.selectedComponentId
+  )
+
+  const getSelectedComponentId = (screen, componentId) => {
+    if (componentId === `${screen}-screen`) return componentId
+    if (componentId === `${screen}-navigation`) return componentId
+
+    if (!!findComponent($selectedScreen.props, componentId)) {
+      return componentId
+    }
+
+    // Fall back to screen component of the screen
+    return `${screen._id}-screen`
+  }
 
   $: previewData = {
     appId: $appStore.appId,

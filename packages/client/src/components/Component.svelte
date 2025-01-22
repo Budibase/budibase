@@ -104,7 +104,6 @@
   let settingsDefinition
   let settingsDefinitionMap
   let missingRequiredSettings = false
-  let invalidSettings = false
 
   // Temporary styles which can be added in the app preview for things like
   // DND. We clear these whenever a new instance is received.
@@ -143,6 +142,7 @@
   $: showEmptyState = definition?.showEmptyState !== false
   $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
   $: editable = !!definition?.editable && !hasMissingRequiredSettings
+  $: invalidSettings = instance._meta?.errors
   $: hasInvalidSettings = invalidSettings?.length > 0
   $: requiredAncestors = definition?.requiredAncestors || []
   $: missingRequiredAncestors = requiredAncestors.filter(
@@ -373,9 +373,6 @@
       unobserve = context.actions.observeChanges(handleContextChange)
     }
   }
-
-  // Check for invalid settings
-  $: invalidSettings = $componentErrors[id]
 
   // Extracts a map of all context keys which are required by action settings
   // to provide the functions to evaluate at runtime. This needs done manually
