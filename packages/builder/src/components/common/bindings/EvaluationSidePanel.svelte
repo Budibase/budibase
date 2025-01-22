@@ -4,11 +4,13 @@
   import { Helpers } from "@budibase/bbui"
   import { fade } from "svelte/transition"
   import { UserScriptError } from "@budibase/string-templates"
+  import type { Log } from "@budibase/string-templates"
   import type { JSONValue } from "@budibase/types"
 
   // this can be essentially any primitive response from the JS function
   export let expressionResult: JSONValue | undefined = undefined
   export let expressionError: string | undefined = undefined
+  export let expressionLogs: Log[] = []
   export let evaluating = false
   export let expression: string | null = null
 
@@ -16,6 +18,11 @@
   $: empty = expression == null || expression?.trim() === ""
   $: success = !error && !empty
   $: highlightedResult = highlight(expressionResult)
+  $: highlightedLogs = expressionLogs.map(l => ({
+    log: highlight(l.log.join(", ")),
+    line: l.line,
+    type: l.type,
+  }))
 
   const formatError = (err: any) => {
     if (err.code === UserScriptError.code) {
@@ -25,14 +32,14 @@
   }
 
   // json can be any primitive type
-  const highlight = (json?: any | null) => {
+  const highlight = (json?: JSONValue | null) => {
     if (json == null) {
       return ""
     }
 
     // Attempt to parse and then stringify, in case this is valid result
     try {
-      json = JSON.stringify(JSON.parse(json), null, 2)
+      json = JSON.stringify(JSON.parse(json as any), null, 2)
     } catch (err) {
       // couldn't parse/stringify, just treat it as the raw input
     }
@@ -61,7 +68,7 @@
   <div class="header" class:success class:error>
     <div class="header-content">
       {#if error}
-        <Icon name="Alert" color="var(--spectrum-global-color-red-600)" />
+        <Icon name="Alert" color="var(--error-content)" />
         <div>Error</div>
         {#if evaluating}
           <div transition:fade|local={{ duration: 130 }}>
@@ -90,8 +97,36 @@
     {:else if error}
       {formatError(expressionError)}
     {:else}
-      <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-      {@html highlightedResult}
+      <div class="output-lines">
+        {#each highlightedLogs as logLine}
+          <div
+            class="line"
+            class:error-log={logLine.type === "error"}
+            class:warn-log={logLine.type === "warn"}
+          >
+            <div class="icon-log">
+              {#if logLine.type === "error"}
+                <Icon
+                  size="XS"
+                  name="CloseCircle"
+                  color="var(--error-content)"
+                />
+              {:else if logLine.type === "warn"}
+                <Icon size="XS" name="Alert" color="var(--warning-content)" />
+              {/if}
+              <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+              <span>{@html logLine.log}</span>
+            </div>
+            {#if logLine.line}
+              <span style="color: var(--blue)">:{logLine.line}</span>
+            {/if}
+          </div>
+        {/each}
+        <div class="line">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+          {@html highlightedResult}
+        </div>
+      </div>
     {/if}
   </div>
 </div>
@@ -130,20 +165,37 @@
     height: 100%;
     z-index: 1;
     position: absolute;
-    opacity: 10%;
   }
   .header.error::before {
-    background: var(--spectrum-global-color-red-400);
+    background: var(--error-bg);
   }
   .body {
     flex: 1 1 auto;
     padding: var(--spacing-m) var(--spacing-l);
     font-family: var(--font-mono);
     font-size: 12px;
-    overflow-y: scroll;
+    overflow-y: auto;
     overflow-x: hidden;
-    white-space: pre-wrap;
+    white-space: pre-line;
     word-wrap: break-word;
     height: 0;
+  }
+  .output-lines {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  .line {
+    border-bottom: var(--border-light);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: end;
+    padding: var(--spacing-s);
+  }
+  .icon-log {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: start;
   }
 </style>

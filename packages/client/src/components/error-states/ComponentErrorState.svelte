@@ -3,7 +3,6 @@
   import { Icon } from "@budibase/bbui"
   import MissingRequiredSetting from "./MissingRequiredSetting.svelte"
   import MissingRequiredAncestor from "./MissingRequiredAncestor.svelte"
-  import { Component, SDK } from "../../index"
 
   export let missingRequiredSettings:
     | { key: string; label: string }[]
@@ -11,8 +10,8 @@
   export let missingRequiredAncestors: string[] | undefined
   export let invalidSettings: string[] | undefined
 
-  const component = getContext<Component>("component")
-  const { styleable, builderStore } = getContext<SDK>("sdk")
+  const component = getContext("component")
+  const { styleable, builderStore } = getContext("sdk")
 
   $: styles = { ...$component.styles, normal: {}, custom: null, empty: true }
   $: requiredSetting = missingRequiredSettings?.[0]
