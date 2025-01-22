@@ -1,8 +1,8 @@
-import { EventEmitter } from "events"
 import * as queryController from "../../api/controllers/query"
 import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
+  ContextEmitter,
   ExecuteQueryStepInputs,
   ExecuteQueryStepOutputs,
 } from "@budibase/types"
@@ -14,7 +14,7 @@ export async function run({
 }: {
   inputs: ExecuteQueryStepInputs
   appId: string
-  emitter: EventEmitter
+  emitter: ContextEmitter
 }): Promise<ExecuteQueryStepOutputs> {
   if (inputs.query == null) {
     return {
