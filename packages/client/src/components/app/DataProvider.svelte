@@ -1,22 +1,38 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte"
   import { Pagination, ProgressCircle } from "@budibase/bbui"
   import { fetchData, QueryUtils } from "@budibase/frontend-core"
-  import { LogicalOperator, EmptyFilterOption } from "@budibase/types"
+  import {
+    LogicalOperator,
+    EmptyFilterOption,
+    TableSchema,
+    SortOrder,
+    SearchFilters,
+    UISearchFilter,
+    DataFetchDatasource,
+    UserDatasource,
+    GroupUserDatasource,
+    DataFetchOptions,
+  } from "@budibase/types"
 
-  export let dataSource
-  export let filter
-  export let sortColumn
-  export let sortOrder
-  export let limit
-  export let paginate
-  export let autoRefresh
+  type ProviderDatasource = Exclude<
+    DataFetchDatasource,
+    UserDatasource | GroupUserDatasource
+  >
+
+  export let dataSource: ProviderDatasource
+  export let filter: UISearchFilter
+  export let sortColumn: string
+  export let sortOrder: SortOrder
+  export let limit: number
+  export let paginate: boolean
+  export let autoRefresh: number
 
   const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
 
-  let interval
-  let queryExtensions = {}
+  let interval: ReturnType<typeof setInterval>
+  let queryExtensions: Record<string, any> = {}
 
   $: defaultQuery = QueryUtils.buildQuery(filter)
 
@@ -49,8 +65,14 @@
     },
     {
       type: ActionTypes.SetDataProviderSorting,
-      callback: ({ column, order }) => {
-        let newOptions = {}
+      callback: ({
+        column,
+        order,
+      }: {
+        column: string
+        order: SortOrder | undefined
+      }) => {
+        let newOptions: Partial<DataFetchOptions> = {}
         if (column) {
           newOptions.sortColumn = column
         }
@@ -63,6 +85,7 @@
       },
     },
   ]
+
   $: dataContext = {
     rows: $fetch.rows,
     info: $fetch.info,
@@ -75,14 +98,12 @@
     id: $component?.id,
     state: {
       query: $fetch.query,
-      sortColumn: $fetch.sortColumn,
-      sortOrder: $fetch.sortOrder,
     },
     limit,
-    primaryDisplay: $fetch.definition?.primaryDisplay,
+    primaryDisplay: ($fetch.definition as any)?.primaryDisplay,
   }
 
-  const createFetch = datasource => {
+  const createFetch = (datasource: ProviderDatasource) => {
     return fetchData({
       API,
       datasource,
@@ -96,7 +117,7 @@
     })
   }
 
-  const sanitizeSchema = schema => {
+  const sanitizeSchema = (schema: TableSchema | null) => {
     if (!schema) {
       return schema
     }
@@ -109,14 +130,14 @@
     return cloned
   }
 
-  const addQueryExtension = (key, extension) => {
+  const addQueryExtension = (key: string, extension: any) => {
     if (!key || !extension) {
       return
     }
     queryExtensions = { ...queryExtensions, [key]: extension }
   }
 
-  const removeQueryExtension = key => {
+  const removeQueryExtension = (key: string) => {
     if (!key) {
       return
     }
@@ -125,11 +146,14 @@
     queryExtensions = newQueryExtensions
   }
 
-  const extendQuery = (defaultQuery, extensions) => {
+  const extendQuery = (
+    defaultQuery: SearchFilters,
+    extensions: Record<string, any>
+  ): SearchFilters => {
     if (!Object.keys(extensions).length) {
       return defaultQuery
     }
-    const extended = {
+    const extended: SearchFilters = {
       [LogicalOperator.AND]: {
         conditions: [
           ...(defaultQuery ? [defaultQuery] : []),
@@ -140,12 +164,12 @@
     }
 
     // If there are no conditions applied at all, clear the request.
-    return extended[LogicalOperator.AND]?.conditions?.length > 0
+    return (extended[LogicalOperator.AND]?.conditions?.length ?? 0) > 0
       ? extended
-      : null
+      : {}
   }
 
-  const setUpAutoRefresh = autoRefresh => {
+  const setUpAutoRefresh = (autoRefresh: number) => {
     clearInterval(interval)
     if (autoRefresh) {
       interval = setInterval(fetch.refresh, Math.max(10000, autoRefresh * 1000))

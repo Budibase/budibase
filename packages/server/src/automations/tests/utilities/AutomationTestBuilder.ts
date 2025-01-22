@@ -42,7 +42,7 @@ import {
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
-import { definition } from "../../../automations/steps/branch"
+import { automations } from "@budibase/shared-core"
 
 type TriggerOutputs =
   | RowCreatedTriggerOutputs
@@ -103,7 +103,7 @@ class BaseStepBuilder {
       branchStepInputs.children![branchId] = stepBuilder.build()
     })
     const branchStep: AutomationStep = {
-      ...definition,
+      ...automations.steps.branch.definition,
       id: uuidv4(),
       stepId: AutomationActionStepId.BRANCH,
       inputs: branchStepInputs,
