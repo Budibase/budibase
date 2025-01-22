@@ -30,6 +30,7 @@ import {
   AutomationTriggerSchema,
   BranchPath,
   BlockDefinitions,
+  AutomationTestData,
 } from "@budibase/types"
 import { ActionStepID } from "@/constants/backend/automations"
 import { FIELDS } from "@/constants/backend"
@@ -766,7 +767,7 @@ const automationActions = (store: AutomationStore) => ({
     // Create new modified automation
     const automation = get(selectedAutomation)?.data
     if (!automation) {
-      return false
+      return null
     }
     const newAutomation = store.actions.getUpdatedDefinition(
       automation,
@@ -775,7 +776,7 @@ const automationActions = (store: AutomationStore) => ({
 
     // Don't save if no changes were made
     if (JSON.stringify(newAutomation) === JSON.stringify(automation)) {
-      return false
+      return null
     }
 
     return newAutomation
@@ -786,7 +787,7 @@ const automationActions = (store: AutomationStore) => ({
     data: Record<string, any>
   ) => {
     const newAutomation = await store.actions.processBlockInputs(block, data)
-    if (newAutomation === false) {
+    if (!newAutomation) {
       return
     }
     await store.actions.save(newAutomation)
@@ -859,7 +860,7 @@ const automationActions = (store: AutomationStore) => ({
     return await API.clearAutomationLogErrors(automationId, appId)
   },
 
-  addTestDataToAutomation: (data: any) => {
+  addTestDataToAutomation: (data: AutomationTestData) => {
     let newAutomation = cloneDeep(get(selectedAutomation)?.data)
     if (!newAutomation) {
       return newAutomation

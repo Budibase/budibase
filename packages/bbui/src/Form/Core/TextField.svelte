@@ -1,67 +1,73 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher, onMount, tick } from "svelte"
+  import {
+    FocusEventHandler,
+    FormEventHandler,
+    KeyboardEventHandler,
+  } from "svelte/elements"
 
-  export let value = null
-  export let placeholder = null
-  export let type = "text"
+  export let value: string | undefined = undefined
+  export let placeholder: string | undefined = undefined
+  export let type: "text" | "number" | "bigint" = "text"
   export let disabled = false
-  export let id = null
+  export let id: string | undefined = undefined
   export let readonly = false
   export let updateOnChange = true
   export let quiet = false
-  export let align
+  export let align: string | undefined = undefined
   export let autofocus = false
-  export let autocomplete = null
+  export let autocomplete: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
-  let field
+  let field: HTMLInputElement
   let focus = false
 
-  const updateValue = newValue => {
+  const updateValue = (newValue: string) => {
     if (readonly || disabled) {
       return
     }
     if (type === "number") {
       const float = parseFloat(newValue)
-      newValue = isNaN(float) ? null : float
+      dispatch("change", isNaN(float) ? null : float)
+    } else {
+      dispatch("change", newValue)
     }
-    dispatch("change", newValue)
   }
 
-  const onFocus = () => {
+  const onFocus: FocusEventHandler<HTMLInputElement> = () => {
     if (readonly || disabled) {
       return
     }
     focus = true
   }
 
-  const onBlur = event => {
+  const onBlur: FocusEventHandler<HTMLInputElement> = event => {
     if (readonly || disabled) {
       return
     }
     focus = false
-    updateValue(event.target.value)
+    updateValue(event.currentTarget.value)
   }
 
-  const onInput = event => {
+  const onInput: FormEventHandler<HTMLInputElement> = event => {
     if (readonly || !updateOnChange || disabled) {
       return
     }
-    updateValue(event.target.value)
+    updateValue(event.currentTarget.value)
   }
 
-  const updateValueOnEnter = event => {
+  const updateValueOnEnter: KeyboardEventHandler<HTMLInputElement> = event => {
     if (readonly || disabled) {
       return
     }
     if (event.key === "Enter") {
-      updateValue(event.target.value)
+      updateValue(event.currentTarget.value)
     }
   }
 
-  const getInputMode = type => {
+  const getInputMode = (type: "text" | "number" | "bigint") => {
     if (type === "bigint") {
       return "numeric"
     }

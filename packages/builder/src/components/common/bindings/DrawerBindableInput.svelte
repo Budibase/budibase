@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Icon, Input, Drawer, Button } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
@@ -11,16 +11,16 @@
 
   export let panel = ClientBindingPanel
   export let value = ""
-  export let bindings = []
-  export let title
-  export let placeholder
-  export let label
+  export let bindings: any[] = []
+  export let title: string | undefined = undefined
+  export let placeholder: string | undefined = undefined
+  export let label: string | undefined = undefined
   export let disabled = false
   export let allowHBS = true
   export let allowJS = true
   export let allowHelpers = true
   export let updateOnChange = true
-  export let key
+  export let key: string | undefined = undefined
   export let disableBindings = false
   export let forceModal = false
   export let context = null

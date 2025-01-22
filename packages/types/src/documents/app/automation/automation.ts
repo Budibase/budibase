@@ -15,6 +15,8 @@ export enum AutomationIOType {
   JSON = "json",
   DATE = "date",
   ATTACHMENT = "attachment",
+  ATTACHMENT_SINGLE = "attachment_single",
+  SIGNATURE_SINGLE = "signature_single",
 }
 
 export enum AutomationCustomIOType {
@@ -37,6 +39,7 @@ export enum AutomationCustomIOType {
   AUTOMATION_FIELDS = "automationFields",
   MULTI_ATTACHMENTS = "multi_attachments",
   TRIGGER_FILTER = "trigger_filter",
+  TRIGGER_FILTER_SETTING = "trigger_filter_setting",
   FIELDS = "fields",
 }
 
@@ -123,12 +126,14 @@ export const AutomationStepIdArray = [
 
 export interface AutomationTestData {
   row?: Row
-  meta: {
-    [key: string]: unknown
+  meta?: {
+    [key: string]: any
   }
-  id: string
-  revision: string
+  id?: string
+  revision?: string
   oldRow?: Row
+  body?: Record<string, any>
+  fields?: Record<string, any>
 }
 
 export interface Automation extends Document {
@@ -149,7 +154,7 @@ export interface Automation extends Document {
   testData?: AutomationTestData
 }
 
-interface BaseIOStructure {
+export interface BaseIOStructure {
   type?: AutomationIOType
   subtype?: AutomationIOType
   customType?: AutomationCustomIOType

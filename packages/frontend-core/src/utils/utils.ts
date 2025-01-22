@@ -1,36 +1,34 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
 import { cloneDeep } from "lodash"
+import { UISearchFilter } from "@budibase/types"
 
-export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+export const sleep = (ms: number) =>
+  new Promise(resolve => setTimeout(resolve, ms))
 
 /**
  * Utility to wrap an async function and ensure all invocations happen
  * sequentially.
- * @param fn the async function to run
- * @return {Promise} a sequential version of the function
  */
-export const sequential = fn => {
-  let queue = []
-  return (...params) => {
-    return new Promise((resolve, reject) => {
+export const sequential = <R, T extends (...args: any[]) => Promise<R>>(
+  fn: T
+): ((...params: Parameters<T>) => Promise<R>) => {
+  let queue: (() => Promise<void>)[] = []
+  return (...params: Parameters<T>): Promise<R> => {
+    return new Promise<R>((resolve, reject) => {
       queue.push(async () => {
-        let data, error
         try {
-          data = await fn(...params)
-        } catch (err) {
-          error = err
-        }
-        queue.shift()
-        if (queue.length) {
-          queue[0]()
-        }
-        if (error) {
+          resolve(await fn(...params))
+        } catch (error) {
           reject(error)
-        } else {
-          resolve(data)
+        } finally {
+          queue.shift()
+          if (queue.length) {
+            queue[0]()
+          }
         }
       })
+
       if (queue.length === 1) {
         queue[0]()
       }
@@ -41,20 +39,21 @@ export const sequential = fn => {
 /**
  * Utility to debounce an async function and ensure a minimum delay between
  * invocations is enforced.
- * @param callback an async function to run
- * @param minDelay the minimum delay between invocations
- * @returns a debounced version of the callback
  */
-export const debounce = (callback, minDelay = 1000) => {
-  let timeout
-  return async (...params) => {
-    return new Promise(resolve => {
-      if (timeout) {
+export const debounce = <R, T extends (...args: any[]) => Promise<R>>(
+  callback: T,
+  minDelay = 1000
+): ((...params: Parameters<T>) => Promise<R>) => {
+  let timeout: number | null = null
+  return (...params: Parameters<T>): Promise<R> => {
+    return new Promise<R>(resolve => {
+      if (timeout !== null) {
         clearTimeout(timeout)
       }
-      timeout = setTimeout(async () => {
-        resolve(await callback(...params))
-      }, minDelay)
+      timeout = window.setTimeout(
+        async () => resolve(await callback(...params)),
+        minDelay
+      )
     })
   }
 }
@@ -66,43 +65,49 @@ export const debounce = (callback, minDelay = 1000) => {
  * - Every invocation has the latest params (no stale params)
  * - There will always be a final invocation with the last params (no missing
  *   final update)
- * @param callback
- * @param minDelay
- * @returns {Function} a throttled version function
  */
-export const throttle = (callback, minDelay = 1000) => {
-  let lastParams
+export const throttle = <T extends (...args: any[]) => void>(
+  callback: T,
+  minDelay = 1000
+): ((...params: Parameters<T>) => void) => {
+  let lastParams: Parameters<T> | undefined
   let stalled = false
   let pending = false
-  const invoke = (...params) => {
+
+  const invoke = (...params: Parameters<T>) => {
     lastParams = params
     if (stalled) {
       pending = true
       return
     }
+
     callback(...lastParams)
     stalled = true
+
     setTimeout(() => {
       stalled = false
       if (pending) {
         pending = false
-        invoke(...lastParams)
+        invoke(...lastParams!)
       }
     }, minDelay)
   }
+
   return invoke
 }
 
 /**
  * Utility to debounce DOM activities using requestAnimationFrame
- * @param callback the function to run
- * @returns {Function}
  */
-export const domDebounce = callback => {
+export const domDebounce = <T extends (...args: any[]) => void>(
+  callback: T
+): ((...params: Parameters<T>) => void) => {
   let active = false
-  let lastParams
-  return (...params) => {
+  let lastParams: Parameters<T>
+
+  return (...params: Parameters<T>) => {
     lastParams = params
+
     if (!active) {
       active = true
       requestAnimationFrame(() => {
@@ -116,10 +121,8 @@ export const domDebounce = callback => {
 /**
  * Build the default FormBlock button configs per actionType
  * Parse any legacy button config and mirror its the outcome
- *
- * @param {any} props
  * */
-export const buildFormBlockButtonConfig = props => {
+export const buildFormBlockButtonConfig = (props: any) => {
   const {
     _id,
     actionType,
@@ -251,7 +254,7 @@ export const buildFormBlockButtonConfig = props => {
   return defaultButtons
 }
 
-export const buildMultiStepFormBlockDefaultProps = props => {
+export const buildMultiStepFormBlockDefaultProps = (props: any) => {
   const { _id, stepCount, currentStep, actionType, dataSource } = props || {}
 
   // Sanity check
@@ -358,24 +361,25 @@ export const buildMultiStepFormBlockDefaultProps = props => {
 
 /**
  * Parse out empty or invalid UI filters and clear empty groups
- * @param {Object} filter UI filter
- * @returns {Object} parsed filter
  */
-export function parseFilter(filter) {
+export function parseFilter(filter: UISearchFilter): UISearchFilter {
   if (!filter?.groups) {
     return filter
   }
 
   const update = cloneDeep(filter)
+  if (!update.groups) {
+    return update
+  }
 
   update.groups = update.groups
+    .filter(group => group.filters && group.filters.length > 0)
     .map(group => {
-      group.filters = group.filters.filter(filter => {
-        return filter.field && filter.operator
-      })
-      return group.filters.length ? group : null
+      group.filters = group.filters!.filter(
+        filter => "field" in filter && filter.field && filter.operator
+      )
+      return group
     })
-    .filter(group => group)
 
   return update
 }

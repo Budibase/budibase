@@ -1,15 +1,16 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/switch/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
+  import { ChangeEventHandler } from "svelte/elements"
 
   export let value = false
-  export let id = null
-  export let text = null
+  export let id: string | undefined = undefined
+  export let text: string | undefined = undefined
   export let disabled = false
 
   const dispatch = createEventDispatcher()
-  const onChange = event => {
-    dispatch("change", event.target.checked)
+  const onChange: ChangeEventHandler<HTMLInputElement> = event => {
+    dispatch("change", event.currentTarget.checked)
   }
 </script>
 

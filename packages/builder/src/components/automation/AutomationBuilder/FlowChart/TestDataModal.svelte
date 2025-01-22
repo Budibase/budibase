@@ -15,11 +15,12 @@
     AutomationEventType,
     AutomationTestData,
     AutomationTrigger,
+    BaseIOStructure,
   } from "@budibase/types"
 
   let failedParse: string | undefined = undefined
   let trigger: AutomationTrigger | undefined = undefined
-  let schemaProperties = {}
+  let schemaProperties: [string, BaseIOStructure][] = []
 
   const rowTriggers = [
     AutomationEventType.ROW_DELETE,

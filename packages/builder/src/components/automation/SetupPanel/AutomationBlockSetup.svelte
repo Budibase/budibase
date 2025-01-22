@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import TableSelector from "./TableSelector.svelte"
   import FieldSelector from "./FieldSelector.svelte"
   import SchemaSetup from "./SchemaSetup.svelte"
@@ -59,16 +59,21 @@
     AutomationStepType,
     AutomationActionStepId,
     AutomationCustomIOType,
+    Automation,
+    AutomationStep,
+    AutomationTestData,
+    BaseIOStructure,
+    UISearchFilter,
   } from "@budibase/types"
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
 
-  export let automation
-  export let block
-  export let testData
-  export let schemaProperties
+  export let automation: Automation
+  export let block: AutomationStep
+  export let testData: AutomationTestData
+  export let schemaProperties: [string, BaseIOStructure][]
   export let isTestModal = false
-  export let bindings = []
+  export let bindings: any[] = []
 
   const dispatch = createEventDispatcher()
 
@@ -90,11 +95,21 @@
 
   const rowSteps = [ActionStepID.UPDATE_ROW, ActionStepID.CREATE_ROW]
 
-  let webhookModal
-  let drawer
-  let inputData
-  let insertAtPos, getCaretPosition
-  let stepLayouts = {}
+  let webhookModal: Modal
+  let drawer: Drawer
+  let inputData: Record<string, any>
+  let insertAtPos:
+    | ((opts: {
+        start: number
+        end?: number
+        value: string
+        cursor: { anchor: number }
+      }) => void)
+    | undefined = undefined
+  let getCaretPosition: (() => { start: number; end: number }) | undefined =
+    undefined
+
+  let stepLayouts = {} as Record<AutomationActionStepId, any>
 
   $: memoBlock.set(block)
 
@@ -140,13 +155,17 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
-  const getInputData = (testData, blockInputs) => {
+  const getInputData = (
+    testData: AutomationTestData | undefined,
+    blockInputs: Record<string, any>
+  ) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
 
     // Ensures the app action fields are populated
     if (
       block.event === AutomationEventType.APP_TRIGGER &&
+      "fields" in newInputData &&
       !newInputData?.fields
     ) {
       newInputData = cloneDeep(blockInputs)
@@ -164,29 +183,29 @@
   }
 
   // Store for any UX related data
-  const stepStore = writable({})
+  const stepStore = writable(
+    {} as Record<string, AutomationStep | { rowType: string }>
+  )
   $: stepState = $stepStore?.[block.id]
 
-  $: customStepLayouts($memoBlock, schemaProperties, stepState)
+  $: customStepLayouts($memoBlock)
 
-  const customStepLayouts = block => {
+  const customStepLayouts = (block: AutomationStep) => {
     if (
       rowSteps.includes(block.stepId) ||
       (rowTriggers.includes(block.stepId) && isTestModal)
     ) {
-      const schema = schemaProperties.reduce((acc, entry) => {
-        const [key, val] = entry
+      const schema = schemaProperties.reduce((acc, [key, val]) => {
         acc[key] = val
         return acc
-      }, {})
+      }, {} as Record<string, BaseIOStructure>)
 
       // Optionally build the rev field config when its needed.
       const getRevConfig = () => {
-        const rowRevEntry = schema["revision"]
-        if (!rowRevEntry) {
+        if (!schema.revision) {
           return []
         }
-        const rowRevlabel = getFieldLabel("revision", rowRevEntry)
+        const rowRevlabel = getFieldLabel("revision", schema.revision)
 
         return isTestModal
           ? [
@@ -287,7 +306,11 @@
           isUpdateRow: block.stepId === ActionStepID.UPDATE_ROW,
         }
 
-        if (isTestModal && stepState?.rowType === "oldRow") {
+        if (
+          isTestModal &&
+          "rowType" in stepState &&
+          stepState.rowType === "oldRow"
+        ) {
           return [
             {
               type: RowSelector,
@@ -405,7 +428,7 @@
    *   }]
    * })
    */
-  const onRowTriggerUpdate = async update => {
+  const onRowTriggerUpdate = async (update: Record<string, any>) => {
     if (
       ["tableId", AutomationCustomIOType.FILTERS, "meta"].some(key =>
         Object.hasOwn(update, key)
@@ -430,6 +453,10 @@
             }
           )
 
+          if (!updatedAutomation) {
+            return
+          }
+
           // Reset testData when tableId changes
           updatedAutomation = {
             ...updatedAutomation,
@@ -449,7 +476,9 @@
           )
         }
 
-        await automationStore.actions.save(updatedAutomation)
+        if (updatedAutomation) {
+          await automationStore.actions.save(updatedAutomation)
+        }
 
         return
       } catch (e) {
@@ -467,7 +496,7 @@
       "fields" : {"myField": "123", "myArray": "cat,dog,badger"}
     })
    */
-  const onAppTriggerUpdate = async update => {
+  const onAppTriggerUpdate = async (update: Record<string, any>) => {
     try {
       // Parse the block inputs as usual
       const updatedAutomation =
@@ -476,8 +505,12 @@
           ...update,
         })
 
+      if (!updatedAutomation) {
+        return
+      }
+
       // Exclude default or invalid data from the test data
-      let updatedFields = {}
+      let updatedFields: Record<string, any> = {}
       for (const key of Object.keys(block?.inputs?.fields || {})) {
         if (Object.hasOwn(update.fields, key)) {
           if (key !== "") {
@@ -490,6 +523,7 @@
       await automationStore.actions.save({
         ...updatedAutomation,
         testData: {
+          ...updatedAutomation.testData,
           fields: updatedFields,
         },
       })
@@ -501,19 +535,18 @@
 
   /**
    * Handler for automation block input updates.
-    @param {object} update - An automation inputs update object
     @example
     onChange({ 
       meta: { fields : { "Photo": { useAttachmentBinding: false }} }
       row: { "Active": true, "Order Id" : 14, ... }
     })
    */
-  const onChange = Utils.sequential(async update => {
+  const onChange = Utils.sequential(async (update: Record<string, any>) => {
     const request = cloneDeep(update)
     // Process app trigger updates
     if (isTrigger && !isTestModal) {
       // Row trigger
-      if (rowEvents.includes(block.event)) {
+      if (block.event && rowEvents.includes(block.event)) {
         await onRowTriggerUpdate(request)
         return
       }
@@ -562,7 +595,9 @@
         // Ensure the test request has the latest info.
         dispatch("update", updatedAuto)
 
-        await automationStore.actions.save(updatedAuto)
+        if (updatedAuto) {
+          await automationStore.actions.save(updatedAuto)
+        }
       } else {
         const data = { schema, ...request }
         await automationStore.actions.updateBlockInputs(block, data)
@@ -573,21 +608,23 @@
     }
   })
 
-  function lookForFilters(properties) {
+  function lookForFilters(
+    properties: [string, BaseIOStructure][]
+  ): UISearchFilter | undefined {
     if (!properties) {
-      return []
+      return { groups: [] }
     }
     let filters
-    const inputs = testData ? testData : block.inputs
-    for (let [key, field] of properties) {
+    const inputs = testData || block.inputs
+    for (const [key, field] of properties) {
       // need to look for the builder definition (keyed separately, see saveFilters)
-      const defKey = `${key}-def`
+      const defKey = `${key}-def` as keyof typeof inputs
       if (
         (field.customType === AutomationCustomIOType.FILTERS ||
           field.customType === AutomationCustomIOType.TRIGGER_FILTER) &&
         inputs?.[defKey]
       ) {
-        filters = inputs[defKey]
+        filters = inputs[defKey] as UISearchFilter
         break
       }
     }
@@ -596,7 +633,11 @@
       : filters
   }
 
-  function saveFilters(key) {
+  function saveFilters(key: string) {
+    if (!tempFilters) {
+      return
+    }
+
     const update = Utils.parseFilter(tempFilters)
     const query = QueryUtils.buildQuery(update)
     onChange({
@@ -607,12 +648,12 @@
     drawer.hide()
   }
 
-  function canShowField(value) {
+  function canShowField(value: BaseIOStructure) {
     const dependsOn = value?.dependsOn
     return !dependsOn || !!inputData[dependsOn]
   }
 
-  function shouldRenderField(value) {
+  function shouldRenderField(value: BaseIOStructure) {
     return (
       value.customType !== "row" &&
       value.customType !== "code" &&
@@ -628,16 +669,18 @@
     )
   }
 
-  function getFieldLabel(key, value) {
-    const requiredSuffix = requiredProperties.includes(key) ? "*" : ""
+  function getFieldLabel(key: string, value: BaseIOStructure) {
+    const requiredSuffix = requiredProperties?.includes(key) ? "*" : ""
     const label = `${
       value.title || (key === "row" ? "Row" : key)
     } ${requiredSuffix}`
     return Helpers.capitalise(label)
   }
 
-  function handleAttachmentParams(keyValueObj) {
-    let params = {}
+  function handleAttachmentParams(
+    keyValueObj?: [{ url: string; filename: string }]
+  ) {
+    let params: Record<string, string> = {}
     if (keyValueObj?.length) {
       for (let param of keyValueObj) {
         params[param.url] = param.filename
@@ -711,7 +754,6 @@
               <Select
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
-                placeholder={false}
                 options={value.enum}
                 getOptionLabel={(x, idx) =>
                   value.pretty ? value.pretty[idx] : x}
@@ -719,8 +761,9 @@
               />
             {:else if value.type === "json"}
               <Editor
-                editorHeight="250"
-                editorWidth="448"
+                label={""}
+                editorHeight={250}
+                editorWidth={448}
                 mode="json"
                 value={inputData[key]?.value}
                 on:change={e => onChange({ [key]: e.detail })}
@@ -745,7 +788,6 @@
                 {bindings}
                 allowJS={true}
                 updateOnChange={false}
-                drawerLeft="260px"
                 disabled={value.readonly}
               >
                 <DatePicker
@@ -769,7 +811,6 @@
                   <Toggle
                     value={inputData?.meta?.useAttachmentBinding}
                     text={"Use bindings"}
-                    size={"XS"}
                     on:change={e => {
                       onChange({
                         [key]: null,
@@ -950,9 +991,8 @@
                 autoWidth
                 value={inputData[key]}
                 options={["Array", "String"]}
-                defaultValue={"Array"}
               />
-            {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
+            {:else if value.type === "string" || value.type === "number"}
               {#if isTestModal}
                 <ModalBindableInput
                   title={value.title || label}
@@ -988,7 +1028,7 @@
   {/if}
 </div>
 
-<Modal bind:this={webhookModal} width="30%">
+<Modal bind:this={webhookModal}>
   <CreateWebhookModal />
 </Modal>
 
