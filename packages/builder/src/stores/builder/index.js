@@ -16,7 +16,7 @@ import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
 import { contextMenuStore } from "./contextMenu.js"
 import { snippets } from "./snippets"
-import { screenComponentStore } from "./screenComponent"
+import { screenComponentErrors } from "./screenComponent"
 
 // Backend
 import { tables } from "./tables"
@@ -68,7 +68,7 @@ export {
   snippets,
   rowActions,
   appPublished,
-  screenComponentStore,
+  screenComponentErrors,
 }
 
 export const reset = () => {

@@ -11,7 +11,7 @@
     selectedScreen,
     hoverStore,
     componentTreeNodesStore,
-    screenComponentStore,
+    screenComponentErrors,
     snippets,
   } from "@/stores/builder"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -69,7 +69,7 @@
       port: window.location.port,
     },
     snippets: $snippets,
-    componentErrors: $screenComponentStore.errors,
+    componentErrors: $screenComponentErrors,
   }
 
   // Refresh the preview when required
