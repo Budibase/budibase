@@ -38,8 +38,11 @@ export const screenComponentErrors = derived(
       }
 
       const result: Record<string, string[]> = {}
-      for (const component of findComponentsBySettingsType(screen, "table")) {
-        const { resourceId, type, label } = component.dataSource
+      for (const { component, setting } of findComponentsBySettingsType(
+        screen,
+        "table"
+      )) {
+        const { resourceId, type, label } = component[setting.key]
         if (!datasources[resourceId]) {
           const friendlyTypeName =
             friendlyNameByType[type as keyof typeof friendlyNameByType]
