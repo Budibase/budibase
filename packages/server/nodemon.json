@@ -7,7 +7,7 @@
     "../shared-core/src",
     "../string-templates/src"
   ],
-  "ext": "js,ts,json,svelte",
+  "ext": "js,ts,json,svelte,hbs",
   "ignore": [
     "**/*.spec.ts",
     "**/*.spec.js",
