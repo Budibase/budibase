@@ -1,7 +1,12 @@
 import { Component, Screen, ScreenProps } from "@budibase/types"
 import clientManifest from "@budibase/client/manifest.json"
 
-export function findComponentsBySettingsType(screen: Screen, type: string) {
+export function findComponentsBySettingsType(
+  screen: Screen,
+  type: string | string[]
+) {
+  const typesArray = Array.isArray(type) ? type : [type]
+
   const result: {
     component: Component
     setting: {
@@ -9,10 +14,7 @@ export function findComponentsBySettingsType(screen: Screen, type: string) {
       key: string
     }
   }[] = []
-  function recurseFieldComponentsInChildren(
-    component: ScreenProps,
-    type: string
-  ) {
+  function recurseFieldComponentsInChildren(component: ScreenProps) {
     if (!component) {
       return
     }
@@ -20,7 +22,7 @@ export function findComponentsBySettingsType(screen: Screen, type: string) {
     const definition = getManifestDefinition(component)
     const setting =
       "settings" in definition &&
-      definition.settings.find((s: any) => s.type === type)
+      definition.settings.find((s: any) => typesArray.includes(s.type))
     if (setting && "type" in setting) {
       result.push({
         component,
@@ -28,11 +30,11 @@ export function findComponentsBySettingsType(screen: Screen, type: string) {
       })
     }
     component._children?.forEach(child => {
-      recurseFieldComponentsInChildren(child, type)
+      recurseFieldComponentsInChildren(child)
     })
   }
 
-  recurseFieldComponentsInChildren(screen?.props, type)
+  recurseFieldComponentsInChildren(screen?.props)
   return result
 }
 
