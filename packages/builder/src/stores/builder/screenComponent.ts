@@ -5,6 +5,7 @@ import { viewsV2 } from "./viewsV2"
 import { findComponentsBySettingsType } from "@/helpers/screen"
 import { DatasourceType, Screen } from "@budibase/types"
 import { queries } from "./queries"
+import { views } from "./views"
 
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
@@ -20,8 +21,8 @@ function reduceBy<TItem extends {}, TKey extends keyof TItem>(
 }
 
 export const screenComponentErrors = derived(
-  [selectedScreen, tables, viewsV2, queries],
-  ([$selectedScreen, $tables, $viewsV2, $queries]): Record<
+  [selectedScreen, tables, views, viewsV2, queries],
+  ([$selectedScreen, $tables, $views, $viewsV2, $queries]): Record<
     string,
     string[]
   > => {
@@ -34,9 +35,9 @@ export const screenComponentErrors = derived(
       }
 
       const primaryKeyByType: Record<DatasourceType, string> = {
-        table: "resourceId",
-        view: "TODO",
-        viewV2: "resourceId",
+        table: "tableId",
+        view: "name",
+        viewV2: "id",
         query: "_id",
         custom: "" as never,
       }
@@ -67,6 +68,7 @@ export const screenComponentErrors = derived(
 
     const datasources = {
       ...reduceBy("_id", $tables.list),
+      ...reduceBy("name", $views.list),
       ...reduceBy("id", $viewsV2.list),
       ...reduceBy("_id", $queries.list),
     }
