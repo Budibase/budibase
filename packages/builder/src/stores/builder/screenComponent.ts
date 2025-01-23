@@ -3,7 +3,8 @@ import { tables } from "./tables"
 import { selectedScreen } from "./screens"
 import { viewsV2 } from "./viewsV2"
 import { findComponentsBySettingsType } from "@/helpers/screen"
-import { Screen } from "@budibase/types"
+import { DatasourceType, Screen } from "@budibase/types"
+import { queries } from "./queries"
 
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
@@ -19,14 +20,25 @@ function reduceBy<TItem extends {}, TKey extends keyof TItem>(
 }
 
 export const screenComponentErrors = derived(
-  [selectedScreen, tables, viewsV2],
-  ([$selectedScreen, $tables, $viewsV2]): Record<string, string[]> => {
+  [selectedScreen, tables, viewsV2, queries],
+  ([$selectedScreen, $tables, $viewsV2, $queries]): Record<
+    string,
+    string[]
+  > => {
     function getInvalidDatasources(
       screen: Screen,
       datasources: Record<string, any>
     ) {
-      const friendlyNameByType = {
+      const friendlyNameByType: Partial<Record<DatasourceType, string>> = {
         viewV2: "view",
+      }
+
+      const primaryKeyByType: Record<DatasourceType, string> = {
+        table: "resourceId",
+        view: "TODO",
+        viewV2: "resourceId",
+        query: "_id",
+        custom: "" as never,
       }
 
       const result: Record<string, string[]> = {}
@@ -34,7 +46,13 @@ export const screenComponentErrors = derived(
         screen,
         ["table", "dataSource"]
       )) {
-        const { resourceId, type, label } = component[setting.key]
+        const componentSettings = component[setting.key]
+        const { type, label } = componentSettings
+        if (type === "custom") {
+          continue
+        }
+        const resourceId =
+          componentSettings[primaryKeyByType[type as DatasourceType]]
         if (!datasources[resourceId]) {
           const friendlyTypeName =
             friendlyNameByType[type as keyof typeof friendlyNameByType] ?? type
@@ -50,6 +68,7 @@ export const screenComponentErrors = derived(
     const datasources = {
       ...reduceBy("_id", $tables.list),
       ...reduceBy("id", $viewsV2.list),
+      ...reduceBy("_id", $queries.list),
     }
 
     return getInvalidDatasources($selectedScreen, datasources)
