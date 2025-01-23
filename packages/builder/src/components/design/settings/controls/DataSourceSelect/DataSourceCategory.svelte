@@ -7,8 +7,21 @@
   export let dataSet
   export let value
   export let onSelect
+  export let identifiers = ["resourceId"]
 
   $: displayDatasourceName = $datasources.list.length > 1
+
+  function isSelected(entry) {
+    if (!identifiers.length) {
+      return false
+    }
+    for (const identifier of identifiers) {
+      if (entry[identifier] !== value?.[identifier]) {
+        return false
+      }
+    }
+    return true
+  }
 </script>
 
 {#if dividerState}
@@ -24,8 +37,7 @@
   {#each dataSet as data}
     <li
       class="spectrum-Menu-item"
-      class:is-selected={value?.resourceId === data.resourceId &&
-        value?.type === data.type}
+      class:is-selected={isSelected(data) && value?.type === data.type}
       role="option"
       aria-selected="true"
       tabindex="0"
