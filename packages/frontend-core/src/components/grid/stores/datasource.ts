@@ -206,7 +206,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
     // Update server
     if (get(config).canSaveSchema) {
       try {
-        await getAPI()?.actions.saveDefinition(newDefinition)
+        await getAPI()?.actions.saveDefinition(newDefinition as never)
 
         // Broadcast change so external state can be updated, as this change
         // will not be received by the builder websocket because we caused it
