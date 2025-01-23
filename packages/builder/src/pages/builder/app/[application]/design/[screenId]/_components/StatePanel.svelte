@@ -261,7 +261,7 @@
           >
             {component.name}
           </button>
-        {/each}git
+        {/each}
       </div>
     </div>
   {/if}
