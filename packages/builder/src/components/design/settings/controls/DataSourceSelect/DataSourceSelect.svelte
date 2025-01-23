@@ -310,6 +310,7 @@
         dataSet={links}
         {value}
         onSelect={handleSelected}
+        identifiers={["tableId", "fieldName"]}
       />
     {/if}
     {#if fields?.length}
