@@ -57,3 +57,5 @@ export interface RestConfig {
   }
   dynamicVariables?: DynamicVariable[]
 }
+
+export type DatasourceType = "table" | "view" | "viewV2" | "query" | "custom"
