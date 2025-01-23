@@ -42,6 +42,14 @@ const createScreenStore = () => {
         if ($builderStore.layout) {
           activeLayout = $builderStore.layout
         }
+
+        // Attach meta
+        const errors = $builderStore.componentErrors || {}
+        const attachComponentMeta = component => {
+          component._meta = { errors: errors[component._id] || [] }
+          component._children?.forEach(attachComponentMeta)
+        }
+        attachComponentMeta(activeScreen.props)
       } else {
         // Find the correct screen by matching the current route
         screens = $appStore.screens || []
