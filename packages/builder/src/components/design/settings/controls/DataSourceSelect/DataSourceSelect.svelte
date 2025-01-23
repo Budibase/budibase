@@ -301,6 +301,7 @@
         dataSet={queries}
         {value}
         onSelect={handleSelected}
+        identifiers={["_id"]}
       />
     {/if}
     {#if links?.length}
@@ -320,6 +321,7 @@
         dataSet={fields}
         {value}
         onSelect={handleSelected}
+        identifiers={["providerId", "tableId", "fieldName"]}
       />
     {/if}
     {#if jsonArrays?.length}
@@ -329,6 +331,7 @@
         dataSet={jsonArrays}
         {value}
         onSelect={handleSelected}
+        identifiers={["providerId", "tableId", "fieldName"]}
       />
     {/if}
     {#if showDataProviders && dataProviders?.length}
