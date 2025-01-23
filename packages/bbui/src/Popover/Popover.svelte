@@ -1,5 +1,6 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/popover/dist/index-vars.css"
+  // @ts-expect-error types for svelte-portal aren't available on the version we use
   import Portal from "svelte-portal"
   import { createEventDispatcher, getContext, onDestroy } from "svelte"
   import positionDropdown from "../Actions/position_dropdown"
@@ -9,20 +10,20 @@
 
   const dispatch = createEventDispatcher()
 
-  export let anchor
-  export let align = "right"
-  export let portalTarget
-  export let minWidth
-  export let maxWidth
-  export let maxHeight
+  export let anchor: Node | undefined = undefined
+  export let align: "left" | "right" | "left-outside" = "right"
+  export let portalTarget: any = undefined
+  export let minWidth: number | undefined = undefined
+  export let maxWidth: number | undefined = undefined
+  export let maxHeight: number | undefined = undefined
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
   export let offset = 4
-  export let customHeight
+  export let customHeight: string | undefined = undefined
   export let animate = true
-  export let customZindex
-  export let handlePostionUpdate
+  export let customZindex: string | undefined = undefined
+  export let handlePostionUpdate: any = undefined
   export let showPopover = true
   export let clickOutsideOverride = false
   export let resizable = true
@@ -30,7 +31,7 @@
 
   const animationDuration = 260
 
-  let timeout
+  let timeout: ReturnType<typeof setTimeout>
   let blockPointerEvents = false
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
@@ -65,13 +66,13 @@
     }
   }
 
-  const handleOutsideClick = e => {
+  const handleOutsideClick = (e: MouseEvent) => {
     if (clickOutsideOverride) {
       return
     }
     if (open) {
       // Stop propagation if the source is the anchor
-      let node = e.target
+      let node = e.target as Node
       let fromAnchor = false
       while (!fromAnchor && node && node.parentNode) {
         fromAnchor = node === anchor
@@ -86,7 +87,7 @@
     }
   }
 
-  function handleEscape(e) {
+  function handleEscape(e: KeyboardEvent) {
     if (!clickOutsideOverride) {
       return
     }

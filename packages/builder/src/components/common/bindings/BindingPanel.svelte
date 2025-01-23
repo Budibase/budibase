@@ -36,13 +36,13 @@
     EnrichedBinding,
     BindingCompletion,
     Snippet,
-    Helper,
     CaretPositionFn,
     InsertAtPositionFn,
     JSONValue,
   } from "@budibase/types"
   import type { Log } from "@budibase/string-templates"
   import type { CompletionContext } from "@codemirror/autocomplete"
+  import { type Completion } from "@/constants/completions"
 
   const dispatch = createEventDispatcher()
 
@@ -52,10 +52,10 @@
   export let allowJS = false
   export let allowHelpers = true
   export let allowSnippets = true
-  export let context = null
+  export let context: any = null
   export let snippets: Snippet[] | null = null
   export let autofocusEditor = false
-  export let placeholder = null
+  export let placeholder: string | undefined = undefined
   export let showTabBar = true
 
   let mode: BindingMode | null
@@ -156,7 +156,7 @@
   }
 
   const debouncedEval = Utils.debounce(
-    (expression: string | null, context: any, snippets: Snippet[]) => {
+    async (expression: string | null, context: any, snippets: Snippet[]) => {
       try {
         expressionError = undefined
         const output = processStringWithLogsSync(
@@ -186,7 +186,7 @@
     snippets: Snippet[] | null
   ) => {
     evaluating = true
-    debouncedEval(expression, context, snippets)
+    debouncedEval(expression, context, snippets || [])
   }
 
   const highlightJSON = (json: JSONValue) => {
@@ -241,7 +241,7 @@
     requestEval(runtimeExpression, context, snippets)
   }
 
-  const onSelectHelper = (helper: Helper, js?: boolean) => {
+  const onSelectHelper = (helper: Completion, js?: boolean) => {
     bindingHelpers.onSelectHelper(js ? jsValue : hbsValue, helper, {
       js,
       dontDecode: undefined,

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import { CoreFilterBuilder } from "@budibase/frontend-core"
   import { tables } from "@/stores/builder"
@@ -9,13 +9,13 @@
 
   export let schemaFields
   export let filters
-  export let bindings = []
+  export let bindings: any[] = []
   export let panel = ClientBindingPanel
   export let allowBindings = true
-  export let allowOnEmpty
+  export let allowOnEmpty = true
   export let datasource
-  export let builderType
-  export let docsURL
+  export let builderType: "builder" | "filter" = "filter"
+  export let docsURL: string | undefined = undefined
 </script>
 
 <CoreFilterBuilder

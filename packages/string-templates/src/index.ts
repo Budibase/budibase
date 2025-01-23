@@ -364,12 +364,34 @@ export function isValid(string: any, opts?: any): boolean {
   }
 }
 
+// "add": {
+//   "args": [
+//     "a",
+//     "b"
+//   ],
+//   "numArgs": 2,
+//   "example": "{{ add 1 2 }} -> 3",
+//   "description": "<p>Return the sum of <code>a</code> plus <code>b</code>.</p>\n",
+//   "requiresBlock": false
+// },
+
+export interface Helper {
+  args: string[]
+  numArgs: number
+  example?: string
+  description: string
+  requiresBlock?: boolean
+}
+
+export type Helpers = { [key: string]: Helper }
+export type Manifest = { [key: string]: Helpers }
+
 /**
  * We have generated a static manifest file from the helpers that this string templating package makes use of.
  * This manifest provides information about each of the helpers and how it can be used.
  * @returns The manifest JSON which has been generated from the helpers.
  */
-export function getManifest() {
+export function getManifest(): Manifest {
   return manifest
 }
 

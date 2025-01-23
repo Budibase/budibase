@@ -1,6 +1,16 @@
 import { getManifest, helpersToRemoveForJs } from "@budibase/string-templates"
 
-export function handlebarsCompletions() {
+export interface Completion {
+  text: string
+  path: string
+  example?: string
+  label: string
+  displayText: string
+  description: string
+  allowsJs: boolean
+}
+
+export function handlebarsCompletions(): Completion[] {
   const manifest = getManifest()
 
   return Object.keys(manifest).flatMap(key =>

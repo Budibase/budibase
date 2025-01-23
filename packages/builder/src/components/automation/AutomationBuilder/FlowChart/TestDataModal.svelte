@@ -5,7 +5,6 @@
     TextArea,
     notifications,
     ActionButton,
-    CoreSelect,
   } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
@@ -13,9 +12,9 @@
   import {
     AutomationCustomIOType,
     AutomationEventType,
-    AutomationTestData,
-    AutomationTrigger,
-    BaseIOStructure,
+    type AutomationTestData,
+    type AutomationTrigger,
+    type BaseIOStructure,
   } from "@budibase/types"
 
   let failedParse: string | undefined = undefined
@@ -73,24 +72,24 @@
     return true
   }
 
-  $: currentTestData = $selectedAutomation.data?.testData
+  $: currentTestData = $selectedAutomation.data?.testData || {}
 
   // Can be updated locally to avoid race condition when testing
-  $: testData = currentTestData ? parseTestData(currentTestData) : undefined
+  $: testData = parseTestData(currentTestData)
 
   $: {
-    if (!$selectedAutomation.data) return
+    if ($selectedAutomation.data) {
+      // clone the trigger so we're not mutating the reference
+      trigger = cloneDeep($selectedAutomation.data.definition.trigger)
 
-    // clone the trigger so we're not mutating the reference
-    trigger = cloneDeep($selectedAutomation.data.definition.trigger)
+      // get the outputs so we can define the fields
+      let schema = Object.entries(trigger.schema?.outputs?.properties || {})
 
-    // get the outputs so we can define the fields
-    let schema = Object.entries(trigger.schema?.outputs?.properties || {})
-
-    if (trigger?.event === AutomationEventType.APP_TRIGGER) {
-      schema = [["fields", { customType: AutomationCustomIOType.FIELDS }]]
+      if (trigger?.event === AutomationEventType.APP_TRIGGER) {
+        schema = [["fields", { customType: AutomationCustomIOType.FIELDS }]]
+      }
+      schemaProperties = schema
     }
-    schemaProperties = schema
   }
 
   // Check the schema to see if required fields have been entered

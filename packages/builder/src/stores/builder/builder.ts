@@ -12,7 +12,7 @@ interface BuilderState {
     key: string
     type: "info" | string
   } | null
-  propertyFocus: string | null
+  propertyFocus: string | null | undefined
   builderSidePanel: boolean
   onboarding: boolean
   tourNodes: Record<string, HTMLElement> | null
@@ -82,7 +82,7 @@ export class BuilderStore extends BudiStore<BuilderState> {
     }))
   }
 
-  propertyFocus(key: string | null) {
+  propertyFocus(key?: string | null) {
     this.update(state => ({
       ...state,
       propertyFocus: key,

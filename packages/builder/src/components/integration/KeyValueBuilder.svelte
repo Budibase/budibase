@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Icon,
     ActionButton,
@@ -15,14 +15,14 @@
 
   let dispatch = createEventDispatcher()
 
-  export let defaults
+  export let defaults: Record<string, any>
   export let object = defaults || {}
   export let activity = {}
   export let readOnly
   export let noAddButton
   export let name
   export let headings = false
-  export let options
+  export let options: string[]
   export let toggle
   export let keyPlaceholder = "Key"
   export let valuePlaceholder = "Value"
@@ -31,14 +31,14 @@
   export let tooltip
   export let menuItems
   export let showMenu = false
-  export let bindings = []
+  export let bindings: any[] = []
   export let bindingDrawerLeft
   export let allowHelpers = true
   export let customButtonText = null
   export let keyBindings = false
   export let allowJS = false
   export let actionButtonDisabled = false
-  export let compare = (option, value) => option === value
+  export let compare = (option: string, value: string) => option === value
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -51,14 +51,14 @@
     {}
   )
 
-  function buildFieldActivity(obj) {
+  function buildFieldActivity(obj: Record<string, any>) {
     if (!obj || typeof obj !== "object") {
       return []
     }
     const array = Array(fields.length)
-    for (let [key, value] of Object.entries(obj)) {
+    for (const [key, value] of Object.entries(obj)) {
       const field = fields.find(el => el.name === key)
-      const idx = fields.indexOf(field)
+      const idx = fields.indexOf(field!)
       array[idx] = idx !== -1 ? value : true
     }
     return array
@@ -70,7 +70,7 @@
     changed()
   }
 
-  function deleteEntry(idx) {
+  function deleteEntry(idx: number) {
     fields.splice(idx, 1)
     fieldActivity.splice(idx, 1)
     changed()
@@ -131,7 +131,6 @@
           value={field.name}
           {allowJS}
           {allowHelpers}
-          drawerLeft={bindingDrawerLeft}
         />
       {:else}
         <Input readonly={readOnly} bind:value={field.name} on:blur={changed} />
@@ -157,7 +156,6 @@
           value={field.value}
           {allowJS}
           {allowHelpers}
-          drawerLeft={bindingDrawerLeft}
         />
       {:else}
         <Input
@@ -193,9 +191,6 @@
     <ActionButton
       disabled={actionButtonDisabled}
       icon="Add"
-      secondary
-      thin
-      outline
       on:click={addEntry}
     >
       {#if customButtonText}

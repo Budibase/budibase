@@ -1,7 +1,7 @@
 <script lang="ts">
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher, onMount, tick } from "svelte"
-  import {
+  import type {
     FocusEventHandler,
     FormEventHandler,
     KeyboardEventHandler,

@@ -24,11 +24,11 @@
   export let disableBindings = false
   export let forceModal = false
   export let context = null
-  export let autocomplete
+  export let autocomplete: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
-  let bindingDrawer
+  let bindingDrawer: Drawer
   let currentVal = value
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
@@ -38,7 +38,7 @@
   const saveBinding = () => {
     onChange(tempValue)
     onBlur()
-    builderStore.propertyFocus()
+    builderStore.propertyFocus(null)
     bindingDrawer.hide()
   }
 
@@ -46,7 +46,7 @@
     save: saveBinding,
   })
 
-  const onChange = value => {
+  const onChange = (value: string) => {
     currentVal = readableToRuntimeBinding(bindings, value)
     dispatch("change", currentVal)
   }
@@ -55,7 +55,7 @@
     dispatch("blur", currentVal)
   }
 
-  const onDrawerHide = e => {
+  const onDrawerHide = (e: CustomEvent<string>) => {
     builderStore.propertyFocus()
     dispatch("drawerHide", e.detail)
   }

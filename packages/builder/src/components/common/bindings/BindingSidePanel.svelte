@@ -1,24 +1,31 @@
-<script>
+<script lang="ts">
   import groupBy from "lodash/fp/groupBy"
   import { convertToJS } from "@budibase/string-templates"
   import { Input, Layout, Icon, Popover } from "@budibase/bbui"
-  import { handlebarsCompletions } from "@/constants/completions"
+  import {
+    type Completion,
+    handlebarsCompletions,
+  } from "@/constants/completions"
 
-  export let addHelper
-  export let addBinding
-  export let bindings
-  export let mode
-  export let allowHelpers
-  export let context = null
+  export let addHelper: (helper: Completion, js?: boolean) => void = () => {}
+  export let addBinding: (binding: any) => void
+  export let bindings: any[] = []
+  export let mode: { name: string }
+  export let allowHelpers: boolean = false
+  export let context: any = null
 
   let search = ""
   let searching = false
-  let popover
-  let popoverAnchor
-  let hoverTarget
+  let popover: Popover
+  let popoverAnchor: HTMLLIElement | undefined = undefined
+  let hoverTarget: {
+    helper: boolean
+    description?: string
+    code: string
+  } | null
   let helpers = handlebarsCompletions()
-  let selectedCategory
-  let hideTimeout
+  let selectedCategory: string | undefined = undefined
+  let hideTimeout: ReturnType<typeof setTimeout> | null = null
 
   $: bindingIcons = bindings?.reduce((acc, ele) => {
     if (ele.icon) {
@@ -52,7 +59,7 @@
     )
   })
 
-  const getHelperExample = (helper, js) => {
+  const getHelperExample = (helper: Completion, js: boolean) => {
     let example = helper.example || ""
     if (js) {
       example = convertToJS(example).split("\n")[0].split("= ")[1]
@@ -63,7 +70,7 @@
     return example || ""
   }
 
-  const getCategoryNames = categories => {
+  const getCategoryNames = (categories: [string, any[]][]) => {
     let names = [...categories.map(cat => cat[0])]
     if (allowHelpers) {
       names.push("Helpers")
@@ -71,7 +78,7 @@
     return names
   }
 
-  const showBindingPopover = (binding, target) => {
+  const showBindingPopover = (binding: any, target: HTMLLIElement) => {
     if (!context || !binding.value || binding.value === "") {
       return
     }
@@ -84,7 +91,7 @@
     popover.show()
   }
 
-  const showHelperPopover = (helper, target) => {
+  const showHelperPopover = (helper: Completion, target: HTMLLIElement) => {
     stopHidingPopover()
     if (!helper.displayText && helper.description) {
       return
@@ -101,7 +108,7 @@
   const hidePopover = () => {
     hideTimeout = setTimeout(() => {
       popover.hide()
-      popoverAnchor = null
+      popoverAnchor = undefined
       hoverTarget = null
       hideTimeout = null
     }, 100)
@@ -119,7 +126,7 @@
     search = ""
   }
 
-  const stopSearching = e => {
+  const stopSearching = (e: MouseEvent) => {
     e.stopPropagation()
     searching = false
     search = ""
@@ -137,14 +144,14 @@
   on:mouseenter={stopHidingPopover}
   on:mouseleave={hidePopover}
 >
-  <div class="binding-popover" class:helper={hoverTarget.helper}>
-    {#if hoverTarget.description}
+  <div class="binding-popover" class:helper={hoverTarget?.helper}>
+    {#if hoverTarget?.description}
       <div>
         <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-        {@html hoverTarget.description}
+        {@html hoverTarget?.description}
       </div>
     {/if}
-    {#if hoverTarget.code}
+    {#if hoverTarget?.code}
       <!-- eslint-disable-next-line svelte/no-at-html-tags-->
       <pre>{@html hoverTarget.code}</pre>
     {/if}
@@ -161,7 +168,7 @@
           name="BackAndroid"
           hoverable
           size="S"
-          on:click={() => (selectedCategory = null)}
+          on:click={() => (selectedCategory = undefined)}
         />
         {selectedCategory}
       </div>
@@ -230,7 +237,8 @@
               {#each category.bindings as binding}
                 <li
                   class="binding"
-                  on:mouseenter={e => showBindingPopover(binding, e.target)}
+                  on:mouseenter={e =>
+                    showBindingPopover(binding, e.currentTarget)}
                   on:mouseleave={hidePopover}
                   on:click={() => addBinding(binding)}
                 >
@@ -264,7 +272,8 @@
               {#each filteredHelpers as helper}
                 <li
                   class="binding"
-                  on:mouseenter={e => showHelperPopover(helper, e.target)}
+                  on:mouseenter={e =>
+                    showHelperPopover(helper, e.currentTarget)}
                   on:mouseleave={hidePopover}
                   on:click={() => addHelper(helper, mode.name === "javascript")}
                 >

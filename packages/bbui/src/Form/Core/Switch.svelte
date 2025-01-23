@@ -1,7 +1,7 @@
 <script lang="ts">
   import "@spectrum-css/switch/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import { ChangeEventHandler } from "svelte/elements"
+  import type { ChangeEventHandler } from "svelte/elements"
 
   export let value = false
   export let id: string | undefined = undefined

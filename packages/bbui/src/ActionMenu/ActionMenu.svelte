@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   import { setContext, getContext } from "svelte"
   import Popover from "../Popover/Popover.svelte"
   import Menu from "../Menu/Menu.svelte"
 
   export let disabled = false
-  export let align = "left"
+  export let align: "left" | "right" = "left"
   export let portalTarget
   export let openOnHover = false
   export let animate

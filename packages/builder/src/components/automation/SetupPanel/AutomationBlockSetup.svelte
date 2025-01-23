@@ -59,17 +59,18 @@
     AutomationStepType,
     AutomationActionStepId,
     AutomationCustomIOType,
-    Automation,
-    AutomationStep,
-    AutomationTestData,
-    BaseIOStructure,
-    UISearchFilter,
+    type Automation,
+    type AutomationStep,
+    type AutomationTestData,
+    type BaseIOStructure,
+    type UISearchFilter,
+    type AutomationTrigger,
   } from "@budibase/types"
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
 
   export let automation: Automation
-  export let block: AutomationStep
+  export let block: AutomationStep | AutomationTrigger
   export let testData: AutomationTestData
   export let schemaProperties: [string, BaseIOStructure][]
   export let isTestModal = false
@@ -856,7 +857,6 @@
                     <DrawerBindableInput
                       title={value.title ?? label}
                       panel={AutomationBindingPanel}
-                      type={value.customType}
                       value={inputData[key]}
                       on:change={e => onChange({ [key]: e.detail })}
                       {bindings}
@@ -864,7 +864,6 @@
                       placeholder={value.customType === "queryLimit"
                         ? queryLimit
                         : ""}
-                      drawerLeft="260px"
                     />
                   {/if}
                 </div>
@@ -892,7 +891,6 @@
                     {schemaFields}
                     datasource={{ type: "table", tableId }}
                     panel={AutomationBindingPanel}
-                    showFilterEmptyDropdown={!rowTriggers.includes(stepId)}
                     on:change={e => (tempFilters = e.detail)}
                   />
                 </DrawerContent>
@@ -979,7 +977,7 @@
                               type: BindingType.RUNTIME,
                             }
                           )}
-                        mode="javascript"
+                        mode={{ name: "javascript" }}
                       />
                     </div>
                   {/if}
@@ -1008,7 +1006,6 @@
                   <DrawerBindableInput
                     title={value.title ?? label}
                     panel={AutomationBindingPanel}
-                    type={value.customType}
                     value={inputData[key]}
                     on:change={e => onChange({ [key]: e.detail })}
                     {bindings}
@@ -1016,7 +1013,6 @@
                     placeholder={value.customType === "queryLimit"
                       ? queryLimit
                       : ""}
-                    drawerLeft="260px"
                   />
                 </div>
               {/if}
