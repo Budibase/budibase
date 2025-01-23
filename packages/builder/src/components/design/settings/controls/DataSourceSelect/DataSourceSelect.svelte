@@ -338,6 +338,7 @@
         dataSet={dataProviders}
         {value}
         onSelect={handleSelected}
+        identifiers={["providerId"]}
       />
     {/if}
     <DataSourceCategory
