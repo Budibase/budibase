@@ -4,6 +4,7 @@
   import { getHorizontalResizeActions } from "@/components/common/resizable"
   import { ActionButton } from "@budibase/bbui"
   import BindingsPanel from "./BindingsPanel.svelte"
+  import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
 
   const [resizable, resizableHandle] = getHorizontalResizeActions()
 
@@ -42,6 +43,7 @@
     <div class="dividerClickExtender" role="separator" use:resizableHandle />
   </div>
 </div>
+<ComponentKeyHandler />
 
 <style>
   .panel {
