@@ -5,9 +5,15 @@ import { viewsV2 } from "./viewsV2"
 import { findComponentsBySettingsType } from "@/helpers/screen"
 import { Screen, Table, ViewV2 } from "@budibase/types"
 
+import { featureFlag } from "@/helpers"
+
 export const screenComponentErrors = derived(
   [selectedScreen, tables, viewsV2],
   ([$selectedScreen, $tables, $viewsV2]): Record<string, string[]> => {
+    if (!featureFlag.isEnabled("CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS")) {
+      return {}
+    }
+
     function flattenTablesAndViews(tables: Table[], views: ViewV2[]) {
       return {
         ...tables.reduce(
