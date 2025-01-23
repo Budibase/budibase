@@ -8,10 +8,10 @@ import { App } from "@budibase/types"
 
 interface BuilderState {
   previousTopNavPath: Record<string, string>
-  highlightedSettings: Array<{
+  highlightedSetting: {
     key: string
     type: "info" | string
-  }> | null
+  } | null
   propertyFocus: string | null
   builderSidePanel: boolean
   onboarding: boolean
@@ -24,7 +24,7 @@ interface BuilderState {
 
 export const INITIAL_BUILDER_STATE: BuilderState = {
   previousTopNavPath: {},
-  highlightedSettings: null,
+  highlightedSetting: null,
   propertyFocus: null,
   builderSidePanel: false,
   onboarding: false,
@@ -76,29 +76,10 @@ export class BuilderStore extends BudiStore<BuilderState> {
   }
 
   highlightSetting(key?: string, type?: string) {
-    this.update(state => {
-      if (!key) {
-        return {
-          ...state,
-          highlightedSettings: null,
-        }
-      }
-
-      const currentSettings = state.highlightedSettings || []
-
-      const settingExists = currentSettings.some(setting => setting.key === key)
-      if (!settingExists) {
-        return {
-          ...state,
-          highlightedSettings: [
-            ...currentSettings,
-            { key, type: type || "info" },
-          ],
-        }
-      }
-
-      return state
-    })
+    this.update(state => ({
+      ...state,
+      highlightedSetting: key ? { key, type: type || "info" } : null,
+    }))
   }
 
   propertyFocus(key: string | null) {

@@ -19,9 +19,7 @@
   let tempValue
   let drawer
 
-  $: highlighted = $builderStore.highlightedSettings?.find(
-    setting => setting.key === "_conditions"
-  )
+  $: highlighted = $builderStore.highlightedSetting?.key === "_conditions"
 
   const openDrawer = () => {
     tempValue = JSON.parse(JSON.stringify(componentInstance?._conditions ?? []))

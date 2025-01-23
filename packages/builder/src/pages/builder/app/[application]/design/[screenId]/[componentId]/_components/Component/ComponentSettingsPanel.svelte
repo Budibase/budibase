@@ -57,14 +57,13 @@
   $: id, (section = tabs[0])
   $: componentName = getComponentName(componentInstance)
 
-  $: highlightedSettings = $builderStore.highlightedSettings
-  $: if (highlightedSettings?.length) {
-    const settings = highlightedSettings.map(s => s.key)
-    if (settings.includes("_conditions")) {
+  $: highlightedSetting = $builderStore.highlightedSetting
+  $: if (highlightedSetting) {
+    if (highlightedSetting.key === "_conditions") {
       section = "conditions"
-    } else if (settings.includes("_styles")) {
+    } else if (highlightedSetting.key === "_styles") {
       section = "styles"
-    } else if (settings.includes("_settings")) {
+    } else if (highlightedSetting.key === "_settings") {
       section = "settings"
     }
   }

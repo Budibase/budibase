@@ -718,7 +718,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
    */
   select(componentId: string) {
     builderStore.update(state => {
-      state.highlightedSettings = null
+      state.highlightedSetting = null
       return state
     })
 

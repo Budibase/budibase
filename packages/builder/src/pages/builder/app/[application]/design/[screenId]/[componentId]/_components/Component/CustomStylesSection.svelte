@@ -33,9 +33,7 @@
 
   $: icon = componentDefinition?.icon
 
-  $: highlighted = $builderStore.highlightedSettings?.find(
-    setting => setting.key === "_styles"
-  )
+  $: highlighted = $builderStore.highlightedSetting?.key === "_styles"
 
   const openDrawer = () => {
     tempValue = runtimeToReadableBinding(

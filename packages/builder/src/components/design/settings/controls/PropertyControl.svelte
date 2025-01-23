@@ -26,18 +26,14 @@
 
   let highlightType
 
-  $: highlightedSettings = $builderStore.highlightedSettings
+  $: highlightedProp = $builderStore.highlightedSetting
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
 
   $: if (value) {
-    const highlightedSetting = highlightedSettings?.find(
-      setting => setting.key === key
-    )
-    highlightType = highlightedSetting
-      ? `highlighted-${highlightedSetting.type}`
-      : ""
+    highlightType =
+      highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
   }
 
   const getAllBindings = (bindings, componentBindings, nested) => {
