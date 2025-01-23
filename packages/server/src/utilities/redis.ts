@@ -89,17 +89,22 @@ export async function setDebounce(id: string, seconds: number) {
   await debounceClient.store(id, "debouncing", seconds)
 }
 
-export async function setTestFlag(id: string) {
-  await flagClient.store(id, { testing: true }, AUTOMATION_TEST_FLAG_SECONDS)
-}
-
 export async function checkTestFlag(id: string) {
   const flag = await flagClient?.get(id)
   return !!(flag && flag.testing)
 }
 
-export async function clearTestFlag(id: string) {
-  await devAppClient.delete(id)
+export async function withTestFlag<R>(id: string, fn: () => Promise<R>) {
+  // TODO(samwho): this has a bit of a problem where if 2 automations are tested
+  // at the same time, the second one will overwrite the first one's flag. We
+  // should instead use an atomic counter and only clear the flag when the
+  // counter reaches 0.
+  await flagClient.store(id, { testing: true }, AUTOMATION_TEST_FLAG_SECONDS)
+  try {
+    return await fn()
+  } finally {
+    await devAppClient.delete(id)
+  }
 }
 
 export function getSocketPubSubClients() {
