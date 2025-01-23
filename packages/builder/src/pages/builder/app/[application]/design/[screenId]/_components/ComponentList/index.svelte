@@ -12,7 +12,6 @@
   import ComponentTree from "./ComponentTree.svelte"
   import { dndStore, DropPosition } from "./dndStore.js"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
-  import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
   import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
   import getScreenContextMenuItems from "./getScreenContextMenuItems"
 
@@ -136,7 +135,6 @@
       </ul>
     </ComponentScrollWrapper>
   </div>
-  <ComponentKeyHandler />
 </div>
 
 <style>
