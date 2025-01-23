@@ -3,7 +3,6 @@
   import AppPreview from "./AppPreview.svelte"
   import { screenStore, appStore } from "@/stores/builder"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
-  import { ActionButton } from "@budibase/bbui"
   import BindingsPanel from "./BindingsPanel.svelte"
 </script>
 
