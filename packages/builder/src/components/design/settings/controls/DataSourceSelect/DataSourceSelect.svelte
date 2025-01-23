@@ -291,6 +291,7 @@
         dataSet={views}
         {value}
         onSelect={handleSelected}
+        identifiers={["tableId", "name"]}
       />
     {/if}
     {#if queries?.length}
