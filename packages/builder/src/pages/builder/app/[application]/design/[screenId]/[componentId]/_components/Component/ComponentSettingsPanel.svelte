@@ -16,6 +16,7 @@
   } from "@/dataBinding"
   import { ActionButton, notifications } from "@budibase/bbui"
   import { capitalise } from "@/helpers"
+  import { builderStore } from "@/stores/builder"
   import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "@/components/portal/onboarding/tours.js"
 
@@ -55,6 +56,14 @@
   $: id = $selectedComponent?._id
   $: id, (section = tabs[0])
   $: componentName = getComponentName(componentInstance)
+
+  $: highlightedSettings = $builderStore.highlightedSettings
+  $: if (highlightedSettings?.length) {
+    const settings = highlightedSettings.map(s => s.key)
+    if (settings.length === 1 && settings[0] === "_conditions") {
+      section = "conditions"
+    }
+  }
 </script>
 
 {#if $selectedComponent}

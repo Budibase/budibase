@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Divider, Select, Heading } from "@budibase/bbui"
+  import { Select, Link } from "@budibase/bbui"
   import { getAllStateVariables } from "@/dataBinding"
   import {
     componentStore,
@@ -13,7 +13,7 @@
     isJSBinding,
   } from "@budibase/string-templates"
   import { onMount } from "svelte"
-  import CodeMirrorEditor from "@/components/common/CodeMirrorEditor.svelte"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
   type ComponentUsingState = {
     id: string
@@ -40,9 +40,8 @@
     const previewContext = $previewStore.selectedComponentContext || {}
 
     if (selectedKey && previewContext.state) {
-      // It's unlikely value will ever be populated immediately as state is never populated automatically in preview
-      const value = previewContext.state[selectedKey] ?? null
-      editorValue = JSON.stringify(value, null, 2)
+      // It's unlikely value will ever be populated immediately as preview never has state values on load
+      editorValue = previewContext.state[selectedKey] ?? null
       editorError = null
     } else {
       editorValue = ""
@@ -50,10 +49,10 @@
     }
   }
 
-  function findComponentsUpdatingState(
+  const findComponentsUpdatingState = (
     component: any,
     stateKey: string
-  ): ComponentUsingState[] {
+  ): ComponentUsingState[] => {
     let foundComponents: ComponentUsingState[] = []
 
     const eventHandlerProps = ["onClick", "onChange"]
@@ -87,39 +86,76 @@
     return foundComponents
   }
 
-  function findComponentsUsingState(
+  const findComponentsUsingState = (
     component: any,
     stateKey: string
-  ): ComponentUsingState[] {
+  ): ComponentUsingState[] => {
     let componentsUsingState: ComponentUsingState[] = []
 
+    const processValue = (value: string): boolean => {
+      const bindings = findHBSBlocks(value).map(binding => {
+        const sanitizedBinding = binding.replace(/\\"/g, '"')
+        return isJSBinding(sanitizedBinding)
+          ? decodeJSBinding(sanitizedBinding)
+          : sanitizedBinding
+      })
+      return bindings.join(" ").includes(stateKey)
+    }
+
     const { _children, ...componentSettings } = component
-    let settingsWithState: string[] = []
 
+    // Check normal settings
     for (const [setting, value] of Object.entries(componentSettings)) {
-      if (typeof value === "string") {
-        const bindings = findHBSBlocks(value).map(binding => {
-          let sanitizedBinding = binding.replace(/\\"/g, '"')
-          if (isJSBinding(sanitizedBinding)) {
-            return decodeJSBinding(sanitizedBinding)
-          } else {
-            return sanitizedBinding
-          }
+      if (typeof value === "string" && processValue(value)) {
+        componentsUsingState.push({
+          id: component._id,
+          name: `${component._instanceName} (${setting})`,
+          settings: [setting],
         })
-        const bindingString = bindings.join(" ")
+      }
+    }
 
-        if (bindingString.includes(stateKey)) {
-          settingsWithState.push(setting)
+    // Check conditions
+    if (component._conditions?.length > 0) {
+      for (const condition of component._conditions) {
+        const conditionValues = [condition.referenceValue, condition.newValue]
+        if (
+          conditionValues.some(
+            value => typeof value === "string" && processValue(value)
+          )
+        ) {
+          componentsUsingState.push({
+            id: component._id,
+            name: `${component._instanceName} (conditions)`,
+            settings: ["_conditions"],
+          })
+          break
         }
       }
     }
 
-    if (settingsWithState.length > 0) {
-      componentsUsingState.push({
-        id: component._id,
-        name: component._instanceName,
-        settings: settingsWithState,
-      })
+    // Check styles
+    if (component._styles) {
+      const checkStyleObject = (obj: any) => {
+        for (const [, value] of Object.entries(obj)) {
+          if (typeof value === "string" && processValue(value)) {
+            return true
+          }
+        }
+        return false
+      }
+
+      const hasStateInStyles = Object.values(component._styles).some(styleObj =>
+        checkStyleObject(styleObj)
+      )
+
+      if (hasStateInStyles) {
+        componentsUsingState.push({
+          id: component._id,
+          name: `${component._instanceName} (styles)`,
+          settings: ["_styles"],
+        })
+      }
     }
 
     if (_children) {
@@ -134,7 +170,7 @@
     return componentsUsingState
   }
 
-  function searchComponents(stateKey: string) {
+  const searchComponents = (stateKey: string) => {
     if (!stateKey || !$selectedScreen?.props) {
       return
     }
@@ -148,22 +184,21 @@
     )
   }
 
-  function handleStateKeySelect(event: CustomEvent) {
-    selectedKey = event.detail
-    if (!selectedKey) {
+  const handleStateKeySelect = (key: CustomEvent) => {
+    if (!key.detail) {
       throw new Error("No state key selected")
     }
-    searchComponents(selectedKey)
+    searchComponents(key.detail)
   }
 
-  function onClickComponentLink(component: ComponentUsingState) {
+  const onClickComponentLink = (component: ComponentUsingState) => {
     componentStore.select(component.id)
     component.settings.forEach(setting => {
       builderStore.highlightSetting(setting)
     })
   }
 
-  function handleStateInspectorChange(e: CustomEvent) {
+  const handleStateInspectorChange = (e: CustomEvent) => {
     if (!selectedKey || !$previewStore.selectedComponentContext) {
       throw new Error("No state key selected")
     }
@@ -172,48 +207,40 @@
       return
     }
 
-    try {
-      const value = JSON.parse(e.detail)
-      const stateUpdate = { [selectedKey]: value }
-      editorError = null
+    const stateUpdate = { [selectedKey]: e.detail }
+    editorError = null
 
-      previewStore.updateState(stateUpdate)
-      previewStore.setSelectedComponentContext({
-        ...$previewStore.selectedComponentContext,
-        state: stateUpdate,
-      })
-      previewStore.requestComponentContext()
-    } catch (err) {
-      editorError = "Invalid JSON value"
-    }
+    previewStore.updateState(stateUpdate)
+    previewStore.setSelectedComponentContext({
+      ...$previewStore.selectedComponentContext,
+      state: stateUpdate,
+    })
+    previewStore.requestComponentContext()
   }
 </script>
 
 <div class="state-panel">
-  <Heading size="S">State</Heading>
-  <div>Showing state variables for this screen</div>
   <div class="section">
     <Select
+      label="State variables"
       value={selectedKey}
       placeholder="Type here..."
       options={keyOptions}
       on:change={handleStateKeySelect}
     />
   </div>
-  <Divider />
   <div class="section">
-    <CodeMirrorEditor
-      height={200}
+    <DrawerBindableInput
       value={editorValue}
-      resize="vertical"
-      label="State Inspector"
+      title={`Set value for "${selectedKey}"`}
+      placeholder="Enter a value"
+      label="Set temporary value for design preview"
       on:change={handleStateInspectorChange}
     />
     {#if editorError}
       <div class="error">{editorError}</div>
     {/if}
   </div>
-  <Divider />
 
   {#if componentsUsingState.length > 0}
     <div class="section">
@@ -221,7 +248,7 @@
       {#each componentsUsingState as component, i}
         {#if i > 0}{", "}{/if}
         <button
-          class="component-link"
+          class="component-link updates-colour"
           on:click={() => onClickComponentLink(component)}
         >
           {component.name}
@@ -235,7 +262,7 @@
       {#each componentsUpdatingState as component, i}
         {#if i > 0}{", "}{/if}
         <button
-          class="component-link"
+          class="component-link controlled-by-colour"
           on:click={() => onClickComponentLink(component)}
         >
           {component.name}
@@ -243,6 +270,16 @@
       {/each}
     </div>
   {/if}
+  <div style="opacity: 0.5; ">
+    <Link
+      href="https://docs.budibase.com/docs/app-state"
+      target="_blank"
+      size={"S"}
+      secondary
+    >
+      Learn more about State within Budibase.
+    </Link>
+  </div>
 </div>
 
 <style>
@@ -258,7 +295,7 @@
   }
   .text {
     color: var(--spectrum-global-color-gray-700);
-    font-size: var(--spectrum-global-dimension-font-size-75);
+    font-size: var(--spectrum-global-dimension-font-size-50);
   }
   .error {
     color: var(
@@ -268,6 +305,13 @@
     font-size: var(--spectrum-global-dimension-font-size-75);
     margin-top: var(--spectrum-global-dimension-size-75);
   }
+
+  .updates-colour {
+    color: #8488fd;
+  }
+  .controlled-by-colour {
+    color: #e87400;
+  }
   .component-link {
     display: inline;
     border: none;
@@ -275,7 +319,7 @@
     text-decoration: underline;
     color: var(--spectrum-global-color-white);
     cursor: pointer;
-    font-size: var(--spectrum-global-dimension-font-size-75);
+    font-size: var(--spectrum-global-dimension-font-size-50);
     padding: 0;
   }
   .component-link:hover {
