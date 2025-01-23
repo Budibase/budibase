@@ -19,7 +19,7 @@
   let tempValue
   let drawer
 
-  $: highlightCondition = $builderStore.highlightedSettings?.find(
+  $: highlighted = $builderStore.highlightedSettings?.find(
     setting => setting.key === "_conditions"
   )
 
@@ -57,7 +57,7 @@
 />
 
 <DetailSummary name={"Conditions"} collapsible={false}>
-  <div class:highlighted={highlightCondition}>
+  <div class:highlighted>
     <ActionButton fullWidth on:click={openDrawer}>{conditionText}</ActionButton>
   </div>
 </DetailSummary>

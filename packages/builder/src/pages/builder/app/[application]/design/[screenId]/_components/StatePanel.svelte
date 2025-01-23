@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { onMount } from "svelte"
   import { Select, Link } from "@budibase/bbui"
+  import type { Component } from "@budibase/types"
   import { getAllStateVariables } from "@/dataBinding"
   import {
     componentStore,
@@ -12,7 +14,6 @@
     findHBSBlocks,
     isJSBinding,
   } from "@budibase/string-templates"
-  import { onMount } from "svelte"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
   type ComponentUsingState = {
@@ -30,15 +31,12 @@
   let editorError: string | null = null
 
   onMount(() => {
-    if (selectedKey) {
-      searchComponents(selectedKey)
-    }
     previewStore.requestComponentContext()
   })
 
+  $: $selectedScreen, selectedKey && searchComponents(selectedKey)
   $: {
     const previewContext = $previewStore.selectedComponentContext || {}
-
     if (selectedKey && previewContext.state) {
       // It's unlikely value will ever be populated immediately as preview never has state values on load
       editorValue = previewContext.state[selectedKey] ?? null
@@ -50,7 +48,7 @@
   }
 
   const findComponentsUpdatingState = (
-    component: any,
+    component: Component,
     stateKey: string
   ): ComponentUsingState[] => {
     let foundComponents: ComponentUsingState[] = []
@@ -66,7 +64,7 @@
             handler.parameters?.key === stateKey
           ) {
             foundComponents.push({
-              id: component._id,
+              id: component._id!,
               name: component._instanceName,
               settings: [eventType],
             })
@@ -86,76 +84,71 @@
     return foundComponents
   }
 
+  const hasStateBinding = (value: string, stateKey: string): boolean => {
+    const bindings = findHBSBlocks(value).map(binding => {
+      const sanitizedBinding = binding.replace(/\\"/g, '"')
+      return isJSBinding(sanitizedBinding)
+        ? decodeJSBinding(sanitizedBinding)
+        : sanitizedBinding
+    })
+    return bindings.join(" ").includes(stateKey)
+  }
+
+  const getSettingsWithState = (component: any, stateKey: string): string[] => {
+    const settingsWithState: string[] = []
+    for (const [setting, value] of Object.entries(component)) {
+      if (typeof value === "string" && hasStateBinding(value, stateKey)) {
+        settingsWithState.push(setting)
+      }
+    }
+    return settingsWithState
+  }
+
+  const checkConditions = (conditions: any[], stateKey: string): boolean => {
+    return conditions.some(condition =>
+      [condition.referenceValue, condition.newValue].some(
+        value => typeof value === "string" && hasStateBinding(value, stateKey)
+      )
+    )
+  }
+
+  const checkStyles = (styles: any, stateKey: string): boolean => {
+    return (
+      typeof styles?.custom === "string" &&
+      hasStateBinding(styles.custom, stateKey)
+    )
+  }
+
   const findComponentsUsingState = (
     component: any,
     stateKey: string
   ): ComponentUsingState[] => {
     let componentsUsingState: ComponentUsingState[] = []
+    const { _children, _styles, _conditions, ...componentSettings } = component
 
-    const processValue = (value: string): boolean => {
-      const bindings = findHBSBlocks(value).map(binding => {
-        const sanitizedBinding = binding.replace(/\\"/g, '"')
-        return isJSBinding(sanitizedBinding)
-          ? decodeJSBinding(sanitizedBinding)
-          : sanitizedBinding
+    const settingsWithState = getSettingsWithState(componentSettings, stateKey)
+    settingsWithState.forEach(setting => {
+      componentsUsingState.push({
+        id: component._id,
+        name: `${component._instanceName} (${setting})`,
+        settings: [setting],
       })
-      return bindings.join(" ").includes(stateKey)
+    })
+
+    if (_conditions?.length > 0 && checkConditions(_conditions, stateKey)) {
+      componentsUsingState.push({
+        id: component._id,
+        name: `${component._instanceName} (conditions)`,
+        settings: ["_conditions"],
+      })
     }
 
-    const { _children, ...componentSettings } = component
-
-    // Check normal settings
-    for (const [setting, value] of Object.entries(componentSettings)) {
-      if (typeof value === "string" && processValue(value)) {
-        componentsUsingState.push({
-          id: component._id,
-          name: `${component._instanceName} (${setting})`,
-          settings: [setting],
-        })
-      }
-    }
-
-    // Check conditions
-    if (component._conditions?.length > 0) {
-      for (const condition of component._conditions) {
-        const conditionValues = [condition.referenceValue, condition.newValue]
-        if (
-          conditionValues.some(
-            value => typeof value === "string" && processValue(value)
-          )
-        ) {
-          componentsUsingState.push({
-            id: component._id,
-            name: `${component._instanceName} (conditions)`,
-            settings: ["_conditions"],
-          })
-          break
-        }
-      }
-    }
-
-    // Check styles
-    if (component._styles) {
-      const checkStyleObject = (obj: any) => {
-        for (const [, value] of Object.entries(obj)) {
-          if (typeof value === "string" && processValue(value)) {
-            return true
-          }
-        }
-        return false
-      }
-
-      const hasStateInStyles = Object.values(component._styles).some(styleObj =>
-        checkStyleObject(styleObj)
-      )
-
-      if (hasStateInStyles) {
-        componentsUsingState.push({
-          id: component._id,
-          name: `${component._instanceName} (styles)`,
-          settings: ["_styles"],
-        })
-      }
+    if (_styles && checkStyles(_styles, stateKey)) {
+      componentsUsingState.push({
+        id: component._id,
+        name: `${component._instanceName} (styles)`,
+        settings: ["_styles"],
+      })
     }
 
     if (_children) {
@@ -170,7 +163,7 @@
     return componentsUsingState
   }
 
-  const searchComponents = (stateKey: string) => {
+  const searchComponents = (stateKey: string | undefined) => {
     if (!stateKey || !$selectedScreen?.props) {
       return
     }
@@ -223,7 +216,7 @@
   <div class="section">
     <Select
       label="State variables"
-      value={selectedKey}
+      bind:value={selectedKey}
       placeholder="Type here..."
       options={keyOptions}
       on:change={handleStateKeySelect}
@@ -245,29 +238,31 @@
   {#if componentsUsingState.length > 0}
     <div class="section">
       <span class="text">Updates:</span>
-      {#each componentsUsingState as component, i}
-        {#if i > 0}{", "}{/if}
-        <button
-          class="component-link updates-colour"
-          on:click={() => onClickComponentLink(component)}
-        >
-          {component.name}
-        </button>
-      {/each}
+      <div class="updates-section">
+        {#each componentsUsingState as component}
+          <button
+            class="component-link updates-colour"
+            on:click={() => onClickComponentLink(component)}
+          >
+            {component.name}
+          </button>
+        {/each}
+      </div>
     </div>
   {/if}
   {#if componentsUpdatingState.length > 0}
     <div class="section">
       <span class="text">Controlled by:</span>
-      {#each componentsUpdatingState as component, i}
-        {#if i > 0}{", "}{/if}
-        <button
-          class="component-link controlled-by-colour"
-          on:click={() => onClickComponentLink(component)}
-        >
-          {component.name}
-        </button>
-      {/each}
+      <div class="updates-section">
+        {#each componentsUpdatingState as component}
+          <button
+            class="component-link controlled-by-colour"
+            on:click={() => onClickComponentLink(component)}
+          >
+            {component.name}
+          </button>
+        {/each}git
+      </div>
     </div>
   {/if}
   <div style="opacity: 0.5; ">
@@ -291,6 +286,8 @@
     gap: var(--spacing-m);
   }
   .section {
+    display: flex;
+    flex-direction: column;
     gap: var(--spacing-s);
   }
   .text {
@@ -313,16 +310,23 @@
     color: #e87400;
   }
   .component-link {
-    display: inline;
+    display: inline-block;
     border: none;
     background: none;
     text-decoration: underline;
-    color: var(--spectrum-global-color-white);
     cursor: pointer;
     font-size: var(--spectrum-global-dimension-font-size-50);
     padding: 0;
+    white-space: nowrap;
   }
   .component-link:hover {
     text-decoration: underline;
+  }
+
+  .updates-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
   }
 </style>

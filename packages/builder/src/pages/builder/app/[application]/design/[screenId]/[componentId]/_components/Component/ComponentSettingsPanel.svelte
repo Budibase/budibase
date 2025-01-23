@@ -60,8 +60,12 @@
   $: highlightedSettings = $builderStore.highlightedSettings
   $: if (highlightedSettings?.length) {
     const settings = highlightedSettings.map(s => s.key)
-    if (settings.length === 1 && settings[0] === "_conditions") {
+    if (settings.includes("_conditions")) {
       section = "conditions"
+    } else if (settings.includes("_styles")) {
+      section = "styles"
+    } else if (settings.includes("_settings")) {
+      section = "settings"
     }
   }
 </script>
