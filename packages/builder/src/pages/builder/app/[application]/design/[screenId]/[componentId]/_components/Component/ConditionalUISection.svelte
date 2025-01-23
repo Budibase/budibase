@@ -9,6 +9,7 @@
   import { componentStore } from "@/stores/builder"
   import ConditionalUIDrawer from "./ConditionalUIDrawer.svelte"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
+  import { builderStore } from "@/stores/builder"
 
   export let componentInstance
   export let componentDefinition
@@ -17,6 +18,10 @@
 
   let tempValue
   let drawer
+
+  $: highlightCondition = $builderStore.highlightedSettings?.find(
+    setting => setting.key === "_conditions"
+  )
 
   const openDrawer = () => {
     tempValue = JSON.parse(JSON.stringify(componentInstance?._conditions ?? []))
@@ -52,7 +57,9 @@
 />
 
 <DetailSummary name={"Conditions"} collapsible={false}>
-  <ActionButton on:click={openDrawer}>{conditionText}</ActionButton>
+  <div class:highlighted={highlightCondition}>
+    <ActionButton fullWidth on:click={openDrawer}>{conditionText}</ActionButton>
+  </div>
 </DetailSummary>
 <Drawer bind:this={drawer} title="Conditions">
   <svelte:fragment slot="description">
@@ -61,3 +68,17 @@
   <Button cta slot="buttons" on:click={() => save()}>Save</Button>
   <ConditionalUIDrawer slot="body" bind:conditions={tempValue} {bindings} />
 </Drawer>
+
+<style>
+  .highlighted {
+    background: var(--spectrum-global-color-gray-300);
+    border-left: 4px solid var(--spectrum-semantic-informative-color-background);
+    transition: background 130ms ease-out, border-color 130ms ease-out;
+    margin-top: -3.5px;
+    margin-bottom: -3.5px;
+    padding-bottom: 3.5px;
+    padding-top: 3.5px;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+</style>
