@@ -3,13 +3,15 @@
   import ComponentList from "./ComponentList/index.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
   import { ActionButton } from "@budibase/bbui"
+  import BindingsPanel from "./BindingsPanel.svelte"
+  import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
 
   const [resizable, resizableHandle] = getHorizontalResizeActions()
 
-  enum Tabs {
-    Components = "Components",
-    Bindings = "Bindings",
-    State = "State",
+  const Tabs = {
+    Components: "Components",
+    Bindings: "Bindings",
+    State: "State",
   }
 
   let activeTab = Tabs.Components
@@ -32,7 +34,7 @@
     {#if activeTab === Tabs.Components}
       <ComponentList />
     {:else if activeTab === Tabs.Bindings}
-      <div class="tab-content">Bindings</div>
+      <BindingsPanel />
     {:else if activeTab === Tabs.State}
       <div class="tab-content">State</div>
     {/if}
@@ -41,6 +43,7 @@
     <div class="dividerClickExtender" role="separator" use:resizableHandle />
   </div>
 </div>
+<ComponentKeyHandler />
 
 <style>
   .panel {
@@ -68,6 +71,10 @@
     border-bottom: var(--border-light);
   }
   .tab-content {
+    flex: 1 1 auto;
+    height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--spacing-l);
   }
 
