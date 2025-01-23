@@ -1,4 +1,5 @@
 <script>
+  import { datasources } from "@/stores/builder"
   import { Divider, Heading } from "@budibase/bbui"
 
   export let dividerState
@@ -6,6 +7,8 @@
   export let dataSet
   export let value
   export let onSelect
+
+  $: displayDatasourceName = $datasources.list.length > 1
 </script>
 
 {#if dividerState}
@@ -21,7 +24,7 @@
   {#each dataSet as data}
     <li
       class="spectrum-Menu-item"
-      class:is-selected={value?.label === data.label &&
+      class:is-selected={value?.resourceId === data.resourceId &&
         value?.type === data.type}
       role="option"
       aria-selected="true"
@@ -29,7 +32,9 @@
       on:click={() => onSelect(data)}
     >
       <span class="spectrum-Menu-itemLabel">
-        {data.datasourceName ? `${data.datasourceName} - ` : ""}{data.label}
+        {data.datasourceName && displayDatasourceName
+          ? `${data.datasourceName} - `
+          : ""}{data.label}
       </span>
       <svg
         class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"

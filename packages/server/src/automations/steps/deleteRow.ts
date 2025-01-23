@@ -1,8 +1,11 @@
-import { EventEmitter } from "events"
 import { destroy } from "../../api/controllers/row"
 import { buildCtx } from "./utils"
 import { getError } from "../automationUtils"
-import { DeleteRowStepInputs, DeleteRowStepOutputs } from "@budibase/types"
+import {
+  ContextEmitter,
+  DeleteRowStepInputs,
+  DeleteRowStepOutputs,
+} from "@budibase/types"
 
 export async function run({
   inputs,
@@ -11,7 +14,7 @@ export async function run({
 }: {
   inputs: DeleteRowStepInputs
   appId: string
-  emitter: EventEmitter
+  emitter: ContextEmitter
 }): Promise<DeleteRowStepOutputs> {
   if (inputs.id == null) {
     return {
