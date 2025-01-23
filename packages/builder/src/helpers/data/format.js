@@ -11,7 +11,7 @@ export const datasourceSelect = {
   },
   viewV2: (view, datasources) => {
     const datasource = datasources
-      .filter(f => f.entities)
+      ?.filter(f => f.entities)
       .flatMap(d => d.entities)
       .find(ds => ds._id === view.tableId)
     return {
