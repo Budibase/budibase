@@ -38,7 +38,7 @@
   .component-placeholder {
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
     color: var(--spectrum-global-color-gray-600);
     font-size: var(--font-size-s);
