@@ -1,5 +1,5 @@
 <script>
-  import { tables } from "stores/builder"
+  import { tables } from "@/stores/builder"
   import {
     BindingValue,
     Block,

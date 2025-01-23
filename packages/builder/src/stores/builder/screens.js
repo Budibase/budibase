@@ -2,17 +2,17 @@ import { derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { Helpers } from "@budibase/bbui"
 import { RoleUtils, Utils } from "@budibase/frontend-core"
-import { findAllMatchingComponents } from "helpers/components"
+import { findAllMatchingComponents } from "@/helpers/components"
 import {
   layoutStore,
   appStore,
   componentStore,
   navigationStore,
   selectedComponent,
-} from "stores/builder"
-import { createHistoryStore } from "stores/builder/history"
-import { API } from "api"
-import BudiStore from "../BudiStore"
+} from "@/stores/builder"
+import { createHistoryStore } from "@/stores/builder/history"
+import { API } from "@/api"
+import { BudiStore } from "../BudiStore"
 
 export const INITIAL_SCREENS_STATE = {
   screens: [],
@@ -274,7 +274,7 @@ export class ScreenStore extends BudiStore {
 
   /**
    * @param {function} patchFn
-   * @param {string} screenId
+   * @param {string | null} screenId
    * @returns
    */
   async patch(patchFn, screenId) {
@@ -344,12 +344,7 @@ export class ScreenStore extends BudiStore {
     let deleteUrls = []
     screensToDelete.forEach(screen => {
       // Delete the screen
-      promises.push(
-        API.deleteScreen({
-          screenId: screen._id,
-          screenRev: screen._rev,
-        })
-      )
+      promises.push(API.deleteScreen(screen._id, screen._rev))
       // Remove links to this screen
       deleteUrls.push(screen.routing.route)
     })

@@ -85,7 +85,7 @@
     }
 
     const getPos = e => {
-      var rect = canvasRef.getBoundingClientRect()
+      let rect = canvasRef.getBoundingClientRect()
       const canvasX = e.offsetX || e.targetTouches?.[0].pageX - rect.left
       const canvasY = e.offsetY || e.targetTouches?.[0].pageY - rect.top
 

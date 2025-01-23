@@ -74,12 +74,14 @@
   .value {
     display: -webkit-box;
     -webkit-line-clamp: var(--content-lines);
+    line-clamp: var(--content-lines);
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 20px;
   }
   .number .value {
     -webkit-line-clamp: 1;
+    line-clamp: 1;
   }
   input {
     flex: 1 1 auto;
@@ -110,5 +112,6 @@
   }
   input[type="number"] {
     -moz-appearance: textfield;
+    appearance: textfield;
   }
 </style>

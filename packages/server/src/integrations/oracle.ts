@@ -116,7 +116,7 @@ const OracleContraintTypes = {
 
 class OracleIntegration extends Sql implements DatasourcePlus {
   private readonly config: OracleConfig
-  private index: number = 1
+  private index = 1
 
   private static readonly COLUMNS_SQL = `
     SELECT

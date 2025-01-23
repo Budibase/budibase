@@ -147,7 +147,7 @@ const fetchRowHandler = async action => {
 
   if (tableId && rowId) {
     try {
-      const row = await API.fetchRow({ tableId, rowId })
+      const row = await API.fetchRow(tableId, rowId)
 
       return { row }
     } catch (error) {
@@ -192,7 +192,7 @@ const deleteRowHandler = async action => {
         return false
       }
 
-      const resp = await API.deleteRows({ tableId, rows: requestConfig })
+      const resp = await API.deleteRows(tableId, requestConfig)
 
       if (!notificationOverride) {
         notificationStore.actions.success(
@@ -216,11 +216,11 @@ const deleteRowHandler = async action => {
 const triggerAutomationHandler = async action => {
   const { fields, notificationOverride, timeout } = action.parameters
   try {
-    const result = await API.triggerAutomation({
-      automationId: action.parameters.automationId,
+    const result = await API.triggerAutomation(
+      action.parameters.automationId,
       fields,
-      timeout,
-    })
+      timeout
+    )
 
     // Value will exist if automation is synchronous, so return it.
     if (result.value) {
@@ -251,17 +251,14 @@ const navigationHandler = action => {
 }
 
 const queryExecutionHandler = async action => {
-  const { datasourceId, queryId, queryParams, notificationOverride } =
-    action.parameters
+  const { queryId, queryParams, notificationOverride } = action.parameters
   try {
     const query = await API.fetchQueryDefinition(queryId)
     if (query?.datasourceId == null) {
       notificationStore.actions.error("That query couldn't be found")
       return false
     }
-    const result = await API.executeQuery({
-      datasourceId,
-      queryId,
+    const result = await API.executeQuery(queryId, {
       parameters: queryParams,
     })
 
@@ -381,10 +378,8 @@ const exportDataHandler = async action => {
       if (typeof rows[0] !== "string") {
         rows = rows.map(row => row._id)
       }
-      const data = await API.exportRows({
-        tableId,
+      const data = await API.exportRows(tableId, type, {
         rows,
-        format: type,
         columns: columns?.map(column => column.name || column),
         delimiter,
         customHeaders,
@@ -454,12 +449,7 @@ const downloadFileHandler = async action => {
     const { type } = action.parameters
     if (type === "attachment") {
       const { tableId, rowId, attachmentColumn } = action.parameters
-      const res = await API.downloadAttachment(
-        tableId,
-        rowId,
-        attachmentColumn,
-        { suppressErrors: true }
-      )
+      const res = await API.downloadAttachment(tableId, rowId, attachmentColumn)
       await downloadStream(res)
       return
     }
@@ -495,11 +485,7 @@ const downloadFileHandler = async action => {
 
 const rowActionHandler = async action => {
   const { resourceId, rowId, rowActionId } = action.parameters
-  await API.rowActions.trigger({
-    rowActionId,
-    sourceId: resourceId,
-    rowId,
-  })
+  await API.rowActions.trigger(resourceId, rowActionId, rowId)
   // Refresh related datasources
   await dataSourceStore.actions.invalidateDataSource(resourceId, {
     invalidateRelationships: true,

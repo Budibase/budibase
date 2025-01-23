@@ -9,7 +9,7 @@ import {
   Database,
   INTERNAL_TABLE_SOURCE_ID,
   Table,
-  TableResponse,
+  FindTableResponse,
   TableSourceType,
   TableViewsResponse,
 } from "@budibase/types"
@@ -173,7 +173,9 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
   return await processTables(tables)
 }
 
-export async function enrichViewSchemas(table: Table): Promise<TableResponse> {
+export async function enrichViewSchemas(
+  table: Table
+): Promise<FindTableResponse> {
   const views = []
   for (const view of Object.values(table.views ?? [])) {
     if (sdk.views.isV2(view)) {

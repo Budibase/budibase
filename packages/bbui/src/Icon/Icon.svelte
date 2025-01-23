@@ -1,23 +1,23 @@
-<script>
+<script lang="ts">
   import {
     default as AbsTooltip,
     TooltipPosition,
     TooltipType,
   } from "../Tooltip/AbsTooltip.svelte"
 
-  export let name = "Add"
-  export let hidden = false
+  export let name: string = "Add"
+  export let hidden: boolean = false
   export let size = "M"
-  export let hoverable = false
-  export let disabled = false
-  export let color
-  export let hoverColor
-  export let tooltip
+  export let hoverable: boolean = false
+  export let disabled: boolean = false
+  export let color: string | undefined = undefined
+  export let hoverColor: string | undefined = undefined
+  export let tooltip: string | undefined = undefined
   export let tooltipPosition = TooltipPosition.Bottom
   export let tooltipType = TooltipType.Default
-  export let tooltipColor
-  export let tooltipWrap = true
-  export let newStyles = false
+  export let tooltipColor: string | undefined = undefined
+  export let tooltipWrap: boolean = true
+  export let newStyles: boolean = false
 </script>
 
 <AbsTooltip

@@ -1,7 +1,7 @@
 import Router from "@koa/router"
 import * as controller from "../../controllers/global/email"
-import { EmailTemplatePurpose } from "../../../constants"
 import { auth } from "@budibase/backend-core"
+import { EmailTemplatePurpose } from "@budibase/types"
 import Joi from "joi"
 
 const router: Router = new Router()

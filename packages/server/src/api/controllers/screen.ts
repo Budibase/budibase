@@ -10,13 +10,16 @@ import { updateAppPackage } from "./application"
 import {
   Plugin,
   ScreenProps,
-  BBContext,
   Screen,
   UserCtx,
+  FetchScreenResponse,
+  SaveScreenRequest,
+  SaveScreenResponse,
+  DeleteScreenResponse,
 } from "@budibase/types"
 import { builderSocket } from "../../websockets"
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   const db = context.getAppDB()
 
   const screens = (
@@ -37,7 +40,9 @@ export async function fetch(ctx: BBContext) {
   )
 }
 
-export async function save(ctx: UserCtx<Screen, Screen>) {
+export async function save(
+  ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
+) {
   const db = context.getAppDB()
   let screen = ctx.request.body
 
@@ -107,7 +112,7 @@ export async function save(ctx: UserCtx<Screen, Screen>) {
   builderSocket?.emitScreenUpdate(ctx, savedScreen)
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
   const db = context.getAppDB()
   const id = ctx.params.screenId
   const screen = await db.get<Screen>(id)
@@ -118,7 +123,6 @@ export async function destroy(ctx: BBContext) {
   ctx.body = {
     message: "Screen deleted successfully",
   }
-  ctx.status = 200
   builderSocket?.emitScreenDeletion(ctx, id)
 }
 

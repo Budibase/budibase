@@ -185,6 +185,62 @@ if (descriptions.length) {
             )
           }
         )
+
+        it("can set primary display", async () => {
+          const columnName = generator.word()
+          const table = await config.api.table.save(
+            tableForDatasource(datasource, {
+              primaryDisplay: columnName,
+              schema: {
+                [columnName]: {
+                  name: columnName,
+                  type: FieldType.STRING,
+                },
+              },
+            })
+          )
+          expect(table.primaryDisplay).toEqual(columnName)
+
+          const res = await config.api.table.get(table._id!)
+          expect(res.primaryDisplay).toEqual(columnName)
+        })
+
+        it("cannot use unexisting columns as primary display", async () => {
+          const columnName = generator.word()
+          await config.api.table.save(
+            tableForDatasource(datasource, {
+              primaryDisplay: columnName,
+            }),
+            {
+              status: 400,
+              body: {
+                message: `Column "${columnName}" cannot be used as a display type.`,
+              },
+            }
+          )
+        })
+
+        it("cannot use invalid column types as display name", async () => {
+          const columnName = generator.word()
+
+          await config.api.table.save(
+            tableForDatasource(datasource, {
+              primaryDisplay: columnName,
+              schema: {
+                [columnName]: {
+                  name: columnName,
+                  type: FieldType.BOOLEAN,
+                },
+              },
+            }),
+            {
+              status: 400,
+              body: {
+                message: `Column "${columnName}" cannot be used as a display type.`,
+              },
+            }
+          )
+        })
       })
 
       describe("permissions", () => {
@@ -247,6 +303,9 @@ if (descriptions.length) {
                   },
                 },
               },
+              primary: ["_id"],
+              views: {},
+              sql: true,
             })
           )
 
@@ -254,9 +313,8 @@ if (descriptions.length) {
             ...table,
             name: generator.guid(),
           })
-
           expect(events.table.updated).toHaveBeenCalledTimes(1)
-          expect(events.table.updated).toHaveBeenCalledWith(updatedTable)
+          expect(events.table.updated).toHaveBeenCalledWith(table, updatedTable)
         })
 
         it("updates all the row fields for a table when a schema key is renamed", async () => {
@@ -600,6 +658,49 @@ if (descriptions.length) {
             views: {},
           }
           expect(response).toEqual(expectedResponse)
+        })
+
+        it("cannot use unexisting columns as primary display", async () => {
+          const table = await config.api.table.save(
+            tableForDatasource(datasource)
+          )
+
+          const columnName = generator.word()
+          const tableRequest = {
+            ...table,
+            primaryDisplay: columnName,
+          }
+          await config.api.table.save(tableRequest, {
+            status: 400,
+            body: {
+              message: `Column "${columnName}" cannot be used as a display type.`,
+            },
+          })
+        })
+
+        it("cannot use invalid column types as display name", async () => {
+          const table = await config.api.table.save(
+            tableForDatasource(datasource)
+          )
+          const columnName = generator.word()
+          const tableRequest: SaveTableRequest = {
+            ...table,
+            primaryDisplay: columnName,
+            schema: {
+              ...table.schema,
+              [columnName]: {
+                name: columnName,
+                type: FieldType.BOOLEAN,
+              },
+            },
+          }
+
+          await config.api.table.save(tableRequest, {
+            status: 400,
+            body: {
+              message: `Column "${columnName}" cannot be used as a display type.`,
+            },
+          })
         })
       })
 

@@ -14,5 +14,7 @@ export interface ViewFetchResponseEnriched {
 }
 
 export interface CreateViewRequest extends Omit<ViewV2, "version" | "id"> {}
+export interface CreateViewResponse extends ViewResponse {}
 
 export interface UpdateViewRequest extends ViewV2 {}
+export interface UpdateViewResponse extends ViewResponse {}

@@ -29,7 +29,6 @@ export async function save(
   layout._rev = response.rev
 
   ctx.body = layout
-  ctx.status = 200
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteLayoutResponse>) {
@@ -51,5 +50,4 @@ export async function destroy(ctx: UserCtx<void, DeleteLayoutResponse>) {
   await db.remove(layoutId, layoutRev)
   await events.layout.deleted(layoutId)
   ctx.body = { message: "Layout deleted successfully" }
-  ctx.status = 200
 }

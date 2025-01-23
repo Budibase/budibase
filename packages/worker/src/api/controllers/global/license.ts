@@ -1,28 +1,33 @@
 import { licensing, quotas } from "@budibase/pro"
 import {
   ActivateLicenseKeyRequest,
+  ActivateLicenseKeyResponse,
   ActivateOfflineLicenseTokenRequest,
+  ActivateOfflineLicenseTokenResponse,
   GetLicenseKeyResponse,
   GetOfflineIdentifierResponse,
   GetOfflineLicenseTokenResponse,
+  GetQuotaUsageResponse,
+  RefreshOfflineLicenseResponse,
   UserCtx,
 } from "@budibase/types"
 
 // LICENSE KEY
 
 export async function activateLicenseKey(
-  ctx: UserCtx<ActivateLicenseKeyRequest>
+  ctx: UserCtx<ActivateLicenseKeyRequest, ActivateLicenseKeyResponse>
 ) {
   const { licenseKey } = ctx.request.body
   await licensing.keys.activateLicenseKey(licenseKey)
-  ctx.status = 200
+  ctx.body = {
+    message: "License activated.",
+  }
 }
 
 export async function getLicenseKey(ctx: UserCtx<void, GetLicenseKeyResponse>) {
   const licenseKey = await licensing.keys.getLicenseKey()
   if (licenseKey) {
     ctx.body = { licenseKey: "*" }
-    ctx.status = 200
   } else {
     ctx.status = 404
   }
@@ -36,11 +41,16 @@ export async function deleteLicenseKey(ctx: UserCtx<void, void>) {
 // OFFLINE LICENSE
 
 export async function activateOfflineLicenseToken(
-  ctx: UserCtx<ActivateOfflineLicenseTokenRequest>
+  ctx: UserCtx<
+    ActivateOfflineLicenseTokenRequest,
+    ActivateOfflineLicenseTokenResponse
+  >
 ) {
   const { offlineLicenseToken } = ctx.request.body
   await licensing.offline.activateOfflineLicenseToken(offlineLicenseToken)
-  ctx.status = 200
+  ctx.body = {
+    message: "License token activated.",
+  }
 }
 
 export async function getOfflineLicenseToken(
@@ -49,7 +59,6 @@ export async function getOfflineLicenseToken(
   const offlineLicenseToken = await licensing.offline.getOfflineLicenseToken()
   if (offlineLicenseToken) {
     ctx.body = { offlineLicenseToken: "*" }
-    ctx.status = 200
   } else {
     ctx.status = 404
   }
@@ -65,19 +74,23 @@ export async function getOfflineLicenseIdentifier(
 ) {
   const identifierBase64 = await licensing.offline.getIdentifierBase64()
   ctx.body = { identifierBase64 }
-  ctx.status = 200
 }
 
 // LICENSES
 
-export const refresh = async (ctx: any) => {
+export const refresh = async (
+  ctx: UserCtx<void, RefreshOfflineLicenseResponse>
+) => {
   await licensing.cache.refresh()
-  ctx.status = 200
+  ctx.body = {
+    message: "License refreshed.",
+  }
 }
 
 // USAGE
 
-export const getQuotaUsage = async (ctx: any) => {
+export const getQuotaUsage = async (
+  ctx: UserCtx<void, GetQuotaUsageResponse>
+) => {
   ctx.body = await quotas.getQuotaUsage()
-  ctx.status = 200
 }

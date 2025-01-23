@@ -3,6 +3,8 @@ import { RestIntegration } from "../rest"
 import { BodyType, RestAuthType } from "@budibase/types"
 import { Response } from "node-fetch"
 import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
+import { createServer } from "http"
+import { AddressInfo } from "net"
 
 const UUID_REGEX =
   "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
@@ -455,29 +457,27 @@ describe("REST Integration", () => {
     // NOTE(samwho): it seems like this code doesn't actually work because it requires
     // node-fetch >=3, and we're not on that because upgrading to it produces errors to
     // do with ESM that are above my pay grade.
+    it.skip("doesn't fail when legacyHttpParser is set", async () => {
+      const server = createServer((req, res) => {
+        res.writeHead(200, {
+          "Transfer-Encoding": "chunked",
+          "Content-Length": "10",
+        })
+        res.end(JSON.stringify({ foo: "bar" }))
+      })
 
-    // eslint-disable-next-line jest/no-commented-out-tests
-    // it("doesn't fail when legacyHttpParser is set", async () => {
-    //   const server = createServer((req, res) => {
-    //     res.writeHead(200, {
-    //       "Transfer-Encoding": "chunked",
-    //       "Content-Length": "10",
-    //     })
-    //     res.end(JSON.stringify({ foo: "bar" }))
-    //   })
+      server.listen()
+      await new Promise(resolve => server.once("listening", resolve))
 
-    //   server.listen()
-    //   await new Promise(resolve => server.once("listening", resolve))
+      const address = server.address() as AddressInfo
 
-    //   const address = server.address() as AddressInfo
-
-    //   const integration = new RestIntegration({
-    //     url: `http://localhost:${address.port}`,
-    //     legacyHttpParser: true,
-    //   })
-    //   const { data } = await integration.read({})
-    //   expect(data).toEqual({ foo: "bar" })
-    // })
+      const integration = new RestIntegration({
+        url: `http://localhost:${address.port}`,
+        legacyHttpParser: true,
+      })
+      const { data } = await integration.read({})
+      expect(data).toEqual({ foo: "bar" })
+    })
 
     it("doesn't fail when legacyHttpParser is true", async () => {
       nock("https://example.com").get("/").reply(200, { foo: "bar" })

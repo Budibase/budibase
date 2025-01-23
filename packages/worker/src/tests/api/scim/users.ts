@@ -4,14 +4,9 @@ import {
   ScimUserResponse,
   ScimUpdateRequest,
 } from "@budibase/types"
-import TestConfiguration from "../../TestConfiguration"
 import { RequestSettings, ScimTestAPI } from "./shared"
 
 export class ScimUsersAPI extends ScimTestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   get = async (
     requestSettings?: Partial<RequestSettings> & {
       params?: {

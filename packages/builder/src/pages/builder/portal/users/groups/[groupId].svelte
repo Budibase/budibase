@@ -10,10 +10,10 @@
     notifications,
   } from "@budibase/bbui"
   import { goto, url } from "@roxi/routify"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { Breadcrumb, Breadcrumbs } from "components/portal/page"
-  import { roles } from "stores/builder"
-  import { appsStore, auth, groups } from "stores/portal"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { Breadcrumb, Breadcrumbs } from "@/components/portal/page"
+  import { roles } from "@/stores/builder"
+  import { appsStore, auth, groups } from "@/stores/portal"
   import { onMount, setContext } from "svelte"
   import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
@@ -53,9 +53,7 @@
   $: readonly = !isAdmin || isScimGroup
   $: groupApps = $appsStore.apps
     .filter(app =>
-      groups.actions
-        .getGroupAppIds(group)
-        .includes(appsStore.getProdAppID(app.devId))
+      groups.getGroupAppIds(group).includes(appsStore.getProdAppID(app.devId))
     )
     .map(app => ({
       ...app,
@@ -72,7 +70,7 @@
 
   async function deleteGroup() {
     try {
-      await groups.actions.delete(group)
+      await groups.delete(group)
       notifications.success("User group deleted successfully")
       $goto("./")
     } catch (error) {
@@ -82,7 +80,7 @@
 
   async function saveGroup(group) {
     try {
-      await groups.actions.save(group)
+      await groups.save(group)
     } catch (error) {
       if (error.message) {
         notifications.error(error.message)
@@ -93,7 +91,7 @@
   }
 
   const removeApp = async app => {
-    await groups.actions.removeApp(groupId, appsStore.getProdAppID(app.devId))
+    await groups.removeApp(groupId, appsStore.getProdAppID(app.devId))
   }
   setContext("roles", {
     updateRole: () => {},
@@ -102,7 +100,7 @@
 
   onMount(async () => {
     try {
-      await Promise.all([groups.actions.init(), roles.fetch()])
+      await Promise.all([groups.init(), roles.fetch()])
       loaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")

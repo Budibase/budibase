@@ -10,32 +10,21 @@
     "prebuild": "rimraf dist/",
     "build": "node ../../scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "test": "jest",
     "test:watch": "yarn test --watchAll"
   },
   "dependencies": {
-    "@budibase/types": "0.0.0",
+    "@budibase/types": "*",
     "cron-validate": "1.4.5"
   },
   "devDependencies": {
     "rimraf": "3.0.2",
-    "typescript": "5.5.2"
+    "typescript": "5.7.2"
   },
   "nx": {
     "targets": {
       "build": {
-        "dependsOn": [
-          {
-            "projects": [
-              "@budibase/types"
-            ],
-            "target": "build"
-          }
-        ]
-      },
-      "dev": {
         "dependsOn": [
           {
             "projects": [

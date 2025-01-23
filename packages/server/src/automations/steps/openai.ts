@@ -1,67 +1,9 @@
 import { OpenAI } from "openai"
 
-import {
-  AutomationActionStepId,
-  AutomationStepDefinition,
-  AutomationStepType,
-  AutomationIOType,
-  OpenAIStepInputs,
-  OpenAIStepOutputs,
-  FeatureFlag,
-} from "@budibase/types"
-import { env, features } from "@budibase/backend-core"
+import { OpenAIStepInputs, OpenAIStepOutputs } from "@budibase/types"
+import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
 import * as pro from "@budibase/pro"
-
-enum Model {
-  GPT_4O_MINI = "gpt-4o-mini",
-  GPT_4O = "gpt-4o",
-  GPT_4 = "gpt-4",
-  GPT_35_TURBO = "gpt-3.5-turbo",
-}
-
-export const definition: AutomationStepDefinition = {
-  name: "OpenAI",
-  tagline: "Send prompts to ChatGPT",
-  icon: "Algorithm",
-  description: "Interact with the OpenAI ChatGPT API.",
-  type: AutomationStepType.ACTION,
-  internal: true,
-  features: {},
-  stepId: AutomationActionStepId.OPENAI,
-  inputs: {
-    prompt: "",
-  },
-  schema: {
-    inputs: {
-      properties: {
-        prompt: {
-          type: AutomationIOType.STRING,
-          title: "Prompt",
-        },
-        model: {
-          type: AutomationIOType.STRING,
-          title: "Model",
-          enum: Object.values(Model),
-        },
-      },
-      required: ["prompt", "model"],
-    },
-    outputs: {
-      properties: {
-        success: {
-          type: AutomationIOType.BOOLEAN,
-          description: "Whether the action was successful",
-        },
-        response: {
-          type: AutomationIOType.STRING,
-          description: "What was output",
-        },
-      },
-      required: ["success", "response"],
-    },
-  },
-}
 
 /**
  * Maintains backward compatibility with automation steps created before the introduction
@@ -99,12 +41,8 @@ export async function run({
 
   try {
     let response
-    const customConfigsEnabled =
-      (await features.flags.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS)) &&
-      (await pro.features.isAICustomConfigsEnabled())
-    const budibaseAIEnabled =
-      (await features.flags.isEnabled(FeatureFlag.BUDIBASE_AI)) &&
-      (await pro.features.isBudibaseAIEnabled())
+    const customConfigsEnabled = await pro.features.isAICustomConfigsEnabled()
+    const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
 
     let llmWrapper
     if (budibaseAIEnabled || customConfigsEnabled) {

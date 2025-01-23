@@ -58,7 +58,7 @@ export const createContext = (
 export const runMiddlewares = async (
   ctx: any,
   middlewares: any[],
-  callback: Function
+  callback: () => Promise<void>
 ) => {
   if (!middlewares[0]) {
     await callback()

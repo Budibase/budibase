@@ -70,6 +70,8 @@ export interface User extends Document {
   appFavourites?: string[]
   ssoId?: string
   appSort?: string
+  budibaseAccess?: boolean
+  accountPortalAccess?: boolean
 }
 
 export interface UserBindings extends Document {

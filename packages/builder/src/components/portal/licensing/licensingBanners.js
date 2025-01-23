@@ -1,12 +1,12 @@
 import { ExpiringKeys } from "./constants"
-import { admin, auth, licensing, temporalStore } from "stores/portal"
+import { admin, auth, licensing, temporalStore } from "@/stores/portal"
 import { get } from "svelte/store"
 import { BANNER_TYPES } from "@budibase/bbui"
 
 const oneDayInSeconds = 86400
 
 const defaultCacheFn = key => {
-  temporalStore.actions.setExpiring(key, {}, oneDayInSeconds)
+  temporalStore.setExpiring(key, {}, oneDayInSeconds)
 }
 
 const upgradeAction = key => {
@@ -148,7 +148,7 @@ export const getBanners = () => {
     buildUsersAboveLimitBanner(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER),
   ].filter(licensingBanner => {
     return (
-      !temporalStore.actions.getExpiring(licensingBanner.key) &&
+      !temporalStore.getExpiring(licensingBanner.key) &&
       licensingBanner.criteria()
     )
   })

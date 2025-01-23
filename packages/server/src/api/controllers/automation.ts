@@ -2,7 +2,7 @@ import * as triggers from "../../automations/triggers"
 import { sdk as coreSdk } from "@budibase/shared-core"
 import { DocumentType } from "../../db/utils"
 import { updateTestHistory, removeDeprecated } from "../../automations/utils"
-import { setTestFlag, clearTestFlag } from "../../utilities/redis"
+import { withTestFlag } from "../../utilities/redis"
 import { context, cache, events, db as dbCore } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
 import {
@@ -62,7 +62,6 @@ export async function create(
 
   const createdAutomation = await sdk.automations.create(automation)
 
-  ctx.status = 200
   ctx.body = {
     message: "Automation created successfully",
     automation: createdAutomation,
@@ -84,7 +83,6 @@ export async function update(
 
   const updatedAutomation = await sdk.automations.update(automation)
 
-  ctx.status = 200
   ctx.body = {
     message: `Automation ${automation._id} updated successfully.`,
     automation: updatedAutomation,
@@ -233,24 +231,25 @@ export async function test(
   ctx: UserCtx<TestAutomationRequest, TestAutomationResponse>
 ) {
   const db = context.getAppDB()
-  let automation = await db.get<Automation>(ctx.params.id)
-  await setTestFlag(automation._id!)
-  const testInput = prepareTestInput(ctx.request.body)
-  const response = await triggers.externalTrigger(
-    automation,
-    {
-      ...testInput,
-      appId: ctx.appId,
-      user: sdk.users.getUserContextBindings(ctx.user),
-    },
-    { getResponses: true }
-  )
-  // save a test history run
-  await updateTestHistory(ctx.appId, automation, {
-    ...ctx.request.body,
-    occurredAt: new Date().getTime(),
+  const automation = await db.tryGet<Automation>(ctx.params.id)
+  if (!automation) {
+    ctx.throw(404, `Automation ${ctx.params.id} not found`)
+  }
+
+  const { request, appId } = ctx
+  const { body } = request
+
+  ctx.body = await withTestFlag(automation._id!, async () => {
+    const occurredAt = new Date().getTime()
+    await updateTestHistory(appId, automation, { ...body, occurredAt })
+
+    const user = sdk.users.getUserContextBindings(ctx.user)
+    return await triggers.externalTrigger(
+      automation,
+      { ...prepareTestInput(body), appId, user },
+      { getResponses: true }
+    )
   })
-  await clearTestFlag(automation._id!)
-  ctx.body = response
+
   await events.automation.tested(automation)
 }

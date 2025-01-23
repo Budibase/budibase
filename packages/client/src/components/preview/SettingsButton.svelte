@@ -10,6 +10,7 @@
   export let bool = false
   export let active = false
   export let component
+  export let disabled = false
 
   const dispatch = createEventDispatcher()
 
@@ -22,6 +23,7 @@
 <div
   {title}
   class:active
+  class:disabled
   on:click={() => {
     if (prop) {
       const newValue = bool ? !currentValue : value
@@ -49,5 +51,9 @@
   .active:hover {
     background-color: rgba(13, 102, 208, 0.1);
     color: var(--spectrum-global-color-blue-600);
+  }
+  .disabled {
+    pointer-events: none;
+    color: var(--spectrum-global-color-gray-400);
   }
 </style>

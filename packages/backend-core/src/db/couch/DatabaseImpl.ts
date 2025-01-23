@@ -289,7 +289,7 @@ export class DatabaseImpl implements Database {
       return
     }
     let errorFound = false
-    let errorMessage: string = "Unable to bulk remove documents: "
+    let errorMessage = "Unable to bulk remove documents: "
     for (let res of response) {
       if (res.error) {
         errorFound = true

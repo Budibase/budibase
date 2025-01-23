@@ -10,8 +10,8 @@
     MenuItem,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { lowercase } from "helpers"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { lowercase } from "@/helpers"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
   let dispatch = createEventDispatcher()
 

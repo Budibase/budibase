@@ -1,7 +1,7 @@
 <script>
   import { Helpers, Multiselect, Select } from "@budibase/bbui"
-  import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
-  import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
+  import ServerBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
+  import ModalBindableInput from "@/components/common/bindings/ModalBindableInput.svelte"
   import {
     AIOperations,
     OperationFields,

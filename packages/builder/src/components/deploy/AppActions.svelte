@@ -11,13 +11,13 @@
     StatusLight,
     AbsTooltip,
   } from "@budibase/bbui"
-  import RevertModal from "components/deploy/RevertModal.svelte"
-  import VersionModal from "components/deploy/VersionModal.svelte"
+  import RevertModal from "@/components/deploy/RevertModal.svelte"
+  import VersionModal from "@/components/deploy/VersionModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import analytics, { Events, EventSource } from "analytics"
-  import { API } from "api"
-  import { appsStore } from "stores/portal"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import analytics, { Events, EventSource } from "@/analytics"
+  import { API } from "@/api"
+  import { appsStore } from "@/stores/portal"
   import {
     previewStore,
     builderStore,
@@ -26,9 +26,9 @@
     deploymentStore,
     sortedScreens,
     appPublished,
-  } from "stores/builder"
-  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
-  import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
+  } from "@/stores/builder"
+  import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
+  import { TOUR_STEP_KEYS } from "@/components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
 
   export let application

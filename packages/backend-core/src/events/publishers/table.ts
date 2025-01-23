@@ -1,13 +1,14 @@
 import { publishEvent } from "../events"
 import {
   Event,
-  TableExportFormat,
+  FieldType,
   Table,
   TableCreatedEvent,
-  TableUpdatedEvent,
   TableDeletedEvent,
   TableExportedEvent,
+  TableExportFormat,
   TableImportedEvent,
+  TableUpdatedEvent,
 } from "@budibase/types"
 
 async function created(table: Table, timestamp?: string | number) {
@@ -20,14 +21,34 @@ async function created(table: Table, timestamp?: string | number) {
   await publishEvent(Event.TABLE_CREATED, properties, timestamp)
 }
 
-async function updated(table: Table) {
+async function updated(oldTable: Table, newTable: Table) {
+  // only publish the event if it has fields we are interested in
+  let defaultValues, aiColumn
+
+  // check that new fields have been added
+  for (const key in newTable.schema) {
+    if (!oldTable.schema[key]) {
+      const newColumn = newTable.schema[key]
+      if ("default" in newColumn && newColumn.default != null) {
+        defaultValues = true
+      }
+      if (newColumn.type === FieldType.AI) {
+        aiColumn = newColumn.operation
+      }
+    }
+  }
+
   const properties: TableUpdatedEvent = {
-    tableId: table._id as string,
+    tableId: newTable._id as string,
+    defaultValues,
+    aiColumn,
     audited: {
-      name: table.name,
+      name: newTable.name,
     },
   }
-  await publishEvent(Event.TABLE_UPDATED, properties)
+  if (defaultValues || aiColumn) {
+    await publishEvent(Event.TABLE_UPDATED, properties)
+  }
 }
 
 async function deleted(table: Table) {

@@ -8,11 +8,11 @@
     TooltipType,
     notifications,
   } from "@budibase/bbui"
-  import BindingPanel from "components/common/bindings/BindingPanel.svelte"
+  import BindingPanel from "@/components/common/bindings/BindingPanel.svelte"
   import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
-  import { snippets } from "stores/builder"
-  import { getSequentialName } from "helpers/duplicate"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { snippets } from "@/stores/builder"
+  import { getSequentialName } from "@/helpers/duplicate"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { ValidSnippetNameRegex } from "@budibase/shared-core"
 
   export let snippet
@@ -28,7 +28,9 @@
   let loading = false
   let deleteConfirmationDialog
 
-  $: defaultName = getSequentialName($snippets, "MySnippet", x => x.name)
+  $: defaultName = getSequentialName($snippets, "MySnippet", {
+    getName: x => x.name,
+  })
   $: key = snippet?.name
   $: name = snippet?.name || defaultName
   $: code = snippet?.code ? encodeJSBinding(snippet.code) : ""

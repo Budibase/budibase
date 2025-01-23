@@ -1,19 +1,19 @@
 <script>
-  import { viewsV2, rowActions } from "stores/builder"
-  import { admin, themeStore, featureFlags } from "stores/portal"
+  import { viewsV2, rowActions } from "@/stores/builder"
+  import { admin, themeStore, licensing } from "@/stores/portal"
   import { Grid } from "@budibase/frontend-core"
-  import { API } from "api"
+  import { API } from "@/api"
   import { notifications } from "@budibase/bbui"
-  import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
-  import GridFilterButton from "components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
-  import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
-  import GridSortButton from "components/backend/DataTable/buttons/grid/GridSortButton.svelte"
-  import GridColumnsSettingButton from "components/backend/DataTable/buttons/grid/GridColumnsSettingButton.svelte"
-  import GridSizeButton from "components/backend/DataTable/buttons/grid/GridSizeButton.svelte"
-  import GridGenerateButton from "components/backend/DataTable/buttons/grid/GridGenerateButton.svelte"
-  import GridScreensButton from "components/backend/DataTable/buttons/grid/GridScreensButton.svelte"
-  import GridRowActionsButton from "components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
-  import GridViewCalculationButton from "components/backend/DataTable/buttons/grid/GridViewCalculationButton.svelte"
+  import GridCreateEditRowModal from "@/components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
+  import GridFilterButton from "@/components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
+  import GridManageAccessButton from "@/components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
+  import GridSortButton from "@/components/backend/DataTable/buttons/grid/GridSortButton.svelte"
+  import GridColumnsSettingButton from "@/components/backend/DataTable/buttons/grid/GridColumnsSettingButton.svelte"
+  import GridSizeButton from "@/components/backend/DataTable/buttons/grid/GridSizeButton.svelte"
+  import GridGenerateButton from "@/components/backend/DataTable/buttons/grid/GridGenerateButton.svelte"
+  import GridScreensButton from "@/components/backend/DataTable/buttons/grid/GridScreensButton.svelte"
+  import GridRowActionsButton from "@/components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
+  import GridViewCalculationButton from "@/components/backend/DataTable/buttons/grid/GridViewCalculationButton.svelte"
   import { ViewV2Type } from "@budibase/types"
 
   let generateButton
@@ -53,7 +53,7 @@
   {buttons}
   allowAddRows
   allowDeleteRows
-  aiEnabled={$featureFlags.BUDIBASE_AI || $featureFlags.AI_CUSTOM_CONFIGS}
+  aiEnabled={$licensing.customAIConfigsEnabled || $licensing.budibaseAiEnabled}
   showAvatars={false}
   on:updatedatasource={handleGridViewUpdate}
   isCloud={$admin.cloud}

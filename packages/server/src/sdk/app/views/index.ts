@@ -40,7 +40,9 @@ export async function get(viewId: string): Promise<ViewV2> {
   return pickApi(tableId).get(viewId)
 }
 
-export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
+export async function getEnriched(
+  viewId: string
+): Promise<ViewV2Enriched | undefined> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
   return pickApi(tableId).getEnriched(viewId)
 }
@@ -315,14 +317,17 @@ export async function create(
   return view
 }
 
-export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
+export async function update(
+  tableId: string,
+  view: ViewV2
+): Promise<{ view: ViewV2; existingView: ViewV2 }> {
   await guardViewSchema(tableId, view)
 
   return pickApi(tableId).update(tableId, view)
 }
 
-export function isV2(view: View | ViewV2): view is ViewV2 {
-  return (view as ViewV2).version === 2
+export function isV2(view: View | ViewV2) {
+  return helpers.views.isV2(view)
 }
 
 export async function remove(viewId: string): Promise<ViewV2> {
@@ -429,6 +434,21 @@ export async function enrichSchema(
       ...tableSchema[key],
       ...ui,
       order: anyViewOrder ? ui?.order ?? undefined : tableSchema[key]?.order,
+      // When this was written, the only column types in FieldSchema to have columns
+      // field were the relationship columns. We blank this out here to make sure it's
+      // not set on non-relationship columns, then below we populate it by calling
+      // populateRelSchema.
+      //
+      // For Budibase 3.0 we introduced the FieldType.AI fields. Some of these fields
+      // have `columns: string[]` and it flew under the radar here because the
+      // AIFieldMetadata type isn't a union on its subtypes, it has a collection of
+      // optional fields. So columns is `columns?: string[]` which allows undefined,
+      // and doesn't fail this type check.
+      //
+      // What this means in practice is when FieldType.AI fields get enriched, we
+      // delete their `columns`. At the time of writing, I don't believe anything in
+      // the frontend depends on this, but it is odd and will probably bite us at
+      // some point.
       columns: undefined,
     }
 

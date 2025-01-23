@@ -39,7 +39,7 @@
     getActionContextKey,
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
-  import { gridLayout } from "utils/grid.js"
+  import { gridLayout } from "utils/grid"
 
   export let instance = {}
   export let parent = null
@@ -103,6 +103,7 @@
   let settingsDefinition
   let settingsDefinitionMap
   let missingRequiredSettings = false
+  let componentErrors = false
 
   // Temporary styles which can be added in the app preview for things like
   // DND. We clear these whenever a new instance is received.
@@ -137,16 +138,21 @@
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
+  $: componentErrors = instance?._meta?.errors
   $: hasChildren = !!definition?.hasChildren
   $: showEmptyState = definition?.showEmptyState !== false
   $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
   $: editable = !!definition?.editable && !hasMissingRequiredSettings
+  $: hasComponentErrors = componentErrors?.length > 0
   $: requiredAncestors = definition?.requiredAncestors || []
   $: missingRequiredAncestors = requiredAncestors.filter(
     ancestor => !$component.ancestors.includes(`${BudibasePrefix}${ancestor}`)
   )
   $: hasMissingRequiredAncestors = missingRequiredAncestors?.length > 0
-  $: errorState = hasMissingRequiredSettings || hasMissingRequiredAncestors
+  $: errorState =
+    hasMissingRequiredSettings ||
+    hasMissingRequiredAncestors ||
+    hasComponentErrors
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
@@ -692,6 +698,7 @@
       <ComponentErrorState
         {missingRequiredSettings}
         {missingRequiredAncestors}
+        {componentErrors}
       />
     {:else}
       <svelte:component this={constructor} bind:this={ref} {...initialSettings}>

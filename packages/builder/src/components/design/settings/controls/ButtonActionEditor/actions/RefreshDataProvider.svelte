@@ -1,7 +1,7 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { selectedScreen, componentStore } from "stores/builder"
-  import { getActionProviders } from "dataBinding"
+  import { selectedScreen, componentStore } from "@/stores/builder"
+  import { getActionProviders } from "@/dataBinding"
 
   export let parameters
   export let nested

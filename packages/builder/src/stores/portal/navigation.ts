@@ -1,38 +1,31 @@
-import { writable } from "svelte/store"
+import { BudiStore } from "../BudiStore"
 
 type GotoFuncType = (path: string) => void
 
-interface Store {
+interface NavigationState {
   initialisated: boolean
   goto: GotoFuncType
 }
 
-export function createNavigationStore() {
-  const store = writable<Store>({
-    initialisated: false,
-    goto: undefined as any,
-  })
-  const { set, subscribe } = store
+class NavigationStore extends BudiStore<NavigationState> {
+  constructor() {
+    super({
+      initialisated: false,
+      goto: undefined as any,
+    })
+  }
 
-  const init = (gotoFunc: GotoFuncType) => {
+  init(gotoFunc: GotoFuncType) {
     if (typeof gotoFunc !== "function") {
       throw new Error(
         `gotoFunc must be a function, found a "${typeof gotoFunc}" instead`
       )
     }
-
-    set({
+    this.set({
       initialisated: true,
       goto: gotoFunc,
     })
   }
-
-  return {
-    subscribe,
-    actions: {
-      init,
-    },
-  }
 }
 
-export const navigation = createNavigationStore()
+export const navigation = new NavigationStore()

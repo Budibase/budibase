@@ -45,7 +45,7 @@ export function getInternalRowId(row: Row, table: Table): string {
 export function generateIdForRow(
   row: Row | undefined,
   table: Table,
-  isLinked: boolean = false
+  isLinked = false
 ): string {
   const primary = table.primary
   if (!row || !primary) {

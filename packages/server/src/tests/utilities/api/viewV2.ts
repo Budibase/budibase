@@ -46,8 +46,11 @@ export class ViewV2API extends TestAPI {
   }
 
   get = async (viewId: string) => {
-    return (await this._get<ViewResponseEnriched>(`/api/v2/views/${viewId}`))
-      .data
+    return (
+      await this._get<ViewResponseEnriched>(
+        `/api/v2/views/${encodeURIComponent(viewId)}`
+      )
+    ).data
   }
 
   fetch = async (expectations?: Expectations) => {

@@ -389,25 +389,24 @@ describe("Google Sheets Integration", () => {
     })
 
     // TODO: this gets the error "Sheet is not large enough to fit 27 columns. Resize the sheet first."
-    // eslint-disable-next-line jest/no-commented-out-tests
-    // it("should be able to add a new column", async () => {
-    //   const updatedTable = await config.api.table.save({
-    //     ...table,
-    //     schema: {
-    //       ...table.schema,
-    //       newColumn: {
-    //         name: "newColumn",
-    //         type: FieldType.STRING,
-    //       },
-    //     },
-    //   })
+    it.skip("should be able to add a new column", async () => {
+      const updatedTable = await config.api.table.save({
+        ...table,
+        schema: {
+          ...table.schema,
+          newColumn: {
+            name: "newColumn",
+            type: FieldType.STRING,
+          },
+        },
+      })
 
-    //   expect(updatedTable.schema.newColumn).toBeDefined()
+      expect(updatedTable.schema.newColumn).toBeDefined()
 
-    //   expect(mock.cell("A1")).toEqual("name")
-    //   expect(mock.cell("B1")).toEqual("description")
-    //   expect(mock.cell("C1")).toEqual("newColumn")
-    // })
+      expect(mock.cell("A1")).toEqual("name")
+      expect(mock.cell("B1")).toEqual("description")
+      expect(mock.cell("C1")).toEqual("newColumn")
+    })
 
     it("should be able to delete a column", async () => {
       const row = await config.api.row.save(table._id!, {

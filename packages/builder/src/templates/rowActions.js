@@ -1,8 +1,8 @@
 import { get } from "svelte/store"
-import { getDatasourceForProvider } from "dataBinding"
-import { rowActions, selectedScreen, componentStore } from "stores/builder"
+import { getDatasourceForProvider } from "@/dataBinding"
+import { rowActions, selectedScreen, componentStore } from "@/stores/builder"
 import { Helpers } from "@budibase/bbui"
-import { findComponent } from "helpers/components"
+import { findComponent } from "@/helpers/components"
 
 export const getRowActionButtonTemplates = async ({
   screen,
