@@ -5650,7 +5650,7 @@
     "@types/node" "*"
     form-data "^4.0.0"
 
-"@types/node@*", "@types/node@>=10.0.0", "@types/node@>=13.13.4", "@types/node@>=13.7.0", "@types/node@>=18":
+"@types/node@*", "@types/node@22.9.1", "@types/node@>=10.0.0", "@types/node@>=13.13.4", "@types/node@>=13.7.0", "@types/node@>=18":
   version "22.9.1"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-22.9.1.tgz#bdf91c36e0e7ecfb7257b2d75bf1b206b308ca71"
   integrity sha512-p8Yy/8sw1caA8CdRIQBG5tiLHmxtQKObCijiAa9Ez+d4+PRffM4054xbju0msf+cvhJpnFEeNjxmVT/0ipktrg==
@@ -5679,7 +5679,7 @@
   dependencies:
     undici-types "~5.26.4"
 
-"@types/node@^20.17.9", "@types/node@^20.4.5":
+"@types/node@^20.4.5":
   version "20.17.9"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-20.17.9.tgz#5f141d4b7ee125cdee5faefe28de095398865bab"
   integrity sha512-0JOXkRyLanfGPE2QRCwgxhzlBAvaRdCNMcvbd7jFfpmD4eEXll7LRwy5ymJmyeZqk7Nh7eD2LeUyQ68BbndmXw==
