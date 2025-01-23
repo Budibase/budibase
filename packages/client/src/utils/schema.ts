@@ -1,5 +1,6 @@
 import { API } from "api"
 import { DataFetchMap, DataFetchType } from "@budibase/frontend-core"
+import { FieldType, TableSchema } from "@budibase/types"
 
 /**
  * Constructs a fetch instance for a given datasource.
@@ -42,14 +43,14 @@ export const fetchDatasourceSchema = async <
   }
 
   // Get the normal schema as long as we aren't wanting a form schema
-  let schema: any
+  let schema: TableSchema | undefined
   if (datasource?.type !== "query" || !options?.formSchema) {
-    schema = instance.getSchema(definition as any)
+    schema = instance.getSchema(definition as any) as TableSchema
   } else if ("parameters" in definition && definition.parameters?.length) {
     schema = {}
-    definition.parameters.forEach(param => {
-      schema[param.name] = { ...param, type: "string" }
-    })
+    for (const param of definition.parameters) {
+      schema[param.name] = { ...param, type: FieldType.STRING }
+    }
   }
   if (!schema) {
     return null
@@ -57,11 +58,11 @@ export const fetchDatasourceSchema = async <
 
   // Strip hidden fields from views
   if (datasource.type === "viewV2") {
-    Object.keys(schema).forEach(field => {
+    for (const field of Object.keys(schema)) {
       if (!schema[field].visible) {
         delete schema[field]
       }
-    })
+    }
   }
 
   // Enrich schema with relationships if required
