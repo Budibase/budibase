@@ -20,7 +20,7 @@
 
   const processModals = () => {
     const defaultCacheFn = key => {
-      temporalStore.actions.setExpiring(key, {}, oneDayInSeconds)
+      temporalStore.setExpiring(key, {}, oneDayInSeconds)
     }
 
     const dismissableModals = [
@@ -50,7 +50,7 @@
       },
     ]
     return dismissableModals.filter(modal => {
-      return !temporalStore.actions.getExpiring(modal.key) && modal.criteria()
+      return !temporalStore.getExpiring(modal.key) && modal.criteria()
     })
   }
 
