@@ -1,4 +1,5 @@
-import { createContext, runInNewContext } from "vm"
+import browserVM from "@budibase/vm-browserify"
+import vm from "vm"
 import { create, TemplateDelegate } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
 import { postprocess, postprocessWithLogs, preprocess } from "./processors"
@@ -14,10 +15,10 @@ import {
 } from "./utilities"
 import { convertHBSBlock } from "./conversion"
 import { removeJSRunner, setJSRunner } from "./helpers/javascript"
-
 import manifest from "./manifest.json"
 import { Log, ProcessOptions } from "./types"
 import { UserScriptError } from "./errors"
+import { isTest } from "./environment"
 
 export type { Log, LogType } from "./types"
 export { setTestingBackendJS } from "./environment"
@@ -507,15 +508,15 @@ export function convertToJS(hbs: string) {
 export { JsTimeoutError, UserScriptError } from "./errors"
 
 export function browserJSSetup() {
-  /**
-   * Use polyfilled vm to run JS scripts in a browser Env
-   */
+  // tests are in jest - we need to use node VM for these
+  const jsSandbox = isTest() ? vm : browserVM
+  // Use polyfilled vm to run JS scripts in a browser Env
   setJSRunner((js: string, context: Record<string, any>) => {
-    createContext(context)
+    jsSandbox.createContext(context)
 
     const wrappedJs = frontendWrapJS(js)
 
-    const result = runInNewContext(wrappedJs, context, { timeout: 1000 })
+    const result = jsSandbox.runInNewContext(wrappedJs, context)
     if (result.error) {
       throw new UserScriptError(result.error)
     }
