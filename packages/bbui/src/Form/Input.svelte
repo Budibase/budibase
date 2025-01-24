@@ -10,12 +10,12 @@
   export let type = "text"
   export let disabled = false
   export let readonly = false
-  export let error = null
+  export let error: string | undefined = undefined
   export let updateOnChange = true
   export let quiet = false
   export let autofocus: boolean | undefined = undefined
   export let autocomplete: boolean | undefined = undefined
-  export let helpText = null
+  export let helpText: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = (e: any) => {
