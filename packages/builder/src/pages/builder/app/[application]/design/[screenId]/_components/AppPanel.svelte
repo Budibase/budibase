@@ -3,7 +3,6 @@
   import AppPreview from "./AppPreview.svelte"
   import { screenStore, appStore } from "@/stores/builder"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
-  import BindingsPanel from "./BindingsPanel.svelte"
 </script>
 
 <div class="app-panel">
@@ -11,12 +10,11 @@
   <div class="header">
     <div class="header-left">
       <UndoRedoControl store={screenStore.history} />
+    </div>
+    <div class="header-right">
       {#if $appStore.clientFeatures.devicePreview}
         <DevicePreviewSelect />
       {/if}
-    </div>
-    <div class="header-right">
-      <BindingsPanel />
     </div>
   </div>
   <div class="content">

@@ -6,34 +6,39 @@
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
   import Context from "../context"
+  import { PopoverAlignment } from "../constants"
 
   const dispatch = createEventDispatcher()
 
   export let anchor: HTMLElement | undefined = undefined
-  export let align: string | undefined = "right"
-  export let portalTarget: any | undefined = undefined
+  export let align: PopoverAlignment = PopoverAlignment.Right
+  export let portalTarget: string | undefined = undefined
   export let minWidth: number | undefined = undefined
   export let maxWidth: number | undefined = undefined
   export let maxHeight: number | undefined = undefined
-  export let open: boolean | undefined = false
-  export let useAnchorWidth: boolean | undefined = false
-  export let dismissible: boolean | undefined = true
-  export let offset: number | undefined = 4
-  export let customHeight: number | undefined = undefined
-  export let animate: boolean | undefined = true
-  export let customZindex: number | undefined = undefined
-  export let handlePostionUpdate: () => void | undefined = undefined
-  export let showPopover: boolean | undefined = true
-  export let clickOutsideOverride: boolean | undefined = false
-  export let resizable: boolean | undefined = true
-  export let wrap: boolean | undefined = false
+  export let open: boolean = false
+  export let useAnchorWidth: boolean = false
+  export let dismissible: boolean = true
+  export let offset: number = 4
+  export let customHeight: string | undefined = undefined
+  export let animate: boolean = true
+  export let customZIndex: number | undefined = undefined
+  export let handlePositionUpdate: Function | undefined = undefined
+  export let showPopover: boolean = true
+  export let clickOutsideOverride: boolean = false
+  export let resizable: boolean = true
+  export let wrap: boolean = false
 
   const animationDuration = 260
 
-  let timeout
+  let timeout: ReturnType<typeof setTimeout> | undefined
   let blockPointerEvents = false
 
-  $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
+  // Portal library lacks types, so we have to type this as any even though it's
+  // actually a string
+  $: target = (portalTarget ||
+    getContext(Context.PopoverRoot) ||
+    ".spectrum") as any
   $: {
     // Disable pointer events for the initial part of the animation, because we
     // fly from top to bottom and initially can be positioned under the cursor,
@@ -65,13 +70,13 @@
     }
   }
 
-  const handleOutsideClick = e => {
+  const handleOutsideClick = (e: MouseEvent) => {
     if (clickOutsideOverride) {
       return
     }
     if (open) {
       // Stop propagation if the source is the anchor
-      let node = e.target
+      let node = e.target as Node
       let fromAnchor = false
       while (!fromAnchor && node && node.parentNode) {
         fromAnchor = node === anchor
@@ -86,7 +91,7 @@
     }
   }
 
-  function handleEscape(e) {
+  function handleEscape(e: KeyboardEvent) {
     if (!clickOutsideOverride) {
       return
     }
@@ -113,7 +118,7 @@
         minWidth,
         useAnchorWidth,
         offset,
-        customUpdate: handlePostionUpdate,
+        customUpdate: handlePositionUpdate,
         resizable,
         wrap,
       }}
@@ -123,11 +128,11 @@
       }}
       on:keydown={handleEscape}
       class="spectrum-Popover is-open"
-      class:customZindex
+      class:customZIndex
       class:hidden={!showPopover}
       class:blockPointerEvents
       role="presentation"
-      style="height: {customHeight}; --customZindex: {customZindex};"
+      style="height: {customHeight}; --customZIndex: {customZIndex};"
       transition:fly|local={{
         y: -20,
         duration: animate ? animationDuration : 0,
@@ -157,7 +162,7 @@
     opacity: 0;
     pointer-events: none;
   }
-  .customZindex {
-    z-index: var(--customZindex) !important;
+  .customZIndex {
+    z-index: var(--customZIndex) !important;
   }
 </style>

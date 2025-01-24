@@ -18997,10 +18997,10 @@ svelte-loading-spinners@^0.1.1:
   resolved "https://registry.yarnpkg.com/svelte-loading-spinners/-/svelte-loading-spinners-0.1.7.tgz#3fa6fa0ef67ab635773bf20b07d0b071debbadaa"
   integrity sha512-EKCId1DjVL2RSUVJJsvtNcqQHox03XIgh4xh/4p7r6ST7d8mut6INY9/LqK4A17PFU64+3quZmqiSfOlf480CA==
 
-svelte-portal@1.0.0, svelte-portal@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-1.0.0.tgz#36a47c5578b1a4d9b4dc60fa32a904640ec4cdd3"
-  integrity sha512-nHf+DS/jZ6jjnZSleBMSaZua9JlG5rZv9lOGKgJuaZStfevtjIlUJrkLc3vbV8QdBvPPVmvcjTlazAzfKu0v3Q==
+svelte-portal@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-2.2.1.tgz#b1d7bed78e56318db245996beb5483d8de6b9740"
+  integrity sha512-uF7is5sM4aq5iN7QF/67XLnTUvQCf2iiG/B1BHTqLwYVY1dsVmTeXZ/LeEyU6dLjApOQdbEG9lkqHzxiQtOLEQ==
 
 svelte-spa-router@^4.0.1:
   version "4.0.1"
