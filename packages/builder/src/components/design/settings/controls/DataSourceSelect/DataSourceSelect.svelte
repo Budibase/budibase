@@ -31,7 +31,11 @@
   import IntegrationQueryEditor from "@/components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { findAllComponents } from "@/helpers/components"
-  import { extractFields, extractRelationships } from "@/helpers/bindings"
+  import {
+    extractFields,
+    extractJSONArrayFields,
+    extractRelationships,
+  } from "@/helpers/bindings"
   import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "@/components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "@/api"
@@ -84,27 +88,7 @@
     }))
   $: links = extractRelationships(bindings)
   $: fields = extractFields(bindings)
-  $: jsonArrays = bindings
-    .filter(
-      x =>
-        x.fieldSchema?.type === "jsonarray" ||
-        (x.fieldSchema?.type === "json" && x.fieldSchema?.subtype === "array")
-    )
-    .map(binding => {
-      const { providerId, readableBinding, runtimeBinding, tableId } = binding
-      const { name, type, prefixKeys, subtype } = binding.fieldSchema
-      return {
-        providerId,
-        label: readableBinding,
-        fieldName: name,
-        fieldType: type,
-        tableId,
-        prefixKeys,
-        type: type === "jsonarray" ? "jsonarray" : "queryarray",
-        subtype,
-        value: `{{ literal ${runtimeBinding} }}`,
-      }
-    })
+  $: jsonArrays = extractJSONArrayFields(bindings)
   $: custom = {
     type: "custom",
     label: "JSON / CSV",

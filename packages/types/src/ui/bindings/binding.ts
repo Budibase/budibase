@@ -31,6 +31,8 @@ export interface UIBinding {
     name: string
     tableId: string
     type: string
+    subtype?: string
+    prefixKeys?: string
   }
   component?: string
   providerId: string
