@@ -6,6 +6,7 @@ import { findComponentsBySettingsType } from "@/helpers/screen"
 import { DatasourceType, Screen } from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
+import { featureFlag } from "@/helpers"
 
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
@@ -38,6 +39,9 @@ export const screenComponentErrors = derived(
     string,
     string[]
   > => {
+    if (!featureFlag.isEnabled("CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS")) {
+      return {}
+    }
     function getInvalidDatasources(
       screen: Screen,
       datasources: Record<string, any>
