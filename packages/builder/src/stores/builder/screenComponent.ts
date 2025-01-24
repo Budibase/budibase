@@ -20,6 +20,18 @@ function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   )
 }
 
+const friendlyNameByType: Partial<Record<DatasourceType, string>> = {
+  viewV2: "view",
+}
+
+const validationKeyByType: Record<DatasourceType, string | null> = {
+  table: "tableId",
+  view: "name",
+  viewV2: "id",
+  query: "_id",
+  custom: null,
+}
+
 export const screenComponentErrors = derived(
   [selectedScreen, tables, views, viewsV2, queries],
   ([$selectedScreen, $tables, $views, $viewsV2, $queries]): Record<
@@ -30,35 +42,24 @@ export const screenComponentErrors = derived(
       screen: Screen,
       datasources: Record<string, any>
     ) {
-      const friendlyNameByType: Partial<Record<DatasourceType, string>> = {
-        viewV2: "view",
-      }
-
-      const primaryKeyByType: Record<DatasourceType, string> = {
-        table: "tableId",
-        view: "name",
-        viewV2: "id",
-        query: "_id",
-        custom: "" as never,
-      }
-
       const result: Record<string, string[]> = {}
       for (const { component, setting } of findComponentsBySettingsType(
         screen,
         ["table", "dataSource"]
       )) {
         const componentSettings = component[setting.key]
-        const { type, label } = componentSettings
-        if (type === "custom") {
+        const { label } = componentSettings
+        const type = componentSettings as DatasourceType
+
+        const validationKey = validationKeyByType[type]
+        if (!validationKey) {
           continue
         }
-        const resourceId =
-          componentSettings[primaryKeyByType[type as DatasourceType]]
+        const resourceId = componentSettings[validationKey]
         if (!datasources[resourceId]) {
-          const friendlyTypeName =
-            friendlyNameByType[type as keyof typeof friendlyNameByType] ?? type
+          const friendlyTypeName = friendlyNameByType[type] ?? type
           result[component._id!] = [
-            `The ${friendlyTypeName} named "${label}" does not exist`,
+            `The ${friendlyTypeName} named "${label}" could not be found`,
           ]
         }
       }
