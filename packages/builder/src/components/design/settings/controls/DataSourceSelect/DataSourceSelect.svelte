@@ -31,6 +31,7 @@
   import IntegrationQueryEditor from "@/components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { findAllComponents } from "@/helpers/components"
+  import { extractFields, extractRelationships } from "@/helpers/bindings"
   import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "@/components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "@/api"
@@ -81,46 +82,8 @@
       value: `{{ literal ${safe(provider._id)} }}`,
       type: "provider",
     }))
-  $: links = bindings
-    // Get only link bindings
-    .filter(x => x.fieldSchema?.type === "link")
-    // Filter out bindings provided by forms
-    .filter(x => !x.component?.endsWith("/form"))
-    .map(binding => {
-      const { providerId, readableBinding, fieldSchema } = binding || {}
-      const { name, tableId } = fieldSchema || {}
-      const safeProviderId = safe(providerId)
-      return {
-        providerId,
-        label: readableBinding,
-        fieldName: name,
-        tableId,
-        type: "link",
-        // These properties will be enriched by the client library and provide
-        // details of the parent row of the relationship field, from context
-        rowId: `{{ ${safeProviderId}.${safe("_id")} }}`,
-        rowTableId: `{{ ${safeProviderId}.${safe("tableId")} }}`,
-      }
-    })
-  $: fields = bindings
-    .filter(
-      x =>
-        x.fieldSchema?.type === "attachment" ||
-        (x.fieldSchema?.type === "array" && x.tableId)
-    )
-    .map(binding => {
-      const { providerId, readableBinding, runtimeBinding } = binding
-      const { name, type, tableId } = binding.fieldSchema
-      return {
-        providerId,
-        label: readableBinding,
-        fieldName: name,
-        fieldType: type,
-        tableId,
-        type: "field",
-        value: `{{ literal ${runtimeBinding} }}`,
-      }
-    })
+  $: links = extractRelationships(bindings)
+  $: fields = extractFields(bindings)
   $: jsonArrays = bindings
     .filter(
       x =>
