@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Input, Drawer, Button } from "@budibase/bbui"
+  import { Icon, CoreTextArea, Drawer, Button, TextArea } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -64,7 +64,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="control" class:disabled>
-  <Input
+  <CoreTextArea
     {label}
     {disabled}
     readonly={isJS}
@@ -110,40 +110,36 @@
 
 <style>
   .control {
-    flex: 1;
     position: relative;
+  }
+  .control :global(textarea) {
+    min-height: 0 !important;
+    field-sizing: content;
+    max-height: 72px;
+    padding: 6px 11px 6px 11px;
+    height: auto;
+    resize: none;
+    flex: 1 1 auto;
+    width: 0;
   }
 
   .icon {
-    right: 1px;
-    bottom: 1px;
+    right: 8px;
+    top: 8px;
     position: absolute;
-    justify-content: center;
-    align-items: center;
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    place-items: center;
     box-sizing: border-box;
-    border-left: 1px solid var(--spectrum-alias-border-color);
-    border-top-right-radius: var(--spectrum-alias-border-radius-regular);
-    border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
-    width: 31px;
+    border-radius: 4px;
     color: var(--spectrum-alias-text-color);
-    background-color: var(--spectrum-global-color-gray-75);
-    transition: background-color
-        var(--spectrum-global-animation-duration-100, 130ms),
-      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
-      border-color var(--spectrum-global-animation-duration-100, 130ms);
-    height: calc(var(--spectrum-alias-item-height-m) - 2px);
   }
 
   .icon:hover {
     cursor: pointer;
-    color: var(--spectrum-alias-text-color-hover);
-    background-color: var(--spectrum-global-color-gray-50);
-    border-color: var(--spectrum-alias-border-color-hover);
+    color: var(--spectrum-global-color-blue-600);
   }
 
-  .control:not(.disabled) :global(.spectrum-Textfield-input) {
-    padding-right: 40px;
+  .control:not(.disabled) :global(textarea) {
+    padding-right: 32px;
   }
 </style>
