@@ -120,7 +120,9 @@
               <span>{@html logLine.log}</span>
             </div>
             {#if logLine.line}
-              <span style="color: var(--blue); overflow-wrap: normal;">:{logLine.line}</span>
+              <span style="color: var(--blue); overflow-wrap: normal;"
+                >:{logLine.line}</span
+              >
             {/if}
           </div>
         {/each}
