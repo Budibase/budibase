@@ -28,7 +28,6 @@
   let componentsUsingState: ComponentUsingState[] = []
   let componentsUpdatingState: ComponentUsingState[] = []
   let editorValue: string = ""
-  let editorError: string | null = null
 
   onMount(() => {
     previewStore.requestComponentContext()
@@ -40,10 +39,8 @@
     if (selectedKey && previewContext.state) {
       // It's unlikely value will ever be populated immediately as preview never has state values on load
       editorValue = previewContext.state[selectedKey] ?? null
-      editorError = null
     } else {
       editorValue = ""
-      editorError = null
     }
   }
 
@@ -196,12 +193,7 @@
       throw new Error("No state key selected")
     }
 
-    if (!e.detail) {
-      return
-    }
-
     const stateUpdate = { [selectedKey]: e.detail }
-    editorError = null
 
     previewStore.updateState(stateUpdate)
     previewStore.setSelectedComponentContext({
@@ -230,9 +222,6 @@
       label="Set temporary value for design preview"
       on:change={handleStateInspectorChange}
     />
-    {#if editorError}
-      <div class="error">{editorError}</div>
-    {/if}
   </div>
 
   {#if componentsUsingState.length > 0}

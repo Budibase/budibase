@@ -8,7 +8,7 @@
   export let id = null
   export let updateOnChange = true
   export let quiet = false
-  export let inputRef: HTMLInputElement | undefined = undefined
+  export let inputRef: HTMLElement | undefined = undefined
 
   const dispatch = createEventDispatcher()
   let focus = false
