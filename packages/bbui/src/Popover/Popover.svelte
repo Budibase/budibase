@@ -1,3 +1,10 @@
+<script context="module" lang="ts">
+  export interface PopoverAPI {
+    show: () => void
+    hide: () => void
+  }
+</script>
+
 <script lang="ts">
   import "@spectrum-css/popover/dist/index-vars.css"
   import Portal from "svelte-portal"
