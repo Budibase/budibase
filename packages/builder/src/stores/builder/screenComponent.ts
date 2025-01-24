@@ -3,7 +3,7 @@ import { tables } from "./tables"
 import { selectedScreen } from "./screens"
 import { viewsV2 } from "./viewsV2"
 import { findComponentsBySettingsType } from "@/helpers/screen"
-import { DatasourceType, Screen } from "@budibase/types"
+import { UIDatasourceType, Screen } from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
 import { featureFlag } from "@/helpers"
@@ -21,11 +21,11 @@ function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   )
 }
 
-const friendlyNameByType: Partial<Record<DatasourceType, string>> = {
+const friendlyNameByType: Partial<Record<UIDatasourceType, string>> = {
   viewV2: "view",
 }
 
-const validationKeyByType: Record<DatasourceType, string | null> = {
+const validationKeyByType: Record<UIDatasourceType, string | null> = {
   table: "tableId",
   view: "name",
   viewV2: "id",
@@ -53,7 +53,7 @@ export const screenComponentErrors = derived(
       )) {
         const componentSettings = component[setting.key]
         const { label } = componentSettings
-        const type = componentSettings.type as DatasourceType
+        const type = componentSettings.type as UIDatasourceType
 
         const validationKey = validationKeyByType[type]
         if (!validationKey) {
