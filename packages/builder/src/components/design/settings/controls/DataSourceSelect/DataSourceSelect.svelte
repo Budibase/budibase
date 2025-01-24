@@ -291,6 +291,7 @@
         dataSet={views}
         {value}
         onSelect={handleSelected}
+        identifiers={["tableId", "name"]}
       />
     {/if}
     {#if queries?.length}
@@ -300,6 +301,7 @@
         dataSet={queries}
         {value}
         onSelect={handleSelected}
+        identifiers={["_id"]}
       />
     {/if}
     {#if links?.length}
@@ -309,6 +311,7 @@
         dataSet={links}
         {value}
         onSelect={handleSelected}
+        identifiers={["tableId", "fieldName"]}
       />
     {/if}
     {#if fields?.length}
@@ -318,6 +321,7 @@
         dataSet={fields}
         {value}
         onSelect={handleSelected}
+        identifiers={["providerId", "tableId", "fieldName"]}
       />
     {/if}
     {#if jsonArrays?.length}
@@ -327,6 +331,7 @@
         dataSet={jsonArrays}
         {value}
         onSelect={handleSelected}
+        identifiers={["providerId", "tableId", "fieldName"]}
       />
     {/if}
     {#if showDataProviders && dataProviders?.length}
@@ -336,6 +341,7 @@
         dataSet={dataProviders}
         {value}
         onSelect={handleSelected}
+        identifiers={["providerId"]}
       />
     {/if}
     <DataSourceCategory

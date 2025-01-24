@@ -21,7 +21,7 @@ export default class ViewFetch extends BaseDataFetch<ViewV1Datasource, Table> {
 
   getSchema(definition: Table) {
     const { datasource } = this.options
-    return definition?.views?.[datasource.name]?.schema
+    return definition?.views?.[datasource?.name]?.schema
   }
 
   async getData() {
