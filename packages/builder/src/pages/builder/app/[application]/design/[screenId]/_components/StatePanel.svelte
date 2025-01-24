@@ -50,7 +50,13 @@
   ): ComponentUsingState[] => {
     let foundComponents: ComponentUsingState[] = []
 
-    const eventHandlerProps = ["onClick", "onChange", "onRowClick"]
+    const eventHandlerProps = [
+      "onClick",
+      "onChange",
+      "onRowClick",
+      "onChange",
+      "buttonOnClick",
+    ]
 
     eventHandlerProps.forEach(eventType => {
       const handlers = component[eventType]
@@ -164,7 +170,7 @@
     if (!stateKey || !$selectedScreen?.props) {
       return
     }
-    console.log($selectedScreen.props)
+
     componentsUsingState = findComponentsUsingState(
       $selectedScreen.props,
       stateKey
