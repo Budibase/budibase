@@ -4,6 +4,7 @@ export type UIColumn = FieldSchema & {
   label: string
   readonly: boolean
   conditions: any
+  format?: () => any
   related?: {
     field: string
     subField: string
