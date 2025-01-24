@@ -3,6 +3,7 @@
   import GridCell from "./GridCell.svelte"
   import { getCellRenderer } from "../lib/renderers"
   import { derived, writable } from "svelte/store"
+  import { processStringSync } from "@budibase/string-templates"
 
   const {
     rows,
@@ -35,6 +36,8 @@
   const emptyError = writable(null)
 
   let api
+
+  $: value = column.format ? column.format(row) : row[column.name]
 
   // Get the error for this cell if the cell is focused or selected
   $: error = getErrorStore(rowFocused, cellId)
@@ -138,7 +141,7 @@
   <svelte:component
     this={getCellRenderer(column)}
     bind:api
-    value={row[column.name]}
+    {value}
     schema={column.schema}
     onChange={cellAPI.setValue}
     {focused}
