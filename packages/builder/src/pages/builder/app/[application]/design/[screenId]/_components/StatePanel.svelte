@@ -265,7 +265,7 @@
       </div>
     </div>
   {/if}
-  <div style="opacity: 0.5; ">
+  <div class="link-opacity">
     <Link
       href="https://docs.budibase.com/docs/app-state"
       target="_blank"
@@ -328,5 +328,9 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-xs);
+  }
+
+  .link-opacity {
+    opacity: 0.5;
   }
 </style>
