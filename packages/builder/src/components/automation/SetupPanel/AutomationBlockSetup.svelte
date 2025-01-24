@@ -293,7 +293,7 @@
               type: RowSelector,
               props: {
                 row: inputData["oldRow"] || {
-                  tableId: inputData["row"].tableId,
+                  tableId: inputData["row"]?.tableId,
                 },
                 meta: {
                   fields: inputData["meta"]?.oldFields || {},
