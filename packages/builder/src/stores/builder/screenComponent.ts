@@ -49,7 +49,7 @@ export const screenComponentErrors = derived(
       )) {
         const componentSettings = component[setting.key]
         const { label } = componentSettings
-        const type = componentSettings as DatasourceType
+        const type = componentSettings.type as DatasourceType
 
         const validationKey = validationKeyByType[type]
         if (!validationKey) {
