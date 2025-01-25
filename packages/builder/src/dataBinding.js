@@ -1159,10 +1159,16 @@ export const buildFormSchema = (component, asset) => {
  * Returns an array of the keys of any state variables which are set anywhere
  * in the app.
  */
-export const getAllStateVariables = () => {
+export const getAllStateVariables = (screen = null) => {
   // Find all button action settings in all components
+  let assets = []
+  if (screen) {
+    assets.push(screen)
+  } else {
+    assets = getAllAssets()
+  }
   let eventSettings = []
-  getAllAssets().forEach(asset => {
+  assets.forEach(asset => {
     findAllMatchingComponents(asset.props, component => {
       const settings = componentStore.getComponentSettings(component._component)
       const nestedTypes = [
@@ -1213,12 +1219,17 @@ export const getAllStateVariables = () => {
     })
   })
 
-  // Add on load settings from screens
-  get(screenStore).screens.forEach(screen => {
+  if (screen) {
     if (screen.onLoad) {
       eventSettings.push(screen.onLoad)
     }
-  })
+  } else {
+    get(screenStore).screens.forEach(screen => {
+      if (screen.onLoad) {
+        eventSettings.push(screen.onLoad)
+      }
+    })
+  }
 
   // Extract all state keys from any "update state" actions in each setting
   let bindingSet = new Set()

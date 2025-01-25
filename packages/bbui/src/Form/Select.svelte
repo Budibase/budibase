@@ -10,7 +10,7 @@
   export let readonly: boolean = false
   export let labelPosition: string = "above"
   export let error: string | undefined = undefined
-  export let placeholder: string = "Choose an option"
+  export let placeholder: string | boolean = "Choose an option"
   export let options: any[] = []
   export let getOptionLabel = (option: any) => extractProperty(option, "label")
   export let getOptionValue = (option: any) => extractProperty(option, "value")

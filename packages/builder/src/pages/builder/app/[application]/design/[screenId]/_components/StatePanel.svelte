@@ -2,7 +2,7 @@
   import { onMount } from "svelte"
   import { Select, Link } from "@budibase/bbui"
   import type { Component } from "@budibase/types"
-  import { getAllStateVariables } from "@/dataBinding"
+  import { getAllStateVariables, getBindableProperties } from "@/dataBinding"
   import {
     componentStore,
     selectedScreen,
@@ -16,31 +16,40 @@
   } from "@budibase/string-templates"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
-  type ComponentUsingState = {
+  interface ComponentUsingState {
     id: string
     name: string
     settings: string[]
   }
 
-  const keyOptions = getAllStateVariables()
+  $: keyOptions = getAllStateVariables($selectedScreen)
+  $: bindings = getBindableProperties(
+    $selectedScreen,
+    $componentStore.selectedComponentId
+  )
 
   let selectedKey: string | undefined = undefined
   let componentsUsingState: ComponentUsingState[] = []
   let componentsUpdatingState: ComponentUsingState[] = []
   let editorValue: string = ""
+  let previousScreenId: string | undefined = undefined
 
-  onMount(() => {
-    previewStore.requestComponentContext()
-  })
-
-  $: $selectedScreen, selectedKey && searchComponents(selectedKey)
   $: {
+    const screenChanged =
+      $selectedScreen && $selectedScreen._id !== previousScreenId
     const previewContext = $previewStore.selectedComponentContext || {}
-    if (selectedKey && previewContext.state) {
-      // It's unlikely value will ever be populated immediately as preview never has state values on load
-      editorValue = previewContext.state[selectedKey] ?? null
-    } else {
+
+    if (screenChanged) {
+      selectedKey = keyOptions[0]
+      componentsUsingState = []
+      componentsUpdatingState = []
       editorValue = ""
+      previousScreenId = $selectedScreen._id
+    }
+
+    if (selectedKey) {
+      searchComponents(selectedKey)
+      editorValue = previewContext.state?.[selectedKey] ?? ""
     }
   }
 
@@ -197,18 +206,19 @@
 
   const handleStateInspectorChange = (e: CustomEvent) => {
     if (!selectedKey || !$previewStore.selectedComponentContext) {
-      throw new Error("No state key selected")
+      return
     }
 
-    const stateUpdate = { [selectedKey]: e.detail }
-
+    const stateUpdate = {
+      [selectedKey]: e.detail,
+    }
     previewStore.updateState(stateUpdate)
-    previewStore.setSelectedComponentContext({
-      ...$previewStore.selectedComponentContext,
-      state: stateUpdate,
-    })
-    previewStore.requestComponentContext()
+    editorValue = e.detail
   }
+
+  onMount(() => {
+    previewStore.requestComponentContext()
+  })
 </script>
 
 <div class="state-panel">
@@ -216,21 +226,23 @@
     <Select
       label="State variables"
       bind:value={selectedKey}
-      placeholder="Type here..."
+      placeholder={keyOptions.length > 0 ? false : "No state variables found"}
       options={keyOptions}
       on:change={handleStateKeySelect}
     />
   </div>
-  <div class="section">
-    <DrawerBindableInput
-      value={editorValue}
-      title={`Set value for "${selectedKey}"`}
-      placeholder="Enter a value"
-      label="Set temporary value for design preview"
-      on:change={handleStateInspectorChange}
-    />
-  </div>
-
+  {#if selectedKey && keyOptions.length > 0}
+    <div class="section">
+      <DrawerBindableInput
+        value={editorValue}
+        title={`Set value for "${selectedKey}"`}
+        placeholder="Enter a value"
+        label="Set temporary value for design preview"
+        on:change={e => handleStateInspectorChange(e)}
+        {bindings}
+      />
+    </div>
+  {/if}
   {#if componentsUsingState.length > 0}
     <div class="section">
       <span class="text">Updates:</span>
@@ -276,7 +288,6 @@
 <style>
   .state-panel {
     background-color: var(--spectrum-alias-background-color-primary);
-    padding: var(--spacing-m);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-m);
@@ -289,14 +300,6 @@
   .text {
     color: var(--spectrum-global-color-gray-700);
     font-size: var(--spectrum-global-dimension-font-size-50);
-  }
-  .error {
-    color: var(
-      --spectrum-semantic-negative-color-default,
-      var(--spectrum-global-color-red-500)
-    );
-    font-size: var(--spectrum-global-dimension-font-size-75);
-    margin-top: var(--spectrum-global-dimension-size-75);
   }
 
   .updates-colour {
