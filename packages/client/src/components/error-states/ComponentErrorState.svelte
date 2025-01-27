@@ -4,6 +4,7 @@
   import MissingRequiredSetting from "./MissingRequiredSetting.svelte"
   import MissingRequiredAncestor from "./MissingRequiredAncestor.svelte"
   import { UIComponentError } from "@budibase/types"
+  import ComponentErrorStateCta from "./ComponentErrorStateCTA.svelte"
 
   export let missingRequiredSettings:
     | { key: string; label: string }[]
@@ -28,19 +29,7 @@
         <MissingRequiredAncestor {requiredAncestor} />
       {:else if errorMessage}
         {@html errorMessage.message}
-        {#if errorMessage.key}
-          <span>-</span>
-          <!-- svelte-ignore a11y-no-static-element-interactions -->
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <span
-            class="spectrum-Link"
-            on:click={() => {
-              builderStore.actions.highlightSetting(errorMessage.key)
-            }}
-          >
-            Show me
-          </span>
-        {/if}
+        <ComponentErrorStateCta error={errorMessage} />
       {:else if requiredSetting}
         <MissingRequiredSetting {requiredSetting} />
       {/if}

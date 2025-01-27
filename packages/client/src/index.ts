@@ -14,6 +14,10 @@ export interface SDK {
   }> & {
     actions: {
       highlightSetting: (key: string) => void
+      addParentComponent: (
+        componentId: string,
+        fullAncestorType: string
+      ) => void
     }
   }
 }
