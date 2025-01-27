@@ -1,11 +1,11 @@
 <script>
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+  import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import { CoreFilterBuilder } from "@budibase/frontend-core"
-  import { tables } from "stores/builder"
+  import { tables } from "@/stores/builder"
   import {
     runtimeToReadableBinding,
     readableToRuntimeBinding,
-  } from "dataBinding"
+  } from "@/dataBinding"
 
   export let schemaFields
   export let filters

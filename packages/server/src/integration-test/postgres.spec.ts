@@ -1,5 +1,4 @@
 import { Datasource, FieldType, Table } from "@budibase/types"
-import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import {
   DatabaseName,
@@ -8,11 +7,13 @@ import {
 } from "../integrations/tests/utils"
 import { Knex } from "knex"
 
-const mainDescriptions = datasourceDescribe({ only: [DatabaseName.POSTGRES] })
+const mainDescriptions = datasourceDescribe({
+  only: [DatabaseName.POSTGRES, DatabaseName.POSTGRES_LEGACY],
+})
 
 if (mainDescriptions.length) {
   describe.each(mainDescriptions)(
-    "/postgres integrations",
+    "/postgres integrations ($dbName)",
     ({ config, dsProvider }) => {
       let datasource: Datasource
       let client: Knex
@@ -107,7 +108,7 @@ if (mainDescriptions.length) {
           const table = response.datasource.entities?.["binaryTable"]
           expect(table).toBeDefined()
           expect(table?.schema.id.externalType).toBe("bytea")
-          const row = await config.api.row.save(table?._id!, {
+          const row = await config.api.row.save(table!._id!, {
             id: "1111",
             column1: "hello",
             column2: 222,

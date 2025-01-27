@@ -3,19 +3,18 @@
     automationStore,
     automationHistoryStore,
     selectedAutomation,
-  } from "stores/builder"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  } from "@/stores/builder"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import {
-    Icon,
     notifications,
     Modal,
     Toggle,
     Button,
     ActionButton,
   } from "@budibase/bbui"
-  import { ActionStepID } from "constants/backend/automations"
-  import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+  import { ActionStepID } from "@/constants/backend/automations"
+  import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import StepNode from "./StepNode.svelte"
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
@@ -44,19 +43,8 @@
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
   const refresh = () => {
-    // Build global automation bindings.
-    const environmentBindings =
-      automationStore.actions.buildEnvironmentBindings()
-
     // Get all processed block references
     blockRefs = $selectedAutomation.blockRefs
-
-    automationStore.update(state => {
-      return {
-        ...state,
-        bindings: [...environmentBindings],
-      }
-    })
   }
 
   const getBlocks = automation => {
@@ -77,8 +65,6 @@
   }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="header" class:scrolling>
   <div class="header-left">
     <UndoRedoControl store={automationHistoryStore} showButtonGroup />
@@ -111,15 +97,18 @@
       Run test
     </Button>
     <div class="buttons">
-      <Icon disabled={!$automationStore.testResults} size="M" name="Multiple" />
-      <div
-        class:disabled={!$automationStore.testResults}
-        on:click={() => {
-          $automationStore.showTestPanel = true
-        }}
-      >
-        Test details
-      </div>
+      {#if !$automationStore.showTestPanel && $automationStore.testResults}
+        <Button
+          secondary
+          icon={"Multiple"}
+          disabled={!$automationStore.testResults}
+          on:click={() => {
+            $automationStore.showTestPanel = true
+          }}
+        >
+          Test details
+        </Button>
+      {/if}
     </div>
     {#if !isRowAction}
       <div class="toggle-active setting-spacing">
@@ -138,7 +127,18 @@
 </div>
 
 <div class="root" bind:this={treeEle}>
-  <DraggableCanvas bind:this={draggable}>
+  <DraggableCanvas
+    bind:this={draggable}
+    draggableClasses={[
+      "main-content",
+      "content",
+      "block",
+      "branched",
+      "branch",
+      "flow-item",
+      "branch-wrap",
+    ]}
+  >
     <span class="main-content" slot="content">
       {#if Object.keys(blockRefs).length}
         {#each blocks as block, idx (block.id)}
@@ -179,9 +179,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-height: 100%;
-    height: 100%;
-    width: 100%;
   }
 
   .header-left {
@@ -221,15 +218,26 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-left: var(--spacing-l);
-    transition: background 130ms ease-out;
+    padding: var(--spacing-l);
     flex: 0 0 60px;
     padding-right: var(--spacing-xl);
+    position: absolute;
+    width: 100%;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  .header > * {
+    pointer-events: auto;
   }
 
   .controls {
     display: flex;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-l);
+  }
+
+  .controls .toggle-active :global(.spectrum-Switch-label) {
+    margin-right: 0px;
   }
 
   .buttons {
@@ -241,11 +249,6 @@
 
   .buttons:hover {
     cursor: pointer;
-  }
-
-  .disabled {
-    pointer-events: none;
-    color: var(--spectrum-global-color-gray-500) !important;
   }
 
   .group {

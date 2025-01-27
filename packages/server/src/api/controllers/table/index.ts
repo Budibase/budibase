@@ -37,6 +37,7 @@ import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
 import { cloneDeep } from "lodash"
 import {
+  canBeDisplayColumn,
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
@@ -61,6 +62,27 @@ function checkDefaultFields(table: Table) {
     if (helpers.schema.isRequired(field.constraints)) {
       throw new HTTPError(
         `Cannot make field "${key}" required, it has a default value.`,
+        400
+      )
+    }
+  }
+}
+
+async function guardTable(table: Table, isCreate: boolean) {
+  checkDefaultFields(table)
+
+  if (
+    table.primaryDisplay &&
+    !canBeDisplayColumn(table.schema[table.primaryDisplay]?.type)
+  ) {
+    // Prevent throwing errors from existing badly configured tables. Only throw for new tables or if this setting is being updated
+    if (
+      isCreate ||
+      (await sdk.tables.getTable(table._id!)).primaryDisplay !==
+        table.primaryDisplay
+    ) {
+      throw new HTTPError(
+        `Column "${table.primaryDisplay}" cannot be used as a display type.`,
         400
       )
     }
@@ -111,7 +133,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 
   const isCreate = !table._id
 
-  checkDefaultFields(table)
+  await guardTable(table, isCreate)
 
   let savedTable: Table
   if (isCreate) {
@@ -120,8 +142,15 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     await events.table.created(savedTable)
   } else {
     const api = pickApi({ table })
-    savedTable = await api.updateTable(ctx, renaming)
-    await events.table.updated(savedTable)
+    const { table: updatedTable, oldTable } = await api.updateTable(
+      ctx,
+      renaming
+    )
+    savedTable = updatedTable
+
+    if (oldTable) {
+      await events.table.updated(oldTable, savedTable)
+    }
   }
   if (renaming) {
     await sdk.views.renameLinkedViews(savedTable, renaming)
@@ -129,7 +158,6 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   if (isImport) {
     await events.table.imported(savedTable)
   }
-  ctx.status = 200
   ctx.message = `Table ${table.name} saved successfully.`
   ctx.eventEmitter?.emitTable(EventType.TABLE_SAVE, appId, { ...savedTable })
   ctx.body = savedTable
@@ -146,7 +174,6 @@ export async function destroy(ctx: UserCtx<void, DeleteTableResponse>) {
   await events.table.deleted(deletedTable)
 
   ctx.eventEmitter?.emitTable(EventType.TABLE_DELETE, appId, deletedTable)
-  ctx.status = 200
   ctx.table = deletedTable
   ctx.body = { message: `Table ${tableId} deleted.` }
   builderSocket?.emitTableDeletion(ctx, deletedTable)
@@ -162,7 +189,6 @@ export async function bulkImport(
   // can only be done in the builder, but in the future we may need to
   // think about events for bulk items
 
-  ctx.status = 200
   ctx.body = { message: `Bulk rows created.` }
 }
 
@@ -173,7 +199,6 @@ export async function csvToJson(
 
   const result = await jsonFromCsvString(csvString)
 
-  ctx.status = 200
   ctx.body = result
 }
 
@@ -183,7 +208,6 @@ export async function validateNewTableImport(
   const { rows, schema } = ctx.request.body
 
   if (isRows(rows) && isSchema(schema)) {
-    ctx.status = 200
     ctx.body = validateSchema(rows, schema, PROTECTED_INTERNAL_COLUMNS)
   } else {
     ctx.status = 422
@@ -217,7 +241,6 @@ export async function validateExistingTableImport(
   }
 
   if (tableId && isRows(rows) && isSchema(schema)) {
-    ctx.status = 200
     ctx.body = validateSchema(rows, schema, protectedColumnNames)
   } else {
     ctx.status = 422
@@ -238,6 +261,5 @@ export async function migrate(
     })
   }
 
-  ctx.status = 200
   ctx.body = { message: `Column ${oldColumn} migrated.` }
 }

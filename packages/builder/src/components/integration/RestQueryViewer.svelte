@@ -1,7 +1,7 @@
 <script>
   import { goto, params } from "@roxi/routify"
-  import { datasources, flags, integrations, queries } from "stores/builder"
-  import { environment } from "stores/portal"
+  import { datasources, flags, integrations, queries } from "@/stores/builder"
+  import { environment } from "@/stores/portal"
   import {
     Banner,
     Body,
@@ -19,24 +19,24 @@
     Tabs,
     TextArea,
   } from "@budibase/bbui"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import EditableLabel from "components/common/inputs/EditableLabel.svelte"
+  import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
+  import EditableLabel from "@/components/common/inputs/EditableLabel.svelte"
   import CodeMirrorEditor, {
     EditorModes,
-  } from "components/common/CodeMirrorEditor.svelte"
+  } from "@/components/common/CodeMirrorEditor.svelte"
   import RestBodyInput from "./RestBodyInput.svelte"
-  import { capitalise } from "helpers"
+  import { capitalise } from "@/helpers"
   import { onMount } from "svelte"
-  import restUtils from "helpers/data/utils"
+  import restUtils from "@/helpers/data/utils"
   import {
     PaginationLocations,
     PaginationTypes,
     RawRestBodyTypes,
     RestBodyTypes as bodyTypes,
     SchemaTypeOptionsExpanded,
-  } from "constants/backend"
-  import JSONPreview from "components/integration/JSONPreview.svelte"
-  import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
+  } from "@/constants/backend"
+  import JSONPreview from "@/components/integration/JSONPreview.svelte"
+  import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
   import DynamicVariableModal from "./DynamicVariableModal.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
   import { cloneDeep } from "lodash/fp"
@@ -48,7 +48,7 @@
     runtimeToReadableBinding,
     runtimeToReadableMap,
     toBindingsArray,
-  } from "dataBinding"
+  } from "@/dataBinding"
 
   export let queryId
 
@@ -176,7 +176,7 @@
       notifications.success(`Request saved successfully`)
       if (dynamicVariables) {
         datasource.config.dynamicVariables = rebuildVariables(saveId)
-        datasource = await datasources.update({
+        datasource = await datasources.save({
           integration: integrationInfo,
           datasource,
         })

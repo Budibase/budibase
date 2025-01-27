@@ -1,11 +1,14 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte"
   import { Icon } from "@budibase/bbui"
   import MissingRequiredSetting from "./MissingRequiredSetting.svelte"
   import MissingRequiredAncestor from "./MissingRequiredAncestor.svelte"
 
-  export let missingRequiredSettings
-  export let missingRequiredAncestors
+  export let missingRequiredSettings:
+    | { key: string; label: string }[]
+    | undefined
+  export let missingRequiredAncestors: string[] | undefined
+  export let componentErrors: string[] | undefined
 
   const component = getContext("component")
   const { styleable, builderStore } = getContext("sdk")
@@ -13,6 +16,7 @@
   $: styles = { ...$component.styles, normal: {}, custom: null, empty: true }
   $: requiredSetting = missingRequiredSettings?.[0]
   $: requiredAncestor = missingRequiredAncestors?.[0]
+  $: errorMessage = componentErrors?.[0]
 </script>
 
 {#if $builderStore.inBuilder}
@@ -21,6 +25,8 @@
       <Icon name="Alert" color="var(--spectrum-global-color-static-red-600)" />
       {#if requiredAncestor}
         <MissingRequiredAncestor {requiredAncestor} />
+      {:else if errorMessage}
+        {errorMessage}
       {:else if requiredSetting}
         <MissingRequiredSetting {requiredSetting} />
       {/if}
@@ -32,7 +38,7 @@
   .component-placeholder {
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
     color: var(--spectrum-global-color-gray-600);
     font-size: var(--font-size-s);

@@ -119,6 +119,7 @@ interface DatasourceBasicFieldConfig {
   default?: any
   deprecated?: boolean
   hidden?: string
+  placeholder?: string
 }
 
 interface DatasourceSelectFieldConfig extends DatasourceBasicFieldConfig {

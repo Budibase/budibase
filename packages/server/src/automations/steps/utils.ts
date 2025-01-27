@@ -1,4 +1,4 @@
-import { EventEmitter } from "events"
+import { ContextEmitter } from "@budibase/types"
 
 export async function getFetchResponse(fetched: any) {
   let status = fetched.status,
@@ -22,7 +22,7 @@ export async function getFetchResponse(fetched: any) {
 // opts can contain, body, params and version
 export function buildCtx(
   appId: string,
-  emitter?: EventEmitter | null,
+  emitter?: ContextEmitter | null,
   opts: any = {}
 ) {
   const ctx: any = {

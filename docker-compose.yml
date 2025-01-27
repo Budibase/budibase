@@ -1,0 +1,120 @@
+version: "3"
+
+# optional ports are specified throughout for more advanced use cases.
+
+services:
+  app-service:
+    restart: unless-stopped
+    image: budibase/apps
+    container_name: bbapps
+    environment:
+      SELF_HOSTED: 1
+      COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
+      WORKER_URL: http://worker-service:4003
+      MINIO_URL: http://minio-service:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      BUDIBASE_ENVIRONMENT: ${BUDIBASE_ENVIRONMENT}
+      PORT: 4002
+      API_ENCRYPTION_KEY: ${API_ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: info
+      ENABLE_ANALYTICS: "true"
+      REDIS_URL: redis-service:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      BB_ADMIN_USER_EMAIL: ${BB_ADMIN_USER_EMAIL}
+      BB_ADMIN_USER_PASSWORD: ${BB_ADMIN_USER_PASSWORD}
+      PLUGINS_DIR: ${PLUGINS_DIR}
+      OFFLINE_MODE: ${OFFLINE_MODE:-}
+    depends_on:
+      - worker-service
+      - redis-service
+  #    volumes:
+  #      - /some/path/to/plugins:/plugins
+
+  worker-service:
+    restart: unless-stopped
+    image: budibase/worker
+    container_name: bbworker
+    environment:
+      SELF_HOSTED: 1
+      PORT: 4003
+      CLUSTER_PORT: ${MAIN_PORT}
+      API_ENCRYPTION_KEY: ${API_ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_URL: http://minio-service:9000
+      APPS_URL: http://app-service:4002
+      COUCH_DB_USERNAME: ${COUCH_DB_USER}
+      COUCH_DB_PASSWORD: ${COUCH_DB_PASSWORD}
+      COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      REDIS_URL: redis-service:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      OFFLINE_MODE: ${OFFLINE_MODE:-}
+    depends_on:
+      - redis-service
+      - minio-service
+
+  minio-service:
+    restart: unless-stopped
+    image: minio/minio
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BROWSER: "off"
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: "timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  proxy-service:
+    restart: unless-stopped
+    ports:
+      - "${MAIN_PORT}:10000"
+    container_name: bbproxy
+    image: budibase/proxy
+    environment:
+      - PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND=10
+      - PROXY_RATE_LIMIT_API_PER_SECOND=20
+      - APPS_UPSTREAM_URL=http://app-service:4002
+      - WORKER_UPSTREAM_URL=http://worker-service:4003
+      - MINIO_UPSTREAM_URL=http://minio-service:9000
+      - COUCHDB_UPSTREAM_URL=http://couchdb-service:5984
+      - RESOLVER=127.0.0.11
+    depends_on:
+      - minio-service
+      - worker-service
+      - app-service
+      - couchdb-service
+
+  couchdb-service:
+    restart: unless-stopped
+    image: budibase/couchdb:v3.3.3-sqs-v2.1.1
+    environment:
+      - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
+      - COUCHDB_USER=${COUCH_DB_USER}
+      - TARGETBUILD=docker-compose
+    volumes:
+      - couchdb3_data:/opt/couchdb/data
+
+  redis-service:
+    restart: unless-stopped
+    image: redis
+    command: redis-server --requirepass "${REDIS_PASSWORD}"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  couchdb3_data:
+    driver: local
+  minio_data:
+    driver: local
+  redis_data:
+    driver: local

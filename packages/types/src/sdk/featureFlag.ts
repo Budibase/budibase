@@ -1,11 +1,17 @@
 export enum FeatureFlag {
-  AUTOMATION_BRANCHING = "AUTOMATION_BRANCHING",
-  AI_CUSTOM_CONFIGS = "AI_CUSTOM_CONFIGS",
-  DEFAULT_VALUES = "DEFAULT_VALUES",
-  BUDIBASE_AI = "BUDIBASE_AI",
   USE_ZOD_VALIDATOR = "USE_ZOD_VALIDATOR",
+  CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS = "CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS",
+
+  // Account-portal
+  DIRECT_LOGIN_TO_ACCOUNT_PORTAL = "DIRECT_LOGIN_TO_ACCOUNT_PORTAL",
 }
 
-export interface TenantFeatureFlags {
-  [key: string]: FeatureFlag[]
+export const FeatureFlagDefaults = {
+  [FeatureFlag.USE_ZOD_VALIDATOR]: false,
+  [FeatureFlag.CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS]: false,
+
+  // Account-portal
+  [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,
 }
+
+export type FeatureFlags = typeof FeatureFlagDefaults

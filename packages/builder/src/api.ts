@@ -3,12 +3,12 @@ import {
   CookieUtils,
   Constants,
 } from "@budibase/frontend-core"
-import { appStore } from "stores/builder"
+import { appStore } from "@/stores/builder"
 import { get } from "svelte/store"
 import { auth, navigation } from "./stores/portal"
 
 export const API = createAPIClient({
-  attachHeaders: (headers: Record<string, string>) => {
+  attachHeaders: headers => {
     // Attach app ID header from store
     let appId = get(appStore).appId
     if (appId) {
@@ -22,7 +22,7 @@ export const API = createAPIClient({
     }
   },
 
-  onError: (error: any) => {
+  onError: error => {
     const { url, message, status, method, handled } = error || {}
 
     // Log any errors that we haven't manually handled
@@ -45,7 +45,7 @@ export const API = createAPIClient({
       }
     }
   },
-  onMigrationDetected: (appId: string) => {
+  onMigrationDetected: appId => {
     const updatingUrl = `/builder/app/updating/${appId}`
 
     if (window.location.pathname === updatingUrl) {

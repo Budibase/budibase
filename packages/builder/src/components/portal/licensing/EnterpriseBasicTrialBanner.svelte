@@ -3,7 +3,7 @@
   import Portal from "svelte-portal"
   import { fly } from "svelte/transition"
   import { Banner, BANNER_TYPES } from "@budibase/bbui"
-  import { licensing } from "stores/portal"
+  import { licensing } from "@/stores/portal"
 
   export let show = true
 

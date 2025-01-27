@@ -223,7 +223,7 @@ const COLUMN_DEFINITION_METADATA: Record<string, ColumnDefinitionMetadata> = {
 
 class SqlServerIntegration extends Sql implements DatasourcePlus {
   private readonly config: MSSQLConfig
-  private index: number = 0
+  private index = 0
   private client?: sqlServer.ConnectionPool
 
   MASTER_TABLES = [
@@ -276,6 +276,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           encrypt,
           enableArithAbort: true,
           requestTimeout: env.QUERY_THREAD_TIMEOUT,
+          connectTimeout: env.QUERY_THREAD_TIMEOUT,
         },
       }
       if (encrypt) {

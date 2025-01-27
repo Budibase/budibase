@@ -4,14 +4,14 @@ import { writable, get } from "svelte/store"
 // eslint-disable-next-line
 import { params } from "@roxi/routify"
 // eslint-disable-next-line
-import { integrations } from "stores/builder"
-import { IntegrationTypes } from "constants/backend"
+import { integrations } from "@/stores/builder"
+import { IntegrationTypes } from "@/constants/backend"
 
 vi.mock("@roxi/routify", () => ({
   params: vi.fn(),
 }))
 
-vi.mock("stores/builder", () => ({
+vi.mock("@/stores/builder", () => ({
   integrations: vi.fn(),
 }))
 

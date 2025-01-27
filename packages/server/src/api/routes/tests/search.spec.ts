@@ -71,18 +71,27 @@ if (descriptions.length) {
       let tableOrViewId: string
       let rows: Row[]
 
-      async function basicRelationshipTables(type: RelationshipType) {
+      async function basicRelationshipTables(
+        type: RelationshipType,
+        opts?: {
+          tableName?: string
+          primaryColumn?: string
+          otherColumn?: string
+        }
+      ) {
         const relatedTable = await createTable({
-          name: { name: "name", type: FieldType.STRING },
+          name: { name: opts?.tableName || "name", type: FieldType.STRING },
         })
+
+        const columnName = opts?.primaryColumn || "productCat"
+        //@ts-ignore - API accepts this structure, will build out rest of definition
         const tableId = await createTable({
-          name: { name: "name", type: FieldType.STRING },
-          //@ts-ignore - API accepts this structure, will build out rest of definition
-          productCat: {
+          name: { name: opts?.tableName || "name", type: FieldType.STRING },
+          [columnName]: {
             type: FieldType.LINK,
             relationshipType: type,
-            name: "productCat",
-            fieldName: "product",
+            name: columnName,
+            fieldName: opts?.otherColumn || "product",
             tableId: relatedTable,
             constraints: {
               type: "array",
@@ -314,9 +323,7 @@ if (descriptions.length) {
                 const cloned = cloneDeep(response)
                 const foundRows = response.rows
 
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect(foundRows).toHaveLength(expectedRows.length)
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect([...foundRows]).toEqual(
                   expectedRows.map((expectedRow: any) =>
                     expect.objectContaining(this.popRow(expectedRow, foundRows))
@@ -333,9 +340,7 @@ if (descriptions.length) {
                 const cloned = cloneDeep(response)
                 const foundRows = response.rows
 
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect(foundRows).toHaveLength(expectedRows.length)
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect([...foundRows]).toEqual(
                   expect.arrayContaining(
                     expectedRows.map((expectedRow: any) =>
@@ -358,10 +363,8 @@ if (descriptions.length) {
                   keyof SearchResponse<Row>
                 >
                 for (let key of keys) {
-                  // eslint-disable-next-line jest/no-standalone-expect
                   expect(response[key]).toBeDefined()
                   if (properties[key]) {
-                    // eslint-disable-next-line jest/no-standalone-expect
                     expect(response[key]).toEqual(properties[key])
                   }
                 }
@@ -375,7 +378,6 @@ if (descriptions.length) {
                 const response = await this.performSearch()
                 const cloned = cloneDeep(response)
                 for (let property of properties) {
-                  // eslint-disable-next-line jest/no-standalone-expect
                   expect(response[property]).toBeUndefined()
                 }
                 return cloned
@@ -389,7 +391,6 @@ if (descriptions.length) {
                 const cloned = cloneDeep(response)
                 const foundRows = response.rows
 
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect([...foundRows]).toEqual(
                   expect.arrayContaining(
                     expectedRows.map((expectedRow: any) =>
@@ -409,7 +410,6 @@ if (descriptions.length) {
               async toHaveLength(length: number) {
                 const { rows: foundRows } = await this.performSearch()
 
-                // eslint-disable-next-line jest/no-standalone-expect
                 expect(foundRows).toHaveLength(length)
               }
             }
@@ -1683,6 +1683,212 @@ if (descriptions.length) {
                 })
               })
 
+            describe("datetime - date only", () => {
+              describe.each([true, false])(
+                "saved with timestamp: %s",
+                saveWithTimestamp => {
+                  describe.each([true, false])(
+                    "search with timestamp: %s",
+                    searchWithTimestamp => {
+                      const SAVE_SUFFIX = saveWithTimestamp
+                        ? "T00:00:00.000Z"
+                        : ""
+                      const SEARCH_SUFFIX = searchWithTimestamp
+                        ? "T00:00:00.000Z"
+                        : ""
+
+                      const JAN_1ST = `2020-01-01`
+                      const JAN_10TH = `2020-01-10`
+                      const JAN_30TH = `2020-01-30`
+                      const UNEXISTING_DATE = `2020-01-03`
+                      const NULL_DATE__ID = `null_date__id`
+
+                      beforeAll(async () => {
+                        tableOrViewId = await createTableOrView({
+                          dateid: {
+                            name: "dateid",
+                            type: FieldType.STRING,
+                          },
+                          date: {
+                            name: "date",
+                            type: FieldType.DATETIME,
+                            dateOnly: true,
+                          },
+                        })
+
+                        await createRows([
+                          { dateid: NULL_DATE__ID, date: null },
+                          { date: `${JAN_1ST}${SAVE_SUFFIX}` },
+                          { date: `${JAN_10TH}${SAVE_SUFFIX}` },
+                        ])
+                      })
+
+                      describe("equal", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            equal: { date: `${JAN_1ST}${SEARCH_SUFFIX}` },
+                          }).toContainExactly([{ date: JAN_1ST }])
+                        })
+
+                        it("successfully finds an ISO8601 row", async () => {
+                          await expectQuery({
+                            equal: { date: `${JAN_10TH}${SEARCH_SUFFIX}` },
+                          }).toContainExactly([{ date: JAN_10TH }])
+                        })
+
+                        it("finds a row with ISO8601 timestamp", async () => {
+                          await expectQuery({
+                            equal: { date: `${JAN_1ST}${SEARCH_SUFFIX}` },
+                          }).toContainExactly([{ date: JAN_1ST }])
+                        })
+
+                        it("fails to find nonexistent row", async () => {
+                          await expectQuery({
+                            equal: {
+                              date: `${UNEXISTING_DATE}${SEARCH_SUFFIX}`,
+                            },
+                          }).toFindNothing()
+                        })
+                      })
+
+                      describe("notEqual", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            notEqual: {
+                              date: `${JAN_1ST}${SEARCH_SUFFIX}`,
+                            },
+                          }).toContainExactly([
+                            { date: JAN_10TH },
+                            { dateid: NULL_DATE__ID },
+                          ])
+                        })
+
+                        it("fails to find nonexistent row", async () => {
+                          await expectQuery({
+                            notEqual: {
+                              date: `${JAN_30TH}${SEARCH_SUFFIX}`,
+                            },
+                          }).toContainExactly([
+                            { date: JAN_1ST },
+                            { date: JAN_10TH },
+                            { dateid: NULL_DATE__ID },
+                          ])
+                        })
+                      })
+
+                      describe("oneOf", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            oneOf: { date: [`${JAN_1ST}${SEARCH_SUFFIX}`] },
+                          }).toContainExactly([{ date: JAN_1ST }])
+                        })
+
+                        it("fails to find nonexistent row", async () => {
+                          await expectQuery({
+                            oneOf: {
+                              date: [`${UNEXISTING_DATE}${SEARCH_SUFFIX}`],
+                            },
+                          }).toFindNothing()
+                        })
+                      })
+
+                      describe("range", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            range: {
+                              date: {
+                                low: `${JAN_1ST}${SEARCH_SUFFIX}`,
+                                high: `${JAN_1ST}${SEARCH_SUFFIX}`,
+                              },
+                            },
+                          }).toContainExactly([{ date: JAN_1ST }])
+                        })
+
+                        it("successfully finds multiple rows", async () => {
+                          await expectQuery({
+                            range: {
+                              date: {
+                                low: `${JAN_1ST}${SEARCH_SUFFIX}`,
+                                high: `${JAN_10TH}${SEARCH_SUFFIX}`,
+                              },
+                            },
+                          }).toContainExactly([
+                            { date: JAN_1ST },
+                            { date: JAN_10TH },
+                          ])
+                        })
+
+                        it("successfully finds no rows", async () => {
+                          await expectQuery({
+                            range: {
+                              date: {
+                                low: `${JAN_30TH}${SEARCH_SUFFIX}`,
+                                high: `${JAN_30TH}${SEARCH_SUFFIX}`,
+                              },
+                            },
+                          }).toFindNothing()
+                        })
+                      })
+
+                      describe("sort", () => {
+                        it("sorts ascending", async () => {
+                          await expectSearch({
+                            query: {},
+                            sort: "date",
+                            sortOrder: SortOrder.ASCENDING,
+                          }).toMatchExactly([
+                            { dateid: NULL_DATE__ID },
+                            { date: JAN_1ST },
+                            { date: JAN_10TH },
+                          ])
+                        })
+
+                        it("sorts descending", async () => {
+                          await expectSearch({
+                            query: {},
+                            sort: "date",
+                            sortOrder: SortOrder.DESCENDING,
+                          }).toMatchExactly([
+                            { date: JAN_10TH },
+                            { date: JAN_1ST },
+                            { dateid: NULL_DATE__ID },
+                          ])
+                        })
+
+                        describe("sortType STRING", () => {
+                          it("sorts ascending", async () => {
+                            await expectSearch({
+                              query: {},
+                              sort: "date",
+                              sortType: SortType.STRING,
+                              sortOrder: SortOrder.ASCENDING,
+                            }).toMatchExactly([
+                              { dateid: NULL_DATE__ID },
+                              { date: JAN_1ST },
+                              { date: JAN_10TH },
+                            ])
+                          })
+
+                          it("sorts descending", async () => {
+                            await expectSearch({
+                              query: {},
+                              sort: "date",
+                              sortType: SortType.STRING,
+                              sortOrder: SortOrder.DESCENDING,
+                            }).toMatchExactly([
+                              { date: JAN_10TH },
+                              { date: JAN_1ST },
+                              { dateid: NULL_DATE__ID },
+                            ])
+                          })
+                        })
+                      })
+                    }
+                  )
+                }
+              )
+            })
+
             isInternal &&
               !isInMemory &&
               describe("AI Column", () => {
@@ -2142,7 +2348,7 @@ if (descriptions.length) {
                     // repeat the search many times to check the first row is always the same
                     let bookmark: string | number | undefined,
                       hasNextPage: boolean | undefined = true,
-                      rowCount: number = 0
+                      rowCount = 0
                     do {
                       const response = await config.api.row.search(
                         tableOrViewId,
@@ -2169,7 +2375,6 @@ if (descriptions.length) {
                     let bookmark: string | number = undefined
                     let rows: Row[] = []
 
-                    // eslint-disable-next-line no-constant-condition
                     while (true) {
                       const response = await config.api.row.search(
                         tableOrViewId,
@@ -2787,6 +2992,42 @@ if (descriptions.length) {
               })
 
             isSql &&
+              describe("relationship - table with spaces", () => {
+                let primaryTable: Table, row: Row
+
+                beforeAll(async () => {
+                  const { relatedTable, tableId } =
+                    await basicRelationshipTables(
+                      RelationshipType.ONE_TO_MANY,
+                      {
+                        tableName: "table with spaces",
+                        primaryColumn: "related",
+                        otherColumn: "related",
+                      }
+                    )
+                  tableOrViewId = tableId
+                  primaryTable = relatedTable
+
+                  row = await config.api.row.save(primaryTable._id!, {
+                    name: "foo",
+                  })
+
+                  await config.api.row.save(tableOrViewId, {
+                    name: "foo",
+                    related: [row._id],
+                  })
+                })
+
+                it("should be able to search by table name with spaces", async () => {
+                  await expectQuery({
+                    equal: {
+                      ["table with spaces.name"]: "foo",
+                    },
+                  }).toContain([{ name: "foo" }])
+                })
+              })
+
+            isSql &&
               describe.each([
                 RelationshipType.MANY_TO_ONE,
                 RelationshipType.MANY_TO_MANY,
@@ -3364,7 +3605,7 @@ if (descriptions.length) {
                       type: FieldType.LINK,
                       relationshipType: RelationshipType.MANY_TO_ONE,
                       tableId: toRelateTableId,
-                      fieldName: "link",
+                      fieldName: "main",
                     },
                   })
 
@@ -3373,7 +3614,7 @@ if (descriptions.length) {
                   )
                   await config.api.table.save({
                     ...toRelateTable,
-                    primaryDisplay: "link",
+                    primaryDisplay: "name",
                   })
                   const relatedRows = await Promise.all([
                     config.api.row.save(toRelateTable._id!, {

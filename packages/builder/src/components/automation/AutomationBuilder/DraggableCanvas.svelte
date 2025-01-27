@@ -7,19 +7,31 @@
     onDestroy,
     tick,
   } from "svelte"
-  import { Utils } from "@budibase/frontend-core"
-  import { selectedAutomation, automationStore } from "stores/builder"
+  import Logo from "assets/bb-emblem.svg?raw"
+  import { Utils, memo } from "@budibase/frontend-core"
+  import { selectedAutomation, automationStore } from "@/stores/builder"
 
-  export function zoomIn() {
-    const scale = Number(Math.min($view.scale + 0.1, 1.5).toFixed(2))
+  // CSS classes that, on mouse down, will trigger the view drag behaviour
+  export let draggableClasses = []
+
+  export function toFocus() {
+    viewToFocusEle()
+  }
+
+  export async function zoomIn() {
+    const newScale = parseFloat(Math.min($view.scale + 0.1, 1.5).toFixed(2))
+    if ($view.scale === 1.5) return
+
     view.update(state => ({
       ...state,
-      scale,
+      scale: newScale,
     }))
   }
 
   export function zoomOut() {
-    const scale = Number(Math.max($view.scale - 0.1, 0).toFixed(2))
+    const scale = parseFloat(Math.max($view.scale - 0.1, 0.1).toFixed(2))
+    if ($view.scale === 0.1) return
+
     view.update(state => ({
       ...state,
       scale,
@@ -32,12 +44,13 @@
       w: contentDims.original.w,
       h: contentDims.original.h,
     }
-    dragOffset = []
     contentPos.update(state => ({
       ...state,
       x: 0,
       y: 0,
     }))
+    offsetX = 0
+    offsetY = 0
     view.update(state => ({
       ...state,
       scale: 1,
@@ -48,18 +61,23 @@
     const { width: wViewPort, height: hViewPort } =
       viewPort.getBoundingClientRect()
 
-    const scaleTarget = Math.min(
-      wViewPort / contentDims.original.w,
-      hViewPort / contentDims.original.h
+    const scaleTarget = parseFloat(
+      Math.min(
+        wViewPort / contentDims.original.w,
+        hViewPort / contentDims.original.h
+      ).toFixed(2)
     )
 
-    // Smallest ratio determines which dimension needs squeezed
-    view.update(state => ({
-      ...state,
-      scale: scaleTarget,
-    }))
+    // Skip behaviour if the scale target scale is the current scale
+    if ($view.scale !== scaleTarget) {
+      // Smallest ratio determines which dimension needs squeezed
+      view.update(state => ({
+        ...state,
+        scale: parseFloat(scaleTarget.toFixed(2)),
+      }))
 
-    await tick()
+      await tick()
+    }
 
     const adjustedY = (hViewPort - contentDims.original.h) / 2
 
@@ -67,7 +85,10 @@
       ...state,
       x: 0,
       y: parseInt(0 + adjustedY),
+      scrollX: 0,
+      scrollY: 0,
     }))
+    offsetY = parseInt(0 + adjustedY)
   }
 
   const dispatch = createEventDispatcher()
@@ -79,7 +100,6 @@
     dragSpot: null,
     scale: 1,
     dropzones: {},
-    //focus - node to center on?
   })
 
   setContext("draggableView", view)
@@ -89,7 +109,12 @@
   setContext("viewPos", internalPos)
 
   // Content pos tracking
-  const contentPos = writable({ x: 0, y: 0, scrollX: 0, scrollY: 0 })
+  const contentPos = writable({
+    x: 0,
+    y: 0,
+    scrollX: 0,
+    scrollY: 0,
+  })
   setContext("contentPos", contentPos)
 
   // Elements
@@ -101,7 +126,7 @@
   let down = false
 
   // Monitor the size of the viewPort
-  let observer
+  let viewObserver
 
   // Size of the core display content
   let contentDims = {}
@@ -109,24 +134,51 @@
   // Size of the view port
   let viewDims = {}
 
-  // When dragging the content, maintain the drag start offset
-  let dragOffset
-
-  // Used when focusing the UI on trigger
-  let loaded = false
-
   // Edge around the draggable content
   let contentDragPadding = 200
+
+  // Auto scroll
+  let scrollInterval
+
+  // Used to track where the draggable item is scrolling into
+  let scrollZones
+
+  // Used to track the movements of the dragged content
+  // This allows things like the background to have their own starting coords
+  let offsetX = 0
+  let offsetY = 0
+
+  // Focus element details. Used to move the viewport
+  let focusElement = memo()
+
+  // Memo Focus
+  $: focusElement.set($view.focusEle)
+
+  // Background pattern
+  let bgDim = 24
+
+  // Scale prop for the icon
+  let dotDefault = 0.006
+
+  let viewDragStart = { x: 0, y: 0 }
+  let viewDragOffset = [0, 0]
+  let startPos = [0, 0]
+
+  $: bgSize = Math.max(bgDim * $view.scale, 10)
+  $: bgWidth = bgSize
+  $: bgHeight = bgSize
+  $: dotSize = Math.max(dotDefault * $view.scale, dotDefault)
 
   const onScale = async () => {
     dispatch("zoom", $view.scale)
     await getDims()
   }
 
-  const getDims = async () => {
-    if (!mainContent) return
-
-    if (!contentDims.original) {
+  const getDims = async (forceRefresh = false) => {
+    if (!mainContent || !viewPort) {
+      return
+    }
+    if (!contentDims.original || (contentDims.original && forceRefresh)) {
       contentDims.original = {
         w: parseInt(mainContent.getBoundingClientRect().width),
         h: parseInt(mainContent.getBoundingClientRect().height),
@@ -153,7 +205,11 @@
   const buildWrapStyles = (pos, scale, dims) => {
     const { x, y } = pos
     const { w, h } = dims
-    return `--posX: ${x}px; --posY: ${y}px; --scale: ${scale}; --wrapH: ${h}px; --wrapW: ${w}px`
+    return `
+      --posX: ${x}px; --posY: ${y}px; 
+      --scale: ${scale}; 
+      --wrapH: ${h}px; --wrapW: ${w}px;
+      `
   }
 
   const onViewScroll = e => {
@@ -177,18 +233,20 @@
             }
           : {}),
       }))
+
+      offsetX = offsetX - xBump
     } else if (e.ctrlKey || e.metaKey) {
       // Scale the content on scrolling
       let updatedScale
       if (e.deltaY < 0) {
         updatedScale = Math.min(1, currentScale + 0.05)
       } else if (e.deltaY > 0) {
-        updatedScale = Math.max(0, currentScale - 0.05)
+        updatedScale = Math.max(0.1, currentScale - 0.05)
       }
 
       view.update(state => ({
         ...state,
-        scale: Number(updatedScale.toFixed(2)),
+        scale: parseFloat(updatedScale.toFixed(2)),
       }))
     } else {
       yBump = scrollIncrement * (e.deltaY < 0 ? -1 : 1)
@@ -203,6 +261,7 @@
             }
           : {}),
       }))
+      offsetY = offsetY - yBump
     }
   }
 
@@ -219,18 +278,80 @@
       y,
     }))
 
-    if (down && !$view.dragging && dragOffset) {
+    if (down && !$view.dragging) {
+      // Determine how much the view has moved since
+      viewDragOffset = [x - viewDragStart.x, y - viewDragStart.y]
+
       contentPos.update(state => ({
         ...state,
-        x: x - dragOffset[0],
-        y: y - dragOffset[1],
+        x: startPos[0] + viewDragOffset[0],
+        y: startPos[1] + viewDragOffset[1],
       }))
+      offsetX = startPos[0] + viewDragOffset[0]
+      offsetY = startPos[1] + viewDragOffset[1]
+    }
+
+    const clearScrollInterval = () => {
+      if (scrollInterval) {
+        clearInterval(scrollInterval)
+        scrollInterval = undefined
+      }
+    }
+
+    if ($view.dragging) {
+      // Static, default buffer centered around the mouse
+      const dragBuffer = 100
+
+      scrollZones = {
+        top: y < dragBuffer,
+        bottom: y > viewDims.height - dragBuffer,
+        left: x < dragBuffer,
+        // An exception for the right side as the drag handle is on the extreme left
+        right: x > viewDims.width - $view.moveStep.w,
+      }
+
+      // Determine which zones are currently in play
+      const dragOutEntries = Object.entries(scrollZones).filter(e => e[1])
+      if (dragOutEntries.length) {
+        if (!scrollInterval) {
+          const autoScroll = () => {
+            const bump = 30
+
+            return () => {
+              const dragOutEntries = Object.entries(scrollZones).filter(
+                e => e[1]
+              )
+              const dragOut = Object.fromEntries(dragOutEntries)
+
+              // Depending on the zone, you want to move the content
+              // in the opposite direction
+              const xInterval = dragOut.right ? -bump : dragOut.left ? bump : 0
+              const yInterval = dragOut.bottom ? -bump : dragOut.top ? bump : 0
+
+              contentPos.update(state => ({
+                ...state,
+                x: (state.x || 0) + xInterval,
+                y: (state.y || 0) + yInterval,
+                scrollX: state.scrollX + xInterval,
+                scrollY: state.scrollY + yInterval,
+              }))
+              offsetX = offsetX + xInterval
+              offsetY = offsetY + yInterval
+            }
+          }
+
+          scrollInterval = setInterval(autoScroll(), 30)
+        }
+      } else {
+        clearScrollInterval()
+      }
+    } else {
+      clearScrollInterval()
     }
   }
 
   const onViewDragEnd = () => {
     down = false
-    dragOffset = [0, 0]
   }
 
   const handleDragDrop = () => {
@@ -247,8 +368,40 @@
     )
   }
 
+  // Reset state on mouse up
+  const globalMouseUp = () => {
+    down = false
+
+    viewDragStart = { x: 0, y: 0 }
+    viewDragOffset = [0, 0]
+
+    if ($view.dragging) {
+      view.update(state => ({
+        ...state,
+        dragging: false,
+        moveStep: null,
+        dragSpot: null,
+        dropzones: {},
+        droptarget: null,
+      }))
+
+      if (scrollInterval) {
+        clearInterval(scrollInterval)
+        scrollInterval = undefined
+        scrollZones = {}
+      }
+
+      // Clear the scroll offset for dragging
+      contentPos.update(state => ({
+        ...state,
+        scrollY: 0,
+        scrollX: 0,
+      }))
+    }
+  }
+
   const onMouseUp = () => {
-    if ($view.droptarget) {
+    if ($view.droptarget && $view.dragging) {
       handleDragDrop()
     }
 
@@ -273,8 +426,6 @@
     if (!viewPort) {
       return
     }
-    // Update viewDims to get the latest viewport dimensions
-    viewDims = viewPort.getBoundingClientRect()
 
     if ($view.moveStep && $view.dragging === false) {
       view.update(state => ({
@@ -329,18 +480,13 @@
     }
   }
 
-  const onMoveContent = e => {
-    if (down || !viewPort) {
-      return
-    }
-    const { x, y } = eleXY(e, viewPort)
-
-    dragOffset = [Math.abs(x - $contentPos.x), Math.abs(y - $contentPos.y)]
+  const isDraggable = e => {
+    const draggable = ["draggable-view", ...draggableClasses]
+    return draggable.some(cls => e.target.classList.contains(cls))
   }
 
-  const focusOnLoad = () => {
-    if ($view.focusEle && !loaded) {
-      const focusEleDims = $view.focusEle
+  const viewToFocusEle = () => {
+    if ($focusElement) {
       const viewWidth = viewDims.width
 
       // The amount to shift the content in order to center the trigger on load.
@@ -348,8 +494,8 @@
       // The sidebar offset factors into the left positioning of the content here.
       const targetX =
         contentWrap.getBoundingClientRect().x -
-        focusEleDims.x +
-        (viewWidth / 2 - focusEleDims.width / 2)
+        $focusElement.x +
+        (viewWidth / 2 - $focusElement.width / 2)
 
       // Update the content position state
       // Shift the content up slightly to accommodate the padding
@@ -358,21 +504,19 @@
         x: targetX,
         y: -(contentDragPadding / 2),
       }))
-
-      loaded = true
     }
   }
 
   // Update dims after scaling
-  $: {
-    $view.scale
+  $: viewScale = $view.scale
+  $: if (viewScale && mainContent) {
     onScale()
   }
 
   // Focus on a registered element
   $: {
-    $view.focusEle
-    focusOnLoad()
+    $focusElement
+    viewToFocusEle()
   }
 
   // Content mouse pos and scale to css variables.
@@ -380,12 +524,21 @@
   $: wrapStyles = buildWrapStyles($contentPos, $view.scale, contentDims)
 
   onMount(() => {
-    observer = new ResizeObserver(getDims)
-    observer.observe(viewPort)
+    // As the view/browser resizes, ensure the stored view is up to date
+    viewObserver = new ResizeObserver(
+      Utils.domDebounce(() => {
+        getDims()
+      })
+    )
+    viewObserver.observe(viewPort)
+
+    // Global mouse observer
+    document.addEventListener("mouseup", globalMouseUp)
   })
 
   onDestroy(() => {
-    observer.disconnect()
+    viewObserver.disconnect()
+    document.removeEventListener("mouseup", globalMouseUp)
   })
 </script>
 
@@ -399,56 +552,45 @@
   on:mousemove={Utils.domDebounce(onMouseMove)}
   style={`--dragPadding: ${contentDragPadding}px;`}
 >
+  <svg class="draggable-background" style={`--dotSize: ${dotSize};`}>
+    <!-- Small 2px offset to tuck the points under the viewport on load-->
+    <pattern
+      id="dot-pattern"
+      width={bgWidth}
+      height={bgHeight}
+      patternUnits="userSpaceOnUse"
+      patternTransform={`translate(${offsetX - 2}, ${offsetY - 2})`}
+    >
+      <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+      {@html Logo}
+    </pattern>
+    <rect x="0" y="0" width="100%" height="100%" fill="url(#dot-pattern)" />
+  </svg>
+
   <div
     class="draggable-view"
+    class:dragging={down}
     bind:this={viewPort}
     on:wheel={Utils.domDebounce(onViewScroll)}
     on:mousemove={Utils.domDebounce(onViewMouseMove)}
-    on:mouseup={onViewDragEnd}
-    on:mouseleave={onViewDragEnd}
+    on:mousedown={e => {
+      if ((e.which === 1 || e.button === 0) && isDraggable(e)) {
+        const { x, y } = eleXY(e, viewPort)
+        viewDragStart = { x, y }
+        startPos = [$contentPos.x, $contentPos.y]
+        down = true
+      }
+    }}
+    on:mouseup={e => {
+      viewDragOffset = [0, 0]
+      if ((e.which === 1 || e.button === 0) && isDraggable(e)) {
+        down = false
+      }
+      onViewDragEnd()
+    }}
   >
-    <!-- <div class="debug">
-      <span>
-        View Pos [{$internalPos.x}, {$internalPos.y}]
-      </span>
-      <span>View Dims [{viewDims.width}, {viewDims.height}]</span>
-      <span>Mouse Down [{down}]</span>
-      <span>Drag [{$view.dragging}]</span>
-      <span>Dragging [{$view?.moveStep?.id || "no"}]</span>
-      <span>Scale [{$view.scale}]</span>
-      <span>Content [{JSON.stringify($contentPos)}]</span>
-    </div> -->
-    <div
-      class="content-wrap"
-      style={wrapStyles}
-      bind:this={contentWrap}
-      class:dragging={down}
-    >
-      <div
-        class="content"
-        bind:this={mainContent}
-        on:mousemove={Utils.domDebounce(onMoveContent)}
-        on:mousedown={e => {
-          if (e.which === 1 || e.button === 0) {
-            down = true
-          }
-        }}
-        on:mouseup={e => {
-          if (e.which === 1 || e.button === 0) {
-            down = false
-          }
-        }}
-        on:mouseleave={() => {
-          down = false
-          view.update(state => ({
-            ...state,
-            dragging: false,
-            moveStep: null,
-            dragSpot: null,
-            dropzones: {},
-          }))
-        }}
-      >
+    <div class="content-wrap" style={wrapStyles} bind:this={contentWrap}>
+      <div class="content" bind:this={mainContent}>
         <slot name="content" />
       </div>
     </div>
@@ -465,7 +607,19 @@
     height: 100%;
     overflow: hidden;
     position: relative;
+    cursor: grab;
   }
+  .draggable-view.dragging {
+    cursor: grabbing;
+  }
+
+  .content {
+    transform-origin: 50% 50%;
+    transform: scale(var(--scale));
+    user-select: none;
+    padding: var(--dragPadding);
+  }
+
   .content-wrap {
     min-width: 100%;
     position: absolute;
@@ -473,25 +627,25 @@
     left: 0;
     width: var(--wrapW);
     height: var(--wrapH);
-    cursor: grab;
     transform: translate(var(--posX), var(--posY));
   }
-  .content {
-    transform: scale(var(--scale));
-    user-select: none;
-    padding: var(--dragPadding);
+
+  .draggable-background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: -1;
+    background-color: var(--spectrum-global-color-gray-50);
   }
 
-  .content-wrap.dragging {
-    cursor: grabbing;
+  .draggable-background :global(svg g path) {
+    fill: #91919a;
   }
 
-  /* .debug {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    position: fixed;
-    padding: 8px;
-    z-index: 2;
-  } */
+  .draggable-background :global(svg g) {
+    transform: scale(var(--dotSize));
+  }
 </style>

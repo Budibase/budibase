@@ -1,17 +1,19 @@
 <script>
-  import { auth } from "stores/portal"
+  import { admin, auth } from "@/stores/portal"
   import { ActionMenu, MenuItem, Icon, Modal } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import ProfileModal from "components/settings/ProfileModal.svelte"
-  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
-  import ThemeModal from "components/settings/ThemeModal.svelte"
-  import APIKeyModal from "components/settings/APIKeyModal.svelte"
+  import ProfileModal from "@/components/settings/ProfileModal.svelte"
+  import ChangePasswordModal from "@/components/settings/ChangePasswordModal.svelte"
+  import ThemeModal from "@/components/settings/ThemeModal.svelte"
+  import APIKeyModal from "@/components/settings/APIKeyModal.svelte"
   import { UserAvatar } from "@budibase/frontend-core"
 
   let themeModal
   let profileModal
   let updatePasswordModal
   let apiKeyModal
+
+  $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   const logout = async () => {
     try {
@@ -32,7 +34,16 @@
   </MenuItem>
   <MenuItem icon="Moon" on:click={() => themeModal.show()}>Theme</MenuItem>
   {#if !$auth.isSSO}
-    <MenuItem icon="LockClosed" on:click={() => updatePasswordModal.show()}>
+    <MenuItem
+      icon="LockClosed"
+      on:click={() => {
+        if (isOwner) {
+          window.location.href = `${$admin.accountPortalUrl}/portal/account`
+        } else {
+          updatePasswordModal.show()
+        }
+      }}
+    >
       Update password
     </MenuItem>
   {/if}

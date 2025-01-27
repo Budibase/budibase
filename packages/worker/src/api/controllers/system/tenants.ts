@@ -1,7 +1,7 @@
-import { UserCtx } from "@budibase/types"
+import { GetTenantInfoResponse, UserCtx } from "@budibase/types"
 import * as tenantSdk from "../../../sdk/tenants"
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: UserCtx<void, void>) {
   const user = ctx.user!
   const tenantId = ctx.params.tenantId
 
@@ -18,6 +18,6 @@ export async function destroy(ctx: UserCtx) {
   }
 }
 
-export async function info(ctx: UserCtx) {
+export async function info(ctx: UserCtx<void, GetTenantInfoResponse>) {
   ctx.body = await tenantSdk.tenantInfo(ctx.params.tenantId)
 }

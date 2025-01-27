@@ -104,7 +104,6 @@ const _import = async (
     ...importResult,
     datasourceId,
   }
-  ctx.status = 200
 }
 export { _import as import }
 
@@ -356,7 +355,7 @@ async function execute(
     ExecuteQueryRequest,
     ExecuteV2QueryResponse | ExecuteV1QueryResponse
   >,
-  opts: any = { rowsOnly: false, isAutomation: false }
+  opts = { rowsOnly: false, isAutomation: false }
 ) {
   const db = context.getAppDB()
 
@@ -417,7 +416,7 @@ export async function executeV1(
 export async function executeV2(
   ctx: UserCtx<ExecuteQueryRequest, ExecuteV2QueryResponse>
 ) {
-  return execute(ctx, { rowsOnly: false })
+  return execute(ctx, { rowsOnly: false, isAutomation: false })
 }
 
 export async function executeV2AsAutomation(
@@ -455,6 +454,5 @@ export async function destroy(ctx: UserCtx<void, DeleteQueryResponse>) {
   const datasource = await sdk.datasources.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.body = { message: `Query deleted.` }
-  ctx.status = 200
   await events.query.deleted(datasource, query)
 }

@@ -7,10 +7,13 @@
     DrawerContent,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+  import {
+    getDatasourceForProvider,
+    getSchemaForDatasource,
+  } from "@/dataBinding"
   import FilterBuilder from "./FilterBuilder.svelte"
-  import { tables, selectedScreen } from "stores/builder"
-  import { search } from "@budibase/frontend-core"
+  import { tables, selectedScreen } from "@/stores/builder"
+  import { search, Utils } from "@budibase/frontend-core"
   import { utils } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
@@ -33,7 +36,8 @@
   $: text = getText(value)
 
   async function saveFilter() {
-    dispatch("change", localFilters)
+    const update = Utils.parseFilter(localFilters)
+    dispatch("change", update)
     notifications.success("Filters saved")
     drawer.hide()
   }

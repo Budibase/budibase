@@ -1,13 +1,19 @@
 {
   "watch": [
     "src",
-    "../backend-core",
-    "../pro",
-    "../types",
-    "../shared-core",
-    "../string-templates"
+    "../backend-core/src",
+    "../pro/src",
+    "../types/src",
+    "../shared-core/src",
+    "../string-templates/src"
   ],
-  "ext": "js,ts,json,svelte",
-  "ignore": ["**/*.spec.ts", "**/*.spec.js", "../*/dist/**/*", "client/**/*", "builder/**/*"],
+  "ext": "js,ts,json,svelte,hbs",
+  "ignore": [
+    "**/*.spec.ts",
+    "**/*.spec.js",
+    "../*/dist/**/*",
+    "client/**/*",
+    "builder/**/*"
+  ],
   "exec": "yarn build && node --no-node-snapshot ./dist/index.js"
 }

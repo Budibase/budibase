@@ -9,8 +9,8 @@
     FancyInput,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { API } from "api"
-  import { admin, auth } from "stores/portal"
+  import { API } from "@/api"
+  import { admin, auth } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { passwordsMatch, handleError } from "../auth/_components/utils"
@@ -36,10 +36,7 @@
       await API.createAdminUser(adminUser)
       notifications.success("Admin user created")
       await admin.init()
-      await auth.login({
-        username: formData?.email.trim(),
-        password: formData?.password,
-      })
+      await auth.login(formData?.email.trim(), formData?.password)
       $goto("../portal")
     } catch (error) {
       submitted = false

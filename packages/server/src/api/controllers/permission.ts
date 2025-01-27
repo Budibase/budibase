@@ -9,7 +9,7 @@ import {
   RemovePermissionRequest,
   RemovePermissionResponse,
   FetchResourcePermissionInfoResponse,
-  FetchBuiltinPermissionsRequest,
+  FetchBuiltinPermissionsResponse,
   FetchPermissionLevelsRequest,
 } from "@budibase/types"
 import {
@@ -22,7 +22,7 @@ import { PermissionUpdateType } from "../../sdk/app/permissions"
 const SUPPORTED_LEVELS = CURRENTLY_SUPPORTED_LEVELS
 
 export function fetchBuiltin(
-  ctx: UserCtx<void, FetchBuiltinPermissionsRequest>
+  ctx: UserCtx<void, FetchBuiltinPermissionsResponse>
 ) {
   ctx.body = Object.values(permissions.getBuiltinPermissions())
 }
@@ -99,7 +99,7 @@ export async function getDependantResources(
 export async function addPermission(ctx: UserCtx<void, AddPermissionResponse>) {
   const params: AddPermissionRequest = ctx.params
   await sdk.permissions.updatePermissionOnRole(params, PermissionUpdateType.ADD)
-  ctx.status = 200
+  ctx.body = { message: "Permission added." }
 }
 
 export async function removePermission(
@@ -110,5 +110,5 @@ export async function removePermission(
     params,
     PermissionUpdateType.REMOVE
   )
-  ctx.status = 200
+  ctx.body = { message: "Permission removed." }
 }

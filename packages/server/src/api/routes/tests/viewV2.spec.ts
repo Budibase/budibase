@@ -1,39 +1,40 @@
 import {
+  AIOperationEnum,
+  ArrayOperator,
+  BasicOperator,
+  BBReferenceFieldSubType,
+  CalculationType,
   CreateViewRequest,
   Datasource,
+  EmptyFilterOption,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  JsonFieldSubType,
+  JsonTypes,
+  LegacyFilter,
+  NumericCalculationFieldMetadata,
   PermissionLevel,
   QuotaUsageType,
+  RelationshipType,
+  RenameColumn,
   Row,
   SaveTableRequest,
+  SearchFilters,
+  SearchResponse,
+  SearchViewRowRequest,
   SortOrder,
   SortType,
   StaticQuotaName,
   Table,
+  TableSchema,
   TableSourceType,
+  UILogicalOperator,
+  UISearchFilter,
   UpdateViewRequest,
   ViewV2,
-  SearchResponse,
-  BasicOperator,
-  CalculationType,
-  RelationshipType,
-  TableSchema,
-  RenameColumn,
-  BBReferenceFieldSubType,
-  NumericCalculationFieldMetadata,
   ViewV2Schema,
   ViewV2Type,
-  JsonTypes,
-  EmptyFilterOption,
-  JsonFieldSubType,
-  UISearchFilter,
-  LegacyFilter,
-  SearchViewRowRequest,
-  ArrayOperator,
-  UILogicalOperator,
-  SearchFilters,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import {
@@ -42,7 +43,9 @@ import {
 } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { db, roles, context } from "@budibase/backend-core"
+import { context, db, events, roles, setEnv } from "@budibase/backend-core"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
+import nock from "nock"
 
 const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
 
@@ -55,7 +58,7 @@ if (descriptions.length) {
       let datasource: Datasource | undefined
 
       function saveTableRequest(
-        ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
+        ...overrides: Partial<SaveTableRequest>[]
       ): SaveTableRequest {
         const req: SaveTableRequest = {
           name: generator.guid().replaceAll("-", "").substring(0, 16),
@@ -100,6 +103,7 @@ if (descriptions.length) {
 
       beforeAll(async () => {
         await config.init()
+        mocks.licenses.useCloudFree()
 
         const ds = await dsProvider()
         rawDatasource = ds.rawDatasource
@@ -109,7 +113,6 @@ if (descriptions.length) {
 
       beforeEach(() => {
         jest.clearAllMocks()
-        mocks.licenses.useCloudFree()
       })
 
       describe("view crud", () => {
@@ -129,6 +132,7 @@ if (descriptions.length) {
               id: expect.stringMatching(new RegExp(`${table._id!}_`)),
               version: 2,
             })
+            expect(events.view.created).toHaveBeenCalledTimes(1)
           })
 
           it("can persist views with all fields", async () => {
@@ -161,6 +165,7 @@ if (descriptions.length) {
                     visible: true,
                   },
                 },
+                rowHeight: generator.integer(),
               }
             const res = await config.api.viewV2.create(newView)
 
@@ -195,6 +200,7 @@ if (descriptions.length) {
             }
 
             expect(res).toEqual(expected)
+            expect(events.view.created).toHaveBeenCalledTimes(1)
           })
 
           it("can create a view with just a query field, no queryUI, for backwards compatibility", async () => {
@@ -222,8 +228,10 @@ if (descriptions.length) {
                   visible: true,
                 },
               },
+              rowHeight: generator.integer(),
             }
             const res = await config.api.viewV2.create(newView)
+            expect(events.view.created).toHaveBeenCalledTimes(1)
 
             const expected: ViewV2 = {
               ...newView,
@@ -283,6 +291,7 @@ if (descriptions.length) {
             }
 
             const createdView = await config.api.viewV2.create(newView)
+            expect(events.view.created).toHaveBeenCalledTimes(1)
 
             expect(createdView).toEqual({
               ...newView,
@@ -501,7 +510,6 @@ if (descriptions.length) {
             })
 
             it("readonly fields can be used on free license", async () => {
-              mocks.licenses.useCloudFree()
               const table = await config.api.table.save(
                 saveTableRequest({
                   schema: {
@@ -927,6 +935,95 @@ if (descriptions.length) {
                 }
               )
             })
+
+          isInternal &&
+            describe("AI fields", () => {
+              let envCleanup: () => void
+              beforeAll(() => {
+                mocks.licenses.useBudibaseAI()
+                mocks.licenses.useAICustomConfigs()
+                envCleanup = setEnv({
+                  OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
+                })
+
+                mockChatGPTResponse(prompt => {
+                  if (prompt.includes("elephant")) {
+                    return "big"
+                  }
+                  if (prompt.includes("mouse")) {
+                    return "small"
+                  }
+                  if (prompt.includes("whale")) {
+                    return "big"
+                  }
+                  return "unknown"
+                })
+              })
+
+              afterAll(() => {
+                nock.cleanAll()
+                envCleanup()
+                mocks.licenses.useCloudFree()
+              })
+
+              it("can use AI fields in view calculations", async () => {
+                const table = await config.api.table.save(
+                  saveTableRequest({
+                    schema: {
+                      animal: {
+                        name: "animal",
+                        type: FieldType.STRING,
+                      },
+                      bigOrSmall: {
+                        name: "bigOrSmall",
+                        type: FieldType.AI,
+                        operation: AIOperationEnum.CATEGORISE_TEXT,
+                        categories: "big,small",
+                        columns: ["animal"],
+                      },
+                    },
+                  })
+                )
+
+                const view = await config.api.viewV2.create({
+                  tableId: table._id!,
+                  name: generator.guid(),
+                  type: ViewV2Type.CALCULATION,
+                  schema: {
+                    bigOrSmall: {
+                      visible: true,
+                    },
+                    count: {
+                      visible: true,
+                      calculationType: CalculationType.COUNT,
+                      field: "animal",
+                    },
+                  },
+                })
+
+                await config.api.row.save(table._id!, {
+                  animal: "elephant",
+                })
+
+                await config.api.row.save(table._id!, {
+                  animal: "mouse",
+                })
+
+                await config.api.row.save(table._id!, {
+                  animal: "whale",
+                })
+
+                const { rows } = await config.api.row.search(view.id, {
+                  sort: "bigOrSmall",
+                  sortOrder: SortOrder.ASCENDING,
+                })
+                expect(rows).toHaveLength(2)
+                expect(rows[0].bigOrSmall).toEqual("big")
+                expect(rows[1].bigOrSmall).toEqual("small")
+                expect(rows[0].count).toEqual(2)
+                expect(rows[1].count).toEqual(1)
+              })
+            })
         })
 
         describe("update", () => {
@@ -990,6 +1087,46 @@ if (descriptions.length) {
             expect((await config.api.table.get(tableId)).views).toEqual({
               [view.name]: expected,
             })
+            expect(events.view.updated).toHaveBeenCalledTimes(1)
+          })
+
+          it("handles view grouped filter events", async () => {
+            view.queryUI = {
+              logicalOperator: UILogicalOperator.ALL,
+              onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+              groups: [
+                {
+                  logicalOperator: UILogicalOperator.ALL,
+                  filters: [
+                    {
+                      operator: BasicOperator.EQUAL,
+                      field: "newField",
+                      value: "newValue",
+                    },
+                  ],
+                },
+              ],
+            }
+            await config.api.viewV2.update(view)
+            expect(events.view.filterUpdated).not.toHaveBeenCalled()
+
+            // @ts-ignore
+            view.queryUI.groups.push({
+              logicalOperator: UILogicalOperator.ALL,
+              filters: [
+                {
+                  operator: BasicOperator.EQUAL,
+                  field: "otherField",
+                  value: "otherValue",
+                },
+              ],
+            })
+
+            await config.api.viewV2.update(view)
+            expect(events.view.filterUpdated).toHaveBeenCalledWith({
+              filterGroups: 2,
+              tableId: view.tableId,
+            })
           })
 
           it("can update all fields", async () => {
@@ -1025,6 +1162,7 @@ if (descriptions.length) {
                   readonly: true,
                 },
               },
+              rowHeight: generator.integer(),
             }
             await config.api.viewV2.update(updatedData)
 
@@ -1621,6 +1759,7 @@ if (descriptions.length) {
                 field: "age",
               }
               await config.api.viewV2.update(view)
+              expect(events.view.calculationCreated).toHaveBeenCalledTimes(1)
 
               const { rows } = await config.api.row.search(view.id)
               expect(rows).toHaveLength(2)
@@ -1788,7 +1927,6 @@ if (descriptions.length) {
               },
             })
 
-            mocks.licenses.useCloudFree()
             const view = await getDelegate(res)
             expect(view.schema?.one).toEqual(
               expect.objectContaining({ visible: true, readonly: true })
@@ -1852,6 +1990,36 @@ if (descriptions.length) {
               ],
             }
             expect(view.queryUI).toEqual(expected)
+          })
+
+          it("tables and views can contain whitespaces", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                name: `table with spaces ${generator.hash()}`,
+                schema: {
+                  name: {
+                    type: FieldType.STRING,
+                    name: "name",
+                  },
+                },
+              })
+            )
+
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: `view name with spaces`,
+              schema: {
+                name: { visible: true },
+              },
+            })
+
+            expect(await getDelegate(view)).toEqual({
+              ...view,
+              schema: {
+                id: { ...table.schema["id"], visible: false },
+                name: { ...table.schema["name"], visible: true },
+              },
+            })
           })
         })
 
@@ -2154,6 +2322,7 @@ if (descriptions.length) {
                   }),
                 })
               )
+              expect(events.view.viewJoinCreated).not.toHaveBeenCalled()
             })
 
             it("does not rename columns with the same name but from other tables", async () => {
@@ -2224,6 +2393,36 @@ if (descriptions.length) {
                   }),
                 })
               )
+            })
+
+            it("handles events for changing column visibility from default false", async () => {
+              let auxTable = await createAuxTable()
+              let aux2Table = await createAuxTable()
+
+              const table = await createMainTable([
+                { name: "aux", tableId: auxTable._id!, fk: "fk_aux" },
+                { name: "aux2", tableId: aux2Table._id!, fk: "fk_aux2" },
+              ])
+
+              const view = await createView(table._id!, {
+                aux: {
+                  visible: true,
+                  columns: {
+                    name: { visible: false, readonly: true },
+                  },
+                },
+                aux2: {
+                  visible: true,
+                  columns: {
+                    name: { visible: false, readonly: true },
+                  },
+                },
+              })
+
+              // @ts-expect-error column exists above
+              view.schema.aux2.columns.name.visible = true
+              await config.api.viewV2.update(view)
+              expect(events.view.viewJoinCreated).toHaveBeenCalledTimes(1)
             })
 
             it("updates all views references", async () => {

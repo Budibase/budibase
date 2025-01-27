@@ -6,7 +6,7 @@
   import OktaLogo from "assets/okta-logo.png"
   import OneLoginLogo from "assets/onelogin-logo.png"
 
-  import { oidc, organisation, auth } from "stores/portal"
+  import { oidc, organisation, auth } from "@/stores/portal"
   import { onMount } from "svelte"
 
   export let samePage

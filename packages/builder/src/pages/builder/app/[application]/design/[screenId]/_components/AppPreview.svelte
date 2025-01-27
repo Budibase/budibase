@@ -11,12 +11,13 @@
     selectedScreen,
     hoverStore,
     componentTreeNodesStore,
+    screenComponentErrors,
     snippets,
-  } from "stores/builder"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  } from "@/stores/builder"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { Layout, Heading, Body, Icon, notifications } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
-  import { findComponent, findComponentPath } from "helpers/components"
+  import { findComponent, findComponentPath } from "@/helpers/components"
   import { isActive, goto } from "@roxi/routify"
   import { ClientAppSkeleton } from "@budibase/frontend-core"
   import { getThemeClassNames, ThemeClassPrefix } from "@budibase/shared-core"
@@ -68,6 +69,7 @@
       port: window.location.port,
     },
     snippets: $snippets,
+    componentErrors: $screenComponentErrors,
   }
 
   // Refresh the preview when required

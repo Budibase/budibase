@@ -6,12 +6,12 @@
     Layout,
     keepOpen,
   } from "@budibase/bbui"
-  import { createValidationStore } from "helpers/validation/yup"
+  import { createValidationStore } from "@/helpers/validation/yup"
   import { writable, get } from "svelte/store"
-  import * as appValidation from "helpers/validation/yup/app"
-  import { appsStore, auth } from "stores/portal"
+  import * as appValidation from "@/helpers/validation/yup/app"
+  import { appsStore, auth } from "@/stores/portal"
   import { onMount } from "svelte"
-  import { API } from "api"
+  import { API } from "@/api"
   import { sdk } from "@budibase/shared-core"
 
   export let appId
@@ -68,7 +68,7 @@
     }
 
     try {
-      const app = await API.duplicateApp(data, appId)
+      const app = await API.duplicateApp(appId, data)
       appsStore.load()
       if (!sdk.users.isBuilder($auth.user, app?.duplicateAppId)) {
         // Refresh for access to created applications

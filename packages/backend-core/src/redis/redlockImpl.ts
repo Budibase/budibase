@@ -92,7 +92,7 @@ function getLockName(opts: LockOptions) {
   // determine lock name
   // by default use the tenantId for uniqueness, unless using a system lock
   const prefix = opts.systemLock ? "system" : context.getTenantId()
-  let name: string = `lock:${prefix}_${opts.name}`
+  let name = `lock:${prefix}_${opts.name}`
   // add additional unique name if required
   if (opts.resource) {
     name = name + `_${opts.resource}`

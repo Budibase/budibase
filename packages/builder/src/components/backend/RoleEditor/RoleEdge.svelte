@@ -2,7 +2,7 @@
   import { getBezierPath, BaseEdge, EdgeLabelRenderer } from "@xyflow/svelte"
   import { Icon, TooltipPosition } from "@budibase/bbui"
   import { getContext, onMount } from "svelte"
-  import { roles } from "stores/builder"
+  import { roles } from "@/stores/builder"
 
   export let sourceX
   export let sourceY

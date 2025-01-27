@@ -1,8 +1,8 @@
 <script>
-  import { selectedScreen, componentStore } from "stores/builder"
+  import { selectedScreen, componentStore } from "@/stores/builder"
   import { Label, Combobox, Select } from "@budibase/bbui"
-  import { getActionProviders, buildFormSchema } from "dataBinding"
-  import { findComponent } from "helpers/components"
+  import { getActionProviders, buildFormSchema } from "@/dataBinding"
+  import { findComponent } from "@/helpers/components"
 
   export let parameters
   export let nested
