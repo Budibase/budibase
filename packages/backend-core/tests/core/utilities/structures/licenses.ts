@@ -22,7 +22,6 @@ export function price(): PurchasedPrice {
     currency: "usd",
     duration: PriceDuration.MONTHLY,
     priceId: "price_123",
-    dayPasses: undefined,
     isPerUser: true,
   }
 }
@@ -46,11 +45,6 @@ export function quotas(): Quotas {
           triggers: [],
         },
         automations: {
-          name: "Queries",
-          value: 1,
-          triggers: [],
-        },
-        dayPasses: {
           name: "Queries",
           value: 1,
           triggers: [],

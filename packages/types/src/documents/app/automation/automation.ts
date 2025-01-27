@@ -1,10 +1,10 @@
 import { Document } from "../../document"
-import { EventEmitter } from "events"
 import { User } from "../../global"
 import { ReadStream } from "fs"
 import { Row } from "../row"
 import { Table } from "../table"
 import { AutomationStep, AutomationTrigger } from "./schema"
+import { ContextEmitter } from "../../../sdk"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -148,6 +148,7 @@ export interface Automation extends Document {
 
 interface BaseIOStructure {
   type?: AutomationIOType
+  subtype?: AutomationIOType
   customType?: AutomationCustomIOType
   title?: string
   description?: string
@@ -174,6 +175,7 @@ export enum AutomationFeature {
 
 export enum AutomationStepStatus {
   NO_ITERATIONS = "no_iterations",
+  MAX_ITERATIONS = "max_iterations_reached",
 }
 
 export enum AutomationStatus {
@@ -191,7 +193,7 @@ export enum AutomationStoppedReason {
 export interface AutomationResults {
   automationId?: string
   status?: AutomationStatus
-  trigger?: any
+  trigger?: AutomationTrigger
   steps: {
     stepId: AutomationTriggerStepId | AutomationActionStepId
     inputs: {
@@ -201,6 +203,14 @@ export interface AutomationResults {
       [key: string]: any
     }
   }[]
+}
+
+export interface DidNotTriggerResponse {
+  outputs: {
+    success: false
+    status: AutomationStatus.STOPPED
+  }
+  message: AutomationStoppedReason.TRIGGER_FILTER_NOT_MET
 }
 
 export interface AutomationLog extends AutomationResults, Document {
@@ -216,7 +226,7 @@ export interface AutomationLogPage {
 
 export interface AutomationStepInputBase {
   context: Record<string, any>
-  emitter: EventEmitter
+  emitter: ContextEmitter
   appId: string
   apiKey?: string
 }

@@ -62,7 +62,6 @@ export interface User extends Document {
   password?: string
   status?: UserStatus
   createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
-  dayPassRecordedAt?: string
   userGroups?: string[]
   onboardedAt?: string
   freeTrialConfirmedAt?: string
@@ -71,6 +70,8 @@ export interface User extends Document {
   appFavourites?: string[]
   ssoId?: string
   appSort?: string
+  budibaseAccess?: boolean
+  accountPortalAccess?: boolean
 }
 
 export interface UserBindings extends Document {

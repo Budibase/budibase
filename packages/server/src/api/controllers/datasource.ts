@@ -23,13 +23,17 @@ import {
   Table,
   RowValue,
   DynamicVariable,
+  FetchDatasourcesResponse,
+  FindDatasourcesResponse,
+  DeleteDatasourceResponse,
+  FetchExternalSchemaResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { isEqual } from "lodash"
 import { processTable } from "../../sdk/app/tables/getters"
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: UserCtx<void, FetchDatasourcesResponse>) {
   ctx.body = await sdk.datasources.fetch()
 }
 
@@ -178,7 +182,6 @@ export async function update(
     }
   }
 
-  ctx.status = 200
   ctx.message = "Datasource saved successfully."
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
@@ -260,7 +263,7 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
   }
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
 
@@ -286,27 +289,18 @@ export async function destroy(ctx: UserCtx) {
   await db.remove(datasourceId, ctx.params.revId)
   await events.datasource.deleted(datasource)
 
-  ctx.message = `Datasource deleted.`
-  ctx.status = 200
+  ctx.body = { message: `Datasource deleted.` }
   builderSocket?.emitDatasourceDeletion(ctx, datasourceId)
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: UserCtx<void, FindDatasourcesResponse>) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   ctx.body = await sdk.datasources.removeSecretSingle(datasource)
 }
 
-// dynamic query functionality
-export async function query(ctx: UserCtx) {
-  const queryJson = ctx.request.body
-  try {
-    ctx.body = await sdk.rows.utils.getDatasourceAndQuery(queryJson)
-  } catch (err: any) {
-    ctx.throw(400, err)
-  }
-}
-
-export async function getExternalSchema(ctx: UserCtx) {
+export async function getExternalSchema(
+  ctx: UserCtx<void, FetchExternalSchemaResponse>
+) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
     datasource
@@ -316,9 +310,10 @@ export async function getExternalSchema(ctx: UserCtx) {
   if (!connector.getExternalSchema) {
     ctx.throw(400, "Datasource does not support exporting external schema")
   }
-  const response = await connector.getExternalSchema()
 
-  ctx.body = {
-    schema: response,
+  try {
+    ctx.body = { schema: await connector.getExternalSchema() }
+  } catch (e: any) {
+    ctx.throw(400, e.message)
   }
 }

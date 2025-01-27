@@ -153,10 +153,10 @@ export async function processOutputBBReference(
 }
 
 export async function processOutputBBReferences(
-  value: string | null | undefined,
+  value: string | string[] | null | undefined,
   subtype: BBReferenceFieldSubType
 ): Promise<UserReferenceInfo[] | undefined> {
-  if (!value) {
+  if (!value || (Array.isArray(value) && value.length === 0)) {
     return undefined
   }
   const ids =

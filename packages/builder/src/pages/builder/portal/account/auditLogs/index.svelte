@@ -17,16 +17,16 @@
     Divider,
     ActionButton,
   } from "@budibase/bbui"
-  import { licensing, users, appsStore, auditLogs } from "stores/portal"
+  import { licensing, users, appsStore, auditLogs } from "@/stores/portal"
   import LockedFeature from "../../_components/LockedFeature.svelte"
-  import { createPaginationStore } from "helpers/pagination"
+  import { createPaginationStore } from "@/helpers/pagination"
   import { onMount, setContext } from "svelte"
   import ViewDetailsRenderer from "./_components/ViewDetailsRenderer.svelte"
   import UserRenderer from "./_components/UserRenderer.svelte"
   import TimeRenderer from "./_components/TimeRenderer.svelte"
   import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
   import { cloneDeep } from "lodash"
-  import DateRangePicker from "components/common/DateRangePicker.svelte"
+  import DateRangePicker from "@/components/common/DateRangePicker.svelte"
   import dayjs from "dayjs"
 
   const schema = {
@@ -152,16 +152,16 @@
       logsPageInfo.loading()
       await auditLogs.search({
         bookmark: logsPage,
-        startDate: dateRange[0],
-        endDate: dateRange[1],
+        startDate: dateRange[0] || undefined,
+        endDate: dateRange[1] || undefined,
         fullSearch: logSearchTerm,
         userIds: selectedUsers,
         appIds: selectedApps,
         events: selectedEvents,
       })
       logsPageInfo.fetched(
-        $auditLogs.logs.hasNextPage,
-        $auditLogs.logs.bookmark
+        $auditLogs.logs?.hasNextPage,
+        $auditLogs.logs?.bookmark
       )
     } catch (error) {
       notifications.error(`Error getting audit logs - ${error}`)
@@ -200,6 +200,8 @@
       return Object.entries(obj).map(([id, label]) => {
         return { id, label }
       })
+    } else {
+      return []
     }
   }
 
@@ -316,7 +318,7 @@
     <Table
       on:click={({ detail }) => viewDetails(detail)}
       {customRenderers}
-      data={$auditLogs.logs.data}
+      data={$auditLogs.logs?.data}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}

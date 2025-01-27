@@ -5,3 +5,6 @@ export enum EventPublishType {
 export interface PostEventPublishRequest {
   type: EventPublishType
 }
+export interface PostEventPublishResponse {
+  message: string
+}

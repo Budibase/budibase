@@ -1,6 +1,6 @@
 import env from "../../environment"
 
-export const getCouchInfo = (connection?: string) => {
+export const getCouchInfo = (connection?: string | null) => {
   // clean out any auth credentials
   const urlInfo = getUrlInfo(connection)
   let username
@@ -45,7 +45,7 @@ export const getCouchInfo = (connection?: string) => {
   }
 }
 
-export const getUrlInfo = (url = env.COUCH_DB_URL) => {
+export const getUrlInfo = (url: string | null = env.COUCH_DB_URL) => {
   let cleanUrl, username, password, host
   if (url) {
     // Ensure the URL starts with a protocol

@@ -12,6 +12,7 @@
   export let name
   export let config
   export let showModal = () => {}
+  export let placeholder
 
   const selectComponent = type => {
     if (type === "object") {
@@ -40,6 +41,7 @@
   {name}
   {config}
   {showModal}
+  {placeholder}
   on:blur
   on:change
 />

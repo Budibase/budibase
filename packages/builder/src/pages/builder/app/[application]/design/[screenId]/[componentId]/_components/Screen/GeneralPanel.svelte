@@ -8,13 +8,13 @@
     Select,
     notifications,
   } from "@budibase/bbui"
-  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
-  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
-  import { selectedScreen, screenStore } from "stores/builder"
-  import sanitizeUrl from "helpers/sanitizeUrl"
-  import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
-  import { getBindableProperties } from "dataBinding"
-  import BarButtonList from "components/design/settings/controls/BarButtonList.svelte"
+  import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
+  import RoleSelect from "@/components/design/settings/controls/RoleSelect.svelte"
+  import { selectedScreen, screenStore } from "@/stores/builder"
+  import sanitizeUrl from "@/helpers/sanitizeUrl"
+  import ButtonActionEditor from "@/components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
+  import { getBindableProperties } from "@/dataBinding"
+  import BarButtonList from "@/components/design/settings/controls/BarButtonList.svelte"
 
   $: bindings = getBindableProperties($selectedScreen, null)
   $: screenSettings = getScreenSettings($selectedScreen)

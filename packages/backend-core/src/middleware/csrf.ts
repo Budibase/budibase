@@ -1,6 +1,7 @@
 import { Header } from "../constants"
 import { buildMatcherRegex, matches } from "./matchers"
-import { BBContext, EndpointMatcher } from "@budibase/types"
+import { Ctx, EndpointMatcher } from "@budibase/types"
+import type { Middleware, Next } from "koa"
 
 /**
  * GET, HEAD and OPTIONS methods are considered safe operations
@@ -36,7 +37,7 @@ export default function (
   opts: { noCsrfPatterns: EndpointMatcher[] } = { noCsrfPatterns: [] }
 ) {
   const noCsrfOptions = buildMatcherRegex(opts.noCsrfPatterns)
-  return async (ctx: BBContext | any, next: any) => {
+  return (async (ctx: Ctx, next: Next) => {
     // don't apply for excluded paths
     const found = matches(ctx, noCsrfOptions)
     if (found) {
@@ -77,5 +78,5 @@ export default function (
     }
 
     return next()
-  }
+  }) as Middleware
 }

@@ -14,7 +14,8 @@ import {
 import { breakExternalTableId } from "../../../../integrations/utils"
 import { generateJunctionTableID } from "../../../../db/utils"
 import sdk from "../../../../sdk"
-import { helpers } from "@budibase/shared-core"
+import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
+import { sql } from "@budibase/backend-core"
 
 type TableMap = Record<string, Table>
 
@@ -118,45 +119,131 @@ export async function buildSqlFieldList(
   opts?: { relationships: boolean }
 ) {
   const { relationships } = opts || {}
+
+  const nonMappedColumns = [FieldType.LINK, FieldType.FORMULA, FieldType.AI]
+
   function extractRealFields(table: Table, existing: string[] = []) {
     return Object.entries(table.schema)
       .filter(
         ([columnName, column]) =>
-          column.type !== FieldType.LINK &&
-          column.type !== FieldType.FORMULA &&
-          column.type !== FieldType.AI &&
-          !existing.find(
-            (field: string) => field === `${table.name}.${columnName}`
-          )
+          !nonMappedColumns.includes(column.type) &&
+          !existing.find((field: string) => field === columnName)
       )
-      .map(([columnName]) => `${table.name}.${columnName}`)
+      .map(([columnName]) => columnName)
+  }
+
+  function getRequiredFields(table: Table, existing: string[] = []) {
+    const requiredFields: string[] = []
+    if (table.primary) {
+      requiredFields.push(...table.primary)
+    }
+    if (table.primaryDisplay) {
+      requiredFields.push(table.primaryDisplay)
+    }
+
+    if (!sql.utils.isExternalTable(table)) {
+      requiredFields.push(...PROTECTED_INTERNAL_COLUMNS)
+    }
+
+    return requiredFields.filter(
+      column =>
+        !existing.find((field: string) => field === column) &&
+        table.schema[column] &&
+        !nonMappedColumns.includes(table.schema[column].type)
+    )
   }
 
   let fields: string[] = []
-  if (sdk.views.isView(source)) {
-    fields = Object.keys(helpers.views.basicFields(source))
-  } else {
-    fields = extractRealFields(source)
-  }
+
+  const isView = sdk.views.isView(source)
 
   let table: Table
-  if (sdk.views.isView(source)) {
+  if (isView) {
     table = await sdk.views.getTable(source.id)
+
+    fields = Object.keys(helpers.views.basicFields(source)).filter(
+      f => table.schema[f].type !== FieldType.LINK
+    )
   } else {
     table = source
+    fields = extractRealFields(source).filter(
+      f => table.schema[f].visible !== false
+    )
   }
 
-  for (let field of Object.values(table.schema)) {
+  const containsFormula = (isView ? fields : Object.keys(table.schema)).some(
+    f => table.schema[f]?.type === FieldType.FORMULA
+  )
+  // If are requesting for a formula field, we need to retrieve all fields
+  if (containsFormula) {
+    fields = extractRealFields(table)
+  }
+
+  if (!isView || !helpers.views.isCalculationView(source)) {
+    fields.push(
+      ...getRequiredFields(
+        {
+          ...table,
+          primaryDisplay: source.primaryDisplay || table.primaryDisplay,
+        },
+        fields
+      )
+    )
+  }
+
+  fields = fields.map(c => `${table.name}.${c}`)
+
+  for (const field of Object.values(table.schema)) {
     if (field.type !== FieldType.LINK || !relationships || !field.tableId) {
       continue
     }
-    const { tableName } = breakExternalTableId(field.tableId)
-    if (tables[tableName]) {
-      fields = fields.concat(extractRealFields(tables[tableName], fields))
+
+    if (
+      isView &&
+      (!source.schema?.[field.name] ||
+        !helpers.views.isVisible(source.schema[field.name])) &&
+      !containsFormula
+    ) {
+      continue
     }
+
+    const { tableName } = breakExternalTableId(field.tableId)
+    const relatedTable = tables[tableName]
+    if (!relatedTable) {
+      continue
+    }
+
+    const viewFields = new Set<string>()
+    if (containsFormula) {
+      extractRealFields(relatedTable).forEach(f => viewFields.add(f))
+    } else {
+      relatedTable.primary?.forEach(f => viewFields.add(f))
+      if (relatedTable.primaryDisplay) {
+        viewFields.add(relatedTable.primaryDisplay)
+      }
+
+      if (isView) {
+        Object.entries(source.schema?.[field.name]?.columns || {})
+          .filter(
+            ([columnName, columnConfig]) =>
+              relatedTable.schema[columnName] &&
+              helpers.views.isVisible(columnConfig) &&
+              ![FieldType.LINK, FieldType.FORMULA].includes(
+                relatedTable.schema[columnName].type
+              )
+          )
+          .forEach(([field]) => viewFields.add(field))
+      }
+    }
+
+    const fieldsToAdd = Array.from(viewFields)
+      .filter(f => !nonMappedColumns.includes(relatedTable.schema[f].type))
+      .map(f => `${relatedTable.name}.${f}`)
+      .filter(f => !fields.includes(f))
+    fields.push(...fieldsToAdd)
   }
 
-  return fields
+  return [...new Set(fields)]
 }
 
 export function isKnexEmptyReadResponse(resp: DatasourcePlusQueryResponse) {

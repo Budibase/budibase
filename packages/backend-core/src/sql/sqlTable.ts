@@ -3,13 +3,13 @@ import {
   FieldType,
   NumberFieldMetadata,
   Operation,
-  QueryJson,
   RelationshipType,
   RenameColumn,
   SqlQuery,
   Table,
   TableSourceType,
   SqlClient,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import { breakExternalTableId, getNativeSql } from "./utils"
 import { helpers, utils } from "@budibase/shared-core"
@@ -25,7 +25,7 @@ function generateSchema(
   schema: CreateTableBuilder,
   table: Table,
   tables: Record<string, Table>,
-  oldTable: null | Table = null,
+  oldTable?: Table,
   renamed?: RenameColumn
 ) {
   let primaryKeys = table && table.primary ? table.primary : []
@@ -55,7 +55,7 @@ function generateSchema(
   )
   for (let [key, column] of Object.entries(table.schema)) {
     // skip things that are already correct
-    const oldColumn = oldTable ? oldTable.schema[key] : null
+    const oldColumn = oldTable?.schema[key]
     if (
       (oldColumn && oldColumn.type) ||
       columnTypeSet.includes(key) ||
@@ -199,8 +199,8 @@ function buildUpdateTable(
   knex: SchemaBuilder,
   table: Table,
   tables: Record<string, Table>,
-  oldTable: Table,
-  renamed: RenameColumn
+  oldTable?: Table,
+  renamed?: RenameColumn
 ): SchemaBuilder {
   return knex.alterTable(table.name, schema => {
     generateSchema(schema, table, tables, oldTable, renamed)
@@ -238,19 +238,18 @@ class SqlTableQueryBuilder {
    * @param json the input JSON structure from which an SQL query will be built.
    * @return the operation that was found in the JSON.
    */
-  _operation(json: QueryJson): Operation {
-    return json.endpoint.operation
+  _operation(json: EnrichedQueryJson): Operation {
+    return json.operation
   }
 
-  _tableQuery(json: QueryJson): SqlQuery | SqlQuery[] {
+  _tableQuery(json: EnrichedQueryJson): SqlQuery | SqlQuery[] {
     let client = knex({ client: this.sqlClient }).schema
-    let schemaName = json?.endpoint?.schema
-    if (schemaName) {
-      client = client.withSchema(schemaName)
+    if (json?.schema) {
+      client = client.withSchema(json.schema)
     }
 
     let query: Knex.SchemaBuilder
-    if (!json.table || !json.meta || !json.meta.tables) {
+    if (!json.table || !json.tables) {
       throw new Error("Cannot execute without table being specified")
     }
     if (json.table.sourceType === TableSourceType.INTERNAL) {
@@ -259,17 +258,17 @@ class SqlTableQueryBuilder {
 
     switch (this._operation(json)) {
       case Operation.CREATE_TABLE:
-        query = buildCreateTable(client, json.table, json.meta.tables)
+        query = buildCreateTable(client, json.table, json.tables)
         break
       case Operation.UPDATE_TABLE:
-        if (!json.meta || !json.meta.table) {
+        if (!json.table) {
           throw new Error("Must specify old table for update")
         }
         // renameColumn does not work for MySQL, so return a raw query
-        if (this.sqlClient === SqlClient.MY_SQL && json.meta.renamed) {
+        if (this.sqlClient === SqlClient.MY_SQL && json.meta?.renamed) {
           const updatedColumn = json.meta.renamed.updated
-          const tableName = schemaName
-            ? `\`${schemaName}\`.\`${json.table.name}\``
+          const tableName = json?.schema
+            ? `\`${json.schema}\`.\`${json.table.name}\``
             : `\`${json.table.name}\``
           return {
             sql: `alter table ${tableName} rename column \`${json.meta.renamed.old}\` to \`${updatedColumn}\`;`,
@@ -280,18 +279,18 @@ class SqlTableQueryBuilder {
         query = buildUpdateTable(
           client,
           json.table,
-          json.meta.tables,
-          json.meta.table,
-          json.meta.renamed!
+          json.tables,
+          json.meta?.oldTable,
+          json.meta?.renamed
         )
 
         // renameColumn for SQL Server returns a parameterised `sp_rename` query,
         // which is not supported by SQL Server and gives a syntax error.
-        if (this.sqlClient === SqlClient.MS_SQL && json.meta.renamed) {
+        if (this.sqlClient === SqlClient.MS_SQL && json.meta?.renamed) {
           const oldColumn = json.meta.renamed.old
           const updatedColumn = json.meta.renamed.updated
-          const tableName = schemaName
-            ? `${schemaName}.${json.table.name}`
+          const tableName = json?.schema
+            ? `${json.schema}.${json.table.name}`
             : `${json.table.name}`
           const sql = getNativeSql(query)
           if (Array.isArray(sql)) {

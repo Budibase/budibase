@@ -1,6 +1,7 @@
 import { User } from "./types"
+import { RequiredKeys } from "@budibase/types"
 
-function user(body: any): User {
+function user(body: any): RequiredKeys<User> {
   return {
     _id: body._id,
     email: body.email,

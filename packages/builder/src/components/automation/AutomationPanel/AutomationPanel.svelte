@@ -1,11 +1,11 @@
 <script>
   import CreateAutomationModal from "./CreateAutomationModal.svelte"
   import { Modal, notifications, Layout } from "@budibase/bbui"
-  import NavHeader from "components/common/NavHeader.svelte"
+  import NavHeader from "@/components/common/NavHeader.svelte"
   import { onMount } from "svelte"
-  import { automationStore, tables } from "stores/builder"
+  import { automationStore, tables } from "@/stores/builder"
   import AutomationNavItem from "./AutomationNavItem.svelte"
-  import { TriggerStepID } from "constants/backend/automations"
+  import { TriggerStepID } from "@/constants/backend/automations"
 
   export let modal
   export let webhookModal

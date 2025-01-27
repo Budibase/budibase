@@ -1,5 +1,5 @@
 <script>
-  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
+  import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import {
     Drawer,
     DrawerContent,
@@ -14,12 +14,12 @@
     Modal,
     ModalContent,
   } from "@budibase/bbui"
-  import PropField from "components/automation/SetupPanel/PropField.svelte"
-  import AutomationBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
+  import PropField from "@/components/automation/SetupPanel/PropField.svelte"
+  import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import FlowItemActions from "./FlowItemActions.svelte"
-  import { automationStore, selectedAutomation } from "stores/builder"
-  import { QueryUtils } from "@budibase/frontend-core"
+  import { automationStore, selectedAutomation } from "@/stores/builder"
+  import { QueryUtils, Utils } from "@budibase/frontend-core"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher, getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
@@ -36,13 +36,11 @@
   const view = getContext("draggableView")
 
   let drawer
-  let condition
   let open = true
   let confirmDeleteModal
 
   $: branch = step.inputs?.branches?.[branchIdx]
-  $: editableConditionUI = cloneDeep(branch.conditionUI || {})
-  $: condition = QueryUtils.buildQuery(editableConditionUI)
+  $: editableConditionUI = branch.conditionUI || {}
 
   // Parse all the bindings into fields for the condition builder
   $: schemaFields = bindings.map(binding => {
@@ -80,9 +78,10 @@
     slot="buttons"
     on:click={() => {
       drawer.hide()
+      const updatedConditionsUI = Utils.parseFilter(editableConditionUI)
       dispatch("change", {
-        conditionUI: editableConditionUI,
-        condition,
+        conditionUI: updatedConditionsUI,
+        condition: QueryUtils.buildQuery(updatedConditionsUI),
       })
     }}
   >
@@ -223,6 +222,7 @@
   .branch-actions {
     display: flex;
     gap: var(--spacing-l);
+    cursor: default;
   }
   .footer {
     display: flex;
@@ -261,6 +261,7 @@
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px 4px 4px 4px;
+    cursor: default;
   }
 
   .blockSection {

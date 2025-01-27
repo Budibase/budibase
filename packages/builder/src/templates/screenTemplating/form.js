@@ -1,9 +1,9 @@
 import { Screen } from "./Screen"
 import { Component } from "../Component"
 import getValidRoute from "./getValidRoute"
-import { componentStore } from "stores/builder"
+import { componentStore } from "@/stores/builder"
 import { Helpers } from "@budibase/bbui"
-import { getRowActionButtonTemplates } from "templates/rowActions"
+import { getRowActionButtonTemplates } from "@/templates/rowActions"
 
 export const getTypeSpecificRoute = (tableOrView, type) => {
   if (type === "create") {

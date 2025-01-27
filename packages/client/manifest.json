@@ -3096,7 +3096,6 @@
     "name": "Text Field",
     "icon": "Text",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3106,8 +3105,7 @@
       {
         "type": "field/string",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -3226,13 +3224,22 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
   },
   "numberfield": {
     "name": "Number Field",
     "icon": "123",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3242,8 +3249,7 @@
       {
         "type": "field/number",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -3328,13 +3334,22 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "number"
+        }
+      ]
+    }
   },
   "bigintfield": {
     "name": "BigInt Field",
     "icon": "TagBold",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3344,8 +3359,7 @@
       {
         "type": "field/bigint",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -3414,13 +3428,22 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "number"
+        }
+      ]
+    }
   },
   "passwordfield": {
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3430,8 +3453,7 @@
       {
         "type": "field/string",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -3500,13 +3522,22 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
   },
   "optionsfield": {
     "name": "Options Picker",
     "icon": "Menu",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3516,8 +3547,7 @@
       {
         "type": "field/options",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -3714,13 +3744,22 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
   },
   "multifieldselect": {
     "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3730,8 +3769,7 @@
       {
         "type": "field/array",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -3922,13 +3960,22 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "array"
+        }
+      ]
+    }
   },
   "booleanfield": {
     "name": "Checkbox",
     "icon": "SelectBox",
     "editable": true,
-    "requiredAncestors": ["form"],
     "size": {
       "width": 400,
       "height": 60
@@ -3937,8 +3984,7 @@
       {
         "type": "field/boolean",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -4047,13 +4093,22 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "boolean"
+        }
+      ]
+    }
   },
   "longformfield": {
     "name": "Long Form Field",
     "icon": "TextAlignLeft",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -4063,8 +4118,7 @@
       {
         "type": "field/longform",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -4171,13 +4225,22 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
   },
   "datetimefield": {
     "name": "Date Picker",
     "icon": "Date",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -4187,8 +4250,7 @@
       {
         "type": "field/datetime",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -4291,7 +4353,17 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "datetime"
+        }
+      ]
+    }
   },
   "codescanner": {
     "name": "Barcode/QR Scanner",
@@ -4305,8 +4377,7 @@
       {
         "type": "field/barcodeqr",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -4451,7 +4522,17 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
   },
   "signaturesinglefield": {
     "name": "Signature",
@@ -4924,7 +5005,6 @@
     "icon": "Brackets",
     "styles": ["size"],
     "editable": true,
-    "requiredAncestors": ["form"],
     "size": {
       "width": 400,
       "height": 100
@@ -4933,8 +5013,7 @@
       {
         "type": "field/json",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -5014,7 +5093,17 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
   },
   "s3upload": {
     "name": "S3 File Upload",
@@ -5029,8 +5118,7 @@
       {
         "type": "field/s3",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -5051,7 +5139,8 @@
       {
         "type": "text",
         "label": "File name",
-        "key": "key"
+        "key": "key",
+        "nested": true
       },
       {
         "type": "event",
@@ -5075,7 +5164,17 @@
         "label": "Validation",
         "key": "validation"
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "array"
+        }
+      ]
+    }
   },
   "dataprovider": {
     "name": "Data Provider",
@@ -7643,7 +7742,6 @@
     "name": "User List Field",
     "icon": "UserGroup",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -7653,8 +7751,7 @@
       {
         "type": "field/bb_reference",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -7744,14 +7841,23 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "array"
+        }
+      ]
+    }
   },
   "bbreferencesinglefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
     "name": "User Field",
     "icon": "User",
     "styles": ["size"],
-    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -7761,8 +7867,7 @@
       {
         "type": "field/bb_reference_single",
         "label": "Field",
-        "key": "field",
-        "required": true
+        "key": "field"
       },
       {
         "type": "text",
@@ -7852,6 +7957,16 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
   }
 }

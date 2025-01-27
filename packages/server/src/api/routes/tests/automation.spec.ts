@@ -19,9 +19,11 @@ import {
   Table,
 } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
-import { FilterConditions } from "../../../automations/steps/filter"
 import { removeDeprecated } from "../../../automations/utils"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
+import { automations } from "@budibase/shared-core"
+
+const FilterConditions = automations.steps.filter.FilterConditions
 
 const MAX_RETRIES = 4
 let {

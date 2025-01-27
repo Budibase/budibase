@@ -1,8 +1,9 @@
 import { UserCtx } from "@budibase/types"
 import { checkMissingMigrations } from "../appMigrations"
 import env from "../environment"
+import type { Middleware, Next } from "koa"
 
-export default async (ctx: UserCtx, next: any) => {
+const middleware = (async (ctx: UserCtx, next: Next) => {
   const { appId } = ctx
 
   // migrations can be disabled via environment variable if you
@@ -16,4 +17,6 @@ export default async (ctx: UserCtx, next: any) => {
   }
 
   return checkMissingMigrations(ctx, next, appId)
-}
+}) as Middleware
+
+export default middleware

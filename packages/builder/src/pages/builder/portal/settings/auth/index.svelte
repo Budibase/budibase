@@ -24,8 +24,8 @@
     Link,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { API } from "api"
-  import { organisation, admin, licensing } from "stores/portal"
+  import { API } from "@/api"
+  import { organisation, admin, licensing } from "@/stores/portal"
   import Scim from "./scim.svelte"
   import Google from "./google.svelte"
 
@@ -140,10 +140,7 @@
     if (image) {
       let data = new FormData()
       data.append("file", image)
-      await API.uploadOIDCLogo({
-        name: image.name,
-        data,
-      })
+      await API.uploadOIDCLogo(image.name, data)
     }
   }
 

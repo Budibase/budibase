@@ -1,5 +1,5 @@
 import { Table, Row } from "../documents"
-import { QueryJson } from "./search"
+import { EnrichedQueryJson } from "./search"
 
 export const PASSWORD_REPLACEMENT = "--secret-value--"
 
@@ -119,6 +119,7 @@ interface DatasourceBasicFieldConfig {
   default?: any
   deprecated?: boolean
   hidden?: string
+  placeholder?: string
 }
 
 interface DatasourceSelectFieldConfig extends DatasourceBasicFieldConfig {
@@ -207,7 +208,7 @@ export interface DatasourcePlus extends IntegrationBase {
   // this returns the format of the identifier
   getBindingIdentifier(): string
   getStringConcat(parts: string[]): string
-  query(json: QueryJson): Promise<DatasourcePlusQueryResponse>
+  query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse>
   buildSchema(
     datasourceId: string,
     entities: Record<string, Table>

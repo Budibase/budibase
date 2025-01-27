@@ -1,4 +1,4 @@
-import jimp from "jimp"
+import { Jimp } from "jimp"
 
 const FORMATS = {
   IMAGES: ["png", "jpg", "jpeg", "gif", "bmp", "tiff"],
@@ -6,8 +6,8 @@ const FORMATS = {
 
 function processImage(file: { path: string }) {
   // this will overwrite the temp file
-  return jimp.read(file.path).then(img => {
-    return img.resize(300, jimp.AUTO).write(file.path)
+  return Jimp.read(file.path).then(img => {
+    return img.resize({ w: 256 }).write(file.path as `${string}.${string}`)
   })
 }
 

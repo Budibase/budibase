@@ -6,10 +6,10 @@ import { DBView, SearchFilters } from "../../sdk"
 export type ViewTemplateOpts = {
   field: string
   tableId: string
-  groupBy: string
+  groupBy?: string
   filters: ViewFilter[]
   schema: any
-  calculation: string
+  calculation?: string
   groupByMulti?: boolean
 }
 
@@ -99,6 +99,11 @@ export interface ViewV2 {
     type?: SortType
   }
   schema?: ViewV2Schema
+  rowHeight?: number
+}
+
+export interface PublicAPIView extends Omit<ViewV2, "query" | "queryUI"> {
+  query?: UISearchFilter
 }
 
 export type ViewV2Schema = Record<string, ViewFieldMetadata>

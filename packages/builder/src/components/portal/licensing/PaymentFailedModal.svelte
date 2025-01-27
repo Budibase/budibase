@@ -1,6 +1,6 @@
 <script>
   import { Modal, ModalContent, Body, TooltipWrapper } from "@budibase/bbui"
-  import { auth, admin, licensing } from "stores/portal"
+  import { auth, admin, licensing } from "@/stores/portal"
   import { onMount } from "svelte"
 
   export let onDismiss = () => {}

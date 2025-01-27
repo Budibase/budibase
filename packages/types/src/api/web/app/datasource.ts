@@ -12,7 +12,7 @@ export interface UpdateDatasourceResponse {
 export interface CreateDatasourceRequest {
   datasource: Datasource
   fetchSchema?: boolean
-  tablesFilter: string[]
+  tablesFilter?: string[]
 }
 
 export interface VerifyDatasourceRequest {
@@ -41,4 +41,15 @@ export interface BuildSchemaFromSourceRequest {
 export interface BuildSchemaFromSourceResponse {
   datasource: Datasource
   errors: Record<string, string>
+}
+
+export type FetchDatasourcesResponse = Datasource[]
+export type FindDatasourcesResponse = Datasource
+
+export interface DeleteDatasourceResponse {
+  message: string
+}
+
+export interface FetchExternalSchemaResponse {
+  schema: string
 }

@@ -121,7 +121,7 @@ const identifyInstallationGroup = async (
 
 const identifyTenantGroup = async (
   tenantId: string,
-  account: Account | undefined,
+  hosting: Hosting,
   timestamp?: string | number
 ): Promise<void> => {
   const id = await getEventTenantId(tenantId)
@@ -129,26 +129,12 @@ const identifyTenantGroup = async (
   const installationId = await getInstallationId()
   const environment = getDeploymentEnvironment()
 
-  let hosting: Hosting
-  let profession: string | undefined
-  let companySize: string | undefined
-
-  if (account) {
-    profession = account.profession
-    companySize = account.size
-    hosting = account.hosting
-  } else {
-    hosting = getHostingFromEnv()
-  }
-
   const group: TenantGroup = {
     id,
     type,
     hosting,
     environment,
     installationId,
-    profession,
-    companySize,
   }
 
   await identifyGroup(group, timestamp)

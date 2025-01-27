@@ -1,5 +1,5 @@
-import { findClosestMatchingComponent } from "helpers/components"
-import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+import { findClosestMatchingComponent } from "@/helpers/components"
+import { getDatasourceForProvider, getSchemaForDatasource } from "@/dataBinding"
 
 export const getComponentFieldOptions = (asset, id, type, loose = true) => {
   const form = findClosestMatchingComponent(

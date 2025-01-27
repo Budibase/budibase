@@ -22,6 +22,7 @@ import {
 } from "@budibase/types"
 import { ErrorCode, InvalidAPIKeyError } from "../errors"
 import tracer from "dd-trace"
+import type { Middleware, Next } from "koa"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
   ? parseInt(env.SESSION_UPDATE_PERIOD)
@@ -94,6 +95,14 @@ async function checkApiKey(
   })
 }
 
+function getHeader(ctx: Ctx, header: Header): string | undefined {
+  const contents = ctx.request.headers[header]
+  if (Array.isArray(contents)) {
+    throw new Error("Unexpected header format")
+  }
+  return contents
+}
+
 /**
  * This middleware is tenancy aware, so that it does not depend on other middlewares being used.
  * The tenancy modules should not be used here and it should be assumed that the tenancy context
@@ -106,9 +115,9 @@ export default function (
   }
 ) {
   const noAuthOptions = noAuthPatterns ? buildMatcherRegex(noAuthPatterns) : []
-  return async (ctx: Ctx | any, next: any) => {
+  return (async (ctx: Ctx, next: Next) => {
     let publicEndpoint = false
-    const version = ctx.request.headers[Header.API_VER]
+    const version = getHeader(ctx, Header.API_VER)
     // the path is not authenticated
     const found = matches(ctx, noAuthOptions)
     if (found) {
@@ -116,21 +125,21 @@ export default function (
     }
     try {
       // check the actual user is authenticated first, try header or cookie
-      let headerToken = ctx.request.headers[Header.TOKEN]
+      let headerToken = getHeader(ctx, Header.TOKEN)
 
       const authCookie =
         getCookie<SessionCookie>(ctx, Cookie.Auth) ||
         openJwt<SessionCookie>(headerToken)
-      let apiKey = ctx.request.headers[Header.API_KEY]
+      let apiKey = getHeader(ctx, Header.API_KEY)
 
       if (!apiKey && ctx.request.headers[Header.AUTHORIZATION]) {
         apiKey = ctx.request.headers[Header.AUTHORIZATION].split(" ")[1]
       }
 
-      const tenantId = ctx.request.headers[Header.TENANT_ID]
-      let authenticated: boolean = false,
+      const tenantId = getHeader(ctx, Header.TENANT_ID)
+      let authenticated = false,
         user: User | { tenantId: string } | undefined = undefined,
-        internal: boolean = false,
+        internal = false,
         loginMethod: LoginMethod | undefined = undefined
       if (authCookie && !apiKey) {
         const sessionId = authCookie.sessionId
@@ -243,5 +252,5 @@ export default function (
         ctx.throw(err.status || 403, err)
       }
     }
-  }
+  }) as Middleware
 }

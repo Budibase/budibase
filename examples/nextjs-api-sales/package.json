@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "bulma": "^0.9.3",
-    "next": "14.2.10",
+    "next": "14.2.21",
     "node-fetch": "^3.2.10",
     "sass": "^1.52.3",
     "react": "17.0.2",
@@ -18,10 +18,10 @@
     "react-notifications-component": "^3.4.1"
   },
   "devDependencies": {
-    "@types/node": "17.0.21",
+    "@types/node": "^20.17.9",
     "@types/react": "17.0.39",
     "eslint": "8.10.0",
     "eslint-config-next": "12.1.0",
-    "typescript": "5.5.2"
+    "typescript": "5.7.2"
   }
 }

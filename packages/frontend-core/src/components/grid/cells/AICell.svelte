@@ -73,6 +73,7 @@
   .value {
     display: -webkit-box;
     -webkit-line-clamp: var(--content-lines);
+    line-clamp: var(--content-lines);
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 20px;

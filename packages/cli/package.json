@@ -11,13 +11,14 @@
   "scripts": {
     "tsc": "node ../../scripts/build.js",
     "build": "yarn tsc",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "start": "ts-node ./src/index.ts"
   },
   "dependencies": {
-    "@budibase/backend-core": "0.0.0",
-    "@budibase/string-templates": "0.0.0",
-    "@budibase/types": "0.0.0",
+    "@budibase/backend-core": "*",
+    "@budibase/pouchdb-replication-stream": "1.2.11",
+    "@budibase/string-templates": "*",
+    "@budibase/types": "*",
     "chalk": "4.1.0",
     "cli-progress": "3.11.2",
     "commander": "7.1.0",
@@ -28,9 +29,9 @@
     "inquirer": "8.0.0",
     "lookpath": "1.1.0",
     "node-fetch": "2.6.7",
+    "open": "8.4.2",
     "posthog-node": "4.0.1",
     "pouchdb": "7.3.0",
-    "@budibase/pouchdb-replication-stream": "1.2.11",
     "randomstring": "1.1.5",
     "tar": "6.2.1",
     "yaml": "^2.1.1"
@@ -40,6 +41,6 @@
     "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "^6.4.0",
     "ts-node": "10.8.1",
-    "typescript": "5.5.2"
+    "typescript": "5.7.2"
   }
 }

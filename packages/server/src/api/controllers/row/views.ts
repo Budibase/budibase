@@ -1,16 +1,16 @@
 import {
   UserCtx,
   ViewV2,
-  SearchRowResponse,
   SearchViewRowRequest,
   RequiredKeys,
   RowSearchParams,
+  PaginatedSearchRowResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { context } from "@budibase/backend-core"
 
 export async function searchView(
-  ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
+  ctx: UserCtx<SearchViewRowRequest, PaginatedSearchRowResponse>
 ) {
   const { viewId } = ctx.params
 
@@ -29,33 +29,41 @@ export async function searchView(
 
   await context.ensureSnippetContext(true)
 
-  const searchOptions: RequiredKeys<SearchViewRowRequest> &
-    RequiredKeys<
-      Pick<RowSearchParams, "tableId" | "viewId" | "query" | "fields">
-    > = {
+  const searchOptions: RequiredKeys<RowSearchParams> = {
     tableId: view.tableId,
     viewId: view.id,
-    query: body.query,
+    query: body.query || {},
     fields: viewFields,
     ...getSortOptions(body, view),
     limit: body.limit,
-    bookmark: body.bookmark,
+    bookmark: body.bookmark ?? undefined,
     paginate: body.paginate,
     countRows: body.countRows,
+    version: undefined,
+    disableEscaping: undefined,
+    indexer: undefined,
+    rows: undefined,
   }
 
   const result = await sdk.rows.search(searchOptions, {
     user: sdk.users.getUserContextBindings(ctx.user),
   })
   result.rows.forEach(r => (r._viewId = view.id))
-  ctx.body = result
+
+  ctx.body = {
+    rows: result.rows,
+    bookmark: result.bookmark,
+    hasNextPage: result.hasNextPage,
+    totalRows: result.totalRows,
+  }
 }
+
 function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
   if (request.sort) {
     return {
       sort: request.sort,
       sortOrder: request.sortOrder,
-      sortType: request.sortType,
+      sortType: request.sortType ?? undefined,
     }
   }
   if (view.sort) {

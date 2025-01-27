@@ -977,63 +977,69 @@ describe("/rowsActions", () => {
   })
 })
 
-datasourceDescribe(
-  { name: "row actions (%s)", only: [DatabaseName.SQS, DatabaseName.POSTGRES] },
-  ({ config, dsProvider, isInternal }) => {
-    let datasource: Datasource | undefined
+const descriptions = datasourceDescribe({
+  only: [DatabaseName.SQS, DatabaseName.POSTGRES],
+})
 
-    beforeAll(async () => {
-      const ds = await dsProvider()
-      datasource = ds.datasource
-    })
+if (descriptions.length) {
+  describe.each(descriptions)(
+    "row actions ($dbName)",
+    ({ config, dsProvider, isInternal }) => {
+      let datasource: Datasource | undefined
 
-    async function getTable(): Promise<Table> {
-      if (isInternal) {
-        await config.api.application.addSampleData(config.getAppId())
-        const tables = await config.api.table.fetch()
-        return tables.find(t => t.sourceId === DEFAULT_BB_DATASOURCE_ID)!
-      } else {
-        const table = await config.api.table.save(
-          setup.structures.tableForDatasource(datasource!)
-        )
-        return table
-      }
-    }
+      beforeAll(async () => {
+        const ds = await dsProvider()
+        datasource = ds.datasource
+      })
 
-    it("should delete all the row actions (and automations) for its tables when a datasource is deleted", async () => {
-      async function getRowActionsFromDb(tableId: string) {
-        return await context.doInAppContext(config.getAppId(), async () => {
-          const db = context.getAppDB()
-          const tableDoc = await db.tryGet<TableRowActions>(
-            generateRowActionsID(tableId)
+      async function getTable(): Promise<Table> {
+        if (isInternal) {
+          await config.api.application.addSampleData(config.getAppId())
+          const tables = await config.api.table.fetch()
+          return tables.find(t => t.sourceId === DEFAULT_BB_DATASOURCE_ID)!
+        } else {
+          const table = await config.api.table.save(
+            setup.structures.tableForDatasource(datasource!)
           )
-          return tableDoc
-        })
+          return table
+        }
       }
 
-      const table = await getTable()
-      const tableId = table._id!
+      it("should delete all the row actions (and automations) for its tables when a datasource is deleted", async () => {
+        async function getRowActionsFromDb(tableId: string) {
+          return await context.doInAppContext(config.getAppId(), async () => {
+            const db = context.getAppDB()
+            const tableDoc = await db.tryGet<TableRowActions>(
+              generateRowActionsID(tableId)
+            )
+            return tableDoc
+          })
+        }
 
-      await config.api.rowAction.save(tableId, {
-        name: generator.guid(),
+        const table = await getTable()
+        const tableId = table._id!
+
+        await config.api.rowAction.save(tableId, {
+          name: generator.guid(),
+        })
+        await config.api.rowAction.save(tableId, {
+          name: generator.guid(),
+        })
+
+        const { actions } = (await getRowActionsFromDb(tableId))!
+        expect(Object.entries(actions)).toHaveLength(2)
+
+        const { automations } = await config.api.automation.fetch()
+        expect(automations).toHaveLength(2)
+
+        const datasource = await config.api.datasource.get(table.sourceId)
+        await config.api.datasource.delete(datasource)
+
+        const automationsResp = await config.api.automation.fetch()
+        expect(automationsResp.automations).toHaveLength(0)
+
+        expect(await getRowActionsFromDb(tableId)).toBeUndefined()
       })
-      await config.api.rowAction.save(tableId, {
-        name: generator.guid(),
-      })
-
-      const { actions } = (await getRowActionsFromDb(tableId))!
-      expect(Object.entries(actions)).toHaveLength(2)
-
-      const { automations } = await config.api.automation.fetch()
-      expect(automations).toHaveLength(2)
-
-      const datasource = await config.api.datasource.get(table.sourceId)
-      await config.api.datasource.delete(datasource)
-
-      const automationsResp = await config.api.automation.fetch()
-      expect(automationsResp.automations).toHaveLength(0)
-
-      expect(await getRowActionsFromDb(tableId)).toBeUndefined()
-    })
-  }
-)
+    }
+  )
+}

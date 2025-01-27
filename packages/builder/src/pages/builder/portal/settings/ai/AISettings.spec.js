@@ -1,7 +1,7 @@
 import { it, expect, describe, vi } from "vitest"
 import AISettings from "./index.svelte"
 import { render, fireEvent } from "@testing-library/svelte"
-import { admin, licensing, featureFlags } from "stores/portal"
+import { admin, licensing, featureFlags } from "@/stores/portal"
 import { notifications } from "@budibase/bbui"
 
 vi.spyOn(notifications, "error").mockImplementation(vi.fn)

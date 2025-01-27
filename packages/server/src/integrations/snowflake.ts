@@ -6,7 +6,8 @@ import {
   QueryType,
   SqlQuery,
 } from "@budibase/types"
-import { Snowflake } from "snowflake-promise"
+import snowflakeSdk, { SnowflakeError } from "snowflake-sdk"
+import { promisify } from "util"
 
 interface SnowflakeConfig {
   account: string
@@ -71,11 +72,52 @@ const SCHEMA: Integration = {
   },
 }
 
-class SnowflakeIntegration {
-  private client: Snowflake
+class SnowflakePromise {
+  config: SnowflakeConfig
+  client?: snowflakeSdk.Connection
 
   constructor(config: SnowflakeConfig) {
-    this.client = new Snowflake(config)
+    this.config = config
+  }
+
+  async connect() {
+    if (this.client?.isUp()) return
+
+    this.client = snowflakeSdk.createConnection(this.config)
+    const connectAsync = promisify(this.client.connect.bind(this.client))
+    return connectAsync()
+  }
+
+  async execute(sql: string) {
+    return new Promise((resolve, reject) => {
+      if (!this.client) {
+        throw Error(
+          "No snowflake client present to execute query. Run connect() first to initialise."
+        )
+      }
+
+      this.client.execute({
+        sqlText: sql,
+        complete: function (
+          err: SnowflakeError | undefined,
+          statementExecuted: any,
+          rows: any
+        ) {
+          if (err) {
+            return reject(err)
+          }
+          resolve(rows)
+        },
+      })
+    })
+  }
+}
+
+class SnowflakeIntegration {
+  private client: SnowflakePromise
+
+  constructor(config: SnowflakeConfig) {
+    this.client = new SnowflakePromise(config)
   }
 
   async testConnection(): Promise<ConnectionInfo> {

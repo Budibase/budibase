@@ -10,17 +10,18 @@
     "prebuild": "rimraf dist/",
     "build": "node ../../scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020"
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null"
   },
   "jest": {},
   "devDependencies": {
     "@budibase/nano": "10.1.5",
+    "@types/json-schema": "^7.0.15",
     "@types/koa": "2.13.4",
     "@types/redlock": "4.0.7",
+    "koa-useragent": "^4.1.0",
     "rimraf": "3.0.2",
-    "typescript": "5.5.2",
-    "koa-useragent": "^4.1.0"
+    "typescript": "5.7.2",
+    "zod": "^3.23.8"
   },
   "dependencies": {
     "scim-patch": "^0.8.1"

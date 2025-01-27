@@ -1,18 +1,25 @@
 import { db as dbCore, tenancy } from "@budibase/backend-core"
-import { BBContext, Document } from "@budibase/types"
+import {
+  Document,
+  UserCtx,
+  ApiKeyDoc,
+  ApiKeyFetchResponse,
+  UpdateApiKeyRequest,
+  UpdateApiKeyResponse,
+} from "@budibase/types"
 
 const KEYS_DOC = dbCore.StaticDatabases.GLOBAL.docs.apiKeys
 
 async function getBuilderMainDoc() {
   const db = tenancy.getGlobalDB()
-  try {
-    return await db.get<any>(KEYS_DOC)
-  } catch (err) {
-    // doesn't exist yet, nothing to get
+  const doc = await db.tryGet<ApiKeyDoc>(KEYS_DOC)
+  if (!doc) {
     return {
       _id: KEYS_DOC,
+      apiKeys: {},
     }
   }
+  return doc
 }
 
 async function setBuilderMainDoc(doc: Document) {
@@ -22,7 +29,7 @@ async function setBuilderMainDoc(doc: Document) {
   return db.put(doc)
 }
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: UserCtx<void, ApiKeyFetchResponse>) {
   try {
     const mainDoc = await getBuilderMainDoc()
     ctx.body = mainDoc.apiKeys ? mainDoc.apiKeys : {}
@@ -32,7 +39,9 @@ export async function fetch(ctx: BBContext) {
   }
 }
 
-export async function update(ctx: BBContext) {
+export async function update(
+  ctx: UserCtx<UpdateApiKeyRequest, UpdateApiKeyResponse>
+) {
   const key = ctx.params.key
   const value = ctx.request.body.value
 

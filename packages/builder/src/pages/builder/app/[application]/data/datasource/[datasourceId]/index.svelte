@@ -1,7 +1,7 @@
 <script>
   import { Tabs, Tab, Heading, Body, Layout } from "@budibase/bbui"
-  import { datasources, integrations } from "stores/builder"
-  import ICONS from "components/backend/DatasourceNavigator/icons"
+  import { datasources, integrations } from "@/stores/builder"
+  import ICONS from "@/components/backend/DatasourceNavigator/icons"
   import EditDatasourceConfig from "./_components/EditDatasourceConfig.svelte"
   import TablesPanel from "./_components/panels/Tables/index.svelte"
   import RelationshipsPanel from "./_components/panels/Relationships.svelte"
@@ -12,8 +12,8 @@
   import PromptQueryModal from "./_components/PromptQueryModal.svelte"
   import SettingsPanel from "./_components/panels/Settings.svelte"
   import { helpers } from "@budibase/shared-core"
-  import { admin } from "stores/portal"
-  import { IntegrationTypes } from "constants/backend"
+  import { admin } from "@/stores/portal"
+  import { IntegrationTypes } from "@/constants/backend"
 
   let selectedPanel = null
   let panelOptions = []
@@ -116,8 +116,5 @@
     gap: var(--spacing-l);
     align-items: center;
     margin-bottom: 12px;
-  }
-
-  .tabs {
   }
 </style>

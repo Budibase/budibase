@@ -111,8 +111,8 @@ describe("Rest Importer", () => {
     const importResult = await restImporter.importQueries(datasource._id)
     expect(importResult.errorQueries.length).toBe(0)
     expect(importResult.queries.length).toBe(assertions[key].count)
-    expect(events.query.imported).toBeCalledTimes(1)
-    expect(events.query.imported).toBeCalledWith(
+    expect(events.query.imported).toHaveBeenCalledTimes(1)
+    expect(events.query.imported).toHaveBeenCalledWith(
       datasource,
       assertions[key].source,
       assertions[key].count

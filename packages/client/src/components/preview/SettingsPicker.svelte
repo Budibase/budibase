@@ -6,6 +6,7 @@
   export let options
   export let label
   export let component
+  export let disabled = false
 
   $: currentValue = component?.[prop]
 </script>
@@ -16,6 +17,7 @@
     autoWidth
     placeholder={label}
     {options}
+    {disabled}
     value={currentValue}
     on:change={e => {
       if (prop) {

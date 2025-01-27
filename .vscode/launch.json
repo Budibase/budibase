@@ -21,16 +21,6 @@
       "cwd": "${workspaceFolder}/packages/worker"
     },
     {
-      "name": "Camunda Worker",
-      "type": "node",
-      "request": "launch",
-      "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
-      "args": [
-        "${workspaceFolder}/packages/account-portal/packages/server/src/v2/run.ts"
-      ],
-      "cwd": "${workspaceFolder}/packages/account-portal/packages/server"
-    },
-    {
       "type": "chrome",
       "request": "launch",
       "name": "Launch Chrome against localhost",

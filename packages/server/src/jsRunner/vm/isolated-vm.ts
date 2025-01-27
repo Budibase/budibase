@@ -72,7 +72,7 @@ export class IsolatedVM implements VM {
 
     this.addToContext({
       helpersStripProtocol: new ivm.Callback((str: string) => {
-        var parsed = url.parse(str) as any
+        let parsed = url.parse(str) as any
         parsed.protocol = ""
         return parsed.format()
       }),

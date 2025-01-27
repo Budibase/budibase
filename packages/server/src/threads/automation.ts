@@ -29,8 +29,13 @@ import {
   LoopStep,
   UserBindings,
   isBasicSearchOperator,
+  ContextEmitter,
 } from "@budibase/types"
-import { AutomationContext, TriggerOutput } from "../definitions/automations"
+import {
+  AutomationContext,
+  AutomationResponse,
+  TriggerOutput,
+} from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
 import { context, logging, configs } from "@budibase/backend-core"
 import {
@@ -67,6 +72,24 @@ function getLoopIterations(loopStep: LoopStep) {
   return 0
 }
 
+export async function enrichBaseContext(context: Record<string, any>) {
+  context.env = await sdkUtils.getEnvironmentVariables()
+
+  try {
+    const { config } = await configs.getSettingsConfigDoc()
+    context.settings = {
+      url: config.platformUrl,
+      logo: config.logoUrl,
+      company: config.company,
+    }
+  } catch (e) {
+    // if settings doc doesn't exist, make the settings blank
+    context.settings = {}
+  }
+
+  return context
+}
+
 /**
  * The automation orchestrator is a class responsible for executing automations.
  * It handles the context of the automation and makes sure each step gets the correct
@@ -76,12 +99,12 @@ class Orchestrator {
   private chainCount: number
   private appId: string
   private automation: Automation
-  private emitter: any
+  private emitter: ContextEmitter
   private context: AutomationContext
   private job: Job
   private loopStepOutputs: LoopStep[]
   private stopped: boolean
-  private executionOutput: Omit<AutomationContext, "stepsByName" | "stepsById">
+  private executionOutput: AutomationResponse
   private currentUser: UserBindings | undefined
 
   constructor(job: AutomationJob) {
@@ -257,7 +280,7 @@ class Orchestrator {
     })
   }
 
-  async execute(): Promise<any> {
+  async execute(): Promise<AutomationResponse | undefined> {
     return tracer.trace(
       "Orchestrator.execute",
       { resource: "automation" },
@@ -266,20 +289,9 @@ class Orchestrator {
           appId: this.appId,
           automationId: this.automation._id,
         })
-        this.context.env = await sdkUtils.getEnvironmentVariables()
-        this.context.user = this.currentUser
 
-        try {
-          const { config } = await configs.getSettingsConfigDoc()
-          this.context.settings = {
-            url: config.platformUrl,
-            logo: config.logoUrl,
-            company: config.company,
-          }
-        } catch (e) {
-          // if settings doc doesn't exist, make the settings blank
-          this.context.settings = {}
-        }
+        await enrichBaseContext(this.context)
+        this.context.user = this.currentUser
 
         let metadata
 
@@ -385,13 +397,14 @@ class Orchestrator {
     stepIdx: number,
     pathIdx?: number
   ): Promise<number> {
-    await processObject(loopStep.inputs, this.processContext(this.context))
+    await processObject(loopStep.inputs, this.mergeContexts(this.context))
     const iterations = getLoopIterations(loopStep)
     let stepToLoopIndex = stepIdx + 1
     let pathStepIdx = (pathIdx || stepIdx) + 1
 
     let iterationCount = 0
     let shouldCleanup = true
+    let reachedMaxIterations = false
 
     for (let loopStepIndex = 0; loopStepIndex < iterations; loopStepIndex++) {
       try {
@@ -419,19 +432,8 @@ class Orchestrator {
         loopStepIndex === env.AUTOMATION_MAX_ITERATIONS ||
         (loopStep.inputs.iterations && loopStepIndex === maxIterations)
       ) {
-        this.updateContextAndOutput(
-          pathStepIdx + 1,
-          steps[stepToLoopIndex],
-          {
-            items: this.loopStepOutputs,
-            iterations: loopStepIndex,
-          },
-          {
-            status: AutomationErrors.MAX_ITERATIONS,
-            success: true,
-          }
-        )
-        shouldCleanup = false
+        reachedMaxIterations = true
+        shouldCleanup = true
         break
       }
 
@@ -484,6 +486,10 @@ class Orchestrator {
               items: this.loopStepOutputs,
               iterations: iterationCount,
             }
+
+      if (reachedMaxIterations && iterations !== 0) {
+        tempOutput.status = AutomationStepStatus.MAX_ITERATIONS
+      }
 
       // Loop Step clean up
       this.executionOutput.steps.splice(pathStepIdx, 0, {
@@ -573,14 +579,14 @@ class Orchestrator {
           for (const [field, value] of Object.entries(filters[filterKey])) {
             const fromContext = processStringSync(
               field,
-              this.processContext(this.context)
+              this.mergeContexts(this.context)
             )
             toFilter[field] = fromContext
 
             if (typeof value === "string" && findHBSBlocks(value).length > 0) {
               const processedVal = processStringSync(
                 value,
-                this.processContext(this.context)
+                this.mergeContexts(this.context)
               )
 
               filters[filterKey][field] = processedVal
@@ -637,7 +643,7 @@ class Orchestrator {
         const stepFn = await this.getStepFunctionality(step.stepId)
         let inputs = await processObject(
           originalStepInput,
-          this.processContext(this.context)
+          this.mergeContexts(this.context)
         )
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
 
@@ -645,7 +651,7 @@ class Orchestrator {
           inputs: inputs,
           appId: this.appId,
           emitter: this.emitter,
-          context: this.context,
+          context: this.mergeContexts(this.context),
         })
         this.handleStepOutput(step, outputs, loopIteration)
       }
@@ -665,8 +671,8 @@ class Orchestrator {
     return null
   }
 
-  private processContext(context: AutomationContext) {
-    const processContext = {
+  private mergeContexts(context: AutomationContext) {
+    const mergeContexts = {
       ...context,
       steps: {
         ...context.steps,
@@ -674,7 +680,7 @@ class Orchestrator {
         ...context.stepsByName,
       },
     }
-    return processContext
+    return mergeContexts
   }
 
   private handleStepOutput(
@@ -729,7 +735,9 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   })
 }
 
-export async function executeInThread(job: Job<AutomationData>) {
+export async function executeInThread(
+  job: Job<AutomationData>
+): Promise<AutomationResponse> {
   const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
@@ -741,7 +749,7 @@ export async function executeInThread(job: Job<AutomationData>) {
     }, job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT)
   })
 
-  return await context.doInAppContext(appId, async () => {
+  return (await context.doInAppContext(appId, async () => {
     await context.ensureSnippetContext()
     const envVars = await sdkUtils.getEnvironmentVariables()
     // put into automation thread for whole context
@@ -752,7 +760,7 @@ export async function executeInThread(job: Job<AutomationData>) {
         timeoutPromise,
       ])
     })
-  })
+  })) as AutomationResponse
 }
 
 export const removeStalled = async (job: Job) => {

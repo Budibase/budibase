@@ -23,7 +23,7 @@
   export let type = TooltipType.Default
   export let text = ""
   export let fixed = false
-  export let color = null
+  export let color = ""
   export let noWrap = false
 
   let wrapper
@@ -134,6 +134,7 @@
   .spectrum-Tooltip-label {
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     font-size: 12px;
