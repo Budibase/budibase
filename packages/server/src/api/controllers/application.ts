@@ -27,7 +27,6 @@ import {
   env as envCore,
   ErrorCode,
   events,
-  migrations,
   objectStore,
   roles,
   tenancy,
@@ -43,7 +42,6 @@ import { groups, licensing, quotas } from "@budibase/pro"
 import {
   App,
   Layout,
-  MigrationType,
   PlanType,
   Screen,
   UserCtx,
@@ -488,13 +486,6 @@ async function creationEvents(request: BBRequest<CreateAppRequest>, app: App) {
 }
 
 async function appPostCreate(ctx: UserCtx<CreateAppRequest, App>, app: App) {
-  const tenantId = tenancy.getTenantId()
-  await migrations.backPopulateMigrations({
-    type: MigrationType.APP,
-    tenantId,
-    appId: app.appId,
-  })
-
   await creationEvents(ctx.request, app)
 
   // app import, template creation and duplication
