@@ -1,10 +1,10 @@
 import { Document } from "../../document"
-import { EventEmitter } from "events"
 import { User } from "../../global"
 import { ReadStream } from "fs"
 import { Row } from "../row"
 import { Table } from "../table"
 import { AutomationStep, AutomationTrigger } from "./schema"
+import { ContextEmitter } from "../../../sdk"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -205,6 +205,14 @@ export interface AutomationResults {
   }[]
 }
 
+export interface DidNotTriggerResponse {
+  outputs: {
+    success: false
+    status: AutomationStatus.STOPPED
+  }
+  message: AutomationStoppedReason.TRIGGER_FILTER_NOT_MET
+}
+
 export interface AutomationLog extends AutomationResults, Document {
   automationName: string
   _rev?: string
@@ -218,7 +226,7 @@ export interface AutomationLogPage {
 
 export interface AutomationStepInputBase {
   context: Record<string, any>
-  emitter: EventEmitter
+  emitter: ContextEmitter
   appId: string
   apiKey?: string
 }
