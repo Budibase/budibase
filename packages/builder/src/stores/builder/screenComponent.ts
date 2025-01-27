@@ -65,6 +65,7 @@ export const screenComponentErrors = derived(
 
     const errors = {
       ...getInvalidDatasources($selectedScreen, datasources),
+      ...getMissingAncestors($selectedScreen),
       ...getMissingRequiredSettings($selectedScreen),
     }
     return errors
@@ -180,5 +181,39 @@ function getMissingRequiredSettings(screen: Screen) {
     }
   }
 
+  return result
+}
+
+const BudibasePrefix = "@budibase/standard-components/"
+function getMissingAncestors(screen: Screen) {
+  const allComponents = getAllComponentsInScreen(screen)
+  const result: Record<string, UIComponentError[]> = {}
+  for (const component of allComponents) {
+    const definition = getManifestDefinition(component)
+    if (!("requiredAncestors" in definition)) {
+      continue
+    }
+
+    const missingAncestors = definition.requiredAncestors.filter(
+      ancestor => !component.ancestors?.includes(`${BudibasePrefix}${ancestor}`)
+    )
+
+    if (missingAncestors.length) {
+      const pluralise = (name: string) => {
+        return name.endsWith("s") ? `${name}'` : `${name}s`
+      }
+
+      const getAncestorName = (name: string) => {
+        const definition: any = getManifestDefinition(name)
+        return definition.name
+      }
+
+      result[component._id!] = missingAncestors.map((s: any) => ({
+        key: s.key,
+        message: `${pluralise(component._instanceName)} need to be inside a
+<mark>${getAncestorName(s)}</mark>`,
+      }))
+    }
+  }
   return result
 }

@@ -38,8 +38,11 @@ export function findComponentsBySettingsType(
   return result
 }
 
-export function getManifestDefinition(component: Component) {
-  const componentType = component._component.split("/").slice(-1)[0]
+export function getManifestDefinition(component: Component | string) {
+  const componentType =
+    typeof component === "string"
+      ? component
+      : component._component.split("/").slice(-1)[0]
   const definition =
     clientManifest[componentType as keyof typeof clientManifest]
   return definition
