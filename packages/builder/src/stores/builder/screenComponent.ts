@@ -100,6 +100,11 @@ export const screenComponentErrors = derived(
       ...reduceBy("_id", $queries.list),
     }
 
+    if (!$selectedScreen) {
+      // Skip validation if a screen is not selected.
+      return {}
+    }
+
     return getInvalidDatasources($selectedScreen, datasources)
   }
 )
