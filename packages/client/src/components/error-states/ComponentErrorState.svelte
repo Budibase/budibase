@@ -26,7 +26,7 @@
       {#if requiredAncestor}
         <MissingRequiredAncestor {requiredAncestor} />
       {:else if errorMessage}
-        {errorMessage}
+        {@html errorMessage}
       {:else if requiredSetting}
         <MissingRequiredSetting {requiredSetting} />
       {/if}

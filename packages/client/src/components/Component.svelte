@@ -695,11 +695,7 @@
     use:gridLayout={gridMetadata}
   >
     {#if errorState}
-      <ComponentErrorState
-        {missingRequiredSettings}
-        {missingRequiredAncestors}
-        {componentErrors}
-      />
+      <ComponentErrorState {componentErrors} />
     {:else}
       <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
         {#if children.length}
