@@ -3,12 +3,13 @@
   import { Icon } from "@budibase/bbui"
   import MissingRequiredSetting from "./MissingRequiredSetting.svelte"
   import MissingRequiredAncestor from "./MissingRequiredAncestor.svelte"
+  import { UIComponentError } from "@budibase/types"
 
   export let missingRequiredSettings:
     | { key: string; label: string }[]
     | undefined
   export let missingRequiredAncestors: string[] | undefined
-  export let componentErrors: string[] | undefined
+  export let componentErrors: UIComponentError[] | undefined
 
   const component = getContext("component")
   const { styleable, builderStore } = getContext("sdk")
@@ -26,7 +27,20 @@
       {#if requiredAncestor}
         <MissingRequiredAncestor {requiredAncestor} />
       {:else if errorMessage}
-        {@html errorMessage}
+        {@html errorMessage.message}
+        {#if errorMessage.key}
+          <span>-</span>
+          <!-- svelte-ignore a11y-no-static-element-interactions -->
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <span
+            class="spectrum-Link"
+            on:click={() => {
+              builderStore.actions.highlightSetting(errorMessage.key)
+            }}
+          >
+            Show me
+          </span>
+        {/if}
       {:else if requiredSetting}
         <MissingRequiredSetting {requiredSetting} />
       {/if}

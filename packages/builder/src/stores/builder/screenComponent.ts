@@ -6,7 +6,12 @@ import {
   findComponentsBySettingsType,
   getManifestDefinition,
 } from "@/helpers/screen"
-import { UIDatasourceType, Screen, Component } from "@budibase/types"
+import {
+  UIDatasourceType,
+  Screen,
+  Component,
+  UIComponentError,
+} from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
 import { featureFlag } from "@/helpers"
@@ -41,7 +46,7 @@ export const screenComponentErrors = derived(
   [selectedScreen, tables, views, viewsV2, queries],
   ([$selectedScreen, $tables, $views, $viewsV2, $queries]): Record<
     string,
-    string[]
+    UIComponentError[]
   > => {
     if (!featureFlag.isEnabled("CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS")) {
       return {}
@@ -66,7 +71,7 @@ function getInvalidDatasources(
   screen: Screen,
   datasources: Record<string, any>
 ) {
-  const result: Record<string, string[]> = {}
+  const result: Record<string, UIComponentError[]> = {}
   for (const { component, setting } of findComponentsBySettingsType(screen, [
     "table",
     "dataSource",
@@ -87,7 +92,10 @@ function getInvalidDatasources(
     if (!datasources[resourceId]) {
       const friendlyTypeName = friendlyNameByType[type] ?? type
       result[component._id!] = [
-        `The ${friendlyTypeName} named "${label}" could not be found`,
+        {
+          key: setting.key,
+          message: `The ${friendlyTypeName} named "${label}" could not be found`,
+        },
       ]
     }
   }
@@ -108,7 +116,7 @@ function getAllComponentsInScreen(screen: Screen) {
 function getMissingRequiredSettings(screen: Screen) {
   const allComponents = getAllComponentsInScreen(screen)
 
-  const result: Record<string, string[]> = {}
+  const result: Record<string, UIComponentError[]> = {}
   for (const component of allComponents) {
     const definition = getManifestDefinition(component)
     if (!("settings" in definition)) {
@@ -152,10 +160,10 @@ function getMissingRequiredSettings(screen: Screen) {
     )
 
     if (missingRequiredSettings.length) {
-      result[component._id!] = missingRequiredSettings.map(
-        (s: any) =>
-          `Add the <mark>${s.label}</mark> setting to start using your component`
-      )
+      result[component._id!] = missingRequiredSettings.map((s: any) => ({
+        key: s.key,
+        message: `Add the <mark>${s.label}</mark> setting to start using your component`,
+      }))
     }
   }
 
