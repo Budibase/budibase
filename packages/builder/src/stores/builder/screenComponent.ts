@@ -34,6 +34,7 @@ const validationKeyByType: Record<UIDatasourceType, string | null> = {
   custom: null,
   link: "rowId",
   field: "value",
+  jsonarray: "value",
 }
 
 export const screenComponentErrors = derived(
@@ -74,6 +75,10 @@ export const screenComponentErrors = derived(
             bindings.extractRelationships(componentBindings)
           ),
           ...reduceBy("value", bindings.extractFields(componentBindings)),
+          ...reduceBy(
+            "value",
+            bindings.extractJSONArrayFields(componentBindings)
+          ),
         }
 
         const resourceId = componentSettings[validationKey]
