@@ -6,7 +6,8 @@ import { findComponentsBySettingsType } from "@/helpers/screen"
 import { UIDatasourceType, Screen } from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
-import { featureFlag } from "@/helpers"
+import { bindings, featureFlag } from "@/helpers"
+import { screenComponentBindableProperties } from "./bindings"
 
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
@@ -31,14 +32,26 @@ const validationKeyByType: Record<UIDatasourceType, string | null> = {
   viewV2: "id",
   query: "_id",
   custom: null,
+  link: "rowId",
 }
 
 export const screenComponentErrors = derived(
-  [selectedScreen, tables, views, viewsV2, queries],
-  ([$selectedScreen, $tables, $views, $viewsV2, $queries]): Record<
-    string,
-    string[]
-  > => {
+  [
+    selectedScreen,
+    tables,
+    views,
+    viewsV2,
+    queries,
+    screenComponentBindableProperties,
+  ],
+  ([
+    $selectedScreen,
+    $tables,
+    $views,
+    $viewsV2,
+    $queries,
+    $screenComponentBindableProperties,
+  ]): Record<string, string[]> => {
     if (!featureFlag.isEnabled("CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS")) {
       return {}
     }
@@ -56,6 +69,9 @@ export const screenComponentErrors = derived(
         const type = componentSettings.type as UIDatasourceType
 
         const validationKey = validationKeyByType[type]
+        if (type === "link") {
+          debugger
+        }
         if (!validationKey) {
           continue
         }
@@ -76,6 +92,10 @@ export const screenComponentErrors = derived(
       ...reduceBy("name", $views.list),
       ...reduceBy("id", $viewsV2.list),
       ...reduceBy("_id", $queries.list),
+      ...reduceBy(
+        "rowId",
+        bindings.extractRelationships($screenComponentBindableProperties)
+      ),
     }
 
     return getInvalidDatasources($selectedScreen, datasources)
