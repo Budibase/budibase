@@ -7,12 +7,12 @@ import { UIDatasourceType, Screen } from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
 import { bindings, featureFlag } from "@/helpers"
-import { screenComponentBindableProperties } from "./bindings"
+import { getBindableProperties } from "@/dataBinding"
 
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
   list: TItem[]
-) {
+): Record<string, any> {
   return list.reduce(
     (result, item) => ({
       ...result,
@@ -36,22 +36,11 @@ const validationKeyByType: Record<UIDatasourceType, string | null> = {
 }
 
 export const screenComponentErrors = derived(
-  [
-    selectedScreen,
-    tables,
-    views,
-    viewsV2,
-    queries,
-    screenComponentBindableProperties,
-  ],
-  ([
-    $selectedScreen,
-    $tables,
-    $views,
-    $viewsV2,
-    $queries,
-    $screenComponentBindableProperties,
-  ]): Record<string, string[]> => {
+  [selectedScreen, tables, views, viewsV2, queries],
+  ([$selectedScreen, $tables, $views, $viewsV2, $queries]): Record<
+    string,
+    string[]
+  > => {
     if (!featureFlag.isEnabled("CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS")) {
       return {}
     }
@@ -72,8 +61,21 @@ export const screenComponentErrors = derived(
         if (!validationKey) {
           continue
         }
+
+        const componentBindings = getBindableProperties(
+          $selectedScreen,
+          component._id
+        )
+
+        const componentDatasources = {
+          ...reduceBy(
+            "rowId",
+            bindings.extractRelationships(componentBindings)
+          ),
+        }
+
         const resourceId = componentSettings[validationKey]
-        if (!datasources[resourceId]) {
+        if (!{ ...datasources, ...componentDatasources }[resourceId]) {
           const friendlyTypeName = friendlyNameByType[type] ?? type
           result[component._id!] = [
             `The ${friendlyTypeName} named "${label}" could not be found`,
@@ -89,10 +91,6 @@ export const screenComponentErrors = derived(
       ...reduceBy("name", $views.list),
       ...reduceBy("id", $viewsV2.list),
       ...reduceBy("_id", $queries.list),
-      ...reduceBy(
-        "rowId",
-        bindings.extractRelationships($screenComponentBindableProperties)
-      ),
     }
 
     return getInvalidDatasources($selectedScreen, datasources)
