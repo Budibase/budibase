@@ -5,3 +5,4 @@ export type UIDatasourceType =
   | "query"
   | "custom"
   | "link"
+  | "field"
