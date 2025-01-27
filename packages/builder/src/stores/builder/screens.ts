@@ -35,7 +35,7 @@ export const initialScreenState: ScreenState = {
 export class ScreenStore extends BudiStore<ScreenState> {
   history: any
   delete: any
-  save: any
+  save: (screen: Screen) => Promise<Screen>
 
   constructor() {
     super(initialScreenState)
@@ -281,7 +281,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * supports deeply mutating the current doc rather than just appending data.
    */
   sequentialScreenPatch = Utils.sequential(
-    async (patchFn: (screen: Screen) => any, screenId: string) => {
+    async (
+      patchFn: (screen: Screen) => boolean,
+      screenId: string
+    ): Promise<Screen | void> => {
       const state = get(this.store)
       const screen = state.screens.find(screen => screen._id === screenId)
       if (!screen) {
