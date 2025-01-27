@@ -13,6 +13,7 @@
     decodeJSBinding,
     findHBSBlocks,
     isJSBinding,
+    processStringSync,
   } from "@budibase/string-templates"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
@@ -230,7 +231,10 @@
     }
 
     const stateUpdate = {
-      [selectedKey]: e.detail,
+      [selectedKey]: processStringSync(
+        e.detail,
+        $previewStore.selectedComponentContext
+      ),
     }
     previewStore.updateState(stateUpdate)
     editorValue = e.detail
