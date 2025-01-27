@@ -210,7 +210,7 @@ function getMissingAncestors(screen: Screen) {
 
       result[component._id!] = missingAncestors.map((s: any) => ({
         key: s.key,
-        message: `${pluralise(component._instanceName)} need to be inside a
+        message: `${pluralise(definition.name)} need to be inside a
 <mark>${getAncestorName(s)}</mark>`,
       }))
     }
