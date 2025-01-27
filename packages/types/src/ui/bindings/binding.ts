@@ -24,3 +24,18 @@ export type InsertAtPositionFn = (_: {
   value: string
   cursor?: { anchor: number }
 }) => void
+
+export interface UIBinding {
+  tableId?: string
+  fieldSchema?: {
+    name: string
+    tableId: string
+    type: string
+    subtype?: string
+    prefixKeys?: string
+  }
+  component?: string
+  providerId: string
+  readableBinding?: string
+  runtimeBinding?: string
+}
