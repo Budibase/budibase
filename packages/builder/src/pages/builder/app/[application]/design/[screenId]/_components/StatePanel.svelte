@@ -47,6 +47,10 @@
       previousScreenId = $selectedScreen._id
     }
 
+    if (keyOptions.length > 0 && !keyOptions.includes(selectedKey)) {
+      selectedKey = keyOptions[0]
+    }
+
     if (selectedKey) {
       searchComponents(selectedKey)
       editorValue = previewContext.state?.[selectedKey] ?? ""
@@ -180,14 +184,30 @@
       return
     }
 
+    const componentStateUpdates = findComponentsUpdatingState(
+      $selectedScreen.props,
+      stateKey
+    )
+
     componentsUsingState = findComponentsUsingState(
       $selectedScreen.props,
       stateKey
     )
-    componentsUpdatingState = findComponentsUpdatingState(
-      $selectedScreen.props,
-      stateKey
-    )
+
+    const screenStateUpdates =
+      $selectedScreen?.onLoad
+        ?.filter(
+          (handler: any) =>
+            handler["##eventHandlerType"] === "Update State" &&
+            handler.parameters?.key === stateKey
+        )
+        .map(() => ({
+          id: $selectedScreen._id,
+          name: "Screen onLoad",
+          settings: ["onLoad"],
+        })) || []
+
+    componentsUpdatingState = [...componentStateUpdates, ...screenStateUpdates]
   }
 
   const handleStateKeySelect = (key: CustomEvent) => {
