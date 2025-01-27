@@ -118,7 +118,7 @@
   $: stepId = $memoBlock.stepId
 
   $: getInputData(testData, $memoBlock.inputs)
-  $: tableId = inputData ? inputData.row?.tableId : null
+  $: tableId = inputData?.row?.tableId || testData?.row?.tableId || null
   $: table = tableId
     ? $tables.list.find(table => table._id === tableId)
     : { schema: {} }
@@ -172,6 +172,7 @@
   $: fetchLoading = $fetch?.loading
   $: primaryDisplay = table?.primaryDisplay
   $: rowSearchTerm = ""
+  $: selectedRow = null
 
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
@@ -403,10 +404,12 @@
                 placeholder: "Select a row",
                 options: fetchedRows,
                 loading: fetchLoading,
+                value: selectedRow,
                 autocomplete: true,
                 getOptionLabel: row => row?.[primaryDisplay] || "",
                 onChange: e => {
                   if (isTestModal) {
+                    selectedRow = e.detail
                     if (stepState?.rowType === "oldRow") {
                       onChange({
                         oldRow: e.detail,
