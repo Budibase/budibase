@@ -69,9 +69,6 @@ export const screenComponentErrors = derived(
         const type = componentSettings.type as UIDatasourceType
 
         const validationKey = validationKeyByType[type]
-        if (type === "link") {
-          debugger
-        }
         if (!validationKey) {
           continue
         }
