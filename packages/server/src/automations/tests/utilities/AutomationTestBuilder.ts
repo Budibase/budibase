@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from "uuid"
-import { testAutomation } from "../../../api/routes/tests/utilities/TestFunctions"
 import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
 import { TRIGGER_DEFINITIONS } from "../../triggers"
 import {
@@ -7,7 +6,6 @@ import {
   AppActionTriggerOutputs,
   Automation,
   AutomationActionStepId,
-  AutomationResults,
   AutomationStep,
   AutomationStepInputs,
   AutomationTrigger,
@@ -24,6 +22,7 @@ import {
   ExecuteQueryStepInputs,
   ExecuteScriptStepInputs,
   FilterStepInputs,
+  isDidNotTriggerResponse,
   LoopStepInputs,
   OpenAIStepInputs,
   QueryRowsStepInputs,
@@ -36,6 +35,7 @@ import {
   SearchFilters,
   ServerLogStepInputs,
   SmtpEmailStepInputs,
+  TestAutomationRequest,
   UpdateRowStepInputs,
   WebhookTriggerInputs,
   WebhookTriggerOutputs,
@@ -279,7 +279,7 @@ class StepBuilder extends BaseStepBuilder {
 class AutomationBuilder extends BaseStepBuilder {
   private automationConfig: Automation
   private config: TestConfiguration
-  private triggerOutputs: any
+  private triggerOutputs: TriggerOutputs
   private triggerSet = false
 
   constructor(
@@ -398,21 +398,19 @@ class AutomationBuilder extends BaseStepBuilder {
 
   async run() {
     const automation = await this.save()
-    const results = await testAutomation(
-      this.config,
-      automation,
-      this.triggerOutputs
+    const response = await this.config.api.automation.test(
+      automation._id!,
+      this.triggerOutputs as TestAutomationRequest
     )
-    return this.processResults(results)
-  }
 
-  private processResults(results: {
-    body: AutomationResults
-  }): AutomationResults {
-    results.body.steps.shift()
+    if (isDidNotTriggerResponse(response)) {
+      throw new Error(response.message)
+    }
+
+    response.steps.shift()
     return {
-      trigger: results.body.trigger,
-      steps: results.body.steps,
+      trigger: response.trigger,
+      steps: response.steps,
     }
   }
 }

@@ -2,10 +2,10 @@ import * as scriptController from "../../api/controllers/script"
 import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
+  ContextEmitter,
   ExecuteScriptStepInputs,
   ExecuteScriptStepOutputs,
 } from "@budibase/types"
-import { EventEmitter } from "events"
 
 export async function run({
   inputs,
@@ -16,7 +16,7 @@ export async function run({
   inputs: ExecuteScriptStepInputs
   appId: string
   context: object
-  emitter: EventEmitter
+  emitter: ContextEmitter
 }): Promise<ExecuteScriptStepOutputs> {
   if (inputs.code == null) {
     return {

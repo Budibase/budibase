@@ -49,7 +49,12 @@ export class ComponentTreeNodesStore extends BudiStore<OpenNodesState> {
 
   // Will ensure all parents of a node are expanded so that it is visible in the tree
   makeNodeVisible(componentId: string) {
-    const selectedScreen = get(selectedScreenStore)
+    const selectedScreen: Screen | undefined = get(selectedScreenStore)
+
+    if (!selectedScreen) {
+      console.error("Invalid node " + componentId)
+      return {}
+    }
 
     const path = findComponentPath(selectedScreen?.props, componentId)
 

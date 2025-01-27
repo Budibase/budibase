@@ -43,6 +43,7 @@ const loadBudibase = async () => {
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
     location: window["##BUDIBASE_LOCATION##"],
     snippets: window["##BUDIBASE_SNIPPETS##"],
+    componentErrors: window["##BUDIBASE_COMPONENT_ERRORS##"],
   })
 
   // Set app ID - this window flag is set by both the preview and the real
