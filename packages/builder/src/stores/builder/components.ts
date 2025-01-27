@@ -483,9 +483,8 @@ export class ComponentStore extends BudiStore<ComponentState> {
       extras._children = []
     }
 
-    const $selectedScreen = get(selectedScreen)
     // Add step name to form steps
-    if (componentName.endsWith("/formstep") && $selectedScreen) {
+    if (componentName.endsWith("/formstep")) {
       const parentForm = findClosestMatchingComponent(
         screen.props,
         get(selectedComponent)._id,
@@ -621,7 +620,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
       const state = get(this.store)
       componentId = componentId ?? state.selectedComponentId ?? undefined
       const screenState = get(screenStore)
-      screenId = (screenId || screenState.selectedScreenId) ?? undefined
+      screenId = screenId || screenState.selectedScreenId
     }
     if (!componentId || !screenId || !patchFn) {
       return

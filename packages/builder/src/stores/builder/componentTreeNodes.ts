@@ -56,7 +56,7 @@ export class ComponentTreeNodesStore extends BudiStore<OpenNodesState> {
       return {}
     }
 
-    const path = findComponentPath(selectedScreen?.props, componentId)
+    const path = findComponentPath(selectedScreen.props, componentId)
 
     const componentIds = path.map((component: Component) => component._id)
 
