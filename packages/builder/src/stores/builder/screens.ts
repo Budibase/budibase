@@ -10,7 +10,7 @@ import {
   navigationStore,
   selectedComponent,
 } from "@/stores/builder"
-import { createHistoryStore } from "@/stores/builder/history"
+import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
@@ -33,8 +33,8 @@ export const initialScreenState: ScreenState = {
 
 // Review the nulls
 export class ScreenStore extends BudiStore<ScreenState> {
-  history: any
-  delete: any
+  history: HistoryStore<Screen>
+  delete: (screens: Screen) => Promise<void>
   save: (screen: Screen) => Promise<Screen>
 
   constructor() {
@@ -365,10 +365,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * Any deleted screens will then have their routes/links purged
    *
    * Wrapped by {@link delete}
-   * @param {Screen | Screen[]} screens
+   * @param {Screen } screens
    */
-  async deleteScreen(screens: Screen | Screen[]) {
-    const screensToDelete = Array.isArray(screens) ? screens : [screens]
+  async deleteScreen(screen: Screen) {
+    const screensToDelete = [screen]
     // Build array of promises to speed up bulk deletions
     let promises: Promise<DeleteScreenResponse>[] = []
     let deleteUrls: string[] = []
