@@ -112,6 +112,7 @@ function getInvalidDatasources(
         {
           key: setting.key,
           message: `The ${friendlyTypeName} named "${label}" could not be found`,
+          errorType: "setting",
         },
       ]
     }
@@ -180,6 +181,7 @@ function getMissingRequiredSettings(screen: Screen) {
       result[component._id!] = missingRequiredSettings.map((s: any) => ({
         key: s.key,
         message: `Add the <mark>${s.label}</mark> setting to start using your component`,
+        errorType: "setting",
       }))
     }
   }
@@ -206,16 +208,19 @@ function getMissingAncestors(screen: Screen) {
         return name.endsWith("s") ? `${name}'` : `${name}s`
       }
 
-      const getAncestorName = (name: string) => {
-        const definition: any = getManifestDefinition(name)
-        return definition.name
-      }
-
-      result[component._id!] = missingAncestors.map((s: any) => ({
-        key: s.key,
-        message: `${pluralise(definition.name)} need to be inside a
-<mark>${getAncestorName(s)}</mark>`,
-      }))
+      result[component._id!] = missingAncestors.map((ancestor: any) => {
+        const ancestorDefinition: any = getManifestDefinition(ancestor)
+        return {
+          key: ancestor.key,
+          message: `${pluralise(definition.name)} need to be inside a
+<mark>${ancestorDefinition.name}</mark>`,
+          errorType: "ancestor-setting",
+          ancestor: {
+            name: ancestorDefinition.name,
+            fullType: `${BudibasePrefix}${ancestor}`,
+          },
+        }
+      })
     }
   }
   return result
