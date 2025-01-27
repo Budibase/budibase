@@ -4,83 +4,11 @@ import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
   FieldType,
-  AutomationActionStepId,
-  AutomationCustomIOType,
-  AutomationFeature,
-  AutomationIOType,
-  AutomationStepDefinition,
-  AutomationStepType,
   EmptyFilterOption,
   SortOrder,
   QueryRowsStepInputs,
   QueryRowsStepOutputs,
 } from "@budibase/types"
-
-const SortOrderPretty = {
-  [SortOrder.ASCENDING]: "Ascending",
-  [SortOrder.DESCENDING]: "Descending",
-}
-
-export const definition: AutomationStepDefinition = {
-  description: "Query rows from the database",
-  icon: "Search",
-  name: "Query rows",
-  tagline: "Query rows from {{inputs.enriched.table.name}} table",
-  type: AutomationStepType.ACTION,
-  stepId: AutomationActionStepId.QUERY_ROWS,
-  internal: true,
-  features: {
-    [AutomationFeature.LOOPING]: true,
-  },
-  inputs: {},
-  schema: {
-    inputs: {
-      properties: {
-        tableId: {
-          type: AutomationIOType.STRING,
-          customType: AutomationCustomIOType.TABLE,
-          title: "Table",
-        },
-        filters: {
-          type: AutomationIOType.OBJECT,
-          customType: AutomationCustomIOType.FILTERS,
-          title: "Filtering",
-        },
-        sortColumn: {
-          type: AutomationIOType.STRING,
-          title: "Sort Column",
-          customType: AutomationCustomIOType.COLUMN,
-        },
-        sortOrder: {
-          type: AutomationIOType.STRING,
-          title: "Sort Order",
-          enum: Object.values(SortOrder),
-          pretty: Object.values(SortOrderPretty),
-        },
-        limit: {
-          type: AutomationIOType.NUMBER,
-          title: "Limit",
-          customType: AutomationCustomIOType.QUERY_LIMIT,
-        },
-      },
-      required: ["tableId"],
-    },
-    outputs: {
-      properties: {
-        rows: {
-          type: AutomationIOType.ARRAY,
-          customType: AutomationCustomIOType.ROWS,
-          description: "The rows that were found",
-        },
-        success: {
-          type: AutomationIOType.BOOLEAN,
-          description: "Whether the query was successful",
-        },
-      },
-      required: ["rows", "success"],
-    },
-  },
-}
 
 async function getTable(appId: string, tableId: string) {
   const ctx: any = buildCtx(appId, null, {
@@ -122,9 +50,10 @@ export async function run({
     sortType =
       fieldType === FieldType.NUMBER ? FieldType.NUMBER : FieldType.STRING
   }
+  // when passing the tableId in the Ctx it needs to be decoded
   const ctx = buildCtx(appId, null, {
     params: {
-      tableId,
+      tableId: decodeURIComponent(tableId),
     },
     body: {
       sortType,
@@ -152,7 +81,7 @@ export async function run({
 
     return {
       rows,
-      success: ctx.status === 200,
+      success: true,
     }
   } catch (err) {
     return {

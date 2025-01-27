@@ -1,11 +1,6 @@
-import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 
 export class ConfigAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   getConfigChecklist = () => {
     return this.request
       .get(`/api/global/configs/checklist`)

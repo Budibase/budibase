@@ -19,6 +19,7 @@ const createBuilderStore = () => {
     eventResolvers: {},
     metadata: null,
     snippets: null,
+    componentErrors: {},
 
     // Legacy - allow the builder to specify a layout
     layout: null,

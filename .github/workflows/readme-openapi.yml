@@ -1,0 +1,26 @@
+name: ReadMe GitHub Action 🦉
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  rdme-openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: yarn
+      - run: yarn --frozen-lockfile
+
+      - name: Install OpenAPI pkg
+        run: yarn global add openapi
+
+      - name: update specs
+        run: cd packages/server && yarn specs && openapi specs/openapi.yaml --key=${{ secrets.README_API_KEY }} --id=6728a74f5918b50036c61841

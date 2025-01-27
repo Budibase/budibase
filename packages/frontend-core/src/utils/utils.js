@@ -1,5 +1,6 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
+import { cloneDeep } from "lodash"
 
 export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -7,7 +8,7 @@ export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
  * Utility to wrap an async function and ensure all invocations happen
  * sequentially.
  * @param fn the async function to run
- * @return {Promise} a sequential version of the function
+ * @return {Function} a sequential version of the function
  */
 export const sequential = fn => {
   let queue = []
@@ -42,7 +43,7 @@ export const sequential = fn => {
  * invocations is enforced.
  * @param callback an async function to run
  * @param minDelay the minimum delay between invocations
- * @returns {Promise} a debounced version of the callback
+ * @returns a debounced version of the callback
  */
 export const debounce = (callback, minDelay = 1000) => {
   let timeout
@@ -208,6 +209,9 @@ export const buildFormBlockButtonConfig = props => {
     {
       "##eventHandlerType": "Close Side Panel",
     },
+    {
+      "##eventHandlerType": "Close Modal",
+    },
 
     ...(actionUrl
       ? [
@@ -350,4 +354,28 @@ export const buildMultiStepFormBlockDefaultProps = props => {
     buttons,
     title,
   }
+}
+
+/**
+ * Parse out empty or invalid UI filters and clear empty groups
+ * @param {Object} filter UI filter
+ * @returns {Object} parsed filter
+ */
+export function parseFilter(filter) {
+  if (!filter?.groups) {
+    return filter
+  }
+
+  const update = cloneDeep(filter)
+
+  update.groups = update.groups
+    .map(group => {
+      group.filters = group.filters.filter(filter => {
+        return filter.field && filter.operator
+      })
+      return group.filters.length ? group : null
+    })
+    .filter(group => group)
+
+  return update
 }

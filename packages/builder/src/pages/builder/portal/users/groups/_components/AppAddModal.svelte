@@ -1,8 +1,8 @@
 <script>
   import { keepOpen, Body, ModalContent, Select } from "@budibase/bbui"
-  import { appsStore, groups } from "stores/portal"
-  import { roles } from "stores/builder"
-  import RoleSelect from "components/common/RoleSelect.svelte"
+  import { appsStore, groups } from "@/stores/portal"
+  import { roles } from "@/stores/builder"
+  import RoleSelect from "@/components/common/RoleSelect.svelte"
 
   export let group
 
@@ -23,7 +23,7 @@
 
       return keepOpen
     } else {
-      await groups.actions.addApp(group._id, prodAppId, selectedRoleId)
+      await groups.addApp(group._id, prodAppId, selectedRoleId)
     }
   }
 </script>

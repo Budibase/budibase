@@ -11,27 +11,24 @@ export async function makeTableRequest(
   datasource: Datasource,
   operation: Operation,
   table: Table,
-  tables: Record<string, Table>,
   oldTable?: Table,
   renamed?: RenameColumn
 ) {
   const json: QueryJson = {
     endpoint: {
-      datasourceId: datasource._id!,
-      entityId: table._id!,
+      datasourceId: datasource,
+      entityId: table,
       operation,
     },
-    meta: {
-      table,
-      tables,
-    },
-    table,
+  }
+  if (!json.meta) {
+    json.meta = {}
   }
   if (oldTable) {
-    json.meta!.table = oldTable
+    json.meta.oldTable = oldTable
   }
   if (renamed) {
-    json.meta!.renamed = renamed
+    json.meta.renamed = renamed
   }
-  return makeExternalQuery(datasource, json)
+  return makeExternalQuery(json)
 }

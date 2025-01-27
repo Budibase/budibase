@@ -12,9 +12,9 @@ export enum PluginSource {
   URL = "URL",
   FILE = "File Upload",
 }
-export interface FileType {
-  path: string
-  name: string
+export interface KoaFile {
+  path: string | null
+  name: string | null
 }
 
 export interface Plugin extends Document {

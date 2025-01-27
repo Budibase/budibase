@@ -45,17 +45,6 @@ export enum AuthTypes {
   EXTERNAL = "external",
 }
 
-export enum DataSourceOperation {
-  CREATE = "CREATE",
-  READ = "READ",
-  UPDATE = "UPDATE",
-  DELETE = "DELETE",
-  BULK_CREATE = "BULK_CREATE",
-  CREATE_TABLE = "CREATE_TABLE",
-  UPDATE_TABLE = "UPDATE_TABLE",
-  DELETE_TABLE = "DELETE_TABLE",
-}
-
 export enum DatasourceAuthTypes {
   GOOGLE = "google",
 }
@@ -135,11 +124,6 @@ export enum BaseQueryVerbs {
   DELETE = "delete",
 }
 
-export enum MetadataTypes {
-  AUTOMATION_TEST_INPUT = "automationTestInput",
-  AUTOMATION_TEST_HISTORY = "automationTestHistory",
-}
-
 export enum InvalidColumns {
   ID = "_id",
   REV = "_rev",
@@ -148,7 +132,6 @@ export enum InvalidColumns {
 
 export enum AutomationErrors {
   INCORRECT_TYPE = "INCORRECT_TYPE",
-  MAX_ITERATIONS = "MAX_ITERATIONS_REACHED",
   FAILURE_CONDITION = "FAILURE_CONDITION_MET",
 }
 

@@ -1,7 +1,7 @@
 <script>
   import { ActionButton, List, ListItem, Button } from "@budibase/bbui"
-  import DetailPopover from "components/common/DetailPopover.svelte"
-  import { screenStore, appStore } from "stores/builder"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
+  import { screenStore, appStore } from "@/stores/builder"
   import { getContext, createEventDispatcher } from "svelte"
 
   const { datasource } = getContext("grid")

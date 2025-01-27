@@ -1,9 +1,9 @@
 <script>
   import { Layout, Heading, Body, Button } from "@budibase/bbui"
   import { downloadStream } from "@budibase/frontend-core"
-  import Spinner from "components/common/Spinner.svelte"
+  import Spinner from "@/components/common/Spinner.svelte"
 
-  import { API } from "api"
+  import { API } from "@/api"
 
   let loading = false
 

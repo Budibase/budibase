@@ -27,7 +27,6 @@ import {
   env as envCore,
   ErrorCode,
   events,
-  migrations,
   objectStore,
   roles,
   tenancy,
@@ -43,7 +42,6 @@ import { groups, licensing, quotas } from "@budibase/pro"
 import {
   App,
   Layout,
-  MigrationType,
   PlanType,
   Screen,
   UserCtx,
@@ -59,6 +57,18 @@ import {
   BBReferenceFieldSubType,
   Row,
   BBRequest,
+  SyncAppResponse,
+  CreateAppResponse,
+  FetchAppsResponse,
+  UpdateAppClientResponse,
+  RevertAppClientResponse,
+  DeleteAppResponse,
+  ImportToUpdateAppRequest,
+  ImportToUpdateAppResponse,
+  SetRevertableAppVersionRequest,
+  AddAppSampleDataResponse,
+  UnpublishAppResponse,
+  SetRevertableAppVersionResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -166,7 +176,9 @@ async function createInstance(appId: string, template: AppTemplate) {
   return { _id: appId }
 }
 
-export const addSampleData = async (ctx: UserCtx) => {
+export const addSampleData = async (
+  ctx: UserCtx<void, AddAppSampleDataResponse>
+) => {
   const db = context.getAppDB()
 
   try {
@@ -179,10 +191,10 @@ export const addSampleData = async (ctx: UserCtx) => {
     await db.bulkDocs([...defaultDbDocs])
   }
 
-  ctx.status = 200
+  ctx.body = { message: "Sample tables added." }
 }
 
-export async function fetch(ctx: UserCtx<void, App[]>) {
+export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
   ctx.body = await sdk.applications.fetch(
     ctx.query.status as AppStatus,
     ctx.user
@@ -242,7 +254,9 @@ export async function fetchAppPackage(
   }
 }
 
-async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
+async function performAppCreate(
+  ctx: UserCtx<CreateAppRequest, CreateAppResponse>
+) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
@@ -472,13 +486,6 @@ async function creationEvents(request: BBRequest<CreateAppRequest>, app: App) {
 }
 
 async function appPostCreate(ctx: UserCtx<CreateAppRequest, App>, app: App) {
-  const tenantId = tenancy.getTenantId()
-  await migrations.backPopulateMigrations({
-    type: MigrationType.APP,
-    tenantId,
-    appId: app.appId,
-  })
-
   await creationEvents(ctx.request, app)
 
   // app import, template creation and duplication
@@ -510,12 +517,13 @@ async function appPostCreate(ctx: UserCtx<CreateAppRequest, App>, app: App) {
   }
 }
 
-export async function create(ctx: UserCtx<CreateAppRequest, App>) {
+export async function create(
+  ctx: UserCtx<CreateAppRequest, CreateAppResponse>
+) {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
   await appPostCreate(ctx, newApplication)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
   ctx.body = newApplication
-  ctx.status = 200
 }
 
 // This endpoint currently operates as a PATCH rather than a PUT
@@ -538,7 +546,6 @@ export async function update(
 
   const app = await updateAppPackage(ctx.request.body, ctx.params.appId)
   await events.app.updated(app)
-  ctx.status = 200
   ctx.body = app
   builderSocket?.emitAppMetadataUpdate(ctx, {
     theme: app.theme,
@@ -553,7 +560,9 @@ export async function update(
   })
 }
 
-export async function updateClient(ctx: UserCtx) {
+export async function updateClient(
+  ctx: UserCtx<void, UpdateAppClientResponse>
+) {
   // Get current app version
   const application = await sdk.applications.metadata.get()
   const currentVersion = application.version
@@ -577,11 +586,12 @@ export async function updateClient(ctx: UserCtx) {
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionUpdated(app, currentVersion, updatedToVersion)
-  ctx.status = 200
   ctx.body = app
 }
 
-export async function revertClient(ctx: UserCtx) {
+export async function revertClient(
+  ctx: UserCtx<void, RevertAppClientResponse>
+) {
   // Check app can be reverted
   const application = await sdk.applications.metadata.get()
   if (!application.revertableVersion) {
@@ -607,7 +617,6 @@ export async function revertClient(ctx: UserCtx) {
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionReverted(app, currentVersion, revertedToVersion)
-  ctx.status = 200
   ctx.body = app
 }
 
@@ -668,15 +677,14 @@ async function postDestroyApp(ctx: UserCtx) {
   }
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: UserCtx<void, DeleteAppResponse>) {
   await preDestroyApp(ctx)
   const result = await destroyApp(ctx)
   await postDestroyApp(ctx)
-  ctx.status = 200
   ctx.body = result
 }
 
-export async function unpublish(ctx: UserCtx) {
+export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
   const prodAppId = dbCore.getProdAppID(ctx.params.appId)
   const dbExists = await dbCore.dbExists(prodAppId)
 
@@ -688,11 +696,11 @@ export async function unpublish(ctx: UserCtx) {
   await preDestroyApp(ctx)
   await unpublishApp(ctx)
   await postDestroyApp(ctx)
-  ctx.status = 204
   builderSocket?.emitAppUnpublish(ctx)
+  ctx.body = { message: "App unpublished." }
 }
 
-export async function sync(ctx: UserCtx) {
+export async function sync(ctx: UserCtx<void, SyncAppResponse>) {
   const appId = ctx.params.appId
   try {
     ctx.body = await sdk.applications.syncApp(appId)
@@ -701,10 +709,12 @@ export async function sync(ctx: UserCtx) {
   }
 }
 
-export async function importToApp(ctx: UserCtx) {
+export async function importToApp(
+  ctx: UserCtx<ImportToUpdateAppRequest, ImportToUpdateAppResponse>
+) {
   const { appId } = ctx.params
   const appExport = ctx.request.files?.appExport
-  const password = ctx.request.body.encryptionPassword as string
+  const password = ctx.request.body.encryptionPassword
   if (!appExport) {
     ctx.throw(400, "Must supply app export to import")
   }
@@ -783,7 +793,6 @@ export async function duplicateApp(
     duplicateAppId: newApplication?.appId,
     sourceAppId,
   }
-  ctx.status = 200
 }
 
 export async function updateAppPackage(
@@ -811,7 +820,7 @@ export async function updateAppPackage(
 }
 
 export async function setRevertableVersion(
-  ctx: UserCtx<{ revertableVersion: string }, App>
+  ctx: UserCtx<SetRevertableAppVersionRequest, SetRevertableAppVersionResponse>
 ) {
   if (!env.isDev()) {
     ctx.status = 403
@@ -821,8 +830,7 @@ export async function setRevertableVersion(
   const app = await sdk.applications.metadata.get()
   app.revertableVersion = ctx.request.body.revertableVersion
   await db.put(app)
-
-  ctx.status = 200
+  ctx.body = { message: "Revertable version updated." }
 }
 
 async function migrateAppNavigation() {

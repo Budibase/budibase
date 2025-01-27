@@ -50,8 +50,6 @@
     border-radius: 4px;
     pointer-events: none;
   }
-  .indicator.above {
-  }
   .indicator.below {
     margin-top: 32px;
   }

@@ -6,7 +6,7 @@
     notifications,
     ActionButton,
   } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "stores/builder"
+  import { automationStore, selectedAutomation } from "@/stores/builder"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
   import { AutomationEventType } from "@budibase/types"
@@ -46,7 +46,7 @@
       }
     } else {
       // Leave the core data as it is
-      return testData
+      return cloneDeep(testData)
     }
   }
 
@@ -63,7 +63,10 @@
     return true
   }
 
-  $: testData = testData || parseTestData($selectedAutomation.data.testData)
+  $: currentTestData = $selectedAutomation.data.testData
+
+  // Can be updated locally to avoid race condition when testing
+  $: testData = parseTestData(currentTestData)
 
   $: {
     // clone the trigger so we're not mutating the reference
@@ -85,7 +88,7 @@
       required => testData?.[required] || required !== "row"
     )
 
-  function parseTestJSON(e) {
+  async function parseTestJSON(e) {
     let jsonUpdate
 
     try {
@@ -105,7 +108,9 @@
       }
     }
 
-    automationStore.actions.addTestDataToAutomation(jsonUpdate)
+    const updatedAuto =
+      automationStore.actions.addTestDataToAutomation(jsonUpdate)
+    await automationStore.actions.save(updatedAuto)
   }
 
   const testAutomation = async () => {
@@ -150,10 +155,14 @@
   {#if selectedValues}
     <div class="tab-content-padding">
       <AutomationBlockSetup
-        bind:testData
         {schemaProperties}
         isTestModal
+        {testData}
         block={trigger}
+        on:update={e => {
+          const { testData: updatedTestData } = e.detail
+          testData = updatedTestData
+        }}
       />
     </div>
   {/if}
@@ -162,7 +171,7 @@
       <TextArea
         value={JSON.stringify($selectedAutomation.data.testData, null, 2)}
         error={failedParse}
-        on:change={e => parseTestJSON(e)}
+        on:change={async e => await parseTestJSON(e)}
       />
     </div>
   {/if}

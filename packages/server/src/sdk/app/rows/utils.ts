@@ -14,13 +14,13 @@ import {
   SqlClient,
   ArrayOperator,
   ViewV2,
+  EnrichedQueryJson,
 } from "@budibase/types"
-import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
 import { extractViewInfoFromID, isRelationshipColumn } from "../../../db/utils"
 import { isSQL } from "../../../integrations/utils"
-import { docIds, sql } from "@budibase/backend-core"
+import { docIds, sql, SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getTableFromSource } from "../../../api/controllers/row/utils"
 import env from "../../../environment"
 
@@ -73,18 +73,58 @@ export function processRowCountResponse(
   }
 }
 
-export async function getDatasourceAndQuery(
-  json: QueryJson
-): Promise<DatasourcePlusQueryResponse> {
-  const datasourceId = json.endpoint.datasourceId
-  const datasource = await sdk.datasources.get(datasourceId)
-  const table = datasource.entities?.[json.endpoint.entityId]
-  if (!json.meta && table) {
-    json.meta = {
-      table,
-    }
+function processInternalTables(tables: Table[]) {
+  const tableMap: Record<string, Table> = {}
+  for (let table of tables) {
+    // update the table name, should never query by name for SQLite
+    table.originalName = table.name
+    table.name = table._id!
+    tableMap[table._id!] = table
   }
-  return makeExternalQuery(datasource, json)
+  return tableMap
+}
+
+export async function enrichQueryJson(
+  json: QueryJson
+): Promise<EnrichedQueryJson> {
+  let datasource: Datasource | undefined = undefined
+
+  if (typeof json.endpoint.datasourceId === "string") {
+    if (json.endpoint.datasourceId !== SQS_DATASOURCE_INTERNAL) {
+      datasource = await sdk.datasources.get(json.endpoint.datasourceId, {
+        enriched: true,
+      })
+    }
+  } else {
+    datasource = await sdk.datasources.enrich(json.endpoint.datasourceId)
+  }
+
+  let tables: Record<string, Table>
+  if (datasource) {
+    tables = datasource.entities || {}
+  } else {
+    tables = processInternalTables(await sdk.tables.getAllInternalTables())
+  }
+
+  let table: Table
+  if (typeof json.endpoint.entityId === "string") {
+    let entityId = json.endpoint.entityId
+    if (docIds.isDatasourceId(entityId)) {
+      entityId = sql.utils.breakExternalTableId(entityId).tableName
+    }
+    table = tables[entityId]
+  } else {
+    table = json.endpoint.entityId
+  }
+
+  return {
+    operation: json.endpoint.operation,
+    table,
+    tables,
+    datasource,
+    schema: json.endpoint.schema,
+    ...json,
+  }
 }
 
 export function cleanExportRows(

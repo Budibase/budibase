@@ -4,42 +4,57 @@ import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
   AddSSoUserRequest,
+  AddSSoUserResponse,
   BulkUserRequest,
   BulkUserResponse,
-  CloudAccount,
+  CheckInviteResponse,
+  CountUserResponse,
   CreateAdminUserRequest,
   CreateAdminUserResponse,
   Ctx,
   DeleteInviteUserRequest,
   DeleteInviteUsersRequest,
+  DeleteInviteUsersResponse,
+  DeleteUserResponse,
+  FetchUsersResponse,
+  FindUserResponse,
+  GetUserInvitesResponse,
+  Hosting,
   InviteUserRequest,
+  InviteUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
   LockName,
   LockType,
-  MigrationType,
+  LookupAccountHolderResponse,
+  LookupTenantUserResponse,
   PlatformUserByEmail,
   SaveUserResponse,
   SearchUsersRequest,
+  SearchUsersResponse,
+  UnsavedUser,
+  UpdateInviteRequest,
+  UpdateInviteResponse,
   User,
   UserCtx,
   UserIdentifier,
 } from "@budibase/types"
 import {
-  accounts,
   users,
   cache,
   ErrorCode,
   events,
-  migrations,
   platform,
   tenancy,
   db,
   locks,
+  context,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
 import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
+import emailValidator from "email-validator"
+import crypto from "crypto"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -51,18 +66,21 @@ const generatePassword = (length: number) => {
     .slice(0, length)
 }
 
-export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
+export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
   try {
     const currentUserId = ctx.user?._id
-    const requestUser = ctx.request.body
+    const tenantId = context.getTenantId()
+    const requestUser: User = { ...ctx.request.body, tenantId }
 
     // Do not allow the account holder role to be changed
-    const accountMetadata = await users.getExistingAccounts([requestUser.email])
-    if (accountMetadata?.length > 0) {
-      if (
-        requestUser.admin?.global !== true ||
-        requestUser.builder?.global !== true
-      ) {
+    if (
+      requestUser.admin?.global !== true ||
+      requestUser.builder?.global !== true
+    ) {
+      const accountMetadata = await users.getExistingAccounts([
+        requestUser.email,
+      ])
+      if (accountMetadata?.length > 0) {
         throw Error("Cannot set role of account holder")
       }
     }
@@ -79,7 +97,9 @@ export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
   }
 }
 
-export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
+export const addSsoSupport = async (
+  ctx: Ctx<AddSSoUserRequest, AddSSoUserResponse>
+) => {
   const { email, ssoId } = ctx.request.body
   try {
     // Status is changed to 404 from getUserDoc if user is not found
@@ -99,7 +119,7 @@ export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
       email,
       ssoId,
     })
-    ctx.status = 200
+    ctx.body = { message: "SSO support added." }
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -132,7 +152,12 @@ export const bulkUpdate = async (
   let created, deleted
   try {
     if (input.create) {
-      created = await bulkCreate(input.create.users, input.create.groups)
+      const tenantId = context.getTenantId()
+      const users: User[] = input.create.users.map(user => ({
+        ...user,
+        tenantId,
+      }))
+      created = await bulkCreate(users, input.create.groups)
     }
     if (input.delete) {
       deleted = await bulkDelete(input.delete.users, currentUserId)
@@ -160,10 +185,6 @@ export const adminUser = async (
   if (env.MULTI_TENANCY) {
     // store the new tenant record in the platform db
     await platform.tenants.addTenant(tenantId)
-    await migrations.backPopulateMigrations({
-      type: MigrationType.GLOBAL,
-      tenantId,
-    })
   }
 
   await tenancy.doInTenant(tenantId, async () => {
@@ -190,12 +211,10 @@ export const adminUser = async (
         lastName: familyName,
       })
 
-      // events
-      let account: CloudAccount | undefined
-      if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-        account = await accounts.getAccountByTenantId(tenantId)
-      }
-      await events.identification.identifyTenantGroup(tenantId, account)
+      await events.identification.identifyTenantGroup(
+        tenantId,
+        env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
+      )
 
       ctx.body = {
         _id: finalUser._id!,
@@ -208,7 +227,7 @@ export const adminUser = async (
   })
 }
 
-export const countByApp = async (ctx: any) => {
+export const countByApp = async (ctx: UserCtx<void, CountUserResponse>) => {
   const appId = ctx.params.appId
   try {
     ctx.body = await userSdk.db.countUsersByApp(appId)
@@ -217,7 +236,7 @@ export const countByApp = async (ctx: any) => {
   }
 }
 
-export const destroy = async (ctx: any) => {
+export const destroy = async (ctx: UserCtx<void, DeleteUserResponse>) => {
   const id = ctx.params.id
   if (id === ctx.user._id) {
     ctx.throw(400, "Unable to delete self.")
@@ -240,7 +259,9 @@ export const getAppUsers = async (ctx: Ctx<SearchUsersRequest>) => {
   ctx.body = { data: users }
 }
 
-export const search = async (ctx: Ctx<SearchUsersRequest>) => {
+export const search = async (
+  ctx: Ctx<SearchUsersRequest, SearchUsersResponse>
+) => {
   const body = ctx.request.body
 
   // TODO: for now only two supported search keys; string.email and equal._id
@@ -281,7 +302,7 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
 }
 
 // called internally by app server user fetch
-export const fetch = async (ctx: any) => {
+export const fetch = async (ctx: UserCtx<void, FetchUsersResponse>) => {
   const all = await userSdk.db.allUsers()
   // user hashed password shouldn't ever be returned
   for (let user of all) {
@@ -293,12 +314,18 @@ export const fetch = async (ctx: any) => {
 }
 
 // called internally by app server user find
-export const find = async (ctx: any) => {
+export const find = async (ctx: UserCtx<void, FindUserResponse>) => {
   ctx.body = await userSdk.db.getUser(ctx.params.id)
 }
 
-export const tenantUserLookup = async (ctx: any) => {
+export const tenantUserLookup = async (
+  ctx: UserCtx<void, LookupTenantUserResponse>
+) => {
   const id = ctx.params.id
+  // is email, check its valid
+  if (id.includes("@") && !emailValidator.validate(id)) {
+    ctx.throw(400, `${id} is not a valid email address to lookup.`)
+  }
   const user = await userSdk.core.getFirstPlatformUser(id)
   if (user) {
     ctx.body = user
@@ -311,7 +338,9 @@ export const tenantUserLookup = async (ctx: any) => {
  * This will be paginated to a default of the first 50 users,
  * So the account holder may not be found until further pagination has occurred
  */
-export const accountHolderLookup = async (ctx: Ctx) => {
+export const accountHolderLookup = async (
+  ctx: Ctx<void, LookupAccountHolderResponse>
+) => {
   try {
     const users = await userSdk.core.getAllUsers()
     const response = await userSdk.core.getExistingAccounts(
@@ -363,7 +392,9 @@ export const onboardUsers = async (
   ctx.body = { ...resp, created: true }
 }
 
-export const invite = async (ctx: Ctx<InviteUserRequest>) => {
+export const invite = async (
+  ctx: Ctx<InviteUserRequest, InviteUserResponse>
+) => {
   const request = ctx.request.body
 
   let multiRequest = [request]
@@ -386,12 +417,14 @@ export const invite = async (ctx: Ctx<InviteUserRequest>) => {
   }
 }
 
-export const inviteMultiple = async (ctx: Ctx<InviteUsersRequest>) => {
+export const inviteMultiple = async (
+  ctx: Ctx<InviteUsersRequest, InviteUsersResponse>
+) => {
   ctx.body = await userSdk.invite(ctx.request.body)
 }
 
 export const removeMultipleInvites = async (
-  ctx: Ctx<DeleteInviteUsersRequest>
+  ctx: Ctx<DeleteInviteUsersRequest, DeleteInviteUsersResponse>
 ) => {
   const inviteCodesToRemove = ctx.request.body.map(
     (invite: DeleteInviteUserRequest) => invite.code
@@ -404,7 +437,7 @@ export const removeMultipleInvites = async (
   }
 }
 
-export const checkInvite = async (ctx: any) => {
+export const checkInvite = async (ctx: UserCtx<void, CheckInviteResponse>) => {
   const { code } = ctx.params
   let invite
   try {
@@ -412,14 +445,15 @@ export const checkInvite = async (ctx: any) => {
   } catch (e) {
     console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
-    return
   }
   ctx.body = {
     email: invite.email,
   }
 }
 
-export const getUserInvites = async (ctx: any) => {
+export const getUserInvites = async (
+  ctx: UserCtx<void, GetUserInvitesResponse>
+) => {
   try {
     // Restricted to the currently authenticated tenant
     ctx.body = await cache.invite.getInviteCodes()
@@ -428,7 +462,9 @@ export const getUserInvites = async (ctx: any) => {
   }
 }
 
-export const updateInvite = async (ctx: any) => {
+export const updateInvite = async (
+  ctx: UserCtx<UpdateInviteRequest, UpdateInviteResponse>
+) => {
   const { code } = ctx.params
   let updateBody = { ...ctx.request.body }
 
@@ -439,7 +475,6 @@ export const updateInvite = async (ctx: any) => {
     invite = await cache.invite.getCode(code)
   } catch (e) {
     ctx.throw(400, "There was a problem with the invite")
-    return
   }
 
   let updated = {

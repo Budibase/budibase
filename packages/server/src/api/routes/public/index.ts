@@ -4,19 +4,21 @@ import queryEndpoints from "./queries"
 import tableEndpoints from "./tables"
 import rowEndpoints from "./rows"
 import userEndpoints from "./users"
+import viewEndpoints from "./views"
 import roleEndpoints from "./roles"
 import authorized from "../../../middleware/authorized"
 import publicApi from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
-import { PermissionType, PermissionLevel } from "@budibase/types"
+import { PermissionLevel, PermissionType } from "@budibase/types"
 import { CtxFn } from "./utils/Endpoint"
 import mapperMiddleware from "./middleware/mapper"
 import env from "../../../environment"
+import { middleware, redis } from "@budibase/backend-core"
+import { SelectableDatabase } from "@budibase/backend-core/src/redis/utils"
+import cors from "@koa/cors"
 // below imports don't have declaration files
 const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
-import { middleware, redis } from "@budibase/backend-core"
-import { SelectableDatabase } from "@budibase/backend-core/src/redis/utils"
 
 interface KoaRateLimitOptions {
   socket: {
@@ -81,6 +83,7 @@ const publicRouter = new Router({
 if (limiter && !env.isDev()) {
   publicRouter.use(limiter)
 }
+publicRouter.use(cors())
 
 function addMiddleware(
   endpoints: any,
@@ -149,6 +152,7 @@ applyAdminRoutes(metricEndpoints)
 applyAdminRoutes(roleEndpoints)
 applyRoutes(appEndpoints, PermissionType.APP, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
+applyRoutes(viewEndpoints, PermissionType.VIEW, "viewId")
 applyRoutes(userEndpoints, PermissionType.USER, "userId")
 applyRoutes(queryEndpoints, PermissionType.QUERY, "queryId")
 // needs to be applied last for routing purposes, don't override other endpoints

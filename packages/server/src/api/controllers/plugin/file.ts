@@ -3,8 +3,12 @@ import {
   getPluginMetadata,
   extractTarball,
 } from "../../../utilities/fileSystem"
+import { KoaFile } from "@budibase/types"
 
-export async function fileUpload(file: { name: string; path: string }) {
+export async function fileUpload(file: KoaFile) {
+  if (!file.name || !file.path) {
+    throw new Error("File is not valid - cannot upload.")
+  }
   if (!file.name.endsWith(".tar.gz")) {
     throw new Error("Plugin must be compressed into a gzipped tarball.")
   }

@@ -1,8 +1,8 @@
 import {
   Aggregation,
   CalculationType,
-  Datasource,
   DocumentType,
+  EnrichedQueryJson,
   FieldType,
   isLogicalSearchOperator,
   Operation,
@@ -38,7 +38,7 @@ import { generateJunctionTableID } from "../../../../../db/utils"
 import AliasTables from "../../sqlAlias"
 import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
-import { processRowCountResponse } from "../../utils"
+import { enrichQueryJson, processRowCountResponse } from "../../utils"
 import {
   dataFilters,
   helpers,
@@ -55,30 +55,42 @@ const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
 const MISSING_TABLE_REGX = new RegExp(`no such table: .+`)
 const DUPLICATE_COLUMN_REGEX = new RegExp(`duplicate column name: .+`)
 
-async function buildInternalFieldList(
+export async function buildInternalFieldList(
   source: Table | ViewV2,
   tables: Table[],
-  opts?: { relationships?: RelationshipsJson[]; allowedFields?: string[] }
+  opts?: {
+    relationships?: RelationshipsJson[]
+    allowedFields?: string[]
+    includeHiddenFields?: boolean
+  }
 ) {
-  const { relationships, allowedFields } = opts || {}
+  const { relationships, allowedFields, includeHiddenFields } = opts || {}
   let schemaFields: string[] = []
-  if (sdk.views.isView(source)) {
-    schemaFields = Object.keys(helpers.views.basicFields(source))
-  } else {
-    schemaFields = Object.keys(source.schema).filter(
-      key => source.schema[key].visible !== false
-    )
-  }
 
-  if (allowedFields) {
-    schemaFields = schemaFields.filter(field => allowedFields.includes(field))
-  }
-
+  const isView = sdk.views.isView(source)
   let table: Table
-  if (sdk.views.isView(source)) {
+  if (isView) {
     table = await sdk.views.getTable(source.id)
   } else {
     table = source
+  }
+
+  if (isView) {
+    schemaFields = Object.keys(helpers.views.basicFields(source))
+  } else {
+    schemaFields = Object.keys(source.schema).filter(
+      key => includeHiddenFields || source.schema[key].visible !== false
+    )
+  }
+
+  const containsFormula = schemaFields.some(
+    f => table.schema[f]?.type === FieldType.FORMULA
+  )
+  // If are requesting for a formula field, we need to retrieve all fields
+  if (containsFormula) {
+    schemaFields = Object.keys(table.schema)
+  } else if (allowedFields) {
+    schemaFields = schemaFields.filter(field => allowedFields.includes(field))
   }
 
   let fieldList: string[] = []
@@ -101,10 +113,12 @@ async function buildInternalFieldList(
   }
   for (let key of schemaFields) {
     const col = table.schema[key]
+
     const isRelationship = col.type === FieldType.LINK
     if (!relationships && isRelationship) {
       continue
     }
+
     if (!isRelationship) {
       fieldList.push(`${table._id}.${mapToUserColumn(key)}`)
     } else {
@@ -113,8 +127,17 @@ async function buildInternalFieldList(
       if (!relatedTable) {
         continue
       }
+
+      // a quirk of how junction documents work in Budibase, refer to the "LinkDocument" type to see the full
+      // structure - essentially all relationships between two tables will be inserted into a single "table"
+      // we don't use an independent junction table ID for each separate relationship between two tables. For
+      // example if we have table A and B, with two relationships between them, all the junction documents will
+      // end up in the same junction table ID. We need to retrieve the field name property of the junction documents
+      // as part of the relationship to tell us which relationship column the junction is related to.
       const relatedFields = (
-        await buildInternalFieldList(relatedTable, tables)
+        await buildInternalFieldList(relatedTable, tables, {
+          includeHiddenFields: containsFormula,
+        })
       ).concat(
         getJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
       )
@@ -125,6 +148,13 @@ async function buildInternalFieldList(
       fieldList = fieldList.concat(relatedFields)
     }
   }
+
+  if (!isView || !helpers.views.isCalculationView(source)) {
+    for (const field of PROTECTED_INTERNAL_COLUMNS) {
+      fieldList.push(`${table._id}.${field}`)
+    }
+  }
+
   return [...new Set(fieldList)]
 }
 
@@ -180,19 +210,6 @@ function cleanupFilters(filters: SearchFilters, allTables: Table[]) {
   return filters
 }
 
-function buildTableMap(tables: Table[]) {
-  const tableMap: Record<string, Table> = {}
-  for (let table of tables) {
-    // update the table name, should never query by name for SQLite
-    table.originalName = table.name
-    table.name = table._id!
-    // need a primary for sorting, lookups etc
-    table.primary = ["_id"]
-    tableMap[table._id!] = table
-  }
-  return tableMap
-}
-
 // table is only needed to handle relationships
 function reverseUserColumnMapping(rows: Row[], table?: Table) {
   const prefixLength = USER_COLUMN_PREFIX.length
@@ -223,30 +240,30 @@ function reverseUserColumnMapping(rows: Row[], table?: Table) {
 }
 
 function runSqlQuery(
-  json: QueryJson,
+  json: EnrichedQueryJson,
   tables: Table[],
   relationships: RelationshipsJson[]
 ): Promise<Row[]>
 function runSqlQuery(
-  json: QueryJson,
+  json: EnrichedQueryJson,
   tables: Table[],
   relationships: RelationshipsJson[],
   opts: { countTotalRows: true }
 ): Promise<number>
 async function runSqlQuery(
-  json: QueryJson,
+  json: EnrichedQueryJson,
   tables: Table[],
   relationships: RelationshipsJson[],
   opts?: { countTotalRows?: boolean }
 ) {
   const relationshipJunctionTableIds = relationships.map(rel => rel.through!)
   const alias = new AliasTables(
-    tables.map(table => table.name).concat(relationshipJunctionTableIds)
+    tables.map(table => table._id!).concat(relationshipJunctionTableIds)
   )
   if (opts?.countTotalRows) {
-    json.endpoint.operation = Operation.COUNT
+    json.operation = Operation.COUNT
   }
-  const processSQLQuery = async (_: Datasource, json: QueryJson) => {
+  const processSQLQuery = async (json: EnrichedQueryJson) => {
     const query = builder._query(json, {
       disableReturning: true,
     })
@@ -281,7 +298,7 @@ async function runSqlQuery(
   if (opts?.countTotalRows) {
     return processRowCountResponse(response)
   } else if (Array.isArray(response)) {
-    return reverseUserColumnMapping(response, json.meta.table)
+    return reverseUserColumnMapping(response, json.table)
   }
   return response
 }
@@ -315,7 +332,11 @@ export async function search(
   }
 
   const allTables = await sdk.tables.getAllInternalTables()
-  const allTablesMap = buildTableMap(allTables)
+  const allTablesMap = allTables.reduce((acc, table) => {
+    acc[table._id!] = table
+    return acc
+  }, {} as Record<string, Table>)
+
   // make sure we have the mapped/latest table
   if (table._id) {
     table = allTablesMap[table._id]
@@ -332,8 +353,9 @@ export async function search(
   }
 
   let aggregations: Aggregation[] = []
-  if (sdk.views.isView(source)) {
+  if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
     const calculationFields = helpers.views.calculationFields(source)
+
     for (const [key, field] of Object.entries(calculationFields)) {
       if (options.fields && !options.fields.includes(key)) {
         continue
@@ -372,10 +394,7 @@ export async function search(
       operation: Operation.READ,
     },
     filters: searchFilters,
-    table,
     meta: {
-      table,
-      tables: allTablesMap,
       columnPrefix: USER_COLUMN_PREFIX,
     },
     resource: {
@@ -427,11 +446,13 @@ export async function search(
     }
   }
 
+  const enrichedRequest = await enrichQueryJson(request)
+
   try {
     const [rows, totalRows] = await Promise.all([
-      runSqlQuery(request, allTables, relationships),
+      runSqlQuery(enrichedRequest, allTables, relationships),
       options.countRows
-        ? runSqlQuery(request, allTables, relationships, {
+        ? runSqlQuery(enrichedRequest, allTables, relationships, {
             countTotalRows: true,
           })
         : Promise.resolve(undefined),
@@ -447,7 +468,7 @@ export async function search(
     )
 
     // check for pagination final row
-    let nextRow: boolean = false
+    let nextRow = false
     if (paginate && params.limit && rows.length > params.limit) {
       // remove the extra row that confirmed if there is another row to move to
       nextRow = true

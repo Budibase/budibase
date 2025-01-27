@@ -3,8 +3,8 @@ import {
   BulkImportResponse,
   CsvToJsonRequest,
   CsvToJsonResponse,
-  MigrateRequest,
-  MigrateResponse,
+  MigrateTableRequest,
+  MigrateTableResponse,
   SaveTableRequest,
   SaveTableResponse,
   Table,
@@ -38,13 +38,16 @@ export class TableAPI extends TestAPI {
 
   migrate = async (
     tableId: string,
-    data: MigrateRequest,
+    data: MigrateTableRequest,
     expectations?: Expectations
-  ): Promise<MigrateResponse> => {
-    return await this._post<MigrateResponse>(`/api/tables/${tableId}/migrate`, {
-      body: data,
-      expectations,
-    })
+  ): Promise<MigrateTableResponse> => {
+    return await this._post<MigrateTableResponse>(
+      `/api/tables/${tableId}/migrate`,
+      {
+        body: data,
+        expectations,
+      }
+    )
   }
 
   import = async (

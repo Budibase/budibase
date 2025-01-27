@@ -30,14 +30,14 @@ export async function updateTable(
   }
 
   try {
-    const { table } = await sdk.tables.internal.save(tableToSave, {
+    const { table, oldTable } = await sdk.tables.internal.save(tableToSave, {
       userId: ctx.user._id,
       rowsToImport: rows,
       tableId: ctx.request.body._id,
       renaming,
     })
 
-    return table
+    return { table, oldTable }
   } catch (err: any) {
     if (err instanceof Error) {
       ctx.throw(400, err.message)

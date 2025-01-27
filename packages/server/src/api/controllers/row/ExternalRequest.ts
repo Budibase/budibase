@@ -42,7 +42,7 @@ import {
   sqlOutputProcessing,
 } from "./utils"
 import {
-  getDatasourceAndQuery,
+  enrichQueryJson,
   processRowCountResponse,
 } from "../../../sdk/app/rows/utils"
 import { processObjectSync } from "@budibase/string-templates"
@@ -135,16 +135,9 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
   return config
 }
 
-function getEndpoint(tableId: string | undefined, operation: string) {
-  if (!tableId) {
-    throw new Error("Cannot get endpoint information - no table ID specified")
-  }
+function getEndpoint(tableId: string, operation: Operation) {
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  return {
-    datasourceId: datasourceId,
-    entityId: tableName,
-    operation: operation as Operation,
-  }
+  return { datasourceId, entityId: tableName, operation }
 }
 
 function isOneSide(
@@ -268,12 +261,9 @@ export class ExternalRequest<T extends Operation> {
     const filters = this.prepareFilters(rowId, {}, table)
     // safety check, if there are no filters on deletion bad things happen
     if (Object.keys(filters).length !== 0) {
-      return getDatasourceAndQuery({
+      return makeExternalQuery({
         endpoint: getEndpoint(tableId, Operation.DELETE),
         filters,
-        meta: {
-          table,
-        },
       })
     } else {
       return []
@@ -289,13 +279,10 @@ export class ExternalRequest<T extends Operation> {
     const filters = this.prepareFilters(rowId, {}, table)
     // safety check, if there are no filters on deletion bad things happen
     if (Object.keys(filters).length !== 0) {
-      return getDatasourceAndQuery({
+      return makeExternalQuery({
         endpoint: getEndpoint(tableId, Operation.UPDATE),
         body: { [colName]: null },
         filters,
-        meta: {
-          table,
-        },
       })
     } else {
       return []
@@ -311,12 +298,9 @@ export class ExternalRequest<T extends Operation> {
   }
 
   async getRow(table: Table, rowId: string): Promise<Row> {
-    const response = await getDatasourceAndQuery({
+    const response = await makeExternalQuery({
       endpoint: getEndpoint(table._id!, Operation.READ),
       filters: this.prepareFilters(rowId, {}, table),
-      meta: {
-        table,
-      },
     })
     if (Array.isArray(response) && response.length > 0) {
       return response[0]
@@ -394,7 +378,7 @@ export class ExternalRequest<T extends Operation> {
         }
         // many to one
         else {
-          const thisKey: string = "id"
+          const thisKey = "id"
           // @ts-ignore
           const otherKey: string = field.fieldName
           for (const relationship of row[key]) {
@@ -490,15 +474,12 @@ export class ExternalRequest<T extends Operation> {
       if (!relatedTable) {
         throw new Error("unable to find related table")
       }
-      const response = await getDatasourceAndQuery({
-        endpoint: endpoint,
+      const response = await makeExternalQuery({
+        endpoint,
         filters: {
           equal: {
             [fieldName]: row[lookupField],
           },
-        },
-        meta: {
-          table: relatedTable,
         },
       })
       // this is the response from knex if no rows found
@@ -537,6 +518,11 @@ export class ExternalRequest<T extends Operation> {
     for (let relationship of relationships) {
       const { key, tableId, isUpdate, id, relationshipType, ...rest } =
         relationship
+
+      if (!tableId) {
+        throw new Error("Table ID is unknown, cannot find table")
+      }
+
       const body: { [key: string]: any } = processObjectSync(rest, row, {})
       const linkTable = this.getTable(tableId)
       const relationshipPrimary = linkTable?.primary || []
@@ -583,14 +569,11 @@ export class ExternalRequest<T extends Operation> {
       const operation = isUpdate ? Operation.UPDATE : Operation.CREATE
       if (!existingRelationship) {
         promises.push(
-          getDatasourceAndQuery({
+          makeExternalQuery({
             endpoint: getEndpoint(tableId, operation),
             // if we're doing many relationships then we're writing, only one response
             body,
             filters: this.prepareFilters(id, {}, linkTable),
-            meta: {
-              table: linkTable,
-            },
           })
         )
       } else {
@@ -723,8 +706,8 @@ export class ExternalRequest<T extends Operation> {
 
     let json: QueryJson = {
       endpoint: {
-        datasourceId: this.datasource._id!,
-        entityId: table.name,
+        datasourceId: this.datasource,
+        entityId: table,
         operation,
       },
       resource: {
@@ -749,10 +732,6 @@ export class ExternalRequest<T extends Operation> {
           table
         ),
       },
-      meta: {
-        table,
-        tables: this.tables,
-      },
     }
 
     // remove any relationships that could block deletion
@@ -773,8 +752,11 @@ export class ExternalRequest<T extends Operation> {
       response = [unprocessedRow]
     } else {
       response = env.SQL_ALIASING_DISABLE
-        ? await getDatasourceAndQuery(json)
-        : await aliasing.queryWithAliasing(json, makeExternalQuery)
+        ? await makeExternalQuery(json)
+        : await aliasing.queryWithAliasing(
+            await enrichQueryJson(json),
+            makeExternalQuery
+          )
     }
 
     // if it's a counting operation there will be no more processing, just return the number

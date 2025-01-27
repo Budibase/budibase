@@ -245,7 +245,6 @@ export async function save(
     datasource,
     operation,
     tableToSave,
-    tables,
     oldTable,
     opts?.renaming
   )
@@ -253,7 +252,7 @@ export async function save(
   for (let extraTable of extraTablesToUpdate) {
     const oldExtraTable = oldTables[extraTable.name]
     let op = oldExtraTable ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE
-    await makeTableRequest(datasource, op, extraTable, tables, oldExtraTable)
+    await makeTableRequest(datasource, op, extraTable, oldExtraTable)
   }
 
   // make sure the constrained list, all still exist
@@ -282,7 +281,7 @@ export async function save(
     tableToSave.sql = true
   }
 
-  return { datasource: updatedDatasource, table: tableToSave }
+  return { datasource: updatedDatasource, table: tableToSave, oldTable }
 }
 
 export async function destroy(datasourceId: string, table: Table) {
@@ -292,7 +291,7 @@ export async function destroy(datasourceId: string, table: Table) {
 
   const operation = Operation.DELETE_TABLE
   if (tables) {
-    await makeTableRequest(datasource, operation, table, tables)
+    await makeTableRequest(datasource, operation, table)
     cleanupRelationships(table, tables, { deleting: true })
     delete tables[table.name]
     datasource.entities = tables

@@ -11,7 +11,7 @@ describe("redis", () => {
   let container: StartedTestContainer
 
   beforeAll(async () => {
-    const container = await new GenericContainer("redis")
+    container = await new GenericContainer("redis")
       .withExposedPorts(6379)
       .start()
 

@@ -1,5 +1,4 @@
 import { auth, permissions } from "@budibase/backend-core"
-import { DataSourceOperation } from "../../../constants"
 import {
   AutomationActionStepId,
   AutomationStep,
@@ -9,6 +8,13 @@ import {
   Table,
   WebhookActionType,
   BuiltinPermissionID,
+  ViewV2Type,
+  SortOrder,
+  SortType,
+  UILogicalOperator,
+  BasicOperator,
+  ArrayOperator,
+  RangeOperator,
 } from "@budibase/types"
 import Joi, { CustomValidator } from "joi"
 import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
@@ -66,6 +72,66 @@ export function tableValidator() {
   )
 }
 
+function searchUIFilterValidator() {
+  const logicalOperator = Joi.string().valid(
+    ...Object.values(UILogicalOperator)
+  )
+  const operators = [
+    ...Object.values(BasicOperator),
+    ...Object.values(ArrayOperator),
+    ...Object.values(RangeOperator),
+  ]
+  const filters = Joi.array().items(
+    Joi.object({
+      operator: Joi.string()
+        .valid(...operators)
+        .required(),
+      field: Joi.string().required(),
+      // could do with better validation of value based on operator
+      value: Joi.any().required(),
+    })
+  )
+  return Joi.object({
+    logicalOperator,
+    onEmptyFilter: Joi.string().valid(...Object.values(EmptyFilterOption)),
+    groups: Joi.array().items(
+      Joi.object({
+        logicalOperator,
+        filters,
+        groups: Joi.array().items(
+          Joi.object({
+            filters,
+            logicalOperator,
+          })
+        ),
+      })
+    ),
+  })
+}
+
+export function viewValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      id: OPTIONAL_STRING,
+      tableId: Joi.string().required(),
+      name: Joi.string().required(),
+      type: Joi.string().optional().valid(null, ViewV2Type.CALCULATION),
+      primaryDisplay: OPTIONAL_STRING,
+      schema: Joi.object().required(),
+      query: searchUIFilterValidator().optional(),
+      sort: Joi.object({
+        field: Joi.string().required(),
+        order: Joi.string()
+          .optional()
+          .valid(...Object.values(SortOrder)),
+        type: Joi.string()
+          .optional()
+          .valid(...Object.values(SortType)),
+      }).optional(),
+    })
+  )
+}
+
 export function nameValidator() {
   return auth.joiValidator.body(
     Joi.object({
@@ -91,8 +157,7 @@ export function datasourceValidator() {
   )
 }
 
-function filterObject(opts?: { unknown: boolean }) {
-  const { unknown = true } = opts || {}
+function searchFiltersValidator() {
   const conditionalFilteringObject = () =>
     Joi.object({
       conditions: Joi.array().items(Joi.link("#schema")).required(),
@@ -119,7 +184,14 @@ function filterObject(opts?: { unknown: boolean }) {
     fuzzyOr: Joi.forbidden(),
     documentType: Joi.forbidden(),
   }
-  return Joi.object(filtersValidators).unknown(unknown).id("schema")
+
+  return Joi.object(filtersValidators)
+}
+
+function filterObject(opts?: { unknown: boolean }) {
+  const { unknown = true } = opts || {}
+
+  return searchFiltersValidator().unknown(unknown).id("schema")
 }
 
 export function internalSearchValidator() {
@@ -153,30 +225,6 @@ export function externalSearchValidator() {
         column: Joi.string(),
         order: OPTIONAL_STRING.valid("ascending", "descending"),
         type: OPTIONAL_STRING.valid("string", "number"),
-      }).optional(),
-    })
-  )
-}
-
-export function datasourceQueryValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      endpoint: Joi.object({
-        datasourceId: Joi.string().required(),
-        operation: Joi.string()
-          .required()
-          .valid(...Object.values(DataSourceOperation)),
-        entityId: Joi.string().required(),
-      }).required(),
-      resource: Joi.object({
-        fields: Joi.array().items(Joi.string()).optional(),
-      }).optional(),
-      body: Joi.object().optional(),
-      sort: Joi.object().optional(),
-      filters: filterObject().optional(),
-      paginate: Joi.object({
-        page: Joi.string().alphanum().optional(),
-        limit: Joi.number().optional(),
       }).optional(),
     })
   )

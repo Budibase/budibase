@@ -65,6 +65,9 @@ export interface paths {
   "/tables/{tableId}/rows/search": {
     post: operations["rowSearch"];
   };
+  "/views/{viewId}/rows/search": {
+    post: operations["rowViewSearch"];
+  };
   "/tables": {
     /** Create a table, this could be internal or external. */
     post: operations["tableCreate"];
@@ -92,6 +95,22 @@ export interface paths {
   "/users/search": {
     /** Based on user properties (currently only name) search for users. */
     post: operations["userSearch"];
+  };
+  "/views": {
+    /** Create a view, this can be against an internal or external table. */
+    post: operations["viewCreate"];
+  };
+  "/views/{viewId}": {
+    /** Lookup a view, this could be internal or external. */
+    get: operations["viewGetById"];
+    /** Update a view, this can be against an internal or external table. */
+    put: operations["viewUpdate"];
+    /** Delete a view, this can be against an internal or external table. */
+    delete: operations["viewDestroy"];
+  };
+  "/views/search": {
+    /** Based on view properties (currently only name) search for views. */
+    post: operations["viewSearch"];
   };
 }
 
@@ -813,10 +832,442 @@ export interface components {
         userIds: string[];
       };
     };
+    /** @description The view to be created/updated. */
+    view: {
+      /** @description The name of the view. */
+      name: string;
+      /** @description The ID of the table this view is based on. */
+      tableId: string;
+      /**
+       * @description The type of view - standard (empty value) or calculation.
+       * @enum {string}
+       */
+      type?: "calculation";
+      /** @description A column used to display rows from this view - usually used when rendered in tables. */
+      primaryDisplay?: string;
+      /** @description Search parameters for view */
+      query?: {
+        /**
+         * @description When using groups this defines whether all of the filters must match, or only one of them.
+         * @enum {string}
+         */
+        logicalOperator?: "all" | "any";
+        /**
+         * @description If no filters match, should the view return all rows, or no rows.
+         * @enum {string}
+         */
+        onEmptyFilter?: "all" | "none";
+        /** @description A grouping of filters to be applied. */
+        groups?: {
+          /**
+           * @description When using groups this defines whether all of the filters must match, or only one of them.
+           * @enum {string}
+           */
+          logicalOperator?: "all" | "any";
+          /** @description A list of filters to apply */
+          filters?: {
+            /**
+             * @description The type of search operation which is being performed.
+             * @enum {string}
+             */
+            operator?:
+              | "equal"
+              | "notEqual"
+              | "empty"
+              | "notEmpty"
+              | "fuzzy"
+              | "string"
+              | "contains"
+              | "notContains"
+              | "containsAny"
+              | "oneOf"
+              | "range";
+            /** @description The field in the view to perform the search on. */
+            field?: string;
+            /** @description The value to search for - the type will depend on the operator in use. */
+            value?:
+              | string
+              | number
+              | boolean
+              | { [key: string]: unknown }
+              | unknown[];
+          }[];
+          /** @description A grouping of filters to be applied. */
+          groups?: {
+            /**
+             * @description When using groups this defines whether all of the filters must match, or only one of them.
+             * @enum {string}
+             */
+            logicalOperator?: "all" | "any";
+            /** @description A list of filters to apply */
+            filters?: {
+              /**
+               * @description The type of search operation which is being performed.
+               * @enum {string}
+               */
+              operator?:
+                | "equal"
+                | "notEqual"
+                | "empty"
+                | "notEmpty"
+                | "fuzzy"
+                | "string"
+                | "contains"
+                | "notContains"
+                | "containsAny"
+                | "oneOf"
+                | "range";
+              /** @description The field in the view to perform the search on. */
+              field?: string;
+              /** @description The value to search for - the type will depend on the operator in use. */
+              value?:
+                | string
+                | number
+                | boolean
+                | { [key: string]: unknown }
+                | unknown[];
+            }[];
+          }[];
+        }[];
+      };
+      sort?: {
+        /** @description The field from the table/view schema to sort on. */
+        field: string;
+        /**
+         * @description The order in which to sort.
+         * @enum {string}
+         */
+        order?: "ascending" | "descending";
+        /**
+         * @description The type of sort to perform (by number, or by alphabetically).
+         * @enum {string}
+         */
+        type?: "string" | "number";
+      };
+      schema: {
+        [key: string]:
+          | {
+              /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
+              visible?: boolean;
+              /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
+              readonly?: boolean;
+              /** @description A number defining where the column shows up in tables, lowest being first. */
+              order?: number;
+              /** @description A width for the column, defined in pixels - this affects rendering in tables. */
+              width?: number;
+              /** @description If this is a relationship column, we can set the columns we wish to include */
+              column?: {
+                readonly?: boolean;
+              }[];
+            }
+          | {
+              /**
+               * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
+               * @enum {string}
+               */
+              calculationType?: "sum" | "avg" | "count" | "min" | "max";
+              /** @description The field from the table to perform the calculation on. */
+              field?: string;
+              /** @description Can be used in tandem with the count calculation type, to count unique entries. */
+              distinct?: boolean;
+            };
+      };
+    };
+    viewOutput: {
+      /** @description The view to be created/updated. */
+      data: {
+        /** @description The name of the view. */
+        name: string;
+        /** @description The ID of the table this view is based on. */
+        tableId: string;
+        /**
+         * @description The type of view - standard (empty value) or calculation.
+         * @enum {string}
+         */
+        type?: "calculation";
+        /** @description A column used to display rows from this view - usually used when rendered in tables. */
+        primaryDisplay?: string;
+        /** @description Search parameters for view */
+        query?: {
+          /**
+           * @description When using groups this defines whether all of the filters must match, or only one of them.
+           * @enum {string}
+           */
+          logicalOperator?: "all" | "any";
+          /**
+           * @description If no filters match, should the view return all rows, or no rows.
+           * @enum {string}
+           */
+          onEmptyFilter?: "all" | "none";
+          /** @description A grouping of filters to be applied. */
+          groups?: {
+            /**
+             * @description When using groups this defines whether all of the filters must match, or only one of them.
+             * @enum {string}
+             */
+            logicalOperator?: "all" | "any";
+            /** @description A list of filters to apply */
+            filters?: {
+              /**
+               * @description The type of search operation which is being performed.
+               * @enum {string}
+               */
+              operator?:
+                | "equal"
+                | "notEqual"
+                | "empty"
+                | "notEmpty"
+                | "fuzzy"
+                | "string"
+                | "contains"
+                | "notContains"
+                | "containsAny"
+                | "oneOf"
+                | "range";
+              /** @description The field in the view to perform the search on. */
+              field?: string;
+              /** @description The value to search for - the type will depend on the operator in use. */
+              value?:
+                | string
+                | number
+                | boolean
+                | { [key: string]: unknown }
+                | unknown[];
+            }[];
+            /** @description A grouping of filters to be applied. */
+            groups?: {
+              /**
+               * @description When using groups this defines whether all of the filters must match, or only one of them.
+               * @enum {string}
+               */
+              logicalOperator?: "all" | "any";
+              /** @description A list of filters to apply */
+              filters?: {
+                /**
+                 * @description The type of search operation which is being performed.
+                 * @enum {string}
+                 */
+                operator?:
+                  | "equal"
+                  | "notEqual"
+                  | "empty"
+                  | "notEmpty"
+                  | "fuzzy"
+                  | "string"
+                  | "contains"
+                  | "notContains"
+                  | "containsAny"
+                  | "oneOf"
+                  | "range";
+                /** @description The field in the view to perform the search on. */
+                field?: string;
+                /** @description The value to search for - the type will depend on the operator in use. */
+                value?:
+                  | string
+                  | number
+                  | boolean
+                  | { [key: string]: unknown }
+                  | unknown[];
+              }[];
+            }[];
+          }[];
+        };
+        sort?: {
+          /** @description The field from the table/view schema to sort on. */
+          field: string;
+          /**
+           * @description The order in which to sort.
+           * @enum {string}
+           */
+          order?: "ascending" | "descending";
+          /**
+           * @description The type of sort to perform (by number, or by alphabetically).
+           * @enum {string}
+           */
+          type?: "string" | "number";
+        };
+        schema: {
+          [key: string]:
+            | {
+                /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
+                visible?: boolean;
+                /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
+                readonly?: boolean;
+                /** @description A number defining where the column shows up in tables, lowest being first. */
+                order?: number;
+                /** @description A width for the column, defined in pixels - this affects rendering in tables. */
+                width?: number;
+                /** @description If this is a relationship column, we can set the columns we wish to include */
+                column?: {
+                  readonly?: boolean;
+                }[];
+              }
+            | {
+                /**
+                 * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
+                 * @enum {string}
+                 */
+                calculationType?: "sum" | "avg" | "count" | "min" | "max";
+                /** @description The field from the table to perform the calculation on. */
+                field?: string;
+                /** @description Can be used in tandem with the count calculation type, to count unique entries. */
+                distinct?: boolean;
+              };
+        };
+        /** @description The ID of the view. */
+        id: string;
+      };
+    };
+    viewSearch: {
+      data: {
+        /** @description The name of the view. */
+        name: string;
+        /** @description The ID of the table this view is based on. */
+        tableId: string;
+        /**
+         * @description The type of view - standard (empty value) or calculation.
+         * @enum {string}
+         */
+        type?: "calculation";
+        /** @description A column used to display rows from this view - usually used when rendered in tables. */
+        primaryDisplay?: string;
+        /** @description Search parameters for view */
+        query?: {
+          /**
+           * @description When using groups this defines whether all of the filters must match, or only one of them.
+           * @enum {string}
+           */
+          logicalOperator?: "all" | "any";
+          /**
+           * @description If no filters match, should the view return all rows, or no rows.
+           * @enum {string}
+           */
+          onEmptyFilter?: "all" | "none";
+          /** @description A grouping of filters to be applied. */
+          groups?: {
+            /**
+             * @description When using groups this defines whether all of the filters must match, or only one of them.
+             * @enum {string}
+             */
+            logicalOperator?: "all" | "any";
+            /** @description A list of filters to apply */
+            filters?: {
+              /**
+               * @description The type of search operation which is being performed.
+               * @enum {string}
+               */
+              operator?:
+                | "equal"
+                | "notEqual"
+                | "empty"
+                | "notEmpty"
+                | "fuzzy"
+                | "string"
+                | "contains"
+                | "notContains"
+                | "containsAny"
+                | "oneOf"
+                | "range";
+              /** @description The field in the view to perform the search on. */
+              field?: string;
+              /** @description The value to search for - the type will depend on the operator in use. */
+              value?:
+                | string
+                | number
+                | boolean
+                | { [key: string]: unknown }
+                | unknown[];
+            }[];
+            /** @description A grouping of filters to be applied. */
+            groups?: {
+              /**
+               * @description When using groups this defines whether all of the filters must match, or only one of them.
+               * @enum {string}
+               */
+              logicalOperator?: "all" | "any";
+              /** @description A list of filters to apply */
+              filters?: {
+                /**
+                 * @description The type of search operation which is being performed.
+                 * @enum {string}
+                 */
+                operator?:
+                  | "equal"
+                  | "notEqual"
+                  | "empty"
+                  | "notEmpty"
+                  | "fuzzy"
+                  | "string"
+                  | "contains"
+                  | "notContains"
+                  | "containsAny"
+                  | "oneOf"
+                  | "range";
+                /** @description The field in the view to perform the search on. */
+                field?: string;
+                /** @description The value to search for - the type will depend on the operator in use. */
+                value?:
+                  | string
+                  | number
+                  | boolean
+                  | { [key: string]: unknown }
+                  | unknown[];
+              }[];
+            }[];
+          }[];
+        };
+        sort?: {
+          /** @description The field from the table/view schema to sort on. */
+          field: string;
+          /**
+           * @description The order in which to sort.
+           * @enum {string}
+           */
+          order?: "ascending" | "descending";
+          /**
+           * @description The type of sort to perform (by number, or by alphabetically).
+           * @enum {string}
+           */
+          type?: "string" | "number";
+        };
+        schema: {
+          [key: string]:
+            | {
+                /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
+                visible?: boolean;
+                /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
+                readonly?: boolean;
+                /** @description A number defining where the column shows up in tables, lowest being first. */
+                order?: number;
+                /** @description A width for the column, defined in pixels - this affects rendering in tables. */
+                width?: number;
+                /** @description If this is a relationship column, we can set the columns we wish to include */
+                column?: {
+                  readonly?: boolean;
+                }[];
+              }
+            | {
+                /**
+                 * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
+                 * @enum {string}
+                 */
+                calculationType?: "sum" | "avg" | "count" | "min" | "max";
+                /** @description The field from the table to perform the calculation on. */
+                field?: string;
+                /** @description Can be used in tandem with the count calculation type, to count unique entries. */
+                distinct?: boolean;
+              };
+        };
+        /** @description The ID of the view. */
+        id: string;
+      }[];
+    };
   };
   parameters: {
     /** @description The ID of the table which this request is targeting. */
     tableId: string;
+    /** @description The ID of the view which this request is targeting. */
+    viewId: string;
     /** @description The ID of the row which this request is targeting. */
     rowId: string;
     /** @description The ID of the app which this request is targeting. */
@@ -1213,6 +1664,31 @@ export interface operations {
       };
     };
   };
+  rowViewSearch: {
+    parameters: {
+      path: {
+        /** The ID of the view which this request is targeting. */
+        viewId: components["parameters"]["viewId"];
+      };
+      header: {
+        /** The ID of the app which this request is targeting. */
+        "x-budibase-app-id": components["parameters"]["appId"];
+      };
+    };
+    responses: {
+      /** The response will contain an array of rows that match the search parameters. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["searchOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["rowSearch"];
+      };
+    };
+  };
   /** Create a table, this could be internal or external. */
   tableCreate: {
     parameters: {
@@ -1400,6 +1876,118 @@ export interface operations {
       200: {
         content: {
           "application/json": components["schemas"]["userSearch"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["nameSearch"];
+      };
+    };
+  };
+  /** Create a view, this can be against an internal or external table. */
+  viewCreate: {
+    parameters: {
+      header: {
+        /** The ID of the app which this request is targeting. */
+        "x-budibase-app-id": components["parameters"]["appId"];
+      };
+    };
+    responses: {
+      /** Returns the created view, including the ID which has been generated for it. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["viewOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["view"];
+      };
+    };
+  };
+  /** Lookup a view, this could be internal or external. */
+  viewGetById: {
+    parameters: {
+      path: {
+        /** The ID of the view which this request is targeting. */
+        viewId: components["parameters"]["viewId"];
+      };
+      header: {
+        /** The ID of the app which this request is targeting. */
+        "x-budibase-app-id": components["parameters"]["appId"];
+      };
+    };
+    responses: {
+      /** Returns the retrieved view. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["viewOutput"];
+        };
+      };
+    };
+  };
+  /** Update a view, this can be against an internal or external table. */
+  viewUpdate: {
+    parameters: {
+      path: {
+        /** The ID of the view which this request is targeting. */
+        viewId: components["parameters"]["viewId"];
+      };
+      header: {
+        /** The ID of the app which this request is targeting. */
+        "x-budibase-app-id": components["parameters"]["appId"];
+      };
+    };
+    responses: {
+      /** Returns the updated view. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["viewOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["view"];
+      };
+    };
+  };
+  /** Delete a view, this can be against an internal or external table. */
+  viewDestroy: {
+    parameters: {
+      path: {
+        /** The ID of the view which this request is targeting. */
+        viewId: components["parameters"]["viewId"];
+      };
+      header: {
+        /** The ID of the app which this request is targeting. */
+        "x-budibase-app-id": components["parameters"]["appId"];
+      };
+    };
+    responses: {
+      /** Returns the deleted view. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["viewOutput"];
+        };
+      };
+    };
+  };
+  /** Based on view properties (currently only name) search for views. */
+  viewSearch: {
+    parameters: {
+      header: {
+        /** The ID of the app which this request is targeting. */
+        "x-budibase-app-id": components["parameters"]["appId"];
+      };
+    };
+    responses: {
+      /** Returns the found views, based on the search parameters. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["viewSearch"];
         };
       };
     };

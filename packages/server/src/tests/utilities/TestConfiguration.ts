@@ -621,7 +621,7 @@ export default class TestConfiguration {
   }
 
   async unpublish() {
-    const response = await this._req(appController.unpublish, {
+    const response = await this._req(appController.unpublish, undefined, {
       appId: this.appId,
     })
     this.prodAppId = undefined

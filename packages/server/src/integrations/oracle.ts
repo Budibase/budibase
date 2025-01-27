@@ -3,7 +3,6 @@ import {
   DatasourceFieldType,
   Integration,
   Operation,
-  QueryJson,
   QueryType,
   SqlQuery,
   Table,
@@ -15,6 +14,7 @@ import {
   Row,
   DatasourcePlusQueryResponse,
   SqlClient,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -116,7 +116,7 @@ const OracleContraintTypes = {
 
 class OracleIntegration extends Sql implements DatasourcePlus {
   private readonly config: OracleConfig
-  private index: number = 1
+  private index = 1
 
   private static readonly COLUMNS_SQL = `
     SELECT
@@ -545,7 +545,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
+  async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const operation = this._operation(json)
     const input = this._query(json, { disableReturning: true }) as SqlQuery
     if (Array.isArray(input)) {
@@ -572,13 +572,9 @@ class OracleIntegration extends Sql implements DatasourcePlus {
         return response.rows as Row[]
       } else {
         // get the last row that was updated
-        if (
-          response.lastRowid &&
-          json.endpoint?.entityId &&
-          operation !== Operation.DELETE
-        ) {
+        if (response.lastRowid && operation !== Operation.DELETE) {
           const lastRow = await this.internalQuery({
-            sql: `SELECT * FROM "${json.endpoint.entityId}" WHERE ROWID = '${response.lastRowid}'`,
+            sql: `SELECT * FROM "${json.table.name}" WHERE ROWID = '${response.lastRowid}'`,
           })
           return lastRow.rows as Row[]
         } else {

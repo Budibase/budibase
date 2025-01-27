@@ -17,18 +17,18 @@
   export let getOptionIcon = option => option?.icon
   export let getOptionColour = option => option?.colour
   export let useOptionIconImage = false
-  export let isOptionEnabled
+  export let isOptionEnabled = undefined
   export let quiet = false
   export let autoWidth = false
   export let sort = false
   export let tooltip = ""
   export let autocomplete = false
-  export let customPopoverHeight
-  export let align
+  export let customPopoverHeight = undefined
+  export let align = undefined
   export let footer = null
   export let tag = null
   export let helpText = null
-  export let compare
+  export let compare = undefined
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
 

@@ -2,7 +2,6 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "tasksRunnerOptions": {
     "default": {
-      "runner": "nx-cloud",
       "options": {
         "cacheableOperations": ["build", "test", "check:types"]
       }
@@ -13,7 +12,8 @@
       "inputs": [
         "{workspaceRoot}/scripts/*",
         "{workspaceRoot}/lerna.json",
-        "{workspaceRoot}/.github/workflows/*"
+        "{workspaceRoot}/.github/workflows/*",
+        "{workspaceRoot}/tsconfig.build.json"
       ]
     },
     "test": {

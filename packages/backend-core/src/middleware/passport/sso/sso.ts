@@ -20,7 +20,7 @@ export const ssoSaveUserNoOp: SaveSSOUserFunction = (user: SSOUser) =>
  */
 export async function authenticate(
   details: SSOAuthDetails,
-  requireLocalAccount: boolean = true,
+  requireLocalAccount = true,
   done: any,
   saveUserFn: SaveSSOUserFunction
 ) {

@@ -20,10 +20,10 @@
     licensing,
     organisation,
     admin,
-  } from "stores/portal"
+  } from "@/stores/portal"
   import { onMount } from "svelte"
-  import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
-  import UpgradeModal from "components/common/users/UpgradeModal.svelte"
+  import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
+  import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
@@ -35,8 +35,8 @@
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import { get } from "svelte/store"
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
-  import { API } from "api"
-  import { OnboardingType } from "constants"
+  import { API } from "@/api"
+  import { OnboardingType } from "@/constants"
   import { sdk } from "@budibase/shared-core"
 
   const fetch = fetchData({
@@ -247,10 +247,11 @@
     try {
       bulkSaveResponse = await users.create(await removingDuplicities(userData))
       notifications.success("Successfully created user")
-      await groups.actions.init()
+      await groups.init()
       passwordModal.show()
       await fetch.refresh()
     } catch (error) {
+      console.error(error)
       notifications.error("Error creating user")
     }
   }
@@ -317,7 +318,7 @@
 
   onMount(async () => {
     try {
-      await groups.actions.init()
+      await groups.init()
       groupsLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")

@@ -1,9 +1,16 @@
 import { DocumentType } from "../../db/utils"
-import { App, Plugin, UserCtx } from "@budibase/types"
+import {
+  App,
+  FetchComponentDefinitionResponse,
+  Plugin,
+  UserCtx,
+} from "@budibase/types"
 import { db as dbCore, context, tenancy } from "@budibase/backend-core"
 import { getComponentLibraryManifest } from "../../utilities/fileSystem"
 
-export async function fetchAppComponentDefinitions(ctx: UserCtx) {
+export async function fetchAppComponentDefinitions(
+  ctx: UserCtx<void, FetchComponentDefinitionResponse>
+) {
   try {
     const db = context.getAppDB()
     const app = await db.get<App>(DocumentType.APP_METADATA)

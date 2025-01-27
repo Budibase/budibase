@@ -1,15 +1,7 @@
 {
-  "endpoint": {
-    "datasourceId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
-    "entityId": "compositetable",
-    "operation": "DELETE"
-  },
+  "operation": "DELETE",
   "resource": {
-    "fields": [
-      "a.keyparttwo",
-      "a.keypartone",
-      "a.name"
-    ]
+    "fields": ["a.keyparttwo", "a.keypartone", "a.name"]
   },
   "filters": {
     "equal": {
@@ -26,48 +18,43 @@
       }
     }
   },
-  "meta": {
-    "table": {
-      "type": "table",
-      "_id": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__compositetable",
-      "primary": [
-        "keypartone",
-        "keyparttwo"
-      ],
-      "name": "compositetable",
-      "schema": {
-        "keyparttwo": {
-          "type": "string",
-          "externalType": "character varying",
-          "autocolumn": false,
-          "name": "keyparttwo",
-          "constraints": {
-            "presence": true
-          }
-        },
-        "keypartone": {
-          "type": "string",
-          "externalType": "character varying",
-          "autocolumn": false,
-          "name": "keypartone",
-          "constraints": {
-            "presence": true
-          }
-        },
-        "name": {
-          "type": "string",
-          "externalType": "character varying",
-          "autocolumn": false,
-          "name": "name",
-          "constraints": {
-            "presence": false
-          }
+  "table": {
+    "type": "table",
+    "_id": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__compositetable",
+    "primary": ["keypartone", "keyparttwo"],
+    "name": "compositetable",
+    "schema": {
+      "keyparttwo": {
+        "type": "string",
+        "externalType": "character varying",
+        "autocolumn": false,
+        "name": "keyparttwo",
+        "constraints": {
+          "presence": true
         }
       },
-      "sourceId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
-      "sourceType": "external",
-      "primaryDisplay": "keypartone"
-    }
+      "keypartone": {
+        "type": "string",
+        "externalType": "character varying",
+        "autocolumn": false,
+        "name": "keypartone",
+        "constraints": {
+          "presence": true
+        }
+      },
+      "name": {
+        "type": "string",
+        "externalType": "character varying",
+        "autocolumn": false,
+        "name": "name",
+        "constraints": {
+          "presence": false
+        }
+      }
+    },
+    "sourceId": "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
+    "sourceType": "external",
+    "primaryDisplay": "keypartone"
   },
   "tableAliases": {
     "compositetable": "a"

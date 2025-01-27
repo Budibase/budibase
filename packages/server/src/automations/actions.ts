@@ -1,3 +1,4 @@
+import { automations } from "@budibase/shared-core"
 import * as sendSmtpEmail from "./steps/sendSmtpEmail"
 import * as createRow from "./steps/createRow"
 import * as updateRow from "./steps/updateRow"
@@ -14,11 +15,10 @@ import * as make from "./steps/make"
 import * as filter from "./steps/filter"
 import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
-import * as loop from "./steps/loop"
 import * as collect from "./steps/collect"
-import * as branch from "./steps/branch"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import * as openai from "./steps/openai"
+import * as bash from "./steps/bash"
 import env from "../environment"
 import {
   PluginType,
@@ -27,11 +27,9 @@ import {
   Hosting,
   ActionImplementation,
   AutomationStepDefinition,
-  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
-import { features } from "@budibase/backend-core"
 
 type ActionImplType = ActionImplementations<
   typeof env.SELF_HOSTED extends "true" ? Hosting.SELF : Hosting.CLOUD
@@ -64,50 +62,47 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   string,
   AutomationStepDefinition
 > = {
-  SEND_EMAIL_SMTP: sendSmtpEmail.definition,
-  CREATE_ROW: createRow.definition,
-  UPDATE_ROW: updateRow.definition,
-  DELETE_ROW: deleteRow.definition,
-  OUTGOING_WEBHOOK: outgoingWebhook.definition,
-  EXECUTE_SCRIPT: executeScript.definition,
-  EXECUTE_QUERY: executeQuery.definition,
-  SERVER_LOG: serverLog.definition,
-  DELAY: delay.definition,
-  FILTER: filter.definition,
-  QUERY_ROWS: queryRow.definition,
-  LOOP: loop.definition,
-  COLLECT: collect.definition,
-  TRIGGER_AUTOMATION_RUN: triggerAutomationRun.definition,
+  SEND_EMAIL_SMTP: automations.steps.sendSmtpEmail.definition,
+  CREATE_ROW: automations.steps.createRow.definition,
+  UPDATE_ROW: automations.steps.updateRow.definition,
+  DELETE_ROW: automations.steps.deleteRow.definition,
+  OUTGOING_WEBHOOK: automations.steps.outgoingWebhook.definition,
+  EXECUTE_SCRIPT: automations.steps.executeScript.definition,
+  EXECUTE_QUERY: automations.steps.executeQuery.definition,
+  SERVER_LOG: automations.steps.serverLog.definition,
+  DELAY: automations.steps.delay.definition,
+  FILTER: automations.steps.filter.definition,
+  QUERY_ROWS: automations.steps.queryRows.definition,
+  LOOP: automations.steps.loop.definition,
+  COLLECT: automations.steps.collect.definition,
+  TRIGGER_AUTOMATION_RUN: automations.steps.triggerAutomationRun.definition,
+  BRANCH: automations.steps.branch.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
-  discord: discord.definition,
-  slack: slack.definition,
-  zapier: zapier.definition,
-  integromat: make.definition,
-  n8n: n8n.definition,
+  discord: automations.steps.discord.definition,
+  slack: automations.steps.slack.definition,
+  zapier: automations.steps.zapier.definition,
+  integromat: automations.steps.make.definition,
+  n8n: automations.steps.n8n.definition,
 }
 
 // don't add the bash script/definitions unless in self host
 // the fact this isn't included in any definitions means it cannot be
 // ran at all
 if (env.SELF_HOSTED) {
-  const bash = require("./steps/bash")
-
-  // @ts-ignore
+  // @ts-expect-error
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
-  // @ts-ignore
-  BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
+  BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = automations.steps.bash.definition
+
+  if (env.isTest()) {
+    BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
+  }
 }
 
-export async function getActionDefinitions() {
-  if (await features.flags.isEnabled(FeatureFlag.AUTOMATION_BRANCHING)) {
-    BUILTIN_ACTION_DEFINITIONS["BRANCH"] = branch.definition
-  }
-  if (
-    env.SELF_HOSTED ||
-    (await features.flags.isEnabled(FeatureFlag.BUDIBASE_AI)) ||
-    (await features.flags.isEnabled(FeatureFlag.AI_CUSTOM_CONFIGS))
-  ) {
-    BUILTIN_ACTION_DEFINITIONS["OPENAI"] = openai.definition
+export async function getActionDefinitions(): Promise<
+  Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
+> {
+  if (env.SELF_HOSTED) {
+    BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
   }
 
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS

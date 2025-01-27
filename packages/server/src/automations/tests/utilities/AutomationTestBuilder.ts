@@ -1,49 +1,55 @@
 import { v4 as uuidv4 } from "uuid"
-import { testAutomation } from "../../../api/routes/tests/utilities/TestFunctions"
-import {} from "../../steps/createRow"
 import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
 import { TRIGGER_DEFINITIONS } from "../../triggers"
 import {
-  LoopStepInputs,
-  DeleteRowStepInputs,
-  UpdateRowStepInputs,
-  CreateRowStepInputs,
+  AppActionTriggerInputs,
+  AppActionTriggerOutputs,
   Automation,
-  AutomationTrigger,
-  AutomationResults,
-  SmtpEmailStepInputs,
-  ExecuteQueryStepInputs,
-  QueryRowsStepInputs,
   AutomationActionStepId,
-  AutomationTriggerStepId,
   AutomationStep,
+  AutomationStepInputs,
+  AutomationTrigger,
   AutomationTriggerDefinition,
-  RowDeletedTriggerInputs,
-  RowDeletedTriggerOutputs,
-  RowUpdatedTriggerOutputs,
-  RowUpdatedTriggerInputs,
+  AutomationTriggerInputs,
+  AutomationTriggerStepId,
+  BashStepInputs,
+  Branch,
+  BranchStepInputs,
+  CollectStepInputs,
+  CreateRowStepInputs,
+  CronTriggerOutputs,
+  DeleteRowStepInputs,
+  ExecuteQueryStepInputs,
+  ExecuteScriptStepInputs,
+  FilterStepInputs,
+  isDidNotTriggerResponse,
+  LoopStepInputs,
+  OpenAIStepInputs,
+  QueryRowsStepInputs,
   RowCreatedTriggerInputs,
   RowCreatedTriggerOutputs,
-  AppActionTriggerOutputs,
-  CronTriggerOutputs,
-  AppActionTriggerInputs,
-  AutomationStepInputs,
-  AutomationTriggerInputs,
-  ServerLogStepInputs,
-  BranchStepInputs,
+  RowDeletedTriggerInputs,
+  RowDeletedTriggerOutputs,
+  RowUpdatedTriggerInputs,
+  RowUpdatedTriggerOutputs,
   SearchFilters,
-  Branch,
-  FilterStepInputs,
+  ServerLogStepInputs,
+  SmtpEmailStepInputs,
+  TestAutomationRequest,
+  UpdateRowStepInputs,
+  WebhookTriggerInputs,
+  WebhookTriggerOutputs,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
-import { definition } from "../../../automations/steps/branch"
+import { automations } from "@budibase/shared-core"
 
 type TriggerOutputs =
   | RowCreatedTriggerOutputs
   | RowUpdatedTriggerOutputs
   | RowDeletedTriggerOutputs
   | AppActionTriggerOutputs
+  | WebhookTriggerOutputs
   | CronTriggerOutputs
   | undefined
 
@@ -97,7 +103,7 @@ class BaseStepBuilder {
       branchStepInputs.children![branchId] = stepBuilder.build()
     })
     const branchStep: AutomationStep = {
-      ...definition,
+      ...automations.steps.branch.definition,
       id: uuidv4(),
       stepId: AutomationActionStepId.BRANCH,
       inputs: branchStepInputs,
@@ -177,6 +183,7 @@ class BaseStepBuilder {
       opts
     )
   }
+
   loop(
     inputs: LoopStepInputs,
     opts?: { stepName?: string; stepId?: string }
@@ -201,6 +208,18 @@ class BaseStepBuilder {
     )
   }
 
+  executeScript(
+    input: ExecuteScriptStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.EXECUTE_SCRIPT,
+      BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT,
+      input,
+      opts
+    )
+  }
+
   filter(input: FilterStepInputs): this {
     return this.step(
       AutomationActionStepId.FILTER,
@@ -208,7 +227,44 @@ class BaseStepBuilder {
       input
     )
   }
+
+  bash(
+    input: BashStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.EXECUTE_BASH,
+      BUILTIN_ACTION_DEFINITIONS.EXECUTE_BASH,
+      input,
+      opts
+    )
+  }
+
+  openai(
+    input: OpenAIStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.OPENAI,
+      BUILTIN_ACTION_DEFINITIONS.OPENAI,
+      input,
+      opts
+    )
+  }
+
+  collect(
+    input: CollectStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.COLLECT,
+      BUILTIN_ACTION_DEFINITIONS.COLLECT,
+      input,
+      opts
+    )
+  }
 }
+
 class StepBuilder extends BaseStepBuilder {
   build(): AutomationStep[] {
     return this.steps
@@ -223,8 +279,8 @@ class StepBuilder extends BaseStepBuilder {
 class AutomationBuilder extends BaseStepBuilder {
   private automationConfig: Automation
   private config: TestConfiguration
-  private triggerOutputs: any
-  private triggerSet: boolean = false
+  private triggerOutputs: TriggerOutputs
+  private triggerSet = false
 
   constructor(
     options: { name?: string; appId?: string; config?: TestConfiguration } = {}
@@ -290,6 +346,16 @@ class AutomationBuilder extends BaseStepBuilder {
     )
   }
 
+  webhook(outputs: WebhookTriggerOutputs, inputs?: WebhookTriggerInputs) {
+    this.triggerOutputs = outputs
+    return this.trigger(
+      TRIGGER_DEFINITIONS.WEBHOOK,
+      AutomationTriggerStepId.WEBHOOK,
+      inputs,
+      outputs
+    )
+  }
+
   private trigger<TStep extends AutomationTriggerStepId>(
     triggerSchema: AutomationTriggerDefinition,
     stepId: TStep,
@@ -322,27 +388,29 @@ class AutomationBuilder extends BaseStepBuilder {
     return this.automationConfig
   }
 
-  async run() {
+  async save() {
     if (!Object.keys(this.automationConfig.definition.trigger).length) {
       throw new Error("Please add a trigger to this automation test")
     }
     this.automationConfig.definition.steps = this.steps
-    const automation = await this.config.createAutomation(this.build())
-    const results = await testAutomation(
-      this.config,
-      automation,
-      this.triggerOutputs
-    )
-    return this.processResults(results)
+    return await this.config.createAutomation(this.build())
   }
 
-  private processResults(results: {
-    body: AutomationResults
-  }): AutomationResults {
-    results.body.steps.shift()
+  async run() {
+    const automation = await this.save()
+    const response = await this.config.api.automation.test(
+      automation._id!,
+      this.triggerOutputs as TestAutomationRequest
+    )
+
+    if (isDidNotTriggerResponse(response)) {
+      throw new Error(response.message)
+    }
+
+    response.steps.shift()
     return {
-      trigger: results.body.trigger,
-      steps: results.body.steps,
+      trigger: response.trigger,
+      steps: response.steps,
     }
   }
 }

@@ -58,57 +58,32 @@ export function checkSlashesInUrl(url: string) {
 export async function updateEntityMetadata(
   type: string,
   entityId: string,
-  updateFn: any
+  updateFn: (metadata: Document) => Document
 ) {
   const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
-  // read it to see if it exists, we'll overwrite it no matter what
-  let rev, metadata: Document
-  try {
-    const oldMetadata = await db.get<any>(id)
-    rev = oldMetadata._rev
-    metadata = updateFn(oldMetadata)
-  } catch (err) {
-    rev = null
-    metadata = updateFn({})
-  }
+  const metadata = updateFn((await db.tryGet(id)) || {})
   metadata._id = id
-  if (rev) {
-    metadata._rev = rev
-  }
   const response = await db.put(metadata)
-  return {
-    ...metadata,
-    _id: id,
-    _rev: response.rev,
-  }
+  return { ...metadata, _id: id, _rev: response.rev }
 }
 
 export async function saveEntityMetadata(
   type: string,
   entityId: string,
   metadata: Document
-) {
-  return updateEntityMetadata(type, entityId, () => {
-    return metadata
-  })
+): Promise<Document> {
+  return updateEntityMetadata(type, entityId, () => metadata)
 }
 
 export async function deleteEntityMetadata(type: string, entityId: string) {
   const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
-  let rev
-  try {
-    const metadata = await db.get<any>(id)
-    if (metadata) {
-      rev = metadata._rev
-    }
-  } catch (err) {
-    // don't need to error if it doesn't exist
+  const metadata = await db.tryGet(id)
+  if (!metadata) {
+    return
   }
-  if (id && rev) {
-    await db.remove(id, rev)
-  }
+  await db.remove(metadata)
 }
 
 export function escapeDangerousCharacters(string: string) {

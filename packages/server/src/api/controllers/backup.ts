@@ -1,14 +1,16 @@
 import sdk from "../../sdk"
 import { events, context, db } from "@budibase/backend-core"
 import { DocumentType } from "../../db/utils"
-import { App, Ctx } from "@budibase/types"
+import {
+  App,
+  Ctx,
+  ExportAppDumpRequest,
+  ExportAppDumpResponse,
+} from "@budibase/types"
 
-interface ExportAppDumpRequest {
-  excludeRows: boolean
-  encryptPassword?: string
-}
-
-export async function exportAppDump(ctx: Ctx<ExportAppDumpRequest>) {
+export async function exportAppDump(
+  ctx: Ctx<ExportAppDumpRequest, ExportAppDumpResponse>
+) {
   const { appId } = ctx.query as any
   const { excludeRows, encryptPassword } = ctx.request.body
 

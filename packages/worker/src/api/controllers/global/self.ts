@@ -10,6 +10,11 @@ import {
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
 import {
+  DevInfo,
+  FetchAPIKeyResponse,
+  GenerateAPIKeyRequest,
+  GenerateAPIKeyResponse,
+  GetGlobalSelfResponse,
   UpdateSelfRequest,
   UpdateSelfResponse,
   User,
@@ -35,22 +40,24 @@ function cleanupDevInfo(info: any) {
   return info
 }
 
-export async function generateAPIKey(ctx: any) {
+export async function generateAPIKey(
+  ctx: UserCtx<GenerateAPIKeyRequest, GenerateAPIKeyResponse>
+) {
   let userId
   let apiKey
   if (env.isTest() && ctx.request.body.userId) {
     userId = ctx.request.body.userId
     apiKey = newTestApiKey()
   } else {
-    userId = ctx.user._id
+    userId = ctx.user._id!
     apiKey = newApiKey()
   }
 
   const db = tenancy.getGlobalDB()
   const id = dbCore.generateDevInfoID(userId)
-  let devInfo
+  let devInfo: DevInfo
   try {
-    devInfo = await db.get<any>(id)
+    devInfo = await db.get<DevInfo>(id)
   } catch (err) {
     devInfo = { _id: id, userId }
   }
@@ -59,9 +66,9 @@ export async function generateAPIKey(ctx: any) {
   ctx.body = cleanupDevInfo(devInfo)
 }
 
-export async function fetchAPIKey(ctx: any) {
+export async function fetchAPIKey(ctx: UserCtx<void, FetchAPIKeyResponse>) {
   const db = tenancy.getGlobalDB()
-  const id = dbCore.generateDevInfoID(ctx.user._id)
+  const id = dbCore.generateDevInfoID(ctx.user._id!)
   let devInfo
   try {
     devInfo = await db.get(id)
@@ -77,21 +84,21 @@ export async function fetchAPIKey(ctx: any) {
 }
 
 /**
- * Add the attributes that are session based to the current user.
+ *
  */
-const addSessionAttributesToUser = (ctx: any) => {
-  ctx.body.account = ctx.user.account
-  ctx.body.license = ctx.user.license
-  ctx.body.budibaseAccess = !!ctx.user.budibaseAccess
-  ctx.body.accountPortalAccess = !!ctx.user.accountPortalAccess
-  ctx.body.csrfToken = ctx.user.csrfToken
-}
+const getUserSessionAttributes = (ctx: any) => ({
+  account: ctx.user.account,
+  license: ctx.user.license,
+  budibaseAccess: !!ctx.user.budibaseAccess,
+  accountPortalAccess: !!ctx.user.accountPortalAccess,
+  csrfToken: ctx.user.csrfToken,
+})
 
-export async function getSelf(ctx: any) {
+export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
   if (!ctx.user) {
     ctx.throw(403, "User not logged in")
   }
-  const userId = ctx.user._id
+  const userId = ctx.user._id!
   ctx.params = {
     id: userId,
   }
@@ -101,13 +108,19 @@ export async function getSelf(ctx: any) {
 
   // get the main body of the user
   const user = await userSdk.db.getUser(userId)
-  ctx.body = await groups.enrichUserRolesFromGroups(user)
+  const enrichedUser = await groups.enrichUserRolesFromGroups(user)
+
+  // add the attributes that are session based to the current user
+  const sessionAttributes = getUserSessionAttributes(ctx)
 
   // add the feature flags for this tenant
   const flags = await features.flags.fetch()
-  ctx.body.flags = flags
 
-  addSessionAttributesToUser(ctx)
+  ctx.body = {
+    ...enrichedUser,
+    ...sessionAttributes,
+    flags,
+  }
 }
 
 export const syncAppFavourites = async (processedAppIds: string[]) => {

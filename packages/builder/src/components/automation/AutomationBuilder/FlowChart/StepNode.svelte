@@ -3,8 +3,8 @@
   import BranchNode from "./BranchNode.svelte"
   import { AutomationActionStepId } from "@budibase/types"
   import { ActionButton, notifications } from "@budibase/bbui"
-  import { automationStore } from "stores/builder"
-  import { environment } from "stores/portal"
+  import { automationStore } from "@/stores/builder"
+  import { environment } from "@/stores/portal"
   import { cloneDeep } from "lodash"
   import { memo } from "@budibase/frontend-core"
   import { getContext, onMount } from "svelte"
@@ -50,9 +50,12 @@
     // Register the trigger as the focus element for the automation
     // Onload, the canvas will use the dimensions to center the step
     if (stepEle && step.type === "TRIGGER" && !$view.focusEle) {
+      const { width, height, left, right, top, bottom, x, y } =
+        stepEle.getBoundingClientRect()
+
       view.update(state => ({
         ...state,
-        focusEle: stepEle.getBoundingClientRect(),
+        focusEle: { width, height, left, right, top, bottom, x, y },
       }))
     }
   })

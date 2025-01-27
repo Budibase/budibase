@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     DrawerContent,
     ActionButton,
@@ -12,9 +12,9 @@
     decodeJSBinding,
     encodeJSBinding,
     processObjectSync,
-    processStringSync,
+    processStringWithLogsSync,
   } from "@budibase/string-templates"
-  import { readableToRuntimeBinding } from "dataBinding"
+  import { readableToRuntimeBinding } from "@/dataBinding"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
   import {
     getHelperCompletions,
@@ -28,45 +28,47 @@
   import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
   import SnippetSidePanel from "./SnippetSidePanel.svelte"
   import { BindingHelpers } from "./utils"
-  import formatHighlight from "json-format-highlight"
-  import { capitalise } from "helpers"
-  import { Utils } from "@budibase/frontend-core"
-  import { licensing } from "stores/portal"
+  import { capitalise } from "@/helpers"
+  import { Utils, JsonFormatter } from "@budibase/frontend-core"
+  import { licensing } from "@/stores/portal"
+  import { BindingMode, SidePanel } from "@budibase/types"
+  import type {
+    EnrichedBinding,
+    BindingCompletion,
+    Snippet,
+    Helper,
+    CaretPositionFn,
+    InsertAtPositionFn,
+    JSONValue,
+  } from "@budibase/types"
+  import type { Log } from "@budibase/string-templates"
+  import type { CompletionContext } from "@codemirror/autocomplete"
 
   const dispatch = createEventDispatcher()
 
-  export let bindings = []
-  export let value = ""
+  export let bindings: EnrichedBinding[] = []
+  export let value: string = ""
   export let allowHBS = true
   export let allowJS = false
   export let allowHelpers = true
   export let allowSnippets = true
   export let context = null
-  export let snippets = null
+  export let snippets: Snippet[] | null = null
   export let autofocusEditor = false
   export let placeholder = null
   export let showTabBar = true
 
-  const Modes = {
-    Text: "Text",
-    JavaScript: "JavaScript",
-  }
-  const SidePanels = {
-    Bindings: "FlashOn",
-    Evaluation: "Play",
-    Snippets: "Code",
-  }
-
-  let mode
-  let sidePanel
+  let mode: BindingMode | null
+  let sidePanel: SidePanel | null
   let initialValueJS = value?.startsWith?.("{{ js ")
-  let jsValue = initialValueJS ? value : null
-  let hbsValue = initialValueJS ? null : value
-  let getCaretPosition
-  let insertAtPos
-  let targetMode = null
-  let expressionResult
-  let expressionError
+  let jsValue: string | null = initialValueJS ? value : null
+  let hbsValue: string | null = initialValueJS ? null : value
+  let getCaretPosition: CaretPositionFn | undefined
+  let insertAtPos: InsertAtPositionFn | undefined
+  let targetMode: BindingMode | null = null
+  let expressionResult: string | undefined
+  let expressionLogs: Log[] | undefined
+  let expressionError: string | undefined
   let evaluating = false
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
@@ -78,10 +80,12 @@
     mode
   )
   $: enrichedBindings = enrichBindings(bindings, context, snippets)
-  $: usingJS = mode === Modes.JavaScript
+  $: usingJS = mode === BindingMode.JavaScript
   $: editorMode =
-    mode === Modes.JavaScript ? EditorModes.JS : EditorModes.Handlebars
-  $: editorValue = editorMode === EditorModes.JS ? jsValue : hbsValue
+    mode === BindingMode.JavaScript ? EditorModes.JS : EditorModes.Handlebars
+  $: editorValue = (editorMode === EditorModes.JS ? jsValue : hbsValue) as
+    | string
+    | null
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: requestEval(runtimeExpression, context, snippets)
   $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
@@ -95,7 +99,7 @@
     }
   }
 
-  const getHBSCompletions = bindingCompletions => {
+  const getHBSCompletions = (bindingCompletions: BindingCompletion[]) => {
     return [
       hbAutocomplete([
         ...bindingCompletions,
@@ -104,71 +108,89 @@
     ]
   }
 
-  const getJSCompletions = (bindingCompletions, snippets, useSnippets) => {
-    const completions = [
+  const getJSCompletions = (
+    bindingCompletions: BindingCompletion[],
+    snippets: Snippet[] | null,
+    useSnippets?: boolean
+  ) => {
+    const completions: ((_: CompletionContext) => any)[] = [
       jsAutocomplete([
         ...bindingCompletions,
         ...getHelperCompletions(EditorModes.JS),
       ]),
     ]
-    if (useSnippets) {
+    if (useSnippets && snippets) {
       completions.push(snippetAutoComplete(snippets))
     }
     return completions
   }
 
-  const getModeOptions = (allowHBS, allowJS) => {
+  const getModeOptions = (allowHBS: boolean, allowJS: boolean) => {
     let options = []
     if (allowHBS) {
-      options.push(Modes.Text)
+      options.push(BindingMode.Text)
     }
     if (allowJS) {
-      options.push(Modes.JavaScript)
+      options.push(BindingMode.JavaScript)
     }
     return options
   }
 
-  const getSidePanelOptions = (bindings, context, useSnippets, mode) => {
+  const getSidePanelOptions = (
+    bindings: EnrichedBinding[],
+    context: any,
+    useSnippets: boolean,
+    mode: BindingMode | null
+  ) => {
     let options = []
     if (bindings?.length) {
-      options.push(SidePanels.Bindings)
+      options.push(SidePanel.Bindings)
     }
     if (context && Object.keys(context).length > 0) {
-      options.push(SidePanels.Evaluation)
+      options.push(SidePanel.Evaluation)
     }
-    if (useSnippets && mode === Modes.JavaScript) {
-      options.push(SidePanels.Snippets)
+    if (useSnippets && mode === BindingMode.JavaScript) {
+      options.push(SidePanel.Snippets)
     }
     return options
   }
 
-  const debouncedEval = Utils.debounce((expression, context, snippets) => {
-    try {
-      expressionError = null
-      expressionResult = processStringSync(
-        expression || "",
-        {
-          ...context,
-          snippets,
-        },
-        {
-          noThrow: false,
-        }
-      )
-    } catch (err) {
-      expressionResult = null
-      expressionError = err
-    }
-    evaluating = false
-  }, 260)
+  const debouncedEval = Utils.debounce(
+    (expression: string | null, context: any, snippets: Snippet[]) => {
+      try {
+        expressionError = undefined
+        const output = processStringWithLogsSync(
+          expression || "",
+          {
+            ...context,
+            snippets,
+          },
+          {
+            noThrow: false,
+          }
+        )
+        expressionResult = output.result
+        expressionLogs = output.logs
+      } catch (err: any) {
+        expressionResult = undefined
+        expressionError = err
+      }
+      evaluating = false
+    },
+    260
+  )
 
-  const requestEval = (expression, context, snippets) => {
+  const requestEval = (
+    expression: string | null,
+    context: any,
+    snippets: Snippet[] | null
+  ) => {
     evaluating = true
     debouncedEval(expression, context, snippets)
   }
 
-  const highlightJSON = json => {
-    return formatHighlight(json, {
+  const highlightJSON = (json: JSONValue) => {
+    return JsonFormatter.format(json, {
       keyColor: "#e06c75",
       numberColor: "#e5c07b",
       stringColor: "#98c379",
@@ -178,7 +200,11 @@
     })
   }
 
-  const enrichBindings = (bindings, context, snippets) => {
+  const enrichBindings = (
+    bindings: EnrichedBinding[],
+    context: any,
+    snippets: Snippet[] | null
+  ) => {
     // Create a single big array to enrich in one go
     const bindingStrings = bindings.map(binding => {
       if (binding.runtimeBinding.startsWith('trim "')) {
@@ -189,17 +215,18 @@
         return `{{ literal ${binding.runtimeBinding} }}`
       }
     })
-    const bindingEvauations = processObjectSync(bindingStrings, {
+    const bindingEvaluations = processObjectSync(bindingStrings, {
       ...context,
       snippets,
     })
 
     // Enrich bindings with evaluations and highlighted HTML
     return bindings.map((binding, idx) => {
-      if (!context) {
+      if (!context || typeof bindingEvaluations !== "object") {
         return binding
       }
-      const value = JSON.stringify(bindingEvauations[idx], null, 2)
+      const evalObj: Record<any, any> = bindingEvaluations
+      const value = JSON.stringify(evalObj[idx], null, 2)
       return {
         ...binding,
         value,
@@ -208,29 +235,38 @@
     })
   }
 
-  const updateValue = val => {
+  const updateValue = (val: any) => {
     const runtimeExpression = readableToRuntimeBinding(enrichedBindings, val)
     dispatch("change", val)
     requestEval(runtimeExpression, context, snippets)
   }
 
-  const onSelectHelper = (helper, js) => {
-    bindingHelpers.onSelectHelper(js ? jsValue : hbsValue, helper, { js })
+  const onSelectHelper = (helper: Helper, js?: boolean) => {
+    bindingHelpers.onSelectHelper(js ? jsValue : hbsValue, helper, {
+      js,
+      dontDecode: undefined,
+    })
   }
 
-  const onSelectBinding = (binding, { forceJS } = {}) => {
+  const onSelectBinding = (
+    binding: EnrichedBinding,
+    { forceJS }: { forceJS?: boolean } = {}
+  ) => {
     const js = usingJS || forceJS
-    bindingHelpers.onSelectBinding(js ? jsValue : hbsValue, binding, { js })
+    bindingHelpers.onSelectBinding(js ? jsValue : hbsValue, binding, {
+      js,
+      dontDecode: undefined,
+    })
   }
 
-  const changeMode = newMode => {
+  const changeMode = (newMode: BindingMode) => {
     if (targetMode || newMode === mode) {
       return
     }
 
     // Get the raw editor value to see if we are abandoning changes
     let rawValue = editorValue
-    if (mode === Modes.JavaScript) {
+    if (mode === BindingMode.JavaScript && rawValue) {
       rawValue = decodeJSBinding(rawValue)
     }
 
@@ -249,16 +285,16 @@
     targetMode = null
   }
 
-  const changeSidePanel = newSidePanel => {
+  const changeSidePanel = (newSidePanel: SidePanel) => {
     sidePanel = newSidePanel === sidePanel ? null : newSidePanel
   }
 
-  const onChangeHBSValue = e => {
+  const onChangeHBSValue = (e: { detail: string }) => {
     hbsValue = e.detail
     updateValue(hbsValue)
   }
 
-  const onChangeJSValue = e => {
+  const onChangeJSValue = (e: { detail: string }) => {
     jsValue = encodeJSBinding(e.detail)
     if (!e.detail?.trim()) {
       // Don't bother saving empty values as JS
@@ -268,9 +304,14 @@
     }
   }
 
+  const addSnippet = (snippet: Snippet) =>
+    bindingHelpers.onSelectSnippet(snippet)
+
   onMount(() => {
     // Set the initial mode appropriately
-    const initialValueMode = initialValueJS ? Modes.JavaScript : Modes.Text
+    const initialValueMode = initialValueJS
+      ? BindingMode.JavaScript
+      : BindingMode.Text
     if (editorModeOptions.includes(initialValueMode)) {
       mode = initialValueMode
     } else {
@@ -314,7 +355,7 @@
         </div>
       {/if}
       <div class="editor">
-        {#if mode === Modes.Text}
+        {#if mode === BindingMode.Text}
           {#key hbsCompletions}
             <CodeEditor
               value={hbsValue}
@@ -328,10 +369,10 @@
               jsBindingWrapping={false}
             />
           {/key}
-        {:else if mode === Modes.JavaScript}
+        {:else if mode === BindingMode.JavaScript}
           {#key jsCompletions}
             <CodeEditor
-              value={decodeJSBinding(jsValue)}
+              value={jsValue ? decodeJSBinding(jsValue) : jsValue}
               on:change={onChangeJSValue}
               completions={jsCompletions}
               mode={EditorModes.JS}
@@ -371,7 +412,7 @@
       </div>
     </div>
     <div class="side" class:visible={!!sidePanel}>
-      {#if sidePanel === SidePanels.Bindings}
+      {#if sidePanel === SidePanel.Bindings}
         <BindingSidePanel
           bindings={enrichedBindings}
           {allowHelpers}
@@ -380,18 +421,16 @@
           addBinding={onSelectBinding}
           mode={editorMode}
         />
-      {:else if sidePanel === SidePanels.Evaluation}
+      {:else if sidePanel === SidePanel.Evaluation}
         <EvaluationSidePanel
           {expressionResult}
           {expressionError}
+          {expressionLogs}
           {evaluating}
-          expression={editorValue}
+          expression={editorValue ? editorValue : ""}
         />
-      {:else if sidePanel === SidePanels.Snippets}
-        <SnippetSidePanel
-          addSnippet={snippet => bindingHelpers.onSelectSnippet(snippet)}
-          {snippets}
-        />
+      {:else if sidePanel === SidePanel.Snippets}
+        <SnippetSidePanel {addSnippet} {snippets} />
       {/if}
     </div>
   </div>

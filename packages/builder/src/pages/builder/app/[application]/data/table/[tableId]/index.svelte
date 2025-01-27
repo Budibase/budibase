@@ -7,25 +7,25 @@
     appStore,
     rowActions,
     roles,
-  } from "stores/builder"
-  import { themeStore, admin, featureFlags } from "stores/portal"
-  import { TableNames } from "constants"
+  } from "@/stores/builder"
+  import { themeStore, admin, licensing } from "@/stores/portal"
+  import { TableNames } from "@/constants"
   import { Grid } from "@budibase/frontend-core"
-  import { API } from "api"
-  import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
-  import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
-  import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
-  import GridImportButton from "components/backend/DataTable/buttons/grid/GridImportButton.svelte"
-  import GridExportButton from "components/backend/DataTable/buttons/grid/GridExportButton.svelte"
-  import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
-  import GridRelationshipButton from "components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
-  import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
-  import GridUsersTableButton from "components/backend/DataTable/buttons/grid/GridUsersTableButton.svelte"
-  import GridGenerateButton from "components/backend/DataTable/buttons/grid/GridGenerateButton.svelte"
-  import GridScreensButton from "components/backend/DataTable/buttons/grid/GridScreensButton.svelte"
-  import GridAutomationsButton from "components/backend/DataTable/buttons/grid/GridAutomationsButton.svelte"
-  import GridRowActionsButton from "components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
-  import { DB_TYPE_EXTERNAL } from "constants/backend"
+  import { API } from "@/api"
+  import GridAddColumnModal from "@/components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
+  import GridCreateEditRowModal from "@/components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
+  import GridEditUserModal from "@/components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
+  import GridImportButton from "@/components/backend/DataTable/buttons/grid/GridImportButton.svelte"
+  import GridExportButton from "@/components/backend/DataTable/buttons/grid/GridExportButton.svelte"
+  import GridManageAccessButton from "@/components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
+  import GridRelationshipButton from "@/components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
+  import GridEditColumnModal from "@/components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
+  import GridUsersTableButton from "@/components/backend/DataTable/buttons/grid/GridUsersTableButton.svelte"
+  import GridGenerateButton from "@/components/backend/DataTable/buttons/grid/GridGenerateButton.svelte"
+  import GridScreensButton from "@/components/backend/DataTable/buttons/grid/GridScreensButton.svelte"
+  import GridAutomationsButton from "@/components/backend/DataTable/buttons/grid/GridAutomationsButton.svelte"
+  import GridRowActionsButton from "@/components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
+  import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
   let generateButton
 
@@ -130,7 +130,8 @@
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     isCloud={$admin.cloud}
-    aiEnabled={$featureFlags.BUDIBASE_AI || $featureFlags.AI_CUSTOM_CONFIGS}
+    aiEnabled={$licensing.customAIConfigsEnabled ||
+      $licensing.budibaseAIEnabled}
     {buttons}
     buttonsCollapsed
     on:updatedatasource={handleGridTableUpdate}

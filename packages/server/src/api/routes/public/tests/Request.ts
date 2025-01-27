@@ -1,13 +1,24 @@
-import { User, Table, SearchFilters, Row } from "@budibase/types"
+import {
+  User,
+  Table,
+  SearchFilters,
+  Row,
+  ViewV2Schema,
+  ViewV2,
+  ViewV2Type,
+  PublicAPIView,
+} from "@budibase/types"
 import { HttpMethod, MakeRequestResponse, generateMakeRequest } from "./utils"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { Expectations } from "../../../../tests/utilities/api/base"
 
 type RequestOpts = { internal?: boolean; appId?: string }
+
+type Response<T> = { data: T }
 
 export interface PublicAPIExpectations {
   status?: number
   body?: Record<string, any>
+  headers?: Record<string, string>
 }
 
 export class PublicAPIRequest {
@@ -15,6 +26,7 @@ export class PublicAPIRequest {
   private appId: string | undefined
 
   tables: PublicTableAPI
+  views: PublicViewAPI
   rows: PublicRowAPI
   apiKey: string
 
@@ -28,6 +40,7 @@ export class PublicAPIRequest {
     this.appId = appId
     this.tables = new PublicTableAPI(this)
     this.rows = new PublicRowAPI(this)
+    this.views = new PublicViewAPI(this)
   }
 
   static async init(config: TestConfiguration, user: User, opts?: RequestOpts) {
@@ -59,6 +72,12 @@ export class PublicAPIRequest {
     if (expectations?.body) {
       expect(res.body).toEqual(expectations?.body)
     }
+    if (expectations?.headers) {
+      for (let [header, value] of Object.entries(expectations.headers)) {
+        const found = res.headers[header]
+        expect(found?.toLowerCase()).toEqual(value)
+      }
+    }
     return res.body
   }
 }
@@ -73,8 +92,15 @@ export class PublicTableAPI {
   async create(
     table: Table,
     expectations?: PublicAPIExpectations
-  ): Promise<{ data: Table }> {
+  ): Promise<Response<Table>> {
     return this.request.send("post", "/tables", table, expectations)
+  }
+
+  async search(
+    name: string,
+    expectations?: PublicAPIExpectations
+  ): Promise<Response<Table[]>> {
+    return this.request.send("post", "/tables/search", { name }, expectations)
   }
 }
 
@@ -85,16 +111,100 @@ export class PublicRowAPI {
     this.request = request
   }
 
+  async create(
+    tableId: string,
+    row: Row,
+    expectations?: PublicAPIExpectations
+  ): Promise<Response<Row>> {
+    return this.request.send(
+      "post",
+      `/tables/${tableId}/rows`,
+      row,
+      expectations
+    )
+  }
+
   async search(
     tableId: string,
     query: SearchFilters,
     expectations?: PublicAPIExpectations
-  ): Promise<{ data: Row[] }> {
+  ): Promise<Response<Row[]>> {
     return this.request.send(
       "post",
       `/tables/${tableId}/rows/search`,
       {
         query,
+      },
+      expectations
+    )
+  }
+
+  async viewSearch(
+    viewId: string,
+    query: SearchFilters,
+    expectations?: PublicAPIExpectations
+  ): Promise<Response<Row[]>> {
+    return this.request.send(
+      "post",
+      `/views/${viewId}/rows/search`,
+      {
+        query,
+      },
+      expectations
+    )
+  }
+}
+
+export class PublicViewAPI {
+  request: PublicAPIRequest
+
+  constructor(request: PublicAPIRequest) {
+    this.request = request
+  }
+
+  async create(
+    view: Omit<PublicAPIView, "id" | "version">,
+    expectations?: PublicAPIExpectations
+  ): Promise<Response<PublicAPIView>> {
+    return this.request.send("post", "/views", view, expectations)
+  }
+
+  async update(
+    viewId: string,
+    view: Omit<PublicAPIView, "id" | "version">,
+    expectations?: PublicAPIExpectations
+  ): Promise<Response<PublicAPIView>> {
+    return this.request.send("put", `/views/${viewId}`, view, expectations)
+  }
+
+  async destroy(
+    viewId: string,
+    expectations?: PublicAPIExpectations
+  ): Promise<void> {
+    return this.request.send(
+      "delete",
+      `/views/${viewId}`,
+      undefined,
+      expectations
+    )
+  }
+
+  async find(
+    viewId: string,
+    expectations?: PublicAPIExpectations
+  ): Promise<Response<PublicAPIView>> {
+    return this.request.send("get", `/views/${viewId}`, undefined, expectations)
+  }
+
+  async search(
+    viewName: string,
+    expectations?: PublicAPIExpectations
+  ): Promise<Response<PublicAPIView[]>> {
+    return this.request.send(
+      "post",
+      "/views/search",
+      {
+        name: viewName,
       },
       expectations
     )

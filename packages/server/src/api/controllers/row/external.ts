@@ -45,6 +45,9 @@ export async function handleRequest<T extends Operation>(
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const source = await utils.getSource(ctx)
 
+  const { viewId, tableId } = utils.getSourceId(ctx)
+  const sourceId = viewId || tableId
+
   if (sdk.views.isView(source) && helpers.views.isCalculationView(source)) {
     ctx.throw(400, "Cannot update rows through a calculation view")
   }
@@ -52,10 +55,22 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const table = await utils.getTableFromSource(source)
   const { _id, ...rowData } = ctx.request.body
 
-  const dataToUpdate = await inputProcessing(
+  const beforeRow = await sdk.rows.external.getRow(table._id!, _id, {
+    relationships: true,
+  })
+
+  let dataToUpdate = cloneDeep(beforeRow)
+  const allowedField = utils.getSourceFields(source)
+  for (const key of Object.keys(rowData)) {
+    if (!allowedField.includes(key)) continue
+
+    dataToUpdate[key] = rowData[key]
+  }
+
+  dataToUpdate = await inputProcessing(
     ctx.user?._id,
     cloneDeep(source),
-    rowData
+    dataToUpdate
   )
 
   const validateResult = await sdk.rows.utils.validate({
@@ -66,10 +81,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     throw { validation: validateResult.errors }
   }
 
-  const beforeRow = await sdk.rows.external.getRow(table._id!, _id, {
-    relationships: true,
-  })
-
   const response = await handleRequest(Operation.UPDATE, source, {
     id: breakRowIdField(_id),
     row: dataToUpdate,
@@ -78,7 +89,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   // The id might have been changed, so the refetching would fail. Recalculating the id just in case
   const updatedId =
     generateIdForRow({ ...beforeRow, ...dataToUpdate }, table) || _id
-  const row = await sdk.rows.external.getRow(table._id!, updatedId, {
+  const row = await sdk.rows.external.getRow(sourceId, updatedId, {
     relationships: true,
   })
 

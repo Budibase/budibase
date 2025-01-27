@@ -1,8 +1,8 @@
 import { Screen } from "../Screen"
 import { Component } from "../../Component"
-import { capitalise } from "helpers"
+import { capitalise } from "@/helpers"
 import getValidRoute from "../getValidRoute"
-import { getRowActionButtonTemplates } from "templates/rowActions"
+import { getRowActionButtonTemplates } from "@/templates/rowActions"
 
 const inline = async ({ tableOrView, permissions, screens }) => {
   const heading = new Component("@budibase/standard-components/heading")

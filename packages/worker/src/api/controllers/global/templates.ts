@@ -3,10 +3,25 @@ import {
   TemplateBindings,
   GLOBAL_OWNER,
 } from "../../../constants"
-import { getTemplates } from "../../../constants/templates"
+import { getTemplateByID, getTemplates } from "../../../constants/templates"
 import { tenancy, db as dbCore } from "@budibase/backend-core"
+import {
+  DeleteGlobalTemplateResponse,
+  FetchGlobalTemplateByOwnerIDResponse,
+  FetchGlobalTemplateByTypeResponse,
+  FetchGlobalTemplateDefinitionResponse,
+  FetchGlobalTemplateResponse,
+  FindGlobalTemplateResponse,
+  SaveGlobalTemplateRequest,
+  SaveGlobalTemplateResponse,
+  GlobalTemplateBinding,
+  GlobalTemplateDefinition,
+  UserCtx,
+} from "@budibase/types"
 
-export async function save(ctx: any) {
+export async function save(
+  ctx: UserCtx<SaveGlobalTemplateRequest, SaveGlobalTemplateResponse>
+) {
   const db = tenancy.getGlobalDB()
   let template = ctx.request.body
   if (!template.ownerId) {
@@ -23,9 +38,11 @@ export async function save(ctx: any) {
   }
 }
 
-export async function definitions(ctx: any) {
-  const bindings: any = {}
-  const info: any = {}
+export async function definitions(
+  ctx: UserCtx<void, FetchGlobalTemplateDefinitionResponse>
+) {
+  const bindings: Record<string, GlobalTemplateBinding[]> = {}
+  const info: Record<string, GlobalTemplateDefinition> = {}
   for (let template of TemplateMetadata.email) {
     bindings[template.purpose] = template.bindings
     info[template.purpose] = {
@@ -44,34 +61,35 @@ export async function definitions(ctx: any) {
   }
 }
 
-export async function fetch(ctx: any) {
+export async function fetch(ctx: UserCtx<void, FetchGlobalTemplateResponse>) {
   ctx.body = await getTemplates()
 }
 
-export async function fetchByType(ctx: any) {
-  // @ts-ignore
+export async function fetchByType(
+  ctx: UserCtx<void, FetchGlobalTemplateByTypeResponse>
+) {
   ctx.body = await getTemplates({
     type: ctx.params.type,
   })
 }
 
-export async function fetchByOwner(ctx: any) {
+export async function fetchByOwner(
+  ctx: UserCtx<void, FetchGlobalTemplateByOwnerIDResponse>
+) {
   // @ts-ignore
   ctx.body = await getTemplates({
     ownerId: ctx.params.ownerId,
   })
 }
 
-export async function find(ctx: any) {
-  // @ts-ignore
-  ctx.body = await getTemplates({
-    id: ctx.params.id,
-  })
+export async function find(ctx: UserCtx<void, FindGlobalTemplateResponse>) {
+  ctx.body = await getTemplateByID(ctx.params.id)
 }
 
-export async function destroy(ctx: any) {
+export async function destroy(
+  ctx: UserCtx<void, DeleteGlobalTemplateResponse>
+) {
   const db = tenancy.getGlobalDB()
   await db.remove(ctx.params.id, ctx.params.rev)
-  ctx.message = `Template ${ctx.params.id} deleted.`
-  ctx.status = 200
+  ctx.body = { message: `Template ${ctx.params.id} deleted.` }
 }

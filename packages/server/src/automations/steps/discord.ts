@@ -1,70 +1,9 @@
 import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
-import {
-  AutomationActionStepId,
-  AutomationStepType,
-  AutomationIOType,
-  AutomationFeature,
-  ExternalAppStepOutputs,
-  DiscordStepInputs,
-  AutomationStepDefinition,
-} from "@budibase/types"
+import { ExternalAppStepOutputs, DiscordStepInputs } from "@budibase/types"
 
 const DEFAULT_USERNAME = "Budibase Automate"
 const DEFAULT_AVATAR_URL = "https://i.imgur.com/a1cmTKM.png"
-
-export const definition: AutomationStepDefinition = {
-  name: "Discord Message",
-  tagline: "Send a message to a Discord server",
-  description: "Send a message to a Discord server",
-  icon: "ri-discord-line",
-  stepId: AutomationActionStepId.discord,
-  type: AutomationStepType.ACTION,
-  internal: false,
-  features: {
-    [AutomationFeature.LOOPING]: true,
-  },
-  inputs: {},
-  schema: {
-    inputs: {
-      properties: {
-        url: {
-          type: AutomationIOType.STRING,
-          title: "Discord Webhook URL",
-        },
-        username: {
-          type: AutomationIOType.STRING,
-          title: "Bot Name",
-        },
-        avatar_url: {
-          type: AutomationIOType.STRING,
-          title: "Bot Avatar URL",
-        },
-        content: {
-          type: AutomationIOType.STRING,
-          title: "Message",
-        },
-      },
-      required: ["url", "content"],
-    },
-    outputs: {
-      properties: {
-        httpStatus: {
-          type: AutomationIOType.NUMBER,
-          description: "The HTTP status code of the request",
-        },
-        response: {
-          type: AutomationIOType.STRING,
-          description: "The response from the Discord Webhook",
-        },
-        success: {
-          type: AutomationIOType.BOOLEAN,
-          description: "Whether the message sent successfully",
-        },
-      },
-    },
-  },
-}
 
 export async function run({
   inputs,

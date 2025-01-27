@@ -1,16 +1,7 @@
-import { Ctx } from "@budibase/types"
+import { Ctx, LogOpsRequest, ErrorOpsRequest } from "@budibase/types"
 import { logging } from "@budibase/backend-core"
 
-interface LogRequest {
-  message: string
-  data?: any
-}
-
-interface ErrorRequest {
-  message: string
-}
-
-export async function log(ctx: Ctx<LogRequest>) {
+export async function log(ctx: Ctx<LogOpsRequest, void>) {
   const body = ctx.request.body
   console.trace(body.message, body.data)
   console.debug(body.message, body.data)
@@ -20,13 +11,13 @@ export async function log(ctx: Ctx<LogRequest>) {
   ctx.status = 204
 }
 
-export async function alert(ctx: Ctx<ErrorRequest>) {
+export async function alert(ctx: Ctx<ErrorOpsRequest, void>) {
   const body = ctx.request.body
   logging.logAlert(body.message, new Error(body.message))
   ctx.status = 204
 }
 
-export async function error(ctx: Ctx<ErrorRequest>) {
+export async function error(ctx: Ctx<ErrorOpsRequest, void>) {
   const body = ctx.request.body
   throw new Error(body.message)
 }

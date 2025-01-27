@@ -1,77 +1,12 @@
-import { EventEmitter } from "events"
 import * as rowController from "../../api/controllers/row"
 import * as automationUtils from "../automationUtils"
 import { buildCtx } from "./utils"
 import {
-  AutomationActionStepId,
-  AutomationCustomIOType,
-  AutomationFeature,
-  AutomationIOType,
-  AutomationStepDefinition,
-  AutomationStepType,
+  ContextEmitter,
   UpdateRowStepInputs,
   UpdateRowStepOutputs,
 } from "@budibase/types"
 
-export const definition: AutomationStepDefinition = {
-  name: "Update Row",
-  tagline: "Update a {{inputs.enriched.table.name}} row",
-  icon: "Refresh",
-  description: "Update a row in your database",
-  type: AutomationStepType.ACTION,
-  internal: true,
-  features: {
-    [AutomationFeature.LOOPING]: true,
-  },
-  stepId: AutomationActionStepId.UPDATE_ROW,
-  inputs: {},
-  schema: {
-    inputs: {
-      properties: {
-        meta: {
-          type: AutomationIOType.OBJECT,
-          title: "Field settings",
-        },
-        row: {
-          type: AutomationIOType.OBJECT,
-          customType: AutomationCustomIOType.ROW,
-          title: "Table",
-        },
-        rowId: {
-          type: AutomationIOType.STRING,
-          title: "Row ID",
-        },
-      },
-      required: ["row", "rowId"],
-    },
-    outputs: {
-      properties: {
-        row: {
-          type: AutomationIOType.OBJECT,
-          customType: AutomationCustomIOType.ROW,
-          description: "The updated row",
-        },
-        response: {
-          type: AutomationIOType.OBJECT,
-          description: "The response from the table",
-        },
-        success: {
-          type: AutomationIOType.BOOLEAN,
-          description: "Whether the action was successful",
-        },
-        id: {
-          type: AutomationIOType.STRING,
-          description: "The identifier of the updated row",
-        },
-        revision: {
-          type: AutomationIOType.STRING,
-          description: "The revision of the updated row",
-        },
-      },
-      required: ["success", "id", "revision"],
-    },
-  },
-}
 export async function run({
   inputs,
   appId,
@@ -79,7 +14,7 @@ export async function run({
 }: {
   inputs: UpdateRowStepInputs
   appId: string
-  emitter: EventEmitter
+  emitter: ContextEmitter
 }): Promise<UpdateRowStepOutputs> {
   if (inputs.rowId == null || inputs.row == null) {
     return {
@@ -90,6 +25,8 @@ export async function run({
     }
   }
   const tableId = inputs.row.tableId
+    ? decodeURIComponent(inputs.row.tableId)
+    : inputs.row.tableId
 
   // Base update
   let rowUpdate: Record<string, any>
@@ -157,7 +94,7 @@ export async function run({
       },
       params: {
         rowId: inputs.rowId,
-        tableId,
+        tableId: tableId,
       },
     })
     await rowController.patch(ctx)
@@ -166,7 +103,7 @@ export async function run({
       response: ctx.message,
       id: ctx.body._id,
       revision: ctx.body._rev,
-      success: ctx.status === 200,
+      success: !!ctx.body._id,
     }
   } catch (err) {
     return {

@@ -138,12 +138,22 @@ export function generateColumnDefinition(config: {
   let { externalType, autocolumn, name, presence, options } = config
   let foundType = FieldType.STRING
   const lowerCaseType = externalType.toLowerCase()
-  let matchingTypes = []
-  for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
-    if (lowerCaseType.includes(external)) {
-      matchingTypes.push({ external, internal })
+  let matchingTypes: { external: string; internal: PrimitiveTypes }[] = []
+
+  // In at least MySQL, the external type of an ENUM column is "enum('option1',
+  // 'option2', ...)", which can potentially contain any type name as a
+  // substring. To get around this interfering with the loop below, we first
+  // check for an enum column and handle that separately.
+  if (lowerCaseType.startsWith("enum")) {
+    matchingTypes.push({ external: "enum", internal: FieldType.OPTIONS })
+  } else {
+    for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
+      if (lowerCaseType.includes(external)) {
+        matchingTypes.push({ external, internal })
+      }
     }
   }
+
   // Set the foundType based the longest match
   if (matchingTypes.length > 0) {
     foundType = matchingTypes.reduce((acc, val) => {

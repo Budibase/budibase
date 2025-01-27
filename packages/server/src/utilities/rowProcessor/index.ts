@@ -29,6 +29,8 @@ import {
 import { isExternalTableID } from "../../integrations/utils"
 import {
   helpers,
+  isExternalColumnName,
+  isInternalColumnName,
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
@@ -200,14 +202,17 @@ export async function inputProcessing(
   const clonedRow = cloneDeep(row)
   const table = await getTableFromSource(source)
 
-  const dontCleanseKeys = ["type", "_id", "_rev", "tableId"]
   for (const [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
+    const isBuiltinColumn = isExternalTableID(table._id!)
+      ? isExternalColumnName(key)
+      : isInternalColumnName(key)
     // cleanse fields that aren't in the schema
+    if (!field && !isBuiltinColumn) {
+      delete clonedRow[key]
+    }
+    // field isn't found - might be a built-in column, skip over it
     if (!field) {
-      if (dontCleanseKeys.indexOf(key) === -1) {
-        delete clonedRow[key]
-      }
       continue
     }
     // remove any formula values, they are to be generated
@@ -404,6 +409,15 @@ export async function coreOutputProcessing(
             .toString()
             .padStart(2, "0")
           row[property] = `${hours}:${minutes}:${seconds}`
+        }
+      }
+    } else if (column.type === FieldType.DATETIME && column.dateOnly) {
+      for (const row of rows) {
+        if (typeof row[property] === "string") {
+          row[property] = new Date(row[property])
+        }
+        if (row[property] instanceof Date) {
+          row[property] = row[property].toISOString().slice(0, 10)
         }
       }
     } else if (column.type === FieldType.LINK) {

@@ -1,13 +1,17 @@
 import { Automation, AutomationTriggerStepId } from "@budibase/types"
 
 export function isRowAction(automation: Automation) {
-  const result =
+  return (
     automation.definition.trigger?.stepId === AutomationTriggerStepId.ROW_ACTION
-  return result
+  )
+}
+
+export function isWebhookAction(automation: Automation) {
+  return (
+    automation.definition.trigger?.stepId === AutomationTriggerStepId.WEBHOOK
+  )
 }
 
 export function isAppAction(automation: Automation) {
-  const result =
-    automation.definition.trigger?.stepId === AutomationTriggerStepId.APP
-  return result
+  return automation.definition.trigger?.stepId === AutomationTriggerStepId.APP
 }

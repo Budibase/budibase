@@ -2,7 +2,6 @@ import {
   Integration,
   DatasourceFieldType,
   QueryType,
-  QueryJson,
   SqlQuery,
   Table,
   TableSchema,
@@ -15,6 +14,7 @@ import {
   DatasourcePlusQueryResponse,
   SqlQueryBinding,
   SqlClient,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -322,9 +322,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
             presence: required && !isAuto && !hasDefault,
             externalType: column.Type,
             options: column.Type.startsWith("enum")
-              ? column.Type.substring(5, column.Type.length - 1)
-                  .split(",")
-                  .map(str => str.replace(/^'(.*)'$/, "$1"))
+              ? column.Type.substring(6, column.Type.length - 2).split("','")
               : undefined,
           })
         }
@@ -390,15 +388,15 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     return results.length ? results : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
+  async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     await this.connect()
     try {
       const queryFn = (query: any) =>
         this.internalQuery(query, { connect: false, disableCoercion: true })
       const processFn = (result: any) => {
-        if (json?.meta?.table && Array.isArray(result)) {
+        if (Array.isArray(result)) {
           return this.convertJsonStringColumns(
-            json.meta.table,
+            json.table,
             result,
             json.tableAliases
           )
@@ -414,7 +412,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   async getExternalSchema() {
     try {
       const [databaseResult] = await this.internalQuery({
-        sql: `SHOW CREATE DATABASE ${this.config.database}`,
+        sql: `SHOW CREATE DATABASE IF NOT EXISTS \`${this.config.database}\``,
       })
       let dumpContent = [databaseResult["Create Database"]]
 
@@ -434,7 +432,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         dumpContent.push(createTableStatement)
       }
 
-      return dumpContent.join("\n")
+      return dumpContent.join(";\n") + ";"
     } finally {
       this.disconnect()
     }

@@ -32,6 +32,15 @@
           "type": "string"
         }
       },
+      "viewId": {
+        "in": "path",
+        "name": "viewId",
+        "required": true,
+        "description": "The ID of the view which this request is targeting.",
+        "schema": {
+          "type": "string"
+        }
+      },
       "rowId": {
         "in": "path",
         "name": "rowId",
@@ -47,7 +56,7 @@
         "required": true,
         "description": "The ID of the app which this request is targeting.",
         "schema": {
-          "default": "{{ appId }}",
+          "default": "{{appId}}",
           "type": "string"
         }
       },
@@ -57,7 +66,7 @@
         "required": true,
         "description": "The ID of the app which this request is targeting.",
         "schema": {
-          "default": "{{ appId }}",
+          "default": "{{appId}}",
           "type": "string"
         }
       },
@@ -423,6 +432,110 @@
       },
       "metrics": {
         "value": "# HELP budibase_os_uptime Time in seconds that the host operating system has been up.\n# TYPE budibase_os_uptime counter\nbudibase_os_uptime 54958\n# HELP budibase_os_free_mem Bytes of memory free for usage on the host operating system.\n# TYPE budibase_os_free_mem gauge\nbudibase_os_free_mem 804507648\n# HELP budibase_os_total_mem Total bytes of memory on the host operating system.\n# TYPE budibase_os_total_mem gauge\nbudibase_os_total_mem 16742404096\n# HELP budibase_os_used_mem Total bytes of memory in use on the host operating system.\n# TYPE budibase_os_used_mem gauge\nbudibase_os_used_mem 15937896448\n# HELP budibase_os_load1 Host operating system load average.\n# TYPE budibase_os_load1 gauge\nbudibase_os_load1 1.91\n# HELP budibase_os_load5 Host operating system load average.\n# TYPE budibase_os_load5 gauge\nbudibase_os_load5 1.75\n# HELP budibase_os_load15 Host operating system load average.\n# TYPE budibase_os_load15 gauge\nbudibase_os_load15 1.56\n# HELP budibase_tenant_user_count The number of users created.\n# TYPE budibase_tenant_user_count gauge\nbudibase_tenant_user_count 1\n# HELP budibase_tenant_app_count The number of apps created by a user.\n# TYPE budibase_tenant_app_count gauge\nbudibase_tenant_app_count 2\n# HELP budibase_tenant_production_app_count The number of apps a user has published.\n# TYPE budibase_tenant_production_app_count gauge\nbudibase_tenant_production_app_count 1\n# HELP budibase_tenant_dev_app_count The number of apps a user has unpublished in development.\n# TYPE budibase_tenant_dev_app_count gauge\nbudibase_tenant_dev_app_count 1\n# HELP budibase_tenant_db_count The number of couchdb databases including global tables such as _users.\n# TYPE budibase_tenant_db_count gauge\nbudibase_tenant_db_count 3\n# HELP budibase_quota_usage_apps The number of apps created.\n# TYPE budibase_quota_usage_apps gauge\nbudibase_quota_usage_apps 1\n# HELP budibase_quota_limit_apps The limit on the number of apps that can be created.\n# TYPE budibase_quota_limit_apps gauge\nbudibase_quota_limit_apps 9007199254740991\n# HELP budibase_quota_usage_rows The number of database rows used from the quota.\n# TYPE budibase_quota_usage_rows gauge\nbudibase_quota_usage_rows 0\n# HELP budibase_quota_limit_rows The limit on the number of rows that can be created.\n# TYPE budibase_quota_limit_rows gauge\nbudibase_quota_limit_rows 9007199254740991\n# HELP budibase_quota_usage_plugins The number of plugins in use.\n# TYPE budibase_quota_usage_plugins gauge\nbudibase_quota_usage_plugins 0\n# HELP budibase_quota_limit_plugins The limit on the number of plugins that can be created.\n# TYPE budibase_quota_limit_plugins gauge\nbudibase_quota_limit_plugins 9007199254740991\n# HELP budibase_quota_usage_user_groups The number of user groups created.\n# TYPE budibase_quota_usage_user_groups gauge\nbudibase_quota_usage_user_groups 0\n# HELP budibase_quota_limit_user_groups The limit on the number of user groups that can be created.\n# TYPE budibase_quota_limit_user_groups gauge\nbudibase_quota_limit_user_groups 9007199254740991\n# HELP budibase_quota_usage_queries The number of queries used in the current month.\n# TYPE budibase_quota_usage_queries gauge\nbudibase_quota_usage_queries 0\n# HELP budibase_quota_limit_queries The limit on the number of queries for the current month.\n# TYPE budibase_quota_limit_queries gauge\nbudibase_quota_limit_queries 9007199254740991\n# HELP budibase_quota_usage_automations The number of automations used in the current month.\n# TYPE budibase_quota_usage_automations gauge\nbudibase_quota_usage_automations 0\n# HELP budibase_quota_limit_automations The limit on the number of automations that can be created.\n# TYPE budibase_quota_limit_automations gauge\nbudibase_quota_limit_automations 9007199254740991\n"
+      },
+      "view": {
+        "value": {
+          "data": {
+            "name": "peopleView",
+            "tableId": "ta_896a325f7e8147d2a2cda93c5d236511",
+            "schema": {
+              "name": {
+                "visible": true,
+                "readonly": false,
+                "order": 1,
+                "width": 300
+              },
+              "age": {
+                "visible": true,
+                "readonly": true,
+                "order": 2,
+                "width": 200
+              },
+              "salary": {
+                "visible": false,
+                "readonly": false
+              }
+            },
+            "query": {
+              "logicalOperator": "all",
+              "onEmptyFilter": "none",
+              "groups": [
+                {
+                  "logicalOperator": "any",
+                  "filters": [
+                    {
+                      "operator": "string",
+                      "field": "name",
+                      "value": "John"
+                    },
+                    {
+                      "operator": "range",
+                      "field": "age",
+                      "value": {
+                        "low": 18,
+                        "high": 100
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "primaryDisplay": "name"
+          }
+        }
+      },
+      "views": {
+        "value": {
+          "data": [
+            {
+              "name": "peopleView",
+              "tableId": "ta_896a325f7e8147d2a2cda93c5d236511",
+              "schema": {
+                "name": {
+                  "visible": true,
+                  "readonly": false,
+                  "order": 1,
+                  "width": 300
+                },
+                "age": {
+                  "visible": true,
+                  "readonly": true,
+                  "order": 2,
+                  "width": 200
+                },
+                "salary": {
+                  "visible": false,
+                  "readonly": false
+                }
+              },
+              "query": {
+                "logicalOperator": "all",
+                "onEmptyFilter": "none",
+                "groups": [
+                  {
+                    "logicalOperator": "any",
+                    "filters": [
+                      {
+                        "operator": "string",
+                        "field": "name",
+                        "value": "John"
+                      },
+                      {
+                        "operator": "range",
+                        "field": "age",
+                        "value": {
+                          "low": 18,
+                          "high": 100
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "primaryDisplay": "name"
+            }
+          ]
+        }
       }
     },
     "securitySchemes": {
@@ -831,8 +944,7 @@
                       "type": "string",
                       "enum": [
                         "static",
-                        "dynamic",
-                        "ai"
+                        "dynamic"
                       ],
                       "description": "Defines whether this is a static or dynamic formula."
                     }
@@ -1042,8 +1154,7 @@
                           "type": "string",
                           "enum": [
                             "static",
-                            "dynamic",
-                            "ai"
+                            "dynamic"
                           ],
                           "description": "Defines whether this is a static or dynamic formula."
                         }
@@ -1264,8 +1375,7 @@
                             "type": "string",
                             "enum": [
                               "static",
-                              "dynamic",
-                              "ai"
+                              "dynamic"
                             ],
                             "description": "Defines whether this is a static or dynamic formula."
                           }
@@ -2024,6 +2134,869 @@
         "required": [
           "data"
         ]
+      },
+      "view": {
+        "description": "The view to be created/updated.",
+        "type": "object",
+        "required": [
+          "name",
+          "schema",
+          "tableId"
+        ],
+        "properties": {
+          "name": {
+            "description": "The name of the view.",
+            "type": "string"
+          },
+          "tableId": {
+            "description": "The ID of the table this view is based on.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of view - standard (empty value) or calculation.",
+            "type": "string",
+            "enum": [
+              "calculation"
+            ]
+          },
+          "primaryDisplay": {
+            "type": "string",
+            "description": "A column used to display rows from this view - usually used when rendered in tables."
+          },
+          "query": {
+            "description": "Search parameters for view",
+            "type": "object",
+            "properties": {
+              "logicalOperator": {
+                "description": "When using groups this defines whether all of the filters must match, or only one of them.",
+                "type": "string",
+                "enum": [
+                  "all",
+                  "any"
+                ]
+              },
+              "onEmptyFilter": {
+                "description": "If no filters match, should the view return all rows, or no rows.",
+                "type": "string",
+                "enum": [
+                  "all",
+                  "none"
+                ]
+              },
+              "groups": {
+                "description": "A grouping of filters to be applied.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "logicalOperator": {
+                      "description": "When using groups this defines whether all of the filters must match, or only one of them.",
+                      "type": "string",
+                      "enum": [
+                        "all",
+                        "any"
+                      ]
+                    },
+                    "filters": {
+                      "description": "A list of filters to apply",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "operator": {
+                            "type": "string",
+                            "description": "The type of search operation which is being performed.",
+                            "enum": [
+                              "equal",
+                              "notEqual",
+                              "empty",
+                              "notEmpty",
+                              "fuzzy",
+                              "string",
+                              "contains",
+                              "notContains",
+                              "containsAny",
+                              "oneOf",
+                              "range"
+                            ]
+                          },
+                          "field": {
+                            "type": "string",
+                            "description": "The field in the view to perform the search on."
+                          },
+                          "value": {
+                            "description": "The value to search for - the type will depend on the operator in use.",
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "object"
+                              },
+                              {
+                                "type": "array"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "groups": {
+                      "description": "A grouping of filters to be applied.",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "logicalOperator": {
+                            "description": "When using groups this defines whether all of the filters must match, or only one of them.",
+                            "type": "string",
+                            "enum": [
+                              "all",
+                              "any"
+                            ]
+                          },
+                          "filters": {
+                            "description": "A list of filters to apply",
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "operator": {
+                                  "type": "string",
+                                  "description": "The type of search operation which is being performed.",
+                                  "enum": [
+                                    "equal",
+                                    "notEqual",
+                                    "empty",
+                                    "notEmpty",
+                                    "fuzzy",
+                                    "string",
+                                    "contains",
+                                    "notContains",
+                                    "containsAny",
+                                    "oneOf",
+                                    "range"
+                                  ]
+                                },
+                                "field": {
+                                  "type": "string",
+                                  "description": "The field in the view to perform the search on."
+                                },
+                                "value": {
+                                  "description": "The value to search for - the type will depend on the operator in use.",
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    },
+                                    {
+                                      "type": "object"
+                                    },
+                                    {
+                                      "type": "array"
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "sort": {
+            "type": "object",
+            "required": [
+              "field"
+            ],
+            "properties": {
+              "field": {
+                "type": "string",
+                "description": "The field from the table/view schema to sort on."
+              },
+              "order": {
+                "type": "string",
+                "description": "The order in which to sort.",
+                "enum": [
+                  "ascending",
+                  "descending"
+                ]
+              },
+              "type": {
+                "type": "string",
+                "description": "The type of sort to perform (by number, or by alphabetically).",
+                "enum": [
+                  "string",
+                  "number"
+                ]
+              }
+            }
+          },
+          "schema": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "visible": {
+                      "type": "boolean",
+                      "description": "Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it."
+                    },
+                    "readonly": {
+                      "type": "boolean",
+                      "description": "When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated."
+                    },
+                    "order": {
+                      "type": "integer",
+                      "description": "A number defining where the column shows up in tables, lowest being first."
+                    },
+                    "width": {
+                      "type": "integer",
+                      "description": "A width for the column, defined in pixels - this affects rendering in tables."
+                    },
+                    "column": {
+                      "type": "array",
+                      "description": "If this is a relationship column, we can set the columns we wish to include",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "readonly": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "calculationType": {
+                      "type": "string",
+                      "description": "This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.",
+                      "enum": [
+                        "sum",
+                        "avg",
+                        "count",
+                        "min",
+                        "max"
+                      ]
+                    },
+                    "field": {
+                      "type": "string",
+                      "description": "The field from the table to perform the calculation on."
+                    },
+                    "distinct": {
+                      "type": "boolean",
+                      "description": "Can be used in tandem with the count calculation type, to count unique entries."
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "viewOutput": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "The view to be created/updated.",
+            "type": "object",
+            "required": [
+              "name",
+              "schema",
+              "tableId",
+              "id"
+            ],
+            "properties": {
+              "name": {
+                "description": "The name of the view.",
+                "type": "string"
+              },
+              "tableId": {
+                "description": "The ID of the table this view is based on.",
+                "type": "string"
+              },
+              "type": {
+                "description": "The type of view - standard (empty value) or calculation.",
+                "type": "string",
+                "enum": [
+                  "calculation"
+                ]
+              },
+              "primaryDisplay": {
+                "type": "string",
+                "description": "A column used to display rows from this view - usually used when rendered in tables."
+              },
+              "query": {
+                "description": "Search parameters for view",
+                "type": "object",
+                "properties": {
+                  "logicalOperator": {
+                    "description": "When using groups this defines whether all of the filters must match, or only one of them.",
+                    "type": "string",
+                    "enum": [
+                      "all",
+                      "any"
+                    ]
+                  },
+                  "onEmptyFilter": {
+                    "description": "If no filters match, should the view return all rows, or no rows.",
+                    "type": "string",
+                    "enum": [
+                      "all",
+                      "none"
+                    ]
+                  },
+                  "groups": {
+                    "description": "A grouping of filters to be applied.",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "logicalOperator": {
+                          "description": "When using groups this defines whether all of the filters must match, or only one of them.",
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "any"
+                          ]
+                        },
+                        "filters": {
+                          "description": "A list of filters to apply",
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "operator": {
+                                "type": "string",
+                                "description": "The type of search operation which is being performed.",
+                                "enum": [
+                                  "equal",
+                                  "notEqual",
+                                  "empty",
+                                  "notEmpty",
+                                  "fuzzy",
+                                  "string",
+                                  "contains",
+                                  "notContains",
+                                  "containsAny",
+                                  "oneOf",
+                                  "range"
+                                ]
+                              },
+                              "field": {
+                                "type": "string",
+                                "description": "The field in the view to perform the search on."
+                              },
+                              "value": {
+                                "description": "The value to search for - the type will depend on the operator in use.",
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "object"
+                                  },
+                                  {
+                                    "type": "array"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "groups": {
+                          "description": "A grouping of filters to be applied.",
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "logicalOperator": {
+                                "description": "When using groups this defines whether all of the filters must match, or only one of them.",
+                                "type": "string",
+                                "enum": [
+                                  "all",
+                                  "any"
+                                ]
+                              },
+                              "filters": {
+                                "description": "A list of filters to apply",
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "operator": {
+                                      "type": "string",
+                                      "description": "The type of search operation which is being performed.",
+                                      "enum": [
+                                        "equal",
+                                        "notEqual",
+                                        "empty",
+                                        "notEmpty",
+                                        "fuzzy",
+                                        "string",
+                                        "contains",
+                                        "notContains",
+                                        "containsAny",
+                                        "oneOf",
+                                        "range"
+                                      ]
+                                    },
+                                    "field": {
+                                      "type": "string",
+                                      "description": "The field in the view to perform the search on."
+                                    },
+                                    "value": {
+                                      "description": "The value to search for - the type will depend on the operator in use.",
+                                      "oneOf": [
+                                        {
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "number"
+                                        },
+                                        {
+                                          "type": "boolean"
+                                        },
+                                        {
+                                          "type": "object"
+                                        },
+                                        {
+                                          "type": "array"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "sort": {
+                "type": "object",
+                "required": [
+                  "field"
+                ],
+                "properties": {
+                  "field": {
+                    "type": "string",
+                    "description": "The field from the table/view schema to sort on."
+                  },
+                  "order": {
+                    "type": "string",
+                    "description": "The order in which to sort.",
+                    "enum": [
+                      "ascending",
+                      "descending"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "The type of sort to perform (by number, or by alphabetically).",
+                    "enum": [
+                      "string",
+                      "number"
+                    ]
+                  }
+                }
+              },
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "visible": {
+                          "type": "boolean",
+                          "description": "Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it."
+                        },
+                        "readonly": {
+                          "type": "boolean",
+                          "description": "When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated."
+                        },
+                        "order": {
+                          "type": "integer",
+                          "description": "A number defining where the column shows up in tables, lowest being first."
+                        },
+                        "width": {
+                          "type": "integer",
+                          "description": "A width for the column, defined in pixels - this affects rendering in tables."
+                        },
+                        "column": {
+                          "type": "array",
+                          "description": "If this is a relationship column, we can set the columns we wish to include",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "readonly": {
+                                "type": "boolean"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "calculationType": {
+                          "type": "string",
+                          "description": "This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.",
+                          "enum": [
+                            "sum",
+                            "avg",
+                            "count",
+                            "min",
+                            "max"
+                          ]
+                        },
+                        "field": {
+                          "type": "string",
+                          "description": "The field from the table to perform the calculation on."
+                        },
+                        "distinct": {
+                          "type": "boolean",
+                          "description": "Can be used in tandem with the count calculation type, to count unique entries."
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "id": {
+                "description": "The ID of the view.",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "viewSearch": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "description": "The view to be created/updated.",
+              "type": "object",
+              "required": [
+                "name",
+                "schema",
+                "tableId",
+                "id"
+              ],
+              "properties": {
+                "name": {
+                  "description": "The name of the view.",
+                  "type": "string"
+                },
+                "tableId": {
+                  "description": "The ID of the table this view is based on.",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "The type of view - standard (empty value) or calculation.",
+                  "type": "string",
+                  "enum": [
+                    "calculation"
+                  ]
+                },
+                "primaryDisplay": {
+                  "type": "string",
+                  "description": "A column used to display rows from this view - usually used when rendered in tables."
+                },
+                "query": {
+                  "description": "Search parameters for view",
+                  "type": "object",
+                  "properties": {
+                    "logicalOperator": {
+                      "description": "When using groups this defines whether all of the filters must match, or only one of them.",
+                      "type": "string",
+                      "enum": [
+                        "all",
+                        "any"
+                      ]
+                    },
+                    "onEmptyFilter": {
+                      "description": "If no filters match, should the view return all rows, or no rows.",
+                      "type": "string",
+                      "enum": [
+                        "all",
+                        "none"
+                      ]
+                    },
+                    "groups": {
+                      "description": "A grouping of filters to be applied.",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "logicalOperator": {
+                            "description": "When using groups this defines whether all of the filters must match, or only one of them.",
+                            "type": "string",
+                            "enum": [
+                              "all",
+                              "any"
+                            ]
+                          },
+                          "filters": {
+                            "description": "A list of filters to apply",
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "operator": {
+                                  "type": "string",
+                                  "description": "The type of search operation which is being performed.",
+                                  "enum": [
+                                    "equal",
+                                    "notEqual",
+                                    "empty",
+                                    "notEmpty",
+                                    "fuzzy",
+                                    "string",
+                                    "contains",
+                                    "notContains",
+                                    "containsAny",
+                                    "oneOf",
+                                    "range"
+                                  ]
+                                },
+                                "field": {
+                                  "type": "string",
+                                  "description": "The field in the view to perform the search on."
+                                },
+                                "value": {
+                                  "description": "The value to search for - the type will depend on the operator in use.",
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    },
+                                    {
+                                      "type": "object"
+                                    },
+                                    {
+                                      "type": "array"
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          "groups": {
+                            "description": "A grouping of filters to be applied.",
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "logicalOperator": {
+                                  "description": "When using groups this defines whether all of the filters must match, or only one of them.",
+                                  "type": "string",
+                                  "enum": [
+                                    "all",
+                                    "any"
+                                  ]
+                                },
+                                "filters": {
+                                  "description": "A list of filters to apply",
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "operator": {
+                                        "type": "string",
+                                        "description": "The type of search operation which is being performed.",
+                                        "enum": [
+                                          "equal",
+                                          "notEqual",
+                                          "empty",
+                                          "notEmpty",
+                                          "fuzzy",
+                                          "string",
+                                          "contains",
+                                          "notContains",
+                                          "containsAny",
+                                          "oneOf",
+                                          "range"
+                                        ]
+                                      },
+                                      "field": {
+                                        "type": "string",
+                                        "description": "The field in the view to perform the search on."
+                                      },
+                                      "value": {
+                                        "description": "The value to search for - the type will depend on the operator in use.",
+                                        "oneOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "number"
+                                          },
+                                          {
+                                            "type": "boolean"
+                                          },
+                                          {
+                                            "type": "object"
+                                          },
+                                          {
+                                            "type": "array"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "sort": {
+                  "type": "object",
+                  "required": [
+                    "field"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "description": "The field from the table/view schema to sort on."
+                    },
+                    "order": {
+                      "type": "string",
+                      "description": "The order in which to sort.",
+                      "enum": [
+                        "ascending",
+                        "descending"
+                      ]
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "The type of sort to perform (by number, or by alphabetically).",
+                      "enum": [
+                        "string",
+                        "number"
+                      ]
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "visible": {
+                            "type": "boolean",
+                            "description": "Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it."
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated."
+                          },
+                          "order": {
+                            "type": "integer",
+                            "description": "A number defining where the column shows up in tables, lowest being first."
+                          },
+                          "width": {
+                            "type": "integer",
+                            "description": "A width for the column, defined in pixels - this affects rendering in tables."
+                          },
+                          "column": {
+                            "type": "array",
+                            "description": "If this is a relationship column, we can set the columns we wish to include",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "readonly": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "calculationType": {
+                            "type": "string",
+                            "description": "This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.",
+                            "enum": [
+                              "sum",
+                              "avg",
+                              "count",
+                              "min",
+                              "max"
+                            ]
+                          },
+                          "field": {
+                            "type": "string",
+                            "description": "The field from the table to perform the calculation on."
+                          },
+                          "distinct": {
+                            "type": "boolean",
+                            "description": "Can be used in tandem with the count calculation type, to count unique entries."
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "id": {
+                  "description": "The ID of the view.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
       }
     }
   },
@@ -2741,6 +3714,50 @@
         }
       }
     },
+    "/views/{viewId}/rows/search": {
+      "post": {
+        "operationId": "rowViewSearch",
+        "summary": "Search for rows in a view",
+        "tags": [
+          "rows"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/viewId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rowSearch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The response will contain an array of rows that match the search parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/searchOutput"
+                },
+                "examples": {
+                  "search": {
+                    "$ref": "#/components/examples/rows"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tables": {
       "post": {
         "operationId": "tableCreate",
@@ -3108,6 +4125,209 @@
                 "examples": {
                   "users": {
                     "$ref": "#/components/examples/users"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/views": {
+      "post": {
+        "operationId": "viewCreate",
+        "summary": "Create a view",
+        "description": "Create a view, this can be against an internal or external table.",
+        "tags": [
+          "views"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/view"
+              },
+              "examples": {
+                "view": {
+                  "$ref": "#/components/examples/view"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the created view, including the ID which has been generated for it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/viewOutput"
+                },
+                "examples": {
+                  "view": {
+                    "$ref": "#/components/examples/view"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/views/{viewId}": {
+      "put": {
+        "operationId": "viewUpdate",
+        "summary": "Update a view",
+        "description": "Update a view, this can be against an internal or external table.",
+        "tags": [
+          "views"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/viewId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/view"
+              },
+              "examples": {
+                "view": {
+                  "$ref": "#/components/examples/view"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the updated view.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/viewOutput"
+                },
+                "examples": {
+                  "view": {
+                    "$ref": "#/components/examples/view"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "viewDestroy",
+        "summary": "Delete a view",
+        "description": "Delete a view, this can be against an internal or external table.",
+        "tags": [
+          "views"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/viewId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deleted view.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/viewOutput"
+                },
+                "examples": {
+                  "view": {
+                    "$ref": "#/components/examples/view"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "viewGetById",
+        "summary": "Retrieve a view",
+        "description": "Lookup a view, this could be internal or external.",
+        "tags": [
+          "views"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/viewId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the retrieved view.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/viewOutput"
+                },
+                "examples": {
+                  "view": {
+                    "$ref": "#/components/examples/view"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/views/search": {
+      "post": {
+        "operationId": "viewSearch",
+        "summary": "Search for views",
+        "description": "Based on view properties (currently only name) search for views.",
+        "tags": [
+          "views"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/nameSearch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the found views, based on the search parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/viewSearch"
+                },
+                "examples": {
+                  "views": {
+                    "$ref": "#/components/examples/views"
                   }
                 }
               }

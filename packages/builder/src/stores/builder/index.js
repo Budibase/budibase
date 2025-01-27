@@ -3,7 +3,7 @@ import { appStore } from "./app.js"
 import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation.js"
 import { themeStore } from "./theme.js"
-import { screenStore, selectedScreen, sortedScreens } from "./screens.js"
+import { screenStore, selectedScreen, sortedScreens } from "./screens"
 import { builderStore } from "./builder.js"
 import { hoverStore } from "./hover.js"
 import { previewStore } from "./preview.js"
@@ -16,6 +16,7 @@ import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
 import { contextMenuStore } from "./contextMenu.js"
 import { snippets } from "./snippets"
+import { screenComponentErrors } from "./screenComponent"
 
 // Backend
 import { tables } from "./tables"
@@ -67,6 +68,7 @@ export {
   snippets,
   rowActions,
   appPublished,
+  screenComponentErrors,
 }
 
 export const reset = () => {

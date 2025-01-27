@@ -20,6 +20,8 @@ import {
   AutomationStatus,
   AutomationRowEvent,
   UserBindings,
+  AutomationResults,
+  DidNotTriggerResponse,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"
@@ -139,16 +141,36 @@ function rowPassesFilters(row: Row, filters: SearchFilters) {
   return filteredRows.length > 0
 }
 
+export function isAutomationResults(
+  response: AutomationResults | DidNotTriggerResponse | AutomationJob
+): response is AutomationResults {
+  return (
+    response !== null && "steps" in response && Array.isArray(response.steps)
+  )
+}
+
+interface AutomationTriggerParams {
+  fields: Record<string, any>
+  timeout?: number
+  appId?: string
+  user?: UserBindings
+}
+
 export async function externalTrigger(
   automation: Automation,
-  params: {
-    fields: Record<string, any>
-    timeout?: number
-    appId?: string
-    user?: UserBindings
-  },
+  params: AutomationTriggerParams,
+  options: { getResponses: true }
+): Promise<AutomationResults | DidNotTriggerResponse>
+export async function externalTrigger(
+  automation: Automation,
+  params: AutomationTriggerParams,
+  options?: { getResponses: false }
+): Promise<AutomationJob | DidNotTriggerResponse>
+export async function externalTrigger(
+  automation: Automation,
+  params: AutomationTriggerParams,
   { getResponses }: { getResponses?: boolean } = {}
-): Promise<any> {
+): Promise<AutomationResults | DidNotTriggerResponse | AutomationJob> {
   if (automation.disabled) {
     throw new Error("Automation is disabled")
   }
@@ -164,10 +186,14 @@ export async function externalTrigger(
       coercedFields[key] = coerce(params.fields[key], fields[key])
     }
     params.fields = coercedFields
-  } else if (sdk.automations.isRowAction(automation)) {
+  }
+  // row actions and webhooks flatten the fields down
+  else if (
+    sdk.automations.isRowAction(automation) ||
+    sdk.automations.isWebhookAction(automation)
+  ) {
     params = {
       ...params,
-      // Until we don't refactor all the types, we want to flatten the nested "fields" object
       ...params.fields,
       fields: {},
     }
