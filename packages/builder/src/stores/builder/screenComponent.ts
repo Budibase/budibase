@@ -52,7 +52,10 @@ export const screenComponentErrors = derived(
     string,
     UIComponentError[]
   > => {
-    if (!featureFlag.isEnabled("CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS")) {
+    if (
+      !featureFlag.isEnabled("CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS") ||
+      !$selectedScreen
+    ) {
       return {}
     }
 
