@@ -3,7 +3,9 @@
   // @ts-expect-error no types for the version of svelte-portal we're on.
   import Portal from "svelte-portal"
   import { createEventDispatcher, getContext, onDestroy } from "svelte"
-  import positionDropdown, { Styles } from "../Actions/position_dropdown"
+  import positionDropdown, {
+    type UpdateHandler,
+  } from "../Actions/position_dropdown"
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
   import Context from "../context"
@@ -25,13 +27,7 @@
   export let customHeight: string | undefined = undefined
   export let animate = true
   export let customZindex: string | undefined = undefined
-  export let handlePostionUpdate:
-    | ((
-        anchorBounds: DOMRect,
-        elementBounds: DOMRect,
-        styles: Styles
-      ) => Styles)
-    | undefined = undefined
+  export let handlePostionUpdate: UpdateHandler | undefined = undefined
   export let showPopover = true
   export let clickOutsideOverride = false
   export let resizable = true

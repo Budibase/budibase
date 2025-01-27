@@ -1,3 +1,7 @@
+<script lang="ts" context="module">
+  type O = any
+</script>
+
 <script lang="ts" generics="O">
   import type { ChangeEventHandler } from "svelte/elements"
 
@@ -14,8 +18,8 @@
   export let disabled = false
   export let readonly = false
   export let options: O[] = []
-  export let getOptionLabel: (option: O) => string = option => `${option}`
-  export let getOptionValue: (option: O) => string = option => `${option}`
+  export let getOptionLabel = (option: O) => `${option}`
+  export let getOptionValue = (option: O) => `${option}`
 
   const dispatch = createEventDispatcher<{
     change: string

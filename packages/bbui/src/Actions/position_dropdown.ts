@@ -25,6 +25,12 @@ export interface Styles {
   top: number
 }
 
+export type UpdateHandler = (
+  anchorBounds: DOMRect,
+  elementBounds: DOMRect,
+  styles: Styles
+) => Styles
+
 interface Opts {
   anchor?: HTMLElement
   align: string
@@ -33,11 +39,7 @@ interface Opts {
   minWidth?: number
   useAnchorWidth: boolean
   offset: number
-  customUpdate?: (
-    anchorBounds: DOMRect,
-    elementBounds: DOMRect,
-    styles: Styles
-  ) => Styles
+  customUpdate?: UpdateHandler
   resizable: boolean
   wrap: boolean
 }

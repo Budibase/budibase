@@ -1,3 +1,8 @@
+<script lang="ts" context="module">
+  type O = any
+  type V = any
+</script>
+
 <script lang="ts" generics="O, V">
   import "@spectrum-css/fieldgroup/dist/index-vars.css"
   import "@spectrum-css/radio/dist/index-vars.css"
@@ -8,8 +13,8 @@
   export let options: O[] = []
   export let disabled = false
   export let readonly = false
-  export let getOptionLabel: (option: O) => string = (option: O) => `${option}`
-  export let getOptionValue: (option: O) => V = option => option as unknown as V
+  export let getOptionLabel = (option: O) => `${option}`
+  export let getOptionValue = (option: O) => option as unknown as V
 
   const dispatch = createEventDispatcher<{ change: V[] }>()
 
@@ -24,6 +29,8 @@
     }
   }
 </script>
+
+import context from "src/context"
 
 <div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>
   {#if options && Array.isArray(options)}
