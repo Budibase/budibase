@@ -102,6 +102,10 @@
     if (rowTriggers.includes(trigger?.event)) {
       const tableId = trigger?.inputs?.tableId
 
+      if (!jsonUpdate.row) {
+        jsonUpdate.row = {}
+      }
+
       // Reset the tableId as it must match the trigger
       if (jsonUpdate?.row?.tableId !== tableId) {
         jsonUpdate.row.tableId = tableId

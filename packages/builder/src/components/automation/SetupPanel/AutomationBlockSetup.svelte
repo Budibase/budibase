@@ -18,6 +18,7 @@
     Toggle,
     Divider,
     Icon,
+    CoreSelect,
   } from "@budibase/bbui"
 
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
@@ -48,7 +49,13 @@
     EditorModes,
   } from "@/components/common/CodeEditor"
   import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { QueryUtils, Utils, search, memo } from "@budibase/frontend-core"
+  import {
+    QueryUtils,
+    Utils,
+    search,
+    memo,
+    fetchData,
+  } from "@budibase/frontend-core"
   import { getSchemaForDatasourcePlus } from "@/dataBinding"
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
   import { onMount, createEventDispatcher } from "svelte"
@@ -59,9 +66,11 @@
     AutomationStepType,
     AutomationActionStepId,
     AutomationCustomIOType,
+    SortOrder,
   } from "@budibase/types"
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
+  import { API } from "@/api"
 
   export let automation
   export let block
@@ -109,9 +118,9 @@
   $: stepId = $memoBlock.stepId
 
   $: getInputData(testData, $memoBlock.inputs)
-  $: tableId = inputData ? inputData.tableId : null
+  $: tableId = inputData ? inputData.row?.tableId : null
   $: table = tableId
-    ? $tables.list.find(table => table._id === inputData.tableId)
+    ? $tables.list.find(table => table._id === tableId)
     : { schema: {} }
   $: schema = getSchemaForDatasourcePlus(tableId, {
     searchableSchema: true,
@@ -140,6 +149,30 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
+  $: fetch = tableId
+    ? fetchData({
+        API,
+        datasource: {
+          type: "table",
+          tableId,
+        },
+        options: {
+          sortColumn: primaryDisplay,
+          sortOrder: SortOrder.ASCENDING,
+          query: {
+            fuzzy: {
+              [primaryDisplay]: rowSearchTerm || "",
+            },
+          },
+          limit: 20,
+        },
+      })
+    : null
+  $: fetchedRows = $fetch?.rows
+  $: fetchLoading = $fetch?.loading
+  $: primaryDisplay = table?.primaryDisplay
+  $: rowSearchTerm = ""
+
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
@@ -167,7 +200,7 @@
   const stepStore = writable({})
   $: stepState = $stepStore?.[block.id]
 
-  $: customStepLayouts($memoBlock, schemaProperties, stepState)
+  $: customStepLayouts($memoBlock, schemaProperties, stepState, fetchLoading)
 
   const customStepLayouts = block => {
     if (
@@ -360,6 +393,49 @@
                   })
                 },
                 disabled: isTestModal,
+              },
+            },
+            {
+              type: CoreSelect,
+              title: "Row",
+              props: {
+                disabled: !table,
+                placeholder: "Select a row",
+                options: fetchedRows,
+                loading: fetchLoading,
+                autocomplete: true,
+                getOptionLabel: row => row?.[primaryDisplay] || "",
+                onChange: e => {
+                  if (isTestModal) {
+                    if (stepState?.rowType === "oldRow") {
+                      onChange({
+                        oldRow: e.detail,
+                        meta: {
+                          fields: inputData["meta"]?.fields || {},
+                          oldFields: e.detail?.meta?.fields || {},
+                        },
+                      })
+                    } else {
+                      onChange({
+                        id: e.detail?._id,
+                        revision: e.detail?._rev,
+                        row: e.detail,
+                        meta: {
+                          fields: e.detail?.meta?.fields || {},
+                          ...(isTestModal
+                            ? { oldFields: inputData["meta"]?.oldFields || {} }
+                            : {}),
+                        },
+                      })
+                    }
+                  }
+                },
+              },
+            },
+            {
+              type: Divider,
+              props: {
+                noMargin: true,
               },
             },
             ...getIdConfig(),
@@ -668,6 +744,7 @@
                 {...config.props}
                 {bindings}
                 on:change={config.props.onChange}
+                bind:searchTerm={rowSearchTerm}
               />
             </PropField>
           {:else}
