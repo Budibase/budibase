@@ -20,9 +20,9 @@ import {
   Automation,
   Datasource,
   Role,
-  Screen,
   Table,
   UIUser,
+  Screen,
 } from "@budibase/types"
 
 export const createBuilderWebsocket = (appId: string) => {

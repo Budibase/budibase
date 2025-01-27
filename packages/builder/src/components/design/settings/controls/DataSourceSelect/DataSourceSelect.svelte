@@ -31,10 +31,15 @@
   import IntegrationQueryEditor from "@/components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { findAllComponents } from "@/helpers/components"
+  import {
+    extractFields,
+    extractJSONArrayFields,
+    extractRelationships,
+  } from "@/helpers/bindings"
   import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "@/components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "@/api"
-  import { datasourceSelect as format } from "@/helpers/data/format"
+  import { sortAndFormat } from "@/helpers/data/format"
 
   export let value = {}
   export let otherSources
@@ -51,25 +56,13 @@
   let modal
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = $tablesStore.list
-    .map(table => format.table(table, $datasources.list))
-    .sort((a, b) => {
-      // sort tables alphabetically, grouped by datasource
-      const dsA = a.datasourceName ?? ""
-      const dsB = b.datasourceName ?? ""
-
-      const dsComparison = dsA.localeCompare(dsB)
-      if (dsComparison !== 0) {
-        return dsComparison
-      }
-      return a.label.localeCompare(b.label)
-    })
+  $: tables = sortAndFormat.tables($tablesStore.list, $datasources.list)
   $: viewsV1 = $viewsStore.list.map(view => ({
     ...view,
     label: view.name,
     type: "view",
   }))
-  $: viewsV2 = $viewsV2Store.list.map(format.viewV2)
+  $: viewsV2 = sortAndFormat.viewsV2($viewsV2Store.list, $datasources.list)
   $: views = [...(viewsV1 || []), ...(viewsV2 || [])]
   $: queries = $queriesStore.list
     .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
@@ -93,67 +86,9 @@
       value: `{{ literal ${safe(provider._id)} }}`,
       type: "provider",
     }))
-  $: links = bindings
-    // Get only link bindings
-    .filter(x => x.fieldSchema?.type === "link")
-    // Filter out bindings provided by forms
-    .filter(x => !x.component?.endsWith("/form"))
-    .map(binding => {
-      const { providerId, readableBinding, fieldSchema } = binding || {}
-      const { name, tableId } = fieldSchema || {}
-      const safeProviderId = safe(providerId)
-      return {
-        providerId,
-        label: readableBinding,
-        fieldName: name,
-        tableId,
-        type: "link",
-        // These properties will be enriched by the client library and provide
-        // details of the parent row of the relationship field, from context
-        rowId: `{{ ${safeProviderId}.${safe("_id")} }}`,
-        rowTableId: `{{ ${safeProviderId}.${safe("tableId")} }}`,
-      }
-    })
-  $: fields = bindings
-    .filter(
-      x =>
-        x.fieldSchema?.type === "attachment" ||
-        (x.fieldSchema?.type === "array" && x.tableId)
-    )
-    .map(binding => {
-      const { providerId, readableBinding, runtimeBinding } = binding
-      const { name, type, tableId } = binding.fieldSchema
-      return {
-        providerId,
-        label: readableBinding,
-        fieldName: name,
-        fieldType: type,
-        tableId,
-        type: "field",
-        value: `{{ literal ${runtimeBinding} }}`,
-      }
-    })
-  $: jsonArrays = bindings
-    .filter(
-      x =>
-        x.fieldSchema?.type === "jsonarray" ||
-        (x.fieldSchema?.type === "json" && x.fieldSchema?.subtype === "array")
-    )
-    .map(binding => {
-      const { providerId, readableBinding, runtimeBinding, tableId } = binding
-      const { name, type, prefixKeys, subtype } = binding.fieldSchema
-      return {
-        providerId,
-        label: readableBinding,
-        fieldName: name,
-        fieldType: type,
-        tableId,
-        prefixKeys,
-        type: type === "jsonarray" ? "jsonarray" : "queryarray",
-        subtype,
-        value: `{{ literal ${runtimeBinding} }}`,
-      }
-    })
+  $: links = extractRelationships(bindings)
+  $: fields = extractFields(bindings)
+  $: jsonArrays = extractJSONArrayFields(bindings)
   $: custom = {
     type: "custom",
     label: "JSON / CSV",
@@ -303,6 +238,7 @@
         dataSet={views}
         {value}
         onSelect={handleSelected}
+        identifiers={["tableId", "name"]}
       />
     {/if}
     {#if queries?.length}
@@ -312,6 +248,7 @@
         dataSet={queries}
         {value}
         onSelect={handleSelected}
+        identifiers={["_id"]}
       />
     {/if}
     {#if links?.length}
@@ -321,6 +258,7 @@
         dataSet={links}
         {value}
         onSelect={handleSelected}
+        identifiers={["tableId", "fieldName"]}
       />
     {/if}
     {#if fields?.length}
@@ -330,6 +268,7 @@
         dataSet={fields}
         {value}
         onSelect={handleSelected}
+        identifiers={["providerId", "tableId", "fieldName"]}
       />
     {/if}
     {#if jsonArrays?.length}
@@ -339,6 +278,7 @@
         dataSet={jsonArrays}
         {value}
         onSelect={handleSelected}
+        identifiers={["providerId", "tableId", "fieldName"]}
       />
     {/if}
     {#if showDataProviders && dataProviders?.length}
@@ -348,6 +288,7 @@
         dataSet={dataProviders}
         {value}
         onSelect={handleSelected}
+        identifiers={["providerId"]}
       />
     {/if}
     <DataSourceCategory

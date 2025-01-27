@@ -6,7 +6,7 @@ import { BANNER_TYPES } from "@budibase/bbui"
 const oneDayInSeconds = 86400
 
 const defaultCacheFn = key => {
-  temporalStore.actions.setExpiring(key, {}, oneDayInSeconds)
+  temporalStore.setExpiring(key, {}, oneDayInSeconds)
 }
 
 const upgradeAction = key => {
@@ -148,7 +148,7 @@ export const getBanners = () => {
     buildUsersAboveLimitBanner(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER),
   ].filter(licensingBanner => {
     return (
-      !temporalStore.actions.getExpiring(licensingBanner.key) &&
+      !temporalStore.getExpiring(licensingBanner.key) &&
       licensingBanner.criteria()
     )
   })

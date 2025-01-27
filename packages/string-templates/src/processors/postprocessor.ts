@@ -1,12 +1,16 @@
 import { LITERAL_MARKER } from "../helpers/constants"
+import { Log } from "../types"
 
 export enum PostProcessorNames {
   CONVERT_LITERALS = "convert-literals",
 }
 
-type PostprocessorFn = (statement: string) => string
+export type PostprocessorFn = (statement: string) => {
+  result: any
+  logs?: Log[]
+}
 
-class Postprocessor {
+export class Postprocessor {
   name: PostProcessorNames
   private readonly fn: PostprocessorFn
 
@@ -23,12 +27,12 @@ class Postprocessor {
 export const processors = [
   new Postprocessor(
     PostProcessorNames.CONVERT_LITERALS,
-    (statement: string) => {
+    (statement: string): { result: any; logs?: Log[] } => {
       if (
         typeof statement !== "string" ||
         !statement.includes(LITERAL_MARKER)
       ) {
-        return statement
+        return { result: statement }
       }
       const splitMarkerIndex = statement.indexOf("-")
       const type = statement.substring(12, splitMarkerIndex)
@@ -38,20 +42,22 @@ export const processors = [
       )
       switch (type) {
         case "string":
-          return value
+          return { result: value }
         case "number":
-          return parseFloat(value)
+          return { result: parseFloat(value) }
         case "boolean":
-          return value === "true"
+          return { result: value === "true" }
         case "object":
-          return JSON.parse(value)
-        case "js_result":
+          return { result: JSON.parse(value) }
+        case "js_result": {
           // We use the literal helper to process the result of JS expressions
           // as we want to be able to return any types.
           // We wrap the value in an abject to be able to use undefined properly.
-          return JSON.parse(value).data
+          const parsed = JSON.parse(value)
+          return { result: parsed.data, logs: parsed.logs }
+        }
       }
-      return value
+      return { result: value }
     }
   ),
 ]
