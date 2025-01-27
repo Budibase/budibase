@@ -14,13 +14,14 @@ import {
 } from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
-import { featureFlag } from "@/helpers"
 import { findAllComponents } from "@/helpers/components"
+import { bindings, featureFlag } from "@/helpers"
+import { getBindableProperties } from "@/dataBinding"
 
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
   list: TItem[]
-) {
+): Record<string, any> {
   return list.reduce(
     (result, item) => ({
       ...result,
@@ -40,6 +41,9 @@ const validationKeyByType: Record<UIDatasourceType, string | null> = {
   viewV2: "id",
   query: "_id",
   custom: null,
+  link: "rowId",
+  field: "value",
+  jsonarray: "value",
 }
 
 export const screenComponentErrors = derived(
@@ -77,10 +81,6 @@ function getInvalidDatasources(
     "dataSource",
   ])) {
     const componentSettings = component[setting.key]
-    if (!componentSettings) {
-      continue
-    }
-
     const { label } = componentSettings
     const type = componentSettings.type as UIDatasourceType
 
@@ -88,8 +88,17 @@ function getInvalidDatasources(
     if (!validationKey) {
       continue
     }
+
+    const componentBindings = getBindableProperties(screen, component._id)
+
+    const componentDatasources = {
+      ...reduceBy("rowId", bindings.extractRelationships(componentBindings)),
+      ...reduceBy("value", bindings.extractFields(componentBindings)),
+      ...reduceBy("value", bindings.extractJSONArrayFields(componentBindings)),
+    }
+
     const resourceId = componentSettings[validationKey]
-    if (!datasources[resourceId]) {
+    if (!{ ...datasources, ...componentDatasources }[resourceId]) {
       const friendlyTypeName = friendlyNameByType[type] ?? type
       result[component._id!] = [
         {
