@@ -17,12 +17,13 @@ export const sequential = <
   TFunction extends (...args: any[]) => Promise<TReturn>
 >(
   fn: TFunction
-): ((...args: Parameters<TFunction>) => Promise<TReturn | undefined>) => {
-  let queue: any[] = []
-  return (...params: Parameters<TFunction>) => {
-    return new Promise<TReturn | undefined>((resolve, reject) => {
+): TFunction => {
+  let queue: (() => Promise<void>)[] = []
+  const result = (...params: Parameters<TFunction>) => {
+    return new Promise<TReturn>((resolve, reject) => {
       queue.push(async () => {
-        let data, error
+        let data: TReturn | undefined
+        let error: unknown
         try {
           data = await fn(...params)
         } catch (err) {
@@ -35,7 +36,7 @@ export const sequential = <
         if (error) {
           reject(error)
         } else {
-          resolve(data)
+          resolve(data!)
         }
       })
       if (queue.length === 1) {
@@ -43,6 +44,7 @@ export const sequential = <
       }
     })
   }
+  return result as TFunction
 }
 
 /**
