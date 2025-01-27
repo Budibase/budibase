@@ -6,3 +6,4 @@ export type UIDatasourceType =
   | "custom"
   | "link"
   | "field"
+  | "jsonarray"
