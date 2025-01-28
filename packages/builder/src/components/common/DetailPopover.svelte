@@ -1,8 +1,8 @@
 <script lang="ts">
   import {
     Popover,
-    PopoverAlignment,
     Icon,
+    PopoverAlignment,
     type PopoverAPI,
   } from "@budibase/bbui"
 
