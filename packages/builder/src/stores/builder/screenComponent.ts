@@ -122,13 +122,7 @@ function getInvalidDatasources(
 }
 
 function getAllComponentsInScreen(screen: Screen) {
-  const result: Component[] = []
-  function recursiveCheck(component: Component) {
-    result.push(...findAllComponents(component))
-    component._children?.forEach(recursiveCheck)
-  }
-  recursiveCheck(screen.props)
-  return result
+  return findAllComponents(screen.props) as Component[]
 }
 
 function getMissingRequiredSettings(screen: Screen) {
@@ -191,16 +185,21 @@ function getMissingRequiredSettings(screen: Screen) {
 
 const BudibasePrefix = "@budibase/standard-components/"
 function getMissingAncestors(screen: Screen) {
-  const allComponents = getAllComponentsInScreen(screen)
   const result: Record<string, UIComponentError[]> = {}
-  for (const component of allComponents) {
+
+  function checkMissingAncestors(component: Component, ancestors: string[]) {
+    for (const child of component._children || []) {
+      checkMissingAncestors(child, [...ancestors, component._component])
+    }
+
     const definition = getManifestDefinition(component)
+
     if (!("requiredAncestors" in definition)) {
-      continue
+      return
     }
 
     const missingAncestors = definition.requiredAncestors.filter(
-      ancestor => !component.ancestors?.includes(`${BudibasePrefix}${ancestor}`)
+      ancestor => !ancestors.includes(`${BudibasePrefix}${ancestor}`)
     )
 
     if (missingAncestors.length) {
@@ -223,5 +222,7 @@ function getMissingAncestors(screen: Screen) {
       })
     }
   }
+
+  checkMissingAncestors(screen.props, [])
   return result
 }
