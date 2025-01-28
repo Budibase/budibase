@@ -203,10 +203,9 @@ function getMissingAncestors(screen: Screen) {
         return name.endsWith("s") ? `${name}'` : `${name}s`
       }
 
-      result[component._id!] = missingAncestors.map((ancestor: any) => {
+      result[component._id!] = missingAncestors.map(ancestor => {
         const ancestorDefinition: any = getManifestDefinition(ancestor)
         return {
-          key: ancestor.key,
           message: `${pluralise(definition.name)} need to be inside a
 <mark>${ancestorDefinition.name}</mark>`,
           errorType: "ancestor-setting",

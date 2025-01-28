@@ -1,10 +1,10 @@
 interface BaseUIComponentError {
-  key: string
   message: string
 }
 
 interface UISettingComponentError extends BaseUIComponentError {
   errorType: "setting"
+  key: string
 }
 
 interface UIAncestorComponentError extends BaseUIComponentError {
