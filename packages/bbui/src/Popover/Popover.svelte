@@ -1,28 +1,33 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/popover/dist/index-vars.css"
+  // @ts-expect-error no types for the version of svelte-portal we're on.
   import Portal from "svelte-portal"
   import { createEventDispatcher, getContext, onDestroy } from "svelte"
-  import positionDropdown from "../Actions/position_dropdown"
+  import positionDropdown, {
+    type UpdateHandler,
+  } from "../Actions/position_dropdown"
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
   import Context from "../context"
+  import type { KeyboardEventHandler } from "svelte/elements"
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ open: void; close: void }>()
 
-  export let anchor
-  export let align = "right"
-  export let portalTarget
-  export let minWidth
-  export let maxWidth
-  export let maxHeight
+  export let anchor: HTMLElement
+  export let align: "left" | "right" | "left-outside" | "right-outside" =
+    "right"
+  export let portalTarget: string | undefined = undefined
+  export let minWidth: number | undefined = undefined
+  export let maxWidth: number | undefined = undefined
+  export let maxHeight: number | undefined = undefined
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
   export let offset = 4
-  export let customHeight
+  export let customHeight: string | undefined = undefined
   export let animate = true
-  export let customZindex
-  export let handlePostionUpdate
+  export let customZindex: string | undefined = undefined
+  export let handlePostionUpdate: UpdateHandler | undefined = undefined
   export let showPopover = true
   export let clickOutsideOverride = false
   export let resizable = true
@@ -30,7 +35,7 @@
 
   const animationDuration = 260
 
-  let timeout
+  let timeout: ReturnType<typeof setTimeout>
   let blockPointerEvents = false
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
@@ -65,13 +70,13 @@
     }
   }
 
-  const handleOutsideClick = e => {
+  const handleOutsideClick = (e: MouseEvent) => {
     if (clickOutsideOverride) {
       return
     }
     if (open) {
       // Stop propagation if the source is the anchor
-      let node = e.target
+      let node = e.target as Node | null
       let fromAnchor = false
       while (!fromAnchor && node && node.parentNode) {
         fromAnchor = node === anchor
@@ -86,7 +91,7 @@
     }
   }
 
-  function handleEscape(e) {
+  const handleEscape: KeyboardEventHandler<HTMLDivElement> = e => {
     if (!clickOutsideOverride) {
       return
     }
