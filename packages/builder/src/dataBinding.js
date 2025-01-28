@@ -1160,11 +1160,12 @@ export const buildFormSchema = (component, asset) => {
  * in the app.
  */
 export const getAllStateVariables = (screen = null) => {
-  // Find all button action settings in all components
   let assets = []
   if (screen) {
+    // only include state variables from a specific screen
     assets.push(screen)
   } else {
+    // otherwise include state variables from all screens
     assets = getAllAssets()
   }
   let eventSettings = []
@@ -1219,6 +1220,7 @@ export const getAllStateVariables = (screen = null) => {
     })
   })
 
+  // Add on load settings from screens
   if (screen) {
     if (screen.onLoad) {
       eventSettings.push(screen.onLoad)
