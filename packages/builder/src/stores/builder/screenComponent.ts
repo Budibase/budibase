@@ -56,6 +56,9 @@ export const screenComponentErrors = derived(
         ["table", "dataSource"]
       )) {
         const componentSettings = component[setting.key]
+        if (!componentSettings) {
+          continue
+        }
         const { label } = componentSettings
         const type = componentSettings.type as UIDatasourceType
 
