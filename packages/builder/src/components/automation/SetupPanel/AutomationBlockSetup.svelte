@@ -104,6 +104,8 @@
   let inputData
   let insertAtPos, getCaretPosition
   let stepLayouts = {}
+  let rowSearchTerm = ""
+  let selectedRow
 
   $: memoBlock.set(block)
 
@@ -117,8 +119,18 @@
   $: tempFilters = cloneDeep(filters)
   $: stepId = $memoBlock.stepId
 
+  $: {
+    console.log("inputData", inputData)
+    console.log("testData", testData)
+    console.log("tableId", tableId)
+  }
+
   $: getInputData(testData, $memoBlock.inputs)
-  $: tableId = inputData?.row?.tableId || testData?.row?.tableId || null
+  $: tableId =
+    inputData?.row?.tableId ||
+    testData?.row?.tableId ||
+    inputData?.tableId ||
+    null
   $: table = tableId
     ? $tables.list.find(table => table._id === tableId)
     : { schema: {} }
@@ -149,30 +161,39 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
-  $: fetch = tableId
-    ? fetchData({
-        API,
-        datasource: {
-          type: "table",
-          tableId,
-        },
-        options: {
-          sortColumn: primaryDisplay,
-          sortOrder: SortOrder.ASCENDING,
-          query: {
-            fuzzy: {
-              [primaryDisplay]: rowSearchTerm || "",
-            },
-          },
-          limit: 20,
-        },
-      })
-    : null
+  $: fetch = createFetch({ type: "table", tableId })
   $: fetchedRows = $fetch?.rows
+  $: fetch?.update({
+    query: {
+      fuzzy: {
+        [primaryDisplay]: rowSearchTerm || "",
+      },
+    },
+  })
+
   $: fetchLoading = $fetch?.loading
   $: primaryDisplay = table?.primaryDisplay
-  $: rowSearchTerm = ""
-  $: selectedRow = null
+
+  const createFetch = datasource => {
+    if (!datasource) {
+      return
+    }
+
+    return fetchData({
+      API,
+      datasource,
+      options: {
+        sortColumn: primaryDisplay,
+        sortOrder: SortOrder.ASCENDING,
+        query: {
+          fuzzy: {
+            [primaryDisplay]: rowSearchTerm || "",
+          },
+        },
+        limit: 20,
+      },
+    })
+  }
 
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
@@ -201,7 +222,7 @@
   const stepStore = writable({})
   $: stepState = $stepStore?.[block.id]
 
-  $: customStepLayouts($memoBlock, schemaProperties, stepState, fetchLoading)
+  $: customStepLayouts($memoBlock, schemaProperties, stepState, fetchedRows)
 
   const customStepLayouts = block => {
     if (
