@@ -1,24 +1,34 @@
+<script lang="ts" context="module">
+  type O = any
+  type V = any
+</script>
+
 <script lang="ts">
   import Field from "./Field.svelte"
   import Select from "./Core/Select.svelte"
   import { createEventDispatcher } from "svelte"
   import { PopoverAlignment } from "../constants"
 
-  export let value: string | undefined = undefined
+  export let value: V | undefined = undefined
   export let label: string | undefined = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
   export let labelPosition: string = "above"
   export let error: string | undefined = undefined
   export let placeholder: string | boolean = "Choose an option"
-  export let options: any[] = []
-  export let getOptionLabel = (option: any) => extractProperty(option, "label")
-  export let getOptionValue = (option: any) => extractProperty(option, "value")
-  export let getOptionSubtitle = (option: any) => option?.subtitle
-  export let getOptionIcon = (option: any) => option?.icon
-  export let getOptionColour = (option: any) => option?.colour
+  export let options: O[] = []
+  export let getOptionLabel = (option: O, _index?: number) =>
+    extractProperty(option, "label")
+  export let getOptionValue = (option: O, _index?: number) =>
+    extractProperty(option, "value")
+  export let getOptionSubtitle = (option: O, _index?: number) =>
+    option?.subtitle
+  export let getOptionIcon = (option: O, _index?: number) => option?.icon
+  export let getOptionColour = (option: O, _index?: number) => option?.colour
   export let useOptionIconImage = false
-  export let isOptionEnabled = undefined
+  export let isOptionEnabled:
+    | ((_option: O, _index?: number) => boolean)
+    | undefined = undefined
   export let quiet: boolean = false
   export let autoWidth: boolean = false
   export let sort: boolean = false
@@ -33,7 +43,7 @@
   export let onOptionMouseleave = () => {}
 
   const dispatch = createEventDispatcher()
-  const onChange = (e: any) => {
+  const onChange = (e: CustomEvent<any>) => {
     value = e.detail
     dispatch("change", e.detail)
   }

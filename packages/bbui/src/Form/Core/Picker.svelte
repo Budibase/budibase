@@ -1,3 +1,8 @@
+<script lang="ts" context="module">
+  type O = any
+  type V = any
+</script>
+
 <script lang="ts">
   import "@spectrum-css/picker/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
@@ -20,27 +25,21 @@
   export let fieldColour: string = ""
   export let isPlaceholder: boolean = false
   export let placeholderOption: string | undefined | boolean = undefined
-  export let options: any[] = []
-  export let isOptionSelected = (_value: any) => false
-  export let isOptionEnabled = (_value: any) => true
-  export let onSelectOption: (_value: any) => void = () => {}
-  export let getOptionLabel: (_option: any, _idx?: number) => string = option =>
-    option
-  export let getOptionValue: (_option: any, _idx?: number) => any = option =>
-    option
-  export let getOptionIcon: (
-    _option: any,
-    _idx?: number
-  ) => string | undefined = () => undefined
+  export let options: O[] = []
+  export let isOptionSelected = (option: O) => option as unknown as boolean
+  export let isOptionEnabled = (option: O, _index?: number) =>
+    option as unknown as boolean
+  export let onSelectOption: (_value: V) => void = () => {}
+  export let getOptionLabel = (option: O, _index?: number) => `${option}`
+  export let getOptionValue = (option: O, _index?: number) =>
+    option as unknown as V
+  export let getOptionIcon = (option: O, _index?: number) =>
+    option as unknown as O
   export let useOptionIconImage = false
-  export let getOptionColour: (
-    _option: any,
-    _idx?: number
-  ) => string | undefined = () => undefined
-  export let getOptionSubtitle: (
-    _option: any,
-    _idx?: number
-  ) => string | undefined = () => undefined
+  export let getOptionColour = (option: O, _index?: number) =>
+    option as unknown as O
+  export let getOptionSubtitle = (option: O, _index?: number) =>
+    option as unknown as O
   export let open: boolean = false
   export let readonly: boolean = false
   export let quiet: boolean = false
