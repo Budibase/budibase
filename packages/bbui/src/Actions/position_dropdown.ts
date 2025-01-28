@@ -240,7 +240,12 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
     }
 
     for (const [key, value] of Object.entries(styles)) {
-      element.style.setProperty(key, value ? `${value}px` : null)
+      const name = key as keyof Styles
+      if (value != null) {
+        element.style[name] = `${value}px`
+      } else {
+        element.style[name] = ""
+      }
     }
   }
 
