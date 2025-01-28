@@ -441,16 +441,14 @@
                 },
               },
             },
-            selectedRow
-              ? {
-                  type: InfoDisplay,
-                  props: {
-                    warning: true,
-                    icon: "AlertCircleFilled",
-                    body: `Be careful when testing this automation because your data may be modified or deleted.`,
-                  },
-                }
-              : {},
+            {
+              type: InfoDisplay,
+              props: {
+                warning: true,
+                icon: "AlertCircleFilled",
+                body: `Be careful when testing this automation because your data may be modified or deleted.`,
+              },
+            },
             {
               type: Divider,
               props: {
