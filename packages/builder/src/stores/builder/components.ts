@@ -254,7 +254,10 @@ export class ComponentStore extends BudiStore<ComponentState> {
    * @param {object} opts
    * @returns
    */
-  enrichEmptySettings(component: Component, opts: any) {
+  enrichEmptySettings(
+    component: Component,
+    opts: { screen?: Screen; parent?: Component; useDefaultValues?: boolean }
+  ) {
     if (!component?._component) {
       return
     }
@@ -1339,7 +1342,7 @@ export const componentStore = new ComponentStore()
 
 export const selectedComponent = derived(
   [componentStore, selectedScreen],
-  ([$store, $selectedScreen]) => {
+  ([$store, $selectedScreen]): Component | null => {
     if (
       $selectedScreen &&
       $store.selectedComponentId?.startsWith(`${$selectedScreen._id}-`)
