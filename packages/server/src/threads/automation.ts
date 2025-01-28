@@ -29,6 +29,7 @@ import {
   LoopStep,
   UserBindings,
   isBasicSearchOperator,
+  ContextEmitter,
 } from "@budibase/types"
 import {
   AutomationContext,
@@ -71,6 +72,24 @@ function getLoopIterations(loopStep: LoopStep) {
   return 0
 }
 
+export async function enrichBaseContext(context: Record<string, any>) {
+  context.env = await sdkUtils.getEnvironmentVariables()
+
+  try {
+    const { config } = await configs.getSettingsConfigDoc()
+    context.settings = {
+      url: config.platformUrl,
+      logo: config.logoUrl,
+      company: config.company,
+    }
+  } catch (e) {
+    // if settings doc doesn't exist, make the settings blank
+    context.settings = {}
+  }
+
+  return context
+}
+
 /**
  * The automation orchestrator is a class responsible for executing automations.
  * It handles the context of the automation and makes sure each step gets the correct
@@ -80,7 +99,7 @@ class Orchestrator {
   private chainCount: number
   private appId: string
   private automation: Automation
-  private emitter: any
+  private emitter: ContextEmitter
   private context: AutomationContext
   private job: Job
   private loopStepOutputs: LoopStep[]
@@ -270,20 +289,9 @@ class Orchestrator {
           appId: this.appId,
           automationId: this.automation._id,
         })
-        this.context.env = await sdkUtils.getEnvironmentVariables()
-        this.context.user = this.currentUser
 
-        try {
-          const { config } = await configs.getSettingsConfigDoc()
-          this.context.settings = {
-            url: config.platformUrl,
-            logo: config.logoUrl,
-            company: config.company,
-          }
-        } catch (e) {
-          // if settings doc doesn't exist, make the settings blank
-          this.context.settings = {}
-        }
+        await enrichBaseContext(this.context)
+        this.context.user = this.currentUser
 
         let metadata
 

@@ -1,5 +1,3 @@
-// TODO: datasource and defitions are unions of the different implementations. At this point, the datasource does not know what type is being used, and the assignations will cause TS exceptions. Casting it "as any" for now. This should be fixed improving the type usages.
-
 import { derived, get, Readable, Writable } from "svelte/store"
 import {
   DataFetchDefinition,
@@ -10,12 +8,10 @@ import { enrichSchemaWithRelColumns, memo } from "../../../utils"
 import { cloneDeep } from "lodash"
 import {
   SaveRowRequest,
-  SaveTableRequest,
   UIDatasource,
   UIFieldMutation,
   UIFieldSchema,
   UIRow,
-  UpdateViewRequest,
   ViewV2Type,
 } from "@budibase/types"
 import { Store as StoreContext, BaseStoreProps } from "."
@@ -79,7 +75,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
   const schema = derived(definition, $definition => {
     const schema: Record<string, any> | undefined = getDatasourceSchema({
       API,
-      datasource: get(datasource) as any, // TODO: see line 1
+      datasource: get(datasource),
       definition: $definition ?? undefined,
     })
     if (!schema) {
@@ -137,7 +133,7 @@ export const deriveStores = (context: StoreContext): DerivedDatasourceStore => {
       let type = $datasource?.type
       // @ts-expect-error
       if (type === "provider") {
-        type = ($datasource as any).value?.datasource?.type // TODO: see line 1
+        type = ($datasource as any).value?.datasource?.type
       }
       // Handle calculation views
       if (
@@ -196,15 +192,13 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
   const refreshDefinition = async () => {
     const def = await getDatasourceDefinition({
       API,
-      datasource: get(datasource) as any, // TODO: see line 1
+      datasource: get(datasource),
     })
-    definition.set(def as any) // TODO: see line 1
+    definition.set(def ?? null)
   }
 
   // Saves the datasource definition
-  const saveDefinition = async (
-    newDefinition: SaveTableRequest | UpdateViewRequest
-  ) => {
+  const saveDefinition = async (newDefinition: DataFetchDefinition) => {
     // Update local state
     const originalDefinition = get(definition)
     definition.set(newDefinition)
@@ -245,7 +239,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
         delete newDefinition.schema[column].default
       }
     }
-    return await saveDefinition(newDefinition as any) // TODO: see line 1
+    return await saveDefinition(newDefinition)
   }
 
   // Adds a schema mutation for a single field
@@ -321,7 +315,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
     await saveDefinition({
       ...$definition,
       schema: newSchema,
-    } as any) // TODO: see line 1
+    })
     resetSchemaMutations()
   }
 
