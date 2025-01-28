@@ -101,7 +101,6 @@
   let definition
   let settingsDefinition
   let settingsDefinitionMap
-  let componentErrors = false
 
   // Temporary styles which can be added in the app preview for things like
   // DND. We clear these whenever a new instance is received.
