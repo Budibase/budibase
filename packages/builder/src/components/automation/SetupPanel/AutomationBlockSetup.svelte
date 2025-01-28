@@ -424,7 +424,7 @@
                 autocomplete: true,
                 filter: false,
                 getOptionLabel: row => row?.[primaryDisplay] || "",
-                compare: (a, b) => a?._id === b?._id,
+                compare: (a, b) => a?.[primaryDisplay] === b?.[primaryDisplay],
                 onChange: e => {
                   if (isTestModal) {
                     onChange({
@@ -651,7 +651,10 @@
           ...request,
         }
 
-        if (newTestData?.row?._id == null) {
+        if (
+          newTestData?.row == null ||
+          Object.keys(newTestData?.row).length === 0
+        ) {
           selectedRow = null
         } else {
           selectedRow = newTestData.row
