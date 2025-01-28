@@ -30,8 +30,6 @@
   }
 </script>
 
-import context from "src/context"
-
 <div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>
   {#if options && Array.isArray(options)}
     {#each options as option}
