@@ -427,27 +427,16 @@
                 compare: (a, b) => a?._id === b?._id,
                 onChange: e => {
                   if (isTestModal) {
-                    if (stepState?.rowType === "oldRow") {
-                      onChange({
-                        oldRow: e.detail,
-                        meta: {
-                          fields: inputData["meta"]?.fields || {},
-                          oldFields: e.detail?.meta?.fields || {},
-                        },
-                      })
-                    } else {
-                      onChange({
-                        id: e.detail?._id,
-                        revision: e.detail?._rev,
-                        row: e.detail,
-                        meta: {
-                          fields: e.detail?.meta?.fields || {},
-                          ...(isTestModal
-                            ? { oldFields: inputData["meta"]?.oldFields || {} }
-                            : {}),
-                        },
-                      })
-                    }
+                    onChange({
+                      id: e.detail?._id,
+                      revision: e.detail?._rev,
+                      row: e.detail,
+                      oldRow: e.detail,
+                      meta: {
+                        fields: inputData["meta"]?.fields || {},
+                        oldFields: e.detail?.meta?.fields || {},
+                      },
+                    })
                   }
                 },
               },
