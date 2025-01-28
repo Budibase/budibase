@@ -119,12 +119,6 @@
   $: tempFilters = cloneDeep(filters)
   $: stepId = $memoBlock.stepId
 
-  $: {
-    console.log("inputData", inputData)
-    console.log("testData", testData)
-    console.log("tableId", tableId)
-  }
-
   $: getInputData(testData, $memoBlock.inputs)
   $: tableId =
     inputData?.row?.tableId ||
@@ -427,10 +421,11 @@
                 loading: fetchLoading,
                 value: selectedRow,
                 autocomplete: true,
+                filter: false,
                 getOptionLabel: row => row?.[primaryDisplay] || "",
+                compare: (a, b) => a?._id === b?._id,
                 onChange: e => {
                   if (isTestModal) {
-                    selectedRow = e.detail
                     if (stepState?.rowType === "oldRow") {
                       onChange({
                         oldRow: e.detail,
@@ -654,6 +649,12 @@
         newTestData = {
           ...newTestData,
           ...request,
+        }
+
+        if (newTestData?.row?._id == null) {
+          selectedRow = null
+        } else {
+          selectedRow = newTestData.row
         }
 
         const updatedAuto =

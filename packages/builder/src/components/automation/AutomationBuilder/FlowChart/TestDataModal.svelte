@@ -165,7 +165,7 @@
         block={trigger}
         on:update={e => {
           const { testData: updatedTestData } = e.detail
-          testData = updatedTestData
+          testData = parseTestData(updatedTestData)
         }}
       />
     </div>

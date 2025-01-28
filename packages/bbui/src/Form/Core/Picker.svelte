@@ -40,6 +40,7 @@
   export let align = "left"
   export let footer = null
   export let customAnchor = null
+  export let filter = true
   export let loading
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
@@ -82,7 +83,7 @@
   }
 
   const getFilteredOptions = (options, term, getLabel) => {
-    if (autocomplete && term) {
+    if (autocomplete && term && filter) {
       const lowerCaseTerm = term.toLowerCase()
       return options.filter(option => {
         return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)

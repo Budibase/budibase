@@ -25,6 +25,7 @@
   export let open = false
   export let tag = null
   export let searchTerm = null
+  export let filter = true
   export let loading
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
@@ -97,6 +98,7 @@
   {useOptionIconImage}
   {isOptionEnabled}
   {autocomplete}
+  {filter}
   {sort}
   {tag}
   {onOptionMouseenter}
