@@ -121,12 +121,8 @@ function getInvalidDatasources(
   return result
 }
 
-function getAllComponentsInScreen(screen: Screen) {
-  return findAllComponents(screen.props) as Component[]
-}
-
 function getMissingRequiredSettings(screen: Screen) {
-  const allComponents = getAllComponentsInScreen(screen)
+  const allComponents = findAllComponents(screen.props) as Component[]
 
   const result: Record<string, UIComponentError[]> = {}
   for (const component of allComponents) {
