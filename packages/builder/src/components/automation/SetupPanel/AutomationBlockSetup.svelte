@@ -71,6 +71,7 @@
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
   import { API } from "@/api"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let automation
   export let block
@@ -451,6 +452,16 @@
                 },
               },
             },
+            selectedRow
+              ? {
+                  type: InfoDisplay,
+                  props: {
+                    warning: true,
+                    icon: "AlertCircleFilled",
+                    body: `Be careful when testing this automation because your data may be modified or deleted.`,
+                  },
+                }
+              : {},
             {
               type: Divider,
               props: {
