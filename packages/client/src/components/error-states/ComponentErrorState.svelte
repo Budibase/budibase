@@ -18,6 +18,7 @@
     <div class="component-placeholder" use:styleable={styles}>
       <Icon name="Alert" color="var(--spectrum-global-color-static-red-600)" />
       {#if errorMessage}
+        <!-- eslint-disable-next-line svelte/no-at-html-tags-->
         {@html errorMessage.message}
         <ComponentErrorStateCta error={errorMessage} />
       {/if}
