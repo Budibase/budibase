@@ -212,7 +212,7 @@
   }
 
   const handleStateKeySelect = (key: CustomEvent) => {
-    if (!key.detail) {
+    if (!key.detail && keyOptions.length > 0) {
       throw new Error("No state key selected")
     }
     searchComponents(key.detail)
@@ -246,6 +246,15 @@
 </script>
 
 <div class="state-panel">
+  <div class="link">
+    <Link
+      href="https://docs.budibase.com/docs/app-state"
+      target="_blank"
+      secondary
+    >
+      Learn how to use State within Budibase.
+    </Link>
+  </div>
   <div class="section">
     <Select
       label="State variables"
@@ -297,16 +306,6 @@
       </div>
     </div>
   {/if}
-  <div class="link-opacity">
-    <Link
-      href="https://docs.budibase.com/docs/app-state"
-      target="_blank"
-      size={"S"}
-      secondary
-    >
-      Learn more about State within Budibase.
-    </Link>
-  </div>
 </div>
 
 <style>
@@ -319,18 +318,18 @@
   .section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+    gap: var(--spacing-xs);
   }
   .text {
-    color: var(--spectrum-global-color-gray-700);
+    color: var(--spectrum-global-color-gray-600);
     font-size: var(--spectrum-global-dimension-font-size-50);
   }
 
   .updates-colour {
-    color: #8488fd;
+    color: var(--spectrum-global-color-blue-700);
   }
   .controlled-by-colour {
-    color: #e87400;
+    color: var(--spectrum-global-color-orange-700);
   }
   .component-link {
     display: inline-block;
@@ -353,7 +352,12 @@
     gap: var(--spacing-xs);
   }
 
-  .link-opacity {
-    opacity: 0.5;
+  .link {
+    color: var(--spectrum-global-color-gray-600);
+    margin-top: var(--spacing-m);
+  }
+
+  .link:hover {
+    color: var(--spectrum-global-color-gray-700);
   }
 </style>
