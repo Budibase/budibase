@@ -1,30 +1,31 @@
+<script lang="ts" context="module">
+  type O = any
+  type V = any
+</script>
+
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
   import Picker from "./Picker.svelte"
   import { PopoverAlignment } from "../../constants"
-  export let value: any = null
+
+  export let value: V | null = null
   export let id: string | undefined = undefined
   export let placeholder: string | boolean = "Choose an option"
   export let disabled: boolean = false
-  export let options: any[] = []
-  export let getOptionLabel = (option: any) => option
-  export let getOptionValue = (_option: any, _idx: number | undefined) =>
-    _option
-  export let getOptionIcon: (
-    _option: any,
-    _idx?: number
-  ) => string | undefined = () => undefined
-  export let getOptionColour: (
-    _option: any,
-    _idx?: number
-  ) => string | undefined = () => undefined
-  export let getOptionSubtitle: (
-    _option: any,
-    _idx?: number
-  ) => string | undefined = () => undefined
-  export let compare: any = null
+  export let options: O[] = []
+  export let getOptionLabel = (option: O, _index?: number) => `${option}`
+  export let getOptionValue = (option: O, _index?: number) =>
+    option as unknown as V
+  export let getOptionIcon = (option: O, _index?: number) =>
+    option as unknown as string
+  export let getOptionColour = (option: O, _index?: number) =>
+    option as unknown as string
+  export let getOptionSubtitle = (option: O, _index?: number) =>
+    option as unknown as string
+  export let compare = (option: O, value: V) => option === value
   export let useOptionIconImage = false
-  export let isOptionEnabled
+  export let isOptionEnabled = (option: O, _index?: number) =>
+    option as unknown as boolean
   export let readonly: boolean = false
   export let quiet: boolean = false
   export let autoWidth: boolean = false
@@ -45,13 +46,13 @@
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
-  function compareOptionAndValue(option: any, value: any) {
+  function compareOptionAndValue(option: O, value: V) {
     return typeof compare === "function"
       ? compare(option, value)
       : option === value
   }
 
-  const getFieldAttribute = (getAttribute: any, value: any, options: any) => {
+  const getFieldAttribute = (getAttribute: any, value: V[], options: O[]) => {
     // Wait for options to load if there is a value but no options
     if (!options?.length) {
       return ""
@@ -81,7 +82,7 @@
     )
   }
 
-  const selectOption = (value: any) => {
+  const selectOption = (value: V) => {
     dispatch("change", value)
     open = false
   }
