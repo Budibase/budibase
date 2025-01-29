@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte"
-  import { Link, Body, Helpers, Layout, notifications } from "@budibase/bbui"
+  import { Helpers, notifications } from "@budibase/bbui"
   import { processObjectSync } from "@budibase/string-templates"
   import {
     previewStore,
