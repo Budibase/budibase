@@ -173,30 +173,21 @@ export class IsolatedVM implements VM {
           return result
         }
       ),
+      atobCB: new ivm.Callback((...args: Parameters<typeof atob>) => {
+        const result = atob(...args)
+        return result
+      }),
+      btoaCB: new ivm.Callback((...args: Parameters<typeof btoa>) => {
+        const result = btoa(...args)
+        return result
+      }),
     })
 
-    // "Polyfilling" text decoder. `bson.deserialize` requires decoding. We are creating a bridge function so we don't need to inject the full library
-    const textDecoderPolyfill = class TextDecoderMock {
-      constructorArgs
-
-      constructor(...constructorArgs: any) {
-        this.constructorArgs = constructorArgs
-      }
-
-      decode(...input: any) {
-        // @ts-expect-error - this is going to run in the isolate, where this function will be available
-        // eslint-disable-next-line no-undef
-        return textDecoderCb({
-          constructorArgs: this.constructorArgs,
-          functionArgs: input,
-        })
-      }
-    }
-      .toString()
-      .replace(/TextDecoderMock/, "TextDecoder")
+    // "Polyfilling" text decoder and other utils. `bson.deserialize` requires decoding. We are creating a bridge function so we don't need to inject the full library
+    const bsonPolyfills = loadBundle(BundleType.BSON_POLYFILLS)
 
     const script = this.isolate.compileScriptSync(
-      `${textDecoderPolyfill};${bsonSource}`
+      `${bsonPolyfills};${bsonSource}`
     )
     script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
     new Promise(() => {
