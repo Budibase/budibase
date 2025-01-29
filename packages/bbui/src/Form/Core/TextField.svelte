@@ -4,7 +4,7 @@
   import type { UIEvent } from "@budibase/types"
 
   export let value: string | null = null
-  export let placeholder = null
+  export let placeholder: string | null = null
   export let type = "text"
   export let disabled = false
   export let id = null
@@ -12,8 +12,8 @@
   export let updateOnChange = true
   export let quiet = false
   export let align: string | null = null
-  export let autofocus = false
-  export let autocomplete = null
+  export let autofocus: boolean | null = false
+  export let autocomplete: string | null = null
 
   const dispatch = createEventDispatcher()
 
@@ -71,7 +71,7 @@
 
   onMount(async () => {
     if (disabled) return
-    focus = autofocus
+    focus = autofocus || false
     if (focus) {
       await tick()
       field.focus()

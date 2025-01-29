@@ -13,8 +13,8 @@
   export let error = null
   export let updateOnChange = true
   export let quiet = false
-  export let autofocus
-  export let autocomplete
+  export let autofocus: boolean | null = null
+  export let autocomplete: string | null = null
   export let helpText = null
 
   const dispatch = createEventDispatcher()
