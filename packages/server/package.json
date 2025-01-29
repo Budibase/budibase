@@ -120,7 +120,7 @@
     "semver": "^7.5.4",
     "serialize-error": "^7.0.1",
     "server-destroy": "1.0.1",
-    "snowflake-sdk": "^1.15.0",
+    "snowflake-sdk": "^2.0.2",
     "socket.io": "4.8.1",
     "svelte": "4.2.19",
     "tar": "6.2.1",
