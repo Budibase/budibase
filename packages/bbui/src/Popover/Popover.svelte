@@ -9,36 +9,38 @@
   import "@spectrum-css/popover/dist/index-vars.css"
   import Portal from "svelte-portal"
   import { createEventDispatcher, getContext, onDestroy } from "svelte"
-  import positionDropdown from "../Actions/position_dropdown"
+  import positionDropdown, {
+    type UpdateHandler,
+  } from "../Actions/position_dropdown"
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
   import Context from "../context"
+  import type { KeyboardEventHandler } from "svelte/elements"
   import { PopoverAlignment } from "../constants"
 
-  const dispatch = createEventDispatcher()
-
-  export let anchor: HTMLElement | undefined = undefined
+  export let anchor: HTMLElement
   export let align: PopoverAlignment = PopoverAlignment.Right
   export let portalTarget: string | undefined = undefined
   export let minWidth: number | undefined = undefined
   export let maxWidth: number | undefined = undefined
   export let maxHeight: number | undefined = undefined
-  export let open: boolean = false
-  export let useAnchorWidth: boolean = false
-  export let dismissible: boolean = true
-  export let offset: number = 4
+  export let open = false
+  export let useAnchorWidth = false
+  export let dismissible = true
+  export let offset = 4
   export let customHeight: string | undefined = undefined
-  export let animate: boolean = true
+  export let animate = true
   export let customZIndex: number | undefined = undefined
-  export let handlePositionUpdate: Function | undefined = undefined
-  export let showPopover: boolean = true
-  export let clickOutsideOverride: boolean = false
-  export let resizable: boolean = true
-  export let wrap: boolean = false
+  export let handlePositionUpdate: UpdateHandler | undefined = undefined
+  export let showPopover = true
+  export let clickOutsideOverride = false
+  export let resizable = true
+  export let wrap = false
 
+  const dispatch = createEventDispatcher<{ open: void; close: void }>()
   const animationDuration = 260
 
-  let timeout: ReturnType<typeof setTimeout> | undefined
+  let timeout: ReturnType<typeof setTimeout>
   let blockPointerEvents = false
 
   // Portal library lacks types, so we have to type this as any even though it's
@@ -83,7 +85,7 @@
     }
     if (open) {
       // Stop propagation if the source is the anchor
-      let node = e.target as Node
+      let node = e.target as Node | null
       let fromAnchor = false
       while (!fromAnchor && node && node.parentNode) {
         fromAnchor = node === anchor
@@ -98,7 +100,7 @@
     }
   }
 
-  function handleEscape(e: KeyboardEvent) {
+  const handleEscape: KeyboardEventHandler<HTMLDivElement> = e => {
     if (!clickOutsideOverride) {
       return
     }
