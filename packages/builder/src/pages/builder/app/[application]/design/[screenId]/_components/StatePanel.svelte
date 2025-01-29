@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte"
-  import { Select, Link } from "@budibase/bbui"
+  import { Select } from "@budibase/bbui"
   import type { Component } from "@budibase/types"
   import { getAllStateVariables, getBindableProperties } from "@/dataBinding"
   import {
@@ -203,7 +203,7 @@
             handler.parameters?.key === stateKey
         )
         .map(() => ({
-          id: $selectedScreen._id,
+          id: $selectedScreen._id!,
           name: "Screen onLoad",
           settings: ["onLoad"],
         })) || []
@@ -341,14 +341,5 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-xs);
-  }
-
-  .link {
-    color: var(--spectrum-global-color-gray-600);
-    margin-top: var(--spacing-m);
-  }
-
-  .link:hover {
-    color: var(--spectrum-global-color-gray-700);
   }
 </style>
