@@ -58,13 +58,12 @@ export class ScreenStore extends BudiStore<ScreenState> {
       getDoc: (id: string) =>
         get(this.store).screens?.find(screen => screen._id === id),
       selectDoc: this.select,
-      beforeAction: () => {},
       afterAction: () => {
         // Ensure a valid component is selected
         if (!get(selectedComponent)) {
-          this.update(state => ({
+          componentStore.update(state => ({
             ...state,
-            selectedComponentId: get(selectedScreen)?.props._id,
+            selectedComponentId: get(selectedScreen)?._id,
           }))
         }
       },
