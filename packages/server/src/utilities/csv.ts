@@ -4,15 +4,10 @@ export async function jsonFromCsvString(csvString: string) {
   const possibleDelimeters = [",", ";", ":", "|", "~", "\t", " "]
 
   for (let i = 0; i < possibleDelimeters.length; i++) {
-    let numOfHeaders: number | undefined = undefined
+    let headers: string[] | undefined = undefined
     let headerMismatch = false
 
     try {
-      const castedWithEmptyValues = await csv({
-        ignoreEmpty: true,
-        delimiter: possibleDelimeters[i],
-      }).fromString(csvString)
-
       // By default the csvtojson library casts empty values as empty strings. This
       // is causing issues on conversion.  ignoreEmpty will remove the key completly
       // if empty, so creating this empty object will ensure we return the values
@@ -28,18 +23,17 @@ export async function jsonFromCsvString(csvString: string) {
         // If the number of columms in each row is different to
         // the number of headers, this isn't the right delimiter
         const columns = Object.keys(r)
-        if (numOfHeaders == null) {
-          numOfHeaders = columns.length
+        if (headers == null) {
+          headers = columns
         }
-        if (numOfHeaders === 1 || numOfHeaders !== columns.length) {
+        if (headers.length === 1 || headers.length !== columns.length) {
           headerMismatch = true
           break
         }
-        for (const [key] of Object.entries(r).filter(
-          ([, value]) => value === ""
-        )) {
-          if (castedWithEmptyValues[i][key] === undefined) {
-            r[key] = null
+
+        for (const header of headers) {
+          if (r[header] === undefined || r[header] === "") {
+            r[header] = null
           }
         }
       }
