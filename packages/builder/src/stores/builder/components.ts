@@ -20,6 +20,7 @@ import {
   previewStore,
   tables,
   componentTreeNodesStore,
+  builderStore,
 } from "@/stores/builder"
 import { buildFormSchema, getSchemaForDatasource } from "@/dataBinding"
 import {
@@ -736,10 +737,16 @@ export class ComponentStore extends BudiStore<ComponentState> {
    *
    * @param {string} componentId
    */
-  select(componentId: string) {
+  select(id: string) {
     this.update(state => {
-      state.selectedComponentId = componentId
-      return state
+      // Only clear highlights if selecting a different component
+      if (!id.includes(state.selectedComponentId!)) {
+        builderStore.highlightSetting()
+      }
+      return {
+        ...state,
+        selectedComponentId: id,
+      }
     })
   }
 

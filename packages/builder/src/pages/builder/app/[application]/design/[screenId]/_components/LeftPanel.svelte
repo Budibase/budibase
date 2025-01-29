@@ -3,6 +3,7 @@
   import ComponentList from "./ComponentList/index.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
   import { ActionButton } from "@budibase/bbui"
+  import StatePanel from "./StatePanel.svelte"
   import BindingsPanel from "./BindingsPanel.svelte"
   import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
 
@@ -36,7 +37,7 @@
     {:else if activeTab === Tabs.Bindings}
       <BindingsPanel />
     {:else if activeTab === Tabs.State}
-      <div class="tab-content">State</div>
+      <div class="tab-content"><StatePanel /></div>
     {/if}
   </div>
   <div class="divider">

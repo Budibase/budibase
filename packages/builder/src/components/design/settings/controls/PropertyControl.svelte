@@ -5,7 +5,6 @@
     runtimeToReadableBinding,
   } from "@/dataBinding"
   import { builderStore } from "@/stores/builder"
-  import { onDestroy } from "svelte"
 
   export let label = ""
   export let labelHidden = false
@@ -32,7 +31,7 @@
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
 
-  $: if (!Array.isArray(value)) {
+  $: if (value) {
     highlightType =
       highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
   }
@@ -75,12 +74,6 @@
       ? defaultValue
       : enriched
   }
-
-  onDestroy(() => {
-    if (highlightedProp) {
-      builderStore.highlightSetting(null)
-    }
-  })
 </script>
 
 <div
