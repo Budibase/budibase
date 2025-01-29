@@ -634,6 +634,28 @@ if (descriptions.length) {
             }
           })
         })
+
+        it("should be able to select a ObjectId in a transformer", async () => {
+          const query = await createQuery({
+            fields: {
+              json: {},
+              extra: {
+                actionType: "find",
+              },
+            },
+            transformer: "return data.map(x => ({ id: x._id }))",
+          })
+
+          const result = await config.api.query.execute(query._id!)
+
+          expect(result.data).toEqual([
+            { id: expectValidId },
+            { id: expectValidId },
+            { id: expectValidId },
+            { id: expectValidId },
+            { id: expectValidId },
+          ])
+        })
       })
 
       it("should throw an error if the incorrect actionType is specified", async () => {
