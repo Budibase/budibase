@@ -1,4 +1,4 @@
-import { AutomationJob, DidNotTriggerResponse } from "../../../sdk/automations"
+import { AutomationJob } from "../../../sdk/automations"
 import {
   Automation,
   AutomationActionStepId,
