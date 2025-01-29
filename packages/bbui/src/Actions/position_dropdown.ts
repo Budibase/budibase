@@ -1,28 +1,53 @@
-import { PopoverAlignment } from "../constants"
-
 // Strategies are defined as [Popover]To[Anchor].
 // They can apply for both horizontal and vertical alignment.
-const Strategies = {
-  StartToStart: "StartToStart", // e.g. left alignment
-  EndToEnd: "EndToEnd", // e.g. right alignment
-  StartToEnd: "StartToEnd", // e.g. right-outside alignment
-  EndToStart: "EndToStart", // e.g. left-outside alignment
-  MidPoint: "MidPoint", // centers relative to midpoints
-  ScreenEdge: "ScreenEdge", // locks to screen edge
+import { PopoverAlignment } from "../constants"
+
+type Strategy =
+  | "StartToStart"
+  | "EndToEnd"
+  | "StartToEnd"
+  | "EndToStart"
+  | "MidPoint"
+  | "ScreenEdge"
+
+export interface Styles {
+  maxHeight?: number
+  minWidth?: number
+  maxWidth?: number
+  offset?: number
+  left: number
+  top: number
 }
 
-export default function positionDropdown(element, opts) {
-  let resizeObserver
+export type UpdateHandler = (
+  anchorBounds: DOMRect,
+  elementBounds: DOMRect,
+  styles: Styles
+) => Styles
+
+interface Opts {
+  anchor?: HTMLElement
+  align: PopoverAlignment
+  maxHeight?: number
+  maxWidth?: number
+  minWidth?: number
+  useAnchorWidth: boolean
+  offset: number
+  customUpdate?: UpdateHandler
+  resizable: boolean
+  wrap: boolean
+}
+
+export default function positionDropdown(element: HTMLElement, opts: Opts) {
+  let resizeObserver: ResizeObserver
   let latestOpts = opts
 
   // We need a static reference to this function so that we can properly
   // clean up the scroll listener.
-  const scrollUpdate = () => {
-    updatePosition(latestOpts)
-  }
+  const scrollUpdate = () => updatePosition(latestOpts)
 
   // Updates the position of the dropdown
-  const updatePosition = opts => {
+  const updatePosition = (opts: Opts) => {
     const {
       anchor,
       align,
@@ -45,12 +70,12 @@ export default function positionDropdown(element, opts) {
     const winWidth = window.innerWidth
     const winHeight = window.innerHeight
     const screenOffset = 8
-    let styles = {
+    let styles: Styles = {
       maxHeight,
       minWidth: useAnchorWidth ? anchorBounds.width : minWidth,
       maxWidth: useAnchorWidth ? anchorBounds.width : maxWidth,
-      left: null,
-      top: null,
+      left: 0,
+      top: 0,
     }
 
     // Ignore all our logic for custom logic
@@ -75,67 +100,67 @@ export default function positionDropdown(element, opts) {
       }
 
       // Applies a dynamic max height constraint if appropriate
-      const applyMaxHeight = height => {
+      const applyMaxHeight = (height: number) => {
         if (!styles.maxHeight && resizable) {
           styles.maxHeight = height
         }
       }
 
       // Applies the X strategy to our styles
-      const applyXStrategy = strategy => {
+      const applyXStrategy = (strategy: Strategy) => {
         switch (strategy) {
-          case Strategies.StartToStart:
+          case "StartToStart":
           default:
             styles.left = anchorBounds.left
             break
-          case Strategies.EndToEnd:
+          case "EndToEnd":
             styles.left = anchorBounds.right - elementBounds.width
             break
-          case Strategies.StartToEnd:
+          case "StartToEnd":
             styles.left = anchorBounds.right + offset
             break
-          case Strategies.EndToStart:
+          case "EndToStart":
             styles.left = anchorBounds.left - elementBounds.width - offset
             break
-          case Strategies.MidPoint:
+          case "MidPoint":
             styles.left =
               anchorBounds.left +
               anchorBounds.width / 2 -
               elementBounds.width / 2
             break
-          case Strategies.ScreenEdge:
+          case "ScreenEdge":
             styles.left = winWidth - elementBounds.width - screenOffset
             break
         }
       }
 
       // Applies the Y strategy to our styles
-      const applyYStrategy = strategy => {
+      const applyYStrategy = (strategy: Strategy) => {
         switch (strategy) {
-          case Strategies.StartToStart:
+          case "StartToStart":
             styles.top = anchorBounds.top
             applyMaxHeight(winHeight - anchorBounds.top - screenOffset)
             break
-          case Strategies.EndToEnd:
+          case "EndToEnd":
             styles.top = anchorBounds.bottom - elementBounds.height
             applyMaxHeight(anchorBounds.bottom - screenOffset)
             break
-          case Strategies.StartToEnd:
+          case "StartToEnd":
           default:
             styles.top = anchorBounds.bottom + offset
             applyMaxHeight(winHeight - anchorBounds.bottom - screenOffset)
             break
-          case Strategies.EndToStart:
+          case "EndToStart":
             styles.top = anchorBounds.top - elementBounds.height - offset
             applyMaxHeight(anchorBounds.top - screenOffset)
             break
-          case Strategies.MidPoint:
+          case "MidPoint":
             styles.top =
               anchorBounds.top +
               anchorBounds.height / 2 -
               elementBounds.height / 2
             break
-          case Strategies.ScreenEdge:
+          case "ScreenEdge":
             styles.top = winHeight - elementBounds.height - screenOffset
             applyMaxHeight(winHeight - 2 * screenOffset)
             break
@@ -144,21 +169,21 @@ export default function positionDropdown(element, opts) {
 
       // Determine X strategy
       if (align === PopoverAlignment.Right) {
-        applyXStrategy(Strategies.EndToEnd)
+        applyXStrategy("EndToEnd")
       } else if (
         align === PopoverAlignment.RightOutside ||
         align === PopoverAlignment.RightContextMenu
       ) {
-        applyXStrategy(Strategies.StartToEnd)
+        applyXStrategy("StartToEnd")
       } else if (
         align === PopoverAlignment.LeftOutside ||
         align === PopoverAlignment.LeftContextMenu
       ) {
-        applyXStrategy(Strategies.EndToStart)
+        applyXStrategy("EndToStart")
       } else if (align === PopoverAlignment.Center) {
-        applyXStrategy(Strategies.MidPoint)
+        applyXStrategy("MidPoint")
       } else {
-        applyXStrategy(Strategies.StartToStart)
+        applyXStrategy("StartToStart")
       }
 
       // Determine Y strategy
@@ -166,68 +191,73 @@ export default function positionDropdown(element, opts) {
         align === PopoverAlignment.RightOutside ||
         align === PopoverAlignment.LeftOutside
       ) {
-        applyYStrategy(Strategies.MidPoint)
+        applyYStrategy("MidPoint")
       } else if (
-        align === "right-context-menu" ||
-        align === "left-context-menu"
+        align === PopoverAlignment.RightContextMenu ||
+        align === PopoverAlignment.LeftContextMenu
       ) {
-        applyYStrategy(Strategies.StartToStart)
-        styles.top -= 5 // Manual adjustment for action menu padding
+        applyYStrategy("StartToStart")
+        if (styles.top) {
+          styles.top -= 5 // Manual adjustment for action menu padding
+        }
       } else {
-        applyYStrategy(Strategies.StartToEnd)
+        applyYStrategy("StartToEnd")
       }
 
       // Handle screen overflow
       if (doesXOverflow()) {
         // Swap left to right
-        if (align === "left") {
-          applyXStrategy(Strategies.EndToEnd)
+        if (align === PopoverAlignment.Left) {
+          applyXStrategy("EndToEnd")
         }
         // Swap right-outside to left-outside
-        else if (align === "right-outside") {
-          applyXStrategy(Strategies.EndToStart)
+        else if (align === PopoverAlignment.RightOutside) {
+          applyXStrategy("EndToStart")
         }
       }
       if (doesYOverflow()) {
         // If wrapping, lock to the bottom of the screen and also reposition to
         // the side to not block the anchor
         if (wrap) {
-          applyYStrategy(Strategies.MidPoint)
+          applyYStrategy("MidPoint")
           if (doesYOverflow()) {
-            applyYStrategy(Strategies.ScreenEdge)
+            applyYStrategy("ScreenEdge")
           }
-          applyXStrategy(Strategies.StartToEnd)
+          applyXStrategy("StartToEnd")
           if (doesXOverflow()) {
-            applyXStrategy(Strategies.EndToStart)
+            applyXStrategy("EndToStart")
           }
         }
-        // Othewise invert as normal
+        // Otherwise invert as normal
         else {
           // If using an outside strategy then lock to the bottom of the screen
-          if (align === "left-outside" || align === "right-outside") {
-            applyYStrategy(Strategies.ScreenEdge)
+          if (
+            align === PopoverAlignment.LeftOutside ||
+            align === PopoverAlignment.RightOutside
+          ) {
+            applyYStrategy("ScreenEdge")
           }
           // Otherwise flip above
           else {
-            applyYStrategy(Strategies.EndToStart)
+            applyYStrategy("EndToStart")
           }
         }
       }
     }
 
-    // Apply styles
-    Object.entries(styles).forEach(([style, value]) => {
+    for (const [key, value] of Object.entries(styles)) {
+      const name = key as keyof Styles
       if (value != null) {
-        element.style[style] = `${value.toFixed(0)}px`
+        element.style[name] = `${value}px`
       } else {
-        element.style[style] = null
+        element.style[name] = ""
       }
-    })
+    }
   }
 
   // The actual svelte action callback which creates observers on the relevant
   // DOM elements
-  const update = newOpts => {
+  const update = (newOpts: Opts) => {
     latestOpts = newOpts
 
     // Cleanup old state
