@@ -16,7 +16,7 @@ export async function jsonFromCsvString(csvString: string) {
         ignoreEmpty: false,
         delimiter: possibleDelimeters[i],
       }).fromString(csvString)
-      for (const [i, r] of result.entries()) {
+      for (const [, r] of result.entries()) {
         // The purpose of this is to find rows that have been split
         // into the wrong number of columns - Any valid .CSV file will have
         // the same number of colums in each row

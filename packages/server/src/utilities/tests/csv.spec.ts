@@ -1,4 +1,3 @@
-import { delimiter } from "path"
 import { jsonFromCsvString } from "../csv"
 
 describe("csv", () => {
