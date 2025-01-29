@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte"
-  import { Link, Body, Helpers, Layout, notifications } from "@budibase/bbui"
+  import { Helpers, notifications } from "@budibase/bbui"
   import { processObjectSync } from "@budibase/string-templates"
   import {
     previewStore,
@@ -68,18 +68,7 @@
 </script>
 
 <div class="bindings-panel">
-  <Layout noPadding gap="S">
-    <div class="text">
-      <Body size="S">Showing all available bindings.</Body>
-      <Link
-        target="_blank"
-        href="https://docs.budibase.com/docs/introduction-to-bindings"
-      >
-        Learn more.
-      </Link>
-    </div>
-    <JSONViewer value={context} showCopyIcon on:click-copy={copyBinding} />
-  </Layout>
+  <JSONViewer value={context} showCopyIcon on:click-copy={copyBinding} />
 </div>
 
 <style>
@@ -88,12 +77,7 @@
     height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: var(--spacing-l);
-  }
-  .text {
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-    flex-wrap: wrap;
+    padding: var(--spacing-xl) var(--spacing-l) var(--spacing-l)
+      var(--spacing-l);
   }
 </style>
