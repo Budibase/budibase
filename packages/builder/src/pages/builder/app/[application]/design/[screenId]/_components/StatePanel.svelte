@@ -147,7 +147,7 @@
     settingsWithState.forEach(setting => {
       componentsUsingState.push({
         id: component._id,
-        name: `${component._instanceName} (${setting})`,
+        name: `${component._instanceName} - ${setting}`,
         settings: [setting],
       })
     })
@@ -155,7 +155,7 @@
     if (_conditions?.length > 0 && checkConditions(_conditions, stateKey)) {
       componentsUsingState.push({
         id: component._id,
-        name: `${component._instanceName} (conditions)`,
+        name: `${component._instanceName} - conditions`,
         settings: ["_conditions"],
       })
     }
@@ -163,7 +163,7 @@
     if (_styles && checkStyles(_styles, stateKey)) {
       componentsUsingState.push({
         id: component._id,
-        name: `${component._instanceName} (styles)`,
+        name: `${component._instanceName} - styles`,
         settings: ["_styles"],
       })
     }
