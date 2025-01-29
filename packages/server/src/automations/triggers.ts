@@ -21,6 +21,7 @@ import {
   AutomationRowEvent,
   UserBindings,
   AutomationResults,
+  DidNotTriggerResponse,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"
@@ -32,14 +33,6 @@ const JOB_OPTS = {
 }
 import * as automationUtils from "../automations/automationUtils"
 import { doesTableExist } from "../sdk/app/tables/getters"
-
-type DidNotTriggerResponse = {
-  outputs: {
-    success: false
-    status: AutomationStatus.STOPPED
-  }
-  message: AutomationStoppedReason.TRIGGER_FILTER_NOT_MET
-}
 
 async function getAllAutomations() {
   const db = context.getAppDB()

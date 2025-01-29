@@ -1,6 +1,8 @@
 import {
   Automation,
   AutomationMetadata,
+  AutomationStatus,
+  AutomationStoppedReason,
   Row,
   UserBindings,
 } from "../../documents"
@@ -29,3 +31,11 @@ export interface AutomationRowEvent {
 }
 
 export type AutomationJob = Job<AutomationData>
+
+export type DidNotTriggerResponse = {
+  outputs: {
+    success: false
+    status: AutomationStatus.STOPPED
+  }
+  message: AutomationStoppedReason.TRIGGER_FILTER_NOT_MET
+}

@@ -21,7 +21,7 @@
   } from "@budibase/bbui"
 
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, tables } from "@/stores/builder"
+  import { automationStore, tables, evaluationContext } from "@/stores/builder"
   import { environment } from "@/stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import {
@@ -62,6 +62,8 @@
   } from "@budibase/types"
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
+  import { encodeJSBinding } from "@budibase/string-templates"
+  import CodeEditorField from "@/components/common/bindings/CodeEditorField.svelte"
 
   export let automation
   export let block
@@ -74,6 +76,7 @@
 
   // Stop unnecessary rendering
   const memoBlock = memo(block)
+  const memoContext = memo({})
 
   const rowTriggers = [
     TriggerStepID.ROW_UPDATED,
@@ -97,6 +100,7 @@
   let stepLayouts = {}
 
   $: memoBlock.set(block)
+  $: memoContext.set($evaluationContext)
 
   $: filters = lookForFilters(schemaProperties)
   $: filterCount =
@@ -140,6 +144,7 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
+  // TODO: check if it inputData != newInputData (memo)
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
@@ -156,6 +161,7 @@
   }
 
   const setDefaultEnumValues = () => {
+    // TODO: Update this for memoisation
     for (const [key, value] of schemaProperties) {
       if (value.type === "string" && value.enum && inputData[key] == null) {
         inputData[key] = value.enum[0]
@@ -200,7 +206,6 @@
                     onChange({ ["revision"]: e.detail })
                   },
                   updateOnChange: false,
-                  forceModal: true,
                 },
               },
             ]
@@ -228,7 +233,6 @@
                 onChange({ [rowIdentifier]: e.detail })
               },
               updateOnChange: false,
-              forceModal: true,
             },
           },
         ]
@@ -476,6 +480,10 @@
           ...update,
         })
 
+      if (!updatedAutomation) {
+        return
+      }
+
       // Exclude default or invalid data from the test data
       let updatedFields = {}
       for (const key of Object.keys(block?.inputs?.fields || {})) {
@@ -547,7 +555,7 @@
             ...newTestData,
             body: {
               ...update,
-              ...automation.testData?.body,
+              ...(automation?.testData?.body || {}),
             },
           }
         }
@@ -668,6 +676,7 @@
                 {...config.props}
                 {bindings}
                 on:change={config.props.onChange}
+                context={$memoContext}
               />
             </PropField>
           {:else}
@@ -676,6 +685,7 @@
               {...config.props}
               {bindings}
               on:change={config.props.onChange}
+              context={$memoContext}
             />
           {/if}
         {/each}
@@ -800,6 +810,7 @@
                         : "Add signature"}
                       keyPlaceholder={"URL"}
                       valuePlaceholder={"Filename"}
+                      context={$memoContext}
                     />
                   {:else if isTestModal}
                     <ModalBindableInput
@@ -824,6 +835,7 @@
                         ? queryLimit
                         : ""}
                       drawerLeft="260px"
+                      context={$memoContext}
                     />
                   {/if}
                 </div>
@@ -853,6 +865,7 @@
                     panel={AutomationBindingPanel}
                     showFilterEmptyDropdown={!rowTriggers.includes(stepId)}
                     on:change={e => (tempFilters = e.detail)}
+                    evaluationContext={$memoContext}
                   />
                 </DrawerContent>
               </Drawer>
@@ -895,7 +908,39 @@
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
               />
-            {:else if value.customType === "code"}
+            {:else if value.customType === "code" && stepId === ActionStepID.EXECUTE_SCRIPT_V2}
+              <div class="scriptv2-wrapper">
+                <DrawerBindableSlot
+                  title={"Edit Code"}
+                  panel={AutomationBindingPanel}
+                  type={"longform"}
+                  {schema}
+                  on:change={e => onChange({ [key]: e.detail })}
+                  value={inputData[key]}
+                  {bindings}
+                  allowJS={true}
+                  allowHBS={false}
+                  updateOnChange={false}
+                  context={$memoContext}
+                >
+                  <div class="field-wrap code-editor">
+                    <CodeEditorField
+                      value={inputData[key]}
+                      {bindings}
+                      context={$memoContext}
+                      allowHBS={false}
+                      allowJS
+                      placeholder={codeMode === EditorModes.Handlebars
+                        ? "Add bindings by typing {{"
+                        : null}
+                      on:blur={e =>
+                        onChange({ [key]: encodeJSBinding(e.detail) })}
+                    />
+                  </div>
+                </DrawerBindableSlot>
+              </div>
+            {:else if value.customType === "code" && stepId === ActionStepID.EXECUTE_SCRIPT}
+              <!-- DEPRECATED -->
               <CodeEditorModal
                 on:hide={() => {
                   // Push any pending changes when the window closes
@@ -977,6 +1022,7 @@
                       ? queryLimit
                       : ""}
                     drawerLeft="260px"
+                    context={$memoContext}
                   />
                 </div>
               {/if}
@@ -1043,5 +1089,24 @@
   .js-binding-picker {
     flex: 3;
     margin-top: calc((var(--spacing-xl) * -1) + 1px);
+  }
+
+  .field-wrap :global(.cm-editor),
+  .field-wrap :global(.cm-scroller) {
+    border-radius: 4px;
+  }
+  .field-wrap {
+    box-sizing: border-box;
+    border: 1px solid var(--spectrum-global-color-gray-400);
+    border-radius: 4px;
+  }
+  .field-wrap.code-editor {
+    height: 180px;
+  }
+  .scriptv2-wrapper :global(.icon.slot-icon) {
+    top: 1px;
+    border-bottom-left-radius: var(--spectrum-alias-border-radius-regular);
+    border-right: 0px;
+    border-bottom: 1px solid var(--spectrum-alias-border-color);
   }
 </style>

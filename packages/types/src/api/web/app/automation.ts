@@ -1,7 +1,9 @@
+import { AutomationJob, DidNotTriggerResponse } from "../../../sdk/automations"
 import {
   Automation,
   AutomationActionStepId,
   AutomationLogPage,
+  AutomationResults,
   AutomationStatus,
   AutomationStepDefinition,
   AutomationTriggerDefinition,
@@ -74,4 +76,8 @@ export interface TestAutomationRequest {
   fields: Record<string, any>
   row?: Row
 }
-export interface TestAutomationResponse {}
+
+export type TestAutomationResponse =
+  | AutomationResults
+  | DidNotTriggerResponse
+  | AutomationJob

@@ -5,6 +5,7 @@ import { ReadStream } from "fs"
 import { Row } from "../row"
 import { Table } from "../table"
 import { AutomationStep, AutomationTrigger } from "./schema"
+import { StepOutputs, TriggerOutputs } from "./StepInputsOutputs"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -194,7 +195,7 @@ export enum AutomationStoppedReason {
 export interface AutomationResults {
   automationId?: string
   status?: AutomationStatus
-  trigger?: AutomationTrigger
+  trigger?: AutomationTrigger & { outputs: TriggerOutputs }
   steps: {
     stepId: AutomationTriggerStepId | AutomationActionStepId
     inputs: {

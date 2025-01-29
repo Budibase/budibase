@@ -29,7 +29,9 @@
   let modal
   let webhookModal
 
-  onMount(() => {
+  onMount(async () => {
+    await automationStore.actions.initAppSelf()
+
     $automationStore.showTestPanel = false
   })
 
