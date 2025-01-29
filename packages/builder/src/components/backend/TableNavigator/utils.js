@@ -58,7 +58,7 @@ export const parseFile = e => {
             resolveRows(rows)
           })
           .catch(() => {
-            reject("cannot parse csv.")
+            reject("cannot parse csv")
           })
       }
     })
