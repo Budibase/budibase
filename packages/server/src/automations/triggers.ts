@@ -149,14 +149,26 @@ export function isAutomationResults(
   )
 }
 
+interface AutomationTriggerParams {
+  fields: Record<string, any>
+  timeout?: number
+  appId?: string
+  user?: UserBindings
+}
+
 export async function externalTrigger(
   automation: Automation,
-  params: {
-    fields: Record<string, any>
-    timeout?: number
-    appId?: string
-    user?: UserBindings
-  },
+  params: AutomationTriggerParams,
+  options: { getResponses: true }
+): Promise<AutomationResults | DidNotTriggerResponse>
+export async function externalTrigger(
+  automation: Automation,
+  params: AutomationTriggerParams,
+  options?: { getResponses: false }
+): Promise<AutomationJob | DidNotTriggerResponse>
+export async function externalTrigger(
+  automation: Automation,
+  params: AutomationTriggerParams,
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<AutomationResults | DidNotTriggerResponse | AutomationJob> {
   if (automation.disabled) {

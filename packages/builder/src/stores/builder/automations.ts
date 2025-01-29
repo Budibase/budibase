@@ -1519,8 +1519,6 @@ class AutomationStore extends BudiStore<AutomationState> {
     this.history = createHistoryStore({
       getDoc: this.actions.getDefinition.bind(this),
       selectDoc: this.actions.select.bind(this),
-      beforeAction: () => {},
-      afterAction: () => {},
     })
 
     // Then wrap save and delete with history
