@@ -176,11 +176,8 @@ async function createInstance(appId: string, template: AppTemplate) {
   return { _id: appId }
 }
 
-export const addSampleData = async (
-  ctx: UserCtx<void, AddAppSampleDataResponse>
-) => {
+async function addSampleDataDocs() {
   const db = context.getAppDB()
-
   try {
     // Check if default datasource exists before creating it
     await sdk.datasources.get(DEFAULT_BB_DATASOURCE_ID)
@@ -190,7 +187,12 @@ export const addSampleData = async (
     // add in the default db data docs - tables, datasource, rows and links
     await db.bulkDocs([...defaultDbDocs])
   }
+}
 
+export const addSampleData = async (
+  ctx: UserCtx<void, AddAppSampleDataResponse>
+) => {
+  await addSampleDataDocs()
   ctx.body = { message: "Sample tables added." }
 }
 
@@ -378,6 +380,11 @@ async function performAppCreate(
     /* istanbul ignore next */
     if (!env.isTest()) {
       await createApp(appId)
+    }
+
+    // Add sample datasource for all apps that aren't imports
+    if (!isImport) {
+      await addSampleDataDocs()
     }
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
