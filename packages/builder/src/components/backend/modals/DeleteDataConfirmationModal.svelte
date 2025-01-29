@@ -5,6 +5,7 @@
   import type { Table, View, Datasource, Query } from "@budibase/types"
 
   export let source: Table | View | Datasource | Query | undefined
+  export let type: "table" | "view" | "datasource" | "query"
   export let deleteSourceFn: () => Promise<void>
 
   let confirmDeleteDialog: any
@@ -54,7 +55,7 @@
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Table"
+  okText={`Delete ${type}`}
   onOk={deleteSourceFn}
   onCancel={hideDeleteDialog}
   title="Confirm Deletion"
@@ -62,8 +63,8 @@
 >
   <div class="content">
     <p class="firstWarning">
-      Are you sure you wish to delete the table
-      <span class="tableNameLine">
+      Are you sure you wish to delete the {type}
+      <span class="sourceNameLine">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <b on:click={autofillSourceName} class="sourceName">{source?.name}</b>
@@ -71,13 +72,13 @@
       </span>
     </p>
 
-    <p class="secondWarning">All table data will be deleted{viewsMessage}.</p>
+    <p class="secondWarning">All {type} data will be deleted{viewsMessage}.</p>
     <p class="thirdWarning">This action <b>cannot be undone</b>.</p>
 
     {#if affectedScreens.length > 0}
       <div class="affectedScreens">
         <InlineAlert
-          header="The following screens were originally generated from this table and may no longer function as expected"
+          header={`The following screens were originally generated from this ${type} and may no longer function as expected`}
         >
           <ul class="affectedScreensList">
             {#each affectedScreens as item}
@@ -109,7 +110,7 @@
     max-width: 100%;
   }
 
-  .tableNameLine {
+  .sourceNameLine {
     display: inline-flex;
     max-width: 100%;
     vertical-align: bottom;
