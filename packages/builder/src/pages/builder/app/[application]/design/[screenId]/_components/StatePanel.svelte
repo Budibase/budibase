@@ -246,15 +246,6 @@
 </script>
 
 <div class="state-panel">
-  <div class="link">
-    <Link
-      href="https://docs.budibase.com/docs/app-state"
-      target="_blank"
-      secondary
-    >
-      Learn how to use State within Budibase.
-    </Link>
-  </div>
   <div class="section">
     <Select
       label="State variables"
