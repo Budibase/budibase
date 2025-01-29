@@ -75,6 +75,7 @@ export interface TestAutomationRequest {
   revision?: string
   fields: Record<string, any>
   row?: Row
+  oldRow?: Row
 }
 export type TestAutomationResponse = AutomationResults | DidNotTriggerResponse
 
