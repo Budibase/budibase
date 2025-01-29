@@ -246,30 +246,26 @@
 </script>
 
 <div class="state-panel">
-  <div class="section">
-    <Select
-      label="State variables"
-      bind:value={selectedKey}
-      placeholder={keyOptions.length > 0 ? false : "No state variables found"}
-      options={keyOptions}
-      on:change={handleStateKeySelect}
-    />
-  </div>
+  <Select
+    label="State variables"
+    bind:value={selectedKey}
+    placeholder={keyOptions.length > 0 ? false : "No state variables found"}
+    options={keyOptions}
+    on:change={handleStateKeySelect}
+  />
   {#if selectedKey && keyOptions.length > 0}
-    <div class="section">
-      <DrawerBindableInput
-        value={editorValue}
-        title={`Set value for "${selectedKey}"`}
-        placeholder="Enter a value"
-        label="Set temporary value for design preview"
-        on:change={e => handleStateInspectorChange(e)}
-        {bindings}
-      />
-    </div>
+    <DrawerBindableInput
+      value={editorValue}
+      title={`Set value for "${selectedKey}"`}
+      placeholder="Enter a value"
+      label="Set temporary value for design preview"
+      on:change={e => handleStateInspectorChange(e)}
+      {bindings}
+    />
   {/if}
   {#if componentsUsingState.length > 0}
     <div class="section">
-      <span class="text">Updates:</span>
+      <span class="text">Updates</span>
       <div class="updates-section">
         {#each componentsUsingState as component}
           <button
@@ -284,7 +280,7 @@
   {/if}
   {#if componentsUpdatingState.length > 0}
     <div class="section">
-      <span class="text">Controlled by:</span>
+      <span class="text">Controlled by</span>
       <div class="updates-section">
         {#each componentsUpdatingState as component}
           <button
@@ -309,15 +305,16 @@
   .section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-s);
+    margin-top: var(--spacing-s);
   }
   .text {
-    color: var(--spectrum-global-color-gray-600);
-    font-size: var(--spectrum-global-dimension-font-size-50);
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 12px;
   }
 
   .updates-colour {
-    color: var(--spectrum-global-color-blue-700);
+    color: var(--bb-indigo-light);
   }
   .controlled-by-colour {
     color: var(--spectrum-global-color-orange-700);
@@ -328,9 +325,9 @@
     background: none;
     text-decoration: underline;
     cursor: pointer;
-    font-size: var(--spectrum-global-dimension-font-size-50);
     padding: 0;
     white-space: nowrap;
+    font-size: 12px;
   }
   .component-link:hover {
     text-decoration: underline;
@@ -340,6 +337,6 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-s);
   }
 </style>
