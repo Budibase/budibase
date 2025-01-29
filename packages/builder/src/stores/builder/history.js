@@ -16,8 +16,8 @@ export const initialState = {
 export const createHistoryStore = ({
   getDoc,
   selectDoc,
-  beforeAction,
-  afterAction,
+  beforeAction = () => {},
+  afterAction = () => {},
 }) => {
   // Use a derived store to check if we are able to undo or redo any operations
   const store = writable(initialState)
