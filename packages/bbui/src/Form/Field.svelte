@@ -1,13 +1,13 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/fieldlabel/dist/index-vars.css"
   import FieldLabel from "./FieldLabel.svelte"
   import Icon from "../Icon/Icon.svelte"
 
-  export let id = null
-  export let label = null
+  export let id: string | null = null
+  export let label: string | null = null
   export let labelPosition = "above"
-  export let error = null
-  export let helpText = null
+  export let error: string | null = null
+  export let helpText: string | null = null
   export let tooltip = ""
 </script>
 

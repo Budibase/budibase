@@ -10,7 +10,7 @@
   export let secondary = false
   export let overBackground = false
   export let target
-  export let download
+  export let download = null
   export let disabled = false
   export let tooltip = null
 
