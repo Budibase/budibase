@@ -161,6 +161,8 @@ export class IsolatedVM implements VM {
 
     const bsonSource = loadBundle(BundleType.BSON)
 
+    // "Polyfilling" text decoder and other utils. `bson.deserialize` requires decoding. We are creating a bridge function so we don't need to inject the full library
+    const bsonPolyfills = loadBundle(BundleType.BSON_POLYFILLS)
     this.addToContext({
       textDecoderCb: new ivm.Callback(
         (args: {
@@ -182,9 +184,6 @@ export class IsolatedVM implements VM {
         return result
       }),
     })
-
-    // "Polyfilling" text decoder and other utils. `bson.deserialize` requires decoding. We are creating a bridge function so we don't need to inject the full library
-    const bsonPolyfills = loadBundle(BundleType.BSON_POLYFILLS)
 
     const script = this.isolate.compileScriptSync(
       `${bsonPolyfills};${bsonSource}`
