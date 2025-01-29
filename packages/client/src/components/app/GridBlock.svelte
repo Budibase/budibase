@@ -119,7 +119,6 @@
       return null
     }
     return row => {
-      console.log("processStringSync")
       return processStringSync(column.format, { [id]: row })
     }
   }
