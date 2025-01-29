@@ -376,7 +376,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
             getSchemaForDatasource(screen, dataSource, {})
 
           // Finds fields by types from the schema of the configured datasource
-          const findFieldTypes = (fieldTypes: any) => {
+          const findFieldTypes = (fieldTypes: FieldType | FieldType[]) => {
             if (!Array.isArray(fieldTypes)) {
               fieldTypes = [fieldTypes]
             }
@@ -531,7 +531,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
   async create(
     componentName: string,
     presetProps: any,
-    parent: any,
+    parent: Component,
     index: number
   ) {
     const state = get(this.store)
