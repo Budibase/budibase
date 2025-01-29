@@ -180,8 +180,8 @@
   }
   .body {
     flex: 1 1 auto;
-    padding: 0 var(--spacing-l);
     font-family: var(--font-mono);
+    margin: 0 var(--spacing-m);
     font-size: 12px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -197,7 +197,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: end;
-    padding: var(--spacing-m);
+    padding: var(--spacing-m) 0;
     word-wrap: anywhere;
   }
   .line:not(:first-of-type) {
