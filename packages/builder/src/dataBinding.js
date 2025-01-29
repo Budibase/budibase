@@ -1159,7 +1159,7 @@ export const buildFormSchema = (component, asset) => {
  * Returns an array of the keys of any state variables which are set anywhere
  * in the app.
  */
-export const getAllStateVariables = (screen = null) => {
+export const getAllStateVariables = screen => {
   let assets = []
   if (screen) {
     // only include state variables from a specific screen
