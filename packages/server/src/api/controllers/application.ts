@@ -263,7 +263,7 @@ async function performAppCreate(
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
 
-  let useTemplate
+  let useTemplate = false
   if (typeof body.useTemplate === "string") {
     useTemplate = body.useTemplate === "true"
   } else if (typeof body.useTemplate === "boolean") {
