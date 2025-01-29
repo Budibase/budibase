@@ -383,7 +383,7 @@ async function performAppCreate(
     }
 
     // Add sample datasource for all apps that aren't imports
-    if (!isImport) {
+    if (!isImport && !useTemplate) {
       await addSampleDataDocs()
     }
 
