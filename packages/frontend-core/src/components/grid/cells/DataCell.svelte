@@ -76,7 +76,7 @@
     onKeyDown: (...params) => api?.onKeyDown?.(...params),
     isReadonly: () => readonly,
     getType: () => column.schema.type,
-    getValue: () => row[column.name],
+    getValue: () => value,
     setValue: (value, options = { apply: true }) => {
       validation.actions.setError(cellId, null)
       updateValue({
