@@ -1,10 +1,25 @@
-import * as jsonpatch from "fast-json-patch/index.mjs"
-import { writable, derived, get } from "svelte/store"
+import { Document } from "@budibase/types"
+import * as jsonpatch from "fast-json-patch"
+import { writable, derived, get, Readable } from "svelte/store"
 
-export const Operations = {
-  Add: "Add",
-  Delete: "Delete",
-  Change: "Change",
+export const enum Operations {
+  Add = "Add",
+  Delete = "Delete",
+  Change = "Change",
+}
+
+interface Operator<T extends Document> {
+  id?: number
+  type: Operations
+  doc: T
+  forwardPatch?: jsonpatch.Operation[]
+  backwardsPatch?: jsonpatch.Operation[]
+}
+
+interface HistoryState<T extends Document> {
+  history: Operator<T>[]
+  position: number
+  loading?: boolean
 }
 
 export const initialState = {
@@ -13,14 +28,38 @@ export const initialState = {
   loading: false,
 }
 
-export const createHistoryStore = ({
+export interface HistoryStore<T extends Document>
+  extends Readable<
+    HistoryState<T> & {
+      canUndo: boolean
+      canRedo: boolean
+    }
+  > {
+  wrapSaveDoc: (
+    fn: (doc: T) => Promise<T>
+  ) => (doc: T, operationId?: number) => Promise<T>
+  wrapDeleteDoc: (
+    fn: (doc: T) => Promise<void>
+  ) => (doc: T, operationId?: number) => Promise<void>
+
+  reset: () => void
+  undo: () => Promise<void>
+  redo: () => Promise<void>
+}
+
+export const createHistoryStore = <T extends Document>({
   getDoc,
   selectDoc,
   beforeAction,
   afterAction,
-}) => {
+}: {
+  getDoc: (id: string) => T | undefined
+  selectDoc: (id: string) => void
+  beforeAction?: (operation?: Operator<T>) => void
+  afterAction?: (operation?: Operator<T>) => void
+}): HistoryStore<T> => {
   // Use a derived store to check if we are able to undo or redo any operations
-  const store = writable(initialState)
+  const store = writable<HistoryState<T>>(initialState)
   const derivedStore = derived(store, $store => {
     return {
       ...$store,
@@ -31,8 +70,8 @@ export const createHistoryStore = ({
 
   // Wrapped versions of essential functions which we call ourselves when using
   // undo and redo
-  let saveFn
-  let deleteFn
+  let saveFn: (doc: T, operationId?: number) => Promise<T>
+  let deleteFn: (doc: T, operationId?: number) => Promise<void>
 
   /**
    * Internal util to set the loading flag
@@ -66,7 +105,7 @@ export const createHistoryStore = ({
    * For internal use only.
    * @param operation the operation to save
    */
-  const saveOperation = operation => {
+  const saveOperation = (operation: Operator<T>) => {
     store.update(state => {
       // Update history
       let history = state.history
@@ -93,15 +132,15 @@ export const createHistoryStore = ({
    * @param fn the save function
    * @returns {function} a wrapped version of the save function
    */
-  const wrapSaveDoc = fn => {
-    saveFn = async (doc, operationId) => {
+  const wrapSaveDoc = (fn: (doc: T) => Promise<T>) => {
+    saveFn = async (doc: T, operationId?: number) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
         return
       }
       startLoading()
       try {
-        const oldDoc = getDoc(doc._id)
+        const oldDoc = getDoc(doc._id!)
         const newDoc = jsonpatch.deepClone(await fn(doc))
 
         // Store the change
@@ -141,8 +180,8 @@ export const createHistoryStore = ({
    * @param fn the delete function
    * @returns {function} a wrapped version of the delete function
    */
-  const wrapDeleteDoc = fn => {
-    deleteFn = async (doc, operationId) => {
+  const wrapDeleteDoc = (fn: (doc: T) => Promise<void>) => {
+    deleteFn = async (doc: T, operationId?: number) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
         return
@@ -201,7 +240,7 @@ export const createHistoryStore = ({
       // Undo ADD
       if (operation.type === Operations.Add) {
         // Try to get the latest doc version to delete
-        const latestDoc = getDoc(operation.doc._id)
+        const latestDoc = getDoc(operation.doc._id!)
         const doc = latestDoc || operation.doc
         await deleteFn(doc, operation.id)
       }
@@ -219,7 +258,7 @@ export const createHistoryStore = ({
       // Undo CHANGE
       else {
         // Get the current doc and apply the backwards patch on top of it
-        let doc = jsonpatch.deepClone(getDoc(operation.doc._id))
+        let doc = jsonpatch.deepClone(getDoc(operation.doc._id!))
         if (doc) {
           jsonpatch.applyPatch(
             doc,
@@ -283,7 +322,7 @@ export const createHistoryStore = ({
       // Redo DELETE
       else if (operation.type === Operations.Delete) {
         // Try to get the latest doc version to delete
-        const latestDoc = getDoc(operation.doc._id)
+        const latestDoc = getDoc(operation.doc._id!)
         const doc = latestDoc || operation.doc
         await deleteFn(doc, operation.id)
       }
@@ -291,7 +330,7 @@ export const createHistoryStore = ({
       // Redo CHANGE
       else {
         // Get the current doc and apply the forwards patch on top of it
-        let doc = jsonpatch.deepClone(getDoc(operation.doc._id))
+        let doc = jsonpatch.deepClone(getDoc(operation.doc._id!))
         if (doc) {
           jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.forwardPatch))
           await saveFn(doc, operation.id)
