@@ -1,37 +1,39 @@
 import {
-  QueryJson,
-  Datasource,
   DatasourcePlusQueryResponse,
-  RowOperations,
+  EnrichedQueryJson,
+  QueryJson,
 } from "@budibase/types"
 import { getIntegration } from "../index"
 import sdk from "../../sdk"
+import { enrichQueryJson } from "../../sdk/app/rows/utils"
+
+function isEnriched(
+  json: QueryJson | EnrichedQueryJson
+): json is EnrichedQueryJson {
+  return "datasource" in json
+}
 
 export async function makeExternalQuery(
-  datasource: Datasource,
-  json: QueryJson
+  json: QueryJson | EnrichedQueryJson
 ): Promise<DatasourcePlusQueryResponse> {
-  const entityId = json.endpoint.entityId,
-    tableName = json.meta.table.name,
-    tableId = json.meta.table._id
-  // case found during testing - make sure this doesn't happen again
-  if (
-    RowOperations.includes(json.endpoint.operation) &&
-    entityId !== tableId &&
-    entityId !== tableName
-  ) {
-    throw new Error("Entity ID and table metadata do not align")
+  if (!isEnriched(json)) {
+    json = await enrichQueryJson(json)
+    if (json.datasource) {
+      json.datasource = await sdk.datasources.enrich(json.datasource)
+    }
   }
-  if (!datasource) {
+
+  if (!json.datasource) {
     throw new Error("No datasource provided for external query")
   }
-  datasource = await sdk.datasources.enrich(datasource)
-  const Integration = await getIntegration(datasource.source)
+
+  const Integration = await getIntegration(json.datasource.source)
+
   // query is the opinionated function
-  if (Integration.prototype.query) {
-    const integration = new Integration(datasource.config)
-    return integration.query(json)
-  } else {
+  if (!Integration.prototype.query) {
     throw "Datasource does not support query."
   }
+
+  const integration = new Integration(json.datasource.config)
+  return integration.query(json)
 }

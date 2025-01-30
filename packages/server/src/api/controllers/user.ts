@@ -7,19 +7,24 @@ import {
   FetchUserMetadataResponse,
   FindUserMetadataResponse,
   Flags,
-  SetFlagRequest,
+  SetUserFlagRequest,
+  UpdateSelfMetadataRequest,
+  UpdateSelfMetadataResponse,
+  UpdateUserMetadataResponse,
+  UpdateUserMetadataRequest,
   UserCtx,
-  UserMetadata,
+  DeleteUserMetadataResponse,
+  SetUserFlagResponse,
+  GetUserFlagsResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
-import { DocumentInsertResponse } from "@budibase/nano"
 
 export async function fetchMetadata(ctx: Ctx<void, FetchUserMetadataResponse>) {
   ctx.body = await sdk.users.fetchMetadata()
 }
 
 export async function updateSelfMetadata(
-  ctx: UserCtx<UserMetadata, DocumentInsertResponse>
+  ctx: UserCtx<UpdateSelfMetadataRequest, UpdateSelfMetadataResponse>
 ) {
   // overwrite the ID with current users
   ctx.request.body._id = ctx.user?._id
@@ -31,7 +36,7 @@ export async function updateSelfMetadata(
 }
 
 export async function updateMetadata(
-  ctx: UserCtx<UserMetadata, DocumentInsertResponse>
+  ctx: UserCtx<UpdateUserMetadataRequest, UpdateUserMetadataResponse>
 ) {
   const db = context.getAppDB()
   const user = ctx.request.body
@@ -44,7 +49,9 @@ export async function updateMetadata(
   ctx.body = await db.put(metadata)
 }
 
-export async function destroyMetadata(ctx: UserCtx<void, { message: string }>) {
+export async function destroyMetadata(
+  ctx: UserCtx<void, DeleteUserMetadataResponse>
+) {
   const db = context.getAppDB()
   try {
     const dbUser = await sdk.users.get(ctx.params.id)
@@ -64,7 +71,7 @@ export async function findMetadata(
 }
 
 export async function setFlag(
-  ctx: UserCtx<SetFlagRequest, { message: string }>
+  ctx: UserCtx<SetUserFlagRequest, SetUserFlagResponse>
 ) {
   const userId = ctx.user?._id
   const { flag, value } = ctx.request.body
@@ -84,7 +91,7 @@ export async function setFlag(
   ctx.body = { message: "Flag set successfully" }
 }
 
-export async function getFlags(ctx: UserCtx<void, Flags>) {
+export async function getFlags(ctx: UserCtx<void, GetUserFlagsResponse>) {
   const userId = ctx.user?._id
   const docId = generateUserFlagID(userId!)
   const db = context.getAppDB()

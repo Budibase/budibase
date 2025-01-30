@@ -2,7 +2,7 @@ import {
   PatchRowRequest,
   SaveRowRequest,
   Row,
-  ValidateResponse,
+  ValidateRowResponse,
   ExportRowsRequest,
   BulkImportRequest,
   BulkImportResponse,
@@ -51,8 +51,8 @@ export class RowAPI extends TestAPI {
     sourceId: string,
     row: SaveRowRequest,
     expectations?: Expectations
-  ): Promise<ValidateResponse> => {
-    return await this._post<ValidateResponse>(
+  ): Promise<ValidateRowResponse> => {
+    return await this._post<ValidateRowResponse>(
       `/api/${sourceId}/rows/validate`,
       {
         body: row,

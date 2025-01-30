@@ -16,7 +16,7 @@ jest.mock("../../../utilities/redis", () => ({
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
-import { events, utils, context, features } from "@budibase/backend-core"
+import { events, utils, context } from "@budibase/backend-core"
 import env from "../../../environment"
 import { type App, BuiltinPermissionID } from "@budibase/types"
 import tk from "timekeeper"
@@ -208,7 +208,7 @@ describe("/applications", () => {
 
     it("should reject with a known url", async () => {
       await config.api.application.create(
-        { name: "made up", url: app?.url! },
+        { name: "made up", url: app!.url! },
         { body: { message: "App URL is already in use." }, status: 400 }
       )
     })
@@ -354,21 +354,6 @@ describe("/applications", () => {
       await config.api.application.delete(prodAppId)
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
-    })
-
-    it("should be able to delete an app after SQS has been set but app hasn't been migrated", async () => {
-      const prodAppId = app.appId.replace("_dev", "")
-      nock("http://localhost:10000")
-        .delete(`/api/global/roles/${prodAppId}`)
-        .reply(200, {})
-
-      await features.testutils.withFeatureFlags(
-        "*",
-        { SQS: true },
-        async () => {
-          await config.api.application.delete(app.appId)
-        }
-      )
     })
   })
 

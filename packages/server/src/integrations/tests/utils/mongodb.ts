@@ -18,7 +18,7 @@ export async function getDatasource(): Promise<Datasource> {
         .withWaitStrategy(
           Wait.forSuccessfulCommand(
             `mongosh --eval "db.version()"`
-          ).withStartupTimeout(10000)
+          ).withStartupTimeout(20000)
         )
     )
   }

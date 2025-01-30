@@ -30,7 +30,7 @@ const FullScreenControl = L.Control.extend({
     fullScreenTitle: "Enter Fullscreen",
   },
   onAdd: function () {
-    var fullScreenClassName = "leaflet-control-fullscreen",
+    let fullScreenClassName = "leaflet-control-fullscreen",
       container = L.DomUtil.create("div", fullScreenClassName + " leaflet-bar"),
       options = this.options
 
@@ -45,7 +45,7 @@ const FullScreenControl = L.Control.extend({
     return container
   },
   _fullScreen: function () {
-    var map = this._map
+    let map = this._map
     if (screenfull.isEnabled) {
       screenfull.toggle(map.getContainer())
     }
@@ -80,7 +80,7 @@ const LocationControl = L.Control.extend({
     locationTitle: "Show Your Location",
   },
   onAdd: function () {
-    var locationClassName = "leaflet-control-location",
+    let locationClassName = "leaflet-control-location",
       container = L.DomUtil.create("div", locationClassName + " leaflet-bar"),
       options = this.options
 
@@ -136,7 +136,7 @@ const LocationControl = L.Control.extend({
       })
   },
   _getPosition: function () {
-    var options = {
+    let options = {
       enableHighAccuracy: false,
       timeout: 5000,
       maximumAge: 30000,

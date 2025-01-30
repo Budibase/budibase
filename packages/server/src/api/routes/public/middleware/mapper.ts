@@ -1,9 +1,10 @@
 import { Ctx } from "@budibase/types"
 import mapping from "../../../controllers/public/mapping"
 
-enum Resources {
+enum Resource {
   APPLICATION = "applications",
   TABLES = "tables",
+  VIEWS = "views",
   ROWS = "rows",
   USERS = "users",
   QUERIES = "queries",
@@ -15,7 +16,7 @@ function isAttachment(ctx: Ctx) {
 }
 
 function isArrayResponse(ctx: Ctx) {
-  return ctx.url.endsWith(Resources.SEARCH) || Array.isArray(ctx.body)
+  return ctx.url.endsWith(Resource.SEARCH) || Array.isArray(ctx.body)
 }
 
 function noResponse(ctx: Ctx) {
@@ -35,6 +36,14 @@ function processTables(ctx: Ctx) {
     return mapping.mapTables(ctx)
   } else {
     return mapping.mapTable(ctx)
+  }
+}
+
+function processViews(ctx: Ctx) {
+  if (isArrayResponse(ctx)) {
+    return mapping.mapViews(ctx)
+  } else {
+    return mapping.mapView(ctx)
   }
 }
 
@@ -71,20 +80,27 @@ export default async (ctx: Ctx, next: any) => {
   let body = {}
 
   switch (urlParts[0]) {
-    case Resources.APPLICATION:
+    case Resource.APPLICATION:
       body = processApplications(ctx)
       break
-    case Resources.TABLES:
-      if (urlParts[2] === Resources.ROWS) {
+    case Resource.TABLES:
+      if (urlParts[2] === Resource.ROWS) {
         body = processRows(ctx)
       } else {
         body = processTables(ctx)
       }
       break
-    case Resources.USERS:
+    case Resource.VIEWS:
+      if (urlParts[2] === Resource.ROWS) {
+        body = processRows(ctx)
+      } else {
+        body = processViews(ctx)
+      }
+      break
+    case Resource.USERS:
       body = processUsers(ctx)
       break
-    case Resources.QUERIES:
+    case Resource.QUERIES:
       body = processQueries(ctx)
       break
   }

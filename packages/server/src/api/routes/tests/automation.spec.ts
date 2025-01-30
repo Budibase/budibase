@@ -1,7 +1,6 @@
 import {
   checkBuilderEndpoint,
   getAllTableRows,
-  clearAllAutomations,
   testAutomation,
 } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
@@ -12,19 +11,23 @@ import {
 import { configs, context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import {
-  Automation,
   ConfigType,
   FieldType,
+  isDidNotTriggerResponse,
   SettingsConfig,
   Table,
 } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
-import { FilterConditions } from "../../../automations/steps/filter"
 import { removeDeprecated } from "../../../automations/utils"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
+import { automations } from "@budibase/shared-core"
+import { basicTable } from "../../../tests/utilities/structures"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+
+const FilterConditions = automations.steps.filter.FilterConditions
 
 const MAX_RETRIES = 4
-let {
+const {
   basicAutomation,
   newAutomation,
   automationTrigger,
@@ -35,10 +38,11 @@ let {
 } = setup.structures
 
 describe("/automations", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   beforeAll(async () => {
     await config.init()
@@ -50,40 +54,26 @@ describe("/automations", () => {
 
   describe("get definitions", () => {
     it("returns a list of definitions for actions", async () => {
-      const res = await request
-        .get(`/api/automations/action/list`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-
-      expect(Object.keys(res.body).length).not.toEqual(0)
+      const res = await config.api.automation.getActions()
+      expect(Object.keys(res).length).not.toEqual(0)
     })
 
     it("returns a list of definitions for triggerInfo", async () => {
-      const res = await request
-        .get(`/api/automations/trigger/list`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-
-      expect(Object.keys(res.body).length).not.toEqual(0)
+      const res = await config.api.automation.getTriggers()
+      expect(Object.keys(res).length).not.toEqual(0)
     })
 
     it("returns all of the definitions in one", async () => {
-      const res = await request
-        .get(`/api/automations/definitions/list`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const { action, trigger } = await config.api.automation.getDefinitions()
 
       let definitionsLength = Object.keys(
         removeDeprecated(BUILTIN_ACTION_DEFINITIONS)
       ).length
 
-      expect(Object.keys(res.body.action).length).toBeGreaterThanOrEqual(
+      expect(Object.keys(action).length).toBeGreaterThanOrEqual(
         definitionsLength
       )
-      expect(Object.keys(res.body.trigger).length).toEqual(
+      expect(Object.keys(trigger).length).toEqual(
         Object.keys(removeDeprecated(TRIGGER_DEFINITIONS)).length
       )
     })
@@ -91,38 +81,27 @@ describe("/automations", () => {
 
   describe("create", () => {
     it("creates an automation with no steps", async () => {
-      const automation = newAutomation()
-      automation.definition.steps = []
+      const { message, automation } = await config.api.automation.post(
+        newAutomation({ steps: [] })
+      )
 
-      const res = await request
-        .post(`/api/automations`)
-        .set(config.defaultHeaders())
-        .send(automation)
-        .expect("Content-Type", /json/)
-        .expect(200)
-
-      expect(res.body.message).toEqual("Automation created successfully")
-      expect(res.body.automation.name).toEqual("My Automation")
-      expect(res.body.automation._id).not.toEqual(null)
+      expect(message).toEqual("Automation created successfully")
+      expect(automation.name).toEqual("My Automation")
+      expect(automation._id).not.toEqual(null)
       expect(events.automation.created).toHaveBeenCalledTimes(1)
       expect(events.automation.stepCreated).not.toHaveBeenCalled()
     })
 
     it("creates an automation with steps", async () => {
-      const automation = newAutomation()
-      automation.definition.steps.push(automationStep())
       jest.clearAllMocks()
 
-      const res = await request
-        .post(`/api/automations`)
-        .set(config.defaultHeaders())
-        .send(automation)
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const { message, automation } = await config.api.automation.post(
+        newAutomation({ steps: [automationStep(), automationStep()] })
+      )
 
-      expect(res.body.message).toEqual("Automation created successfully")
-      expect(res.body.automation.name).toEqual("My Automation")
-      expect(res.body.automation._id).not.toEqual(null)
+      expect(message).toEqual("Automation created successfully")
+      expect(automation.name).toEqual("My Automation")
+      expect(automation._id).not.toEqual(null)
       expect(events.automation.created).toHaveBeenCalledTimes(1)
       expect(events.automation.stepCreated).toHaveBeenCalledTimes(2)
     })
@@ -239,13 +218,9 @@ describe("/automations", () => {
   describe("find", () => {
     it("should be able to find the automation", async () => {
       const automation = await config.createAutomation()
-      const res = await request
-        .get(`/api/automations/${automation._id}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body._id).toEqual(automation._id)
-      expect(res.body._rev).toEqual(automation._rev)
+      const { _id, _rev } = await config.api.automation.get(automation._id!)
+      expect(_id).toEqual(automation._id)
+      expect(_rev).toEqual(automation._rev)
     })
   })
 
@@ -346,106 +321,104 @@ describe("/automations", () => {
 
   describe("trigger", () => {
     it("does not trigger an automation when not synchronous and in dev", async () => {
-      let automation = newAutomation()
-      automation = await config.createAutomation(automation)
-      const res = await request
-        .post(`/api/automations/${automation._id}/trigger`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(400)
-
-      expect(res.body.message).toEqual(
-        "Only apps in production support this endpoint"
+      const { automation } = await config.api.automation.post(newAutomation())
+      await config.api.automation.trigger(
+        automation._id!,
+        {
+          fields: {},
+          timeout: 1000,
+        },
+        {
+          status: 400,
+          body: {
+            message: "Only apps in production support this endpoint",
+          },
+        }
       )
     })
 
     it("triggers a synchronous automation", async () => {
       mocks.licenses.useSyncAutomations()
-      let automation = collectAutomation()
-      automation = await config.createAutomation(automation)
-      const res = await request
-        .post(`/api/automations/${automation._id}/trigger`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-
-      expect(res.body.success).toEqual(true)
-      expect(res.body.value).toEqual([1, 2, 3])
+      const { automation } = await config.api.automation.post(
+        collectAutomation()
+      )
+      await config.api.automation.trigger(
+        automation._id!,
+        {
+          fields: {},
+          timeout: 1000,
+        },
+        {
+          status: 200,
+          body: {
+            success: true,
+            value: [1, 2, 3],
+          },
+        }
+      )
     })
 
     it("should throw an error when attempting to trigger a disabled automation", async () => {
       mocks.licenses.useSyncAutomations()
-      let automation = collectAutomation()
-      automation = await config.createAutomation({
-        ...automation,
-        disabled: true,
-      })
+      const { automation } = await config.api.automation.post(
+        collectAutomation({ disabled: true })
+      )
 
-      const res = await request
-        .post(`/api/automations/${automation._id}/trigger`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(400)
-
-      expect(res.body.message).toEqual("Automation is disabled")
+      await config.api.automation.trigger(
+        automation._id!,
+        {
+          fields: {},
+          timeout: 1000,
+        },
+        {
+          status: 400,
+          body: {
+            message: "Automation is disabled",
+          },
+        }
+      )
     })
 
     it("triggers an asynchronous automation", async () => {
-      let automation = newAutomation()
-      automation = await config.createAutomation(automation)
+      const { automation } = await config.api.automation.post(newAutomation())
       await config.publish()
 
-      const res = await request
-        .post(`/api/automations/${automation._id}/trigger`)
-        .set(config.defaultHeaders({}, true))
-        .expect("Content-Type", /json/)
-        .expect(200)
-
-      expect(res.body.message).toEqual(
-        `Automation ${automation._id} has been triggered.`
+      await config.withProdApp(() =>
+        config.api.automation.trigger(
+          automation._id!,
+          {
+            fields: {},
+            timeout: 1000,
+          },
+          {
+            status: 200,
+            body: {
+              message: `Automation ${automation._id} has been triggered.`,
+            },
+          }
+        )
       )
     })
   })
 
   describe("update", () => {
-    const update = async (automation: Automation) => {
-      return request
-        .put(`/api/automations`)
-        .set(config.defaultHeaders())
-        .send(automation)
-        .expect("Content-Type", /json/)
-        .expect(200)
-    }
-
-    const updateWithPost = async (automation: Automation) => {
-      return request
-        .post(`/api/automations`)
-        .set(config.defaultHeaders())
-        .send(automation)
-        .expect("Content-Type", /json/)
-        .expect(200)
-    }
-
     it("updates a automations name", async () => {
-      const automation = await config.createAutomation(newAutomation())
+      const { automation } = await config.api.automation.post(basicAutomation())
       automation.name = "Updated Name"
       jest.clearAllMocks()
 
-      const res = await update(automation)
+      const { automation: updatedAutomation, message } =
+        await config.api.automation.update(automation)
 
-      const automationRes = res.body.automation
-      const message = res.body.message
+      expect(updatedAutomation._id).toEqual(automation._id)
+      expect(updatedAutomation._rev).toBeDefined()
+      expect(updatedAutomation._rev).not.toEqual(automation._rev)
 
-      // doc attributes
-      expect(automationRes._id).toEqual(automation._id)
-      expect(automationRes._rev).toBeDefined()
-      expect(automationRes._rev).not.toEqual(automation._rev)
-      // content updates
-      expect(automationRes.name).toEqual("Updated Name")
+      expect(updatedAutomation.name).toEqual("Updated Name")
       expect(message).toEqual(
         `Automation ${automation._id} updated successfully.`
       )
-      // events
+
       expect(events.automation.created).not.toHaveBeenCalled()
       expect(events.automation.stepCreated).not.toHaveBeenCalled()
       expect(events.automation.stepDeleted).not.toHaveBeenCalled()
@@ -453,26 +426,23 @@ describe("/automations", () => {
     })
 
     it("updates a automations name using POST request", async () => {
-      const automation = await config.createAutomation(newAutomation())
+      const { automation } = await config.api.automation.post(basicAutomation())
       automation.name = "Updated Name"
       jest.clearAllMocks()
 
-      // the POST request will defer to the update
-      // when an id has been supplied.
-      const res = await updateWithPost(automation)
+      // the POST request will defer to the update when an id has been supplied.
+      const { automation: updatedAutomation, message } =
+        await config.api.automation.post(automation)
 
-      const automationRes = res.body.automation
-      const message = res.body.message
-      // doc attributes
-      expect(automationRes._id).toEqual(automation._id)
-      expect(automationRes._rev).toBeDefined()
-      expect(automationRes._rev).not.toEqual(automation._rev)
-      // content updates
-      expect(automationRes.name).toEqual("Updated Name")
+      expect(updatedAutomation._id).toEqual(automation._id)
+      expect(updatedAutomation._rev).toBeDefined()
+      expect(updatedAutomation._rev).not.toEqual(automation._rev)
+
+      expect(updatedAutomation.name).toEqual("Updated Name")
       expect(message).toEqual(
         `Automation ${automation._id} updated successfully.`
       )
-      // events
+
       expect(events.automation.created).not.toHaveBeenCalled()
       expect(events.automation.stepCreated).not.toHaveBeenCalled()
       expect(events.automation.stepDeleted).not.toHaveBeenCalled()
@@ -480,16 +450,14 @@ describe("/automations", () => {
     })
 
     it("updates an automation trigger", async () => {
-      let automation = newAutomation()
-      automation = await config.createAutomation(automation)
+      const { automation } = await config.api.automation.post(newAutomation())
       automation.definition.trigger = automationTrigger(
         TRIGGER_DEFINITIONS.WEBHOOK
       )
       jest.clearAllMocks()
 
-      await update(automation)
+      await config.api.automation.update(automation)
 
-      // events
       expect(events.automation.created).not.toHaveBeenCalled()
       expect(events.automation.stepCreated).not.toHaveBeenCalled()
       expect(events.automation.stepDeleted).not.toHaveBeenCalled()
@@ -497,16 +465,13 @@ describe("/automations", () => {
     })
 
     it("adds automation steps", async () => {
-      let automation = newAutomation()
-      automation = await config.createAutomation(automation)
+      const { automation } = await config.api.automation.post(newAutomation())
       automation.definition.steps.push(automationStep())
       automation.definition.steps.push(automationStep())
       jest.clearAllMocks()
 
-      // check the post request honours updates with same id
-      await update(automation)
+      await config.api.automation.update(automation)
 
-      // events
       expect(events.automation.stepCreated).toHaveBeenCalledTimes(2)
       expect(events.automation.created).not.toHaveBeenCalled()
       expect(events.automation.stepDeleted).not.toHaveBeenCalled()
@@ -514,32 +479,25 @@ describe("/automations", () => {
     })
 
     it("removes automation steps", async () => {
-      let automation = newAutomation()
-      automation.definition.steps.push(automationStep())
-      automation = await config.createAutomation(automation)
+      const { automation } = await config.api.automation.post(newAutomation())
       automation.definition.steps = []
       jest.clearAllMocks()
 
-      // check the post request honours updates with same id
-      await update(automation)
+      await config.api.automation.update(automation)
 
-      // events
-      expect(events.automation.stepDeleted).toHaveBeenCalledTimes(2)
+      expect(events.automation.stepDeleted).toHaveBeenCalledTimes(1)
       expect(events.automation.stepCreated).not.toHaveBeenCalled()
       expect(events.automation.created).not.toHaveBeenCalled()
       expect(events.automation.triggerUpdated).not.toHaveBeenCalled()
     })
 
     it("adds and removes automation steps", async () => {
-      let automation = newAutomation()
-      automation = await config.createAutomation(automation)
+      const { automation } = await config.api.automation.post(newAutomation())
       automation.definition.steps = [automationStep(), automationStep()]
       jest.clearAllMocks()
 
-      // check the post request honours updates with same id
-      await update(automation)
+      await config.api.automation.update(automation)
 
-      // events
       expect(events.automation.stepCreated).toHaveBeenCalledTimes(2)
       expect(events.automation.stepDeleted).toHaveBeenCalledTimes(1)
       expect(events.automation.created).not.toHaveBeenCalled()
@@ -549,16 +507,24 @@ describe("/automations", () => {
 
   describe("fetch", () => {
     it("return all the automations for an instance", async () => {
-      await clearAllAutomations(config)
-      const autoConfig = await config.createAutomation(basicAutomation())
-      const res = await request
-        .get(`/api/automations`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const fetchResponse = await config.api.automation.fetch()
+      for (const auto of fetchResponse.automations) {
+        await config.api.automation.delete(auto)
+      }
 
-      expect(res.body.automations[0]).toEqual(
-        expect.objectContaining(autoConfig)
+      const { automation: automation1 } = await config.api.automation.post(
+        newAutomation()
+      )
+      const { automation: automation2 } = await config.api.automation.post(
+        newAutomation()
+      )
+      const { automation: automation3 } = await config.api.automation.post(
+        newAutomation()
+      )
+
+      const { automations } = await config.api.automation.fetch()
+      expect(automations).toEqual(
+        expect.arrayContaining([automation1, automation2, automation3])
       )
     })
 
@@ -573,29 +539,25 @@ describe("/automations", () => {
 
   describe("destroy", () => {
     it("deletes a automation by its ID", async () => {
-      const automation = await config.createAutomation()
-      const res = await request
-        .delete(`/api/automations/${automation._id}/${automation._rev}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const { automation } = await config.api.automation.post(newAutomation())
+      const { id } = await config.api.automation.delete(automation)
 
-      expect(res.body.id).toEqual(automation._id)
+      expect(id).toEqual(automation._id)
       expect(events.automation.deleted).toHaveBeenCalledTimes(1)
     })
 
     it("cannot delete a row action automation", async () => {
-      const automation = await config.createAutomation(
+      const { automation } = await config.api.automation.post(
         setup.structures.rowActionAutomation()
       )
-      await request
-        .delete(`/api/automations/${automation._id}/${automation._rev}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(422, {
+
+      await config.api.automation.delete(automation, {
+        status: 422,
+        body: {
           message: "Row actions automations cannot be deleted",
           status: 422,
-        })
+        },
+      })
 
       expect(events.automation.deleted).not.toHaveBeenCalled()
     })
@@ -612,10 +574,19 @@ describe("/automations", () => {
 
   describe("checkForCollectStep", () => {
     it("should return true if a collect step exists in an automation", async () => {
-      let automation = collectAutomation()
-      await config.createAutomation(automation)
-      let res = await sdk.automations.utils.checkForCollectStep(automation)
-      expect(res).toEqual(true)
+      const { automation } = await config.api.automation.post(
+        collectAutomation()
+      )
+      expect(sdk.automations.utils.checkForCollectStep(automation)).toEqual(
+        true
+      )
+    })
+
+    it("should return false if a collect step does not exist in an automation", async () => {
+      const { automation } = await config.api.automation.post(newAutomation())
+      expect(sdk.automations.utils.checkForCollectStep(automation)).toEqual(
+        false
+      )
     })
   })
 
@@ -626,28 +597,45 @@ describe("/automations", () => {
     ])(
       "triggers an update row automation and compares new to old rows with old city '%s' and new city '%s'",
       async ({ oldCity, newCity }) => {
-        const expectedResult = oldCity === newCity
+        let table = await config.api.table.save(basicTable())
 
-        let table = await config.createTable()
+        const { automation } = await config.api.automation.post(
+          filterAutomation({
+            definition: {
+              trigger: {
+                inputs: {
+                  tableId: table._id,
+                },
+              },
+              steps: [
+                {
+                  inputs: {
+                    condition: FilterConditions.EQUAL,
+                    field: "{{ trigger.row.City }}",
+                    value: "{{ trigger.oldRow.City }}",
+                  },
+                },
+              ],
+            },
+          })
+        )
 
-        let automation = await filterAutomation(config.getAppId())
-        automation.definition.trigger.inputs.tableId = table._id
-        automation.definition.steps[0].inputs = {
-          condition: FilterConditions.EQUAL,
-          field: "{{ trigger.row.City }}",
-          value: "{{ trigger.oldRow.City }}",
-        }
-        automation = await config.createAutomation(automation)
-        let triggerInputs = {
+        const res = await config.api.automation.test(automation._id!, {
+          fields: {},
           oldRow: {
             City: oldCity,
           },
           row: {
             City: newCity,
           },
+        })
+
+        if (isDidNotTriggerResponse(res)) {
+          throw new Error("Automation did not trigger")
         }
-        const res = await testAutomation(config, automation, triggerInputs)
-        expect(res.body.steps[1].outputs.result).toEqual(expectedResult)
+
+        const expectedResult = oldCity === newCity
+        expect(res.steps[1].outputs.result).toEqual(expectedResult)
       }
     )
   })
@@ -655,16 +643,18 @@ describe("/automations", () => {
     let table: Table
 
     beforeAll(async () => {
-      table = await config.createTable({
-        name: "table",
-        type: "table",
-        schema: {
-          Approved: {
-            name: "Approved",
-            type: FieldType.BOOLEAN,
+      table = await config.api.table.save(
+        basicTable(undefined, {
+          name: "table",
+          type: "table",
+          schema: {
+            Approved: {
+              name: "Approved",
+              type: FieldType.BOOLEAN,
+            },
           },
-        },
-      })
+        })
+      )
     })
 
     const testCases = [
@@ -710,33 +700,29 @@ describe("/automations", () => {
     it.each(testCases)(
       "$description",
       async ({ filters, row, oldRow, expectToRun }) => {
-        let automation = await updateRowAutomationWithFilters(
-          config.getAppId(),
-          table._id!
-        )
-        automation.definition.trigger.inputs = {
+        let req = updateRowAutomationWithFilters(config.getAppId(), table._id!)
+        req.definition.trigger.inputs = {
           tableId: table._id,
           filters,
         }
-        automation = await config.createAutomation(automation)
 
-        const inputs = {
-          row: {
-            tableId: table._id,
-            ...row,
-          },
+        const { automation } = await config.api.automation.post(req)
+        const res = await config.api.automation.test(automation._id!, {
+          fields: {},
           oldRow: {
             tableId: table._id,
             ...oldRow,
           },
-        }
+          row: {
+            tableId: table._id,
+            ...row,
+          },
+        })
 
-        const res = await testAutomation(config, automation, inputs)
-
-        if (expectToRun) {
-          expect(res.body.steps[1].outputs.success).toEqual(true)
+        if (isDidNotTriggerResponse(res)) {
+          expect(expectToRun).toEqual(false)
         } else {
-          expect(res.body.outputs.success).toEqual(false)
+          expect(res.steps[1].outputs.success).toEqual(expectToRun)
         }
       }
     )

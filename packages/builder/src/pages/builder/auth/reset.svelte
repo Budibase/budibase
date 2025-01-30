@@ -8,7 +8,7 @@
     notifications,
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { auth, organisation } from "stores/portal"
+  import { auth, organisation } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { onMount } from "svelte"
@@ -30,10 +30,16 @@
     try {
       loading = true
       if (forceResetPassword) {
+        const email = $auth.user.email
+        const tenantId = $auth.user.tenantId
         await auth.updateSelf({
           password,
           forceResetPassword: false,
         })
+        if (!$auth.user) {
+          // Update self will clear the platform user, so need to login
+          await auth.login(email, password, tenantId)
+        }
         $goto("../portal/")
       } else {
         await auth.resetPassword(password, resetCode)

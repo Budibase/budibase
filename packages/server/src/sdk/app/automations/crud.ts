@@ -3,10 +3,10 @@ import {
   RequiredKeys,
   Webhook,
   WebhookActionType,
+  MetadataType,
 } from "@budibase/types"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
-import { MetadataTypes } from "../../../constants"
 import {
   context,
   events,
@@ -161,7 +161,7 @@ export async function update(automation: Automation) {
   if (oldAutoTrigger && oldAutoTrigger.id !== newAutoTrigger?.id) {
     await events.automation.triggerUpdated(automation)
     await deleteEntityMetadata(
-      MetadataTypes.AUTOMATION_TEST_INPUT,
+      MetadataType.AUTOMATION_TEST_INPUT,
       automation._id!
     )
   }
@@ -183,11 +183,8 @@ export async function remove(automationId: string, rev: string) {
   })
 
   // delete metadata first
-  await deleteEntityMetadata(MetadataTypes.AUTOMATION_TEST_INPUT, automationId)
-  await deleteEntityMetadata(
-    MetadataTypes.AUTOMATION_TEST_HISTORY,
-    automationId
-  )
+  await deleteEntityMetadata(MetadataType.AUTOMATION_TEST_INPUT, automationId)
+  await deleteEntityMetadata(MetadataType.AUTOMATION_TEST_HISTORY, automationId)
 
   const result = await db.remove(automationId, rev)
 

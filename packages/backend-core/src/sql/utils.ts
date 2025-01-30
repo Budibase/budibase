@@ -14,7 +14,7 @@ import environment from "../environment"
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
 const ENCODED_SPACE = encodeURIComponent(" ")
-const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}.\d{3}Z)?$/
 const TIME_REGEX = /^(?:\d{2}:)?(?:\d{2}:)(?:\d{2})$/
 
 export function isExternalTableID(tableId: string) {
@@ -59,11 +59,19 @@ export function isExternalTable(table: Table) {
 }
 
 export function buildExternalTableId(datasourceId: string, tableName: string) {
-  // encode spaces
-  if (tableName.includes(" ")) {
-    tableName = encodeURIComponent(tableName)
+  return `${datasourceId}${DOUBLE_SEPARATOR}${encodeURIComponent(tableName)}`
+}
+
+export function encodeTableId(tableId: string) {
+  if (isExternalTableID(tableId)) {
+    return encodeURIComponent(tableId)
+  } else {
+    return tableId
   }
-  return `${datasourceId}${DOUBLE_SEPARATOR}${tableName}`
+}
+
+export function encodeViewId(viewId: string) {
+  return encodeURIComponent(viewId)
 }
 
 export function breakExternalTableId(tableId: string) {
@@ -141,15 +149,7 @@ export function isInvalidISODateString(str: string) {
 }
 
 export function isValidISODateString(str: string) {
-  const trimmedValue = str.trim()
-  if (!ISO_DATE_REGEX.test(trimmedValue)) {
-    return false
-  }
-  let d = new Date(trimmedValue)
-  if (isNaN(d.getTime())) {
-    return false
-  }
-  return d.toISOString() === trimmedValue
+  return ISO_DATE_REGEX.test(str.trim())
 }
 
 export function isValidFilter(value: any) {

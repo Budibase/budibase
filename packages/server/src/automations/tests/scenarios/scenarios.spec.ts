@@ -1,9 +1,16 @@
 import * as automation from "../../index"
 import * as setup from "../utilities"
-import { LoopStepType, FieldType, Table } from "@budibase/types"
+import { LoopStepType, FieldType, Table, Datasource } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { DatabaseName } from "../../../integrations/tests/utils"
-import { FilterConditions } from "../../../automations/steps/filter"
+import {
+  DatabaseName,
+  datasourceDescribe,
+} from "../../../integrations/tests/utils"
+import { Knex } from "knex"
+import { generator } from "@budibase/backend-core/tests"
+import { automations } from "@budibase/shared-core"
+
+const FilterConditions = automations.steps.filter.FilterConditions
 
 describe("Automation Scenarios", () => {
   let config = setup.getConfig()
@@ -105,96 +112,6 @@ describe("Automation Scenarios", () => {
       expect(results.steps).toHaveLength(3)
       expect(results.steps[1].outputs.success).toBeTruthy()
       expect(results.steps[2].outputs.rows).toHaveLength(1)
-    })
-
-    it("should query an external database for some data then insert than into an internal table", async () => {
-      const { datasource, client } = await setup.setupTestDatasource(
-        config,
-        DatabaseName.MYSQL
-      )
-
-      const newTable = await config.createTable({
-        name: "table",
-        type: "table",
-        schema: {
-          name: {
-            name: "name",
-            type: FieldType.STRING,
-            constraints: {
-              presence: true,
-            },
-          },
-          age: {
-            name: "age",
-            type: FieldType.NUMBER,
-            constraints: {
-              presence: true,
-            },
-          },
-        },
-      })
-
-      const tableName = await setup.createTestTable(client, {
-        name: { type: "string" },
-        age: { type: "number" },
-      })
-
-      const rows = [
-        { name: "Joe", age: 20 },
-        { name: "Bob", age: 25 },
-        { name: "Paul", age: 30 },
-      ]
-
-      await setup.insertTestData(client, tableName, rows)
-
-      const query = await setup.saveTestQuery(
-        config,
-        client,
-        tableName,
-        datasource
-      )
-
-      const builder = createAutomationBuilder({
-        name: "Test external query and save",
-      })
-
-      const results = await builder
-        .appAction({
-          fields: {},
-        })
-        .executeQuery({
-          query: {
-            queryId: query._id!,
-          },
-        })
-        .loop({
-          option: LoopStepType.ARRAY,
-          binding: "{{ steps.1.response }}",
-        })
-        .createRow({
-          row: {
-            name: "{{ loop.currentItem.name }}",
-            age: "{{ loop.currentItem.age }}",
-            tableId: newTable._id!,
-          },
-        })
-        .queryRows({
-          tableId: newTable._id!,
-        })
-        .run()
-
-      expect(results.steps).toHaveLength(3)
-
-      expect(results.steps[1].outputs.iterations).toBe(3)
-      expect(results.steps[1].outputs.items).toHaveLength(3)
-
-      expect(results.steps[2].outputs.rows).toHaveLength(3)
-
-      rows.forEach(expectedRow => {
-        expect(results.steps[2].outputs.rows).toEqual(
-          expect.arrayContaining([expect.objectContaining(expectedRow)])
-        )
-      })
     })
 
     it("should trigger an automation which creates and then updates a row", async () => {
@@ -517,3 +434,105 @@ describe("Automation Scenarios", () => {
     expect(results.steps[0].outputs.message).toContain("example.com")
   })
 })
+
+const descriptions = datasourceDescribe({ only: [DatabaseName.MYSQL] })
+
+if (descriptions.length) {
+  describe.each(descriptions)("/rows ($dbName)", ({ config, dsProvider }) => {
+    let datasource: Datasource
+    let client: Knex
+
+    beforeAll(async () => {
+      const ds = await dsProvider()
+      datasource = ds.datasource!
+      client = ds.client!
+    })
+
+    it("should query an external database for some data then insert than into an internal table", async () => {
+      const newTable = await config.createTable({
+        name: "table",
+        type: "table",
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            constraints: {
+              presence: true,
+            },
+          },
+          age: {
+            name: "age",
+            type: FieldType.NUMBER,
+            constraints: {
+              presence: true,
+            },
+          },
+        },
+      })
+
+      const tableName = generator.guid()
+      await client.schema.createTable(tableName, table => {
+        table.string("name")
+        table.integer("age")
+      })
+
+      const rows = [
+        { name: "Joe", age: 20 },
+        { name: "Bob", age: 25 },
+        { name: "Paul", age: 30 },
+      ]
+
+      await client(tableName).insert(rows)
+
+      const query = await setup.saveTestQuery(
+        config,
+        client,
+        tableName,
+        datasource
+      )
+
+      const builder = createAutomationBuilder({
+        name: "Test external query and save",
+        config,
+      })
+
+      const results = await builder
+        .appAction({
+          fields: {},
+        })
+        .executeQuery({
+          query: {
+            queryId: query._id!,
+          },
+        })
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: "{{ steps.1.response }}",
+        })
+        .createRow({
+          row: {
+            name: "{{ loop.currentItem.name }}",
+            age: "{{ loop.currentItem.age }}",
+            tableId: newTable._id!,
+          },
+        })
+        .queryRows({
+          tableId: newTable._id!,
+        })
+        .run()
+
+      expect(results.steps).toHaveLength(3)
+
+      expect(results.steps[1].outputs.iterations).toBe(3)
+      expect(results.steps[1].outputs.items).toHaveLength(3)
+
+      expect(results.steps[2].outputs.rows).toHaveLength(3)
+
+      rows.forEach(expectedRow => {
+        expect(results.steps[2].outputs.rows).toEqual(
+          expect.arrayContaining([expect.objectContaining(expectedRow)])
+        )
+      })
+    })
+  })
+}

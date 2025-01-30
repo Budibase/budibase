@@ -3,28 +3,23 @@
   "description": "A UI solution used in the different Budibase projects.",
   "version": "0.0.0",
   "license": "MPL-2.0",
-  "svelte": "src/index.js",
-  "module": "dist/bbui.es.js",
+  "svelte": "src/index.ts",
+  "module": "dist/bbui.mjs",
   "exports": {
     ".": {
-      "import": "./dist/bbui.es.js"
+      "import": "./dist/bbui.mjs"
     },
     "./package.json": "./package.json",
     "./spectrum-icons-rollup.js": "./src/spectrum-icons-rollup.js",
     "./spectrum-icons-vite.js": "./src/spectrum-icons-vite.js"
   },
   "scripts": {
-    "build": "rollup -c"
+    "build": "vite build",
+    "dev": "vite build --watch --mode=dev"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^16.0.0",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^11.2.1",
-    "postcss": "^8.2.9",
-    "rollup": "^2.45.2",
-    "rollup-plugin-postcss": "^4.0.0",
-    "rollup-plugin-svelte": "^7.1.0",
-    "rollup-plugin-terser": "^7.0.2"
+    "@sveltejs/vite-plugin-svelte": "1.4.0",
+    "vite-plugin-css-injected-by-js": "3.5.2"
   },
   "keywords": [
     "svelte"
@@ -35,8 +30,8 @@
   ],
   "dependencies": {
     "@adobe/spectrum-css-workflow-icons": "1.2.1",
-    "@budibase/shared-core": "0.0.0",
-    "@budibase/string-templates": "0.0.0",
+    "@budibase/shared-core": "*",
+    "@budibase/string-templates": "*",
     "@spectrum-css/accordion": "3.0.24",
     "@spectrum-css/actionbutton": "1.0.1",
     "@spectrum-css/actiongroup": "1.0.1",
@@ -81,6 +76,7 @@
     "@spectrum-css/typography": "3.0.1",
     "@spectrum-css/underlay": "2.0.9",
     "@spectrum-css/vars": "3.0.1",
+    "atrament": "^4.3.0",
     "dayjs": "^1.10.8",
     "easymde": "^2.16.1",
     "svelte-dnd-action": "^0.9.8",
@@ -95,8 +91,7 @@
         "dependsOn": [
           {
             "projects": [
-              "@budibase/string-templates",
-              "@budibase/shared-core"
+              "@budibase/string-templates"
             ],
             "target": "build"
           }

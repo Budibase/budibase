@@ -5,6 +5,7 @@ import {
   SearchViewRowRequest,
   PaginatedSearchRowResponse,
   ViewResponseEnriched,
+  ViewFetchResponseEnriched,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -45,8 +46,17 @@ export class ViewV2API extends TestAPI {
   }
 
   get = async (viewId: string) => {
-    return (await this._get<ViewResponseEnriched>(`/api/v2/views/${viewId}`))
-      .data
+    return (
+      await this._get<ViewResponseEnriched>(
+        `/api/v2/views/${encodeURIComponent(viewId)}`
+      )
+    ).data
+  }
+
+  fetch = async (expectations?: Expectations) => {
+    return await this._get<ViewFetchResponseEnriched>(`/api/v2/views`, {
+      expectations,
+    })
   }
 
   search = async (

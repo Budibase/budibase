@@ -1,5 +1,6 @@
-import { FeatureFlags, parseEnvFlags } from ".."
+import { FeatureFlags } from "@budibase/types"
 import { setEnv } from "../../environment"
+import { parseEnvFlags } from "../features"
 
 function getCurrentFlags(): Record<string, Record<string, boolean>> {
   const result: Record<string, Record<string, boolean>> = {}

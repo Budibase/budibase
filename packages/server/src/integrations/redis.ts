@@ -129,7 +129,7 @@ class RedisIntegration {
     return this.client.quit()
   }
 
-  async redisContext(query: Function) {
+  async redisContext<T>(query: () => Promise<T>) {
     try {
       return await query()
     } catch (err) {

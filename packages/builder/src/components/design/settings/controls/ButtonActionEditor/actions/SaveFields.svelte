@@ -1,7 +1,7 @@
 <script>
   import { Label, ActionButton, Button, Select, Input } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
   const dispatch = createEventDispatcher()
 

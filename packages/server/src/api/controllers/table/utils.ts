@@ -15,12 +15,11 @@ import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { context, events, features, HTTPError } from "@budibase/backend-core"
+import { context, events, HTTPError } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   Database,
   Datasource,
-  FeatureFlag,
   FieldSchema,
   FieldType,
   NumberFieldMetadata,
@@ -336,9 +335,8 @@ class TableSaveFunctions {
       importRows: this.importRows,
       userId: this.userId,
     })
-    if (await features.flags.isEnabled(FeatureFlag.SQS)) {
-      await sdk.tables.sqs.addTable(table)
-    }
+
+    await sdk.tables.sqs.addTable(table)
     return table
   }
 
@@ -530,9 +528,8 @@ export async function internalTableCleanup(table: Table, rows?: Row[]) {
   if (rows) {
     await AttachmentCleanup.tableDelete(table, rows)
   }
-  if (await features.flags.isEnabled(FeatureFlag.SQS)) {
-    await sdk.tables.sqs.removeTable(table)
-  }
+
+  await sdk.tables.sqs.removeTable(table)
 }
 
 const _TableSaveFunctions = TableSaveFunctions

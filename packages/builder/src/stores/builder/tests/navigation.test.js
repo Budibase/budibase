@@ -1,13 +1,13 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get, writable } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 import {
   INITIAL_NAVIGATION_STATE,
   NavigationStore,
-} from "stores/builder/navigation"
-import { appStore } from "stores/builder"
+} from "@/stores/builder/navigation"
+import { appStore } from "@/stores/builder"
 
-vi.mock("api", () => {
+vi.mock("@/api", () => {
   return {
     API: {
       saveAppMetadata: vi.fn(),
@@ -15,7 +15,7 @@ vi.mock("api", () => {
   }
 })
 
-vi.mock("stores/builder", async () => {
+vi.mock("@/stores/builder", async () => {
   const mockAppStore = writable()
   const appStore = {
     subscribe: mockAppStore.subscribe,
@@ -264,10 +264,7 @@ describe("Navigation store", () => {
 
     await ctx.test.navigationStore.save(update)
 
-    expect(saveSpy).toHaveBeenCalledWith({
-      appId: "testing_123",
-      metadata: { navigation: update },
-    })
+    expect(saveSpy).toHaveBeenCalledWith("testing_123", { navigation: update })
 
     expect(ctx.test.store.links.length).toBe(3)
 

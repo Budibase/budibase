@@ -4,13 +4,33 @@ import {
   getContainerRuntimeClient,
 } from "testcontainers"
 import { ContainerInfo } from "dockerode"
-import path from "path"
-import lockfile from "proper-lockfile"
+import * as path from "path"
+import * as lockfile from "proper-lockfile"
+import { execSync } from "child_process"
+
+interface DockerContext {
+  Name: string
+  Description: string
+  DockerEndpoint: string
+  ContextType: string
+  Error: string
+}
+
+function getCurrentDockerContext(): DockerContext {
+  const out = execSync("docker context ls --format json")
+  for (const line of out.toString().split("\n")) {
+    const parsed = JSON.parse(line)
+    if (parsed.Current) {
+      return parsed as DockerContext
+    }
+  }
+  throw new Error("No current Docker context")
+}
 
 async function getBudibaseContainers() {
   const client = await getContainerRuntimeClient()
-  const conatiners = await client.container.list()
-  return conatiners.filter(
+  const containers = await client.container.list()
+  return containers.filter(
     container =>
       container.Labels["com.budibase"] === "true" &&
       container.Labels["org.testcontainers"] === "true"
@@ -27,6 +47,16 @@ async function killContainers(containers: ContainerInfo[]) {
 }
 
 export default async function setup() {
+  process.env.TESTCONTAINERS_RYUK_DISABLED = "true"
+
+  // For whatever reason, testcontainers doesn't always use the correct current
+  // docker context. This bit of code forces the issue by finding the current
+  // context and setting it as the DOCKER_HOST environment
+  if (!process.env.DOCKER_HOST) {
+    const dockerContext = getCurrentDockerContext()
+    process.env.DOCKER_HOST = dockerContext.DockerEndpoint
+  }
+
   const lockPath = path.resolve(__dirname, "globalSetup.ts")
   // If you run multiple tests at the same time, it's possible for the CouchDB
   // shared container to get started multiple times despite having an
@@ -47,6 +77,7 @@ export default async function setup() {
 
   try {
     const couchdb = new GenericContainer("budibase/couchdb:v3.3.3-sqs-v2.1.1")
+      .withName("couchdb_testcontainer")
       .withExposedPorts(5984, 4984)
       .withEnvironment({
         COUCHDB_PASSWORD: "budibase",
@@ -62,6 +93,7 @@ export default async function setup() {
         },
       ])
       .withLabels({ "com.budibase": "true" })
+      .withTmpFs({ "/data": "rw" })
       .withReuse()
       .withWaitStrategy(
         Wait.forSuccessfulCommand(
@@ -70,8 +102,10 @@ export default async function setup() {
       )
 
     const minio = new GenericContainer("minio/minio")
+      .withName("minio_testcontainer")
       .withExposedPorts(9000)
       .withCommand(["server", "/data"])
+      .withTmpFs({ "/data": "rw" })
       .withEnvironment({
         MINIO_ACCESS_KEY: "budibase",
         MINIO_SECRET_KEY: "budibase",

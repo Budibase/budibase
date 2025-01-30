@@ -4,25 +4,38 @@ import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import env from "../../../environment"
-import { events, context, utils, constants } from "@budibase/backend-core"
+import { constants, context, events, utils } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import {
   ConfigType,
-  Query,
-  UserCtx,
-  SessionCookie,
-  JsonFieldSubType,
-  QueryResponse,
-  QuerySchema,
-  FieldType,
+  CreateDatasourceRequest,
+  Datasource,
   ExecuteQueryRequest,
-  ExecuteQueryResponse,
+  ExecuteV2QueryResponse,
+  ExecuteV1QueryResponse,
+  FetchQueriesResponse,
+  FieldType,
+  FindQueryResponse,
+  ImportRestQueryRequest,
+  ImportRestQueryResponse,
+  JsonFieldSubType,
   PreviewQueryRequest,
   PreviewQueryResponse,
+  Query,
+  QueryResponse,
+  QuerySchema,
+  SaveQueryRequest,
+  SaveQueryResponse,
+  SessionCookie,
+  SourceName,
+  UserCtx,
+  DeleteQueryResponse,
 } from "@budibase/types"
-import { ValidQueryNameRegex, utils as JsonUtils } from "@budibase/shared-core"
+import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
 import { findHBSBlocks } from "@budibase/string-templates"
+import { ObjectId } from "mongodb"
+import { merge } from "lodash"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -42,11 +55,13 @@ function validateQueryInputs(parameters: QueryEventParameters) {
   }
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: UserCtx<void, FetchQueriesResponse>) {
   ctx.body = await sdk.queries.fetch()
 }
 
-const _import = async (ctx: UserCtx) => {
+const _import = async (
+  ctx: UserCtx<ImportRestQueryRequest, ImportRestQueryResponse>
+) => {
   const body = ctx.request.body
   const data = body.data
 
@@ -57,9 +72,9 @@ const _import = async (ctx: UserCtx) => {
   if (!body.datasourceId) {
     // construct new datasource
     const info: any = await importer.getInfo()
-    let datasource = {
+    let datasource: Datasource = {
       type: "datasource",
-      source: "REST",
+      source: SourceName.REST,
       config: {
         url: info.url,
         defaultHeaders: [],
@@ -68,8 +83,14 @@ const _import = async (ctx: UserCtx) => {
       name: info.name,
     }
     // save the datasource
-    const datasourceCtx = { ...ctx }
-    datasourceCtx.request.body.datasource = datasource
+    const datasourceCtx: UserCtx<CreateDatasourceRequest> = merge(ctx, {
+      request: {
+        body: {
+          datasource,
+          tablesFilter: [],
+        },
+      },
+    })
     await saveDatasource(datasourceCtx)
     datasourceId = datasourceCtx.body.datasource._id
   } else {
@@ -83,11 +104,10 @@ const _import = async (ctx: UserCtx) => {
     ...importResult,
     datasourceId,
   }
-  ctx.status = 200
 }
 export { _import as import }
 
-export async function save(ctx: UserCtx<Query, Query>) {
+export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getAppDB()
   const query: Query = ctx.request.body
 
@@ -118,10 +138,9 @@ export async function save(ctx: UserCtx<Query, Query>) {
   query._rev = response.rev
 
   ctx.body = query
-  ctx.message = `Query ${query.name} saved successfully.`
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: UserCtx<void, FindQueryResponse>) {
   const queryId = ctx.params.queryId
   ctx.body = await sdk.queries.find(queryId)
 }
@@ -223,6 +242,8 @@ export async function preview(
             } else {
               fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
             }
+          } else if (field instanceof ObjectId) {
+            fieldMetadata = makeQuerySchema(FieldType.STRING, key)
           } else {
             fieldMetadata = makeQuerySchema(FieldType.JSON, key)
           }
@@ -332,9 +353,9 @@ export async function preview(
 async function execute(
   ctx: UserCtx<
     ExecuteQueryRequest,
-    ExecuteQueryResponse | Record<string, any>[]
+    ExecuteV2QueryResponse | ExecuteV1QueryResponse
   >,
-  opts: any = { rowsOnly: false, isAutomation: false }
+  opts = { rowsOnly: false, isAutomation: false }
 ) {
   const db = context.getAppDB()
 
@@ -387,19 +408,21 @@ async function execute(
 }
 
 export async function executeV1(
-  ctx: UserCtx<ExecuteQueryRequest, Record<string, any>[]>
+  ctx: UserCtx<ExecuteQueryRequest, ExecuteV1QueryResponse>
 ) {
   return execute(ctx, { rowsOnly: true, isAutomation: false })
 }
 
 export async function executeV2(
-  ctx: UserCtx<
-    ExecuteQueryRequest,
-    ExecuteQueryResponse | Record<string, any>[]
-  >,
-  { isAutomation }: { isAutomation?: boolean } = {}
+  ctx: UserCtx<ExecuteQueryRequest, ExecuteV2QueryResponse>
 ) {
-  return execute(ctx, { rowsOnly: false, isAutomation })
+  return execute(ctx, { rowsOnly: false, isAutomation: false })
+}
+
+export async function executeV2AsAutomation(
+  ctx: UserCtx<ExecuteQueryRequest, ExecuteV2QueryResponse>
+) {
+  return execute(ctx, { rowsOnly: false, isAutomation: true })
 }
 
 const removeDynamicVariables = async (queryId: string) => {
@@ -423,14 +446,13 @@ const removeDynamicVariables = async (queryId: string) => {
   }
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: UserCtx<void, DeleteQueryResponse>) {
   const db = context.getAppDB()
   const queryId = ctx.params.queryId as string
   await removeDynamicVariables(queryId)
   const query = await db.get<Query>(queryId)
   const datasource = await sdk.datasources.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
-  ctx.message = `Query deleted.`
-  ctx.status = 200
+  ctx.body = { message: `Query deleted.` }
   await events.query.deleted(datasource, query)
 }

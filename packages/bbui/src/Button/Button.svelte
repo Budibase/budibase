@@ -3,7 +3,7 @@
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let type
+  export let type = undefined
   export let disabled = false
   export let size = "M"
   export let cta = false
@@ -16,8 +16,8 @@
   export let active = false
   export let tooltip = undefined
   export let newStyles = true
-  export let id
-  export let ref
+  export let id = undefined
+  export let ref = undefined
   export let reverse = false
 
   const dispatch = createEventDispatcher()

@@ -1,6 +1,6 @@
-import { Ctx, MaintenanceType, FeatureFlag } from "@budibase/types"
+import { Ctx, GetEnvironmentResponse, MaintenanceType } from "@budibase/types"
 import env from "../../../environment"
-import { env as coreEnv, db as dbCore, features } from "@budibase/backend-core"
+import { env as coreEnv, db as dbCore } from "@budibase/backend-core"
 import nodeFetch from "node-fetch"
 import { helpers } from "@budibase/shared-core"
 
@@ -35,19 +35,16 @@ async function isSqsAvailable() {
 }
 
 async function isSqsMissing() {
-  return (
-    (await features.flags.isEnabled(FeatureFlag.SQS)) &&
-    !(await isSqsAvailable())
-  )
+  return !(await isSqsAvailable())
 }
 
-export const fetch = async (ctx: Ctx) => {
+export const fetch = async (ctx: Ctx<void, GetEnvironmentResponse>) => {
   ctx.body = {
     multiTenancy: !!env.MULTI_TENANCY,
     offlineMode: !!coreEnv.OFFLINE_MODE,
     cloud: !env.SELF_HOSTED,
     accountPortalUrl: env.ACCOUNT_PORTAL_URL,
-    disableAccountPortal: env.DISABLE_ACCOUNT_PORTAL,
+    disableAccountPortal: !!env.DISABLE_ACCOUNT_PORTAL,
     baseUrl: env.PLATFORM_URL,
     isDev: env.isDev() && !env.isTest(),
     maintenance: [],

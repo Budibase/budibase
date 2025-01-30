@@ -1,10 +1,6 @@
 import * as setup from "../../../api/routes/tests/utilities"
 import { basicTable } from "../../../tests/utilities/structures"
-import {
-  db as dbCore,
-  features,
-  SQLITE_DESIGN_DOC_ID,
-} from "@budibase/backend-core"
+import { db as dbCore, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import {
   LinkDocument,
   DocumentType,
@@ -70,24 +66,14 @@ function oldLinkDocument(): Omit<LinkDocument, "tableId"> {
   }
 }
 
-async function sqsDisabled(cb: () => Promise<void>) {
-  await features.testutils.withFeatureFlags("*", { SQS: false }, cb)
-}
-
-async function sqsEnabled(cb: () => Promise<void>) {
-  await features.testutils.withFeatureFlags("*", { SQS: true }, cb)
-}
-
 describe("SQS migration", () => {
   beforeAll(async () => {
-    await sqsDisabled(async () => {
-      await config.init()
-      const table = await config.api.table.save(basicTable())
-      tableId = table._id!
-      const db = dbCore.getDB(config.appId!)
-      // old link document
-      await db.put(oldLinkDocument())
-    })
+    await config.init()
+    const table = await config.api.table.save(basicTable())
+    tableId = table._id!
+    const db = dbCore.getDB(config.appId!)
+    // old link document
+    await db.put(oldLinkDocument())
   })
 
   beforeEach(async () => {
@@ -101,43 +87,32 @@ describe("SQS migration", () => {
 
   it("test migration runs as expected against an older DB", async () => {
     const db = dbCore.getDB(config.appId!)
-    // confirm nothing exists initially
-    await sqsDisabled(async () => {
-      let error: any | undefined
-      try {
-        await db.get(SQLITE_DESIGN_DOC_ID)
-      } catch (err: any) {
-        error = err
-      }
-      expect(error).toBeDefined()
-      expect(error.status).toBe(404)
+
+    // remove sqlite design doc to simulate it comes from an older installation
+    const doc = await db.get(SQLITE_DESIGN_DOC_ID)
+    await db.remove({ _id: doc._id, _rev: doc._rev })
+
+    await processMigrations(config.appId!, MIGRATIONS)
+    const designDoc = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+    expect(designDoc.sql.tables).toBeDefined()
+    const mainTableDef = designDoc.sql.tables[tableId]
+    expect(mainTableDef).toBeDefined()
+    expect(mainTableDef.fields[prefix("name")]).toEqual({
+      field: "name",
+      type: SQLiteType.TEXT,
+    })
+    expect(mainTableDef.fields[prefix("description")]).toEqual({
+      field: "description",
+      type: SQLiteType.TEXT,
     })
 
-    await sqsEnabled(async () => {
-      await processMigrations(config.appId!, MIGRATIONS)
-      const designDoc = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
-      expect(designDoc.sql.tables).toBeDefined()
-      const mainTableDef = designDoc.sql.tables[tableId]
-      expect(mainTableDef).toBeDefined()
-      expect(mainTableDef.fields[prefix("name")]).toEqual({
-        field: "name",
-        type: SQLiteType.TEXT,
-      })
-      expect(mainTableDef.fields[prefix("description")]).toEqual({
-        field: "description",
-        type: SQLiteType.TEXT,
-      })
-
-      const { tableId1, tableId2, rowId1, rowId2 } = oldLinkDocInfo()
-      const linkDoc = await db.get<LinkDocument>(oldLinkDocID())
-      expect(linkDoc.tableId).toEqual(
-        generateJunctionTableID(tableId1, tableId2)
-      )
-      // should have swapped the documents
-      expect(linkDoc.doc1.tableId).toEqual(tableId2)
-      expect(linkDoc.doc1.rowId).toEqual(rowId2)
-      expect(linkDoc.doc2.tableId).toEqual(tableId1)
-      expect(linkDoc.doc2.rowId).toEqual(rowId1)
-    })
+    const { tableId1, tableId2, rowId1, rowId2 } = oldLinkDocInfo()
+    const linkDoc = await db.get<LinkDocument>(oldLinkDocID())
+    expect(linkDoc.tableId).toEqual(generateJunctionTableID(tableId1, tableId2))
+    // should have swapped the documents
+    expect(linkDoc.doc1.tableId).toEqual(tableId2)
+    expect(linkDoc.doc1.rowId).toEqual(rowId2)
+    expect(linkDoc.doc2.tableId).toEqual(tableId1)
+    expect(linkDoc.doc2.rowId).toEqual(rowId1)
   })
 })

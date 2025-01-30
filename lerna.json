@@ -1,12 +1,7 @@
 {
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
-  "version": "3.2.1",
+  "version": "3.3.3",
   "npmClient": "yarn",
-  "packages": [
-    "packages/*",
-    "!packages/account-portal",
-    "packages/account-portal/packages/*"
-  ],
   "concurrency": 20,
   "command": {
     "publish": {

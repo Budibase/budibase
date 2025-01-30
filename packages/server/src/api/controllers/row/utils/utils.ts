@@ -1,6 +1,6 @@
 import * as utils from "../../../../db/utils"
 
-import { docIds } from "@budibase/backend-core"
+import { docIds, sql } from "@budibase/backend-core"
 import {
   Ctx,
   DatasourcePlusQueryResponse,
@@ -66,18 +66,18 @@ export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
     if (docIds.isViewId(sourceId)) {
       return {
         tableId: utils.extractViewInfoFromID(sourceId).tableId,
-        viewId: sourceId,
+        viewId: sql.utils.encodeViewId(sourceId),
       }
     }
-    return { tableId: ctx.params.sourceId }
+    return { tableId: sql.utils.encodeTableId(ctx.params.sourceId) }
   }
   // now check for old way of specifying table ID
   if (ctx.params?.tableId) {
-    return { tableId: ctx.params.tableId }
+    return { tableId: sql.utils.encodeTableId(ctx.params.tableId) }
   }
   // check body for a table ID
   if (ctx.request.body?.tableId) {
-    return { tableId: ctx.request.body.tableId }
+    return { tableId: sql.utils.encodeTableId(ctx.request.body.tableId) }
   }
   throw new Error("Unable to find table ID in request")
 }
@@ -108,6 +108,21 @@ function fixBooleanFields(row: Row, table: Table) {
     }
   }
   return row
+}
+
+export function getSourceFields(source: Table | ViewV2): string[] {
+  const isView = sdk.views.isView(source)
+  if (isView) {
+    const fields = Object.keys(
+      helpers.views.basicFields(source, { visible: true })
+    )
+    return fields
+  }
+
+  const fields = Object.entries(source.schema)
+    .filter(([_, field]) => field.visible !== false)
+    .map(([columnName]) => columnName)
+  return fields
 }
 
 export async function sqlOutputProcessing(
@@ -175,7 +190,7 @@ export async function enrichArrayContext(
 }
 
 export async function enrichSearchContext(
-  fields: Record<string, any>,
+  fields: Record<string, any> | undefined,
   inputs = {},
   helpers = true
 ): Promise<Record<string, any>> {

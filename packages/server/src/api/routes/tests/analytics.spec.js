@@ -4,14 +4,13 @@ const { events, constants } = require("@budibase/backend-core")
 describe("/static", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let app
 
   const timezone = "Europe/London"
 
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
-    app = await config.init()
+    await config.init()
   })
 
   beforeEach(() => {
@@ -26,10 +25,10 @@ describe("/static", () => {
         .set(config.defaultHeaders())
         .expect(200)
 
-      expect(events.serve.servedBuilder).toBeCalledTimes(1)
-      expect(events.serve.servedBuilder).toBeCalledWith(timezone)
-      expect(events.serve.servedApp).not.toBeCalled()
-      expect(events.serve.servedAppPreview).not.toBeCalled()
+      expect(events.serve.servedBuilder).toHaveBeenCalledTimes(1)
+      expect(events.serve.servedBuilder).toHaveBeenCalledWith(timezone)
+      expect(events.serve.servedApp).not.toHaveBeenCalled()
+      expect(events.serve.servedAppPreview).not.toHaveBeenCalled()
     })
 
     it("should ping from app preview", async () => {
@@ -39,12 +38,12 @@ describe("/static", () => {
         .set(config.defaultHeaders())
         .expect(200)
 
-      expect(events.serve.servedAppPreview).toBeCalledTimes(1)
-      expect(events.serve.servedAppPreview).toBeCalledWith(
+      expect(events.serve.servedAppPreview).toHaveBeenCalledTimes(1)
+      expect(events.serve.servedAppPreview).toHaveBeenCalledWith(
         config.getApp(),
         timezone
       )
-      expect(events.serve.servedApp).not.toBeCalled()
+      expect(events.serve.servedApp).not.toHaveBeenCalled()
     })
 
     it("should ping from app", async () => {
@@ -57,13 +56,13 @@ describe("/static", () => {
         .set(headers)
         .expect(200)
 
-      expect(events.serve.servedApp).toBeCalledTimes(1)
-      expect(events.serve.servedApp).toBeCalledWith(
+      expect(events.serve.servedApp).toHaveBeenCalledTimes(1)
+      expect(events.serve.servedApp).toHaveBeenCalledWith(
         config.getProdApp(),
         timezone,
         undefined
       )
-      expect(events.serve.servedAppPreview).not.toBeCalled()
+      expect(events.serve.servedAppPreview).not.toHaveBeenCalled()
     })
 
     it("should ping from an embedded app", async () => {
@@ -76,13 +75,13 @@ describe("/static", () => {
         .set(headers)
         .expect(200)
 
-      expect(events.serve.servedApp).toBeCalledTimes(1)
-      expect(events.serve.servedApp).toBeCalledWith(
+      expect(events.serve.servedApp).toHaveBeenCalledTimes(1)
+      expect(events.serve.servedApp).toHaveBeenCalledWith(
         config.getProdApp(),
         timezone,
         true
       )
-      expect(events.serve.servedAppPreview).not.toBeCalled()
+      expect(events.serve.servedAppPreview).not.toHaveBeenCalled()
     })
   })
 })

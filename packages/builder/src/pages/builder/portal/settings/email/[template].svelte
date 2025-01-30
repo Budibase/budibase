@@ -10,10 +10,10 @@
     Tab,
   } from "@budibase/bbui"
   import { url } from "@roxi/routify"
-  import { email } from "stores/portal"
-  import Editor from "components/integration/QueryEditor.svelte"
+  import { email } from "@/stores/portal"
+  import Editor from "@/components/integration/QueryEditor.svelte"
   import TemplateBindings from "./_components/TemplateBindings.svelte"
-  import { Breadcrumbs, Breadcrumb } from "components/portal/page"
+  import { Breadcrumbs, Breadcrumb } from "@/components/portal/page"
 
   // this is the email purpose
   export let template
@@ -34,7 +34,7 @@
   async function saveTemplate() {
     try {
       // Save your template config
-      await email.templates.save(selectedTemplate)
+      await email.saveTemplate(selectedTemplate)
       notifications.success("Template saved")
     } catch (error) {
       notifications.error("Failed to update template settings")

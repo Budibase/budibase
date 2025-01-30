@@ -16,7 +16,7 @@ describe("test the outgoing webhook action", () => {
 
   it("should be able to run the action", async () => {
     nock("http://www.example.com/").post("/").reply(200, { foo: "bar" })
-    const res = await runStep(actions.discord.stepId, {
+    const res = await runStep(config, actions.discord.stepId, {
       url: "http://www.example.com",
       username: "joe_bloggs",
     })

@@ -136,21 +136,23 @@ class QueryRunner {
       pagination = output.pagination
     }
 
-    // transform as required
-    if (transformer) {
+    // We avoid invoking the transformer if it's trivial because there is a cost
+    // to passing data in and out of the isolate, especially for MongoDB where
+    // we have to bson serialise/deserialise the data.
+    const hasTransformer =
+      transformer != null &&
+      transformer.length > 0 &&
+      transformer.trim() !== "return data" &&
+      transformer.trim() !== "return data;"
+
+    if (transformer && hasTransformer) {
       transformer = iifeWrapper(transformer)
       let vm = new IsolatedVM()
       if (datasource.source === SourceName.MONGODB) {
         vm = vm.withParsingBson(rows)
       }
-
-      const ctx = {
-        data: rows,
-        params: enrichedParameters,
-      }
-      if (transformer != null) {
-        rows = vm.withContext(ctx, () => vm.execute(transformer!))
-      }
+      const ctx = { data: rows, params: enrichedParameters }
+      rows = vm.withContext(ctx, () => vm.execute(transformer!))
     }
 
     // if the request fails we retry once, invalidating the cached value
@@ -172,7 +174,9 @@ class QueryRunner {
     }
 
     // needs to an array for next step
-    if (!Array.isArray(rows)) {
+    if (rows === null) {
+      rows = []
+    } else if (!Array.isArray(rows)) {
       rows = [rows]
     }
 

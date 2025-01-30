@@ -1,7 +1,7 @@
 import authorized from "../middleware/authorized"
 import currentApp from "../middleware/currentapp"
 import { BaseSocket } from "./websocket"
-import { auth, permissions } from "@budibase/backend-core"
+import { auth, permissions, context } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 import { getSourceId } from "../api/controllers/row/utils"
@@ -10,6 +10,12 @@ import { Socket } from "socket.io"
 import { GridSocketEvent } from "@budibase/shared-core"
 import { userAgent } from "koa-useragent"
 import { createContext, runMiddlewares } from "./middleware"
+import sdk from "../sdk"
+import {
+  findHBSBlocks,
+  isJSBinding,
+  decodeJSBinding,
+} from "@budibase/string-templates"
 
 const { PermissionType, PermissionLevel } = permissions
 
@@ -18,15 +24,46 @@ export default class GridSocket extends BaseSocket {
     super(app, server, "/socket/grid")
   }
 
+  // Checks if a view's query contains any current user bindings
+  containsCurrentUserBinding(view: ViewV2): boolean {
+    return findHBSBlocks(JSON.stringify(view.query))
+      .map(binding => {
+        const sanitizedBinding = binding.replace(/\\"/g, '"')
+        if (isJSBinding(sanitizedBinding)) {
+          return decodeJSBinding(sanitizedBinding)
+        } else {
+          return sanitizedBinding
+        }
+      })
+      .some(binding => binding?.includes("[user]"))
+  }
+
   async onConnect(socket: Socket) {
     // Initial identification of connected spreadsheet
     socket.on(GridSocketEvent.SelectDatasource, async (payload, callback) => {
       const ds = payload.datasource
       const appId = payload.appId
       const resourceId = ds?.type === "table" ? ds?.tableId : ds?.id
+      let valid = true
 
-      // Ignore if no table or app specified
+      // Validate datasource
       if (!resourceId || !appId) {
+        // Ignore if no table or app specified
+        valid = false
+      } else if (ds.type === "viewV2") {
+        // If this is a view filtered by current user, don't sync changes
+        try {
+          await context.doInAppContext(appId, async () => {
+            const view = await sdk.views.get(ds.id)
+            if (this.containsCurrentUserBinding(view)) {
+              valid = false
+            }
+          })
+        } catch (err) {
+          valid = false
+        }
+      }
+      if (!valid) {
         socket.disconnect(true)
         return
       }
@@ -70,7 +107,7 @@ export default class GridSocket extends BaseSocket {
     })
   }
 
-  async updateUser(socket: Socket, patch: Object) {
+  async updateUser(socket: Socket, patch: object) {
     await super.updateUser(socket, {
       gridMetadata: {
         ...socket.data.gridMetadata,

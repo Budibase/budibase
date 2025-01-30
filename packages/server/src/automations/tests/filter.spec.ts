@@ -1,14 +1,22 @@
 import * as setup from "./utilities"
-import { FilterConditions } from "../steps/filter"
+import { automations } from "@budibase/shared-core"
+
+const FilterConditions = automations.steps.filter.FilterConditions
 
 describe("test the filter logic", () => {
+  const config = setup.getConfig()
+
+  beforeAll(async () => {
+    await config.init()
+  })
+
   async function checkFilter(
     field: any,
     condition: string,
     value: any,
     pass = true
   ) {
-    let res = await setup.runStep(setup.actions.FILTER.stepId, {
+    let res = await setup.runStep(config, setup.actions.FILTER.stepId, {
       field,
       condition,
       value,

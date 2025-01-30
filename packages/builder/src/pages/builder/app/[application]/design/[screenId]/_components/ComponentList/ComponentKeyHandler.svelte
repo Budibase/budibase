@@ -5,11 +5,11 @@
     componentStore,
     selectedComponent,
     componentTreeNodesStore,
-  } from "stores/builder"
-  import { findComponent, getChildIdsForComponent } from "helpers/components"
+  } from "@/stores/builder"
+  import { findComponent, getChildIdsForComponent } from "@/helpers/components"
   import { goto, isActive } from "@roxi/routify"
   import { notifications } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   let confirmDeleteDialog
   let confirmEjectDialog

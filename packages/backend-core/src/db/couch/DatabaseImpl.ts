@@ -10,7 +10,6 @@ import {
   DatabaseQueryOpts,
   DBError,
   Document,
-  FeatureFlag,
   isDocument,
   RowResponse,
   RowValue,
@@ -27,7 +26,6 @@ import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 import { checkSlashesInUrl } from "../../helpers"
 import { sqlLog } from "../../sql/utils"
-import { flags } from "../../features"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -192,7 +190,7 @@ export class DatabaseImpl implements Database {
     }
   }
 
-  private async performCall<T>(call: DBCallback<T>): Promise<any> {
+  private async performCall<T>(call: DBCallback<T>): Promise<T> {
     const db = this.getDb()
     const fnc = await call(db)
     try {
@@ -291,7 +289,7 @@ export class DatabaseImpl implements Database {
       return
     }
     let errorFound = false
-    let errorMessage: string = "Unable to bulk remove documents: "
+    let errorMessage = "Unable to bulk remove documents: "
     for (let res of response) {
       if (res.error) {
         errorFound = true
@@ -456,10 +454,7 @@ export class DatabaseImpl implements Database {
   }
 
   async destroy() {
-    if (
-      (await flags.isEnabled(FeatureFlag.SQS)) &&
-      (await this.exists(SQLITE_DESIGN_DOC_ID))
-    ) {
+    if (await this.exists(SQLITE_DESIGN_DOC_ID)) {
       // delete the design document, then run the cleanup operation
       const definition = await this.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
       // remove all tables - save the definition then trigger a cleanup
@@ -472,7 +467,7 @@ export class DatabaseImpl implements Database {
     } catch (err: any) {
       // didn't exist, don't worry
       if (err.statusCode === 404) {
-        return
+        return { ok: true }
       } else {
         throw new CouchDBError(err.message, err)
       }

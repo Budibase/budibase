@@ -1,4 +1,4 @@
-import { context, features } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
@@ -9,10 +9,9 @@ import {
   Database,
   INTERNAL_TABLE_SOURCE_ID,
   Table,
-  TableResponse,
+  FindTableResponse,
   TableSourceType,
   TableViewsResponse,
-  FeatureFlag,
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
@@ -47,12 +46,10 @@ export async function processTable(table: Table): Promise<Table> {
     const processed: Table = {
       ...table,
       type: "table",
+      primary: ["_id"], // internal tables must always use _id as primary key
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
-    }
-    const sqsEnabled = await features.flags.isEnabled(FeatureFlag.SQS)
-    if (sqsEnabled) {
-      processed.sql = true
+      sql: true,
     }
     return processed
   }
@@ -82,8 +79,11 @@ export async function getAllInternalTables(db?: Database): Promise<Table[]> {
 }
 
 async function getAllExternalTables(): Promise<Table[]> {
+  // this is all datasources, we'll need to filter out internal
   const datasources = await sdk.datasources.fetch({ enriched: true })
-  const allEntities = datasources.map(datasource => datasource.entities)
+  const allEntities = datasources
+    .filter(datasource => datasource._id !== INTERNAL_TABLE_SOURCE_ID)
+    .map(datasource => datasource.entities)
   let final: Table[] = []
   for (let entities of allEntities) {
     if (entities) {
@@ -173,7 +173,9 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
   return await processTables(tables)
 }
 
-export async function enrichViewSchemas(table: Table): Promise<TableResponse> {
+export async function enrichViewSchemas(
+  table: Table
+): Promise<FindTableResponse> {
   const views = []
   for (const view of Object.values(table.views ?? [])) {
     if (sdk.views.isV2(view)) {

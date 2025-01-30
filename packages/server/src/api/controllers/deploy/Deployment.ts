@@ -1,4 +1,5 @@
 import { context, utils } from "@budibase/backend-core"
+import { DeploymentStatus } from "@budibase/types"
 
 /**
  * This is used to pass around information about the deployment that is occurring
@@ -6,7 +7,7 @@ import { context, utils } from "@budibase/backend-core"
 export default class Deployment {
   _id: string
   verification: any
-  status?: string
+  status?: DeploymentStatus
   err?: any
   appUrl?: string
 
@@ -25,7 +26,7 @@ export default class Deployment {
     return this.verification
   }
 
-  setStatus(status: string, err?: any) {
+  setStatus(status: DeploymentStatus, err?: any) {
     this.status = status
     if (err) {
       this.err = err

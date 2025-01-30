@@ -4,7 +4,7 @@ import { AppStatus } from "../../../../db/utils"
 import { roles, tenancy, context, db } from "@budibase/backend-core"
 import env from "../../../../environment"
 import Nano from "@budibase/nano"
-import TestConfiguration from "src/tests/utilities/TestConfiguration"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 class Request {
   appId: any
@@ -51,15 +51,6 @@ export const clearAllApps = async (
       await runRequest(appId, appController.destroy, req)
     }
   })
-}
-
-export const clearAllAutomations = async (config: TestConfiguration) => {
-  const { automations } = await config.getAllAutomations()
-  for (let auto of automations) {
-    await context.doInAppContext(config.getAppId(), async () => {
-      await config.deleteAutomation(auto)
-    })
-  }
 }
 
 export const wipeDb = async () => {

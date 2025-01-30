@@ -3,7 +3,6 @@ import {
   Integration,
   DatasourceFieldType,
   QueryType,
-  QueryJson,
   SqlQuery,
   Table,
   DatasourcePlus,
@@ -14,6 +13,7 @@ import {
   TableSourceType,
   DatasourcePlusQueryResponse,
   SqlClient,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -149,7 +149,7 @@ const SCHEMA: Integration = {
 class PostgresIntegration extends Sql implements DatasourcePlus {
   private readonly client: Client
   private readonly config: PostgresConfig
-  private index: number = 1
+  private index = 1
   private open: boolean
 
   PRIMARY_KEYS_SQL = () => `
@@ -173,8 +173,13 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   `
 
   COLUMNS_SQL = () => `
-    select * from information_schema.columns where table_schema = ANY(current_schemas(false)) 
-      AND pg_table_is_visible(to_regclass(format('%I.%I', table_schema, table_name)));
+  SELECT columns.*
+  FROM information_schema.columns columns
+  JOIN pg_class pg_class ON pg_class.relname = columns.table_name
+  JOIN pg_namespace name_space ON name_space.oid = pg_class.relnamespace
+  WHERE columns.table_schema = ANY(current_schemas(false))
+    AND columns.table_schema = name_space.nspname
+    AND pg_table_is_visible(pg_class.oid);
   `
 
   constructor(config: PostgresConfig) {
@@ -252,7 +257,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     })
   }
 
-  async internalQuery(query: SqlQuery, close: boolean = true) {
+  async internalQuery(query: SqlQuery, close = true) {
     if (!this.open) {
       await this.openConnection()
     }
@@ -419,7 +424,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     return response.rows.length ? response.rows : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
+  async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const operation = this._operation(json).toLowerCase()
     const input = this._query(json) as SqlQuery
     if (Array.isArray(input)) {
@@ -476,21 +481,15 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       this.config.password
     }" pg_dump --schema-only "${dumpCommandParts.join(" ")}"`
 
-    return new Promise<string>((res, rej) => {
+    return new Promise<string>((resolve, reject) => {
       exec(dumpCommand, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error generating dump: ${error.message}`)
-          rej(error.message)
+        if (error || stderr) {
+          console.error(stderr)
+          reject(new Error(stderr))
           return
         }
 
-        if (stderr) {
-          console.error(`pg_dump error: ${stderr}`)
-          rej(stderr)
-          return
-        }
-
-        res(stdout)
+        resolve(stdout)
         console.log("SQL dump generated successfully!")
       })
     })

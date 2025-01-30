@@ -16,6 +16,8 @@
   export let hideDevTools
   export let sideNav
   export let hideFooter
+
+  export let nonce
 </script>
 
 <svelte:head>
@@ -118,11 +120,11 @@
       <p />
     {/if}
   </div>
-  <script type="application/javascript">
+  <script type="application/javascript" {nonce}>
     window.INIT_TIME = Date.now()
   </script>
   {#if appMigrating}
-    <script type="application/javascript">
+    <script type="application/javascript" {nonce}>
       window.MIGRATING_APP = true
     </script>
   {/if}
@@ -135,7 +137,7 @@
       <script type="application/javascript" src={plugin.jsUrl}></script>
     {/each}
   {/if}
-  <script type="application/javascript">
+  <script type="application/javascript" {nonce}>
     if (window.loadBudibase) {
       window.loadBudibase()
     } else {

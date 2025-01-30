@@ -1,6 +1,6 @@
 import { FieldType } from "@budibase/types"
-import { FIELDS } from "constants/backend"
-import { tables } from "stores/builder"
+import { FIELDS } from "@/constants/backend"
+import { tables } from "@/stores/builder"
 import { get as svelteGet } from "svelte/store"
 
 // currently supported level of relationship depth (server side)

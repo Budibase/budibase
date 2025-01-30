@@ -14,7 +14,3 @@ export async function execute(ctx: Ctx) {
     throw err
   }
 }
-
-export async function save(ctx: Ctx) {
-  ctx.throw(501, "Not currently implemented")
-}

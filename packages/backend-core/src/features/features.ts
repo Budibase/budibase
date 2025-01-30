@@ -2,9 +2,10 @@ import env from "../environment"
 import * as crypto from "crypto"
 import * as context from "../context"
 import { PostHog, PostHogOptions } from "posthog-node"
-import { FeatureFlag } from "@budibase/types"
 import tracer from "dd-trace"
 import { Duration } from "../utils"
+import { cloneDeep } from "lodash"
+import { FeatureFlagDefaults } from "@budibase/types"
 
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
@@ -30,74 +31,6 @@ export function shutdown() {
   posthog?.shutdown()
 }
 
-export abstract class Flag<T> {
-  static boolean(defaultValue: boolean): Flag<boolean> {
-    return new BooleanFlag(defaultValue)
-  }
-
-  static string(defaultValue: string): Flag<string> {
-    return new StringFlag(defaultValue)
-  }
-
-  static number(defaultValue: number): Flag<number> {
-    return new NumberFlag(defaultValue)
-  }
-
-  protected constructor(public defaultValue: T) {}
-
-  abstract parse(value: any): T
-}
-
-type UnwrapFlag<F> = F extends Flag<infer U> ? U : never
-
-export type FlagValues<T> = {
-  [K in keyof T]: UnwrapFlag<T[K]>
-}
-
-type KeysOfType<T, U> = {
-  [K in keyof T]: T[K] extends Flag<U> ? K : never
-}[keyof T]
-
-class BooleanFlag extends Flag<boolean> {
-  parse(value: any) {
-    if (typeof value === "string") {
-      return ["true", "t", "1"].includes(value.toLowerCase())
-    }
-
-    if (typeof value === "boolean") {
-      return value
-    }
-
-    throw new Error(`could not parse value "${value}" as boolean`)
-  }
-}
-
-class StringFlag extends Flag<string> {
-  parse(value: any) {
-    if (typeof value === "string") {
-      return value
-    }
-    throw new Error(`could not parse value "${value}" as string`)
-  }
-}
-
-class NumberFlag extends Flag<number> {
-  parse(value: any) {
-    if (typeof value === "number") {
-      return value
-    }
-
-    if (typeof value === "string") {
-      const parsed = parseFloat(value)
-      if (!isNaN(parsed)) {
-        return parsed
-      }
-    }
-
-    throw new Error(`could not parse value "${value}" as number`)
-  }
-}
-
 export interface EnvFlagEntry {
   tenantId: string
   key: string
@@ -120,7 +53,7 @@ export function parseEnvFlags(flags: string): EnvFlagEntry[] {
   return result
 }
 
-export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
+export class FlagSet<T extends { [name: string]: boolean }> {
   // This is used to safely cache flags sets in the current request context.
   // Because multiple sets could theoretically exist, we don't want the cache of
   // one to leak into another.
@@ -130,34 +63,25 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
     this.setId = crypto.randomUUID()
   }
 
-  defaults(): FlagValues<T> {
-    return Object.keys(this.flagSchema).reduce((acc, key) => {
-      const typedKey = key as keyof T
-      acc[typedKey] = this.flagSchema[key].defaultValue
-      return acc
-    }, {} as FlagValues<T>)
+  defaults(): T {
+    return cloneDeep(this.flagSchema)
   }
 
   isFlagName(name: string | number | symbol): name is keyof T {
     return this.flagSchema[name as keyof T] !== undefined
   }
 
-  async get<K extends keyof T>(key: K): Promise<FlagValues<T>[K]> {
+  async isEnabled<K extends keyof T>(key: K): Promise<T[K]> {
     const flags = await this.fetch()
     return flags[key]
   }
 
-  async isEnabled<K extends KeysOfType<T, boolean>>(key: K): Promise<boolean> {
-    const flags = await this.fetch()
-    return flags[key]
-  }
-
-  async fetch(): Promise<FlagValues<T>> {
+  async fetch(): Promise<T> {
     return await tracer.trace("features.fetch", async span => {
-      const cachedFlags = context.getFeatureFlags<FlagValues<T>>(this.setId)
+      const cachedFlags = context.getFeatureFlags(this.setId)
       if (cachedFlags) {
         span?.addTags({ fromCache: true })
-        return cachedFlags
+        return cachedFlags as T
       }
 
       const tags: Record<string, any> = {}
@@ -189,7 +113,7 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 
         // @ts-expect-error - TS does not like you writing into a generic type,
         // but we know that it's okay in this case because it's just an object.
-        flagValues[key as keyof FlagValues] = value
+        flagValues[key as keyof T] = value
         tags[`flags.${key}.source`] = "environment"
       }
 
@@ -217,15 +141,20 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
         tags[`readFromPostHog`] = true
 
         const personProperties: Record<string, string> = { tenantId }
-        const posthogFlags = await posthog.getAllFlagsAndPayloads(userId, {
+        const posthogFlags = await posthog.getAllFlags(userId, {
           personProperties,
         })
 
-        for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
+        for (const [name, value] of Object.entries(posthogFlags)) {
           if (!this.isFlagName(name)) {
             // We don't want an unexpected PostHog flag to break the app, so we
             // just log it and continue.
             console.warn(`Unexpected posthog flag "${name}": ${value}`)
+            continue
+          }
+
+          if (typeof value !== "boolean") {
+            console.warn(`Invalid value for posthog flag "${name}": ${value}`)
             continue
           }
 
@@ -235,13 +164,9 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
             continue
           }
 
-          const payload = posthogFlags.featureFlagPayloads?.[name]
-          const flag = this.flagSchema[name]
           try {
-            // @ts-expect-error - TS does not like you writing into a generic
-            // type, but we know that it's okay in this case because it's just
-            // an object.
-            flagValues[name] = flag.parse(payload || value)
+            // @ts-expect-error - TS does not like you writing into a generic type.
+            flagValues[name] = value
             tags[`flags.${name}.source`] = "posthog"
           } catch (err) {
             // We don't want an invalid PostHog flag to break the app, so we just
@@ -262,18 +187,12 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
   }
 }
 
-// This is the primary source of truth for feature flags. If you want to add a
-// new flag, add it here and use the `fetch` and `get` functions to access it.
-// All of the machinery in this file is to make sure that flags have their
-// default values set correctly and their types flow through the system.
-export const flags = new FlagSet({
-  [FeatureFlag.DEFAULT_VALUES]: Flag.boolean(true),
-  [FeatureFlag.AUTOMATION_BRANCHING]: Flag.boolean(true),
-  [FeatureFlag.SQS]: Flag.boolean(true),
-  [FeatureFlag.ENRICHED_RELATIONSHIPS]: Flag.boolean(true),
-  [FeatureFlag.AI_CUSTOM_CONFIGS]: Flag.boolean(true),
-  [FeatureFlag.BUDIBASE_AI]: Flag.boolean(true),
-})
+export const flags = new FlagSet(FeatureFlagDefaults)
 
-type UnwrapPromise<T> = T extends Promise<infer U> ? U : T
-export type FeatureFlags = UnwrapPromise<ReturnType<typeof flags.fetch>>
+export async function isEnabled(flag: keyof typeof FeatureFlagDefaults) {
+  return await flags.isEnabled(flag)
+}
+
+export async function all() {
+  return await flags.fetch()
+}

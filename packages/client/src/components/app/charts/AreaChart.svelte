@@ -18,8 +18,6 @@
   export let palette
   export let c1, c2, c3, c4, c5
 
-  // Area specific props
-  export let area
   export let stacked
   export let gradient
 

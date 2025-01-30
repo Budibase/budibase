@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import ToggleActionButtonGroup from "components/common/ToggleActionButtonGroup.svelte"
+  import ToggleActionButtonGroup from "@/components/common/ToggleActionButtonGroup.svelte"
   import { helpers } from "@budibase/shared-core"
   import { SchemaUtils } from "@budibase/frontend-core"
   import { Icon, notifications, ActionButton, Popover } from "@budibase/bbui"
@@ -11,7 +11,6 @@
   export let disabledPermissions = []
   export let columns
   export let fromRelationshipField
-  export let canSetRelationshipSchemas
 
   const { datasource, dispatch } = getContext("grid")
 
@@ -129,6 +128,8 @@
     }
   })
 
+  $: hasLinkColumns = columns.some(c => c.schema.type === FieldType.LINK)
+
   async function toggleColumn(column, permission) {
     const visible = permission !== FieldPermissions.HIDDEN
     const readonly = permission === FieldPermissions.READONLY
@@ -184,7 +185,7 @@
           value={columnToPermissionOptions(column)}
           options={column.options}
         />
-        {#if canSetRelationshipSchemas && column.schema.type === FieldType.LINK && columnToPermissionOptions(column) !== FieldPermissions.HIDDEN}
+        {#if column.schema.type === FieldType.LINK && columnToPermissionOptions(column) !== FieldPermissions.HIDDEN}
           <div class="relationship-columns">
             <ActionButton
               on:click={e => {
@@ -203,7 +204,7 @@
   </div>
 </div>
 
-{#if canSetRelationshipSchemas}
+{#if hasLinkColumns}
   <Popover
     on:close={() => (relationshipFieldName = null)}
     open={relationshipFieldName}

@@ -1,7 +1,7 @@
 <script>
   import { Body, ModalContent, Table, Icon } from "@budibase/bbui"
   import PasswordCopyTableRenderer from "./PasswordCopyTableRenderer.svelte"
-  import { parseToCsv } from "helpers/data/utils"
+  import { parseToCsv } from "@/helpers/data/utils"
   import { onMount } from "svelte"
   import InviteResponseRenderer from "./InviteResponseRenderer.svelte"
 

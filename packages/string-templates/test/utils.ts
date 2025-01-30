@@ -11,7 +11,7 @@ function tryParseJson(str: string) {
   try {
     return JSON.parse(str.replace(/'/g, '"'))
   } catch (e) {
-    return
+    // do nothing
   }
 }
 

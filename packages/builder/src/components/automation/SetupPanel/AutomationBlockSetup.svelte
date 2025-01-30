@@ -20,9 +20,9 @@
     Icon,
   } from "@budibase/bbui"
 
-  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, tables } from "stores/builder"
-  import { environment } from "stores/portal"
+  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
+  import { automationStore, tables } from "@/stores/builder"
+  import { environment } from "@/stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import {
     BindingSidePanel,
@@ -30,25 +30,28 @@
     DrawerBindableInput,
     ServerBindingPanel as AutomationBindingPanel,
     ModalBindableInput,
-  } from "components/common/bindings"
+  } from "@/components/common/bindings"
   import CodeEditorModal from "./CodeEditorModal.svelte"
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import AutomationSelector from "./AutomationSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
-  import Editor from "components/integration/QueryEditor.svelte"
-  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import { BindingHelpers, BindingType } from "components/common/bindings/utils"
+  import Editor from "@/components/integration/QueryEditor.svelte"
+  import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
+  import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
+  import {
+    BindingHelpers,
+    BindingType,
+  } from "@/components/common/bindings/utils"
   import {
     bindingsToCompletions,
     hbAutocomplete,
     EditorModes,
-  } from "components/common/CodeEditor"
-  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
+  } from "@/components/common/CodeEditor"
+  import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { QueryUtils, Utils, search, memo } from "@budibase/frontend-core"
-  import { getSchemaForDatasourcePlus } from "dataBinding"
-  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
-  import { onMount } from "svelte"
+  import { getSchemaForDatasourcePlus } from "@/dataBinding"
+  import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
+  import { onMount, createEventDispatcher } from "svelte"
   import { writable } from "svelte/store"
   import { cloneDeep } from "lodash/fp"
   import {
@@ -66,6 +69,8 @@
   export let schemaProperties
   export let isTestModal = false
   export let bindings = []
+
+  const dispatch = createEventDispatcher()
 
   // Stop unnecessary rendering
   const memoBlock = memo(block)
@@ -114,7 +119,7 @@
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
-    { allowLinks: true }
+    { allowLinks: false }
   )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = $memoBlock?.type === AutomationStepType.TRIGGER
@@ -288,7 +293,7 @@
               type: RowSelector,
               props: {
                 row: inputData["oldRow"] || {
-                  tableId: inputData["row"].tableId,
+                  tableId: inputData["row"]?.tableId,
                 },
                 meta: {
                   fields: inputData["meta"]?.oldFields || {},
@@ -532,7 +537,9 @@
     }
     try {
       if (isTestModal) {
-        let newTestData = { schema }
+        // Be sure to merge in the testData prop data, as it can contain custom
+        // default data
+        let newTestData = { schema, ...testData }
 
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
         if (stepId === TriggerStepID.WEBHOOK) {
@@ -549,7 +556,13 @@
           ...request,
         }
 
-        await automationStore.actions.addTestDataToAutomation(newTestData)
+        const updatedAuto =
+          automationStore.actions.addTestDataToAutomation(newTestData)
+
+        // Ensure the test request has the latest info.
+        dispatch("update", updatedAuto)
+
+        await automationStore.actions.save(updatedAuto)
       } else {
         const data = { schema, ...request }
         await automationStore.actions.updateBlockInputs(block, data)
@@ -584,10 +597,11 @@
   }
 
   function saveFilters(key) {
-    const query = QueryUtils.buildQuery(tempFilters)
+    const update = Utils.parseFilter(tempFilters)
+    const query = QueryUtils.buildQuery(update)
     onChange({
       [key]: query,
-      [`${key}-def`]: tempFilters, // need to store the builder definition in the automation
+      [`${key}-def`]: update, // need to store the builder definition in the automation
     })
 
     drawer.hide()

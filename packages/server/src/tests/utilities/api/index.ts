@@ -16,43 +16,46 @@ import { TemplateAPI } from "./template"
 import { RowActionAPI } from "./rowAction"
 import { AutomationAPI } from "./automation"
 import { PluginAPI } from "./plugin"
+import { WebhookAPI } from "./webhook"
 
 export default class API {
-  table: TableAPI
-  legacyView: LegacyViewAPI
-  viewV2: ViewV2API
-  row: RowAPI
-  permission: PermissionAPI
-  datasource: DatasourceAPI
-  screen: ScreenAPI
   application: ApplicationAPI
-  backup: BackupAPI
   attachment: AttachmentAPI
-  user: UserAPI
+  automation: AutomationAPI
+  backup: BackupAPI
+  datasource: DatasourceAPI
+  legacyView: LegacyViewAPI
+  permission: PermissionAPI
+  plugin: PluginAPI
   query: QueryAPI
   roles: RoleAPI
-  templates: TemplateAPI
+  row: RowAPI
   rowAction: RowActionAPI
-  automation: AutomationAPI
-  plugin: PluginAPI
+  screen: ScreenAPI
+  table: TableAPI
+  templates: TemplateAPI
+  user: UserAPI
+  viewV2: ViewV2API
+  webhook: WebhookAPI
 
   constructor(config: TestConfiguration) {
-    this.table = new TableAPI(config)
-    this.legacyView = new LegacyViewAPI(config)
-    this.viewV2 = new ViewV2API(config)
-    this.row = new RowAPI(config)
-    this.permission = new PermissionAPI(config)
-    this.datasource = new DatasourceAPI(config)
-    this.screen = new ScreenAPI(config)
     this.application = new ApplicationAPI(config)
-    this.backup = new BackupAPI(config)
     this.attachment = new AttachmentAPI(config)
-    this.user = new UserAPI(config)
+    this.automation = new AutomationAPI(config)
+    this.backup = new BackupAPI(config)
+    this.datasource = new DatasourceAPI(config)
+    this.legacyView = new LegacyViewAPI(config)
+    this.permission = new PermissionAPI(config)
+    this.plugin = new PluginAPI(config)
     this.query = new QueryAPI(config)
     this.roles = new RoleAPI(config)
-    this.templates = new TemplateAPI(config)
+    this.row = new RowAPI(config)
     this.rowAction = new RowActionAPI(config)
-    this.automation = new AutomationAPI(config)
-    this.plugin = new PluginAPI(config)
+    this.screen = new ScreenAPI(config)
+    this.table = new TableAPI(config)
+    this.templates = new TemplateAPI(config)
+    this.user = new UserAPI(config)
+    this.viewV2 = new ViewV2API(config)
+    this.webhook = new WebhookAPI(config)
   }
 }

@@ -47,7 +47,7 @@ describe("check BB_ADMIN environment variables", () => {
               })
               expect(user).toBeDefined()
               expect(user?.password).toBeDefined()
-              expect(await utils.compare(PASSWORD, user?.password!)).toEqual(
+              expect(await utils.compare(PASSWORD, user!.password!)).toEqual(
                 true
               )
             }

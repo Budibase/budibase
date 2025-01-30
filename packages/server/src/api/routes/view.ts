@@ -9,6 +9,11 @@ const router: Router = new Router()
 
 router
   .get(
+    "/api/v2/views",
+    authorized(permissions.BUILDER),
+    viewController.v2.fetch
+  )
+  .get(
     "/api/v2/views/:viewId",
     authorizedResource(
       permissions.PermissionType.VIEW,

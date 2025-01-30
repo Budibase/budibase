@@ -6,7 +6,7 @@ import {
   getPlatformURL,
 } from "../context"
 import {
-  BBContext,
+  Ctx,
   TenantResolutionStrategy,
   GetTenantIdOptions,
 } from "@budibase/types"
@@ -37,7 +37,7 @@ export const isUserInAppTenant = (appId: string, user?: any) => {
 const ALL_STRATEGIES = Object.values(TenantResolutionStrategy)
 
 export const getTenantIDFromCtx = (
-  ctx: BBContext,
+  ctx: Ctx,
   opts: GetTenantIdOptions
 ): string | undefined => {
   // exit early if not multi-tenant

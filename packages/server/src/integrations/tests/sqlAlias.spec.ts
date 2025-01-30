@@ -1,12 +1,13 @@
 import {
   Datasource,
   Operation,
-  QueryJson,
   SourceName,
   SqlQuery,
+  SqlClient,
+  EnrichedQueryJson,
+  TableSchema,
   Table,
   TableSourceType,
-  SqlClient,
 } from "@budibase/types"
 import { sql } from "@budibase/backend-core"
 import { join } from "path"
@@ -16,16 +17,20 @@ import sdk from "../../sdk"
 const Sql = sql.Sql
 
 // this doesn't exist strictly
-const TABLE: Table = {
-  type: "table",
-  sourceType: TableSourceType.EXTERNAL,
-  sourceId: "SOURCE_ID",
-  schema: {},
-  name: "tableName",
-  primary: ["id"],
-}
+const TABLE = buildTable("tableName", {})
 
 const AliasTables = sdk.rows.AliasTables
+
+function buildTable(name: string, schema: TableSchema): Table {
+  return {
+    type: "table",
+    sourceType: TableSourceType.EXTERNAL,
+    sourceId: "SOURCE_ID",
+    schema: schema,
+    name: name,
+    primary: ["id"],
+  }
+}
 
 function multiline(sql: string) {
   return sql.replace(/\n/g, "").replace(/ +/g, " ")
@@ -35,8 +40,22 @@ describe("Captures of real examples", () => {
   const relationshipLimit = 500
   const primaryLimit = 100
 
-  function getJson(name: string): QueryJson {
-    return require(join(__dirname, "sqlQueryJson", name)) as QueryJson
+  function getJson(name: string): EnrichedQueryJson {
+    // tables aren't fully specified in the test JSON
+    const base = require(join(__dirname, "sqlQueryJson", name)) as Omit<
+      EnrichedQueryJson,
+      "tables"
+    >
+    const tables: Record<string, Table> = { [base.table.name]: base.table }
+    if (base.relationships) {
+      for (let { tableName } of base.relationships) {
+        tables[tableName] = buildTable(tableName, {})
+      }
+    }
+    return {
+      ...base,
+      tables: tables,
+    }
   }
 
   describe("create", () => {
@@ -54,6 +73,27 @@ describe("Captures of real examples", () => {
   })
 
   describe("read", () => {
+    it("should retrieve all fields if non are specified", () => {
+      const queryJson = getJson("basicFetch.json")
+      delete queryJson.resource
+
+      let query = new Sql(SqlClient.POSTGRES)._query(queryJson)
+      expect(query).toEqual({
+        bindings: [primaryLimit],
+        sql: `select * from "persons" as "a" order by "a"."firstname" asc nulls first, "a"."personid" asc limit $1`,
+      })
+    })
+
+    it("should retrieve only requested fields", () => {
+      const queryJson = getJson("basicFetch.json")
+
+      let query = new Sql(SqlClient.POSTGRES)._query(queryJson)
+      expect(query).toEqual({
+        bindings: [primaryLimit],
+        sql: `select "a"."year", "a"."firstname", "a"."personid", "a"."age", "a"."type", "a"."lastname" from "persons" as "a" order by "a"."firstname" asc nulls first, "a"."personid" asc limit $1`,
+      })
+    })
+
     it("should handle basic retrieval with relationships", () => {
       const queryJson = getJson("basicFetchWithRelationships.json")
       let query = new Sql(SqlClient.POSTGRES, relationshipLimit)._query(
@@ -63,7 +103,7 @@ describe("Captures of real examples", () => {
         bindings: [primaryLimit, relationshipLimit, relationshipLimit],
         sql: expect.stringContaining(
           multiline(
-            `select json_agg(json_build_object('completed',"b"."completed",'completed',"b"."completed",'executorid',"b"."executorid",'executorid',"b"."executorid",'qaid',"b"."qaid",'qaid',"b"."qaid",'taskid',"b"."taskid",'taskid',"b"."taskid",'taskname',"b"."taskname",'taskname',"b"."taskname")`
+            `select json_agg(json_build_object('executorid',"b"."executorid",'executorid',"b"."executorid",'qaid',"b"."qaid",'qaid',"b"."qaid",'taskid',"b"."taskid",'taskid',"b"."taskid",'completed',"b"."completed",'completed',"b"."completed",'taskname',"b"."taskname",'taskname',"b"."taskname"`
           )
         ),
       })
@@ -93,9 +133,9 @@ describe("Captures of real examples", () => {
         bindings: [primaryLimit, relationshipLimit],
         sql: expect.stringContaining(
           multiline(
-            `with "paginated" as (select "a".* from "products" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc limit $1) 
-                 select "a".*, (select json_agg(json_build_object('completed',"b"."completed",'executorid',"b"."executorid",'qaid',"b"."qaid",'taskid',"b"."taskid",'taskname',"b"."taskname")) 
-                 from (select "b".* from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" order by "b"."taskid" asc limit $2) as "b") as "tasks" 
+            `with "paginated" as (select * from "products" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc limit $1) 
+                 select "a"."productname", "a"."productid", (select json_agg(json_build_object('executorid',"b"."executorid",'qaid',"b"."qaid",'taskid',"b"."taskid",'completed',"b"."completed",'taskname',"b"."taskname")) 
+                 from (select "b"."executorid", "b"."qaid", "b"."taskid", "b"."completed", "b"."taskname" from "tasks" as "b" inner join "products_tasks" as "c" on "b"."taskid" = "c"."taskid" where "c"."productid" = "a"."productid" order by "b"."taskid" asc limit $2) as "b") as "tasks" 
                  from "paginated" as "a" order by "a"."productname" asc nulls first, "a"."productid" asc`
           )
         ),
@@ -111,9 +151,9 @@ describe("Captures of real examples", () => {
       expect(query).toEqual({
         bindings: [...filters, relationshipLimit, relationshipLimit],
         sql: multiline(
-          `with "paginated" as (select "a".* from "tasks" as "a" where "a"."taskid" in ($1, $2) order by "a"."taskid" asc limit $3) 
-               select "a".*, (select json_agg(json_build_object('productid',"b"."productid",'productname',"b"."productname")) 
-               from (select "b".* from "products" as "b" inner join "products_tasks" as "c" on "b"."productid" = "c"."productid" 
+          `with "paginated" as (select * from "tasks" as "a" where "a"."taskid" in ($1, $2) order by "a"."taskid" asc limit $3) 
+               select "a"."executorid", "a"."taskname", "a"."taskid", "a"."completed", "a"."qaid", (select json_agg(json_build_object('productid',"b"."productid",'productname',"b"."productname")) 
+               from (select "b"."productid", "b"."productname" from "products" as "b" inner join "products_tasks" as "c" on "b"."productid" = "c"."productid" 
                where "c"."taskid" = "a"."taskid" order by "b"."productid" asc limit $4) as "b") as "products" from "paginated" as "a" order by "a"."taskid" asc`
         ),
       })
@@ -125,10 +165,10 @@ describe("Captures of real examples", () => {
         queryJson
       )
       const filters = queryJson.filters
-      const notEqualsValue = Object.values(filters?.notEqual!)[0]
+      const notEqualsValue = Object.values(filters!.notEqual!)[0]
       const rangeValue: { high?: string | number; low?: string | number } =
-        Object.values(filters?.range!)[0]
-      const equalValue = Object.values(filters?.equal!)[0]
+        Object.values(filters!.range!)[0]
+      const equalValue = Object.values(filters!.equal!)[0]
 
       expect(query).toEqual({
         bindings: [
@@ -190,7 +230,7 @@ describe("Captures of real examples", () => {
         bindings: ["ddd", ""],
         sql: multiline(`delete from "compositetable" as "a" 
           where COALESCE("a"."keypartone" = $1, FALSE) and COALESCE("a"."keyparttwo" = $2, FALSE)
-          returning "a".*`),
+          returning "a"."keyparttwo", "a"."keypartone", "a"."name"`),
       })
     })
   })
@@ -212,8 +252,7 @@ describe("Captures of real examples", () => {
       }, queryJson)
       expect(returningQuery).toEqual({
         sql: multiline(
-          `select top (@p0) * from [people] where CASE WHEN [people].[name] = @p1 THEN 1 ELSE 0 END = 1 
-               and CASE WHEN [people].[age] = @p2 THEN 1 ELSE 0 END = 1 order by [people].[name] asc`
+          `select top (@p0) * from [people] where CASE WHEN [people].[name] = @p1 THEN 1 ELSE 0 END = 1 and CASE WHEN [people].[age] = @p2 THEN 1 ELSE 0 END = 1 order by [people].[name] asc`
         ),
         bindings: [1, "Test", 22],
       })
@@ -227,7 +266,7 @@ describe("Captures of real examples", () => {
         tableNames.push(generator.guid())
       }
       const aliasing = new AliasTables(tableNames)
-      let alias: string = ""
+      let alias = ""
       for (let table of tableNames) {
         alias = aliasing.getAlias(table)
       }
@@ -246,15 +285,17 @@ describe("Captures of real examples", () => {
       }
     }
 
-    function getQuery(op: Operation, fields: string[] = ["a"]): QueryJson {
+    function getQuery(
+      op: Operation,
+      fields: string[] = ["a"]
+    ): EnrichedQueryJson {
       return {
-        endpoint: { datasourceId: "", entityId: "", operation: op },
+        operation: op,
         resource: {
           fields,
         },
-        meta: {
-          table: TABLE,
-        },
+        table: TABLE,
+        tables: { [TABLE.name]: TABLE },
       }
     }
 

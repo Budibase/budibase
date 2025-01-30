@@ -1,5 +1,5 @@
 jest.mock("nodemailer")
-import { TestConfiguration, mocks } from "../../../../tests"
+import { TestConfiguration } from "../../../../tests"
 import { events } from "@budibase/backend-core"
 
 describe("/api/global/self", () => {
@@ -39,7 +39,6 @@ describe("/api/global/self", () => {
       const dbUser = (await config.getUser(user.email))!
 
       user._rev = dbUser._rev
-      user.dayPassRecordedAt = mocks.date.MOCK_DATE.toISOString()
       expect(res.body._id).toBe(user._id)
       expect(events.user.updated).toHaveBeenCalledTimes(1)
       expect(events.user.updated).toHaveBeenCalledWith(dbUser)
@@ -62,7 +61,6 @@ describe("/api/global/self", () => {
     const dbUser = (await config.getUser(user.email))!
 
     user._rev = dbUser._rev
-    user.dayPassRecordedAt = mocks.date.MOCK_DATE.toISOString()
     expect(dbUser.onboardedAt).toBe("2023-03-07T14:10:54.869Z")
     expect(dbUser.freeTrialConfirmedAt).toBe("2024-03-17T14:10:54.869Z")
     expect(res.body._id).toBe(user._id)

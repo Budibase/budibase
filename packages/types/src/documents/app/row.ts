@@ -134,6 +134,12 @@ export const JsonTypes = [
   FieldType.ARRAY,
 ]
 
+export type FormulaResponseType =
+  | FieldType.STRING
+  | FieldType.NUMBER
+  | FieldType.BOOLEAN
+  | FieldType.DATETIME
+
 export const NumericTypes = [FieldType.NUMBER, FieldType.BIGINT]
 
 export function isNumeric(type: FieldType) {
@@ -148,6 +154,7 @@ export const GroupByTypes = [
   FieldType.BOOLEAN,
   FieldType.DATETIME,
   FieldType.BIGINT,
+  FieldType.AI,
 ]
 
 export function canGroupBy(type: FieldType) {

@@ -1,6 +1,7 @@
 import { Table } from "./types"
+import { RequiredKeys } from "@budibase/types"
 
-function table(body: any): Table {
+function table(body: any): RequiredKeys<Table> {
   return {
     _id: body._id,
     name: body.name,

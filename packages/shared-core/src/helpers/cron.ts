@@ -33,7 +33,7 @@ function improveErrors(errors: string[]): string[] {
 
 export function getNextExecutionDates(
   cronExpression: string,
-  limit: number = 4
+  limit = 4
 ): string[] {
   const parsed = cronParser.parseExpression(cronExpression)
   const nextRuns = []
@@ -48,7 +48,7 @@ export function validate(
   cronExpression: string
 ): { valid: false; err: string[] } | { valid: true } {
   const result = cronValidate(cronExpression, {
-    preset: "npm-node-cron",
+    preset: "npm-cron-schedule",
     override: {
       useSeconds: false,
     },

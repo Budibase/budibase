@@ -34,6 +34,7 @@ import {
   Webhook,
   WebhookActionType,
   BuiltinPermissionID,
+  DeepPartial,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -184,21 +185,12 @@ export function newAutomation({
   steps,
   trigger,
 }: { steps?: AutomationStep[]; trigger?: AutomationTrigger } = {}) {
-  const automation = basicAutomation()
-
-  if (trigger) {
-    automation.definition.trigger = trigger
-  } else {
-    automation.definition.trigger = automationTrigger()
-  }
-
-  if (steps) {
-    automation.definition.steps = steps
-  } else {
-    automation.definition.steps = [automationStep()]
-  }
-
-  return automation
+  return basicAutomation({
+    definition: {
+      steps: steps || [automationStep()],
+      trigger: trigger || automationTrigger(),
+    },
+  })
 }
 
 export function rowActionAutomation() {
@@ -211,8 +203,8 @@ export function rowActionAutomation() {
   return automation
 }
 
-export function basicAutomation(appId?: string): Automation {
-  return {
+export function basicAutomation(opts?: DeepPartial<Automation>): Automation {
+  const baseAutomation: Automation = {
     name: "My Automation",
     screenId: "kasdkfldsafkl",
     live: true,
@@ -241,8 +233,9 @@ export function basicAutomation(appId?: string): Automation {
       steps: [],
     },
     type: "automation",
-    appId: appId!,
+    appId: "appId",
   }
+  return merge(baseAutomation, opts)
 }
 
 export function basicCronAutomation(appId: string, cron: string): Automation {
@@ -387,16 +380,21 @@ export function loopAutomation(
   return automation as Automation
 }
 
-export function collectAutomation(tableId?: string): Automation {
-  const automation: any = {
+export function collectAutomation(opts?: DeepPartial<Automation>): Automation {
+  const baseAutomation: Automation = {
+    appId: "appId",
     name: "looping",
     type: "automation",
     definition: {
       steps: [
         {
           id: "b",
-          type: "ACTION",
+          name: "b",
+          tagline: "An automation action step",
+          icon: "Icon",
+          type: AutomationStepType.ACTION,
           internal: true,
+          description: "Execute script",
           stepId: AutomationActionStepId.EXECUTE_SCRIPT,
           inputs: {
             code: "return [1,2,3]",
@@ -405,8 +403,12 @@ export function collectAutomation(tableId?: string): Automation {
         },
         {
           id: "c",
-          type: "ACTION",
+          name: "c",
+          type: AutomationStepType.ACTION,
+          tagline: "An automation action step",
+          icon: "Icon",
           internal: true,
+          description: "Collect",
           stepId: AutomationActionStepId.COLLECT,
           inputs: {
             collection: "{{ literal steps.1.value }}",
@@ -416,24 +418,28 @@ export function collectAutomation(tableId?: string): Automation {
       ],
       trigger: {
         id: "a",
-        type: "TRIGGER",
+        type: AutomationStepType.TRIGGER,
         event: AutomationEventType.ROW_SAVE,
         stepId: AutomationTriggerStepId.ROW_SAVED,
+        name: "trigger Step",
+        tagline: "An automation trigger",
+        description: "A trigger",
+        icon: "Icon",
         inputs: {
-          tableId,
+          tableId: "tableId",
         },
         schema: TRIGGER_DEFINITIONS.ROW_SAVED.schema,
       },
     },
   }
-  return automation
+  return merge(baseAutomation, opts)
 }
 
-export function filterAutomation(appId: string, tableId?: string): Automation {
+export function filterAutomation(opts?: DeepPartial<Automation>): Automation {
   const automation: Automation = {
     name: "looping",
     type: "automation",
-    appId,
+    appId: "appId",
     definition: {
       steps: [
         {
@@ -456,16 +462,16 @@ export function filterAutomation(appId: string, tableId?: string): Automation {
         icon: "Icon",
         id: "a",
         type: AutomationStepType.TRIGGER,
-        event: "row:save",
+        event: AutomationEventType.ROW_SAVE,
         stepId: AutomationTriggerStepId.ROW_SAVED,
         inputs: {
-          tableId: tableId!,
+          tableId: "tableId",
         },
         schema: TRIGGER_DEFINITIONS.ROW_SAVED.schema,
       },
     },
   }
-  return automation
+  return merge(automation, opts)
 }
 
 export function updateRowAutomationWithFilters(
@@ -498,7 +504,7 @@ export function updateRowAutomationWithFilters(
         icon: "Icon",
         id: "a",
         type: AutomationStepType.TRIGGER,
-        event: "row:update",
+        event: AutomationEventType.ROW_UPDATE,
         stepId: AutomationTriggerStepId.ROW_UPDATED,
         inputs: { tableId },
         schema: TRIGGER_DEFINITIONS.ROW_UPDATED.schema,
@@ -513,7 +519,7 @@ export function basicAutomationResults(
   return {
     automationId,
     status: AutomationStatus.SUCCESS,
-    trigger: "trigger",
+    trigger: "trigger" as any,
     steps: [
       {
         stepId: AutomationActionStepId.SERVER_LOG,
@@ -535,7 +541,7 @@ export function basicRow(tableId: string) {
 export function basicLinkedRow(
   tableId: string,
   linkedRowId: string,
-  linkField: string = "link"
+  linkField = "link"
 ) {
   // this is based on the basic linked tables you get from the test configuration
   return {
@@ -586,14 +592,14 @@ export function basicUser(role: string) {
   }
 }
 
-export function basicScreen(route: string = "/") {
+export function basicScreen(route = "/") {
   return createHomeScreen({
     roleId: BUILTIN_ROLE_IDS.BASIC,
     route,
   })
 }
 
-export function powerScreen(route: string = "/") {
+export function powerScreen(route = "/") {
   return createHomeScreen({
     roleId: BUILTIN_ROLE_IDS.POWER,
     route,

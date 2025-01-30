@@ -1,5 +1,8 @@
-import { Table } from "@budibase/types"
+import { EmptyFilterOption, SortOrder, Table } from "@budibase/types"
 import * as setup from "./utilities"
+import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import * as automation from "../index"
+import { basicTable } from "../../tests/utilities/structures"
 
 const NAME = "Test"
 
@@ -8,8 +11,10 @@ describe("Test a query step automation", () => {
   let config = setup.getConfig()
 
   beforeAll(async () => {
+    await automation.init()
     await config.init()
     table = await config.createTable()
+
     const row = {
       name: NAME,
       description: "original description",
@@ -22,87 +27,160 @@ describe("Test a query step automation", () => {
   afterAll(setup.afterAll)
 
   it("should be able to run the query step", async () => {
-    const inputs = {
-      tableId: table._id,
-      filters: {
-        equal: {
-          name: NAME,
+    const result = await createAutomationBuilder({
+      name: "Basic Query Test",
+      config,
+    })
+      .appAction({ fields: {} })
+      .queryRows(
+        {
+          tableId: table._id!,
+          filters: {
+            equal: {
+              name: NAME,
+            },
+          },
+          sortColumn: "name",
+          sortOrder: SortOrder.ASCENDING,
+          limit: 10,
         },
-      },
-      sortColumn: "name",
-      sortOrder: "ascending",
-      limit: 10,
-    }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
-    expect(res.success).toBe(true)
-    expect(res.rows).toBeDefined()
-    expect(res.rows.length).toBe(2)
-    expect(res.rows[0].name).toBe(NAME)
+        { stepName: "Query All Rows" }
+      )
+      .run()
+
+    expect(result.steps[0].outputs.success).toBe(true)
+    expect(result.steps[0].outputs.rows).toBeDefined()
+    expect(result.steps[0].outputs.rows.length).toBe(2)
+    expect(result.steps[0].outputs.rows[0].name).toBe(NAME)
   })
 
   it("Returns all rows when onEmptyFilter has no value and no filters are passed", async () => {
-    const inputs = {
-      tableId: table._id,
-      filters: {},
-      sortColumn: "name",
-      sortOrder: "ascending",
-      limit: 10,
-    }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
-    expect(res.success).toBe(true)
-    expect(res.rows).toBeDefined()
-    expect(res.rows.length).toBe(2)
-    expect(res.rows[0].name).toBe(NAME)
+    const result = await createAutomationBuilder({
+      name: "Empty Filter Test",
+      config,
+    })
+      .appAction({ fields: {} })
+      .queryRows(
+        {
+          tableId: table._id!,
+          filters: {},
+          sortColumn: "name",
+          sortOrder: SortOrder.ASCENDING,
+          limit: 10,
+        },
+        { stepName: "Query With Empty Filter" }
+      )
+      .run()
+
+    expect(result.steps[0].outputs.success).toBe(true)
+    expect(result.steps[0].outputs.rows).toBeDefined()
+    expect(result.steps[0].outputs.rows.length).toBe(2)
+    expect(result.steps[0].outputs.rows[0].name).toBe(NAME)
   })
 
   it("Returns no rows when onEmptyFilter is RETURN_NONE and theres no filters", async () => {
-    const inputs = {
-      tableId: table._id,
-      filters: {},
-      "filters-def": [],
-      sortColumn: "name",
-      sortOrder: "ascending",
-      limit: 10,
-      onEmptyFilter: "none",
-    }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
-    expect(res.success).toBe(false)
-    expect(res.rows).toBeDefined()
-    expect(res.rows.length).toBe(0)
+    const result = await createAutomationBuilder({
+      name: "Return None Test",
+      config,
+    })
+      .appAction({ fields: {} })
+      .queryRows(
+        {
+          tableId: table._id!,
+          filters: {},
+          "filters-def": [],
+          sortColumn: "name",
+          sortOrder: SortOrder.ASCENDING,
+          limit: 10,
+          onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+        },
+        { stepName: "Query With Return None" }
+      )
+      .run()
+
+    expect(result.steps[0].outputs.success).toBe(true)
+    expect(result.steps[0].outputs.rows).toBeDefined()
+    expect(result.steps[0].outputs.rows.length).toBe(0)
   })
 
   it("Returns no rows when onEmptyFilters RETURN_NONE and a filter is passed with a null value", async () => {
-    const inputs = {
-      tableId: table._id,
-      onEmptyFilter: "none",
-      filters: {},
-      "filters-def": [
+    const result = await createAutomationBuilder({
+      name: "Null Filter Test",
+      config,
+    })
+      .appAction({ fields: {} })
+      .queryRows(
         {
-          value: null,
+          tableId: table._id!,
+          onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          filters: {},
+          "filters-def": [
+            {
+              value: null,
+            },
+          ],
+          sortColumn: "name",
+          sortOrder: SortOrder.ASCENDING,
+          limit: 10,
         },
-      ],
-      sortColumn: "name",
-      sortOrder: "ascending",
-      limit: 10,
-    }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
-    expect(res.success).toBe(false)
-    expect(res.rows).toBeDefined()
-    expect(res.rows.length).toBe(0)
+        { stepName: "Query With Null Filter" }
+      )
+      .run()
+
+    expect(result.steps[0].outputs.success).toBe(true)
+    expect(result.steps[0].outputs.rows).toBeDefined()
+    expect(result.steps[0].outputs.rows.length).toBe(0)
   })
 
   it("Returns rows when onEmptyFilter is RETURN_ALL and no filter is passed", async () => {
-    const inputs = {
-      tableId: table._id,
-      onEmptyFilter: "all",
-      filters: {},
-      sortColumn: "name",
-      sortOrder: "ascending",
-      limit: 10,
-    }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
-    expect(res.success).toBe(true)
-    expect(res.rows).toBeDefined()
-    expect(res.rows.length).toBe(2)
+    const result = await createAutomationBuilder({
+      name: "Return All Test",
+      config,
+    })
+      .appAction({ fields: {} })
+      .queryRows(
+        {
+          tableId: table._id!,
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+          filters: {},
+          sortColumn: "name",
+          sortOrder: SortOrder.ASCENDING,
+          limit: 10,
+        },
+        { stepName: "Query With Return All" }
+      )
+      .run()
+
+    expect(result.steps[0].outputs.success).toBe(true)
+    expect(result.steps[0].outputs.rows).toBeDefined()
+    expect(result.steps[0].outputs.rows.length).toBe(2)
+  })
+
+  it("return rows when querying a table with a space in the name", async () => {
+    const tableWithSpaces = await config.createTable({
+      ...basicTable(),
+      name: "table with spaces",
+    })
+    await config.createRow({
+      name: NAME,
+      tableId: tableWithSpaces._id,
+    })
+    const result = await createAutomationBuilder({
+      name: "Return All Test",
+      config,
+    })
+      .appAction({ fields: {} })
+      .queryRows(
+        {
+          tableId: tableWithSpaces._id!,
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+          filters: {},
+        },
+        { stepName: "Query table with spaces" }
+      )
+      .run()
+    expect(result.steps[0].outputs.success).toBe(true)
+    expect(result.steps[0].outputs.rows).toBeDefined()
+    expect(result.steps[0].outputs.rows.length).toBe(1)
   })
 })

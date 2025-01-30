@@ -31,7 +31,7 @@
     }
   </style>
   <script src='{{ clientLibPath }}'></script>
-  <script>
+  <script nonce="{{ nonce }}">
     function receiveMessage(event) {
       if (!event.data) {
         return
@@ -73,7 +73,8 @@
         hiddenComponentIds,
         usedPlugins,
         location,
-        snippets
+        snippets,
+        componentErrors
       } = parsed
 
       // Set some flags so the app knows we're in the builder
@@ -91,6 +92,7 @@
       window["##BUDIBASE_USED_PLUGINS##"] = usedPlugins
       window["##BUDIBASE_LOCATION##"] = location
       window["##BUDIBASE_SNIPPETS##"] = snippets
+      window['##BUDIBASE_COMPONENT_ERRORS##'] = componentErrors
 
       // Initialise app
       try {

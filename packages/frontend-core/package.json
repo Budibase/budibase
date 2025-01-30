@@ -4,14 +4,20 @@
   "description": "Budibase frontend core libraries used in builder and client",
   "author": "Budibase",
   "license": "MPL-2.0",
-  "svelte": "src/index.js",
+  "svelte": "./src/index.ts",
+  "scripts": {
+    "check:types": "yarn svelte-check"
+  },
   "dependencies": {
-    "@budibase/bbui": "0.0.0",
-    "@budibase/shared-core": "0.0.0",
-    "@budibase/types": "0.0.0",
+    "@budibase/bbui": "*",
+    "@budibase/shared-core": "*",
+    "@budibase/types": "*",
     "dayjs": "^1.10.8",
     "lodash": "4.17.21",
     "shortid": "2.2.15",
     "socket.io-client": "^4.7.5"
+  },
+  "devDependencies": {
+    "svelte-check": "^4.1.0"
   }
 }

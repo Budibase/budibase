@@ -68,8 +68,8 @@
   on:scroll
   bind:this={scrollRef}
   on:drop={onDrop}
-  ondragover="return false"
-  ondragenter="return false"
+  on:dragover={e => e.preventDefault()}
+  on:dragenter={e => e.preventDefault()}
 >
   <slot />
 </div>

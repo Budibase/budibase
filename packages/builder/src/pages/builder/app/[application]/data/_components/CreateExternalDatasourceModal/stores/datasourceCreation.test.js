@@ -5,14 +5,13 @@ import {
 } from "./datasourceCreation"
 import { get } from "svelte/store"
 
-vi.mock("stores/selectors", () => ({
+vi.mock("@/stores/selectors", () => ({
   shouldIntegrationFetchTableNames: vi.fn(),
 }))
 
 describe("datasource creation store", () => {
   beforeEach(ctx => {
     vi.clearAllMocks()
-    // eslint-disable-next-line no-import-assign
     ctx.store = createDatasourceCreationStore()
 
     ctx.integration = { data: "integration" }

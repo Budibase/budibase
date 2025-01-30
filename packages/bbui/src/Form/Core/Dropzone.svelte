@@ -8,6 +8,7 @@
   import Link from "../../Link/Link.svelte"
   import Tag from "../../Tags/Tag.svelte"
   import Tags from "../../Tags/Tags.svelte"
+  import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
 
   const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
@@ -39,12 +40,14 @@
     "jfif",
     "webp",
   ]
-
   const fieldId = id || uuid()
+
   let selectedImageIdx = 0
   let fileDragged = false
   let selectedUrl
   let fileInput
+  let loading = false
+
   $: selectedImage = value?.[selectedImageIdx] ?? null
   $: fileCount = value?.length ?? 0
   $: isImage =
@@ -86,10 +89,15 @@
     }
 
     if (processFiles) {
-      const processedFiles = await processFiles(fileList)
-      const newValue = [...value, ...processedFiles]
-      dispatch("change", newValue)
-      selectedImageIdx = newValue.length - 1
+      loading = true
+      try {
+        const processedFiles = await processFiles(fileList)
+        const newValue = [...value, ...processedFiles]
+        dispatch("change", newValue)
+        selectedImageIdx = newValue.length - 1
+      } finally {
+        loading = false
+      }
     } else {
       dispatch("change", fileList)
     }
@@ -227,7 +235,7 @@
   {#if showDropzone}
     <div
       class="spectrum-Dropzone"
-      class:disabled
+      class:disabled={disabled || loading}
       role="region"
       tabindex="0"
       on:dragover={handleDragOver}
@@ -241,7 +249,7 @@
           id={fieldId}
           {disabled}
           type="file"
-          multiple
+          multiple={maximum !== 1}
           accept={extensions}
           bind:this={fileInput}
           on:change={handleFile}
@@ -339,6 +347,12 @@
           {/if}
         {/if}
       </div>
+
+      {#if loading}
+        <div class="loading">
+          <ProgressCircle size="M" />
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -464,6 +478,7 @@
 
   .spectrum-Dropzone {
     height: 220px;
+    position: relative;
   }
   .compact .spectrum-Dropzone {
     height: 40px;
@@ -487,5 +502,15 @@
   }
   .tag {
     margin-top: 8px;
+  }
+
+  .loading {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
   }
 </style>

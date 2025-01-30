@@ -6,6 +6,7 @@ import {
   AutomationFeature,
   InputOutputBlock,
   AutomationTriggerStepId,
+  AutomationEventType,
 } from "./automation"
 import {
   CollectStepInputs,
@@ -142,6 +143,7 @@ export type ActionImplementations<T extends Hosting> = {
 export interface AutomationStepSchemaBase {
   name: string
   stepTitle?: string
+  event?: AutomationEventType
   tagline: string
   icon: string
   description: string
@@ -311,6 +313,7 @@ export type AutomationStep =
 type EmptyInputs = {}
 export type AutomationStepDefinition = Omit<AutomationStep, "id" | "inputs"> & {
   inputs: EmptyInputs
+  deprecated?: boolean
 }
 
 export type AutomationTriggerDefinition = Omit<
@@ -318,6 +321,7 @@ export type AutomationTriggerDefinition = Omit<
   "id" | "inputs"
 > & {
   inputs: EmptyInputs
+  deprecated?: boolean
 }
 
 export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
@@ -342,7 +346,7 @@ export interface AutomationTriggerSchema<
 > extends AutomationStepSchemaBase {
   id: string
   type: AutomationStepType.TRIGGER
-  event?: string
+  event?: AutomationEventType
   cronJobId?: string
   stepId: TTrigger
   inputs: AutomationTriggerInputs<TTrigger> & Record<string, any> // The record union to be removed once the types are fixed

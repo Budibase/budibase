@@ -14,11 +14,10 @@ import {
   coreOutputProcessing,
   processFormulas,
 } from "../../utilities/rowProcessor"
-import { context, features } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import {
   ContextUser,
   EventType,
-  FeatureFlag,
   FieldType,
   LinkDocumentValue,
   Row,
@@ -251,19 +250,13 @@ export async function squashLinks<T = Row[] | Row>(
   source: Table | ViewV2,
   enriched: T
 ): Promise<T> {
-  const allowRelationshipSchemas = await features.flags.isEnabled(
-    FeatureFlag.ENRICHED_RELATIONSHIPS
-  )
-
   let viewSchema: ViewV2Schema = {}
   if (sdk.views.isView(source)) {
     if (helpers.views.isCalculationView(source)) {
       return enriched
     }
 
-    if (allowRelationshipSchemas) {
-      viewSchema = source.schema || {}
-    }
+    viewSchema = source.schema || {}
   }
 
   let table: Table

@@ -113,7 +113,7 @@ export async function syncUsersToAllApps(userIds: string[]) {
 export async function syncApp(
   appId: string,
   opts?: { automationOnly?: boolean }
-) {
+): Promise<{ message: string }> {
   if (env.DISABLE_AUTO_PROD_APP_SYNC) {
     return {
       message:

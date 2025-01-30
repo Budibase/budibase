@@ -25,7 +25,7 @@ describe("/layouts", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._rev).toBeDefined()
-      expect(events.layout.created).toBeCalledTimes(1)
+      expect(events.layout.created).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -45,7 +45,7 @@ describe("/layouts", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.message).toBeDefined()
-      expect(events.layout.deleted).toBeCalledTimes(1)
+      expect(events.layout.deleted).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

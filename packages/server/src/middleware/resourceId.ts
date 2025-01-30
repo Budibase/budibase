@@ -1,4 +1,4 @@
-import { BBContext } from "@budibase/types"
+import { Ctx } from "@budibase/types"
 
 export class ResourceIdGetter {
   parameter: string
@@ -26,7 +26,7 @@ export class ResourceIdGetter {
     const parameter = this.parameter,
       main = this.main,
       sub = this.sub
-    return (ctx: BBContext, next: any) => {
+    return (ctx: Ctx, next: any) => {
       // @ts-ignore
       const request = ctx.request[parameter] || ctx[parameter]
       if (request == null) {

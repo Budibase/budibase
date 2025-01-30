@@ -25,32 +25,31 @@
   import { makePropSafe } from "@budibase/string-templates"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { tables, datasources } from "stores/builder"
-  import { featureFlags } from "stores/portal"
-  import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
+  import { tables, datasources } from "@/stores/builder"
+  import { licensing } from "@/stores/portal"
+  import { TableNames, UNEDITABLE_USER_FIELDS } from "@/constants"
   import {
     FIELDS,
     RelationshipType,
     PrettyRelationshipDefinitions,
     DB_TYPE_EXTERNAL,
-  } from "constants/backend"
-  import { getAutoColumnInformation, buildAutoColumn } from "helpers/utils"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import AIFieldConfiguration from "components/common/AIFieldConfiguration.svelte"
-  import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
-  import { getBindings } from "components/backend/DataTable/formula"
+  } from "@/constants/backend"
+  import { getAutoColumnInformation, buildAutoColumn } from "@/helpers/utils"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import AIFieldConfiguration from "@/components/common/AIFieldConfiguration.svelte"
+  import ModalBindableInput from "@/components/common/bindings/ModalBindableInput.svelte"
+  import { getBindings } from "@/components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import {
     BBReferenceFieldSubType,
     FieldType,
     SourceName,
   } from "@budibase/types"
-  import RelationshipSelector from "components/common/RelationshipSelector.svelte"
+  import RelationshipSelector from "@/components/common/RelationshipSelector.svelte"
   import { RowUtils, canBeDisplayColumn } from "@budibase/frontend-core"
-  import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
+  import ServerBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import OptionsEditor from "./OptionsEditor.svelte"
-  import { isEnabled } from "helpers/featureFlags"
-  import { getUserBindings } from "dataBinding"
+  import { getUserBindings } from "@/dataBinding"
 
   export let field
 
@@ -101,7 +100,8 @@
   let optionsValid = true
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
-  $: aiEnabled = $featureFlags.BUDIBASE_AI || $featureFlags.AI_CUSTOM_CONFIGS
+  $: aiEnabled =
+    $licensing.customAIConfigsEnabled || $licensing.budibaseAiEnabled
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
@@ -168,7 +168,6 @@
   // used to select what different options can be displayed for column type
   $: canBeDisplay =
     canBeDisplayColumn(editableColumn) && !editableColumn.autocolumn
-  $: defaultValuesEnabled = isEnabled("DEFAULT_VALUES")
   $: canHaveDefault = !required && canHaveDefaultColumn(editableColumn.type)
   $: canBeRequired =
     editableColumn?.type !== FieldType.LINK &&
@@ -300,7 +299,7 @@
     }
 
     // Ensure we don't have a default value if we can't have one
-    if (!canHaveDefault || !defaultValuesEnabled) {
+    if (!canHaveDefault) {
       delete saveColumn.default
     }
 
@@ -371,6 +370,7 @@
     delete editableColumn.relationshipType
     delete editableColumn.formulaType
     delete editableColumn.constraints
+    delete editableColumn.responseType
 
     // Add in defaults and initial definition
     const definition = fieldDefinitions[type?.toUpperCase()]
@@ -386,6 +386,7 @@
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     } else if (editableColumn.type === FieldType.FORMULA) {
       editableColumn.formulaType = "dynamic"
+      editableColumn.responseType = field.responseType || FIELDS.STRING.type
     }
   }
 
@@ -769,6 +770,25 @@
     {/if}
     <div class="split-label">
       <div class="label-length">
+        <Label size="M">Response Type</Label>
+      </div>
+      <div class="input-length">
+        <Select
+          bind:value={editableColumn.responseType}
+          options={[
+            FIELDS.STRING,
+            FIELDS.NUMBER,
+            FIELDS.BOOLEAN,
+            FIELDS.DATETIME,
+          ]}
+          getOptionLabel={option => option.name}
+          getOptionValue={option => option.type}
+          tooltip="Formulas by default will return a string - however if you need another type the response can be coerced."
+        />
+      </div>
+    </div>
+    <div class="split-label">
+      <div class="label-length">
         <Label size="M">Formula</Label>
       </div>
       <div class="input-length">
@@ -827,51 +847,49 @@
     </div>
   {/if}
 
-  {#if defaultValuesEnabled}
-    {#if editableColumn.type === FieldType.OPTIONS}
-      <Select
-        disabled={!canHaveDefault}
-        options={editableColumn.constraints?.inclusion || []}
-        label="Default value"
-        value={editableColumn.default}
-        on:change={e => (editableColumn.default = e.detail)}
-        placeholder="None"
-      />
-    {:else if editableColumn.type === FieldType.ARRAY}
-      <Multiselect
-        disabled={!canHaveDefault}
-        options={editableColumn.constraints?.inclusion || []}
-        label="Default value"
-        value={editableColumn.default}
-        on:change={e =>
-          (editableColumn.default = e.detail?.length ? e.detail : undefined)}
-        placeholder="None"
-      />
-    {:else if editableColumn.subtype === BBReferenceFieldSubType.USER}
-      {@const defaultValue =
-        editableColumn.type === FieldType.BB_REFERENCE_SINGLE
-          ? SingleUserDefault
-          : MultiUserDefault}
-      <Toggle
-        disabled={!canHaveDefault}
-        text="Default to current user"
-        value={editableColumn.default === defaultValue}
-        on:change={e =>
-          (editableColumn.default = e.detail ? defaultValue : undefined)}
-      />
-    {:else}
-      <ModalBindableInput
-        disabled={!canHaveDefault}
-        panel={ServerBindingPanel}
-        title="Default value"
-        label="Default value"
-        placeholder="None"
-        value={editableColumn.default}
-        on:change={e => (editableColumn.default = e.detail)}
-        bindings={defaultValueBindings}
-        allowJS
-      />
-    {/if}
+  {#if editableColumn.type === FieldType.OPTIONS}
+    <Select
+      disabled={!canHaveDefault}
+      options={editableColumn.constraints?.inclusion || []}
+      label="Default value"
+      value={editableColumn.default}
+      on:change={e => (editableColumn.default = e.detail)}
+      placeholder="None"
+    />
+  {:else if editableColumn.type === FieldType.ARRAY}
+    <Multiselect
+      disabled={!canHaveDefault}
+      options={editableColumn.constraints?.inclusion || []}
+      label="Default value"
+      value={editableColumn.default}
+      on:change={e =>
+        (editableColumn.default = e.detail?.length ? e.detail : undefined)}
+      placeholder="None"
+    />
+  {:else if editableColumn.subtype === BBReferenceFieldSubType.USER}
+    {@const defaultValue =
+      editableColumn.type === FieldType.BB_REFERENCE_SINGLE
+        ? SingleUserDefault
+        : MultiUserDefault}
+    <Toggle
+      disabled={!canHaveDefault}
+      text="Default to current user"
+      value={editableColumn.default === defaultValue}
+      on:change={e =>
+        (editableColumn.default = e.detail ? defaultValue : undefined)}
+    />
+  {:else}
+    <ModalBindableInput
+      disabled={!canHaveDefault}
+      panel={ServerBindingPanel}
+      title="Default value"
+      label="Default value"
+      placeholder="None"
+      value={editableColumn.default}
+      on:change={e => (editableColumn.default = e.detail)}
+      bindings={defaultValueBindings}
+      allowJS
+    />
   {/if}
 </Layout>
 

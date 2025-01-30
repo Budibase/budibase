@@ -1,15 +1,15 @@
 <script>
-  import { views, tables } from "stores/builder"
-  import { API } from "api"
-  import Table from "components/backend/DataTable/Table.svelte"
-  import CalculateButton from "components/backend/DataTable/buttons/CalculateButton.svelte"
-  import GroupByButton from "components/backend/DataTable/buttons/GroupByButton.svelte"
-  import ViewFilterButton from "components/backend/DataTable/buttons/ViewFilterButton.svelte"
-  import ExportButton from "components/backend/DataTable/buttons/ExportButton.svelte"
-  import ManageAccessButton from "components/backend/DataTable/buttons/ManageAccessButton.svelte"
-  import HideAutocolumnButton from "components/backend/DataTable/buttons/HideAutocolumnButton.svelte"
+  import { views, tables } from "@/stores/builder"
+  import { API } from "@/api"
+  import Table from "@/components/backend/DataTable/Table.svelte"
+  import CalculateButton from "@/components/backend/DataTable/buttons/CalculateButton.svelte"
+  import GroupByButton from "@/components/backend/DataTable/buttons/GroupByButton.svelte"
+  import ViewFilterButton from "@/components/backend/DataTable/buttons/ViewFilterButton.svelte"
+  import ExportButton from "@/components/backend/DataTable/buttons/ExportButton.svelte"
+  import ManageAccessButton from "@/components/backend/DataTable/buttons/ManageAccessButton.svelte"
+  import HideAutocolumnButton from "@/components/backend/DataTable/buttons/HideAutocolumnButton.svelte"
   import { notifications } from "@budibase/bbui"
-  import { ROW_EXPORT_FORMATS } from "constants/backend"
+  import { ROW_EXPORT_FORMATS } from "@/constants/backend"
 
   let hideAutocolumns = true
   let data = []
@@ -43,8 +43,7 @@
       return
     }
     try {
-      data = await API.fetchViewData({
-        name,
+      data = await API.fetchViewData(name, {
         calculation,
         field,
         groupBy,

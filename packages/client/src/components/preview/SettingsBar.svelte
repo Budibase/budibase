@@ -273,6 +273,7 @@
               value={option.value}
               icon={option.barIcon}
               title={option.barTitle || option.label}
+              disabled={!!setting.license}
               {component}
             />
           {/each}
@@ -281,6 +282,7 @@
             prop={setting.key}
             options={setting.options}
             label={setting.label}
+            disabled={!!setting.license}
             {component}
           />
         {/if}
@@ -289,11 +291,16 @@
           prop={setting.key}
           icon={setting.barIcon}
           title={setting.barTitle || setting.label}
+          disabled={!!setting.license}
           bool
           {component}
         />
       {:else if setting.type === "color"}
-        <SettingsColorPicker prop={setting.key} {component} />
+        <SettingsColorPicker
+          prop={setting.key}
+          {component}
+          disabled={!!setting.license}
+        />
       {/if}
       {#if setting.barSeparator !== false && (settings.length != idx + 1 || !isRoot)}
         <div class="divider" />

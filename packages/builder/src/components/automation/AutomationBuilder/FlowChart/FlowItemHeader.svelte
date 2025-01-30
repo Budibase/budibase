@@ -1,9 +1,9 @@
 <script>
-  import { automationStore, selectedAutomation } from "stores/builder"
+  import { automationStore, selectedAutomation } from "@/stores/builder"
   import { Icon, Body, AbsTooltip, StatusLight } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
-  import { Features } from "constants/backend/automations"
+  import { Features } from "@/constants/backend/automations"
 
   export let block
   export let open
@@ -22,7 +22,7 @@
   const dispatch = createEventDispatcher()
 
   $: blockRefs = $selectedAutomation?.blockRefs || {}
-  $: stepNames = automation?.definition.stepNames
+  $: stepNames = automation?.definition.stepNames || {}
   $: allSteps = automation?.definition.steps || []
   $: automationName = itemName || stepNames?.[block.id] || block?.name || ""
   $: automationNameError = getAutomationNameError(automationName)
@@ -64,7 +64,7 @@
   const getAutomationNameError = name => {
     const duplicateError =
       "This name already exists, please enter a unique name"
-    if (stepNames && editing) {
+    if (editing) {
       for (const [key, value] of Object.entries(stepNames)) {
         if (name !== block.name && name === value && key !== block.id) {
           return duplicateError
