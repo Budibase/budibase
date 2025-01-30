@@ -40,8 +40,6 @@
   export let autofocusEditor = false
   export let placeholder = null
 
-  let mode: BindingMode | null
-  let initialValueJS = value?.startsWith?.("{{ js ")
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
 
@@ -141,9 +139,6 @@
   }
 
   const onChangeJSValue = (e: { detail: string }) => {
-    // if(typeof onChange === "function"){
-
-    // }
     if (!e.detail?.trim()) {
       // Don't bother saving empty values as JS
       updateValue(null)
@@ -151,18 +146,6 @@
       updateValue(encodeJSBinding(e.detail))
     }
   }
-
-  onMount(() => {
-    // Set the initial mode appropriately
-    const initialValueMode = initialValueJS
-      ? BindingMode.JavaScript
-      : BindingMode.Text
-    if (editorModeOptions.includes(initialValueMode)) {
-      mode = initialValueMode
-    } else {
-      mode = editorModeOptions[0]
-    }
-  })
 </script>
 
 <div class="code-panel">

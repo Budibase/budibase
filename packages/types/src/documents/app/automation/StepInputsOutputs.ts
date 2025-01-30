@@ -1,3 +1,4 @@
+import { Table } from "@budibase/types"
 import { SortOrder } from "../../../api"
 import {
   SearchFilters,
@@ -296,6 +297,7 @@ export type RowUpdatedTriggerOutputs = {
   row: Row
   id: string
   revision?: string
+  oldRow: Row
 }
 
 export type WebhookTriggerInputs = {
@@ -303,6 +305,17 @@ export type WebhookTriggerInputs = {
   triggerUrl: string
 }
 
-export type WebhookTriggerOutputs = {
-  fields: Record<string, any>
+export type WebhookTriggerOutputs = Record<string, any> & {
+  body: Record<string, any>
+}
+
+export type RowActionTriggerInputs = {
+  tableId: string
+}
+
+export type RowActionTriggerOutputs = {
+  row: Row
+  id: string
+  revision?: string
+  table: Table
 }

@@ -1,9 +1,9 @@
-import { derived, get, Readable, Writable } from "svelte/store"
+import { derived, get, Readable } from "svelte/store"
 import { API } from "@/api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { createHistoryStore } from "@/stores/builder/history"
-import { licensing, organisation, environment, auth } from "@/stores/portal"
+import { licensing, organisation, environment } from "@/stores/portal"
 import { tables, appStore } from "@/stores/builder"
 import { notifications } from "@budibase/bbui"
 import {
@@ -34,6 +34,11 @@ import {
   GetAutomationActionDefinitionsResponse,
   AppSelfResponse,
   TestAutomationResponse,
+  isAutomationResults,
+  AutomationTestTrigger,
+  TriggerTestOutputs,
+  RowActionTriggerOutputs,
+  WebhookTriggerOutputs,
 } from "@budibase/types"
 import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
 import { FIELDS } from "@/constants/backend"
@@ -100,7 +105,7 @@ const automationActions = (store: AutomationStore) => ({
     const appSelfResponse = await API.fetchSelf()
     store.update(state => ({
       ...state,
-      appSelf: appSelfResponse,
+      ...(appSelfResponse ? { appSelf: appSelfResponse } : {}),
     }))
     return appSelfResponse
   },
@@ -882,12 +887,7 @@ const automationActions = (store: AutomationStore) => ({
       const message = err.message || err.status || JSON.stringify(err)
       throw `Automation test failed - ${message}`
     }
-    if (!result?.trigger && !result?.steps?.length && !result?.message) {
-      if (result?.err?.code === "usage_limit_exceeded") {
-        throw "You have exceeded your automation quota"
-      }
-      throw "Something went wrong testing your automation"
-    }
+
     store.update(state => {
       state.testResults = result
       return state
@@ -1594,18 +1594,9 @@ export class SelectedAutomationStore extends DerivedBudiStore<
 }
 export const selectedAutomation = new SelectedAutomationStore(automationStore)
 
-type TriggerContext = AutomationTrigger & {
-  meta?: Record<any, any>
-  table?: Table
-  body?: Record<any, any>
-  row?: Record<any, any>
-  oldRow?: Record<any, any>
-  outputs?: Record<any, any>
-}
-
 export interface AutomationContext {
   user: AppSelfResponse
-  trigger: TriggerContext
+  trigger?: TriggerTestOutputs
   steps: Record<string, AutomationStep>
   env: Record<string, any>
   settings: Record<string, any>
@@ -1619,7 +1610,8 @@ export const evaluationContext: Readable<AutomationContext> = derived(
     const results: TestAutomationResponse | undefined =
       $selectedAutomation?.testResults
 
-    const testData = $selectedAutomation.data?.testData || {}
+    const testData: TriggerTestOutputs | undefined =
+      $selectedAutomation.data?.testData
     const triggerDef = $selectedAutomation.data?.definition?.trigger
 
     const isWebhook = triggerDef?.stepId! === TriggerStepID.WEBHOOK
@@ -1629,36 +1621,50 @@ export const evaluationContext: Readable<AutomationContext> = derived(
       ? $tables.list.find(table => table._id === rowActionTableId)
       : undefined
 
-    // Needs a clone to avoid state mutation.
-    const triggerData: TriggerContext = cloneDeep(
-      results?.trigger?.outputs || testData
-    )
+    let triggerData: TriggerTestOutputs | undefined
 
-    if (isRowAction && rowActionTable) {
-      // Row action table must always be retrieved as it is never
-      // returned in the test results
-      triggerData.table = rowActionTable
-    } else if (isWebhook) {
-      // Ensure it displays in the event that the configuration have been skipped
-      triggerData.body = triggerData.body ?? {}
+    if (results && isAutomationResults(results)) {
+      const automationTrigger: AutomationTestTrigger | undefined =
+        results?.trigger
+
+      const outputs: TriggerTestOutputs | undefined = automationTrigger?.outputs
+      triggerData = outputs ? outputs : undefined
+
+      if (triggerData) {
+        if (isRowAction && rowActionTable) {
+          const rowTrigger = triggerData as RowActionTriggerOutputs
+          // Row action table must always be retrieved as it is never
+          // returned in the test results
+          rowTrigger.table = rowActionTable
+        } else if (isWebhook) {
+          const webhookTrigger = triggerData as WebhookTriggerOutputs
+          // Ensure it displays in the event that the configuration have been skipped
+          webhookTrigger.body = webhookTrigger.body ?? {}
+        }
+      }
+
+      // Clean up unnecessary data from the context
+      // Meta contains UI/UX config data. Non-bindable
+      delete triggerData?.meta
+    } else {
+      // Substitute test data in place of the trigger data if the test hasn't been run
+      triggerData = testData
     }
-
-    // Clean up unnecessary data from the context
-    // Meta contains UI/UX config data. Non-bindable
-    delete triggerData?.meta
 
     // AppSelf context required to mirror server user context
     const userContext = $selectedAutomation.appSelf || {}
 
+    // Extract step results from a valid response
+    const stepResults =
+      results && isAutomationResults(results) ? results?.steps : []
+
     return {
       user: userContext,
-      trigger: {
-        ...triggerData,
-      },
-
+      // Merge in the trigger data.
+      ...(triggerData ? { trigger: { ...triggerData } } : {}),
       // This will initially be empty for each step but will populate
       // upon running the test.
-      steps: (results?.steps || []).reduce(
+      steps: stepResults.reduce(
         (acc: Record<string, any>, res: Record<string, any>) => {
           acc[res.id] = res.outputs
           return acc

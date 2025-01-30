@@ -22,6 +22,7 @@ import {
   UserBindings,
   AutomationResults,
   DidNotTriggerResponse,
+  Table,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"
@@ -154,6 +155,7 @@ interface AutomationTriggerParams {
   timeout?: number
   appId?: string
   user?: UserBindings
+  table?: Table
 }
 
 export async function externalTrigger(

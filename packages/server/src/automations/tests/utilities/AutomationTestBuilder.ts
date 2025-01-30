@@ -6,6 +6,7 @@ import {
   AppActionTriggerOutputs,
   Automation,
   AutomationActionStepId,
+  AutomationResults,
   AutomationStep,
   AutomationStepInputs,
   AutomationTrigger,
@@ -421,11 +422,11 @@ class AutomationBuilder extends BaseStepBuilder {
     if (isDidNotTriggerResponse(response)) {
       throw new Error(response.message)
     }
-
-    response.steps.shift()
+    const results: AutomationResults = response as AutomationResults
+    results.steps.shift()
     return {
-      trigger: response.trigger,
-      steps: response.steps,
+      trigger: results.trigger,
+      steps: results.steps,
     }
   }
 }

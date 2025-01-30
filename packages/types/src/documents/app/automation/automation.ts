@@ -5,6 +5,16 @@ import { Row } from "../row"
 import { Table } from "../table"
 import { AutomationStep, AutomationTrigger } from "./schema"
 import { ContextEmitter } from "../../../sdk"
+import {
+  AppActionTriggerOutputs,
+  AppSelfResponse,
+  CronTriggerOutputs,
+  RowActionTriggerOutputs,
+  RowCreatedTriggerInputs,
+  RowDeletedTriggerInputs,
+  RowUpdatedTriggerOutputs,
+  WebhookTriggerOutputs,
+} from "@budibase/types"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -136,15 +146,7 @@ export interface Automation extends Document {
   internal?: boolean
   type?: string
   disabled?: boolean
-  testData?: {
-    row?: Row
-    meta: {
-      [key: string]: unknown
-    }
-    id: string
-    revision: string
-    oldRow?: Row
-  }
+  testData?: TriggerTestOutputs
 }
 
 interface BaseIOStructure {
@@ -191,10 +193,36 @@ export enum AutomationStoppedReason {
   TRIGGER_FILTER_NOT_MET = "Automation did not run. Filter conditions in trigger were not met.",
 }
 
+// UI and context fields
+export type AutomationResultFields = {
+  meta?: {
+    [key: string]: unknown
+  }
+  user?: AppSelfResponse
+  automation?: Automation
+}
+
+// Base types for Trigger outputs combined with UI and context fields
+export type TriggerTestOutputs =
+  | (WebhookTriggerOutputs & AutomationResultFields)
+  | (AppActionTriggerOutputs & AutomationResultFields)
+  | (CronTriggerOutputs & AutomationResultFields)
+  | (RowActionTriggerOutputs & AutomationResultFields)
+  | (RowDeletedTriggerInputs & AutomationResultFields)
+  | (RowCreatedTriggerInputs & AutomationResultFields)
+  | (RowUpdatedTriggerOutputs & AutomationResultFields)
+
+export type AutomationTestTrigger = {
+  id: string
+  inputs: null
+  stepId: AutomationTriggerStepId
+  outputs: TriggerTestOutputs
+}
+
 export interface AutomationResults {
   automationId?: string
   status?: AutomationStatus
-  trigger?: AutomationTrigger
+  trigger?: AutomationTestTrigger
   steps: {
     stepId: AutomationTriggerStepId | AutomationActionStepId
     inputs: {
