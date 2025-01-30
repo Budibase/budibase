@@ -96,7 +96,7 @@ const getFinalDefinitions = (
 
 const automationActions = (store: AutomationStore) => ({
   /**
-   * Generates a derived store acting as an evaluation contect
+   * Generates a derived store acting as an evaluation context
    * for bindings in automations
    *
    * @returns {Readable<AutomationContext>}
@@ -1699,7 +1699,6 @@ class AutomationStore extends BudiStore<AutomationState> {
     this.actions.delete = this.history.wrapDeleteDoc(originalDelete)
 
     this.selected = new SelectedAutomationStore(this)
-    // this.context =
   }
 }
 
