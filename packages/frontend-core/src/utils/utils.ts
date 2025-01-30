@@ -55,7 +55,7 @@ export const sequential = <
  * @returns a debounced version of the callback
  */
 export const debounce = (callback: Function, minDelay = 1000) => {
-  let timeout: NodeJS.Timeout
+  let timeout: ReturnType<typeof setTimeout>
   return async (...params: any[]) => {
     return new Promise(resolve => {
       if (timeout) {
