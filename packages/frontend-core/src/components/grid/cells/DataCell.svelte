@@ -47,6 +47,7 @@
 
   // Determine if the cell is editable
   $: readonly =
+    hasCustomFormat ||
     columns.actions.isReadonly(column) ||
     (!$config.canEditRows && !row._isNewRow)
 
