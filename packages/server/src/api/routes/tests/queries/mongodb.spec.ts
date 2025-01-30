@@ -675,7 +675,7 @@ if (descriptions.length) {
                 nestedNumber: 99,
               },
               dateField: new Date(Date.UTC(2025, 0, 30, 12, 30, 20)),
-              // timestampField: new BSON.Timestamp({ t: 1706616000, i: 1 }),
+              timestampField: new BSON.Timestamp({ t: 1706616000, i: 1 }),
               binaryField: new BSON.Binary(
                 new TextEncoder().encode("bufferValue")
               ),
@@ -707,7 +707,9 @@ if (descriptions.length) {
                   binaryField: x.binaryField?.toString('utf8'),
                   decimalField: x.decimalField.toString(),
                   longField: x.longField.toString(),
-                  regexField: x.regexField.toString()
+                  regexField: x.regexField.toString(),
+                  // TODO: currenlty not supported, it looks like there is bug in the library. Getting: Timestamp constructed from { t, i } must provide t as a number
+                  timestampField: null
               }))`,
           })
 
