@@ -3,7 +3,6 @@
   import GridCell from "./GridCell.svelte"
   import { getCellRenderer } from "../lib/renderers"
   import { derived, writable } from "svelte/store"
-  import { processStringSync } from "@budibase/string-templates"
 
   const {
     rows,
