@@ -20,6 +20,7 @@ import {
   previewStore,
   tables,
   componentTreeNodesStore,
+  screenComponents,
 } from "@/stores/builder"
 import { buildFormSchema, getSchemaForDatasource } from "@/dataBinding"
 import {
@@ -467,6 +468,14 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
 
     let componentName = `New ${definition.friendlyName || definition.name}`
+    const $screenComponents = get(screenComponents)
+
+    const sameNameCount = $screenComponents.filter(c =>
+      new RegExp(`^${componentName}( \\d*)?$`).test(c._instanceName)
+    ).length
+    if (sameNameCount) {
+      componentName = `${componentName} ${sameNameCount + 1}`
+    }
 
     // Generate basic component structure
     let instance: Component = {
