@@ -172,7 +172,7 @@
   }
   .text {
     font-size: var(--spectrum-global-dimension-font-size-75);
-    color: var(--grey-6);
+    color: var(--spectrum-global-color-gray-700);
     grid-column: 2 / 2;
   }
 

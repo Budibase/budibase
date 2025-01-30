@@ -3093,7 +3093,8 @@
       {
         "type": "text",
         "label": "Format",
-        "key": "format"
+        "key": "format",
+        "info": "Changing the format will display the value as plain text"
       }
     ]
   },
