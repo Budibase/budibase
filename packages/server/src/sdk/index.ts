@@ -11,6 +11,7 @@ import { default as plugins } from "./plugins"
 import * as views from "./app/views"
 import * as permissions from "./app/permissions"
 import * as rowActions from "./app/rowActions"
+import * as screens from "./app/screens"
 import * as common from "./app/common"
 
 const sdk = {
@@ -23,6 +24,7 @@ const sdk = {
   datasources,
   queries,
   plugins,
+  screens,
   views,
   permissions,
   links,

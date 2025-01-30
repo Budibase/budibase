@@ -173,3 +173,20 @@ export function processSearchFilters(
     ],
   }
 }
+
+export function flattenObject(
+  obj: Record<string, any>,
+  parentKey: string = "",
+  state: Record<string, any> = {}
+) {
+  for (const key of Object.keys(obj)) {
+    const newKey = parentKey.length ? `${parentKey}.${key}` : key
+    const value = obj[key]
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      flattenObject(value, newKey, state)
+    } else {
+      state[newKey] = value
+    }
+  }
+  return state
+}
