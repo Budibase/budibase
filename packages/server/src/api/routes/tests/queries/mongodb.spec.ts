@@ -754,6 +754,7 @@ if (descriptions.length) {
               objectIdField: "65b0123456789abcdef01235",
               regexField: "/^Hello.*/i",
               stringField: "This is a string",
+              timestampField: null,
             },
           ])
         })
