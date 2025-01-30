@@ -634,6 +634,130 @@ if (descriptions.length) {
             }
           })
         })
+
+        it("should be able to select a ObjectId in a transformer", async () => {
+          const query = await createQuery({
+            fields: {
+              json: {},
+              extra: {
+                actionType: "find",
+              },
+            },
+            transformer: "return data.map(x => ({ id: x._id }))",
+          })
+
+          const result = await config.api.query.execute(query._id!)
+
+          expect(result.data).toEqual([
+            { id: expectValidId },
+            { id: expectValidId },
+            { id: expectValidId },
+            { id: expectValidId },
+            { id: expectValidId },
+          ])
+        })
+
+        it("can handle all bson field types with transformers", async () => {
+          collection = generator.guid()
+          await withCollection(async collection => {
+            await collection.insertOne({
+              _id: new BSON.ObjectId("65b0123456789abcdef01234"),
+              stringField: "This is a string",
+              numberField: 42,
+              doubleField: new BSON.Double(42.42),
+              integerField: new BSON.Int32(123),
+              longField: new BSON.Long("9223372036854775807"),
+              booleanField: true,
+              nullField: null,
+              arrayField: [1, 2, 3, "four", { nested: true }],
+              objectField: {
+                nestedString: "nested",
+                nestedNumber: 99,
+              },
+              dateField: new Date(Date.UTC(2025, 0, 30, 12, 30, 20)),
+              timestampField: new BSON.Timestamp({ t: 1706616000, i: 1 }),
+              binaryField: new BSON.Binary(
+                new TextEncoder().encode("bufferValue")
+              ),
+              objectIdField: new BSON.ObjectId("65b0123456789abcdef01235"),
+              regexField: new BSON.BSONRegExp("^Hello.*", "i"),
+              minKeyField: new BSON.MinKey(),
+              maxKeyField: new BSON.MaxKey(),
+              decimalField: new BSON.Decimal128("12345.6789"),
+              codeField: new BSON.Code(
+                "function() { return 'Hello, World!'; }"
+              ),
+              codeWithScopeField: new BSON.Code(
+                "function(x) { return x * 2; }",
+                { x: 10 }
+              ),
+            })
+          })
+
+          const query = await createQuery({
+            fields: {
+              json: {},
+              extra: {
+                actionType: "find",
+                collection,
+              },
+            },
+            transformer: `return data.map(x => ({ 
+                  ...x,
+                  binaryField: x.binaryField?.toString('utf8'),
+                  decimalField: x.decimalField.toString(),
+                  longField: x.longField.toString(),
+                  regexField: x.regexField.toString(),
+                  // TODO: currenlty not supported, it looks like there is bug in the library. Getting: Timestamp constructed from { t, i } must provide t as a number
+                  timestampField: null
+              }))`,
+          })
+
+          const result = await config.api.query.execute(query._id!)
+
+          expect(result.data).toEqual([
+            {
+              _id: "65b0123456789abcdef01234",
+              arrayField: [
+                1,
+                2,
+                3,
+                "four",
+                {
+                  nested: true,
+                },
+              ],
+              binaryField: "bufferValue",
+              booleanField: true,
+              codeField: {
+                code: "function() { return 'Hello, World!'; }",
+              },
+              codeWithScopeField: {
+                code: "function(x) { return x * 2; }",
+                scope: {
+                  x: 10,
+                },
+              },
+              dateField: "2025-01-30T12:30:20.000Z",
+              decimalField: "12345.6789",
+              doubleField: 42.42,
+              integerField: 123,
+              longField: "9223372036854775807",
+              maxKeyField: {},
+              minKeyField: {},
+              nullField: null,
+              numberField: 42,
+              objectField: {
+                nestedNumber: 99,
+                nestedString: "nested",
+              },
+              objectIdField: "65b0123456789abcdef01235",
+              regexField: "/^Hello.*/i",
+              stringField: "This is a string",
+              timestampField: null,
+            },
+          ])
+        })
       })
 
       it("should throw an error if the incorrect actionType is specified", async () => {
