@@ -135,7 +135,7 @@
   <div class="editor">
     {#key jsCompletions}
       <CodeEditor
-        value={jsValue}
+        value={jsValue || ""}
         on:change={onChangeJSValue}
         on:blur
         completions={jsCompletions}
