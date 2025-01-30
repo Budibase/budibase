@@ -372,7 +372,6 @@
             />
           {/key}
         {:else if mode === BindingMode.JavaScript}
-          Binding panel {jsValue}
           {#key jsCompletions}
             <CodeEditor
               value={jsValue ? decodeJSBinding(jsValue) : ""}
