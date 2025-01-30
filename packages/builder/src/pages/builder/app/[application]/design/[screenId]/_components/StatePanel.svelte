@@ -119,12 +119,12 @@
     })
 
     if (component._children) {
-      foundComponents = [
-        ...foundComponents,
-        ...component._children.flatMap(child =>
-          findComponentsUpdatingState(child, stateKey)
-        ),
-      ]
+      for (let child of component._children) {
+        foundComponents = [
+          ...foundComponents,
+          ...findComponentsUpdatingState(child, stateKey),
+        ]
+      }
     }
 
     return foundComponents
