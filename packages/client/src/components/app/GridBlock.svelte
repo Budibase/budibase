@@ -115,12 +115,10 @@
   }
 
   const createFormatter = column => {
-    if (!column.format?.length) {
+    if (typeof column.format !== "string" || !column.format.trim().length) {
       return null
     }
-    return row => {
-      return processStringSync(column.format, { [id]: row })
-    }
+    return row => processStringSync(column.format, { [id]: row })
   }
 
   const enrichButtons = buttons => {
