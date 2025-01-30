@@ -674,7 +674,7 @@ if (descriptions.length) {
                 nestedString: "nested",
                 nestedNumber: 99,
               },
-              dateField: { $date: "2025-01-30T12:00:00Z" },
+              dateField: new Date(Date.UTC(2025, 0, 30, 12, 30, 20)),
               // timestampField: new BSON.Timestamp({ t: 1706616000, i: 1 }),
               binaryField: new BSON.Binary(
                 new TextEncoder().encode("bufferValue")
@@ -702,7 +702,12 @@ if (descriptions.length) {
                 collection,
               },
             },
-            transformer: "return data.map(x => ({ ...x }))",
+            transformer: `return data.map(x => ({ 
+                  ...x,
+                  binaryField: x.binaryField?.toString('utf8'),
+                  decimalField: x.decimalField.toString(),
+                  longField: x.longField.toString()
+              }))`,
           })
 
           const result = await config.api.query.execute(query._id!)
@@ -719,7 +724,7 @@ if (descriptions.length) {
                   nested: true,
                 },
               ],
-              binaryField: "YnVmZmVyVmFsdWU=",
+              binaryField: "bufferValue",
               booleanField: true,
               codeField: {
                 code: "function() { return 'Hello, World!'; }",
@@ -730,34 +735,11 @@ if (descriptions.length) {
                   x: 10,
                 },
               },
-              dateField: "2025-01-30T12:00:00.000Z",
-              decimalField: {
-                bytes: {
-                  "0": 21,
-                  "1": 205,
-                  "10": 0,
-                  "11": 0,
-                  "12": 0,
-                  "13": 0,
-                  "14": 56,
-                  "15": 48,
-                  "2": 91,
-                  "3": 7,
-                  "4": 0,
-                  "5": 0,
-                  "6": 0,
-                  "7": 0,
-                  "8": 0,
-                  "9": 0,
-                },
-              },
+              dateField: "2025-01-30T12:30:20.000Z",
+              decimalField: "12345.6789",
               doubleField: 42.42,
               integerField: 123,
-              longField: {
-                high: 2147483647,
-                low: -1,
-                unsigned: false,
-              },
+              longField: "9223372036854775807",
               maxKeyField: {},
               minKeyField: {},
               nullField: null,
