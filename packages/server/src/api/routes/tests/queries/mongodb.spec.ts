@@ -706,7 +706,8 @@ if (descriptions.length) {
                   ...x,
                   binaryField: x.binaryField?.toString('utf8'),
                   decimalField: x.decimalField.toString(),
-                  longField: x.longField.toString()
+                  longField: x.longField.toString(),
+                  regexField: x.regexField.toString()
               }))`,
           })
 
@@ -749,7 +750,7 @@ if (descriptions.length) {
                 nestedString: "nested",
               },
               objectIdField: "65b0123456789abcdef01235",
-              regexField: {},
+              regexField: "/^Hello.*/i",
               stringField: "This is a string",
             },
           ])
