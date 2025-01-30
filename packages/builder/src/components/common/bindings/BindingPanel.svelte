@@ -360,7 +360,7 @@
         {#if mode === BindingMode.Text}
           {#key hbsCompletions}
             <CodeEditor
-              value={hbsValue}
+              value={hbsValue || ""}
               on:change={onChangeHBSValue}
               bind:getCaretPosition
               bind:insertAtPos
@@ -372,9 +372,10 @@
             />
           {/key}
         {:else if mode === BindingMode.JavaScript}
+          Binding panel {jsValue}
           {#key jsCompletions}
             <CodeEditor
-              value={jsValue ? decodeJSBinding(jsValue) : jsValue}
+              value={jsValue ? decodeJSBinding(jsValue) : ""}
               on:change={onChangeJSValue}
               completions={jsCompletions}
               mode={EditorModes.JS}
