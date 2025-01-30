@@ -297,7 +297,7 @@ export type RowUpdatedTriggerOutputs = {
   row: Row
   id: string
   revision?: string
-  oldRow: Row
+  oldRow?: Row
 }
 
 export type WebhookTriggerInputs = {
