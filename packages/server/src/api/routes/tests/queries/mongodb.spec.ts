@@ -657,7 +657,7 @@ if (descriptions.length) {
           ])
         })
 
-        it("can handle all bson field types", async () => {
+        it("can handle all bson field types with transformers", async () => {
           collection = generator.guid()
           await withCollection(async collection => {
             await collection.insertOne({
