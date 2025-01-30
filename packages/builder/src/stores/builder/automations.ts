@@ -96,6 +96,106 @@ const getFinalDefinitions = (
 
 const automationActions = (store: AutomationStore) => ({
   /**
+   * Generates a derived store acting as an evaluation contect
+   * for bindings in automations
+   *
+   * @returns {Readable<AutomationContext>}
+   */
+  generateContext: (): Readable<AutomationContext> | undefined => {
+    if (!organisation || !store.selected || !environment || !tables) {
+      console.error("Automations: Required context stores are uninitialised")
+      return
+    }
+    return derived(
+      [organisation, store.selected, environment, tables],
+      ([$organisation, $selectedAutomation, $env, $tables]) => {
+        const { platformUrl: url, company, logoUrl: logo } = $organisation
+
+        const results: TestAutomationResponse | undefined =
+          $selectedAutomation?.testResults
+
+        const testData: TriggerTestOutputs | undefined =
+          $selectedAutomation.data?.testData
+        const triggerDef = $selectedAutomation.data?.definition?.trigger
+
+        const isWebhook = triggerDef?.stepId === TriggerStepID.WEBHOOK
+        const isRowAction = triggerDef?.stepId === TriggerStepID.ROW_ACTION
+        const rowActionTableId = triggerDef?.inputs?.tableId
+        const rowActionTable = rowActionTableId
+          ? $tables.list.find(table => table._id === rowActionTableId)
+          : undefined
+
+        let triggerData: TriggerTestOutputs | undefined
+
+        if (results && isAutomationResults(results)) {
+          const automationTrigger: AutomationTestTrigger | undefined =
+            results?.trigger
+
+          const outputs: TriggerTestOutputs | undefined =
+            automationTrigger?.outputs
+          triggerData = outputs ? outputs : undefined
+
+          if (triggerData) {
+            if (isRowAction && rowActionTable) {
+              const rowTrigger = triggerData as RowActionTriggerOutputs
+              // Row action table must always be retrieved as it is never
+              // returned in the test results
+              rowTrigger.table = rowActionTable
+            } else if (isWebhook) {
+              const webhookTrigger = triggerData as WebhookTriggerOutputs
+              // Ensure it displays in the event that the configuration have been skipped
+              webhookTrigger.body = webhookTrigger.body ?? {}
+            }
+          }
+
+          // Clean up unnecessary data from the context
+          // Meta contains UI/UX config data. Non-bindable
+          delete triggerData?.meta
+        } else {
+          // Substitute test data in place of the trigger data if the test hasn't been run
+          triggerData = testData
+        }
+
+        // AppSelf context required to mirror server user context
+        const userContext = $selectedAutomation.appSelf || {}
+
+        // Extract step results from a valid response
+        const stepResults =
+          results && isAutomationResults(results) ? results?.steps : []
+
+        return {
+          user: userContext,
+          // Merge in the trigger data.
+          ...(triggerData ? { trigger: { ...triggerData } } : {}),
+          // This will initially be empty for each step but will populate
+          // upon running the test.
+          steps: stepResults.reduce(
+            (acc: Record<string, any>, res: Record<string, any>) => {
+              acc[res.id] = res.outputs
+              return acc
+            },
+            {}
+          ),
+          env: ($env?.variables || []).reduce(
+            (acc: Record<string, any>, variable: Record<string, any>) => {
+              acc[variable.name] = ""
+              return acc
+            },
+            {}
+          ),
+          settings: { url, company, logo },
+        }
+      }
+    )
+  },
+
+  /**
+   * Initialise the automation evaluation context
+   */
+  initContext: () => {
+    store.context = store.actions.generateContext()
+  },
+  /**
    * Fetches the app user context used for live evaluation
    * This matches the context used on the server
    * @returns {AppSelfResponse | null}
@@ -1509,28 +1609,13 @@ const automationActions = (store: AutomationStore) => ({
   },
 })
 
-class AutomationStore extends BudiStore<AutomationState> {
-  history: HistoryStore<Automation>
-  actions: ReturnType<typeof automationActions>
-
-  constructor() {
-    super(initialAutomationState)
-    this.actions = automationActions(this)
-    this.history = createHistoryStore({
-      getDoc: this.actions.getDefinition.bind(this),
-      selectDoc: this.actions.select.bind(this),
-    })
-
-    // Then wrap save and delete with history
-    const originalSave = this.actions.save.bind(this.actions)
-    const originalDelete = this.actions.delete.bind(this.actions)
-    this.actions.save = this.history.wrapSaveDoc(originalSave)
-    this.actions.delete = this.history.wrapDeleteDoc(originalDelete)
-  }
+export interface AutomationContext {
+  user: AppSelfResponse | null
+  trigger?: TriggerTestOutputs
+  steps: Record<string, AutomationStep>
+  env: Record<string, any>
+  settings: Record<string, any>
 }
-
-export const automationStore = new AutomationStore()
-export const automationHistoryStore = automationStore.history
 
 export class SelectedAutomationStore extends DerivedBudiStore<
   AutomationState,
@@ -1592,93 +1677,34 @@ export class SelectedAutomationStore extends DerivedBudiStore<
     super(initialAutomationState, makeDerivedStore)
   }
 }
-export const selectedAutomation = new SelectedAutomationStore(automationStore)
 
-export interface AutomationContext {
-  user: AppSelfResponse
-  trigger?: TriggerTestOutputs
-  steps: Record<string, AutomationStep>
-  env: Record<string, any>
-  settings: Record<string, any>
+class AutomationStore extends BudiStore<AutomationState> {
+  history: HistoryStore<Automation>
+  actions: ReturnType<typeof automationActions>
+  selected: SelectedAutomationStore
+  context: Readable<AutomationContext> | undefined
+
+  constructor() {
+    super(initialAutomationState)
+    this.actions = automationActions(this)
+    this.history = createHistoryStore({
+      getDoc: this.actions.getDefinition.bind(this),
+      selectDoc: this.actions.select.bind(this),
+    })
+
+    // Then wrap save and delete with history
+    const originalSave = this.actions.save.bind(this.actions)
+    const originalDelete = this.actions.delete.bind(this.actions)
+    this.actions.save = this.history.wrapSaveDoc(originalSave)
+    this.actions.delete = this.history.wrapDeleteDoc(originalDelete)
+
+    this.selected = new SelectedAutomationStore(this)
+    // this.context =
+  }
 }
 
-export const evaluationContext: Readable<AutomationContext> = derived(
-  [organisation, selectedAutomation, environment, tables],
-  ([$organisation, $selectedAutomation, $env, $tables]) => {
-    const { platformUrl: url, company, logoUrl: logo } = $organisation
+export const automationStore = new AutomationStore()
 
-    const results: TestAutomationResponse | undefined =
-      $selectedAutomation?.testResults
-
-    const testData: TriggerTestOutputs | undefined =
-      $selectedAutomation.data?.testData
-    const triggerDef = $selectedAutomation.data?.definition?.trigger
-
-    const isWebhook = triggerDef?.stepId === TriggerStepID.WEBHOOK
-    const isRowAction = triggerDef?.stepId === TriggerStepID.ROW_ACTION
-    const rowActionTableId = triggerDef?.inputs?.tableId
-    const rowActionTable = rowActionTableId
-      ? $tables.list.find(table => table._id === rowActionTableId)
-      : undefined
-
-    let triggerData: TriggerTestOutputs | undefined
-
-    if (results && isAutomationResults(results)) {
-      const automationTrigger: AutomationTestTrigger | undefined =
-        results?.trigger
-
-      const outputs: TriggerTestOutputs | undefined = automationTrigger?.outputs
-      triggerData = outputs ? outputs : undefined
-
-      if (triggerData) {
-        if (isRowAction && rowActionTable) {
-          const rowTrigger = triggerData as RowActionTriggerOutputs
-          // Row action table must always be retrieved as it is never
-          // returned in the test results
-          rowTrigger.table = rowActionTable
-        } else if (isWebhook) {
-          const webhookTrigger = triggerData as WebhookTriggerOutputs
-          // Ensure it displays in the event that the configuration have been skipped
-          webhookTrigger.body = webhookTrigger.body ?? {}
-        }
-      }
-
-      // Clean up unnecessary data from the context
-      // Meta contains UI/UX config data. Non-bindable
-      delete triggerData?.meta
-    } else {
-      // Substitute test data in place of the trigger data if the test hasn't been run
-      triggerData = testData
-    }
-
-    // AppSelf context required to mirror server user context
-    const userContext = $selectedAutomation.appSelf || {}
-
-    // Extract step results from a valid response
-    const stepResults =
-      results && isAutomationResults(results) ? results?.steps : []
-
-    return {
-      user: userContext,
-      // Merge in the trigger data.
-      ...(triggerData ? { trigger: { ...triggerData } } : {}),
-      // This will initially be empty for each step but will populate
-      // upon running the test.
-      steps: stepResults.reduce(
-        (acc: Record<string, any>, res: Record<string, any>) => {
-          acc[res.id] = res.outputs
-          return acc
-        },
-        {}
-      ),
-      env: ($env?.variables || []).reduce(
-        (acc: Record<string, any>, variable: Record<string, any>) => {
-          acc[variable.name] = ""
-          return acc
-        },
-        {}
-      ),
-      settings: { url, company, logo },
-    }
-  }
-)
+export const automationHistoryStore = automationStore.history
+export const selectedAutomation = automationStore.selected
+export const evaluationContext = automationStore.context

@@ -32,6 +32,9 @@
   onMount(async () => {
     await automationStore.actions.initAppSelf()
 
+    // Init the binding evaluation context
+    automationStore.actions.initContext()
+
     $automationStore.showTestPanel = false
   })
 
