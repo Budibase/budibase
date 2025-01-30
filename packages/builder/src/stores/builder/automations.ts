@@ -2,7 +2,7 @@ import { derived, get } from "svelte/store"
 import { API } from "@/api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
-import { createHistoryStore } from "@/stores/builder/history"
+import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { licensing } from "@/stores/portal"
 import { tables, appStore } from "@/stores/builder"
 import { notifications } from "@budibase/bbui"
@@ -1436,7 +1436,7 @@ const automationActions = (store: AutomationStore) => ({
 })
 
 class AutomationStore extends BudiStore<AutomationState> {
-  history: any
+  history: HistoryStore<Automation>
   actions: ReturnType<typeof automationActions>
 
   constructor() {
