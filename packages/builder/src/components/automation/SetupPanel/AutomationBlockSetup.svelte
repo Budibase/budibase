@@ -930,9 +930,7 @@
                       context={$memoContext}
                       allowHBS={false}
                       allowJS
-                      placeholder={codeMode === EditorModes.Handlebars
-                        ? "Add bindings by typing {{"
-                        : null}
+                      placeholder={"Add bindings by typing $"}
                       on:blur={e =>
                         onChange({ [key]: encodeJSBinding(e.detail) })}
                     />
