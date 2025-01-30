@@ -3094,7 +3094,7 @@
         "type": "text",
         "label": "Format",
         "key": "format",
-        "info": "Changing the format will display the value as plain text"
+        "info": "Changing format will display values as text"
       }
     ]
   },
