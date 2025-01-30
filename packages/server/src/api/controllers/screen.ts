@@ -16,8 +16,10 @@ import {
   SaveScreenRequest,
   SaveScreenResponse,
   DeleteScreenResponse,
+  UsageScreenResponse,
 } from "@budibase/types"
 import { builderSocket } from "../../websockets"
+import sdk from "../../sdk"
 
 export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   const db = context.getAppDB()
@@ -139,4 +141,9 @@ function findPlugins(component: ScreenProps, foundPlugins: string[]) {
     return
   }
   component._children.forEach(child => findPlugins(child, foundPlugins))
+}
+
+export async function usage(ctx: UserCtx<void, UsageScreenResponse>) {
+  const sourceId = ctx.params.sourceId
+  const sourceType = sdk.common.getSourceType(sourceId)
 }

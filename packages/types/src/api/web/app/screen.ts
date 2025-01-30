@@ -15,3 +15,10 @@ export interface SaveScreenResponse extends Screen {}
 export interface DeleteScreenResponse {
   message: string
 }
+
+export interface UsageScreenResponse {
+  screens: {
+    url: string
+    _id: string
+  }[]
+}
