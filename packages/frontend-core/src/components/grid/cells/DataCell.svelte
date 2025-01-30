@@ -40,7 +40,7 @@
   // Get the appropriate cell renderer and value
   $: hasCustomFormat = column.format && !row._isNewRow
   $: renderer = hasCustomFormat ? TextCell : getCellRenderer(column)
-  $: value = hasCustomFormat ? column.format(row) : row[column.name]
+  $: value = hasCustomFormat ? row.__formatted?.[column.name] : row[column.name]
 
   // Get the error for this cell if the cell is focused or selected
   $: error = getErrorStore(rowFocused, cellId)
