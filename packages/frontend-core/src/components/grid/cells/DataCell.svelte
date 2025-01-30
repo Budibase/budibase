@@ -3,6 +3,7 @@
   import GridCell from "./GridCell.svelte"
   import { getCellRenderer } from "../lib/renderers"
   import { derived, writable } from "svelte/store"
+  import TextCell from "./TextCell.svelte"
 
   const {
     rows,
@@ -36,7 +37,10 @@
 
   let api
 
-  $: value = column.format ? column.format(row) : row[column.name]
+  // Get the appropriate cell renderer and value
+  $: hasCustomFormat = column.format && !row._isNewRow
+  $: renderer = hasCustomFormat ? TextCell : getCellRenderer(column)
+  $: value = hasCustomFormat ? column.format(row) : row[column.name]
 
   // Get the error for this cell if the cell is focused or selected
   $: error = getErrorStore(rowFocused, cellId)
@@ -138,7 +142,7 @@
   }}
 >
   <svelte:component
-    this={getCellRenderer(column)}
+    this={renderer}
     bind:api
     {value}
     schema={column.schema}
