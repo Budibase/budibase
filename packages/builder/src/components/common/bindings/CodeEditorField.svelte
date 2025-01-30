@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import {
     decodeJSBinding,
     encodeJSBinding,
@@ -16,7 +16,6 @@
   } from "../CodeEditor"
   import { JsonFormatter } from "@budibase/frontend-core"
   import { licensing } from "@/stores/portal"
-  import { BindingMode } from "@budibase/types"
   import type {
     EnrichedBinding,
     BindingCompletion,
@@ -32,8 +31,6 @@
 
   export let bindings: EnrichedBinding[] = []
   export let value: string = ""
-  export let allowHBS = true
-  export let allowJS = false
   export let allowHelpers = true
   export let allowSnippets = true
   export let context = null
@@ -43,13 +40,10 @@
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
 
-  // TO Switch the runtime
   $: readable = runtimeToReadableBinding(bindings, value || "")
-
   $: jsValue = decodeJSBinding(readable)
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
-  $: editorModeOptions = getModeOptions(allowHBS, allowJS)
   $: enrichedBindings = enrichBindings(bindings, context, $snippets)
   $: editorMode = EditorModes.JS
   $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
@@ -75,17 +69,6 @@
     }
 
     return completions
-  }
-
-  const getModeOptions = (allowHBS: boolean, allowJS: boolean) => {
-    let options = []
-    if (allowHBS) {
-      options.push(BindingMode.Text)
-    }
-    if (allowJS) {
-      options.push(BindingMode.JavaScript)
-    }
-    return options
   }
 
   const highlightJSON = (json: JSONValue) => {
