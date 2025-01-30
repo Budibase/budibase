@@ -701,7 +701,7 @@ const automationActions = (store: AutomationStore) => ({
     const isAppTrigger = block.stepId === AutomationTriggerStepId.APP
     const isRowTrigger = rowTriggers.includes(block.stepId)
 
-    let readableBinding: string = ""
+    let readableBinding = ""
     if (isTrigger) {
       if (isAppTrigger) {
         readableBinding = `trigger.fields.${name}`
@@ -1614,8 +1614,8 @@ export const evaluationContext: Readable<AutomationContext> = derived(
       $selectedAutomation.data?.testData
     const triggerDef = $selectedAutomation.data?.definition?.trigger
 
-    const isWebhook = triggerDef?.stepId! === TriggerStepID.WEBHOOK
-    const isRowAction = triggerDef?.stepId! === TriggerStepID.ROW_ACTION
+    const isWebhook = triggerDef?.stepId === TriggerStepID.WEBHOOK
+    const isRowAction = triggerDef?.stepId === TriggerStepID.ROW_ACTION
     const rowActionTableId = triggerDef?.inputs?.tableId
     const rowActionTable = rowActionTableId
       ? $tables.list.find(table => table._id === rowActionTableId)
