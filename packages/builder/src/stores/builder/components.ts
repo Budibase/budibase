@@ -38,6 +38,7 @@ import {
   Table,
 } from "@budibase/types"
 import { utils } from "@budibase/shared-core"
+import { getSequentialName } from "@/helpers/duplicate"
 
 interface Component extends ComponentType {
   _id: string
@@ -467,15 +468,14 @@ export class ComponentStore extends BudiStore<ComponentState> {
       return null
     }
 
-    let componentName = `New ${definition.friendlyName || definition.name}`
-    const $screenComponents = get(screenComponents)
-
-    const sameNameCount = $screenComponents.filter(c =>
-      new RegExp(`^${componentName}( \\d*)?$`).test(c._instanceName)
-    ).length
-    if (sameNameCount) {
-      componentName = `${componentName} ${sameNameCount + 1}`
-    }
+    const componentName = getSequentialName(
+      get(screenComponents),
+      `New ${definition.friendlyName || definition.name}`,
+      {
+        getName: c => c._instanceName,
+        separator: " ",
+      }
+    )
 
     // Generate basic component structure
     let instance: Component = {
