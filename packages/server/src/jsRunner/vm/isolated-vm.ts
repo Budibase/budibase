@@ -175,14 +175,6 @@ export class IsolatedVM implements VM {
           return result
         }
       ),
-      atobCB: new ivm.Callback((...args: Parameters<typeof atob>) => {
-        const result = atob(...args)
-        return result
-      }),
-      btoaCB: new ivm.Callback((...args: Parameters<typeof btoa>) => {
-        const result = btoa(...args)
-        return result
-      }),
     })
 
     const script = this.isolate.compileScriptSync(
