@@ -1,4 +1,4 @@
-import { ScreenRoutingJson, Screen } from "../../../documents"
+import { ScreenRoutingJson, Screen, SourceType } from "../../../documents"
 
 export interface FetchScreenRoutingResponse {
   routes: ScreenRoutingJson
@@ -16,9 +16,12 @@ export interface DeleteScreenResponse {
   message: string
 }
 
+export interface ScreenUsage {
+  url: string
+  _id: string
+}
+
 export interface UsageScreenResponse {
-  screens: {
-    url: string
-    _id: string
-  }[]
+  sourceType: SourceType
+  screens: ScreenUsage[]
 }
