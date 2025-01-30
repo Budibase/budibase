@@ -10,3 +10,4 @@ packages/builder/.routify
 packages/sdk/sdk
 packages/pro/coverage
 **/*.ivm.bundle.js
+!**/bson-polyfills.ivm.bundle.js
