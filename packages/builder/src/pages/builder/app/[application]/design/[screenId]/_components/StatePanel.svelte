@@ -36,11 +36,11 @@
   let previousScreenId: string | undefined = undefined
 
   $: {
-    const screenChanged =
+    const hasScreenChanged =
       $selectedScreen && $selectedScreen._id !== previousScreenId
     const previewContext = $previewStore.selectedComponentContext || {}
 
-    if (screenChanged) {
+    if (hasScreenChanged) {
       selectedKey = keyOptions[0]
       componentsUsingState = []
       componentsUpdatingState = []
@@ -66,38 +66,67 @@
 
     const eventHandlerProps = [
       "onClick",
-      "onChange",
       "onRowClick",
       "onChange",
       "buttonOnClick",
     ]
 
+    const isStateUpdateHandler = (handler: any) =>
+      handler["##eventHandlerType"] === "Update State" &&
+      handler.parameters?.key === stateKey
+
+    const checkEventHandlers = (
+      handlers: any[],
+      componentId: string,
+      instanceName: string,
+      setting: string
+    ) => {
+      if (!Array.isArray(handlers)) return
+
+      handlers.forEach(handler => {
+        if (isStateUpdateHandler(handler)) {
+          foundComponents.push({
+            id: componentId,
+            name: instanceName,
+            settings: [setting],
+          })
+        }
+      })
+    }
+
     eventHandlerProps.forEach(eventType => {
-      const handlers = component[eventType]
-      if (Array.isArray(handlers)) {
-        handlers.forEach(handler => {
-          if (
-            handler["##eventHandlerType"] === "Update State" &&
-            handler.parameters?.key === stateKey
-          ) {
-            foundComponents.push({
-              id: component._id!,
-              name: component._instanceName,
-              settings: [eventType],
-            })
-          }
+      checkEventHandlers(
+        component[eventType],
+        component._id!,
+        component._instanceName,
+        eventType
+      )
+    })
+
+    Object.entries(component).forEach(([propName, propValue]) => {
+      if (Array.isArray(propValue)) {
+        propValue.forEach(item => {
+          eventHandlerProps.forEach(eventType => {
+            checkEventHandlers(
+              item[eventType],
+              component._id!,
+              component._instanceName,
+              propName
+            )
+          })
         })
       }
     })
 
     if (component._children) {
-      for (let child of component._children) {
-        foundComponents = [
-          ...foundComponents,
-          ...findComponentsUpdatingState(child, stateKey),
-        ]
-      }
+      foundComponents = [
+        ...foundComponents,
+        ...component._children.flatMap(child =>
+          findComponentsUpdatingState(child, stateKey)
+        ),
+      ]
     }
+
     return foundComponents
   }
 
@@ -113,11 +142,32 @@
 
   const getSettingsWithState = (component: any, stateKey: string): string[] => {
     const settingsWithState: string[] = []
-    for (const [setting, value] of Object.entries(component)) {
-      if (typeof value === "string" && hasStateBinding(value, stateKey)) {
-        settingsWithState.push(setting)
+
+    const searchForStateBinding = (value: any, path: string[]) => {
+      if (typeof value === "string") {
+        if (hasStateBinding(value, stateKey)) {
+          const topLevelProperty = path[0]
+          if (!settingsWithState.includes(topLevelProperty)) {
+            settingsWithState.push(topLevelProperty)
+          }
+        }
+      } else if (Array.isArray(value)) {
+        value.forEach((item, index) => {
+          searchForStateBinding(item, [...path, `${index}`])
+        })
+      } else if (typeof value === "object" && value !== null) {
+        Object.entries(value).forEach(([key, val]) => {
+          searchForStateBinding(val, [...path, key])
+        })
       }
     }
+
+    Object.entries(component).forEach(([key, value]) => {
+      if (["_children", "_styles", "_conditions"].includes(key)) return
+
+      searchForStateBinding(value, [key])
+    })
+
     return settingsWithState
   }
 
