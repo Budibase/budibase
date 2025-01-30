@@ -78,17 +78,45 @@ if (typeof btoa !== "function") {
   }
 }
 
-class TextDecoder {
-  constructorArgs
-
-  constructor(...constructorArgs) {
-    this.constructorArgs = constructorArgs
+if (typeof TextDecoder === "undefined") {
+  globalThis.TextDecoder = class {
+    constructor(encoding = "utf8") {
+      if (encoding !== "utf8") {
+        throw new Error(
+          `Only UTF-8 is supported in this polyfill. Recieved: ${encoding}`
+        )
+      }
+    }
+    decode(buffer) {
+      return String.fromCharCode(...buffer)
+    }
   }
+}
 
-  decode(...input) {
-    return textDecoderCb({
-      constructorArgs: this.constructorArgs,
-      functionArgs: input,
-    })
+if (typeof TextEncoder === "undefined") {
+  globalThis.TextEncoder = class {
+    encode(str) {
+      const utf8 = []
+      for (const i = 0; i < str.length; i++) {
+        const codePoint = str.charCodeAt(i)
+
+        if (codePoint < 0x80) {
+          utf8.push(codePoint)
+        } else if (codePoint < 0x800) {
+          utf8.push(0xc0 | (codePoint >> 6))
+          utf8.push(0x80 | (codePoint & 0x3f))
+        } else if (codePoint < 0x10000) {
+          utf8.push(0xe0 | (codePoint >> 12))
+          utf8.push(0x80 | ((codePoint >> 6) & 0x3f))
+          utf8.push(0x80 | (codePoint & 0x3f))
+        } else {
+          utf8.push(0xf0 | (codePoint >> 18))
+          utf8.push(0x80 | ((codePoint >> 12) & 0x3f))
+          utf8.push(0x80 | ((codePoint >> 6) & 0x3f))
+          utf8.push(0x80 | (codePoint & 0x3f))
+        }
+      }
+      return new Uint8Array(utf8)
+    }
   }
 }
