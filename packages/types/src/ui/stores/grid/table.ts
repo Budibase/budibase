@@ -25,7 +25,7 @@ export interface UITable extends Table {
 export type UIFieldSchema = FieldSchema &
   BasicViewFieldMetadata & {
     related?: { field: string; subField: string }
-    columns?: Record<string, UIRelationSchFemaField>
+    columns?: Record<string, UIRelationSchemaField>
     cellRenderType?: string
     disabled?: boolean
     format?: (row: UIRow) => any
