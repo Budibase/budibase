@@ -50,10 +50,12 @@ function getCellRendererByType(type: FieldType | "role" | undefined) {
 }
 
 export const getCellRenderer = (column: UIColumn) => {
+  if (column.format) {
+    return TextCell
+  }
   if (column.calculationType) {
     return NumberCell
   }
-
   return (
     getCellRendererByType(column.schema?.cellRenderType) ||
     getCellRendererByType(column.schema?.type) ||
