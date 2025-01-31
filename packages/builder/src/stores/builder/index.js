@@ -17,7 +17,7 @@ import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
 import { contextMenuStore } from "./contextMenu.js"
 import { snippets } from "./snippets"
-import { screenComponentErrors } from "./screenComponent"
+import { screenComponents, screenComponentErrors } from "./screenComponent"
 
 // Backend
 import { tables } from "./tables"
@@ -70,6 +70,7 @@ export {
   rowActions,
   appPublished,
   evaluationContext,
+  screenComponents,
   screenComponentErrors,
 }
 
