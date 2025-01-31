@@ -53,7 +53,7 @@ export const screenComponentErrors = derived(
     $queries,
     $componentStore,
   ]): Record<string, string[]> => {
-    if (!featureFlag.isEnabled("CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS")) {
+    if (!featureFlag.isEnabled("CHECK_COMPONENT_SETTINGS_ERRORS")) {
       return {}
     }
     function getInvalidDatasources(
