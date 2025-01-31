@@ -49,7 +49,7 @@ describe("getSequentialName", () => {
 
   it("handles nullish prefix", async () => {
     const name = getSequentialName([], null)
-    expect(name).toBe(null)
+    expect(name).toBe("")
   })
 
   it("handles just the prefix", async () => {
