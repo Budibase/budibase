@@ -11,8 +11,7 @@
       "require": "./dist/bundle.cjs",
       "import": "./dist/bundle.mjs"
     },
-    "./package.json": "./package.json",
-    "./iife": "./dist/iife.mjs"
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "tsc --emitDeclarationOnly && rollup -c",
