@@ -1,4 +1,4 @@
-import { derived, get } from "svelte/store"
+import { derived } from "svelte/store"
 import { tables } from "./tables"
 import { selectedScreen } from "./screens"
 import { viewsV2 } from "./viewsV2"
@@ -12,7 +12,8 @@ import { queries } from "./queries"
 import { views } from "./views"
 import { bindings, featureFlag } from "@/helpers"
 import { getBindableProperties } from "@/dataBinding"
-import { ComponentDefinition, componentStore } from "./components"
+import { componentStore, ComponentDefinition } from "./components"
+import { findAllComponents } from "@/helpers/components"
 
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
@@ -162,3 +163,13 @@ function findComponentsBySettingsType(
   recurseFieldComponentsInChildren(screen?.props)
   return result
 }
+
+export const screenComponents = derived(
+  [selectedScreen],
+  ([$selectedScreen]) => {
+    if (!$selectedScreen) {
+      return []
+    }
+    return findAllComponents($selectedScreen.props) as Component[]
+  }
+)
