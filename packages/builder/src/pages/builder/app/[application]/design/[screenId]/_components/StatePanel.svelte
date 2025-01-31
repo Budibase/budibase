@@ -160,15 +160,17 @@
 
     const settingsWithState = getSettingsWithState(component, stateKey)
     settingsWithState.forEach(setting => {
+      const label =
+        componentStore
+          .getDefinition(component._component)
+          ?.settings?.find(t => t.key === setting)?.label || setting
+
+      // These have no label so have to set manually
       if (setting === "_conditions") {
         setting = "Conditions"
       } else if (setting === "_styles") {
         setting = "Styles"
       }
-      const label =
-        componentStore
-          .getDefinition(component._component)
-          ?.settings?.find(t => t.key === setting)?.label || setting
 
       componentsUsingState.push({
         id: component._id!,
@@ -193,6 +195,7 @@
     if (!stateKey || !$selectedScreen?.props) {
       return
     }
+    console.log($selectedScreen)
     const componentStateUpdates = findComponentsUpdatingState(
       $selectedScreen.props,
       stateKey
