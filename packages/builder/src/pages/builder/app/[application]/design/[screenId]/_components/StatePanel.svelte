@@ -95,7 +95,7 @@
         if (isStateUpdateHandler(handler)) {
           foundComponents.push({
             id: componentId,
-            name: instanceName + " - " + setting,
+            name: `${instanceName} - ${setting}`,
             settings: [setting],
           })
         }
