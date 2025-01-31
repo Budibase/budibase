@@ -136,11 +136,8 @@ function getMissingRequiredSettings(
   const result: Record<string, UIComponentError[]> = {}
   for (const component of allComponents) {
     const definition = definitions[component._component]
-    if (!("settings" in definition)) {
-      continue
-    }
 
-    const missingRequiredSettings = definition.settings?.filter(
+    const missingRequiredSettings = definition?.settings?.filter(
       (setting: any) => {
         let empty =
           component[setting.key] == null || component[setting.key] === ""
@@ -258,10 +255,10 @@ function findComponentsBySettingsType(
     const setting = definition?.settings?.find((s: any) =>
       typesArray.includes(s.type)
     )
-    if (setting && "type" in setting) {
+    if (setting) {
       result.push({
         component,
-        setting: { type: setting.type!, key: setting.key! },
+        setting: { type: setting.type, key: setting.key },
       })
     }
     component._children?.forEach(child => {
