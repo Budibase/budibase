@@ -1,9 +1,9 @@
 import csv from "csvtojson"
 
 export async function jsonFromCsvString(csvString: string) {
-  const possibleDelimeters = [",", ";", ":", "|", "~", "\t", " "]
+  const possibleDelimiters = [",", ";", ":", "|", "~", "\t", " "]
 
-  for (let i = 0; i < possibleDelimeters.length; i++) {
+  for (let i = 0; i < possibleDelimiters.length; i++) {
     let headers: string[] | undefined = undefined
     let headerMismatch = false
 
@@ -14,7 +14,7 @@ export async function jsonFromCsvString(csvString: string) {
       // with the keys but empty values
       const result = await csv({
         ignoreEmpty: false,
-        delimiter: possibleDelimeters[i],
+        delimiter: possibleDelimiters[i],
       }).fromString(csvString)
       for (const [, r] of result.entries()) {
         // The purpose of this is to find rows that have been split
