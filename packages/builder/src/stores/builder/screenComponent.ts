@@ -1,13 +1,18 @@
-import { derived } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { tables } from "./tables"
 import { selectedScreen } from "./screens"
 import { viewsV2 } from "./viewsV2"
-import { findComponentsBySettingsType } from "@/helpers/screen"
-import { UIDatasourceType, Screen } from "@budibase/types"
+import {
+  UIDatasourceType,
+  Screen,
+  Component,
+  ScreenProps,
+} from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
 import { bindings, featureFlag } from "@/helpers"
 import { getBindableProperties } from "@/dataBinding"
+import { ComponentDefinition, componentStore } from "./components"
 
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
@@ -38,11 +43,15 @@ const validationKeyByType: Record<UIDatasourceType, string | null> = {
 }
 
 export const screenComponentErrors = derived(
-  [selectedScreen, tables, views, viewsV2, queries],
-  ([$selectedScreen, $tables, $views, $viewsV2, $queries]): Record<
-    string,
-    string[]
-  > => {
+  [selectedScreen, tables, views, viewsV2, queries, componentStore],
+  ([
+    $selectedScreen,
+    $tables,
+    $views,
+    $viewsV2,
+    $queries,
+    $componentStore,
+  ]): Record<string, string[]> => {
     if (!featureFlag.isEnabled("CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS")) {
       return {}
     }
@@ -51,9 +60,11 @@ export const screenComponentErrors = derived(
       datasources: Record<string, any>
     ) {
       const result: Record<string, string[]> = {}
+
       for (const { component, setting } of findComponentsBySettingsType(
         screen,
-        ["table", "dataSource"]
+        ["table", "dataSource"],
+        $componentStore.components
       )) {
         const componentSettings = component[setting.key]
         if (!componentSettings) {
@@ -111,3 +122,43 @@ export const screenComponentErrors = derived(
     return getInvalidDatasources($selectedScreen, datasources)
   }
 )
+
+function findComponentsBySettingsType(
+  screen: Screen,
+  type: string | string[],
+  definitions: Record<string, ComponentDefinition>
+) {
+  const typesArray = Array.isArray(type) ? type : [type]
+
+  const result: {
+    component: Component
+    setting: {
+      type: string
+      key: string
+    }
+  }[] = []
+
+  function recurseFieldComponentsInChildren(component: ScreenProps) {
+    if (!component) {
+      return
+    }
+
+    const definition = definitions[component._component]
+
+    const setting = definition?.settings?.find((s: any) =>
+      typesArray.includes(s.type)
+    )
+    if (setting && "type" in setting) {
+      result.push({
+        component,
+        setting: { type: setting.type!, key: setting.key! },
+      })
+    }
+    component._children?.forEach(child => {
+      recurseFieldComponentsInChildren(child)
+    })
+  }
+
+  recurseFieldComponentsInChildren(screen?.props)
+  return result
+}
