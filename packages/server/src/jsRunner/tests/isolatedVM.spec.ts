@@ -111,10 +111,11 @@ describe("Test isolated vm directly", () => {
   it("should ensure error results are cleared between runs", () => {
     const context = {}
     // throw error
-    const result = runJSWithIsolatedVM(`test.foo.bar = 123`, context)
-    expect(result).toEqual({})
-    // ensure error not persisted across vms
-    const secondResult = runJSWithIsolatedVM(`return {}`, context)
+    // Ensure the first execution throws an error
+    expect(() => runJSWithIsolatedVM(`test.foo.bar = 123`, context)).toThrow();
+
+    // Ensure the error is not persisted across VMs
+    const secondResult = runJSWithIsolatedVM(`return {}`, context);
     expect(secondResult).toEqual({})
   })
 })
