@@ -8,13 +8,15 @@ import {
   Component,
   UIComponentError,
   ScreenProps,
+  ComponentDefinition,
 } from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
 import { findAllComponents } from "@/helpers/components"
 import { bindings, featureFlag } from "@/helpers"
 import { getBindableProperties } from "@/dataBinding"
-import { componentStore, ComponentDefinition } from "./components"
+import { componentStore } from "./components"
+import { getSettingsDefinition } from "@budibase/frontend-core"
 
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
@@ -137,41 +139,41 @@ function getMissingRequiredSettings(
   for (const component of allComponents) {
     const definition = definitions[component._component]
 
-    const missingRequiredSettings = definition?.settings?.filter(
-      (setting: any) => {
-        let empty =
-          component[setting.key] == null || component[setting.key] === ""
-        let missing = setting.required && empty
+    const settings = getSettingsDefinition(definition)
 
-        // Check if this setting depends on another, as it may not be required
-        if (setting.dependsOn) {
-          const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
-          const dependsOnValue = setting.dependsOn.value
-          const realDependentValue = component[dependsOnKey]
+    const missingRequiredSettings = settings.filter((setting: any) => {
+      let empty =
+        component[setting.key] == null || component[setting.key] === ""
+      let missing = setting.required && empty
 
-          const sectionDependsOnKey =
-            setting.sectionDependsOn?.setting || setting.sectionDependsOn
-          const sectionDependsOnValue = setting.sectionDependsOn?.value
-          const sectionRealDependentValue = component[sectionDependsOnKey]
+      // Check if this setting depends on another, as it may not be required
+      if (setting.dependsOn) {
+        const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
+        const dependsOnValue = setting.dependsOn.value
+        const realDependentValue = component[dependsOnKey]
 
-          if (dependsOnValue == null && realDependentValue == null) {
-            return false
-          }
-          if (dependsOnValue != null && dependsOnValue !== realDependentValue) {
-            return false
-          }
+        const sectionDependsOnKey =
+          setting.sectionDependsOn?.setting || setting.sectionDependsOn
+        const sectionDependsOnValue = setting.sectionDependsOn?.value
+        const sectionRealDependentValue = component[sectionDependsOnKey]
 
-          if (
-            sectionDependsOnValue != null &&
-            sectionDependsOnValue !== sectionRealDependentValue
-          ) {
-            return false
-          }
+        if (dependsOnValue == null && realDependentValue == null) {
+          return false
+        }
+        if (dependsOnValue != null && dependsOnValue !== realDependentValue) {
+          return false
         }
 
-        return missing
+        if (
+          sectionDependsOnValue != null &&
+          sectionDependsOnValue !== sectionRealDependentValue
+        ) {
+          return false
+        }
       }
-    )
+
+      return missing
+    })
 
     if (missingRequiredSettings?.length) {
       result[component._id!] = missingRequiredSettings.map((s: any) => ({
