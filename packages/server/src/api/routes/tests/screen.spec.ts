@@ -1,10 +1,24 @@
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { events, roles } from "@budibase/backend-core"
-import { Screen, Role, BuiltinPermissionID } from "@budibase/types"
+import {
+  Screen,
+  Role,
+  BuiltinPermissionID,
+  SourceType,
+  UsageScreenResponse,
+} from "@budibase/types"
 
-const { basicScreen, tableScreen, viewScreen, queryScreen, basicTable } =
-  setup.structures
+const {
+  basicScreen,
+  tableScreen,
+  viewScreen,
+  queryScreen,
+  basicTable,
+  viewV2,
+  basicQuery,
+  basicDatasource,
+} = setup.structures
 
 describe("/screens", () => {
   let config = setup.getConfig()
@@ -189,9 +203,73 @@ describe("/screens", () => {
   })
 
   describe("usage", () => {
+    beforeEach(async () => {
+      await config.init()
+      await config.api.screen.save(basicScreen(), {
+        status: 200,
+      })
+    })
+
+    function confirmScreen(usage: UsageScreenResponse, screen: Screen) {
+      expect(usage.screens.length).toEqual(1)
+      expect(usage.screens[0].url).toEqual(screen.routing.route)
+      expect(usage.screens[0]._id).toEqual(screen._id!)
+    }
+
     it("should find table usage", async () => {
       const table = await config.api.table.save(basicTable(), { status: 200 })
-      const tableScreen = await config.api.screen.save(tableScreen())
+      const screen = await config.api.screen.save(
+        tableScreen("BudibaseDB", table),
+        { status: 200 }
+      )
+      const usage = await config.api.screen.usage(table._id!, { status: 200 })
+      expect(usage.sourceType).toEqual(SourceType.TABLE)
+      confirmScreen(usage, screen)
+    })
+
+    it("should find view usage", async () => {
+      const table = await config.api.table.save(basicTable(), { status: 200 })
+      const view = await config.api.viewV2.create(
+        viewV2.createRequest(table._id!),
+        { status: 201 }
+      )
+      const screen = await config.api.screen.save(
+        viewScreen("BudibaseDB", view),
+        {
+          status: 200,
+        }
+      )
+      const usage = await config.api.screen.usage(view.id, { status: 200 })
+      expect(usage.sourceType).toEqual(SourceType.VIEW)
+      confirmScreen(usage, screen)
+    })
+
+    it("should find datasource/query usage", async () => {
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource,
+        {
+          status: 200,
+        }
+      )
+      const query = await config.api.query.save(basicQuery(datasource._id!), {
+        status: 200,
+      })
+      const screen = await config.api.screen.save(
+        queryScreen(datasource._id!, query),
+        {
+          status: 200,
+        }
+      )
+      const dsUsage = await config.api.screen.usage(datasource._id!, {
+        status: 200,
+      })
+      expect(dsUsage.sourceType).toEqual(SourceType.DATASOURCE)
+      confirmScreen(dsUsage, screen)
+      const queryUsage = await config.api.screen.usage(query._id!, {
+        status: 200,
+      })
+      expect(queryUsage.sourceType).toEqual(SourceType.QUERY)
+      confirmScreen(queryUsage, screen)
     })
   })
 })

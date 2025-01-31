@@ -1,24 +1,23 @@
 import { Screen } from "@budibase/types"
-import { flattenObject } from "../../utils"
 
 export function findInSettings(screen: Screen, toFind: string) {
-  const flattened = flattenObject(screen.props)
   const foundIn: { setting: string; value: string }[] = []
-  for (let key of Object.keys(flattened)) {
-    let found = false
-    if (typeof flattened[key] === "string") {
-      found = flattened[key].includes(toFind)
-    } else if (Array.isArray(flattened[key])) {
-      found = flattened[key].find(
-        (el: any) => typeof el === "string" && el.includes(toFind)
-      )
-    }
-    if (found) {
-      foundIn.push({
-        setting: key,
-        value: flattened[key],
-      })
+  function recurse(props: Record<string, any>, parentKey = "") {
+    for (let key of Object.keys(props)) {
+      if (!props[key]) {
+        continue
+      }
+      if (typeof props[key] === "string" && props[key].includes(toFind)) {
+        foundIn.push({
+          setting: parentKey ? `${parentKey}.${key}` : key,
+          value: props[key],
+        })
+      } else if (typeof props[key] === "object") {
+        recurse(props[key], key)
+      }
     }
   }
+
+  recurse(screen.props)
   return foundIn
 }
