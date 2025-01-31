@@ -3,7 +3,8 @@ import * as setup from "./utilities"
 import { events, roles } from "@budibase/backend-core"
 import { Screen, Role, BuiltinPermissionID } from "@budibase/types"
 
-const { basicScreen } = setup.structures
+const { basicScreen, tableScreen, viewScreen, queryScreen, basicTable } =
+  setup.structures
 
 describe("/screens", () => {
   let config = setup.getConfig()
@@ -184,6 +185,13 @@ describe("/screens", () => {
         method: "DELETE",
         url: `/api/screens/${screen._id}/${screen._rev}`,
       })
+    })
+  })
+
+  describe("usage", () => {
+    it("should find table usage", async () => {
+      const table = await config.api.table.save(basicTable(), { status: 200 })
+      const tableScreen = await config.api.screen.save(tableScreen())
     })
   })
 })
