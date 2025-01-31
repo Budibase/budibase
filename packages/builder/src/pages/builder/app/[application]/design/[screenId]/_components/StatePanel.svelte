@@ -8,6 +8,7 @@
     selectedScreen,
     builderStore,
     previewStore,
+    findComponentsBySettingsType,
   } from "@/stores/builder"
   import {
     decodeJSBinding,
@@ -64,12 +65,19 @@
   ): ComponentUsingState[] => {
     let foundComponents: ComponentUsingState[] = []
 
-    const eventHandlerProps = [
-      "onClick",
-      "onRowClick",
-      "onChange",
-      "buttonOnClick",
-    ]
+    let eventHandlers: string[] = []
+    if ($selectedScreen) {
+      let componentSettings = findComponentsBySettingsType(
+        $selectedScreen,
+        "event",
+        $componentStore.components
+      )
+
+      // Get an array of all event handlers within this component
+      eventHandlers = [
+        ...new Set(componentSettings.map(handler => handler.setting.key)),
+      ]
+    }
 
     const isStateUpdateHandler = (handler: any) =>
       handler["##eventHandlerType"] === "Update State" &&
@@ -94,7 +102,7 @@
       })
     }
 
-    eventHandlerProps.forEach(eventType => {
+    eventHandlers.forEach(eventType => {
       checkEventHandlers(
         component[eventType],
         component._id!,
@@ -108,7 +116,7 @@
       .forEach(([propName, propValue]) => {
         if (Array.isArray(propValue)) {
           propValue.forEach(item => {
-            eventHandlerProps.forEach(eventType => {
+            eventHandlers.forEach(eventType => {
               checkEventHandlers(
                 item[eventType],
                 component._id!,
@@ -195,7 +203,6 @@
     if (!stateKey || !$selectedScreen?.props) {
       return
     }
-    console.log($selectedScreen)
     const componentStateUpdates = findComponentsUpdatingState(
       $selectedScreen.props,
       stateKey
