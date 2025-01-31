@@ -16,13 +16,13 @@ export async function jsonFromCsvString(csvString: string) {
         ignoreEmpty: false,
         delimiter: possibleDelimiters[i],
       }).fromString(csvString)
-      for (const [, r] of result.entries()) {
+      for (const [, row] of result.entries()) {
         // The purpose of this is to find rows that have been split
         // into the wrong number of columns - Any valid .CSV file will have
         // the same number of colums in each row
         // If the number of columms in each row is different to
         // the number of headers, this isn't the right delimiter
-        const columns = Object.keys(r)
+        const columns = Object.keys(row)
         if (headers == null) {
           headers = columns
         }
@@ -32,8 +32,8 @@ export async function jsonFromCsvString(csvString: string) {
         }
 
         for (const header of headers) {
-          if (r[header] === undefined || r[header] === "") {
-            r[header] = null
+          if (row[header] === undefined || row[header] === "") {
+            row[header] = null
           }
         }
       }
