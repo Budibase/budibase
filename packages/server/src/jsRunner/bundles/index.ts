@@ -5,6 +5,7 @@ export const enum BundleType {
   BSON = "bson",
   SNIPPETS = "snippets",
   BUFFER = "buffer",
+  BSON_POLYFILLS = "bson_polyfills",
 }
 
 const bundleSourceFile: Record<BundleType, string> = {
@@ -12,6 +13,7 @@ const bundleSourceFile: Record<BundleType, string> = {
   [BundleType.BSON]: "./bson.ivm.bundle.js",
   [BundleType.SNIPPETS]: "./snippets.ivm.bundle.js",
   [BundleType.BUFFER]: "./buffer.ivm.bundle.js",
+  [BundleType.BSON_POLYFILLS]: "./bson-polyfills.ivm.bundle.js",
 }
 const bundleSourceCode: Partial<Record<BundleType, string>> = {}
 
