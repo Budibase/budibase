@@ -111,6 +111,8 @@
       )
     })
 
+    // This gets event handlers nested within properties
+    // like the buttons property within a table.
     Object.entries(component)
       .filter(([key]) => key !== "_children")
       .forEach(([propName, propValue]) => {
