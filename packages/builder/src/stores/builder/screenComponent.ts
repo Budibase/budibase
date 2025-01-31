@@ -3,20 +3,18 @@ import { tables } from "./tables"
 import { selectedScreen } from "./screens"
 import { viewsV2 } from "./viewsV2"
 import {
-  findComponentsBySettingsType,
-  getManifestDefinition,
-} from "@/helpers/screen"
-import {
   UIDatasourceType,
   Screen,
   Component,
   UIComponentError,
+  ScreenProps,
 } from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
 import { findAllComponents } from "@/helpers/components"
 import { bindings, featureFlag } from "@/helpers"
 import { getBindableProperties } from "@/dataBinding"
+import { componentStore, ComponentDefinition } from "./components"
 
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
@@ -47,13 +45,17 @@ const validationKeyByType: Record<UIDatasourceType, string | null> = {
 }
 
 export const screenComponentErrors = derived(
-  [selectedScreen, tables, views, viewsV2, queries],
-  ([$selectedScreen, $tables, $views, $viewsV2, $queries]): Record<
-    string,
-    UIComponentError[]
-  > => {
+  [selectedScreen, tables, views, viewsV2, queries, componentStore],
+  ([
+    $selectedScreen,
+    $tables,
+    $views,
+    $viewsV2,
+    $queries,
+    $componentStore,
+  ]): Record<string, UIComponentError[]> => {
     if (
-      !featureFlag.isEnabled("CHECK_SCREEN_COMPONENT_SETTINGS_ERRORS") ||
+      !featureFlag.isEnabled("CHECK_COMPONENT_SETTINGS_ERRORS") ||
       !$selectedScreen
     ) {
       return {}
@@ -66,10 +68,12 @@ export const screenComponentErrors = derived(
       ...reduceBy("_id", $queries.list),
     }
 
+    const { components: definitions } = $componentStore
+
     const errors = {
-      ...getInvalidDatasources($selectedScreen, datasources),
-      ...getMissingAncestors($selectedScreen),
-      ...getMissingRequiredSettings($selectedScreen),
+      ...getInvalidDatasources($selectedScreen, datasources, definitions),
+      ...getMissingAncestors($selectedScreen, definitions),
+      ...getMissingRequiredSettings($selectedScreen, definitions),
     }
     return errors
   }
@@ -77,13 +81,15 @@ export const screenComponentErrors = derived(
 
 function getInvalidDatasources(
   screen: Screen,
-  datasources: Record<string, any>
+  datasources: Record<string, any>,
+  definitions: Record<string, ComponentDefinition>
 ) {
   const result: Record<string, UIComponentError[]> = {}
-  for (const { component, setting } of findComponentsBySettingsType(screen, [
-    "table",
-    "dataSource",
-  ])) {
+  for (const { component, setting } of findComponentsBySettingsType(
+    screen,
+    ["table", "dataSource"],
+    definitions
+  )) {
     const componentSettings = component[setting.key]
     if (!componentSettings) {
       continue
@@ -121,17 +127,20 @@ function getInvalidDatasources(
   return result
 }
 
-function getMissingRequiredSettings(screen: Screen) {
+function getMissingRequiredSettings(
+  screen: Screen,
+  definitions: Record<string, ComponentDefinition>
+) {
   const allComponents = findAllComponents(screen.props) as Component[]
 
   const result: Record<string, UIComponentError[]> = {}
   for (const component of allComponents) {
-    const definition = getManifestDefinition(component)
+    const definition = definitions[component._component]
     if (!("settings" in definition)) {
       continue
     }
 
-    const missingRequiredSettings = definition.settings.filter(
+    const missingRequiredSettings = definition.settings?.filter(
       (setting: any) => {
         let empty =
           component[setting.key] == null || component[setting.key] === ""
@@ -167,7 +176,7 @@ function getMissingRequiredSettings(screen: Screen) {
       }
     )
 
-    if (missingRequiredSettings.length) {
+    if (missingRequiredSettings?.length) {
       result[component._id!] = missingRequiredSettings.map((s: any) => ({
         key: s.key,
         message: `Add the <mark>${s.label}</mark> setting to start using your component`,
@@ -180,7 +189,10 @@ function getMissingRequiredSettings(screen: Screen) {
 }
 
 const BudibasePrefix = "@budibase/standard-components/"
-function getMissingAncestors(screen: Screen) {
+function getMissingAncestors(
+  screen: Screen,
+  definitions: Record<string, ComponentDefinition>
+) {
   const result: Record<string, UIComponentError[]> = {}
 
   function checkMissingAncestors(component: Component, ancestors: string[]) {
@@ -188,9 +200,9 @@ function getMissingAncestors(screen: Screen) {
       checkMissingAncestors(child, [...ancestors, component._component])
     }
 
-    const definition = getManifestDefinition(component)
+    const definition = definitions[component._component]
 
-    if (!("requiredAncestors" in definition)) {
+    if (!definition?.requiredAncestors?.length) {
       return
     }
 
@@ -204,7 +216,7 @@ function getMissingAncestors(screen: Screen) {
       }
 
       result[component._id!] = missingAncestors.map(ancestor => {
-        const ancestorDefinition: any = getManifestDefinition(ancestor)
+        const ancestorDefinition = definitions[`${BudibasePrefix}${ancestor}`]
         return {
           message: `${pluralise(definition.name)} need to be inside a
 <mark>${ancestorDefinition.name}</mark>`,
@@ -221,3 +233,52 @@ function getMissingAncestors(screen: Screen) {
   checkMissingAncestors(screen.props, [])
   return result
 }
+function findComponentsBySettingsType(
+  screen: Screen,
+  type: string | string[],
+  definitions: Record<string, ComponentDefinition>
+) {
+  const typesArray = Array.isArray(type) ? type : [type]
+
+  const result: {
+    component: Component
+    setting: {
+      type: string
+      key: string
+    }
+  }[] = []
+
+  function recurseFieldComponentsInChildren(component: ScreenProps) {
+    if (!component) {
+      return
+    }
+
+    const definition = definitions[component._component]
+
+    const setting = definition?.settings?.find((s: any) =>
+      typesArray.includes(s.type)
+    )
+    if (setting && "type" in setting) {
+      result.push({
+        component,
+        setting: { type: setting.type!, key: setting.key! },
+      })
+    }
+    component._children?.forEach(child => {
+      recurseFieldComponentsInChildren(child)
+    })
+  }
+
+  recurseFieldComponentsInChildren(screen?.props)
+  return result
+}
+
+export const screenComponents = derived(
+  [selectedScreen],
+  ([$selectedScreen]) => {
+    if (!$selectedScreen) {
+      return []
+    }
+    return findAllComponents($selectedScreen.props) as Component[]
+  }
+)
