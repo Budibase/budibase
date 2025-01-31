@@ -87,7 +87,7 @@
         if (isStateUpdateHandler(handler)) {
           foundComponents.push({
             id: componentId,
-            name: instanceName,
+            name: instanceName + " - " + setting,
             settings: [setting],
           })
         }
@@ -103,20 +103,22 @@
       )
     })
 
-    Object.entries(component).forEach(([propName, propValue]) => {
-      if (Array.isArray(propValue)) {
-        propValue.forEach(item => {
-          eventHandlerProps.forEach(eventType => {
-            checkEventHandlers(
-              item[eventType],
-              component._id!,
-              component._instanceName,
-              propName
-            )
+    Object.entries(component)
+      .filter(([key]) => key !== "_children")
+      .forEach(([propName, propValue]) => {
+        if (Array.isArray(propValue)) {
+          propValue.forEach(item => {
+            eventHandlerProps.forEach(eventType => {
+              checkEventHandlers(
+                item[eventType],
+                component._id!,
+                component._instanceName,
+                propName
+              )
+            })
           })
-        })
-      }
-    })
+        }
+      })
 
     if (component._children) {
       for (let child of component._children) {
@@ -140,83 +142,40 @@
     return bindings.join(" ").includes(stateKey)
   }
 
-  const getSettingsWithState = (component: any, stateKey: string): string[] => {
-    const settingsWithState: string[] = []
-
-    const searchForStateBinding = (value: any, path: string[]) => {
-      if (typeof value === "string") {
-        if (hasStateBinding(value, stateKey)) {
-          const topLevelProperty = path[0]
-          if (!settingsWithState.includes(topLevelProperty)) {
-            settingsWithState.push(topLevelProperty)
-          }
-        }
-      } else if (Array.isArray(value)) {
-        value.forEach((item, index) => {
-          searchForStateBinding(item, [...path, `${index}`])
-        })
-      } else if (typeof value === "object" && value !== null) {
-        Object.entries(value).forEach(([key, val]) => {
-          searchForStateBinding(val, [...path, key])
-        })
-      }
-    }
-
-    Object.entries(component).forEach(([key, value]) => {
-      if (["_children", "_styles", "_conditions"].includes(key)) return
-
-      searchForStateBinding(value, [key])
-    })
-
-    return settingsWithState
+  const getSettingsWithState = (
+    component: Component,
+    stateKey: string
+  ): string[] => {
+    return Object.entries(component)
+      .filter(([key]) => key !== "_children")
+      .filter(([_, value]) => hasStateBinding(JSON.stringify(value), stateKey))
+      .map(([key]) => key)
   }
-
-  const checkConditions = (conditions: any[], stateKey: string): boolean => {
-    return conditions.some(condition =>
-      [condition.referenceValue, condition.newValue].some(
-        value => typeof value === "string" && hasStateBinding(value, stateKey)
-      )
-    )
-  }
-
-  const checkStyles = (styles: any, stateKey: string): boolean => {
-    return (
-      typeof styles?.custom === "string" &&
-      hasStateBinding(styles.custom, stateKey)
-    )
-  }
-
   const findComponentsUsingState = (
-    component: any,
+    component: Component,
     stateKey: string
   ): ComponentUsingState[] => {
     let componentsUsingState: ComponentUsingState[] = []
-    const { _children, _styles, _conditions, ...componentSettings } = component
+    const { _children } = component
 
-    const settingsWithState = getSettingsWithState(componentSettings, stateKey)
+    const settingsWithState = getSettingsWithState(component, stateKey)
     settingsWithState.forEach(setting => {
+      if (setting === "_conditions") {
+        setting = "Conditions"
+      } else if (setting === "_styles") {
+        setting = "Styles"
+      }
+      const label =
+        componentStore
+          .getDefinition(component._component)
+          ?.settings?.find(t => t.key === setting)?.label || setting
+
       componentsUsingState.push({
-        id: component._id,
-        name: `${component._instanceName} - ${setting}`,
+        id: component._id!,
+        name: `${component._instanceName} - ${label}`,
         settings: [setting],
       })
     })
-
-    if (_conditions?.length > 0 && checkConditions(_conditions, stateKey)) {
-      componentsUsingState.push({
-        id: component._id,
-        name: `${component._instanceName} - conditions`,
-        settings: ["_conditions"],
-      })
-    }
-
-    if (_styles && checkStyles(_styles, stateKey)) {
-      componentsUsingState.push({
-        id: component._id,
-        name: `${component._instanceName} - styles`,
-        settings: ["_styles"],
-      })
-    }
 
     if (_children) {
       for (let child of _children) {
@@ -234,7 +193,6 @@
     if (!stateKey || !$selectedScreen?.props) {
       return
     }
-
     const componentStateUpdates = findComponentsUpdatingState(
       $selectedScreen.props,
       stateKey
@@ -254,7 +212,7 @@
         )
         .map(() => ({
           id: $selectedScreen._id!,
-          name: "Screen onLoad",
+          name: "Screen - onLoad",
           settings: ["onLoad"],
         })) || []
 
