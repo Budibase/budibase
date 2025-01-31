@@ -11,11 +11,8 @@
 <script>
   import { getContext, setContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
-  import {
-    enrichProps,
-    propsAreSame,
-    getSettingsDefinition,
-  } from "utils/componentProps"
+  import { enrichProps, propsAreSame } from "utils/componentProps"
+  import { getSettingsDefinition } from "@budibase/frontend-core"
   import {
     builderStore,
     devToolsStore,
