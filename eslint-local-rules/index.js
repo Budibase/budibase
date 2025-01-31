@@ -41,12 +41,11 @@ module.exports = {
           if (
             /^@budibase\/[^/]+\/.*$/.test(importPath) &&
             importPath !== "@budibase/backend-core/tests" &&
-            importPath !== "@budibase/string-templates/test/utils" &&
-            importPath !== "@budibase/client/manifest.json"
+            importPath !== "@budibase/string-templates/test/utils"
           ) {
             context.report({
               node,
-              message: `Importing from @budibase is not allowed, except for @budibase/backend-core/tests, @budibase/string-templates/test/utils and @budibase/client/manifest.json.`,
+              message: `Importing from @budibase is not allowed, except for @budibase/backend-core/tests and @budibase/string-templates/test/utils.`,
             })
           }
         },
