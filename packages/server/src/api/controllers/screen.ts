@@ -143,7 +143,8 @@ export async function usage(ctx: UserCtx<void, UsageScreenResponse>) {
   const allScreens = await sdk.screens.fetch()
   const response: ScreenUsage[] = []
   for (let screen of allScreens) {
-    if (sharedSdk.screens.findInSettings(screen, sourceId)) {
+    const found = sharedSdk.screens.findInSettings(screen, sourceId)
+    if (found.length !== 0) {
       response.push({
         url: screen.routing.route,
         _id: screen._id!,
