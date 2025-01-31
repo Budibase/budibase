@@ -20,6 +20,7 @@ import {
   previewStore,
   tables,
   componentTreeNodesStore,
+  screenComponents,
 } from "@/stores/builder"
 import { buildFormSchema, getSchemaForDatasource } from "@/dataBinding"
 import {
@@ -37,6 +38,7 @@ import {
   Table,
 } from "@budibase/types"
 import { utils } from "@budibase/shared-core"
+import { getSequentialName } from "@/helpers/duplicate"
 
 interface Component extends ComponentType {
   _id: string
@@ -60,6 +62,7 @@ export interface ComponentDefinition {
   features?: Record<string, boolean>
   typeSupportPresets?: Record<string, any>
   legalDirectChildren: string[]
+  requiredAncestors?: string[]
   illegalChildren: string[]
 }
 
@@ -452,7 +455,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
    * @returns
    */
   createInstance(
-    componentName: string,
+    componentType: string,
     presetProps: any,
     parent: any
   ): Component | null {
@@ -461,10 +464,19 @@ export class ComponentStore extends BudiStore<ComponentState> {
       throw "A valid screen must be selected"
     }
 
-    const definition = this.getDefinition(componentName)
+    const definition = this.getDefinition(componentType)
     if (!definition) {
       return null
     }
+
+    const componentName = getSequentialName(
+      get(screenComponents),
+      `New ${definition.friendlyName || definition.name}`,
+      {
+        getName: c => c._instanceName,
+        separator: " ",
+      }
+    )
 
     // Generate basic component structure
     let instance: Component = {
@@ -475,7 +487,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
         hover: {},
         active: {},
       },
-      _instanceName: `New ${definition.friendlyName || definition.name}`,
+      _instanceName: componentName,
       ...presetProps,
     }
 
@@ -500,7 +512,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
 
     // Add step name to form steps
-    if (componentName.endsWith("/formstep")) {
+    if (componentType.endsWith("/formstep")) {
       const parentForm = findClosestMatchingComponent(
         screen.props,
         get(selectedComponent)?._id,
@@ -529,14 +541,14 @@ export class ComponentStore extends BudiStore<ComponentState> {
    * @returns
    */
   async create(
-    componentName: string,
+    componentType: string,
     presetProps: any,
     parent: Component,
     index: number
   ) {
     const state = get(this.store)
     const componentInstance = this.createInstance(
-      componentName,
+      componentType,
       presetProps,
       parent
     )
