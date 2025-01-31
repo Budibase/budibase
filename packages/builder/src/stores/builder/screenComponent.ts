@@ -3,11 +3,12 @@ import { tables } from "./tables"
 import { selectedScreen } from "./screens"
 import { viewsV2 } from "./viewsV2"
 import { findComponentsBySettingsType } from "@/helpers/screen"
-import { UIDatasourceType, Screen } from "@budibase/types"
+import { UIDatasourceType, Screen, Component } from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
 import { bindings, featureFlag } from "@/helpers"
 import { getBindableProperties } from "@/dataBinding"
+import { findAllComponents } from "@/helpers/components"
 
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
@@ -109,5 +110,18 @@ export const screenComponentErrors = derived(
     }
 
     return getInvalidDatasources($selectedScreen, datasources)
+  }
+)
+
+export const screenComponents = derived(
+  [selectedScreen],
+  ([$selectedScreen]) => {
+    if (!$selectedScreen) {
+      return []
+    }
+    const allComponents = findAllComponents(
+      $selectedScreen.props
+    ) as Component[]
+    return allComponents
   }
 )
