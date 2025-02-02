@@ -64,79 +64,68 @@
     stateKey: string
   ): ComponentUsingState[] => {
     let foundComponents: ComponentUsingState[] = []
+    const definition = componentStore.getDefinition(component._component)
 
-    let eventHandlers: string[] = []
-    if ($selectedScreen) {
-      let componentSettings = findComponentsBySettingsType(
-        $selectedScreen,
-        "event",
-        $componentStore.components
-      )
-
-      // Get an array of all event handlers within this component
-      eventHandlers = [
-        ...new Set(componentSettings.map(handler => handler.setting.key)),
-      ]
-    }
-
-    const isStateUpdateHandler = (handler: any) =>
-      handler["##eventHandlerType"] === "Update State" &&
-      handler.parameters?.key === stateKey
-
-    const checkEventHandlers = (
+    const checkStateUpdateHandlers = (
       handlers: any[],
       componentId: string,
       instanceName: string,
-      setting: string
+      settingKey: string
     ) => {
       if (!Array.isArray(handlers)) return
 
       handlers.forEach(handler => {
-        if (isStateUpdateHandler(handler)) {
+        if (
+          handler["##eventHandlerType"] === "Update State" &&
+          handler.parameters?.key === stateKey
+        ) {
+          let label =
+            definition?.settings?.find(t => t.key === settingKey)?.label ||
+            settingKey
           foundComponents.push({
             id: componentId,
-            name: `${instanceName} - ${setting}`,
-            settings: [setting],
+            name: `${instanceName} - ${label}`,
+            settings: [settingKey],
           })
         }
       })
     }
 
-    eventHandlers.forEach(eventType => {
-      checkEventHandlers(
-        component[eventType],
-        component._id!,
-        component._instanceName,
-        eventType
+    componentStore
+      .getComponentSettings(component._component)
+      .filter(
+        setting =>
+          setting.type === "event" || setting.type === "buttonConfiguration"
       )
-    })
-
-    // This gets event handlers nested within properties
-    // like the buttons property within a table.
-    Object.entries(component)
-      .filter(([key]) => key !== "_children")
-      .forEach(([propName, propValue]) => {
-        if (Array.isArray(propValue)) {
-          propValue.forEach(item => {
-            eventHandlers.forEach(eventType => {
-              checkEventHandlers(
-                item[eventType],
+      .forEach(setting => {
+        if (setting.type === "event") {
+          checkStateUpdateHandlers(
+            component[setting.key],
+            component._id!,
+            component._instanceName,
+            setting.key
+          )
+        } else if (setting.type === "buttonConfiguration") {
+          const buttons = component[setting.key]
+          if (Array.isArray(buttons)) {
+            buttons.forEach(button => {
+              checkStateUpdateHandlers(
+                button.onClick,
                 component._id!,
                 component._instanceName,
-                propName
+                setting.key
               )
             })
-          })
+          }
         }
       })
 
     if (component._children) {
-      for (let child of component._children) {
-        foundComponents = [
-          ...foundComponents,
-          ...findComponentsUpdatingState(child, stateKey),
-        ]
-      }
+      foundComponents.push(
+        ...component._children.flatMap(child =>
+          findComponentsUpdatingState(child, stateKey)
+        )
+      )
     }
 
     return foundComponents
@@ -166,20 +155,20 @@
     stateKey: string
   ): ComponentUsingState[] => {
     let componentsUsingState: ComponentUsingState[] = []
+    let label
+
     const { _children } = component
-
+    const definition = componentStore.getDefinition(component._component)
     const settingsWithState = getSettingsWithState(component, stateKey)
-    settingsWithState.forEach(setting => {
-      const label =
-        componentStore
-          .getDefinition(component._component)
-          ?.settings?.find(t => t.key === setting)?.label || setting
 
-      // These have no label so have to set manually
+    settingsWithState.forEach(setting => {
+      label =
+        definition?.settings?.find(t => t.key === setting)?.label || setting
+
       if (setting === "_conditions") {
-        setting = "Conditions"
+        label = "Conditions"
       } else if (setting === "_styles") {
-        setting = "Styles"
+        label = "Styles"
       }
 
       componentsUsingState.push({
@@ -205,6 +194,7 @@
     if (!stateKey || !$selectedScreen?.props) {
       return
     }
+
     const componentStateUpdates = findComponentsUpdatingState(
       $selectedScreen.props,
       stateKey
@@ -224,7 +214,7 @@
         )
         .map(() => ({
           id: $selectedScreen._id!,
-          name: "Screen - onLoad",
+          name: "Screen - On load",
           settings: ["onLoad"],
         })) || []
 
