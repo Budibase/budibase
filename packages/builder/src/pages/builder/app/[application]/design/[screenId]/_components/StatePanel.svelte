@@ -8,7 +8,6 @@
     selectedScreen,
     builderStore,
     previewStore,
-    findComponentsBySettingsType,
   } from "@/stores/builder"
   import {
     decodeJSBinding,
