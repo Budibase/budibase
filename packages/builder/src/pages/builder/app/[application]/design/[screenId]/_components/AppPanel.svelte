@@ -1,8 +1,13 @@
 <script>
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
-  import { screenStore, appStore } from "@/stores/builder"
+  import {
+    screenStore,
+    appStore,
+    screenComponentErrorList,
+  } from "@/stores/builder"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
+  import { ActionButton } from "@budibase/bbui"
 </script>
 
 <div class="app-panel">
@@ -15,6 +20,10 @@
       {#if $appStore.clientFeatures.devicePreview}
         <DevicePreviewSelect />
       {/if}
+
+      <ActionButton selected quiet on:click={() => {}}
+        >Errors ({$screenComponentErrorList.length})</ActionButton
+      >
     </div>
   </div>
   <div class="content">
