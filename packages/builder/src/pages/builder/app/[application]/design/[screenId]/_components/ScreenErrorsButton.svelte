@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { UIComponentError } from "@budibase/types"
   import {
     componentStore,
     screenComponentErrorList,
@@ -9,7 +10,7 @@
   let button: any
   let popover: any
 
-  function getErrorTitle(error: any) {
+  function getErrorTitle(error: UIComponentError) {
     const titleParts = [$screenComponents[error.componentId]._instanceName]
     if (error.errorType === "setting") {
       titleParts.push(error.key)
