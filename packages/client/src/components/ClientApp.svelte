@@ -44,6 +44,7 @@
   import MaintenanceScreen from "components/MaintenanceScreen.svelte"
   import SnippetsProvider from "./context/SnippetsProvider.svelte"
   import EmbedProvider from "./context/EmbedProvider.svelte"
+  import MouseManager from "components/preview/MouseManager.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -278,6 +279,7 @@
     {/if}
   </div>
   <KeyboardManager />
+  <MouseManager />
 {/if}
 
 <style>

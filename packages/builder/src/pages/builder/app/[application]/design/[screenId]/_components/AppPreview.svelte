@@ -214,6 +214,9 @@
         }
       }
       previewStore.setSelectedComponentContext(context)
+    } else if (type === "click") {
+      // TODO
+      console.error("click")
     } else {
       console.warn(`Client sent unknown event type: ${type}`)
     }
