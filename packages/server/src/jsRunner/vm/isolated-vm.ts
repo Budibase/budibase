@@ -186,6 +186,7 @@ export class IsolatedVM implements VM {
 
     code = `
       try {
+        results = {}
         results['${this.runResultKey}']=${this.codeWrapper(code)}
       } catch (e) {
         results['${this.runErrorKey}']=e
