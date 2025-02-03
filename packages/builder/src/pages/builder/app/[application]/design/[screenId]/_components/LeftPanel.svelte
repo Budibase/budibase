@@ -28,7 +28,12 @@
           selected={activeTab === tab}
           on:click={() => (activeTab = tab)}
         >
-          {tab}
+          <div class="tab-label">
+            {tab}
+            {#if tab !== Tabs.Components}
+              <div class="new">NEW</div>
+            {/if}
+          </div>
         </ActionButton>
       {/each}
     </div>
@@ -49,7 +54,7 @@
 <style>
   .panel {
     display: flex;
-    min-width: 270px;
+    min-width: 310px;
     width: 310px;
     height: 100%;
   }
@@ -77,6 +82,19 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding: var(--spacing-l);
+  }
+  .tab-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .new {
+    font-size: 8px;
+    background: var(--bb-indigo);
+    border-radius: 2px;
+    padding: 1px 3px;
+    color: white;
+    font-weight: bold;
   }
 
   .divider {
