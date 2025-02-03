@@ -215,8 +215,8 @@
       }
       previewStore.setSelectedComponentContext(context)
     } else if (type === "click") {
-      // TODO
-      console.error("click")
+      // Force clickoutside to close modals or side panels from the builder
+      document.dispatchEvent(new MouseEvent("contextmenu"))
     } else {
       console.warn(`Client sent unknown event type: ${type}`)
     }
