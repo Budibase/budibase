@@ -1,16 +1,24 @@
 <script lang="ts">
-  import { InlineAlert, Link, Input } from "@budibase/bbui"
-  import { appStore, screenStore } from "@/stores/builder"
+  import { InlineAlert, Link, Input, notifications } from "@budibase/bbui"
+  import {
+    appStore,
+    datasources,
+    screenStore,
+    tables,
+    views,
+    viewsV2,
+  } from "@/stores/builder"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import type { Table, ViewV2, Datasource, Query } from "@budibase/types"
+  import { SourceType } from "@budibase/types"
+  import { goto, params } from "@roxi/routify"
+  import { DB_TYPE_EXTERNAL } from "@/constants/backend"
+  import type { Table, ViewV2, View, Datasource, Query } from "@budibase/types"
 
   export let source: Table | ViewV2 | Datasource | Query | undefined
-  export let type: "table" | "view" | "datasource" | "query"
-  export let deleteSourceFn: () => Promise<void>
 
   let confirmDeleteDialog: any
   let affectedScreens: { text: string; url: string }[] = []
-
+  let sourceType: SourceType | undefined = undefined
   let viewsMessage: string = ""
   let deleteSourceName: string | undefined
 
@@ -43,6 +51,7 @@
     viewsMessage = getViewsMessage()
     const usage = await screenStore.usageOfScreens(getSourceID())
     affectedScreens = processScreens(usage.screens)
+    sourceType = usage.sourceType
     confirmDeleteDialog.show()
   }
 
@@ -62,19 +71,68 @@
   const autofillSourceName = () => {
     deleteSourceName = source?.name
   }
+
+  async function deleteTable(table: Table & { datasourceId?: string }) {
+    const isSelected = $params.tableId === table._id
+    try {
+      await tables.delete({
+        _id: table._id!,
+        _rev: table._rev!,
+      })
+
+      if (table.sourceType === DB_TYPE_EXTERNAL) {
+        await datasources.fetch()
+      }
+      notifications.success("Table deleted")
+      if (isSelected) {
+        $goto(`./datasource/${table.datasourceId}`)
+      }
+    } catch (error: any) {
+      notifications.error(`Error deleting table - ${error.message}`)
+    }
+  }
+
+  async function deleteView(view: ViewV2 | View) {
+    try {
+      if ("version" in view && view.version === 2) {
+        await viewsV2.delete(view as ViewV2)
+      } else {
+        await views.delete(view as View)
+      }
+      notifications.success("View deleted")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error deleting view")
+    }
+  }
+
+  async function deleteSource() {
+    if (!source || !sourceType) {
+      throw new Error("Unable to delete - no data source found.")
+    }
+
+    switch (sourceType) {
+      case SourceType.TABLE:
+        return await deleteTable(source as Table)
+      case SourceType.VIEW:
+        return await deleteView(source as ViewV2)
+      case SourceType.DATASOURCE:
+      case SourceType.QUERY:
+    }
+  }
 </script>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText={`Delete ${type}`}
-  onOk={deleteSourceFn}
+  okText={`Delete ${sourceType}`}
+  onOk={deleteSource}
   onCancel={hideDeleteDialog}
   title="Confirm Deletion"
   disabled={deleteSourceName !== source?.name}
 >
   <div class="content">
     <p class="firstWarning">
-      Are you sure you wish to delete the {type}
+      Are you sure you wish to delete the {sourceType}
       <span class="sourceNameLine">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -83,13 +141,15 @@
       </span>
     </p>
 
-    <p class="secondWarning">All {type} data will be deleted{viewsMessage}.</p>
+    <p class="secondWarning">
+      All {sourceType} data will be deleted{viewsMessage}.
+    </p>
     <p class="thirdWarning">This action <b>cannot be undone</b>.</p>
 
     {#if affectedScreens.length > 0}
       <div class="affectedScreens">
         <InlineAlert
-          header={`The following screens were originally generated from this ${type} and may no longer function as expected`}
+          header={`The following screens use this ${sourceType} and may no longer function as expected`}
         >
           <ul class="affectedScreensList">
             {#each affectedScreens as item}
