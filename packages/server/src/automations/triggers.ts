@@ -1,7 +1,7 @@
 import emitter from "../events/index"
 import { getAutomationParams, isDevAppID } from "../db/utils"
 import { coerce } from "../utilities/rowProcessor"
-import { definitions } from "./triggerInfo"
+import { definitions } from "../../../shared-core/src/automations/triggers"
 // need this to call directly, so we can get a response
 import { automationQueue } from "./bullboard"
 import { checkTestFlag } from "../utilities/redis"

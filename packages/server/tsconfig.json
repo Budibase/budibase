@@ -4,6 +4,18 @@
     "require": ["tsconfig-paths/register"],
     "swc": true
   },
-  "include": ["src/**/*", "specs", "__mocks__"],
+  "include": [
+    "src/**/*",
+    "specs",
+    "__mocks__",
+    "../shared-core/src/automations/triggers/app.ts",
+    "../shared-core/src/automations/triggers/cron.ts",
+    "../shared-core/src/automations/triggers/index.ts",
+    "../shared-core/src/automations/triggers/rowAction.ts",
+    "../shared-core/src/automations/triggers/rowDeleted.ts",
+    "../shared-core/src/automations/triggers/rowSaved.ts",
+    "../shared-core/src/automations/triggers/rowUpdated.ts",
+    "../shared-core/src/automations/triggers/webhook.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

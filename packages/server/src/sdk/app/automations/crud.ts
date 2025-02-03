@@ -13,7 +13,7 @@ import {
   HTTPError,
   db as dbCore,
 } from "@budibase/backend-core"
-import { definitions } from "../../../automations/triggerInfo"
+import { definitions } from "../../../../../shared-core/src/automations/triggers"
 import automations from "."
 
 export interface PersistedAutomation extends Automation {

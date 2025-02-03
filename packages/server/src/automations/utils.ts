@@ -1,5 +1,5 @@
 import { Thread, ThreadType } from "../threads"
-import { definitions } from "./triggerInfo"
+import { definitions } from "../../../shared-core/src/automations/triggers"
 import { automationQueue } from "./bullboard"
 import { updateEntityMetadata } from "../utilities"
 import { context, db as dbCore, utils } from "@budibase/backend-core"
