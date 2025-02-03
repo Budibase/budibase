@@ -286,10 +286,16 @@ export const screenComponentErrorList = derived(
 
 export const screenComponents = derived(
   [selectedScreen],
-  ([$selectedScreen]) => {
+  ([$selectedScreen]): Record<string, Component> => {
     if (!$selectedScreen) {
-      return []
+      return {}
     }
-    return findAllComponents($selectedScreen.props) as Component[]
+
+    return findAllComponents($selectedScreen.props).reduce<
+      Record<string, Component>
+    >((obj, component) => {
+      obj[component._id] = component
+      return obj
+    }, {})
   }
 )
