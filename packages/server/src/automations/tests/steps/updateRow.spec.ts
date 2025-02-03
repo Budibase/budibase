@@ -8,15 +8,16 @@ import {
   Table,
   TableSourceType,
 } from "@budibase/types"
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
-import * as setup from "./utilities"
 import * as uuid from "uuid"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 describe("test the update row action", () => {
-  let table: Table,
-    row: Row,
-    config = setup.getConfig()
+  const config = new TestConfiguration()
+
+  let table: Table
+  let row: Row
 
   beforeAll(async () => {
     await config.init()
@@ -24,7 +25,9 @@ describe("test the update row action", () => {
     row = await config.createRow()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to run the update row action", async () => {
     const builder = createAutomationBuilder({
