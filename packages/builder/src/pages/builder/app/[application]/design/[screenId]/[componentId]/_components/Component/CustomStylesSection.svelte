@@ -105,11 +105,7 @@
     background: var(--spectrum-global-color-gray-300);
     border-left: 4px solid var(--spectrum-semantic-informative-color-background);
     transition: background 130ms ease-out, border-color 130ms ease-out;
-    margin-top: -3.5px;
-    margin-bottom: -3.5px;
-    padding-bottom: 3.5px;
-    padding-top: 3.5px;
-    padding-left: 5px;
-    padding-right: 5px;
+    margin: -4px calc(-1 * var(--spacing-xl));
+    padding: 4px var(--spacing-xl) 4px calc(var(--spacing-xl) - 4px);
   }
 </style>

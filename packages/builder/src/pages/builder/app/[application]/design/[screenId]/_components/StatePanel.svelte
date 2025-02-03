@@ -1,7 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte"
   import { Select } from "@budibase/bbui"
-  import type { Component } from "@budibase/types"
+  import type {
+    Component,
+    ComponentCondition,
+    EventHandler,
+    Screen,
+  } from "@budibase/types"
   import { getAllStateVariables, getBindableProperties } from "@/dataBinding"
   import {
     componentStore,
@@ -16,89 +21,189 @@
     processStringSync,
   } from "@budibase/string-templates"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
+  import { type ComponentSetting } from "@/stores/builder/components"
 
   interface ComponentUsingState {
     id: string
     name: string
-    settings: string[]
+    setting: string
   }
 
+  let selectedKey: string | undefined = undefined
+  let componentsUsingState: ComponentUsingState[] = []
+  let componentsUpdatingState: ComponentUsingState[] = []
+  let editorValue: string = ""
+
+  $: selectStateKey($selectedScreen, selectedKey)
   $: keyOptions = getAllStateVariables($selectedScreen)
   $: bindings = getBindableProperties(
     $selectedScreen,
     $componentStore.selectedComponentId
   )
 
-  let selectedKey: string | undefined = undefined
-  let componentsUsingState: ComponentUsingState[] = []
-  let componentsUpdatingState: ComponentUsingState[] = []
-  let editorValue: string = ""
-  let previousScreenId: string | undefined = undefined
-
+  // Auto-select first valid state key
   $: {
-    const screenChanged =
-      $selectedScreen && $selectedScreen._id !== previousScreenId
-    const previewContext = $previewStore.selectedComponentContext || {}
-
-    if (screenChanged) {
+    if (keyOptions.length && !keyOptions.includes(selectedKey)) {
       selectedKey = keyOptions[0]
+    } else if (!keyOptions.length) {
+      selectedKey = undefined
+    }
+  }
+
+  const selectStateKey = (
+    screen: Screen | undefined,
+    key: string | undefined
+  ) => {
+    if (screen && key) {
+      searchComponents(screen, key)
+      editorValue = $previewStore.selectedComponentContext?.state?.[key] ?? ""
+    } else {
+      editorValue = ""
       componentsUsingState = []
       componentsUpdatingState = []
-      editorValue = ""
-      previousScreenId = $selectedScreen._id
     }
+  }
 
-    if (keyOptions.length > 0 && !keyOptions.includes(selectedKey)) {
-      selectedKey = keyOptions[0]
-    }
+  const searchComponents = (screen: Screen, stateKey: string) => {
+    const { props, onLoad, _id } = screen
+    componentsUsingState = findComponentsUsingState(props, stateKey)
+    componentsUpdatingState = findComponentsUpdatingState(props, stateKey)
 
-    if (selectedKey) {
-      searchComponents(selectedKey)
-      editorValue = previewContext.state?.[selectedKey] ?? ""
+    // Check screen load actions which are outside the component hierarchy
+    if (eventUpdatesState(onLoad, stateKey)) {
+      componentsUpdatingState.push({
+        id: _id!,
+        name: "Screen - On load",
+        setting: "onLoad",
+      })
     }
+  }
+
+  // Checks if an event setting updates a certain state key
+  const eventUpdatesState = (
+    handlers: EventHandler[] | undefined,
+    stateKey: string
+  ) => {
+    return handlers?.some(handler => {
+      return (
+        handler["##eventHandlerType"] === "Update State" &&
+        handler.parameters?.key === stateKey
+      )
+    })
+  }
+
+  // Checks if a setting for the given component updates a certain state key
+  const settingUpdatesState = (
+    component: Record<string, any>,
+    setting: ComponentSetting,
+    stateKey: string
+  ) => {
+    if (setting.type === "event") {
+      return eventUpdatesState(component[setting.key], stateKey)
+    } else if (setting.type === "buttonConfiguration") {
+      const buttons = component[setting.key]
+      if (Array.isArray(buttons)) {
+        for (let button of buttons) {
+          if (eventUpdatesState(button.onClick, stateKey)) {
+            return true
+          }
+        }
+      }
+    }
+    return false
+  }
+
+  // Checks if a condition updates a certain state key
+  const conditionUpdatesState = (
+    condition: ComponentCondition,
+    settings: ComponentSetting[],
+    stateKey: string
+  ) => {
+    const setting = settings.find(s => s.key === condition.setting)
+    if (!setting) {
+      return false
+    }
+    const component = { [setting.key]: condition.settingValue }
+    return settingUpdatesState(component, setting, stateKey)
   }
 
   const findComponentsUpdatingState = (
     component: Component,
-    stateKey: string
+    stateKey: string,
+    foundComponents: ComponentUsingState[] = []
   ): ComponentUsingState[] => {
-    let foundComponents: ComponentUsingState[] = []
+    const { _children, _conditions, _component, _instanceName, _id } = component
+    const settings = componentStore
+      .getComponentSettings(_component)
+      .filter(s => s.type === "event" || s.type === "buttonConfiguration")
 
-    const eventHandlerProps = [
-      "onClick",
-      "onChange",
-      "onRowClick",
-      "onChange",
-      "buttonOnClick",
-    ]
-
-    eventHandlerProps.forEach(eventType => {
-      const handlers = component[eventType]
-      if (Array.isArray(handlers)) {
-        handlers.forEach(handler => {
-          if (
-            handler["##eventHandlerType"] === "Update State" &&
-            handler.parameters?.key === stateKey
-          ) {
-            foundComponents.push({
-              id: component._id!,
-              name: component._instanceName,
-              settings: [eventType],
-            })
-          }
+    // Check all settings of this component
+    settings.forEach(setting => {
+      if (settingUpdatesState(component, setting, stateKey)) {
+        const label = setting.label || setting.key
+        foundComponents.push({
+          id: _id!,
+          name: `${_instanceName} - ${label}`,
+          setting: setting.key,
         })
       }
     })
 
-    if (component._children) {
-      for (let child of component._children) {
-        foundComponents = [
-          ...foundComponents,
-          ...findComponentsUpdatingState(child, stateKey),
-        ]
-      }
+    // Check if conditions update these settings to update this state key
+    if (_conditions?.some(c => conditionUpdatesState(c, settings, stateKey))) {
+      foundComponents.push({
+        id: _id!,
+        name: `${_instanceName} - Conditions`,
+        setting: "_conditions",
+      })
     }
+
+    // Check children
+    _children?.forEach(child => {
+      findComponentsUpdatingState(child, stateKey, foundComponents)
+    })
     return foundComponents
+  }
+
+  const findComponentsUsingState = (
+    component: Component,
+    stateKey: string,
+    componentsUsingState: ComponentUsingState[] = []
+  ): ComponentUsingState[] => {
+    const settings = componentStore.getComponentSettings(component._component)
+
+    // Check all settings of this component
+    const settingsWithState = getSettingsUsingState(component, stateKey)
+    settingsWithState.forEach(setting => {
+      // Get readable label for this setting
+      let label = settings.find(s => s.key === setting)?.label || setting
+      if (setting === "_conditions") {
+        label = "Conditions"
+      } else if (setting === "_styles") {
+        label = "Styles"
+      }
+      componentsUsingState.push({
+        id: component._id!,
+        name: `${component._instanceName} - ${label}`,
+        setting,
+      })
+    })
+
+    // Check children
+    component._children?.forEach(child => {
+      findComponentsUsingState(child, stateKey, componentsUsingState)
+    })
+    return componentsUsingState
+  }
+
+  const getSettingsUsingState = (
+    component: Component,
+    stateKey: string
+  ): string[] => {
+    return Object.entries(component)
+      .filter(([key]) => key !== "_children")
+      .filter(([_, value]) => hasStateBinding(JSON.stringify(value), stateKey))
+      .map(([key]) => key)
   }
 
   const hasStateBinding = (value: string, stateKey: string): boolean => {
@@ -111,125 +216,15 @@
     return bindings.join(" ").includes(stateKey)
   }
 
-  const getSettingsWithState = (component: any, stateKey: string): string[] => {
-    const settingsWithState: string[] = []
-    for (const [setting, value] of Object.entries(component)) {
-      if (typeof value === "string" && hasStateBinding(value, stateKey)) {
-        settingsWithState.push(setting)
-      }
-    }
-    return settingsWithState
-  }
-
-  const checkConditions = (conditions: any[], stateKey: string): boolean => {
-    return conditions.some(condition =>
-      [condition.referenceValue, condition.newValue].some(
-        value => typeof value === "string" && hasStateBinding(value, stateKey)
-      )
-    )
-  }
-
-  const checkStyles = (styles: any, stateKey: string): boolean => {
-    return (
-      typeof styles?.custom === "string" &&
-      hasStateBinding(styles.custom, stateKey)
-    )
-  }
-
-  const findComponentsUsingState = (
-    component: any,
-    stateKey: string
-  ): ComponentUsingState[] => {
-    let componentsUsingState: ComponentUsingState[] = []
-    const { _children, _styles, _conditions, ...componentSettings } = component
-
-    const settingsWithState = getSettingsWithState(componentSettings, stateKey)
-    settingsWithState.forEach(setting => {
-      componentsUsingState.push({
-        id: component._id,
-        name: `${component._instanceName} - ${setting}`,
-        settings: [setting],
-      })
-    })
-
-    if (_conditions?.length > 0 && checkConditions(_conditions, stateKey)) {
-      componentsUsingState.push({
-        id: component._id,
-        name: `${component._instanceName} - conditions`,
-        settings: ["_conditions"],
-      })
-    }
-
-    if (_styles && checkStyles(_styles, stateKey)) {
-      componentsUsingState.push({
-        id: component._id,
-        name: `${component._instanceName} - styles`,
-        settings: ["_styles"],
-      })
-    }
-
-    if (_children) {
-      for (let child of _children) {
-        componentsUsingState = [
-          ...componentsUsingState,
-          ...findComponentsUsingState(child, stateKey),
-        ]
-      }
-    }
-
-    return componentsUsingState
-  }
-
-  const searchComponents = (stateKey: string | undefined) => {
-    if (!stateKey || !$selectedScreen?.props) {
-      return
-    }
-
-    const componentStateUpdates = findComponentsUpdatingState(
-      $selectedScreen.props,
-      stateKey
-    )
-
-    componentsUsingState = findComponentsUsingState(
-      $selectedScreen.props,
-      stateKey
-    )
-
-    const screenStateUpdates =
-      $selectedScreen?.onLoad
-        ?.filter(
-          (handler: any) =>
-            handler["##eventHandlerType"] === "Update State" &&
-            handler.parameters?.key === stateKey
-        )
-        .map(() => ({
-          id: $selectedScreen._id!,
-          name: "Screen onLoad",
-          settings: ["onLoad"],
-        })) || []
-
-    componentsUpdatingState = [...componentStateUpdates, ...screenStateUpdates]
-  }
-
-  const handleStateKeySelect = (key: CustomEvent) => {
-    if (!key.detail && keyOptions.length > 0) {
-      throw new Error("No state key selected")
-    }
-    searchComponents(key.detail)
-  }
-
   const onClickComponentLink = (component: ComponentUsingState) => {
     componentStore.select(component.id)
-    component.settings.forEach(setting => {
-      builderStore.highlightSetting(setting)
-    })
+    builderStore.highlightSetting(component.setting)
   }
 
   const handleStateInspectorChange = (e: CustomEvent) => {
     if (!selectedKey || !$previewStore.selectedComponentContext) {
       return
     }
-
     const stateUpdate = {
       [selectedKey]: processStringSync(
         e.detail,
@@ -247,11 +242,10 @@
 
 <div class="state-panel">
   <Select
-    label="State variables"
+    label="State variable"
     bind:value={selectedKey}
     placeholder={keyOptions.length > 0 ? false : "No state variables found"}
     options={keyOptions}
-    on:change={handleStateKeySelect}
   />
   {#if selectedKey && keyOptions.length > 0}
     <DrawerBindableInput
@@ -312,7 +306,6 @@
     color: var(--spectrum-global-color-gray-700);
     font-size: 12px;
   }
-
   .updates-colour {
     color: var(--bb-indigo-light);
   }
@@ -332,7 +325,6 @@
   .component-link:hover {
     text-decoration: underline;
   }
-
   .updates-section {
     display: flex;
     flex-direction: column;
