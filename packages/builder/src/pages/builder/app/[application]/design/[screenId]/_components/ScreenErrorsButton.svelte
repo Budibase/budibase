@@ -6,12 +6,12 @@
   let popover: any
 </script>
 
-<div bind:this={button}>
+<div bind:this={button} class="error-button">
   <ActionButton selected quiet on:click={() => popover.show()}>
-    <div class="error-button">
+    <div class="content">
       Errors
       {#if $screenComponentErrorList.length}
-        <div class="error-button-badge">
+        <div class="badge">
           {$screenComponentErrorList.length}
         </div>
       {/if}
@@ -19,7 +19,7 @@
   </ActionButton>
 </div>
 <Popover bind:this={popover} anchor={button} align={"right"} maxWidth={400}>
-  <div class="errors">
+  <div class="error-popover">
     {#each $screenComponentErrorList as error}
       <div class="error">
         <Icon
@@ -39,12 +39,19 @@
 </Popover>
 
 <style>
-  .error-button {
+  .error-button :global(.spectrum-ActionButton) {
+    border-radius: 16px;
+  }
+  .error-button .content {
+    min-width: 60px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: var(--spacing-xs);
+    padding-left: var(--spacing-xs);
+    padding-right: var(--spacing-xs);
   }
-  .error-button-badge {
+  .error-button .badge {
     background-color: var(--spectrum-global-color-static-red-700);
     height: 18px;
     width: 18px;
@@ -54,26 +61,26 @@
     align-items: center;
     justify-content: center;
   }
-  .errors {
+  .error-popover {
     display: flex;
     flex-direction: column;
   }
-  .error {
+  .error-popover .error {
     display: inline-flex;
     flex-direction: row;
-    padding: var(--spacing-l);
+    padding: var(--spacing-xl) var(--spacing-m);
     gap: var(--spacing-s);
   }
-  .error:not(:last-child) {
+  .error-popover .error:not(:last-child) {
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
   }
 
-  .error-title {
+  .error-popover .error-title {
     font-weight: 700;
     text-decoration: underline;
   }
 
-  .error :global(mark) {
+  .error-popover .error :global(mark) {
     background: unset;
     color: unset;
   }
