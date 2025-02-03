@@ -124,7 +124,7 @@ export const screenComponentErrors = derived(
   }
 )
 
-function findComponentsBySettingsType(
+export function findComponentsBySettingsType(
   screen: Screen,
   type: string | string[],
   definitions: Record<string, ComponentDefinition>
