@@ -6,7 +6,7 @@ import {
   Role,
   BuiltinPermissionID,
   SourceType,
-  UsageScreenResponse,
+  UsageOfScreensResponse,
 } from "@budibase/types"
 
 const {
@@ -210,7 +210,7 @@ describe("/screens", () => {
       })
     })
 
-    function confirmScreen(usage: UsageScreenResponse, screen: Screen) {
+    function confirmScreen(usage: UsageOfScreensResponse, screen: Screen) {
       expect(usage.screens.length).toEqual(1)
       expect(usage.screens[0].url).toEqual(screen.routing.route)
       expect(usage.screens[0]._id).toEqual(screen._id!)

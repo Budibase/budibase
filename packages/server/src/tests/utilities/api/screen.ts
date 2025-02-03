@@ -1,4 +1,4 @@
-import { Screen, UsageScreenResponse } from "@budibase/types"
+import { Screen, UsageOfScreensResponse } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
 export class ScreenAPI extends TestAPI {
@@ -32,9 +32,12 @@ export class ScreenAPI extends TestAPI {
   usage = async (
     sourceId: string,
     expectations?: Expectations
-  ): Promise<UsageScreenResponse> => {
-    return this._post<UsageScreenResponse>(`/api/screens/usage/${sourceId}`, {
-      expectations,
-    })
+  ): Promise<UsageOfScreensResponse> => {
+    return this._post<UsageOfScreensResponse>(
+      `/api/screens/usage/${sourceId}`,
+      {
+        expectations,
+      }
+    )
   }
 }
