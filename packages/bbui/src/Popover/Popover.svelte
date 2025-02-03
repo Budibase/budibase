@@ -1,6 +1,12 @@
+<script context="module" lang="ts">
+  export interface PopoverAPI {
+    show: () => void
+    hide: () => void
+  }
+</script>
+
 <script lang="ts">
   import "@spectrum-css/popover/dist/index-vars.css"
-  // @ts-expect-error no types for the version of svelte-portal we're on.
   import Portal from "svelte-portal"
   import { createEventDispatcher, getContext, onDestroy } from "svelte"
   import positionDropdown, {
@@ -10,12 +16,10 @@
   import { fly } from "svelte/transition"
   import Context from "../context"
   import type { KeyboardEventHandler } from "svelte/elements"
-
-  const dispatch = createEventDispatcher<{ open: void; close: void }>()
+  import { PopoverAlignment } from "../constants"
 
   export let anchor: HTMLElement
-  export let align: "left" | "right" | "left-outside" | "right-outside" =
-    "right"
+  export let align: PopoverAlignment = PopoverAlignment.Right
   export let portalTarget: string | undefined = undefined
   export let minWidth: number | undefined = undefined
   export let maxWidth: number | undefined = undefined
@@ -26,19 +30,24 @@
   export let offset = 4
   export let customHeight: string | undefined = undefined
   export let animate = true
-  export let customZindex: string | undefined = undefined
-  export let handlePostionUpdate: UpdateHandler | undefined = undefined
+  export let customZIndex: number | undefined = undefined
+  export let handlePositionUpdate: UpdateHandler | undefined = undefined
   export let showPopover = true
   export let clickOutsideOverride = false
   export let resizable = true
   export let wrap = false
 
+  const dispatch = createEventDispatcher<{ open: void; close: void }>()
   const animationDuration = 260
 
   let timeout: ReturnType<typeof setTimeout>
   let blockPointerEvents = false
 
-  $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
+  // Portal library lacks types, so we have to type this as any even though it's
+  // actually a string
+  $: target = (portalTarget ||
+    getContext(Context.PopoverRoot) ||
+    ".spectrum") as any
   $: {
     // Disable pointer events for the initial part of the animation, because we
     // fly from top to bottom and initially can be positioned under the cursor,
@@ -118,7 +127,7 @@
         minWidth,
         useAnchorWidth,
         offset,
-        customUpdate: handlePostionUpdate,
+        customUpdate: handlePositionUpdate,
         resizable,
         wrap,
       }}
@@ -128,11 +137,11 @@
       }}
       on:keydown={handleEscape}
       class="spectrum-Popover is-open"
-      class:customZindex
+      class:customZIndex
       class:hidden={!showPopover}
       class:blockPointerEvents
       role="presentation"
-      style="height: {customHeight}; --customZindex: {customZindex};"
+      style="height: {customHeight}; --customZIndex: {customZIndex};"
       transition:fly|local={{
         y: -20,
         duration: animate ? animationDuration : 0,
@@ -162,7 +171,7 @@
     opacity: 0;
     pointer-events: none;
   }
-  .customZindex {
-    z-index: var(--customZindex) !important;
+  .customZIndex {
+    z-index: var(--customZIndex) !important;
   }
 </style>
