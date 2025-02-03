@@ -1,9 +1,10 @@
-import { CalculationType, FieldSchema, FieldType } from "@budibase/types"
+import { CalculationType, FieldSchema, FieldType, UIRow } from "@budibase/types"
 
 export type UIColumn = FieldSchema & {
   label: string
   readonly: boolean
   conditions: any
+  format?: (row: UIRow) => any
   related?: {
     field: string
     subField: string

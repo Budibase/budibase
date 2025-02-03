@@ -1,13 +1,7 @@
-/**
- * Valid alignment options are
- * - left
- * - right
- * - left-outside
- * - right-outside
- **/
-
 // Strategies are defined as [Popover]To[Anchor].
 // They can apply for both horizontal and vertical alignment.
+import { PopoverAlignment } from "../constants"
+
 type Strategy =
   | "StartToStart"
   | "EndToEnd"
@@ -33,7 +27,7 @@ export type UpdateHandler = (
 
 interface Opts {
   anchor?: HTMLElement
-  align: string
+  align: PopoverAlignment
   maxHeight?: number
   maxWidth?: number
   minWidth?: number
@@ -174,24 +168,33 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
       }
 
       // Determine X strategy
-      if (align === "right") {
+      if (align === PopoverAlignment.Right) {
         applyXStrategy("EndToEnd")
-      } else if (align === "right-outside" || align === "right-context-menu") {
+      } else if (
+        align === PopoverAlignment.RightOutside ||
+        align === PopoverAlignment.RightContextMenu
+      ) {
         applyXStrategy("StartToEnd")
-      } else if (align === "left-outside" || align === "left-context-menu") {
+      } else if (
+        align === PopoverAlignment.LeftOutside ||
+        align === PopoverAlignment.LeftContextMenu
+      ) {
         applyXStrategy("EndToStart")
-      } else if (align === "center") {
+      } else if (align === PopoverAlignment.Center) {
         applyXStrategy("MidPoint")
       } else {
         applyXStrategy("StartToStart")
       }
 
       // Determine Y strategy
-      if (align === "right-outside" || align === "left-outside") {
+      if (
+        align === PopoverAlignment.RightOutside ||
+        align === PopoverAlignment.LeftOutside
+      ) {
         applyYStrategy("MidPoint")
       } else if (
-        align === "right-context-menu" ||
-        align === "left-context-menu"
+        align === PopoverAlignment.RightContextMenu ||
+        align === PopoverAlignment.LeftContextMenu
       ) {
         applyYStrategy("StartToStart")
         if (styles.top) {
@@ -204,11 +207,11 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
       // Handle screen overflow
       if (doesXOverflow()) {
         // Swap left to right
-        if (align === "left") {
+        if (align === PopoverAlignment.Left) {
           applyXStrategy("EndToEnd")
         }
         // Swap right-outside to left-outside
-        else if (align === "right-outside") {
+        else if (align === PopoverAlignment.RightOutside) {
           applyXStrategy("EndToStart")
         }
       }
@@ -225,10 +228,13 @@ export default function positionDropdown(element: HTMLElement, opts: Opts) {
             applyXStrategy("EndToStart")
           }
         }
-        // Othewise invert as normal
+        // Otherwise invert as normal
         else {
           // If using an outside strategy then lock to the bottom of the screen
-          if (align === "left-outside" || align === "right-outside") {
+          if (
+            align === PopoverAlignment.LeftOutside ||
+            align === PopoverAlignment.RightOutside
+          ) {
             applyYStrategy("ScreenEdge")
           }
           // Otherwise flip above
