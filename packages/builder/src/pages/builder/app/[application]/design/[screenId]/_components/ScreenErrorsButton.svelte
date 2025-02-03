@@ -1,6 +1,10 @@
 <script lang="ts">
-  import { screenComponentErrorList, screenComponents } from "@/stores/builder"
-  import { ActionButton, Icon, Popover } from "@budibase/bbui"
+  import {
+    componentStore,
+    screenComponentErrorList,
+    screenComponents,
+  } from "@/stores/builder"
+  import { ActionButton, Icon, Link, Popover } from "@budibase/bbui"
 
   let button: any
   let popover: any
@@ -27,9 +31,14 @@
           color="var(--spectrum-global-color-static-red-600)"
         />
         <div>
-          <span class="error-title">
-            {$screenComponents[error.componentId]._instanceName}:
-          </span>
+          <Link
+            overBackground
+            on:click={() => {
+              componentStore.select(error.componentId)
+            }}
+          >
+            {$screenComponents[error.componentId]._instanceName}:</Link
+          >
           <!-- eslint-disable-next-line svelte/no-at-html-tags-->
           {@html error.message}
         </div>
@@ -73,11 +82,6 @@
   }
   .error-popover .error:not(:last-child) {
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-  }
-
-  .error-popover .error-title {
-    font-weight: 700;
-    text-decoration: underline;
   }
 
   .error-popover .error :global(mark) {
