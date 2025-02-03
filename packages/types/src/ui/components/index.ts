@@ -15,6 +15,13 @@ export interface ComponentDefinition {
   illegalChildren: string[]
 }
 
+export type DependsOnComponentSetting =
+  | string
+  | {
+      setting: string
+      value: string
+    }
+
 export interface ComponentSetting {
   key: string
   type: string
@@ -26,12 +33,6 @@ export interface ComponentSetting {
   selectAllFields?: boolean
   resetOn?: string | string[]
   settings?: ComponentSetting[]
-  dependsOn?: {
-    setting: string
-    value: string
-  }
-  sectionDependsOn?: {
-    setting: string
-    value: string
-  }
+  dependsOn?: DependsOnComponentSetting
+  sectionDependsOn?: DependsOnComponentSetting
 }
