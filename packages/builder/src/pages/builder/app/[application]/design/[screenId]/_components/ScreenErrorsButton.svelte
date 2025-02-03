@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { UIComponentError } from "@budibase/types"
   import {
+    builderStore,
     componentStore,
     screenComponentErrorList,
     screenComponents,
@@ -16,6 +17,13 @@
       titleParts.push(error.key)
     }
     return titleParts.join(" - ")
+  }
+
+  function onErrorClick(error: UIComponentError) {
+    componentStore.select(error.componentId)
+    if (error.errorType === "setting") {
+      builderStore.highlightSetting(error.key, "error")
+    }
   }
 </script>
 
@@ -40,10 +48,7 @@
           color="var(--spectrum-global-color-static-red-600)"
         />
         <div>
-          <Link
-            overBackground
-            on:click={() => componentStore.select(error.componentId)}
-          >
+          <Link overBackground on:click={() => onErrorClick(error)}>
             {getErrorTitle(error)}:</Link
           >
           <!-- eslint-disable-next-line svelte/no-at-html-tags-->
