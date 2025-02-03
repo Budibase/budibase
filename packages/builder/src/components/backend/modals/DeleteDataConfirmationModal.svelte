@@ -3,6 +3,7 @@
   import {
     appStore,
     datasources,
+    queries,
     screenStore,
     tables,
     views,
@@ -106,6 +107,20 @@
     }
   }
 
+  async function deleteQuery(query: Query) {
+    try {
+      // Go back to the datasource if we are deleting the active query
+      if ($queries.selectedQueryId === query._id) {
+        $goto(`./datasource/${query.datasourceId}`)
+      }
+      await queries.delete(query)
+      await datasources.fetch()
+      notifications.success("Query deleted")
+    } catch (error) {
+      notifications.error("Error deleting query")
+    }
+  }
+
   async function deleteSource() {
     if (!source || !sourceType) {
       throw new Error("Unable to delete - no data source found.")
@@ -116,8 +131,9 @@
         return await deleteTable(source as Table)
       case SourceType.VIEW:
         return await deleteView(source as ViewV2)
-      case SourceType.DATASOURCE:
       case SourceType.QUERY:
+        return await deleteQuery(source as Query)
+      case SourceType.DATASOURCE:
     }
   }
 </script>
@@ -164,7 +180,9 @@
       </div>
     {/if}
     <p class="fourthWarning">
-      Please enter the "<b><i>{source?.name}</i></b>" below to confirm.
+      Please enter the "<b on:click={autofillSourceName} class="sourceName"
+        >{source?.name}</b
+      >" below to confirm.
     </p>
     <Input bind:value={deleteSourceName} placeholder={source?.name} />
   </div>
