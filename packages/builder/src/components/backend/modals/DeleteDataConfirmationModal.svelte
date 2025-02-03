@@ -1,10 +1,10 @@
 <script lang="ts">
   import { InlineAlert, Link, Input } from "@budibase/bbui"
-  import { appStore } from "@/stores/builder"
+  import { appStore, screenStore } from "@/stores/builder"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import type { Table, View, Datasource, Query } from "@budibase/types"
+  import type { Table, ViewV2, Datasource, Query } from "@budibase/types"
 
-  export let source: Table | View | Datasource | Query | undefined
+  export let source: Table | ViewV2 | Datasource | Query | undefined
   export let type: "table" | "view" | "datasource" | "query"
   export let deleteSourceFn: () => Promise<void>
 
@@ -29,9 +29,20 @@
     return `, including ${views.length} views`
   }
 
-  export const show = () => {
+  function getSourceID(): string {
+    if (!source) {
+      throw new Error("No data source provided.")
+    }
+    if ("id" in source) {
+      return source.id
+    }
+    return source._id!
+  }
+
+  export const show = async () => {
     viewsMessage = getViewsMessage()
-    // TODO: fetch information about screens affected
+    const usage = await screenStore.usageOfScreens(getSourceID())
+    affectedScreens = processScreens(usage.screens)
     confirmDeleteDialog.show()
   }
 
