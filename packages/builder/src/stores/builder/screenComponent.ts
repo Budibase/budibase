@@ -9,6 +9,7 @@ import {
   UIComponentError,
   ScreenProps,
   ComponentDefinition,
+  DependsOnComponentSetting,
 } from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
@@ -127,6 +128,21 @@ function getInvalidDatasources(
   return result
 }
 
+function parseDependsOn(dependsOn: DependsOnComponentSetting | undefined): {
+  key?: string
+  value?: string
+} {
+  if (dependsOn === undefined) {
+    return {}
+  }
+
+  if (typeof dependsOn === "string") {
+    return { key: dependsOn }
+  }
+
+  return { key: dependsOn.setting, value: dependsOn.value }
+}
+
 function getMissingRequiredSettings(
   screen: Screen,
   definitions: Record<string, ComponentDefinition>
@@ -145,15 +161,15 @@ function getMissingRequiredSettings(
       let missing = setting.required && empty
 
       // Check if this setting depends on another, as it may not be required
-      if (setting.dependsOn && typeof setting.dependsOn !== "string") {
-        const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
-        const dependsOnValue = setting.dependsOn.value
+      if (setting.dependsOn) {
+        const { key: dependsOnKey, value: dependsOnValue } = parseDependsOn(
+          setting.dependsOn
+        )
         const realDependentValue =
           component[dependsOnKey as keyof typeof component]
 
-        const sectionDependsOnKey =
-          setting.sectionDependsOn?.setting || setting.sectionDependsOn
-        const sectionDependsOnValue = setting.sectionDependsOn?.value
+        const { key: sectionDependsOnKey, value: sectionDependsOnValue } =
+          parseDependsOn(setting.sectionDependsOn)
         const sectionRealDependentValue =
           component[sectionDependsOnKey as keyof typeof component]
 
