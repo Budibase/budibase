@@ -109,8 +109,7 @@ export const gridLayout = (node: HTMLDivElement, metadata: GridMetadata) => {
     }
 
     // Callback to select the component when clicking on the wrapper
-    selectComponent = (e: Event) => {
-      e.stopPropagation()
+    selectComponent = () => {
       builderStore.actions.selectComponent(id)
     }
 
