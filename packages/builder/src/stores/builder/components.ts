@@ -34,6 +34,7 @@ import { BudiStore } from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
 import {
   Component as ComponentType,
+  ComponentCondition,
   FieldType,
   Screen,
   Table,
@@ -1136,7 +1137,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     })
   }
 
-  async updateConditions(conditions: Record<string, any>) {
+  async updateConditions(conditions: ComponentCondition[]) {
     await this.patch((component: Component) => {
       component._conditions = conditions
     })
