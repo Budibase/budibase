@@ -5,6 +5,7 @@
     Component,
     ComponentCondition,
     EventHandler,
+    Screen,
   } from "@budibase/types"
   import { getAllStateVariables, getBindableProperties } from "@/dataBinding"
   import {
@@ -33,7 +34,7 @@
   let componentsUpdatingState: ComponentUsingState[] = []
   let editorValue: string = ""
 
-  $: selectStateKey(selectedKey)
+  $: selectStateKey($selectedScreen, selectedKey)
   $: keyOptions = getAllStateVariables($selectedScreen)
   $: bindings = getBindableProperties(
     $selectedScreen,
@@ -49,9 +50,12 @@
     }
   }
 
-  const selectStateKey = (key: string | undefined) => {
-    if (key) {
-      searchComponents(key)
+  const selectStateKey = (
+    screen: Screen | undefined,
+    key: string | undefined
+  ) => {
+    if (screen && key) {
+      searchComponents(screen, key)
       editorValue = $previewStore.selectedComponentContext?.state?.[key] ?? ""
     } else {
       editorValue = ""
@@ -60,23 +64,15 @@
     }
   }
 
-  const searchComponents = (stateKey: string) => {
-    if (!$selectedScreen?.props) {
-      return
-    }
-    componentsUsingState = findComponentsUsingState(
-      $selectedScreen.props,
-      stateKey
-    )
-    componentsUpdatingState = findComponentsUpdatingState(
-      $selectedScreen.props,
-      stateKey
-    )
+  const searchComponents = (screen: Screen, stateKey: string) => {
+    const { props, onLoad, _id } = screen
+    componentsUsingState = findComponentsUsingState(props, stateKey)
+    componentsUpdatingState = findComponentsUpdatingState(props, stateKey)
 
     // Check screen load actions which are outside the component hierarchy
-    if (eventUpdatesState($selectedScreen.onLoad, stateKey)) {
+    if (eventUpdatesState(onLoad, stateKey)) {
       componentsUpdatingState.push({
-        id: $selectedScreen._id!,
+        id: _id!,
         name: "Screen - On load",
         setting: "onLoad",
       })
