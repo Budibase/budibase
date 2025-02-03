@@ -450,7 +450,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
 
     const componentName = getSequentialName(
-      get(screenComponents),
+      Object.values(get(screenComponents)),
       `New ${definition.friendlyName || definition.name}`,
       {
         getName: c => c._instanceName,
