@@ -67,10 +67,8 @@ export const styleable = (node, styles = {}) => {
 
     // Handler to select a component in the builder when clicking it in the
     // builder preview
-    selectComponent = event => {
+    selectComponent = () => {
       builderStore.actions.selectComponent(componentId)
-      event.preventDefault()
-      event.stopPropagation()
       return false
     }
 
