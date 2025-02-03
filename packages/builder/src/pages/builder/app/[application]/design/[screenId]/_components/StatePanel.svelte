@@ -210,7 +210,7 @@
 
 <div class="state-panel">
   <Select
-    label="State variables"
+    label="State variable"
     bind:value={selectedKey}
     placeholder={keyOptions.length > 0 ? false : "No state variables found"}
     options={keyOptions}
