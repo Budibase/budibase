@@ -1,26 +1,28 @@
-import * as automation from "../../index"
-import * as setup from "../utilities"
+import * as automation from "../index"
 import { LoopStepType, FieldType, Table, Datasource } from "@budibase/types"
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 import {
   DatabaseName,
   datasourceDescribe,
-} from "../../../integrations/tests/utils"
+} from "../../integrations/tests/utils"
 import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 import { automations } from "@budibase/shared-core"
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
 
 const FilterConditions = automations.steps.filter.FilterConditions
 
 describe("Automation Scenarios", () => {
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
   beforeEach(async () => {
     await automation.init()
     await config.init()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   describe("Row Automations", () => {
     it("should trigger an automation which then creates a row", async () => {
@@ -58,7 +60,7 @@ describe("Automation Scenarios", () => {
       })
     })
 
-    it("should trigger an automation which querys the database", async () => {
+    it("should trigger an automation which queries the database", async () => {
       const table = await config.createTable()
       const row = {
         name: "Test Row",
@@ -82,7 +84,7 @@ describe("Automation Scenarios", () => {
       expect(results.steps[0].outputs.rows).toHaveLength(2)
     })
 
-    it("should trigger an automation which querys the database then deletes a row", async () => {
+    it("should trigger an automation which queries the database then deletes a row", async () => {
       const table = await config.createTable()
       const row = {
         name: "DFN",
@@ -484,12 +486,18 @@ if (descriptions.length) {
 
       await client(tableName).insert(rows)
 
-      const query = await setup.saveTestQuery(
-        config,
-        client,
-        tableName,
-        datasource
-      )
+      const query = await config.api.query.save({
+        name: "test query",
+        datasourceId: datasource._id!,
+        parameters: [],
+        fields: {
+          sql: client(tableName).select("*").toSQL().toNative().sql,
+        },
+        transformer: "",
+        schema: {},
+        readable: true,
+        queryVerb: "read",
+      })
 
       const builder = createAutomationBuilder({
         name: "Test external query and save",

@@ -1,11 +1,11 @@
-import * as automation from "../../index"
-import * as setup from "../utilities"
+import * as automation from "../index"
 import { Table, AutomationStatus } from "@budibase/types"
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
 
 describe("Branching automations", () => {
-  let config = setup.getConfig(),
-    table: Table
+  const config = new TestConfiguration()
+  let table: Table
 
   beforeEach(async () => {
     await automation.init()
@@ -14,7 +14,9 @@ describe("Branching automations", () => {
     await config.createRow()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should run a multiple nested branching automation", async () => {
     const firstLogId = "11111111-1111-1111-1111-111111111111"

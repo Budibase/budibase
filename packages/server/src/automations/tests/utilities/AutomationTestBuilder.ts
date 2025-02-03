@@ -17,14 +17,20 @@ import {
   BranchStepInputs,
   CollectStepInputs,
   CreateRowStepInputs,
+  CronTriggerInputs,
   CronTriggerOutputs,
+  DelayStepInputs,
   DeleteRowStepInputs,
+  DiscordStepInputs,
   ExecuteQueryStepInputs,
   ExecuteScriptStepInputs,
   FilterStepInputs,
   isDidNotTriggerResponse,
   LoopStepInputs,
+  MakeIntegrationInputs,
+  n8nStepInputs,
   OpenAIStepInputs,
+  OutgoingWebhookStepInputs,
   QueryRowsStepInputs,
   RowCreatedTriggerInputs,
   RowCreatedTriggerOutputs,
@@ -36,9 +42,11 @@ import {
   ServerLogStepInputs,
   SmtpEmailStepInputs,
   TestAutomationRequest,
+  TriggerAutomationStepInputs,
   UpdateRowStepInputs,
   WebhookTriggerInputs,
   WebhookTriggerOutputs,
+  ZapierStepInputs,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
@@ -263,6 +271,90 @@ class BaseStepBuilder {
       opts
     )
   }
+
+  zapier(
+    input: ZapierStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.zapier,
+      BUILTIN_ACTION_DEFINITIONS.zapier,
+      input,
+      opts
+    )
+  }
+
+  triggerAutomationRun(
+    input: TriggerAutomationStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
+      BUILTIN_ACTION_DEFINITIONS.TRIGGER_AUTOMATION_RUN,
+      input,
+      opts
+    )
+  }
+
+  outgoingWebhook(
+    input: OutgoingWebhookStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.OUTGOING_WEBHOOK,
+      BUILTIN_ACTION_DEFINITIONS.OUTGOING_WEBHOOK,
+      input,
+      opts
+    )
+  }
+
+  n8n(
+    input: n8nStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.n8n,
+      BUILTIN_ACTION_DEFINITIONS.n8n,
+      input,
+      opts
+    )
+  }
+
+  make(
+    input: MakeIntegrationInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.integromat,
+      BUILTIN_ACTION_DEFINITIONS.integromat,
+      input,
+      opts
+    )
+  }
+
+  discord(
+    input: DiscordStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.discord,
+      BUILTIN_ACTION_DEFINITIONS.discord,
+      input,
+      opts
+    )
+  }
+
+  delay(
+    input: DelayStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.DELAY,
+      BUILTIN_ACTION_DEFINITIONS.DELAY,
+      input,
+      opts
+    )
+  }
 }
 
 class StepBuilder extends BaseStepBuilder {
@@ -286,6 +378,7 @@ class AutomationBuilder extends BaseStepBuilder {
     options: { name?: string; appId?: string; config?: TestConfiguration } = {}
   ) {
     super()
+    this.config = options.config || setup.getConfig()
     this.automationConfig = {
       name: options.name || `Test Automation ${uuidv4()}`,
       definition: {
@@ -294,9 +387,8 @@ class AutomationBuilder extends BaseStepBuilder {
         stepNames: {},
       },
       type: "automation",
-      appId: options.appId ?? setup.getConfig().getAppId(),
+      appId: options.appId ?? this.config.getAppId(),
     }
-    this.config = options.config || setup.getConfig()
   }
 
   // TRIGGERS
@@ -356,6 +448,16 @@ class AutomationBuilder extends BaseStepBuilder {
     )
   }
 
+  cron(inputs: CronTriggerInputs, outputs?: CronTriggerOutputs) {
+    this.triggerOutputs = outputs
+    return this.trigger(
+      TRIGGER_DEFINITIONS.CRON,
+      AutomationTriggerStepId.CRON,
+      inputs,
+      outputs
+    )
+  }
+
   private trigger<TStep extends AutomationTriggerStepId>(
     triggerSchema: AutomationTriggerDefinition,
     stepId: TStep,
@@ -393,7 +495,8 @@ class AutomationBuilder extends BaseStepBuilder {
       throw new Error("Please add a trigger to this automation test")
     }
     this.automationConfig.definition.steps = this.steps
-    return await this.config.createAutomation(this.build())
+    const { automation } = await this.config.api.automation.post(this.build())
+    return automation
   }
 
   async run() {
