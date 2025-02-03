@@ -1,4 +1,4 @@
-import { derived, get, Readable } from "svelte/store"
+import { derived, get, readable, Readable } from "svelte/store"
 import { API } from "@/api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
@@ -39,9 +39,10 @@ import {
   TriggerTestOutputs,
   RowActionTriggerOutputs,
   WebhookTriggerOutputs,
+  AutomationCustomIOType,
 } from "@budibase/types"
 import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
-import { FIELDS } from "@/constants/backend"
+import { FIELDS as COLUMNS } from "@/constants/backend"
 import { sdk } from "@budibase/shared-core"
 import { rowActions } from "./rowActions"
 import { getNewStepName } from "@/helpers/automations/nameHelpers"
@@ -101,11 +102,7 @@ const automationActions = (store: AutomationStore) => ({
    *
    * @returns {Readable<AutomationContext>}
    */
-  generateContext: (): Readable<AutomationContext> | undefined => {
-    if (!organisation || !store.selected || !environment || !tables) {
-      console.error("Automations: Required context stores are uninitialised")
-      return
-    }
+  generateContext: (): Readable<AutomationContext> => {
     return derived(
       [organisation, store.selected, environment, tables],
       ([$organisation, $selectedAutomation, $env, $tables]) => {
@@ -653,7 +650,7 @@ const automationActions = (store: AutomationStore) => ({
     let bindings: any[] = []
     const addBinding = (
       name: string,
-      value: any,
+      schema: any,
       icon: string,
       idx: number,
       isLoopBlock: boolean,
@@ -661,6 +658,7 @@ const automationActions = (store: AutomationStore) => ({
       bindingName: string
     ) => {
       if (!name) return
+
       const runtimeBinding = store.actions.determineRuntimeBinding(
         name,
         idx,
@@ -669,6 +667,11 @@ const automationActions = (store: AutomationStore) => ({
         currentBlock,
         pathSteps
       )
+
+      // Skip binding if its invalid
+      if (!runtimeBinding) {
+        return
+      }
 
       const readableBinding = store.actions.determineReadableBinding(
         name,
@@ -681,20 +684,38 @@ const automationActions = (store: AutomationStore) => ({
         bindingName,
         loopBlockCount
       )
-      bindings.push(
-        store.actions.createBindingObject(
-          name,
-          value,
-          icon,
-          idx,
-          loopBlockCount,
-          isLoopBlock,
-          runtimeBinding,
-          categoryName,
-          bindingName,
-          readableBinding
-        )
+
+      const isStep = !isLoopBlock && idx !== 0
+      const defaultReadable =
+        bindingName && isStep ? `steps.${bindingName}.${name}` : runtimeBinding
+
+      // Check if the schema matches any column types.
+      const column = Object.values(COLUMNS).find(
+        col =>
+          col.type === schema.type &&
+          ("subtype" in col ? col.subtype === schema.subtype : true)
       )
+
+      // Automation types and column types can collide e.g. "array"
+      // Exclude where necessary
+      const ignoreColumnType = schema.customType === AutomationCustomIOType.ROWS
+
+      // Shown in the bindable menus
+      const displayType = ignoreColumnType ? schema.type : column?.name
+
+      bindings.push({
+        readableBinding: readableBinding || defaultReadable,
+        runtimeBinding,
+        type: schema.type,
+        description: schema.description,
+        icon,
+        category: categoryName,
+        display: {
+          type: displayType,
+          name,
+          rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
+        },
+      })
     }
 
     let loopBlockCount = 0
@@ -766,6 +787,7 @@ const automationActions = (store: AutomationStore) => ({
           console.error("Loop block missing.")
         }
       }
+
       Object.entries(schema).forEach(([name, value]) => {
         addBinding(
           name,
@@ -826,7 +848,7 @@ const automationActions = (store: AutomationStore) => ({
     currentBlock: AutomationStep | AutomationTrigger | undefined,
     pathSteps: (AutomationStep | AutomationTrigger)[]
   ) => {
-    let runtimeName: string | null
+    let runtimeName: string
 
     // Legacy support for EXECUTE_SCRIPT steps
     const isJSScript =
@@ -863,14 +885,14 @@ const automationActions = (store: AutomationStore) => ({
       const stepId = pathSteps[idx].id
       if (!stepId) {
         notifications.error("Error generating binding: Step ID not found.")
-        return null
+        return
       }
       runtimeName = `steps["${stepId}"].${name}`
     } else {
       const stepId = pathSteps[idx].id
       if (!stepId) {
         notifications.error("Error generating binding: Step ID not found.")
-        return null
+        return
       }
       runtimeName = `steps.${stepId}.${name}`
     }
@@ -889,44 +911,6 @@ const automationActions = (store: AutomationStore) => ({
     return bindingName
       ? `${bindingName} outputs`
       : `Step ${idx - loopBlockCount} outputs`
-  },
-
-  createBindingObject: (
-    name: string,
-    value: any,
-    icon: string,
-    idx: number,
-    loopBlockCount: number,
-    isLoopBlock: boolean,
-    runtimeBinding: string | null,
-    categoryName: string,
-    bindingName?: string,
-    readableBinding?: string
-  ) => {
-    const field = Object.values(FIELDS).find(
-      field =>
-        field.type === value.type &&
-        ("subtype" in field ? field.subtype === value.subtype : true)
-    )
-
-    const readableBindingDefault =
-      bindingName && !isLoopBlock && idx !== 0
-        ? `steps.${bindingName}.${name}`
-        : runtimeBinding
-
-    return {
-      readableBinding: readableBinding || readableBindingDefault,
-      runtimeBinding,
-      type: value.type,
-      description: value.description,
-      icon,
-      category: categoryName,
-      display: {
-        type: field?.name || value.type,
-        name,
-        rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
-      },
-    }
   },
 
   processBlockInputs: async (
@@ -1706,4 +1690,20 @@ export const automationStore = new AutomationStore()
 
 export const automationHistoryStore = automationStore.history
 export const selectedAutomation = automationStore.selected
-export const evaluationContext = automationStore.context
+
+// Define an empty evaluate context at the start
+const emptyContext: AutomationContext = {
+  user: {},
+  steps: {},
+  env: {},
+  settings: {},
+}
+
+// Page layout kicks off initialisation, subscription happens within the page
+export const evaluationContext: Readable<AutomationContext> = readable(
+  emptyContext,
+  set => {
+    const unsubscribe = automationStore.context?.subscribe(set) ?? (() => {})
+    return () => unsubscribe()
+  }
+)
