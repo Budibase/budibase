@@ -20,6 +20,7 @@ import {
   screenComponents,
   screenComponentErrors,
   findComponentsBySettingsType,
+  screenComponentErrorList,
 } from "./screenComponent"
 
 // Backend
@@ -75,6 +76,7 @@ export {
   screenComponents,
   screenComponentErrors,
   findComponentsBySettingsType,
+  screenComponentErrorList,
 }
 
 export const reset = () => {

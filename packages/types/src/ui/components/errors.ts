@@ -1,4 +1,5 @@
 interface BaseUIComponentError {
+  componentId: string
   message: string
 }
 

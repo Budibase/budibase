@@ -115,6 +115,7 @@ function getInvalidDatasources(
       const friendlyTypeName = friendlyNameByType[type] ?? type
       result[component._id!] = [
         {
+          componentId: component._id!,
           key: setting.key,
           message: `The ${friendlyTypeName} named "${label}" could not be found`,
           errorType: "setting",
@@ -174,6 +175,7 @@ function getMissingRequiredSettings(
 
     if (missingRequiredSettings?.length) {
       result[component._id!] = missingRequiredSettings.map((s: any) => ({
+        componentId: component._id!,
         key: s.key,
         message: `Add the <mark>${s.label}</mark> setting to start using your component`,
         errorType: "setting",
@@ -214,6 +216,7 @@ function getMissingAncestors(
       result[component._id!] = missingAncestors.map(ancestor => {
         const ancestorDefinition = definitions[`${BudibasePrefix}${ancestor}`]
         return {
+          componentId: component._id!,
           message: `${pluralise(definition.name)} need to be inside a
 <mark>${ancestorDefinition.name}</mark>`,
           errorType: "ancestor-setting",
@@ -269,6 +272,17 @@ export function findComponentsBySettingsType(
   recurseFieldComponentsInChildren(screen?.props)
   return result
 }
+
+export const screenComponentErrorList = derived(
+  [screenComponentErrors],
+  ([$screenComponentErrors]): UIComponentError[] => {
+    if (!featureFlag.isEnabled("CHECK_COMPONENT_SETTINGS_ERRORS")) {
+      return []
+    }
+
+    return Object.values($screenComponentErrors).flatMap(errors => errors)
+  }
+)
 
 export const screenComponents = derived(
   [selectedScreen],
