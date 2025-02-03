@@ -21,7 +21,7 @@ import { getSettingsDefinition } from "@budibase/frontend-core"
 function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
   list: TItem[]
-): Record<string, any> {
+): Record<string, TItem> {
   return list.reduce(
     (result, item) => ({
       ...result,
@@ -139,21 +139,23 @@ function getMissingRequiredSettings(
 
     const settings = getSettingsDefinition(definition)
 
-    const missingRequiredSettings = settings.filter((setting: any) => {
+    const missingRequiredSettings = settings.filter(setting => {
       let empty =
         component[setting.key] == null || component[setting.key] === ""
       let missing = setting.required && empty
 
       // Check if this setting depends on another, as it may not be required
-      if (setting.dependsOn) {
+      if (setting.dependsOn && typeof setting.dependsOn !== "string") {
         const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
         const dependsOnValue = setting.dependsOn.value
-        const realDependentValue = component[dependsOnKey]
+        const realDependentValue =
+          component[dependsOnKey as keyof typeof component]
 
         const sectionDependsOnKey =
           setting.sectionDependsOn?.setting || setting.sectionDependsOn
         const sectionDependsOnValue = setting.sectionDependsOn?.value
-        const sectionRealDependentValue = component[sectionDependsOnKey]
+        const sectionRealDependentValue =
+          component[sectionDependsOnKey as keyof typeof component]
 
         if (dependsOnValue == null && realDependentValue == null) {
           return false
@@ -174,7 +176,7 @@ function getMissingRequiredSettings(
     })
 
     if (missingRequiredSettings?.length) {
-      result[component._id!] = missingRequiredSettings.map((s: any) => ({
+      result[component._id!] = missingRequiredSettings.map(s => ({
         componentId: component._id!,
         key: s.key,
         message: `Add the <mark>${s.label}</mark> setting to start using your component`,
@@ -255,9 +257,7 @@ export function findComponentsBySettingsType(
 
     const definition = definitions[component._component]
 
-    const setting = definition?.settings?.find((s: any) =>
-      typesArray.includes(s.type)
-    )
+    const setting = definition?.settings?.find(s => typesArray.includes(s.type))
     if (setting) {
       result.push({
         component,

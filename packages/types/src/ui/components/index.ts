@@ -21,14 +21,17 @@ export interface ComponentSetting {
   label?: string
   section?: string
   name?: string
+  required?: boolean
   defaultValue?: any
   selectAllFields?: boolean
   resetOn?: string | string[]
   settings?: ComponentSetting[]
-  dependsOn?:
-    | string
-    | {
-        setting: string
-        value: string
-      }
+  dependsOn?: {
+    setting: string
+    value: string
+  }
+  sectionDependsOn?: {
+    setting: string
+    value: string
+  }
 }
