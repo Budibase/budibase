@@ -18,6 +18,7 @@ export interface ComponentDefinition {
 export interface ComponentSetting {
   key: string
   type: string
+  label?: string
   section?: string
   name?: string
   defaultValue?: any

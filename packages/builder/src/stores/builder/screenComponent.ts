@@ -232,7 +232,8 @@ function getMissingAncestors(
   checkMissingAncestors(screen.props, [])
   return result
 }
-function findComponentsBySettingsType(
+
+export function findComponentsBySettingsType(
   screen: Screen,
   type: string | string[],
   definitions: Record<string, ComponentDefinition>

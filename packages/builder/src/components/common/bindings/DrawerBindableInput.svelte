@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Icon, Input, Drawer, Button } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
@@ -10,25 +10,25 @@
   import { builderStore } from "@/stores/builder"
 
   export let panel = ClientBindingPanel
-  export let value = ""
-  export let bindings = []
-  export let title
-  export let placeholder
-  export let label
-  export let disabled = false
-  export let allowHBS = true
-  export let allowJS = true
-  export let allowHelpers = true
-  export let updateOnChange = true
-  export let key
-  export let disableBindings = false
-  export let forceModal = false
+  export let value: any = ""
+  export let bindings: any[] = []
+  export let title: string | undefined = undefined
+  export let placeholder: string | undefined = undefined
+  export let label: string | undefined = undefined
+  export let disabled: boolean = false
+  export let allowHBS: boolean = true
+  export let allowJS: boolean = true
+  export let allowHelpers: boolean = true
+  export let updateOnChange: boolean = true
+  export let key: string | null = null
+  export let disableBindings: boolean = false
+  export let forceModal: boolean = false
   export let context = null
-  export let autocomplete
+  export let autocomplete: boolean | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
-  let bindingDrawer
+  let bindingDrawer: any
   let currentVal = value
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
@@ -38,7 +38,7 @@
   const saveBinding = () => {
     onChange(tempValue)
     onBlur()
-    builderStore.propertyFocus()
+    builderStore.propertyFocus(null)
     bindingDrawer.hide()
   }
 
@@ -46,7 +46,7 @@
     save: saveBinding,
   })
 
-  const onChange = value => {
+  const onChange = (value: any) => {
     currentVal = readableToRuntimeBinding(bindings, value)
     dispatch("change", currentVal)
   }
@@ -55,8 +55,8 @@
     dispatch("blur", currentVal)
   }
 
-  const onDrawerHide = e => {
-    builderStore.propertyFocus()
+  const onDrawerHide = (e: any) => {
+    builderStore.propertyFocus(null)
     dispatch("drawerHide", e.detail)
   }
 </script>
