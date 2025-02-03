@@ -20,6 +20,7 @@ import {
   previewStore,
   tables,
   componentTreeNodesStore,
+  builderStore,
   screenComponents,
 } from "@/stores/builder"
 import { buildFormSchema, getSchemaForDatasource } from "@/dataBinding"
@@ -33,6 +34,7 @@ import { BudiStore } from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
 import {
   Component as ComponentType,
+  ComponentCondition,
   FieldType,
   Screen,
   Table,
@@ -68,6 +70,7 @@ export interface ComponentDefinition {
 export interface ComponentSetting {
   key: string
   type: string
+  label?: string
   section?: string
   name?: string
   defaultValue?: any
@@ -743,14 +746,16 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
   }
 
-  /**
-   *
-   * @param {string} componentId
-   */
-  select(componentId: string) {
+  select(id: string) {
     this.update(state => {
-      state.selectedComponentId = componentId
-      return state
+      // Only clear highlights if selecting a different component
+      if (!id.includes(state.selectedComponentId!)) {
+        builderStore.highlightSetting()
+      }
+      return {
+        ...state,
+        selectedComponentId: id,
+      }
     })
   }
 
@@ -1132,7 +1137,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     })
   }
 
-  async updateConditions(conditions: Record<string, any>) {
+  async updateConditions(conditions: ComponentCondition[]) {
     await this.patch((component: Component) => {
       component._conditions = conditions
     })
