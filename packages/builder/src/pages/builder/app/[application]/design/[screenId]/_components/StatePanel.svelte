@@ -1,7 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte"
   import { Select } from "@budibase/bbui"
-  import type { Component, EventHandler } from "@budibase/types"
+  import type {
+    Component,
+    ComponentCondition,
+    EventHandler,
+  } from "@budibase/types"
   import { getAllStateVariables, getBindableProperties } from "@/dataBinding"
   import {
     componentStore,
@@ -16,11 +20,12 @@
     processStringSync,
   } from "@budibase/string-templates"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
+  import { type ComponentSetting } from "@/stores/builder/components"
 
   interface ComponentUsingState {
     id: string
     name: string
-    settings: string[]
+    setting: string
   }
 
   let selectedKey: string | undefined = undefined
@@ -73,11 +78,12 @@
       componentsUpdatingState.push({
         id: $selectedScreen._id!,
         name: "Screen - On load",
-        settings: ["onLoad"],
+        setting: "onLoad",
       })
     }
   }
 
+  // Checks if an event setting updates a certain state key
   const eventUpdatesState = (
     handlers: EventHandler[] | undefined,
     stateKey: string
@@ -90,44 +96,74 @@
     })
   }
 
+  // Checks if a setting for the given component updates a certain state key
+  const settingUpdatesState = (
+    component: Record<string, any>,
+    setting: ComponentSetting,
+    stateKey: string
+  ) => {
+    if (setting.type === "event") {
+      return eventUpdatesState(component[setting.key], stateKey)
+    } else if (setting.type === "buttonConfiguration") {
+      const buttons = component[setting.key]
+      if (Array.isArray(buttons)) {
+        for (let button of buttons) {
+          if (eventUpdatesState(button.onClick, stateKey)) {
+            return true
+          }
+        }
+      }
+    }
+    return false
+  }
+
+  // Checks if a condition updates a certain state key
+  const conditionUpdatesState = (
+    condition: ComponentCondition,
+    settings: ComponentSetting[],
+    stateKey: string
+  ) => {
+    const setting = settings.find(s => s.key === condition.setting)
+    if (!setting) {
+      return false
+    }
+    const component = { [setting.key]: condition.settingValue }
+    return settingUpdatesState(component, setting, stateKey)
+  }
+
   const findComponentsUpdatingState = (
     component: Component,
     stateKey: string,
     foundComponents: ComponentUsingState[] = []
   ): ComponentUsingState[] => {
-    // Check all settings of this component
-    componentStore
-      .getComponentSettings(component._component)
+    const { _children, _conditions, _component, _instanceName, _id } = component
+    const settings = componentStore
+      .getComponentSettings(_component)
       .filter(s => s.type === "event" || s.type === "buttonConfiguration")
-      .forEach(setting => {
-        if (setting.type === "event") {
-          if (eventUpdatesState(component[setting.key], stateKey)) {
-            let label = setting.label || setting.key
-            foundComponents.push({
-              id: component._id!,
-              name: `${component._instanceName} - ${label}`,
-              settings: [setting.key],
-            })
-          }
-        } else if (setting.type === "buttonConfiguration") {
-          const buttons = component[setting.key]
-          if (Array.isArray(buttons)) {
-            buttons.forEach(button => {
-              if (eventUpdatesState(button.onClick, stateKey)) {
-                let label = setting.label || setting.key
-                foundComponents.push({
-                  id: component._id!,
-                  name: `${component._instanceName} - ${label}`,
-                  settings: [setting.key],
-                })
-              }
-            })
-          }
-        }
+
+    // Check all settings of this component
+    settings.forEach(setting => {
+      if (settingUpdatesState(component, setting, stateKey)) {
+        const label = setting.label || setting.key
+        foundComponents.push({
+          id: _id!,
+          name: `${_instanceName} - ${label}`,
+          setting: setting.key,
+        })
+      }
+    })
+
+    // Check if conditions update these settings to update this state key
+    if (_conditions?.some(c => conditionUpdatesState(c, settings, stateKey))) {
+      foundComponents.push({
+        id: _id!,
+        name: `${_instanceName} - Conditions`,
+        setting: "_conditions",
       })
+    }
 
     // Check children
-    component._children?.forEach(child => {
+    _children?.forEach(child => {
       findComponentsUpdatingState(child, stateKey, foundComponents)
     })
     return foundComponents
@@ -153,7 +189,7 @@
       componentsUsingState.push({
         id: component._id!,
         name: `${component._instanceName} - ${label}`,
-        settings: [setting],
+        setting,
       })
     })
 
@@ -186,7 +222,7 @@
 
   const onClickComponentLink = (component: ComponentUsingState) => {
     componentStore.select(component.id)
-    builderStore.highlightSetting(component.settings[0])
+    builderStore.highlightSetting(component.setting)
   }
 
   const handleStateInspectorChange = (e: CustomEvent) => {
@@ -274,7 +310,6 @@
     color: var(--spectrum-global-color-gray-700);
     font-size: 12px;
   }
-
   .updates-colour {
     color: var(--bb-indigo-light);
   }
@@ -294,7 +329,6 @@
   .component-link:hover {
     text-decoration: underline;
   }
-
   .updates-section {
     display: flex;
     flex-direction: column;
