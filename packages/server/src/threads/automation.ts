@@ -11,7 +11,7 @@ import { replaceFakeBindings } from "../automations/loopUtils"
 import { dataFilters, helpers, utils } from "@budibase/shared-core"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
-import { definitions as triggerDefs } from "../automations/triggerInfo"
+import { definitions as triggerDefs } from "../../../shared-core/src/automations/triggers"
 import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
 import {
