@@ -31,10 +31,8 @@
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
 
-  $: if (value) {
-    highlightType =
-      highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
-  }
+  $: highlightType =
+    highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
 
   const getAllBindings = (bindings, componentBindings, nested) => {
     if (!nested) {
