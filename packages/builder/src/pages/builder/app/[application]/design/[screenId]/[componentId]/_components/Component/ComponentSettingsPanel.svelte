@@ -63,7 +63,7 @@
       section = "conditions"
     } else if (highlightedSetting.key === "_styles") {
       section = "styles"
-    } else if (highlightedSetting.key === "_settings") {
+    } else {
       section = "settings"
     }
   }

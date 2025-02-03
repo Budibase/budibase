@@ -745,10 +745,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
   }
 
-  /**
-   *
-   * @param {string} componentId
-   */
   select(id: string) {
     this.update(state => {
       // Only clear highlights if selecting a different component
