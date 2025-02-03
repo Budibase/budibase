@@ -63,7 +63,7 @@
       section = "conditions"
     } else if (highlightedSetting.key === "_styles") {
       section = "styles"
-    } else if (highlightedSetting.key === "_settings") {
+    } else {
       section = "settings"
     }
   }
@@ -110,7 +110,7 @@
           {/each}
         </div>
       </span>
-      {#if section == "settings"}
+      {#if section === "settings"}
         <TourWrap
           stepKeys={[
             BUILDER_FORM_CREATE_STEPS,
@@ -127,7 +127,7 @@
           />
         </TourWrap>
       {/if}
-      {#if section == "styles"}
+      {#if section === "styles"}
         <DesignSection
           {componentInstance}
           {componentBindings}
@@ -142,7 +142,7 @@
           componentTitle={title}
         />
       {/if}
-      {#if section == "conditions"}
+      {#if section === "conditions"}
         <ConditionalUISection
           {componentInstance}
           {componentDefinition}

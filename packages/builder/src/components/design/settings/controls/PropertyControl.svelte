@@ -143,10 +143,10 @@
   .property-control.highlighted {
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-static-red-600);
-    margin-top: -3.5px;
-    margin-bottom: -3.5px;
-    padding-bottom: 3.5px;
-    padding-top: 3.5px;
+    margin-top: -4px;
+    margin-bottom: -4px;
+    padding-bottom: 4px;
+    padding-top: 4px;
   }
 
   .property-control.property-focus :global(input) {

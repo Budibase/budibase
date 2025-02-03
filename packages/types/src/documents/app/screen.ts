@@ -45,6 +45,6 @@ export interface EventHandler {
     value: string
     persist: any | null
   }
-  eventHandlerType: string
+  "##eventHandlerType": string
   id: string
 }
