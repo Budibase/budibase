@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    componentStore,
-    screenComponentErrorList,
-    screenComponents,
-  } from "@/stores/builder"
+  import { screenComponentErrorList, screenComponents } from "@/stores/builder"
   import { ActionButton, Icon, Popover } from "@budibase/bbui"
 
   let button: any
@@ -11,11 +7,18 @@
 </script>
 
 <div bind:this={button}>
-  <ActionButton selected quiet on:click={() => popover.show()}
-    >Errors ({$screenComponentErrorList.length})</ActionButton
-  >
+  <ActionButton selected quiet on:click={() => popover.show()}>
+    <div class="error-button">
+      Errors
+      {#if $screenComponentErrorList.length}
+        <div class="error-button-badge">
+          {$screenComponentErrorList.length}
+        </div>
+      {/if}
+    </div>
+  </ActionButton>
 </div>
-<Popover bind:this={popover} open anchor={button} align={"right"}>
+<Popover bind:this={popover} anchor={button} align={"right"} maxWidth={400}>
   <div class="errors">
     {#each $screenComponentErrorList as error}
       <div class="error">
@@ -24,8 +27,11 @@
           color="var(--spectrum-global-color-static-red-600)"
         />
         <div>
-          {$screenComponents[error.componentId]._instanceName}:
-          {error.message}
+          <span class="error-title">
+            {$screenComponents[error.componentId]._instanceName}:
+          </span>
+          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+          {@html error.message}
         </div>
       </div>
     {/each}
@@ -33,6 +39,21 @@
 </Popover>
 
 <style>
+  .error-button {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+  .error-button-badge {
+    background-color: var(--spectrum-global-color-static-red-700);
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .errors {
     display: flex;
     flex-direction: column;
@@ -45,5 +66,15 @@
   }
   .error:not(:last-child) {
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+  }
+
+  .error-title {
+    font-weight: 700;
+    text-decoration: underline;
+  }
+
+  .error :global(mark) {
+    background: unset;
+    color: unset;
   }
 </style>
