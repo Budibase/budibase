@@ -6,6 +6,7 @@ interface BaseUIComponentError {
 interface UISettingComponentError extends BaseUIComponentError {
   errorType: "setting"
   key: string
+  label: string
 }
 
 interface UIAncestorComponentError extends BaseUIComponentError {

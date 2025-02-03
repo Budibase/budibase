@@ -118,6 +118,7 @@ function getInvalidDatasources(
         {
           componentId: component._id!,
           key: setting.key,
+          label: setting.label || setting.key,
           message: `The ${friendlyTypeName} named "${label}" could not be found`,
           errorType: "setting",
         },
@@ -195,6 +196,7 @@ function getMissingRequiredSettings(
       result[component._id!] = missingRequiredSettings.map(s => ({
         componentId: component._id!,
         key: s.key,
+        label: s.label || s.key,
         message: `Add the <mark>${s.label}</mark> setting to start using your component`,
         errorType: "setting",
       }))
@@ -263,6 +265,7 @@ export function findComponentsBySettingsType(
     setting: {
       type: string
       key: string
+      label: string | undefined
     }
   }[] = []
 
@@ -277,7 +280,7 @@ export function findComponentsBySettingsType(
     if (setting) {
       result.push({
         component,
-        setting: { type: setting.type, key: setting.key },
+        setting: { type: setting.type, key: setting.key, label: setting.label },
       })
     }
     component._children?.forEach(child => {

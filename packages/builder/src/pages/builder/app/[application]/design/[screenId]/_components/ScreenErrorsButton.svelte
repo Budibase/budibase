@@ -14,7 +14,7 @@
   function getErrorTitle(error: UIComponentError) {
     const titleParts = [$screenComponents[error.componentId]._instanceName]
     if (error.errorType === "setting") {
-      titleParts.push(error.key)
+      titleParts.push(error.label)
     }
     return titleParts.join(" - ")
   }
