@@ -82,6 +82,10 @@ export class PreviewStore extends BudiStore<PreviewState> {
     }))
   }
 
+  updateState(data: Record<string, any>) {
+    this.sendEvent("builder-state", data)
+  }
+
   requestComponentContext() {
     this.sendEvent("request-context")
   }
