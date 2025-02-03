@@ -321,9 +321,11 @@
     padding: 0;
     white-space: nowrap;
     font-size: 12px;
+    transition: filter 130ms ease-out;
   }
   .component-link:hover {
     text-decoration: underline;
+    filter: brightness(1.2);
   }
   .updates-section {
     display: flex;
