@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte"
   import { Select } from "@budibase/bbui"
-  import type { Component } from "@budibase/types"
+  import type { Component, EventHandler } from "@budibase/types"
   import { getAllStateVariables, getBindableProperties } from "@/dataBinding"
   import {
     componentStore,
@@ -23,111 +23,155 @@
     settings: string[]
   }
 
+  let selectedKey: string | undefined = undefined
+  let componentsUsingState: ComponentUsingState[] = []
+  let componentsUpdatingState: ComponentUsingState[] = []
+  let editorValue: string = ""
+
+  $: selectStateKey(selectedKey)
   $: keyOptions = getAllStateVariables($selectedScreen)
   $: bindings = getBindableProperties(
     $selectedScreen,
     $componentStore.selectedComponentId
   )
 
-  let selectedKey: string | undefined = undefined
-  let componentsUsingState: ComponentUsingState[] = []
-  let componentsUpdatingState: ComponentUsingState[] = []
-  let editorValue: string = ""
-  let previousScreenId: string | undefined = undefined
-
+  // Auto-select first valid state key
   $: {
-    const hasScreenChanged =
-      $selectedScreen && $selectedScreen._id !== previousScreenId
-    const previewContext = $previewStore.selectedComponentContext || {}
-
-    if (hasScreenChanged) {
+    if (keyOptions.length && !keyOptions.includes(selectedKey)) {
       selectedKey = keyOptions[0]
+    } else if (!keyOptions.length) {
+      selectedKey = undefined
+    }
+  }
+
+  const selectStateKey = (key: string | undefined) => {
+    if (key) {
+      searchComponents(key)
+      editorValue = $previewStore.selectedComponentContext?.state?.[key] ?? ""
+    } else {
+      editorValue = ""
       componentsUsingState = []
       componentsUpdatingState = []
-      editorValue = ""
-      previousScreenId = $selectedScreen._id
     }
+  }
 
-    if (keyOptions.length > 0 && !keyOptions.includes(selectedKey)) {
-      selectedKey = keyOptions[0]
+  const searchComponents = (stateKey: string) => {
+    if (!$selectedScreen?.props) {
+      return
     }
+    componentsUsingState = findComponentsUsingState(
+      $selectedScreen.props,
+      stateKey
+    )
+    componentsUpdatingState = findComponentsUpdatingState(
+      $selectedScreen.props,
+      stateKey
+    )
 
-    if (selectedKey) {
-      searchComponents(selectedKey)
-      editorValue = previewContext.state?.[selectedKey] ?? ""
+    // Check screen load actions which are outside the component hierarchy
+    if (eventUpdatesState($selectedScreen.onLoad, stateKey)) {
+      componentsUpdatingState.push({
+        id: $selectedScreen._id!,
+        name: "Screen - On load",
+        settings: ["onLoad"],
+      })
     }
+  }
+
+  const eventUpdatesState = (
+    handlers: EventHandler[] | undefined,
+    stateKey: string
+  ) => {
+    return handlers?.some(handler => {
+      return (
+        handler["##eventHandlerType"] === "Update State" &&
+        handler.parameters?.key === stateKey
+      )
+    })
   }
 
   const findComponentsUpdatingState = (
     component: Component,
-    stateKey: string
+    stateKey: string,
+    foundComponents: ComponentUsingState[] = []
   ): ComponentUsingState[] => {
-    let foundComponents: ComponentUsingState[] = []
-    const definition = componentStore.getDefinition(component._component)
-
-    const checkStateUpdateHandlers = (
-      handlers: any[],
-      componentId: string,
-      instanceName: string,
-      settingKey: string
-    ) => {
-      if (!Array.isArray(handlers)) return
-
-      handlers.forEach(handler => {
-        if (
-          handler["##eventHandlerType"] === "Update State" &&
-          handler.parameters?.key === stateKey
-        ) {
-          let label =
-            definition?.settings?.find(t => t.key === settingKey)?.label ||
-            settingKey
-          foundComponents.push({
-            id: componentId,
-            name: `${instanceName} - ${label}`,
-            settings: [settingKey],
-          })
-        }
-      })
-    }
-
+    // Check all settings of this component
     componentStore
       .getComponentSettings(component._component)
-      .filter(
-        setting =>
-          setting.type === "event" || setting.type === "buttonConfiguration"
-      )
+      .filter(s => s.type === "event" || s.type === "buttonConfiguration")
       .forEach(setting => {
         if (setting.type === "event") {
-          checkStateUpdateHandlers(
-            component[setting.key],
-            component._id!,
-            component._instanceName,
-            setting.key
-          )
+          if (eventUpdatesState(component[setting.key], stateKey)) {
+            let label = setting.label || setting.key
+            foundComponents.push({
+              id: component._id!,
+              name: `${component._instanceName} - ${label}`,
+              settings: [setting.key],
+            })
+          }
         } else if (setting.type === "buttonConfiguration") {
           const buttons = component[setting.key]
           if (Array.isArray(buttons)) {
             buttons.forEach(button => {
-              checkStateUpdateHandlers(
-                button.onClick,
-                component._id!,
-                component._instanceName,
-                setting.key
-              )
+              if (eventUpdatesState(button.onClick, stateKey)) {
+                let label = setting.label || setting.key
+                foundComponents.push({
+                  id: component._id!,
+                  name: `${component._instanceName} - ${label}`,
+                  settings: [setting.key],
+                })
+              }
             })
           }
         }
       })
 
-    if (component._children) {
-      foundComponents.push(
-        ...component._children.flatMap(child =>
-          findComponentsUpdatingState(child, stateKey)
-        )
-      )
-    }
-
+    // Check children
+    component._children?.forEach(child => {
+      findComponentsUpdatingState(child, stateKey, foundComponents)
+    })
     return foundComponents
+  }
+
+  const findComponentsUsingState = (
+    component: Component,
+    stateKey: string,
+    componentsUsingState: ComponentUsingState[] = []
+  ): ComponentUsingState[] => {
+    const settings = componentStore.getComponentSettings(component._component)
+
+    // Check all settings of this component
+    const settingsWithState = getSettingsUsingState(component, stateKey)
+    settingsWithState.forEach(setting => {
+      // Get readable label for this setting
+      let label = settings.find(s => s.key === setting)?.label || setting
+      if (setting === "_conditions") {
+        label = "Conditions"
+      } else if (setting === "_styles") {
+        label = "Styles"
+      }
+      componentsUsingState.push({
+        id: component._id!,
+        name: `${component._instanceName} - ${label}`,
+        settings: [setting],
+      })
+    })
+
+    // Check children
+    component._children?.forEach(child => {
+      findComponentsUsingState(child, stateKey, componentsUsingState)
+    })
+    return componentsUsingState
+  }
+
+  const getSettingsUsingState = (
+    component: Component,
+    stateKey: string
+  ): string[] => {
+    return Object.entries(component)
+      .filter(([key]) => key !== "_children")
+      .filter(([_, value]) => hasStateBinding(JSON.stringify(value), stateKey))
+      .map(([key]) => key)
   }
 
   const hasStateBinding = (value: string, stateKey: string): boolean => {
@@ -140,105 +184,15 @@
     return bindings.join(" ").includes(stateKey)
   }
 
-  const getSettingsWithState = (
-    component: Component,
-    stateKey: string
-  ): string[] => {
-    return Object.entries(component)
-      .filter(([key]) => key !== "_children")
-      .filter(([_, value]) => hasStateBinding(JSON.stringify(value), stateKey))
-      .map(([key]) => key)
-  }
-  const findComponentsUsingState = (
-    component: Component,
-    stateKey: string
-  ): ComponentUsingState[] => {
-    let componentsUsingState: ComponentUsingState[] = []
-    let label
-
-    const { _children } = component
-    const definition = componentStore.getDefinition(component._component)
-    const settingsWithState = getSettingsWithState(component, stateKey)
-
-    settingsWithState.forEach(setting => {
-      label =
-        definition?.settings?.find(t => t.key === setting)?.label || setting
-
-      if (setting === "_conditions") {
-        label = "Conditions"
-      } else if (setting === "_styles") {
-        label = "Styles"
-      }
-
-      componentsUsingState.push({
-        id: component._id!,
-        name: `${component._instanceName} - ${label}`,
-        settings: [setting],
-      })
-    })
-
-    if (_children) {
-      for (let child of _children) {
-        componentsUsingState = [
-          ...componentsUsingState,
-          ...findComponentsUsingState(child, stateKey),
-        ]
-      }
-    }
-
-    return componentsUsingState
-  }
-
-  const searchComponents = (stateKey: string | undefined) => {
-    if (!stateKey || !$selectedScreen?.props) {
-      return
-    }
-
-    const componentStateUpdates = findComponentsUpdatingState(
-      $selectedScreen.props,
-      stateKey
-    )
-
-    componentsUsingState = findComponentsUsingState(
-      $selectedScreen.props,
-      stateKey
-    )
-
-    const screenStateUpdates =
-      $selectedScreen?.onLoad
-        ?.filter(
-          (handler: any) =>
-            handler["##eventHandlerType"] === "Update State" &&
-            handler.parameters?.key === stateKey
-        )
-        .map(() => ({
-          id: $selectedScreen._id!,
-          name: "Screen - On load",
-          settings: ["onLoad"],
-        })) || []
-
-    componentsUpdatingState = [...componentStateUpdates, ...screenStateUpdates]
-  }
-
-  const handleStateKeySelect = (key: CustomEvent) => {
-    if (!key.detail && keyOptions.length > 0) {
-      throw new Error("No state key selected")
-    }
-    searchComponents(key.detail)
-  }
-
   const onClickComponentLink = (component: ComponentUsingState) => {
     componentStore.select(component.id)
-    component.settings.forEach(setting => {
-      builderStore.highlightSetting(setting)
-    })
+    builderStore.highlightSetting(component.settings[0])
   }
 
   const handleStateInspectorChange = (e: CustomEvent) => {
     if (!selectedKey || !$previewStore.selectedComponentContext) {
       return
     }
-
     const stateUpdate = {
       [selectedKey]: processStringSync(
         e.detail,
@@ -260,7 +214,6 @@
     bind:value={selectedKey}
     placeholder={keyOptions.length > 0 ? false : "No state variables found"}
     options={keyOptions}
-    on:change={handleStateKeySelect}
   />
   {#if selectedKey && keyOptions.length > 0}
     <DrawerBindableInput
