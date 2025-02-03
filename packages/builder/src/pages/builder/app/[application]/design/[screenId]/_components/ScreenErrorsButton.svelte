@@ -8,6 +8,14 @@
 
   let button: any
   let popover: any
+
+  function getErrorTitle(error: any) {
+    const titleParts = [$screenComponents[error.componentId]._instanceName]
+    if (error.errorType === "setting") {
+      titleParts.push(error.key)
+    }
+    return titleParts.join(" - ")
+  }
 </script>
 
 <div bind:this={button} class="error-button">
@@ -33,11 +41,9 @@
         <div>
           <Link
             overBackground
-            on:click={() => {
-              componentStore.select(error.componentId)
-            }}
+            on:click={() => componentStore.select(error.componentId)}
           >
-            {$screenComponents[error.componentId]._instanceName}:</Link
+            {getErrorTitle(error)}:</Link
           >
           <!-- eslint-disable-next-line svelte/no-at-html-tags-->
           {@html error.message}
