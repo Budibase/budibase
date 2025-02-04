@@ -108,7 +108,7 @@
   .error-popover .error {
     display: inline-flex;
     flex-direction: row;
-    padding: var(--spacing-xl) var(--spacing-m);
+    padding: var(--spacing-m);
     gap: var(--spacing-s);
     align-items: start;
   }
