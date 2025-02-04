@@ -1,5 +1,12 @@
-import { Feature, License, Quotas } from "@budibase/types"
+import {
+  Feature,
+  License,
+  MonthlyQuotaName,
+  QuotaType,
+  QuotaUsageType,
+} from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
+import merge from "lodash/merge"
 
 let CLOUD_FREE_LICENSE: License
 let UNLIMITED_LICENSE: License
@@ -27,18 +34,19 @@ export function initInternal(opts: {
 
 export interface UseLicenseOpts {
   features?: Feature[]
-  quotas?: Quotas
+  monthlyQuotas?: [MonthlyQuotaName, number][]
 }
 
 // LICENSES
 
 export const useLicense = (license: License, opts?: UseLicenseOpts) => {
-  if (opts) {
-    if (opts.features) {
-      license.features.push(...opts.features)
-    }
-    if (opts.quotas) {
-      license.quotas = opts.quotas
+  if (opts?.features) {
+    license.features.push(...opts.features)
+  }
+  if (opts?.monthlyQuotas) {
+    for (const [name, value] of opts.monthlyQuotas) {
+      license.quotas[QuotaType.USAGE][QuotaUsageType.MONTHLY][name].value =
+        value
     }
   }
 
@@ -57,12 +65,9 @@ export const useCloudFree = () => {
 
 // FEATURES
 
-const useFeature = (feature: Feature) => {
+const useFeature = (feature: Feature, extra?: Partial<UseLicenseOpts>) => {
   const license = cloneDeep(getCachedLicense() || UNLIMITED_LICENSE)
-  const opts: UseLicenseOpts = {
-    features: [feature],
-  }
-
+  const opts: UseLicenseOpts = merge({ features: [feature] }, extra)
   return useLicense(license, opts)
 }
 
@@ -102,8 +107,12 @@ export const useAppBuilders = () => {
   return useFeature(Feature.APP_BUILDERS)
 }
 
-export const useBudibaseAI = () => {
-  return useFeature(Feature.BUDIBASE_AI)
+export const useBudibaseAI = (opts?: { monthlyQuota?: number }) => {
+  return useFeature(Feature.BUDIBASE_AI, {
+    monthlyQuotas: [
+      [MonthlyQuotaName.BUDIBASE_AI_CREDITS, opts?.monthlyQuota || 1000],
+    ],
+  })
 }
 
 export const useAICustomConfigs = () => {
