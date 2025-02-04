@@ -37,7 +37,7 @@
 </script>
 
 <div bind:this={button} class="error-button">
-  <ActionButton selected quiet on:click={() => popover.show()}>
+  <ActionButton selected quiet on:click={() => popover.show()} size="S">
     <div class="content">
       Errors
       {#if $screenComponentErrorList.length}
@@ -79,18 +79,19 @@
     border-radius: 16px;
   }
   .error-button .content {
-    min-width: 60px;
+    min-width: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: var(--spacing-xs);
     padding-left: var(--spacing-xs);
     padding-right: var(--spacing-xs);
+    font-weight: 600;
   }
   .error-button .badge {
     background-color: var(--spectrum-global-color-static-red-700);
-    height: 18px;
-    width: 18px;
+    height: 14px;
+    width: 14px;
     border-radius: 50%;
 
     display: flex;
