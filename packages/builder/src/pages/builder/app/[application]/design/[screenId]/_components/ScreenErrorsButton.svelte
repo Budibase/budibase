@@ -37,7 +37,7 @@
 </script>
 
 <div bind:this={button} class="error-button">
-  <ActionButton selected quiet on:click={() => popover.show()} size="S">
+  <ActionButton selected quiet on:click={() => popover.show()} size="M">
     <div class="content">
       Errors
       {#if $screenComponentErrorList.length}
@@ -64,8 +64,8 @@
         />
         <div>
           <Link overBackground on:click={() => onErrorClick(error)}>
-            {getErrorTitle(error)}:</Link
-          >
+            {getErrorTitle(error)}
+          </Link>:
           <!-- eslint-disable-next-line svelte/no-at-html-tags-->
           {@html error.message}
         </div>
@@ -85,7 +85,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-xs);
+    gap: 6px;
     padding-left: var(--spacing-xs);
     padding-right: var(--spacing-xs);
     font-weight: 600;
@@ -93,8 +93,8 @@
   .error-button .badge {
     color: var(--spectrum-global-color-static-white);
     background-color: var(--spectrum-global-color-static-red-700);
-    height: 14px;
-    width: 14px;
+    height: 18px;
+    width: 18px;
     border-radius: 50%;
 
     display: flex;
@@ -119,5 +119,8 @@
   .error-popover .error :global(mark) {
     background: unset;
     color: unset;
+  }
+  .error-popover .error :global(.spectrum-Link) {
+    display: inline-block;
   }
 </style>
