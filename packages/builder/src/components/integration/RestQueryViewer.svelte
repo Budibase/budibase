@@ -18,6 +18,8 @@
     Table,
     Tabs,
     TextArea,
+    ActionButton,
+    Popover,
   } from "@budibase/bbui"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import EditableLabel from "@/components/common/inputs/EditableLabel.svelte"
@@ -49,6 +51,7 @@
     runtimeToReadableMap,
     toBindingsArray,
   } from "@/dataBinding"
+  import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
 
   export let queryId
 
@@ -61,6 +64,8 @@
   let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
+  let anchor
+  let popover
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
@@ -502,9 +507,19 @@
             on:change={() => (query.flags.urlName = false)}
             on:save={saveQuery}
           />
-          <div class="access">
-            <Label>Access</Label>
-            <AccessLevelSelect {query} {saveId} />
+          <div
+            bind:this={anchor}
+            style="display: flex; align-items: center; gap: var(--spacing-m);"
+          >
+            <ActionButton
+              icon="DeviceDesktop"
+              quiet
+              on:click={() => popover.show()}>Screens</ActionButton
+            >
+            <div class="access">
+              <Label>Access</Label>
+              <AccessLevelSelect {query} {saveId} />
+            </div>
           </div>
         </div>
         <div class="url-block">
@@ -770,6 +785,10 @@
     </div>
   </div>
 {/if}
+
+<Popover bind:this={popover} {anchor}>
+  <ConnectedQueryScreens />
+</Popover>
 
 <style>
   .inner {
