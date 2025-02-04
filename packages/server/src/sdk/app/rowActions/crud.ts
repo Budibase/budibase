@@ -9,7 +9,7 @@ import {
 } from "@budibase/types"
 import { generateRowActionsID } from "../../../db/utils"
 import automations from "../automations"
-import { definitions as TRIGGER_DEFINITIONS } from "../../../automations/triggerInfo"
+import { automations as sharedAutomations } from "@budibase/shared-core"
 import * as triggers from "../../../automations/triggers"
 import sdk from "../.."
 
@@ -59,7 +59,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
     definition: {
       trigger: {
         id: "trigger",
-        ...TRIGGER_DEFINITIONS.ROW_ACTION,
+        ...sharedAutomations.triggers.definitions.ROW_ACTION,
         stepId: AutomationTriggerStepId.ROW_ACTION,
         inputs: {
           tableId,

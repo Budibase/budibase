@@ -19,8 +19,8 @@ import {
   Screen,
   Component,
   SaveScreenResponse,
+  ComponentDefinition,
 } from "@budibase/types"
-import { ComponentDefinition } from "./components"
 
 interface ScreenState {
   screens: Screen[]

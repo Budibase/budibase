@@ -23,6 +23,7 @@ export interface Screen extends Document {
   props: ScreenProps
   name?: string
   pluginAdded?: boolean
+  onLoad?: EventHandler[]
 }
 
 export interface ScreenRoutesViewOutput extends Document {
@@ -36,3 +37,14 @@ export type ScreenRoutingJson = Record<
     subpaths: Record<string, any>
   }
 >
+
+export interface EventHandler {
+  parameters: {
+    key: string
+    type: string
+    value: string
+    persist: any | null
+  }
+  "##eventHandlerType": string
+  id: string
+}
