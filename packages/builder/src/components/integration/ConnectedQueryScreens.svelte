@@ -1,91 +1,66 @@
-<script>
-  import { Icon } from "@budibase/bbui"
+<script lang="ts">
+  import { onMount } from "svelte"
+  import { List, ListItem, ActionButton } from "@budibase/bbui"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
+  import { appStore, screenStore } from "@/stores/builder"
+  import type { ScreenUsage } from "@budibase/types"
+  import { PopoverAlign } from "@budibase/types"
 
-  let screens = ["screen1", "screen2", "screen3", "screen4", "screen5"]
+  export let sourceId: string
+
+  let screens: ScreenUsage[] = []
+  let popover: any
+
+  export function show() {
+    popover?.show()
+  }
+
+  export function hide() {
+    popover?.hide()
+  }
+
+  onMount(async () => {
+    let response = await screenStore.usageOfScreens(sourceId)
+    screens = response?.screens
+  })
 </script>
 
-<div class="screens-popover">
-  <header>
-    <h3>Screens</h3>
-    <button class="close-button">
-      <Icon name="Close" />
-    </button>
-  </header>
-  <p class="description">The following screens are connected to this data.</p>
-  <div class="screen-list">
-    {#each screens as screen}
-      <button class="screen-item">
-        <span>/{screen}</span>
-        <Icon name="ChevronRight" />
-      </button>
-    {/each}
-  </div>
-</div>
+<DetailPopover title="Screens" bind:this={popover} align={PopoverAlign.Left}>
+  <svelte:fragment slot="anchor" let:open>
+    <ActionButton icon="DeviceDesktop" quiet selected={open} on:click={show}>
+      Screens
+    </ActionButton>
+  </svelte:fragment>
+
+  {#if !screens.length}
+    <div class="empty-state">
+      <p>No screens are using this data.</p>
+    </div>
+  {:else}
+    <p class="description">The following screens are connected to this data.</p>
+
+    <List>
+      {#each screens as screen}
+        <ListItem
+          title={screen.url}
+          url={`/builder/app/${$appStore.appId}/design/${screen._id}`}
+          showArrow
+        />
+      {/each}
+    </List>
+  {/if}
+</DetailPopover>
 
 <style>
-  .screens-popover {
-    min-width: 320px;
-    padding: var(--spacing-m);
-    background: var(--background-dark);
-    color: var(--white);
-    border-radius: var(--border-radius-m);
-  }
-
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-m);
-  }
-
-  h3 {
-    margin: 0;
-    font-size: var(--font-size-m);
-    font-weight: 500;
-  }
-
-  .close-button {
-    background: none;
-    border: none;
-    padding: 0;
-    color: var(--white);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-  }
-
   .description {
-    margin: 0 0 var(--spacing-m) 0;
     font-size: var(--font-size-s);
-    color: var(--grey-4);
+    margin: 0 0 var(--spacing-xs) 0;
   }
 
-  .screen-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-
-  .screen-item {
-    width: 100%;
+  .empty-state {
     padding: var(--spacing-m);
-    background: var(--grey-9);
-    border: none;
-    border-radius: var(--border-radius-s);
-    color: var(--white);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    text-align: left;
-  }
-
-  .screen-item:hover {
-    background: var(--grey-8);
-  }
-
-  .screen-item :global(.icon) {
+    text-align: center;
     color: var(--grey-5);
+    font-size: var(--font-size-s);
   }
 </style>

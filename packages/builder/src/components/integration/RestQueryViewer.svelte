@@ -18,8 +18,6 @@
     Table,
     Tabs,
     TextArea,
-    ActionButton,
-    Popover,
   } from "@budibase/bbui"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import EditableLabel from "@/components/common/inputs/EditableLabel.svelte"
@@ -64,8 +62,6 @@
   let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
-  let anchor
-  let popover
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
@@ -507,15 +503,8 @@
             on:change={() => (query.flags.urlName = false)}
             on:save={saveQuery}
           />
-          <div
-            bind:this={anchor}
-            style="display: flex; align-items: center; gap: var(--spacing-m);"
-          >
-            <ActionButton
-              icon="DeviceDesktop"
-              quiet
-              on:click={() => popover.show()}>Screens</ActionButton
-            >
+          <div class="controls">
+            <ConnectedQueryScreens sourceId={query._id} />
             <div class="access">
               <Label>Access</Label>
               <AccessLevelSelect {query} {saveId} />
@@ -786,10 +775,6 @@
   </div>
 {/if}
 
-<Popover bind:this={popover} {anchor}>
-  <ConnectedQueryScreens />
-</Popover>
-
 <style>
   .inner {
     width: 960px;
@@ -842,6 +827,12 @@
   .top-bar {
     display: flex;
     justify-content: space-between;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 
   .access {

@@ -11,8 +11,6 @@
     Body,
     Divider,
     Button,
-    ActionButton,
-    Popover,
   } from "@budibase/bbui"
   import { capitalise } from "@/helpers"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
@@ -46,9 +44,6 @@
   let nestedSchemaFields = {}
   let rows = []
   let keys = {}
-
-  let popover
-  let anchor
 
   const parseQuery = query => {
     modified = false
@@ -176,13 +171,7 @@
         </Body>
       </div>
       <div class="controls">
-        <span bind:this={anchor}>
-          <ActionButton
-            icon="DeviceDesktop"
-            quiet
-            on:click={() => popover.show()}>Screens</ActionButton
-          >
-        </span>
+        <ConnectedQueryScreens sourceId={query._id} />
         <Button disabled={loading} on:click={runQuery} overBackground>
           <Icon size="S" name="Play" />
           Run query</Button
@@ -334,10 +323,6 @@
     />
   </div>
 </div>
-
-<Popover bind:this={popover} {anchor}>
-  <ConnectedQueryScreens />
-</Popover>
 
 <style>
   .unsaved {

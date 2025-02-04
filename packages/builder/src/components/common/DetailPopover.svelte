@@ -1,14 +1,15 @@
-<script>
+<script lang="ts">
   import { Popover, Icon } from "@budibase/bbui"
+  import { PopoverAlign } from "@budibase/types"
 
-  export let title
-  export let align = "left"
-  export let showPopover
-  export let width
+  export let title: string = ""
+  export let align: PopoverAlign = PopoverAlign.Left
+  export let showPopover: boolean = true
+  export let width: number = 400
 
-  let popover
-  let anchor
-  let open
+  let popover: any
+  let anchor: HTMLElement
+  let open: boolean
 
   export const show = () => popover?.show()
   export const hide = () => popover?.hide()
