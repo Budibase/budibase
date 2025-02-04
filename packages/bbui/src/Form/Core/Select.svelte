@@ -17,11 +17,11 @@
   export let getOptionValue = (option: O, _index?: number) =>
     option as unknown as V
   export let getOptionIcon = (option: O, _index?: number) =>
-    option as unknown as string
+    option?.icon ?? undefined
   export let getOptionColour = (option: O, _index?: number) =>
-    option as unknown as string
+    option?.colour ?? undefined
   export let getOptionSubtitle = (option: O, _index?: number) =>
-    option as unknown as string
+    option?.subtitle ?? undefined
   export let compare = (option: O, value: V) => option === value
   export let useOptionIconImage = false
   export let isOptionEnabled = (option: O, _index?: number) =>
