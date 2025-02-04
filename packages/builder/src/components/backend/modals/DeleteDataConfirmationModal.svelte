@@ -156,27 +156,17 @@
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText={`Delete ${sourceType}`}
+  okText="Delete"
   onOk={deleteSource}
   onCancel={hideDeleteDialog}
-  title="Confirm Deletion"
+  title={`Are you sure you want to delete ${sourceType} ${source?.name}?`}
   disabled={deleteSourceName !== source?.name}
 >
   <div class="content">
-    <p class="firstWarning">
-      Are you sure you wish to delete the {sourceType}
-      <span class="sourceNameLine">
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <b on:click={autofillSourceName} class="sourceName">{source?.name}</b>
-        <span>?</span>
-      </span>
-    </p>
-
-    <p class="secondWarning">
+    <p class="dataWarning">
       All {sourceType} data will be deleted{viewsMessage}.
     </p>
-    <p class="thirdWarning">This action <b>cannot be undone</b>.</p>
+    <p class="undoneWarning">This action <b>cannot be undone</b>.</p>
 
     {#if affectedScreens.length > 0}
       <div class="affectedScreens">
@@ -210,17 +200,6 @@
     max-width: 320px;
   }
 
-  .firstWarning {
-    margin: 0 0 12px;
-    max-width: 100%;
-  }
-
-  .sourceNameLine {
-    display: inline-flex;
-    max-width: 100%;
-    vertical-align: bottom;
-  }
-
   .sourceName {
     flex-grow: 1;
     white-space: nowrap;
@@ -229,12 +208,12 @@
     cursor: pointer;
   }
 
-  .secondWarning {
+  .dataWarning {
     margin: 0;
     max-width: 100%;
   }
 
-  .thirdWarning {
+  .undoneWarning {
     margin: 0 0 12px;
     max-width: 100%;
   }

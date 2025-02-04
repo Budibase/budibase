@@ -1,27 +1,29 @@
-import { generateScreenID, DocumentType } from "../../db/utils"
+import { DocumentType, generateScreenID } from "../../db/utils"
 import {
-  events,
   context,
-  tenancy,
   db as dbCore,
+  events,
   roles,
+  tenancy,
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
 import {
-  Plugin,
-  ScreenProps,
-  Screen,
-  UserCtx,
+  DeleteScreenResponse,
   FetchScreenResponse,
+  Plugin,
   SaveScreenRequest,
   SaveScreenResponse,
-  DeleteScreenResponse,
-  UsageOfScreensResponse,
+  Screen,
+  ScreenProps,
   ScreenUsage,
+  SourceType,
+  UsageOfScreensResponse,
+  UserCtx,
 } from "@budibase/types"
 import { builderSocket } from "../../websockets"
 import sdk from "../../sdk"
 import { sdk as sharedSdk } from "@budibase/shared-core"
+import { isInternal } from "../../sdk/app/tables/utils"
 
 export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   const screens = await sdk.screens.fetch()
@@ -151,8 +153,14 @@ export async function usage(ctx: UserCtx<void, UsageOfScreensResponse>) {
       })
     }
   }
+  const isInternalTable =
+    sourceType === SourceType.TABLE &&
+    sdk.tables.isInternal({ tableId: sourceId })
+  const isInternalView =
+    sourceType === SourceType.VIEW && sdk.views.isInternal(sourceId)
   ctx.body = {
     sourceType,
+    internal: isInternalTable || isInternalView,
     screens: response,
   }
 }

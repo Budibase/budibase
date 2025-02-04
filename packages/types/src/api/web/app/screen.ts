@@ -23,5 +23,6 @@ export interface ScreenUsage {
 
 export interface UsageOfScreensResponse {
   sourceType: SourceType
+  internal: boolean
   screens: ScreenUsage[]
 }
