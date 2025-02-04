@@ -16,6 +16,7 @@
   } from "@/dataBinding"
   import { ActionButton, notifications } from "@budibase/bbui"
   import { capitalise } from "@/helpers"
+  import { builderStore } from "@/stores/builder"
   import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "@/components/portal/onboarding/tours.js"
 
@@ -55,6 +56,17 @@
   $: id = $selectedComponent?._id
   $: id, (section = tabs[0])
   $: componentName = getComponentName(componentInstance)
+
+  $: highlightedSetting = $builderStore.highlightedSetting
+  $: if (highlightedSetting) {
+    if (highlightedSetting.key === "_conditions") {
+      section = "conditions"
+    } else if (highlightedSetting.key === "_styles") {
+      section = "styles"
+    } else {
+      section = "settings"
+    }
+  }
 </script>
 
 {#if $selectedComponent}
@@ -98,7 +110,7 @@
           {/each}
         </div>
       </span>
-      {#if section == "settings"}
+      {#if section === "settings"}
         <TourWrap
           stepKeys={[
             BUILDER_FORM_CREATE_STEPS,
@@ -115,7 +127,7 @@
           />
         </TourWrap>
       {/if}
-      {#if section == "styles"}
+      {#if section === "styles"}
         <DesignSection
           {componentInstance}
           {componentBindings}
@@ -130,7 +142,7 @@
           componentTitle={title}
         />
       {/if}
-      {#if section == "conditions"}
+      {#if section === "conditions"}
         <ConditionalUISection
           {componentInstance}
           {componentDefinition}

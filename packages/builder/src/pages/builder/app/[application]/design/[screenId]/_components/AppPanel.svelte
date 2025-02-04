@@ -50,6 +50,9 @@
     margin-bottom: 9px;
   }
 
+  .header-left {
+    display: flex;
+  }
   .header-left :global(div) {
     border-right: none;
   }
