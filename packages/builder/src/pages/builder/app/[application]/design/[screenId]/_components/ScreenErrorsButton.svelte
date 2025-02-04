@@ -101,6 +101,7 @@
     flex-direction: row;
     padding: var(--spacing-xl) var(--spacing-m);
     gap: var(--spacing-s);
+    align-items: start;
   }
   .error-popover .error:not(:last-child) {
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
