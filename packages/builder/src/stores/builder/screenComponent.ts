@@ -23,13 +23,10 @@ function reduceBy<TItem extends {}, TKey extends keyof TItem>(
   key: TKey,
   list: TItem[]
 ): Record<string, TItem> {
-  return list.reduce(
-    (result, item) => ({
-      ...result,
-      [item[key] as string]: item,
-    }),
-    {}
-  )
+  return list.reduce<Record<string, TItem>>((result, item) => {
+    result[item[key] as string] = item
+    return result
+  }, {})
 }
 
 const friendlyNameByType: Partial<Record<UIDatasourceType, string>> = {
@@ -253,7 +250,7 @@ function getMissingAncestors(
   return result
 }
 
-export function findComponentsBySettingsType(
+function findComponentsBySettingsType(
   screen: Screen,
   type: string | string[],
   definitions: Record<string, ComponentDefinition>
@@ -303,18 +300,13 @@ export const screenComponentErrorList = derived(
   }
 )
 
-export const screenComponents = derived(
+export const screenComponentsList = derived(
   [selectedScreen],
-  ([$selectedScreen]): Record<string, Component> => {
+  ([$selectedScreen]): Component[] => {
     if (!$selectedScreen) {
-      return {}
+      return []
     }
 
-    return findAllComponents($selectedScreen.props).reduce<
-      Record<string, Component>
-    >((obj, component) => {
-      obj[component._id] = component
-      return obj
-    }, {})
+    return findAllComponents($selectedScreen.props)
   }
 )

@@ -4,7 +4,7 @@
     builderStore,
     componentStore,
     screenComponentErrorList,
-    screenComponents,
+    screenComponentsList,
   } from "@/stores/builder"
   import { ActionButton, Icon, Link, Popover } from "@budibase/bbui"
 
@@ -12,7 +12,10 @@
   let popover: any
 
   function getErrorTitle(error: UIComponentError) {
-    const titleParts = [$screenComponents[error.componentId]._instanceName]
+    const titleParts = [
+      $screenComponentsList.find(c => c._id === error.componentId)!
+        ._instanceName,
+    ]
     if (error.errorType === "setting") {
       titleParts.push(error.label)
     }
