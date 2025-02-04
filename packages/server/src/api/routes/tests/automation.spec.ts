@@ -11,6 +11,7 @@ import {
 import { configs, context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import {
+  AutomationResults,
   ConfigType,
   FieldType,
   isDidNotTriggerResponse,
@@ -18,7 +19,6 @@ import {
   Table,
 } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
-import { removeDeprecated } from "../../../automations/utils"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { automations } from "@budibase/shared-core"
 import { basicTable } from "../../../tests/utilities/structures"
@@ -66,15 +66,11 @@ describe("/automations", () => {
     it("returns all of the definitions in one", async () => {
       const { action, trigger } = await config.api.automation.getDefinitions()
 
-      let definitionsLength = Object.keys(
-        removeDeprecated(BUILTIN_ACTION_DEFINITIONS)
-      ).length
-
       expect(Object.keys(action).length).toBeGreaterThanOrEqual(
-        definitionsLength
+        Object.keys(BUILTIN_ACTION_DEFINITIONS).length
       )
       expect(Object.keys(trigger).length).toEqual(
-        Object.keys(removeDeprecated(TRIGGER_DEFINITIONS)).length
+        Object.keys(TRIGGER_DEFINITIONS).length
       )
     })
   })
@@ -620,7 +616,7 @@ describe("/automations", () => {
           })
         )
 
-        const res = await config.api.automation.test(automation._id!, {
+        const response = await config.api.automation.test(automation._id!, {
           fields: {},
           oldRow: {
             City: oldCity,
@@ -630,12 +626,14 @@ describe("/automations", () => {
           },
         })
 
-        if (isDidNotTriggerResponse(res)) {
+        if (isDidNotTriggerResponse(response)) {
           throw new Error("Automation did not trigger")
         }
 
+        const results: AutomationResults = response as AutomationResults
+
         const expectedResult = oldCity === newCity
-        expect(res.steps[1].outputs.result).toEqual(expectedResult)
+        expect(results.steps[1].outputs.result).toEqual(expectedResult)
       }
     )
   })
@@ -722,7 +720,8 @@ describe("/automations", () => {
         if (isDidNotTriggerResponse(res)) {
           expect(expectToRun).toEqual(false)
         } else {
-          expect(res.steps[1].outputs.success).toEqual(expectToRun)
+          const results: AutomationResults = res as AutomationResults
+          expect(results.steps[1].outputs.success).toEqual(expectToRun)
         }
       }
     )

@@ -11,6 +11,7 @@ import {
   automationStore,
   selectedAutomation,
   automationHistoryStore,
+  evaluationContext,
 } from "./automations.js"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
@@ -72,6 +73,7 @@ export {
   snippets,
   rowActions,
   appPublished,
+  evaluationContext,
   screenComponents,
   screenComponentErrors,
   findComponentsBySettingsType,

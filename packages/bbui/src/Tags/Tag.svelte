@@ -6,6 +6,7 @@
   export let icon = ""
   export let avatar = ""
   export let invalid = false
+  export let emphasized = false
   export let disabled = false
   export let closable = false
 </script>
@@ -13,6 +14,7 @@
 <div
   class:is-invalid={invalid}
   class:is-disabled={disabled}
+  class:is-emphasized={emphasized}
   class="spectrum-Tags-item"
   role="listitem"
 >
@@ -39,5 +41,10 @@
   .spectrum-Tags-item {
     margin-bottom: 0;
     margin-top: 0;
+  }
+
+  .is-emphasized {
+    border-color: var(--spectrum-global-color-blue-700);
+    color: var(--spectrum-global-color-blue-700);
   }
 </style>

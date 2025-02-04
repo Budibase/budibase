@@ -6,6 +6,7 @@ import {
   AppActionTriggerOutputs,
   Automation,
   AutomationActionStepId,
+  AutomationResults,
   AutomationStep,
   AutomationStepInputs,
   AutomationTrigger,
@@ -208,6 +209,9 @@ class BaseStepBuilder {
     )
   }
 
+  /**
+   * @deprecated Use `executeScriptV2` instead
+   */
   executeScript(
     input: ExecuteScriptStepInputs,
     opts?: { stepName?: string; stepId?: string }
@@ -215,6 +219,18 @@ class BaseStepBuilder {
     return this.step(
       AutomationActionStepId.EXECUTE_SCRIPT,
       BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT,
+      input,
+      opts
+    )
+  }
+
+  executeScriptV2(
+    input: ExecuteScriptStepInputs,
+    opts?: { stepName?: string; stepId?: string }
+  ): this {
+    return this.step(
+      AutomationActionStepId.EXECUTE_SCRIPT_V2,
+      BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT_V2,
       input,
       opts
     )
@@ -406,11 +422,11 @@ class AutomationBuilder extends BaseStepBuilder {
     if (isDidNotTriggerResponse(response)) {
       throw new Error(response.message)
     }
-
-    response.steps.shift()
+    const results: AutomationResults = response as AutomationResults
+    results.steps.shift()
     return {
-      trigger: response.trigger,
-      steps: response.steps,
+      trigger: results.trigger,
+      steps: results.steps,
     }
   }
 }

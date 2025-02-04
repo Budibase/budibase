@@ -61,8 +61,6 @@
   let mode: BindingMode | null
   let sidePanel: SidePanel | null
   let initialValueJS = value?.startsWith?.("{{ js ")
-  let jsValue: string | null = initialValueJS ? value : null
-  let hbsValue: string | null = initialValueJS ? null : value
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
   let targetMode: BindingMode | null = null
@@ -70,6 +68,10 @@
   let expressionLogs: Log[] | undefined
   let expressionError: string | undefined
   let evaluating = false
+
+  // Ensure these values are not stale
+  $: jsValue = initialValueJS ? value : null
+  $: hbsValue = initialValueJS ? null : value
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
@@ -358,7 +360,7 @@
         {#if mode === BindingMode.Text}
           {#key hbsCompletions}
             <CodeEditor
-              value={hbsValue}
+              value={hbsValue || ""}
               on:change={onChangeHBSValue}
               bind:getCaretPosition
               bind:insertAtPos
@@ -372,7 +374,7 @@
         {:else if mode === BindingMode.JavaScript}
           {#key jsCompletions}
             <CodeEditor
-              value={jsValue ? decodeJSBinding(jsValue) : jsValue}
+              value={jsValue ? decodeJSBinding(jsValue) : ""}
               on:change={onChangeJSValue}
               completions={jsCompletions}
               mode={EditorModes.JS}
