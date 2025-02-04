@@ -77,7 +77,9 @@
 <style>
   .error-button :global(.spectrum-ActionButton) {
     border-radius: 16px;
+    right: -4px;
   }
+
   .error-button .content {
     min-width: 50px;
     display: flex;
@@ -89,6 +91,7 @@
     font-weight: 600;
   }
   .error-button .badge {
+    color: var(--spectrum-global-color-static-white);
     background-color: var(--spectrum-global-color-static-red-700);
     height: 14px;
     width: 14px;
