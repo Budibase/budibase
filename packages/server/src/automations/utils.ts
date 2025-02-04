@@ -1,5 +1,5 @@
 import { Thread, ThreadType } from "../threads"
-import { definitions } from "../../../shared-core/src/automations/triggers"
+import { automations } from "@budibase/shared-core"
 import { automationQueue } from "./bullboard"
 import { updateEntityMetadata } from "../utilities"
 import { context, db as dbCore, utils } from "@budibase/backend-core"
@@ -19,7 +19,7 @@ import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
 
-const CRON_STEP_ID = definitions.CRON.stepId
+const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 let Runner: Thread
 if (automationsEnabled()) {
   Runner = new Thread(ThreadType.AUTOMATION)
@@ -255,7 +255,10 @@ export async function cleanupAutomations(appId: any) {
  * @return if it is recurring (cron).
  */
 export function isRecurring(automation: Automation) {
-  return automation.definition.trigger.stepId === definitions.CRON.stepId
+  return (
+    automation.definition.trigger.stepId ===
+    automations.triggers.definitions.CRON.stepId
+  )
 }
 
 export function isErrorInOutput(output: {
