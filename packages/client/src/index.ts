@@ -11,7 +11,15 @@ export interface SDK {
   generateGoldenSample: any
   builderStore: Readable<{
     inBuilder: boolean
-  }>
+  }> & {
+    actions: {
+      highlightSetting: (key: string) => void
+      addParentComponent: (
+        componentId: string,
+        fullAncestorType: string
+      ) => void
+    }
+  }
 }
 
 export type Component = Readable<{
