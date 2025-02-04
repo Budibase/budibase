@@ -53,6 +53,7 @@
   anchor={button}
   align={PopoverAlignment.Right}
   maxWidth={400}
+  showPopover={$screenComponentErrorList.length}
 >
   <div class="error-popover">
     {#each $screenComponentErrorList as error}
