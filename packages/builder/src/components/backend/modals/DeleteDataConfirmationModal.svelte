@@ -13,6 +13,7 @@
   import { SourceType } from "@budibase/types"
   import { goto, params } from "@roxi/routify"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
+  import { get } from "svelte/store"
   import type { Table, ViewV2, View, Datasource, Query } from "@budibase/types"
 
   export let source: Table | ViewV2 | Datasource | Query | undefined
@@ -107,6 +108,20 @@
     }
   }
 
+  async function deleteDatasource(datasource: Datasource) {
+    try {
+      const isSelected =
+        get(datasources).selectedDatasourceId === datasource._id
+      await datasources.delete(datasource)
+      notifications.success("Datasource deleted")
+      if (isSelected) {
+        $goto("./datasource")
+      }
+    } catch (error) {
+      notifications.error("Error deleting datasource")
+    }
+  }
+
   async function deleteQuery(query: Query) {
     try {
       // Go back to the datasource if we are deleting the active query
@@ -134,6 +149,7 @@
       case SourceType.QUERY:
         return await deleteQuery(source as Query)
       case SourceType.DATASOURCE:
+        return await deleteDatasource(source as Datasource)
     }
   }
 </script>
@@ -180,7 +196,7 @@
       </div>
     {/if}
     <p class="fourthWarning">
-      Please enter the "<b on:click={autofillSourceName} class="sourceName"
+      Please enter "<b on:click={autofillSourceName} class="sourceName"
         >{source?.name}</b
       >" below to confirm.
     </p>
