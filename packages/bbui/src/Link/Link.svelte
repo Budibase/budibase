@@ -9,8 +9,8 @@
   export let primary = false
   export let secondary = false
   export let overBackground = false
-  export let target
-  export let download
+  export let target = undefined
+  export let download = undefined
   export let disabled = false
   export let tooltip = null
 

@@ -1,7 +1,8 @@
 import "./bbui.css"
-
-// Spectrum icons
 import "@spectrum-css/icon/dist/index-vars.css"
+
+// Constants
+export * from "./constants"
 
 // Form components
 export { default as Input } from "./Form/Input.svelte"
@@ -45,7 +46,7 @@ export { default as ClearButton } from "./ClearButton/ClearButton.svelte"
 export { default as Icon } from "./Icon/Icon.svelte"
 export { default as IconAvatar } from "./Icon/IconAvatar.svelte"
 export { default as DetailSummary } from "./DetailSummary/DetailSummary.svelte"
-export { default as Popover } from "./Popover/Popover.svelte"
+export { default as Popover, type PopoverAPI } from "./Popover/Popover.svelte"
 export { default as ProgressBar } from "./ProgressBar/ProgressBar.svelte"
 export { default as ProgressCircle } from "./ProgressCircle/ProgressCircle.svelte"
 export { default as Label } from "./Label/Label.svelte"
@@ -92,7 +93,6 @@ export { default as IconSideNav } from "./IconSideNav/IconSideNav.svelte"
 export { default as IconSideNavItem } from "./IconSideNav/IconSideNavItem.svelte"
 export { default as Accordion } from "./Accordion/Accordion.svelte"
 export { default as AbsTooltip } from "./Tooltip/AbsTooltip.svelte"
-export { TooltipPosition, TooltipType } from "./Tooltip/AbsTooltip.svelte"
 
 // Renderers
 export { default as BoldRenderer } from "./Table/BoldRenderer.svelte"

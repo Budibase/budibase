@@ -17,7 +17,11 @@ import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
 import { contextMenuStore } from "./contextMenu.js"
 import { snippets } from "./snippets"
-import { screenComponents, screenComponentErrors } from "./screenComponent"
+import {
+  screenComponents,
+  screenComponentErrors,
+  findComponentsBySettingsType,
+} from "./screenComponent"
 
 // Backend
 import { tables } from "./tables"
@@ -72,6 +76,7 @@ export {
   evaluationContext,
   screenComponents,
   screenComponentErrors,
+  findComponentsBySettingsType,
 }
 
 export const reset = () => {
