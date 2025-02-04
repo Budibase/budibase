@@ -30,9 +30,10 @@ function newJob(queue: string, message: any, opts?: JobOptions): JobMessage {
 }
 
 /**
- * This is designed to replicate Bull (https://github.com/OptimalBits/bull) in memory as a sort of mock.
- * It is relatively simple, using an event emitter internally to register when messages are available
- * to the consumers - in can support many inputs and many consumers.
+ * This is designed to replicate Bull (https://github.com/OptimalBits/bull) in
+ * memory as a sort of mock.  It is relatively simple, using an event emitter
+ * internally to register when messages are available to the consumers - in can
+ * support many inputs and many consumers.
  */
 class InMemoryQueue implements Partial<Queue> {
   _name: string
