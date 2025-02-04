@@ -28,20 +28,10 @@
     return titleParts.join(" - ")
   }
 
-  function onErrorClick(error: UIComponentError) {
+  async function onErrorClick(error: UIComponentError) {
     componentStore.select(error.componentId)
     if (error.errorType === "setting") {
       builderStore.highlightSetting(error.key, "error")
-
-      // TODO: dry from AppPreview
-      const selector = `#${error.key}-prop-control`
-      const element = document.querySelector(selector)?.parentElement
-      if (element) {
-        element.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        })
-      }
     }
   }
 </script>
