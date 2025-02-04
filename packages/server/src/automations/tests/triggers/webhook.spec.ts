@@ -11,11 +11,8 @@ describe("Branching automations", () => {
   let table: Table
   let webhook: Webhook
 
-  async function createWebhookAutomation(testName: string) {
-    const builder = createAutomationBuilder({
-      name: testName,
-    })
-    const automation = await builder
+  async function createWebhookAutomation() {
+    const automation = await createAutomationBuilder({ config })
       .webhook({ fields: { parameter: "string" } })
       .createRow({
         row: { tableId: table._id!, name: "{{ trigger.parameter }}" },
@@ -50,9 +47,7 @@ describe("Branching automations", () => {
   })
 
   it("should run the webhook automation - checking for parameters", async () => {
-    const { webhook } = await createWebhookAutomation(
-      "Check a basic webhook works as expected"
-    )
+    const { webhook } = await createWebhookAutomation()
     const res = await config.api.webhook.trigger(
       config.getProdAppId(),
       webhook._id!,
