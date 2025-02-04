@@ -4,6 +4,7 @@
   import type {
     Component,
     ComponentCondition,
+    ComponentSetting,
     EventHandler,
     Screen,
   } from "@budibase/types"
@@ -21,7 +22,6 @@
     processStringSync,
   } from "@budibase/string-templates"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
-  import { type ComponentSetting } from "@/stores/builder/components"
 
   interface ComponentUsingState {
     id: string
