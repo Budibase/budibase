@@ -21,8 +21,10 @@
   let confirmDeleteDialog: any
   let affectedScreens: { text: string; url: string }[] = []
   let sourceType: SourceType | undefined = undefined
-  let viewsMessage: string = ""
+  let isInternal: boolean = false
   let deleteSourceName: string | undefined
+
+  $: isInternalTable = isInternal && sourceType === SourceType.TABLE
 
   const getViewsMessage = () => {
     if (!source || !("views" in source)) {
@@ -33,10 +35,28 @@
       return ""
     }
     if (views.length === 1) {
-      return ", including 1 view"
+      return "1 view."
     }
 
-    return `, including ${views.length} views`
+    return `${views.length} views.`
+  }
+
+  const getQueriesMessage = () => {
+    if (sourceType !== SourceType.DATASOURCE) {
+      return ""
+    }
+    const sourceId = getSourceID()
+    const queryList = get(queries).list.filter(
+      query => query.datasourceId === sourceId
+    )
+    if (queryList.length < 1) {
+      return ""
+    }
+    if (queryList.length === 1) {
+      return "1 query."
+    }
+
+    return `${queryList.length} queries.`
   }
 
   function getSourceID(): string {
@@ -50,10 +70,10 @@
   }
 
   export const show = async () => {
-    viewsMessage = getViewsMessage()
     const usage = await screenStore.usageOfScreens(getSourceID())
     affectedScreens = processScreens(usage.screens)
     sourceType = usage.sourceType
+    isInternal = usage.internal
     confirmDeleteDialog.show()
   }
 
@@ -152,6 +172,24 @@
         return await deleteDatasource(source as Datasource)
     }
   }
+
+  function buildMessage() {
+    let message = ""
+    if (isInternalTable) {
+      message = `All ${sourceType} data will be deleted`
+      const viewsMessage = getViewsMessage()
+      if (viewsMessage) {
+        message += `including ${viewsMessage}. `
+      } else {
+        message += ". "
+      }
+    } else if (sourceType === SourceType.DATASOURCE) {
+      const queriesMessage = getQueriesMessage()
+      message = `This will include deleting ${queriesMessage}. `
+    }
+    message += "<b>This action cannot be undone.</b>"
+    return message
+  }
 </script>
 
 <ConfirmDialog
@@ -163,10 +201,10 @@
   disabled={deleteSourceName !== source?.name}
 >
   <div class="content">
-    <p class="dataWarning">
-      All {sourceType} data will be deleted{viewsMessage}.
+    <p class="warning">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      {@html buildMessage()}
     </p>
-    <p class="undoneWarning">This action <b>cannot be undone</b>.</p>
 
     {#if affectedScreens.length > 0}
       <div class="affectedScreens">
@@ -208,13 +246,8 @@
     cursor: pointer;
   }
 
-  .dataWarning {
+  .warning {
     margin: 0;
-    max-width: 100%;
-  }
-
-  .undoneWarning {
-    margin: 0 0 12px;
     max-width: 100%;
   }
 

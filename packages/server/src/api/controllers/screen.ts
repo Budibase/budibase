@@ -23,7 +23,6 @@ import {
 import { builderSocket } from "../../websockets"
 import sdk from "../../sdk"
 import { sdk as sharedSdk } from "@budibase/shared-core"
-import { isInternal } from "../../sdk/app/tables/utils"
 
 export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   const screens = await sdk.screens.fetch()
