@@ -34,11 +34,11 @@
   export let getOptionValue = (option: O, _index?: number) =>
     option as unknown as V
   export let getOptionIcon = (option: O, _index?: number) =>
-    option?.icon ?? null
+    option?.icon ?? undefined
   export let getOptionColour = (option: O, _index?: number) =>
-    option as unknown as O
+    option?.colour ?? undefined
   export let getOptionSubtitle = (option: O, _index?: number) =>
-    option?.subtitle ?? null
+    option?.subtitle ?? undefined
   export let useOptionIconImage = false
   export let open: boolean = false
   export let readonly: boolean = false
