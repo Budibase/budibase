@@ -13,7 +13,7 @@ import {
 import { queries } from "./queries"
 import { views } from "./views"
 import { findAllComponents } from "@/helpers/components"
-import { bindings, featureFlag } from "@/helpers"
+import { bindings } from "@/helpers"
 import { getBindableProperties } from "@/dataBinding"
 import { componentStore } from "./components"
 import { getSettingsDefinition } from "@budibase/frontend-core"
@@ -56,10 +56,7 @@ export const screenComponentErrors = derived(
     $queries,
     $componentStore,
   ]): Record<string, UIComponentError[]> => {
-    if (
-      !featureFlag.isEnabled("CHECK_COMPONENT_SETTINGS_ERRORS") ||
-      !$selectedScreen
-    ) {
+    if (!$selectedScreen) {
       return {}
     }
 
