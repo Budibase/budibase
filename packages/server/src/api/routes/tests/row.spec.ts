@@ -39,7 +39,6 @@ import {
   RowExportFormat,
   RelationSchemaField,
   FormulaResponseType,
-  MonthlyQuotaName,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"

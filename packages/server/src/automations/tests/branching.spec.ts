@@ -24,11 +24,7 @@ describe("Branching automations", () => {
     const branch2LogId = "33333333-3333-3333-3333-333333333333"
     const branch2Id = "44444444-4444-4444-4444-444444444444"
 
-    const builder = createAutomationBuilder({
-      name: "Test Trigger with Loop and Create Row",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .serverLog(
         { text: "Starting automation" },
@@ -87,11 +83,7 @@ describe("Branching automations", () => {
   })
 
   it("should execute correct branch based on string equality", async () => {
-    const builder = createAutomationBuilder({
-      name: "String Equality Branching",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: { status: "active" } })
       .branch({
         activeBranch: {
@@ -116,11 +108,7 @@ describe("Branching automations", () => {
   })
 
   it("should handle multiple conditions with AND operator", async () => {
-    const builder = createAutomationBuilder({
-      name: "Multiple AND Conditions Branching",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: { status: "active", role: "admin" } })
       .branch({
         activeAdminBranch: {
@@ -148,11 +136,7 @@ describe("Branching automations", () => {
   })
 
   it("should handle multiple conditions with OR operator", async () => {
-    const builder = createAutomationBuilder({
-      name: "Multiple OR Conditions Branching",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: { status: "test", role: "user" } })
       .branch({
         specialBranch: {
@@ -184,11 +168,7 @@ describe("Branching automations", () => {
   })
 
   it("should stop the branch automation when no conditions are met", async () => {
-    const builder = createAutomationBuilder({
-      name: "Multiple OR Conditions Branching",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: { status: "test", role: "user" } })
       .createRow({ row: { name: "Test", tableId: table._id } })
       .branch({
@@ -215,7 +195,6 @@ describe("Branching automations", () => {
           },
         },
       })
-      .serverLog({ text: "Test" })
       .run()
 
     expect(results.steps[1].outputs.status).toEqual(
@@ -225,11 +204,7 @@ describe("Branching automations", () => {
   })
 
   it("evaluate multiple conditions", async () => {
-    const builder = createAutomationBuilder({
-      name: "evaluate multiple conditions",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: { test_trigger: true } })
       .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
       .branch({
@@ -270,11 +245,7 @@ describe("Branching automations", () => {
   })
 
   it("evaluate multiple conditions with interpolated text", async () => {
-    const builder = createAutomationBuilder({
-      name: "evaluate multiple conditions",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: { test_trigger: true } })
       .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
       .branch({

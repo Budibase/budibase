@@ -30,11 +30,7 @@ describe("test the update row action", () => {
   })
 
   it("should be able to run the update row action", async () => {
-    const builder = createAutomationBuilder({
-      name: "Update Row Automation",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .updateRow({
         rowId: row._id!,
@@ -57,11 +53,7 @@ describe("test the update row action", () => {
   })
 
   it("should check invalid inputs return an error", async () => {
-    const builder = createAutomationBuilder({
-      name: "Invalid Inputs Automation",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .updateRow({ meta: {}, row: {}, rowId: "" })
       .run()
@@ -70,11 +62,7 @@ describe("test the update row action", () => {
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const builder = createAutomationBuilder({
-      name: "Nonexistent Table Automation",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .updateRow({
         row: { _id: "invalid" },
@@ -118,11 +106,7 @@ describe("test the update row action", () => {
       user2: [{ _id: user2._id }],
     })
 
-    const builder = createAutomationBuilder({
-      name: "Link Preservation Automation",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .updateRow({
         rowId: row._id!,
@@ -176,11 +160,7 @@ describe("test the update row action", () => {
       user2: [{ _id: user2._id }],
     })
 
-    const builder = createAutomationBuilder({
-      name: "Link Overwrite Automation",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .updateRow({
         rowId: row._id!,
