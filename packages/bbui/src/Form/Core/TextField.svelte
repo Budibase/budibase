@@ -4,23 +4,23 @@
   import type { UIEvent } from "@budibase/types"
 
   export let value: string | null = null
-  export let placeholder: string | null = null
+  export let placeholder: string | undefined = undefined
   export let type = "text"
   export let disabled = false
   export let id = null
   export let readonly = false
   export let updateOnChange = true
   export let quiet = false
-  export let align: string | null = null
+  export let align: "left" | "right" | "center" | undefined = undefined
   export let autofocus: boolean | null = false
-  export let autocomplete: string | null = null
+  export let autocomplete: boolean | undefined
 
   const dispatch = createEventDispatcher()
 
   let field: any
   let focus = false
 
-  const updateValue = (newValue: string | number | null) => {
+  const updateValue = (newValue: any) => {
     if (readonly || disabled) {
       return
     }
@@ -69,6 +69,13 @@
     return type === "number" ? "decimal" : "text"
   }
 
+  $: autocompleteValue =
+    typeof autocomplete === "boolean"
+      ? autocomplete
+        ? "on"
+        : "off"
+      : undefined
+
   onMount(async () => {
     if (disabled) return
     focus = autofocus || false
@@ -105,7 +112,7 @@
     class="spectrum-Textfield-input"
     style={align ? `text-align: ${align};` : ""}
     inputmode={getInputMode(type)}
-    {autocomplete}
+    autocomplete={autocompleteValue}
   />
 </div>
 

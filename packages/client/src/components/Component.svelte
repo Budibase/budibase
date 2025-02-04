@@ -11,11 +11,8 @@
 <script>
   import { getContext, setContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
-  import {
-    enrichProps,
-    propsAreSame,
-    getSettingsDefinition,
-  } from "utils/componentProps"
+  import { enrichProps, propsAreSame } from "utils/componentProps"
+  import { getSettingsDefinition } from "@budibase/frontend-core"
   import {
     builderStore,
     devToolsStore,
@@ -29,7 +26,6 @@
   import EmptyPlaceholder from "components/app/EmptyPlaceholder.svelte"
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
   import ComponentErrorState from "components/error-states/ComponentErrorState.svelte"
-  import { BudibasePrefix } from "../stores/components.js"
   import {
     decodeJSBinding,
     findHBSBlocks,
@@ -102,8 +98,6 @@
   let definition
   let settingsDefinition
   let settingsDefinitionMap
-  let missingRequiredSettings = false
-  let componentErrors = false
 
   // Temporary styles which can be added in the app preview for things like
   // DND. We clear these whenever a new instance is received.
@@ -141,18 +135,11 @@
   $: componentErrors = instance?._meta?.errors
   $: hasChildren = !!definition?.hasChildren
   $: showEmptyState = definition?.showEmptyState !== false
-  $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
+  $: hasMissingRequiredSettings = !!componentErrors?.find(
+    e => e.errorType === "setting"
+  )
   $: editable = !!definition?.editable && !hasMissingRequiredSettings
   $: hasComponentErrors = componentErrors?.length > 0
-  $: requiredAncestors = definition?.requiredAncestors || []
-  $: missingRequiredAncestors = requiredAncestors.filter(
-    ancestor => !$component.ancestors.includes(`${BudibasePrefix}${ancestor}`)
-  )
-  $: hasMissingRequiredAncestors = missingRequiredAncestors?.length > 0
-  $: errorState =
-    hasMissingRequiredSettings ||
-    hasMissingRequiredAncestors ||
-    hasComponentErrors
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
@@ -218,7 +205,7 @@
     styles: normalStyles,
     draggable,
     definition,
-    errored: errorState,
+    errored: hasComponentErrors,
   }
 
   // When dragging and dropping, pad components to allow dropping between
@@ -251,9 +238,8 @@
     name,
     editing,
     type: instance._component,
-    errorState,
+    errorState: hasComponentErrors,
     parent: id,
-    ancestors: [...($component?.ancestors ?? []), instance._component],
     path: [...($component?.path ?? []), id],
     darkMode,
   })
@@ -309,40 +295,6 @@
     // Update the settings types
     staticSettings = instanceSettings.staticSettings
     dynamicSettings = instanceSettings.dynamicSettings
-
-    // Check if we have any missing required settings
-    missingRequiredSettings = settingsDefinition.filter(setting => {
-      let empty = instance[setting.key] == null || instance[setting.key] === ""
-      let missing = setting.required && empty
-
-      // Check if this setting depends on another, as it may not be required
-      if (setting.dependsOn) {
-        const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
-        const dependsOnValue = setting.dependsOn.value
-        const realDependentValue = instance[dependsOnKey]
-
-        const sectionDependsOnKey =
-          setting.sectionDependsOn?.setting || setting.sectionDependsOn
-        const sectionDependsOnValue = setting.sectionDependsOn?.value
-        const sectionRealDependentValue = instance[sectionDependsOnKey]
-
-        if (dependsOnValue == null && realDependentValue == null) {
-          return false
-        }
-        if (dependsOnValue != null && dependsOnValue !== realDependentValue) {
-          return false
-        }
-
-        if (
-          sectionDependsOnValue != null &&
-          sectionDependsOnValue !== sectionRealDependentValue
-        ) {
-          return false
-        }
-      }
-
-      return missing
-    })
 
     // When considering bindings we can ignore children, so we remove that
     // before storing the reference stringified version
@@ -686,7 +638,7 @@
     class:pad
     class:parent={hasChildren}
     class:block={isBlock}
-    class:error={errorState}
+    class:error={hasComponentErrors}
     class:root={isRoot}
     data-id={id}
     data-name={name}
@@ -694,12 +646,8 @@
     data-parent={$component.id}
     use:gridLayout={gridMetadata}
   >
-    {#if errorState}
-      <ComponentErrorState
-        {missingRequiredSettings}
-        {missingRequiredAncestors}
-        {componentErrors}
-      />
+    {#if hasComponentErrors}
+      <ComponentErrorState {componentErrors} />
     {:else}
       <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
         {#if children.length}
