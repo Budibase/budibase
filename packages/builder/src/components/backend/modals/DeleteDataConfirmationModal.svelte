@@ -35,10 +35,10 @@
       return ""
     }
     if (views.length === 1) {
-      return "1 view."
+      return "1 view"
     }
 
-    return `${views.length} views.`
+    return `${views.length} views`
   }
 
   const getQueriesMessage = () => {
@@ -53,10 +53,10 @@
       return ""
     }
     if (queryList.length === 1) {
-      return "1 query."
+      return "1 query"
     }
 
-    return `${queryList.length} queries.`
+    return `${queryList.length} queries`
   }
 
   function getSourceID(): string {
@@ -176,10 +176,10 @@
   function buildMessage() {
     let message = ""
     if (isInternalTable) {
-      message = `All ${sourceType} data will be deleted`
+      message = `All its data will be deleted`
       const viewsMessage = getViewsMessage()
       if (viewsMessage) {
-        message += `including ${viewsMessage}. `
+        message += `, including ${viewsMessage}. `
       } else {
         message += ". "
       }
@@ -197,7 +197,7 @@
   okText="Delete"
   onOk={deleteSource}
   onCancel={hideDeleteDialog}
-  title={`Are you sure you want to delete ${sourceType} ${source?.name}?`}
+  title={`Are you sure you want to delete ${source?.name}?`}
   disabled={deleteSourceName !== source?.name}
 >
   <div class="content">
