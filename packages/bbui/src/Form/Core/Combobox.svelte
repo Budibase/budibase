@@ -11,6 +11,7 @@
   import { createEventDispatcher } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Popover from "../../Popover/Popover.svelte"
+  import { PopoverAlignment } from "../../constants"
 
   export let value: string | undefined = undefined
   export let id: string | undefined = undefined
@@ -97,11 +98,16 @@
 <Popover
   {anchor}
   {open}
-  align="left"
+  align={PopoverAlignment.Left}
   on:close={() => (open = false)}
   useAnchorWidth
 >
-  <div class="popover-content" use:clickOutside={() => (open = false)}>
+  <div
+    class="popover-content"
+    use:clickOutside={() => {
+      open = false
+    }}
+  >
     <ul class="spectrum-Menu" role="listbox">
       {#if options && Array.isArray(options)}
         {#each options as option}

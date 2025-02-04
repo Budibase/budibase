@@ -3,6 +3,7 @@
   import GridCell from "./GridCell.svelte"
   import { getCellRenderer } from "../lib/renderers"
   import { derived, writable } from "svelte/store"
+  import TextCell from "./TextCell.svelte"
 
   const {
     rows,
@@ -36,11 +37,17 @@
 
   let api
 
+  // Get the appropriate cell renderer and value
+  $: hasCustomFormat = column.format && !row._isNewRow
+  $: renderer = hasCustomFormat ? TextCell : getCellRenderer(column)
+  $: value = hasCustomFormat ? row.__formatted?.[column.name] : row[column.name]
+
   // Get the error for this cell if the cell is focused or selected
   $: error = getErrorStore(rowFocused, cellId)
 
   // Determine if the cell is editable
   $: readonly =
+    hasCustomFormat ||
     columns.actions.isReadonly(column) ||
     (!$config.canEditRows && !row._isNewRow)
 
@@ -69,7 +76,7 @@
     onKeyDown: (...params) => api?.onKeyDown?.(...params),
     isReadonly: () => readonly,
     getType: () => column.schema.type,
-    getValue: () => row[column.name],
+    getValue: () => value,
     setValue: (value, options = { apply: true }) => {
       validation.actions.setError(cellId, null)
       updateValue({
@@ -136,9 +143,9 @@
   }}
 >
   <svelte:component
-    this={getCellRenderer(column)}
+    this={renderer}
     bind:api
-    value={row[column.name]}
+    {value}
     schema={column.schema}
     onChange={cellAPI.setValue}
     {focused}
