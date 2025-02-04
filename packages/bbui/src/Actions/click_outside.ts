@@ -37,11 +37,11 @@ const handleClick = (e: MouseEvent) => {
   const target = e.target as HTMLElement | null
 
   // Ignore click if this is an ignored class
-  if (target?.closest('[data-ignore-click-outside="true"]')) {
+  if (target?.closest?.('[data-ignore-click-outside="true"]')) {
     return
   }
   for (let className of ignoredClasses) {
-    if (target?.closest(className)) {
+    if (target?.closest?.(className)) {
       return
     }
   }
@@ -55,8 +55,8 @@ const handleClick = (e: MouseEvent) => {
 
     // Ignore clicks for certain classes unless we're nested inside them
     for (let className of conditionallyIgnoredClasses) {
-      const sourceInside = handler.anchor?.closest(className) != null
-      const clickInside = target?.closest(className) != null
+      const sourceInside = handler.anchor.closest(className) != null
+      const clickInside = target?.closest?.(className) != null
       if (clickInside && !sourceInside) {
         return
       }
