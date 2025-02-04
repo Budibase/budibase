@@ -6,7 +6,13 @@
     screenComponentErrorList,
     screenComponentsList,
   } from "@/stores/builder"
-  import { ActionButton, Icon, Link, Popover } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Icon,
+    Link,
+    Popover,
+    PopoverAlignment,
+  } from "@budibase/bbui"
 
   let button: any
   let popover: any
@@ -52,7 +58,12 @@
     </div>
   </ActionButton>
 </div>
-<Popover bind:this={popover} anchor={button} align={"right"} maxWidth={400}>
+<Popover
+  bind:this={popover}
+  anchor={button}
+  align={PopoverAlignment.Right}
+  maxWidth={400}
+>
   <div class="error-popover">
     {#each $screenComponentErrorList as error}
       <div class="error">
