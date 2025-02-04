@@ -82,7 +82,7 @@
     })
   }
 
-  $: isHighlighted && scrollToElement(domElement)
+  $: highlightedProp && isHighlighted && scrollToElement(domElement)
 </script>
 
 <div
