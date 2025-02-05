@@ -9,7 +9,6 @@
     dndParent,
     dndIsDragging,
     isGridScreen,
-    dndInitialised,
   } from "stores"
   import DNDPlaceholderOverlay from "./DNDPlaceholderOverlay.svelte"
   import { Utils } from "@budibase/frontend-core"
@@ -230,16 +229,8 @@
   }
 
   // Callback when entering a potential drop target
-  const onDragEnter = e => {
-    if (!source) {
-      return
-    }
-
-    // Mark as initialised if this is our first valid drag enter event
-    if (!$dndInitialised) {
-      dndStore.actions.markInitialised()
-    }
-    if ($isGridScreen) {
+  const onDragEnter = async e => {
+    if (!source || $isGridScreen) {
       return
     }
 
@@ -345,12 +336,14 @@
   })
 </script>
 
-<IndicatorSet
-  componentId={$dndParent}
-  color="var(--spectrum-global-color-static-green-500)"
-  zIndex={920}
-  prefix="Inside"
-/>
+{#if !$isGridScreen}
+  <IndicatorSet
+    componentId={$dndParent}
+    color="var(--spectrum-global-color-static-green-500)"
+    zIndex={920}
+    prefix="Inside"
+  />
+{/if}
 
 {#if $dndIsDragging}
   <DNDPlaceholderOverlay />

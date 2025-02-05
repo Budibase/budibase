@@ -16,7 +16,6 @@ const createDndStore = () => {
 
     // Metadata about the event
     meta: {
-      initialised: false,
       newComponentProps: null,
     },
   }
@@ -30,7 +29,6 @@ const createDndStore = () => {
   }
 
   const startDraggingNewComponent = ({ component, definition }) => {
-    console.log("start", component, definition)
     if (!component) {
       return
     }
@@ -92,16 +90,6 @@ const createDndStore = () => {
     store.set(initialState)
   }
 
-  const markInitialised = () => {
-    store.update(state => ({
-      ...state,
-      meta: {
-        ...state.meta,
-        initialised: true,
-      },
-    }))
-  }
-
   const updateNewComponentProps = newComponentProps => {
     store.update(state => ({
       ...state,
@@ -120,7 +108,6 @@ const createDndStore = () => {
       updateTarget,
       updateDrop,
       reset,
-      markInitialised,
       updateNewComponentProps,
     },
   }
@@ -136,8 +123,11 @@ export const dndParent = derivedMemo(dndStore, x => x.drop?.parent)
 export const dndIndex = derivedMemo(dndStore, x => x.drop?.index)
 export const dndBounds = derivedMemo(dndStore, x => x.source?.bounds)
 export const dndIsDragging = derivedMemo(dndStore, x => !!x.source)
-export const dndInitialised = derivedMemo(dndStore, x => x.meta.initialised)
 export const dndIsNewComponent = derivedMemo(
   dndStore,
   x => x.source?.newComponentType != null
+)
+export const dndNewComponentProps = derivedMemo(
+  dndStore,
+  x => x.meta?.newComponentProps
 )
