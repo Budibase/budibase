@@ -223,12 +223,6 @@
         </InlineAlert>
       </div>
     {/if}
-    <p class="fourthWarning">
-      Please enter "<b on:click={autofillSourceName} class="sourceName"
-        >{source?.name}</b
-      >" below to confirm.
-    </p>
-    <Input bind:value={deleteSourceName} placeholder={source?.name} />
   </div>
 </ConfirmDialog>
 
@@ -273,10 +267,5 @@
     overflow: hidden;
     text-overflow: ellipsis;
     margin-top: 4px;
-  }
-
-  .fourthWarning {
-    margin: 12px 0 6px;
-    max-width: 100%;
   }
 </style>
