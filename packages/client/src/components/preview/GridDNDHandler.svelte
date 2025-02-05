@@ -42,22 +42,25 @@
 
   // Set ephemeral styles
   $: instance = componentStore.actions.getComponentInstance(id)
-  $: $instance?.setEphemeralStyles($styles)
+  $: applyStyles($instance, $styles)
 
-  // Keep DND store up to date with grid styles if dragging a new component
-  // on to a grid screen
-  $: {
-    if ($dndIsNewComponent) {
+  // Reset when not dragging new components
+  $: !$dndIsDragging && stopDragging()
+
+  const applyStyles = async (instance, styles) => {
+    instance?.setEphemeralStyles(styles)
+
+    // If dragging a new component on to a grid screen, tick to allow the
+    // real component to render in the new position before updating the DND
+    // store, preventing the green DND overlay from being out of position
+    if ($dndIsNewComponent && styles) {
       dndStore.actions.updateNewComponentProps({
         _styles: {
-          normal: $styles,
+          normal: styles,
         },
       })
     }
   }
-
-  // Reset when not dragging new components
-  $: !$dndIsDragging && stopDragging()
 
   // Sugar for a combination of both min and max
   const minMax = (value, min, max) => Math.min(max, Math.max(min, value))

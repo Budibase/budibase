@@ -99,6 +99,7 @@ const createScreenStore = () => {
             normal: {
               width: `${$dndBounds?.width || 400}px`,
               height: `${$dndBounds?.height || 200}px`,
+              opacity: 0,
               "--default-width": $dndBounds?.width || 400,
               "--default-height": $dndBounds?.height || 200,
             },

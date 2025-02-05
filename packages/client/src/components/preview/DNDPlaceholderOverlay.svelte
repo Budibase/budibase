@@ -1,14 +1,38 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, tick } from "svelte"
   import { Utils } from "@budibase/frontend-core"
-  import { dndInitialised } from "@/stores"
+  import { componentStore, isGridScreen } from "@/stores"
   import { DNDPlaceholderID } from "@/constants"
 
   let left, top, height, width
   let observing = false
+  let hasGridStyles = false
+
+  // On grid screens, we need to wait for grid styles to be properly set on
+  // the hidden placeholder component before rendering this overlay
+  $: waitingForGrid = $isGridScreen && !hasGridStyles
+  $: instance = componentStore.actions.getComponentInstance(DNDPlaceholderID)
+  $: state = $instance?.state
+  $: styles = $state?.styles?.normal || {}
+  $: {
+    if ($isGridScreen && !hasGridStyles) {
+      checkGridStyles(styles)
+    }
+  }
+
+  // Wait for grid styles to be set, then tick and await a position update
+  // before finally signalling we're allowed to render
+  const checkGridStyles = async styles => {
+    const hasStyles = Object.keys(styles).some(key => key.startsWith("--grid"))
+    if (hasStyles) {
+      await tick()
+      updatePosition()
+      hasGridStyles = true
+    }
+  }
 
   // Observe style changes in the placeholder DOM node and use this to trigger
-  // a redraw of our overlay (grid screens)
+  // a redraw of our overlay
   const observer = new MutationObserver(mutations => {
     if (mutations.some(mutation => mutation.attributeName === "style")) {
       debouncedUpdate()
@@ -50,9 +74,10 @@
   })
 </script>
 
-{#if left != null && top != null && width && height && $dndInitialised}
+{#if left != null && top != null && width && height && !waitingForGrid}
   <div
     class="overlay"
+    class:animate={!$isGridScreen}
     style="left: {left}px; top: {top}px; width: {width}px; height: {height}px;"
   />
 {/if}
@@ -64,5 +89,8 @@
     background: hsl(160, 64%, 90%);
     border-radius: 4px;
     border: 2px solid var(--spectrum-global-color-static-green-500);
+  }
+  .overlay.animate {
+    transition: all 130ms ease-out;
   }
 </style>
