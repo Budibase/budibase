@@ -198,3 +198,7 @@ const createScreenStore = () => {
 }
 
 export const screenStore = createScreenStore()
+
+export const isGridScreen = derived(screenStore, $screenStore => {
+  return $screenStore.activeScreen?.props?.layout === "grid"
+})

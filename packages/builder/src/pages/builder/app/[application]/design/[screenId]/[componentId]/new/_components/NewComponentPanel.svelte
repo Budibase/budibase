@@ -13,6 +13,11 @@
   import { fly } from "svelte/transition"
   import { findComponentPath } from "@/helpers/components"
 
+  // Smallest possible 1x1 transparent GIF
+  const ghost = new Image(1, 1)
+  ghost.src =
+    "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+
   let searchString
   let searchRef
   let selectedIndex
@@ -217,7 +222,8 @@
     }
   })
 
-  const onDragStart = component => {
+  const onDragStart = (e, component) => {
+    e.dataTransfer.setDragImage(ghost, 0, 0)
     previewStore.startDrag(component)
   }
 
@@ -250,7 +256,7 @@
             {#each category.children as component}
               <div
                 draggable="true"
-                on:dragstart={() => onDragStart(component.component)}
+                on:dragstart={e => onDragStart(e, component.component)}
                 on:dragend={onDragEnd}
                 class="component"
                 class:selected={selectedIndex === orderMap[component.component]}
@@ -308,7 +314,7 @@
   }
   .component:hover {
     background: var(--spectrum-global-color-gray-300);
-    cursor: pointer;
+    cursor: grab;
   }
   .component :global(.spectrum-Body) {
     line-height: 1.2 !important;
