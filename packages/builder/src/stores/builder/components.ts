@@ -139,10 +139,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
 
   /**
    * Retrieve the component definition object
-   * @param {string} componentType
-   * @example
-   * '@budibase/standard-components/container'
-   * @returns {object}
    */
   getDefinition(componentType: string) {
     if (!componentType) {
@@ -151,10 +147,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
     return get(this.store).components[componentType]
   }
 
-  /**
-   *
-   * @returns {object}
-   */
   getDefaultDatasource() {
     // Ignore users table
     const validTables = get(tables).list.filter(x => x._id !== "ta_users")
@@ -188,8 +180,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
   /**
    * Takes an enriched component instance and applies any required migration
    * logic
-   * @param {object} enrichedComponent
-   * @returns {object} migrated Component
    */
   migrateSettings(enrichedComponent: Component) {
     const componentPrefix = "@budibase/standard-components"
@@ -230,22 +220,15 @@ export class ComponentStore extends BudiStore<ComponentState> {
     for (let setting of filterableTypes || []) {
       const isLegacy = Array.isArray(enrichedComponent[setting.key])
       if (isLegacy) {
-        const processedSetting = utils.processSearchFilters(
+        enrichedComponent[setting.key] = utils.processSearchFilters(
           enrichedComponent[setting.key]
         )
-        enrichedComponent[setting.key] = processedSetting
         migrated = true
       }
     }
     return migrated
   }
 
-  /**
-   *
-   * @param {object} component
-   * @param {object} opts
-   * @returns
-   */
   enrichEmptySettings(
     component: Component,
     opts: { screen?: Screen; parent?: Component; useDefaultValues?: boolean }
@@ -427,17 +410,10 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
   }
 
-  /**
-   *
-   * @param {string} componentName
-   * @param {object} presetProps
-   * @param {object} parent
-   * @returns
-   */
   createInstance(
     componentType: string,
-    presetProps: any,
-    parent: any
+    presetProps?: Record<string, any>,
+    parent?: Component
   ): Component | null {
     const screen = get(selectedScreen)
     if (!screen) {
@@ -463,7 +439,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
       _id: Helpers.uuid(),
       _component: definition.component,
       _styles: {
-        normal: {},
+        normal: { ...presetProps?._styles?.normal },
         hover: {},
         active: {},
       },
@@ -512,19 +488,11 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
   }
 
-  /**
-   *
-   * @param {string} componentName
-   * @param {object} presetProps
-   * @param {object} parent
-   * @param {number} index
-   * @returns
-   */
   async create(
     componentType: string,
-    presetProps: any,
-    parent: Component,
-    index: number
+    presetProps?: Record<string, any>,
+    parent?: Component,
+    index?: number
   ) {
     const state = get(this.store)
     const componentInstance = this.createInstance(
@@ -611,13 +579,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
     return componentInstance
   }
 
-  /**
-   *
-   * @param {function} patchFn
-   * @param {string} componentId
-   * @param {string} screenId
-   * @returns
-   */
   async patch(
     patchFn: (component: Component, screen: Screen) => any,
     componentId?: string,
@@ -652,11 +613,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
     await screenStore.patch(patchScreen, screenId)
   }
 
-  /**
-   *
-   * @param {object} component
-   * @returns
-   */
   async delete(component: Component) {
     if (!component) {
       return
@@ -737,13 +693,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
     })
   }
 
-  /**
-   *
-   * @param {object} targetComponent
-   * @param {string} mode
-   * @param {object} targetScreen
-   * @returns
-   */
   async paste(
     targetComponent: Component,
     mode: string,
@@ -1101,6 +1050,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
 
   async updateStyles(styles: Record<string, string>, id: string) {
     const patchFn = (component: Component) => {
+      delete component._placeholder
       component._styles.normal = {
         ...component._styles.normal,
         ...styles,
@@ -1231,7 +1181,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
 
     // Create new parent instance
-    const newParentDefinition = this.createInstance(parentType, null, parent)
+    const newParentDefinition = this.createInstance(parentType)
     if (!newParentDefinition) {
       return
     }
@@ -1267,10 +1217,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
 
   /**
    * Check if the components settings have been cached
-   * @param {string} componentType
-   * @example
-   * '@budibase/standard-components/container'
-   * @returns {boolean}
    */
   isCached(componentType: string) {
     const settings = get(this.store).settingsCache
@@ -1279,11 +1225,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
 
   /**
    * Cache component settings
-   * @param {string} componentType
-   * @param {object} definition
-   * @example
-   * '@budibase/standard-components/container'
-   * @returns {array} the settings
    */
   cacheSettings(componentType: string, definition: ComponentDefinition | null) {
     let settings: ComponentSetting[] = []
@@ -1313,12 +1254,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
   /**
    * Retrieve an array of the component settings.
    * These settings are cached because they cannot change at run time.
-   *
    * Searches a component's definition for a setting matching a certain predicate.
-   * @param {string} componentType
-   * @example
-   * '@budibase/standard-components/container'
-   * @returns {Array<object>}
    */
   getComponentSettings(componentType: string) {
     if (!componentType) {

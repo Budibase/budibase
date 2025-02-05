@@ -44,6 +44,7 @@
   import MaintenanceScreen from "components/MaintenanceScreen.svelte"
   import SnippetsProvider from "./context/SnippetsProvider.svelte"
   import EmbedProvider from "./context/EmbedProvider.svelte"
+  import GridNewComponentDNDHandler from "components/preview/GridNewComponentDNDHandler.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -266,6 +267,7 @@
                       {#if $builderStore.inBuilder}
                         <DNDHandler />
                         <GridDNDHandler />
+                        <GridNewComponentDNDHandler />
                       {/if}
                     </div>
                   </SnippetsProvider>

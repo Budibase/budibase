@@ -21,7 +21,11 @@ const createDndStore = () => {
     })
   }
 
-  const startDraggingNewComponent = ({ component, definition }) => {
+  const startDraggingNewComponent = ({
+    component,
+    definition,
+    componentId,
+  }) => {
     if (!component) {
       return
     }
@@ -38,6 +42,7 @@ const createDndStore = () => {
         bounds: { height, width },
         index: null,
         newComponentType: component,
+        newComponentId: componentId,
       },
     })
   }
@@ -82,6 +87,10 @@ export const dndParent = derivedMemo(dndStore, x => x.drop?.parent)
 export const dndIndex = derivedMemo(dndStore, x => x.drop?.index)
 export const dndBounds = derivedMemo(dndStore, x => x.source?.bounds)
 export const dndIsDragging = derivedMemo(dndStore, x => !!x.source)
+export const dndNewComponentId = derivedMemo(
+  dndStore,
+  x => x.source?.newComponentId
+)
 export const dndIsNewComponent = derivedMemo(
   dndStore,
   x => x.source?.newComponentType != null
