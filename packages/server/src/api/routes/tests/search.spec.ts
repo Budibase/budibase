@@ -1040,6 +1040,12 @@ if (descriptions.length) {
                     string: { name: "FO" },
                   }).toContainExactly([{ name: "foo" }])
                 })
+
+                it("should not coerce string to date for string columns", async () => {
+                  await expectQuery({
+                    string: { name: "2020-01-01" },
+                  }).toFindNothing()
+                })
               })
 
               describe("range", () => {
