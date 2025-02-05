@@ -388,7 +388,7 @@ class InternalBuilder {
       }
     }
 
-    if (typeof input === "string") {
+    if (typeof input === "string" && schema.type === FieldType.DATETIME) {
       if (isInvalidISODateString(input)) {
         return null
       }
