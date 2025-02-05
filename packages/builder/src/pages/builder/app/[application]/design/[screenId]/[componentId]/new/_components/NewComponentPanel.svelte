@@ -223,13 +223,11 @@
   })
 
   const onDragStart = (e, component) => {
-    console.log("DRAG START")
     e.dataTransfer.setDragImage(ghost, 0, 0)
     previewStore.startDrag(component)
   }
 
   const onDragEnd = () => {
-    console.log("DRAG END")
     previewStore.stopDrag()
   }
 </script>
