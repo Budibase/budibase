@@ -54,7 +54,7 @@ export const getBindableProperties = (asset, componentId) => {
   const userBindings = getUserBindings()
   const urlBindings = getUrlBindings(asset)
   const deviceBindings = getDeviceBindings()
-  const stateBindings = getStateBindings()
+  const stateBindings = getStateBindings(asset)
   const selectedRowsBindings = getSelectedRowsBindings(asset)
   const roleBindings = getRoleBindings()
   const embedBindings = getEmbedBindings()
@@ -711,10 +711,10 @@ export const makeStateBinding = key => {
 /**
  * Gets all state bindings that are globally available.
  */
-const getStateBindings = () => {
+const getStateBindings = asset => {
   let bindings = []
   if (get(appStore).clientFeatures?.state) {
-    bindings = getAllStateVariables().map(makeStateBinding)
+    bindings = getAllStateVariables(asset).map(makeStateBinding)
   }
   return bindings
 }
@@ -1160,97 +1160,107 @@ export const buildFormSchema = (component, asset) => {
  * in the app.
  */
 export const getAllStateVariables = screen => {
-  let assets = []
-  if (screen) {
-    // only include state variables from a specific screen
-    assets.push(screen)
-  } else {
-    // otherwise include state variables from all screens
-    assets = getAllAssets()
-  }
-  let eventSettings = []
-  assets.forEach(asset => {
-    findAllMatchingComponents(asset.props, component => {
-      const settings = componentStore.getComponentSettings(component._component)
-      const nestedTypes = [
-        "buttonConfiguration",
-        "fieldConfiguration",
-        "stepConfiguration",
-      ]
+  let stateVars = new Set()
 
-      // Extracts all event settings from a component instance.
-      // Recurses into nested types to find all event-like settings at any
-      // depth.
-      const parseEventSettings = (settings, comp) => {
-        if (!settings?.length) {
-          return
-        }
-
-        // Extract top level event settings
-        settings
-          .filter(setting => setting.type === "event")
-          .forEach(setting => {
-            eventSettings.push(comp[setting.key])
-          })
-
-        // Recurse into any nested instance types
-        settings
-          .filter(setting => nestedTypes.includes(setting.type))
-          .forEach(setting => {
-            const instances = comp[setting.key]
-            if (Array.isArray(instances) && instances.length) {
-              instances.forEach(instance => {
-                let type = instance?._component
-
-                // Backwards compatibility for multi-step from blocks which
-                // didn't set a proper component type previously.
-                if (setting.type === "stepConfiguration" && !type) {
-                  type = "@budibase/standard-components/multistepformblockstep"
-                }
-
-                // Parsed nested component instances inside this setting
-                const nestedSettings = componentStore.getComponentSettings(type)
-                parseEventSettings(nestedSettings, instance)
-              })
-            }
-          })
-      }
-
-      parseEventSettings(settings, component)
-    })
-  })
-
-  // Add on load settings from screens
-  if (screen) {
-    if (screen.onLoad) {
-      eventSettings.push(screen.onLoad)
+  // Helper function to extract state variables with their persist status from actions
+  const extractStateVariablesFromActions = actions => {
+    if (!Array.isArray(actions)) {
+      return []
     }
-  } else {
-    get(screenStore).screens.forEach(screen => {
-      if (screen.onLoad) {
-        eventSettings.push(screen.onLoad)
-      }
-    })
-  }
-
-  // Extract all state keys from any "update state" actions in each setting
-  let bindingSet = new Set()
-  eventSettings.forEach(setting => {
-    if (!Array.isArray(setting)) {
-      return
-    }
-    setting.forEach(action => {
+    return actions.reduce((vars, action) => {
       if (
         action["##eventHandlerType"] === "Update State" &&
         action.parameters?.type === "set" &&
         action.parameters?.key &&
         action.parameters?.value
       ) {
-        bindingSet.add(action.parameters.key)
+        vars.push({
+          key: action.parameters.key,
+          persisted: !!action.parameters.persist,
+        })
       }
+      return vars
+    }, [])
+  }
+
+  // Extracts all event settings from a component instance.
+  // Recurses into nested types to find all event-like settings at any
+  // depth.
+  const parseEventSettings = (settings, comp, actions) => {
+    const nestedTypes = [
+      "buttonConfiguration",
+      "fieldConfiguration",
+      "stepConfiguration",
+    ]
+
+    if (!settings?.length) {
+      return
+    }
+
+    // Extract top level event settings
+    settings
+      .filter(setting => setting.type === "event")
+      .forEach(setting => {
+        actions.push(...(comp[setting.key] || []))
+      })
+
+    // Recurse into any nested instance types
+    settings
+      .filter(setting => nestedTypes.includes(setting.type))
+      .forEach(setting => {
+        const instances = comp[setting.key]
+        if (Array.isArray(instances) && instances.length) {
+          instances.forEach(instance => {
+            let type = instance?._component
+
+            // Backwards compatibility for multi-step from blocks which
+            // didn't set a proper component type previously.
+            if (setting.type === "stepConfiguration" && !type) {
+              type = "@budibase/standard-components/multistepformblockstep"
+            }
+
+            // Parsed nested component instances inside this setting
+            const nestedSettings = componentStore.getComponentSettings(type)
+            parseEventSettings(nestedSettings, instance, actions)
+          })
+        }
+      })
+  }
+
+  const collectScreenActions = screen => {
+    let actions = []
+    if (screen.onLoad) {
+      actions.push(...screen.onLoad)
+    }
+    findAllMatchingComponents(screen.props, component => {
+      const settings = componentStore.getComponentSettings(component._component)
+      parseEventSettings(settings, component, actions)
     })
+    return actions
+  }
+
+  // Get state variables from the specific screen
+  if (screen) {
+    const screenActions = collectScreenActions(screen)
+    extractStateVariablesFromActions(screenActions).forEach(
+      ({ key, persisted }) => {
+        if (!persisted) stateVars.add(key)
+      }
+    )
+  }
+
+  // Now get all other state variables for the purpose of finding persisted ones
+  const allScreens = get(screenStore).screens
+  allScreens.forEach(currentScreen => {
+    const screenActions = collectScreenActions(currentScreen)
+    extractStateVariablesFromActions(screenActions).forEach(
+      ({ key, persisted }) => {
+        if (persisted) stateVars.add(key)
+      }
+    )
   })
-  return Array.from(bindingSet)
+
+  return Array.from(stateVars)
 }
 
 export const getAllAssets = () => {
