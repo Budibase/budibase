@@ -25,22 +25,7 @@
 
   $: isInternalTable = isInternal && sourceType === SourceType.TABLE
 
-  const getViewsMessage = () => {
-    if (!source || !("views" in source)) {
-      return ""
-    }
-    const views = Object.values(source?.views ?? [])
-    if (views.length < 1) {
-      return ""
-    }
-    if (views.length === 1) {
-      return "1 view"
-    }
-
-    return `${views.length} views`
-  }
-
-  const getQueriesMessage = () => {
+  const getDatasourceQueries = () => {
     if (sourceType !== SourceType.DATASOURCE) {
       return ""
     }
@@ -48,14 +33,7 @@
     const queryList = get(queries).list.filter(
       query => query.datasourceId === sourceId
     )
-    if (queryList.length < 1) {
-      return ""
-    }
-    if (queryList.length === 1) {
-      return "1 query"
-    }
-
-    return `${queryList.length} queries`
+    return queryList
   }
 
   function getSourceID(): string {
@@ -168,21 +146,35 @@
     }
   }
 
-  function buildMessage() {
-    let message = ""
-    if (isInternalTable) {
-      message = `All ${sourceType} data will also be deleted`
-      const viewsMessage = getViewsMessage()
-      if (viewsMessage) {
-        message += `, including ${viewsMessage}. `
-      } else {
-        message += ". "
+  function buildMessage(sourceType: string) {
+    if (!source) {
+      return ""
+    }
+    let message = `Removing ${source?.name} `
+    let initialLength = message.length
+    if (sourceType === SourceType.TABLE) {
+      const views = "views" in source ? Object.values(source?.views ?? []) : []
+      if (isInternalTable) {
+        message += `will delete its data${
+          views.length ? `, views (${views.length})` : ""
+        }`
+      } else if (views.length) {
+        message += `will delete its views (${views.length})`
       }
     } else if (sourceType === SourceType.DATASOURCE) {
-      const queriesMessage = getQueriesMessage()
-      message = `This will include deleting ${queriesMessage}. `
+      const queryList = getDatasourceQueries()
+      if (queryList.length) {
+        message += `will delete its queries (${queryList.length})`
+      }
     }
-    message += "<b>This action cannot be undone.</b>"
+    if (affectedScreens.length) {
+      message +=
+        initialLength !== message.length
+          ? ", and break connected screens:"
+          : "will break connected screens:"
+    } else {
+      message += "."
+    }
     return message
   }
 </script>
@@ -192,12 +184,12 @@
   okText="Delete"
   onOk={deleteSource}
   onCancel={hideDeleteDialog}
-  title={`Are you sure you want to delete ${source?.name}?`}
+  title={`Are you sure you want to delete this ${sourceType}?`}
 >
   <div class="content">
-    {#if affectedScreens.length > 0}
+    {#if affectedScreens.length > 0 && sourceType}
       <p class="warning">
-        Removing this {sourceType} will break the following screens:
+        {buildMessage(sourceType)}
         <span class="screens">
           {#each affectedScreens as item, idx}
             <Link overBackground target="_blank" href={item.url}
@@ -208,8 +200,7 @@
       </p>
     {/if}
     <p class="warning">
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-      {@html buildMessage()}
+      <b>This action cannot be undone.</b>
     </p>
   </div>
 </ConfirmDialog>
@@ -228,6 +219,7 @@
   .screens {
     display: flex;
     flex-direction: row;
+    padding-bottom: var(--spacing-l);
     gap: var(--spacing-xs);
   }
 </style>
