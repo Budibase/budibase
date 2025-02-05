@@ -257,7 +257,6 @@ describe("/automations", () => {
         appId: config.getAppId(),
         config,
       })
-        .appAction({ fields: {} })
         .serverLog({
           text: "{{ settings.url }}",
         })

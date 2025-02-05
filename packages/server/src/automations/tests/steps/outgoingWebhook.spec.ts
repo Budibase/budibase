@@ -24,7 +24,6 @@ describe("test the outgoing webhook action", () => {
       .reply(200, { foo: "bar" })
 
     const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .outgoingWebhook({
         requestMethod: RequestType.POST,
         url: "http://www.example.com",
@@ -40,7 +39,6 @@ describe("test the outgoing webhook action", () => {
 
   it("should return an error if something goes wrong in fetch", async () => {
     const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .outgoingWebhook({
         requestMethod: RequestType.GET,
         url: "www.invalid.com",
