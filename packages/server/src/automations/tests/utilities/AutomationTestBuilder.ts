@@ -244,6 +244,6 @@ class AutomationBuilder extends BaseStepBuilder {
   }
 }
 
-export function createAutomationBuilder(config?: TestConfiguration) {
+export function createAutomationBuilder(config: TestConfiguration) {
   return new AutomationBuilder(config)
 }
