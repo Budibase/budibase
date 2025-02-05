@@ -36,11 +36,9 @@
   </svelte:fragment>
 
   {#if !screens.length}
-    <div class="empty-state">
-      <p>No screens are using this data.</p>
-    </div>
+    There aren't any screens connected to this data.
   {:else}
-    <p class="description">The following screens are connected to this data.</p>
+    The following screens are connected to this data.
     <List>
       {#each screens as screen}
         <ListItem
@@ -54,17 +52,3 @@
 
   <slot name="footer" />
 </DetailPopover>
-
-<style>
-  .description {
-    font-size: var(--font-size-s);
-    margin: 0 0 var(--spacing-xs) 0;
-  }
-
-  .empty-state {
-    padding: var(--spacing-m);
-    text-align: center;
-    color: var(--grey-5);
-    font-size: var(--font-size-s);
-  }
-</style>
