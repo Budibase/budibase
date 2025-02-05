@@ -2,19 +2,23 @@ import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { getQueue } from "../.."
 import { Job } from "bull"
+import { basicTable } from "../../../tests/utilities/structures"
+import { Table } from "@budibase/types"
 
 describe("cron trigger", () => {
   const config = new TestConfiguration()
+  let table: Table
 
   beforeAll(async () => {
     await config.init()
+    table = await config.api.table.save(basicTable())
   })
 
   afterAll(() => {
     config.end()
   })
 
-  it("should queue a Bull cron job", async () => {
+  it("should successfully fire", async () => {
     const queue = getQueue()
     expect(await queue.getCompletedCount()).toEqual(0)
 
@@ -25,6 +29,7 @@ describe("cron trigger", () => {
     })
 
     await createAutomationBuilder({ config })
+      .rowSaved({ tableId: table._id! })
       .cron({ cron: "* * * * *" })
       .serverLog({
         text: "Hello, world!",
