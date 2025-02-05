@@ -20,7 +20,7 @@ describe("Execute Script Automations", () => {
   })
 
   it("should execute a basic script and return the result", async () => {
-    const results = await createAutomationBuilder({ config })
+    const results = await createAutomationBuilder(config)
       .executeScript({ code: "return 2 + 2" })
       .run()
 
@@ -28,7 +28,7 @@ describe("Execute Script Automations", () => {
   })
 
   it("should access bindings from previous steps", async () => {
-    const results = await createAutomationBuilder({ config })
+    const results = await createAutomationBuilder(config)
       .appAction({ fields: { data: [1, 2, 3] } })
       .executeScript(
         {
@@ -42,7 +42,7 @@ describe("Execute Script Automations", () => {
   })
 
   it("should handle script execution errors gracefully", async () => {
-    const results = await createAutomationBuilder({ config })
+    const results = await createAutomationBuilder(config)
       .executeScript({ code: "return nonexistentVariable.map(x => x)" })
       .run()
 
@@ -53,7 +53,7 @@ describe("Execute Script Automations", () => {
   })
 
   it("should handle conditional logic in scripts", async () => {
-    const results = await createAutomationBuilder({ config })
+    const results = await createAutomationBuilder(config)
       .appAction({ fields: { value: 10 } })
       .executeScript({
         code: `
@@ -70,7 +70,8 @@ describe("Execute Script Automations", () => {
   })
 
   it("should use multiple steps and validate script execution", async () => {
-    const results = await createAutomationBuilder({ config })
+    const results = await createAutomationBuilder(config)
+      .appAction({ fields: {} })
       .serverLog(
         { text: "Starting multi-step automation" },
         { stepId: "start-log-step" }

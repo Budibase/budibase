@@ -107,10 +107,7 @@ describe("/automations", () => {
     })
 
     it("Should ensure you can't have a branch as not a last step", async () => {
-      const automation = createAutomationBuilder({
-        name: "String Equality Branching",
-        appId: config.getAppId(),
-      })
+      const automation = createAutomationBuilder(config)
         .appAction({ fields: { status: "active" } })
         .branch({
           activeBranch: {
@@ -134,10 +131,7 @@ describe("/automations", () => {
     })
 
     it("Should check validation on an automation that has a branch step with no children", async () => {
-      const automation = createAutomationBuilder({
-        name: "String Equality Branching",
-        appId: config.getAppId(),
-      })
+      const automation = createAutomationBuilder(config)
         .appAction({ fields: { status: "active" } })
         .branch({})
         .serverLog({ text: "Inactive user" })
@@ -153,10 +147,7 @@ describe("/automations", () => {
     })
 
     it("Should check validation on a branch step with empty conditions", async () => {
-      const automation = createAutomationBuilder({
-        name: "String Equality Branching",
-        appId: config.getAppId(),
-      })
+      const automation = createAutomationBuilder(config)
         .appAction({ fields: { status: "active" } })
         .branch({
           activeBranch: {
@@ -177,10 +168,7 @@ describe("/automations", () => {
     })
 
     it("Should check validation on an branch that has a condition that is not valid", async () => {
-      const automation = createAutomationBuilder({
-        name: "String Equality Branching",
-        appId: config.getAppId(),
-      })
+      const automation = createAutomationBuilder(config)
         .appAction({ fields: { status: "active" } })
         .branch({
           activeBranch: {
@@ -252,11 +240,7 @@ describe("/automations", () => {
     })
 
     it("should be able to access platformUrl, logoUrl and company in the automation", async () => {
-      const result = await createAutomationBuilder({
-        name: "Test Automation",
-        appId: config.getAppId(),
-        config,
-      })
+      const result = await createAutomationBuilder(config)
         .serverLog({
           text: "{{ settings.url }}",
         })

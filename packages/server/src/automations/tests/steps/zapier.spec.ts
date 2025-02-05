@@ -20,7 +20,7 @@ describe("test the outgoing webhook action", () => {
   it("should be able to run the action", async () => {
     nock("http://www.example.com/").post("/").reply(200, { foo: "bar" })
 
-    const result = await createAutomationBuilder({ config })
+    const result = await createAutomationBuilder(config)
       .zapier({ url: "http://www.example.com", body: null })
       .run()
 
@@ -43,7 +43,7 @@ describe("test the outgoing webhook action", () => {
       .post("/", { ...payload, platform: "budibase" })
       .reply(200, { foo: "bar" })
 
-    const result = await createAutomationBuilder({ config })
+    const result = await createAutomationBuilder(config)
       .zapier({
         url: "http://www.example.com",
         body: { value: JSON.stringify(payload) },
@@ -55,7 +55,7 @@ describe("test the outgoing webhook action", () => {
   })
 
   it("should return a 400 if the JSON payload string is malformed", async () => {
-    const result = await createAutomationBuilder({ config })
+    const result = await createAutomationBuilder(config)
       .zapier({
         url: "http://www.example.com",
         body: { value: "{ invalid json }" },

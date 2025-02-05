@@ -135,14 +135,12 @@ class AutomationBuilder extends BaseStepBuilder {
   private triggerOutputs: TriggerOutputs
   private triggerSet = false
 
-  constructor(
-    options: { name?: string; appId?: string; config?: TestConfiguration } = {}
-  ) {
+  constructor(config?: TestConfiguration) {
     super()
-    this.config = options.config || setup.getConfig()
+    this.config = config || setup.getConfig()
     this.triggerOutputs = { fields: {} }
     this.automationConfig = {
-      name: options.name || `Test Automation ${uuidv4()}`,
+      name: `Test Automation ${uuidv4()}`,
       definition: {
         steps: [],
         trigger: {
@@ -154,8 +152,13 @@ class AutomationBuilder extends BaseStepBuilder {
         stepNames: {},
       },
       type: "automation",
-      appId: options.appId ?? this.config.getAppId(),
+      appId: this.config.getAppId(),
     }
+  }
+
+  name(n: string): this {
+    this.automationConfig.name = n
+    return this
   }
 
   protected triggerInputOutput<
@@ -195,10 +198,13 @@ class AutomationBuilder extends BaseStepBuilder {
     }
   }
 
+  // The input and output for appAction is identical, and we only ever seem to
+  // set the output, so we're ignoring the input for now.
+  appAction = this.triggerOutputOnly(AutomationTriggerStepId.APP)
+
   rowSaved = this.triggerInputOutput(AutomationTriggerStepId.ROW_SAVED)
   rowUpdated = this.triggerInputOutput(AutomationTriggerStepId.ROW_UPDATED)
   rowDeleted = this.triggerInputOutput(AutomationTriggerStepId.ROW_DELETED)
-  appAction = this.triggerOutputOnly(AutomationTriggerStepId.APP)
   webhook = this.triggerInputOutput(AutomationTriggerStepId.WEBHOOK)
   cron = this.triggerInputOutput(AutomationTriggerStepId.CRON)
 
@@ -214,9 +220,6 @@ class AutomationBuilder extends BaseStepBuilder {
   }
 
   async save() {
-    if (!Object.keys(this.automationConfig.definition.trigger).length) {
-      throw new Error("Please add a trigger to this automation test")
-    }
     this.automationConfig.definition.steps = this.steps
     const { automation } = await this.config.api.automation.post(this.build())
     return automation
@@ -241,10 +244,6 @@ class AutomationBuilder extends BaseStepBuilder {
   }
 }
 
-export function createAutomationBuilder(options?: {
-  name?: string
-  appId?: string
-  config?: TestConfiguration
-}) {
-  return new AutomationBuilder(options)
+export function createAutomationBuilder(config?: TestConfiguration) {
+  return new AutomationBuilder(config)
 }
