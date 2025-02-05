@@ -31,7 +31,7 @@ describe("cron trigger", () => {
       })
       .save()
 
-    await config.publish()
+    await config.api.application.publish(config.getAppId())
 
     expect(await queue.getCompletedCount()).toEqual(1)
 
@@ -41,5 +41,22 @@ describe("cron trigger", () => {
       throw new Error("Expected cron repeat")
     }
     expect(repeat.cron).toEqual("* * * * *")
+  })
+
+  it("should fail if the cron expression is invalid", async () => {
+    await createAutomationBuilder({ config })
+      .cron({ cron: "* * * * * *" })
+      .serverLog({
+        text: "Hello, world!",
+      })
+      .save()
+
+    await config.api.application.publish(config.getAppId(), {
+      status: 500,
+      body: {
+        message:
+          'Deployment Failed: Invalid automation CRON "* * * * * *" - Expected 5 values, but got 6.',
+      },
+    })
   })
 })
