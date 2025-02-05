@@ -8,12 +8,14 @@
     dndStore,
     dndParent,
     dndIsDragging,
+    isGridScreen,
+    dndInitialised,
   } from "stores"
   import DNDPlaceholderOverlay from "./DNDPlaceholderOverlay.svelte"
   import { Utils } from "@budibase/frontend-core"
-  import { findComponentById } from "utils/components.js"
-  import { DNDPlaceholderID } from "constants"
-  import { isGridEvent } from "utils/grid"
+  import { findComponentById } from "@/utils/components.js"
+  import { isGridEvent } from "@/utils/grid"
+  import { DNDPlaceholderID } from "@/constants"
 
   const ThrottleRate = 130
 
@@ -219,9 +221,9 @@
     processEvent(e.clientX, e.clientY)
   }
 
-  // Callback when on top of a component.
+  // Callback when on top of a component
   const onDragOver = e => {
-    if (!source || !target) {
+    if (!source || !target || $isGridScreen) {
       return
     }
     handleEvent(e)
@@ -230,6 +232,14 @@
   // Callback when entering a potential drop target
   const onDragEnter = e => {
     if (!source) {
+      return
+    }
+
+    // Mark as initialised if this is our first valid drag enter event
+    if (!$dndInitialised) {
+      dndStore.actions.markInitialised()
+    }
+    if ($isGridScreen) {
       return
     }
 
@@ -262,7 +272,8 @@
       builderStore.actions.dropNewComponent(
         source.newComponentType,
         drop.parent,
-        drop.index
+        drop.index,
+        $dndStore.meta.newComponentProps
       )
       dropping = false
       stopDragging()

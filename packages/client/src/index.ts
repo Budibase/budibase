@@ -36,6 +36,8 @@ import * as internal from "svelte/internal"
 window.svelte_internal = internal
 window.svelte = svelte
 
+console.log("NEW CLIENT")
+
 // Initialise spectrum icons
 // eslint-disable-next-line local-rules/no-budibase-imports
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
@@ -161,14 +163,13 @@ const loadBudibase = async () => {
       const block = blockStore.actions.getBlock(data)
       block?.eject()
     } else if (type === "dragging-new-component") {
-      const { dragging, component, componentId } = data
+      const { dragging, component } = data
       if (dragging) {
         const definition =
           componentStore.actions.getComponentDefinition(component)
         dndStore.actions.startDraggingNewComponent({
           component,
           definition,
-          componentId,
         })
       } else {
         dndStore.actions.reset()

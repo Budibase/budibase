@@ -1,7 +1,5 @@
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
-import { componentStore } from "./components"
-import { selectedScreen } from "./screens"
 
 type PreviewDevice = "desktop" | "tablet" | "mobile"
 type PreviewEventHandler = (name: string, payload?: any) => void
@@ -56,21 +54,10 @@ export class PreviewStore extends BudiStore<PreviewState> {
     }))
   }
 
-  async startDrag(componentType: string) {
-    let componentId
-    const gridScreen = get(selectedScreen)?.props?.layout === "grid"
-    if (gridScreen) {
-      const component = await componentStore.create(componentType, {
-        _placeholder: true,
-        _styles: { normal: { opacity: 0 } },
-      })
-      componentId = component?._id
-    }
+  async startDrag(component: string) {
     this.sendEvent("dragging-new-component", {
       dragging: true,
-      componentType,
-      componentId,
-      gridScreen,
+      component,
     })
   }
 

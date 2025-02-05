@@ -223,11 +223,13 @@
   })
 
   const onDragStart = (e, component) => {
+    console.log("DRAG START")
     e.dataTransfer.setDragImage(ghost, 0, 0)
     previewStore.startDrag(component)
   }
 
   const onDragEnd = () => {
+    console.log("DRAG END")
     previewStore.stopDrag()
   }
 </script>
@@ -314,7 +316,6 @@
   }
   .component:hover {
     background: var(--spectrum-global-color-gray-300);
-    cursor: grab;
   }
   .component :global(.spectrum-Body) {
     line-height: 1.2 !important;
