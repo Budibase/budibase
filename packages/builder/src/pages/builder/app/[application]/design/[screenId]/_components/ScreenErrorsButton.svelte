@@ -37,16 +37,7 @@
 </script>
 
 <div bind:this={button} class="error-button">
-  <ActionButton selected quiet on:click={() => popover.show()} size="M">
-    <div class="content">
-      Errors
-      {#if $screenComponentErrorList.length}
-        <div class="badge">
-          {$screenComponentErrorList.length}
-        </div>
-      {/if}
-    </div>
-  </ActionButton>
+  <ActionButton quiet on:click={() => popover.show()} size="M" icon="Alert" />
 </div>
 <Popover
   bind:this={popover}
@@ -75,32 +66,6 @@
 </Popover>
 
 <style>
-  .error-button :global(.spectrum-ActionButton) {
-    border-radius: 16px;
-    right: -4px;
-  }
-
-  .error-button .content {
-    min-width: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding-left: var(--spacing-xs);
-    padding-right: var(--spacing-xs);
-    font-weight: 600;
-  }
-  .error-button .badge {
-    color: var(--spectrum-global-color-static-white);
-    background-color: var(--spectrum-global-color-static-red-700);
-    height: 18px;
-    width: 18px;
-    border-radius: 50%;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
   .error-popover {
     display: flex;
     flex-direction: column;
