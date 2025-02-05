@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
 import { derivedMemo } from "@budibase/frontend-core"
-import { screenStore } from "@/stores"
+import { screenStore, isGridScreen } from "@/stores"
 import { ScreenslotID } from "@/constants"
 
 const createDndStore = () => {
@@ -33,21 +33,21 @@ const createDndStore = () => {
       return
     }
 
+    // On grid screens, we already know exactly where to insert the component
     let target, drop
     const screen = get(screenStore)?.activeScreen
-    const isGridScreen = screen?.props?.layout === "grid"
-    if (isGridScreen) {
+    if (get(isGridScreen)) {
       const id = screen?.props?._id
-      drop = {
-        parent: id,
-        index: screen?.props?._children?.length,
-      }
       target = {
         id,
         parent: ScreenslotID,
         node: null,
         empty: false,
         acceptsChildren: true,
+      }
+      drop = {
+        parent: id,
+        index: screen?.props?._children?.length,
       }
     }
 
@@ -57,7 +57,6 @@ const createDndStore = () => {
 
     store.set({
       ...initialState,
-      isGridScreen,
       source: {
         id: null,
         parent: null,
@@ -73,7 +72,6 @@ const createDndStore = () => {
   const updateTarget = ({ id, parent, node, empty, acceptsChildren }) => {
     store.update(state => {
       state.target = { id, parent, node, empty, acceptsChildren }
-      console.log("TARGET", state.target)
       return state
     })
   }
@@ -81,7 +79,6 @@ const createDndStore = () => {
   const updateDrop = ({ parent, index }) => {
     store.update(state => {
       state.drop = { parent, index }
-      console.log("DROP", state.drop)
       return state
     })
   }
@@ -126,8 +123,4 @@ export const dndIsDragging = derivedMemo(dndStore, x => !!x.source)
 export const dndIsNewComponent = derivedMemo(
   dndStore,
   x => x.source?.newComponentType != null
-)
-export const dndNewComponentProps = derivedMemo(
-  dndStore,
-  x => x.meta?.newComponentProps
 )

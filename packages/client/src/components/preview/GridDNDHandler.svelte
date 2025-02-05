@@ -124,7 +124,6 @@
   }
 
   const startDraggingPlaceholder = () => {
-    console.log("START PLACEHOLDER")
     const mode = GridDragModes.Move
     const id = DNDPlaceholderID
 
@@ -160,7 +159,6 @@
     }
 
     // Add event handler to clear all drag state when dragging ends
-    console.log("add up listener")
     document.addEventListener("mouseup", stopDragging)
   }
 

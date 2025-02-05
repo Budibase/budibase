@@ -36,8 +36,6 @@ import * as internal from "svelte/internal"
 window.svelte_internal = internal
 window.svelte = svelte
 
-console.log("NEW CLIENT")
-
 // Initialise spectrum icons
 // eslint-disable-next-line local-rules/no-budibase-imports
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"

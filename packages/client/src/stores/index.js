@@ -25,7 +25,6 @@ export {
   dndBounds,
   dndIsNewComponent,
   dndIsDragging,
-  dndNewComponentProps,
 } from "./dnd"
 export { sidePanelStore } from "./sidePanel"
 export { modalStore } from "./modal"
