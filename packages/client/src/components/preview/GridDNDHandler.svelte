@@ -123,12 +123,10 @@
     processEvent(e.clientX, e.clientY)
   }
 
+  // Callback when dragging a new component over the preview iframe in a valid
+  // position for the first time
   const startDraggingPlaceholder = () => {
-    const mode = GridDragModes.Move
-    const id = DNDPlaceholderID
-
-    // Find grid parent and read from DOM
-    const domComponent = document.getElementsByClassName(id)[0]
+    const domComponent = document.getElementsByClassName(DNDPlaceholderID)[0]
     const domGrid = domComponent?.closest(".grid")
     if (!domGrid) {
       return
@@ -139,15 +137,14 @@
     // Show as active
     domComponent.classList.add("dragging")
     domGrid.classList.add("highlight")
-    builderStore.actions.selectComponent(id)
 
     // Update state
     dragInfo = {
       domComponent,
       domGrid,
-      id,
+      id: DNDPlaceholderID,
       gridId: domGrid.parentNode.dataset.id,
-      mode,
+      mode: GridDragModes.Move,
       grid: {
         startX: bounds.left + bounds.width / 2,
         startY: bounds.top + bounds.height / 2,
@@ -157,9 +154,6 @@
         colEnd: parseInt(styles["grid-column-end"]),
       },
     }
-
-    // Add event handler to clear all drag state when dragging ends
-    document.addEventListener("mouseup", stopDragging)
   }
 
   // Callback when initially starting a drag on a draggable component
@@ -266,6 +260,5 @@
   onDestroy(() => {
     document.removeEventListener("dragstart", onDragStart, false)
     document.removeEventListener("dragover", onDragOver, false)
-    document.removeEventListener("mouseup", stopDragging, false)
   })
 </script>
