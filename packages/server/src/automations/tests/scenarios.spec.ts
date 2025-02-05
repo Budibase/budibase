@@ -1,36 +1,35 @@
-import * as automation from "../../index"
-import * as setup from "../utilities"
+import * as automation from "../index"
 import { LoopStepType, FieldType, Table, Datasource } from "@budibase/types"
-import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 import {
   DatabaseName,
   datasourceDescribe,
-} from "../../../integrations/tests/utils"
+} from "../../integrations/tests/utils"
 import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 import { automations } from "@budibase/shared-core"
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
+import { basicTable } from "../../tests/utilities/structures"
 
 const FilterConditions = automations.steps.filter.FilterConditions
 
 describe("Automation Scenarios", () => {
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
   beforeEach(async () => {
     await automation.init()
     await config.init()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   describe("Row Automations", () => {
     it("should trigger an automation which then creates a row", async () => {
-      const table = await config.createTable()
+      const table = await config.api.table.save(basicTable())
 
-      const builder = createAutomationBuilder({
-        name: "Test Row Save and Create",
-      })
-
-      const results = await builder
+      const results = await createAutomationBuilder({ config })
         .rowUpdated(
           { tableId: table._id! },
           {
@@ -58,20 +57,15 @@ describe("Automation Scenarios", () => {
       })
     })
 
-    it("should trigger an automation which querys the database", async () => {
-      const table = await config.createTable()
+    it("should trigger an automation which queries the database", async () => {
+      const table = await config.api.table.save(basicTable())
       const row = {
         name: "Test Row",
         description: "original description",
-        tableId: table._id,
       }
-      await config.createRow(row)
-      await config.createRow(row)
-      const builder = createAutomationBuilder({
-        name: "Test Row Save and Create",
-      })
-
-      const results = await builder
+      await config.api.row.save(table._id!, row)
+      await config.api.row.save(table._id!, row)
+      const results = await createAutomationBuilder({ config })
         .appAction({ fields: {} })
         .queryRows({
           tableId: table._id!,
@@ -82,20 +76,15 @@ describe("Automation Scenarios", () => {
       expect(results.steps[0].outputs.rows).toHaveLength(2)
     })
 
-    it("should trigger an automation which querys the database then deletes a row", async () => {
-      const table = await config.createTable()
+    it("should trigger an automation which queries the database then deletes a row", async () => {
+      const table = await config.api.table.save(basicTable())
       const row = {
         name: "DFN",
         description: "original description",
-        tableId: table._id,
       }
-      await config.createRow(row)
-      await config.createRow(row)
-      const builder = createAutomationBuilder({
-        name: "Test Row Save and Create",
-      })
-
-      const results = await builder
+      await config.api.row.save(table._id!, row)
+      await config.api.row.save(table._id!, row)
+      const results = await createAutomationBuilder({ config })
         .appAction({ fields: {} })
         .queryRows({
           tableId: table._id!,
@@ -115,7 +104,8 @@ describe("Automation Scenarios", () => {
     })
 
     it("should trigger an automation which creates and then updates a row", async () => {
-      const table = await config.createTable({
+      const table = await config.api.table.save({
+        ...basicTable(),
         name: "TestTable",
         type: "table",
         schema: {
@@ -136,11 +126,7 @@ describe("Automation Scenarios", () => {
         },
       })
 
-      const builder = createAutomationBuilder({
-        name: "Test Create and Update Row",
-      })
-
-      const results = await builder
+      const results = await createAutomationBuilder({ config })
         .appAction({ fields: {} })
         .createRow(
           {
@@ -202,19 +188,14 @@ describe("Automation Scenarios", () => {
 
   describe("Name Based Automations", () => {
     it("should fetch and delete a rpw using automation naming", async () => {
-      const table = await config.createTable()
+      const table = await config.api.table.save(basicTable())
       const row = {
         name: "DFN",
         description: "original description",
-        tableId: table._id,
       }
-      await config.createRow(row)
-      await config.createRow(row)
-      const builder = createAutomationBuilder({
-        name: "Test Query and Delete Row",
-      })
-
-      const results = await builder
+      await config.api.row.save(table._id!, row)
+      await config.api.row.save(table._id!, row)
+      const results = await createAutomationBuilder({ config })
         .appAction({ fields: {} })
         .queryRows(
           {
@@ -240,7 +221,8 @@ describe("Automation Scenarios", () => {
     let table: Table
 
     beforeEach(async () => {
-      table = await config.createTable({
+      table = await config.api.table.save({
+        ...basicTable(),
         name: "TestTable",
         type: "table",
         schema: {
@@ -263,11 +245,7 @@ describe("Automation Scenarios", () => {
     })
 
     it("should stop an automation if the condition is not met", async () => {
-      const builder = createAutomationBuilder({
-        name: "Test Equal",
-      })
-
-      const results = await builder
+      const results = await createAutomationBuilder({ config })
         .appAction({ fields: {} })
         .createRow({
           row: {
@@ -293,11 +271,7 @@ describe("Automation Scenarios", () => {
     })
 
     it("should continue the automation if the condition is met", async () => {
-      const builder = createAutomationBuilder({
-        name: "Test Not Equal",
-      })
-
-      const results = await builder
+      const results = await createAutomationBuilder({ config })
         .appAction({ fields: {} })
         .createRow({
           row: {
@@ -364,11 +338,7 @@ describe("Automation Scenarios", () => {
     it.each(testCases)(
       "should pass the filter when condition is $condition",
       async ({ condition, value, rowValue, expectPass }) => {
-        const builder = createAutomationBuilder({
-          name: `Test ${condition}`,
-        })
-
-        const results = await builder
+        const results = await createAutomationBuilder({ config })
           .appAction({ fields: {} })
           .createRow({
             row: {
@@ -401,13 +371,9 @@ describe("Automation Scenarios", () => {
   })
 
   it("Check user is passed through from row trigger", async () => {
-    const table = await config.createTable()
+    const table = await config.api.table.save(basicTable())
 
-    const builder = createAutomationBuilder({
-      name: "Test a user is successfully passed from the trigger",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .rowUpdated(
         { tableId: table._id! },
         {
@@ -422,11 +388,7 @@ describe("Automation Scenarios", () => {
   })
 
   it("Check user is passed through from app trigger", async () => {
-    const builder = createAutomationBuilder({
-      name: "Test a user is successfully passed from the trigger",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .serverLog({ text: "{{ [user].[email] }}" })
       .run()
@@ -449,7 +411,8 @@ if (descriptions.length) {
     })
 
     it("should query an external database for some data then insert than into an internal table", async () => {
-      const newTable = await config.createTable({
+      const newTable = await config.api.table.save({
+        ...basicTable(),
         name: "table",
         type: "table",
         schema: {
@@ -484,19 +447,20 @@ if (descriptions.length) {
 
       await client(tableName).insert(rows)
 
-      const query = await setup.saveTestQuery(
-        config,
-        client,
-        tableName,
-        datasource
-      )
-
-      const builder = createAutomationBuilder({
-        name: "Test external query and save",
-        config,
+      const query = await config.api.query.save({
+        name: "test query",
+        datasourceId: datasource._id!,
+        parameters: [],
+        fields: {
+          sql: client(tableName).select("*").toSQL().toNative().sql,
+        },
+        transformer: "",
+        schema: {},
+        readable: true,
+        queryVerb: "read",
       })
 
-      const results = await builder
+      const results = await createAutomationBuilder({ config })
         .appAction({
           fields: {},
         })

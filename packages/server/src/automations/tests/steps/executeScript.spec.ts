@@ -1,27 +1,26 @@
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
-import * as automation from "../index"
-import * as setup from "./utilities"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import * as automation from "../../index"
 import { Table } from "@budibase/types"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { basicTable } from "../../../tests/utilities/structures"
 
 describe("Execute Script Automations", () => {
-  let config = setup.getConfig(),
-    table: Table
+  const config = new TestConfiguration()
+  let table: Table
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await automation.init()
     await config.init()
-    table = await config.createTable()
-    await config.createRow()
+    table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, {})
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should execute a basic script and return the result", async () => {
-    const builder = createAutomationBuilder({
-      name: "Basic Script Execution",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .executeScript({ code: "return 2 + 2" })
       .run()
@@ -30,11 +29,7 @@ describe("Execute Script Automations", () => {
   })
 
   it("should access bindings from previous steps", async () => {
-    const builder = createAutomationBuilder({
-      name: "Access Bindings",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: { data: [1, 2, 3] } })
       .executeScript(
         {
@@ -48,11 +43,7 @@ describe("Execute Script Automations", () => {
   })
 
   it("should handle script execution errors gracefully", async () => {
-    const builder = createAutomationBuilder({
-      name: "Handle Script Errors",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .executeScript({ code: "return nonexistentVariable.map(x => x)" })
       .run()
@@ -64,11 +55,7 @@ describe("Execute Script Automations", () => {
   })
 
   it("should handle conditional logic in scripts", async () => {
-    const builder = createAutomationBuilder({
-      name: "Conditional Script Logic",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: { value: 10 } })
       .executeScript({
         code: `
@@ -85,11 +72,7 @@ describe("Execute Script Automations", () => {
   })
 
   it("should use multiple steps and validate script execution", async () => {
-    const builder = createAutomationBuilder({
-      name: "Multi-Step Script Execution",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .serverLog(
         { text: "Starting multi-step automation" },
