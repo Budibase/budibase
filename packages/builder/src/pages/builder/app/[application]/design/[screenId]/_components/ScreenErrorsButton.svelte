@@ -13,6 +13,7 @@
     Popover,
     PopoverAlignment,
   } from "@budibase/bbui"
+  import CircleIndicator from "@/components/common/Icons/CircleIndicator.svelte"
 
   let button: any
   let popover: any
@@ -46,6 +47,14 @@
     size="M"
     icon="Alert"
   />
+  {#if hasErrors}
+    <div class="error-indicator">
+      <CircleIndicator
+        size="S"
+        color="var(--spectrum-global-color-static-red-600)"
+      />
+    </div>
+  {/if}
 </div>
 <Popover
   bind:this={popover}
@@ -74,6 +83,14 @@
 </Popover>
 
 <style>
+  .error-button {
+    position: relative;
+  }
+  .error-indicator {
+    position: absolute;
+    top: 0;
+    right: 8px;
+  }
   .error-popover {
     display: flex;
     flex-direction: column;
