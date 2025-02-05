@@ -34,7 +34,7 @@ let candidateTarget: HTMLElement | undefined
 // Processes a "click outside" event and invokes callbacks if our source element
 // is valid
 const handleClick = (e: MouseEvent) => {
-  const target = e.target as HTMLElement
+  const target = (e.target || e.relatedTarget) as HTMLElement
 
   // Ignore click if this is an ignored class
   if (target.closest('[data-ignore-click-outside="true"]')) {
@@ -91,9 +91,19 @@ const handleMouseDown = (e: MouseEvent) => {
   document.addEventListener("click", handleMouseUp, true)
 }
 
+// Handle iframe clicks by detecting a loss of focus on the main window
+const handleBlur = () => {
+  if (document.activeElement?.tagName === "IFRAME") {
+    handleClick(
+      new MouseEvent("click", { relatedTarget: document.activeElement })
+    )
+  }
+}
+
 // Global singleton listeners for our events
 document.addEventListener("mousedown", handleMouseDown)
 document.addEventListener("contextmenu", handleClick)
+window.addEventListener("blur", handleBlur)
 
 /**
  * Adds or updates a click handler
