@@ -1,6 +1,7 @@
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { getQueue } from "../.."
+import { Job } from "bull"
 
 describe("cron trigger", () => {
   const config = new TestConfiguration()
@@ -13,9 +14,15 @@ describe("cron trigger", () => {
     config.end()
   })
 
-  it("should run the webhook automation - checking for parameters", async () => {
+  it("should queue a Bull cron job", async () => {
     const queue = getQueue()
-    expect(await queue.count()).toEqual(0)
+    expect(await queue.getCompletedCount()).toEqual(0)
+
+    const jobPromise = new Promise<Job>(resolve => {
+      queue.on("completed", async job => {
+        resolve(job)
+      })
+    })
 
     await createAutomationBuilder({ config })
       .cron({ cron: "* * * * *" })
@@ -26,6 +33,13 @@ describe("cron trigger", () => {
 
     await config.publish()
 
-    expect(await queue.count()).toEqual(1)
+    expect(await queue.getCompletedCount()).toEqual(1)
+
+    const job = await jobPromise
+    const repeat = job.opts?.repeat
+    if (!repeat || !("cron" in repeat)) {
+      throw new Error("Expected cron repeat")
+    }
+    expect(repeat.cron).toEqual("* * * * *")
   })
 })
