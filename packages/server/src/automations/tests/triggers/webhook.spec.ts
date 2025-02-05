@@ -1,4 +1,3 @@
-import * as automation from "../../index"
 import { Table, Webhook, WebhookActionType } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { mocks } from "@budibase/backend-core/tests"
@@ -37,7 +36,6 @@ describe("Branching automations", () => {
   }
 
   beforeEach(async () => {
-    await automation.init()
     await config.init()
     table = await config.createTable()
   })
