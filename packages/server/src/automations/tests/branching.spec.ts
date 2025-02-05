@@ -25,7 +25,6 @@ describe("Branching automations", () => {
     const branch2Id = "44444444-4444-4444-4444-444444444444"
 
     const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .serverLog(
         { text: "Starting automation" },
         { stepName: "FirstLog", stepId: firstLogId }

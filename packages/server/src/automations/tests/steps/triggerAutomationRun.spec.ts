@@ -18,12 +18,10 @@ describe("Test triggering an automation from another automation", () => {
 
   it("should trigger an other server log automation", async () => {
     const automation = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .serverLog({ text: "Hello World" })
       .save()
 
     const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .triggerAutomationRun({
         automation: {
           automationId: automation._id!,
@@ -37,7 +35,6 @@ describe("Test triggering an automation from another automation", () => {
 
   it("should fail gracefully if the automation id is incorrect", async () => {
     const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .triggerAutomationRun({
         automation: {
           // @ts-expect-error - incorrect on purpose

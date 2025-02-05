@@ -158,7 +158,7 @@ class AutomationBuilder extends BaseStepBuilder {
     }
   }
 
-  protected createTriggerFn<
+  protected triggerInputOutput<
     TStep extends AutomationTriggerStepId,
     TInput = AutomationTriggerInputs<TStep>,
     TOutput = AutomationTriggerOutputs<TStep>
@@ -179,12 +179,28 @@ class AutomationBuilder extends BaseStepBuilder {
     }
   }
 
-  rowSaved = this.createTriggerFn(AutomationTriggerStepId.ROW_SAVED)
-  rowUpdated = this.createTriggerFn(AutomationTriggerStepId.ROW_UPDATED)
-  rowDeleted = this.createTriggerFn(AutomationTriggerStepId.ROW_DELETED)
-  appAction = this.createTriggerFn(AutomationTriggerStepId.APP)
-  webhook = this.createTriggerFn(AutomationTriggerStepId.WEBHOOK)
-  cron = this.createTriggerFn(AutomationTriggerStepId.CRON)
+  protected triggerOutputOnly<
+    TStep extends AutomationTriggerStepId,
+    TOutput = AutomationTriggerOutputs<TStep>
+  >(stepId: TStep) {
+    return (outputs: TOutput) => {
+      this.triggerOutputs = outputs as TriggerOutputs
+      this.automationConfig.definition.trigger = {
+        ...TRIGGER_DEFINITIONS[stepId],
+        stepId,
+        id: uuidv4(),
+      } as AutomationTrigger
+      this.triggerSet = true
+      return this
+    }
+  }
+
+  rowSaved = this.triggerInputOutput(AutomationTriggerStepId.ROW_SAVED)
+  rowUpdated = this.triggerInputOutput(AutomationTriggerStepId.ROW_UPDATED)
+  rowDeleted = this.triggerInputOutput(AutomationTriggerStepId.ROW_DELETED)
+  appAction = this.triggerOutputOnly(AutomationTriggerStepId.APP)
+  webhook = this.triggerInputOutput(AutomationTriggerStepId.WEBHOOK)
+  cron = this.triggerInputOutput(AutomationTriggerStepId.CRON)
 
   branch(branchConfig: BranchConfig): this {
     this.addBranchStep(branchConfig)

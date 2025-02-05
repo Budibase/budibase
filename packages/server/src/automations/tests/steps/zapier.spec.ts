@@ -21,7 +21,6 @@ describe("test the outgoing webhook action", () => {
     nock("http://www.example.com/").post("/").reply(200, { foo: "bar" })
 
     const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .zapier({ url: "http://www.example.com", body: null })
       .run()
 
@@ -45,7 +44,6 @@ describe("test the outgoing webhook action", () => {
       .reply(200, { foo: "bar" })
 
     const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .zapier({
         url: "http://www.example.com",
         body: { value: JSON.stringify(payload) },
@@ -58,7 +56,6 @@ describe("test the outgoing webhook action", () => {
 
   it("should return a 400 if the JSON payload string is malformed", async () => {
     const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .zapier({
         url: "http://www.example.com",
         body: { value: "{ invalid json }" },

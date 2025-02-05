@@ -65,7 +65,6 @@ describe("Execute Bash Automations", () => {
 
   it("should integrate bash output with row operations", async () => {
     const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .queryRows(
         {
           tableId: table._id!,
@@ -122,7 +121,6 @@ describe("Execute Bash Automations", () => {
 
   it("should handle null values gracefully", async () => {
     const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .bash(
         // @ts-expect-error - testing null input
         { code: null },

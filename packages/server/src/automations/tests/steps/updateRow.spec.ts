@@ -31,7 +31,6 @@ describe("test the update row action", () => {
 
   it("should be able to run the update row action", async () => {
     const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .updateRow({
         rowId: row._id!,
         row: {
@@ -54,7 +53,6 @@ describe("test the update row action", () => {
 
   it("should check invalid inputs return an error", async () => {
     const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .updateRow({ meta: {}, row: {}, rowId: "" })
       .run()
 
@@ -63,7 +61,6 @@ describe("test the update row action", () => {
 
   it("should return an error when table doesn't exist", async () => {
     const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .updateRow({
         row: { _id: "invalid" },
         rowId: "invalid",
@@ -107,7 +104,6 @@ describe("test the update row action", () => {
     })
 
     const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .updateRow({
         rowId: row._id!,
         row: {
@@ -161,7 +157,6 @@ describe("test the update row action", () => {
     })
 
     const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
       .updateRow({
         rowId: row._id!,
         row: {

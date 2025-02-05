@@ -32,7 +32,6 @@ describe("Test a query step automation", () => {
       name: "Basic Query Test",
       config,
     })
-      .appAction({ fields: {} })
       .queryRows(
         {
           tableId: table._id!,
@@ -60,7 +59,6 @@ describe("Test a query step automation", () => {
       name: "Empty Filter Test",
       config,
     })
-      .appAction({ fields: {} })
       .queryRows(
         {
           tableId: table._id!,
@@ -84,7 +82,6 @@ describe("Test a query step automation", () => {
       name: "Return None Test",
       config,
     })
-      .appAction({ fields: {} })
       .queryRows(
         {
           tableId: table._id!,
@@ -109,7 +106,6 @@ describe("Test a query step automation", () => {
       name: "Null Filter Test",
       config,
     })
-      .appAction({ fields: {} })
       .queryRows(
         {
           tableId: table._id!,
@@ -138,7 +134,6 @@ describe("Test a query step automation", () => {
       name: "Return All Test",
       config,
     })
-      .appAction({ fields: {} })
       .queryRows(
         {
           tableId: table._id!,
@@ -169,7 +164,6 @@ describe("Test a query step automation", () => {
       name: "Return All Test",
       config,
     })
-      .appAction({ fields: {} })
       .queryRows(
         {
           tableId: tableWithSpaces._id!,
