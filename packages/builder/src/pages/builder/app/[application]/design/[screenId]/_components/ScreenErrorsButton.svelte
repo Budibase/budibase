@@ -17,6 +17,8 @@
   let button: any
   let popover: any
 
+  $: hasErrors = !!$screenComponentErrorList.length
+
   function getErrorTitle(error: UIComponentError) {
     const titleParts = [
       $screenComponentsList.find(c => c._id === error.componentId)!
@@ -37,14 +39,20 @@
 </script>
 
 <div bind:this={button} class="error-button">
-  <ActionButton quiet on:click={() => popover.show()} size="M" icon="Alert" />
+  <ActionButton
+    quiet
+    disabled={!hasErrors}
+    on:click={() => popover.show()}
+    size="M"
+    icon="Alert"
+  />
 </div>
 <Popover
   bind:this={popover}
   anchor={button}
   align={PopoverAlignment.Right}
   maxWidth={400}
-  showPopover={!!$screenComponentErrorList.length}
+  showPopover={hasErrors}
 >
   <div class="error-popover">
     {#each $screenComponentErrorList as error}
