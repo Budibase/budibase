@@ -20,7 +20,7 @@ describe("test the outgoing webhook action", () => {
 
   it("should be able to run the action and default to 'get'", async () => {
     nock("http://www.example.com/").get("/").reply(200, { foo: "bar" })
-    const result = await createAutomationBuilder({ config })
+    const result = await createAutomationBuilder(config)
       .n8n({
         url: "http://www.example.com",
         body: { test: "IGNORE_ME" },
@@ -38,7 +38,7 @@ describe("test the outgoing webhook action", () => {
       .post("/", { name: "Adam", age: 9 })
       .reply(200)
 
-    const result = await createAutomationBuilder({ config })
+    const result = await createAutomationBuilder(config)
       .n8n({
         url: "http://www.example.com",
         body: { value: JSON.stringify({ name: "Adam", age: 9 }) },
@@ -51,7 +51,7 @@ describe("test the outgoing webhook action", () => {
   })
 
   it("should return a 400 if the JSON payload string is malformed", async () => {
-    const result = await createAutomationBuilder({ config })
+    const result = await createAutomationBuilder(config)
       .n8n({
         url: "http://www.example.com",
         body: { value: "{ value1 1 }" },
@@ -70,7 +70,7 @@ describe("test the outgoing webhook action", () => {
       .head("/", body => body === "")
       .reply(200)
 
-    const result = await createAutomationBuilder({ config })
+    const result = await createAutomationBuilder(config)
       .n8n({
         url: "http://www.example.com",
         method: HttpMethod.HEAD,

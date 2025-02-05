@@ -16,7 +16,7 @@ describe("test the delay logic", () => {
     const time = 100
     const before = performance.now()
 
-    await createAutomationBuilder({ config }).delay({ time }).run()
+    await createAutomationBuilder(config).delay({ time }).run()
 
     const now = performance.now()
 

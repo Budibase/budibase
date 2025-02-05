@@ -13,7 +13,7 @@ describe("test the server log action", () => {
   })
 
   it("should be able to log the text", async () => {
-    const result = await createAutomationBuilder({ config })
+    const result = await createAutomationBuilder(config)
       .serverLog({ text: "Hello World" })
       .run()
     expect(result.steps[0].outputs.message).toEqual(
