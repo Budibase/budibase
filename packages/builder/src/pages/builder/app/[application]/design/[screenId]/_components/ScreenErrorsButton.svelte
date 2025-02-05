@@ -7,11 +7,13 @@
     screenComponentsList,
   } from "@/stores/builder"
   import {
+    AbsTooltip,
     ActionButton,
     Icon,
     Link,
     Popover,
     PopoverAlignment,
+    TooltipPosition,
   } from "@budibase/bbui"
   import CircleIndicator from "@/components/common/Icons/CircleIndicator.svelte"
 
@@ -40,21 +42,26 @@
 </script>
 
 <div bind:this={button} class="error-button">
-  <ActionButton
-    quiet
-    disabled={!hasErrors}
-    on:click={() => popover.show()}
-    size="M"
-    icon="Alert"
-  />
-  {#if hasErrors}
-    <div class="error-indicator">
-      <CircleIndicator
-        size="S"
-        color="var(--spectrum-global-color-static-red-600)"
-      />
-    </div>
-  {/if}
+  <AbsTooltip
+    text={!hasErrors ? "No Errors found!" : ""}
+    position={TooltipPosition.Bottom}
+  >
+    <ActionButton
+      quiet
+      disabled={!hasErrors}
+      on:click={() => popover.show()}
+      size="M"
+      icon="Alert"
+    />
+    {#if hasErrors}
+      <div class="error-indicator">
+        <CircleIndicator
+          size="S"
+          color="var(--spectrum-global-color-static-red-600)"
+        />
+      </div>
+    {/if}
+  </AbsTooltip>
 </div>
 <Popover
   bind:this={popover}
