@@ -171,7 +171,7 @@
   function buildMessage() {
     let message = ""
     if (isInternalTable) {
-      message = `All its data will be deleted`
+      message = `All ${sourceType} data will also be deleted`
       const viewsMessage = getViewsMessage()
       if (viewsMessage) {
         message += `, including ${viewsMessage}. `
@@ -187,40 +187,32 @@
   }
 </script>
 
-{#if sourceType}
-  <ConfirmDialog
-    bind:this={confirmDeleteDialog}
-    okText="Delete"
-    onOk={deleteSource}
-    onCancel={hideDeleteDialog}
-    title={`Are you sure you want to delete ${source?.name}?`}
-  >
-    <div class="content">
+<ConfirmDialog
+  bind:this={confirmDeleteDialog}
+  okText="Delete"
+  onOk={deleteSource}
+  onCancel={hideDeleteDialog}
+  title={`Are you sure you want to delete ${source?.name}?`}
+>
+  <div class="content">
+    {#if affectedScreens.length > 0}
       <p class="warning">
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        {@html buildMessage()}
+        Removing this {sourceType} will break the following screens:
+        <span class="screens">
+          {#each affectedScreens as item, idx}
+            <Link overBackground target="_blank" href={item.url}
+              >{item.text}{idx !== affectedScreens.length - 1 ? "," : ""}</Link
+            >
+          {/each}
+        </span>
       </p>
-
-      {#if affectedScreens.length > 0}
-        <div class="affectedScreens">
-          <InlineAlert
-            header={`The following screens use this ${sourceType} and may no longer function as expected`}
-          >
-            <ul class="affectedScreensList">
-              {#each affectedScreens as item}
-                <li>
-                  <Link quiet overBackground target="_blank" href={item.url}
-                    >{item.text}</Link
-                  >
-                </li>
-              {/each}
-            </ul>
-          </InlineAlert>
-        </div>
-      {/if}
-    </div>
-  </ConfirmDialog>
-{/if}
+    {/if}
+    <p class="warning">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      {@html buildMessage()}
+    </p>
+  </div>
+</ConfirmDialog>
 
 <style>
   .content {
@@ -233,27 +225,9 @@
     max-width: 100%;
   }
 
-  .affectedScreens {
-    margin: 18px 0;
-    max-width: 100%;
-    margin-bottom: 24px;
-  }
-
-  .affectedScreens :global(.spectrum-InLineAlert) {
-    max-width: 100%;
-  }
-
-  .affectedScreensList {
-    padding: 0;
-    margin-bottom: 0;
-  }
-
-  .affectedScreensList li {
-    display: block;
-    max-width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 4px;
+  .screens {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-xs);
   }
 </style>
