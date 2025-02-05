@@ -1,44 +1,41 @@
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
-import * as setup from "./utilities"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { Row, Table } from "@budibase/types"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { basicTable } from "../../../tests/utilities/structures"
 
 describe("test the delete row action", () => {
-  let table: any,
-    row: any,
-    config = setup.getConfig()
+  const config = new TestConfiguration()
+
+  let table: Table
+  let row: Row
 
   beforeAll(async () => {
     await config.init()
-    table = await config.createTable()
-    row = await config.createRow()
+    table = await config.api.table.save(basicTable())
+    row = await config.api.row.save(table._id!, {})
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to run the delete row action", async () => {
-    const builder = createAutomationBuilder({
-      name: "Delete Row Automation",
-    })
-
-    await builder
+    await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .deleteRow({
-        tableId: table._id,
-        id: row._id,
+        tableId: table._id!,
+        id: row._id!,
         revision: row._rev,
       })
       .run()
 
-    await config.api.row.get(table._id, row._id, {
+    await config.api.row.get(table._id!, row._id!, {
       status: 404,
     })
   })
 
   it("should check invalid inputs return an error", async () => {
-    const builder = createAutomationBuilder({
-      name: "Invalid Inputs Automation",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .deleteRow({ tableId: "", id: "", revision: "" })
       .run()
@@ -47,11 +44,7 @@ describe("test the delete row action", () => {
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const builder = createAutomationBuilder({
-      name: "Nonexistent Table Automation",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .deleteRow({
         tableId: "invalid",
