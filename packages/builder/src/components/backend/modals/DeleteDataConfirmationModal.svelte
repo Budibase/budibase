@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { InlineAlert, Link, Input, notifications } from "@budibase/bbui"
+  import { InlineAlert, Link, notifications } from "@budibase/bbui"
   import {
     appStore,
     datasources,
@@ -22,7 +22,6 @@
   let affectedScreens: { text: string; url: string }[] = []
   let sourceType: SourceType | undefined = undefined
   let isInternal: boolean = false
-  let deleteSourceName: string | undefined
 
   $: isInternalTable = isInternal && sourceType === SourceType.TABLE
 
@@ -87,11 +86,7 @@
   }
 
   function hideDeleteDialog() {
-    deleteSourceName = ""
-  }
-
-  const autofillSourceName = () => {
-    deleteSourceName = source?.name
+    sourceType = undefined
   }
 
   async function deleteTable(table: Table & { datasourceId?: string }) {
@@ -192,52 +187,45 @@
   }
 </script>
 
-<ConfirmDialog
-  bind:this={confirmDeleteDialog}
-  okText="Delete"
-  onOk={deleteSource}
-  onCancel={hideDeleteDialog}
-  title={`Are you sure you want to delete ${source?.name}?`}
-  disabled={deleteSourceName !== source?.name}
->
-  <div class="content">
-    <p class="warning">
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-      {@html buildMessage()}
-    </p>
+{#if sourceType}
+  <ConfirmDialog
+    bind:this={confirmDeleteDialog}
+    okText="Delete"
+    onOk={deleteSource}
+    onCancel={hideDeleteDialog}
+    title={`Are you sure you want to delete ${source?.name}?`}
+  >
+    <div class="content">
+      <p class="warning">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html buildMessage()}
+      </p>
 
-    {#if affectedScreens.length > 0}
-      <div class="affectedScreens">
-        <InlineAlert
-          header={`The following screens use this ${sourceType} and may no longer function as expected`}
-        >
-          <ul class="affectedScreensList">
-            {#each affectedScreens as item}
-              <li>
-                <Link quiet overBackground target="_blank" href={item.url}
-                  >{item.text}</Link
-                >
-              </li>
-            {/each}
-          </ul>
-        </InlineAlert>
-      </div>
-    {/if}
-  </div>
-</ConfirmDialog>
+      {#if affectedScreens.length > 0}
+        <div class="affectedScreens">
+          <InlineAlert
+            header={`The following screens use this ${sourceType} and may no longer function as expected`}
+          >
+            <ul class="affectedScreensList">
+              {#each affectedScreens as item}
+                <li>
+                  <Link quiet overBackground target="_blank" href={item.url}
+                    >{item.text}</Link
+                  >
+                </li>
+              {/each}
+            </ul>
+          </InlineAlert>
+        </div>
+      {/if}
+    </div>
+  </ConfirmDialog>
+{/if}
 
 <style>
   .content {
     margin-top: 0;
     max-width: 320px;
-  }
-
-  .sourceName {
-    flex-grow: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
   }
 
   .warning {
