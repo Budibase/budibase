@@ -77,11 +77,12 @@ const createBuilderStore = () => {
         mode,
       })
     },
-    dropNewComponent: (component, parent, index) => {
+    dropNewComponent: (component, parent, index, props) => {
       eventStore.actions.dispatchEvent("drop-new-component", {
         component,
         parent,
         index,
+        props,
       })
     },
     setEditMode: enabled => {

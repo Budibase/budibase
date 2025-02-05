@@ -7,7 +7,7 @@ import { dndIndex, dndParent, dndIsNewComponent, dndBounds } from "./dnd.js"
 import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
-import { DNDPlaceholderID, ScreenslotID, ScreenslotType } from "constants"
+import { DNDPlaceholderID, ScreenslotID, ScreenslotType } from "@/constants"
 
 const createScreenStore = () => {
   const store = derived(
@@ -99,7 +99,6 @@ const createScreenStore = () => {
             normal: {
               width: `${$dndBounds?.width || 400}px`,
               height: `${$dndBounds?.height || 200}px`,
-              opacity: 0,
               "--default-width": $dndBounds?.width || 400,
               "--default-height": $dndBounds?.height || 200,
             },

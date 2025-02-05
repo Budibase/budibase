@@ -1,15 +1,22 @@
 <script>
   import { onMount, onDestroy, getContext } from "svelte"
-  import { builderStore, componentStore } from "stores"
+  import {
+    builderStore,
+    componentStore,
+    dndIsDragging,
+    dndIsNewComponent,
+    dndStore,
+    isGridScreen,
+  } from "stores"
   import { Utils, memo } from "@budibase/frontend-core"
-  import { GridRowHeight } from "constants"
+  import { DNDPlaceholderID, GridRowHeight } from "@/constants"
   import {
     isGridEvent,
     GridParams,
     getGridVar,
     Devices,
     GridDragModes,
-  } from "utils/grid"
+  } from "@/utils/grid"
 
   const context = getContext("context")
 
@@ -36,6 +43,21 @@
   // Set ephemeral styles
   $: instance = componentStore.actions.getComponentInstance(id)
   $: $instance?.setEphemeralStyles($styles)
+
+  // Keep DND store up to date with grid styles if dragging a new component
+  // on to a grid screen
+  $: {
+    if ($dndIsNewComponent) {
+      dndStore.actions.updateNewComponentProps({
+        _styles: {
+          normal: $styles,
+        },
+      })
+    }
+  }
+
+  // Reset when not dragging new components
+  $: !$dndIsDragging && stopDragging()
 
   // Sugar for a combination of both min and max
   const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
@@ -98,6 +120,47 @@
     processEvent(e.clientX, e.clientY)
   }
 
+  const startDraggingPlaceholder = () => {
+    console.log("START PLACEHOLDER")
+    const mode = GridDragModes.Move
+    const id = DNDPlaceholderID
+
+    // Find grid parent and read from DOM
+    const domComponent = document.getElementsByClassName(id)[0]
+    const domGrid = domComponent?.closest(".grid")
+    if (!domGrid) {
+      return
+    }
+    const styles = getComputedStyle(domComponent)
+    const bounds = domComponent.getBoundingClientRect()
+
+    // Show as active
+    domComponent.classList.add("dragging")
+    domGrid.classList.add("highlight")
+    builderStore.actions.selectComponent(id)
+
+    // Update state
+    dragInfo = {
+      domComponent,
+      domGrid,
+      id,
+      gridId: domGrid.parentNode.dataset.id,
+      mode,
+      grid: {
+        startX: bounds.left + bounds.width / 2,
+        startY: bounds.top + bounds.height / 2,
+        rowStart: parseInt(styles["grid-row-start"]),
+        rowEnd: parseInt(styles["grid-row-end"]),
+        colStart: parseInt(styles["grid-column-start"]),
+        colEnd: parseInt(styles["grid-column-end"]),
+      },
+    }
+
+    // Add event handler to clear all drag state when dragging ends
+    console.log("add up listener")
+    document.addEventListener("mouseup", stopDragging)
+  }
+
   // Callback when initially starting a drag on a draggable component
   const onDragStart = e => {
     if (!isGridEvent(e)) {
@@ -158,11 +221,15 @@
     }
 
     // Add event handler to clear all drag state when dragging ends
-    dragInfo.domTarget.addEventListener("dragend", stopDragging)
+    dragInfo.domTarget.addEventListener("dragend", stopDragging, false)
   }
 
   const onDragOver = e => {
     if (!dragInfo) {
+      // Check if we're dragging a new component
+      if ($dndIsDragging && $dndIsNewComponent && $isGridScreen) {
+        startDraggingPlaceholder()
+      }
       return
     }
     handleEvent(e)
@@ -178,7 +245,7 @@
     // Reset DOM
     domComponent.classList.remove("dragging")
     domGrid.classList.remove("highlight")
-    domTarget.removeEventListener("dragend", stopDragging)
+    domTarget?.removeEventListener("dragend", stopDragging)
 
     // Save changes
     if ($styles) {
@@ -198,5 +265,6 @@
   onDestroy(() => {
     document.removeEventListener("dragstart", onDragStart, false)
     document.removeEventListener("dragover", onDragOver, false)
+    document.removeEventListener("mouseup", stopDragging, false)
   })
 </script>
