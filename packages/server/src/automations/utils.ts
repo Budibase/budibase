@@ -230,7 +230,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
     // can't use getAppDB here as this is likely to be called from dev app,
     // but this call could be for dev app or prod app, need to just use what
     // was passed in
-    await dbCore.doWithDB(appId, async (db: any) => {
+    await dbCore.doWithDB(appId, async db => {
       const response = await db.put(automation)
       automation._id = response.id
       automation._rev = response.rev
