@@ -261,8 +261,7 @@
                 class="component"
                 class:selected={selectedIndex === orderMap[component.component]}
                 on:click={() => addComponent(component.component)}
-                on:mouseover={() => (selectedIndex = null)}
-                on:focus
+                on:mouseenter={() => (selectedIndex = null)}
               >
                 <Icon name={component.icon} />
                 <Body size="XS">{component.name}</Body>
