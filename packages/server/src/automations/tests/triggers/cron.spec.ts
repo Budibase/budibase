@@ -25,7 +25,7 @@ describe("cron trigger", () => {
     })
 
     await createAutomationBuilder(config)
-      .cron({ cron: "* * * * *" })
+      .onCron({ cron: "* * * * *" })
       .serverLog({
         text: "Hello, world!",
       })
@@ -45,7 +45,7 @@ describe("cron trigger", () => {
 
   it("should fail if the cron expression is invalid", async () => {
     await createAutomationBuilder(config)
-      .cron({ cron: "* * * * * *" })
+      .onCron({ cron: "* * * * * *" })
       .serverLog({
         text: "Hello, world!",
       })

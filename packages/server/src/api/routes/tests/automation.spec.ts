@@ -108,7 +108,7 @@ describe("/automations", () => {
 
     it("Should ensure you can't have a branch as not a last step", async () => {
       const automation = createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .branch({
           activeBranch: {
             steps: stepBuilder =>
@@ -132,7 +132,7 @@ describe("/automations", () => {
 
     it("Should check validation on an automation that has a branch step with no children", async () => {
       const automation = createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .branch({})
         .serverLog({ text: "Inactive user" })
         .build()
@@ -148,7 +148,7 @@ describe("/automations", () => {
 
     it("Should check validation on a branch step with empty conditions", async () => {
       const automation = createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .branch({
           activeBranch: {
             steps: stepBuilder =>
@@ -169,7 +169,7 @@ describe("/automations", () => {
 
     it("Should check validation on an branch that has a condition that is not valid", async () => {
       const automation = createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .branch({
           activeBranch: {
             steps: stepBuilder =>
@@ -241,7 +241,7 @@ describe("/automations", () => {
 
     it("should be able to access platformUrl, logoUrl and company in the automation", async () => {
       const result = await createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .serverLog({
           text: "{{ settings.url }}",
         })

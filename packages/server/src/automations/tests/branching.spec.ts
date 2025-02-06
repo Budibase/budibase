@@ -25,7 +25,7 @@ describe("Branching automations", () => {
     const branch2Id = "44444444-4444-4444-4444-444444444444"
 
     const results = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .serverLog(
         { text: "Starting automation" },
         { stepName: "FirstLog", stepId: firstLogId }
@@ -84,7 +84,7 @@ describe("Branching automations", () => {
 
   it("should execute correct branch based on string equality", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .branch({
         activeBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Active user" }),
@@ -109,7 +109,7 @@ describe("Branching automations", () => {
 
   it("should handle multiple conditions with AND operator", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .branch({
         activeAdminBranch: {
           steps: stepBuilder =>
@@ -137,7 +137,7 @@ describe("Branching automations", () => {
 
   it("should handle multiple conditions with OR operator", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .branch({
         specialBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Special user" }),
@@ -169,7 +169,7 @@ describe("Branching automations", () => {
 
   it("should stop the branch automation when no conditions are met", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .createRow({ row: { name: "Test", tableId: table._id } })
       .branch({
         specialBranch: {
@@ -205,7 +205,7 @@ describe("Branching automations", () => {
 
   it("evaluate multiple conditions", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
       .branch({
         specialBranch: {
@@ -246,7 +246,7 @@ describe("Branching automations", () => {
 
   it("evaluate multiple conditions with interpolated text", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
       .branch({
         specialBranch: {

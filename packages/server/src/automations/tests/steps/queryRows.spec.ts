@@ -29,7 +29,7 @@ describe("Test a query step automation", () => {
 
   it("should be able to run the query step", async () => {
     const result = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -54,7 +54,7 @@ describe("Test a query step automation", () => {
 
   it("Returns all rows when onEmptyFilter has no value and no filters are passed", async () => {
     const result = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -75,7 +75,7 @@ describe("Test a query step automation", () => {
 
   it("Returns no rows when onEmptyFilter is RETURN_NONE and theres no filters", async () => {
     const result = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -97,7 +97,7 @@ describe("Test a query step automation", () => {
 
   it("Returns no rows when onEmptyFilters RETURN_NONE and a filter is passed with a null value", async () => {
     const result = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -123,7 +123,7 @@ describe("Test a query step automation", () => {
 
   it("Returns rows when onEmptyFilter is RETURN_ALL and no filter is passed", async () => {
     const result = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -151,7 +151,7 @@ describe("Test a query step automation", () => {
       name: NAME,
     })
     const result = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .queryRows(
         {
           tableId: tableWithSpaces._id!,

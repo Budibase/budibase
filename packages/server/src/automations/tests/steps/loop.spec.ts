@@ -73,7 +73,7 @@ describe("Attempt to run a basic loop automation", () => {
 
   it("should run an automation with a trigger, loop, and create row step", async () => {
     const results = await createAutomationBuilder(config)
-      .rowSaved(
+      .onRowSaved(
         { tableId: table._id! },
         {
           row: {
@@ -116,7 +116,7 @@ describe("Attempt to run a basic loop automation", () => {
 
   it("should run an automation where a loop step is between two normal steps to ensure context correctness", async () => {
     const results = await createAutomationBuilder(config)
-      .rowSaved(
+      .onRowSaved(
         { tableId: table._id! },
         {
           row: {
@@ -213,7 +213,7 @@ describe("Attempt to run a basic loop automation", () => {
 
   it("should run an automation where a loop is successfully run twice", async () => {
     const results = await createAutomationBuilder(config)
-      .rowSaved(
+      .onRowSaved(
         { tableId: table._id! },
         {
           row: {

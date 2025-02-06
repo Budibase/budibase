@@ -41,7 +41,7 @@ describe("test the create row action", () => {
 
   it("should be able to run the action", async () => {
     const result = await createAutomationBuilder(config)
-      .appAction({ fields: { status: "new" } })
+      .onAppAction({ fields: { status: "new" } })
       .serverLog({ text: "Starting create row flow" }, { stepName: "StartLog" })
       .createRow({ row }, { stepName: "CreateRow" })
       .serverLog(
@@ -67,7 +67,7 @@ describe("test the create row action", () => {
 
   it("should return an error (not throw) when bad info provided", async () => {
     const result = await createAutomationBuilder(config)
-      .appAction({ fields: { status: "error" } })
+      .onAppAction({ fields: { status: "error" } })
       .serverLog({ text: "Starting error test flow" }, { stepName: "StartLog" })
       .createRow(
         {
@@ -85,7 +85,7 @@ describe("test the create row action", () => {
 
   it("should check invalid inputs return an error", async () => {
     const result = await createAutomationBuilder(config)
-      .appAction({ fields: { status: "invalid" } })
+      .onAppAction({ fields: { status: "invalid" } })
       .serverLog({ text: "Testing invalid input" }, { stepName: "StartLog" })
       .createRow({ row: {} }, { stepName: "CreateRow" })
       .filter({
@@ -123,7 +123,7 @@ describe("test the create row action", () => {
 
     attachmentRow.file_attachment = attachmentObject
     const result = await createAutomationBuilder(config)
-      .appAction({ fields: { type: "attachment" } })
+      .onAppAction({ fields: { type: "attachment" } })
       .serverLog(
         { text: "Processing attachment upload" },
         { stepName: "StartLog" }
@@ -174,7 +174,7 @@ describe("test the create row action", () => {
 
     attachmentRow.single_file_attachment = attachmentObject
     const result = await createAutomationBuilder(config)
-      .appAction({ fields: { type: "single-attachment" } })
+      .onAppAction({ fields: { type: "single-attachment" } })
       .serverLog(
         { text: "Processing single attachment" },
         { stepName: "StartLog" }
@@ -245,7 +245,7 @@ describe("test the create row action", () => {
 
     attachmentRow.single_file_attachment = attachmentObject
     const result = await createAutomationBuilder(config)
-      .appAction({ fields: { type: "invalid-attachment" } })
+      .onAppAction({ fields: { type: "invalid-attachment" } })
       .serverLog(
         { text: "Testing invalid attachment keys" },
         { stepName: "StartLog" }
