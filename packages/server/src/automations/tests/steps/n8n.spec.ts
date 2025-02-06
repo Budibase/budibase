@@ -21,12 +21,13 @@ describe("test the outgoing webhook action", () => {
   it("should be able to run the action and default to 'get'", async () => {
     nock("http://www.example.com/").get("/").reply(200, { foo: "bar" })
     const result = await createAutomationBuilder(config)
+      .onAppAction()
       .n8n({
         url: "http://www.example.com",
         body: { test: "IGNORE_ME" },
         authorization: "",
       })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.response).toEqual({ foo: "bar" })
     expect(result.steps[0].outputs.httpStatus).toEqual(200)
@@ -39,26 +40,28 @@ describe("test the outgoing webhook action", () => {
       .reply(200)
 
     const result = await createAutomationBuilder(config)
+      .onAppAction()
       .n8n({
         url: "http://www.example.com",
         body: { value: JSON.stringify({ name: "Adam", age: 9 }) },
         method: HttpMethod.POST,
         authorization: "",
       })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toEqual(true)
   })
 
   it("should return a 400 if the JSON payload string is malformed", async () => {
     const result = await createAutomationBuilder(config)
+      .onAppAction()
       .n8n({
         url: "http://www.example.com",
         body: { value: "{ value1 1 }" },
         method: HttpMethod.POST,
         authorization: "",
       })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.httpStatus).toEqual(400)
     expect(result.steps[0].outputs.response).toEqual("Invalid payload JSON")
@@ -71,13 +74,14 @@ describe("test the outgoing webhook action", () => {
       .reply(200)
 
     const result = await createAutomationBuilder(config)
+      .onAppAction()
       .n8n({
         url: "http://www.example.com",
         method: HttpMethod.HEAD,
         body: { test: "IGNORE_ME" },
         authorization: "",
       })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toEqual(true)
   })
