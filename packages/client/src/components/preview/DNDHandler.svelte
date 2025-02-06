@@ -7,10 +7,10 @@
     screenStore,
     dndStore,
     dndParent,
+    dndSource,
     dndIsDragging,
     isGridScreen,
   } from "stores"
-  import DNDPlaceholderOverlay from "./DNDPlaceholderOverlay.svelte"
   import { Utils } from "@budibase/frontend-core"
   import { findComponentById } from "@/utils/components.js"
   import { isGridEvent } from "@/utils/grid"
@@ -92,6 +92,8 @@
       bounds: component.children[0].getBoundingClientRect(),
       parent: parentId,
       index,
+      name: component.dataset.name,
+      icon: component.dataset.icon,
     })
     builderStore.actions.selectComponent(id)
 
@@ -258,10 +260,10 @@
     }
 
     // Check if we're adding a new component rather than moving one
-    if (source.newComponentType) {
+    if (source.isNew) {
       dropping = true
       builderStore.actions.dropNewComponent(
-        source.newComponentType,
+        source.type,
         drop.parent,
         drop.index,
         $dndStore.meta.newComponentProps
@@ -335,16 +337,3 @@
     document.removeEventListener("drop", onDrop, false)
   })
 </script>
-
-{#if !$isGridScreen}
-  <IndicatorSet
-    componentId={$dndParent}
-    color="var(--spectrum-global-color-static-green-500)"
-    zIndex={920}
-    prefix="Inside"
-  />
-{/if}
-
-{#if $dndIsDragging}
-  <DNDPlaceholderOverlay />
-{/if}

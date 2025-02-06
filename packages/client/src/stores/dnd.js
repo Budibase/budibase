@@ -21,10 +21,17 @@ const createDndStore = () => {
   }
   const store = writable(initialState)
 
-  const startDraggingExistingComponent = ({ id, parent, bounds, index }) => {
+  const startDraggingExistingComponent = ({
+    id,
+    parent,
+    bounds,
+    index,
+    name,
+    icon,
+  }) => {
     store.set({
       ...initialState,
-      source: { id, parent, bounds, index },
+      source: { id, parent, bounds, index, name, icon, isNew: false },
     })
   }
 
@@ -62,7 +69,10 @@ const createDndStore = () => {
         parent: null,
         bounds: { height, width },
         index: null,
-        newComponentType: component,
+        type: component,
+        isNew: true,
+        name: `New ${definition.name}`,
+        icon: definition.icon,
       },
       target,
       drop,
@@ -118,9 +128,5 @@ export const dndStore = createDndStore()
 // or components which depend on DND state unless values actually change.
 export const dndParent = derivedMemo(dndStore, x => x.drop?.parent)
 export const dndIndex = derivedMemo(dndStore, x => x.drop?.index)
-export const dndBounds = derivedMemo(dndStore, x => x.source?.bounds)
+export const dndSource = derivedMemo(dndStore, x => x.source)
 export const dndIsDragging = derivedMemo(dndStore, x => !!x.source)
-export const dndIsNewComponent = derivedMemo(
-  dndStore,
-  x => x.source?.newComponentType != null
-)

@@ -9,6 +9,10 @@
   export let zIndex = 900
   export let prefix = null
   export let allowResizeAnchors = false
+  export let background = null
+  export let animate = false
+  export let text = null
+  export let icon = null
 
   // Offset = 6 (clip-root padding) - 1 (half the border thickness)
   const config = memo($$props)
@@ -24,8 +28,8 @@
 
     // Computed state
     indicators: [],
-    text: null,
-    icon: null,
+    text,
+    icon,
     insideGrid: false,
     error: false,
   })
@@ -61,7 +65,6 @@
   const observeMutations = element => {
     mutationObserver.observe(element, {
       attributes: true,
-      attributeFilter: ["style"],
     })
     observingMutations = true
   }
@@ -108,17 +111,19 @@
     }
 
     // Check if we're inside a grid
-    if (allowResizeAnchors) {
-      nextState.insideGrid = elements[0]?.dataset.insideGrid === "true"
-    }
+    nextState.insideGrid = elements[0]?.dataset.insideGrid === "true"
 
-    // Get text to display
-    nextState.text = elements[0].dataset.name
-    if (nextState.prefix) {
-      nextState.text = `${nextState.prefix} ${nextState.text}`
+    // Get text and icon to display
+    if (!text) {
+      nextState.text = elements[0].dataset.name
+      if (nextState.prefix) {
+        nextState.text = `${nextState.prefix} ${nextState.text}`
+      }
     }
-    if (elements[0].dataset.icon) {
-      nextState.icon = elements[0].dataset.icon
+    if (!icon) {
+      if (elements[0].dataset.icon) {
+        nextState.icon = elements[0].dataset.icon
+      }
     }
     nextState.error = elements[0].classList.contains("error")
 
@@ -205,5 +210,7 @@
     color={state.error ? errorColor : state.color}
     componentId={state.componentId}
     zIndex={state.zIndex}
+    {background}
+    {animate}
   />
 {/each}

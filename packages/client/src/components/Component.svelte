@@ -120,7 +120,7 @@
   $: children = instance._children || []
   $: id = instance._id
   $: name = isRoot ? "Screen" : instance._instanceName
-  $: icon = definition?.icon
+  $: icon = instance._icon || definition?.icon
 
   // Determine if the component is selected or is part of the critical path
   // leading to the selected component

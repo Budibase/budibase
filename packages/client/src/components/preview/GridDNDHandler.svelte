@@ -4,8 +4,8 @@
     builderStore,
     componentStore,
     dndIsDragging,
-    dndIsNewComponent,
     dndStore,
+    dndSource,
     isGridScreen,
   } from "stores"
   import { Utils, memo } from "@budibase/frontend-core"
@@ -53,7 +53,7 @@
     // If dragging a new component on to a grid screen, tick to allow the
     // real component to render in the new position before updating the DND
     // store, preventing the green DND overlay from being out of position
-    if ($dndIsNewComponent && styles) {
+    if ($dndSource?.isNew && styles) {
       dndStore.actions.updateNewComponentProps({
         _styles: {
           normal: styles,
@@ -222,7 +222,7 @@
   const onDragOver = e => {
     if (!dragInfo) {
       // Check if we're dragging a new component
-      if ($dndIsDragging && $dndIsNewComponent && $isGridScreen) {
+      if ($dndIsDragging && $dndSource?.isNew && $isGridScreen) {
         startDraggingPlaceholder()
       }
       return
