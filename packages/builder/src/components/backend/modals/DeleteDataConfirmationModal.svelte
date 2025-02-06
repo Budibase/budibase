@@ -86,7 +86,7 @@
 
   async function deleteView(view: ViewV2 | View) {
     try {
-      if ("version" in view && helpers.views.isCalculationView(view)) {
+      if ("version" in view && helpers.views.isV2(view)) {
         await viewsV2.delete(view as ViewV2)
       } else {
         await views.delete(view as View)
