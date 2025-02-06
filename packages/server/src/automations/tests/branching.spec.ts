@@ -25,6 +25,7 @@ describe("Branching automations", () => {
     const branch2Id = "44444444-4444-4444-4444-444444444444"
 
     const results = await createAutomationBuilder(config)
+      .appAction()
       .serverLog(
         { text: "Starting automation" },
         { stepName: "FirstLog", stepId: firstLogId }
@@ -75,7 +76,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .run({ fields: {} })
 
     expect(results.steps[3].outputs.status).toContain("branch1 branch taken")
     expect(results.steps[4].outputs.message).toContain("Branch 1.1")
@@ -83,7 +84,7 @@ describe("Branching automations", () => {
 
   it("should execute correct branch based on string equality", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction({ fields: { status: "active" } })
+      .appAction()
       .branch({
         activeBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Active user" }),
@@ -99,7 +100,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .run({ fields: { status: "active" } })
     expect(results.steps[0].outputs.status).toContain(
       "activeBranch branch taken"
     )
@@ -108,7 +109,7 @@ describe("Branching automations", () => {
 
   it("should handle multiple conditions with AND operator", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction({ fields: { status: "active", role: "admin" } })
+      .appAction()
       .branch({
         activeAdminBranch: {
           steps: stepBuilder =>
@@ -129,14 +130,14 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .run({ fields: { status: "active", role: "admin" } })
 
     expect(results.steps[1].outputs.message).toContain("Active admin user")
   })
 
   it("should handle multiple conditions with OR operator", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction({ fields: { status: "test", role: "user" } })
+      .appAction()
       .branch({
         specialBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Special user" }),
@@ -161,14 +162,14 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .run({ fields: { status: "test", role: "user" } })
 
     expect(results.steps[1].outputs.message).toContain("Special user")
   })
 
   it("should stop the branch automation when no conditions are met", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction({ fields: { status: "test", role: "user" } })
+      .appAction()
       .createRow({ row: { name: "Test", tableId: table._id } })
       .branch({
         specialBranch: {
@@ -194,7 +195,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .run({ fields: { status: "test", role: "user" } })
 
     expect(results.steps[1].outputs.status).toEqual(
       AutomationStatus.NO_CONDITION_MET
@@ -204,7 +205,7 @@ describe("Branching automations", () => {
 
   it("evaluate multiple conditions", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction({ fields: { test_trigger: true } })
+      .appAction()
       .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
       .branch({
         specialBranch: {
@@ -238,14 +239,14 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .run({ fields: { test_trigger: true } })
 
     expect(results.steps[2].outputs.message).toContain("Special user")
   })
 
   it("evaluate multiple conditions with interpolated text", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction({ fields: { test_trigger: true } })
+      .appAction()
       .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
       .branch({
         specialBranch: {
@@ -275,7 +276,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .run({ fields: { test_trigger: true } })
 
     expect(results.steps[2].outputs.message).toContain("Special user")
   })
