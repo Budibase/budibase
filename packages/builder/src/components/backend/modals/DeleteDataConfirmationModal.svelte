@@ -10,6 +10,7 @@
     viewsV2,
   } from "@/stores/builder"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { helpers } from "@budibase/shared-core"
   import { SourceType } from "@budibase/types"
   import { goto, params } from "@roxi/routify"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
@@ -85,7 +86,7 @@
 
   async function deleteView(view: ViewV2 | View) {
     try {
-      if ("version" in view && view.version === 2) {
+      if ("version" in view && helpers.views.isCalculationView(view)) {
         await viewsV2.delete(view as ViewV2)
       } else {
         await views.delete(view as View)
@@ -99,10 +100,10 @@
 
   async function deleteDatasource(datasource: Datasource) {
     try {
-      const isSelected =
-        get(datasources).selectedDatasourceId === datasource._id
       await datasources.delete(datasource)
       notifications.success("Datasource deleted")
+      const isSelected =
+        get(datasources).selectedDatasourceId === datasource._id
       if (isSelected) {
         $goto("./datasource")
       }

@@ -11,5 +11,5 @@ export function getSourceType(sourceId: string): SourceType {
   } else if (docIds.isQueryId(sourceId)) {
     return SourceType.QUERY
   }
-  throw new Error("Unknown source type - cannot find document type")
+  throw new Error(`Unknown source type for source "${sourceId}"`)
 }

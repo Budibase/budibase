@@ -3,17 +3,17 @@ import { Screen } from "@budibase/types"
 export function findInSettings(screen: Screen, toFind: string) {
   const foundIn: { setting: string; value: string }[] = []
   function recurse(props: Record<string, any>, parentKey = "") {
-    for (let key of Object.keys(props)) {
-      if (!props[key]) {
+    for (const [key, value] of Object.entries(props)) {
+      if (!value) {
         continue
       }
-      if (typeof props[key] === "string" && props[key].includes(toFind)) {
+      if (typeof value === "string" && value.includes(toFind)) {
         foundIn.push({
           setting: parentKey ? `${parentKey}.${key}` : key,
-          value: props[key],
+          value: value,
         })
-      } else if (typeof props[key] === "object") {
-        recurse(props[key], key)
+      } else if (typeof value === "object") {
+        recurse(value, key)
       }
     }
   }
