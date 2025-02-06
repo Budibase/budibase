@@ -90,7 +90,7 @@ describe("/screens", () => {
     async function checkScreens(roleId: string, screenIds: string[]) {
       await config.loginAsRole(roleId, async () => {
         const res = await config.api.application.getDefinition(
-          config.prodAppId!
+          config.getProdAppId()
         )
         expect(res.screens.length).toEqual(screenIds.length)
         expect(res.screens.map(s => s._id).sort()).toEqual(screenIds.sort())
