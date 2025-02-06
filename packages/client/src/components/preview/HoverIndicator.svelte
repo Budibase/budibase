@@ -43,9 +43,11 @@
   })
 </script>
 
-<IndicatorSet
-  componentId={$dndIsDragging ? null : componentId}
-  color="var(--spectrum-global-color-static-blue-200)"
-  zIndex={selected ? 890 : 910}
-  allowResizeAnchors
-/>
+{#if !$dndIsDragging && componentId}
+  <IndicatorSet
+    {componentId}
+    color="var(--spectrum-global-color-static-blue-200)"
+    zIndex={selected ? 890 : 910}
+    allowResizeAnchors
+  />
+{/if}}
