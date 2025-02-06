@@ -22,7 +22,6 @@ import {
   WebhookTriggerOutputs,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import * as setup from "../utilities"
 import { automations } from "@budibase/shared-core"
 
 type TriggerOutputs =
@@ -34,7 +33,7 @@ type TriggerOutputs =
   | CronTriggerOutputs
   | undefined
 
-type StepBuilderFunction = (stepBuilder: StepBuilder) => void
+type StepBuilderFunction = (stepBuilder: AutomationBuilder) => void
 
 type BranchConfig = {
   [key: string]: {
@@ -43,9 +42,38 @@ type BranchConfig = {
   }
 }
 
-class BaseStepBuilder {
-  protected steps: AutomationStep[] = []
-  protected stepNames: { [key: string]: string } = {}
+class AutomationBuilder {
+  private automationConfig: Automation
+  private triggerOutputs: TriggerOutputs
+  private triggerSet = false
+  private config: TestConfiguration
+  private steps: AutomationStep[] = []
+  private stepNames: { [key: string]: string } = {}
+
+  constructor(config: TestConfiguration) {
+    this.config = config
+    this.triggerOutputs = { fields: {} }
+    this.automationConfig = {
+      name: `Test Automation ${uuidv4()}`,
+      definition: {
+        steps: [],
+        trigger: {
+          ...TRIGGER_DEFINITIONS[AutomationTriggerStepId.APP],
+          stepId: AutomationTriggerStepId.APP,
+          inputs: this.triggerOutputs,
+          id: uuidv4(),
+        },
+        stepNames: {},
+      },
+      type: "automation",
+      appId: this.config.getAppId(),
+    }
+  }
+
+  name(n: string): this {
+    this.automationConfig.name = n
+    return this
+  }
 
   protected createStepFn<TStep extends AutomationActionStepId>(stepId: TStep) {
     return (
@@ -98,7 +126,7 @@ class BaseStepBuilder {
     }
 
     Object.entries(branchConfig).forEach(([key, branch]) => {
-      const stepBuilder = new StepBuilder()
+      const stepBuilder = new AutomationBuilder(this.config)
       branch.steps(stepBuilder)
       let branchId = uuidv4()
       branchStepInputs.branches.push({
@@ -106,7 +134,7 @@ class BaseStepBuilder {
         condition: branch.condition,
         id: branchId,
       })
-      branchStepInputs.children![branchId] = stepBuilder.build()
+      branchStepInputs.children![branchId] = stepBuilder.steps
     })
     const branchStep: AutomationStep = {
       ...automations.steps.branch.definition,
@@ -116,51 +144,11 @@ class BaseStepBuilder {
     }
     this.steps.push(branchStep)
   }
-}
-
-class StepBuilder extends BaseStepBuilder {
-  build(): AutomationStep[] {
-    return this.steps
-  }
 
   branch(branchConfig: BranchConfig): this {
     this.addBranchStep(branchConfig)
     return this
   }
-}
-
-class AutomationBuilder extends BaseStepBuilder {
-  private automationConfig: Automation
-  private config: TestConfiguration
-  private triggerOutputs: TriggerOutputs
-  private triggerSet = false
-
-  constructor(config?: TestConfiguration) {
-    super()
-    this.config = config || setup.getConfig()
-    this.triggerOutputs = { fields: {} }
-    this.automationConfig = {
-      name: `Test Automation ${uuidv4()}`,
-      definition: {
-        steps: [],
-        trigger: {
-          ...TRIGGER_DEFINITIONS[AutomationTriggerStepId.APP],
-          stepId: AutomationTriggerStepId.APP,
-          inputs: this.triggerOutputs,
-          id: uuidv4(),
-        },
-        stepNames: {},
-      },
-      type: "automation",
-      appId: this.config.getAppId(),
-    }
-  }
-
-  name(n: string): this {
-    this.automationConfig.name = n
-    return this
-  }
-
   protected triggerInputOutput<
     TStep extends AutomationTriggerStepId,
     TInput = AutomationTriggerInputs<TStep>,
@@ -207,11 +195,6 @@ class AutomationBuilder extends BaseStepBuilder {
   rowDeleted = this.triggerInputOutput(AutomationTriggerStepId.ROW_DELETED)
   webhook = this.triggerInputOutput(AutomationTriggerStepId.WEBHOOK)
   cron = this.triggerInputOutput(AutomationTriggerStepId.CRON)
-
-  branch(branchConfig: BranchConfig): this {
-    this.addBranchStep(branchConfig)
-    return this
-  }
 
   build(): Automation {
     this.automationConfig.definition.steps = this.steps
