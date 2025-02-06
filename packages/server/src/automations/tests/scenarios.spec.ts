@@ -38,7 +38,7 @@ describe("Automation Scenarios", () => {
             tableId: table._id,
           },
         })
-        .run({
+        .test({
           row: { name: "Test", description: "TEST" },
           id: "1234",
         })
@@ -67,7 +67,7 @@ describe("Automation Scenarios", () => {
         .queryRows({
           tableId: table._id!,
         })
-        .run({ fields: {} })
+        .test({ fields: {} })
 
       expect(results.steps).toHaveLength(1)
       expect(results.steps[0].outputs.rows).toHaveLength(2)
@@ -93,7 +93,7 @@ describe("Automation Scenarios", () => {
         .queryRows({
           tableId: table._id!,
         })
-        .run({ fields: {} })
+        .test({ fields: {} })
 
       expect(results.steps).toHaveLength(3)
       expect(results.steps[1].outputs.success).toBeTruthy()
@@ -153,7 +153,7 @@ describe("Automation Scenarios", () => {
           },
           { stepName: "QueryRowsStep" }
         )
-        .run({ fields: {} })
+        .test({ fields: {} })
 
       expect(results.steps).toHaveLength(3)
 
@@ -207,7 +207,7 @@ describe("Automation Scenarios", () => {
         .queryRows({
           tableId: table._id!,
         })
-        .run({ fields: {} })
+        .test({ fields: {} })
 
       expect(results.steps).toHaveLength(3)
       expect(results.steps[1].outputs.success).toBeTruthy()
@@ -260,7 +260,7 @@ describe("Automation Scenarios", () => {
           value: 20,
         })
         .serverLog({ text: "Equal condition met" })
-        .run({ fields: {} })
+        .test({ fields: {} })
 
       expect(results.steps[2].outputs.success).toBeTrue()
       expect(results.steps[2].outputs.result).toBeFalse()
@@ -286,7 +286,7 @@ describe("Automation Scenarios", () => {
           value: 20,
         })
         .serverLog({ text: "Not Equal condition met" })
-        .run({ fields: {} })
+        .test({ fields: {} })
 
       expect(results.steps[2].outputs.success).toBeTrue()
       expect(results.steps[2].outputs.result).toBeTrue()
@@ -355,7 +355,7 @@ describe("Automation Scenarios", () => {
           .serverLog({
             text: `${condition} condition ${expectPass ? "passed" : "failed"}`,
           })
-          .run({ fields: {} })
+          .test({ fields: {} })
 
         expect(results.steps[2].outputs.result).toBe(expectPass)
         if (expectPass) {
@@ -373,7 +373,7 @@ describe("Automation Scenarios", () => {
     const results = await createAutomationBuilder(config)
       .onRowUpdated({ tableId: table._id! })
       .serverLog({ text: "{{ [user].[email] }}" })
-      .run({
+      .test({
         row: { name: "Test", description: "TEST" },
         id: "1234",
       })
@@ -385,7 +385,7 @@ describe("Automation Scenarios", () => {
     const results = await createAutomationBuilder(config)
       .onAppAction()
       .serverLog({ text: "{{ [user].[email] }}" })
-      .run({ fields: {} })
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.message).toContain("example.com")
   })
@@ -475,7 +475,7 @@ if (descriptions.length) {
         .queryRows({
           tableId: newTable._id!,
         })
-        .run({ fields: {} })
+        .test({ fields: {} })
 
       expect(results.steps).toHaveLength(3)
 

@@ -44,7 +44,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query All Rows" }
       )
-      .run({ fields: {} })
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
@@ -65,7 +65,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query With Empty Filter" }
       )
-      .run({ fields: {} })
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
@@ -88,7 +88,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query With Return None" }
       )
-      .run({ fields: {} })
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
@@ -114,7 +114,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query With Null Filter" }
       )
-      .run({ fields: {} })
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
@@ -135,7 +135,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query With Return All" }
       )
-      .run({ fields: {} })
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
@@ -160,7 +160,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query table with spaces" }
       )
-      .run({ fields: {} })
+      .test({ fields: {} })
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
     expect(result.steps[0].outputs.rows.length).toBe(1)

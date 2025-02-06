@@ -60,7 +60,7 @@ describe("test the openai action", () => {
       createAutomationBuilder(config)
         .onAppAction()
         .openai({ prompt: "Hello, world", model: Model.GPT_4O_MINI })
-        .run({ fields: {} })
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual("This is a test")
@@ -72,7 +72,7 @@ describe("test the openai action", () => {
       createAutomationBuilder(config)
         .onAppAction()
         .openai({ prompt: "", model: Model.GPT_4O_MINI })
-        .run({ fields: {} })
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual(
@@ -88,7 +88,7 @@ describe("test the openai action", () => {
       createAutomationBuilder(config)
         .onAppAction()
         .openai({ prompt: "Hello, world", model: Model.GPT_4O_MINI })
-        .run({ fields: {} })
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual(
@@ -111,7 +111,7 @@ describe("test the openai action", () => {
       createAutomationBuilder(config)
         .onAppAction()
         .openai({ model: Model.GPT_4O_MINI, prompt: "Hello, world" })
-        .run({ fields: {} })
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual("This is a test")

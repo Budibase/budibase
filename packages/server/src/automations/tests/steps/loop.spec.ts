@@ -95,7 +95,7 @@ describe("Attempt to run a basic loop automation", () => {
           tableId: table._id,
         },
       })
-      .run()
+      .test()
 
     expect(results.trigger).toBeDefined()
     expect(results.steps).toHaveLength(1)
@@ -136,7 +136,7 @@ describe("Attempt to run a basic loop automation", () => {
       })
       .serverLog({ text: "Message {{loop.currentItem}}" })
       .serverLog({ text: "{{steps.1.rows.0._id}}" })
-      .run()
+      .test()
 
     results.steps[1].outputs.items.forEach(
       (output: ServerLogStepOutputs, index: number) => {
@@ -240,7 +240,7 @@ describe("Attempt to run a basic loop automation", () => {
         binding: "Message 1,Message 2,Message 3",
       })
       .serverLog({ text: "{{loop.currentItem}}" })
-      .run()
+      .test()
 
     expect(results.trigger).toBeDefined()
     expect(results.steps).toHaveLength(2)

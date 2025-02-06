@@ -76,7 +76,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run({ fields: {} })
+      .test({ fields: {} })
 
     expect(results.steps[3].outputs.status).toContain("branch1 branch taken")
     expect(results.steps[4].outputs.message).toContain("Branch 1.1")
@@ -100,7 +100,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run({ fields: { status: "active" } })
+      .test({ fields: { status: "active" } })
     expect(results.steps[0].outputs.status).toContain(
       "activeBranch branch taken"
     )
@@ -130,7 +130,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run({ fields: { status: "active", role: "admin" } })
+      .test({ fields: { status: "active", role: "admin" } })
 
     expect(results.steps[1].outputs.message).toContain("Active admin user")
   })
@@ -162,7 +162,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run({ fields: { status: "test", role: "user" } })
+      .test({ fields: { status: "test", role: "user" } })
 
     expect(results.steps[1].outputs.message).toContain("Special user")
   })
@@ -195,7 +195,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run({ fields: { status: "test", role: "user" } })
+      .test({ fields: { status: "test", role: "user" } })
 
     expect(results.steps[1].outputs.status).toEqual(
       AutomationStatus.NO_CONDITION_MET
@@ -239,7 +239,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run({ fields: { test_trigger: true } })
+      .test({ fields: { test_trigger: true } })
 
     expect(results.steps[2].outputs.message).toContain("Special user")
   })
@@ -276,7 +276,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run({ fields: { test_trigger: true } })
+      .test({ fields: { test_trigger: true } })
 
     expect(results.steps[2].outputs.message).toContain("Special user")
   })

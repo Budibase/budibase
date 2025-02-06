@@ -34,7 +34,7 @@ describe("Execute Bash Automations", () => {
         { text: "Bash output was: {{ steps.[Echo Command].stdout }}" },
         { stepName: "Log Output" }
       )
-      .run()
+      .test()
 
     expect(result.steps[0].outputs.stdout).toEqual("hello world\n")
     expect(result.steps[1].outputs.message).toContain(
@@ -57,7 +57,7 @@ describe("Execute Bash Automations", () => {
         { code: "rm {{ trigger.fields.filename }}" },
         { stepName: "Cleanup" }
       )
-      .run()
+      .test()
 
     expect(result.steps[1].outputs.stdout).toEqual("INITIAL CONTENT\n")
     expect(result.steps[1].outputs.success).toEqual(true)
@@ -112,7 +112,7 @@ describe("Execute Bash Automations", () => {
         { text: "Value was {{ steps.[Check Value].value }}" },
         { stepName: "Log Result" }
       )
-      .run()
+      .test()
 
     expect(result.steps[0].outputs.stdout).toEqual("10\n")
     expect(result.steps[1].outputs.value).toEqual("high")
