@@ -54,13 +54,13 @@ class TriggerBuilder {
     }
   }
 
-  appAction = this.trigger(AutomationTriggerStepId.APP)
+  onAppAction = this.trigger(AutomationTriggerStepId.APP)
 
-  rowSaved = this.trigger(AutomationTriggerStepId.ROW_SAVED)
-  rowUpdated = this.trigger(AutomationTriggerStepId.ROW_UPDATED)
-  rowDeleted = this.trigger(AutomationTriggerStepId.ROW_DELETED)
-  webhook = this.trigger(AutomationTriggerStepId.WEBHOOK)
-  cron = this.trigger(AutomationTriggerStepId.CRON)
+  onRowSaved = this.trigger(AutomationTriggerStepId.ROW_SAVED)
+  onRowUpdated = this.trigger(AutomationTriggerStepId.ROW_UPDATED)
+  onRowDeleted = this.trigger(AutomationTriggerStepId.ROW_DELETED)
+  onWebhook = this.trigger(AutomationTriggerStepId.WEBHOOK)
+  onCron = this.trigger(AutomationTriggerStepId.CRON)
 }
 
 class BranchStepBuilder<TStep extends AutomationTriggerStepId> {

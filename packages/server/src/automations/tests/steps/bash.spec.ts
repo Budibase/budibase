@@ -25,7 +25,7 @@ describe("Execute Bash Automations", () => {
 
   it("should use trigger data in bash command and pass output to subsequent steps", async () => {
     const result = await createAutomationBuilder(config)
-      .appAction({ fields: { command: "hello world" } })
+      .onAppAction({ fields: { command: "hello world" } })
       .bash(
         { code: "echo '{{ trigger.fields.command }}'" },
         { stepName: "Echo Command" }
@@ -44,7 +44,7 @@ describe("Execute Bash Automations", () => {
 
   it("should chain multiple bash commands using previous outputs", async () => {
     const result = await createAutomationBuilder(config)
-      .appAction({ fields: { filename: "testfile.txt" } })
+      .onAppAction({ fields: { filename: "testfile.txt" } })
       .bash(
         { code: "echo 'initial content' > {{ trigger.fields.filename }}" },
         { stepName: "Create File" }
@@ -94,7 +94,7 @@ describe("Execute Bash Automations", () => {
 
   it("should handle bash output in conditional logic", async () => {
     const result = await createAutomationBuilder(config)
-      .appAction({ fields: { threshold: "5" } })
+      .onAppAction({ fields: { threshold: "5" } })
       .bash(
         { code: "echo $(( {{ trigger.fields.threshold }} + 5 ))" },
         { stepName: "Calculate Value" }

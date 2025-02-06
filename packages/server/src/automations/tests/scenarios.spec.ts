@@ -30,7 +30,7 @@ describe("Automation Scenarios", () => {
       const table = await config.api.table.save(basicTable())
 
       const results = await createAutomationBuilder(config)
-        .rowUpdated({ tableId: table._id! })
+        .onRowUpdated({ tableId: table._id! })
         .createRow({
           row: {
             name: "{{trigger.row.name}}",
@@ -63,7 +63,7 @@ describe("Automation Scenarios", () => {
       await config.api.row.save(table._id!, row)
       await config.api.row.save(table._id!, row)
       const results = await createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .queryRows({
           tableId: table._id!,
         })
@@ -82,7 +82,7 @@ describe("Automation Scenarios", () => {
       await config.api.row.save(table._id!, row)
       await config.api.row.save(table._id!, row)
       const results = await createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .queryRows({
           tableId: table._id!,
         })
@@ -124,7 +124,7 @@ describe("Automation Scenarios", () => {
       })
 
       const results = await createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .createRow(
           {
             row: {
@@ -193,7 +193,7 @@ describe("Automation Scenarios", () => {
       await config.api.row.save(table._id!, row)
       await config.api.row.save(table._id!, row)
       const results = await createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .queryRows(
           {
             tableId: table._id!,
@@ -243,7 +243,7 @@ describe("Automation Scenarios", () => {
 
     it("should stop an automation if the condition is not met", async () => {
       const results = await createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .createRow({
           row: {
             name: "Equal Test",
@@ -269,7 +269,7 @@ describe("Automation Scenarios", () => {
 
     it("should continue the automation if the condition is met", async () => {
       const results = await createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .createRow({
           row: {
             name: "Not Equal Test",
@@ -336,7 +336,7 @@ describe("Automation Scenarios", () => {
       "should pass the filter when condition is $condition",
       async ({ condition, value, rowValue, expectPass }) => {
         const results = await createAutomationBuilder(config)
-          .appAction()
+          .onAppAction()
           .createRow({
             row: {
               name: `${condition} Test`,
@@ -371,7 +371,7 @@ describe("Automation Scenarios", () => {
     const table = await config.api.table.save(basicTable())
 
     const results = await createAutomationBuilder(config)
-      .rowUpdated({ tableId: table._id! })
+      .onRowUpdated({ tableId: table._id! })
       .serverLog({ text: "{{ [user].[email] }}" })
       .run({
         row: { name: "Test", description: "TEST" },
@@ -383,7 +383,7 @@ describe("Automation Scenarios", () => {
 
   it("Check user is passed through from app trigger", async () => {
     const results = await createAutomationBuilder(config)
-      .appAction()
+      .onAppAction()
       .serverLog({ text: "{{ [user].[email] }}" })
       .run({ fields: {} })
 
@@ -455,7 +455,7 @@ if (descriptions.length) {
       })
 
       const results = await createAutomationBuilder(config)
-        .appAction()
+        .onAppAction()
         .executeQuery({
           query: {
             queryId: query._id!,
