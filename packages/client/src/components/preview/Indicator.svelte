@@ -14,6 +14,8 @@
   export let line = false
   export let alignRight = false
   export let showResizeAnchors = false
+  export let background = null
+  export let animate = false
 
   const AnchorSides = [
     "right",
@@ -33,10 +35,12 @@
   class="indicator"
   class:flipped
   class:line
-  style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex};"
+  style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex}; --bg: {background ||
+    'none'};"
   class:withText={!!text}
   class:vCompact={height < 40}
   class:hCompact={width < 40}
+  class:animate
 >
   {#if text || icon}
     <div
@@ -84,6 +88,7 @@
     border: 2px solid var(--color);
     pointer-events: none;
     border-radius: 4px;
+    background: var(--bg);
   }
   .indicator.withText {
     border-top-left-radius: 0;
@@ -93,6 +98,9 @@
   }
   .indicator.line {
     border-radius: 4px !important;
+  }
+  .indicator.animate {
+    transition: all 130ms ease-out;
   }
 
   /* Label styles */
