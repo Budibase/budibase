@@ -35,7 +35,6 @@ import {
   WebhookActionType,
   BuiltinPermissionID,
   DeepPartial,
-  ViewV2,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
