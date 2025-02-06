@@ -1,4 +1,10 @@
-import { Ctx } from "@budibase/types"
+import {
+  DeleteMediaResponse,
+  FetchMediaResponse,
+  UploadMediaRequest,
+  UploadMediaResponse,
+  UserCtx,
+} from "@budibase/types"
 import { objectStore } from "@budibase/backend-core"
 
 const ASSETS = "assets"
@@ -7,7 +13,9 @@ function globalBucket() {
   return objectStore.ObjectStoreBuckets.GLOBAL
 }
 
-export async function upload(ctx: Ctx) {
+export async function upload(
+  ctx: UserCtx<UploadMediaRequest, UploadMediaResponse>
+) {
   let file = ctx.request?.files?.file
   const isPrivate = ctx.request.body.private
   const name = ctx.request.body.name
@@ -37,7 +45,7 @@ export async function upload(ctx: Ctx) {
     metadata,
   })
   if (!isPrivate) {
-    await objectStore.makePathPublic(globalBucket(), response.Key)
+    await objectStore.makePathPublic(globalBucket(), s3Key)
   }
 
   const upload = {
@@ -54,7 +62,7 @@ export async function upload(ctx: Ctx) {
   }
 }
 
-export async function fetch(ctx: Ctx) {
+export async function fetch(ctx: UserCtx<void, FetchMediaResponse>) {
   let assets: { name: string; url: string; size: number; private: boolean }[]
   try {
     const globalDir = objectStore.getGlobalFileS3Key(ASSETS, "")
@@ -92,7 +100,7 @@ export async function fetch(ctx: Ctx) {
   }
 }
 
-export async function destroy(ctx: Ctx) {
+export async function destroy(ctx: UserCtx<void, DeleteMediaResponse>) {
   const filename = ctx.params.filename
   const s3Key = objectStore.getGlobalFileS3Key(ASSETS, filename)
 

@@ -10,7 +10,7 @@
     Divider,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { API } from "api"
+  import { API } from "@/api"
   import FileSizeRenderer from "./_components/FileSizeRenderer.svelte"
   import DeleteMediaRenderer from "./_components/DeleteMediaRenderer.svelte"
 
@@ -85,7 +85,7 @@
     let data = new FormData()
     data.append("file", uploadFile)
     try {
-      await API.uploadTentantMedia({ data })
+      await API.uploadTenantMedia(data)
       notifications.success("Media uploaded successfully")
     } catch (e) {
       console.error(e)

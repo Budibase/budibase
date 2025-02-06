@@ -1,9 +1,12 @@
-import BudiStore from "../BudiStore"
-import { API } from "api"
+import { API } from "@/api"
+import { BudiStore } from "@/stores/BudiStore"
+import { FetchMediaResponse, Media } from "@budibase/types"
 
-export const INITIAL_MEDIA_STATE = {}
+interface MediaState {}
 
-export class MediaStore extends BudiStore {
+export const INITIAL_MEDIA_STATE: Record<string, string> = {}
+
+export class MediaStore extends BudiStore<MediaState> {
   constructor() {
     super(INITIAL_MEDIA_STATE)
 
@@ -14,11 +17,12 @@ export class MediaStore extends BudiStore {
   reset() {
     this.store.set(INITIAL_MEDIA_STATE)
   }
+
   async syncMedia() {
     try {
-      const resp = await API.fetchTenantMedia()
+      const resp: FetchMediaResponse = await API.fetchTenantMedia()
       this.store.set(
-        resp.assets.reduce((acc, item) => {
+        resp.assets.reduce((acc: Record<string, string>, item: Media) => {
           acc[item.name] = item.url
           return acc
         }, {})
