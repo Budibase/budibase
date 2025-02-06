@@ -1,9 +1,9 @@
 import { Datasource, Query } from "@budibase/types"
-import * as setup from "./utilities"
+import * as setup from "../utilities"
 import {
   DatabaseName,
   datasourceDescribe,
-} from "../../integrations/tests/utils"
+} from "../../../integrations/tests/utils"
 import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 
