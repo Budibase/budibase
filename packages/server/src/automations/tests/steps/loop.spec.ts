@@ -1,33 +1,78 @@
 import * as automation from "../../index"
-import * as setup from "../utilities"
+import * as triggers from "../../triggers"
+import { basicTable, loopAutomation } from "../../../tests/utilities/structures"
+import { context } from "@budibase/backend-core"
 import {
   Table,
   LoopStepType,
-  CreateRowStepOutputs,
+  AutomationResults,
   ServerLogStepOutputs,
+  CreateRowStepOutputs,
   FieldType,
 } from "@budibase/types"
+import * as loopUtils from "../../loopUtils"
+import { LoopInput } from "../../../definitions/automations"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
-describe("Loop automations", () => {
-  let config = setup.getConfig(),
-    table: Table
+describe("Attempt to run a basic loop automation", () => {
+  const config = new TestConfiguration()
+  let table: Table
 
-  beforeEach(async () => {
-    await automation.init()
+  beforeAll(async () => {
     await config.init()
-    table = await config.createTable()
-    await config.createRow()
+    await automation.init()
   })
 
-  afterAll(setup.afterAll)
+  beforeEach(async () => {
+    table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, {})
+  })
+
+  afterAll(() => {
+    automation.shutdown()
+    config.end()
+  })
+
+  async function runLoop(loopOpts?: LoopInput): Promise<AutomationResults> {
+    const appId = config.getAppId()
+    return await context.doInAppContext(appId, async () => {
+      const params = { fields: { appId } }
+      const result = await triggers.externalTrigger(
+        loopAutomation(table._id!, loopOpts),
+        params,
+        { getResponses: true }
+      )
+      if ("outputs" in result && !result.outputs.success) {
+        throw new Error("Unable to proceed - failed to return anything.")
+      }
+      return result as AutomationResults
+    })
+  }
+
+  it("attempt to run a basic loop", async () => {
+    const resp = await runLoop()
+    expect(resp.steps[2].outputs.iterations).toBe(1)
+  })
+
+  it("test a loop with a string", async () => {
+    const resp = await runLoop({
+      option: LoopStepType.STRING,
+      binding: "a,b,c",
+    })
+    expect(resp.steps[2].outputs.iterations).toBe(3)
+  })
+
+  it("test a loop with a binding that returns an integer", async () => {
+    const resp = await runLoop({
+      option: LoopStepType.ARRAY,
+      binding: "{{ 1 }}",
+    })
+    expect(resp.steps[2].outputs.iterations).toBe(1)
+  })
 
   it("should run an automation with a trigger, loop, and create row step", async () => {
-    const builder = createAutomationBuilder({
-      name: "Test Trigger with Loop and Create Row",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .rowSaved(
         { tableId: table._id! },
         {
@@ -70,11 +115,7 @@ describe("Loop automations", () => {
   })
 
   it("should run an automation where a loop step is between two normal steps to ensure context correctness", async () => {
-    const builder = createAutomationBuilder({
-      name: "Test Trigger with Loop and Create Row",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .rowSaved(
         { tableId: table._id! },
         {
@@ -110,11 +151,7 @@ describe("Loop automations", () => {
   })
 
   it("if an incorrect type is passed to the loop it should return an error", async () => {
-    const builder = createAutomationBuilder({
-      name: "Test Loop error",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .loop({
         option: LoopStepType.ARRAY,
@@ -130,11 +167,7 @@ describe("Loop automations", () => {
   })
 
   it("ensure the loop stops if the failure condition is reached", async () => {
-    const builder = createAutomationBuilder({
-      name: "Test Loop error",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .loop({
         option: LoopStepType.ARRAY,
@@ -153,11 +186,7 @@ describe("Loop automations", () => {
   })
 
   it("ensure the loop stops if the max iterations are reached", async () => {
-    const builder = createAutomationBuilder({
-      name: "Test Loop max iterations",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .loop({
         option: LoopStepType.ARRAY,
@@ -172,11 +201,7 @@ describe("Loop automations", () => {
   })
 
   it("should run an automation with loop and max iterations to ensure context correctness further down the tree", async () => {
-    const builder = createAutomationBuilder({
-      name: "Test context down tree with Loop and max iterations",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .loop({
         option: LoopStepType.ARRAY,
@@ -191,11 +216,7 @@ describe("Loop automations", () => {
   })
 
   it("should run an automation where a loop is successfully run twice", async () => {
-    const builder = createAutomationBuilder({
-      name: "Test Trigger with Loop and Create Row",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .rowSaved(
         { tableId: table._id! },
         {
@@ -257,11 +278,7 @@ describe("Loop automations", () => {
   })
 
   it("should run an automation where a loop is used twice to ensure context correctness further down the tree", async () => {
-    const builder = createAutomationBuilder({
-      name: "Test Trigger with Loop and Create Row",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .loop({
         option: LoopStepType.ARRAY,
@@ -283,11 +300,7 @@ describe("Loop automations", () => {
   })
 
   it("should use automation names to loop with", async () => {
-    const builder = createAutomationBuilder({
-      name: "Test Trigger with Loop and Create Row",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .loop(
         {
@@ -339,11 +352,7 @@ describe("Loop automations", () => {
 
     await config.api.row.bulkImport(table._id!, { rows })
 
-    const builder = createAutomationBuilder({
-      name: "Test Loop and Update Row",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .queryRows({
         tableId: table._id!,
@@ -423,11 +432,7 @@ describe("Loop automations", () => {
 
     await config.api.row.bulkImport(table._id!, { rows })
 
-    const builder = createAutomationBuilder({
-      name: "Test Loop and Update Row",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .queryRows(
         {
@@ -510,11 +515,7 @@ describe("Loop automations", () => {
 
     await config.api.row.bulkImport(table._id!, { rows })
 
-    const builder = createAutomationBuilder({
-      name: "Test Loop and Delete Row",
-    })
-
-    const results = await builder
+    const results = await createAutomationBuilder({ config })
       .appAction({ fields: {} })
       .queryRows({
         tableId: table._id!,
@@ -535,5 +536,99 @@ describe("Loop automations", () => {
     expect(results.steps).toHaveLength(3)
 
     expect(results.steps[2].outputs.rows).toHaveLength(0)
+  })
+
+  describe("replaceFakeBindings", () => {
+    it("should replace loop bindings in nested objects", () => {
+      const originalStepInput = {
+        schema: {
+          name: {
+            type: "string",
+            constraints: {
+              type: "string",
+              length: { maximum: null },
+              presence: false,
+            },
+            name: "name",
+            display: { type: "Text" },
+          },
+        },
+        row: {
+          tableId: "ta_aaad4296e9f74b12b1b90ef7a84afcad",
+          name: "{{ loop.currentItem.pokemon }}",
+        },
+      }
+
+      const loopStepNumber = 3
+
+      const result = loopUtils.replaceFakeBindings(
+        originalStepInput,
+        loopStepNumber
+      )
+
+      expect(result).toEqual({
+        schema: {
+          name: {
+            type: "string",
+            constraints: {
+              type: "string",
+              length: { maximum: null },
+              presence: false,
+            },
+            name: "name",
+            display: { type: "Text" },
+          },
+        },
+        row: {
+          tableId: "ta_aaad4296e9f74b12b1b90ef7a84afcad",
+          name: "{{ steps.3.currentItem.pokemon }}",
+        },
+      })
+    })
+
+    it("should handle null values in nested objects", () => {
+      const originalStepInput = {
+        nullValue: null,
+        nestedNull: {
+          someKey: null,
+        },
+        validValue: "{{ loop.someValue }}",
+      }
+
+      const loopStepNumber = 2
+
+      const result = loopUtils.replaceFakeBindings(
+        originalStepInput,
+        loopStepNumber
+      )
+
+      expect(result).toEqual({
+        nullValue: null,
+        nestedNull: {
+          someKey: null,
+        },
+        validValue: "{{ steps.2.someValue }}",
+      })
+    })
+
+    it("should handle empty objects and arrays", () => {
+      const originalStepInput = {
+        emptyObject: {},
+        emptyArray: [],
+        nestedEmpty: {
+          emptyObj: {},
+          emptyArr: [],
+        },
+      }
+
+      const loopStepNumber = 1
+
+      const result = loopUtils.replaceFakeBindings(
+        originalStepInput,
+        loopStepNumber
+      )
+
+      expect(result).toEqual(originalStepInput)
+    })
   })
 })

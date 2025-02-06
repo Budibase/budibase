@@ -17,11 +17,11 @@ import { basicAutomation } from "../../tests/utilities/structures"
 import { wait } from "../../utilities"
 import { makePartial } from "../../tests/utilities"
 import { cleanInputValues } from "../automationUtils"
-import * as setup from "./utilities"
 import { Automation } from "@budibase/types"
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
 
 describe("Run through some parts of the automations system", () => {
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await automation.init()
@@ -30,7 +30,7 @@ describe("Run through some parts of the automations system", () => {
 
   afterAll(async () => {
     await automation.shutdown()
-    setup.afterAll()
+    config.end()
   })
 
   it("should be able to init in builder", async () => {
