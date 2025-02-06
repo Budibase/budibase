@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { InlineAlert, Link, notifications } from "@budibase/bbui"
+  import { Link, notifications } from "@budibase/bbui"
   import {
     appStore,
     datasources,
@@ -21,9 +21,6 @@
   let confirmDeleteDialog: any
   let affectedScreens: { text: string; url: string }[] = []
   let sourceType: SourceType | undefined = undefined
-  let isInternal: boolean = false
-
-  $: isInternalTable = isInternal && sourceType === SourceType.TABLE
 
   const getDatasourceQueries = () => {
     if (sourceType !== SourceType.DATASOURCE) {
@@ -50,7 +47,6 @@
     const usage = await screenStore.usageOfScreens(getSourceID())
     affectedScreens = processScreens(usage.screens)
     sourceType = usage.sourceType
-    isInternal = usage.internal
     confirmDeleteDialog.show()
   }
 
@@ -174,7 +170,7 @@
     } else {
       message += "."
     }
-    return message
+    return message.length !== initialLength ? message : ""
   }
 </script>
 
