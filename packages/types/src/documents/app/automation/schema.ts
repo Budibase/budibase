@@ -52,6 +52,12 @@ import {
   RowDeletedTriggerInputs,
   BranchStepInputs,
   BaseAutomationOutputs,
+  AppActionTriggerOutputs,
+  CronTriggerOutputs,
+  RowDeletedTriggerOutputs,
+  RowCreatedTriggerOutputs,
+  RowUpdatedTriggerOutputs,
+  WebhookTriggerOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -339,6 +345,23 @@ export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
     ? RowUpdatedTriggerInputs
     : T extends AutomationTriggerStepId.WEBHOOK
     ? Record<string, any>
+    : never
+
+export type AutomationTriggerOutputs<T extends AutomationTriggerStepId> =
+  T extends AutomationTriggerStepId.APP
+    ? AppActionTriggerOutputs
+    : T extends AutomationTriggerStepId.CRON
+    ? CronTriggerOutputs
+    : T extends AutomationTriggerStepId.ROW_ACTION
+    ? Record<string, any>
+    : T extends AutomationTriggerStepId.ROW_DELETED
+    ? RowDeletedTriggerOutputs
+    : T extends AutomationTriggerStepId.ROW_SAVED
+    ? RowCreatedTriggerOutputs
+    : T extends AutomationTriggerStepId.ROW_UPDATED
+    ? RowUpdatedTriggerOutputs
+    : T extends AutomationTriggerStepId.WEBHOOK
+    ? WebhookTriggerOutputs
     : never
 
 export interface AutomationTriggerSchema<

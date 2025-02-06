@@ -8,15 +8,16 @@ import {
   Table,
   TableSourceType,
 } from "@budibase/types"
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
-import * as setup from "./utilities"
 import * as uuid from "uuid"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 describe("test the update row action", () => {
-  let table: Table,
-    row: Row,
-    config = setup.getConfig()
+  const config = new TestConfiguration()
+
+  let table: Table
+  let row: Row
 
   beforeAll(async () => {
     await config.init()
@@ -24,15 +25,12 @@ describe("test the update row action", () => {
     row = await config.createRow()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to run the update row action", async () => {
-    const builder = createAutomationBuilder({
-      name: "Update Row Automation",
-    })
-
-    const results = await builder
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .updateRow({
         rowId: row._id!,
         row: {
@@ -54,12 +52,7 @@ describe("test the update row action", () => {
   })
 
   it("should check invalid inputs return an error", async () => {
-    const builder = createAutomationBuilder({
-      name: "Invalid Inputs Automation",
-    })
-
-    const results = await builder
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .updateRow({ meta: {}, row: {}, rowId: "" })
       .run()
 
@@ -67,12 +60,7 @@ describe("test the update row action", () => {
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const builder = createAutomationBuilder({
-      name: "Nonexistent Table Automation",
-    })
-
-    const results = await builder
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .updateRow({
         row: { _id: "invalid" },
         rowId: "invalid",
@@ -115,12 +103,7 @@ describe("test the update row action", () => {
       user2: [{ _id: user2._id }],
     })
 
-    const builder = createAutomationBuilder({
-      name: "Link Preservation Automation",
-    })
-
-    const results = await builder
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .updateRow({
         rowId: row._id!,
         row: {
@@ -173,12 +156,7 @@ describe("test the update row action", () => {
       user2: [{ _id: user2._id }],
     })
 
-    const builder = createAutomationBuilder({
-      name: "Link Overwrite Automation",
-    })
-
-    const results = await builder
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .updateRow({
         rowId: row._id!,
         row: {
