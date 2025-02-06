@@ -27,7 +27,7 @@ describe("cron automations", () => {
   })
 
   it("should initialise the automation timestamp", async () => {
-    await createAutomationBuilder(config).cron({ cron: "* * * * *" }).save()
+    await createAutomationBuilder(config).onCron({ cron: "* * * * *" }).save()
 
     tk.travel(Date.now() + oneMinuteInMs)
     await config.publish()
