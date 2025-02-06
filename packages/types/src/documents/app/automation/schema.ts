@@ -331,7 +331,7 @@ export type AutomationTriggerDefinition = Omit<
 
 export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
   T extends AutomationTriggerStepId.APP
-    ? void
+    ? void | Record<string, any>
     : T extends AutomationTriggerStepId.CRON
     ? CronTriggerInputs
     : T extends AutomationTriggerStepId.ROW_ACTION
