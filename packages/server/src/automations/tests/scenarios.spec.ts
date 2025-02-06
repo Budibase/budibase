@@ -29,7 +29,7 @@ describe("Automation Scenarios", () => {
     it("should trigger an automation which then creates a row", async () => {
       const table = await config.api.table.save(basicTable())
 
-      const results = await createAutomationBuilder({ config })
+      const results = await createAutomationBuilder(config)
         .rowUpdated(
           { tableId: table._id! },
           {
@@ -65,8 +65,7 @@ describe("Automation Scenarios", () => {
       }
       await config.api.row.save(table._id!, row)
       await config.api.row.save(table._id!, row)
-      const results = await createAutomationBuilder({ config })
-        .appAction({ fields: {} })
+      const results = await createAutomationBuilder(config)
         .queryRows({
           tableId: table._id!,
         })
@@ -84,8 +83,7 @@ describe("Automation Scenarios", () => {
       }
       await config.api.row.save(table._id!, row)
       await config.api.row.save(table._id!, row)
-      const results = await createAutomationBuilder({ config })
-        .appAction({ fields: {} })
+      const results = await createAutomationBuilder(config)
         .queryRows({
           tableId: table._id!,
         })
@@ -126,8 +124,7 @@ describe("Automation Scenarios", () => {
         },
       })
 
-      const results = await createAutomationBuilder({ config })
-        .appAction({ fields: {} })
+      const results = await createAutomationBuilder(config)
         .createRow(
           {
             row: {
@@ -195,8 +192,7 @@ describe("Automation Scenarios", () => {
       }
       await config.api.row.save(table._id!, row)
       await config.api.row.save(table._id!, row)
-      const results = await createAutomationBuilder({ config })
-        .appAction({ fields: {} })
+      const results = await createAutomationBuilder(config)
         .queryRows(
           {
             tableId: table._id!,
@@ -245,8 +241,7 @@ describe("Automation Scenarios", () => {
     })
 
     it("should stop an automation if the condition is not met", async () => {
-      const results = await createAutomationBuilder({ config })
-        .appAction({ fields: {} })
+      const results = await createAutomationBuilder(config)
         .createRow({
           row: {
             name: "Equal Test",
@@ -271,8 +266,7 @@ describe("Automation Scenarios", () => {
     })
 
     it("should continue the automation if the condition is met", async () => {
-      const results = await createAutomationBuilder({ config })
-        .appAction({ fields: {} })
+      const results = await createAutomationBuilder(config)
         .createRow({
           row: {
             name: "Not Equal Test",
@@ -338,8 +332,7 @@ describe("Automation Scenarios", () => {
     it.each(testCases)(
       "should pass the filter when condition is $condition",
       async ({ condition, value, rowValue, expectPass }) => {
-        const results = await createAutomationBuilder({ config })
-          .appAction({ fields: {} })
+        const results = await createAutomationBuilder(config)
           .createRow({
             row: {
               name: `${condition} Test`,
@@ -373,7 +366,7 @@ describe("Automation Scenarios", () => {
   it("Check user is passed through from row trigger", async () => {
     const table = await config.api.table.save(basicTable())
 
-    const results = await createAutomationBuilder({ config })
+    const results = await createAutomationBuilder(config)
       .rowUpdated(
         { tableId: table._id! },
         {
@@ -388,8 +381,7 @@ describe("Automation Scenarios", () => {
   })
 
   it("Check user is passed through from app trigger", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .serverLog({ text: "{{ [user].[email] }}" })
       .run()
 
@@ -460,7 +452,7 @@ if (descriptions.length) {
         queryVerb: "read",
       })
 
-      const results = await createAutomationBuilder({ config })
+      const results = await createAutomationBuilder(config)
         .appAction({
           fields: {},
         })
