@@ -187,7 +187,7 @@
     }
 
     // Calculate the variance between each set of positions on the children
-    const variances = Object.keys(childCoords[0])
+    const variances = Object.keys(childCoords[0] || {})
       .filter(key => key !== "placeholder")
       .map(key => {
         const numericalKey = key as keyof Omit<ChildCoords, "placeholder">
@@ -203,7 +203,7 @@
     variances.sort((a, b) => {
       return a.variance < b.variance ? -1 : 1
     })
-    const column = ["centerX", "left", "right"].includes(variances[0].side)
+    const column = ["centerX", "left", "right"].includes(variances[0]?.side)
 
     // Calculate breakpoints between child components so we can determine the
     // index to drop the component in.
