@@ -12,8 +12,8 @@ interface DNDSource {
     height: number
     width: number
   }
-  name: string
-  icon: string
+  name?: string
+  icon?: string
   type: string
   isNew: boolean
   props?: Record<string, any>
@@ -24,7 +24,7 @@ interface DNDTarget {
   parent: string
   empty: boolean
   acceptsChildren: boolean
-  node?: Node
+  element?: HTMLElement
 }
 
 interface DNDDrop {

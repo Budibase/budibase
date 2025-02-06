@@ -5,7 +5,7 @@
 </script>
 
 {#if $dndIsDragging}
-  {#if !$isGridScreen}
+  {#if !$isGridScreen && $dndParent}
     <IndicatorSet
       componentId={$dndParent}
       color="var(--spectrum-global-color-static-green-400)"
