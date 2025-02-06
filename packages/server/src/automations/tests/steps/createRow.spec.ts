@@ -41,14 +41,14 @@ describe("test the create row action", () => {
 
   it("should be able to run the action", async () => {
     const result = await createAutomationBuilder(config)
-      .onAppAction({ fields: { status: "new" } })
+      .onAppAction()
       .serverLog({ text: "Starting create row flow" }, { stepName: "StartLog" })
       .createRow({ row }, { stepName: "CreateRow" })
       .serverLog(
         { text: "Row created with ID: {{ stepsByName.CreateRow.row._id }}" },
         { stepName: "CreationLog" }
       )
-      .test()
+      .test({ fields: { status: "new" } })
 
     expect(result.steps[1].outputs.success).toBeDefined()
     expect(result.steps[1].outputs.id).toBeDefined()
@@ -67,7 +67,7 @@ describe("test the create row action", () => {
 
   it("should return an error (not throw) when bad info provided", async () => {
     const result = await createAutomationBuilder(config)
-      .onAppAction({ fields: { status: "error" } })
+      .onAppAction()
       .serverLog({ text: "Starting error test flow" }, { stepName: "StartLog" })
       .createRow(
         {
@@ -78,14 +78,14 @@ describe("test the create row action", () => {
         },
         { stepName: "CreateRow" }
       )
-      .test()
+      .test({ fields: { status: "error" } })
 
     expect(result.steps[1].outputs.success).toEqual(false)
   })
 
   it("should check invalid inputs return an error", async () => {
     const result = await createAutomationBuilder(config)
-      .onAppAction({ fields: { status: "invalid" } })
+      .onAppAction()
       .serverLog({ text: "Testing invalid input" }, { stepName: "StartLog" })
       .createRow({ row: {} }, { stepName: "CreateRow" })
       .filter({
@@ -97,7 +97,7 @@ describe("test the create row action", () => {
         { text: "This log should not appear" },
         { stepName: "SkippedLog" }
       )
-      .test()
+      .test({ fields: { status: "invalid" } })
 
     expect(result.steps[1].outputs.success).toEqual(false)
     expect(result.steps.length).toBeLessThan(4)
@@ -123,7 +123,7 @@ describe("test the create row action", () => {
 
     attachmentRow.file_attachment = attachmentObject
     const result = await createAutomationBuilder(config)
-      .onAppAction({ fields: { type: "attachment" } })
+      .onAppAction()
       .serverLog(
         { text: "Processing attachment upload" },
         { stepName: "StartLog" }
@@ -140,7 +140,7 @@ describe("test the create row action", () => {
         },
         { stepName: "UploadLog" }
       )
-      .test()
+      .test({ fields: { type: "attachment" } })
 
     expect(result.steps[1].outputs.success).toEqual(true)
     expect(result.steps[1].outputs.row.file_attachment[0]).toHaveProperty("key")
@@ -174,7 +174,7 @@ describe("test the create row action", () => {
 
     attachmentRow.single_file_attachment = attachmentObject
     const result = await createAutomationBuilder(config)
-      .onAppAction({ fields: { type: "single-attachment" } })
+      .onAppAction()
       .serverLog(
         { text: "Processing single attachment" },
         { stepName: "StartLog" }
@@ -209,7 +209,7 @@ describe("test the create row action", () => {
           },
         },
       })
-      .test()
+      .test({ fields: { type: "single-attachment" } })
 
     expect(result.steps[1].outputs.success).toEqual(true)
     expect(result.steps[1].outputs.row.single_file_attachment).toHaveProperty(
@@ -245,7 +245,7 @@ describe("test the create row action", () => {
 
     attachmentRow.single_file_attachment = attachmentObject
     const result = await createAutomationBuilder(config)
-      .onAppAction({ fields: { type: "invalid-attachment" } })
+      .onAppAction()
       .serverLog(
         { text: "Testing invalid attachment keys" },
         { stepName: "StartLog" }
@@ -278,7 +278,7 @@ describe("test the create row action", () => {
           },
         },
       })
-      .test()
+      .test({ fields: { type: "invalid-attachment" } })
 
     expect(result.steps[1].outputs.success).toEqual(false)
     expect(result.steps[1].outputs.response).toEqual(

@@ -73,17 +73,7 @@ describe("Attempt to run a basic loop automation", () => {
 
   it("should run an automation with a trigger, loop, and create row step", async () => {
     const results = await createAutomationBuilder(config)
-      .onRowSaved(
-        { tableId: table._id! },
-        {
-          row: {
-            name: "Trigger Row",
-            description: "This row triggers the automation",
-          },
-          id: "1234",
-          revision: "1",
-        }
-      )
+      .onRowSaved({ tableId: table._id! })
       .loop({
         option: LoopStepType.ARRAY,
         binding: [1, 2, 3],
@@ -95,7 +85,14 @@ describe("Attempt to run a basic loop automation", () => {
           tableId: table._id,
         },
       })
-      .test()
+      .test({
+        row: {
+          name: "Trigger Row",
+          description: "This row triggers the automation",
+        },
+        id: "1234",
+        revision: "1",
+      })
 
     expect(results.trigger).toBeDefined()
     expect(results.steps).toHaveLength(1)
@@ -116,17 +113,7 @@ describe("Attempt to run a basic loop automation", () => {
 
   it("should run an automation where a loop step is between two normal steps to ensure context correctness", async () => {
     const results = await createAutomationBuilder(config)
-      .onRowSaved(
-        { tableId: table._id! },
-        {
-          row: {
-            name: "Trigger Row",
-            description: "This row triggers the automation",
-          },
-          id: "1234",
-          revision: "1",
-        }
-      )
+      .onRowSaved({ tableId: table._id! })
       .queryRows({
         tableId: table._id!,
       })
@@ -136,7 +123,14 @@ describe("Attempt to run a basic loop automation", () => {
       })
       .serverLog({ text: "Message {{loop.currentItem}}" })
       .serverLog({ text: "{{steps.1.rows.0._id}}" })
-      .test()
+      .test({
+        row: {
+          name: "Trigger Row",
+          description: "This row triggers the automation",
+        },
+        id: "1234",
+        revision: "1",
+      })
 
     results.steps[1].outputs.items.forEach(
       (output: ServerLogStepOutputs, index: number) => {
@@ -152,12 +146,13 @@ describe("Attempt to run a basic loop automation", () => {
 
   it("if an incorrect type is passed to the loop it should return an error", async () => {
     const results = await createAutomationBuilder(config)
+      .onAppAction()
       .loop({
         option: LoopStepType.ARRAY,
         binding: "1, 2, 3",
       })
       .serverLog({ text: "Message {{loop.currentItem}}" })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs).toEqual({
       success: false,
@@ -167,13 +162,14 @@ describe("Attempt to run a basic loop automation", () => {
 
   it("ensure the loop stops if the failure condition is reached", async () => {
     const results = await createAutomationBuilder(config)
+      .onAppAction()
       .loop({
         option: LoopStepType.ARRAY,
         binding: ["test", "test2", "test3"],
         failure: "test2",
       })
       .serverLog({ text: "Message {{loop.currentItem}}" })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs).toEqual(
       expect.objectContaining({
@@ -185,6 +181,7 @@ describe("Attempt to run a basic loop automation", () => {
 
   it("ensure the loop stops if the max iterations are reached", async () => {
     const results = await createAutomationBuilder(config)
+      .onAppAction()
       .loop({
         option: LoopStepType.ARRAY,
         binding: ["test", "test2", "test3"],
@@ -192,13 +189,14 @@ describe("Attempt to run a basic loop automation", () => {
       })
       .serverLog({ text: "{{loop.currentItem}}" })
       .serverLog({ text: "{{steps.1.iterations}}" })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.iterations).toBe(2)
   })
 
   it("should run an automation with loop and max iterations to ensure context correctness further down the tree", async () => {
     const results = await createAutomationBuilder(config)
+      .onAppAction()
       .loop({
         option: LoopStepType.ARRAY,
         binding: ["test", "test2", "test3"],
@@ -206,24 +204,14 @@ describe("Attempt to run a basic loop automation", () => {
       })
       .serverLog({ text: "{{loop.currentItem}}" })
       .serverLog({ text: "{{steps.1.iterations}}" })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[1].outputs.message).toContain("- 2")
   })
 
   it("should run an automation where a loop is successfully run twice", async () => {
     const results = await createAutomationBuilder(config)
-      .onRowSaved(
-        { tableId: table._id! },
-        {
-          row: {
-            name: "Trigger Row",
-            description: "This row triggers the automation",
-          },
-          id: "1234",
-          revision: "1",
-        }
-      )
+      .onRowSaved({ tableId: table._id! })
       .loop({
         option: LoopStepType.ARRAY,
         binding: [1, 2, 3],
@@ -240,7 +228,14 @@ describe("Attempt to run a basic loop automation", () => {
         binding: "Message 1,Message 2,Message 3",
       })
       .serverLog({ text: "{{loop.currentItem}}" })
-      .test()
+      .test({
+        row: {
+          name: "Trigger Row",
+          description: "This row triggers the automation",
+        },
+        id: "1234",
+        revision: "1",
+      })
 
     expect(results.trigger).toBeDefined()
     expect(results.steps).toHaveLength(2)
@@ -275,6 +270,7 @@ describe("Attempt to run a basic loop automation", () => {
 
   it("should run an automation where a loop is used twice to ensure context correctness further down the tree", async () => {
     const results = await createAutomationBuilder(config)
+      .onAppAction()
       .loop({
         option: LoopStepType.ARRAY,
         binding: [1, 2, 3],
@@ -287,7 +283,7 @@ describe("Attempt to run a basic loop automation", () => {
       })
       .serverLog({ text: "{{loop.currentItem}}" })
       .serverLog({ text: "{{steps.3.iterations}}" })
-      .run()
+      .test({ fields: {} })
 
     // We want to ensure that bindings are corr
     expect(results.steps[1].outputs.message).toContain("- 3")
@@ -296,6 +292,7 @@ describe("Attempt to run a basic loop automation", () => {
 
   it("should use automation names to loop with", async () => {
     const results = await createAutomationBuilder(config)
+      .onAppAction()
       .loop(
         {
           option: LoopStepType.ARRAY,
@@ -311,7 +308,7 @@ describe("Attempt to run a basic loop automation", () => {
         { text: "{{steps.FirstLoopLog.iterations}}" },
         { stepName: "FirstLoopIterationLog" }
       )
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[1].outputs.message).toContain("- 3")
   })
@@ -347,6 +344,7 @@ describe("Attempt to run a basic loop automation", () => {
     await config.api.row.bulkImport(table._id!, { rows })
 
     const results = await createAutomationBuilder(config)
+      .onAppAction()
       .queryRows({
         tableId: table._id!,
       })
@@ -366,7 +364,7 @@ describe("Attempt to run a basic loop automation", () => {
       .queryRows({
         tableId: table._id!,
       })
-      .run()
+      .test({ fields: {} })
 
     const expectedRows = [
       { name: "Updated Row 1", value: 1 },
@@ -426,6 +424,7 @@ describe("Attempt to run a basic loop automation", () => {
     await config.api.row.bulkImport(table._id!, { rows })
 
     const results = await createAutomationBuilder(config)
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -448,7 +447,7 @@ describe("Attempt to run a basic loop automation", () => {
       .queryRows({
         tableId: table._id!,
       })
-      .run()
+      .test({ fields: {} })
 
     const expectedRows = [
       { name: "Updated Row 1", value: 1 },
@@ -508,6 +507,7 @@ describe("Attempt to run a basic loop automation", () => {
     await config.api.row.bulkImport(table._id!, { rows })
 
     const results = await createAutomationBuilder(config)
+      .onAppAction()
       .queryRows({
         tableId: table._id!,
       })
@@ -522,7 +522,7 @@ describe("Attempt to run a basic loop automation", () => {
       .queryRows({
         tableId: table._id!,
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps).toHaveLength(3)
 
