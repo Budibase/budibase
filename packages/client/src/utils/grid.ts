@@ -68,15 +68,18 @@ export const getGridVar = (device: string, param: string) =>
   `--grid-${device}-${param}`
 
 // Determines whether a JS event originated from immediately within a grid
-export const isGridEvent = (e: Event & { target: HTMLElement }): boolean => {
+export const isGridEvent = (e: Event): boolean => {
+  if (!(e.target instanceof HTMLElement)) {
+    return false
+  }
+  const componentParent = e.target.closest?.(".component")?.parentNode as
+    | HTMLElement
+    | undefined
+  const gridDOMCandidate = componentParent?.closest(".component")
+    ?.childNodes[0] as HTMLElement | undefined
   return (
     e.target.dataset?.indicator === "true" ||
-    // @ts-expect-error: api is not properly typed
-    e.target
-      .closest?.(".component")
-      // @ts-expect-error
-      ?.parentNode.closest(".component")
-      ?.childNodes[0]?.classList?.contains("grid")
+    !!gridDOMCandidate?.classList?.contains("grid")
   )
 }
 

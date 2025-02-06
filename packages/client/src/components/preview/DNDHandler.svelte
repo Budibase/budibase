@@ -1,20 +1,22 @@
-<script>
+<script lang="ts">
   import { onMount, onDestroy } from "svelte"
   import { get } from "svelte/store"
-  import IndicatorSet from "./IndicatorSet.svelte"
-  import {
-    builderStore,
-    screenStore,
-    dndStore,
-    dndParent,
-    dndSource,
-    dndIsDragging,
-    isGridScreen,
-  } from "@/stores"
+  import { builderStore, screenStore, dndStore, isGridScreen } from "@/stores"
   import { Utils } from "@budibase/frontend-core"
   import { findComponentById } from "@/utils/components.js"
   import { isGridEvent } from "@/utils/grid"
   import { DNDPlaceholderID } from "@/constants"
+  import { Component } from "@budibase/types"
+
+  type ChildCoords = {
+    placeholder: boolean
+    centerX: number
+    centerY: number
+    left: number
+    right: number
+    top: number
+    bottom: number
+  }
 
   const ThrottleRate = 130
 
@@ -27,13 +29,14 @@
   // Local flag for whether we are awaiting an async drop event
   let dropping = false
 
-  // Util to get the inner DOM node by a component ID
-  const getDOMNode = id => {
-    return document.getElementsByClassName(`${id}-dom`)[0]
+  // Util to get the inner DOM element by a component ID
+  const getDOMElement = (id: string): HTMLElement | undefined => {
+    const el = document.getElementsByClassName(`${id}-dom`)[0]
+    return el instanceof HTMLElement ? el : undefined
   }
 
   // Util to calculate the variance of a set of data
-  const variance = arr => {
+  const variance = (arr: number[]) => {
     const mean = arr.reduce((a, b) => a + b, 0) / arr.length
     let squareSum = 0
     arr.forEach(value => {
@@ -62,31 +65,35 @@
   }
 
   // Callback when initially starting a drag on a draggable component
-  const onDragStart = e => {
+  const onDragStart = (e: DragEvent) => {
     if (isGridEvent(e)) {
       return
     }
+    if (!(e.target instanceof HTMLElement)) {
+      return
+    }
     const component = e.target.closest(".component")
-    if (!component?.classList.contains("draggable")) {
+    if (
+      !(component instanceof HTMLElement) ||
+      !component.classList.contains("draggable")
+    ) {
       return
     }
 
     // Hide drag ghost image
-    e.dataTransfer.setDragImage(new Image(), 0, 0)
+    e.dataTransfer?.setDragImage(new Image(), 0, 0)
 
     // Add event handler to clear all drag state when dragging ends
     component.addEventListener("dragend", stopDragging)
 
     // Update state
-    const id = component.dataset.id
-    const parentId = component.dataset.parent
-    const parent = findComponentById(
+    const id = component.dataset.id!
+    const parentId = component.dataset.parent!
+    const parent: Component = findComponentById(
       get(screenStore).activeScreen?.props,
       parentId
     )
-    const index = parent._children.findIndex(
-      x => x._id === component.dataset.id
-    )
+    const index = parent._children!.findIndex(child => child._id === id)
     dndStore.actions.startDraggingExistingComponent({
       id,
       bounds: component.children[0].getBoundingClientRect(),
@@ -94,6 +101,7 @@
       index,
       name: component.dataset.name,
       icon: component.dataset.icon,
+      type: parent._children![index]!._component,
     })
     builderStore.actions.selectComponent(id)
 
@@ -112,18 +120,18 @@
 
   // Core logic for handling drop events and determining where to render the
   // drop target placeholder
-  const processEvent = Utils.throttle((mouseX, mouseY) => {
+  const processEvent = Utils.throttle((mouseX: number, mouseY: number) => {
     if (!target) {
       return
     }
-    let { id, parent, node, acceptsChildren, empty } = target
+    let { id, parent, element, acceptsChildren, empty } = target
 
     // If we're over something that does not accept children then we go up a
     // level and consider the mouse position relative to the parent
     if (!acceptsChildren) {
       id = parent
       empty = false
-      node = getDOMNode(parent)
+      element = getDOMElement(parent)
     }
 
     // We're now hovering over something which does accept children.
@@ -136,51 +144,54 @@
       return
     }
 
-    // As the first DOM node in a component may not necessarily contain the
+    // As the first DOM element in a component may not necessarily contain the
     // child components, we can find to try the parent of the first child
     // component and use that as the real parent DOM node
-    const childNode = node.getElementsByClassName("component")[0]
-    if (childNode?.parentNode) {
-      node = childNode.parentNode
+    const childElement = element?.getElementsByClassName("component")[0]
+    if (childElement?.parentNode instanceof HTMLElement) {
+      element = childElement.parentNode
     }
 
     // Append an ephemeral div to allow us to determine layout if only one
     // child exists
     let ephemeralDiv
-    if (node.children.length === 1) {
+    if (element?.children.length === 1) {
       ephemeralDiv = document.createElement("div")
       ephemeralDiv.dataset.id = DNDPlaceholderID
-      node.appendChild(ephemeralDiv)
+      element.appendChild(ephemeralDiv)
     }
 
     // We're now hovering over something which accepts children and is not
     // empty, so we need to work out where to inside the placeholder
     // Calculate the coordinates of various locations on each child.
-    const childCoords = [...(node.children || [])].map(node => {
-      const child = node.children?.[0] || node
-      const bounds = child.getBoundingClientRect()
-      return {
-        placeholder: node.dataset.id === DNDPlaceholderID,
-        centerX: bounds.left + bounds.width / 2,
-        centerY: bounds.top + bounds.height / 2,
-        left: bounds.left,
-        right: bounds.right,
-        top: bounds.top,
-        bottom: bounds.bottom,
-      }
-    })
+    const childCoords: ChildCoords[] = [...(element?.children || [])]
+      .filter(el => el instanceof HTMLElement)
+      .map(el => {
+        const child = el.children?.[0] || el
+        const bounds = child.getBoundingClientRect()
+        return {
+          placeholder: el.dataset.id === DNDPlaceholderID,
+          centerX: bounds.left + bounds.width / 2,
+          centerY: bounds.top + bounds.height / 2,
+          left: bounds.left,
+          right: bounds.right,
+          top: bounds.top,
+          bottom: bounds.bottom,
+        }
+      })
 
     // Now that we've calculated the position of the children, we no longer need
     // the ephemeral div
     if (ephemeralDiv) {
-      node.removeChild(ephemeralDiv)
+      element?.removeChild(ephemeralDiv)
     }
 
     // Calculate the variance between each set of positions on the children
     const variances = Object.keys(childCoords[0])
-      .filter(x => x !== "placeholder")
+      .filter(key => key !== "placeholder")
       .map(key => {
-        const coords = childCoords.map(x => x[key])
+        const numericalKey = key as keyof Omit<ChildCoords, "placeholder">
+        const coords = childCoords.map(x => x[numericalKey])
         return {
           variance: variance(coords),
           side: key,
@@ -198,7 +209,7 @@
     // index to drop the component in.
     // We want to ignore the placeholder from this calculation as it should not
     // be considered a real child of the parent.
-    let breakpoints = childCoords
+    const breakpoints = childCoords
       .filter(x => !x.placeholder)
       .map(x => {
         return column ? x.centerY : x.centerX
@@ -216,14 +227,14 @@
     })
   }, ThrottleRate)
 
-  const handleEvent = e => {
+  const handleEvent = (e: DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     processEvent(e.clientX, e.clientY)
   }
 
   // Callback when on top of a component
-  const onDragOver = e => {
+  const onDragOver = (e: DragEvent) => {
     if (!source || !target || $isGridScreen) {
       return
     }
@@ -231,23 +242,24 @@
   }
 
   // Callback when entering a potential drop target
-  const onDragEnter = async e => {
-    if (!source || $isGridScreen) {
+  const onDragEnter = async (e: DragEvent) => {
+    if (!source || $isGridScreen || !(e.target instanceof HTMLElement)) {
       return
     }
 
     // Find the next valid component to consider dropping over, ignoring nested
     // block components
-    const component = e.target?.closest?.(
-      `.component:not(.block):not(.${source.id})`
-    )
-    if (component && component.classList.contains("droppable")) {
+    let comp = e.target.closest?.(`.component:not(.block):not(.${source.id})`)
+    if (!(comp instanceof HTMLElement)) {
+      return
+    }
+    if (comp?.classList.contains("droppable")) {
       dndStore.actions.updateTarget({
-        id: component.dataset.id,
-        parent: component.dataset.parent,
-        node: getDOMNode(component.dataset.id),
-        empty: component.classList.contains("empty"),
-        acceptsChildren: component.classList.contains("parent"),
+        id: comp.dataset.id!,
+        parent: comp.dataset.parent!,
+        element: getDOMElement(comp.dataset.id!),
+        empty: comp.classList.contains("empty"),
+        acceptsChildren: comp.classList.contains("parent"),
       })
       handleEvent(e)
     }
@@ -275,7 +287,7 @@
 
     // Convert parent + index into target + mode
     let legacyDropTarget, legacyDropMode
-    const parent = findComponentById(
+    const parent: Component | null = findComponentById(
       get(screenStore).activeScreen?.props,
       drop.parent
     )
