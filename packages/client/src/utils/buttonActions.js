@@ -14,8 +14,8 @@ import {
   sidePanelStore,
   modalStore,
 } from "@/stores"
-import { API } from "api"
-import { ActionTypes } from "constants"
+import { API } from "@/api"
+import { ActionTypes } from "@/constants"
 import { enrichDataBindings } from "./enrichDataBinding"
 import { Helpers } from "@budibase/bbui"
 

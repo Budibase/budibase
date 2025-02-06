@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
-  import { builderStore } from "stores"
+  import { builderStore } from "@/stores"
   import { memo, Utils } from "@budibase/frontend-core"
 
   export let componentId: string

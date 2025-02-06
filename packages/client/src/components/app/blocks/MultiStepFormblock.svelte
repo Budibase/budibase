@@ -1,5 +1,5 @@
 <script>
-  import BlockComponent from "components/BlockComponent.svelte"
+  import BlockComponent from "@/components/BlockComponent.svelte"
   import { Helpers } from "@budibase/bbui"
   import { getContext, setContext } from "svelte"
   import { builderStore } from "@/stores"

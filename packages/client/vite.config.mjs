@@ -48,30 +48,6 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve("./manifest.json"),
         },
         {
-          find: "api",
-          replacement: path.resolve("./src/api"),
-        },
-        {
-          find: "components",
-          replacement: path.resolve("./src/components"),
-        },
-        {
-          find: "stores",
-          replacement: path.resolve("./src/stores"),
-        },
-        {
-          find: "utils",
-          replacement: path.resolve("./src/utils"),
-        },
-        {
-          find: "constants",
-          replacement: path.resolve("./src/constants"),
-        },
-        {
-          find: "sdk",
-          replacement: path.resolve("./src/sdk"),
-        },
-        {
           find: "@budibase/types",
           replacement: path.resolve("../types/src"),
         },

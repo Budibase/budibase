@@ -1,6 +1,6 @@
 <script>
   import { Layout, Select, Body } from "@budibase/bbui"
-  import { componentStore } from "stores/index.ts"
+  import { componentStore } from "@/stores"
   import DevToolsStat from "./DevToolsStat.svelte"
 
   const ReadableBindingMap = {

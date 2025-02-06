@@ -11,7 +11,7 @@
 <script>
   import { getContext, setContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
-  import { enrichProps, propsAreSame } from "utils/componentProps"
+  import { enrichProps, propsAreSame } from "@/utils/componentProps"
   import { getSettingsDefinition } from "@budibase/frontend-core"
   import {
     builderStore,
@@ -22,10 +22,13 @@
     dndIsDragging,
   } from "@/stores"
   import { Helpers } from "@budibase/bbui"
-  import { getActiveConditions, reduceConditionActions } from "utils/conditions"
-  import EmptyPlaceholder from "components/app/EmptyPlaceholder.svelte"
-  import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
-  import ComponentErrorState from "components/error-states/ComponentErrorState.svelte"
+  import {
+    getActiveConditions,
+    reduceConditionActions,
+  } from "@/utils/conditions"
+  import EmptyPlaceholder from "@/components/app/EmptyPlaceholder.svelte"
+  import ScreenPlaceholder from "@/components/app/ScreenPlaceholder.svelte"
+  import ComponentErrorState from "@/components/error-states/ComponentErrorState.svelte"
   import {
     decodeJSBinding,
     findHBSBlocks,
@@ -35,7 +38,7 @@
     getActionContextKey,
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
-  import { gridLayout } from "utils/grid"
+  import { gridLayout } from "@/utils/grid"
 
   export let instance = {}
   export let parent = null

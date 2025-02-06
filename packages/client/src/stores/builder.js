@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 import { devToolsStore } from "./devTools.js"
 import { eventStore } from "./events.js"
 
