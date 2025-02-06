@@ -72,7 +72,7 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   it("should run an automation with a trigger, loop, and create row step", async () => {
-    const results = await createAutomationBuilder({ config })
+    const results = await createAutomationBuilder(config)
       .rowSaved(
         { tableId: table._id! },
         {
@@ -115,7 +115,7 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   it("should run an automation where a loop step is between two normal steps to ensure context correctness", async () => {
-    const results = await createAutomationBuilder({ config })
+    const results = await createAutomationBuilder(config)
       .rowSaved(
         { tableId: table._id! },
         {
@@ -151,8 +151,7 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   it("if an incorrect type is passed to the loop it should return an error", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .loop({
         option: LoopStepType.ARRAY,
         binding: "1, 2, 3",
@@ -167,8 +166,7 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   it("ensure the loop stops if the failure condition is reached", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .loop({
         option: LoopStepType.ARRAY,
         binding: ["test", "test2", "test3"],
@@ -186,8 +184,7 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   it("ensure the loop stops if the max iterations are reached", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .loop({
         option: LoopStepType.ARRAY,
         binding: ["test", "test2", "test3"],
@@ -201,8 +198,7 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   it("should run an automation with loop and max iterations to ensure context correctness further down the tree", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .loop({
         option: LoopStepType.ARRAY,
         binding: ["test", "test2", "test3"],
@@ -216,7 +212,7 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   it("should run an automation where a loop is successfully run twice", async () => {
-    const results = await createAutomationBuilder({ config })
+    const results = await createAutomationBuilder(config)
       .rowSaved(
         { tableId: table._id! },
         {
@@ -278,8 +274,7 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   it("should run an automation where a loop is used twice to ensure context correctness further down the tree", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .loop({
         option: LoopStepType.ARRAY,
         binding: [1, 2, 3],
@@ -300,8 +295,7 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   it("should use automation names to loop with", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .loop(
         {
           option: LoopStepType.ARRAY,
@@ -352,8 +346,7 @@ describe("Attempt to run a basic loop automation", () => {
 
     await config.api.row.bulkImport(table._id!, { rows })
 
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .queryRows({
         tableId: table._id!,
       })
@@ -432,8 +425,7 @@ describe("Attempt to run a basic loop automation", () => {
 
     await config.api.row.bulkImport(table._id!, { rows })
 
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .queryRows(
         {
           tableId: table._id!,
@@ -515,8 +507,7 @@ describe("Attempt to run a basic loop automation", () => {
 
     await config.api.row.bulkImport(table._id!, { rows })
 
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .queryRows({
         tableId: table._id!,
       })

@@ -6,7 +6,7 @@ import { Job } from "bull"
 describe("cron trigger", () => {
   const config = new TestConfiguration()
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 
@@ -24,7 +24,7 @@ describe("cron trigger", () => {
       })
     })
 
-    await createAutomationBuilder({ config })
+    await createAutomationBuilder(config)
       .cron({ cron: "* * * * *" })
       .serverLog({
         text: "Hello, world!",
@@ -44,7 +44,7 @@ describe("cron trigger", () => {
   })
 
   it("should fail if the cron expression is invalid", async () => {
-    await createAutomationBuilder({ config })
+    await createAutomationBuilder(config)
       .cron({ cron: "* * * * * *" })
       .serverLog({
         text: "Hello, world!",
