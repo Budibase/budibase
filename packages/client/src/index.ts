@@ -10,7 +10,7 @@ import {
   eventStore,
   hoverStore,
   stateStore,
-} from "@/stores"
+} from "stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
 import { APIClient } from "@budibase/frontend-core"
@@ -163,12 +163,7 @@ const loadBudibase = async () => {
     } else if (type === "dragging-new-component") {
       const { dragging, component } = data
       if (dragging) {
-        const definition =
-          componentStore.actions.getComponentDefinition(component)
-        dndStore.actions.startDraggingNewComponent({
-          component,
-          definition,
-        })
+        dndStore.actions.startDraggingNewComponent(component)
       } else {
         dndStore.actions.reset()
       }

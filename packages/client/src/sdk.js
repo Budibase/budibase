@@ -18,7 +18,7 @@ import {
   appStore,
   stateStore,
   createContextStore,
-} from "stores"
+} from "@/stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
 import { getAction } from "utils/getAction"

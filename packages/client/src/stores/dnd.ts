@@ -1,54 +1,65 @@
 import { writable, get } from "svelte/store"
 import { derivedMemo } from "@budibase/frontend-core"
-import { screenStore, isGridScreen } from "@/stores"
+import { screenStore, isGridScreen, componentStore } from "stores/index"
 import { ScreenslotID } from "@/constants"
+import { ComponentDefinition } from "@budibase/types"
+
+interface DNDSource {
+  id?: string
+  parent?: string
+  index?: number
+  bounds: {
+    height: number
+    width: number
+  }
+  name: string
+  icon: string
+  type: string
+  isNew: boolean
+  props?: Record<string, any>
+}
+
+interface DNDTarget {
+  id: string
+  parent: string
+  empty: boolean
+  acceptsChildren: boolean
+  node?: Node
+}
+
+interface DNDDrop {
+  parent: string
+  index: number
+}
+
+interface DNDState {
+  source?: DNDSource
+  target?: DNDTarget
+  drop?: DNDDrop
+}
 
 const createDndStore = () => {
-  const initialState = {
-    // Info about the dragged component
-    source: null,
+  const store = writable<DNDState>({})
 
-    // Info about the target component being hovered over
-    target: null,
-
-    // Info about where the component would be dropped
-    drop: null,
-
-    // Metadata about the event
-    meta: {
-      newComponentProps: null,
-    },
-  }
-  const store = writable(initialState)
-
-  const startDraggingExistingComponent = ({
-    id,
-    parent,
-    bounds,
-    index,
-    name,
-    icon,
-  }) => {
+  const startDraggingExistingComponent = (source: Omit<DNDSource, "isNew">) => {
     store.set({
-      ...initialState,
-      source: { id, parent, bounds, index, name, icon, isNew: false },
+      source: {
+        ...source,
+        isNew: false,
+      },
     })
   }
 
-  const startDraggingNewComponent = ({ component, definition }) => {
-    if (!component) {
-      return
-    }
-
+  const startDraggingNewComponent = (type: string) => {
     // On grid screens, we already know exactly where to insert the component
-    let target, drop
-    const screen = get(screenStore)?.activeScreen
+    let target: DNDTarget | undefined = undefined
+    let drop: DNDDrop | undefined = undefined
     if (get(isGridScreen)) {
-      const id = screen?.props?._id
+      const screen = get(screenStore)?.activeScreen
+      const id = screen.props._id
       target = {
         id,
         parent: ScreenslotID,
-        node: null,
         empty: false,
         acceptsChildren: true,
       }
@@ -59,52 +70,55 @@ const createDndStore = () => {
     }
 
     // Get size of new component so we can show a properly sized placeholder
+    const definition: ComponentDefinition =
+      componentStore.actions.getComponentDefinition(type)
     const width = definition?.size?.width || 128
     const height = definition?.size?.height || 64
 
     store.set({
-      ...initialState,
       source: {
-        id: null,
-        parent: null,
         bounds: { height, width },
-        index: null,
-        type: component,
+        type,
         isNew: true,
-        name: `New ${definition.name}`,
-        icon: definition.icon,
+        name: `New ${definition?.name || "component"}`,
+        icon: definition?.icon || "Selection",
       },
       target,
       drop,
     })
   }
 
-  const updateTarget = ({ id, parent, node, empty, acceptsChildren }) => {
+  const updateTarget = (target: DNDTarget) => {
     store.update(state => {
-      state.target = { id, parent, node, empty, acceptsChildren }
+      state.target = target
       return state
     })
   }
 
-  const updateDrop = ({ parent, index }) => {
+  const updateDrop = (drop: DNDDrop) => {
     store.update(state => {
-      state.drop = { parent, index }
+      state.drop = drop
       return state
     })
   }
 
   const reset = () => {
-    store.set(initialState)
+    store.set({})
   }
 
-  const updateNewComponentProps = newComponentProps => {
-    store.update(state => ({
-      ...state,
-      meta: {
-        ...state.meta,
-        newComponentProps,
-      },
-    }))
+  const updateSourceProps = (props: Record<string, any>) => {
+    store.update(state => {
+      if (!state.source) {
+        return state
+      }
+      return {
+        ...state,
+        source: {
+          ...state.source,
+          props,
+        },
+      }
+    })
   }
 
   return {
@@ -115,7 +129,7 @@ const createDndStore = () => {
       updateTarget,
       updateDrop,
       reset,
-      updateNewComponentProps,
+      updateSourceProps,
     },
   }
 }

@@ -1,6 +1,6 @@
 <script>
   import { Heading, Select, ActionButton } from "@budibase/bbui"
-  import { devToolsStore, appStore } from "../../stores"
+  import { devToolsStore, appStore } from "stores"
   import { getContext, onMount } from "svelte"
   import { API } from "api"
 

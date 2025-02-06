@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { dndIsDragging, builderStore } from "@/stores"
+  import { dndIsDragging, builderStore } from "stores"
   import IndicatorSet from "./IndicatorSet.svelte"
 
   $: color = $builderStore.editMode

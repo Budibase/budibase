@@ -10,7 +10,7 @@
     dndSource,
     dndIsDragging,
     isGridScreen,
-  } from "stores"
+  } from "@/stores"
   import { Utils } from "@budibase/frontend-core"
   import { findComponentById } from "@/utils/components.js"
   import { isGridEvent } from "@/utils/grid"
@@ -266,7 +266,7 @@
         source.type,
         drop.parent,
         drop.index,
-        $dndStore.meta.newComponentProps
+        $dndStore.source?.props
       )
       dropping = false
       stopDragging()

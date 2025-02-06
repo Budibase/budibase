@@ -23,6 +23,11 @@ export interface ComponentDefinition {
   legalDirectChildren: string[]
   requiredAncestors?: string[]
   illegalChildren: string[]
+  icon?: string
+  size?: {
+    width: number
+    height: number
+  }
 }
 
 export interface ComponentSetting {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { isGridScreen, dndParent, dndSource, dndIsDragging } from "@/stores"
+  import { isGridScreen, dndParent, dndSource, dndIsDragging } from "stores"
   import { DNDPlaceholderID } from "@/constants"
   import IndicatorSet from "./IndicatorSet.svelte"
 </script>
