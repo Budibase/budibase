@@ -24,7 +24,7 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should use trigger data in bash command and pass output to subsequent steps", async () => {
-    const result = await createAutomationBuilder({ config })
+    const result = await createAutomationBuilder(config)
       .appAction({ fields: { command: "hello world" } })
       .bash(
         { code: "echo '{{ trigger.fields.command }}'" },
@@ -43,7 +43,7 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should chain multiple bash commands using previous outputs", async () => {
-    const result = await createAutomationBuilder({ config })
+    const result = await createAutomationBuilder(config)
       .appAction({ fields: { filename: "testfile.txt" } })
       .bash(
         { code: "echo 'initial content' > {{ trigger.fields.filename }}" },
@@ -64,8 +64,7 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should integrate bash output with row operations", async () => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .queryRows(
         {
           tableId: table._id!,
@@ -94,7 +93,7 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should handle bash output in conditional logic", async () => {
-    const result = await createAutomationBuilder({ config })
+    const result = await createAutomationBuilder(config)
       .appAction({ fields: { threshold: "5" } })
       .bash(
         { code: "echo $(( {{ trigger.fields.threshold }} + 5 ))" },
@@ -121,8 +120,7 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should handle null values gracefully", async () => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .bash(
         // @ts-expect-error - testing null input
         { code: null },

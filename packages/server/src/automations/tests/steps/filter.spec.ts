@@ -42,8 +42,7 @@ describe("test the filter logic", () => {
     [new Date().toISOString(), ">", new Date(-10000).toISOString()],
   ]
   it.each(pass)("should pass %p %p %p", async (field, condition, value) => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .filter({ field, condition: stringToFilterCondition(condition), value })
       .run()
 
@@ -60,8 +59,7 @@ describe("test the filter logic", () => {
     [{}, "==", {}],
   ]
   it.each(fail)("should fail %p %p %p", async (field, condition, value) => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .filter({ field, condition: stringToFilterCondition(condition), value })
       .run()
 

@@ -19,8 +19,7 @@ describe("test the outgoing webhook action", () => {
 
   it("should be able to run the action", async () => {
     nock("http://www.example.com/").post("/").reply(200, { foo: "bar" })
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .discord({
         url: "http://www.example.com",
         username: "joe_bloggs",
