@@ -20,8 +20,7 @@ describe("test the delete row action", () => {
   })
 
   it("should be able to run the delete row action", async () => {
-    await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    await createAutomationBuilder(config)
       .deleteRow({
         tableId: table._id!,
         id: row._id!,
@@ -35,8 +34,7 @@ describe("test the delete row action", () => {
   })
 
   it("should check invalid inputs return an error", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .deleteRow({ tableId: "", id: "", revision: "" })
       .run()
 
@@ -44,8 +42,7 @@ describe("test the delete row action", () => {
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
       .deleteRow({
         tableId: "invalid",
         id: "invalid",
