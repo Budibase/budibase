@@ -13,7 +13,7 @@ import {
   rowSelectionStore,
   sidePanelStore,
   modalStore,
-} from "stores"
+} from "@/stores"
 import { API } from "api"
 import { ActionTypes } from "constants"
 import { enrichDataBindings } from "./enrichDataBinding"

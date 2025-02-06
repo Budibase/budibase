@@ -1,6 +1,6 @@
 <script>
   import Provider from "./Provider.svelte"
-  import { authStore, currentRole } from "stores"
+  import { authStore, currentRole } from "@/stores"
   import { ActionTypes } from "constants"
   import { Constants } from "@budibase/frontend-core"
 

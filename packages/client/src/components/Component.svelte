@@ -20,7 +20,7 @@
     appStore,
     dndComponentPath,
     dndIsDragging,
-  } from "stores"
+  } from "@/stores"
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import EmptyPlaceholder from "components/app/EmptyPlaceholder.svelte"

@@ -7,7 +7,7 @@
     dndStore,
     dndSource,
     isGridScreen,
-  } from "stores"
+  } from "@/stores"
   import { Utils, memo } from "@budibase/frontend-core"
   import { DNDPlaceholderID, GridRowHeight } from "@/constants"
   import {
@@ -54,7 +54,7 @@
     // real component to render in the new position before updating the DND
     // store, preventing the green DND overlay from being out of position
     if ($dndSource?.isNew && styles) {
-      dndStore.actions.updateNewComponentProps({
+      dndStore.actions.updateSourceProps({
         _styles: {
           normal: styles,
         },
