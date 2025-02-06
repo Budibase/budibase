@@ -105,7 +105,7 @@ export type Component = Readable<{
   errorState: boolean
 }>
 
-export type Context = Readable<{}>
+export type Context = Readable<Record<string, any>>
 
 let app: ClientApp
 

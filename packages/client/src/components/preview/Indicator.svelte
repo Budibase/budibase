@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Icon } from "@budibase/bbui"
-  import { GridDragModes } from "@/utils/grid"
+  import { GridDragMode } from "@/utils/grid"
 
   export let top: number
   export let left: number
@@ -50,7 +50,7 @@
       class:right={alignRight}
       draggable="true"
       data-indicator="true"
-      data-drag-mode={GridDragModes.Move}
+      data-drag-mode={GridDragMode.Move}
       data-id={componentId}
     >
       {#if icon}
@@ -69,7 +69,7 @@
         class="anchor {side}"
         draggable="true"
         data-indicator="true"
-        data-drag-mode={GridDragModes.Resize}
+        data-drag-mode={GridDragMode.Resize}
         data-side={side}
         data-id={componentId}
       >
