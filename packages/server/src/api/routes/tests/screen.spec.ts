@@ -11,9 +11,9 @@ import {
 
 const {
   basicScreen,
-  tableScreen,
-  viewScreen,
-  queryScreen,
+  createTableScreen,
+  createViewScreen,
+  createQueryScreen,
   basicTable,
   viewV2,
   basicQuery,
@@ -202,7 +202,7 @@ describe("/screens", () => {
     it("should find table usage", async () => {
       const table = await config.api.table.save(basicTable())
       const screen = await config.api.screen.save(
-        tableScreen("BudibaseDB", table)
+        createTableScreen("BudibaseDB", table)
       )
       const usage = await config.api.screen.usage(table._id!)
       expect(usage.sourceType).toEqual(SourceType.TABLE)
@@ -216,7 +216,7 @@ describe("/screens", () => {
         { status: 201 }
       )
       const screen = await config.api.screen.save(
-        viewScreen("BudibaseDB", view)
+        createViewScreen("BudibaseDB", view)
       )
       const usage = await config.api.screen.usage(view.id)
       expect(usage.sourceType).toEqual(SourceType.VIEW)
@@ -229,7 +229,7 @@ describe("/screens", () => {
       )
       const query = await config.api.query.save(basicQuery(datasource._id!))
       const screen = await config.api.screen.save(
-        queryScreen(datasource._id!, query)
+        createQueryScreen(datasource._id!, query)
       )
       const dsUsage = await config.api.screen.usage(datasource._id!)
       expect(dsUsage.sourceType).toEqual(SourceType.DATASOURCE)
