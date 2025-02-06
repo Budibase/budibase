@@ -15,6 +15,7 @@ import { GroupEndpoints } from "./groups"
 import { LayoutEndpoints } from "./layouts"
 import { LicensingEndpoints } from "./licensing"
 import { LogEndpoints } from "./logs"
+import { MediaEndpoints } from "./media"
 import { MigrationEndpoints } from "./migrations"
 import { OtherEndpoints } from "./other"
 import { PermissionEndpoints } from "./permissions"
@@ -132,4 +133,5 @@ export type APIClient = BaseAPIClient &
   TableEndpoints &
   TemplateEndpoints &
   UserEndpoints &
+  MediaEndpoints &
   ViewEndpoints & { rowActions: RowActionEndpoints; viewV2: ViewV2Endpoints }
