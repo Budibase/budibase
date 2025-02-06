@@ -48,7 +48,7 @@ describe("test the create row action", () => {
         { text: "Row created with ID: {{ stepsByName.CreateRow.row._id }}" },
         { stepName: "CreationLog" }
       )
-      .run()
+      .test()
 
     expect(result.steps[1].outputs.success).toBeDefined()
     expect(result.steps[1].outputs.id).toBeDefined()
@@ -78,7 +78,7 @@ describe("test the create row action", () => {
         },
         { stepName: "CreateRow" }
       )
-      .run()
+      .test()
 
     expect(result.steps[1].outputs.success).toEqual(false)
   })
@@ -97,7 +97,7 @@ describe("test the create row action", () => {
         { text: "This log should not appear" },
         { stepName: "SkippedLog" }
       )
-      .run()
+      .test()
 
     expect(result.steps[1].outputs.success).toEqual(false)
     expect(result.steps.length).toBeLessThan(4)
@@ -140,7 +140,7 @@ describe("test the create row action", () => {
         },
         { stepName: "UploadLog" }
       )
-      .run()
+      .test()
 
     expect(result.steps[1].outputs.success).toEqual(true)
     expect(result.steps[1].outputs.row.file_attachment[0]).toHaveProperty("key")
@@ -209,7 +209,7 @@ describe("test the create row action", () => {
           },
         },
       })
-      .run()
+      .test()
 
     expect(result.steps[1].outputs.success).toEqual(true)
     expect(result.steps[1].outputs.row.single_file_attachment).toHaveProperty(
@@ -278,7 +278,7 @@ describe("test the create row action", () => {
           },
         },
       })
-      .run()
+      .test()
 
     expect(result.steps[1].outputs.success).toEqual(false)
     expect(result.steps[1].outputs.response).toEqual(

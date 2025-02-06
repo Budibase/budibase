@@ -251,7 +251,7 @@ describe("/automations", () => {
         .serverLog({
           text: "{{ settings.company }}",
         })
-        .run({ fields: {} })
+        .test({ fields: {} })
 
       expect(result.steps[0].outputs.message).toEndWith("https://example.com")
       expect(result.steps[1].outputs.message).toEndWith(

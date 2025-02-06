@@ -23,7 +23,7 @@ describe("Execute Script Automations", () => {
     const results = await createAutomationBuilder(config)
       .onAppAction()
       .executeScript({ code: "return 2 + 2" })
-      .run({ fields: {} })
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.value).toEqual(4)
   })
@@ -37,7 +37,7 @@ describe("Execute Script Automations", () => {
         },
         { stepId: "binding-script-step" }
       )
-      .run({ fields: { data: [1, 2, 3] } })
+      .test({ fields: { data: [1, 2, 3] } })
 
     expect(results.steps[0].outputs.value).toEqual([2, 4, 6])
   })
@@ -46,7 +46,7 @@ describe("Execute Script Automations", () => {
     const results = await createAutomationBuilder(config)
       .onAppAction()
       .executeScript({ code: "return nonexistentVariable.map(x => x)" })
-      .run({ fields: {} })
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.response).toContain(
       "ReferenceError: nonexistentVariable is not defined"
@@ -66,7 +66,7 @@ describe("Execute Script Automations", () => {
             }
           `,
       })
-      .run({ fields: { value: 10 } })
+      .test({ fields: { value: 10 } })
 
     expect(results.steps[0].outputs.value).toEqual("Value is greater than 5")
   })
@@ -94,7 +94,7 @@ describe("Execute Script Automations", () => {
       .serverLog({
         text: `Final result is {{ steps.ScriptingStep1.value }}`,
       })
-      .run({ fields: {} })
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.message).toContain(
       "Starting multi-step automation"

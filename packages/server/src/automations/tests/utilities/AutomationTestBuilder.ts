@@ -31,7 +31,7 @@ type BranchConfig = {
 }
 
 class TriggerBuilder {
-  private config: TestConfiguration
+  private readonly config: TestConfiguration
 
   constructor(config: TestConfiguration) {
     this.config = config
@@ -64,10 +64,10 @@ class TriggerBuilder {
 }
 
 class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
-  protected steps: AutomationStep[] = []
-  protected stepNames: { [key: string]: string } = {}
+  protected readonly steps: AutomationStep[] = []
+  protected readonly stepNames: { [key: string]: string } = {}
 
-  protected createStepFn<TStep extends AutomationActionStepId>(stepId: TStep) {
+  protected step<TStep extends AutomationActionStepId>(stepId: TStep) {
     return (
       inputs: AutomationStepInputs<TStep>,
       opts?: { stepName?: string; stepId?: string }
@@ -88,28 +88,28 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
     }
   }
 
-  createRow = this.createStepFn(AutomationActionStepId.CREATE_ROW)
-  updateRow = this.createStepFn(AutomationActionStepId.UPDATE_ROW)
-  deleteRow = this.createStepFn(AutomationActionStepId.DELETE_ROW)
-  sendSmtpEmail = this.createStepFn(AutomationActionStepId.SEND_EMAIL_SMTP)
-  executeQuery = this.createStepFn(AutomationActionStepId.EXECUTE_QUERY)
-  queryRows = this.createStepFn(AutomationActionStepId.QUERY_ROWS)
-  loop = this.createStepFn(AutomationActionStepId.LOOP)
-  serverLog = this.createStepFn(AutomationActionStepId.SERVER_LOG)
-  executeScript = this.createStepFn(AutomationActionStepId.EXECUTE_SCRIPT)
-  filter = this.createStepFn(AutomationActionStepId.FILTER)
-  bash = this.createStepFn(AutomationActionStepId.EXECUTE_BASH)
-  openai = this.createStepFn(AutomationActionStepId.OPENAI)
-  collect = this.createStepFn(AutomationActionStepId.COLLECT)
-  zapier = this.createStepFn(AutomationActionStepId.zapier)
-  triggerAutomationRun = this.createStepFn(
+  createRow = this.step(AutomationActionStepId.CREATE_ROW)
+  updateRow = this.step(AutomationActionStepId.UPDATE_ROW)
+  deleteRow = this.step(AutomationActionStepId.DELETE_ROW)
+  sendSmtpEmail = this.step(AutomationActionStepId.SEND_EMAIL_SMTP)
+  executeQuery = this.step(AutomationActionStepId.EXECUTE_QUERY)
+  queryRows = this.step(AutomationActionStepId.QUERY_ROWS)
+  loop = this.step(AutomationActionStepId.LOOP)
+  serverLog = this.step(AutomationActionStepId.SERVER_LOG)
+  executeScript = this.step(AutomationActionStepId.EXECUTE_SCRIPT)
+  filter = this.step(AutomationActionStepId.FILTER)
+  bash = this.step(AutomationActionStepId.EXECUTE_BASH)
+  openai = this.step(AutomationActionStepId.OPENAI)
+  collect = this.step(AutomationActionStepId.COLLECT)
+  zapier = this.step(AutomationActionStepId.zapier)
+  triggerAutomationRun = this.step(
     AutomationActionStepId.TRIGGER_AUTOMATION_RUN
   )
-  outgoingWebhook = this.createStepFn(AutomationActionStepId.OUTGOING_WEBHOOK)
-  n8n = this.createStepFn(AutomationActionStepId.n8n)
-  make = this.createStepFn(AutomationActionStepId.integromat)
-  discord = this.createStepFn(AutomationActionStepId.discord)
-  delay = this.createStepFn(AutomationActionStepId.DELAY)
+  outgoingWebhook = this.step(AutomationActionStepId.OUTGOING_WEBHOOK)
+  n8n = this.step(AutomationActionStepId.n8n)
+  make = this.step(AutomationActionStepId.integromat)
+  discord = this.step(AutomationActionStepId.discord)
+  delay = this.step(AutomationActionStepId.DELAY)
 
   protected addBranchStep(branchConfig: BranchConfig): void {
     const inputs: BranchStepInputs = {
@@ -142,8 +142,8 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
 class StepBuilder<
   TStep extends AutomationTriggerStepId
 > extends BranchStepBuilder<TStep> {
-  private config: TestConfiguration
-  private trigger: AutomationTrigger
+  private readonly config: TestConfiguration
+  private readonly trigger: AutomationTrigger
   private _name: string | undefined = undefined
 
   constructor(config: TestConfiguration, trigger: AutomationTrigger) {
@@ -176,26 +176,26 @@ class StepBuilder<
     return new AutomationRunner<TStep>(this.config, automation)
   }
 
-  async run(outputs: AutomationTriggerOutputs<TStep>) {
+  async test(triggerOutput: AutomationTriggerOutputs<TStep>) {
     const runner = await this.save()
-    return await runner.run(outputs)
+    return await runner.test(triggerOutput)
   }
 }
 
 class AutomationRunner<TStep extends AutomationTriggerStepId> {
-  private config: TestConfiguration
-  automation: Automation
+  private readonly config: TestConfiguration
+  readonly automation: Automation
 
   constructor(config: TestConfiguration, automation: Automation) {
     this.config = config
     this.automation = automation
   }
 
-  async run(outputs: AutomationTriggerOutputs<TStep>) {
+  async test(triggerOutput: AutomationTriggerOutputs<TStep>) {
     const response = await this.config.api.automation.test(
       this.automation._id!,
       // TODO: figure out why this cast is needed.
-      outputs as TestAutomationRequest
+      triggerOutput as TestAutomationRequest
     )
 
     if (isDidNotTriggerResponse(response)) {
