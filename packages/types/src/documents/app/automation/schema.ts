@@ -45,7 +45,6 @@ import {
   OpenAIStepInputs,
   OpenAIStepOutputs,
   LoopStepInputs,
-  AppActionTriggerInputs,
   CronTriggerInputs,
   RowUpdatedTriggerInputs,
   RowCreatedTriggerInputs,
@@ -332,7 +331,7 @@ export type AutomationTriggerDefinition = Omit<
 
 export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
   T extends AutomationTriggerStepId.APP
-    ? AppActionTriggerInputs
+    ? void | Record<string, any>
     : T extends AutomationTriggerStepId.CRON
     ? CronTriggerInputs
     : T extends AutomationTriggerStepId.ROW_ACTION
