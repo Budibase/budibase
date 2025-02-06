@@ -222,10 +222,8 @@ export function basicAutomation(opts?: DeepPartial<Automation>): Automation {
         icon: "test",
         description: "test",
         type: AutomationStepType.TRIGGER,
+        inputs: {},
         id: "test",
-        inputs: {
-          fields: {},
-        },
         schema: {
           inputs: {
             properties: {},
