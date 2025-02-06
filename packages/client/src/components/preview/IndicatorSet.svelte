@@ -1,32 +1,54 @@
-<script>
+<script lang="ts">
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
   import { builderStore } from "stores"
   import { memo, Utils } from "@budibase/frontend-core"
 
-  export let componentId = null
-  export let color = null
-  export let zIndex = 900
-  export let prefix = null
-  export let allowResizeAnchors = false
-  export let background = null
-  export let animate = false
-  export let text = null
-  export let icon = null
+  export let componentId: string | undefined = undefined
+  export let color: string | undefined = undefined
+  export let zIndex: number = 900
+  export let prefix: string | undefined = undefined
+  export let allowResizeAnchors: boolean = false
+  export let background: string | undefined = undefined
+  export let animate: boolean = false
+  export let text: string | undefined = undefined
+  export let icon: string | undefined = undefined
 
-  // Offset = 6 (clip-root padding) - 1 (half the border thickness)
+  interface IndicatorState {
+    visible: boolean
+    insideModal: boolean
+    insideSidePanel: boolean
+    top: number
+    left: number
+    width: number
+    height: number
+  }
+
+  interface IndicatorSetState {
+    // Cached props
+    componentId?: string
+    color?: string
+    zIndex: number
+    prefix?: string
+    allowResizeAnchors: boolean
+
+    // Computed state
+    indicators: IndicatorState[]
+    text?: string
+    icon?: string
+    insideGrid: boolean
+    error: boolean
+  }
+
   const config = memo($$props)
   const errorColor = "var(--spectrum-global-color-static-red-600)"
   const mutationObserver = new MutationObserver(() => debouncedUpdate())
-  const defaultState = () => ({
-    // Cached props
+  const defaultState = (): IndicatorSetState => ({
     componentId,
     color,
     zIndex,
     prefix,
     allowResizeAnchors,
-
-    // Computed state
     indicators: [],
     text,
     icon,
@@ -34,13 +56,13 @@
     error: false,
   })
 
-  let interval
+  let interval: ReturnType<typeof setInterval>
   let state = defaultState()
   let observingMutations = false
   let updating = false
-  let intersectionObservers = []
+  let intersectionObservers: IntersectionObserver[] = []
   let callbackCount = 0
-  let nextState
+  let nextState: ReturnType<typeof defaultState>
 
   $: componentId, reset()
   $: visibleIndicators = state.indicators.filter(x => x.visible)
@@ -62,26 +84,33 @@
     updating = false
   }
 
-  const observeMutations = element => {
-    mutationObserver.observe(element, {
+  const getElements = (className: string): HTMLElement[] => {
+    return [...document.getElementsByClassName(className)]
+      .filter(el => el instanceof HTMLElement)
+      .slice(0, 100)
+  }
+
+  const observeMutations = (node: Node) => {
+    mutationObserver.observe(node, {
       attributes: true,
     })
     observingMutations = true
   }
 
-  const createIntersectionCallback = idx => entries => {
-    if (callbackCount >= intersectionObservers.length) {
-      return
+  const createIntersectionCallback =
+    (idx: number) => (entries: IntersectionObserverEntry[]) => {
+      if (callbackCount >= intersectionObservers.length) {
+        return
+      }
+      nextState.indicators[idx].visible =
+        nextState.indicators[idx].insideModal ||
+        nextState.indicators[idx].insideSidePanel ||
+        entries[0].isIntersecting
+      if (++callbackCount === intersectionObservers.length) {
+        state = nextState
+        updating = false
+      }
     }
-    nextState.indicators[idx].visible =
-      nextState.indicators[idx].insideModal ||
-      nextState.indicators[idx].insideSidePanel ||
-      entries[0].isIntersecting
-    if (++callbackCount === intersectionObservers.length) {
-      state = nextState
-      updating = false
-    }
-  }
 
   const updatePosition = () => {
     if (updating) {
@@ -93,7 +122,7 @@
       state = defaultState()
       return
     }
-    let elements = document.getElementsByClassName(componentId)
+    let elements = getElements(componentId)
     if (!elements.length) {
       state = defaultState()
       return
@@ -134,11 +163,8 @@
     // Extract valid children
     // Sanity limit of active indicators
     if (!nextState.insideGrid) {
-      elements = document.getElementsByClassName(`${componentId}-dom`)
+      elements = getElements(`${componentId}-dom`)
     }
-    elements = Array.from(elements)
-      .filter(x => x != null)
-      .slice(0, 100)
     const multi = elements.length > 1
 
     // If there aren't any nodes then reset
@@ -148,15 +174,20 @@
     }
 
     const device = document.getElementById("app-root")
+    if (!device) {
+      throw "app-root node not found"
+    }
     const deviceBounds = device.getBoundingClientRect()
     nextState.indicators = elements.map((element, idx) => {
       const elBounds = element.getBoundingClientRect()
-      let indicator = {
+      let indicator: IndicatorState = {
         top: Math.round(elBounds.top + scrollY - deviceBounds.top + offset),
         left: Math.round(elBounds.left + scrollX - deviceBounds.left + offset),
         width: Math.round(elBounds.width + 2),
         height: Math.round(elBounds.height + 2),
         visible: true,
+        insideModal: false,
+        insideSidePanel: false,
       }
 
       // If observing more than one node then we need to use an intersection
