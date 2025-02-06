@@ -4,8 +4,8 @@
   import { builderStore } from "stores"
   import { memo, Utils } from "@budibase/frontend-core"
 
-  export let componentId: string | undefined = undefined
-  export let color: string | undefined = undefined
+  export let componentId: string
+  export let color: string
   export let zIndex: number = 900
   export let prefix: string | undefined = undefined
   export let allowResizeAnchors: boolean = false
@@ -26,8 +26,8 @@
 
   interface IndicatorSetState {
     // Cached props
-    componentId?: string
-    color?: string
+    componentId: string
+    color: string
     zIndex: number
     prefix?: string
     allowResizeAnchors: boolean
@@ -118,10 +118,6 @@
     }
 
     // Sanity check
-    if (!componentId) {
-      state = defaultState()
-      return
-    }
     let elements = getElements(componentId)
     if (!elements.length) {
       state = defaultState()
@@ -235,8 +231,8 @@
     left={indicator.left}
     width={indicator.width}
     height={indicator.height}
-    text={idx === 0 ? state.text : null}
-    icon={idx === 0 ? state.icon : null}
+    text={idx === 0 ? state.text : undefined}
+    icon={idx === 0 ? state.icon : undefined}
     showResizeAnchors={state.allowResizeAnchors && state.insideGrid}
     color={state.error ? errorColor : state.color}
     componentId={state.componentId}

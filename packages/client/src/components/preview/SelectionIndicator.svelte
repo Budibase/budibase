@@ -7,9 +7,11 @@
     : "var(--spectrum-global-color-static-blue-600)"
 </script>
 
-<IndicatorSet
-  componentId={$dndIsDragging ? null : $builderStore.selectedComponentId}
-  {color}
-  zIndex={900}
-  allowResizeAnchors
-/>
+{#if !$dndIsDragging && $builderStore.selectedComponentId}
+  <IndicatorSet
+    componentId={$builderStore.selectedComponentId}
+    {color}
+    zIndex={900}
+    allowResizeAnchors
+  />
+{/if}

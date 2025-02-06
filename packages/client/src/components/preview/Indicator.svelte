@@ -1,20 +1,20 @@
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
   import { GridDragModes } from "utils/grid"
 
-  export let top
-  export let left
-  export let width
-  export let height
-  export let text
-  export let icon
-  export let color
-  export let zIndex
-  export let componentId
+  export let top: number
+  export let left: number
+  export let width: number
+  export let height: number
+  export let text: string | undefined
+  export let icon: string | undefined
+  export let color: string
+  export let zIndex: number
+  export let componentId: string
   export let line = false
   export let alignRight = false
   export let showResizeAnchors = false
-  export let background = null
+  export let background: string | undefined
   export let animate = false
 
   const AnchorSides = [
