@@ -28,11 +28,8 @@ describe("Test a query step automation", () => {
   })
 
   it("should be able to run the query step", async () => {
-    const result = await createAutomationBuilder({
-      name: "Basic Query Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -47,7 +44,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query All Rows" }
       )
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
@@ -56,11 +53,8 @@ describe("Test a query step automation", () => {
   })
 
   it("Returns all rows when onEmptyFilter has no value and no filters are passed", async () => {
-    const result = await createAutomationBuilder({
-      name: "Empty Filter Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -71,7 +65,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query With Empty Filter" }
       )
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
@@ -80,11 +74,8 @@ describe("Test a query step automation", () => {
   })
 
   it("Returns no rows when onEmptyFilter is RETURN_NONE and theres no filters", async () => {
-    const result = await createAutomationBuilder({
-      name: "Return None Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -97,7 +88,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query With Return None" }
       )
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
@@ -105,11 +96,8 @@ describe("Test a query step automation", () => {
   })
 
   it("Returns no rows when onEmptyFilters RETURN_NONE and a filter is passed with a null value", async () => {
-    const result = await createAutomationBuilder({
-      name: "Null Filter Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -126,7 +114,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query With Null Filter" }
       )
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
@@ -134,11 +122,8 @@ describe("Test a query step automation", () => {
   })
 
   it("Returns rows when onEmptyFilter is RETURN_ALL and no filter is passed", async () => {
-    const result = await createAutomationBuilder({
-      name: "Return All Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -150,7 +135,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query With Return All" }
       )
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
@@ -165,11 +150,8 @@ describe("Test a query step automation", () => {
     await config.api.row.save(tableWithSpaces._id!, {
       name: NAME,
     })
-    const result = await createAutomationBuilder({
-      name: "Return All Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .queryRows(
         {
           tableId: tableWithSpaces._id!,
@@ -178,7 +160,7 @@ describe("Test a query step automation", () => {
         },
         { stepName: "Query table with spaces" }
       )
-      .run()
+      .test({ fields: {} })
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[0].outputs.rows).toBeDefined()
     expect(result.steps[0].outputs.rows.length).toBe(1)

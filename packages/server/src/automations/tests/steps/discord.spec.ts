@@ -19,14 +19,14 @@ describe("test the outgoing webhook action", () => {
 
   it("should be able to run the action", async () => {
     nock("http://www.example.com/").post("/").reply(200, { foo: "bar" })
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .discord({
         url: "http://www.example.com",
         username: "joe_bloggs",
         content: "Hello, world",
       })
-      .run()
+      .test({ fields: {} })
     expect(result.steps[0].outputs.response.foo).toEqual("bar")
     expect(result.steps[0].outputs.success).toEqual(true)
   })

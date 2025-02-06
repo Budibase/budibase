@@ -30,8 +30,8 @@ describe("test the update row action", () => {
   })
 
   it("should be able to run the update row action", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .updateRow({
         rowId: row._id!,
         row: {
@@ -41,7 +41,7 @@ describe("test the update row action", () => {
         },
         meta: {},
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.success).toEqual(true)
     const updatedRow = await config.api.row.get(
@@ -53,23 +53,23 @@ describe("test the update row action", () => {
   })
 
   it("should check invalid inputs return an error", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .updateRow({ meta: {}, row: {}, rowId: "" })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.success).toEqual(false)
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .updateRow({
         row: { _id: "invalid" },
         rowId: "invalid",
         meta: {},
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.success).toEqual(false)
   })
@@ -106,8 +106,8 @@ describe("test the update row action", () => {
       user2: [{ _id: user2._id }],
     })
 
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .updateRow({
         rowId: row._id!,
         row: {
@@ -119,7 +119,7 @@ describe("test the update row action", () => {
         },
         meta: {},
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.success).toEqual(true)
 
@@ -160,8 +160,8 @@ describe("test the update row action", () => {
       user2: [{ _id: user2._id }],
     })
 
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .updateRow({
         rowId: row._id!,
         row: {
@@ -179,7 +179,7 @@ describe("test the update row action", () => {
           },
         },
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.success).toEqual(true)
 
