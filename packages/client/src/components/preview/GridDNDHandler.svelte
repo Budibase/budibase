@@ -53,6 +53,7 @@
   ghost.src =
     "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
 
+  let scrollElement: HTMLElement
   let dragInfo: GridDragInfo | undefined
   let styles = memo<Record<string, number> | undefined>()
 
@@ -74,6 +75,8 @@
 
   // Reset when not dragging new components
   $: !$dndIsDragging && stopDragging()
+
+  const scrollOffset = () => scrollElement?.scrollTop || 0
 
   const applyStyles = async (
     instance: any,
@@ -113,7 +116,7 @@
     }
     const diffX = mouseX - startX
     let deltaX = Math.round(diffX / colSize)
-    const diffY = mouseY - startY
+    const diffY = mouseY - startY + scrollOffset()
     let deltaY = Math.round(diffY / GridRowHeight)
     if (mode === GridDragMode.Move) {
       deltaX = minMax(deltaX, 1 - colStart, cols + 1 - colEnd)
@@ -186,7 +189,7 @@
       mode: GridDragMode.Move,
       grid: {
         startX: bounds.left + bounds.width / 2,
-        startY: bounds.top + bounds.height / 2,
+        startY: bounds.top + bounds.height / 2 + scrollOffset(),
         rowStart: parseInt(styles.gridRowStart),
         rowEnd: parseInt(styles.gridRowEnd),
         colStart: parseInt(styles.gridColumnStart),
@@ -249,7 +252,7 @@
       side,
       grid: {
         startX: e.clientX,
-        startY: e.clientY,
+        startY: e.clientY + scrollOffset(),
         rowStart: parseInt(styles.gridRowStart),
         rowEnd: parseInt(styles.gridRowEnd),
         colStart: parseInt(styles.gridColumnStart),
@@ -295,12 +298,17 @@
   }
 
   onMount(() => {
+    scrollElement = document.getElementsByClassName(
+      "screen-wrapper"
+    )[0] as HTMLElement
     document.addEventListener("dragstart", onDragStart, false)
     document.addEventListener("dragover", onDragOver, false)
+    document.addEventListener("scroll", processEvent)
   })
 
   onDestroy(() => {
     document.removeEventListener("dragstart", onDragStart, false)
     document.removeEventListener("dragover", onDragOver, false)
+    document.removeEventListener("scroll", processEvent)
   })
 </script>
