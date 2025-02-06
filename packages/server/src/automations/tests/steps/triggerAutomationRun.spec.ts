@@ -17,24 +17,27 @@ describe("Test triggering an automation from another automation", () => {
   })
 
   it("should trigger an other server log automation", async () => {
-    const automation = await createAutomationBuilder(config)
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog({ text: "Hello World" })
       .save()
 
     const result = await createAutomationBuilder(config)
+      .onAppAction()
       .triggerAutomationRun({
         automation: {
           automationId: automation._id!,
         },
         timeout: env.getDefaults().AUTOMATION_THREAD_TIMEOUT,
       })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(true)
   })
 
   it("should fail gracefully if the automation id is incorrect", async () => {
     const result = await createAutomationBuilder(config)
+      .onAppAction()
       .triggerAutomationRun({
         automation: {
           // @ts-expect-error - incorrect on purpose
@@ -42,7 +45,7 @@ describe("Test triggering an automation from another automation", () => {
         },
         timeout: env.getDefaults().AUTOMATION_THREAD_TIMEOUT,
       })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(false)
   })

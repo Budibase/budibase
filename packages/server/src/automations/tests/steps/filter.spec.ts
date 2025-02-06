@@ -43,8 +43,9 @@ describe("test the filter logic", () => {
   ]
   it.each(pass)("should pass %p %p %p", async (field, condition, value) => {
     const result = await createAutomationBuilder(config)
+      .onAppAction()
       .filter({ field, condition: stringToFilterCondition(condition), value })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.result).toEqual(true)
     expect(result.steps[0].outputs.success).toEqual(true)
@@ -60,8 +61,9 @@ describe("test the filter logic", () => {
   ]
   it.each(fail)("should fail %p %p %p", async (field, condition, value) => {
     const result = await createAutomationBuilder(config)
+      .onAppAction()
       .filter({ field, condition: stringToFilterCondition(condition), value })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.result).toEqual(false)
     expect(result.steps[0].outputs.success).toEqual(true)
