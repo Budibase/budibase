@@ -1,4 +1,3 @@
-import * as automation from "../../index"
 import { Table, Webhook, WebhookActionType } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { mocks } from "@budibase/backend-core/tests"
@@ -12,7 +11,7 @@ describe("Branching automations", () => {
   let webhook: Webhook
 
   async function createWebhookAutomation() {
-    const automation = await createAutomationBuilder({ config })
+    const automation = await createAutomationBuilder(config)
       .webhook({ fields: { parameter: "string" } })
       .createRow({
         row: { tableId: table._id!, name: "{{ trigger.parameter }}" },
@@ -37,7 +36,6 @@ describe("Branching automations", () => {
   }
 
   beforeEach(async () => {
-    await automation.init()
     await config.init()
     table = await config.createTable()
   })
