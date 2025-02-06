@@ -150,24 +150,23 @@
     if (!source) {
       return ""
     }
+    const screenCount = affectedScreens.length
     let message = `Removing ${source?.name} `
     let initialLength = message.length
     if (sourceType === SourceType.TABLE) {
       const views = "views" in source ? Object.values(source?.views ?? []) : []
-      if (isInternalTable) {
-        message += `will delete its data${
-          views.length ? `, views (${views.length})` : ""
-        }`
-      } else if (views.length) {
-        message += `will delete its views (${views.length})`
-      }
+      message += `will delete its data${
+        views.length
+          ? `${screenCount ? "," : " and"} views (${views.length})`
+          : ""
+      }`
     } else if (sourceType === SourceType.DATASOURCE) {
       const queryList = getDatasourceQueries()
       if (queryList.length) {
         message += `will delete its queries (${queryList.length})`
       }
     }
-    if (affectedScreens.length) {
+    if (screenCount) {
       message +=
         initialLength !== message.length
           ? ", and break connected screens:"
@@ -187,16 +186,20 @@
   title={`Are you sure you want to delete this ${sourceType}?`}
 >
   <div class="content">
-    {#if affectedScreens.length > 0 && sourceType}
+    {#if sourceType}
       <p class="warning">
         {buildMessage(sourceType)}
-        <span class="screens">
-          {#each affectedScreens as item, idx}
-            <Link overBackground target="_blank" href={item.url}
-              >{item.text}{idx !== affectedScreens.length - 1 ? "," : ""}</Link
-            >
-          {/each}
-        </span>
+        {#if affectedScreens.length > 0}
+          <span class="screens">
+            {#each affectedScreens as item, idx}
+              <Link overBackground target="_blank" href={item.url}
+                >{item.text}{idx !== affectedScreens.length - 1
+                  ? ","
+                  : ""}</Link
+              >
+            {/each}
+          </span>
+        {/if}
       </p>
     {/if}
     <p class="warning">
