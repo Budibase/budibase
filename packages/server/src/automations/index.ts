@@ -1,7 +1,6 @@
 import { processEvent } from "./utils"
 import { automationQueue } from "./bullboard"
 import { rebootTrigger } from "./triggers"
-import BullQueue from "bull"
 import { automationsEnabled } from "../features"
 
 export { automationQueue } from "./bullboard"
@@ -25,6 +24,6 @@ export async function init() {
   return promise
 }
 
-export function getQueues(): BullQueue.Queue[] {
-  return [automationQueue]
+export function getQueue() {
+  return automationQueue
 }

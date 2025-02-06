@@ -1,37 +1,34 @@
 import { EmptyFilterOption, SortOrder, Table } from "@budibase/types"
-import * as setup from "./utilities"
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
-import * as automation from "../index"
-import { basicTable } from "../../tests/utilities/structures"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import * as automation from "../../index"
+import { basicTable } from "../../../tests/utilities/structures"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 const NAME = "Test"
 
 describe("Test a query step automation", () => {
+  const config = new TestConfiguration()
   let table: Table
-  let config = setup.getConfig()
 
   beforeAll(async () => {
     await automation.init()
     await config.init()
-    table = await config.createTable()
+    table = await config.api.table.save(basicTable())
 
     const row = {
       name: NAME,
       description: "original description",
-      tableId: table._id,
     }
-    await config.createRow(row)
-    await config.createRow(row)
+    await config.api.row.save(table._id!, row)
+    await config.api.row.save(table._id!, row)
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to run the query step", async () => {
-    const result = await createAutomationBuilder({
-      name: "Basic Query Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .queryRows(
         {
           tableId: table._id!,
@@ -55,11 +52,7 @@ describe("Test a query step automation", () => {
   })
 
   it("Returns all rows when onEmptyFilter has no value and no filters are passed", async () => {
-    const result = await createAutomationBuilder({
-      name: "Empty Filter Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .queryRows(
         {
           tableId: table._id!,
@@ -79,11 +72,7 @@ describe("Test a query step automation", () => {
   })
 
   it("Returns no rows when onEmptyFilter is RETURN_NONE and theres no filters", async () => {
-    const result = await createAutomationBuilder({
-      name: "Return None Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .queryRows(
         {
           tableId: table._id!,
@@ -104,11 +93,7 @@ describe("Test a query step automation", () => {
   })
 
   it("Returns no rows when onEmptyFilters RETURN_NONE and a filter is passed with a null value", async () => {
-    const result = await createAutomationBuilder({
-      name: "Null Filter Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .queryRows(
         {
           tableId: table._id!,
@@ -133,11 +118,7 @@ describe("Test a query step automation", () => {
   })
 
   it("Returns rows when onEmptyFilter is RETURN_ALL and no filter is passed", async () => {
-    const result = await createAutomationBuilder({
-      name: "Return All Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .queryRows(
         {
           tableId: table._id!,
@@ -157,19 +138,14 @@ describe("Test a query step automation", () => {
   })
 
   it("return rows when querying a table with a space in the name", async () => {
-    const tableWithSpaces = await config.createTable({
+    const tableWithSpaces = await config.api.table.save({
       ...basicTable(),
       name: "table with spaces",
     })
-    await config.createRow({
+    await config.api.row.save(tableWithSpaces._id!, {
       name: NAME,
-      tableId: tableWithSpaces._id,
     })
-    const result = await createAutomationBuilder({
-      name: "Return All Test",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .queryRows(
         {
           tableId: tableWithSpaces._id!,

@@ -1,30 +1,30 @@
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
-import * as automation from "../index"
-import * as setup from "./utilities"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import * as automation from "../../index"
 import { Table } from "@budibase/types"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { basicTable } from "../../../tests/utilities/structures"
 
 describe("Execute Bash Automations", () => {
-  let config = setup.getConfig(),
-    table: Table
+  const config = new TestConfiguration()
+  let table: Table
 
   beforeAll(async () => {
     await automation.init()
     await config.init()
-    table = await config.createTable()
-    await config.createRow({
+    table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, {
       name: "test row",
       description: "test description",
-      tableId: table._id!,
     })
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    automation.shutdown()
+    config.end()
+  })
 
   it("should use trigger data in bash command and pass output to subsequent steps", async () => {
-    const result = await createAutomationBuilder({
-      name: "Bash with Trigger Data",
-      config,
-    })
+    const result = await createAutomationBuilder(config)
       .appAction({ fields: { command: "hello world" } })
       .bash(
         { code: "echo '{{ trigger.fields.command }}'" },
@@ -43,10 +43,7 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should chain multiple bash commands using previous outputs", async () => {
-    const result = await createAutomationBuilder({
-      name: "Chained Bash Commands",
-      config,
-    })
+    const result = await createAutomationBuilder(config)
       .appAction({ fields: { filename: "testfile.txt" } })
       .bash(
         { code: "echo 'initial content' > {{ trigger.fields.filename }}" },
@@ -67,11 +64,7 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should integrate bash output with row operations", async () => {
-    const result = await createAutomationBuilder({
-      name: "Bash with Row Operations",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .queryRows(
         {
           tableId: table._id!,
@@ -100,10 +93,7 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should handle bash output in conditional logic", async () => {
-    const result = await createAutomationBuilder({
-      name: "Bash with Conditional",
-      config,
-    })
+    const result = await createAutomationBuilder(config)
       .appAction({ fields: { threshold: "5" } })
       .bash(
         { code: "echo $(( {{ trigger.fields.threshold }} + 5 ))" },
@@ -130,13 +120,9 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should handle null values gracefully", async () => {
-    const result = await createAutomationBuilder({
-      name: "Null Bash Input",
-      config,
-    })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
       .bash(
-        //@ts-ignore
+        // @ts-expect-error - testing null input
         { code: null },
         { stepName: "Null Command" }
       )

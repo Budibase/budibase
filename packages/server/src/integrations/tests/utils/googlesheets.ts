@@ -609,7 +609,15 @@ export class GoogleSheetsMock {
       for (let col = startColumnIndex; col <= endColumnIndex; col++) {
         const cell = this.getCellNumericIndexes(sheetId, row, col)
         if (!cell) {
-          throw new Error("Cell not found")
+          const sheet = this.getSheetById(sheetId)
+          if (!sheet) {
+            throw new Error(`Sheet ${sheetId} not found`)
+          }
+          const sheetRows = sheet.data[0].rowData.length
+          const sheetCols = sheet.data[0].rowData[0].values.length
+          throw new Error(
+            `Failed to find cell at ${row}, ${col}. Range: ${valueRange.range}. Sheet dimensions: ${sheetRows}x${sheetCols}.`
+          )
         }
         const value =
           valueRange.values[row - startRowIndex][col - startColumnIndex]
@@ -638,7 +646,15 @@ export class GoogleSheetsMock {
       for (let col = startColumnIndex; col <= endColumnIndex; col++) {
         const cell = this.getCellNumericIndexes(sheetId, row, col)
         if (!cell) {
-          throw new Error("Cell not found")
+          const sheet = this.getSheetById(sheetId)
+          if (!sheet) {
+            throw new Error(`Sheet ${sheetId} not found`)
+          }
+          const sheetRows = sheet.data[0].rowData.length
+          const sheetCols = sheet.data[0].rowData[0].values.length
+          throw new Error(
+            `Failed to find cell at ${row}, ${col}. Range: ${valueRange.range}. Sheet dimensions: ${sheetRows}x${sheetCols}.`
+          )
         }
         values.push(this.cellValue(cell))
       }
