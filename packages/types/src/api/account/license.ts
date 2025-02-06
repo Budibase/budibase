@@ -20,7 +20,8 @@ export interface QuotaTriggeredRequest {
 }
 
 export interface LicenseActivateRequest {
-  installVersion?: string
+  installVersion: string
+  installId: string
 }
 
 export interface UpdateLicenseRequest {
