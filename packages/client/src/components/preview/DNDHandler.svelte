@@ -25,6 +25,7 @@
   $: source = $dndStore.source
   $: target = $dndStore.target
   $: drop = $dndStore.drop
+  $: gridScreen = $isGridScreen
 
   // Local flag for whether we are awaiting an async drop event
   let dropping = false
@@ -235,7 +236,7 @@
 
   // Callback when on top of a component
   const onDragOver = (e: DragEvent) => {
-    if (!source || !target || $isGridScreen) {
+    if (!source || !target || gridScreen) {
       return
     }
     handleEvent(e)
@@ -243,7 +244,7 @@
 
   // Callback when entering a potential drop target
   const onDragEnter = async (e: DragEvent) => {
-    if (!source || $isGridScreen || !(e.target instanceof HTMLElement)) {
+    if (!source || gridScreen || !(e.target instanceof HTMLElement)) {
       return
     }
 
@@ -278,7 +279,7 @@
         source.type,
         drop.parent,
         drop.index,
-        $dndStore.source?.props
+        $dndStore.meta?.props
       )
       dropping = false
       stopDragging()

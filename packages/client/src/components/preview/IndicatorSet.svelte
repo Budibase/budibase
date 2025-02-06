@@ -93,6 +93,7 @@
   const observeMutations = (node: Node) => {
     mutationObserver.observe(node, {
       attributes: true,
+      attributeFilter: ["style"],
     })
     observingMutations = true
   }

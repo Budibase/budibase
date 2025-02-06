@@ -1,12 +1,18 @@
 <script lang="ts">
-  import { isGridScreen, dndParent, dndSource, dndIsDragging } from "@/stores"
+  import {
+    isGridScreen,
+    dndParent,
+    dndSource,
+    dndIsDragging,
+    dndStore,
+  } from "@/stores"
   import { DNDPlaceholderID } from "@/constants"
   import IndicatorSet from "./IndicatorSet.svelte"
 
   // On grid screens, don't draw the indicator until we've dragged over the
   // screen. When this happens, the dndSource props will be set as we will have
   // attached grid metadata styles.
-  $: waitingForGrid = $isGridScreen && !$dndSource?.props
+  $: waitingForGrid = $isGridScreen && !$dndStore.meta?.props
 </script>
 
 {#if $dndIsDragging}

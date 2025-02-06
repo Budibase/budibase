@@ -16,7 +16,6 @@ interface DNDSource {
   icon?: string
   type: string
   isNew: boolean
-  props?: Record<string, any>
 }
 
 interface DNDTarget {
@@ -32,10 +31,15 @@ interface DNDDrop {
   index: number
 }
 
+interface DNDMeta {
+  props?: Record<string, any>
+}
+
 interface DNDState {
   source?: DNDSource
   target?: DNDTarget
   drop?: DNDDrop
+  meta?: DNDMeta
 }
 
 const createDndStore = () => {
@@ -106,15 +110,12 @@ const createDndStore = () => {
     store.set({})
   }
 
-  const updateSourceProps = (props: Record<string, any>) => {
+  const updateNewComponentProps = (props: Record<string, any>) => {
     store.update(state => {
-      if (!state.source) {
-        return state
-      }
       return {
         ...state,
-        source: {
-          ...state.source,
+        meta: {
+          ...state.meta,
           props,
         },
       }
@@ -129,7 +130,7 @@ const createDndStore = () => {
       updateTarget,
       updateDrop,
       reset,
-      updateSourceProps,
+      updateNewComponentProps,
     },
   }
 }

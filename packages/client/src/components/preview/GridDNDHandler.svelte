@@ -85,7 +85,7 @@
     // real component to render in the new position before updating the DND
     // store, preventing the green DND overlay from being out of position
     if ($dndSource?.isNew && styles) {
-      dndStore.actions.updateSourceProps({
+      dndStore.actions.updateNewComponentProps({
         _styles: {
           normal: styles,
         },
