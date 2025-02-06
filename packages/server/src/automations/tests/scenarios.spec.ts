@@ -30,13 +30,7 @@ describe("Automation Scenarios", () => {
       const table = await config.api.table.save(basicTable())
 
       const results = await createAutomationBuilder(config)
-        .rowUpdated(
-          { tableId: table._id! },
-          {
-            row: { name: "Test", description: "TEST" },
-            id: "1234",
-          }
-        )
+        .rowUpdated({ tableId: table._id! })
         .createRow({
           row: {
             name: "{{trigger.row.name}}",
@@ -44,7 +38,10 @@ describe("Automation Scenarios", () => {
             tableId: table._id,
           },
         })
-        .run()
+        .run({
+          row: { name: "Test", description: "TEST" },
+          id: "1234",
+        })
 
       expect(results.steps).toHaveLength(1)
 
@@ -66,10 +63,11 @@ describe("Automation Scenarios", () => {
       await config.api.row.save(table._id!, row)
       await config.api.row.save(table._id!, row)
       const results = await createAutomationBuilder(config)
+        .appAction()
         .queryRows({
           tableId: table._id!,
         })
-        .run()
+        .run({ fields: {} })
 
       expect(results.steps).toHaveLength(1)
       expect(results.steps[0].outputs.rows).toHaveLength(2)
@@ -84,6 +82,7 @@ describe("Automation Scenarios", () => {
       await config.api.row.save(table._id!, row)
       await config.api.row.save(table._id!, row)
       const results = await createAutomationBuilder(config)
+        .appAction()
         .queryRows({
           tableId: table._id!,
         })
@@ -94,7 +93,7 @@ describe("Automation Scenarios", () => {
         .queryRows({
           tableId: table._id!,
         })
-        .run()
+        .run({ fields: {} })
 
       expect(results.steps).toHaveLength(3)
       expect(results.steps[1].outputs.success).toBeTruthy()
@@ -125,6 +124,7 @@ describe("Automation Scenarios", () => {
       })
 
       const results = await createAutomationBuilder(config)
+        .appAction()
         .createRow(
           {
             row: {
@@ -153,7 +153,7 @@ describe("Automation Scenarios", () => {
           },
           { stepName: "QueryRowsStep" }
         )
-        .run()
+        .run({ fields: {} })
 
       expect(results.steps).toHaveLength(3)
 
@@ -193,6 +193,7 @@ describe("Automation Scenarios", () => {
       await config.api.row.save(table._id!, row)
       await config.api.row.save(table._id!, row)
       const results = await createAutomationBuilder(config)
+        .appAction()
         .queryRows(
           {
             tableId: table._id!,
@@ -206,7 +207,7 @@ describe("Automation Scenarios", () => {
         .queryRows({
           tableId: table._id!,
         })
-        .run()
+        .run({ fields: {} })
 
       expect(results.steps).toHaveLength(3)
       expect(results.steps[1].outputs.success).toBeTruthy()
@@ -242,6 +243,7 @@ describe("Automation Scenarios", () => {
 
     it("should stop an automation if the condition is not met", async () => {
       const results = await createAutomationBuilder(config)
+        .appAction()
         .createRow({
           row: {
             name: "Equal Test",
@@ -258,7 +260,7 @@ describe("Automation Scenarios", () => {
           value: 20,
         })
         .serverLog({ text: "Equal condition met" })
-        .run()
+        .run({ fields: {} })
 
       expect(results.steps[2].outputs.success).toBeTrue()
       expect(results.steps[2].outputs.result).toBeFalse()
@@ -267,6 +269,7 @@ describe("Automation Scenarios", () => {
 
     it("should continue the automation if the condition is met", async () => {
       const results = await createAutomationBuilder(config)
+        .appAction()
         .createRow({
           row: {
             name: "Not Equal Test",
@@ -283,7 +286,7 @@ describe("Automation Scenarios", () => {
           value: 20,
         })
         .serverLog({ text: "Not Equal condition met" })
-        .run()
+        .run({ fields: {} })
 
       expect(results.steps[2].outputs.success).toBeTrue()
       expect(results.steps[2].outputs.result).toBeTrue()
@@ -333,6 +336,7 @@ describe("Automation Scenarios", () => {
       "should pass the filter when condition is $condition",
       async ({ condition, value, rowValue, expectPass }) => {
         const results = await createAutomationBuilder(config)
+          .appAction()
           .createRow({
             row: {
               name: `${condition} Test`,
@@ -351,7 +355,7 @@ describe("Automation Scenarios", () => {
           .serverLog({
             text: `${condition} condition ${expectPass ? "passed" : "failed"}`,
           })
-          .run()
+          .run({ fields: {} })
 
         expect(results.steps[2].outputs.result).toBe(expectPass)
         if (expectPass) {
@@ -367,23 +371,21 @@ describe("Automation Scenarios", () => {
     const table = await config.api.table.save(basicTable())
 
     const results = await createAutomationBuilder(config)
-      .rowUpdated(
-        { tableId: table._id! },
-        {
-          row: { name: "Test", description: "TEST" },
-          id: "1234",
-        }
-      )
+      .rowUpdated({ tableId: table._id! })
       .serverLog({ text: "{{ [user].[email] }}" })
-      .run()
+      .run({
+        row: { name: "Test", description: "TEST" },
+        id: "1234",
+      })
 
     expect(results.steps[0].outputs.message).toContain("example.com")
   })
 
   it("Check user is passed through from app trigger", async () => {
     const results = await createAutomationBuilder(config)
+      .appAction()
       .serverLog({ text: "{{ [user].[email] }}" })
-      .run()
+      .run({ fields: {} })
 
     expect(results.steps[0].outputs.message).toContain("example.com")
   })
@@ -453,9 +455,7 @@ if (descriptions.length) {
       })
 
       const results = await createAutomationBuilder(config)
-        .appAction({
-          fields: {},
-        })
+        .appAction()
         .executeQuery({
           query: {
             queryId: query._id!,
@@ -475,7 +475,7 @@ if (descriptions.length) {
         .queryRows({
           tableId: newTable._id!,
         })
-        .run()
+        .run({ fields: {} })
 
       expect(results.steps).toHaveLength(3)
 
