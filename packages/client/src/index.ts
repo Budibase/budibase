@@ -10,7 +10,7 @@ import {
   eventStore,
   hoverStore,
   stateStore,
-} from "stores"
+} from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
 import { APIClient } from "@budibase/frontend-core"

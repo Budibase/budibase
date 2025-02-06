@@ -1,6 +1,6 @@
 import { GridSpacing, GridRowHeight } from "@/constants"
-import { builderStore } from "stores"
-import { buildStyleString } from "utils/styleable.js"
+import { builderStore } from "@/stores"
+import { buildStyleString } from "@/utils/styleable.js"
 
 interface GridMetadata {
   id: string

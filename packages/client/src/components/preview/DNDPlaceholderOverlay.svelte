@@ -3,7 +3,7 @@
 <!--  import { Utils } from "@budibase/frontend-core"-->
 <!--  import { componentStore, dndNewComponentType, isGridScreen } from "@/stores"-->
 <!--  import { DNDPlaceholderID } from "@/constants"-->
-<!--  import IndicatorSet from "components/preview/IndicatorSet.svelte"-->
+<!--  import IndicatorSet from "@/components/preview/IndicatorSet.svelte"-->
 
 <!--  let left, top, height, width-->
 <!--  let observing = false-->

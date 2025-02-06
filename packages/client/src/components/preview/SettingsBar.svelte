@@ -6,7 +6,7 @@
   import SettingsPicker from "./SettingsPicker.svelte"
   import { builderStore, componentStore, dndIsDragging } from "@/stores"
   import { Utils, shouldDisplaySetting } from "@budibase/frontend-core"
-  import { getGridVar, GridParams, Devices } from "utils/grid"
+  import { getGridVar, GridParams, Devices } from "@/utils/grid"
 
   const context = getContext("context")
   const verticalOffset = 36

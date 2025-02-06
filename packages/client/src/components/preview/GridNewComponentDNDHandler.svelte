@@ -2,8 +2,8 @@
   import { onDestroy, getContext } from "svelte"
   import { builderStore, componentStore, screenStore } from "@/stores"
   import { Utils, memo } from "@budibase/frontend-core"
-  import { GridRowHeight } from "constants"
-  import { GridParams, getGridVar, Devices } from "utils/grid"
+  import { GridRowHeight } from "@/constants"
+  import { GridParams, getGridVar, Devices } from "@/utils/grid"
 
   const context = getContext("context")
 

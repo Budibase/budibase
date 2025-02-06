@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
 import { derivedMemo } from "@budibase/frontend-core"
-import { screenStore, isGridScreen, componentStore } from "stores/index"
+import { screenStore, isGridScreen, componentStore } from "@/stores"
 import { ScreenslotID } from "@/constants"
 import { ComponentDefinition } from "@budibase/types"
 

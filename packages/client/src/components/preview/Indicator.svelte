@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Icon } from "@budibase/bbui"
-  import { GridDragModes } from "utils/grid"
+  import { GridDragModes } from "@/utils/grid"
 
   export let top: number
   export let left: number

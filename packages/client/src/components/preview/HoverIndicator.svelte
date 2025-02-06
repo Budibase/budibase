@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte"
   import IndicatorSet from "./IndicatorSet.svelte"
-  import { dndIsDragging, hoverStore, builderStore } from "stores"
+  import { dndIsDragging, hoverStore, builderStore } from "@/stores"
 
   $: componentId = $hoverStore.hoveredComponentId
   $: selectedComponentId = $builderStore.selectedComponentId
