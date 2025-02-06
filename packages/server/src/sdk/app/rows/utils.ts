@@ -12,12 +12,17 @@ import {
   Table,
   TableSchema,
   SqlClient,
+  ArrayOperator,
+  ViewV2,
+  EnrichedQueryJson,
 } from "@budibase/types"
-import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
-import { isRelationshipColumn } from "../../../db/utils"
+import { extractViewInfoFromID, isRelationshipColumn } from "../../../db/utils"
 import { isSQL } from "../../../integrations/utils"
+import { docIds, sql, SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
+import { getTableFromSource } from "../../../api/controllers/row/utils"
+import env from "../../../environment"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.POSTGRES]: SqlClient.POSTGRES,
@@ -39,6 +44,9 @@ const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.BUDIBASE]: undefined,
 }
 
+const XSS_INPUT_REGEX =
+  /[<>;"'(){}]|--|\/\*|\*\/|union|select|insert|drop|delete|update|exec|script/i
+
 export function getSQLClient(datasource: Datasource): SqlClient {
   if (!isSQL(datasource)) {
     throw new Error("Cannot get SQL Client for non-SQL datasource")
@@ -53,26 +61,70 @@ export function getSQLClient(datasource: Datasource): SqlClient {
 export function processRowCountResponse(
   response: DatasourcePlusQueryResponse
 ): number {
-  if (response && response.length === 1 && "total" in response[0]) {
-    const total = response[0].total
+  if (
+    response &&
+    response.length === 1 &&
+    sql.COUNT_FIELD_NAME in response[0]
+  ) {
+    const total = response[0][sql.COUNT_FIELD_NAME]
     return typeof total === "number" ? total : parseInt(total)
   } else {
     throw new Error("Unable to count rows in query - no count response")
   }
 }
 
-export async function getDatasourceAndQuery(
-  json: QueryJson
-): Promise<DatasourcePlusQueryResponse> {
-  const datasourceId = json.endpoint.datasourceId
-  const datasource = await sdk.datasources.get(datasourceId)
-  const table = datasource.entities?.[json.endpoint.entityId]
-  if (!json.meta && table) {
-    json.meta = {
-      table,
-    }
+function processInternalTables(tables: Table[]) {
+  const tableMap: Record<string, Table> = {}
+  for (let table of tables) {
+    // update the table name, should never query by name for SQLite
+    table.originalName = table.name
+    table.name = table._id!
+    tableMap[table._id!] = table
   }
-  return makeExternalQuery(datasource, json)
+  return tableMap
+}
+
+export async function enrichQueryJson(
+  json: QueryJson
+): Promise<EnrichedQueryJson> {
+  let datasource: Datasource | undefined = undefined
+
+  if (typeof json.endpoint.datasourceId === "string") {
+    if (json.endpoint.datasourceId !== SQS_DATASOURCE_INTERNAL) {
+      datasource = await sdk.datasources.get(json.endpoint.datasourceId, {
+        enriched: true,
+      })
+    }
+  } else {
+    datasource = await sdk.datasources.enrich(json.endpoint.datasourceId)
+  }
+
+  let tables: Record<string, Table>
+  if (datasource) {
+    tables = datasource.entities || {}
+  } else {
+    tables = processInternalTables(await sdk.tables.getAllInternalTables())
+  }
+
+  let table: Table
+  if (typeof json.endpoint.entityId === "string") {
+    let entityId = json.endpoint.entityId
+    if (docIds.isDatasourceId(entityId)) {
+      entityId = sql.utils.breakExternalTableId(entityId).tableName
+    }
+    table = tables[entityId]
+  } else {
+    table = json.endpoint.entityId
+  }
+
+  return {
+    operation: json.endpoint.operation,
+    table,
+    tables,
+    datasource,
+    schema: json.endpoint.schema,
+    ...json,
+  }
 }
 
 export function cleanExportRows(
@@ -137,37 +189,27 @@ function isForeignKey(key: string, table: Table) {
 }
 
 export async function validate({
-  tableId,
+  source,
   row,
-  table,
 }: {
-  tableId?: string
+  source: Table | ViewV2
   row: Row
-  table?: Table
 }): Promise<{
   valid: boolean
   errors: Record<string, any>
 }> {
-  let fetchedTable: Table | undefined
-  if (!table && tableId) {
-    fetchedTable = await sdk.tables.getTable(tableId)
-  } else if (table) {
-    fetchedTable = table
-  }
-  if (fetchedTable === undefined) {
-    throw new Error("Unable to fetch table for validation")
-  }
+  const table = await getTableFromSource(source)
   const errors: Record<string, any> = {}
   const disallowArrayTypes = [
     FieldType.ATTACHMENT_SINGLE,
     FieldType.BB_REFERENCE_SINGLE,
   ]
-  for (let fieldName of Object.keys(fetchedTable.schema)) {
-    const column = fetchedTable.schema[fieldName]
+  for (let fieldName of Object.keys(table.schema)) {
+    const column = table.schema[fieldName]
     const constraints = cloneDeep(column.constraints)
     const type = column.type
     // foreign keys are likely to be enriched
-    if (isForeignKey(fieldName, fetchedTable)) {
+    if (isForeignKey(fieldName, table)) {
       continue
     }
     // formulas shouldn't validated, data will be deleted anyway
@@ -224,6 +266,15 @@ export async function validate({
     } else {
       res = validateJs.single(row[fieldName], constraints)
     }
+
+    if (env.XSS_SAFE_MODE && typeof row[fieldName] === "string") {
+      if (XSS_INPUT_REGEX.test(row[fieldName])) {
+        errors[fieldName] = [
+          "Input not sanitised - potentially vulnerable to XSS",
+        ]
+      }
+    }
+
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
@@ -310,4 +361,27 @@ function validateTimeOnlyField(
   }
 
   return res
+}
+
+// type-guard check
+export function isArrayFilter(operator: any): operator is ArrayOperator {
+  return Object.values(ArrayOperator).includes(operator)
+}
+
+export function tryExtractingTableAndViewId(tableOrViewId: string) {
+  if (docIds.isViewId(tableOrViewId)) {
+    return {
+      tableId: extractViewInfoFromID(tableOrViewId).tableId,
+      viewId: tableOrViewId,
+    }
+  }
+
+  return { tableId: tableOrViewId }
+}
+
+export function getSource(tableOrViewId: string) {
+  if (docIds.isViewId(tableOrViewId)) {
+    return sdk.views.get(tableOrViewId)
+  }
+  return sdk.tables.getTable(tableOrViewId)
 }

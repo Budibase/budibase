@@ -2,7 +2,7 @@
   import { getContext, onDestroy } from "svelte"
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
-  import { canBeSortColumn } from "@budibase/shared-core"
+  import { canBeSortColumn } from "@budibase/frontend-core"
   import Provider from "components/context/Provider.svelte"
 
   export let dataProvider
@@ -146,7 +146,7 @@
         return
       }
       newSchema[columnName] = schema[columnName]
-      if (!canBeSortColumn(schema[columnName].type)) {
+      if (!canBeSortColumn(schema[columnName])) {
         newSchema[columnName].sortable = false
       }
 

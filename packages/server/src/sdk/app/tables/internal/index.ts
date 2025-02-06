@@ -5,7 +5,7 @@ import {
   ViewStatisticsSchema,
   ViewV2,
   Row,
-  ContextUser,
+  TableSourceType,
 } from "@budibase/types"
 import {
   hasTypeChanged,
@@ -16,18 +16,56 @@ import { EventType, updateLinks } from "../../../../db/linkedRows"
 import { cloneDeep } from "lodash/fp"
 import isEqual from "lodash/isEqual"
 import { runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFormula"
-import { context } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import { findDuplicateInternalColumns } from "@budibase/shared-core"
 import { getTable } from "../getters"
 import { checkAutoColumns } from "./utils"
 import * as viewsSdk from "../../views"
-import { getRowParams } from "../../../../db/utils"
+import { generateTableID, getRowParams } from "../../../../db/utils"
 import { quotas } from "@budibase/pro"
+
+export async function create(
+  table: Omit<Table, "_id" | "_rev">,
+  rows?: Row[],
+  userId?: string
+) {
+  const tableId = generateTableID()
+
+  let tableToSave: Table = {
+    _id: tableId,
+    ...table,
+    // Ensure these fields are populated, even if not sent in the request
+    type: table.type || "table",
+    sourceType: TableSourceType.INTERNAL,
+  }
+
+  const isImport = !!rows
+
+  if (!tableToSave.views) {
+    tableToSave.views = {}
+  }
+
+  try {
+    const { table } = await save(tableToSave, {
+      userId,
+      rowsToImport: rows,
+      isImport,
+    })
+
+    return table
+  } catch (err: any) {
+    if (err instanceof Error) {
+      throw new HTTPError(err.message, 400)
+    } else {
+      throw new HTTPError(err.message || err, err.status || 500)
+    }
+  }
+}
 
 export async function save(
   table: Table,
   opts?: {
-    user?: ContextUser
+    userId?: string
     tableId?: string
     rowsToImport?: Row[]
     renaming?: RenameColumn
@@ -48,9 +86,7 @@ export async function save(
   }
 
   // check for case sensitivity - we don't want to allow duplicated columns
-  const duplicateColumn = findDuplicateInternalColumns(table, {
-    ignoreProtectedColumnNames: !oldTable && !!opts?.isImport,
-  })
+  const duplicateColumn = findDuplicateInternalColumns(table)
   if (duplicateColumn.length) {
     throw new Error(
       `Column(s) "${duplicateColumn.join(
@@ -65,7 +101,7 @@ export async function save(
   // saving a table is a complex operation, involving many different steps, this
   // has been broken out into a utility to make it more obvious/easier to manipulate
   const tableSaveFunctions = new TableSaveFunctions({
-    user: opts?.user,
+    userId: opts?.userId,
     oldTable,
     importRows: opts?.rowsToImport,
   })
@@ -135,7 +171,7 @@ export async function save(
   }
   // has to run after, make sure it has _id
   await runStaticFormulaChecks(table, { oldTable, deletion: false })
-  return { table }
+  return { table, oldTable }
 }
 
 export async function destroy(table: Table) {

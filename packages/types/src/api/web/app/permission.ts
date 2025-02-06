@@ -1,4 +1,12 @@
-import { PermissionLevel, PlanType } from "../../../sdk"
+import { BuiltinPermission, PermissionLevel } from "../../../sdk"
+
+export type FetchBuiltinPermissionsResponse = BuiltinPermission[]
+
+export type FetchPermissionLevelsRequest = string[]
+
+export interface FetchResourcePermissionInfoResponse {
+  [key: string]: Record<string, string>
+}
 
 export interface ResourcePermissionInfo {
   role: string
@@ -8,7 +16,6 @@ export interface ResourcePermissionInfo {
 
 export interface GetResourcePermsResponse {
   permissions: Record<string, ResourcePermissionInfo>
-  requiresPlanToModify?: PlanType
 }
 
 export interface GetDependantResourcesResponse {
@@ -22,7 +29,9 @@ export interface AddedPermission {
   reason?: string
 }
 
-export type AddPermissionResponse = AddedPermission[]
+export interface AddPermissionResponse {
+  message: string
+}
 
 export interface AddPermissionRequest {
   roleId: string
@@ -31,4 +40,6 @@ export interface AddPermissionRequest {
 }
 
 export interface RemovePermissionRequest extends AddPermissionRequest {}
-export interface RemovePermissionResponse extends AddPermissionResponse {}
+export interface RemovePermissionResponse {
+  message: string
+}

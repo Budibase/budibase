@@ -27,7 +27,6 @@
   let candidateIndex
   let lastSearchId
   let searching = false
-  let container
   let anchor
 
   $: fieldValue = parseValue(value)
@@ -40,6 +39,20 @@
       close()
     }
   }
+
+  $: relationFields = fieldValue?.reduce((acc, f) => {
+    const fields = {}
+    for (const [column] of Object.entries(schema?.columns || {}).filter(
+      ([key, column]) =>
+        column.visible !== false && f[key] !== null && f[key] !== undefined
+    )) {
+      fields[column] = f[column]
+    }
+    if (Object.keys(fields).length) {
+      acc[f._id] = fields
+    }
+    return acc
+  }, {})
 
   const parseValue = value => {
     if (Array.isArray(value) && value.every(x => x?._id)) {
@@ -89,9 +102,8 @@
     lastSearchId = Math.random()
     searching = true
     const thisSearchId = lastSearchId
-    const results = await searchFunction({
+    const results = await searchFunction(schema.tableId, {
       paginate: false,
-      tableId: schema.tableId,
       limit: 20,
       query: {
         string: {
@@ -240,15 +252,20 @@
   style="--color:{color};"
   bind:this={anchor}
 >
-  <div class="container" bind:this={container}>
+  <div class="container">
     <div
       class="values"
       class:wrap={editable || contentLines > 1}
+      class:disabled={!focused}
       on:wheel={e => (focused ? e.stopPropagation() : null)}
     >
       {#each fieldValue || [] as relationship}
         {#if relationship[primaryDisplay] || relationship.primaryDisplay}
-          <div class="badge">
+          <div
+            class="badge"
+            class:extra-info={!!relationFields[relationship._id]}
+            on:focus={() => {}}
+          >
             <span>
               {readable(
                 relationship[primaryDisplay] || relationship.primaryDisplay
@@ -376,6 +393,9 @@
     padding: var(--cell-padding);
     flex-wrap: nowrap;
   }
+  .values.disabled {
+    pointer-events: none;
+  }
   .values.wrap {
     flex-wrap: wrap;
   }
@@ -407,6 +427,11 @@
     height: 20px;
     max-width: 100%;
   }
+  .values.wrap .badge.extra-info:hover {
+    filter: brightness(1.25);
+    cursor: pointer;
+  }
+
   .badge span {
     overflow: hidden;
     white-space: nowrap;

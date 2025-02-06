@@ -1,9 +1,9 @@
 <script>
   import { Button, Modal } from "@budibase/bbui"
-  import { integrations, tables } from "stores/builder"
+  import { integrations, tables } from "@/stores/builder"
   import CreateExternalTableModal from "./CreateExternalTableModal.svelte"
-  import TableImportSelection from "components/backend/Datasources/TableImportSelection/index.svelte"
-  import { integrationForDatasource } from "stores/selectors"
+  import TableImportSelection from "@/components/backend/Datasources/TableImportSelection/index.svelte"
+  import { integrationForDatasource } from "@/stores/selectors"
 
   export let datasource
 

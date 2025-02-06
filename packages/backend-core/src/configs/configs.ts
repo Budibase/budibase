@@ -1,4 +1,5 @@
 import {
+  AIConfig,
   Config,
   ConfigType,
   GoogleConfig,
@@ -253,4 +254,10 @@ export async function getSMTPConfig(
 export async function getSCIMConfig(): Promise<SCIMInnerConfig | undefined> {
   const config = await getConfig<SCIMConfig>(ConfigType.SCIM)
   return config?.config
+}
+
+// AI
+
+export async function getAIConfig(): Promise<AIConfig | undefined> {
+  return getConfig<AIConfig>(ConfigType.AI)
 }

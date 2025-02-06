@@ -44,7 +44,9 @@ describe("automationUtils", () => {
     })
     it("should handle null values", () => {
       // expect it to handle where the binding is null
-      expect(typecastForLooping({ option: LoopStepType.ARRAY })).toEqual(null)
+      expect(
+        typecastForLooping({ option: LoopStepType.ARRAY, binding: null })
+      ).toEqual(null)
       expect(() =>
         typecastForLooping({ option: LoopStepType.ARRAY, binding: "test" })
       ).toThrow()

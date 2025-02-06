@@ -1,6 +1,7 @@
 import { Application } from "./types"
+import { RequiredKeys } from "@budibase/types"
 
-function application(body: any): Application {
+function application(body: any): RequiredKeys<Application> {
   let app = body?.application ? body.application : body
   return {
     _id: app.appId,

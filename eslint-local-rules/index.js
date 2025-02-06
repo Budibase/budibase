@@ -1,6 +1,17 @@
+const path = require("path")
+
+const makeBarrelPath = finalPath => {
+  return path.resolve(__dirname, "..", finalPath)
+}
+const backendCoreBarrelPaths = [
+  makeBarrelPath(path.join("packages", "backend-core", "src", "index.ts")),
+  makeBarrelPath(path.join("packages", "backend-core", "src")),
+  makeBarrelPath(path.join("packages", "backend-core")),
+]
+
 module.exports = {
   "no-console-error": {
-    create: function(context) {
+    create: function (context) {
       return {
         CallExpression(node) {
           if (
@@ -13,11 +24,12 @@ module.exports = {
           ) {
             context.report({
               node,
-              message: 'Using console.error(err) on its own is not allowed. Either provide context to the error (console.error(msg, err)) or throw it.',
+              message:
+                "Using console.error(err) on its own is not allowed. Either provide context to the error (console.error(msg, err)) or throw it.",
             })
           }
         },
-      };
+      }
     },
   },
   "no-budibase-imports": {
@@ -99,6 +111,44 @@ module.exports = {
                   node,
                   'generator.email({ domain: "example.com" })'
                 )
+              },
+            })
+          }
+        },
+      }
+    },
+  },
+  "no-barrel-imports": {
+    meta: {
+      type: "problem",
+      docs: {
+        description:
+          "Disallow imports from the top-level backend-core barrel file",
+        category: "Best Practices",
+        recommended: false,
+      },
+      schema: [], // no options
+      messages: {
+        noBarrelImport:
+          "Avoid importing from the top-level barrel file 'backend-core/src/index.ts'. Import directly from the specific module instead.",
+      },
+    },
+    create(context) {
+      return {
+        ImportDeclaration(node) {
+          const importPath = node.source.value
+          const importFullPath = path.resolve(
+            context.getFilename(),
+            "..",
+            importPath
+          )
+
+          if (backendCoreBarrelPaths.includes(importFullPath)) {
+            context.report({
+              node,
+              messageId: "noBarrelImport",
+              data: {
+                importFullPath,
               },
             })
           }

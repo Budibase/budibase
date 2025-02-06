@@ -1,6 +1,6 @@
 import { FieldType } from "@budibase/types"
-import { FIELDS } from "constants/backend"
-import { tables } from "stores/builder"
+import { FIELDS } from "@/constants/backend"
+import { tables } from "@/stores/builder"
 import { get as svelteGet } from "svelte/store"
 
 // currently supported level of relationship depth (server side)
@@ -8,6 +8,7 @@ const MAX_DEPTH = 1
 
 const TYPES_TO_SKIP = [
   FieldType.FORMULA,
+  FieldType.AI,
   FieldType.LONGFORM,
   FieldType.SIGNATURE_SINGLE,
   FieldType.ATTACHMENTS,

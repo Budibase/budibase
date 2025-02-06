@@ -1,4 +1,5 @@
 import cronValidate from "cron-validate"
+import cronParser from "cron-parser"
 
 const INPUT_CRON_START = "(Input cron: "
 const ERROR_SWAPS = {
@@ -30,11 +31,24 @@ function improveErrors(errors: string[]): string[] {
   return finalErrors
 }
 
+export function getNextExecutionDates(
+  cronExpression: string,
+  limit = 4
+): string[] {
+  const parsed = cronParser.parseExpression(cronExpression)
+  const nextRuns = []
+  for (let i = 0; i < limit; i++) {
+    nextRuns.push(parsed.next().toString())
+  }
+
+  return nextRuns
+}
+
 export function validate(
   cronExpression: string
 ): { valid: false; err: string[] } | { valid: true } {
   const result = cronValidate(cronExpression, {
-    preset: "npm-node-cron",
+    preset: "npm-cron-schedule",
     override: {
       useSeconds: false,
     },

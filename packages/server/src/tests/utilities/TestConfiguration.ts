@@ -70,7 +70,6 @@ import {
 } from "@budibase/types"
 
 import API from "./api"
-import { cloneDeep } from "lodash"
 import jwt, { Secret } from "jsonwebtoken"
 import { Server } from "http"
 
@@ -111,6 +110,7 @@ export default class TestConfiguration {
   tenantId?: string
   api: API
   csrfToken?: string
+  temporaryHeaders?: Record<string, string | string[]>
 
   constructor(openServer = true) {
     if (openServer) {
@@ -237,6 +237,7 @@ export default class TestConfiguration {
     if (!this) {
       return
     }
+
     if (this.server) {
       this.server.close()
     } else {
@@ -244,65 +245,6 @@ export default class TestConfiguration {
     }
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
-    }
-  }
-
-  async withEnv<T>(newEnvVars: Partial<typeof env>, f: () => Promise<T>) {
-    let cleanup = this.setEnv(newEnvVars)
-    try {
-      return await f()
-    } finally {
-      cleanup()
-    }
-  }
-
-  /*
-   * Sets the environment variables to the given values and returns a function
-   * that can be called to reset the environment variables to their original values.
-   */
-  setEnv(newEnvVars: Partial<typeof env>): () => void {
-    const oldEnv = cloneDeep(env)
-
-    let key: keyof typeof newEnvVars
-    for (key in newEnvVars) {
-      env._set(key, newEnvVars[key])
-    }
-
-    return () => {
-      for (const [key, value] of Object.entries(oldEnv)) {
-        env._set(key, value)
-      }
-    }
-  }
-
-  async withCoreEnv<T>(
-    newEnvVars: Partial<typeof coreEnv>,
-    f: () => Promise<T>
-  ) {
-    let cleanup = this.setCoreEnv(newEnvVars)
-    try {
-      return await f()
-    } finally {
-      cleanup()
-    }
-  }
-
-  /*
-   * Sets the environment variables to the given values and returns a function
-   * that can be called to reset the environment variables to their original values.
-   */
-  setCoreEnv(newEnvVars: Partial<typeof coreEnv>): () => void {
-    const oldEnv = cloneDeep(coreEnv)
-
-    let key: keyof typeof newEnvVars
-    for (key in newEnvVars) {
-      coreEnv._set(key, newEnvVars[key])
-    }
-
-    return () => {
-      for (const [key, value] of Object.entries(oldEnv)) {
-        coreEnv._set(key, value)
-      }
     }
   }
 
@@ -316,7 +258,7 @@ export default class TestConfiguration {
     }
   }
 
-  async withApp(app: App | string, f: () => Promise<void>) {
+  async withApp<R>(app: App | string, f: () => Promise<R>) {
     const oldAppId = this.appId
     this.appId = typeof app === "string" ? app : app.appId
     try {
@@ -324,6 +266,10 @@ export default class TestConfiguration {
     } finally {
       this.appId = oldAppId
     }
+  }
+
+  async withProdApp<R>(f: () => Promise<R>) {
+    return await this.withApp(this.getProdAppId(), f)
   }
 
   // UTILS
@@ -393,6 +339,7 @@ export default class TestConfiguration {
       sessionId: this.sessionIdForUser(_id),
       tenantId: this.getTenantId(),
       csrfToken: this.csrfToken,
+      email,
     })
     const resp = await db.put(user)
     await cache.user.invalidateUser(_id)
@@ -456,16 +403,17 @@ export default class TestConfiguration {
       }
       // make sure the user exists in the global DB
       if (roleId !== roles.BUILTIN_ROLE_IDS.PUBLIC) {
-        await this.globalUser({
+        const user = await this.globalUser({
           _id: userId,
           builder: { global: builder },
           roles: { [appId]: roleId || roles.BUILTIN_ROLE_IDS.BASIC },
         })
+        await sessions.createASession(userId, {
+          sessionId: this.sessionIdForUser(userId),
+          tenantId: this.getTenantId(),
+          email: user.email,
+        })
       }
-      await sessions.createASession(userId, {
-        sessionId: this.sessionIdForUser(userId),
-        tenantId: this.getTenantId(),
-      })
       // have to fake this
       const authObj = {
         userId,
@@ -480,11 +428,44 @@ export default class TestConfiguration {
         Accept: "application/json",
         Cookie: [`${constants.Cookie.Auth}=${authToken}`],
         [constants.Header.APP_ID]: appId,
+        ...this.temporaryHeaders,
       }
     })
   }
 
   // HEADERS
+
+  // sets the role for the headers, for the period of a callback
+  async loginAsRole(roleId: string, cb: () => Promise<unknown>) {
+    const roleUser = await this.createUser({
+      roles: {
+        [this.getProdAppId()]: roleId,
+      },
+      builder: { global: false },
+      admin: { global: false },
+    })
+    await this.login({
+      roleId,
+      userId: roleUser._id!,
+      builder: false,
+      prodApp: true,
+    })
+    await this.withUser(roleUser, async () => {
+      await cb()
+    })
+  }
+
+  async withHeaders(
+    headers: Record<string, string | string[]>,
+    cb: () => Promise<unknown>
+  ) {
+    this.temporaryHeaders = headers
+    try {
+      await cb()
+    } finally {
+      this.temporaryHeaders = undefined
+    }
+  }
 
   defaultHeaders(extras = {}, prodApp = false) {
     const tenantId = this.getTenantId()
@@ -509,7 +490,10 @@ export default class TestConfiguration {
     } else if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
-    return headers
+    return {
+      ...headers,
+      ...this.temporaryHeaders,
+    }
   }
 
   publicHeaders({ prodApp = true } = {}) {
@@ -517,6 +501,7 @@ export default class TestConfiguration {
 
     const headers: any = {
       Accept: "application/json",
+      Cookie: "",
     }
     if (appId) {
       headers[constants.Header.APP_ID] = appId
@@ -524,7 +509,10 @@ export default class TestConfiguration {
 
     headers[constants.Header.TENANT_ID] = this.getTenantId()
 
-    return headers
+    return {
+      ...headers,
+      ...this.temporaryHeaders,
+    }
   }
 
   async basicRoleHeaders() {
@@ -543,6 +531,10 @@ export default class TestConfiguration {
     prodApp = true,
   } = {}) {
     return this.login({ userId: email, roleId, builder, prodApp })
+  }
+
+  browserUserAgent() {
+    return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
   }
 
   // TENANCY
@@ -633,7 +625,7 @@ export default class TestConfiguration {
   }
 
   async unpublish() {
-    const response = await this._req(appController.unpublish, {
+    const response = await this._req(appController.unpublish, undefined, {
       appId: this.appId,
     })
     this.prodAppId = undefined

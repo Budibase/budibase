@@ -13,7 +13,6 @@ on:
         options:
           - patch
           - minor
-          - major
         required: true
 
 jobs:

@@ -7,7 +7,7 @@ import { dndIndex, dndParent, dndIsNewComponent, dndBounds } from "./dnd.js"
 import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
-import { DNDPlaceholderID } from "constants"
+import { DNDPlaceholderID, ScreenslotID, ScreenslotType } from "constants"
 
 const createScreenStore = () => {
   const store = derived(
@@ -42,6 +42,14 @@ const createScreenStore = () => {
         if ($builderStore.layout) {
           activeLayout = $builderStore.layout
         }
+
+        // Attach meta
+        const errors = $builderStore.componentErrors || {}
+        const attachComponentMeta = component => {
+          component._meta = { errors: errors[component._id] || [] }
+          component._children?.forEach(attachComponentMeta)
+        }
+        attachComponentMeta(activeScreen.props)
       } else {
         // Find the correct screen by matching the current route
         screens = $appStore.screens || []
@@ -92,6 +100,8 @@ const createScreenStore = () => {
               width: `${$dndBounds?.width || 400}px`,
               height: `${$dndBounds?.height || 200}px`,
               opacity: 0,
+              "--default-width": $dndBounds?.width || 400,
+              "--default-height": $dndBounds?.height || 200,
             },
           },
           static: true,
@@ -129,29 +139,30 @@ const createScreenStore = () => {
       // If we don't have a legacy custom layout, build a layout structure
       // from the screen navigation settings
       if (!activeLayout) {
-        let navigationSettings = {
+        let layoutSettings = {
           navigation: "None",
           pageWidth: activeScreen?.width || "Large",
+          embedded: $appStore.embedded,
         }
         if (activeScreen?.showNavigation) {
-          navigationSettings = {
-            ...navigationSettings,
+          layoutSettings = {
+            ...layoutSettings,
             ...($builderStore.navigation || $appStore.application?.navigation),
           }
 
           // Default navigation to top
-          if (!navigationSettings.navigation) {
-            navigationSettings.navigation = "Top"
+          if (!layoutSettings.navigation) {
+            layoutSettings.navigation = "Top"
           }
 
           // Default title to app name
-          if (!navigationSettings.title && !navigationSettings.hideTitle) {
-            navigationSettings.title = $appStore.application?.name
+          if (!layoutSettings.title && !layoutSettings.hideTitle) {
+            layoutSettings.title = $appStore.application?.name
           }
 
           // Default to the org logo
-          if (!navigationSettings.logoUrl) {
-            navigationSettings.logoUrl = $orgStore?.logoUrl
+          if (!layoutSettings.logoUrl) {
+            layoutSettings.logoUrl = $orgStore?.logoUrl
           }
         }
         activeLayout = {
@@ -160,8 +171,8 @@ const createScreenStore = () => {
             _component: "@budibase/standard-components/layout",
             _children: [
               {
-                _component: "screenslot",
-                _id: "screenslot",
+                _component: ScreenslotType,
+                _id: ScreenslotID,
                 _styles: {
                   normal: {
                     flex: "1 1 auto",
@@ -173,8 +184,7 @@ const createScreenStore = () => {
                 },
               },
             ],
-            ...navigationSettings,
-            embedded: $appStore.embedded,
+            ...layoutSettings,
           },
         }
       }

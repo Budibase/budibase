@@ -136,6 +136,7 @@ router
     buildAdminInitValidation(),
     controller.adminUser
   )
+  .get("/api/global/users/accountholder", controller.accountHolderLookup)
   .get("/api/global/users/tenant/:id", controller.tenantUserLookup)
   // global endpoint but needs to come at end (blocks other endpoints otherwise)
   .get("/api/global/users/:id", auth.builderOrAdmin, controller.find)

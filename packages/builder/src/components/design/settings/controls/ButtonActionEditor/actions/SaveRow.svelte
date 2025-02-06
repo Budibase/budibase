@@ -5,11 +5,11 @@
     componentStore,
     tables,
     viewsV2,
-  } from "stores/builder"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { getSchemaForDatasourcePlus } from "dataBinding"
+  } from "@/stores/builder"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
+  import { getSchemaForDatasourcePlus } from "@/dataBinding"
   import SaveFields from "./SaveFields.svelte"
-  import { getDatasourceLikeProviders } from "components/design/settings/controls/ButtonActionEditor/actions/utils"
+  import { getDatasourceLikeProviders } from "@/components/design/settings/controls/ButtonActionEditor/actions/utils"
 
   export let parameters
   export let bindings = []
@@ -33,7 +33,7 @@
 
   const getSchemaFields = resourceId => {
     const { schema } = getSchemaForDatasourcePlus(resourceId)
-    return Object.values(schema || {})
+    return Object.values(schema || {}).filter(field => !field.readonly)
   }
 
   const onFieldsChanged = e => {

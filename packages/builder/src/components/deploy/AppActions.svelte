@@ -11,13 +11,13 @@
     StatusLight,
     AbsTooltip,
   } from "@budibase/bbui"
-  import RevertModal from "components/deploy/RevertModal.svelte"
-  import VersionModal from "components/deploy/VersionModal.svelte"
+  import RevertModal from "@/components/deploy/RevertModal.svelte"
+  import VersionModal from "@/components/deploy/VersionModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import analytics, { Events, EventSource } from "analytics"
-  import { API } from "api"
-  import { appsStore } from "stores/portal"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import analytics, { Events, EventSource } from "@/analytics"
+  import { API } from "@/api"
+  import { appsStore } from "@/stores/portal"
   import {
     previewStore,
     builderStore,
@@ -25,9 +25,10 @@
     appStore,
     deploymentStore,
     sortedScreens,
-  } from "stores/builder"
-  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
-  import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
+    appPublished,
+  } from "@/stores/builder"
+  import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
+  import { TOUR_STEP_KEYS } from "@/components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
 
   export let application
@@ -45,11 +46,6 @@
 
   $: filteredApps = $appsStore.apps.filter(app => app.devId === application)
   $: selectedApp = filteredApps?.length ? filteredApps[0] : null
-  $: latestDeployments = $deploymentStore
-    .filter(deployment => deployment.status === "SUCCESS")
-    .sort((a, b) => a.updatedAt > b.updatedAt)
-  $: isPublished =
-    selectedApp?.status === "published" && latestDeployments?.length > 0
   $: updateAvailable =
     $appStore.upgradableVersion &&
     $appStore.version &&
@@ -117,7 +113,7 @@
   }
 
   const confirmUnpublishApp = async () => {
-    if (!application || !isPublished) {
+    if (!application || !$appPublished) {
       //confirm the app has loaded.
       return
     }
@@ -204,7 +200,7 @@
     >
       <div bind:this={appActionPopoverAnchor}>
         <div class="app-action">
-          <Icon name={isPublished ? "GlobeCheck" : "GlobeStrike"} />
+          <Icon name={$appPublished ? "GlobeCheck" : "GlobeStrike"} />
           <TourWrap stepKeys={[TOUR_STEP_KEYS.BUILDER_APP_PUBLISH]}>
             <span class="publish-open" id="builder-app-publish-button">
               Publish
@@ -219,7 +215,7 @@
       <Popover
         bind:this={appActionPopover}
         align="right"
-        disabled={!isPublished}
+        disabled={!$appPublished}
         anchor={appActionPopoverAnchor}
         offset={35}
         on:close={() => {
@@ -236,13 +232,13 @@
                 class="app-link"
                 on:click={() => {
                   appActionPopover.hide()
-                  if (isPublished) {
+                  if ($appPublished) {
                     viewApp()
                   }
                 }}
               >
                 {$appStore.url}
-                {#if isPublished}
+                {#if $appPublished}
                   <Icon size="S" name="LinkOut" />
                 {/if}
               </span>
@@ -250,7 +246,7 @@
 
             <Body size="S">
               <span class="publish-popover-status">
-                {#if isPublished}
+                {#if $appPublished}
                   <span class="status-text">
                     {lastDeployed}
                   </span>
@@ -279,7 +275,7 @@
               </span>
             </Body>
             <div class="action-buttons">
-              {#if isPublished}
+              {#if $appPublished}
                 <ActionButton
                   quiet
                   icon="Code"

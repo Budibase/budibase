@@ -7,9 +7,8 @@
     previewStore,
     userStore,
     deploymentStore,
-  } from "stores/builder"
-  import { auth, appsStore } from "stores/portal"
-  import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
+  } from "@/stores/builder"
+  import { auth, appsStore } from "@/stores/portal"
   import {
     Icon,
     Tabs,
@@ -19,21 +18,21 @@
     notifications,
     TooltipPosition,
   } from "@budibase/bbui"
-  import AppActions from "components/deploy/AppActions.svelte"
-  import { API } from "api"
+  import AppActions from "@/components/deploy/AppActions.svelte"
+  import { API } from "@/api"
   import { isActive, url, goto, layout, redirect } from "@roxi/routify"
-  import { capitalise } from "helpers"
+  import { capitalise } from "@/helpers"
   import { onMount, onDestroy } from "svelte"
-  import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
-  import CommandPalette from "components/commandPalette/CommandPalette.svelte"
-  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
-  import TourPopover from "components/portal/onboarding/TourPopover.svelte"
+  import VerificationPromptBanner from "@/components/common/VerificationPromptBanner.svelte"
+  import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
+  import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
+  import TourPopover from "@/components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import { UserAvatars } from "@budibase/frontend-core"
-  import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
+  import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
-  import EnterpriseBasicTrialModal from "components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
-  import UpdateAppTopNav from "components/common/UpdateAppTopNav.svelte"
+  import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
+  import UpdateAppTopNav from "@/components/common/UpdateAppTopNav.svelte"
 
   export let application
 
@@ -90,16 +89,14 @@
 
   const initTour = async () => {
     // Check if onboarding is enabled.
-    if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
-      if (!$auth.user?.onboardedAt) {
-        builderStore.startBuilderOnboarding()
-      } else {
-        // Feature tour date
-        const release_date = new Date("2023-03-01T00:00:00.000Z")
-        const onboarded = new Date($auth.user?.onboardedAt)
-        if (onboarded < release_date) {
-          builderStore.setTour(TOUR_KEYS.FEATURE_ONBOARDING)
-        }
+    if (!$auth.user?.onboardedAt) {
+      builderStore.startBuilderOnboarding()
+    } else {
+      // Feature tour date
+      const release_date = new Date("2023-03-01T00:00:00.000Z")
+      const onboarded = new Date($auth.user?.onboardedAt)
+      if (onboarded < release_date) {
+        builderStore.setTour(TOUR_KEYS.FEATURE_ONBOARDING)
       }
     }
   }
@@ -108,9 +105,6 @@
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
-        // check if user has beta access
-        // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
-        // betaAccess = betaResponse.access
       } catch (error) {
         notifications.error("Failed to sync with production database")
       }
@@ -231,7 +225,7 @@
   .top-nav {
     flex: 0 0 60px;
     background: var(--background);
-    padding-left: var(--spacing-xl);
+    padding: 0 var(--spacing-xl);
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     flex-direction: row;
@@ -272,6 +266,7 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
+    margin-right: calc(-1 * var(--spacing-xl));
   }
 
   .toprightnav :global(.avatars) {

@@ -6,6 +6,11 @@
   import Icon from "../Icon/Icon.svelte"
   import Input from "../Form/Input.svelte"
   import { capitalise } from "../helpers"
+  import {
+    ensureValidTheme,
+    getThemeClassNames,
+    DefaultAppTheme,
+  } from "@budibase/shared-core"
 
   export let value
   export let size = "M"
@@ -18,6 +23,7 @@
 
   $: customValue = getCustomValue(value)
   $: checkColor = getCheckColor(value)
+  $: themeClasses = getThemeClasses(spectrumTheme)
 
   const dispatch = createEventDispatcher()
   const categories = [
@@ -91,6 +97,14 @@
     },
   ]
 
+  const getThemeClasses = theme => {
+    if (!theme) {
+      return ""
+    }
+    theme = ensureValidTheme(theme, DefaultAppTheme)
+    return getThemeClassNames(theme)
+  }
+
   const onChange = value => {
     dispatch("change", value)
     dropdown.hide()
@@ -147,7 +161,7 @@
   }}
 >
   <div
-    class="fill {spectrumTheme || ''}"
+    class="fill {themeClasses}"
     style={value ? `background: ${value};` : ""}
     class:placeholder={!value}
   />
@@ -171,7 +185,7 @@
                 title={prettyPrint(color)}
               >
                 <div
-                  class="fill {spectrumTheme || ''}"
+                  class="fill {themeClasses}"
                   style="background: var(--spectrum-global-color-{color}); color: {checkColor};"
                 >
                   {#if value === `var(--spectrum-global-color-${color})`}

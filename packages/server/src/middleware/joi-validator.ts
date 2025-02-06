@@ -1,9 +1,9 @@
 import Joi from "joi"
-import { BBContext } from "@budibase/types"
+import { Ctx } from "@budibase/types"
 
 function validate(schema: Joi.Schema, property: string) {
   // Return a Koa middleware function
-  return (ctx: BBContext, next: any) => {
+  return (ctx: Ctx, next: any) => {
     if (!schema) {
       return next()
     }

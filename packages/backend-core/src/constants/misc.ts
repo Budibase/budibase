@@ -28,6 +28,7 @@ export enum Config {
   OIDC = "oidc",
   OIDC_LOGOS = "logos_oidc",
   SCIM = "scim",
+  AI = "AI",
 }
 
 export const MIN_VALID_DATE = new Date(-2147483647000)

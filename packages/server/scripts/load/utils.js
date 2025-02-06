@@ -29,7 +29,7 @@ exports.createApp = async apiKey => {
   const body = {
     name,
     url: `/${name}`,
-    useTemplate: "true",
+    useTemplate: true,
     templateKey: "app/school-admin-panel",
     templateName: "School Admin Panel",
   }

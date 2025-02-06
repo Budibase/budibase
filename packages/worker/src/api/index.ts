@@ -4,12 +4,8 @@ const compress = require("koa-compress")
 
 import zlib from "zlib"
 import { routes } from "./routes"
-import { middleware as pro, sdk } from "@budibase/pro"
-import { auth, middleware, env } from "@budibase/backend-core"
-
-if (env.SQS_SEARCH_ENABLE) {
-  sdk.auditLogs.useSQLSearch()
-}
+import { middleware as pro } from "@budibase/pro"
+import { auth, middleware } from "@budibase/backend-core"
 
 const PUBLIC_ENDPOINTS = [
   // deprecated single tenant sso callback
@@ -75,10 +71,6 @@ const PUBLIC_ENDPOINTS = [
     route: "/api/global/users/invite",
     method: "GET",
   },
-  {
-    route: "/api/global/tenant",
-    method: "POST",
-  },
 ]
 
 const NO_TENANCY_ENDPOINTS = [
@@ -125,11 +117,7 @@ const NO_TENANCY_ENDPOINTS = [
     method: "GET",
   },
   {
-    route: "/api/global/tenant",
-    method: "POST",
-  },
-  {
-    route: "/api/global/tenant/:id",
+    route: "/api/global/users/accountholder",
     method: "GET",
   },
 ]

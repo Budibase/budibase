@@ -1,3 +1,4 @@
+import { automations } from "@budibase/shared-core"
 import * as sendSmtpEmail from "./steps/sendSmtpEmail"
 import * as createRow from "./steps/createRow"
 import * as updateRow from "./steps/updateRow"
@@ -14,18 +15,18 @@ import * as make from "./steps/make"
 import * as filter from "./steps/filter"
 import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
-import * as loop from "./steps/loop"
 import * as collect from "./steps/collect"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
+import * as openai from "./steps/openai"
+import * as bash from "./steps/bash"
 import env from "../environment"
 import {
-  AutomationStepSchema,
   PluginType,
-  AutomationStep,
   AutomationActionStepId,
   ActionImplementations,
   Hosting,
   ActionImplementation,
+  AutomationStepDefinition,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
@@ -48,6 +49,7 @@ const ACTION_IMPLS: ActionImplType = {
   QUERY_ROWS: queryRow.run,
   COLLECT: collect.run,
   TRIGGER_AUTOMATION_RUN: triggerAutomationRun.run,
+  OPENAI: openai.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -56,52 +58,58 @@ const ACTION_IMPLS: ActionImplType = {
   n8n: n8n.run,
 }
 
-export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
-  {
-    SEND_EMAIL_SMTP: sendSmtpEmail.definition,
-    CREATE_ROW: createRow.definition,
-    UPDATE_ROW: updateRow.definition,
-    DELETE_ROW: deleteRow.definition,
-    OUTGOING_WEBHOOK: outgoingWebhook.definition,
-    EXECUTE_SCRIPT: executeScript.definition,
-    EXECUTE_QUERY: executeQuery.definition,
-    SERVER_LOG: serverLog.definition,
-    DELAY: delay.definition,
-    FILTER: filter.definition,
-    QUERY_ROWS: queryRow.definition,
-    LOOP: loop.definition,
-    COLLECT: collect.definition,
-    TRIGGER_AUTOMATION_RUN: triggerAutomationRun.definition,
-    // these used to be lowercase step IDs, maintain for backwards compat
-    discord: discord.definition,
-    slack: slack.definition,
-    zapier: zapier.definition,
-    integromat: make.definition,
-    n8n: n8n.definition,
-  }
+export const BUILTIN_ACTION_DEFINITIONS: Record<
+  string,
+  AutomationStepDefinition
+> = {
+  SEND_EMAIL_SMTP: automations.steps.sendSmtpEmail.definition,
+  CREATE_ROW: automations.steps.createRow.definition,
+  UPDATE_ROW: automations.steps.updateRow.definition,
+  DELETE_ROW: automations.steps.deleteRow.definition,
+  OUTGOING_WEBHOOK: automations.steps.outgoingWebhook.definition,
+  EXECUTE_SCRIPT: automations.steps.executeScript.definition,
+  EXECUTE_QUERY: automations.steps.executeQuery.definition,
+  SERVER_LOG: automations.steps.serverLog.definition,
+  DELAY: automations.steps.delay.definition,
+  FILTER: automations.steps.filter.definition,
+  QUERY_ROWS: automations.steps.queryRows.definition,
+  LOOP: automations.steps.loop.definition,
+  COLLECT: automations.steps.collect.definition,
+  TRIGGER_AUTOMATION_RUN: automations.steps.triggerAutomationRun.definition,
+  BRANCH: automations.steps.branch.definition,
+  // these used to be lowercase step IDs, maintain for backwards compat
+  discord: automations.steps.discord.definition,
+  slack: automations.steps.slack.definition,
+  zapier: automations.steps.zapier.definition,
+  integromat: automations.steps.make.definition,
+  n8n: automations.steps.n8n.definition,
+}
 
 // don't add the bash script/definitions unless in self host
 // the fact this isn't included in any definitions means it cannot be
 // ran at all
 if (env.SELF_HOSTED) {
-  const bash = require("./steps/bash")
-  const openai = require("./steps/openai")
-
-  // @ts-ignore
+  // @ts-expect-error
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
-  // @ts-ignore
-  BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
-  // @ts-ignore
-  ACTION_IMPLS.OPENAI = openai.run
-  BUILTIN_ACTION_DEFINITIONS.OPENAI = openai.definition
+  BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = automations.steps.bash.definition
+
+  if (env.isTest()) {
+    BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
+  }
 }
 
-export async function getActionDefinitions() {
+export async function getActionDefinitions(): Promise<
+  Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
+> {
+  if (env.SELF_HOSTED) {
+    BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
+  }
+
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.AUTOMATION)
     for (let plugin of plugins) {
-      const schema = plugin.schema.schema as AutomationStep
+      const schema = plugin.schema.schema as AutomationStepDefinition
       actionDefinitions[schema.stepId] = {
         ...schema,
         custom: true,

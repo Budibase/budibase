@@ -1,44 +1,53 @@
 import LinkController from "./LinkController"
 import {
   getLinkDocuments,
-  getUniqueByProp,
-  getRelatedTableForField,
-  getLinkedTableIDs,
   getLinkedTable,
+  getLinkedTableIDs,
+  getRelatedTableForField,
+  getUniqueByProp,
 } from "./linkUtils"
 import flatten from "lodash/flatten"
 import { USER_METDATA_PREFIX } from "../utils"
 import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
-import { processFormulas } from "../../utilities/rowProcessor"
+import {
+  coreOutputProcessing,
+  processFormulas,
+} from "../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
 import {
-  Table,
-  Row,
-  LinkDocumentValue,
-  FieldType,
   ContextUser,
+  EventType,
+  FieldType,
+  LinkDocumentValue,
+  Row,
+  Table,
+  TableSchema,
+  ViewV2,
+  ViewV2Schema,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { helpers } from "@budibase/shared-core"
 
 export { IncludeDocs, getLinkDocuments, createLinkView } from "./linkUtils"
+
+const INVALID_DISPLAY_COLUMN_TYPE = [
+  FieldType.LINK,
+  FieldType.ATTACHMENTS,
+  FieldType.ATTACHMENT_SINGLE,
+  FieldType.SIGNATURE_SINGLE,
+  FieldType.BB_REFERENCE,
+  FieldType.BB_REFERENCE_SINGLE,
+]
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
  * correctly - making sure that no stale links are left around and that all links have been made successfully.
  */
+export { EventType } from "@budibase/types"
 
-export const EventType = {
-  ROW_SAVE: "row:save",
-  ROW_UPDATE: "row:update",
-  ROW_DELETE: "row:delete",
-  TABLE_SAVE: "table:save",
-  TABLE_UPDATED: "table:updated",
-  TABLE_DELETE: "table:delete",
-}
-
-function clearRelationshipFields(table: Table, rows: Row[]) {
-  for (let [key, field] of Object.entries(table.schema)) {
+function clearRelationshipFields(schema: TableSchema, rows: Row[]) {
+  for (let [key, field] of Object.entries(schema)) {
     if (field.type === FieldType.LINK) {
       rows = rows.map(row => {
         delete row[key]
@@ -143,17 +152,14 @@ export async function updateLinks(args: {
 /**
  * Given a table and a list of rows this will retrieve all of the attached docs and enrich them into the row.
  * This is required for formula fields, this may only be utilised internally (for now).
- * @param table The table from which the rows originated.
- * @param rows The rows which are to be enriched.
- * @param opts optional - options like passing in a base row to use for enrichment.
  * @return returns the rows with all of the enriched relationships on it.
  */
 export async function attachFullLinkedDocs(
-  table: Table,
+  schema: TableSchema,
   rows: Row[],
   opts?: { fromRow?: Row }
 ) {
-  const linkedTableIds = getLinkedTableIDs(table)
+  const linkedTableIds = getLinkedTableIDs(schema)
   if (linkedTableIds.length === 0) {
     return rows
   }
@@ -173,7 +179,7 @@ export async function attachFullLinkedDocs(
   }
   const linkedTables = response[1] as Table[]
   // clear any existing links that could be dupe'd
-  rows = clearRelationshipFields(table, rows)
+  rows = clearRelationshipFields(schema, rows)
   // now get the docs and combine into the rows
   let linked: Row[] = []
   if (linksWithoutFromRow.length > 0) {
@@ -192,7 +198,7 @@ export async function attachFullLinkedDocs(
       }
       if (linkedRow) {
         const linkedTableId =
-          linkedRow.tableId || getRelatedTableForField(table, link.fieldName)
+          linkedRow.tableId || getRelatedTableForField(schema, link.fieldName)
         const linkedTable = linkedTables.find(
           table => table._id === linkedTableId
         )
@@ -207,38 +213,110 @@ export async function attachFullLinkedDocs(
 }
 
 /**
- * This function will take the given enriched rows and squash the links to only contain the primary display field.
- * @param table The table from which the rows originated.
- * @param enriched The pre-enriched rows (full docs) which are to be squashed.
- * @returns The rows after having their links squashed to only contain the ID and primary display.
+ * Finds a valid value for the primary display, avoiding columns which break things
+ * like relationships (can be circular).
+ * @param row The row to lift a value from for the primary display.
+ * @param table The related table to attempt to work out the primary display column from.
  */
-export async function squashLinksToPrimaryDisplay(
-  table: Table,
-  enriched: Row[] | Row
-) {
+function getPrimaryDisplayValue(row: Row, table?: Table) {
+  const primaryDisplay = table?.primaryDisplay
+  let invalid = true
+  if (primaryDisplay) {
+    const primaryDisplaySchema = table?.schema[primaryDisplay]
+    invalid = INVALID_DISPLAY_COLUMN_TYPE.includes(primaryDisplaySchema.type)
+  }
+  if (invalid || !primaryDisplay) {
+    const validKey = Object.keys(table?.schema || {}).find(
+      key =>
+        table?.schema[key].type &&
+        !INVALID_DISPLAY_COLUMN_TYPE.includes(table?.schema[key].type)
+    )
+    return validKey ? row[validKey] : undefined
+  } else {
+    return row[primaryDisplay]
+  }
+}
+
+export type SquashTableFields = Record<string, { visibleFieldNames: string[] }>
+
+/**
+ * This function will take the given enriched rows and squash the links to only
+ * contain the primary display field.
+ *
+ * @returns The rows after having their links squashed to only contain the ID
+ * and primary display.
+ */
+export async function squashLinks<T = Row[] | Row>(
+  source: Table | ViewV2,
+  enriched: T
+): Promise<T> {
+  let viewSchema: ViewV2Schema = {}
+  if (sdk.views.isView(source)) {
+    if (helpers.views.isCalculationView(source)) {
+      return enriched
+    }
+
+    viewSchema = source.schema || {}
+  }
+
+  let table: Table
+  if (sdk.views.isView(source)) {
+    table = await sdk.views.getTable(source.id)
+  } else {
+    table = source
+  }
+
   // will populate this as we find them
   const linkedTables = [table]
   const isArray = Array.isArray(enriched)
-  let enrichedArray = !isArray ? [enriched] : enriched
-  for (let row of enrichedArray) {
+  const enrichedArray = !isArray ? [enriched as Row] : (enriched as Row[])
+  for (const row of enrichedArray) {
     // this only fetches the table if its not already in array
     const rowTable = await getLinkedTable(row.tableId!, linkedTables)
-    for (let [column, schema] of Object.entries(rowTable?.schema || {})) {
+    for (let [column, schema] of Object.entries(rowTable.schema)) {
       if (schema.type !== FieldType.LINK || !Array.isArray(row[column])) {
         continue
       }
-      const newLinks = []
-      for (let link of row[column]) {
-        const linkTblId = link.tableId || getRelatedTableForField(table, column)
-        const linkedTable = await getLinkedTable(linkTblId!, linkedTables)
-        const obj: any = { _id: link._id }
-        if (linkedTable?.primaryDisplay && link[linkedTable.primaryDisplay]) {
-          obj.primaryDisplay = link[linkedTable.primaryDisplay]
-        }
-        newLinks.push(obj)
+      const relatedTable = await getLinkedTable(schema.tableId, linkedTables)
+      if (viewSchema[column]?.columns) {
+        row[column] = await coreOutputProcessing(relatedTable, row[column])
       }
-      row[column] = newLinks
+      row[column] = row[column].map((link: Row) => {
+        const obj: any = { _id: link._id }
+        obj.primaryDisplay = getPrimaryDisplayValue(link, relatedTable)
+
+        if (viewSchema[column]?.columns) {
+          const squashFields = Object.entries(viewSchema[column].columns || {})
+            .filter(([columnName, viewColumnConfig]) => {
+              const tableColumn = relatedTable.schema[columnName]
+              if (!tableColumn) {
+                return false
+              }
+              if (
+                [FieldType.LINK, FieldType.FORMULA, FieldType.AI].includes(
+                  tableColumn.type
+                )
+              ) {
+                return false
+              }
+              return (
+                tableColumn.visible !== false &&
+                viewColumnConfig.visible !== false
+              )
+            })
+
+            .map(([columnName]) => columnName)
+
+          for (const relField of squashFields) {
+            if (link[relField] != null) {
+              obj[relField] = link[relField]
+            }
+          }
+        }
+
+        return obj
+      })
     }
   }
-  return isArray ? enrichedArray : enrichedArray[0]
+  return (isArray ? enrichedArray : enrichedArray[0]) as T
 }

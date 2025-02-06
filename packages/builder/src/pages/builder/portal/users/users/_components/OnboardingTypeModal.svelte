@@ -1,6 +1,6 @@
 <script>
   import { ModalContent, Body, Layout, Icon } from "@budibase/bbui"
-  import { OnboardingType } from "constants"
+  import { OnboardingType } from "@/constants"
 
   export let chooseCreationType
 

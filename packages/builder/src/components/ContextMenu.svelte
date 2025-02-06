@@ -1,5 +1,5 @@
 <script>
-  import { contextMenuStore } from "stores/builder"
+  import { contextMenuStore } from "@/stores/builder"
   import { Popover, Menu, MenuItem } from "@budibase/bbui"
 
   let dropdown

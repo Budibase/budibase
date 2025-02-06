@@ -1,179 +1,147 @@
 <script>
-  import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
+  import ScreenDetailsModal from "@/components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
-  import sanitizeUrl from "helpers/sanitizeUrl"
-  import FormTypeModal from "./FormTypeModal.svelte"
+  import TypeModal from "./TypeModal.svelte"
+  import tableTypes from "./tableTypes"
+  import formTypes from "./formTypes"
   import { Modal, notifications } from "@budibase/bbui"
   import {
     screenStore,
     navigationStore,
     permissions as permissionsStore,
     builderStore,
-  } from "stores/builder"
-  import { auth } from "stores/portal"
-  import { get } from "svelte/store"
-  import { capitalise } from "helpers"
+    datasources,
+    appStore,
+  } from "@/stores/builder"
+  import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
-  import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
-  import blankScreen from "templates/blankScreen"
-  import formScreen from "templates/formScreen"
-  import gridScreen from "templates/gridScreen"
-  import gridDetailsScreen from "templates/gridDetailsScreen"
-  import { Roles } from "constants/backend"
+  import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
+  import * as screenTemplating from "@/templates/screenTemplating"
+  import { Roles } from "@/constants/backend"
+  import { AutoScreenTypes } from "@/constants"
+  import { makeTableOption, makeViewOption } from "./utils"
 
   let mode
 
   let screenDetailsModal
   let datasourceModal
   let formTypeModal
-
+  let tableTypeModal
   let selectedTablesAndViews = []
   let permissions = {}
+  let hasPreselectedDatasource = false
 
-  export const show = newMode => {
+  $: screens = $screenStore.screens
+
+  export const show = (newMode, preselectedDatasource) => {
     mode = newMode
     selectedTablesAndViews = []
     permissions = {}
+    hasPreselectedDatasource = preselectedDatasource != null
 
-    if (mode === "grid" || mode === "gridDetails" || mode === "form") {
-      datasourceModal.show()
-    } else if (mode === "blank") {
+    if (mode === AutoScreenTypes.TABLE || mode === AutoScreenTypes.FORM) {
+      if (preselectedDatasource) {
+        // If preselecting a datasource, skip a step
+        const isTable = preselectedDatasource.type === "table"
+        const tableOrView = isTable
+          ? makeTableOption(preselectedDatasource, $datasources.list)
+          : makeViewOption(preselectedDatasource)
+        fetchPermission(tableOrView.id)
+        selectedTablesAndViews.push(tableOrView)
+        onSelectDatasources()
+      } else {
+        // Otherwise choose a datasource
+        datasourceModal.show()
+      }
+    } else if (mode === AutoScreenTypes.BLANK) {
       screenDetailsModal.show()
     } else {
       throw new Error("Invalid mode provided")
     }
   }
 
-  const createScreen = async screen => {
+  const createScreen = async screenTemplate => {
     try {
-      // Check we aren't clashing with an existing URL
-      if (hasExistingUrl(screen.routing.route, screen.routing.roleId)) {
-        let suffix = 2
-        let candidateUrl = makeCandidateUrl(screen, suffix)
-        while (hasExistingUrl(candidateUrl, screen.routing.roleId)) {
-          candidateUrl = makeCandidateUrl(screen, ++suffix)
-        }
-        screen.routing.route = candidateUrl
-      }
-
-      screen.routing.route = sanitizeUrl(screen.routing.route)
-
-      return await screenStore.save(screen)
+      return await screenStore.save(screenTemplate)
     } catch (error) {
       console.error(error)
       notifications.error("Error creating screens")
     }
   }
 
-  const addNavigationLink = async screen =>
-    await navigationStore.saveLink(
-      screen.routing.route,
-      capitalise(screen.routing.route.split("/")[1]),
-      screen.routing.roleId
-    )
+  const createScreens = async screenTemplates => {
+    const newScreens = []
 
-  // Checks if any screens exist in the store with the given route and
-  // currently selected role
-  const hasExistingUrl = (url, screenAccessRole) => {
-    const screens = get(screenStore).screens.filter(
-      s => s.routing.roleId === screenAccessRole
-    )
-    return !!screens.find(s => s.routing?.route === url)
+    for (let screenTemplate of screenTemplates) {
+      await addNavigationLink(
+        screenTemplate.data,
+        screenTemplate.navigationLinkLabel
+      )
+      newScreens.push(await createScreen(screenTemplate.data))
+    }
+
+    return newScreens
   }
 
-  // Constructs a candidate URL for a new screen, appending a given suffix to the
-  // screen's URL
-  // e.g. "/sales/:id" => "/sales-1/:id"
-  const makeCandidateUrl = (screen, suffix) => {
-    let url = screen.routing?.route || ""
-    if (url.startsWith("/")) {
-      url = url.slice(1)
-    }
-    if (!url.includes("/")) {
-      return `/${url}-${suffix}`
-    } else {
-      const split = url.split("/")
-      return `/${split[0]}-${suffix}/${split.slice(1).join("/")}`
-    }
+  const addNavigationLink = async (screen, linkLabel) => {
+    if (linkLabel == null) return
+
+    await navigationStore.saveLink(
+      screen.routing.route,
+      linkLabel,
+      screen.routing.roleId
+    )
   }
 
   const onSelectDatasources = async () => {
-    if (mode === "form") {
+    if (mode === AutoScreenTypes.FORM) {
       formTypeModal.show()
-    } else if (mode === "grid") {
-      await createGridScreen()
-    } else if (mode === "gridDetails") {
-      await createGridDetailsScreen()
+    } else if (mode === AutoScreenTypes.TABLE) {
+      tableTypeModal.show()
     }
   }
 
-  const createBlankScreen = async ({ screenUrl }) => {
-    const screenTemplate = blankScreen(screenUrl)
-    const screen = await createScreen(screenTemplate)
-    await addNavigationLink(screenTemplate)
-
-    loadNewScreen(screen)
+  const createBlankScreen = async ({ route }) => {
+    const screenTemplates = screenTemplating.blank({ route, screens })
+    const newScreens = await createScreens(screenTemplates)
+    loadNewScreen(newScreens[0])
   }
 
-  const createGridScreen = async () => {
-    let firstScreen = null
-
-    for (let tableOrView of selectedTablesAndViews) {
-      const screenTemplate = gridScreen(
-        tableOrView,
-        permissions[tableOrView.id]
+  const createTableScreen = async type => {
+    const screenTemplates = (
+      await Promise.all(
+        selectedTablesAndViews.map(tableOrView =>
+          screenTemplating.table({
+            screens,
+            tableOrView,
+            type,
+            permissions: permissions[tableOrView.id],
+          })
+        )
       )
-
-      const screen = await createScreen(screenTemplate)
-      await addNavigationLink(screen)
-
-      firstScreen ??= screen
-    }
-
-    loadNewScreen(firstScreen)
+    ).flat()
+    const newScreens = await createScreens(screenTemplates)
+    loadNewScreen(newScreens[0])
   }
 
-  const createGridDetailsScreen = async () => {
-    let firstScreen = null
-
-    for (let tableOrView of selectedTablesAndViews) {
-      const screenTemplate = gridDetailsScreen(
-        tableOrView,
-        permissions[tableOrView.id]
+  const createFormScreen = async type => {
+    const screenTemplates = (
+      await Promise.all(
+        selectedTablesAndViews.map(tableOrView =>
+          screenTemplating.form({
+            screens,
+            tableOrView,
+            type,
+            permissions: permissions[tableOrView.id],
+          })
+        )
       )
+    ).flat()
+    const newScreens = await createScreens(screenTemplates)
 
-      const screen = await createScreen(screenTemplate)
-      await addNavigationLink(screen)
-
-      firstScreen ??= screen
-    }
-
-    loadNewScreen(firstScreen)
-  }
-
-  const createFormScreen = async formType => {
-    let firstScreen = null
-
-    for (let tableOrView of selectedTablesAndViews) {
-      const screenTemplate = formScreen(
-        tableOrView,
-        formType,
-        permissions[tableOrView.id]
-      )
-
-      const screen = await createScreen(screenTemplate)
-      // Only add a navigation link for `Create`, as both `Update` and `View`
-      // require an `id` in their URL in order to function.
-      if (formType === "Create") {
-        await addNavigationLink(screen)
-      }
-
-      firstScreen ??= screen
-    }
-
-    if (formType === "Update" || formType === "Create") {
+    if (type === "update" || type === "create") {
       const associatedTour =
-        formType === "Update"
+        type === "update"
           ? TOUR_KEYS.BUILDER_FORM_VIEW_UPDATE
           : TOUR_KEYS.BUILDER_FORM_CREATE
 
@@ -183,23 +151,29 @@
       }
     }
 
-    loadNewScreen(firstScreen)
+    loadNewScreen(newScreens[0])
   }
 
   const loadNewScreen = screen => {
     if (screen?.props?._children.length) {
       // Focus on the main component for the screen type
       const mainComponent = screen?.props?._children?.[0]._id
-      $goto(`./${screen._id}/${mainComponent}`)
+      $goto(
+        `/builder/app/${$appStore.appId}/design/${screen._id}/${mainComponent}`
+      )
     } else {
-      $goto(`./${screen._id}`)
+      $goto(`/builder/app/${$appStore.appId}/design/${screen._id}`)
     }
 
     screenStore.select(screen._id)
   }
 
   const fetchPermission = resourceId => {
-    permissions[resourceId] = { loading: true, read: null, write: null }
+    permissions[resourceId] = {
+      loading: true,
+      read: Roles.BASIC,
+      write: Roles.BASIC,
+    }
 
     permissionsStore
       .forResource(resourceId)
@@ -218,8 +192,8 @@
         if (permissions[resourceId]?.loading) {
           permissions[resourceId] = {
             loading: false,
-            read: Roles.PUBLIC,
-            write: Roles.PUBLIC,
+            read: Roles.BASIC,
+            write: Roles.BASIC,
           }
         }
       })
@@ -250,9 +224,21 @@
 <Modal bind:this={datasourceModal} autoFocus={false}>
   <DatasourceModal
     {selectedTablesAndViews}
-    {permissions}
     onConfirm={onSelectDatasources}
     on:toggle={handleTableOrViewToggle}
+  />
+</Modal>
+
+<Modal bind:this={tableTypeModal}>
+  <TypeModal
+    title="Choose how you want to manage rows"
+    types={tableTypes}
+    onConfirm={createTableScreen}
+    onCancel={() => {
+      tableTypeModal.hide()
+      datasourceModal.show()
+    }}
+    showCancelButton={!hasPreselectedDatasource}
   />
 </Modal>
 
@@ -261,11 +247,14 @@
 </Modal>
 
 <Modal bind:this={formTypeModal}>
-  <FormTypeModal
+  <TypeModal
+    title="Select form type"
+    types={formTypes}
     onConfirm={createFormScreen}
     onCancel={() => {
       formTypeModal.hide()
       datasourceModal.show()
     }}
+    showCancelButton={!hasPreselectedDatasource}
   />
 </Modal>

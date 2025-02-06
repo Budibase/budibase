@@ -6,12 +6,19 @@ import * as api from "./api"
 import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
-import { events, logging, middleware, timers } from "@budibase/backend-core"
+import {
+  events,
+  logging,
+  middleware,
+  timers,
+  env as coreEnv,
+} from "@budibase/backend-core"
 import destroyable from "server-destroy"
 import { userAgent } from "koa-useragent"
 
 export default function createKoaApp() {
   const app = new Koa()
+  app.proxy = true
 
   let mbNumber = parseInt(env.HTTP_MB_LIMIT || "10")
   if (!mbNumber || isNaN(mbNumber)) {
@@ -35,6 +42,10 @@ export default function createKoaApp() {
 
   app.use(middleware.correlation)
   app.use(middleware.pino)
+  app.use(middleware.ip)
+  if (!coreEnv.DISABLE_CONTENT_SECURITY_POLICY) {
+    app.use(middleware.csp)
+  }
   app.use(userAgent)
 
   const server = http.createServer(app.callback())

@@ -1,4 +1,4 @@
-import { FileType, Plugin, PluginSource, PluginType } from "@budibase/types"
+import { KoaFile, Plugin, PluginSource, PluginType } from "@budibase/types"
 import {
   db as dbCore,
   objectStore,
@@ -10,7 +10,7 @@ import env from "../../environment"
 import { clientAppSocket } from "../../websockets"
 import { sdk as pro } from "@budibase/pro"
 
-export async function fetch(type?: PluginType) {
+export async function fetch(type?: PluginType): Promise<Plugin[]> {
   const db = tenancy.getGlobalDB()
   const response = await db.allDocs(
     dbCore.getPluginParams(null, {
@@ -26,7 +26,7 @@ export async function fetch(type?: PluginType) {
   }
 }
 
-export async function processUploaded(plugin: FileType, source?: PluginSource) {
+export async function processUploaded(plugin: KoaFile, source?: PluginSource) {
   const { metadata, directory } = await fileUpload(plugin)
   pluginCore.validate(metadata?.schema)
 

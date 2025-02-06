@@ -3,7 +3,9 @@
   // because it functions similarly to one
   import { getContext, onMount } from "svelte"
   import { get, derived, readable } from "svelte/store"
+  import { featuresStore } from "stores"
   import { Grid } from "@budibase/frontend-core"
+  import { processStringSync } from "@budibase/string-templates"
 
   // table is actually any datasource, but called table for legacy compatibility
   export let table
@@ -19,6 +21,8 @@
   export let columns = null
   export let onRowClick = null
   export let buttons = null
+  export let buttonsCollapsed = false
+  export let buttonsCollapsedText = null
 
   const context = getContext("context")
   const component = getContext("component")
@@ -39,6 +43,7 @@
   let gridContext
   let minHeight = 0
 
+  $: id = $component.id
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
   $: parsedColumns = getParsedColumns(columns)
@@ -57,9 +62,11 @@
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
-    const rows = get(grid?.getContext()?.rows)
-    const goldenRow = generateGoldenSample(rows)
-    const id = get(component).id
+    const gridContext = grid?.getContext()
+    const rows = get(gridContext?.rows) || []
+    const clean = gridContext?.rows.actions.cleanRow || (x => x)
+    const cleaned = rows.map(clean)
+    const goldenRow = generateGoldenSample(cleaned)
     return {
       // Not sure what this one is for...
       [id]: goldenRow,
@@ -98,12 +105,20 @@
         order: idx,
         conditions: column.conditions,
         visible: !!column.active,
+        format: createFormatter(column),
       }
       if (column.width) {
         overrides[column.field].width = column.width
       }
     })
     return overrides
+  }
+
+  const createFormatter = column => {
+    if (typeof column.format !== "string" || !column.format.trim().length) {
+      return null
+    }
+    return row => processStringSync(column.format, { [id]: row })
   }
 
   const enrichButtons = buttons => {
@@ -181,7 +196,10 @@
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
     buttons={enrichedButtons}
+    {buttonsCollapsed}
+    {buttonsCollapsedText}
     isCloud={$environmentStore.cloud}
+    aiEnabled={$featuresStore.aiEnabled}
     on:rowclick={e => onRowClick?.({ row: e.detail })}
   />
 </div>
@@ -198,7 +216,7 @@
     overflow: hidden;
     height: 410px;
   }
-  div.in-builder :global(*) {
-    pointer-events: none;
+  div.in-builder :global(> *) {
+    pointer-events: none !important;
   }
 </style>

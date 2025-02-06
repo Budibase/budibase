@@ -6,7 +6,7 @@
     themeStore,
     selectedScreen,
     appStore,
-  } from "stores/builder"
+  } from "@/stores/builder"
   import { ProgressCircle } from "@budibase/bbui"
 
   $: route = $selectedScreen?.routing.route || "/"
@@ -49,7 +49,7 @@
     right: 0;
     left: 0;
     bottom: 0;
-    z-index: 999;
+    z-index: 9000;
     position: absolute;
     background: rgba(255, 255, 255, 0.1);
     display: flex;

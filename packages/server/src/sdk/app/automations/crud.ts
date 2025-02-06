@@ -1,20 +1,19 @@
-import { sdk } from "@budibase/shared-core"
 import {
   Automation,
   RequiredKeys,
   Webhook,
   WebhookActionType,
+  MetadataType,
 } from "@budibase/types"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
-import { MetadataTypes } from "../../../constants"
 import {
   context,
   events,
   HTTPError,
   db as dbCore,
 } from "@budibase/backend-core"
-import { definitions } from "../../../automations/triggerInfo"
+import { automations as sharedAutomations } from "@budibase/shared-core"
 import automations from "."
 
 export interface PersistedAutomation extends Automation {
@@ -99,6 +98,12 @@ export async function get(automationId: string) {
   return trimUnexpectedObjectFields(result)
 }
 
+export async function find(ids: string[]) {
+  const db = getDb()
+  const result = await db.getMultiple<PersistedAutomation>(ids)
+  return result.map(trimUnexpectedObjectFields)
+}
+
 export async function create(automation: Automation) {
   automation = trimUnexpectedObjectFields(automation)
   const db = getDb()
@@ -156,7 +161,7 @@ export async function update(automation: Automation) {
   if (oldAutoTrigger && oldAutoTrigger.id !== newAutoTrigger?.id) {
     await events.automation.triggerUpdated(automation)
     await deleteEntityMetadata(
-      MetadataTypes.AUTOMATION_TEST_INPUT,
+      MetadataType.AUTOMATION_TEST_INPUT,
       automation._id!
     )
   }
@@ -178,11 +183,8 @@ export async function remove(automationId: string, rev: string) {
   })
 
   // delete metadata first
-  await deleteEntityMetadata(MetadataTypes.AUTOMATION_TEST_INPUT, automationId)
-  await deleteEntityMetadata(
-    MetadataTypes.AUTOMATION_TEST_HISTORY,
-    automationId
-  )
+  await deleteEntityMetadata(MetadataType.AUTOMATION_TEST_INPUT, automationId)
+  await deleteEntityMetadata(MetadataType.AUTOMATION_TEST_HISTORY, automationId)
 
   const result = await db.remove(automationId, rev)
 
@@ -200,7 +202,7 @@ export async function remove(automationId: string, rev: string) {
  * written to DB (this does not write to DB as it would be wasteful to repeat).
  */
 async function checkForWebhooks({ oldAuto, newAuto }: any) {
-  const WH_STEP_ID = definitions.WEBHOOK.stepId
+  const WH_STEP_ID = sharedAutomations.triggers.definitions.WEBHOOK.stepId
 
   const appId = context.getAppId()
   if (!appId) {
@@ -288,13 +290,6 @@ function guardInvalidUpdatesAndThrow(
         )
       }
     })
-  }
-
-  if (
-    sdk.automations.isRowAction(automation) &&
-    automation.name !== oldAutomation.name
-  ) {
-    throw new Error("Row actions cannot be renamed")
   }
 }
 

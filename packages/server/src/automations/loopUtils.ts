@@ -5,14 +5,15 @@ type ObjValue = {
   [key: string]: string | ObjValue
 }
 
-export function replaceFakeBindings(
-  originalStepInput: Record<string, any>,
+export function replaceFakeBindings<T extends Record<string, any>>(
+  originalStepInput: T,
   loopStepNumber: number
-) {
+): T {
+  const result: Record<string, any> = {}
   for (const [key, value] of Object.entries(originalStepInput)) {
-    originalStepInput[key] = replaceBindingsRecursive(value, loopStepNumber)
+    result[key] = replaceBindingsRecursive(value, loopStepNumber)
   }
-  return originalStepInput
+  return result as T
 }
 
 function replaceBindingsRecursive(

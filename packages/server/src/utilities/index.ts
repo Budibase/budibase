@@ -2,9 +2,10 @@ import env from "../environment"
 import { context } from "@budibase/backend-core"
 import { generateMetadataID } from "../db/utils"
 import { Document } from "@budibase/types"
-import stream from "stream"
+import dayjs from "dayjs"
+import customParseFormat from "dayjs/plugin/customParseFormat"
 
-const Readable = stream.Readable
+dayjs.extend(customParseFormat)
 
 export function wait(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -13,6 +14,28 @@ export function wait(ms: number) {
 export const isDev = env.isDev
 
 export const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+$/g
+const ACCEPTED_DATE_FORMATS = [
+  "MM/DD/YYYY",
+  "MM/DD/YY",
+  "DD/MM/YYYY",
+  "DD/MM/YY",
+  "YYYY/MM/DD",
+  "YYYY-MM-DD",
+  "YYYY-MM-DDTHH:mm",
+  "YYYY-MM-DDTHH:mm:ss",
+  "YYYY-MM-DDTHH:mm:ss[Z]",
+  "YYYY-MM-DDTHH:mm:ss.SSS[Z]",
+]
+
+export function isDate(str: string) {
+  // checks for xx/xx/xx or ISO date timestamp formats
+  for (const format of ACCEPTED_DATE_FORMATS) {
+    if (dayjs(str, format, true).isValid()) {
+      return true
+    }
+  }
+  return false
+}
 
 export function removeFromArray(array: any[], element: any) {
   const index = array.indexOf(element)
@@ -35,57 +58,32 @@ export function checkSlashesInUrl(url: string) {
 export async function updateEntityMetadata(
   type: string,
   entityId: string,
-  updateFn: any
+  updateFn: (metadata: Document) => Document
 ) {
   const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
-  // read it to see if it exists, we'll overwrite it no matter what
-  let rev, metadata: Document
-  try {
-    const oldMetadata = await db.get<any>(id)
-    rev = oldMetadata._rev
-    metadata = updateFn(oldMetadata)
-  } catch (err) {
-    rev = null
-    metadata = updateFn({})
-  }
+  const metadata = updateFn((await db.tryGet(id)) || {})
   metadata._id = id
-  if (rev) {
-    metadata._rev = rev
-  }
   const response = await db.put(metadata)
-  return {
-    ...metadata,
-    _id: id,
-    _rev: response.rev,
-  }
+  return { ...metadata, _id: id, _rev: response.rev }
 }
 
 export async function saveEntityMetadata(
   type: string,
   entityId: string,
   metadata: Document
-) {
-  return updateEntityMetadata(type, entityId, () => {
-    return metadata
-  })
+): Promise<Document> {
+  return updateEntityMetadata(type, entityId, () => metadata)
 }
 
 export async function deleteEntityMetadata(type: string, entityId: string) {
   const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
-  let rev
-  try {
-    const metadata = await db.get<any>(id)
-    if (metadata) {
-      rev = metadata._rev
-    }
-  } catch (err) {
-    // don't need to error if it doesn't exist
+  const metadata = await db.tryGet(id)
+  if (!metadata) {
+    return
   }
-  if (id && rev) {
-    await db.remove(id, rev)
-  }
+  await db.remove(metadata)
 }
 
 export function escapeDangerousCharacters(string: string) {
@@ -96,15 +94,6 @@ export function escapeDangerousCharacters(string: string) {
     .replace(/[\n]/g, "\\n")
     .replace(/[\r]/g, "\\r")
     .replace(/[\t]/g, "\\t")
-}
-
-export function stringToReadStream(string: string) {
-  return new Readable({
-    read() {
-      this.push(string)
-      this.push(null)
-    },
-  })
 }
 
 export function formatBytes(bytes: string) {

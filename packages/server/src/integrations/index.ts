@@ -120,7 +120,7 @@ export async function getIntegration(integration: SourceName) {
       }
     }
   }
-  throw new Error("No datasource implementation found.")
+  throw new Error(`No datasource implementation found called: "${integration}"`)
 }
 
 export default {

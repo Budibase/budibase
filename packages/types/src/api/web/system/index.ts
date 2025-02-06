@@ -1,2 +1,7 @@
 export * from "./environment"
 export * from "./status"
+export * from "./ops"
+export * from "./account"
+export * from "./log"
+export * from "./restore"
+export * from "./tenant"

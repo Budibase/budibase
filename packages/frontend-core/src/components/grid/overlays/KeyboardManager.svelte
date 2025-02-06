@@ -58,7 +58,7 @@
         case "c":
           return handle(() => dispatch("copy"))
         case "v":
-          return handle(() => dispatch("paste"))
+          return dispatch("paste")
         case "Enter":
           return handle(() => {
             if ($config.canAddRows) {

@@ -69,6 +69,7 @@ const toGridFormat = draggableListColumns => {
     active: entry.active,
     width: entry.width,
     conditions: entry.conditions,
+    format: entry.format,
   }))
 }
 
@@ -82,9 +83,10 @@ const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
         active: column.active,
         field: column.field,
         label: column.label,
-        columnType: schema[column.field].type,
+        columnType: column.columnType || schema[column.field].type,
         width: column.width,
         conditions: column.conditions,
+        format: column.format,
       },
       {}
     )

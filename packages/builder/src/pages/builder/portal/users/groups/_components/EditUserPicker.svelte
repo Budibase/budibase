@@ -1,8 +1,8 @@
 <script>
   import { Button, Popover, notifications } from "@budibase/bbui"
-  import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
-  import { createPaginationStore } from "helpers/pagination"
-  import { groups, users } from "stores/portal"
+  import UserGroupPicker from "@/components/settings/UserGroupPicker.svelte"
+  import { createPaginationStore } from "@/helpers/pagination"
+  import { groups, users } from "@/stores/portal"
 
   export let groupId
   export let onUsersUpdated
@@ -50,11 +50,11 @@
     selected={group.users?.map(user => user._id)}
     list={$users.data}
     on:select={async e => {
-      await groups.actions.addUser(groupId, e.detail)
+      await groups.addUser(groupId, e.detail)
       onUsersUpdated()
     }}
     on:deselect={async e => {
-      await groups.actions.removeUser(groupId, e.detail)
+      await groups.removeUser(groupId, e.detail)
       onUsersUpdated()
     }}
   />

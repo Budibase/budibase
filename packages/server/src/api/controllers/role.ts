@@ -9,7 +9,7 @@ import { getUserMetadataParams, InternalTables } from "../../db/utils"
 import {
   AccessibleRolesResponse,
   Database,
-  DestroyRoleResponse,
+  DeleteRoleResponse,
   FetchRolesResponse,
   FindRoleResponse,
   Role,
@@ -17,14 +17,40 @@ import {
   SaveRoleResponse,
   UserCtx,
   UserMetadata,
-  UserRoles,
+  DocumentType,
+  BuiltinPermissionID,
 } from "@budibase/types"
-import { sdk as sharedSdk } from "@budibase/shared-core"
+import { RoleColor, sdk as sharedSdk, helpers } from "@budibase/shared-core"
 import sdk from "../../sdk"
+import { builderSocket } from "../../websockets"
 
 const UpdateRolesOptions = {
   CREATED: "created",
   REMOVED: "removed",
+}
+
+async function removeRoleFromOthers(roleId: string) {
+  const allOtherRoles = await roles.getAllRoles()
+  const updated: Role[] = []
+  for (let role of allOtherRoles) {
+    let changed = false
+    if (Array.isArray(role.inherits)) {
+      const newInherits = role.inherits.filter(
+        id => !roles.roleIDsAreEqual(id, roleId)
+      )
+      changed = role.inherits.length !== newInherits.length
+      role.inherits = newInherits
+    } else if (role.inherits && roles.roleIDsAreEqual(role.inherits, roleId)) {
+      role.inherits = roles.BUILTIN_ROLE_IDS.PUBLIC
+      changed = true
+    }
+    if (changed) {
+      updated.push(role)
+    }
+  }
+  if (updated.length) {
+    await roles.saveRoles(updated)
+  }
 }
 
 async function updateRolesOnUserTable(
@@ -53,17 +79,25 @@ async function updateRolesOnUserTable(
 }
 
 export async function fetch(ctx: UserCtx<void, FetchRolesResponse>) {
-  ctx.body = await roles.getAllRoles()
+  ctx.body = (await roles.getAllRoles()).map(role => roles.externalRole(role))
 }
 
 export async function find(ctx: UserCtx<void, FindRoleResponse>) {
-  ctx.body = await roles.getRole(ctx.params.roleId)
+  const role = await roles.getRole(ctx.params.roleId)
+  if (!role) {
+    ctx.throw(404, { message: "Role not found" })
+  }
+  ctx.body = roles.externalRole(role)
 }
 
 export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   const db = context.getAppDB()
-  let { _id, name, inherits, permissionId, version } = ctx.request.body
+  let { _id, _rev, name, inherits, permissionId, version, uiMetadata } =
+    ctx.request.body
   let isCreate = false
+  if (!_rev && !version) {
+    version = roles.RoleIDVersion.NAME
+  }
   const isNewVersion = version === roles.RoleIDVersion.NAME
 
   if (_id && roles.isBuiltin(_id)) {
@@ -80,17 +114,58 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     _id = dbCore.prefixRoleID(_id)
   }
 
-  let dbRole
-  if (!isCreate) {
-    dbRole = await db.get<UserRoles>(_id)
+  const allRoles = (await roles.getAllRoles()).map(role => ({
+    ...role,
+    _id: dbCore.prefixRoleID(role._id!),
+  }))
+  let dbRole: Role | undefined
+  if (!isCreate && _id?.startsWith(DocumentType.ROLE)) {
+    dbRole = allRoles.find(role => role._id === _id)
   }
   if (dbRole && dbRole.name !== name && isNewVersion) {
     ctx.throw(400, "Cannot change custom role name")
   }
 
-  const role = new roles.Role(_id, name, permissionId).addInheritance(inherits)
-  if (ctx.request.body._rev) {
-    role._rev = ctx.request.body._rev
+  // custom roles should always inherit basic - if they don't inherit anything else
+  if (!inherits && roles.validInherits(allRoles, dbRole?.inherits)) {
+    inherits = dbRole?.inherits
+  } else if (!roles.validInherits(allRoles, inherits)) {
+    inherits = [roles.BUILTIN_ROLE_IDS.BASIC]
+  }
+  // assume write permission level for newly created roles
+  if (isCreate && !permissionId) {
+    permissionId = BuiltinPermissionID.WRITE
+  } else if (!permissionId && dbRole?.permissionId) {
+    permissionId = dbRole.permissionId
+  }
+
+  if (!permissionId) {
+    ctx.throw(400, "Role requires permissionId to be specified.")
+  }
+
+  const role = new roles.Role(_id, name, permissionId, {
+    displayName: uiMetadata?.displayName || name,
+    description: uiMetadata?.description || "Custom role",
+    color: uiMetadata?.color || RoleColor.DEFAULT_CUSTOM,
+  }).addInheritance(inherits)
+  if (dbRole?.permissions && !role.permissions) {
+    role.permissions = dbRole.permissions
+  }
+
+  // add the new role to the list and check for loops
+  const index = allRoles.findIndex(r => r._id === role._id)
+  if (index === -1) {
+    allRoles.push(role)
+  } else {
+    allRoles[index] = role
+  }
+  if (helpers.roles.checkForRoleInheritanceLoops(allRoles)) {
+    ctx.throw(400, "Role inheritance contains a loop, this is not supported")
+  }
+
+  const foundRev = _rev || dbRole?._rev
+  if (foundRev) {
+    role._rev = foundRev
   }
   const result = await db.put(role)
   if (isCreate) {
@@ -105,7 +180,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     role.version
   )
   role._rev = result.rev
-  ctx.body = role
+  ctx.body = roles.externalRole(role)
 
   const devDb = context.getDevAppDB()
   const prodDb = context.getProdAppDB()
@@ -121,9 +196,10 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
       },
     })
   }
+  builderSocket?.emitRoleUpdate(ctx, role)
 }
 
-export async function destroy(ctx: UserCtx<void, DestroyRoleResponse>) {
+export async function destroy(ctx: UserCtx<void, DeleteRoleResponse>) {
   const db = context.getAppDB()
   let roleId = ctx.params.roleId as string
   if (roles.isBuiltin(roleId)) {
@@ -154,8 +230,12 @@ export async function destroy(ctx: UserCtx<void, DestroyRoleResponse>) {
     UpdateRolesOptions.REMOVED,
     role.version
   )
-  ctx.message = `Role ${ctx.params.roleId} deleted successfully`
-  ctx.status = 200
+
+  // clean up inherits
+  await removeRoleFromOthers(roleId)
+
+  ctx.body = { message: `Role ${ctx.params.roleId} deleted successfully` }
+  builderSocket?.emitRoleDeletion(ctx, role)
 }
 
 export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
@@ -163,30 +243,23 @@ export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
   if (!roleId) {
     roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
   }
-  if (ctx.user && sharedSdk.users.isAdminOrBuilder(ctx.user)) {
+  // If a custom role is provided in the header, filter out higher level roles
+  const roleHeader = ctx.header[Header.PREVIEW_ROLE]
+  if (Array.isArray(roleHeader)) {
+    ctx.throw(400, `Too many roles specified in ${Header.PREVIEW_ROLE} header`)
+  }
+  const isBuilder = ctx.user && sharedSdk.users.isAdminOrBuilder(ctx.user)
+  let roleIds: string[] = []
+  if (!roleHeader && isBuilder) {
     const appId = context.getAppId()
-    if (!appId) {
-      ctx.body = []
-    } else {
-      ctx.body = await roles.getAllRoleIds(appId)
+    if (appId) {
+      roleIds = await roles.getAllRoleIds(appId)
     }
+  } else if (isBuilder && roleHeader) {
+    roleIds = await roles.getUserRoleIdHierarchy(roleHeader)
   } else {
-    ctx.body = await roles.getUserRoleIdHierarchy(roleId!)
+    roleIds = await roles.getUserRoleIdHierarchy(roleId!)
   }
 
-  // If a custom role is provided in the header, filter out higher level roles
-  const roleHeader = ctx.header?.[Header.PREVIEW_ROLE] as string
-  if (roleHeader && !Object.keys(roles.BUILTIN_ROLE_IDS).includes(roleHeader)) {
-    const inherits = (await roles.getRole(roleHeader))?.inherits
-    const orderedRoles = ctx.body.reverse()
-    let filteredRoles = [roleHeader]
-    for (let role of orderedRoles) {
-      filteredRoles = [role, ...filteredRoles]
-      if (role === inherits) {
-        break
-      }
-    }
-    filteredRoles.pop()
-    ctx.body = [roleHeader, ...filteredRoles]
-  }
+  ctx.body = roleIds.map(roleId => roles.getExternalRoleID(roleId))
 }

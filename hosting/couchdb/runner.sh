@@ -73,7 +73,7 @@ sed -i "s#COUCHDB_ERLANG_COOKIE#${COUCHDB_ERLANG_COOKIE}#g" /opt/clouseau/clouse
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb > /dev/stdout 2>&1 &
 
 # Start SQS. Use 127.0.0.1 instead of localhost to avoid IPv6 issues.
-/opt/sqs/sqs --server "http://127.0.0.1:5984" --data-dir ${DATA_DIR}/sqs --bind-address=0.0.0.0 > /dev/stdout 2>&1 &
+/opt/sqs/sqs --server "http://127.0.0.1:5984" --data-dir ${DATA_DIR}/sqs --bind-address=0.0.0.0 --max-threads=20 > /dev/stdout 2>&1 &
 
 # Wait for CouchDB to start up.
 while [[ $(curl -s -w "%{http_code}\n" http://localhost:5984/_up -o /dev/null) -ne 200 ]]; do

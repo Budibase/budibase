@@ -10,7 +10,7 @@ export abstract class TestAPI {
   config: TestConfiguration
   request: SuperTest<Test>
 
-  protected constructor(config: TestConfiguration) {
+  constructor(config: TestConfiguration) {
     this.config = config
     this.request = config.request
   }

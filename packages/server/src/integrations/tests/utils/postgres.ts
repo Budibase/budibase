@@ -2,21 +2,21 @@ import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
-import knex from "knex"
-import { POSTGRES_IMAGE } from "./images"
+import knex, { Knex } from "knex"
+import { POSTGRES_IMAGE, POSTGRES_LEGACY_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>
 
-export async function getDatasource(): Promise<Datasource> {
+async function datasourceWithImage(image: string): Promise<Datasource> {
   if (!ports) {
     ports = startContainer(
-      new GenericContainer(POSTGRES_IMAGE)
+      new GenericContainer(image)
         .withExposedPorts(5432)
         .withEnvironment({ POSTGRES_PASSWORD: "password" })
         .withWaitStrategy(
           Wait.forSuccessfulCommand(
             "pg_isready -h localhost -p 5432"
-          ).withStartupTimeout(10000)
+          ).withStartupTimeout(20000)
         )
     )
   }
@@ -51,7 +51,18 @@ export async function getDatasource(): Promise<Datasource> {
   return datasource
 }
 
-export async function knexClient(ds: Datasource) {
+export async function getDatasource(): Promise<Datasource> {
+  return datasourceWithImage(POSTGRES_IMAGE)
+}
+
+export async function getLegacyDatasource(): Promise<Datasource> {
+  return datasourceWithImage(POSTGRES_LEGACY_IMAGE)
+}
+
+export async function knexClient(
+  ds: Datasource,
+  opts?: Knex.Config
+): Promise<Knex> {
   if (!ds.config) {
     throw new Error("Datasource config is missing")
   }
@@ -62,5 +73,6 @@ export async function knexClient(ds: Datasource) {
   return knex({
     client: "pg",
     connection: ds.config,
+    ...opts,
   })
 }

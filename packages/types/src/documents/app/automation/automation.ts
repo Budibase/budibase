@@ -1,9 +1,10 @@
 import { Document } from "../../document"
-import { EventEmitter } from "events"
 import { User } from "../../global"
 import { ReadStream } from "fs"
 import { Row } from "../row"
 import { Table } from "../table"
+import { AutomationStep, AutomationTrigger } from "./schema"
+import { ContextEmitter } from "../../../sdk"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -71,6 +72,7 @@ export enum AutomationActionStepId {
   COLLECT = "COLLECT",
   OPENAI = "OPENAI",
   TRIGGER_AUTOMATION_RUN = "TRIGGER_AUTOMATION_RUN",
+  BRANCH = "BRANCH",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -122,6 +124,8 @@ export interface Automation extends Document {
   definition: {
     steps: AutomationStep[]
     trigger: AutomationTrigger
+    // stepNames is used to lookup step names from their correspnding step ID.
+    stepNames?: Record<string, string>
   }
   screenId?: string
   uiTree?: any
@@ -144,6 +148,7 @@ export interface Automation extends Document {
 
 interface BaseIOStructure {
   type?: AutomationIOType
+  subtype?: AutomationIOType
   customType?: AutomationCustomIOType
   title?: string
   description?: string
@@ -164,46 +169,13 @@ export interface InputOutputBlock {
   required?: string[]
 }
 
-export interface AutomationStepSchema {
-  name: string
-  stepTitle?: string
-  tagline: string
-  icon: string
-  description: string
-  type: AutomationStepType
-  internal?: boolean
-  deprecated?: boolean
-  stepId: AutomationTriggerStepId | AutomationActionStepId
-  blockToLoop?: string
-  inputs: Record<string, any>
-  schema: {
-    inputs: InputOutputBlock
-    outputs: InputOutputBlock
-  }
-  custom?: boolean
-  features?: Partial<Record<AutomationFeature, boolean>>
-}
-
 export enum AutomationFeature {
   LOOPING = "LOOPING",
 }
 
-export interface AutomationStep extends AutomationStepSchema {
-  id: string
-}
-
-export interface AutomationTriggerSchema extends AutomationStepSchema {
-  type: AutomationStepType.TRIGGER
-  event?: string
-  cronJobId?: string
-}
-
-export interface AutomationTrigger extends AutomationTriggerSchema {
-  id: string
-}
-
 export enum AutomationStepStatus {
   NO_ITERATIONS = "no_iterations",
+  MAX_ITERATIONS = "max_iterations_reached",
 }
 
 export enum AutomationStatus {
@@ -211,6 +183,7 @@ export enum AutomationStatus {
   ERROR = "error",
   STOPPED = "stopped",
   STOPPED_ERROR = "stopped_error",
+  NO_CONDITION_MET = "No branch condition met",
 }
 
 export enum AutomationStoppedReason {
@@ -220,7 +193,7 @@ export enum AutomationStoppedReason {
 export interface AutomationResults {
   automationId?: string
   status?: AutomationStatus
-  trigger?: any
+  trigger?: AutomationTrigger
   steps: {
     stepId: AutomationTriggerStepId | AutomationActionStepId
     inputs: {
@@ -230,6 +203,14 @@ export interface AutomationResults {
       [key: string]: any
     }
   }[]
+}
+
+export interface DidNotTriggerResponse {
+  outputs: {
+    success: false
+    status: AutomationStatus.STOPPED
+  }
+  message: AutomationStoppedReason.TRIGGER_FILTER_NOT_MET
 }
 
 export interface AutomationLog extends AutomationResults, Document {
@@ -245,7 +226,7 @@ export interface AutomationLogPage {
 
 export interface AutomationStepInputBase {
   context: Record<string, any>
-  emitter: EventEmitter
+  emitter: ContextEmitter
   appId: string
   apiKey?: string
 }
@@ -290,6 +271,7 @@ export type UpdatedRowEventEmitter = {
   oldRow: Row
   table: Table
   appId: string
+  user: User
 }
 
 export enum LoopStepType {

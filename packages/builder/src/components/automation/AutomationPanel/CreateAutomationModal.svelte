@@ -1,5 +1,6 @@
 <script>
-  import { automationStore } from "stores/builder"
+  import { goto } from "@roxi/routify"
+  import { automationStore } from "@/stores/builder"
   import {
     notifications,
     Input,
@@ -10,7 +11,7 @@
     Icon,
     Label,
   } from "@budibase/bbui"
-  import { TriggerStepID } from "constants/backend/automations"
+  import { TriggerStepID } from "@/constants/backend/automations"
 
   export let webhookModal
 
@@ -32,11 +33,12 @@
         triggerVal.stepId,
         triggerVal
       )
-      await automationStore.actions.create(name, trigger)
+      const automation = await automationStore.actions.create(name, trigger)
       if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
         webhookModal.show()
       }
       notifications.success(`Automation ${name} created`)
+      $goto(`../automation/${automation._id}`)
     } catch (error) {
       notifications.error("Error creating automation")
     }

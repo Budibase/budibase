@@ -81,46 +81,36 @@ describe("/templates", () => {
   })
 
   describe("create app from template", () => {
-    it.each(["sqs", "lucene"])(
-      `should be able to create an app from a template (%s)`,
-      async source => {
-        const env = {
-          SQS_SEARCH_ENABLE: source === "sqs" ? "true" : "false",
-          SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
-        }
+    it("should be able to create an app from a template", async () => {
+      const name = generator.guid().replaceAll("-", "")
+      const url = `/${name}`
 
-        await config.withCoreEnv(env, async () => {
-          const name = generator.guid().replaceAll("-", "")
-          const url = `/${name}`
+      const app = await config.api.application.create({
+        name,
+        url,
+        useTemplate: "true",
+        templateName: "Agency Client Portal",
+        templateKey: "app/agency-client-portal",
+      })
+      expect(app.name).toBe(name)
+      expect(app.url).toBe(url)
 
-          const app = await config.api.application.create({
-            name,
-            url,
-            useTemplate: "true",
-            templateName: "Agency Client Portal",
-            templateKey: "app/agency-client-portal",
-          })
-          expect(app.name).toBe(name)
-          expect(app.url).toBe(url)
+      await config.withApp(app, async () => {
+        const tables = await config.api.table.fetch()
+        expect(tables).toHaveLength(2)
 
-          await config.withApp(app, async () => {
-            const tables = await config.api.table.fetch()
-            expect(tables).toHaveLength(2)
+        tables.sort((a, b) => a.name.localeCompare(b.name))
+        const [agencyProjects, users] = tables
+        expect(agencyProjects.name).toBe("Agency Projects")
+        expect(users.name).toBe("Users")
 
-            tables.sort((a, b) => a.name.localeCompare(b.name))
-            const [agencyProjects, users] = tables
-            expect(agencyProjects.name).toBe("Agency Projects")
-            expect(users.name).toBe("Users")
-
-            const { rows } = await config.api.row.search(agencyProjects._id!, {
-              tableId: agencyProjects._id!,
-              query: {},
-            })
-
-            expect(rows).toHaveLength(3)
-          })
+        const { rows } = await config.api.row.search(agencyProjects._id!, {
+          tableId: agencyProjects._id!,
+          query: {},
         })
-      }
-    )
+
+        expect(rows).toHaveLength(3)
+      })
+    })
   })
 })

@@ -31,7 +31,7 @@ function getDatasourceId(table: Table) {
   return breakExternalTableId(table._id).datasourceId
 }
 
-export async function save(
+export async function updateTable(
   ctx: UserCtx<SaveTableRequest, SaveTableResponse>,
   renaming?: RenameColumn
 ) {
@@ -45,13 +45,13 @@ export async function save(
     inputs.created = true
   }
   try {
-    const { datasource, table } = await sdk.tables.external.save(
+    const { datasource, oldTable, table } = await sdk.tables.external.save(
       datasourceId!,
       inputs,
       { tableId, renaming }
     )
     builderSocket?.emitDatasourceUpdate(ctx, datasource)
-    return table
+    return { table, oldTable }
   } catch (err: any) {
     if (err instanceof Error) {
       ctx.throw(400, err.message)
@@ -113,11 +113,10 @@ export async function bulkImport(
     const processed = await inputProcessing(ctx.user?._id, table, row, {
       noAutoRelationships: true,
     })
-    parsedRows.push(processed.row)
-    table = processed.table
+    parsedRows.push(processed)
   }
 
-  await handleRequest(Operation.BULK_UPSERT, table._id!, {
+  await handleRequest(Operation.BULK_UPSERT, table, {
     rows: parsedRows,
   })
   await events.rows.imported(table, parsedRows.length)

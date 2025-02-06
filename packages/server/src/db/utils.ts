@@ -1,4 +1,4 @@
-import { context, db as dbCore, utils } from "@budibase/backend-core"
+import { context, db as dbCore, docIds, utils } from "@budibase/backend-core"
 import {
   DatabaseQueryOpts,
   Datasource,
@@ -318,12 +318,8 @@ export function generateViewID(tableId: string) {
   }${SEPARATOR}${tableId}${SEPARATOR}${newid()}`
 }
 
-export function isViewID(viewId: string) {
-  return viewId?.split(SEPARATOR)[0] === VirtualDocumentType.VIEW
-}
-
 export function extractViewInfoFromID(viewId: string) {
-  if (!isViewID(viewId)) {
+  if (!docIds.isViewId(viewId)) {
     throw new Error("Unable to extract table ID, is not a view ID")
   }
   const split = viewId.split(SEPARATOR)

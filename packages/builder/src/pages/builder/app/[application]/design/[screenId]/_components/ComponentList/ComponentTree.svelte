@@ -1,5 +1,5 @@
 <script>
-  import NavItem from "components/common/NavItem.svelte"
+  import NavItem from "@/components/common/NavItem.svelte"
   import { Icon, notifications } from "@budibase/bbui"
   import {
     selectedScreen,
@@ -9,12 +9,12 @@
     hoverStore,
     componentTreeNodesStore,
     contextMenuStore,
-  } from "stores/builder"
+  } from "@/stores/builder"
   import {
     findComponentPath,
     getComponentText,
     getComponentName,
-  } from "helpers/components"
+  } from "@/helpers/components"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
   import getComponentContextMenuItems from "./getComponentContextMenuItems"

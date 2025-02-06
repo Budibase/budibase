@@ -1,14 +1,14 @@
 <script>
+  import { tick } from "svelte"
   import {
     ModalContent,
     TextArea,
     notifications,
     ActionButton,
   } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "stores/builder"
+  import { automationStore, selectedAutomation } from "@/stores/builder"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
-  import { memo } from "@budibase/frontend-core"
   import { AutomationEventType } from "@budibase/types"
 
   let failedParse = null
@@ -19,6 +19,7 @@
     AutomationEventType.ROW_DELETE,
     AutomationEventType.ROW_UPDATE,
     AutomationEventType.ROW_SAVE,
+    AutomationEventType.ROW_ACTION,
   ]
 
   /**
@@ -28,7 +29,7 @@
    * @todo Parse *all* data for each trigger type and relay adequate feedback
    */
   const parseTestData = testData => {
-    const autoTrigger = $selectedAutomation?.definition?.trigger
+    const autoTrigger = $selectedAutomation.data?.definition?.trigger
     const { tableId } = autoTrigger?.inputs || {}
 
     // Ensure the tableId matches the trigger table for row trigger automations
@@ -45,7 +46,7 @@
       }
     } else {
       // Leave the core data as it is
-      return testData
+      return cloneDeep(testData)
     }
   }
 
@@ -62,12 +63,14 @@
     return true
   }
 
-  const memoTestData = memo(parseTestData($selectedAutomation.testData))
-  $: memoTestData.set(parseTestData($selectedAutomation.testData))
+  $: currentTestData = $selectedAutomation.data.testData
+
+  // Can be updated locally to avoid race condition when testing
+  $: testData = parseTestData(currentTestData)
 
   $: {
     // clone the trigger so we're not mutating the reference
-    trigger = cloneDeep($selectedAutomation.definition.trigger)
+    trigger = cloneDeep($selectedAutomation.data.definition.trigger)
 
     // get the outputs so we can define the fields
     let schema = Object.entries(trigger.schema?.outputs?.properties || {})
@@ -82,10 +85,10 @@
   $: isError =
     !isTriggerValid(trigger) ||
     !(trigger.schema.outputs.required || []).every(
-      required => $memoTestData?.[required] || required !== "row"
+      required => testData?.[required] || required !== "row"
     )
 
-  function parseTestJSON(e) {
+  async function parseTestJSON(e) {
     let jsonUpdate
 
     try {
@@ -105,12 +108,16 @@
       }
     }
 
-    automationStore.actions.addTestDataToAutomation(jsonUpdate)
+    const updatedAuto =
+      automationStore.actions.addTestDataToAutomation(jsonUpdate)
+    await automationStore.actions.save(updatedAuto)
   }
 
   const testAutomation = async () => {
+    // Ensure testData reactiveness is processed
+    await tick()
     try {
-      await automationStore.actions.test($selectedAutomation, $memoTestData)
+      await automationStore.actions.test($selectedAutomation.data, testData)
       $automationStore.showTestPanel = true
     } catch (error) {
       notifications.error(error)
@@ -148,19 +155,23 @@
   {#if selectedValues}
     <div class="tab-content-padding">
       <AutomationBlockSetup
-        testData={$memoTestData}
         {schemaProperties}
         isTestModal
+        {testData}
         block={trigger}
+        on:update={e => {
+          const { testData: updatedTestData } = e.detail
+          testData = updatedTestData
+        }}
       />
     </div>
   {/if}
   {#if selectedJSON}
     <div class="text-area-container">
       <TextArea
-        value={JSON.stringify($selectedAutomation.testData, null, 2)}
+        value={JSON.stringify($selectedAutomation.data.testData, null, 2)}
         error={failedParse}
-        on:change={e => parseTestJSON(e)}
+        on:change={async e => await parseTestJSON(e)}
       />
     </div>
   {/if}

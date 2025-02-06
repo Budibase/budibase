@@ -5,7 +5,6 @@
   import { writable } from "svelte/store"
 
   export let dataSource
-  export let theme
   export let size
   export let disabled = false
   export let readonly = false
@@ -22,7 +21,7 @@
 
   const context = getContext("context")
   const component = getContext("component")
-  const { API, fetchDatasourceSchema } = getContext("sdk")
+  const { fetchDatasourceSchema, fetchDatasourceDefinition } = getContext("sdk")
 
   const getInitialFormStep = () => {
     const parsedFormStep = parseInt(initialFormStep)
@@ -32,9 +31,9 @@
     return parsedFormStep
   }
 
-  let loaded = false
+  let definition
   let schema
-  let table
+  let loaded = false
   let currentStep = getContext("current-step") || writable(getInitialFormStep())
 
   $: fetchSchema(dataSource)
@@ -63,7 +62,7 @@
     // Look up the component tree and find something that is provided by an
     // ancestor that matches our datasource. This is for backwards compatibility
     // as previously we could use the "closest" context.
-    for (let id of path.reverse().slice(1)) {
+    for (let id of path.toReversed().slice(1)) {
       // Check for matching view datasource
       if (
         dataSource.type === "viewV2" &&
@@ -84,12 +83,10 @@
 
   // Fetches the form schema from this form's dataSource
   const fetchSchema = async dataSource => {
-    if (dataSource?.tableId && !dataSource?.type?.startsWith("query")) {
-      try {
-        table = await API.fetchTableDefinition(dataSource.tableId)
-      } catch (error) {
-        table = null
-      }
+    try {
+      definition = await fetchDatasourceDefinition(dataSource)
+    } catch (error) {
+      definition = null
     }
     const res = await fetchDatasourceSchema(dataSource)
     schema = res || {}
@@ -115,13 +112,11 @@
   {#key resetKey}
     <InnerForm
       {dataSource}
-      {theme}
       {size}
       {disabled}
       {readonly}
-      {actionType}
       {schema}
-      {table}
+      {definition}
       {initialValues}
       {disableSchemaValidation}
       {editAutoColumns}

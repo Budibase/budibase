@@ -6,9 +6,9 @@
     auth,
     sideBarCollapsed,
     enrichedApps,
-  } from "stores/portal"
-  import AppContextMenuModals from "components/start/AppContextMenuModals.svelte"
-  import getAppContextMenuItems from "components/start/getAppContextMenuItems.js"
+  } from "@/stores/portal"
+  import AppContextMenuModals from "@/components/start/AppContextMenuModals.svelte"
+  import getAppContextMenuItems from "@/components/start/getAppContextMenuItems.js"
   import FavouriteAppButton from "../FavouriteAppButton.svelte"
   import {
     Link,
@@ -18,11 +18,11 @@
     TooltipPosition,
     TooltipType,
   } from "@budibase/bbui"
-  import { sdk } from "@budibase/shared-core"
-  import { API } from "api"
+  import { sdk, getThemeClassNames } from "@budibase/shared-core"
+  import { API } from "@/api"
   import ErrorSVG from "./ErrorSVG.svelte"
-  import { getBaseTheme, ClientAppSkeleton } from "@budibase/frontend-core"
-  import { contextMenuStore } from "stores/builder"
+  import { ClientAppSkeleton } from "@budibase/frontend-core"
+  import { contextMenuStore } from "@/stores/builder"
 
   $: app = $enrichedApps.find(app => app.appId === $params.appId)
   $: iframeUrl = getIframeURL(app)
@@ -163,9 +163,7 @@
       class:hide={!loading || !app?.features?.skeletonLoader}
       class="loading"
     >
-      <div
-        class={`loadingThemeWrapper ${getBaseTheme(app.theme)} ${app.theme}`}
-      >
+      <div class="loadingThemeWrapper {getThemeClassNames(app.theme)}">
         <ClientAppSkeleton
           noAnimation
           hideDevTools={app?.status === "published"}

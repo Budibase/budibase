@@ -2,6 +2,7 @@
   import { onMount, getContext } from "svelte"
   import { Dropzone } from "@budibase/bbui"
   import GridPopover from "../overlays/GridPopover.svelte"
+  import { FieldType } from "@budibase/types"
 
   export let value
   export let focused = false
@@ -81,7 +82,12 @@
 >
   {#each value || [] as attachment}
     {#if isImage(attachment.extension)}
-      <img src={attachment.url} alt={attachment.extension} />
+      <img
+        class:light={!$props?.darkMode &&
+          schema.type === FieldType.SIGNATURE_SINGLE}
+        src={attachment.url}
+        alt={attachment.extension}
+      />
     {:else}
       <div class="file" title={attachment.name}>
         {attachment.extension}
@@ -139,5 +145,10 @@
     background: var(--grid-background-alt);
     width: 320px;
     padding: var(--cell-padding);
+  }
+
+  .attachment-cell img.light {
+    -webkit-filter: invert(100%);
+    filter: invert(100%);
   }
 </style>

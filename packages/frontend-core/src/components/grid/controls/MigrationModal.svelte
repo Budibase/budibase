@@ -29,11 +29,11 @@
 
   const migrateUserColumn = async () => {
     try {
-      await API.migrateColumn({
-        tableId: $definition._id,
-        oldColumn: column.schema.name,
-        newColumn: newColumnName,
-      })
+      await API.migrateColumn(
+        $definition._id,
+        column.schema.name,
+        newColumnName
+      )
       notifications.success("Column migrated")
     } catch (e) {
       notifications.error(`Failed to migrate: ${e.message}`)

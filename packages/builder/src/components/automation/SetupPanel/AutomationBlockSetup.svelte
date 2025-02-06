@@ -20,9 +20,9 @@
     Icon,
   } from "@budibase/bbui"
 
-  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, selectedAutomation, tables } from "stores/builder"
-  import { environment, licensing } from "stores/portal"
+  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
+  import { automationStore, tables } from "@/stores/builder"
+  import { environment } from "@/stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import {
     BindingSidePanel,
@@ -30,28 +30,28 @@
     DrawerBindableInput,
     ServerBindingPanel as AutomationBindingPanel,
     ModalBindableInput,
-  } from "components/common/bindings"
+  } from "@/components/common/bindings"
   import CodeEditorModal from "./CodeEditorModal.svelte"
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import AutomationSelector from "./AutomationSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
-  import Editor from "components/integration/QueryEditor.svelte"
-  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import { BindingHelpers, BindingType } from "components/common/bindings/utils"
+  import Editor from "@/components/integration/QueryEditor.svelte"
+  import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
+  import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
+  import {
+    BindingHelpers,
+    BindingType,
+  } from "@/components/common/bindings/utils"
   import {
     bindingsToCompletions,
     hbAutocomplete,
     EditorModes,
-  } from "components/common/CodeEditor"
-  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
+  } from "@/components/common/CodeEditor"
+  import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { QueryUtils, Utils, search, memo } from "@budibase/frontend-core"
-  import {
-    getSchemaForDatasourcePlus,
-    getEnvironmentBindings,
-  } from "dataBinding"
-  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
-  import { onMount } from "svelte"
+  import { getSchemaForDatasourcePlus } from "@/dataBinding"
+  import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
+  import { onMount, createEventDispatcher } from "svelte"
   import { writable } from "svelte/store"
   import { cloneDeep } from "lodash/fp"
   import {
@@ -60,13 +60,17 @@
     AutomationActionStepId,
     AutomationCustomIOType,
   } from "@budibase/types"
-  import { FIELDS } from "constants/backend"
   import PropField from "./PropField.svelte"
+  import { utils } from "@budibase/shared-core"
 
+  export let automation
   export let block
   export let testData
   export let schemaProperties
   export let isTestModal = false
+  export let bindings = []
+
+  const dispatch = createEventDispatcher()
 
   // Stop unnecessary rendering
   const memoBlock = memo(block)
@@ -75,6 +79,7 @@
     TriggerStepID.ROW_UPDATED,
     TriggerStepID.ROW_SAVED,
     TriggerStepID.ROW_DELETED,
+    TriggerStepID.ROW_ACTION,
   ]
 
   const rowEvents = [
@@ -92,10 +97,17 @@
   let stepLayouts = {}
 
   $: memoBlock.set(block)
-  $: filters = lookForFilters(schemaProperties) || []
-  $: tempFilters = filters
-  $: stepId = block.stepId
-  $: bindings = getAvailableBindings(block, $selectedAutomation?.definition)
+
+  $: filters = lookForFilters(schemaProperties)
+  $: filterCount =
+    filters?.groups?.reduce((acc, group) => {
+      acc = acc += group?.filters?.length || 0
+      return acc
+    }, 0) || 0
+
+  $: tempFilters = cloneDeep(filters)
+  $: stepId = $memoBlock.stepId
+
   $: getInputData(testData, $memoBlock.inputs)
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
@@ -107,10 +119,10 @@
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
-    { allowLinks: true }
+    { allowLinks: false }
   )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
-  $: isTrigger = block?.type === AutomationStepType.TRIGGER
+  $: isTrigger = $memoBlock?.type === AutomationStepType.TRIGGER
   $: codeMode =
     stepId === AutomationActionStepId.EXECUTE_BASH
       ? EditorModes.Handlebars
@@ -119,7 +131,9 @@
     disableWrapping: true,
   })
   $: editingJs = codeMode === EditorModes.JS
-  $: requiredProperties = isTestModal ? [] : block.schema["inputs"].required
+  $: requiredProperties = isTestModal
+    ? []
+    : $memoBlock.schema["inputs"].required
 
   $: stepCompletions =
     codeMode === EditorModes.Handlebars
@@ -151,9 +165,9 @@
 
   // Store for any UX related data
   const stepStore = writable({})
-  $: currentStep = $stepStore?.[block.id]
+  $: stepState = $stepStore?.[block.id]
 
-  $: customStepLayouts($memoBlock, schemaProperties, currentStep)
+  $: customStepLayouts($memoBlock, schemaProperties, stepState)
 
   const customStepLayouts = block => {
     if (
@@ -185,7 +199,6 @@
                   onChange: e => {
                     onChange({ ["revision"]: e.detail })
                   },
-                  bindings,
                   updateOnChange: false,
                   forceModal: true,
                 },
@@ -214,7 +227,6 @@
               onChange: e => {
                 onChange({ [rowIdentifier]: e.detail })
               },
-              bindings,
               updateOnChange: false,
               forceModal: true,
             },
@@ -275,13 +287,13 @@
           isUpdateRow: block.stepId === ActionStepID.UPDATE_ROW,
         }
 
-        if (isTestModal && currentStep?.rowType === "oldRow") {
+        if (isTestModal && stepState?.rowType === "oldRow") {
           return [
             {
               type: RowSelector,
               props: {
                 row: inputData["oldRow"] || {
-                  tableId: inputData["row"].tableId,
+                  tableId: inputData["row"]?.tableId,
                 },
                 meta: {
                   fields: inputData["meta"]?.oldFields || {},
@@ -404,7 +416,7 @@
 
         if (
           Object.hasOwn(update, "tableId") &&
-          $selectedAutomation.testData?.row?.tableId !== update.tableId
+          automation.testData?.row?.tableId !== update.tableId
         ) {
           const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
             searchableSchema: true,
@@ -525,7 +537,9 @@
     }
     try {
       if (isTestModal) {
-        let newTestData = { schema }
+        // Be sure to merge in the testData prop data, as it can contain custom
+        // default data
+        let newTestData = { schema, ...testData }
 
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
         if (stepId === TriggerStepID.WEBHOOK) {
@@ -533,7 +547,7 @@
             ...newTestData,
             body: {
               ...update,
-              ...$selectedAutomation.testData?.body,
+              ...automation.testData?.body,
             },
           }
         }
@@ -541,7 +555,14 @@
           ...newTestData,
           ...request,
         }
-        await automationStore.actions.addTestDataToAutomation(newTestData)
+
+        const updatedAuto =
+          automationStore.actions.addTestDataToAutomation(newTestData)
+
+        // Ensure the test request has the latest info.
+        dispatch("update", updatedAuto)
+
+        await automationStore.actions.save(updatedAuto)
       } else {
         const data = { schema, ...request }
         await automationStore.actions.updateBlockInputs(block, data)
@@ -552,192 +573,6 @@
     }
   })
 
-  function getAvailableBindings(block, automation) {
-    if (!block || !automation) {
-      return []
-    }
-
-    // Find previous steps to the selected one
-    let allSteps = [...automation.steps]
-
-    if (automation.trigger) {
-      allSteps = [automation.trigger, ...allSteps]
-    }
-    let blockIdx = allSteps.findIndex(step => step.id === block.id)
-
-    // Extract all outputs from all previous steps as available bindingsx§x
-    let bindings = []
-    let loopBlockCount = 0
-    const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
-      if (!name) return
-      const runtimeBinding = determineRuntimeBinding(name, idx, isLoopBlock)
-      const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
-
-      bindings.push(
-        createBindingObject(
-          name,
-          value,
-          icon,
-          idx,
-          loopBlockCount,
-          isLoopBlock,
-          runtimeBinding,
-          categoryName,
-          bindingName
-        )
-      )
-    }
-
-    const determineRuntimeBinding = (name, idx, isLoopBlock) => {
-      let runtimeName
-
-      /* Begin special cases for generating custom schemas based on triggers */
-      if (
-        idx === 0 &&
-        automation.trigger?.event === AutomationEventType.APP_TRIGGER
-      ) {
-        return `trigger.fields.${name}`
-      }
-
-      if (
-        idx === 0 &&
-        (automation.trigger?.event === AutomationEventType.ROW_UPDATE ||
-          automation.trigger?.event === AutomationEventType.ROW_SAVE)
-      ) {
-        let noRowKeywordBindings = ["id", "revision", "oldRow"]
-        if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
-      }
-      /* End special cases for generating custom schemas based on triggers */
-
-      if (isLoopBlock) {
-        runtimeName = `loop.${name}`
-      } else if (block.name.startsWith("JS")) {
-        runtimeName = `steps[${idx - loopBlockCount}].${name}`
-      } else {
-        runtimeName = `steps.${idx - loopBlockCount}.${name}`
-      }
-      return idx === 0 ? `trigger.${name}` : runtimeName
-    }
-
-    const determineCategoryName = (idx, isLoopBlock, bindingName) => {
-      if (idx === 0) return "Trigger outputs"
-      if (isLoopBlock) return "Loop Outputs"
-      return bindingName
-        ? `${bindingName} outputs`
-        : `Step ${idx - loopBlockCount} outputs`
-    }
-
-    const createBindingObject = (
-      name,
-      value,
-      icon,
-      idx,
-      loopBlockCount,
-      isLoopBlock,
-      runtimeBinding,
-      categoryName,
-      bindingName
-    ) => {
-      const field = Object.values(FIELDS).find(
-        field => field.type === value.type && field.subtype === value.subtype
-      )
-
-      return {
-        readableBinding: bindingName
-          ? `${bindingName}.${name}`
-          : runtimeBinding,
-        runtimeBinding,
-        type: value.type,
-        description: value.description,
-        icon,
-        category: categoryName,
-        display: {
-          type: field?.name || value.type,
-          name,
-          rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
-        },
-      }
-    }
-
-    for (let idx = 0; idx < blockIdx; idx++) {
-      let wasLoopBlock = allSteps[idx - 1]?.stepId === ActionStepID.LOOP
-      let isLoopBlock =
-        allSteps[idx]?.stepId === ActionStepID.LOOP &&
-        allSteps.some(x => x.blockToLoop === block.id)
-      let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
-      let bindingName =
-        automation.stepNames?.[allSteps[idx - loopBlockCount].id]
-
-      if (isLoopBlock) {
-        schema = {
-          currentItem: {
-            type: "string",
-            description: "the item currently being executed",
-          },
-        }
-      }
-
-      if (
-        idx === 0 &&
-        automation.trigger?.event === AutomationEventType.APP_TRIGGER
-      ) {
-        schema = Object.fromEntries(
-          Object.keys(automation.trigger.inputs.fields || []).map(key => [
-            key,
-            { type: automation.trigger.inputs.fields[key] },
-          ])
-        )
-      }
-      if (
-        (idx === 0 &&
-          automation.trigger.event === AutomationEventType.ROW_UPDATE) ||
-        (idx === 0 && automation.trigger.event === AutomationEventType.ROW_SAVE)
-      ) {
-        let table = $tables.list.find(
-          table => table._id === automation.trigger.inputs.tableId
-        )
-        // We want to generate our own schema for the bindings from the table schema itself
-        for (const key in table?.schema) {
-          schema[key] = {
-            type: table.schema[key].type,
-            subtype: table.schema[key].subtype,
-          }
-        }
-        // remove the original binding
-        delete schema.row
-      }
-      let icon =
-        idx === 0
-          ? automation.trigger.icon
-          : isLoopBlock
-          ? "Reuse"
-          : allSteps[idx].icon
-
-      if (wasLoopBlock) {
-        loopBlockCount++
-        continue
-      }
-      Object.entries(schema).forEach(([name, value]) =>
-        addBinding(name, value, icon, idx, isLoopBlock, bindingName)
-      )
-    }
-
-    // Environment bindings
-    if ($licensing.environmentVariablesEnabled) {
-      bindings = bindings.concat(
-        getEnvironmentBindings().map(binding => {
-          return {
-            ...binding,
-            display: {
-              ...binding.display,
-              rank: 98,
-            },
-          }
-        })
-      )
-    }
-    return bindings
-  }
   function lookForFilters(properties) {
     if (!properties) {
       return []
@@ -756,21 +591,23 @@
         break
       }
     }
-    return filters || []
+    return Array.isArray(filters)
+      ? utils.processSearchFilters(filters)
+      : filters
   }
 
   function saveFilters(key) {
-    const filters = QueryUtils.buildQuery(tempFilters)
-
+    const update = Utils.parseFilter(tempFilters)
+    const query = QueryUtils.buildQuery(update)
     onChange({
-      [key]: filters,
-      [`${key}-def`]: tempFilters, // need to store the builder definition in the automation
+      [key]: query,
+      [`${key}-def`]: update, // need to store the builder definition in the automation
     })
 
     drawer.hide()
   }
 
-  function canShowField(key, value) {
+  function canShowField(value) {
     const dependsOn = value?.dependsOn
     return !dependsOn || !!inputData[dependsOn]
   }
@@ -822,13 +659,14 @@
   <!-- Custom Layouts -->
   {#if stepLayouts[block.stepId]}
     {#each Object.keys(stepLayouts[block.stepId] || {}) as key}
-      {#if canShowField(key, stepLayouts[block.stepId].schema)}
+      {#if canShowField(stepLayouts[block.stepId].schema)}
         {#each stepLayouts[block.stepId][key].content as config}
           {#if config.title}
             <PropField label={config.title} labelTooltip={config.tooltip}>
               <svelte:component
                 this={config.type}
                 {...config.props}
+                {bindings}
                 on:change={config.props.onChange}
               />
             </PropField>
@@ -836,6 +674,7 @@
             <svelte:component
               this={config.type}
               {...config.props}
+              {bindings}
               on:change={config.props.onChange}
             />
           {/if}
@@ -845,7 +684,7 @@
   {:else}
     <!-- Default Schema Property Layout -->
     {#each schemaProperties as [key, value]}
-      {#if canShowField(key, value)}
+      {#if canShowField(value)}
         {@const label = getFieldLabel(key, value)}
         <div class:block-field={shouldRenderField(value)}>
           {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
@@ -867,8 +706,8 @@
               {/if}
             </div>
           {/if}
-          <div class:field-width={shouldRenderField(value)}>
-            {#if value.type === "string" && value.enum && canShowField(key, value)}
+          <div>
+            {#if value.type === "string" && value.enum && canShowField(value)}
               <Select
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
@@ -990,18 +829,24 @@
                 </div>
               </div>
             {:else if value.customType === AutomationCustomIOType.FILTERS || value.customType === AutomationCustomIOType.TRIGGER_FILTER}
-              <ActionButton fullWidth on:click={drawer.show}
-                >{filters.length > 0
-                  ? "Update Filter"
-                  : "No Filter set"}</ActionButton
+              <ActionButton fullWidth on:click={drawer.show}>
+                {filterCount > 0 ? "Update Filter" : "No Filter set"}
+              </ActionButton>
+              <Drawer
+                bind:this={drawer}
+                title="Filtering"
+                forceModal
+                on:drawerShow={() => {
+                  tempFilters = filters
+                }}
               >
-              <Drawer bind:this={drawer} title="Filtering">
                 <Button cta slot="buttons" on:click={() => saveFilters(key)}>
                   Save
                 </Button>
+
                 <DrawerContent slot="body">
                   <FilterBuilder
-                    {filters}
+                    filters={tempFilters}
                     {bindings}
                     {schemaFields}
                     datasource={{ type: "table", tableId }}
@@ -1014,7 +859,7 @@
             {:else if value.customType === "cron"}
               <CronBuilder
                 on:change={e => onChange({ [key]: e.detail })}
-                value={inputData[key]}
+                cronExpression={inputData[key]}
               />
             {:else if value.customType === "automationFields"}
               <AutomationSelector
@@ -1051,7 +896,12 @@
                 value={inputData[key]}
               />
             {:else if value.customType === "code"}
-              <CodeEditorModal>
+              <CodeEditorModal
+                on:hide={() => {
+                  // Push any pending changes when the window closes
+                  onChange({ [key]: inputData[key] })
+                }}
+              >
                 <div class:js-editor={editingJs}>
                   <div
                     class:js-code={editingJs}
@@ -1061,7 +911,6 @@
                       value={inputData[key]}
                       on:change={e => {
                         // need to pass without the value inside
-                        onChange({ [key]: e.detail })
                         inputData[key] = e.detail
                       }}
                       completions={stepCompletions}
@@ -1153,8 +1002,9 @@
     align-items: center;
     gap: var(--spacing-s);
   }
-  .field-width {
-    width: 320px;
+
+  .label-container :global(label) {
+    white-space: unset;
   }
 
   .step-fields {
@@ -1166,12 +1016,9 @@
   }
 
   .block-field {
-    display: flex;
     justify-content: space-between;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 320px;
   }
 
   .attachment-field-width {

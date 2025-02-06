@@ -1,21 +1,25 @@
-<script>
+<script lang="ts" context="module">
+  type O = any
+  type V = any
+</script>
+
+<script lang="ts" generics="O, V">
   import "@spectrum-css/fieldgroup/dist/index-vars.css"
   import "@spectrum-css/radio/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
 
-  export let direction = "vertical"
-  export let value = []
-  export let options = []
+  export let direction: "horizontal" | "vertical" = "vertical"
+  export let value: V[] = []
+  export let options: O[] = []
   export let disabled = false
   export let readonly = false
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
+  export let getOptionLabel = (option: O) => `${option}`
+  export let getOptionValue = (option: O) => option as unknown as V
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: V[] }>()
 
-  const onChange = e => {
-    const optionValue = e.target.value
-    if (e.target.checked && !value.includes(optionValue)) {
+  const onChange = (optionValue: V) => {
+    if (!value.includes(optionValue)) {
       dispatch("change", [...value, optionValue])
     } else {
       dispatch(
@@ -39,10 +43,9 @@
           class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-FieldGroup-item"
         >
           <input
-            on:change={onChange}
+            on:change={() => onChange(optionValue)}
             type="checkbox"
             class="spectrum-Checkbox-input"
-            value={optionValue}
             checked={value.includes(optionValue)}
             {disabled}
           />

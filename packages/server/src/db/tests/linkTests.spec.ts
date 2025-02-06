@@ -34,7 +34,7 @@ describe("test link functionality", () => {
   })
 
   describe("getRelatedTableForField", () => {
-    let link = basicTable()
+    const link = basicTable()
     link.schema.link = {
       name: "link",
       relationshipType: RelationshipType.ONE_TO_MANY,
@@ -44,11 +44,13 @@ describe("test link functionality", () => {
     }
 
     it("should get the field from the table directly", () => {
-      expect(linkUtils.getRelatedTableForField(link, "link")).toBe("tableID")
+      expect(linkUtils.getRelatedTableForField(link.schema, "link")).toBe(
+        "tableID"
+      )
     })
 
     it("should get the field from the link", () => {
-      expect(linkUtils.getRelatedTableForField(link, "otherLink")).toBe(
+      expect(linkUtils.getRelatedTableForField(link.schema, "otherLink")).toBe(
         "tableID"
       )
     })

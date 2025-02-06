@@ -10,7 +10,7 @@
   export let inline = false
   export let disableCancel = false
   export let autoFocus = true
-  export let zIndex = 999
+  export let zIndex = 1001
 
   const dispatch = createEventDispatcher()
   let visible = fixed || inline

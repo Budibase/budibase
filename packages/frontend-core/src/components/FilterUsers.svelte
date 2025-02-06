@@ -27,7 +27,8 @@
 <div class="user-control">
   <svelte:component
     this={component}
-    bind:value
+    {value}
+    on:change
     autocomplete
     {options}
     getOptionLabel={option => option.email}

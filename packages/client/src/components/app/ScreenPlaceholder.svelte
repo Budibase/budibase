@@ -23,6 +23,8 @@
     align-items: center;
     gap: var(--spacing-s);
     flex: 1 1 auto;
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
   }
   .placeholder :global(.spectrum-Button) {
     margin-top: var(--spacing-m);

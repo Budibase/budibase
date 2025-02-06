@@ -11,11 +11,8 @@
 <script>
   import { getContext, setContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
-  import {
-    enrichProps,
-    propsAreSame,
-    getSettingsDefinition,
-  } from "utils/componentProps"
+  import { enrichProps, propsAreSame } from "utils/componentProps"
+  import { getSettingsDefinition } from "@budibase/frontend-core"
   import {
     builderStore,
     devToolsStore,
@@ -29,7 +26,6 @@
   import EmptyPlaceholder from "components/app/EmptyPlaceholder.svelte"
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
   import ComponentErrorState from "components/error-states/ComponentErrorState.svelte"
-  import { BudibasePrefix } from "../stores/components.js"
   import {
     decodeJSBinding,
     findHBSBlocks,
@@ -39,8 +35,10 @@
     getActionContextKey,
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
+  import { gridLayout } from "utils/grid"
 
   export let instance = {}
+  export let parent = null
   export let isLayout = false
   export let isRoot = false
   export let isBlock = false
@@ -100,10 +98,9 @@
   let definition
   let settingsDefinition
   let settingsDefinitionMap
-  let missingRequiredSettings = false
 
-  // Temporary styles which can be added in the app preview for things like DND.
-  // We clear these whenever a new instance is received.
+  // Temporary styles which can be added in the app preview for things like
+  // DND. We clear these whenever a new instance is received.
   let ephemeralStyles
 
   // Single string of all HBS blocks, used to check if we use a certain binding
@@ -135,23 +132,21 @@
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
+  $: componentErrors = instance?._meta?.errors
   $: hasChildren = !!definition?.hasChildren
   $: showEmptyState = definition?.showEmptyState !== false
-  $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
-  $: editable = !!definition?.editable && !hasMissingRequiredSettings
-  $: requiredAncestors = definition?.requiredAncestors || []
-  $: missingRequiredAncestors = requiredAncestors.filter(
-    ancestor => !$component.ancestors.includes(`${BudibasePrefix}${ancestor}`)
+  $: hasMissingRequiredSettings = !!componentErrors?.find(
+    e => e.errorType === "setting"
   )
-  $: hasMissingRequiredAncestors = missingRequiredAncestors?.length > 0
-  $: errorState = hasMissingRequiredSettings || hasMissingRequiredAncestors
+  $: editable = !!definition?.editable && !hasMissingRequiredSettings
+  $: hasComponentErrors = componentErrors?.length > 0
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
   $: builderInteractive =
     $builderStore.inBuilder && insideScreenslot && !isBlock && !instance.static
   $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
-  $: interactive = !isRoot && (builderInteractive || devToolsInteractive)
+  $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
   $: draggable =
     !inDragPath &&
@@ -187,14 +182,37 @@
   // Scroll the selected element into view
   $: selected && scrollIntoView()
 
+  // Themes
+  $: currentTheme = $context?.device?.theme
+  $: darkMode = !currentTheme?.includes("light")
+
+  // Apply ephemeral styles (such as when resizing grid components)
+  $: normalStyles = {
+    ...instance._styles?.normal,
+    ...ephemeralStyles,
+  }
+
+  // Metadata to pass into grid action to apply CSS
+  const checkGrid = x =>
+    x?._component?.endsWith("/container") && x?.layout === "grid"
+  $: insideGrid = checkGrid(parent)
+  $: isGrid = checkGrid(instance)
+  $: gridMetadata = {
+    insideGrid,
+    ignoresLayout: definition?.ignoresLayout === true,
+    id,
+    interactive,
+    styles: normalStyles,
+    draggable,
+    definition,
+    errored: hasComponentErrors,
+  }
+
   // When dragging and dropping, pad components to allow dropping between
   // nested layers. Only reset this when dragging stops.
   let pad = false
-  $: pad = pad || (interactive && hasChildren && inDndPath)
+  $: pad = pad || (!isGrid && interactive && hasChildren && inDndPath)
   $: $dndIsDragging, (pad = false)
-
-  $: currentTheme = $context?.device?.theme
-  $: darkMode = !currentTheme?.includes("light")
 
   // Update component context
   $: store.set({
@@ -202,28 +220,26 @@
     children: children.length,
     styles: {
       ...instance._styles,
-      normal: {
-        ...instance._styles?.normal,
-        ...ephemeralStyles,
-      },
+      normal: normalStyles,
       custom: customCSS,
       id,
       empty: emptyState,
       selected,
       interactive,
+      isRoot,
       draggable,
       editable,
       isBlock,
     },
     empty: emptyState,
     selected,
+    isRoot,
     inSelectedPath,
     name,
     editing,
     type: instance._component,
-    errorState,
+    errorState: hasComponentErrors,
     parent: id,
-    ancestors: [...($component?.ancestors ?? []), instance._component],
     path: [...($component?.path ?? []), id],
     darkMode,
   })
@@ -241,6 +257,9 @@
     } else {
       lastInstanceKey = instanceKey
     }
+
+    // Reset ephemeral state
+    ephemeralStyles = null
 
     // Pull definition and constructor
     const component = instance._component
@@ -276,40 +295,6 @@
     // Update the settings types
     staticSettings = instanceSettings.staticSettings
     dynamicSettings = instanceSettings.dynamicSettings
-
-    // Check if we have any missing required settings
-    missingRequiredSettings = settingsDefinition.filter(setting => {
-      let empty = instance[setting.key] == null || instance[setting.key] === ""
-      let missing = setting.required && empty
-
-      // Check if this setting depends on another, as it may not be required
-      if (setting.dependsOn) {
-        const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
-        const dependsOnValue = setting.dependsOn.value
-        const realDependentValue = instance[dependsOnKey]
-
-        const sectionDependsOnKey =
-          setting.sectionDependsOn?.setting || setting.sectionDependsOn
-        const sectionDependsOnValue = setting.sectionDependsOn?.value
-        const sectionRealDependentValue = instance[sectionDependsOnKey]
-
-        if (dependsOnValue == null && realDependentValue == null) {
-          return false
-        }
-        if (dependsOnValue != null && dependsOnValue !== realDependentValue) {
-          return false
-        }
-
-        if (
-          sectionDependsOnValue != null &&
-          sectionDependsOnValue !== sectionRealDependentValue
-        ) {
-          return false
-        }
-      }
-
-      return missing
-    })
 
     // When considering bindings we can ignore children, so we remove that
     // before storing the reference stringified version
@@ -527,7 +512,12 @@
       cachedSettings = { ...allSettings }
       initialSettings = cachedSettings
     } else {
-      Object.keys(allSettings).forEach(key => {
+      // We need to compare all keys from both the current and previous settings, as
+      // keys may have disappeared in the current set which would otherwise be ignored
+      // if we only checked the current set keys
+      const keys = new Set(Object.keys(allSettings))
+      Object.keys(cachedSettings).forEach(key => keys.add(key))
+      keys.forEach(key => {
         const same = propsAreSame(allSettings[key], cachedSettings[key])
         if (!same) {
           // Updated cachedSettings (which is assigned by reference to
@@ -561,19 +551,22 @@
     }
   }
 
-  const scrollIntoView = () => {
-    // Don't scroll into view if we selected this component because we were
-    // starting dragging on it
-    if (get(dndIsDragging)) {
-      return
-    }
-    const node = document.getElementsByClassName(id)?.[0]?.children[0]
+  const scrollIntoView = async () => {
+    const className = insideGrid ? id : `${id}-dom`
+    const node = document.getElementsByClassName(className)[0]
     if (!node) {
       return
     }
-    node.style.scrollMargin = "100px"
+    // Don't scroll into view if we selected this component because we were
+    // starting dragging on it
+    if (
+      get(dndIsDragging) ||
+      (insideGrid && node.classList.contains("dragging"))
+    ) {
+      return
+    }
     node.scrollIntoView({
-      behavior: "smooth",
+      behavior: "instant",
       block: "nearest",
       inline: "start",
     })
@@ -645,22 +638,21 @@
     class:pad
     class:parent={hasChildren}
     class:block={isBlock}
-    class:error={errorState}
+    class:error={hasComponentErrors}
+    class:root={isRoot}
     data-id={id}
     data-name={name}
     data-icon={icon}
     data-parent={$component.id}
+    use:gridLayout={gridMetadata}
   >
-    {#if errorState}
-      <ComponentErrorState
-        {missingRequiredSettings}
-        {missingRequiredAncestors}
-      />
+    {#if hasComponentErrors}
+      <ComponentErrorState {componentErrors} />
     {:else}
       <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
         {#if children.length}
           {#each children as child (child._id)}
-            <svelte:self instance={child} />
+            <svelte:self instance={child} parent={instance} />
           {/each}
         {:else if emptyState}
           {#if isRoot}
@@ -687,7 +679,7 @@
     border-radius: 4px !important;
     transition: padding 260ms ease-out, border 260ms ease-out;
   }
-  .interactive :global(*) {
-    cursor: default;
+  .interactive {
+    cursor: default !important;
   }
 </style>

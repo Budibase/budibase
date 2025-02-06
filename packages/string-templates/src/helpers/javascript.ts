@@ -1,12 +1,21 @@
-import { atob, isJSAllowed } from "../utilities"
-import cloneDeep from "lodash/fp/cloneDeep"
+import {
+  atob,
+  frontendWrapJS,
+  isBackendService,
+  isJSAllowed,
+} from "../utilities"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
+import { JsTimeoutError, UserScriptError } from "../errors"
+import { cloneDeep } from "lodash/fp"
+import { Log, LogType } from "../types"
+import { isTest } from "../environment"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
-let runJS: ((js: string, context: any) => any) | undefined = undefined
+let runJS: ((js: string, context: Record<string, any>) => any) | undefined =
+  undefined
 export const setJSRunner = (runner: typeof runJS) => (runJS = runner)
 
 export const removeJSRunner = () => {
@@ -30,9 +39,19 @@ const removeSquareBrackets = (value: string) => {
   return value
 }
 
+const isReservedKey = (key: string) =>
+  key === "snippets" ||
+  key === "helpers" ||
+  key.startsWith("snippets.") ||
+  key.startsWith("helpers.")
+
 // Our context getter function provided to JS code as $.
 // Extracts a value from context.
 const getContextValue = (path: string, context: any) => {
+  // We populate `snippets` ourselves, don't allow access to it.
+  if (isReservedKey(path)) {
+    return undefined
+  }
   const literalStringRegex = /^(["'`]).*\1$/
   let data = context
   // check if it's a literal string - just return path if its quoted
@@ -45,6 +64,7 @@ const getContextValue = (path: string, context: any) => {
     }
     data = data[removeSquareBrackets(key)]
   })
+
   return data
 }
 
@@ -66,14 +86,26 @@ export function processJS(handlebars: string, context: any) {
       snippetMap[snippet.name] = snippet.code
     }
 
-    // Our $ context function gets a value from context.
-    // We clone the context to avoid mutation in the binding affecting real
-    // app context.
-    const clonedContext = cloneDeep({ ...context, snippets: null })
-    const sandboxContext = {
+    let clonedContext: Record<string, any>
+    if (isBackendService()) {
+      // On the backend, values are copied across the isolated-vm boundary and
+      // so we don't need to do any cloning here. This does create a fundamental
+      // difference in how JS executes on the frontend vs the backend, e.g.
+      // consider this snippet:
+      //
+      //   $("array").push(2)
+      //   return $("array")[1]
+      //
+      // With the context of `{ array: [1] }`, the backend will return
+      // `undefined` whereas the frontend will return `2`. We should fix this.
+      clonedContext = context
+    } else {
+      clonedContext = cloneDeep(context)
+    }
+
+    const sandboxContext: Record<string, any> = {
       $: (path: string) => getContextValue(path, clonedContext),
       helpers: getJsHelperList(),
-
       // Proxy to evaluate snippets when running in the browser
       snippets: new Proxy(
         {},
@@ -88,18 +120,96 @@ export function processJS(handlebars: string, context: any) {
       ),
     }
 
+    const logs: Log[] = []
+    // logging only supported on frontend
+    if (!isBackendService()) {
+      // this counts the lines in the wrapped JS *before* the user's code, so that we can minus it
+      const jsLineCount = frontendWrapJS(js).split(js)[0].split("\n").length
+      const buildLogResponse = (type: LogType) => {
+        return (...props: any[]) => {
+          if (!isTest()) {
+            console[type](...props)
+          }
+          props.forEach((prop, index) => {
+            if (typeof prop === "object") {
+              props[index] = JSON.stringify(prop)
+            }
+          })
+          // quick way to find out what line this is being called from
+          // its an anonymous function and we look for the overall length to find the
+          // line number we care about (from the users function)
+          // JS stack traces are in the format function:line:column
+          const lineNumber = new Error().stack?.match(
+            /<anonymous>:(\d+):\d+/
+          )?.[1]
+          logs.push({
+            log: props,
+            line: lineNumber ? parseInt(lineNumber) - jsLineCount : undefined,
+            type,
+          })
+        }
+      }
+      sandboxContext.console = {
+        log: buildLogResponse("log"),
+        info: buildLogResponse("info"),
+        debug: buildLogResponse("debug"),
+        warn: buildLogResponse("warn"),
+        error: buildLogResponse("error"),
+        // table should be treated differently, but works the same
+        // as the rest of the logs for now
+        table: buildLogResponse("table"),
+      }
+    }
+
     // Create a sandbox with our context and run the JS
-    const res = { data: runJS(js, sandboxContext) }
+    const res = { data: runJS(js, sandboxContext), logs }
     return `{{${LITERAL_MARKER} js_result-${JSON.stringify(res)}}}`
   } catch (error: any) {
     onErrorLog && onErrorLog(error)
 
+    const { noThrow = true } = context.__opts || {}
+
+    // The error handling below is quite messy, because it has fallen to
+    // string-templates to handle a variety of types of error specific to usages
+    // above it in the stack. It would be nice some day to refactor this to
+    // allow each user of processStringSync to handle errors in the way they see
+    // fit.
+
+    // This is to catch the error vm.runInNewContext() throws when the timeout
+    // is exceeded.
     if (error.code === "ERR_SCRIPT_EXECUTION_TIMEOUT") {
       return "Timed out while executing JS"
     }
-    if (error.name === "ExecutionTimeoutError") {
-      return "Request JS execution limit hit"
+
+    // This is to catch the JsRequestTimeoutError we throw when we detect a
+    // timeout across an entire request in the backend. We use a magic string
+    // because we can't import from the backend into string-templates.
+    if (error.code === "JS_REQUEST_TIMEOUT_ERROR") {
+      return error.message
     }
+
+    // This is to catch the JsTimeoutError we throw when we detect a timeout in
+    // a single JS execution.
+    if (error.code === JsTimeoutError.code) {
+      return JsTimeoutError.message
+    }
+
+    // This is to catch the error that happens if a user-supplied JS script
+    // throws for reasons introduced by the user.
+    if (error.code === UserScriptError.code) {
+      if (noThrow) {
+        return error.userScriptError.toString()
+      }
+      throw error
+    }
+
+    if (error.name === "SyntaxError") {
+      if (noThrow) {
+        return error.toString()
+      }
+      throw error
+    }
+
     return "Error while executing JS"
   }
 }

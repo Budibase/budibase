@@ -279,7 +279,7 @@ export class QueryBuilder<T> {
     let query = allOr ? "" : "*:*"
     let allFiltersEmpty = true
     const allPreProcessingOpts = { escape: true, lowercase: true, wrap: true }
-    let tableId: string = ""
+    let tableId = ""
     if (this.#query.equal!.tableId) {
       tableId = this.#query.equal!.tableId
       delete this.#query.equal!.tableId
@@ -612,7 +612,6 @@ async function runQuery<T>(
  *   limit {number} The number of results to fetch
  *   bookmark {string|null} Current bookmark in the recursive search
  *   rows {array|null} Current results in the recursive search
- * @returns {Promise<*[]|*>}
  */
 async function recursiveSearch<T>(
   dbName: string,

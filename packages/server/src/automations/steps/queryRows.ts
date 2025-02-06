@@ -4,86 +4,11 @@ import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
   FieldType,
-  AutomationActionStepId,
-  AutomationCustomIOType,
-  AutomationFeature,
-  AutomationIOType,
-  AutomationStepSchema,
-  AutomationStepType,
   EmptyFilterOption,
-  SearchFilters,
-  Table,
   SortOrder,
   QueryRowsStepInputs,
   QueryRowsStepOutputs,
 } from "@budibase/types"
-import { db as dbCore } from "@budibase/backend-core"
-
-const SortOrderPretty = {
-  [SortOrder.ASCENDING]: "Ascending",
-  [SortOrder.DESCENDING]: "Descending",
-}
-
-export const definition: AutomationStepSchema = {
-  description: "Query rows from the database",
-  icon: "Search",
-  name: "Query rows",
-  tagline: "Query rows from {{inputs.enriched.table.name}} table",
-  type: AutomationStepType.ACTION,
-  stepId: AutomationActionStepId.QUERY_ROWS,
-  internal: true,
-  features: {
-    [AutomationFeature.LOOPING]: true,
-  },
-  inputs: {},
-  schema: {
-    inputs: {
-      properties: {
-        tableId: {
-          type: AutomationIOType.STRING,
-          customType: AutomationCustomIOType.TABLE,
-          title: "Table",
-        },
-        filters: {
-          type: AutomationIOType.OBJECT,
-          customType: AutomationCustomIOType.FILTERS,
-          title: "Filtering",
-        },
-        sortColumn: {
-          type: AutomationIOType.STRING,
-          title: "Sort Column",
-          customType: AutomationCustomIOType.COLUMN,
-        },
-        sortOrder: {
-          type: AutomationIOType.STRING,
-          title: "Sort Order",
-          enum: Object.values(SortOrder),
-          pretty: Object.values(SortOrderPretty),
-        },
-        limit: {
-          type: AutomationIOType.NUMBER,
-          title: "Limit",
-          customType: AutomationCustomIOType.QUERY_LIMIT,
-        },
-      },
-      required: ["tableId"],
-    },
-    outputs: {
-      properties: {
-        rows: {
-          type: AutomationIOType.ARRAY,
-          customType: AutomationCustomIOType.ROWS,
-          description: "The rows that were found",
-        },
-        success: {
-          type: AutomationIOType.BOOLEAN,
-          description: "Whether the query was successful",
-        },
-      },
-      required: ["rows", "success"],
-    },
-  },
-}
 
 async function getTable(appId: string, tableId: string) {
   const ctx: any = buildCtx(appId, null, {
@@ -93,38 +18,6 @@ async function getTable(appId: string, tableId: string) {
   })
   await tableController.find(ctx)
   return ctx.body
-}
-
-function typeCoercion(filters: SearchFilters, table: Table) {
-  if (!filters || !table) {
-    return filters
-  }
-  for (let key of Object.keys(filters)) {
-    const searchParam = filters[key as keyof SearchFilters]
-    if (typeof searchParam === "object") {
-      for (let [property, value] of Object.entries(searchParam)) {
-        // We need to strip numerical prefixes here, so that we can look up
-        // the correct field name in the schema
-        const columnName = dbCore.removeKeyNumbering(property)
-        const column = table.schema[columnName]
-
-        // convert string inputs
-        if (!column || typeof value !== "string") {
-          continue
-        }
-        if (column.type === FieldType.NUMBER) {
-          if (key === "oneOf") {
-            searchParam[property] = value
-              .split(",")
-              .map(item => parseFloat(item))
-          } else {
-            searchParam[property] = parseFloat(value)
-          }
-        }
-      }
-    }
-  }
-  return filters
 }
 
 function hasNullFilters(filters: any[]) {
@@ -157,15 +50,16 @@ export async function run({
     sortType =
       fieldType === FieldType.NUMBER ? FieldType.NUMBER : FieldType.STRING
   }
-  const ctx: any = buildCtx(appId, null, {
+  // when passing the tableId in the Ctx it needs to be decoded
+  const ctx = buildCtx(appId, null, {
     params: {
-      tableId,
+      tableId: decodeURIComponent(tableId),
     },
     body: {
       sortType,
       limit,
       sort: sortColumn,
-      query: typeCoercion(filters || {}, table),
+      query: filters || {},
       // default to ascending, like data tab
       sortOrder: sortOrder || SortOrder.ASCENDING,
     },
@@ -187,7 +81,7 @@ export async function run({
 
     return {
       rows,
-      success: ctx.status === 200,
+      success: true,
     }
   } catch (err) {
     return {

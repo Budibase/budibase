@@ -1,5 +1,5 @@
 <script>
-  import { tables } from "stores/builder"
+  import { tables } from "@/stores/builder"
   import {
     ActionButton,
     Popover,
@@ -13,8 +13,8 @@
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
   import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
-  import { FIELDS } from "constants/backend"
-  import { capitalise } from "helpers"
+  import { FIELDS } from "@/constants/backend"
+  import { capitalise } from "@/helpers"
   import { memo } from "@budibase/frontend-core"
   import PropField from "./PropField.svelte"
   import { cloneDeep, isPlainObject, mergeWith } from "lodash"
@@ -233,6 +233,14 @@
     )
     dispatch("change", result)
   }
+
+  /**
+   * Converts arrays into strings. The CodeEditor expects a string or encoded JS
+   * @param{object} fieldValue
+   */
+  const drawerValue = fieldValue => {
+    return Array.isArray(fieldValue) ? fieldValue.join(",") : fieldValue
+  }
 </script>
 
 {#each schemaFields || [] as [field, schema]}
@@ -257,7 +265,7 @@
             panel={AutomationBindingPanel}
             type={schema.type}
             {schema}
-            value={editableRow[field]}
+            value={drawerValue(editableRow[field])}
             on:change={e =>
               onChange({
                 row: {

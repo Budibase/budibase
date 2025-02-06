@@ -1,8 +1,8 @@
 <script>
   import { goto } from "@roxi/routify"
   import { Button, Table } from "@budibase/bbui"
-  import { queries } from "stores/builder"
-  import CapitaliseRenderer from "components/common/renderers/CapitaliseRenderer.svelte"
+  import { queries } from "@/stores/builder"
+  import CapitaliseRenderer from "@/components/common/renderers/CapitaliseRenderer.svelte"
   import RestImportButton from "./RestImportButton.svelte"
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"

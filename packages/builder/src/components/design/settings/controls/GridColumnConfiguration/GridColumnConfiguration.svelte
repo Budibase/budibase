@@ -1,11 +1,16 @@
 <script>
-  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import { selectedScreen, componentStore } from "stores/builder"
+  import { enrichSchemaWithRelColumns } from "@budibase/frontend-core"
+  import {
+    getDatasourceForProvider,
+    getSchemaForDatasource,
+  } from "@/dataBinding"
+  import { selectedScreen, componentStore } from "@/stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
   import getColumns from "./getColumns.js"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let value
   export let componentInstance
@@ -21,13 +26,16 @@
   const getSchema = (asset, datasource) => {
     const schema = getSchemaForDatasource(asset, datasource).schema
 
-    // Don't show ID and rev in tables
-    if (schema) {
-      delete schema._id
-      delete schema._rev
+    if (!schema) {
+      return
     }
 
-    return schema
+    // Don't show ID and rev in tables
+    delete schema._id
+    delete schema._rev
+
+    const result = enrichSchemaWithRelColumns(schema)
+    return result
   }
 
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
@@ -53,21 +61,31 @@
           anchor={primaryDisplayColumnAnchor}
           item={columns.primary}
           on:change={e => columns.update(e.detail)}
+          {bindings}
         />
       </div>
     </div>
   </div>
 {/if}
-<DraggableList
-  on:change={e => columns.updateSortable(e.detail)}
-  on:itemChange={e => columns.update(e.detail)}
-  items={columns.sortable}
-  listItemKey={"_id"}
-  listType={FieldSetting}
-  listTypeProps={{
-    bindings,
-  }}
-/>
+
+{#if columns?.sortable?.length}
+  <DraggableList
+    on:change={e => columns.updateSortable(e.detail)}
+    on:itemChange={e => columns.update(e.detail)}
+    items={columns.sortable}
+    listItemKey={"_id"}
+    listType={FieldSetting}
+    listTypeProps={{
+      bindings,
+    }}
+  />
+{:else}
+  <InfoDisplay
+    body={datasource?.type !== "custom"
+      ? "No available columns"
+      : "No available columns for JSON/CSV data sources"}
+  />
+{/if}
 
 <style>
   .right-content {

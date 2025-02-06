@@ -22,7 +22,7 @@ spec:
         - redis-server 
         - --requirepass 
         - {{ .Values.services.redis.password }}
-        image: {{ .Values.services.redis.image }}
+        image: {{ .Values.globals.dockerRegistry }}{{ .Values.services.redis.image }}
         imagePullPolicy: ""
         name: redis-service
         ports:

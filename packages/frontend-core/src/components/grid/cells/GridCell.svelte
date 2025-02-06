@@ -16,7 +16,12 @@
   $: style = getStyle(width, selectedUser, metadata)
 
   const getStyle = (width, selectedUser, metadata) => {
-    let style = width === "auto" ? "width: auto;" : `flex: 0 0 ${width}px;`
+    let style
+    if (width === "auto" || width === "100%") {
+      style = `width: ${width};`
+    } else {
+      style = `flex: 0 0 ${width}px;`
+    }
     if (selectedUser) {
       style += `--user-color :${selectedUser.color};`
     }

@@ -1,6 +1,6 @@
 import { MonthlyQuotaName, QuotaUsage } from "@budibase/types"
 
-export const usage = (users: number = 0, creators: number = 0): QuotaUsage => {
+export const usage = (users = 0, creators = 0): QuotaUsage => {
   return {
     _id: "usage_quota",
     quotaReset: new Date().toISOString(),
@@ -15,8 +15,8 @@ export const usage = (users: number = 0, creators: number = 0): QuotaUsage => {
     monthly: {
       "01-2023": {
         automations: 0,
-        dayPasses: 0,
         queries: 0,
+        budibaseAICredits: 0,
         triggers: {},
         breakdown: {
           rowQueries: {
@@ -44,14 +44,14 @@ export const usage = (users: number = 0, creators: number = 0): QuotaUsage => {
       },
       "02-2023": {
         automations: 0,
-        dayPasses: 0,
         queries: 0,
+        budibaseAICredits: 0,
         triggers: {},
       },
       current: {
         automations: 0,
-        dayPasses: 0,
         queries: 0,
+        budibaseAICredits: 0,
         triggers: {},
       },
     },
@@ -62,6 +62,7 @@ export const usage = (users: number = 0, creators: number = 0): QuotaUsage => {
       creators,
       userGroups: 0,
       rows: 0,
+      aiCustomConfigs: 0,
       triggers: {},
     },
   }

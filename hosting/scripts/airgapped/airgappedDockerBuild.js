@@ -12,7 +12,6 @@ let IMAGES = {
 	couch: "ibmcom/couchdb3",
 	curl: "curlimages/curl",
 	redis: "redis",
-	watchtower: "containrrr/watchtower",
 }
 
 if (IS_SINGLE_IMAGE) {

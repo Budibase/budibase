@@ -1,4 +1,4 @@
-ARG BASEIMG=budibase/couchdb:v3.3.3
+ARG BASEIMG=budibase/couchdb:v3.3.3-sqs-v2.1.1
 FROM node:20-slim as build
 
 # install node-gyp dependencies
@@ -22,7 +22,8 @@ RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
 
 RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
 RUN ./scripts/removeWorkspaceDependencies.sh package.json
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production --frozen-lockfile
+ARG TARGETPLATFORM
+RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} yarn install --production --frozen-lockfile
 
 # copy the actual code
 COPY packages/server/dist packages/server/dist
@@ -68,6 +69,9 @@ RUN mkdir -p /var/log/nginx && \
 WORKDIR /minio
 COPY scripts/install-minio.sh ./install.sh
 RUN chmod +x install.sh && ./install.sh
+
+# setup redis
+COPY hosting/single/redis.conf /etc/redis/redis.conf
 
 # setup runner file
 WORKDIR /

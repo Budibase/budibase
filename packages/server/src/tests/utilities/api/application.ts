@@ -17,8 +17,8 @@ export class ApplicationAPI extends TestAPI {
     app: CreateAppRequest,
     expectations?: Expectations
   ): Promise<App> => {
-    const files = app.templateFile ? { templateFile: app.templateFile } : {}
-    delete app.templateFile
+    const files = app.fileToImport ? { fileToImport: app.fileToImport } : {}
+    delete app.fileToImport
     return await this._post<App>("/api/applications", {
       fields: app,
       files,
@@ -33,7 +33,10 @@ export class ApplicationAPI extends TestAPI {
     await this._delete(`/api/applications/${appId}`, { expectations })
   }
 
-  publish = async (appId: string): Promise<PublishResponse> => {
+  publish = async (
+    appId: string,
+    expectations?: Expectations
+  ): Promise<PublishResponse> => {
     return await this._post<PublishResponse>(
       `/api/applications/${appId}/publish`,
       {
@@ -42,14 +45,16 @@ export class ApplicationAPI extends TestAPI {
         headers: {
           [constants.Header.APP_ID]: appId,
         },
+        expectations,
       }
     )
   }
 
-  unpublish = async (appId: string): Promise<void> => {
-    await this._post(`/api/applications/${appId}/unpublish`, {
-      expectations: { status: 204 },
-    })
+  unpublish = async (
+    appId: string,
+    expectations?: Expectations
+  ): Promise<void> => {
+    await this._post(`/api/applications/${appId}/unpublish`, { expectations })
   }
 
   sync = async (
@@ -144,13 +149,20 @@ export class ApplicationAPI extends TestAPI {
     })
   }
 
-  fetch = async ({ status }: { status?: AppStatus } = {}): Promise<App[]> => {
+  fetch = async (
+    { status }: { status?: AppStatus } = {},
+    expectations?: Expectations
+  ): Promise<App[]> => {
     return await this._get<App[]>("/api/applications", {
       query: { status },
+      expectations,
     })
   }
 
-  addSampleData = async (appId: string): Promise<void> => {
-    await this._post(`/api/applications/${appId}/sample`)
+  addSampleData = async (
+    appId: string,
+    expectations?: Expectations
+  ): Promise<void> => {
+    await this._post(`/api/applications/${appId}/sample`, { expectations })
   }
 }

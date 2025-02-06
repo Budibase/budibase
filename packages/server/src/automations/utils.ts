@@ -1,22 +1,25 @@
 import { Thread, ThreadType } from "../threads"
-import { definitions } from "./triggerInfo"
+import { automations } from "@budibase/shared-core"
 import { automationQueue } from "./bullboard"
 import { updateEntityMetadata } from "../utilities"
-import { MetadataTypes } from "../constants"
 import { context, db as dbCore, utils } from "@budibase/backend-core"
 import { getAutomationMetadataParams } from "../db/utils"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import {
   Automation,
+  AutomationActionStepId,
   AutomationJob,
-  AutomationStepSchema,
+  AutomationStepDefinition,
+  AutomationTriggerDefinition,
+  AutomationTriggerStepId,
+  MetadataType,
 } from "@budibase/types"
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
 
-const CRON_STEP_ID = definitions.CRON.stepId
+const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 let Runner: Thread
 if (automationsEnabled()) {
   Runner = new Thread(ThreadType.AUTOMATION)
@@ -69,6 +72,10 @@ export async function processEvent(job: AutomationJob) {
 
       const task = async () => {
         try {
+          if (isCronTrigger(job.data.automation)) {
+            // Requires the timestamp at run time
+            job.data.event.timestamp = Date.now()
+          }
           // need to actually await these so that an error can be captured properly
           console.log("automation running", ...loggingArgs(job))
 
@@ -100,7 +107,7 @@ export async function updateTestHistory(
   history: any
 ) {
   return updateEntityMetadata(
-    MetadataTypes.AUTOMATION_TEST_HISTORY,
+    MetadataType.AUTOMATION_TEST_HISTORY,
     automation._id,
     (metadata: any) => {
       if (metadata && Array.isArray(metadata.history)) {
@@ -115,16 +122,21 @@ export async function updateTestHistory(
   )
 }
 
-export function removeDeprecated(
-  definitions: Record<string, AutomationStepSchema>
-) {
-  const base = cloneDeep(definitions)
+export function removeDeprecated<
+  T extends
+    | Record<keyof typeof AutomationTriggerStepId, AutomationTriggerDefinition>
+    | Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
+>(definitions: T): T {
+  const base: Record<
+    string,
+    AutomationTriggerDefinition | AutomationStepDefinition
+  > = cloneDeep(definitions)
   for (let key of Object.keys(base)) {
     if (base[key].deprecated) {
       delete base[key]
     }
   }
-  return base
+  return base as T
 }
 
 // end the repetition and the job itself
@@ -206,19 +218,19 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
     }
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
     const jobId = `${appId}_cron_${utils.newid()}`
-    const job: any = await automationQueue.add(
+    const job = await automationQueue.add(
       {
         automation,
-        event: { appId, timestamp: Date.now() },
+        event: { appId },
       },
       { repeat: { cron: cronExp }, jobId }
     )
     // Assign cron job ID from bull so we can remove it later if the cron trigger is removed
-    trigger.cronJobId = job.id
+    trigger.cronJobId = job.id.toString()
     // can't use getAppDB here as this is likely to be called from dev app,
     // but this call could be for dev app or prod app, need to just use what
     // was passed in
-    await dbCore.doWithDB(appId, async (db: any) => {
+    await dbCore.doWithDB(appId, async db => {
       const response = await db.put(automation)
       automation._id = response.id
       automation._rev = response.rev
@@ -243,7 +255,10 @@ export async function cleanupAutomations(appId: any) {
  * @return if it is recurring (cron).
  */
 export function isRecurring(automation: Automation) {
-  return automation.definition.trigger.stepId === definitions.CRON.stepId
+  return (
+    automation.definition.trigger.stepId ===
+    automations.triggers.definitions.CRON.stepId
+  )
 }
 
 export function isErrorInOutput(output: {

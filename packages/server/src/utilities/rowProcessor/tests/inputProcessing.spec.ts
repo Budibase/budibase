@@ -65,7 +65,7 @@ describe("rowProcessor - inputProcessing", () => {
 
     processInputBBReferenceMock.mockResolvedValue(user)
 
-    const { row } = await inputProcessing(userId, table, newRow)
+    const row = await inputProcessing(userId, table, newRow)
 
     expect(bbReferenceProcessor.processInputBBReference).toHaveBeenCalledTimes(
       1
@@ -117,7 +117,7 @@ describe("rowProcessor - inputProcessing", () => {
 
     processInputBBReferencesMock.mockResolvedValue(user)
 
-    const { row } = await inputProcessing(userId, table, newRow)
+    const row = await inputProcessing(userId, table, newRow)
 
     expect(bbReferenceProcessor.processInputBBReferences).toHaveBeenCalledTimes(
       1
@@ -164,7 +164,7 @@ describe("rowProcessor - inputProcessing", () => {
       name: "Jack",
     }
 
-    const { row } = await inputProcessing(userId, table, newRow)
+    const row = await inputProcessing(userId, table, newRow)
 
     expect(bbReferenceProcessor.processInputBBReferences).not.toHaveBeenCalled()
     expect(row).toEqual({ ...newRow, user: undefined })
@@ -207,7 +207,7 @@ describe("rowProcessor - inputProcessing", () => {
         user: userValue,
       }
 
-      const { row } = await inputProcessing(userId, table, newRow)
+      const row = await inputProcessing(userId, table, newRow)
 
       if (userValue === undefined) {
         // The 'user' field is omitted
@@ -262,7 +262,7 @@ describe("rowProcessor - inputProcessing", () => {
       user: "123",
     }
 
-    const { row } = await inputProcessing(userId, table, newRow)
+    const row = await inputProcessing(userId, table, newRow)
 
     expect(bbReferenceProcessor.processInputBBReferences).not.toHaveBeenCalled()
     expect(row).toEqual({

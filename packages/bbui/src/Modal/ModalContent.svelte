@@ -30,7 +30,9 @@
   export let custom = false
 
   const { hide, cancel } = getContext(Context.Modal)
+
   let loading = false
+
   $: confirmDisabled = disabled || loading
 
   async function secondary(e) {
@@ -90,7 +92,7 @@
 
     <!-- TODO: Remove content-grid class once Layout components are in bbui -->
     <section class="spectrum-Dialog-content content-grid">
-      <slot />
+      <slot {loading} />
     </section>
     {#if showCancelButton || showConfirmButton || $$slots.footer}
       <div
@@ -144,6 +146,9 @@
 <style>
   .spectrum-Dialog--extraLarge {
     width: 1000px;
+  }
+  .spectrum-Dialog--medium {
+    width: 540px;
   }
 
   .content-grid {

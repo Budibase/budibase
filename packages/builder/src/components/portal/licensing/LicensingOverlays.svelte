@@ -1,19 +1,16 @@
 <script>
-  import { licensing, auth, temporalStore } from "stores/portal"
+  import { licensing, auth, temporalStore } from "@/stores/portal"
   import { onMount } from "svelte"
-  import DayPassWarningModal from "./DayPassWarningModal.svelte"
   import PaymentFailedModal from "./PaymentFailedModal.svelte"
   import AccountDowngradedModal from "./AccountDowngradedModal.svelte"
   import { ExpiringKeys } from "./constants"
   import { getBanners } from "./licensingBanners"
   import { banner } from "@budibase/bbui"
-  import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
 
   const oneDayInSeconds = 86400
 
   let queuedBanners = []
   let queuedModals = []
-  let dayPassModal
   let paymentFailedModal
   let accountDowngradeModal
   let userLoaded = false
@@ -23,22 +20,10 @@
 
   const processModals = () => {
     const defaultCacheFn = key => {
-      temporalStore.actions.setExpiring(key, {}, oneDayInSeconds)
+      temporalStore.setExpiring(key, {}, oneDayInSeconds)
     }
 
     const dismissableModals = [
-      {
-        key: ExpiringKeys.LICENSING_DAYPASS_WARNING_MODAL,
-        criteria: () => {
-          return $licensing?.usageMetrics?.dayPasses >= 90
-        },
-        action: () => {
-          dayPassModal.show()
-        },
-        cache: () => {
-          defaultCacheFn(ExpiringKeys.LICENSING_DAYPASS_WARNING_MODAL)
-        },
-      },
       {
         key: ExpiringKeys.LICENSING_PAYMENT_FAILED,
         criteria: () => {
@@ -65,7 +50,7 @@
       },
     ]
     return dismissableModals.filter(modal => {
-      return !temporalStore.actions.getExpiring(modal.key) && modal.criteria()
+      return !temporalStore.getExpiring(modal.key) && modal.criteria()
     })
   }
 
@@ -89,8 +74,7 @@
     userLoaded &&
     $licensing.usageMetrics &&
     domLoaded &&
-    !licensingLoaded &&
-    isEnabled(TENANT_FEATURE_FLAGS.LICENSING)
+    !licensingLoaded
   ) {
     licensingLoaded = true
     queuedModals = processModals()
@@ -104,7 +88,6 @@
   })
 </script>
 
-<DayPassWarningModal bind:this={dayPassModal} onDismiss={showNextModal} />
 <PaymentFailedModal bind:this={paymentFailedModal} onDismiss={showNextModal} />
 <AccountDowngradedModal
   bind:this={accountDowngradeModal}

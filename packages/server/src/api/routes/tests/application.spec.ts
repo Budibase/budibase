@@ -1,3 +1,5 @@
+import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
+
 jest.mock("../../../utilities/redis", () => ({
   init: jest.fn(),
   getLocksById: () => {
@@ -16,10 +18,12 @@ import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
 import { events, utils, context } from "@budibase/backend-core"
 import env from "../../../environment"
-import { type App } from "@budibase/types"
+import { type App, BuiltinPermissionID } from "@budibase/types"
 import tk from "timekeeper"
 import * as uuid from "uuid"
 import { structures } from "@budibase/backend-core/tests"
+import nock from "nock"
+import path from "path"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -35,6 +39,7 @@ describe("/applications", () => {
       throw new Error("Failed to publish app")
     }
     jest.clearAllMocks()
+    nock.cleanAll()
   })
 
   // These need to go first for the app totals to make sense
@@ -77,7 +82,7 @@ describe("/applications", () => {
       const role = await config.api.roles.save({
         name: "Test",
         inherits: "PUBLIC",
-        permissionId: "read_only",
+        permissionId: BuiltinPermissionID.READ_ONLY,
         version: "name",
       })
 
@@ -109,7 +114,7 @@ describe("/applications", () => {
       const role = await config.api.roles.save({
         name: roleName,
         inherits: "PUBLIC",
-        permissionId: "read_only",
+        permissionId: BuiltinPermissionID.READ_ONLY,
         version: "name",
       })
 
@@ -135,11 +140,17 @@ describe("/applications", () => {
     })
 
     it("creates app from template", async () => {
+      nock("https://prod-budi-templates.s3-eu-west-1.amazonaws.com")
+        .get(`/templates/app/agency-client-portal.tar.gz`)
+        .replyWithFile(
+          200,
+          path.resolve(__dirname, "data", "agency-client-portal.tar.gz")
+        )
+
       const app = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        templateKey: "test",
-        templateString: "{}",
+        templateKey: "app/agency-client-portal",
       })
       expect(app._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
@@ -150,7 +161,7 @@ describe("/applications", () => {
       const app = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        templateFile: "src/api/routes/tests/data/export.txt",
+        fileToImport: "src/api/routes/tests/data/export.txt",
       })
       expect(app._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
@@ -170,7 +181,7 @@ describe("/applications", () => {
       const app = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        templateFile: "src/api/routes/tests/data/old-app.txt",
+        fileToImport: "src/api/routes/tests/data/old-app.txt",
       })
       expect(app._id).toBeDefined()
       expect(app.navigation).toBeDefined()
@@ -197,7 +208,7 @@ describe("/applications", () => {
 
     it("should reject with a known url", async () => {
       await config.api.application.create(
-        { name: "made up", url: app?.url! },
+        { name: "made up", url: app!.url! },
         { body: { message: "App URL is already in use." }, status: 400 }
       )
     })
@@ -324,21 +335,25 @@ describe("/applications", () => {
 
   describe("delete", () => {
     it("should delete published app and dev apps with dev app ID", async () => {
+      const prodAppId = app.appId.replace("_dev", "")
+      nock("http://localhost:10000")
+        .delete(`/api/global/roles/${prodAppId}`)
+        .reply(200, {})
+
       await config.api.application.delete(app.appId)
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
 
     it("should delete published app and dev app with prod app ID", async () => {
-      await config.api.application.delete(app.appId.replace("_dev", ""))
+      const prodAppId = app.appId.replace("_dev", "")
+      nock("http://localhost:10000")
+        .delete(`/api/global/roles/${prodAppId}`)
+        .reply(200, {})
+
+      await config.api.application.delete(prodAppId)
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
-    })
-
-    it("should be able to delete an app after SQS_SEARCH_ENABLE has been set but app hasn't been migrated", async () => {
-      await config.withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, async () => {
-        await config.api.application.delete(app.appId)
-      })
     })
   })
 
@@ -417,6 +432,20 @@ describe("/applications", () => {
       // doesn't exist in dev
       const devLogs = await config.getAutomationLogs()
       expect(devLogs.data.length).toBe(0)
+    })
+  })
+
+  describe("POST /api/applications/:appId/sample", () => {
+    it("should be able to add sample data", async () => {
+      await config.api.application.addSampleData(config.getAppId())
+      for (let table of DEFAULT_TABLES) {
+        const res = await config.api.row.search(
+          table._id!,
+          { query: {} },
+          { status: 200 }
+        )
+        expect(res.rows.length).not.toEqual(0)
+      }
     })
   })
 })

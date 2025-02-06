@@ -7,11 +7,13 @@
   export let type = "text"
   export let readonly = false
   export let api
+  export let format = null
 
   let input
   let active = false
 
   $: editable = focused && !readonly
+  $: displayValue = format?.(value) ?? value ?? ""
 
   const handleChange = e => {
     onChange(e.target.value)
@@ -52,7 +54,7 @@
 {:else}
   <div class="text-cell" class:number={type === "number"}>
     <div class="value">
-      {value ?? ""}
+      {displayValue}
     </div>
   </div>
 {/if}
@@ -72,12 +74,14 @@
   .value {
     display: -webkit-box;
     -webkit-line-clamp: var(--content-lines);
+    line-clamp: var(--content-lines);
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 20px;
   }
   .number .value {
     -webkit-line-clamp: 1;
+    line-clamp: 1;
   }
   input {
     flex: 1 1 auto;
@@ -108,5 +112,6 @@
   }
   input[type="number"] {
     -moz-appearance: textfield;
+    appearance: textfield;
   }
 </style>

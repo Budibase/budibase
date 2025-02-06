@@ -24,9 +24,9 @@ export class BaseStructure {
     if (this._children.length !== 0) {
       for (let child of this._children) {
         if (this._isScreen) {
-          structure.props._children.push(child.json())
+          structure.props._children.push(child.json?.() || child)
         } else {
-          structure._children.push(child.json())
+          structure._children.push(child.json?.() || child)
         }
       }
     }

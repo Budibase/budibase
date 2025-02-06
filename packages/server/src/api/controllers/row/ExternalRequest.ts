@@ -1,23 +1,29 @@
 import dayjs from "dayjs"
 import {
+  Aggregation,
   AutoFieldSubType,
   AutoReason,
   Datasource,
+  DatasourcePlusQueryResponse,
   FieldSchema,
   FieldType,
   FilterType,
   IncludeRelationship,
   InternalSearchFilterOperator,
   isManyToOne,
+  isOneToMany,
   OneToManyRelationshipFieldMetadata,
   Operation,
   PaginationJson,
+  QueryJson,
   RelationshipFieldMetadata,
+  RelationshipType,
   Row,
   SearchFilters,
   SortJson,
   SortType,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import {
   breakExternalTableId,
@@ -36,7 +42,7 @@ import {
   sqlOutputProcessing,
 } from "./utils"
 import {
-  getDatasourceAndQuery,
+  enrichQueryJson,
   processRowCountResponse,
 } from "../../../sdk/app/rows/utils"
 import { processObjectSync } from "@budibase/string-templates"
@@ -45,13 +51,16 @@ import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
+import { dataFilters, helpers } from "@budibase/shared-core"
+import { isRelationshipColumn } from "../../../db/utils"
 
-export interface ManyRelationship {
+interface ManyRelationship {
   tableId?: string
   id?: string
   isUpdate?: boolean
   key: string
   [key: string]: any
+  relationshipType: RelationshipType
 }
 
 export interface RunConfig {
@@ -66,9 +75,14 @@ export interface RunConfig {
   includeSqlRelationships?: IncludeRelationship
 }
 
+export type ExternalReadRequestReturnType = {
+  rows: Row[]
+  rawResponseSize: number
+}
+
 export type ExternalRequestReturnType<T extends Operation> =
   T extends Operation.READ
-    ? Row[]
+    ? ExternalReadRequestReturnType
     : T extends Operation.COUNT
     ? number
     : { row: Row; table: Table }
@@ -121,16 +135,9 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
   return config
 }
 
-function getEndpoint(tableId: string | undefined, operation: string) {
-  if (!tableId) {
-    throw new Error("Cannot get endpoint information - no table ID specified")
-  }
+function getEndpoint(tableId: string, operation: Operation) {
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  return {
-    datasourceId: datasourceId,
-    entityId: tableName,
-    operation: operation as Operation,
-  }
+  return { datasourceId, entityId: tableName, operation }
 }
 
 function isOneSide(
@@ -147,24 +154,47 @@ function isEditableColumn(column: FieldSchema) {
     column.autoReason !== AutoReason.FOREIGN_KEY &&
     column.subtype !== AutoFieldSubType.AUTO_ID
   const isFormula = column.type === FieldType.FORMULA
-  return !(isExternalAutoColumn || isFormula)
+  const isAIColumn = column.type === FieldType.AI
+  return !(isExternalAutoColumn || isFormula || isAIColumn)
 }
 
 export class ExternalRequest<T extends Operation> {
   private readonly operation: T
-  private readonly tableId: string
-  private datasource?: Datasource
-  private tables: { [key: string]: Table } = {}
-  private tableList: Table[]
+  private readonly source: Table | ViewV2
+  private datasource: Datasource
 
-  constructor(operation: T, tableId: string, datasource?: Datasource) {
-    this.operation = operation
-    this.tableId = tableId
-    this.datasource = datasource
-    if (datasource && datasource.entities) {
-      this.tables = datasource.entities
+  public static async for<T extends Operation>(
+    operation: T,
+    source: Table | ViewV2,
+    opts: { datasource?: Datasource } = {}
+  ) {
+    if (!opts.datasource) {
+      if (sdk.views.isView(source)) {
+        const table = await sdk.views.getTable(source.id)
+        opts.datasource = await sdk.datasources.get(table.sourceId)
+      } else {
+        opts.datasource = await sdk.datasources.get(source.sourceId)
+      }
     }
-    this.tableList = Object.values(this.tables)
+
+    return new ExternalRequest(operation, source, opts.datasource)
+  }
+
+  private get tables(): { [key: string]: Table } {
+    if (!this.datasource.entities) {
+      throw new Error("Datasource does not have entities")
+    }
+    return this.datasource.entities
+  }
+
+  private constructor(
+    operation: T,
+    source: Table | ViewV2,
+    datasource: Datasource
+  ) {
+    this.operation = operation
+    this.source = source
+    this.datasource = datasource
   }
 
   private prepareFilters(
@@ -172,46 +202,39 @@ export class ExternalRequest<T extends Operation> {
     filters: SearchFilters,
     table: Table
   ): SearchFilters {
-    // replace any relationship columns initially, table names and relationship column names are acceptable
-    const relationshipColumns = sdk.rows.filters.getRelationshipColumns(table)
-    filters = sdk.rows.filters.updateFilterKeys(
-      filters,
-      relationshipColumns.map(({ name, definition }) => {
-        const { tableName } = breakExternalTableId(definition.tableId)
-        return {
-          original: name,
-          updated: tableName,
-        }
-      })
-    )
     const primary = table.primary
     // if passed in array need to copy for shifting etc
     let idCopy: undefined | string | any[] = cloneDeep(id)
     if (filters) {
       // need to map over the filters and make sure the _id field isn't present
       let prefix = 1
-      for (const operator of Object.values(filters)) {
-        for (const field of Object.keys(operator || {})) {
-          if (dbCore.removeKeyNumbering(field) === "_id") {
-            if (primary) {
-              const parts = breakRowIdField(operator[field])
-              if (primary.length > 1) {
-                operator[InternalSearchFilterOperator.COMPLEX_ID_OPERATOR] = {
-                  id: primary,
-                  values: parts[0],
+      const checkFilters = (innerFilters: SearchFilters): SearchFilters => {
+        for (const [operatorType, operator] of Object.entries(innerFilters)) {
+          const isArrayOp = sdk.rows.utils.isArrayFilter(operatorType)
+          for (const field of Object.keys(operator || {})) {
+            if (dbCore.removeKeyNumbering(field) === "_id") {
+              if (primary) {
+                const parts = breakRowIdField(operator[field])
+                if (primary.length > 1 && isArrayOp) {
+                  operator[InternalSearchFilterOperator.COMPLEX_ID_OPERATOR] = {
+                    id: primary,
+                    values: parts[0],
+                  }
+                } else {
+                  for (let field of primary) {
+                    operator[`${prefix}:${field}`] = parts.shift()
+                  }
+                  prefix++
                 }
-              } else {
-                for (let field of primary) {
-                  operator[`${prefix}:${field}`] = parts.shift()
-                }
-                prefix++
               }
+              // make sure this field doesn't exist on any filter
+              delete operator[field]
             }
-            // make sure this field doesn't exist on any filter
-            delete operator[field]
           }
         }
+        return dataFilters.recurseLogicalOperators(innerFilters, checkFilters)
       }
+      checkFilters(filters)
     }
     // there is no id, just use the user provided filters
     if (!idCopy || !table) {
@@ -233,7 +256,21 @@ export class ExternalRequest<T extends Operation> {
     }
   }
 
-  private async removeManyToManyRelationships(
+  private async removeManyToManyRelationships(rowId: string, table: Table) {
+    const tableId = table._id!
+    const filters = this.prepareFilters(rowId, {}, table)
+    // safety check, if there are no filters on deletion bad things happen
+    if (Object.keys(filters).length !== 0) {
+      return makeExternalQuery({
+        endpoint: getEndpoint(tableId, Operation.DELETE),
+        filters,
+      })
+    } else {
+      return []
+    }
+  }
+
+  private async removeOneToManyRelationships(
     rowId: string,
     table: Table,
     colName: string
@@ -242,30 +279,10 @@ export class ExternalRequest<T extends Operation> {
     const filters = this.prepareFilters(rowId, {}, table)
     // safety check, if there are no filters on deletion bad things happen
     if (Object.keys(filters).length !== 0) {
-      return getDatasourceAndQuery({
-        endpoint: getEndpoint(tableId, Operation.DELETE),
+      return makeExternalQuery({
+        endpoint: getEndpoint(tableId, Operation.UPDATE),
         body: { [colName]: null },
         filters,
-        meta: {
-          table,
-        },
-      })
-    } else {
-      return []
-    }
-  }
-
-  private async removeOneToManyRelationships(rowId: string, table: Table) {
-    const tableId = table._id!
-    const filters = this.prepareFilters(rowId, {}, table)
-    // safety check, if there are no filters on deletion bad things happen
-    if (Object.keys(filters).length !== 0) {
-      return getDatasourceAndQuery({
-        endpoint: getEndpoint(tableId, Operation.UPDATE),
-        filters,
-        meta: {
-          table,
-        },
       })
     } else {
       return []
@@ -280,28 +297,10 @@ export class ExternalRequest<T extends Operation> {
     return this.tables[tableName]
   }
 
-  // seeds the object with table and datasource information
-  async retrieveMetadata(
-    datasourceId: string
-  ): Promise<{ tables: Record<string, Table>; datasource: Datasource }> {
-    if (!this.datasource) {
-      this.datasource = await sdk.datasources.get(datasourceId)
-      if (!this.datasource || !this.datasource.entities) {
-        throw "No tables found, fetch tables before query."
-      }
-      this.tables = this.datasource.entities
-      this.tableList = Object.values(this.tables)
-    }
-    return { tables: this.tables, datasource: this.datasource }
-  }
-
   async getRow(table: Table, rowId: string): Promise<Row> {
-    const response = await getDatasourceAndQuery({
+    const response = await makeExternalQuery({
       endpoint: getEndpoint(table._id!, Operation.READ),
       filters: this.prepareFilters(rowId, {}, table),
-      meta: {
-        table,
-      },
     })
     if (Array.isArray(response) && response.length > 0) {
       return response[0]
@@ -373,12 +372,13 @@ export class ExternalRequest<T extends Operation> {
               [otherKey]: breakRowIdField(relationship)[0],
               // leave the ID for enrichment later
               [thisKey]: `{{ literal ${tablePrimary} }}`,
+              relationshipType: RelationshipType.MANY_TO_MANY,
             })
           }
         }
         // many to one
         else {
-          const thisKey: string = "id"
+          const thisKey = "id"
           // @ts-ignore
           const otherKey: string = field.fieldName
           for (const relationship of row[key]) {
@@ -389,6 +389,7 @@ export class ExternalRequest<T extends Operation> {
               [thisKey]: breakRowIdField(relationship)[0],
               // leave the ID for enrichment later
               [otherKey]: `{{ literal ${tablePrimary} }}`,
+              relationshipType: RelationshipType.MANY_TO_ONE,
             })
           }
         }
@@ -409,14 +410,30 @@ export class ExternalRequest<T extends Operation> {
     return { row: newRow as T, manyRelationships }
   }
 
+  private getLookupRelationsKey(relationship: {
+    relationshipType: RelationshipType
+    fieldName: string
+    through?: string
+  }) {
+    if (relationship.relationshipType === RelationshipType.MANY_TO_MANY) {
+      return `${relationship.through}_${relationship.fieldName}`
+    }
+    return relationship.fieldName
+  }
   /**
    * This is a cached lookup, of relationship records, this is mainly for creating/deleting junction
    * information.
    */
-  async lookupRelations(tableId: string, row: Row) {
-    const related: {
-      [key: string]: { rows: Row[]; isMany: boolean; tableId: string }
-    } = {}
+  private async lookupRelations(tableId: string, row: Row) {
+    const related: Record<
+      string,
+      {
+        rows: Row[]
+        isMany: boolean
+        tableId: string
+      }
+    > = {}
+
     const { tableName } = breakExternalTableId(tableId)
     const table = this.tables[tableName]
     // @ts-ignore
@@ -448,11 +465,8 @@ export class ExternalRequest<T extends Operation> {
           "Unable to lookup relationships - undefined column properties."
         )
       }
-      const { tableName: relatedTableName } =
-        breakExternalTableId(relatedTableId)
-      // @ts-ignore
-      const linkPrimaryKey = this.tables[relatedTableName].primary[0]
-      if (!lookupField || !row[lookupField]) {
+
+      if (!lookupField || !row?.[lookupField]) {
         continue
       }
       const endpoint = getEndpoint(relatedTableId, Operation.READ)
@@ -460,15 +474,12 @@ export class ExternalRequest<T extends Operation> {
       if (!relatedTable) {
         throw new Error("unable to find related table")
       }
-      const response = await getDatasourceAndQuery({
-        endpoint: endpoint,
+      const response = await makeExternalQuery({
+        endpoint,
         filters: {
           equal: {
             [fieldName]: row[lookupField],
           },
-        },
-        meta: {
-          table: relatedTable,
         },
       })
       // this is the response from knex if no rows found
@@ -476,10 +487,8 @@ export class ExternalRequest<T extends Operation> {
         !Array.isArray(response) || isKnexEmptyReadResponse(response)
           ? []
           : response
-      const storeTo = isManyToMany(field)
-        ? field.throughFrom || linkPrimaryKey
-        : fieldName
-      related[storeTo] = {
+
+      related[this.getLookupRelationsKey(field)] = {
         rows,
         isMany: isManyToMany(field),
         tableId: relatedTableId,
@@ -507,7 +516,13 @@ export class ExternalRequest<T extends Operation> {
     const promises = []
     const related = await this.lookupRelations(mainTableId, row)
     for (let relationship of relationships) {
-      const { key, tableId, isUpdate, id, ...rest } = relationship
+      const { key, tableId, isUpdate, id, relationshipType, ...rest } =
+        relationship
+
+      if (!tableId) {
+        throw new Error("Table ID is unknown, cannot find table")
+      }
+
       const body: { [key: string]: any } = processObjectSync(rest, row, {})
       const linkTable = this.getTable(tableId)
       const relationshipPrimary = linkTable?.primary || []
@@ -518,7 +533,14 @@ export class ExternalRequest<T extends Operation> {
 
       const linkSecondary = relationshipPrimary[1]
 
-      const rows = related[key]?.rows || []
+      const rows =
+        related[
+          this.getLookupRelationsKey({
+            relationshipType,
+            fieldName: key,
+            through: relationship.tableId,
+          })
+        ]?.rows || []
 
       const relationshipMatchPredicate = ({
         row,
@@ -536,8 +558,9 @@ export class ExternalRequest<T extends Operation> {
           return matchesPrimaryLink
         }
 
-        const matchesSecondayLink = row[linkSecondary] === body?.[linkSecondary]
-        return matchesPrimaryLink && matchesSecondayLink
+        const matchesSecondaryLink =
+          row[linkSecondary] === body?.[linkSecondary]
+        return matchesPrimaryLink && matchesSecondaryLink
       }
 
       const existingRelationship = rows.find((row: { [key: string]: any }) =>
@@ -546,14 +569,11 @@ export class ExternalRequest<T extends Operation> {
       const operation = isUpdate ? Operation.UPDATE : Operation.CREATE
       if (!existingRelationship) {
         promises.push(
-          getDatasourceAndQuery({
+          makeExternalQuery({
             endpoint: getEndpoint(tableId, operation),
             // if we're doing many relationships then we're writing, only one response
             body,
             filters: this.prepareFilters(id, {}, linkTable),
-            meta: {
-              table: linkTable,
-            },
           })
         )
       } else {
@@ -562,20 +582,20 @@ export class ExternalRequest<T extends Operation> {
       }
     }
     // finally cleanup anything that needs to be removed
-    for (let [colName, { isMany, rows, tableId }] of Object.entries(related)) {
+    for (const [field, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
       // if it's not the foreign key skip it, nothing to do
       if (
         !table ||
-        (!isMany && table.primary && table.primary.indexOf(colName) !== -1)
+        (!isMany && table.primary && table.primary.indexOf(field) !== -1)
       ) {
         continue
       }
       for (let row of rows) {
         const rowId = generateIdForRow(row, table)
         const promise: Promise<any> = isMany
-          ? this.removeManyToManyRelationships(rowId, table, colName)
-          : this.removeOneToManyRelationships(rowId, table)
+          ? this.removeManyToManyRelationships(rowId, table)
+          : this.removeOneToManyRelationships(rowId, table, field)
         if (promise) {
           promises.push(promise)
         }
@@ -587,46 +607,40 @@ export class ExternalRequest<T extends Operation> {
   async removeRelationshipsToRow(table: Table, rowId: string) {
     const row = await this.getRow(table, rowId)
     const related = await this.lookupRelations(table._id!, row)
-    for (let column of Object.values(table.schema)) {
-      const relationshipColumn = column as RelationshipFieldMetadata
-      if (!isManyToOne(relationshipColumn)) {
+    for (const column of Object.values(table.schema)) {
+      if (!isRelationshipColumn(column) || isOneToMany(column)) {
         continue
       }
-      const { rows, isMany, tableId } = related[relationshipColumn.fieldName]
+
+      const relatedByTable = related[this.getLookupRelationsKey(column)]
+      if (!relatedByTable) {
+        continue
+      }
+
+      const { rows, isMany, tableId } = relatedByTable
       const table = this.getTable(tableId)!
       await Promise.all(
         rows.map(row => {
           const rowId = generateIdForRow(row, table)
           return isMany
-            ? this.removeManyToManyRelationships(
-                rowId,
-                table,
-                relationshipColumn.fieldName
-              )
-            : this.removeOneToManyRelationships(rowId, table)
+            ? this.removeManyToManyRelationships(rowId, table)
+            : this.removeOneToManyRelationships(rowId, table, column.fieldName)
         })
       )
     }
   }
 
   async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
-    const { operation, tableId } = this
-    if (!tableId) {
-      throw new Error("Unable to run without a table ID")
+    const { operation } = this
+    let table: Table
+    if (sdk.views.isView(this.source)) {
+      table = await sdk.views.getTable(this.source.id)
+    } else {
+      table = this.source
     }
-    let { datasourceId, tableName } = breakExternalTableId(tableId)
-    let datasource = this.datasource
-    if (!datasource) {
-      const { datasource: ds } = await this.retrieveMetadata(datasourceId)
-      datasource = ds
-    }
-    const table = this.tables[tableName]
-    let isSql = isSQL(datasource)
-    if (!table) {
-      throw new Error(
-        `Unable to process query, table "${tableName}" not defined.`
-      )
-    }
+
+    let isSql = isSQL(this.datasource)
+
     // look for specific components of config which may not be considered acceptable
     let { id, row, filters, sort, paginate, rows } = cleanupConfig(
       config,
@@ -651,10 +665,23 @@ export class ExternalRequest<T extends Operation> {
     filters = this.prepareFilters(id, filters || {}, table)
     const relationships = buildExternalRelationships(table, this.tables)
 
+    let aggregations: Aggregation[] = []
+    if (sdk.views.isView(this.source)) {
+      const calculationFields = helpers.views.calculationFields(this.source)
+      for (const [key, field] of Object.entries(calculationFields)) {
+        aggregations.push({
+          ...field,
+          name: key,
+        })
+      }
+    }
+
     const incRelationships =
+      aggregations.length === 0 &&
       config.includeSqlRelationships === IncludeRelationship.INCLUDE
 
     // clean up row on ingress using schema
+    const unprocessedRow = config.row
     const processed = this.inputProcessing(row, table)
     row = processed.row
     let manyRelationships = processed.manyRelationships
@@ -669,25 +696,28 @@ export class ExternalRequest<T extends Operation> {
         }
       }
     }
+
     if (
       operation === Operation.DELETE &&
       (filters == null || Object.keys(filters).length === 0)
     ) {
       throw "Deletion must be filtered"
     }
-    let json = {
+
+    let json: QueryJson = {
       endpoint: {
-        datasourceId: datasourceId!,
-        entityId: tableName,
+        datasourceId: this.datasource,
+        entityId: table,
         operation,
       },
       resource: {
         // have to specify the fields to avoid column overlap (for SQL)
         fields: isSql
-          ? buildSqlFieldList(table, this.tables, {
+          ? await buildSqlFieldList(this.source, this.tables, {
               relationships: incRelationships,
             })
           : [],
+        aggregations,
       },
       filters,
       sort,
@@ -702,10 +732,6 @@ export class ExternalRequest<T extends Operation> {
           table
         ),
       },
-      meta: {
-        table,
-        id: config.id,
-      },
     }
 
     // remove any relationships that could block deletion
@@ -715,9 +741,23 @@ export class ExternalRequest<T extends Operation> {
 
     // aliasing can be disabled fully if desired
     const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
-    let response = env.SQL_ALIASING_DISABLE
-      ? await getDatasourceAndQuery(json)
-      : await aliasing.queryWithAliasing(json, makeExternalQuery)
+    let response: DatasourcePlusQueryResponse
+    // there's a chance after input processing nothing needs updated, so pass over the call
+    // we might still need to perform other operations like updating the foreign keys on other rows
+    if (
+      this.operation === Operation.UPDATE &&
+      Object.keys(row || {}).length === 0 &&
+      unprocessedRow
+    ) {
+      response = [unprocessedRow]
+    } else {
+      response = env.SQL_ALIASING_DISABLE
+        ? await makeExternalQuery(json)
+        : await aliasing.queryWithAliasing(
+            await enrichQueryJson(json),
+            makeExternalQuery
+          )
+    }
 
     // if it's a counting operation there will be no more processing, just return the number
     if (this.operation === Operation.COUNT) {
@@ -735,15 +775,17 @@ export class ExternalRequest<T extends Operation> {
     }
     const output = await sqlOutputProcessing(
       response,
-      table,
+      this.source,
       this.tables,
       relationships
     )
     // if reading it'll just be an array of rows, return whole thing
     if (operation === Operation.READ) {
-      return (
-        Array.isArray(output) ? output : [output]
-      ) as ExternalRequestReturnType<T>
+      const rows = Array.isArray(output) ? output : [output]
+      return {
+        rows,
+        rawResponseSize: responseRows.length,
+      } as ExternalRequestReturnType<T>
     } else {
       return { row: output[0], table } as ExternalRequestReturnType<T>
     }

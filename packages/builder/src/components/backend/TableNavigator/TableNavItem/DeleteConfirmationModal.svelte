@@ -1,9 +1,9 @@
 <script>
   import { goto, params } from "@roxi/routify"
-  import { appStore, tables, datasources, screenStore } from "stores/builder"
+  import { appStore, tables, datasources, screenStore } from "@/stores/builder"
   import { InlineAlert, Link, Input, notifications } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DB_TYPE_EXTERNAL } from "constants/backend"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
   export let table
 
@@ -104,7 +104,7 @@
         </InlineAlert>
       </div>
     {/if}
-    <p class="fourthWarning">Please enter the app name below to confirm.</p>
+    <p class="fourthWarning">Please enter the table name below to confirm.</p>
     <Input bind:value={deleteTableName} placeholder={table.name} />
   </div>
 </ConfirmDialog>

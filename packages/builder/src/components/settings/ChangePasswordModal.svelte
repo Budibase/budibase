@@ -1,7 +1,7 @@
 <script>
   import { ModalContent, Body, notifications } from "@budibase/bbui"
-  import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
-  import { auth } from "stores/portal"
+  import PasswordRepeatInput from "@/components/common/users/PasswordRepeatInput.svelte"
+  import { auth } from "@/stores/portal"
 
   let password
   let error
@@ -14,8 +14,15 @@
       notifications.error("Failed to update password")
     }
   }
+
+  const handleKeydown = evt => {
+    if (evt.key === "Enter" && !error && password) {
+      updatePassword()
+    }
+  }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 <ModalContent
   title="Update password"
   confirmText="Update password"

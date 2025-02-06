@@ -7,7 +7,7 @@ import { addListeners, StalledFn } from "./listeners"
 import { Duration } from "../utils"
 import * as timers from "../timers"
 
-export { QueueOptions, Queue, JobOptions } from "bull"
+export type { QueueOptions, Queue, JobOptions } from "bull"
 
 // the queue lock is held for 5 minutes
 const QUEUE_LOCK_MS = Duration.fromMinutes(5).toMs()
@@ -15,7 +15,7 @@ const QUEUE_LOCK_MS = Duration.fromMinutes(5).toMs()
 const QUEUE_LOCK_RENEW_INTERNAL_MS = Duration.fromSeconds(30).toMs()
 // cleanup the queue every 60 seconds
 const CLEANUP_PERIOD_MS = Duration.fromSeconds(60).toMs()
-let QUEUES: BullQueue.Queue[] | InMemoryQueue[] = []
+let QUEUES: BullQueue.Queue[] = []
 let cleanupInterval: NodeJS.Timeout
 
 async function cleanup() {
@@ -45,11 +45,18 @@ export function createQueue<T>(
   if (opts.jobOptions) {
     queueConfig.defaultJobOptions = opts.jobOptions
   }
-  let queue: any
+  let queue: BullQueue.Queue<T>
   if (!env.isTest()) {
     queue = new BullQueue(jobQueue, queueConfig)
+  } else if (
+    process.env.BULL_TEST_REDIS_PORT &&
+    !isNaN(+process.env.BULL_TEST_REDIS_PORT)
+  ) {
+    queue = new BullQueue(jobQueue, {
+      redis: { host: "localhost", port: +process.env.BULL_TEST_REDIS_PORT },
+    })
   } else {
-    queue = new InMemoryQueue(jobQueue, queueConfig)
+    queue = new InMemoryQueue(jobQueue, queueConfig) as any
   }
   addListeners(queue, jobQueue, opts?.removeStalledCb)
   QUEUES.push(queue)

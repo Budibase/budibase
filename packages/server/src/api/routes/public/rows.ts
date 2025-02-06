@@ -1,4 +1,4 @@
-import controller from "../../controllers/public/rows"
+import controller, { viewSearch } from "../../controllers/public/rows"
 import Endpoint from "./utils/Endpoint"
 import { externalSearchValidator } from "../utils/validators"
 
@@ -165,6 +165,42 @@ read.push(
     "post",
     "/tables/:tableId/rows/search",
     controller.search
+  ).addMiddleware(externalSearchValidator())
+)
+
+/**
+ * @openapi
+ * /views/{viewId}/rows/search:
+ *   post:
+ *     operationId: rowViewSearch
+ *     summary: Search for rows in a view
+ *     tags:
+ *       - rows
+ *     parameters:
+ *       - $ref: '#/components/parameters/viewId'
+ *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/rowSearch'
+ *     responses:
+ *       200:
+ *         description: The response will contain an array of rows that match the search parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/searchOutput'
+ *             examples:
+ *               search:
+ *                 $ref: '#/components/examples/rows'
+ */
+read.push(
+  new Endpoint(
+    "post",
+    "/views/:viewId/rows/search",
+    controller.viewSearch
   ).addMiddleware(externalSearchValidator())
 )
 

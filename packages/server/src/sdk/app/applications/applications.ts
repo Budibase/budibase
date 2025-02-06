@@ -25,10 +25,12 @@ export async function fetch(status: AppStatus, user: ContextUser) {
   const all = status === AppStatus.ALL
   let apps = (await dbCore.getAllApps({ dev, all })) as App[]
 
-  const enrichedUser = await groups.enrichUserRolesFromGroups({
+  // need to type this correctly - add roles back in to convert from ContextUser to User
+  const completeUser: User = {
     ...user,
-    roles: user.roles || {},
-  })
+    roles: user?.roles || {},
+  }
+  const enrichedUser = await groups.enrichUserRolesFromGroups(completeUser)
   apps = filterAppList(enrichedUser, apps)
 
   const appIds = apps

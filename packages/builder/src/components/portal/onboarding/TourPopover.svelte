@@ -2,7 +2,7 @@
   import { Popover, Layout, Heading, Body, Button, Link } from "@budibase/bbui"
   import { TOURS, getCurrentStepIdx } from "./tours.js"
   import { goto, layout, isActive } from "@roxi/routify"
-  import { builderStore } from "stores/builder"
+  import { builderStore } from "@/stores/builder"
 
   let popoverAnchor
   let popover
@@ -96,8 +96,8 @@
       maxWidth={300}
       dismissible={false}
       offset={12}
-      handlePostionUpdate={tourStep?.positionHandler}
-      customZindex={3}
+      handlePositionUpdate={tourStep?.positionHandler}
+      customZIndex={3}
     >
       <div class="tour-content">
         <Layout noPadding gap="M">

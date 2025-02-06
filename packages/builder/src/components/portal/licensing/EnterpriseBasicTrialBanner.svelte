@@ -3,7 +3,7 @@
   import Portal from "svelte-portal"
   import { fly } from "svelte/transition"
   import { Banner, BANNER_TYPES } from "@budibase/bbui"
-  import { licensing } from "stores/portal"
+  import { licensing } from "@/stores/portal"
 
   export let show = true
 
@@ -14,7 +14,13 @@
   function daysUntilCancel() {
     const cancelAt = license?.billing?.subscription?.cancelAt
     const diffTime = Math.abs(cancelAt - new Date().getTime()) / 1000
-    return Math.floor(diffTime / oneDayInSeconds)
+    const days = Math.floor(diffTime / oneDayInSeconds)
+    if (days === 1) {
+      return "tomorrow."
+    } else if (days === 0) {
+      return "today."
+    }
+    return `in ${days} days.`
   }
 </script>
 
@@ -28,7 +34,7 @@
           extraLinkAction={$licensing.goToUpgradePage}
           showCloseButton={false}
         >
-          Your free trial will end in {daysUntilCancel()} days.
+          Your free trial will end {daysUntilCancel()}
         </Banner>
       </div>
     {/if}

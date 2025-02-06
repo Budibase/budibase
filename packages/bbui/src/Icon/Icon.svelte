@@ -1,23 +1,20 @@
-<script>
-  import {
-    default as AbsTooltip,
-    TooltipPosition,
-    TooltipType,
-  } from "../Tooltip/AbsTooltip.svelte"
+<script lang="ts">
+  import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
+  import { TooltipPosition, TooltipType } from "../constants"
 
-  export let name = "Add"
-  export let hidden = false
-  export let size = "M"
-  export let hoverable = false
-  export let disabled = false
-  export let color
-  export let hoverColor
-  export let tooltip
+  export let name: string = "Add"
+  export let size: "XS" | "S" | "M" | "L" | "XL" = "M"
+  export let hidden: boolean = false
+  export let hoverable: boolean = false
+  export let disabled: boolean = false
+  export let color: string | undefined = undefined
+  export let hoverColor: string | undefined = undefined
+  export let tooltip: string | undefined = undefined
   export let tooltipPosition = TooltipPosition.Bottom
   export let tooltipType = TooltipType.Default
-  export let tooltipColor
-  export let tooltipWrap = true
-  export let newStyles = false
+  export let tooltipColor: string | undefined = undefined
+  export let tooltipWrap: boolean = true
+  export let newStyles: boolean = false
 </script>
 
 <AbsTooltip
@@ -60,10 +57,11 @@
   .newStyles {
     color: var(--spectrum-global-color-gray-700);
   }
-
+  svg {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+  }
   svg.hoverable {
     pointer-events: all;
-    transition: color var(--spectrum-global-animation-duration-100, 130ms);
   }
   svg.hoverable:hover {
     color: var(--hover-color) !important;
@@ -80,17 +78,6 @@
     color: var(--spectrum-global-color-gray-500) !important;
     pointer-events: none !important;
   }
-
-  .tooltip {
-    position: absolute;
-    pointer-events: none;
-    left: 50%;
-    bottom: calc(100% + 4px);
-    transform: translateX(-50%);
-    text-align: center;
-    z-index: 1;
-  }
-
   .spectrum-Icon--sizeXS {
     width: var(--spectrum-global-dimension-size-150);
     height: var(--spectrum-global-dimension-size-150);

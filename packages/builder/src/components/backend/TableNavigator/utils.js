@@ -1,5 +1,5 @@
-import { API } from "api"
-import { FIELDS } from "constants/backend"
+import { API } from "@/api"
+import { FIELDS } from "@/constants/backend"
 
 const BYTES_IN_MB = 1000000
 const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
@@ -65,4 +65,8 @@ export const parseFile = e => {
 
     reader.readAsText(file)
   })
+}
+
+export const alphabetical = (a, b) => {
+  return a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
 }

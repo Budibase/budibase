@@ -1,3 +1,5 @@
+import { isTest, isTestingBackendJS } from "./environment"
+
 const ALPHA_NUMERIC_REGEX = /^[A-Za-z0-9]+$/g
 
 export const FIND_HBS_REGEX = /{{([^{].*?)}}/g
@@ -5,6 +7,16 @@ export const FIND_ANY_HBS_REGEX = /{?{{([^{].*?)}}}?/g
 export const FIND_TRIPLE_HBS_REGEX = /{{{([^{].*?)}}}/g
 
 export const isBackendService = () => {
+  // allow configuring backend JS mode when testing - we default to assuming
+  // frontend, but need a method to control this
+  if (isTest() && isTestingBackendJS()) {
+    return true
+  }
+  // We consider the tests for string-templates to be frontend, so that they
+  // test the frontend JS functionality.
+  if (isTest()) {
+    return false
+  }
   return typeof window === "undefined"
 }
 
@@ -65,4 +77,34 @@ export const btoa = (plainText: string) => {
 
 export const atob = (base64: string) => {
   return Buffer.from(base64, "base64").toString("utf-8")
+}
+
+export const prefixStrings = (
+  baseString: string,
+  strings: string[],
+  prefix: string
+) => {
+  // Escape any special characters in the strings to avoid regex errors
+  const escapedStrings = strings.map(str =>
+    str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  )
+  const regexPattern = new RegExp(`\\b(${escapedStrings.join("|")})\\b`, "g")
+  return baseString.replace(regexPattern, `${prefix}$1`)
+}
+
+export function frontendWrapJS(js: string) {
+  return `
+        result = {
+          result: null,
+          error: null,
+        };
+
+        try {
+          result.result = ${js};
+        } catch (e) {
+          result.error = e;
+        }
+
+        result;
+      `
 }

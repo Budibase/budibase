@@ -88,7 +88,7 @@ const authorized =
     opts = { schema: false },
     resourcePath?: string
   ) =>
-  async (ctx: any, next: any) => {
+  async (ctx: UserCtx, next: any) => {
     // webhooks don't need authentication, each webhook unique
     // also internal requests (between services) don't need authorized
     if (isWebhookEndpoint(ctx) || ctx.internal) {

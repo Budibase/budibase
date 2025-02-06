@@ -1,4 +1,9 @@
-import { Automation, AutomationMetadata, Row } from "../../documents"
+import {
+  Automation,
+  AutomationMetadata,
+  Row,
+  UserBindings,
+} from "../../documents"
 import { Job } from "bull"
 
 export interface AutomationDataEvent {
@@ -8,11 +13,19 @@ export interface AutomationDataEvent {
   timeout?: number
   row?: Row
   oldRow?: Row
+  user?: UserBindings
+  timestamp?: number
 }
 
 export interface AutomationData {
   event: AutomationDataEvent
   automation: Automation
+}
+
+export interface AutomationRowEvent {
+  appId: string
+  row: Row
+  oldRow: Row
 }
 
 export type AutomationJob = Job<AutomationData>

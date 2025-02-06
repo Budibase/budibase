@@ -24,7 +24,8 @@ COPY packages/worker/dist/yarn.lock .
 
 RUN ../scripts/removeWorkspaceDependencies.sh package.json
 
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true --network-timeout 1000000
+ARG TARGETPLATFORM
+RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} yarn install --production
 # Remove unneeded data from file system to reduce image size
 RUN apk del .gyp \
     && yarn cache clean
@@ -44,7 +45,6 @@ ENV NODE_OPTIONS="--no-node-snapshot"
 ENV CLUSTER_MODE=${CLUSTER_MODE}
 ENV SERVICE=worker-service
 ENV POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
-ENV TENANT_FEATURE_FLAGS=*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR
 ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
 
 ARG BUDIBASE_VERSION

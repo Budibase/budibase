@@ -8,10 +8,12 @@ const allowDisplayColumnByType: Record<FieldType, boolean> = {
   [FieldType.NUMBER]: true,
   [FieldType.DATETIME]: true,
   [FieldType.FORMULA]: true,
+  [FieldType.AI]: true,
   [FieldType.AUTO]: true,
   [FieldType.INTERNAL]: true,
   [FieldType.BARCODEQR]: true,
   [FieldType.BIGINT]: true,
+
   [FieldType.BOOLEAN]: false,
   [FieldType.ARRAY]: false,
   [FieldType.ATTACHMENTS]: false,
@@ -35,7 +37,9 @@ const allowSortColumnByType: Record<FieldType, boolean> = {
   [FieldType.BIGINT]: true,
   [FieldType.BOOLEAN]: true,
   [FieldType.JSON]: true,
+
   [FieldType.FORMULA]: false,
+  [FieldType.AI]: false,
   [FieldType.ATTACHMENTS]: false,
   [FieldType.ATTACHMENT_SINGLE]: false,
   [FieldType.SIGNATURE_SINGLE]: false,
@@ -43,6 +47,30 @@ const allowSortColumnByType: Record<FieldType, boolean> = {
   [FieldType.LINK]: false,
   [FieldType.BB_REFERENCE]: false,
   [FieldType.BB_REFERENCE_SINGLE]: false,
+}
+
+const allowDefaultColumnByType: Record<FieldType, boolean> = {
+  [FieldType.NUMBER]: true,
+  [FieldType.JSON]: true,
+  [FieldType.DATETIME]: true,
+  [FieldType.LONGFORM]: true,
+  [FieldType.STRING]: true,
+  [FieldType.OPTIONS]: true,
+  [FieldType.ARRAY]: true,
+  [FieldType.BIGINT]: true,
+  [FieldType.BOOLEAN]: true,
+
+  [FieldType.AUTO]: false,
+  [FieldType.INTERNAL]: false,
+  [FieldType.BARCODEQR]: false,
+  [FieldType.FORMULA]: false,
+  [FieldType.AI]: false,
+  [FieldType.ATTACHMENTS]: false,
+  [FieldType.ATTACHMENT_SINGLE]: false,
+  [FieldType.SIGNATURE_SINGLE]: false,
+  [FieldType.LINK]: false,
+  [FieldType.BB_REFERENCE]: true,
+  [FieldType.BB_REFERENCE_SINGLE]: true,
 }
 
 export function canBeDisplayColumn(type: FieldType): boolean {
@@ -53,10 +81,11 @@ export function canBeSortColumn(type: FieldType): boolean {
   return !!allowSortColumnByType[type]
 }
 
-export function findDuplicateInternalColumns(
-  table: Table,
-  opts?: { ignoreProtectedColumnNames: boolean }
-): string[] {
+export function canHaveDefaultColumn(type: FieldType): boolean {
+  return !!allowDefaultColumnByType[type]
+}
+
+export function findDuplicateInternalColumns(table: Table): string[] {
   // maintains the case of keys
   const casedKeys = Object.keys(table.schema)
   // get the column names
@@ -72,11 +101,10 @@ export function findDuplicateInternalColumns(
       }
     }
   }
-  if (!opts?.ignoreProtectedColumnNames) {
-    for (let internalColumn of PROTECTED_INTERNAL_COLUMNS) {
-      if (casedKeys.find(key => key === internalColumn)) {
-        duplicates.push(internalColumn)
-      }
+
+  for (let internalColumn of PROTECTED_INTERNAL_COLUMNS) {
+    if (casedKeys.find(key => key === internalColumn)) {
+      duplicates.push(internalColumn)
     }
   }
   return duplicates

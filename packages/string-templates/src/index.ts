@@ -1,21 +1,27 @@
-import { Context, createContext, runInNewContext } from "vm"
+import browserVM from "@budibase/vm-browserify"
+import vm from "vm"
 import { create, TemplateDelegate } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
-import { preprocess, postprocess } from "./processors"
+import { postprocess, postprocessWithLogs, preprocess } from "./processors"
 import {
   atob,
   btoa,
-  isBackendService,
-  FIND_HBS_REGEX,
   FIND_ANY_HBS_REGEX,
+  FIND_HBS_REGEX,
   findDoubleHbsInstances,
+  frontendWrapJS,
+  isBackendService,
+  prefixStrings,
 } from "./utilities"
 import { convertHBSBlock } from "./conversion"
-import { setJSRunner, removeJSRunner } from "./helpers/javascript"
-
+import { removeJSRunner, setJSRunner } from "./helpers/javascript"
 import manifest from "./manifest.json"
-import { ProcessOptions } from "./types"
+import { Log, ProcessOptions } from "./types"
+import { UserScriptError } from "./errors"
+import { isTest } from "./environment"
 
+export type { Log, LogType } from "./types"
+export { setTestingBackendJS } from "./environment"
 export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
 export { FIND_ANY_HBS_REGEX } from "./utilities"
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"
@@ -23,6 +29,7 @@ export { iifeWrapper } from "./iife"
 
 const hbsInstance = create()
 registerAll(hbsInstance)
+const helperNames = Object.keys(hbsInstance.helpers)
 const hbsInstanceNoHelpers = create()
 registerMinimum(hbsInstanceNoHelpers)
 const defaultOpts: ProcessOptions = {
@@ -45,12 +52,25 @@ function testObject(object: any) {
   }
 }
 
+function findOverlappingHelpers(context?: object) {
+  if (!context) {
+    return []
+  }
+  const contextKeys = Object.keys(context)
+  return contextKeys.filter(key => helperNames.includes(key))
+}
+
 /**
  * Creates a HBS template function for a given string, and optionally caches it.
  */
 const templateCache: Record<string, TemplateDelegate<any>> = {}
-function createTemplate(string: string, opts?: ProcessOptions) {
+function createTemplate(
+  string: string,
+  opts?: ProcessOptions,
+  context?: object
+) {
   opts = { ...defaultOpts, ...opts }
+  const helpersEnabled = !opts?.noHelpers
 
   // Finalising adds a helper, can't do this with no helpers
   const key = `${string}-${JSON.stringify(opts)}`
@@ -60,7 +80,25 @@ function createTemplate(string: string, opts?: ProcessOptions) {
     return templateCache[key]
   }
 
-  string = preprocess(string, opts)
+  const overlappingHelpers = helpersEnabled
+    ? findOverlappingHelpers(context)
+    : []
+
+  string = preprocess(string, {
+    ...opts,
+    disabledHelpers: overlappingHelpers,
+  })
+
+  if (context && helpersEnabled) {
+    if (overlappingHelpers.length > 0) {
+      for (const block of findHBSBlocks(string)) {
+        string = string.replace(
+          block,
+          prefixStrings(block, overlappingHelpers, "./")
+        )
+      }
+    }
+  }
 
   // Optionally disable built in HBS escaping
   if (opts.noEscaping) {
@@ -70,6 +108,7 @@ function createTemplate(string: string, opts?: ProcessOptions) {
   // This does not throw an error when template can't be fulfilled,
   // have to try correct beforehand
   const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
+
   const template = instance.compile(string, {
     strict: false,
   })
@@ -88,7 +127,7 @@ function createTemplate(string: string, opts?: ProcessOptions) {
 export async function processObject<T extends Record<string, any>>(
   object: T,
   context: object,
-  opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound?: boolean }
+  opts?: ProcessOptions
 ): Promise<T> {
   testObject(object)
 
@@ -138,7 +177,7 @@ export async function processString(
 export function processObjectSync(
   object: { [x: string]: any },
   context: any,
-  opts: any
+  opts?: ProcessOptions
 ): object | Array<any> {
   testObject(object)
   for (let key of Object.keys(object || {})) {
@@ -150,6 +189,70 @@ export function processObjectSync(
     }
   }
   return object
+}
+
+// keep the logging function internal, don't want to add this to the process options directly
+// as it can't be used for object processing etc.
+function processStringSyncInternal(
+  str: string,
+  context?: object,
+  opts?: ProcessOptions & { logging: false }
+): string
+function processStringSyncInternal(
+  str: string,
+  context?: object,
+  opts?: ProcessOptions & { logging: true }
+): { result: string; logs: Log[] }
+function processStringSyncInternal(
+  string: string,
+  context?: object,
+  opts?: ProcessOptions & { logging: boolean }
+): string | { result: string; logs: Log[] } {
+  // Take a copy of input in case of error
+  const input = string
+  if (typeof string !== "string") {
+    throw new Error("Cannot process non-string types.")
+  }
+  function process(stringPart: string) {
+    // context is needed to check for overlap between helpers and context
+    const template = createTemplate(stringPart, opts, context)
+    const now = Math.floor(Date.now() / 1000) * 1000
+    const processedString = template({
+      now: new Date(now).toISOString(),
+      __opts: {
+        ...opts,
+        input: stringPart,
+      },
+      ...context,
+    })
+    return opts?.logging
+      ? postprocessWithLogs(processedString)
+      : postprocess(processedString)
+  }
+  try {
+    if (opts && opts.onlyFound) {
+      let logs: Log[] = []
+      const blocks = findHBSBlocks(string)
+      for (let block of blocks) {
+        const outcome = process(block)
+        if (typeof outcome === "object" && "result" in outcome) {
+          logs = logs.concat(outcome.logs || [])
+          string = string.replace(block, outcome.result)
+        } else {
+          string = string.replace(block, outcome)
+        }
+      }
+      return !opts?.logging ? string : { result: string, logs }
+    } else {
+      return process(string)
+    }
+  } catch (err: any) {
+    const { noThrow = true } = opts || {}
+    if (noThrow) {
+      return input
+    }
+    throw err
+  }
 }
 
 /**
@@ -165,38 +268,27 @@ export function processStringSync(
   context?: object,
   opts?: ProcessOptions
 ): string {
-  // Take a copy of input in case of error
-  const input = string
-  if (typeof string !== "string") {
-    throw "Cannot process non-string types."
+  return processStringSyncInternal(string, context, {
+    ...opts,
+    logging: false,
+  })
+}
+
+/**
+ * Same as function above, but allows logging to be returned - this is only for JS bindings.
+ */
+export function processStringWithLogsSync(
+  string: string,
+  context?: object,
+  opts?: ProcessOptions
+): { result: string; logs: Log[] } {
+  if (isBackendService()) {
+    throw new Error("Logging disabled for backend bindings")
   }
-  function process(stringPart: string) {
-    const template = createTemplate(stringPart, opts)
-    const now = Math.floor(Date.now() / 1000) * 1000
-    const processedString = template({
-      now: new Date(now).toISOString(),
-      __opts: {
-        ...opts,
-        input: stringPart,
-      },
-      ...context,
-    })
-    return postprocess(processedString)
-  }
-  try {
-    if (opts && opts.onlyFound) {
-      const blocks = findHBSBlocks(string)
-      for (let block of blocks) {
-        const outcome = process(block)
-        string = string.replace(block, outcome)
-      }
-      return string
-    } else {
-      return process(string)
-    }
-  } catch (err) {
-    return input
-  }
+  return processStringSyncInternal(string, context, {
+    ...opts,
+    logging: true,
+  })
 }
 
 /**
@@ -413,23 +505,28 @@ export function convertToJS(hbs: string) {
   return `${varBlock}${js}`
 }
 
-export { JsErrorTimeout } from "./errors"
+export { JsTimeoutError, UserScriptError } from "./errors"
+
+export function browserJSSetup() {
+  // tests are in jest - we need to use node VM for these
+  const jsSandbox = isTest() ? vm : browserVM
+  // Use polyfilled vm to run JS scripts in a browser Env
+  setJSRunner((js: string, context: Record<string, any>) => {
+    jsSandbox.createContext(context)
+
+    const wrappedJs = frontendWrapJS(js)
+
+    const result = jsSandbox.runInNewContext(wrappedJs, context)
+    if (result.error) {
+      throw new UserScriptError(result.error)
+    }
+    return result.result
+  })
+}
 
 export function defaultJSSetup() {
   if (!isBackendService()) {
-    /**
-     * Use polyfilled vm to run JS scripts in a browser Env
-     */
-    setJSRunner((js: string, context: Context) => {
-      context = {
-        ...context,
-        alert: undefined,
-        setInterval: undefined,
-        setTimeout: undefined,
-      }
-      createContext(context)
-      return runInNewContext(js, context, { timeout: 1000 })
-    })
+    browserJSSetup()
   } else {
     removeJSRunner()
   }

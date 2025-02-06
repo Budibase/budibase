@@ -12,7 +12,6 @@ export interface CreateAccountRequest {
   name?: string
   password: string
   provider?: AccountSSOProvider
-  thirdPartyProfile: object
 }
 
 export interface SearchAccountsRequest {

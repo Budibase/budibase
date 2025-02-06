@@ -11,13 +11,13 @@
     Body,
     Search,
   } from "@budibase/bbui"
-  import Spinner from "components/common/Spinner.svelte"
-  import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
-  import AccountLockedModal from "components/portal/licensing/AccountLockedModal.svelte"
+  import Spinner from "@/components/common/Spinner.svelte"
+  import CreateAppModal from "@/components/start/CreateAppModal.svelte"
+  import AppLimitModal from "@/components/portal/licensing/AppLimitModal.svelte"
+  import AccountLockedModal from "@/components/portal/licensing/AccountLockedModal.svelte"
   import { sdk } from "@budibase/shared-core"
-  import { automationStore, initialise } from "stores/builder"
-  import { API } from "api"
+  import { automationStore, initialise } from "@/stores/builder"
+  import { API } from "@/api"
   import { onMount } from "svelte"
   import {
     appsStore,
@@ -26,9 +26,10 @@
     licensing,
     environment,
     enrichedApps,
-  } from "stores/portal"
+    sortBy,
+  } from "@/stores/portal"
   import { goto } from "@roxi/routify"
-  import AppRow from "components/start/AppRow.svelte"
+  import AppRow from "@/components/start/AppRow.svelte"
   import Logo from "assets/bb-space-man.svg"
 
   let template
@@ -75,9 +76,7 @@
     const params = new URLSearchParams({
       open: "error",
     })
-    $goto(
-      `/builder/app/${appId}/settings/automation-history?${params.toString()}`
-    )
+    $goto(`/builder/app/${appId}/settings/automations?${params.toString()}`)
   }
 
   const errorCount = errors => {
@@ -140,7 +139,7 @@
       await auth.setInitInfo({})
       $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
-      notifications.error("Error creating app")
+      notifications.error(`Error creating app - ${error.message}`)
     }
   }
 
@@ -192,8 +191,14 @@
           ? "View errors"
           : "View error"}
         on:dismiss={async () => {
-          await automationStore.actions.clearLogErrors({ appId })
-          await appsStore.load()
+          const automationId = Object.keys(automationErrors[appId] || {})[0]
+          if (automationId) {
+            await automationStore.actions.clearLogErrors({
+              appId,
+              automationId,
+            })
+            await appsStore.load()
+          }
         }}
         message={automationErrorMessage(appId)}
       />
@@ -247,7 +252,7 @@
             <div class="app-actions">
               <Select
                 autoWidth
-                value={$appsStore.sortBy}
+                value={$sortBy}
                 on:change={e => {
                   appsStore.updateSort(e.detail)
                 }}

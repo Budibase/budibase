@@ -3,7 +3,7 @@ import {
   BBReferenceFieldSubType,
   FieldType,
   FormulaType,
-  SearchFilter,
+  LegacyFilter,
   SearchFilters,
   SearchQueryFields,
   ArrayOperator,
@@ -17,13 +17,29 @@ import {
   Table,
   BasicOperator,
   RangeOperator,
+  LogicalOperator,
+  isLogicalSearchOperator,
+  UISearchFilter,
+  UILogicalOperator,
+  isBasicSearchOperator,
+  isArraySearchOperator,
+  isRangeSearchOperator,
+  SearchFilter,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
+import { processSearchFilters } from "./utils"
 import { deepGet, schema } from "./helpers"
 import { isPlainObject, isEmpty } from "lodash"
+import { decodeNonAscii } from "./helpers/schema"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
+const LOGICAL_OPERATORS = Object.values(LogicalOperator)
+const SEARCH_OPERATORS = [
+  ...Object.values(BasicOperator),
+  ...Object.values(ArrayOperator),
+  ...Object.values(RangeOperator),
+]
 
 /**
  * Returns the valid operator options for a certain data type
@@ -78,6 +94,8 @@ export const getValidOperatorsForType = (
     ops = numOps
   } else if (type === FieldType.FORMULA && formulaType === FormulaType.STATIC) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
+  } else if (type === FieldType.AI) {
+    ops = stringOps.concat([Op.MoreThan, Op.LessThan])
   } else if (
     type === FieldType.BB_REFERENCE_SINGLE ||
     schema.isDeprecatedSingleUserColumn(fieldType)
@@ -110,6 +128,20 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.In.value,
 ] as (keyof SearchQueryFields)[]
 
+export function recurseLogicalOperators(
+  filters: SearchFilters,
+  fn: (f: SearchFilters) => SearchFilters
+) {
+  for (const logical of LOGICAL_OPERATORS) {
+    if (filters[logical]) {
+      filters[logical]!.conditions = filters[logical]!.conditions.map(
+        condition => fn(condition)
+      )
+    }
+  }
+  return filters
+}
+
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
@@ -118,9 +150,6 @@ export const NoEmptyFilterStrings = [
  * https://github.com/Budibase/budibase/issues/10118
  */
 export const cleanupQuery = (query: SearchFilters) => {
-  if (!query) {
-    return query
-  }
   for (let filterField of NoEmptyFilterStrings) {
     if (!query[filterField]) {
       continue
@@ -142,6 +171,7 @@ export const cleanupQuery = (query: SearchFilters) => {
       }
     }
   }
+  query = recurseLogicalOperators(query, cleanupQuery)
   return query
 }
 
@@ -181,8 +211,16 @@ export class ColumnSplitter {
   tableIds: string[]
   relationshipColumnNames: string[]
   relationships: string[]
+  aliases?: Record<string, string>
+  columnPrefix?: string
 
-  constructor(tables: Table[]) {
+  constructor(
+    tables: Table[],
+    opts?: {
+      aliases?: Record<string, string>
+      columnPrefix?: string
+    }
+  ) {
     this.tableNames = tables.map(table => table.name)
     this.tableIds = tables.map(table => table._id!)
     this.relationshipColumnNames = tables.flatMap(table =>
@@ -195,16 +233,38 @@ export class ColumnSplitter {
       .concat(this.relationshipColumnNames)
       // sort by length - makes sure there's no mis-matches due to similarities (sub column names)
       .sort((a, b) => b.length - a.length)
+
+    if (opts?.aliases) {
+      this.aliases = {}
+      for (const [key, value] of Object.entries(opts.aliases)) {
+        this.aliases[value] = key
+      }
+    }
+
+    this.columnPrefix = opts?.columnPrefix
   }
 
   run(key: string): {
     numberPrefix?: string
     relationshipPrefix?: string
+    tableName?: string
     column: string
   } {
     let { prefix, key: splitKey } = getKeyNumbering(key)
+
+    let tableName: string | undefined = undefined
+    if (this.aliases) {
+      for (const possibleAlias of Object.keys(this.aliases || {})) {
+        const withDot = `${possibleAlias}.`
+        if (splitKey.startsWith(withDot)) {
+          tableName = this.aliases[possibleAlias]!
+          splitKey = splitKey.slice(withDot.length)
+        }
+      }
+    }
+
     let relationship: string | undefined
-    for (let possibleRelationship of this.relationships) {
+    for (const possibleRelationship of this.relationships) {
       const withDot = `${possibleRelationship}.`
       if (splitKey.startsWith(withDot)) {
         const finalKeyParts = splitKey.split(withDot)
@@ -214,7 +274,15 @@ export class ColumnSplitter {
         break
       }
     }
+
+    if (this.columnPrefix) {
+      if (splitKey.startsWith(this.columnPrefix)) {
+        splitKey = decodeNonAscii(splitKey.slice(this.columnPrefix.length))
+      }
+    }
+
     return {
+      tableName,
       numberPrefix: prefix,
       relationshipPrefix: relationship,
       column: splitKey,
@@ -223,131 +291,213 @@ export class ColumnSplitter {
 }
 
 /**
- * Builds a JSON query from the filter structure generated in the builder
+ * Builds a JSON query from the filter a SearchFilter definition
  * @param filter the builder filter structure
  */
-export const buildQuery = (filter: SearchFilter[]) => {
-  let query: SearchFilters = {
-    string: {},
-    fuzzy: {},
-    range: {},
-    equal: {},
-    notEqual: {},
-    empty: {},
-    notEmpty: {},
-    contains: {},
-    notContains: {},
-    oneOf: {},
-    containsAny: {},
+
+function buildCondition(filter: undefined): undefined
+function buildCondition(filter: SearchFilter): SearchFilters
+function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
+  // Ignore empty or invalid filters
+  if (!filter || !filter?.operator || !filter?.field) {
+    return
   }
 
-  if (!Array.isArray(filter)) {
-    return query
+  const query: SearchFilters = {}
+  const { operator, field, type, externalType } = filter
+  let { value } = filter
+
+  // Default the value for noValue fields to ensure they are correctly added
+  // to the final query
+  if (operator === "empty" || operator === "notEmpty") {
+    value = null
   }
 
-  filter.forEach(expression => {
-    let { operator, field, type, value, externalType, onEmptyFilter } =
-      expression
-    const queryOperator = operator as SearchFilterOperator
-    const isHbs =
-      typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
-    // Parse all values into correct types
-    if (operator === "allOr") {
-      query.allOr = true
-      return
-    }
-    if (onEmptyFilter) {
-      query.onEmptyFilter = onEmptyFilter
-      return
-    }
-    if (
-      type === "datetime" &&
-      !isHbs &&
-      queryOperator !== "empty" &&
-      queryOperator !== "notEmpty"
-    ) {
-      // Ensure date value is a valid date and parse into correct format
-      if (!value) {
-        return
-      }
-      try {
+  const isHbs =
+    typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
+
+  // Parsing value depending on what the type is.
+  switch (type) {
+    case FieldType.DATETIME:
+      if (!isHbs && operator !== "empty" && operator !== "notEmpty") {
+        if (!value) {
+          return
+        }
         value = new Date(value).toISOString()
-      } catch (error) {
-        return
       }
-    }
-    if (type === "number" && typeof value === "string" && !isHbs) {
-      if (queryOperator === "oneOf") {
-        value = value.split(",").map(item => parseFloat(item))
-      } else {
-        value = parseFloat(value)
-      }
-    }
-    if (type === "boolean") {
-      value = `${value}`?.toLowerCase() === "true"
-    }
-    if (
-      ["contains", "notContains", "containsAny"].includes(operator) &&
-      type === "array" &&
-      typeof value === "string"
-    ) {
-      value = value.split(",")
-    }
-    if (operator.startsWith("range") && query.range) {
-      const minint =
-        SqlNumberTypeRangeMap[
-          externalType as keyof typeof SqlNumberTypeRangeMap
-        ]?.min || Number.MIN_SAFE_INTEGER
-      const maxint =
-        SqlNumberTypeRangeMap[
-          externalType as keyof typeof SqlNumberTypeRangeMap
-        ]?.max || Number.MAX_SAFE_INTEGER
-      if (!query.range[field]) {
-        query.range[field] = {
-          low: type === "number" ? minint : "0000-00-00T00:00:00.000Z",
-          high: type === "number" ? maxint : "9999-00-00T00:00:00.000Z",
-        }
-      }
-      if (operator === "rangeLow" && value != null && value !== "") {
-        query.range[field] = {
-          ...query.range[field],
-          low: value,
-        }
-      } else if (operator === "rangeHigh" && value != null && value !== "") {
-        query.range[field] = {
-          ...query.range[field],
-          high: value,
-        }
-      }
-    } else if (query[queryOperator] && operator !== "onEmptyFilter") {
-      if (type === "boolean") {
-        // Transform boolean filters to cope with null.
-        // "equals false" needs to be "not equals true"
-        // "not equals false" needs to be "equals true"
-        if (queryOperator === "equal" && value === false) {
-          query.notEqual = query.notEqual || {}
-          query.notEqual[field] = true
-        } else if (queryOperator === "notEqual" && value === false) {
-          query.equal = query.equal || {}
-          query.equal[field] = true
+      break
+    case FieldType.NUMBER:
+      if (typeof value === "string" && !isHbs) {
+        if (operator === "oneOf") {
+          value = value.split(",").map(parseFloat)
         } else {
-          query[queryOperator] ??= {}
-          query[queryOperator]![field] = value
+          value = parseFloat(value)
         }
-      } else {
-        query[queryOperator] ??= {}
-        query[queryOperator]![field] = value
       }
+      break
+    case FieldType.BOOLEAN:
+      value = `${value}`.toLowerCase() === "true"
+      break
+    case FieldType.ARRAY:
+      if (
+        ["contains", "notContains", "containsAny"].includes(
+          operator.toLocaleString()
+        ) &&
+        typeof value === "string"
+      ) {
+        value = value.split(",")
+      }
+      break
+  }
+
+  if (isRangeSearchOperator(operator)) {
+    const key = externalType as keyof typeof SqlNumberTypeRangeMap
+    const limits = SqlNumberTypeRangeMap[key] || {
+      min: Number.MIN_SAFE_INTEGER,
+      max: Number.MAX_SAFE_INTEGER,
     }
-  })
+
+    query[operator] ??= {}
+    query[operator][field] = {
+      low: type === "number" ? limits.min : "0000-00-00T00:00:00.000Z",
+      high: type === "number" ? limits.max : "9999-00-00T00:00:00.000Z",
+    }
+  } else if (operator === "rangeHigh" && value != null && value !== "") {
+    query.range ??= {}
+    query.range[field] = {
+      ...query.range[field],
+      high: value,
+    }
+  } else if (operator === "rangeLow" && value != null && value !== "") {
+    query.range ??= {}
+    query.range[field] = {
+      ...query.range[field],
+      low: value,
+    }
+  } else if (
+    isBasicSearchOperator(operator) ||
+    isArraySearchOperator(operator) ||
+    isRangeSearchOperator(operator)
+  ) {
+    if (type === "boolean") {
+      // TODO(samwho): I suspect this boolean transformation isn't needed anymore,
+      // write some tests to confirm.
+
+      // Transform boolean filters to cope with null.  "equals false" needs to
+      // be "not equals true" "not equals false" needs to be "equals true"
+      if (operator === "equal" && value === false) {
+        query.notEqual = query.notEqual || {}
+        query.notEqual[field] = true
+      } else if (operator === "notEqual" && value === false) {
+        query.equal = query.equal || {}
+        query.equal[field] = true
+      } else {
+        query[operator] ??= {}
+        query[operator][field] = value
+      }
+    } else {
+      query[operator] ??= {}
+      query[operator][field] = value
+    }
+  } else {
+    throw new Error(`Unsupported operator: ${operator}`)
+  }
 
   return query
+}
+
+export interface LegacyFilterSplit {
+  allOr?: boolean
+  onEmptyFilter?: EmptyFilterOption
+  filters: SearchFilter[]
+}
+
+export function splitFiltersArray(filters: LegacyFilter[]) {
+  const split: LegacyFilterSplit = {
+    filters: [],
+  }
+
+  for (const filter of filters) {
+    if ("operator" in filter && filter.operator === "allOr") {
+      split.allOr = true
+    } else if ("onEmptyFilter" in filter) {
+      split.onEmptyFilter = filter.onEmptyFilter
+    } else {
+      split.filters.push(filter)
+    }
+  }
+
+  return split
+}
+
+/**
+ * Converts a **UISearchFilter** filter definition into a grouped
+ * search query of type **SearchFilters**
+ *
+ * Legacy support remains for the old **SearchFilter[]** format.
+ * These will be migrated to an appropriate **SearchFilters** object, if encountered
+ */
+export function buildQuery(
+  filter?: UISearchFilter | LegacyFilter[]
+): SearchFilters {
+  if (!filter) {
+    return {}
+  }
+
+  if (Array.isArray(filter)) {
+    filter = processSearchFilters(filter)
+    if (!filter) {
+      return {}
+    }
+  }
+
+  const operator = logicalOperatorFromUI(
+    filter.logicalOperator || UILogicalOperator.ALL
+  )
+
+  const query: SearchFilters = {}
+  if (filter.onEmptyFilter) {
+    query.onEmptyFilter = filter.onEmptyFilter
+  } else {
+    query.onEmptyFilter = EmptyFilterOption.RETURN_ALL
+  }
+
+  query[operator] = {
+    conditions: (filter.groups || []).map(group => {
+      const { allOr, onEmptyFilter, filters } = splitFiltersArray(
+        group.filters || []
+      )
+      if (onEmptyFilter) {
+        query.onEmptyFilter = onEmptyFilter
+      }
+
+      // logicalOperator takes precendence over allOr
+      let operator = allOr ? LogicalOperator.OR : LogicalOperator.AND
+      if (group.logicalOperator) {
+        operator = logicalOperatorFromUI(group.logicalOperator)
+      }
+      return {
+        [operator]: { conditions: filters.map(buildCondition).filter(f => f) },
+      }
+    }),
+  }
+
+  return query
+}
+
+function logicalOperatorFromUI(operator: UILogicalOperator): LogicalOperator {
+  return operator === UILogicalOperator.ALL
+    ? LogicalOperator.AND
+    : LogicalOperator.OR
 }
 
 // The frontend can send single values for array fields sometimes, so to handle
 // this we convert them to arrays at the controller level so that nothing below
 // this has to worry about the non-array values.
 export function fixupFilterArrays(filters: SearchFilters) {
+  if (!filters) {
+    return filters
+  }
   for (const searchField of Object.values(ArrayOperator)) {
     const field = filters[searchField]
     if (field == null || !isPlainObject(field)) {
@@ -367,22 +517,28 @@ export function fixupFilterArrays(filters: SearchFilters) {
       }
     }
   }
+  recurseLogicalOperators(filters, fixupFilterArrays)
   return filters
 }
 
-export const search = (
-  docs: Record<string, any>[],
-  query: RowSearchParams
-): SearchResponse<Record<string, any>> => {
+export function search<T extends Record<string, any>>(
+  docs: T[],
+  query: Omit<RowSearchParams, "tableId">
+): SearchResponse<T> {
   let result = runQuery(docs, query.query)
   if (query.sort) {
-    result = sort(result, query.sort, query.sortOrder || SortOrder.ASCENDING)
+    result = sort(
+      result,
+      query.sort,
+      query.sortOrder || SortOrder.ASCENDING,
+      query.sortType
+    )
   }
-  let totalRows = result.length
+  const totalRows = result.length
   if (query.limit) {
     result = limit(result, query.limit.toString())
   }
-  const response: SearchResponse<Record<string, any>> = { rows: result }
+  const response: SearchResponse<T> = { rows: result }
   if (query.countRows) {
     response.totalRows = totalRows
   }
@@ -394,7 +550,10 @@ export const search = (
  * @param docs the data
  * @param query the JSON query
  */
-export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
+export function runQuery<T extends Record<string, any>>(
+  docs: T[],
+  query: SearchFilters
+): T[] {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
@@ -417,16 +576,19 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       type: SearchFilterOperator,
       test: (docValue: any, testValue: any) => boolean
     ) =>
-    (doc: Record<string, any>) => {
+    (doc: T) => {
       for (const [key, testValue] of Object.entries(query[type] || {})) {
-        const result = test(deepGet(doc, removeKeyNumbering(key)), testValue)
+        const valueToCheck = isLogicalSearchOperator(type)
+          ? doc
+          : deepGet(doc, removeKeyNumbering(key))
+        const result = test(valueToCheck, testValue)
         if (query.allOr && result) {
           return true
         } else if (!query.allOr && !result) {
           return false
         }
       }
-      return true
+      return !query.allOr
     }
 
   const stringMatch = match(
@@ -537,7 +699,27 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       return docValue._id === testValue
     }
 
-    return docValue === testValue
+    if (docValue === testValue) {
+      return true
+    }
+
+    if (docValue == null && testValue != null) {
+      return false
+    }
+
+    if (docValue != null && testValue == null) {
+      return false
+    }
+
+    const leftDate = dayjs(docValue)
+    if (leftDate.isValid()) {
+      const rightDate = dayjs(testValue)
+      if (rightDate.isValid()) {
+        return leftDate.isSame(rightDate)
+      }
+    }
+
+    return false
   }
 
   const not =
@@ -627,8 +809,42 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   )
   const containsAny = match(ArrayOperator.CONTAINS_ANY, _contains("some"))
 
-  const docMatch = (doc: Record<string, any>) => {
-    const filterFunctions = {
+  const and = match(
+    LogicalOperator.AND,
+    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
+      if (!conditions.length) {
+        return false
+      }
+      for (const condition of conditions) {
+        const matchesCondition = runQuery([docValue], condition)
+        if (!matchesCondition.length) {
+          return false
+        }
+      }
+      return true
+    }
+  )
+  const or = match(
+    LogicalOperator.OR,
+    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
+      if (!conditions.length) {
+        return false
+      }
+      for (const condition of conditions) {
+        const matchesCondition = runQuery([docValue], {
+          ...condition,
+          allOr: true,
+        })
+        if (matchesCondition.length) {
+          return true
+        }
+      }
+      return false
+    }
+  )
+
+  const docMatch = (doc: T) => {
+    const filterFunctions: Record<SearchFilterOperator, (doc: T) => boolean> = {
       string: stringMatch,
       fuzzy: fuzzyMatch,
       range: rangeMatch,
@@ -640,6 +856,8 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       contains: contains,
       containsAny: containsAny,
       notContains: notContains,
+      [LogicalOperator.AND]: and,
+      [LogicalOperator.OR]: or,
     }
 
     const results = Object.entries(query || {})
@@ -653,12 +871,16 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
         return filterFunctions[key as SearchFilterOperator]?.(doc) ?? false
       })
 
-    if (query.allOr) {
+    // there are no filters - logical operators can cover this up
+    if (!hasFilters(query)) {
+      return true
+    } else if (query.allOr) {
       return results.some(result => result === true)
     } else {
       return results.every(result => result === true)
     }
   }
+
   return docs.filter(docMatch)
 }
 
@@ -670,12 +892,12 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
  * @param sortOrder the sort order ("ascending" or "descending")
  * @param sortType the type of sort ("string" or "number")
  */
-export const sort = (
-  docs: any[],
-  sort: string,
+export function sort<T extends Record<string, any>>(
+  docs: T[],
+  sort: keyof T,
   sortOrder: SortOrder,
   sortType = SortType.STRING
-) => {
+): T[] {
   if (!sort || !sortOrder || !sortType) {
     return docs
   }
@@ -690,19 +912,17 @@ export const sort = (
     return parseFloat(x)
   }
 
-  return docs
-    .slice()
-    .sort((a: { [x: string]: any }, b: { [x: string]: any }) => {
-      const colA = parse(a[sort])
-      const colB = parse(b[sort])
+  return docs.slice().sort((a, b) => {
+    const colA = parse(a[sort])
+    const colB = parse(b[sort])
 
-      const result = colB == null || colA > colB ? 1 : -1
-      if (sortOrder.toLowerCase() === "descending") {
-        return result * -1
-      }
+    const result = colB == null || colA > colB ? 1 : -1
+    if (sortOrder.toLowerCase() === "descending") {
+      return result * -1
+    }
 
-      return result
-    })
+    return result
+  })
 }
 
 /**
@@ -711,8 +931,8 @@ export const sort = (
  * @param docs the data
  * @param limit the number of docs to limit to
  */
-export const limit = (docs: any[], limit: string) => {
-  const numLimit = parseFloat(limit)
+export function limit<T>(docs: T[], limit: string | number): T[] {
+  const numLimit = typeof limit === "number" ? limit : parseFloat(limit)
   if (isNaN(numLimit)) {
     return docs
   }
@@ -723,14 +943,33 @@ export const hasFilters = (query?: SearchFilters) => {
   if (!query) {
     return false
   }
-  const skipped = ["allOr", "onEmptyFilter"]
-  for (let [key, value] of Object.entries(query)) {
-    if (skipped.includes(key) || typeof value !== "object") {
-      continue
+  const check = (filters: SearchFilters): boolean => {
+    for (const logical of LOGICAL_OPERATORS) {
+      if (filters[logical]) {
+        for (const condition of filters[logical]?.conditions || []) {
+          const result = check(condition)
+          if (result) {
+            return result
+          }
+        }
+      }
     }
-    if (Object.keys(value || {}).length !== 0) {
-      return true
+    for (const search of SEARCH_OPERATORS) {
+      const searchValue = filters[search]
+      if (!searchValue || typeof searchValue !== "object") {
+        continue
+      }
+      const filtered = Object.entries(searchValue).filter(entry => {
+        const valueDefined =
+          entry[1] !== undefined || entry[1] !== null || entry[1] !== ""
+        // not empty is an edge case, null is allowed for it - this is covered by test cases
+        return search === BasicOperator.NOT_EMPTY || valueDefined
+      })
+      if (filtered.length !== 0) {
+        return true
+      }
     }
+    return false
   }
-  return false
+  return check(query)
 }

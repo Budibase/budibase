@@ -8,12 +8,12 @@
     views,
     viewsV2,
     userSelectedResourceMap,
-  } from "stores/builder"
+  } from "@/stores/builder"
   import QueryNavItem from "./QueryNavItem.svelte"
-  import NavItem from "components/common/NavItem.svelte"
-  import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
+  import NavItem from "@/components/common/NavItem.svelte"
+  import TableNavigator from "@/components/backend/TableNavigator/TableNavigator.svelte"
   import DatasourceNavItem from "./DatasourceNavItem/DatasourceNavItem.svelte"
-  import { TableNames } from "constants"
+  import { TableNames } from "@/constants"
   import { enrichDatasources } from "./datasourceUtils"
   import { onMount } from "svelte"
 
@@ -39,9 +39,7 @@
 
   const selectTable = tableId => {
     tables.select(tableId)
-    if (!$isActive("./table/:tableId")) {
-      $goto(`./table/${tableId}`)
-    }
+    $goto(`./table/${tableId}`)
   }
 
   function openNode(datasource) {
@@ -78,6 +76,13 @@
       selectedBy={$userSelectedResourceMap[TableNames.USERS]}
     />
   {/if}
+  <NavItem
+    icon="UserAdmin"
+    text="Manage roles"
+    selected={$isActive("./roles")}
+    on:click={() => $goto("./roles")}
+    selectedBy={$userSelectedResourceMap.roles}
+  />
   {#each enrichedDataSources.filter(ds => ds.show) as datasource}
     <DatasourceNavItem
       {datasource}

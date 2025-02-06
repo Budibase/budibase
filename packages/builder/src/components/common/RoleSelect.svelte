@@ -1,11 +1,11 @@
 <script>
   import { Select, FancySelect } from "@budibase/bbui"
-  import { roles } from "stores/builder"
-  import { licensing } from "stores/portal"
+  import { roles } from "@/stores/builder"
+  import { licensing } from "@/stores/portal"
 
-  import { Constants, RoleUtils } from "@budibase/frontend-core"
+  import { Constants } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
-  import { capitalise } from "helpers"
+  import { capitalise } from "@/helpers"
 
   export let value
   export let error
@@ -24,6 +24,7 @@
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
+  const subType = $licensing.license.plan.type ?? null
 
   $: enrichLabel = label => (labelPrefix ? `${labelPrefix} ${label}` : label)
   $: options = getOptions(
@@ -48,7 +49,8 @@
       let options = roles
         .filter(role => allowedRoles.includes(role._id))
         .map(role => ({
-          name: enrichLabel(role.name),
+          color: role.uiMetadata.color,
+          name: enrichLabel(role.uiMetadata.displayName),
           _id: role._id,
         }))
       if (allowedRoles.includes(Constants.Roles.CREATOR)) {
@@ -63,18 +65,19 @@
 
     // Allow all core roles
     let options = roles.map(role => ({
-      name: enrichLabel(role.name),
+      color: role.uiMetadata.color,
+      name: enrichLabel(role.uiMetadata.displayName),
       _id: role._id,
     }))
 
     // Add creator if required
-    if (allowCreator) {
+    if (allowCreator || isEnterprisePlan(subType)) {
       options.unshift({
         _id: Constants.Roles.CREATOR,
         name: "Can edit",
-        tag:
-          !$licensing.perAppBuildersEnabled &&
-          capitalise(Constants.PlanType.BUSINESS),
+        tag: isEnterprisePlan(subType)
+          ? null
+          : capitalise(Constants.PlanType.ENTERPRISE),
       })
     }
 
@@ -99,7 +102,7 @@
     if (role._id === Constants.Roles.CREATOR || role._id === RemoveID) {
       return null
     }
-    return RoleUtils.getRoleColour(role._id)
+    return role.color || "var(--spectrum-global-color-static-magenta-400)"
   }
 
   const getIcon = role => {
@@ -116,6 +119,14 @@
     } else {
       dispatch("change", e.detail)
     }
+  }
+
+  function isEnterprisePlan(subType) {
+    return (
+      subType === Constants.PlanType.ENTERPRISE ||
+      subType === Constants.PlanType.ENTERPRISE_BASIC ||
+      subType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
+    )
   }
 </script>
 
@@ -134,9 +145,12 @@
     getOptionValue={role => role._id}
     getOptionColour={getColor}
     getOptionIcon={getIcon}
-    isOptionEnabled={option =>
-      option._id !== Constants.Roles.CREATOR ||
-      $licensing.perAppBuildersEnabled}
+    isOptionEnabled={option => {
+      if (option._id === Constants.Roles.CREATOR) {
+        return isEnterprisePlan(subType)
+      }
+      return true
+    }}
     {placeholder}
     {error}
   />
@@ -154,10 +168,12 @@
     getOptionValue={role => role._id}
     getOptionColour={getColor}
     getOptionIcon={getIcon}
-    isOptionEnabled={option =>
-      (option._id !== Constants.Roles.CREATOR ||
-        $licensing.perAppBuildersEnabled) &&
-      option.enabled !== false}
+    isOptionEnabled={option => {
+      if (option._id === Constants.Roles.CREATOR) {
+        return isEnterprisePlan(subType)
+      }
+      return option.enabled !== false
+    }}
     {placeholder}
     {error}
   />

@@ -121,7 +121,7 @@ const identifyInstallationGroup = async (
 
 const identifyTenantGroup = async (
   tenantId: string,
-  account: Account | undefined,
+  hosting: Hosting,
   timestamp?: string | number
 ): Promise<void> => {
   const id = await getEventTenantId(tenantId)
@@ -129,26 +129,12 @@ const identifyTenantGroup = async (
   const installationId = await getInstallationId()
   const environment = getDeploymentEnvironment()
 
-  let hosting: Hosting
-  let profession: string | undefined
-  let companySize: string | undefined
-
-  if (account) {
-    profession = account.profession
-    companySize = account.size
-    hosting = account.hosting
-  } else {
-    hosting = getHostingFromEnv()
-  }
-
   const group: TenantGroup = {
     id,
     type,
     hosting,
     environment,
     installationId,
-    profession,
-    companySize,
   }
 
   await identifyGroup(group, timestamp)
@@ -171,9 +157,9 @@ const identifyUser = async (
   if (isSSOUser(user)) {
     providerType = user.providerType
   }
-  const accountHolder = account?.budibaseUserId === user._id || false
-  const verified =
-    account && account?.budibaseUserId === user._id ? account.verified : false
+  const accountHolder = await users.getExistingAccounts([user.email])
+  const isAccountHolder = accountHolder.length > 0
+  const verified = !!account && isAccountHolder && account.verified
   const installationId = await getInstallationId()
   const hosting = account ? account.hosting : getHostingFromEnv()
   const environment = getDeploymentEnvironment()
@@ -185,7 +171,7 @@ const identifyUser = async (
     installationId,
     tenantId,
     verified,
-    accountHolder,
+    accountHolder: isAccountHolder,
     providerType,
     builder,
     admin,
@@ -207,9 +193,10 @@ const identifyAccount = async (account: Account) => {
   const environment = getDeploymentEnvironment()
 
   if (isCloudAccount(account)) {
-    if (account.budibaseUserId) {
+    const user = await users.getGlobalUserByEmail(account.email)
+    if (user?._id) {
       // use the budibase user as the id if set
-      id = account.budibaseUserId
+      id = user._id
     }
   }
 

@@ -11,7 +11,7 @@
   }
 </script>
 
-<Modal bind:this={modal}>
+<Modal bind:this={modal} on:hide>
   <ModalContent
     size="XL"
     title="Edit Code"

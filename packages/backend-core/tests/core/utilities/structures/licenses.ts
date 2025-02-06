@@ -22,7 +22,6 @@ export function price(): PurchasedPrice {
     currency: "usd",
     duration: PriceDuration.MONTHLY,
     priceId: "price_123",
-    dayPasses: undefined,
     isPerUser: true,
   }
 }
@@ -50,8 +49,8 @@ export function quotas(): Quotas {
           value: 1,
           triggers: [],
         },
-        dayPasses: {
-          name: "Queries",
+        budibaseAICredits: {
+          name: "Budibase AI Credits",
           value: 1,
           triggers: [],
         },
@@ -83,6 +82,11 @@ export function quotas(): Quotas {
           triggers: [],
         },
         plugins: {
+          name: "Plugins",
+          value: 1,
+          triggers: [],
+        },
+        aiCustomConfigs: {
           name: "Plugins",
           value: 1,
           triggers: [],

@@ -77,7 +77,7 @@
   const enrichSteps = (steps, schema, id) => {
     const safeSteps = steps?.length ? steps : [{}]
     return safeSteps.map((step, idx) => {
-      const { title, desc, fields, buttons } = step
+      const { title, fields, buttons } = step
       const defaultProps = Utils.buildMultiStepFormBlockDefaultProps({
         _id: id,
         stepCount: safeSteps.length,
@@ -86,10 +86,10 @@
         dataSource,
       })
       return {
+        ...step,
         _stepId: Helpers.uuid(),
         fields: getDefaultFields(fields || [], schema),
         title: title ?? defaultProps.title,
-        desc,
         buttons: buttons || defaultProps.buttons,
       }
     })
@@ -172,7 +172,11 @@
           {#if buttonPosition === "bottom"}
             <BlockComponent
               type="buttongroup"
-              props={{ buttons: step.buttons }}
+              props={{
+                buttons: step.buttons,
+                collapsed: step.buttonsCollapsed,
+                collapsedText: step.buttonsCollapsedText,
+              }}
               order={3}
             />
           {/if}

@@ -18,6 +18,7 @@ import {
   timers,
   redis,
   cache,
+  features,
 } from "@budibase/backend-core"
 
 db.init()
@@ -45,6 +46,7 @@ bootstrap()
 const app: Application = new Application()
 
 app.keys = ["secret", "key"]
+app.proxy = true
 
 // set up top level koa middleware
 app.use(handleScimBody)
@@ -60,6 +62,10 @@ app.use(
 app.use(koaSession(app))
 app.use(middleware.correlation)
 app.use(middleware.pino)
+app.use(middleware.ip)
+if (!coreEnv.DISABLE_CONTENT_SECURITY_POLICY) {
+  app.use(middleware.csp)
+}
 app.use(userAgent)
 
 // authentication
@@ -100,8 +106,10 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
     startupLog = `${startupLog} - environment: "${env.BUDIBASE_ENVIRONMENT}"`
   }
   console.log(startupLog)
+
   await initPro()
   await redis.clients.init()
+  features.init()
   cache.docWritethrough.init()
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues

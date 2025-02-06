@@ -8,23 +8,27 @@ import {
   utils as coreUtils,
   cache,
 } from "@budibase/backend-core"
-import { PlatformLogoutOpts, User } from "@budibase/types"
+import { PlatformLogoutOpts, User, EmailTemplatePurpose } from "@budibase/types"
 import jwt from "jsonwebtoken"
 import * as userSdk from "../users"
 import * as emails from "../../utilities/email"
-import { EmailTemplatePurpose } from "../../constants"
 
 // LOGIN / LOGOUT
 
 export async function loginUser(user: User) {
   const sessionId = coreUtils.newid()
   const tenantId = tenancy.getTenantId()
-  await sessions.createASession(user._id!, { sessionId, tenantId })
+  await sessions.createASession(user._id!, {
+    sessionId,
+    tenantId,
+    email: user.email,
+  })
   return jwt.sign(
     {
       userId: user._id,
       sessionId,
       tenantId,
+      email: user.email,
     },
     coreEnv.JWT_SECRET!
   )

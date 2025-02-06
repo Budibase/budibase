@@ -4,15 +4,16 @@
 
   export let value
   export let row
-  $: count = getCount(Object.keys(value || {}).length)
 
-  const getCount = () => {
+  $: count = getCount(row, value)
+
+  const getCount = (row, value) => {
     return sdk.users.hasAppBuilderPermissions(row)
       ? row.builder.apps.length +
           Object.keys(row.roles || {}).filter(appId =>
             row.builder.apps.includes(appId)
           ).length
-      : value?.length || 0
+      : Object.keys(value || {}).length
   }
 </script>
 

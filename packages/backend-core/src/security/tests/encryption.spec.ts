@@ -4,7 +4,7 @@ import env from "../../environment"
 describe("encryption", () => {
   it("should throw an error if API encryption key is not set", () => {
     const jwt = getSecret(SecretOption.API)
-    expect(jwt).toBe(env.JWT_SECRET)
+    expect(jwt).toBe(env.JWT_SECRET?.export().toString())
   })
 
   it("should throw an error if encryption key is not set", () => {

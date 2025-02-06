@@ -44,8 +44,8 @@ export class AttachmentCleanup {
     if (type === FieldType.ATTACHMENTS && Array.isArray(rowData)) {
       return rowData
         .filter(attachment => attachment.key)
-        .map(attachment => attachment.key)
-    } else if ("key" in rowData) {
+        .map(attachment => attachment.key!)
+    } else if ("key" in rowData && rowData.key) {
       return [rowData.key]
     }
 

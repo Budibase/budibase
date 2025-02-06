@@ -2,15 +2,16 @@ import {
   PatchRowRequest,
   SaveRowRequest,
   Row,
-  ValidateResponse,
+  ValidateRowResponse,
   ExportRowsRequest,
   BulkImportRequest,
   BulkImportResponse,
   SearchRowResponse,
-  RowSearchParams,
   DeleteRows,
   DeleteRow,
   PaginatedSearchRowResponse,
+  RowExportFormat,
+  SearchRowRequest,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -50,8 +51,8 @@ export class RowAPI extends TestAPI {
     sourceId: string,
     row: SaveRowRequest,
     expectations?: Expectations
-  ): Promise<ValidateResponse> => {
-    return await this._post<ValidateResponse>(
+  ): Promise<ValidateRowResponse> => {
+    return await this._post<ValidateRowResponse>(
       `/api/${sourceId}/rows/validate`,
       {
         body: row,
@@ -104,7 +105,8 @@ export class RowAPI extends TestAPI {
 
   exportRows = async (
     tableId: string,
-    body: ExportRowsRequest,
+    body?: ExportRowsRequest,
+    format: RowExportFormat = RowExportFormat.JSON,
     expectations?: Expectations
   ) => {
     const response = await this._requestRaw(
@@ -112,7 +114,7 @@ export class RowAPI extends TestAPI {
       `/api/${tableId}/rows/exportRows`,
       {
         body,
-        query: { format: "json" },
+        query: { format },
         expectations,
       }
     )
@@ -134,7 +136,7 @@ export class RowAPI extends TestAPI {
     )
   }
 
-  search = async <T extends RowSearchParams>(
+  search = async <T extends SearchRowRequest>(
     sourceId: string,
     params?: T,
     expectations?: Expectations

@@ -74,7 +74,9 @@ describe("bbReferenceProcessor", () => {
 
         expect(result).toEqual(userId)
         expect(cacheGetUserSpy).toHaveBeenCalledTimes(1)
-        expect(cacheGetUserSpy).toHaveBeenCalledWith(userId)
+        expect(cacheGetUserSpy).toHaveBeenCalledWith({
+          userId,
+        })
       })
 
       it("throws an error given an invalid id", async () => {
@@ -98,7 +100,9 @@ describe("bbReferenceProcessor", () => {
 
         expect(result).toEqual(userId)
         expect(cacheGetUserSpy).toHaveBeenCalledTimes(1)
-        expect(cacheGetUserSpy).toHaveBeenCalledWith(userId)
+        expect(cacheGetUserSpy).toHaveBeenCalledWith({
+          userId,
+        })
       })
 
       it("empty strings will return null", async () => {
@@ -243,7 +247,9 @@ describe("bbReferenceProcessor", () => {
           lastName: user.lastName,
         })
         expect(cacheGetUserSpy).toHaveBeenCalledTimes(1)
-        expect(cacheGetUserSpy).toHaveBeenCalledWith(userId)
+        expect(cacheGetUserSpy).toHaveBeenCalledWith({
+          userId,
+        })
       })
 
       it("returns undefined given an unexisting user", async () => {
@@ -255,7 +261,9 @@ describe("bbReferenceProcessor", () => {
 
         expect(result).toBeUndefined()
         expect(cacheGetUserSpy).toHaveBeenCalledTimes(1)
-        expect(cacheGetUserSpy).toHaveBeenCalledWith(userId)
+        expect(cacheGetUserSpy).toHaveBeenCalledWith({
+          userId,
+        })
       })
     })
   })

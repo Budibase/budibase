@@ -15,6 +15,7 @@ import { helpers, utils } from "@budibase/shared-core"
 import { pipeline } from "stream/promises"
 import tmp from "tmp"
 import fs from "fs"
+import { merge, cloneDeep } from "lodash"
 
 type PrimitiveTypes =
   | FieldType.STRING
@@ -137,12 +138,22 @@ export function generateColumnDefinition(config: {
   let { externalType, autocolumn, name, presence, options } = config
   let foundType = FieldType.STRING
   const lowerCaseType = externalType.toLowerCase()
-  let matchingTypes = []
-  for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
-    if (lowerCaseType.includes(external)) {
-      matchingTypes.push({ external, internal })
+  let matchingTypes: { external: string; internal: PrimitiveTypes }[] = []
+
+  // In at least MySQL, the external type of an ENUM column is "enum('option1',
+  // 'option2', ...)", which can potentially contain any type name as a
+  // substring. To get around this interfering with the loop below, we first
+  // check for an enum column and handle that separately.
+  if (lowerCaseType.startsWith("enum")) {
+    matchingTypes.push({ external: "enum", internal: FieldType.OPTIONS })
+  } else {
+    for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
+      if (lowerCaseType.includes(external)) {
+        matchingTypes.push({ external, internal })
+      }
     }
   }
+
   // Set the foundType based the longest match
   if (matchingTypes.length > 0) {
     foundType = matchingTypes.reduce((acc, val) => {
@@ -241,6 +252,7 @@ function copyExistingPropsOver(
       let shouldKeepSchema = false
       switch (existingColumnType) {
         case FieldType.FORMULA:
+        case FieldType.AI:
         case FieldType.AUTO:
         case FieldType.INTERNAL:
           shouldKeepSchema = true
@@ -291,10 +303,16 @@ function copyExistingPropsOver(
         const fetchedColumnDefinition: FieldSchema | undefined =
           table.schema[key]
         table.schema[key] = {
-          ...existingTableSchema[key],
+          // merge the properties - anything missing will be filled in, old definition preferred
+          // have to clone due to the way merge works
+          ...merge(
+            cloneDeep(fetchedColumnDefinition),
+            existingTableSchema[key]
+          ),
+          // always take externalType and autocolumn from the fetched definition
           externalType:
             existingTableSchema[key].externalType ||
-            table.schema[key]?.externalType,
+            fetchedColumnDefinition?.externalType,
           autocolumn: fetchedColumnDefinition?.autocolumn,
         } as FieldSchema
         // check constraints which can be fetched from the DB (they could be updated)

@@ -40,10 +40,7 @@ export const getMetadata = async (
     try {
       return await db.get(accountId)
     } catch (e: any) {
-      if (e.status === 404) {
-        // do nothing
-        return
-      } else {
+      if (e.status !== 404) {
         throw e
       }
     }

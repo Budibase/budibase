@@ -1,7 +1,7 @@
 <script>
   import { Line, InfoWord, DocumentationLink, Text } from "../typography"
   import { FieldType } from "@budibase/types"
-  import { FIELDS } from "constants/backend"
+  import { FIELDS } from "@/constants/backend"
   import subjects from "../subjects"
 
   export let schema
@@ -79,6 +79,9 @@
     }
     if (columnType === FieldType.FORMULA) {
       return "https://docs.budibase.com/docs/formula"
+    }
+    if (columnType === FieldType.AI) {
+      return "https://docs.budibase.com/docs/ai"
     }
     if (columnType === FieldType.OPTIONS) {
       return "https://docs.budibase.com/docs/options"

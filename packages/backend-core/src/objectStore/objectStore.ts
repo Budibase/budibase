@@ -392,7 +392,7 @@ export async function listAllObjects(bucketName: string, path: string) {
 export function getPresignedUrl(
   bucketName: string,
   key: string,
-  durationSeconds: number = 3600
+  durationSeconds = 3600
 ) {
   const objectStore = ObjectStore(bucketName, { presigning: true })
   const params = {

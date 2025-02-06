@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
   import { Label } from "@budibase/bbui"
-  import { onMount, createEventDispatcher } from "svelte"
+  import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 
   import {
@@ -12,7 +12,6 @@
     completionStatus,
   } from "@codemirror/autocomplete"
   import {
-    EditorView,
     lineNumbers,
     keymap,
     highlightSpecialChars,
@@ -25,6 +24,7 @@
     MatchDecorator,
     ViewPlugin,
     Decoration,
+    EditorView,
   } from "@codemirror/view"
   import {
     bracketMatching,
@@ -43,13 +43,15 @@
   import { Compartment, EditorState } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
-  import { themeStore } from "stores/portal"
+  import { themeStore } from "@/stores/portal"
+  import type { EditorMode } from "@budibase/types"
 
-  export let label
-  export let completions = []
-  export let mode = EditorModes.Handlebars
-  export let value = ""
-  export let placeholder = null
+  export let label: string | undefined = undefined
+  // TODO: work out what best type fits this
+  export let completions: any[] = []
+  export let mode: EditorMode = EditorModes.Handlebars
+  export let value: string | null = ""
+  export let placeholder: string | null = null
   export let autocompleteEnabled = true
   export let autofocus = false
   export let jsBindingWrapping = true
@@ -58,16 +60,86 @@
 
   const dispatch = createEventDispatcher()
 
+  let textarea: HTMLDivElement
+  let editor: EditorView
+  let mounted = false
+  let isEditorInitialised = false
+  let queuedRefresh = false
+
+  // Theming!
+  let currentTheme = $themeStore?.theme
+  let isDark = !currentTheme.includes("light")
+  let themeConfig = new Compartment()
+
+  $: {
+    if (autofocus && isEditorInitialised) {
+      editor.focus()
+    }
+  }
+
+  // Init when all elements are ready
+  $: if (mounted && !isEditorInitialised) {
+    isEditorInitialised = true
+    initEditor()
+  }
+
+  // Theme change
+  $: if (mounted && isEditorInitialised && $themeStore?.theme) {
+    if (currentTheme != $themeStore?.theme) {
+      currentTheme = $themeStore?.theme
+      isDark = !currentTheme.includes("light")
+
+      // Issue theme compartment update
+      editor.dispatch({
+        effects: themeConfig.reconfigure([...(isDark ? [oneDark] : [])]),
+      })
+    }
+  }
+
+  // Wait to try and gracefully replace
+  $: refresh(value, isEditorInitialised, mounted)
+
+  /**
+   * Will refresh the editor contents only after
+   * it has been fully initialised
+   */
+  const refresh = (
+    value: string | null,
+    initialised?: boolean,
+    mounted?: boolean
+  ) => {
+    if (!initialised || !mounted) {
+      queuedRefresh = true
+      return
+    }
+
+    if (
+      editor &&
+      value &&
+      (editor.state.doc.toString() !== value || queuedRefresh)
+    ) {
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: value },
+      })
+      queuedRefresh = false
+    }
+  }
+
   // Export a function to expose caret position
   export const getCaretPosition = () => {
     const selection_range = editor.state.selection.ranges[0]
     return {
-      start: selection_range.from,
-      end: selection_range.to,
+      start: selection_range?.from,
+      end: selection_range?.to,
     }
   }
 
-  export const insertAtPos = opts => {
+  export const insertAtPos = (opts: {
+    start: number
+    end?: number
+    value: string
+    cursor: { anchor: number }
+  }) => {
     // Updating the value inside.
     // Retain focus
     editor.dispatch({
@@ -132,14 +204,9 @@
     }
   )
 
-  // Theming!
-  let currentTheme = $themeStore?.theme
-  let isDark = !currentTheme.includes("light")
-  let themeConfig = new Compartment()
-
   const indentWithTabCustom = {
     key: "Tab",
-    run: view => {
+    run: (view: EditorView) => {
       if (completionStatus(view.state) === "active") {
         acceptCompletion(view)
         return true
@@ -147,7 +214,7 @@
       indentMore(view)
       return true
     },
-    shift: view => {
+    shift: (view: EditorView) => {
       indentLess(view)
       return true
     },
@@ -179,7 +246,8 @@
 
   // None of this is reactive, but it never has been, so we just assume most
   // config flags aren't changed at runtime
-  const buildExtensions = base => {
+  // TODO: work out type for base
+  const buildExtensions = (base: any[]) => {
     let complete = [...base]
 
     if (autocompleteEnabled) {
@@ -189,7 +257,7 @@
           closeOnBlur: true,
           icons: false,
           optionClass: completion =>
-            completion.simple
+            "simple" in completion && completion.simple
               ? "autocomplete-option-simple"
               : "autocomplete-option",
         })
@@ -253,6 +321,11 @@
         lineNumbers(),
         foldGutter(),
         keymap.of(buildKeymap()),
+        EditorView.domEventHandlers({
+          blur: () => {
+            dispatch("blur", editor.state.doc.toString())
+          },
+        }),
         EditorView.updateListener.of(v => {
           const docStr = v.state.doc?.toString()
           if (docStr === value) {
@@ -266,11 +339,6 @@
     return complete
   }
 
-  let textarea
-  let editor
-  let mounted = false
-  let isEditorInitialised = false
-
   const initEditor = () => {
     const baseExtensions = buildBaseExtensions()
 
@@ -281,44 +349,20 @@
     })
   }
 
-  $: {
-    if (autofocus && isEditorInitialised) {
-      editor.focus()
-    }
-  }
-
-  // Init when all elements are ready
-  $: if (mounted && !isEditorInitialised) {
-    isEditorInitialised = true
-    initEditor()
-  }
-
-  // Theme change
-  $: if (mounted && isEditorInitialised && $themeStore?.theme) {
-    if (currentTheme != $themeStore?.theme) {
-      currentTheme = $themeStore?.theme
-      isDark = !currentTheme.includes("light")
-
-      // Issue theme compartment update
-      editor.dispatch({
-        effects: themeConfig.reconfigure([...(isDark ? [oneDark] : [])]),
-      })
-    }
-  }
-
   onMount(async () => {
     mounted = true
-    return () => {
-      if (editor) {
-        editor.destroy()
-      }
+  })
+
+  onDestroy(() => {
+    if (editor) {
+      editor.destroy()
     }
   })
 </script>
 
 {#if label}
   <div>
-    <Label small>{label}</Label>
+    <Label size="S">{label}</Label>
   </div>
 {/if}
 

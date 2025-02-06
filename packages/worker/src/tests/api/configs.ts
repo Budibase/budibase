@@ -1,11 +1,6 @@
-import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 
 export class ConfigAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   getConfigChecklist = () => {
     return this.request
       .get(`/api/global/configs/checklist`)
@@ -17,6 +12,14 @@ export class ConfigAPI extends TestAPI {
   getPublicSettings = () => {
     return this.request
       .get(`/api/global/configs/public`)
+      .set(this.config.defaultHeaders())
+      .expect(200)
+      .expect("Content-Type", /json/)
+  }
+
+  getAIConfig = () => {
+    return this.request
+      .get(`/api/global/configs/ai`)
       .set(this.config.defaultHeaders())
       .expect(200)
       .expect("Content-Type", /json/)
@@ -40,7 +43,7 @@ export class ConfigAPI extends TestAPI {
     const sessionContent = JSON.parse(
       Buffer.from(koaSession, "base64").toString("utf-8")
     )
-    const handle = sessionContent["openidconnect:localhost"].state.handle
+    const handle = sessionContent["openidconnect:example.com"].state.handle
     return this.request
       .get(`/api/global/auth/${this.config.getTenantId()}/oidc/callback`)
       .query({ code: "test", state: handle })

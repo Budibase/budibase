@@ -11,14 +11,16 @@
     selectedScreen,
     hoverStore,
     componentTreeNodesStore,
+    screenComponentErrors,
     snippets,
-  } from "stores/builder"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  } from "@/stores/builder"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { Layout, Heading, Body, Icon, notifications } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
-  import { findComponent, findComponentPath } from "helpers/components"
+  import { findComponent, findComponentPath } from "@/helpers/components"
   import { isActive, goto } from "@roxi/routify"
   import { ClientAppSkeleton } from "@budibase/frontend-core"
+  import { getThemeClassNames, ThemeClassPrefix } from "@budibase/shared-core"
 
   let iframe
   let layout
@@ -47,7 +49,9 @@
     layout,
     screen,
     selectedComponentId,
-    theme: $themeStore.theme,
+    theme: $appStore.clientFeatures.unifiedThemes
+      ? $themeStore.theme
+      : `${ThemeClassPrefix}${$themeStore.theme}`,
     customTheme: $themeStore.customTheme,
     previewDevice: $previewStore.previewDevice,
     messagePassing: $appStore.clientFeatures.messagePassing,
@@ -65,6 +69,7 @@
       port: window.location.port,
     },
     snippets: $snippets,
+    componentErrors: $screenComponentErrors,
   }
 
   // Refresh the preview when required
@@ -144,7 +149,12 @@
       const rootComponent = get(selectedScreen).props
       const component = findComponent(rootComponent, data.id)
       componentStore.copy(component)
-      await componentStore.paste(component)
+      await componentStore.paste(
+        component,
+        data.mode,
+        null,
+        data.selectComponent
+      )
     } else if (type === "preview-loaded") {
       // Wait for this event to show the client library if intelligent
       // loading is supported
@@ -246,13 +256,13 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="component-container">
+<div
+  class="component-container"
+  class:tablet={$previewStore.previewDevice === "tablet"}
+  class:mobile={$previewStore.previewDevice === "mobile"}
+>
   {#if loading}
-    <div
-      class={`loading ${$themeStore.baseTheme} ${$themeStore.theme}`}
-      class:tablet={$previewStore.previewDevice === "tablet"}
-      class:mobile={$previewStore.previewDevice === "mobile"}
-    >
+    <div class={`loading ${getThemeClassNames($themeStore.theme)}`}>
       <ClientAppSkeleton
         sideNav={$navigationStore?.navigation === "Left"}
         hideFooter
@@ -275,6 +285,7 @@
     src="/app/preview"
     class:hidden={loading || error}
   />
+  <div class="underlay" />
   <div
     class="add-component"
     class:active={isAddingComponent}
@@ -293,34 +304,13 @@
 />
 
 <style>
-  .loading {
-    position: absolute;
-    container-type: inline-size;
-    width: 100%;
-    height: 100%;
-    border: 2px solid transparent;
-    box-sizing: border-box;
-  }
-
-  .loading.tablet {
-    width: calc(1024px + 6px);
-    max-height: calc(768px + 6px);
-  }
-
-  .loading.mobile {
-    width: calc(390px + 6px);
-    max-height: calc(844px + 6px);
-  }
-
   .component-container {
-    grid-row-start: middle;
-    grid-column-start: middle;
     display: grid;
     place-items: center;
     position: relative;
-    overflow: hidden;
     margin: auto;
     height: 100%;
+    --client-padding: 6px;
   }
   .component-container iframe {
     border: 0;
@@ -329,6 +319,33 @@
     width: 100%;
     background-color: transparent;
   }
+
+  .loading,
+  .underlay {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    width: calc(100% - var(--client-padding) * 2);
+    height: calc(100% - var(--client-padding) * 2);
+  }
+  .tablet .loading,
+  .tablet .underlay {
+    max-width: 1024px;
+    max-height: 768px;
+  }
+  .mobile .loading,
+  .mobile .underlay {
+    max-width: 390px;
+    max-height: 844px;
+  }
+
+  .underlay {
+    background: var(--spectrum-global-color-gray-200);
+    z-index: -1;
+    padding: 2px;
+  }
+
   .center {
     position: absolute;
     width: 100%;

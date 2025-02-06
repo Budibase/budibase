@@ -1,6 +1,6 @@
 <script>
   import { Body, ProgressBar, Heading, Icon, Link } from "@budibase/bbui"
-  import { admin, auth } from "stores/portal"
+  import { admin, auth } from "@/stores/portal"
   import { onMount } from "svelte"
 
   export let usage

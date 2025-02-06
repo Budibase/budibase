@@ -1,4 +1,10 @@
-import { PermissionLevel, PermissionType } from "@budibase/types"
+import {
+  PermissionLevel,
+  PermissionType,
+  BuiltinPermissionID,
+  Permission,
+  BuiltinPermissions,
+} from "@budibase/types"
 import flatten from "lodash/flatten"
 import cloneDeep from "lodash/fp/cloneDeep"
 
@@ -8,7 +14,7 @@ export type RoleHierarchy = {
   permissionId: string
 }[]
 
-export class Permission {
+export class PermissionImpl implements Permission {
   type: PermissionType
   level: PermissionLevel
 
@@ -57,70 +63,62 @@ export function getAllowedLevels(userPermLevel: PermissionLevel): string[] {
   }
 }
 
-export enum BuiltinPermissionID {
-  PUBLIC = "public",
-  READ_ONLY = "read_only",
-  WRITE = "write",
-  ADMIN = "admin",
-  POWER = "power",
-}
-
-export const BUILTIN_PERMISSIONS = {
+export const BUILTIN_PERMISSIONS: BuiltinPermissions = {
   PUBLIC: {
     _id: BuiltinPermissionID.PUBLIC,
     name: "Public",
     permissions: [
-      new Permission(PermissionType.WEBHOOK, PermissionLevel.EXECUTE),
+      new PermissionImpl(PermissionType.WEBHOOK, PermissionLevel.EXECUTE),
     ],
   },
   READ_ONLY: {
     _id: BuiltinPermissionID.READ_ONLY,
     name: "Read only",
     permissions: [
-      new Permission(PermissionType.QUERY, PermissionLevel.READ),
-      new Permission(PermissionType.TABLE, PermissionLevel.READ),
-      new Permission(PermissionType.APP, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.QUERY, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.TABLE, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.APP, PermissionLevel.READ),
     ],
   },
   WRITE: {
     _id: BuiltinPermissionID.WRITE,
     name: "Read/Write",
     permissions: [
-      new Permission(PermissionType.QUERY, PermissionLevel.WRITE),
-      new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
-      new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
-      new Permission(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
-      new Permission(PermissionType.APP, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.QUERY, PermissionLevel.WRITE),
+      new PermissionImpl(PermissionType.TABLE, PermissionLevel.WRITE),
+      new PermissionImpl(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
+      new PermissionImpl(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.APP, PermissionLevel.READ),
     ],
   },
   POWER: {
     _id: BuiltinPermissionID.POWER,
     name: "Power",
     permissions: [
-      new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
-      new Permission(PermissionType.USER, PermissionLevel.READ),
-      new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
-      new Permission(PermissionType.WEBHOOK, PermissionLevel.READ),
-      new Permission(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
-      new Permission(PermissionType.APP, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.TABLE, PermissionLevel.WRITE),
+      new PermissionImpl(PermissionType.USER, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
+      new PermissionImpl(PermissionType.WEBHOOK, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.APP, PermissionLevel.READ),
     ],
   },
   ADMIN: {
     _id: BuiltinPermissionID.ADMIN,
     name: "Admin",
     permissions: [
-      new Permission(PermissionType.TABLE, PermissionLevel.ADMIN),
-      new Permission(PermissionType.USER, PermissionLevel.ADMIN),
-      new Permission(PermissionType.AUTOMATION, PermissionLevel.ADMIN),
-      new Permission(PermissionType.WEBHOOK, PermissionLevel.READ),
-      new Permission(PermissionType.QUERY, PermissionLevel.ADMIN),
-      new Permission(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
-      new Permission(PermissionType.APP, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.TABLE, PermissionLevel.ADMIN),
+      new PermissionImpl(PermissionType.USER, PermissionLevel.ADMIN),
+      new PermissionImpl(PermissionType.AUTOMATION, PermissionLevel.ADMIN),
+      new PermissionImpl(PermissionType.WEBHOOK, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.QUERY, PermissionLevel.ADMIN),
+      new PermissionImpl(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
+      new PermissionImpl(PermissionType.APP, PermissionLevel.READ),
     ],
   },
 }
 
-export function getBuiltinPermissions() {
+export function getBuiltinPermissions(): BuiltinPermissions {
   return cloneDeep(BUILTIN_PERMISSIONS)
 }
 

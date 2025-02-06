@@ -9,6 +9,9 @@ export type CreateApplicationParams = components["schemas"]["application"]
 export type Table = components["schemas"]["tableOutput"]["data"]
 export type CreateTableParams = components["schemas"]["table"]
 
+export type View = components["schemas"]["viewOutput"]["data"]
+export type CreateViewParams = components["schemas"]["view"]
+
 export type Row = components["schemas"]["rowOutput"]["data"]
 export type RowSearch = components["schemas"]["searchOutput"]
 export type CreateRowParams = components["schemas"]["row"]

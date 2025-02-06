@@ -1,15 +1,16 @@
-import TestConfig from "../../../tests/utilities/TestConfiguration"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { context } from "@budibase/backend-core"
 import { BUILTIN_ACTION_DEFINITIONS, getAction } from "../../actions"
 import emitter from "../../../events/index"
 import env from "../../../environment"
-import { AutomationActionStepId } from "@budibase/types"
+import { AutomationActionStepId, Datasource } from "@budibase/types"
+import { Knex } from "knex"
 
-let config: TestConfig
+let config: TestConfiguration
 
-export function getConfig(): TestConfig {
+export function getConfig(): TestConfiguration {
   if (!config) {
-    config = new TestConfig(true)
+    config = new TestConfiguration(true)
   }
   return config
 }
@@ -32,7 +33,12 @@ export async function runInProd(fn: any) {
   }
 }
 
-export async function runStep(stepId: string, inputs: any, stepContext?: any) {
+export async function runStep(
+  config: TestConfiguration,
+  stepId: string,
+  inputs: any,
+  stepContext?: any
+) {
   async function run() {
     let step = await getAction(stepId as AutomationActionStepId)
     expect(step).toBeDefined()
@@ -48,13 +54,33 @@ export async function runStep(stepId: string, inputs: any, stepContext?: any) {
       emitter,
     })
   }
-  if (config?.appId) {
+  if (config.appId) {
     return context.doInContext(config?.appId, async () => {
       return run()
     })
   } else {
     return run()
   }
+}
+
+export async function saveTestQuery(
+  config: TestConfiguration,
+  client: Knex,
+  tableName: string,
+  datasource: Datasource
+) {
+  return await config.api.query.save({
+    name: "test query",
+    datasourceId: datasource._id!,
+    parameters: [],
+    fields: {
+      sql: client(tableName).select("*").toSQL().toNative().sql,
+    },
+    transformer: "",
+    schema: {},
+    readable: true,
+    queryVerb: "read",
+  })
 }
 
 export const apiKey = "test"

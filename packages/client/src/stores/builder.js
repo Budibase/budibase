@@ -19,6 +19,7 @@ const createBuilderStore = () => {
     eventResolvers: {},
     metadata: null,
     snippets: null,
+    componentErrors: {},
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -41,13 +42,20 @@ const createBuilderStore = () => {
       eventStore.actions.dispatchEvent("update-prop", { prop, value })
     },
     updateStyles: async (styles, id) => {
-      await eventStore.actions.dispatchEvent("update-styles", { styles, id })
+      await eventStore.actions.dispatchEvent("update-styles", {
+        styles,
+        id,
+      })
     },
     keyDown: (key, ctrlKey) => {
       eventStore.actions.dispatchEvent("key-down", { key, ctrlKey })
     },
-    duplicateComponent: id => {
-      eventStore.actions.dispatchEvent("duplicate-component", { id })
+    duplicateComponent: (id, mode = "below", selectComponent = true) => {
+      eventStore.actions.dispatchEvent("duplicate-component", {
+        id,
+        mode,
+        selectComponent,
+      })
     },
     deleteComponent: id => {
       eventStore.actions.dispatchEvent("delete-component", { id })

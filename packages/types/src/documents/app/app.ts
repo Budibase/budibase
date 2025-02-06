@@ -1,4 +1,4 @@
-import { User, Document, Plugin, Snippet } from "../"
+import { User, Document, Plugin, Snippet, Theme } from "../"
 import { SocketSession } from "../../sdk"
 
 export type AppMetadataErrors = { [key: string]: string[] }
@@ -14,7 +14,7 @@ export interface App extends Document {
   instance: AppInstance
   tenantId: string
   status: string
-  theme?: string
+  theme?: Theme
   customTheme?: AppCustomTheme
   revertableVersion?: string
   lockedBy?: User
@@ -27,6 +27,8 @@ export interface App extends Document {
   usedPlugins?: Plugin[]
   upgradableVersion?: string
   snippets?: Snippet[]
+  creationVersion?: string
+  updatedBy?: string
 }
 
 export interface AppInstance {
@@ -35,8 +37,8 @@ export interface AppInstance {
 
 export interface AppNavigation {
   navigation: string
-  title: string
-  navWidth: string
+  title?: string
+  navWidth?: string
   sticky?: boolean
   hideLogo?: boolean
   logoUrl?: string
@@ -44,6 +46,7 @@ export interface AppNavigation {
   navBackground?: string
   navTextColor?: string
   links?: AppNavigationLink[]
+  textAlign?: string
 }
 
 export interface AppNavigationLink {
@@ -51,6 +54,8 @@ export interface AppNavigationLink {
   url: string
   id?: string
   roleId?: string
+  type?: string
+  subLinks?: AppNavigationLink[]
 }
 
 export interface AppCustomTheme {

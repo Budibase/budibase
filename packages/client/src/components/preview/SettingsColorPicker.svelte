@@ -1,16 +1,18 @@
 <script>
   import { ColorPicker } from "@budibase/bbui"
-  import { builderStore, componentStore } from "stores"
+  import { builderStore } from "stores"
 
   export let prop
+  export let component
+  export let disabled = false
 
-  $: currentValue = $componentStore.selectedComponent?.[prop]
+  $: currentValue = component?.[prop]
 </script>
 
-<div>
+<div class:disabled>
   <ColorPicker
     size="S"
-    value={currentValue}
+    value={disabled ? null : currentValue}
     on:change={e => {
       if (prop) {
         builderStore.actions.updateProp(prop, e.detail)
@@ -22,5 +24,8 @@
 <style>
   div {
     padding: 0 4px;
+  }
+  div.disabled {
+    pointer-events: none;
   }
 </style>

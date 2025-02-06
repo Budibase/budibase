@@ -1,15 +1,20 @@
 import { serializeError } from "serialize-error"
 import env from "../environment"
 import {
-  JsErrorTimeout,
+  JsTimeoutError,
   setJSRunner,
   setOnErrorLog,
+  setTestingBackendJS,
 } from "@budibase/string-templates"
 import { context, logging } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { IsolatedVM } from "./vm"
 
 export function init() {
+  // enforce that if we're using isolated-VM runner then we are running backend JS
+  if (env.isTest()) {
+    setTestingBackendJS()
+  }
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, () => {
       try {
@@ -40,7 +45,7 @@ export function init() {
         return vm.withContext(rest, () => vm.execute(js))
       } catch (error: any) {
         if (error.message === "Script execution timed out.") {
-          throw new JsErrorTimeout()
+          throw new JsTimeoutError()
         }
         throw error
       }

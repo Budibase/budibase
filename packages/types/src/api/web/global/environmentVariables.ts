@@ -7,12 +7,22 @@ export interface CreateEnvironmentVariableRequest {
   production: string
   development: string
 }
+export interface CreateEnvironmentVariableResponse {
+  message: string
+}
 
 export interface UpdateEnvironmentVariableRequest {
   production: string
   development: string
 }
+export interface UpdateEnvironmentVariableResponse {
+  message: string
+}
 
 export interface GetEnvironmentVariablesResponse {
   variables: string[]
+}
+
+export interface DeleteEnvironmentVariablesResponse {
+  message: string
 }

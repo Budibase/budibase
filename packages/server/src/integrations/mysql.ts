@@ -2,7 +2,6 @@ import {
   Integration,
   DatasourceFieldType,
   QueryType,
-  QueryJson,
   SqlQuery,
   Table,
   TableSchema,
@@ -15,6 +14,7 @@ import {
   DatasourcePlusQueryResponse,
   SqlQueryBinding,
   SqlClient,
+  EnrichedQueryJson,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -24,8 +24,7 @@ import {
   checkExternalTables,
   HOST_ADDRESS,
 } from "./utils"
-import dayjs from "dayjs"
-import { NUMBER_REGEX } from "../utilities"
+import { isDate, NUMBER_REGEX } from "../utilities"
 import { MySQLColumn } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import { sql } from "@budibase/backend-core"
@@ -129,11 +128,7 @@ export function bindingTypeCoerce(bindings: SqlQueryBinding) {
     }
     // if not a number, see if it is a date - important to do in this order as any
     // integer will be considered a valid date
-    else if (
-      /^\d/.test(binding) &&
-      dayjs(binding).isValid() &&
-      !binding.includes(",")
-    ) {
+    else if (isDate(binding)) {
       let value: any
       value = new Date(binding)
       if (isNaN(value)) {
@@ -241,6 +236,16 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
 
   async connect() {
     this.client = await mysql.createConnection(this.config)
+    const res = await this.internalQuery(
+      {
+        sql: "SELECT VERSION();",
+      },
+      { connect: false }
+    )
+    const version = res?.[0]?.["VERSION()"]
+    if (version?.toLowerCase().includes("mariadb")) {
+      this.setExtendedSqlClient(SqlClient.MARIADB)
+    }
   }
 
   async disconnect() {
@@ -317,9 +322,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
             presence: required && !isAuto && !hasDefault,
             externalType: column.Type,
             options: column.Type.startsWith("enum")
-              ? column.Type.substring(5, column.Type.length - 1)
-                  .split(",")
-                  .map(str => str.replace(/^'(.*)'$/, "$1"))
+              ? column.Type.substring(6, column.Type.length - 2).split("','")
               : undefined,
           })
         }
@@ -385,15 +388,15 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     return results.length ? results : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
+  async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     await this.connect()
     try {
       const queryFn = (query: any) =>
         this.internalQuery(query, { connect: false, disableCoercion: true })
       const processFn = (result: any) => {
-        if (json?.meta?.table && Array.isArray(result)) {
+        if (Array.isArray(result)) {
           return this.convertJsonStringColumns(
-            json.meta.table,
+            json.table,
             result,
             json.tableAliases
           )
@@ -409,7 +412,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   async getExternalSchema() {
     try {
       const [databaseResult] = await this.internalQuery({
-        sql: `SHOW CREATE DATABASE ${this.config.database}`,
+        sql: `SHOW CREATE DATABASE IF NOT EXISTS \`${this.config.database}\``,
       })
       let dumpContent = [databaseResult["Create Database"]]
 
@@ -429,8 +432,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         dumpContent.push(createTableStatement)
       }
 
-      const schema = dumpContent.join("\n")
-      return schema
+      return dumpContent.join(";\n") + ";"
     } finally {
       this.disconnect()
     }

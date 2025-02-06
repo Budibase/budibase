@@ -34,7 +34,7 @@ type TemplateType = {
 
 function rewriteAttachmentUrl(appId: string, attachment: RowAttachment) {
   // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
-  const urlParts = attachment.key.split("/")
+  const urlParts = attachment.key?.split("/") || []
   // remove the app ID
   urlParts.shift()
   // add new app ID
@@ -170,7 +170,10 @@ export async function importApp(
   appId: string,
   db: Database,
   template: TemplateType,
-  opts: { importObjStoreContents: boolean } = { importObjStoreContents: true }
+  opts: {
+    importObjStoreContents: boolean
+    updateAttachmentColumns: boolean
+  } = { importObjStoreContents: true, updateAttachmentColumns: true }
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
   let dbStream: any
@@ -184,6 +187,20 @@ export async function importApp(
       await decryptFiles(tmpPath, template.file.password)
     }
     const contents = await fsp.readdir(tmpPath)
+    const stillEncrypted = !!contents.find(name => name.endsWith(".enc"))
+    if (stillEncrypted) {
+      throw new Error("Files are encrypted but no password has been supplied.")
+    }
+    const isPlugin = !!contents.find(name => name === "plugin.min.js")
+    if (isPlugin) {
+      throw new Error("Supplied file is a plugin - cannot import as app.")
+    }
+    const isInvalid = !contents.find(name => name === DB_EXPORT_FILE)
+    if (isInvalid) {
+      throw new Error(
+        "App export does not appear to be valid - no DB file found."
+      )
+    }
     // have to handle object import
     if (contents.length && opts.importObjStoreContents) {
       let promises = []
@@ -219,7 +236,9 @@ export async function importApp(
   if (!ok) {
     throw "Error loading database dump from template."
   }
-  await updateAttachmentColumns(prodAppId, db)
+  if (opts.updateAttachmentColumns) {
+    await updateAttachmentColumns(prodAppId, db)
+  }
   await updateAutomations(prodAppId, db)
   // clear up afterward
   if (tmpPath) {

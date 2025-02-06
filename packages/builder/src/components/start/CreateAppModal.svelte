@@ -7,15 +7,15 @@
     ModalContent,
     Dropzone,
   } from "@budibase/bbui"
-  import { initialise } from "stores/builder"
-  import { API } from "api"
-  import { appsStore, admin, auth } from "stores/portal"
+  import { initialise } from "@/stores/builder"
+  import { API } from "@/api"
+  import { appsStore, admin, auth } from "@/stores/portal"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import { createValidationStore } from "helpers/validation/yup"
-  import * as appValidation from "helpers/validation/yup/app"
-  import TemplateCard from "components/common/TemplateCard.svelte"
-  import { lowercase } from "helpers"
+  import { createValidationStore } from "@/helpers/validation/yup"
+  import * as appValidation from "@/helpers/validation/yup/app"
+  import TemplateCard from "@/components/common/TemplateCard.svelte"
+  import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
 
   export let template
@@ -26,6 +26,7 @@
   const values = writable({ name: "", url: null })
   const validation = createValidationStore()
   const encryptionValidation = createValidationStore()
+  const isEncryptedRegex = /^.*\.enc.*\.tar\.gz$/gm
 
   $: {
     const { url } = $values
@@ -37,7 +38,9 @@
     encryptionValidation.check({ ...$values })
   }
 
-  $: encryptedFile = $values.file?.name?.endsWith(".enc.tar.gz")
+  // filename should be separated to avoid updates everytime any other form element changes
+  $: filename = $values.file?.name
+  $: encryptedFile = isEncryptedRegex.test(filename)
 
   onMount(async () => {
     const lastChar = $auth.user?.firstName
@@ -118,14 +121,17 @@
       if ($values.url) {
         data.append("url", $values.url.trim())
       }
-      data.append("useTemplate", template != null)
-      if (template) {
-        data.append("templateName", template.name)
-        data.append("templateKey", template.key)
-        data.append("templateFile", $values.file)
+
+      if (template?.fromFile) {
+        data.append("useTemplate", true)
+        data.append("fileToImport", $values.file)
         if ($values.encryptionPassword?.trim()) {
           data.append("encryptionPassword", $values.encryptionPassword.trim())
         }
+      } else if (template) {
+        data.append("useTemplate", true)
+        data.append("templateName", template.name)
+        data.append("templateKey", template.key)
       }
 
       // Create App
@@ -168,7 +174,7 @@
           try {
             await createNewApp()
           } catch (error) {
-            notifications.error("Error creating app")
+            notifications.error(`Error creating app - ${error.message}`)
           }
         }
       },

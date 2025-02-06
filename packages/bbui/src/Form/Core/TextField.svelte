@@ -1,25 +1,25 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/textfield/dist/index-vars.css"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher, onMount, tick } from "svelte"
 
   export let value = null
-  export let placeholder = null
+  export let placeholder: string | undefined = undefined
   export let type = "text"
   export let disabled = false
   export let id = null
   export let readonly = false
   export let updateOnChange = true
   export let quiet = false
-  export let align
+  export let align: "left" | "right" | "center" | undefined = undefined
   export let autofocus = false
-  export let autocomplete = null
+  export let autocomplete: boolean | undefined
 
   const dispatch = createEventDispatcher()
 
-  let field
+  let field: any
   let focus = false
 
-  const updateValue = newValue => {
+  const updateValue = (newValue: any) => {
     if (readonly || disabled) {
       return
     }
@@ -37,7 +37,7 @@
     focus = true
   }
 
-  const onBlur = event => {
+  const onBlur = (event: any) => {
     if (readonly || disabled) {
       return
     }
@@ -45,14 +45,14 @@
     updateValue(event.target.value)
   }
 
-  const onInput = event => {
+  const onInput = (event: any) => {
     if (readonly || !updateOnChange || disabled) {
       return
     }
     updateValue(event.target.value)
   }
 
-  const updateValueOnEnter = event => {
+  const updateValueOnEnter = (event: any) => {
     if (readonly || disabled) {
       return
     }
@@ -61,17 +61,27 @@
     }
   }
 
-  const getInputMode = type => {
+  const getInputMode = (type: any) => {
     if (type === "bigint") {
       return "numeric"
     }
     return type === "number" ? "decimal" : "text"
   }
 
-  onMount(() => {
+  $: autocompleteValue =
+    typeof autocomplete === "boolean"
+      ? autocomplete
+        ? "on"
+        : "off"
+      : undefined
+
+  onMount(async () => {
     if (disabled) return
     focus = autofocus
-    if (focus) field.focus()
+    if (focus) {
+      await tick()
+      field.focus()
+    }
   })
 </script>
 
@@ -101,7 +111,7 @@
     class="spectrum-Textfield-input"
     style={align ? `text-align: ${align};` : ""}
     inputmode={getInputMode(type)}
-    {autocomplete}
+    autocomplete={autocompleteValue}
   />
 </div>
 

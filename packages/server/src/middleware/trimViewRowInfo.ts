@@ -1,45 +1,44 @@
-import { Ctx, Row } from "@budibase/types"
-import * as utils from "../db/utils"
+import { Ctx, Row, ViewV2 } from "@budibase/types"
+
 import sdk from "../sdk"
 import { Next } from "koa"
-import { getTableId } from "../api/controllers/row/utils"
+import { getSourceId } from "../api/controllers/row/utils"
 
-export default async (ctx: Ctx<Row>, next: Next) => {
+export default async (ctx: Ctx<Row, Row>, next: Next) => {
   const { body } = ctx.request
-  let { _viewId: viewId } = body
-
-  const possibleViewId = getTableId(ctx)
-  if (utils.isViewID(possibleViewId)) {
-    viewId = possibleViewId
-  }
+  const viewId = getSourceId(ctx).viewId ?? body._viewId
 
   // nothing to do, it is not a view (just a table ID)
   if (!viewId) {
     return next()
   }
 
-  const { tableId } = utils.extractViewInfoFromID(viewId)
-
   // don't need to trim delete requests
-  if (ctx?.method?.toLowerCase() !== "delete") {
-    await trimViewFields(ctx.request.body, viewId)
+  const trimFields = ctx?.method?.toLowerCase() !== "delete"
+  if (!trimFields) {
+    return next()
   }
 
-  ctx.params.sourceId = tableId
-  ctx.params.viewId = viewId
+  const view = await sdk.views.get(viewId)
+  ctx.request.body = await trimNonViewFields(ctx.request.body, view, "WRITE")
 
-  return next()
+  await next()
+
+  ctx.body = await trimNonViewFields(ctx.body, view, "READ")
 }
 
 // have to mutate the koa context, can't return
-export async function trimViewFields(body: Row, viewId: string): Promise<void> {
-  const view = await sdk.views.get(viewId)
-  const allowedKeys = sdk.views.allowedFields(view)
+async function trimNonViewFields(
+  row: Row,
+  view: ViewV2,
+  permission: "WRITE" | "READ"
+): Promise<Row> {
+  row = { ...row }
+  const allowedKeys = sdk.views.allowedFields(view, permission)
   // have to mutate the context, can't update reference
-  const toBeRemoved = Object.keys(body).filter(
-    key => !allowedKeys.includes(key)
-  )
+  const toBeRemoved = Object.keys(row).filter(key => !allowedKeys.includes(key))
   for (let removeKey of toBeRemoved) {
-    delete body[removeKey]
+    delete row[removeKey]
   }
+  return row
 }
