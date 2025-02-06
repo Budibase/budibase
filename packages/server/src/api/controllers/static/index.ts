@@ -1,4 +1,3 @@
-import { InvalidFileExtensions } from "@budibase/shared-core"
 import AppComponent from "./templates/BudibaseApp.svelte"
 import { join } from "../../../utilities/centralPath"
 import * as uuid from "uuid"
