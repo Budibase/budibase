@@ -11,7 +11,7 @@ import { replaceFakeBindings } from "../automations/loopUtils"
 import { dataFilters, helpers, utils } from "@budibase/shared-core"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
-import { definitions as triggerDefs } from "../automations/triggerInfo"
+import { automations } from "@budibase/shared-core"
 import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
 import {
@@ -50,7 +50,7 @@ import env from "../environment"
 import tracer from "dd-trace"
 
 threadUtils.threadSetup()
-const CRON_STEP_ID = triggerDefs.CRON.stepId
+const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
 function getLoopIterations(loopStep: LoopStep) {
