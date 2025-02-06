@@ -1,10 +1,5 @@
 import { roles, utils } from "@budibase/backend-core"
-import {
-  createHomeScreen,
-  createTableScreen,
-  createQueryScreen,
-  createViewScreen,
-} from "../../constants/screens"
+import { createHomeScreen } from "../../constants/screens"
 import { EMPTY_LAYOUT } from "../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -45,6 +40,11 @@ import {
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
 import { generator } from "@budibase/backend-core/tests"
+export {
+  createTableScreen,
+  createQueryScreen,
+  createViewScreen,
+} from "../../constants/screens"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -521,18 +521,6 @@ export function basicScreen(route = "/") {
     roleId: BUILTIN_ROLE_IDS.BASIC,
     route,
   })
-}
-
-export function tableScreen(datasourceName: string, table: Table) {
-  return createTableScreen(datasourceName, table)
-}
-
-export function viewScreen(datasourceName: string, view: ViewV2) {
-  return createViewScreen(datasourceName, view)
-}
-
-export function queryScreen(datasourceId: string, query: Query) {
-  return createQueryScreen(datasourceId, query)
 }
 
 export function powerScreen(route = "/") {
