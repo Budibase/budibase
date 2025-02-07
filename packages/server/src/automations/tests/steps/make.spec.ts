@@ -19,13 +19,13 @@ describe("test the outgoing webhook action", () => {
 
   it("should be able to run the action", async () => {
     nock("http://www.example.com/").post("/").reply(200, { foo: "bar" })
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .make({
         url: "http://www.example.com",
         body: null,
       })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.response.foo).toEqual("bar")
     expect(result.steps[0].outputs.success).toEqual(true)
@@ -46,26 +46,26 @@ describe("test the outgoing webhook action", () => {
       .post("/", payload)
       .reply(200, { foo: "bar" })
 
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .make({
         body: { value: JSON.stringify(payload) },
         url: "http://www.example.com",
       })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.response.foo).toEqual("bar")
     expect(result.steps[0].outputs.success).toEqual(true)
   })
 
   it("should return a 400 if the JSON payload string is malformed", async () => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .make({
         body: { value: "{ invalid json }" },
         url: "http://www.example.com",
       })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.httpStatus).toEqual(400)
     expect(result.steps[0].outputs.response).toEqual("Invalid payload JSON")

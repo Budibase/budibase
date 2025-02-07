@@ -24,8 +24,8 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should use trigger data in bash command and pass output to subsequent steps", async () => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: { command: "hello world" } })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .bash(
         { code: "echo '{{ trigger.fields.command }}'" },
         { stepName: "Echo Command" }
@@ -34,7 +34,7 @@ describe("Execute Bash Automations", () => {
         { text: "Bash output was: {{ steps.[Echo Command].stdout }}" },
         { stepName: "Log Output" }
       )
-      .run()
+      .test({ fields: { command: "hello world" } })
 
     expect(result.steps[0].outputs.stdout).toEqual("hello world\n")
     expect(result.steps[1].outputs.message).toContain(
@@ -43,8 +43,8 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should chain multiple bash commands using previous outputs", async () => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: { filename: "testfile.txt" } })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .bash(
         { code: "echo 'initial content' > {{ trigger.fields.filename }}" },
         { stepName: "Create File" }
@@ -57,15 +57,15 @@ describe("Execute Bash Automations", () => {
         { code: "rm {{ trigger.fields.filename }}" },
         { stepName: "Cleanup" }
       )
-      .run()
+      .test({ fields: { filename: "testfile.txt" } })
 
     expect(result.steps[1].outputs.stdout).toEqual("INITIAL CONTENT\n")
     expect(result.steps[1].outputs.success).toEqual(true)
   })
 
   it("should integrate bash output with row operations", async () => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .queryRows(
         {
           tableId: table._id!,
@@ -83,7 +83,7 @@ describe("Execute Bash Automations", () => {
         { text: "{{ steps.[Process Row Data].stdout }}" },
         { stepName: "Log Result" }
       )
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[1].outputs.stdout).toContain(
       "Row data: test row - test description"
@@ -94,8 +94,8 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should handle bash output in conditional logic", async () => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: { threshold: "5" } })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .bash(
         { code: "echo $(( {{ trigger.fields.threshold }} + 5 ))" },
         { stepName: "Calculate Value" }
@@ -113,7 +113,7 @@ describe("Execute Bash Automations", () => {
         { text: "Value was {{ steps.[Check Value].value }}" },
         { stepName: "Log Result" }
       )
-      .run()
+      .test({ fields: { threshold: "5" } })
 
     expect(result.steps[0].outputs.stdout).toEqual("10\n")
     expect(result.steps[1].outputs.value).toEqual("high")
@@ -121,14 +121,14 @@ describe("Execute Bash Automations", () => {
   })
 
   it("should handle null values gracefully", async () => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .bash(
         // @ts-expect-error - testing null input
         { code: null },
         { stepName: "Null Command" }
       )
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.stdout).toBe(
       "Budibase bash automation failed: Invalid inputs"

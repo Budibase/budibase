@@ -254,10 +254,6 @@ export type OutgoingWebhookStepInputs = {
   headers: string | Record<string, string>
 }
 
-export type AppActionTriggerInputs = {
-  fields: object
-}
-
 export type AppActionTriggerOutputs = {
   fields: object
 }
