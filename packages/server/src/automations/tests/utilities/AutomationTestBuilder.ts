@@ -208,7 +208,7 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
     // Remove the trigger step from the response.
     results.steps.shift()
 
-    return response
+    return results
   }
 }
 
