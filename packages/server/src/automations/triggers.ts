@@ -1,7 +1,7 @@
 import emitter from "../events/index"
 import { getAutomationParams, isDevAppID } from "../db/utils"
 import { coerce } from "../utilities/rowProcessor"
-import { definitions } from "./triggerInfo"
+import { automations } from "@budibase/shared-core"
 // need this to call directly, so we can get a response
 import { automationQueue } from "./bullboard"
 import { checkTestFlag } from "../utilities/redis"
@@ -21,25 +21,18 @@ import {
   AutomationRowEvent,
   UserBindings,
   AutomationResults,
+  DidNotTriggerResponse,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"
 
-export const TRIGGER_DEFINITIONS = definitions
+export const TRIGGER_DEFINITIONS = automations.triggers.definitions
 const JOB_OPTS = {
   removeOnComplete: true,
   removeOnFail: true,
 }
 import * as automationUtils from "../automations/automationUtils"
 import { doesTableExist } from "../sdk/app/tables/getters"
-
-type DidNotTriggerResponse = {
-  outputs: {
-    success: false
-    status: AutomationStatus.STOPPED
-  }
-  message: AutomationStoppedReason.TRIGGER_FILTER_NOT_MET
-}
 
 async function getAllAutomations() {
   const db = context.getAppDB()
@@ -156,14 +149,26 @@ export function isAutomationResults(
   )
 }
 
+interface AutomationTriggerParams {
+  fields: Record<string, any>
+  timeout?: number
+  appId?: string
+  user?: UserBindings
+}
+
 export async function externalTrigger(
   automation: Automation,
-  params: {
-    fields: Record<string, any>
-    timeout?: number
-    appId?: string
-    user?: UserBindings
-  },
+  params: AutomationTriggerParams,
+  options: { getResponses: true }
+): Promise<AutomationResults | DidNotTriggerResponse>
+export async function externalTrigger(
+  automation: Automation,
+  params: AutomationTriggerParams,
+  options?: { getResponses: false }
+): Promise<AutomationJob | DidNotTriggerResponse>
+export async function externalTrigger(
+  automation: Automation,
+  params: AutomationTriggerParams,
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<AutomationResults | DidNotTriggerResponse | AutomationJob> {
   if (automation.disabled) {
@@ -268,8 +273,8 @@ async function checkTriggerFilters(
   }
 
   if (
-    trigger.stepId === definitions.ROW_UPDATED.stepId ||
-    trigger.stepId === definitions.ROW_SAVED.stepId
+    trigger.stepId === automations.triggers.definitions.ROW_UPDATED.stepId ||
+    trigger.stepId === automations.triggers.definitions.ROW_SAVED.stepId
   ) {
     const newRow = await automationUtils.cleanUpRow(tableId, event.row)
     return rowPassesFilters(newRow, filters)

@@ -9,6 +9,7 @@ import {
   dndStore,
   eventStore,
   hoverStore,
+  stateStore,
 } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
 import { get } from "svelte/store"
@@ -43,6 +44,7 @@ const loadBudibase = async () => {
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
     location: window["##BUDIBASE_LOCATION##"],
     snippets: window["##BUDIBASE_SNIPPETS##"],
+    componentErrors: window["##BUDIBASE_COMPONENT_ERRORS##"],
   })
 
   // Set app ID - this window flag is set by both the preview and the real
@@ -86,8 +88,10 @@ const loadBudibase = async () => {
         dndStore.actions.reset()
       }
     } else if (type === "request-context") {
-      const { selectedComponentInstance } = get(componentStore)
-      const context = selectedComponentInstance?.getDataContext()
+      const { selectedComponentInstance, screenslotInstance } =
+        get(componentStore)
+      const instance = selectedComponentInstance || screenslotInstance
+      const context = instance?.getDataContext()
       let stringifiedContext = null
       try {
         stringifiedContext = JSON.stringify(context)
@@ -101,6 +105,9 @@ const loadBudibase = async () => {
       hoverStore.actions.hoverComponent(data, false)
     } else if (type === "builder-meta") {
       builderStore.actions.setMetadata(data)
+    } else if (type === "builder-state") {
+      const [[key, value]] = Object.entries(data)
+      stateStore.actions.setValue(key, value)
     }
   }
 
