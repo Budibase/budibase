@@ -235,8 +235,11 @@ export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
   id: string
   stepId: TStep
-  inputs: AutomationStepInputs<TStep> & Record<string, any> // The record union to be removed once the types are fixed
+  inputs: StepInputs<TStep>
 }
+
+export type StepInputs<TStep extends AutomationActionStepId> =
+  AutomationStepInputs<TStep> & Record<string, any> // Remove `Record<string, any>` once types are fixed
 
 export type CollectStep = AutomationStepSchema<AutomationActionStepId.COLLECT>
 
