@@ -43,8 +43,8 @@
 
 <div bind:this={button} class="error-button">
   <AbsTooltip
-    text={!hasErrors ? "No Errors found!" : ""}
-    position={TooltipPosition.Bottom}
+    text={!hasErrors ? "No errors found!" : ""}
+    position={TooltipPosition.Top}
   >
     <ActionButton
       quiet
