@@ -169,6 +169,18 @@ if (descriptions.length) {
         )
       }
 
+      const resetRowUsage = async () => {
+        await config.doInContext(
+          undefined,
+          async () =>
+            await quotas.setUsage(
+              0,
+              StaticQuotaName.ROWS,
+              QuotaUsageType.STATIC
+            )
+        )
+      }
+
       const getRowUsage = async () => {
         const { total } = await config.doInContext(undefined, () =>
           quotas.getCurrentUsageValues(
@@ -204,6 +216,10 @@ if (descriptions.length) {
 
       beforeAll(async () => {
         table = await config.api.table.save(defaultTable())
+      })
+
+      beforeEach(async () => {
+        await resetRowUsage()
       })
 
       describe("create", () => {
@@ -3317,6 +3333,7 @@ if (descriptions.length) {
           beforeAll(async () => {
             mocks.licenses.useBudibaseAI()
             mocks.licenses.useAICustomConfigs()
+
             envCleanup = setEnv({
               OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
             })

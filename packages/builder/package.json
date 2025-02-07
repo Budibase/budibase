@@ -81,7 +81,7 @@
     "shortid": "2.2.15",
     "svelte-dnd-action": "^0.9.8",
     "svelte-loading-spinners": "^0.1.1",
-    "svelte-portal": "1.0.0",
+    "svelte-portal": "^2.2.1",
     "yup": "^0.32.11"
   },
   "devDependencies": {

@@ -16,6 +16,7 @@ import { Store as StoreContext } from "."
 
 interface IndexedUIRow extends UIRow {
   __idx: number
+  __formatted: Record<string, any>
 }
 
 interface RowStore {
@@ -114,26 +115,44 @@ export const createStores = (): RowStore => {
 export const deriveStores = (context: StoreContext): RowDerivedStore => {
   const { rows, enrichedSchema } = context
 
-  // Enrich rows with an index property and any pending changes
+  // Enrich rows with an index property and additional values
   const enrichedRows = derived(
     [rows, enrichedSchema],
     ([$rows, $enrichedSchema]) => {
-      const customColumns = Object.values($enrichedSchema || {}).filter(
-        f => f.related
-      )
-      return $rows.map<IndexedUIRow>((row, idx) => ({
-        ...row,
-        __idx: idx,
-        ...customColumns.reduce<Record<string, string>>((map, column) => {
-          const fromField = $enrichedSchema![column.related!.field]
-          map[column.name] = getRelatedTableValues(
-            row,
-            { ...column, related: column.related! },
-            fromField
-          )
-          return map
-        }, {}),
-      }))
+      // Find columns which require additional processing
+      const cols = Object.values($enrichedSchema || {})
+      const relatedColumns = cols.filter(col => col.related)
+      const formattedColumns = cols.filter(col => col.format)
+
+      return $rows.map<IndexedUIRow>((row, idx) => {
+        // Derive any values that need enriched from related rows
+        const relatedValues = relatedColumns.reduce<Record<string, string>>(
+          (map, column) => {
+            const fromField = $enrichedSchema![column.related!.field]
+            map[column.name] = getRelatedTableValues(
+              row,
+              { ...column, related: column.related! },
+              fromField
+            )
+            return map
+          },
+          {}
+        )
+        // Derive any display-only formatted values for this row
+        const formattedValues = formattedColumns.reduce<Record<string, any>>(
+          (map, column) => {
+            map[column.name] = column.format!(row)
+            return map
+          },
+          {}
+        )
+        return {
+          ...row,
+          ...relatedValues,
+          __formatted: formattedValues,
+          __idx: idx,
+        }
+      })
     }
   )
 
@@ -791,6 +810,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
     let clone: Row = { ...row }
     delete clone.__idx
     delete clone.__metadata
+    delete clone.__formatted
     if (!get(hasBudibaseIdentifiers) && isGeneratedRowID(clone._id!)) {
       delete clone._id
     }
