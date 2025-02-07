@@ -1,8 +1,9 @@
 <script lang="ts">
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher, onMount, tick } from "svelte"
+  import type { UIEvent } from "@budibase/types"
 
-  export let value = null
+  export let value: string | null = null
   export let placeholder: string | undefined = undefined
   export let type = "text"
   export let disabled = false
@@ -11,7 +12,7 @@
   export let updateOnChange = true
   export let quiet = false
   export let align: "left" | "right" | "center" | undefined = undefined
-  export let autofocus = false
+  export let autofocus: boolean | null = false
   export let autocomplete: boolean | undefined
 
   const dispatch = createEventDispatcher()
@@ -24,7 +25,7 @@
       return
     }
     if (type === "number") {
-      const float = parseFloat(newValue)
+      const float = parseFloat(newValue as string)
       newValue = isNaN(float) ? null : float
     }
     dispatch("change", newValue)
@@ -37,31 +38,31 @@
     focus = true
   }
 
-  const onBlur = (event: any) => {
+  const onBlur = (event: UIEvent) => {
     if (readonly || disabled) {
       return
     }
     focus = false
-    updateValue(event.target.value)
+    updateValue(event?.target?.value)
   }
 
-  const onInput = (event: any) => {
+  const onInput = (event: UIEvent) => {
     if (readonly || !updateOnChange || disabled) {
       return
     }
-    updateValue(event.target.value)
+    updateValue(event.target?.value)
   }
 
-  const updateValueOnEnter = (event: any) => {
+  const updateValueOnEnter = (event: UIEvent) => {
     if (readonly || disabled) {
       return
     }
     if (event.key === "Enter") {
-      updateValue(event.target.value)
+      updateValue(event.target?.value)
     }
   }
 
-  const getInputMode = (type: any) => {
+  const getInputMode = (type: string) => {
     if (type === "bigint") {
       return "numeric"
     }
@@ -77,7 +78,7 @@
 
   onMount(async () => {
     if (disabled) return
-    focus = autofocus
+    focus = autofocus || false
     if (focus) {
       await tick()
       field.focus()
