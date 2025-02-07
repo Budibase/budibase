@@ -140,7 +140,9 @@ function getInvalidDatasources(
           key: setting.key,
           label: setting.label || setting.key,
           message: `The ${friendlyTypeName} named "${label}" could not be found`,
+
           errorType: "setting",
+          cause: "invalid",
         })
       }
     }
@@ -217,6 +219,7 @@ function getMissingRequiredSettings(
         label: s.label || s.key,
         message: `Add the <mark>${s.label}</mark> setting to start using your component`,
         errorType: "setting",
+        cause: "missing",
       }))
     )
   }
