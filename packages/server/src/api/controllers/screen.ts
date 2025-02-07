@@ -16,7 +16,6 @@ import {
   Screen,
   ScreenProps,
   ScreenUsage,
-  SourceType,
   UsageInScreensResponse,
   UserCtx,
 } from "@budibase/types"
