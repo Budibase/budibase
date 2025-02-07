@@ -34,10 +34,16 @@ import {
   Webhook,
   WebhookActionType,
   BuiltinPermissionID,
+  DeepPartial,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
 import { generator } from "@budibase/backend-core/tests"
+export {
+  createTableScreen,
+  createQueryScreen,
+  createViewScreen,
+} from "../../constants/screens"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -184,21 +190,12 @@ export function newAutomation({
   steps,
   trigger,
 }: { steps?: AutomationStep[]; trigger?: AutomationTrigger } = {}) {
-  const automation = basicAutomation()
-
-  if (trigger) {
-    automation.definition.trigger = trigger
-  } else {
-    automation.definition.trigger = automationTrigger()
-  }
-
-  if (steps) {
-    automation.definition.steps = steps
-  } else {
-    automation.definition.steps = [automationStep()]
-  }
-
-  return automation
+  return basicAutomation({
+    definition: {
+      steps: steps || [automationStep()],
+      trigger: trigger || automationTrigger(),
+    },
+  })
 }
 
 export function rowActionAutomation() {
@@ -211,8 +208,8 @@ export function rowActionAutomation() {
   return automation
 }
 
-export function basicAutomation(appId?: string): Automation {
-  return {
+export function basicAutomation(opts?: DeepPartial<Automation>): Automation {
+  const baseAutomation: Automation = {
     name: "My Automation",
     screenId: "kasdkfldsafkl",
     live: true,
@@ -225,10 +222,8 @@ export function basicAutomation(appId?: string): Automation {
         icon: "test",
         description: "test",
         type: AutomationStepType.TRIGGER,
+        inputs: {},
         id: "test",
-        inputs: {
-          fields: {},
-        },
         schema: {
           inputs: {
             properties: {},
@@ -241,90 +236,9 @@ export function basicAutomation(appId?: string): Automation {
       steps: [],
     },
     type: "automation",
-    appId: appId!,
+    appId: "appId",
   }
-}
-
-export function basicCronAutomation(appId: string, cron: string): Automation {
-  const automation: Automation = {
-    name: `Automation ${generator.guid()}`,
-    definition: {
-      trigger: {
-        stepId: AutomationTriggerStepId.CRON,
-        name: "test",
-        tagline: "test",
-        icon: "test",
-        description: "test",
-        type: AutomationStepType.TRIGGER,
-        id: "test",
-        inputs: {
-          cron,
-        },
-        schema: {
-          inputs: {
-            properties: {},
-          },
-          outputs: {
-            properties: {},
-          },
-        },
-      },
-      steps: [],
-    },
-    type: "automation",
-    appId,
-  }
-  return automation
-}
-
-export function serverLogAutomation(appId?: string): Automation {
-  return {
-    name: "My Automation",
-    screenId: "kasdkfldsafkl",
-    live: true,
-    uiTree: {},
-    definition: {
-      trigger: {
-        stepId: AutomationTriggerStepId.APP,
-        name: "test",
-        tagline: "test",
-        icon: "test",
-        description: "test",
-        type: AutomationStepType.TRIGGER,
-        id: "test",
-        inputs: { fields: {} },
-        schema: {
-          inputs: {
-            properties: {},
-          },
-          outputs: {
-            properties: {},
-          },
-        },
-      },
-      steps: [
-        {
-          stepId: AutomationActionStepId.SERVER_LOG,
-          name: "Backend log",
-          tagline: "Console log a value in the backend",
-          icon: "Monitoring",
-          description: "Logs the given text to the server (using console.log)",
-          internal: true,
-          features: {
-            LOOPING: true,
-          },
-          inputs: {
-            text: "log statement",
-          },
-          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
-          id: "y8lkZbeSe",
-          type: AutomationStepType.ACTION,
-        },
-      ],
-    },
-    type: "automation",
-    appId: appId!,
-  }
+  return merge(baseAutomation, opts)
 }
 
 export function loopAutomation(
@@ -387,16 +301,21 @@ export function loopAutomation(
   return automation as Automation
 }
 
-export function collectAutomation(tableId?: string): Automation {
-  const automation: any = {
+export function collectAutomation(opts?: DeepPartial<Automation>): Automation {
+  const baseAutomation: Automation = {
+    appId: "appId",
     name: "looping",
     type: "automation",
     definition: {
       steps: [
         {
           id: "b",
-          type: "ACTION",
+          name: "b",
+          tagline: "An automation action step",
+          icon: "Icon",
+          type: AutomationStepType.ACTION,
           internal: true,
+          description: "Execute script",
           stepId: AutomationActionStepId.EXECUTE_SCRIPT,
           inputs: {
             code: "return [1,2,3]",
@@ -405,8 +324,12 @@ export function collectAutomation(tableId?: string): Automation {
         },
         {
           id: "c",
-          type: "ACTION",
+          name: "c",
+          type: AutomationStepType.ACTION,
+          tagline: "An automation action step",
+          icon: "Icon",
           internal: true,
+          description: "Collect",
           stepId: AutomationActionStepId.COLLECT,
           inputs: {
             collection: "{{ literal steps.1.value }}",
@@ -416,24 +339,28 @@ export function collectAutomation(tableId?: string): Automation {
       ],
       trigger: {
         id: "a",
-        type: "TRIGGER",
+        type: AutomationStepType.TRIGGER,
         event: AutomationEventType.ROW_SAVE,
         stepId: AutomationTriggerStepId.ROW_SAVED,
+        name: "trigger Step",
+        tagline: "An automation trigger",
+        description: "A trigger",
+        icon: "Icon",
         inputs: {
-          tableId,
+          tableId: "tableId",
         },
         schema: TRIGGER_DEFINITIONS.ROW_SAVED.schema,
       },
     },
   }
-  return automation
+  return merge(baseAutomation, opts)
 }
 
-export function filterAutomation(appId: string, tableId?: string): Automation {
+export function filterAutomation(opts?: DeepPartial<Automation>): Automation {
   const automation: Automation = {
     name: "looping",
     type: "automation",
-    appId,
+    appId: "appId",
     definition: {
       steps: [
         {
@@ -459,13 +386,13 @@ export function filterAutomation(appId: string, tableId?: string): Automation {
         event: AutomationEventType.ROW_SAVE,
         stepId: AutomationTriggerStepId.ROW_SAVED,
         inputs: {
-          tableId: tableId!,
+          tableId: "tableId",
         },
         schema: TRIGGER_DEFINITIONS.ROW_SAVED.schema,
       },
     },
   }
-  return automation
+  return merge(automation, opts)
 }
 
 export function updateRowAutomationWithFilters(

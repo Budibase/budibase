@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
 import { selectedScreen as selectedScreenStore } from "./screens"
 import { findComponentPath } from "@/helpers/components"
-import { Screen, Component } from "@budibase/types"
+import { Component, Screen } from "@budibase/types"
 import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
 interface OpenNodesState {
@@ -49,7 +49,12 @@ export class ComponentTreeNodesStore extends BudiStore<OpenNodesState> {
 
   // Will ensure all parents of a node are expanded so that it is visible in the tree
   makeNodeVisible(componentId: string) {
-    const selectedScreen: Screen = get(selectedScreenStore)
+    const selectedScreen: Screen | undefined = get(selectedScreenStore)
+
+    if (!selectedScreen) {
+      console.error("Invalid node " + componentId)
+      return {}
+    }
 
     const path = findComponentPath(selectedScreen.props, componentId)
 

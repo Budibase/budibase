@@ -2,10 +2,12 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationLogPage,
+  AutomationResults,
   AutomationStatus,
   AutomationStepDefinition,
   AutomationTriggerDefinition,
   AutomationTriggerStepId,
+  DidNotTriggerResponse,
   Row,
 } from "../../../documents"
 import { DocumentDestroyResponse } from "@budibase/nano"
@@ -73,5 +75,12 @@ export interface TestAutomationRequest {
   revision?: string
   fields: Record<string, any>
   row?: Row
+  oldRow?: Row
 }
-export interface TestAutomationResponse {}
+export type TestAutomationResponse = AutomationResults | DidNotTriggerResponse
+
+export function isDidNotTriggerResponse(
+  response: TestAutomationResponse
+): response is DidNotTriggerResponse {
+  return !!("message" in response && response.message)
+}

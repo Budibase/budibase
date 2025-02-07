@@ -19,5 +19,10 @@ router
     authorized(permissions.BUILDER),
     controller.destroy
   )
+  .post(
+    "/api/screens/usage/:sourceId",
+    authorized(permissions.BUILDER),
+    controller.usage
+  )
 
 export default router

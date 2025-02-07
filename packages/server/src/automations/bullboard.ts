@@ -5,9 +5,9 @@ import * as automation from "../threads/automation"
 import { backups } from "@budibase/pro"
 import { getAppMigrationQueue } from "../appMigrations/queue"
 import { createBullBoard } from "@bull-board/api"
-import BullQueue from "bull"
+import { AutomationData } from "@budibase/types"
 
-export const automationQueue: BullQueue.Queue = queue.createQueue(
+export const automationQueue = queue.createQueue<AutomationData>(
   queue.JobQueue.AUTOMATION,
   { removeStalledCb: automation.removeStalled }
 )
@@ -16,24 +16,20 @@ const PATH_PREFIX = "/bulladmin"
 
 export async function init() {
   // Set up queues for bull board admin
+  const queues = [new BullAdapter(automationQueue)]
+
   const backupQueue = backups.getBackupQueue()
-  const appMigrationQueue = getAppMigrationQueue()
-  const queues = [automationQueue]
   if (backupQueue) {
-    queues.push(backupQueue)
+    queues.push(new BullAdapter(backupQueue))
   }
+
+  const appMigrationQueue = getAppMigrationQueue()
   if (appMigrationQueue) {
-    queues.push(appMigrationQueue)
+    queues.push(new BullAdapter(appMigrationQueue))
   }
-  const adapters = []
-  const serverAdapter: any = new KoaAdapter()
-  for (let queue of queues) {
-    adapters.push(new BullAdapter(queue))
-  }
-  createBullBoard({
-    queues: adapters,
-    serverAdapter,
-  })
+
+  const serverAdapter = new KoaAdapter()
+  createBullBoard({ queues, serverAdapter })
   serverAdapter.setBasePath(PATH_PREFIX)
   return serverAdapter.registerPlugin()
 }
