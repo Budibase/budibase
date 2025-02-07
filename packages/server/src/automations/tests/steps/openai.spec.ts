@@ -58,8 +58,9 @@ describe("test the openai action", () => {
     // own API key. We don't count this against your quota.
     const result = await expectAIUsage(0, () =>
       createAutomationBuilder(config)
+        .onAppAction()
         .openai({ prompt: "Hello, world", model: Model.GPT_4O_MINI })
-        .run()
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual("This is a test")
@@ -69,8 +70,9 @@ describe("test the openai action", () => {
   it("should present the correct error message when a prompt is not provided", async () => {
     const result = await expectAIUsage(0, () =>
       createAutomationBuilder(config)
+        .onAppAction()
         .openai({ prompt: "", model: Model.GPT_4O_MINI })
-        .run()
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual(
@@ -84,8 +86,9 @@ describe("test the openai action", () => {
 
     const result = await expectAIUsage(0, () =>
       createAutomationBuilder(config)
+        .onAppAction()
         .openai({ prompt: "Hello, world", model: Model.GPT_4O_MINI })
-        .run()
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual(
@@ -106,8 +109,9 @@ describe("test the openai action", () => {
     // key, so we charge users for it.
     const result = await expectAIUsage(14, () =>
       createAutomationBuilder(config)
+        .onAppAction()
         .openai({ model: Model.GPT_4O_MINI, prompt: "Hello, world" })
-        .run()
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual("This is a test")
