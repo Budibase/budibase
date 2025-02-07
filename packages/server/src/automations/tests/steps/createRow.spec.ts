@@ -1,7 +1,11 @@
-import * as setup from "./utilities"
-import { basicTableWithAttachmentField } from "../../tests/utilities/structures"
+import {
+  basicTable,
+  basicTableWithAttachmentField,
+} from "../../../tests/utilities/structures"
 import { objectStore } from "@budibase/backend-core"
-import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { Row, Table } from "@budibase/types"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 async function uploadTestFile(filename: string) {
   let bucket = "testbucket"
@@ -10,19 +14,20 @@ async function uploadTestFile(filename: string) {
     filename,
     body: Buffer.from("test data"),
   })
-  let presignedUrl = await objectStore.getPresignedUrl(bucket, filename, 60000)
+  let presignedUrl = objectStore.getPresignedUrl(bucket, filename, 60000)
 
   return presignedUrl
 }
 
 describe("test the create row action", () => {
-  let table: any
-  let row: any
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
+
+  let table: Table
+  let row: Row
 
   beforeEach(async () => {
     await config.init()
-    table = await config.createTable()
+    table = await config.api.table.save(basicTable())
     row = {
       tableId: table._id,
       name: "test",
@@ -30,28 +35,27 @@ describe("test the create row action", () => {
     }
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to run the action", async () => {
-    const result = await createAutomationBuilder({
-      name: "Test Create Row Flow",
-      appId: config.getAppId(),
-      config,
-    })
-      .appAction({ fields: { status: "new" } })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog({ text: "Starting create row flow" }, { stepName: "StartLog" })
       .createRow({ row }, { stepName: "CreateRow" })
       .serverLog(
         { text: "Row created with ID: {{ stepsByName.CreateRow.row._id }}" },
         { stepName: "CreationLog" }
       )
-      .run()
+      .test({ fields: { status: "new" } })
 
     expect(result.steps[1].outputs.success).toBeDefined()
     expect(result.steps[1].outputs.id).toBeDefined()
     expect(result.steps[1].outputs.revision).toBeDefined()
+
     const gottenRow = await config.api.row.get(
-      table._id,
+      table._id!,
       result.steps[1].outputs.id
     )
     expect(gottenRow.name).toEqual("test")
@@ -62,12 +66,8 @@ describe("test the create row action", () => {
   })
 
   it("should return an error (not throw) when bad info provided", async () => {
-    const result = await createAutomationBuilder({
-      name: "Test Create Row Error Flow",
-      appId: config.getAppId(),
-      config,
-    })
-      .appAction({ fields: { status: "error" } })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog({ text: "Starting error test flow" }, { stepName: "StartLog" })
       .createRow(
         {
@@ -78,18 +78,14 @@ describe("test the create row action", () => {
         },
         { stepName: "CreateRow" }
       )
-      .run()
+      .test({ fields: { status: "error" } })
 
     expect(result.steps[1].outputs.success).toEqual(false)
   })
 
   it("should check invalid inputs return an error", async () => {
-    const result = await createAutomationBuilder({
-      name: "Test Create Row Invalid Flow",
-      appId: config.getAppId(),
-      config,
-    })
-      .appAction({ fields: { status: "invalid" } })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog({ text: "Testing invalid input" }, { stepName: "StartLog" })
       .createRow({ row: {} }, { stepName: "CreateRow" })
       .filter({
@@ -101,18 +97,18 @@ describe("test the create row action", () => {
         { text: "This log should not appear" },
         { stepName: "SkippedLog" }
       )
-      .run()
+      .test({ fields: { status: "invalid" } })
 
     expect(result.steps[1].outputs.success).toEqual(false)
     expect(result.steps.length).toBeLessThan(4)
   })
 
   it("should check that an attachment field is sent to storage and parsed", async () => {
-    let attachmentTable = await config.createTable(
+    let attachmentTable = await config.api.table.save(
       basicTableWithAttachmentField()
     )
 
-    let attachmentRow: any = {
+    let attachmentRow: Row = {
       tableId: attachmentTable._id,
     }
 
@@ -126,12 +122,8 @@ describe("test the create row action", () => {
     ]
 
     attachmentRow.file_attachment = attachmentObject
-    const result = await createAutomationBuilder({
-      name: "Test Create Row Attachment Flow",
-      appId: config.getAppId(),
-      config,
-    })
-      .appAction({ fields: { type: "attachment" } })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog(
         { text: "Processing attachment upload" },
         { stepName: "StartLog" }
@@ -148,7 +140,7 @@ describe("test the create row action", () => {
         },
         { stepName: "UploadLog" }
       )
-      .run()
+      .test({ fields: { type: "attachment" } })
 
     expect(result.steps[1].outputs.success).toEqual(true)
     expect(result.steps[1].outputs.row.file_attachment[0]).toHaveProperty("key")
@@ -165,11 +157,11 @@ describe("test the create row action", () => {
   })
 
   it("should check that an single attachment field is sent to storage and parsed", async () => {
-    let attachmentTable = await config.createTable(
+    let attachmentTable = await config.api.table.save(
       basicTableWithAttachmentField()
     )
 
-    let attachmentRow: any = {
+    let attachmentRow: Row = {
       tableId: attachmentTable._id,
     }
 
@@ -181,12 +173,8 @@ describe("test the create row action", () => {
     }
 
     attachmentRow.single_file_attachment = attachmentObject
-    const result = await createAutomationBuilder({
-      name: "Test Create Row Single Attachment Flow",
-      appId: config.getAppId(),
-      config,
-    })
-      .appAction({ fields: { type: "single-attachment" } })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog(
         { text: "Processing single attachment" },
         { stepName: "StartLog" }
@@ -221,7 +209,7 @@ describe("test the create row action", () => {
           },
         },
       })
-      .run()
+      .test({ fields: { type: "single-attachment" } })
 
     expect(result.steps[1].outputs.success).toEqual(true)
     expect(result.steps[1].outputs.row.single_file_attachment).toHaveProperty(
@@ -240,11 +228,11 @@ describe("test the create row action", () => {
   })
 
   it("should check that attachment without the correct keys throws an error", async () => {
-    let attachmentTable = await config.createTable(
+    let attachmentTable = await config.api.table.save(
       basicTableWithAttachmentField()
     )
 
-    let attachmentRow: any = {
+    let attachmentRow: Row = {
       tableId: attachmentTable._id,
     }
 
@@ -256,12 +244,8 @@ describe("test the create row action", () => {
     }
 
     attachmentRow.single_file_attachment = attachmentObject
-    const result = await createAutomationBuilder({
-      name: "Test Create Row Invalid Attachment Flow",
-      appId: config.getAppId(),
-      config,
-    })
-      .appAction({ fields: { type: "invalid-attachment" } })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog(
         { text: "Testing invalid attachment keys" },
         { stepName: "StartLog" }
@@ -294,7 +278,7 @@ describe("test the create row action", () => {
           },
         },
       })
-      .run()
+      .test({ fields: { type: "invalid-attachment" } })
 
     expect(result.steps[1].outputs.success).toEqual(false)
     expect(result.steps[1].outputs.response).toEqual(

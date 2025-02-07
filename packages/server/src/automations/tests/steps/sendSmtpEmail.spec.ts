@@ -1,6 +1,7 @@
-import * as workerRequests from "../../utilities/workerRequests"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import * as workerRequests from "../../../utilities/workerRequests"
 
-jest.mock("../../utilities/workerRequests", () => ({
+jest.mock("../../../utilities/workerRequests", () => ({
   sendSmtpEmail: jest.fn(),
 }))
 
@@ -18,16 +19,18 @@ function generateResponse(to: string, from: string) {
   }
 }
 
-import * as setup from "./utilities"
+import * as setup from "../utilities"
 
 describe("test the outgoing webhook action", () => {
-  let inputs
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
+
   beforeAll(async () => {
     await config.init()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to run the action", async () => {
     jest
@@ -42,7 +45,7 @@ describe("test the outgoing webhook action", () => {
       location: "location",
       url: "url",
     }
-    inputs = {
+    const inputs = {
       to: "user1@example.com",
       from: "admin@example.com",
       subject: "hello",
