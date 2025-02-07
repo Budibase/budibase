@@ -2,11 +2,11 @@
   import Icon from "../Icon/Icon.svelte"
   import StatusLight from "../StatusLight/StatusLight.svelte"
 
-  export let icon: string | null = null
-  export let iconColor: string | null = null
-  export let title: string | null = null
-  export let subtitle: string | null = null
-  export let url: string | null = null
+  export let icon: string | undefined = undefined
+  export let iconColor: string | undefined = undefined
+  export let title: string | undefined = undefined
+  export let subtitle: string | undefined = undefined
+  export let url: string | undefined = undefined
   export let hoverable: boolean = false
   export let showArrow: boolean = false
   export let selected: boolean = false
