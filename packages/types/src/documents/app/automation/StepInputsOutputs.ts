@@ -141,7 +141,7 @@ export type MakeIntegrationInputs = {
 
 export type n8nStepInputs = {
   url: string
-  method: HttpMethod
+  method?: HttpMethod
   authorization: string
   body: any
 }
@@ -237,7 +237,8 @@ export type ZapierStepInputs = {
 export type ZapierStepOutputs = Omit<ExternalAppStepOutputs, "response"> & {
   response: string
 }
-enum RequestType {
+
+export enum RequestType {
   POST = "POST",
   GET = "GET",
   PUT = "PUT",
@@ -249,11 +250,7 @@ export type OutgoingWebhookStepInputs = {
   requestMethod: RequestType
   url: string
   requestBody: string
-  headers: string
-}
-
-export type AppActionTriggerInputs = {
-  fields: object
+  headers: string | Record<string, string>
 }
 
 export type AppActionTriggerOutputs = {

@@ -107,11 +107,8 @@ describe("/automations", () => {
     })
 
     it("Should ensure you can't have a branch as not a last step", async () => {
-      const automation = createAutomationBuilder({
-        name: "String Equality Branching",
-        appId: config.getAppId(),
-      })
-        .appAction({ fields: { status: "active" } })
+      const automation = createAutomationBuilder(config)
+        .onAppAction()
         .branch({
           activeBranch: {
             steps: stepBuilder =>
@@ -134,11 +131,8 @@ describe("/automations", () => {
     })
 
     it("Should check validation on an automation that has a branch step with no children", async () => {
-      const automation = createAutomationBuilder({
-        name: "String Equality Branching",
-        appId: config.getAppId(),
-      })
-        .appAction({ fields: { status: "active" } })
+      const automation = createAutomationBuilder(config)
+        .onAppAction()
         .branch({})
         .serverLog({ text: "Inactive user" })
         .build()
@@ -153,11 +147,8 @@ describe("/automations", () => {
     })
 
     it("Should check validation on a branch step with empty conditions", async () => {
-      const automation = createAutomationBuilder({
-        name: "String Equality Branching",
-        appId: config.getAppId(),
-      })
-        .appAction({ fields: { status: "active" } })
+      const automation = createAutomationBuilder(config)
+        .onAppAction()
         .branch({
           activeBranch: {
             steps: stepBuilder =>
@@ -177,11 +168,8 @@ describe("/automations", () => {
     })
 
     it("Should check validation on an branch that has a condition that is not valid", async () => {
-      const automation = createAutomationBuilder({
-        name: "String Equality Branching",
-        appId: config.getAppId(),
-      })
-        .appAction({ fields: { status: "active" } })
+      const automation = createAutomationBuilder(config)
+        .onAppAction()
         .branch({
           activeBranch: {
             steps: stepBuilder =>
@@ -252,12 +240,8 @@ describe("/automations", () => {
     })
 
     it("should be able to access platformUrl, logoUrl and company in the automation", async () => {
-      const result = await createAutomationBuilder({
-        name: "Test Automation",
-        appId: config.getAppId(),
-        config,
-      })
-        .appAction({ fields: {} })
+      const result = await createAutomationBuilder(config)
+        .onAppAction()
         .serverLog({
           text: "{{ settings.url }}",
         })
@@ -267,7 +251,7 @@ describe("/automations", () => {
         .serverLog({
           text: "{{ settings.company }}",
         })
-        .run()
+        .test({ fields: {} })
 
       expect(result.steps[0].outputs.message).toEndWith("https://example.com")
       expect(result.steps[1].outputs.message).toEndWith(

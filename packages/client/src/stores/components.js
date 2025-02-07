@@ -6,7 +6,7 @@ import { screenStore } from "./screens"
 import { builderStore } from "./builder"
 import Router from "../components/Router.svelte"
 import * as AppComponents from "../components/app/index.js"
-import { ScreenslotType } from "../constants"
+import { ScreenslotID, ScreenslotType } from "../constants"
 
 export const BudibasePrefix = "@budibase/standard-components/"
 
@@ -43,6 +43,7 @@ const createComponentStore = () => {
         selectedComponentDefinition: definition,
         selectedComponentPath: selectedPath?.map(component => component._id),
         mountedComponentCount: Object.keys($store.mountedComponents).length,
+        screenslotInstance: $store.mountedComponents[ScreenslotID],
       }
     }
   )
