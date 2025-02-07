@@ -7,6 +7,7 @@ interface UISettingComponentError extends BaseUIComponentError {
   errorType: "setting"
   key: string
   label: string
+  cause: "missing" | "invalid"
 }
 
 interface UIAncestorComponentError extends BaseUIComponentError {

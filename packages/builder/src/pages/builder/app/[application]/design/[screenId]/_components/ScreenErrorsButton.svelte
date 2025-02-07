@@ -27,7 +27,7 @@
       $screenComponentsList.find(c => c._id === error.componentId)!
         ._instanceName,
     ]
-    if (error.errorType === "setting") {
+    if (error.errorType === "setting" && error.cause === "invalid") {
       titleParts.push(error.label)
     }
     return titleParts.join(" - ")
