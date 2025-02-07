@@ -5,7 +5,7 @@
   import { get, derived, readable } from "svelte/store"
   import { featuresStore } from "stores"
   import { Grid } from "@budibase/frontend-core"
-  import { processStringSync } from "@budibase/string-templates"
+  // import { processStringSync } from "@budibase/string-templates"
 
   // table is actually any datasource, but called table for legacy compatibility
   export let table
@@ -105,7 +105,7 @@
         order: idx,
         conditions: column.conditions,
         visible: !!column.active,
-        format: createFormatter(column),
+        // format: createFormatter(column),
       }
       if (column.width) {
         overrides[column.field].width = column.width
@@ -114,12 +114,12 @@
     return overrides
   }
 
-  const createFormatter = column => {
-    if (typeof column.format !== "string" || !column.format.trim().length) {
-      return null
-    }
-    return row => processStringSync(column.format, { [id]: row })
-  }
+  // const createFormatter = column => {
+  //   if (typeof column.format !== "string" || !column.format.trim().length) {
+  //     return null
+  //   }
+  //   return row => processStringSync(column.format, { [id]: row })
+  // }
 
   const enrichButtons = buttons => {
     if (!buttons?.length) {
