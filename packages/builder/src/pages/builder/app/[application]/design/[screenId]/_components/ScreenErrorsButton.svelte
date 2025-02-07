@@ -76,6 +76,7 @@
         <Icon
           name="Alert"
           color="var(--spectrum-global-color-static-red-600)"
+          size="S"
         />
         <div>
           <Link overBackground on:click={() => onErrorClick(error)}>
