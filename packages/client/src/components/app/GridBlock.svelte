@@ -105,7 +105,7 @@
         order: idx,
         conditions: column.conditions,
         visible: !!column.active,
-        format: createFormatter(column),
+        // format: createFormatter(column),
       }
       if (column.width) {
         overrides[column.field].width = column.width
