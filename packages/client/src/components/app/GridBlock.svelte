@@ -114,12 +114,12 @@
     return overrides
   }
 
-  const createFormatter = column => {
-    if (typeof column.format !== "string" || !column.format.trim().length) {
-      return null
-    }
-    return row => processStringSync(column.format, { [id]: row })
-  }
+  // const createFormatter = column => {
+  //   if (typeof column.format !== "string" || !column.format.trim().length) {
+  //     return null
+  //   }
+  //   return row => processStringSync(column.format, { [id]: row })
+  // }
 
   const enrichButtons = buttons => {
     if (!buttons?.length) {

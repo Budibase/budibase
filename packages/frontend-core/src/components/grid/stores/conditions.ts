@@ -173,6 +173,5 @@ const evaluateConditions = (row: UIRow, conditions: UICondition[]) => {
       // Swallow
     }
   }
-  console.log(metadata)
   return metadata
 }
