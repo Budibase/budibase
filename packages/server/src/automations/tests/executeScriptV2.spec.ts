@@ -21,47 +21,44 @@ describe("Execute Script Automations", () => {
   afterAll(setup.afterAll)
 
   it("should execute a basic script and return the result", async () => {
-    const builder = createAutomationBuilder({
-      name: "Basic Script Execution",
-    })
+    config.name = "Basic Script Execution"
+    const builder = createAutomationBuilder(config)
 
     const results = await builder
-      .appAction({ fields: {} })
+      .onAppAction()
       .executeScriptV2({ code: encodeJS("return 2 + 2") })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.value).toEqual(4)
   })
 
   it("should access bindings from previous steps", async () => {
-    const builder = createAutomationBuilder({
-      name: "Access Bindings",
-    })
+    config.name = "Access Bindings"
+    const builder = createAutomationBuilder(config)
 
     const results = await builder
-      .appAction({ fields: { data: [1, 2, 3] } })
+      .onAppAction()
       .executeScriptV2(
         {
           code: encodeJS(`return $("trigger.fields.data").map(x => x * 2)`),
         },
         { stepId: "binding-script-step" }
       )
-      .run()
+      .test({ fields: { data: [1, 2, 3] } })
 
     expect(results.steps[0].outputs.value).toEqual([2, 4, 6])
   })
 
   it("should handle script execution errors gracefully", async () => {
-    const builder = createAutomationBuilder({
-      name: "Handle Script Errors",
-    })
+    config.name = "Handle Script Errors"
+    const builder = createAutomationBuilder(config)
 
     const results = await builder
-      .appAction({ fields: {} })
+      .onAppAction()
       .executeScriptV2({
         code: encodeJS("return nonexistentVariable.map(x => x)"),
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.response).toContain(
       "ReferenceError: nonexistentVariable is not defined"
@@ -70,12 +67,11 @@ describe("Execute Script Automations", () => {
   })
 
   it("should handle conditional logic in scripts", async () => {
-    const builder = createAutomationBuilder({
-      name: "Conditional Script Logic",
-    })
+    config.name = "Conditional Script Logic"
+    const builder = createAutomationBuilder(config)
 
     const results = await builder
-      .appAction({ fields: { value: 10 } })
+      .onAppAction()
       .executeScriptV2({
         code: encodeJS(`
             if ($("trigger.fields.value") > 5) {
@@ -85,18 +81,17 @@ describe("Execute Script Automations", () => {
             }
           `),
       })
-      .run()
+      .test({ fields: { value: 10 } })
 
     expect(results.steps[0].outputs.value).toEqual("Value is greater than 5")
   })
 
   it("should use multiple steps and validate script execution", async () => {
-    const builder = createAutomationBuilder({
-      name: "Multi-Step Script Execution",
-    })
+    config.name = "Multi-Step Script Execution"
+    const builder = createAutomationBuilder(config)
 
     const results = await builder
-      .appAction({ fields: {} })
+      .onAppAction()
       .serverLog(
         { text: "Starting multi-step automation" },
         { stepId: "start-log-step" }
@@ -117,7 +112,7 @@ describe("Execute Script Automations", () => {
       .serverLog({
         text: `Final result is {{ steps.ScriptingStep1.value }}`,
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.message).toContain(
       "Starting multi-step automation"
@@ -128,16 +123,15 @@ describe("Execute Script Automations", () => {
   })
 
   it("should fail if the code has not been encoded as a handlebars template", async () => {
-    const builder = createAutomationBuilder({
-      name: "Invalid Code Encoding",
-    })
+    config.name = "Invalid Code Encoding"
+    const builder = createAutomationBuilder(config)
 
     const results = await builder
-      .appAction({ fields: {} })
+      .onAppAction()
       .executeScriptV2({
         code: "return 2 + 2",
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.response.message).toEqual(
       "Expected code to be a {{ js }} template block"
@@ -146,16 +140,15 @@ describe("Execute Script Automations", () => {
   })
 
   it("does not process embedded handlebars templates", async () => {
-    const builder = createAutomationBuilder({
-      name: "Embedded Handlebars",
-    })
+    config.name = "Embedded Handlebars"
+    const builder = createAutomationBuilder(config)
 
     const results = await builder
-      .appAction({ fields: {} })
+      .onAppAction()
       .executeScriptV2({
         code: encodeJS(`return "{{ triggers.row.whatever }}"`),
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.value).toEqual(
       "{{ triggers.row.whatever }}"
